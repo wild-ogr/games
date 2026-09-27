@@ -29,7 +29,12 @@ const TW={
 const TW_ORDER=['arch','pushka','izba','mag','dub'];
 const TW_UNLOCK={arch:[0,0],pushka:[0,1],izba:[0,2],mag:[0,4],dub:[1,0]}; // [глава, уровень]
 const BRANCH_UNLOCK=[1,2];
-const SPELL_UNLOCK={thunder:[0,1],cat:[0,3]};
+// Гром Перуна — с 1-3 (было 1-2: там сразу три новинки — пушкари, Гром и летучий нетопырь; аудит 14)
+const SPELL_UNLOCK={thunder:[0,2],cat:[0,3]};
+/* вожак — «маленький босс» в первые 10 минут (аудит 14): последняя волна 1-3, без умений босса, но крупный, с полосой здоровья
+   наверху и баннером. Сила подобрана ботом (campaign 48/48) */
+const LEAD={at:{'0-2':'lesh'},hp:4,sz:1.45,lives:2,gold:3,n:{lesh:'Леший-батюшка'},about:'Хозяин чащи: крепкий и заживает на ходу. Сбей его!',
+  say:['Кто в моём лесу шумит?!','Ух, я вам!','А ну, брысь с дороги!']};
 
 /* ---------- чары ---------- */
 const SPELLS={
@@ -114,8 +119,8 @@ const CH=[
     road:{edge:'#7a5a34',fill:'#c9a26a',hi:'#dcb983',deco:'stones'},decor:['d_pine','d_oak','d_bush','d_stump','d_shroom','d_pine'],mc:'#4f9e44',
     levels:['Опушка','Грибная поляна','Волчья тропа','Лешачья чаща','Бурелом','Логово Соловья'],
     intro:['Нечисть лезет из леса! Ставь стрельцов у дороги — пусть стреляют, а не в носу ковыряют.',
-      'Мухоморы идут строем. Пушкари решат этот грибной вопрос. А если совсем туго — зови Гром Перуна!',
-      'Тётушка Яга согласилась помочь. За пенсию и дрова. Её зелье травит и замедляет.',
+      'Мухоморы идут строем. Пушкари решат этот грибной вопрос. Только нетопырей пушка не видит — на них стрельцы!',
+      'Тётушка Яга согласилась помочь. За пенсию и дрова. Её зелье травит и замедляет. А если совсем туго — зови Гром Перуна!',
       'Лешие толстокожие и заживают на ходу. А ещё к нам прибился Кот Баюн — споёт, и вся нечисть уснёт.',
       'К заставе пришёл колдун-отшельник. Молнии бьют без промаха — даже по летучим.',
       'Соловей-Разбойник! Как свистнет — заставы рядом глохнут. Держись, братцы!']},
@@ -222,7 +227,7 @@ const FORGE_EXTRA=[
 
 /* ---------- деревня (за золото) ---------- */
 // Экономика (настройка 26.09, tools/econ.js): «голодный паёк» — без рекламы всё проходимо, но деревня строится медленно;
-// главный рычаг рекламы — «Удвоить золото» после боя; казна и гостинец — приятные добавки. Постройки всего ≈45 тыс.
+// главный рычаг рекламы — «Удвоить золото» после боя; казна и гостинец — приятные добавки. Постройки всего 41 620.
 const BLD=[
   {id:'mint',name:'Мытный двор',ic:'b_mint',about:'Казна копит золото, пока тебя нет: +10 в час за уровень',cost:[150,450,1100,2400,5000]},
   {id:'barn',name:'Амбар',ic:'b_barn',about:'Казна вмещает на 2 часа больше',cost:[200,700,1900]},
@@ -234,7 +239,7 @@ const BLD=[
 ];
 function afkRate(){return 8+10*(S.village.mint||0)+3*Math.min(8,chaptersDone());}
 function afkCapH(){return 4+2*(S.village.barn||0);}
-function afkGold(){const h=Math.min(afkCapH(),(Date.now()-S.afkT)/3600e3);return Math.floor(h*afkRate());}
+function afkGold(){const h=Math.max(0,Math.min(afkCapH(),(nowMs()-S.afkT)/3600e3));return Math.floor(h*afkRate());}
 /* ---------- награды золотом (одни формулы для игры и для бота/симуляции tools/econ.js) ---------- */
 function winGold(c,l,st,first){return Math.round((40+25*c+6*l)*[0,1,1.25,1.5][st]*(first?2:1));}
 function loseGold(c,wave){return Math.round(8*wave*(1+c*.3));}
@@ -260,7 +265,11 @@ const DECO=[
   {id:'carousel',n:'Карусель',cost:4000},
   {id:'fire',n:'Купальский костёр',cost:4500}];
 function vilDone(){return BLD.every(b=>(S.village[b.id]||0)>=b.cost.length);}
-function skinOf(t){const k=S.skin&&S.skin[t];return k&&S.skins&&S.skins[t+'.'+k]?k:'';}
+// облик «Жар-птица» — покупка Яндекса skins_firebird (js/pay.js): на все роды застав сразу, без отстроенной деревни
+const SKIN_FB={id:'firebird',n:'Жар-птица',about:'огненные перья'};
+function skinFb(){return typeof PAY!=='undefined'&&PAY.own('skins_firebird');}
+function skinOf(t){const k=S.skin&&S.skin[t];return k==='firebird'?(skinFb()?k:''):k&&S.skins&&S.skins[t+'.'+k]?k:'';}
+function skinName(id){return id==='firebird'?SKIN_FB.n:(SKINS.find(k=>k.id===id)||{n:''}).n;}
 // сколько золота ещё можно потратить (постройки + облики + украшения)
 function goldSink(){let n=0;for(const b of BLD)for(let l=S.village[b.id]||0;l<b.cost.length;l++)n+=b.cost[l];
   for(const t of TW_ORDER)for(const k of SKINS)if(!(S.skins&&S.skins[t+'.'+k.id]))n+=k.cost;
@@ -307,9 +316,9 @@ function diffNow(){const d=+S.diff;return d===0||d===2?d:1;}
    Таблица Яндекса 'weekly' (создать в консоли, тип «число»): неделя×100000 + очки — у свежей недели счёт всегда выше старых. */
 // сила босса и монеты на старте подобраны ботом (27.09): с полной прокачкой все 8 боссов падают за 3,5–4 мин, новичок снимает 5–80%
 const WEEK_WAVES=9,WEEK_BOSS_HP=2.5,WEEK_COINS=700,WEEK_SCORE=1e5;
-function weekNo(t){const d=new Date(t||Date.now());return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5+3)/7);}   // недели с понедельника
+function weekNo(t){const d=new Date(t||nowMs());return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5+3)/7);}   // недели с понедельника
 function weekCh(w){return ((w==null?weekNo():w)*3)%CH.length;}
-function weekLeftH(){const d=new Date(),dow=(d.getDay()+6)%7,end=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7-dow);return Math.ceil((end-d)/3600e3);}
+function weekLeftH(){const d=new Date(nowMs()),dow=(d.getDay()+6)%7,end=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7-dow);return Math.ceil((end-d)/3600e3);}
 function weekReward(){return 150+50*Math.min(8,chaptersDone());}
 // очки: 0…9999 — снятое здоровье босса в сотых долях процента; 10000…19999 — победа (чем быстрее, тем больше)
 function weekScore(kill,pct,t){return kill?10000+Math.max(0,9999-Math.floor(t)):Math.max(0,Math.min(9999,Math.floor(pct*10000)));}
@@ -328,7 +337,7 @@ const DCH_RULES=[
   {k:'poor',n:'Скупой воевода',d:'Монет на старте на пятую часть меньше. Считай каждую!'}
 ];
 // в испытание дня не берём уровни с боссом и «стены», где бот с прокачкой своего времени проигрывал хоть с одним правилом (прогон 27.09)
-const DCH_SKIP={'2-4':1,'3-4':1,'6-3':1,'6-4':1,'7-2':1};
+const DCH_SKIP={'2-4':1,'3-3':1,'3-4':1,'6-3':1,'6-4':1,'7-2':1};   // 3-3 (4-4) «без чар» бот берёт ~60% — стена, исключили (аудит 14)
 function dchLevelOk(c,l){return l<5&&!DCH_SKIP[c+'-'+l];}
 function dchGold(){return 100+40*Math.min(8,chaptersDone());}
 

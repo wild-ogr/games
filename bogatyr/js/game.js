@@ -48,7 +48,8 @@ function onScreen(e,pad){return Math.abs(e.x-VIEW.cx)<VIEW.ww+(pad||0)&&Math.abs
 /* ---------- старт забега ---------- */
 function xpNeed(l){return Math.round(5+(l-1)*6+Math.pow(l-1,1.8)*.3);}
 // в самом первом походе первая Жар-птица не прилетает (реклама не раньше ~3 минут), остаётся вторая — на 3:20
-function mkEvents(t0){return [...(G&&G.first?[]:[{t:70,k:'bird'}]),{t:90,k:'elite'},{t:150,k:'ring'},{t:180,k:'elite'},{t:200,k:'bird'},{t:240,k:'swarm'},{t:255,k:'elite'},{t:RUN_BOSS_T,k:'boss'}].map(e=>({t:e.t+t0,k:e.k}));}
+// v17 (аудит 14): на 4:00 вместо общей «Стаи» — своё событие главы (CH_EV), на 2:05 — «Камень на распутье» (не в первом походе, в сече — только в 1-м круге)
+function mkEvents(t0){return [...(G&&G.first?[]:[{t:70,k:'bird'}]),{t:90,k:'elite'},...(G&&(G.first||G.endless&&G.cyc)?[]:[{t:125,k:'stone'}]),{t:150,k:'ring'},{t:180,k:'elite'},{t:200,k:'bird'},{t:240,k:'chev'},{t:255,k:'elite'},{t:RUN_BOSS_T,k:'boss'}].map(e=>({t:e.t+t0,k:e.k}));}
 function LT(){return G.t-G.t0;} // время внутри главы (в бесконечном режиме — внутри круга)
 function newRun(chi,heroId,endless,wk,dr){
   if(dr){endless=false;wk=false;chi=dr.chi;heroId=dr.hero;}
@@ -65,7 +66,7 @@ function newRun(chi,heroId,endless,wk,dr){
   G.st=null;computeStats();G.hero.hp=G.st.maxHp;G.darT=darCd()*.5;G.q={chests:0,evos:0,dars:0};G.wolfT=0;G.swordT=0;G.dashT=0;
   G.hpLock=G.hero.hp;
   // v13: изгнать/закрепить (окно уровня), находки на поле, замирание кадра, серия убийств, сон-трава
-  G.ban={};G.banN=2;G.pin=null;G.propT=G.first?50:28;G.prop=null;G.hs=0;G.kb=null;G.combo=null;G.sleepT=0;
+  G.haz=[];G.fogT=0;G.stone=null;G.stoneMod=null;G.richT=0;G.loot=0;G.ban={};G.banN=2;G.pin=null;G.propT=G.first?50:28;G.prop=null;G.hs=0;G.kb=null;G.combo=null;G.sleepT=0;
   if(G.daily)banner('Поход дня',G.daily.rule.name);else if(G.weekly)banner('Испытание недели',weekly().name);else if(G.endless)banner('Бесконечная сеча','Круг 1: '+G.ch.name);else banner(G.ch.name,G.ch.sub);
   G.tut=null;if((S.tut===-1||!S.tut&&!S.runs)&&!G.endless)tutStart();
   later(3.4,()=>heroSay(pick(PH.start)));
@@ -91,6 +92,7 @@ function computeStats(){const hm=heroMod(G.heroId),f=S.forge,p=G.pas,v=S.village
     area:1+(hm.area||0)+.1*(p.comb||0),cd:(1-(hm.cd||0))*(1-.04*(f.cd||0))*(1-.07*(p.amulet||0)),magnet:72*(1+.2*(f.magnet||0)+.25*(p.ball||0)),
     xp:1+.1*(p.cloth||0)+.1*(v.tower||0)+.06*(f.xp||0)+(hm.xp||0),luck:1+.15*(f.luck||0)+(hm.luck||0),gold:1+.1*(f.gold||0)+.15*(v.barn||0)+(hm.gold||0),amount:p.quiver||0};
   const wm=G.wk||{};if(wm.hp)st.maxHp*=wm.hp;if(wm.might)st.might*=wm.might;if(wm.armor)st.armor+=wm.armor;if(wm.cd)st.cd*=wm.cd;if(wm.amount)st.amount+=wm.amount;if(wm.noHeal)st.regen=0;
+  const sm=G.stoneMod;if(sm){if(sm.spd)st.spd*=sm.spd;if(sm.might)st.might*=sm.might;} // «Камень на распутье»
   const old=G.st;G.st=st;if(old&&st.maxHp>old.maxHp)G.hero.hp+=st.maxHp-old.maxHp;G.hero.hp=Math.min(G.hero.hp,st.maxHp);}
 
 /* ---------- существа ---------- */
@@ -107,16 +109,58 @@ function spawnPos(far){const H=G.hero;let a=rand(0,TAU);if(H.moving&&Math.random
 function pickType(){const t=LT(),en=G.ch.en,unl=[0,35,95,165];let tot=0;const w=en.map((id,i)=>{if(t<unl[i])return 0;let v=i===3?.3:1;if(i>0&&t-unl[i]<60)v*=1.6;if(i===0&&t>150)v*=.6;tot+=v;return v;});
   let r=Math.random()*tot;for(let i=0;i<en.length;i++){r-=w[i];if(r<=0)return en[i];}return en[0];}
 function spawnTick(dt){const t=LT();let rate=(1.15+t/60*1.2)*(G.wk.spawn||1);const cap=(48+t/60*56)*(G.wk.cap||1)*(qLow()?.8:1);
-  if(G.boss&&!G.boss.dead)rate*=.35;if(G.win)return;if(G.sleepT>0)rate=0; // сон-трава: пока нечисть спит, новая не лезет
+  if(G.boss&&!G.boss.dead)rate*=.35;if(G.richT>0)rate*=1.6;if(G.win)return;if(G.sleepT>0)rate=0; // сон-трава: пока нечисть спит, новая не лезет
   G.spawnAcc+=rate*dt;while(G.spawnAcc>=1){G.spawnAcc-=1;if(G.en.length>=cap)break;const p=spawnPos();mkEnemy(pickType(),p[0],p[1]);}
   while(G.ev.length&&G.t>=G.ev[0].t){const ev=G.ev.shift(),H=G.hero;
     if(ev.k==='elite'){const p=spawnPos();const e=mkEnemy(G.ch.en[Math.min(3,Math.floor(t/80))],p[0],p[1],{elite:1});say(e,'Я тут главный!');tutEvent('elite');}
     if(ev.k==='ring'){const n=30,R=VIEW.R-20;for(let i=0;i<n;i++){const a=i/n*TAU;mkEnemy(G.ch.en[0],H.x+Math.cos(a)*R,H.y+Math.sin(a)*R);}banner('Окружили!','Прорывайся!');tutEvent('ring');}
     if(ev.k==='swarm'){const a=rand(0,TAU),bx=H.x+Math.cos(a)*VIEW.R,by=H.y+Math.sin(a)*VIEW.R;for(let i=0;i<24;i++){const e=mkEnemy(G.ch.en[1],bx+rand(-60,60),by+rand(-60,60));e.spd*=1.25;}banner('Стая!','Со всех ног!');}
     if(ev.k==='bird'){spawnGift();tutEvent('bird');}
+    if(ev.k==='chev')chapterEvent();
+    if(ev.k==='stone')spawnStone();
     if(ev.k==='boss')spawnBoss();}}
 function spawnBoss(){const type=G.ch.boss,H=G.hero,a=rand(0,TAU);const e=mkEnemy(type,H.x+Math.cos(a)*VIEW.R*.7,H.y+Math.sin(a)*VIEW.R*.7);
   G.boss=e;banner(EN[type].n,'«'+PH.boss[type].intro+'»');say(e,PH.boss[type].intro,3);SND.boss();G.shake=10;vib(60,1);musicPlay('boss');}
+/* ---------- свои события глав (v17, аудит 14): по силе — как прежняя «Стая» (20–25 нечисти), у каждой главы своё ---------- */
+const CH_EV=['wolves','fog','barrows','shadows','avalanche','tide','firerain','night'];
+function chapterEvent(){const H=G.hero,en=G.ch.en,k=CH_EV[G.chi]||'wolves',R=VIEW.R;
+  if(k==='wolves'){const a=rand(0,TAU),ux=Math.cos(a),uy=Math.sin(a),bx=H.x+ux*R,by=H.y+uy*R; // клином: вершина ближе, крылья сзади
+    for(let i=0;i<22;i++){const row=Math.ceil(i/2),side=i%2?1:-1,back=row*34,off=row*30*side;const e=mkEnemy(en[2],bx+ux*back-uy*off,by+uy*back+ux*off);e.spd*=1.3;}
+    banner('Волчья стая!','Идут клином — уходи вбок!');}
+  if(k==='fog'||k==='night'){G.fogT=14;G.fogK=k;for(let i=0;i<20;i++){const a=rand(0,TAU),d=R*rand(.55,.8);mkEnemy(k==='fog'?en[1]:en[0],H.x+Math.cos(a)*d,H.y+Math.sin(a)*d);}
+    k==='fog'?banner('Болотный туман','Кикиморы прячутся в тумане'):banner('Лихо глаз закрыло','Тьма — нечисть лезет из мрака');}
+  if(k==='barrows'){const a0=rand(0,TAU);for(let j=0;j<5;j++){const a=a0+j/5*TAU,x=H.x+Math.cos(a)*R*.5,y=H.y+Math.sin(a)*R*.5;
+      G.fx.push({k:'pulse',x,y,t:0,dur:.9,r1:70});later(.9,()=>{if(!G||G.over)return;burst(x,y,'#b59f59',14,140);for(let i=0;i<5;i++)mkEnemy(en[1],x+rand(-30,30),y+rand(-30,30));});}
+    banner('Засада из курганов!','Мертвецы встают из земли');}
+  if(k==='shadows'){for(let i=0;i<20;i++){const a=i/20*TAU,e=mkEnemy(en[0],H.x+Math.cos(a)*R*.9,H.y+Math.sin(a)*R*.9);e.shade=1;}banner('Кощеевы тени','Видны только вблизи!');}
+  if(k==='avalanche'){const s=Math.random()<.5?-1:1;for(let i=0;i<24;i++){const e=mkEnemy(en[0],H.x+(i-11.5)*30,H.y+s*(VIEW.wh+40)+rand(-12,12));e.spd*=1.5;}banner('Лавина!','Ледяные волки катятся с гор');}
+  if(k==='tide'){for(const s of[-1,1])for(let i=0;i<12;i++)mkEnemy(en[0],H.x+s*(VIEW.ww+30),H.y+(i-5.5)*36);banner('Прилив!','Рыбы-зубастики с двух сторон');}
+  if(k==='firerain'){for(let i=0;i<14;i++)later(i*.45,()=>{if(!G||G.over||G.win)return;const Hh=G.hero,aim=i%3===0;
+      G.haz.push({x:Hh.x+(aim?rand(-30,30):rand(-230,230)),y:Hh.y+(aim?rand(-30,30):rand(-200,200)),t:0,warn:1.3,r:54});});
+    for(let i=0;i<8;i++){const p=spawnPos();mkEnemy(en[0],p[0],p[1]);}banner('Огненный дождь!','Уходи из красных кругов');}
+}
+// огненный дождь: круг-предупреждение 1,3 с, потом удар (богатырю — как от огневика, нечисти — тоже достаётся)
+function hazTick(dt){if(G.fogT>0)G.fogT-=dt;const H=G.hero;
+  for(const q of G.haz){q.t+=dt;if(!q.hit&&q.t>=q.warn){q.hit=1;burst(q.x,q.y,'#ff8a2a',16,180);G.fx.push({k:'boom',x:q.x,y:q.y,t:0,dur:.45,r:q.r*1.3});SND.boom();
+      if((H.x-q.x)**2+(H.y-q.y)**2<(q.r+8)**2)hurtHero(9*G.ch.dmg*(G.emD||1),'ognev');
+      forNear(q.x,q.y,q.r+20,e=>{if(!e.boss&&(e.x-q.x)**2+(e.y-q.y)**2<(q.r+e.r)**2)hitEnemy(e,40*G.st.might,0,0);});}}
+  compact(G.haz,q=>q.t<q.warn+.3);
+  const s=G.stone;if(s&&!s.done){s.t+=dt;
+    for(const p of s.p){if((H.x-p.x)**2+(H.y-p.y)**2<38*38){stoneChoose(p.k);break;}}
+    if(!s.done&&(s.t>28||s.t>6&&(H.x-s.x)**2+(H.y-s.y)**2>(VIEW.R*1.6)**2)){s.done=1;G.stone=null;}}
+  if(G.richT>0)G.richT-=dt;}
+/* ---------- «Камень на распутье» (v17, аудит 14/отчёт 11): выбор ногами, без окна и паузы.
+   Коня потеряешь — скорость −15% до конца похода, но сразу 2 уровня; себя потеряешь — здоровье до трети, но урон +25%;
+   богатство найдёшь — сундук умений, но 45 с нечисти сбегается больше. Золото не даёт (экономика та же) ---------- */
+const STONE=[{k:'horse',ic:'🐎',t:'Коня потеряешь',s:'+2 уровня, но медленнее'},{k:'self',ic:'💀',t:'Себя потеряешь',s:'урон +25%, но ранен'},{k:'rich',ic:'🎁',t:'Богатство найдёшь',s:'сундук, но нечисти больше'}];
+function spawnStone(){const H=G.hero,a=H.moving?Math.atan2(H.fy,H.fx)+rand(-.5,.5):rand(0,TAU),d=Math.min(VIEW.ww,VIEW.wh)*.55,x=H.x+Math.cos(a)*d,y=H.y+Math.sin(a)*d;
+  G.stone={x,y,t:0,p:STONE.map((q,i)=>({k:q.k,x:x+(i-1)*120,y:y+(i===1?130:50)}))};banner('Камень на распутье','Выбери дорогу — просто зайди в круг');
+  later(.8,()=>{if(G&&G.stone)heroSay('Налево пойдёшь… направо пойдёшь… Хм!');});}
+function stoneChoose(k){const s=G.stone,H=G.hero;if(!s||s.done)return;s.done=1;G.stone=null;G.stoneK=k;SND.chest();vib(40);burst(s.x,s.y,'#c8c0b0',14,160);
+  G.stoneMod=G.stoneMod||{};
+  if(k==='horse'){G.stoneMod.spd=.85;computeStats();for(let i=0;i<2;i++){H.lvl++;H.need=xpNeed(H.lvl);G.lvlQ++;}banner('Коня потерял…','…зато силы прибыло: +2 уровня');}
+  if(k==='self'){G.stoneMod.might=1.25;computeStats();H.hp=Math.min(H.hp,Math.max(1,G.st.maxHp*.34));G.hpLock=H.hp;banner('Себя не жалеешь!','Урон +25% до конца похода');}
+  if(k==='rich'){drop('chest',s.x,s.y);G.picks[G.picks.length-1].mag=true;G.richT=45;banner('Богатство нашёл!','Нечисть сбегается на звон — держись!');}}
 function spawnGift(){const H=G.hero,s=Math.random()<.5?1:-1;G.gift={x:H.x-s*(VIEW.ww+30),y:H.y+rand(-VIEW.wh*.4,VIEW.wh*.2),vx:s*44,t:0,ph:0};}
 
 /* ---------- урон ---------- */
@@ -150,7 +194,10 @@ function bossDie(e){G.shake=16;SND.win();S.bossKill[e.type]=1;musicPlay(G.endles
   if(G.endless){banner(defeated(e.type),'Дальше — сильнее!');G.bossesKilled=(G.bossesKilled||0)+1;later(3.5,nextCycle);}
   else{G.win=true;G.winT=3.2;banner(PH.win[0],defeated(e.type));}
   for(let i=0;i<16;i++)drop('coin',e.x+rand(-60,60),e.y+rand(-60,60),Math.round(8*G.ch.gold));
-  drop('chest',e.x,e.y,2);if(G.endless)G.picks[G.picks.length-1].mag=true; // с босса — золотой сундук (3 или 5 наград); в сече сам летит к богатырю
+  // с босса — золотой сундук (3 или 5 наград); в сече сам летит к богатырю. В главе поход через 3 с кончается — умения уже не нужны:
+  // вместо рулетки «Добыча богатыря» — то же золото, что лежало в сундуке (экономика та же), строкой в итогах (аудит 14)
+  if(G.endless){drop('chest',e.x,e.y,2);G.picks[G.picks.length-1].mag=true;}
+  else{G.loot=Math.round(randi(15,30)*G.ch.gold*ECO.coin*3);G.q.chests++;later(1,()=>{if(G&&!G.over)heroSay('Вот это добыча!');});}
   G.boss=null;for(const o of G.en)if(!o.dead&&o!==e){o.dead=true;burst(o.x,o.y,EN[o.type].col,5,100);dropGem(o.x,o.y,o.xp);}
   G.eproj.length=0;for(const g of G.gems)g.mag=true;}
 // «Соловей повержен», «Баба-Яга повержена», «Лихо повержено» — род из EN[].g
@@ -366,6 +413,7 @@ function update(dt){
   G.cam.x+=(H.x-G.cam.x)*Math.min(1,dt*9);G.cam.y+=(H.y-G.cam.y)*Math.min(1,dt*9);
   VIEW.cx=G.cam.x;VIEW.cy=G.cam.y;
   if(!G.win)spawnTick(dt);
+  hazTick(dt);
   if(G.sleepT>0)G.sleepT-=dt;
   if(!G.win){G.propT-=dt;if(G.propT<=0){G.propT=rand(36,46);if(!G.prop||G.prop.dead)spawnProp();}}
   if(G.prop&&!G.prop.dead&&G.t-G.prop.t0>35&&!onScreen(G.prop,40)){G.prop.dead=true;G.prop=null;} // не разбил и ушёл — пенёк пропадает
@@ -435,7 +483,7 @@ function pickup(p){const H=G.hero;
 function endRun(win){if(G.over)return;G.over=true;G.paused=true;IN.on=false;YG.stop();musicPlay(null);tipHide();
   G.bestNew=[];for(const t in G.meet){if(!S.meet[t]&&EN[t]){S.meet[t]=1;G.bestNew.push(t);}}for(const t in G.kt)S.bk[t]=(S.bk[t]||0)+G.kt[t];
   // награда: монеты из похода + за нечисть (1 за 40) + за время (3×глава за минуту) + за босса; множители — глава (ECO.chk), жадность, проклятие, испытание
-  const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*(ECO.chk[G.chi]||.65),parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold],['time',G.t/60*ECO.time*(G.chi+1)*G.st.gold],['boss',win?100*G.ch.gold:0]];
+  const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*(ECO.chk[G.chi]||.65),parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold],['time',G.t/60*ECO.time*(G.chi+1)*G.st.gold],['boss',win?100*G.ch.gold:0],['loot',(G.loot||0)*G.goldMul*G.st.gold]];
   if(G.endless)parts[3][1]=150*(G.bossesKilled||0)*G.ch.gold;
   G.rw={};G.reward=0;for(const [k,v] of parts){G.rw[k]=Math.round(v*mul);G.reward+=G.rw[k];}
   if(G.daily){const sc=G.kills+(win?500:0),m=drMine();S.dr={day:m.day,best:Math.max(m.best,sc),got:m.got,runs:m.runs+1};G.drScore=sc;G.newRec=sc>m.best;
@@ -444,8 +492,10 @@ function endRun(win){if(G.over)return;G.over=true;G.paused=true;IN.on=false;YG.s
     G.newRec=sec>S.wk.best;S.wk.best=Math.max(S.wk.best,sec);if(!S.wk.got&&sec>=60){S.wk.got=1;G.wkReward=weeklyReward();S.gold+=G.wkReward;S.stats.weeks=(S.stats.weeks||0)+1;}
     LB.set('weekly',w*WEEK_SCORE+S.wk.best);}
   else if(G.endless){G.newRec=Math.floor(G.t)>(S.endBest||0);S.endBest=Math.max(S.endBest||0,Math.floor(G.t));}
-  else{if(win)S.done[G.chi]=1;S.best[G.chi]=Math.max(S.best[G.chi]||0,Math.floor(G.t));}S.runs++;S.kills+=G.kills;G.bossN=G.endless?(G.bossesKilled||0):(win?1:0);S.bosses=(S.bosses||0)+G.bossN;G.questDone=questsFromRun(win);runStats(win);
+  else{if(win)S.done[G.chi]=1;S.best[G.chi]=Math.max(S.best[G.chi]||0,Math.floor(G.t));}if(G.t>=30)S.runs++; // поход, брошенный в первые 30 с, не считается (задания, достижения)
+  S.kills+=G.kills;G.bossN=G.endless?(G.bossesKilled||0):(win?1:0);S.bosses=(S.bosses||0)+G.bossN;G.questDone=questsFromRun(win);runStats(win);
   if(G.endless&&!G.weekly)LB.set('endless',S.endBest);LB.set('kills',S.kills);
+  S.gold+=G.reward; // золото похода — сразу в кошелёк и в сохранение (openResult → save), ×2/×3 за рекламу доплачивает разницу
   win?SND.win():SND.lose();openResult(win);}
 
 /* ================= отрисовка ================= */
@@ -481,6 +531,14 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
   // лужи мёртвой воды
   for(const q of G.puddles){const a=Math.min(1,(q.dur-q.t)*2,q.t*6);const gr=c.createRadialGradient(q.x,q.y,0,q.x,q.y,q.r);gr.addColorStop(0,'rgba(170,90,255,'+.55*a+')');gr.addColorStop(.7,'rgba(110,40,200,'+.45*a+')');gr.addColorStop(1,'rgba(90,20,160,0)');
     c.fillStyle=gr;c.beginPath();c.ellipse(q.x,q.y,q.r,q.r*.75,0,0,TAU);c.fill();c.fillStyle='rgba(220,190,255,'+.6*a+')';for(let i=0;i<4;i++){const bx=q.x+Math.cos(i*1.7+q.t*2)*q.r*.5,by=q.y+Math.sin(i*2.3+q.t*1.5)*q.r*.35;c.beginPath();c.arc(bx,by,1.5+((q.t*3+i)%1)*2,0,TAU);c.fill();}}
+  // огненный дождь: круг-предупреждение
+  for(const q of G.haz){if(q.hit)continue;const k=q.t/q.warn;c.fillStyle='rgba(255,60,30,'+(.12+.18*k)+')';c.beginPath();c.ellipse(q.x,q.y,q.r,q.r*.75,0,0,TAU);c.fill();
+    c.strokeStyle='rgba(255,120,60,'+(.5+.4*Math.sin(G.t*20))+')';c.lineWidth=3;c.beginPath();c.ellipse(q.x,q.y,q.r*k,q.r*.75*k,0,0,TAU);c.stroke();}
+  // камень на распутье: сам камень и три круга-дороги
+  if(G.stone){const s=G.stone;for(let i=0;i<3;i++){const p=s.p[i],pul=1+Math.sin(G.t*4+i)*.06;c.fillStyle=['rgba(255,200,90,.22)','rgba(255,90,90,.22)','rgba(120,230,120,.22)'][i];
+      c.strokeStyle=['#ffc85a','#ff6a6a','#7ae67a'][i];c.lineWidth=3;c.beginPath();c.ellipse(p.x,p.y,34*pul,26*pul,0,0,TAU);c.fill();c.stroke();}
+    c.fillStyle='#8f8a80';c.strokeStyle='#4a463f';c.lineWidth=3;c.beginPath();c.moveTo(s.x-30,s.y+18);c.lineTo(s.x-26,s.y-30);c.quadraticCurveTo(s.x,s.y-50,s.x+26,s.y-30);c.lineTo(s.x+30,s.y+18);c.closePath();c.fill();c.stroke();
+    c.strokeStyle='rgba(40,36,30,.6)';c.lineWidth=2;for(let j=0;j<3;j++){c.beginPath();c.moveTo(s.x-16,s.y-20+j*11);c.lineTo(s.x+16,s.y-20+j*11);c.stroke();}}
   // гусли — аура
   const gs=G.weapons.find(w=>w.id==='gusli');if(gs){const R=wv(gs,'r')*G.st.area;c.strokeStyle='rgba(255,216,74,.22)';c.lineWidth=2;c.setLineDash([6,8]);c.lineDashOffset=-G.t*20;c.beginPath();c.arc(H.x,H.y,R,0,TAU);c.stroke();c.setLineDash([]);}
   // добыча
@@ -510,7 +568,7 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
     if((e.type==='gory'||e.type==='tugar')&&e.state==='breath'){worldT();const tel=e.st>1.6;c.fillStyle=tel?'rgba(255,60,40,'+(.18+Math.sin(G.t*25)*.08)+')':'rgba(255,140,40,.12)';c.beginPath();c.moveTo(e.x,e.y-20);c.arc(e.x,e.y-20,260,e.ba-.38,e.ba+.38);c.closePath();c.fill();}
     if(e.type==='solo'&&e.state==='whistle'){worldT();const q=1-e.st/1.1;c.strokeStyle='rgba(190,230,255,'+(.3+q*.5)+')';c.lineWidth=3;for(let i=0;i<3;i++){c.beginPath();c.arc(e.x,e.y,e.r+10+((q*3+i)%1)*40,0,TAU);c.stroke();}}
     const sq=e.fly?1:1+bob*.05;
-    drawSpr(e.type,e.x,e.y+fl-(e.fly?6:0),e.face*e.sc*(e.fly?1:1/sq*1),e.sc*sq*(e.fly?(1+Math.sin(G.t*14+e.ph)*.12):1),e.flash>0,0,e.invul?.55+Math.sin(G.t*10)*.2:null);}
+    drawSpr(e.type,e.x,e.y+fl-(e.fly?6:0),e.face*e.sc*(e.fly?1:1/sq*1),e.sc*sq*(e.fly?(1+Math.sin(G.t*14+e.ph)*.12):1),e.flash>0,0,e.invul?.55+Math.sin(G.t*10)*.2:e.shade?clamp(1.4-Math.hypot(e.x-H.x,e.y-H.y)/150,.13,1):null);}
   // булавы
   worldT();for(const w of G.weapons)if(w.id==='mace'&&w.balls){const R=wv(w,'r')*G.st.area;c.strokeStyle='rgba(255,255,255,.12)';c.lineWidth=1.5;c.beginPath();c.arc(H.x,H.y,R,0,TAU);c.stroke();
     {const k=wa(w)*(w.lvl>=6?1.55:1);for(const b of w.balls)drawSpr('mace',b[0],b[1],k,k,false,G.t*8);}}
@@ -610,15 +668,24 @@ function drawHUD(){const c=ctx,d=VIEW.dpr,W=VIEW.W,H=G.hero;c.setTransform(d,0,0
     c.save();c.globalAlpha=a;c.translate(W/2,y);c.scale(sc,sc);c.textAlign='center';c.textBaseline='middle';c.font='900 17px system-ui,-apple-system,sans-serif';c.lineWidth=5;c.strokeStyle='rgba(60,20,10,.8)';
     const t='Раззудись плечо! ×'+b.n;c.strokeText(t,0,0);c.fillStyle='#ffd84a';c.fillText(t,0,0);c.restore();}}
   // стрелки к важному за краем экрана
-  const marks=[];if(G.egg&&!G.egg.dead)marks.push([G.egg,'#ffd84a']);if(G.gift)marks.push([G.gift,'#ff9a2a']);for(const p of G.picks)if(p.k==='chest')marks.push([p,'#ffd84a']);if(G.prop&&!G.prop.dead)marks.push([G.prop,'#9aff6a']);if(G.boss&&!G.boss.dead)marks.push([G.boss,'#ff4a4a']);
+  const marks=[];if(G.egg&&!G.egg.dead)marks.push([G.egg,'#ffd84a']);if(G.gift)marks.push([G.gift,'#ff9a2a']);if(G.stone)marks.push([G.stone,'#e8e0d0']);for(const p of G.picks)if(p.k==='chest')marks.push([p,'#ffd84a']);if(G.prop&&!G.prop.dead)marks.push([G.prop,'#9aff6a']);if(G.boss&&!G.boss.dead)marks.push([G.boss,'#ff4a4a']);
   for(const [o,col] of marks){const sx=(o.x-VIEW.cx)*VIEW.zoom+W/2,sy=(o.y-VIEW.cy)*VIEW.zoom+VIEW.H/2;if(sx>0&&sx<W&&sy>0&&sy<VIEW.H)continue;
     const big=o===G.boss,a=Math.atan2(sy-VIEW.H/2,sx-W/2),m=big?40:28,ex=clamp(sx,m,W-m),ey=clamp(sy,m+top+92,VIEW.H-m);c.save();c.translate(ex,ey);c.rotate(a);if(big)c.scale(1.7+Math.sin(G.t*8)*.15,1.7+Math.sin(G.t*8)*.15);c.fillStyle=col;c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=2;
     c.beginPath();c.moveTo(14,0);c.lineTo(-6,-9);c.lineTo(-2,0);c.lineTo(-6,9);c.closePath();c.stroke();c.fill();c.restore();
     if(big){const tx=ex-Math.cos(a)*34,ty=ey-Math.sin(a)*30;c.font='900 12px system-ui,-apple-system,sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineWidth=3;c.strokeStyle='rgba(10,10,30,.8)';c.strokeText('БОСС',tx,ty);c.fillStyle='#ff8a7a';c.fillText('БОСС',tx,ty);}}
+  // туман/тьма (события глав): видно только вокруг богатыря
+  if(G.fogT>0){const a=Math.min(1,G.fogT/1.5,(14-G.fogT)/1.5),hx=(H.x-VIEW.cx)*VIEW.zoom+W/2,hy=(H.y-VIEW.cy)*VIEW.zoom+VIEW.H/2,m=Math.min(W,VIEW.H),col=G.fogK==='night'?'12,8,28':'196,222,206';
+    const gr=c.createRadialGradient(hx,hy,m*.2,hx,hy,m*.62);gr.addColorStop(0,'rgba('+col+',0)');gr.addColorStop(1,'rgba('+col+','+(.86*a)+')');c.fillStyle=gr;c.fillRect(0,0,W,VIEW.H);}
+  // подписи дорог у камня
+  if(G.stone){c.textAlign='center';c.textBaseline='middle';for(let i=0;i<3;i++){const p=G.stone.p[i],q=STONE[i],sx=(p.x-VIEW.cx)*VIEW.zoom+W/2,sy=(p.y-VIEW.cy)*VIEW.zoom+VIEW.H/2;
+      c.font='20px system-ui,sans-serif';c.fillStyle='#fff';c.fillText(q.ic,sx,sy);c.font='900 12px system-ui,-apple-system,sans-serif';c.lineWidth=4;c.strokeStyle='rgba(10,10,30,.8)';
+      const lx=clamp(sx,74,W-74);c.strokeText(q.t,lx,sy+30);c.fillStyle='#fff3c8';c.fillText(q.t,lx,sy+30);c.font='700 11px system-ui,-apple-system,sans-serif';c.strokeText(q.s,lx,sy+44);c.fillStyle='#e8e4f4';c.fillText(q.s,lx,sy+44);}c.textBaseline='alphabetic';}
   // баннер
   if(G.banner){const b=G.banner,q=b.t,a=q<.3?q/.3:q>2.6?Math.max(0,(3.2-q)/.6):1,y=VIEW.H*.3;c.globalAlpha=a;c.textAlign='center';
-    c.font='900 30px system-ui,-apple-system,sans-serif';c.lineWidth=6;c.strokeStyle='rgba(10,10,30,.6)';c.strokeText(b.title,W/2,y);c.fillStyle='#fff3c8';c.fillText(b.title,W/2,y);
-    if(b.sub){c.font='700 15px system-ui,-apple-system,sans-serif';c.lineWidth=4;c.strokeText(b.sub,W/2,y+30);c.fillStyle='#fff';c.fillText(b.sub,W/2,y+30);}c.globalAlpha=1;}
+    // по ширине экрана: шрифт меньше, пока надпись не влезет (заголовок не мельче 18 px, подпись — 11 px)
+    const fit=(txt,px,min,w)=>{let f=px;for(;f>min;f-=2){c.font=w+' '+f+'px system-ui,-apple-system,sans-serif';if(c.measureText(txt).width<=W-24)break;}c.font=w+' '+f+'px system-ui,-apple-system,sans-serif';};
+    fit(b.title,30,18,900);c.lineWidth=6;c.strokeStyle='rgba(10,10,30,.6)';c.strokeText(b.title,W/2,y);c.fillStyle='#fff3c8';c.fillText(b.title,W/2,y);
+    if(b.sub){fit(b.sub,15,11,700);c.lineWidth=4;c.strokeText(b.sub,W/2,y+30);c.fillStyle='#fff';c.fillText(b.sub,W/2,y+30);}c.globalAlpha=1;}
   // дар богатыря: портрет и кольцо перезарядки
   {const cx=36,cy=VIEW.H-44-(window.__safeBot||0),R=24,q=1-clamp(G.darT/darCd(),0,1),sp=spr('hp_'+G.hkey);
     c.fillStyle='rgba(10,14,30,.6)';c.beginPath();c.arc(cx,cy,R,0,TAU);c.fill();if(sp)c.drawImage(sp.c,cx-R*.85,cy-R*.85,R*1.7,R*1.7);

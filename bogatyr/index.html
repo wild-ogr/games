@@ -12,7 +12,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(120% 8
 button{font-family:inherit;color:inherit;border:0;cursor:pointer}
 #cv{position:fixed;left:0;top:0;width:100%;height:100%;display:block;touch-action:none}
 /* кнопка паузы лежит поверх движущегося холста — без размытия (оно пересчитывалось бы каждый кадр), фон плотнее */
-#pauseBtn{position:fixed;right:max(12px,env(safe-area-inset-right,0px));top:calc(var(--st) + 30px);width:46px;height:46px;border-radius:14px;background:rgba(10,14,30,.78);
+#pauseBtn{position:fixed;right:12px;right:max(12px,env(safe-area-inset-right,0px));top:calc(var(--st) + 30px);width:46px;height:46px;border-radius:14px;background:rgba(10,14,30,.78);
   font-size:16px;font-weight:900;display:none;z-index:5;border:1px solid var(--line)}
 body.run #pauseBtn{display:block}
 /* ---------- меню ---------- */
@@ -37,6 +37,7 @@ nav button.go img{opacity:1}
 nav button{position:relative}nav button.dot::after{content:'';position:absolute;top:4px;right:18%;width:10px;height:10px;border-radius:50%;background:#ff4a4a;box-shadow:0 0 0 2px #141a2e}
 .lbrow{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:14px}.lbrow b{width:28px;text-align:center;color:var(--gold)}.lbrow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbrow.me{background:rgba(255,201,74,.12);border-radius:10px}
 .qdone{color:#8af0a0;font-size:13px;margin:4px 0}
+.upc small.adl{display:block;margin-top:3px;font-size:12px;font-weight:800;color:#c8b8ff}
 h2{font-size:20px;font-weight:900;margin:10px 2px 4px}
 .sub{color:var(--mut);font-size:14px;margin:0 2px 12px;line-height:1.35}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:10px}
@@ -61,6 +62,12 @@ h2{font-size:20px;font-weight:900;margin:10px 2px 4px}
 .hero-card>img{width:86px;height:86px;flex:none;background:radial-gradient(circle at 50% 60%,rgba(255,255,255,.14),transparent 70%);border-radius:18px}
 .hero-card.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset,0 6px 24px rgba(255,201,74,.18)}
 .hero-card.lock>img{filter:brightness(0) opacity(.45)}
+/* покупки (js/pay.js) и рамка «Меценат» */
+.pay{margin:10px 0 0;text-align:left}.pay h3{font-size:16px;margin:0 0 4px}
+.prow{display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:6px 0;min-height:52px;text-align:left;color:var(--txt);font-weight:800;font-size:15px}
+.prow span{padding-right:10px;line-height:1.25}.prow small{font-size:12.5px;font-weight:600;color:var(--mut)}.prow b{white-space:nowrap;color:var(--gold);font-size:16px}.prow i{font-style:normal;color:var(--ok);font-weight:900}
+button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertical-align:-3px;margin-left:3px}
+.hero-card>img.mecenat{box-shadow:0 0 0 3px #e6b53a,0 0 0 5px #7a4a12,0 0 14px rgba(255,201,74,.55)}
 .tag{display:inline-block;font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.1);margin-top:6px}
 .tag.ok{background:rgba(74,222,106,.18);color:#8af0a0}
 .row .t span.tag,.hero-card span.tag{display:inline-block;width:auto}
@@ -69,6 +76,8 @@ h2{font-size:20px;font-weight:900;margin:10px 2px 4px}
 #modal.on{display:flex}
 .panel{width:100%;max-width:420px;max-height:100%;overflow-y:auto;background:linear-gradient(180deg,#263058,#1a2140);border:1px solid rgba(255,255,255,.16);border-radius:24px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:pop .22s cubic-bezier(.2,1.4,.4,1)}
 @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+.panel.guard .upc,.panel.guard .lvtools,.panel.guard .btns{pointer-events:none}.panel.guard>*{animation:gin .18s ease-out}
+@keyframes gin{from{transform:scale(.94);opacity:.4}to{transform:none;opacity:1}}
 .panel h3{margin:0 0 4px;font-size:22px;font-weight:900;text-align:center}
 .panel .sub{text-align:center}
 .cards{display:flex;flex-direction:column;gap:8px;margin:10px 0}
@@ -83,6 +92,7 @@ h2{font-size:20px;font-weight:900;margin:10px 2px 4px}
 .treasury{background:linear-gradient(135deg,rgba(255,201,74,.2),rgba(255,138,74,.12));border:1px solid rgba(255,201,74,.35)}
 .bar{height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#ffd84a,#ff9a3a)}
 .btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.btns.stick{position:-webkit-sticky;position:sticky;bottom:-18px;z-index:2;margin:12px -18px -18px;padding:12px 18px 18px;background:linear-gradient(180deg,rgba(26,33,64,0),#1a2140 16px)}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
 .stats div{background:rgba(255,255,255,.06);border-radius:14px;padding:10px;text-align:center;font-size:13px;color:var(--mut)}
 .stats b{display:block;font-size:20px;color:#fff}
@@ -100,7 +110,7 @@ body.run #tip.on{display:block;animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
 #tip.ev{border-color:rgba(255,138,74,.8);background:rgba(40,18,14,.88)}
 #tipT::before{content:'💡 '}#tip.ev #tipT::before{content:'❗ '}
 /* «Пропустить обучение» — наверху, под паузой (внизу его задевали большим пальцем), 44 px в высоту */
-#tipX{position:fixed;right:max(12px,env(safe-area-inset-right,0px));top:calc(var(--st) + 84px);z-index:6;display:none;min-height:44px;padding:10px 12px;border-radius:14px;background:rgba(10,14,30,.78);border:1px solid var(--line);color:#dfe3f0;font-size:13px;font-weight:800}
+#tipX{position:fixed;right:12px;right:max(12px,env(safe-area-inset-right,0px));top:calc(var(--st) + 84px);z-index:6;display:none;min-height:44px;padding:10px 12px;border-radius:14px;background:rgba(10,14,30,.78);border:1px solid var(--line);color:#dfe3f0;font-size:13px;font-weight:800}
 body.run #tipX.on{display:block}
 .tutbox{background:rgba(255,216,74,.14);border:1px solid rgba(255,216,74,.4);border-radius:14px;padding:8px 10px;font-size:14px;font-weight:700;line-height:1.35;margin:6px 0}
 /* ---------- громкость ---------- */
@@ -161,6 +171,8 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 </head>
 <body>
 <div id="loading">Богатырь собирается…</div>
+<script>/* если скрипт игры не загрузился (обрыв сети) — через 25 с предложить обновить страницу */
+setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.innerHTML='<div style="text-align:center;padding:16px">Не загрузилось — проверь связь<br><button id="reloadBtn" style="margin-top:14px;min-height:44px;padding:10px 20px;border-radius:14px;background:#c2410c;color:#fff;font-weight:900;font-size:16px">Обновить</button></div>';document.getElementById('reloadBtn').onclick=function(){location.reload();};}},25000);</script>
 <canvas id="cv"></canvas>
 <button id="pauseBtn" aria-label="Пауза">❚❚</button>
 <div id="tip"><div id="tipT"></div></div>
@@ -193,6 +205,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <div id="toast"></div>
 
 <script src="js/core.js"></script>
+<script src="js/pay.js"></script>
 <script src="js/art.js"></script>
 <script src="js/data.js"></script>
 <script src="js/game.js"></script>

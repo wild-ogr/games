@@ -6,9 +6,12 @@ let G=null;
 const PRICE={letter:35,word:90};
 const JAR_SIZE=15,JAR_PRIZE=10;
 const ECO={replay:1,x2min:10,adCoins:20,adCoinsDay:3,test:2, // test — множитель награды за «испытание» (каждый 10-й уровень с 30-го)
+  chap:20,                // аудит 14: подарок за пройденную главу (20 уровней), один раз — окно «Глава пройдена!» (openChapFinale)
   freeLetter:1,gift:25,   // отчёт 12: бесплатная буква в день («Ять нашёл», не копится) и подарок дня в меню +25 за рекламу (раз в день)
   lvl:i=>2+Math.min(6,Math.floor((i+20)/40)),          // 2 (ур.1–20), 3 (21–60), 4 (61–100) … до 8
   daily:s=>10+Math.min(Math.max(s-1,0),5)*2};          // задание дня: 10, серия +2 в день, до 20
+// «Тетрадь недели» (аудит 14): 5 заданий дня из 7 за неделю — подарок (раз в неделю, S.wk); модель — tools/econ.py
+const WEEK={need:5,gift:20};
 const cellKey=(x,y)=>x+','+y;
 // настройки с сервера Яндекса (флаги в консоли разработчика, значения — строки; нет флага — действуют числа выше).
 // Рамки жёсткие: флагом нельзя сделать рекламу чаще раза в 150 с, раньше 8-го уровня или сразу после ролика
@@ -60,9 +63,11 @@ function startLevel(idx,daily){
   $('gTitle').textContent=daily?'Задание дня':'Уровень '+(idx+1);
   $('gSub').textContent=daily?('Серия: '+(S.streak||0)+' '+plural(S.streak||0,'день','дня','дней')):isTest(idx)?'⚡ Испытание ×2':(ch.e+' '+ch.n);
   G.half=G.words.filter(w=>w.found).length*2>=G.words.length;updCount();
+  G.rid=riddleOf(G);
   zinaFace('norm');
   drawLine();stopTutorial();
   buildGrid();buildWheel();updJar();updPrices();updCoins();
+  if(G.rid)wordCells(G.rid).forEach(c=>c.el.classList.add('rid'));
   const first=!daily&&idx%CH_LEN===0&&!S.curs[key].greeted;
   if(G.tut)zina('Проведи пальцем по буквам, чтобы составить слово. Попробуй: «'+shortestWord().toUpperCase()+'»!','happy',99);
   else if(daily)zina(say('daily'),'happy');
@@ -71,6 +76,7 @@ function startLevel(idx,daily){
   else if(isTest(idx,daily)&&!cur)zina('Испытание! Уровень потруднее, зато монет — вдвое больше.','wow',5);
   else if(isRest(idx,daily)&&!cur&&G.giftN)zina('Передышка! Одно слово я уже открыла — отдохни немножко.','happy',5);
   else if(G.giftN&&!cur)zina('Слово тут хитрое — одну букву я открыла. Не благодари.','happy',4.5);
+  else if(G.rid)riddleSay(8);
   else if(!daily&&idx>=2&&!S.tip.fl&&freeLeft()){S.tip.fl=1;save();glowHint();zina('Ять опять под диваном букву нашёл! Одна подсказка 💡 в день — даром.','happy',6);}
   else zina(say('start'),'norm',3);
   if(G.tut)startTutorial();
@@ -95,8 +101,14 @@ function buildGrid(){
 }
 function layoutGrid(){
   if(!G)return;const b=$('board'),[gw,gh]=G.lv.g;
-  const bw=b.clientWidth-20,bh=b.clientHeight-12;
-  const big=!!S.big,cs=Math.max(Math.min(26,Math.floor(bw/gw)),Math.min(Math.floor(bw/gw),Math.floor(bh/gh),($('app').clientHeight>=780?74:62)*(big?1.15:1)|0));
+  const bw=b.clientWidth-20,bh=b.clientHeight-12,big=!!S.big;
+  const csOf=h=>Math.max(Math.min(26,Math.floor(bw/gw)),Math.min(Math.floor(bw/gw),Math.floor(h/gh),($('app').clientHeight>=780?74:62)*(big?1.15:1)|0));
+  // низкий экран (≤700): реплика бабы Зины лежит поверх верха поля — оставляем под неё место сверху (аудит 14: закрывала верхний ряд).
+  // Клетки ради этого уменьшаем, только если они останутся не мельче 30 px; иначе отдаём сверху сколько есть свободного
+  let cs=csOf(bh),pad=0;
+  if(isSmallH()){const R=clamp(Math.round($('zSay').getBoundingClientRect().top+52-b.getBoundingClientRect().top),0,90);
+    const c2=csOf(bh-R);if(c2>=Math.min(cs,30))cs=c2;pad=clamp(bh-gh*cs,0,R);}
+  b.style.paddingTop=6+pad+'px';
   const gap=Math.max(2,Math.round(cs*.08));
   const grid=$('grid');grid.style.width=gw*cs+'px';grid.style.height=gh*cs+'px';
   for(const c of G.cells.values()){const s=c.el.style;s.left=c.x*cs+'px';s.top=c.y*cs+'px';s.width=s.height=(cs-gap)+'px';s.fontSize=Math.round(cs*(big?.64:.56))+'px';s.borderRadius=Math.round(cs*.2)+'px';}
@@ -149,6 +161,8 @@ function drawLine(px,py){
 function updSel(){
   (WH.els||[]).forEach((e,i)=>e.classList.toggle('on',G.sel.includes(i)));
   const w=$('preview').firstElementChild;w.className='w';w.textContent=G.sel.map(i=>G.letters[i]).join('');
+  if(!G.sel.length)G.tap=false;
+  $('preview').classList.toggle('tap',!!G.tap&&G.sel.length>0); // ✔ и ✕ рядом со словом — только при вводе нажатиями
 }
 function selAdd(i){
   if(i<0)return;const s=G.sel;
@@ -156,14 +170,30 @@ function selAdd(i){
   if(s.includes(i))return;s.push(i);SND.letter(s.length-1);updSel();
 }
 let dragging=false;
+// ввод нажатиями (аудит 14: 45+ часто тыкают в буквы по одной): одно нажатие без протягивания — буква остаётся выбранной,
+// следующие нажатия добавляют буквы (нажатие на последнюю — убрать её), ✔ или нажатие на слово — проверить, ✕ — стереть
 function wheelDown(e){if(!G||G.won||G.hintMode)return;const i=letterAt(e.clientX,e.clientY);if(i<0)return;
-  ac();WH.rect=null;dragging=true;G.sel=[];selAdd(i);drawLine(e.clientX,e.clientY);poke();try{$('wheel').setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();}
+  ac();WH.rect=null;poke();e.preventDefault();
+  if(G.tap&&G.sel.length){const s=G.sel;
+    if(s[s.length-1]===i){s.pop();SND.letter(Math.max(0,s.length-1));}else if(!s.includes(i)){s.push(i);SND.letter(s.length-1);}
+    updSel();drawLine();return;}
+  if(isSmallH())zinaHide(true); // низкий экран: реплика поверх кроссворда — убираем, как только палец коснулся круга
+  dragging=true;G.sel=[];selAdd(i);drawLine(e.clientX,e.clientY);try{$('wheel').setPointerCapture(e.pointerId);}catch(_){}}
 // движение пальца: событий бывает до 120 в секунду — обрабатываем последнее, раз в кадр
 let wmE=null,wmRaf=0;
 function wheelMove(e){if(!dragging)return;wmE={x:e.clientX,y:e.clientY};if(!wmRaf)wmRaf=requestAnimationFrame(wheelMoveNow);}
 function wheelMoveNow(){wmRaf=0;if(!dragging||!wmE)return;selAdd(letterAt(wmE.x,wmE.y));drawLine(wmE.x,wmE.y);}
-function wheelUp(e){if(!dragging)return;if(e&&e.clientX!=null){wmE={x:e.clientX,y:e.clientY};wheelMoveNow();}dragging=false;const w=G.sel.map(i=>G.letters[i]).join('');G.sel=[];drawLine();
-  (WH.els||[]).forEach(e=>e.classList.remove('on'));submit(w);}
+function wheelUp(e){if(!dragging)return;if(e&&e.clientX!=null){wmE={x:e.clientX,y:e.clientY};wheelMoveNow();}dragging=false;
+  if(G.sel.length===1){G.tap=true;updSel();drawLine();tapTip();return;} // одна буква — это нажатие: ждём следующие
+  const w=G.sel.map(i=>G.letters[i]).join('');G.sel=[];G.tap=false;drawLine();
+  (WH.els||[]).forEach(e=>e.classList.remove('on'));updSel();$('preview').firstElementChild.textContent=w;submit(w);}
+function tapSubmit(){if(!G||G.won||!G.sel.length)return;poke();const w=G.sel.map(i=>G.letters[i]).join('');G.sel=[];G.tap=false;drawLine();updSel();
+  $('preview').firstElementChild.textContent=w;submit(w);}
+function tapClear(){if(!G)return;SND.tap();G.sel=[];G.tap=false;drawLine();updSel();}
+// первый раз: объяснить оба способа (раз за игру; на 1-м уровне — вместе с обучением)
+function tapTip(){if(S.tip.tap)return;S.tip.tap=1;save();
+  zina('Можно и нажимать: буквы по очереди, потом ✔. А можно вести пальцем по буквам, как ручкой по тетради, — так быстрее!','happy',7);}
+const isSmallH=()=>$('app').clientHeight<=700;
 
 /* ---------- проверка слова ---------- */
 function flashPreview(w,cls){const el=$('preview').firstElementChild;el.textContent=w;el.className='w '+cls;
@@ -186,10 +216,11 @@ function submit(w){
   }
   flashPreview(w,'bad');SND.bad();buzz('bad');G.combo=0;G.miss++;
   // «честная учительница»: настоящее слово — объясняем, почему не подходит (js/zina.js), иначе догадка по окончанию; «не знаю» — только для незнакомых
-  const why=whyNot(w)||(looksPlural(w)?'plural':looksVerb(w)?'verb':'bad');
-  if(G.miss===3){glowHint();if(why==='bad'){zina(say('badx3'),'norm',4);return;}}
+  let why=whyNot(w)||(looksPlural(w)?'plural':looksVerb(w)?'verb':'bad');
+  if(why==='bad'&&gibberish(w))why='gib';
+  if(G.miss===3){glowHint();if(why==='bad'||why==='gib'){zina(say('badx3'),'norm',4);return;}}
   // первые 5 уровней объяснение висит до следующего слова — чтобы успели прочитать
-  zina(say(why),why==='bad'||why==='verb'||why==='rude'?'stern':'norm',why!=='bad'&&!G.daily&&G.idx<5?99:0);
+  zina(say(why),why==='gib'||why==='verb'||why==='rude'?'stern':'norm',why!=='bad'&&why!=='gib'&&!G.daily&&G.idx<5?99:0);
 }
 // «розы», «розу», «розой», «роз» — есть ли в словаре начальная форма
 function looksPlural(w){
@@ -198,6 +229,8 @@ function looksPlural(w){
   for(const e of ends)if(w.endsWith(e)){const st=w.slice(0,-e.length);
     if(st.length>=3&&(tails.some(t=>isWord(st+t))||isWord(st.slice(0,-1)+'ок')||isWord(st.slice(0,-1)+'ец')))return true;}
   return w.length>=3&&['а','я'].some(t=>isWord(w+t));}
+// явная бессмыслица: нет гласных, 4 согласные подряд, одна буква трижды подряд, «ь/ъ/ы» в начале — тут можно и пошутить
+function gibberish(w){return !/[аеёиоуыэюя]/.test(w)||/[бвгджзйклмнпрстфхцчшщ]{4}/.test(w)||/(.)\1\1/.test(w)||/^[ьъы]/.test(w)||/[ьъ]{2}/.test(w);}
 function looksVerb(w){return /(ть|ти|ться|тся|чь|ешь|ишь|ет|ит|ут|ют|ат|ят|ал|ил|ел|ул|ла|ли)$/.test(w)&&w.length>=4;}
 function collectDef(w){if(DEFS[w]&&!S.dict[w]){S.dict[w]=1;G.newDefs.push(w);return true;}return false;}
 const DEF_NOTE=' 📖 Про это слово у меня есть запись в словаре!';
@@ -216,12 +249,14 @@ function foundWord(wd,byHint){
     if(G.tut){zina('Молодец! Засчитываю только предметы — «кто? что?», и по одной штуке: «нос», а не «носы».','happy',7);
       const g=G;setTimeout(()=>{if(G===g&&!g.won)zina('Ищи остальные слова! Сколько осталось — написано сверху.','happy',6);},7000);}
     else if(!left)zina(pick(['Всё! Все слова на месте!','Готово! Кроссворд сдан!','Последнее! Ура!']),'happy',6);
+    else if(G.rid===wd)zina(pick(['Загадку отгадал! Ну голова!','Отгадал! Я эту загадку на соседке Гале проверяла — она не смогла.','Правильно! Вот что значит начитанный.']),'wow',4.5);
     else if(note)zina(say(wd.w.length>=6?'wordLong':'word')+note,'happy',4.5);
     else if(left===1)zina(say('oneLeft'),'wow',3.5);
     else if(half)zina(say('half'),'happy',3.5);
     else if(G.combo===3)zina(say('streak'),'wow');
     else zina(say(wd.w.length>=6?'wordLong':'word'),'happy',3.2);}
   updCount();
+  if(G.rid===wd){wordCells(wd).forEach(c=>c.el.classList.remove('rid'));G.rid=null;}
   if(G.tut){G.tut=false;S.tip.tut=1;stopTutorial();}
   saveCur();checkWin();
 }
@@ -236,7 +271,9 @@ function checkWin(){
 }
 
 /* ---------- подсказки ---------- */
-function updPrices(){const f=freeLeft();$('prLet').textContent=f?'даром':PRICE.letter;$('hLet').title=f?'Открыть букву — сегодня даром':'Открыть букву';$('prWord').textContent=PRICE.word;}
+// уровни 1–2 (обучение): буква-подсказка даром и не в счёт «буквы дня» (аудит 14: подарок сгорал до объяснения)
+const learnFree=()=>!!G&&!G.daily&&G.idx<2;
+function updPrices(){const f=learnFree()||freeLeft();$('prLet').textContent=f?'даром':PRICE.letter;$('hLet').title=f?'Открыть букву — сегодня даром':'Открыть букву';$('prWord').textContent=PRICE.word;}
 // окно подсказки: всегда два способа — за монеты и за рекламу (ролик; награда только за досмотренный). В VK без моста — только монеты
 function pay(kind,then){
   const pr=PRICE[kind],g=G,ad=adsOk(),enough=S.coins>=pr,ic=kind==='letter'?'💡':'📜';
@@ -263,6 +300,7 @@ function hintLetter(){
     const c=wordCells(ws[0]).find(c=>!c.open)||closed[0];
     G.hinted=true;openCell(c,0,'hint');SND.open();zina(msg||say('hint'),'norm',msg?4.5:0);checkAutoFoundAndWin();saveCur();
   };
+  if(learnFree()){S.hintsUsed=(S.hintsUsed||0)+1;open('На первых уровнях подсказываю даром — учись! Дальше — за монетки, но раз в день кот букву принесёт.');return;}
   // бесплатная буква дня — сразу, без окна и без монет
   if(freeLeft()){useFree();S.hintsUsed=(S.hintsUsed||0)+1;updPrices();
     open(pick(['Ять под диваном букву нашёл — держи, даром! Завтра ещё поищет.','Кот принёс букву. Бесплатно — раз в день. Завтра ещё принесёт.']));return;}
@@ -275,7 +313,7 @@ function hintWord(){
 }
 function checkAutoFoundAndWin(){checkAutoFound();checkWin();}
 function shuffleLetters(){
-  if(!G||G.won)return;poke();const old=G.letters.join('');
+  if(!G||G.won)return;poke();const old=G.letters.join('');G.sel=[];G.tap=false;updSel();drawLine();
   for(let k=0;k<10;k++){shuffle(G.letters);if(G.letters.join('')!==old)break;}
   const wh=$('wheel');wh.querySelectorAll('.let').forEach((e,i)=>{e.textContent=G.letters[i];e.animate([{transform:'scale(.3) rotate(-90deg)'},{transform:'scale(1)'}],{duration:280,easing:'ease-out'});});
   SND.shuffle();zina(say('shuffle'),'norm',2.5);saveCur();
@@ -291,9 +329,9 @@ function showJar(){
 }
 
 /* ---------- баба Зина говорит ---------- */
-function zina(t,mood,sec){const e=$('zSay');e.textContent=t;e.classList.add('on');e.classList.remove('pin');if(mood)zinaFace(mood);
+function zina(t,mood,sec){const e=$('zSay');e.textContent=t;(zina.h=zina.h||[]).push(t);if(zina.h.length>3)zina.h.shift();e.classList.add('on');e.classList.remove('pin');if(mood)zinaFace(mood);
   clearTimeout(zina._t);if(sec!==99)zina._t=setTimeout(zinaHide,Math.max(sec||3.2,1.5+t.length*.06)*1000);}
-function zinaHide(){$('zSay').classList.remove('on','pin');zinaFace('norm');}
+function zinaHide(soft){const e=$('zSay');if(soft&&(e.classList.contains('pin')||!e.classList.contains('on')||G&&G.tut))return;clearTimeout(zina._t);e.classList.remove('on','pin');zinaFace('norm');}
 $('zSay').addEventListener('click',()=>{const e=$('zSay');if(!e.classList.contains('on'))return;clearTimeout(zina._t);
   if(e.classList.contains('pin'))zinaHide();else e.classList.add('pin');});
 const MOODS=['norm','happy','wow','stern'];
@@ -301,8 +339,37 @@ function zinaFace(m){const av=$('zAv');if(av.dataset.o!==S.outfit){av.dataset.o=
   av.querySelectorAll('.face').forEach(f=>f.classList.toggle('on',f.dataset.m===m));}
 function glowHint(){const e=$('hLet');e.classList.remove('glow');void e.offsetWidth;e.classList.add('glow');}
 function poke(){if(G){G.idleT=0;}}
-setInterval(()=>{if(!G||G.won||paused||!$('game').classList.contains('on')||document.hidden)return;G.idleT++;
-  if(G.idleT===30&&G.idleN<2){G.idleN++;zina(say('idle'),'norm',5);glowHint();G.idleT=0;}},1000);
+setInterval(()=>{if(!G||G.won||paused||!$('game').classList.contains('on')||$('modal').classList.contains('on')||document.hidden)return;G.idleT++;
+  if(G.idleT===30&&G.idleN<2){G.idleN++;G.idleT=0;
+    // вторые 30 с без слова (≈ минута) — иногда кот Ять сам ставит букву (catHelp); иначе баба Зина подсказывает, как раньше
+    if(G.idleN===2&&catHelp())return;
+    zina(say('idle'),'norm',5);glowHint();}},1000);
+
+/* ---------- «Зина загадала слово» (аудит 14: разнообразие подачи, уровни и раскладки не меняются) ----------
+   Уровни 12, 14, 16, 18, 20 и дальше каждый 3-й в десятке: одно слово кроссворда — загадка. Шутка из «Толкового словаря»
+   вместо буквы, клетки слова обведены пунктиром. Нажатие на бабу Зину — повторить загадку. Монет за это нет. */
+function riddleOf(g){if(g.daily||g.tut)return null;const i=g.idx,on=i>=10&&i<20?i%2===1:i>=20&&i%10===2;if(!on)return null;
+  const c=g.words.filter(w=>!w.found&&DEFS[w.w]);if(!c.length)return null;
+  return c.find(w=>w.w===g.lv.d)||c.sort((a,b)=>b.w.length-a.w.length)[0];}
+function riddleSay(sec){if(!G||!G.rid)return;zina('Загадка! «'+DEFS[G.rid.w]+'» Что это? Слово я обвела.','wow',sec||6);}
+
+/* ---------- кот Ять помогает (аудит 14) ----------
+   Минуту без нового слова — кот сам ставит одну букву (с 3-го уровня, не чаще раза в 7 побед; S.catW — на какой победе помог; модель — tools/econ.py).
+   Это подарок, а не подсказка: «Отличник» не снимается, монеты не тратятся. */
+function catHelp(){if(!G||G.won||G.tut||G.catD||(!G.daily&&G.idx<2))return false;
+  const w=S.wins||0;if(S.catW!=null&&w-S.catW<7)return false;
+  const ws=G.words.filter(x=>!x.found).sort((a,b)=>wordCells(a).filter(c=>c.open).length/a.w.length-wordCells(b).filter(c=>c.open).length/b.w.length);
+  const c=ws.length&&wordCells(ws[0]).find(c=>!c.open);if(!c)return false;
+  S.catW=w;G.catD=1;save();SND.meow();buzz('word');const g=G;
+  const put=()=>{if(G!==g||g.won||c.open)return;openCell(c,0,'cat');SND.open();checkAutoFoundAndWin();saveCur();};
+  const from=$('zAv').getBoundingClientRect(),to=c.el.getBoundingClientRect();
+  if(CALM()||!document.body.animate)put();
+  else{const e=document.createElement('div');e.className='catfly';e.textContent='🐈';e.style.left=(from.left+from.width/2-20)+'px';e.style.top=(from.top+from.height/2-20)+'px';
+    document.body.appendChild(e);const dx=to.left+to.width/2-(from.left+from.width/2),dy=to.top+to.height/2-(from.top+from.height/2);
+    e.animate([{transform:'translate(0,0) scale(.6)'},{transform:`translate(${dx*.5}px,${dy*.5-60}px) scale(1.2)`,offset:.5},{transform:`translate(${dx}px,${dy}px) scale(.8)`}],{duration:900,easing:'ease-in-out',fill:'both'});
+    setTimeout(()=>{e.remove();put();},880);}
+  zina(pick(['Кот Ять не выдержал — сам букву принёс! Мяу.','Ять заскучал и поставил букву. Даром, он у нас добрый.','Мяу! Это Ять подсказал. Я его не учила, честно.']),'wow',5);
+  return true;}
 
 /* ---------- обучение ---------- */
 // уровень 2: баба Зина объясняет кнопки и подсвечивает их
@@ -361,7 +428,7 @@ document.addEventListener('keydown',e=>{
   if(!G||G.won||!$('game').classList.contains('on'))return;
   const k=e.key.toLowerCase().replace('ё','е');
   if(k==='1'){hintLetter();return;}if(k==='2'){hintWord();return;}
-  if(k==='enter'){const w=G.sel.map(i=>G.letters[i]).join('');G.sel=[];updSel();submit(w);return;}
+  if(k==='enter'){const w=G.sel.map(i=>G.letters[i]).join('');G.sel=[];G.tap=false;updSel();submit(w);return;}
   if(k==='backspace'){G.sel.pop();updSel();return;}
   if(k==='escape'){G.sel=[];updSel();return;}
   if(k===' '){shuffleLetters();e.preventDefault();return;}

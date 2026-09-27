@@ -31,7 +31,7 @@ let ysdk=null,YP=null,VK=null,paused=false,muted=false,adShowing=false;
 const T0P=performance.now(),VK_TS=(function(){const m=/[?&]vk_ts=(\d+)/.exec(location.search);return m?+m[1]*1000:0;})();
 function srvMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return 0;}
 function nowMs(){const t=srvMs();if(t)return t;if(VK_TS>1.6e12)return Math.min(Date.now(),VK_TS+(performance.now()-T0P)+600000);return Date.now();}
-function dayMs(){return srvMs()||Date.now();}
+function dayMs(){const t=srvMs();if(t)return t;if(VK_TS>1.6e12)return Math.min(Date.now(),VK_TS+(performance.now()-T0P)+12*3600e3);return Date.now();} // VK: не дальше 12 ч вперёд от запуска (перевод даты не даёт новый день)
 
 /* ================= сохранение =================
    localStorage — сразу. Облако (Яндекс: player.setData, VK: VKWebAppStorage) — ТОЛЬКО после того, как облако прочитано
@@ -43,10 +43,11 @@ let S=freshSave();
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 function fixSave(){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v);
   for(const k of['forge','village','armory','done','best','rank','bought','stats','bossKill','evoSeen','skins','skin','ach','meet','bk','ask'])if(!ob(S[k]))S[k]={};
-  if(typeof S.gold!=='number'||!isFinite(S.gold))S.gold=0;if(!S.afkT)S.afkT=nowMs();}
+  if(typeof S.gold!=='number'||!isFinite(S.gold))S.gold=0;if(!S.afkT)S.afkT=nowMs();
+  for(const k of['payT','payV'])if(S[k]!=null&&!Array.isArray(S[k]))S[k]=[];if(S.buy!=null&&!ob(S.buy))S.buy={};if(S.buyB!=null&&!ob(S.buyB))S.buyB={};} // покупки (js/pay.js)
 fixSave();
 const BOOT={ts:S.ts||0,fresh:!S.ts}; // что было на этом устройстве при запуске
-let cloudBase=S.gold||0,cloudReady=false,cloudPending=null,cloudT=0,cloudLast=0,cloudBusy=false;
+let loginMerge=false,cloudBase=S.gold||0,cloudReady=false,cloudPending=null,cloudT=0,cloudLast=0,cloudBusy=false;
 const CLOUD_GAP=PLAT==='vk'?15000:3500; // VK — не чаще раза в 15 с; Яндекс — лимит 100 записей за 5 мин
 function save(){S.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}cloudQueue();}
 function cloudQueue(){if(!cloudReady||cloudPending||cloudT)return;cloudT=setTimeout(cloudSave,Math.max(2000,CLOUD_GAP-(Date.now()-cloudLast)));}
@@ -65,6 +66,7 @@ function mergeProgress(d,L,useCloud){const ob=v=>v&&typeof v==='object'&&!Array.
   for(const k in d)if(/^seen\d+$/.test(k)&&d[k])o[k]=1;
   o.afkT=BOOT.fresh?(+d.afkT||o.afkT):Math.max(+o.afkT||0,+d.afkT||0);
   o.gold=Math.max(0,Math.round((+d.gold||0)+((+L.gold||0)-cloudBase)));
+  if(loginMerge){loginMerge=false;o.gold=Math.max(o.gold,Math.round(+L.gold||0));} // гость вошёл в аккаунт: золото гостя не «пропадает» — берём большее
   const later=(a,b)=>!a?b:!b?a:(b.last>a.last||b.last===a.last&&(b.n||0)>(a.n||0))?b:a;
   o.login=later(ob(o.login).last?o.login:null,ob(d.login).last?d.login:null)||o.login;o.streak=later(ob(o.streak).last?o.streak:null,ob(d.streak).last?d.streak:null)||o.streak;
   const ab=ob(o.afkBoost),db=ob(d.afkBoost);if(db.day&&(!ab.day||db.day>ab.day))o.afkBoost=db;else if(db.day&&db.day===ab.day)o.afkBoost={day:ab.day,n:Math.max(ab.n||0,db.n||0)};
@@ -73,6 +75,7 @@ function mergeProgress(d,L,useCloud){const ob=v=>v&&typeof v==='object'&&!Array.
   const ar=ob(o.dr),dr=ob(d.dr);if(dr.day&&(!ar.day||dr.day>ar.day))o.dr=dr;else if(dr.day&&dr.day===ar.day)for(const k of['best','got','runs'])ar[k]=Math.max(ar[k]||0,dr[k]||0); // поход дня
   const aw=ob(o.wk),dw=ob(d.wk);if(dw.w&&(!aw.w||dw.w>aw.w))o.wk=dw;else if(dw.w&&dw.w===aw.w)for(const k of['best','got','runs'])aw[k]=Math.max(aw[k]||0,dw[k]||0);
   if(useCloud)for(const k of['hero','skin','curse','sound','music','vm','vs','calm','vib'])if(k in d)o[k]=d[k];
+  if(typeof payMerge==='function')payMerge(d,o); // покупки (js/pay.js): купленное — объединение
   o.ts=Math.max(+o.ts||0,+d.ts||0);return o;}
 function mergeSave(d){if(!d||typeof d!=='object'||Array.isArray(d)||!d.ts)return false;
   S=mergeProgress(d,S,BOOT.fresh||d.ts>(S.ts||0));fixSave();cloudBase=+d.gold||0;BOOT.fresh=false;return true;}
@@ -80,7 +83,7 @@ function mergeSave(d){if(!d||typeof d!=='object'||Array.isArray(d)||!d.ts)return
 function cloudIn(d){if(typeof G!=='undefined'&&G){cloudPending={d};return;}applyCloud(d);}
 function applyCloud(d){cloudPending=null;let changed=false;
   try{changed=mergeSave(d);}catch(e){console.warn('cloud merge',e);return;} // не слилось — в облако не пишем
-  cloudReady=true;save();if(changed&&typeof onCloud==='function')onCloud();}
+  loginMerge=false;cloudReady=true;save();if(changed&&typeof onCloud==='function')onCloud();}
 function cloudApply(){if(cloudPending&&!(typeof G!=='undefined'&&G))applyCloud(cloudPending.d);}
 function withTimeout(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
 // Яндекс: читаем облако с таймаутом; не вышло — повторяем (3 раза через 10 с, дальше раз в минуту)
@@ -114,15 +117,18 @@ async function vkCloudInit(tries){try{const r=await vkLoadCloud();cloudIn(r.empt
 async function initSDK(){
   if(PLAT==='vk'){
     // меню уже показано, мост VK и облако догружаем следом (VKWebAppInit может отвечать секунды)
+    let cl=null;
     try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
       await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;
       VK.subscribe(e=>{const t=e.detail&&e.detail.type;
         if(t==='VKWebAppViewHide'){paused=true;setMuted(true);cloudFlush();}
         else if(t==='VKWebAppViewRestore'&&!adShowing){paused=false;setMuted(false);}});
-      vkCloudInit(2);
+      cl=vkCloudInit(2);
       vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
       vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(()=>{});
     }catch(e){VK=null;}
+    try{await cl;}catch(e){}
+    if(typeof PAY!=='undefined')PAY.init(); // покупки VK (js/pay.js): после моста и облака (на маке без моста — только ?vk=1&paytest=1)
     return;
   }
   // Яндекс: меню тоже уже показано — SDK и облако догружаем следом
@@ -131,10 +137,12 @@ async function initSDK(){
       ysdk.on&&ysdk.on('game_api_pause',()=>{paused=true;setMuted(true);});
       ysdk.on&&ysdk.on('game_api_resume',()=>{if(adShowing)return;paused=false;setMuted(false);});
     }catch(e){ysdk=null;}
+    if(ysdk&&typeof G!=='undefined'&&G&&!G.over&&!G.paused)YG.start(); // первый поход начался раньше, чем пришёл SDK
     try{ysdk&&ysdk.getFlags&&ysdk.getFlags().then(applyFlags).catch(()=>{});}catch(e){} // флаги из консоли Яндекса (межэкранная)
   }
   try{ysdk&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
   sdkDone=true;if(ysdk)yCloud(3);else if(LOCAL)cloudReady=true; // на маке без SDK облака нет — только localStorage
+  if(typeof PAY!=='undefined')PAY.init(); // покупки Яндекса (js/pay.js): постоянные — флаги, облако их объединит
 }
 let sdkDone=false;
 /* Реклама (решение владельца 27.09): за награду — по желанию игрока; межэкранная — мягко, только между походами (interAfterRun).
@@ -150,6 +158,7 @@ function applyFlags(f){if(!f||typeof f!=='object')return;const num=(k,a,b)=>{con
 function adMark(){ADV.last=Date.now();try{localStorage.setItem('bogatyr-ad',String(ADV.last));}catch(e){}}
 // поход закончен и итоги забраны: показать межэкранную? (runT — длина похода, с). Считает походы захода — звать ровно раз за поход
 function interReady(runT){ADV.sess++;const now=Date.now();if(ADV.last>now)adMark(); // часы перевели назад — отсчёт заново
+  if(typeof PAY!=='undefined'&&PAY.own('no_ads'))return false; // куплено «Без рекламы между походами»
   if(!ADV.on||S.runs<ADV.from||ADV.sess<2||!(runT>=45)||now-ADV.last<ADV.gap*60000||adBusy||adShowing)return false;
   if(PLAT==='vk')return !!VK||(!VK_REAL&&LOCAL); // в настоящем VK без моста — нет; ?vk=1 на маке — заглушка
   return !!ysdk||LOCAL;}
@@ -224,11 +233,12 @@ function musicPlay(name){MUS.want=name;}
 function musEdges(b){const sr=b.sampleRate,n=b.length,lim=Math.min(n>>1,sr*2),th=.002,chs=[];for(let c=0;c<b.numberOfChannels;c++)chs.push(b.getChannelData(c));
   const loud=i=>chs.some(d=>Math.abs(d[i])>th);let i0=0,i1=n-1;while(i0<lim&&!loud(i0))i0++;while(i1>n-lim&&!loud(i1))i1--;
   b._ls=i0<lim?i0/sr:0;b._le=i1>n-lim?(i1+1)/sr:b.duration;}
-function musLoad(n){if(MUS.buf[n]||!AC||MUS.ld[n]||(MUS.fails[n]||0)>=3||performance.now()<(MUS.retry[n]||0))return;MUS.ld[n]=1;
+function musLoad(n){if(window.NO_MUSIC||MUS.buf[n]||!AC||MUS.ld[n]||(MUS.fails[n]||0)>=3||performance.now()<(MUS.retry[n]||0))return;MUS.ld[n]=1;
   (MUS.raw[n]?Promise.resolve(MUS.raw[n]):fetch(MUSF[n]).then(r=>{if(!r.ok)throw new Error('http '+r.status);return r.arrayBuffer();}).then(ab=>MUS.raw[n]=ab))
     .then(ab=>new Promise((ok,no)=>{const p=AC.decodeAudioData(ab.slice(0),ok,()=>no({dec:1}));if(p&&p.catch)p.catch(()=>no({dec:1}));}))
     .then(b=>{musEdges(b);MUS.ld[n]=0;if(MUSK[MUS.want]===n)MUS.buf[n]=b;})   // пока грузился, экран сменился — не держим
-    .catch(e=>{MUS.ld[n]=0;MUS.fails[n]=(MUS.fails[n]||0)+(e&&e.dec?3:1);MUS.retry[n]=performance.now()+20000;});}
+    .catch(e=>{MUS.ld[n]=0;if(e&&e.message==='http 404'){for(const k in MUSF)MUS.fails[k]=3;return;} // треков нет (сборка без музыки) — больше не просим
+      MUS.fails[n]=(MUS.fails[n]||0)+(e&&e.dec?3:1);MUS.retry[n]=performance.now()+20000;});}
 function musPos(){const b=MUS.buf[MUS.cur],L=b._le-b._ls;return b._ls+((MUS.off-b._ls)+(AC.currentTime-MUS.t0))%L;}
 function musStart(n,v,fade){const a=AC,b=MUS.buf[n],t=a.currentTime,s=a.createBufferSource(),g=a.createGain();
   s.buffer=b;s.loop=true;s.loopStart=b._ls;s.loopEnd=b._le;const off=MUS.pos[n]!=null?MUS.pos[n]:b._ls;delete MUS.pos[n];
@@ -307,15 +317,22 @@ function dayPrev(k){const [y,m,d]=k.split('-').map(Number);return dayKey(new Dat
    В консоли Яндекс Игр нужно создать лидерборды с техническими именами 'endless', 'kills', 'weekly' и 'daily' (тип «число»). */
 const LB={
   ok(){return !!(ysdk&&(ysdk.leaderboards||ysdk.getLeaderboards));},
-  async set(name,score){if(!ysdk)return;try{if(YP&&YP.isAuthorized&&!YP.isAuthorized())return;
-    if(ysdk.leaderboards&&ysdk.leaderboards.setScore)await ysdk.leaderboards.setScore(name,Math.floor(score));
-    else{const lb=await ysdk.getLeaderboards();await lb.setLeaderboardScore(name,Math.floor(score));}}catch(e){}},
+  // setScore у Яндекса — не чаще раза в секунду: очередь, для каждой таблицы — только последнее значение, между вызовами 1,1 с
+  q:{},busy:false,
+  set(name,score){if(!ysdk)return;LB.q[name]=score;LB.pump();},
+  async pump(){if(LB.busy)return;LB.busy=true;
+    try{for(let k=Object.keys(LB.q)[0];k;k=Object.keys(LB.q)[0]){const score=LB.q[k];delete LB.q[k];
+      try{if(YP&&YP.isAuthorized&&!YP.isAuthorized())continue;
+        if(ysdk.leaderboards&&ysdk.leaderboards.setScore)await ysdk.leaderboards.setScore(k,Math.floor(score));
+        else{const lb=await ysdk.getLeaderboards();await lb.setLeaderboardScore(k,Math.floor(score));}}catch(e){}
+        await new Promise(r=>setTimeout(r,1100));}}
+    finally{LB.busy=false;}},
   async get(name){if(!ysdk)return null;try{const o={quantityTop:10,includeUser:true,quantityAround:2};
     if(ysdk.leaderboards&&ysdk.leaderboards.getEntries)return await ysdk.leaderboards.getEntries(name,o);
     const lb=await ysdk.getLeaderboards();return await lb.getLeaderboardEntries(name,o);}catch(e){return null;}},
   authed(){return !YP||!YP.isAuthorized||YP.isAuthorized();},
   // после входа — другой игрок Яндекса: его облако читаем заново и сливаем с тем, что на устройстве (до этого в облако не пишем)
-  async login(){try{await ysdk.auth.openAuthDialog();clearTimeout(cloudT);cloudT=0;cloudReady=false;cloudPending=null;YP=await ysdk.getPlayer({scopes:false});yCloud(3);return true;}catch(e){return false;}},
+  async login(){try{await ysdk.auth.openAuthDialog();loginMerge=true;clearTimeout(cloudT);cloudT=0;cloudReady=false;cloudPending=null;YP=await ysdk.getPlayer({scopes:false});yCloud(3);return true;}catch(e){return false;}},
   // VK: таблица друзей (окно VK). Счёт — сколько нечисти одолено всего (в настройках приложения VK — турнирная таблица «по очкам»)
   vkFriends(){if(!VK){toast('Таблица друзей откроется в игре ВКонтакте');return;}
     vkSend('VKWebAppShowLeaderBoardBox',{user_result:Math.floor(S.kills||0)},60000).catch(()=>toast('Таблица друзей сейчас недоступна'));}

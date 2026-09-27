@@ -16,10 +16,11 @@ const T0=Date.now(); // начало сессии: межуровневая ре
 
 /* ================= словарь (Set строим при первом слове, а не на старте) ================= */
 // MORE — добавка бонусных слов из js/zina.js (кеды, жюри…): отдельно от dict.js, чтобы уровни не пересобирались
-let MAIN=null,EXTRA=null,MORE=null,WHY=null;
+// DENY — слова из словаря, которые засчитывать нельзя («она», «кости», «лет»: не «одна штука» или не предмет; js/zina.js, разделы «!» в data/zina-no.txt)
+let MAIN=null,EXTRA=null,MORE=null,WHY=null,DENY=null;
 function isWord(w){if(!MAIN){if(typeof DICT_MAIN==='undefined')return false;MAIN=new Set(DICT_MAIN.split(' '));EXTRA=new Set(DICT_EXTRA.split(' '));
-    MORE=new Set(typeof ZINA_MORE==='string'&&ZINA_MORE?ZINA_MORE.split(' '):[]);}
-  return MAIN.has(w)||EXTRA.has(w)||MORE.has(w);}
+    MORE=new Set(typeof ZINA_MORE==='string'&&ZINA_MORE?ZINA_MORE.split(' '):[]);DENY=new Set(typeof ZINA_DENY==='string'&&ZINA_DENY?ZINA_DENY.split(' '):[]);}
+  return !DENY.has(w)&&(MAIN.has(w)||EXTRA.has(w)||MORE.has(w));}
 // почему настоящее слово не засчитано (js/zina.js): adj, pron, num, adv, func, name, rude, form, plural, verb; '' — не знаем
 // грубое хранится отпечатками (tools/zina.py, h32) — чтобы в игре не лежал мат текстом
 function h32(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
@@ -41,8 +42,9 @@ const bootSnap=()=>({ts:S.ts,coins:+S.coins||0,jar:+S.jar||0});
 function synced(s){Object.assign(BOOT,s);}
 // облако: не чаще раза в 3 с (VK — 15 с); пока облако не прочитано и не слито — в него не пишем
 let cloudT=0,cloudReady=false,cloudBusy=false,cloudTry=0,cloudFails=0;
+// таймер ставим, только если его нет: частые слова не отодвигают запись (было «через 15 с тишины» — у активного игрока облако не писалось)
 function save(){if(SHOT)return;S.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
-  clearTimeout(cloudT);cloudT=setTimeout(cloudSave,PLAT==='vk'?15000:3000);}
+  if(!cloudT)cloudT=setTimeout(()=>{cloudT=0;cloudSave();},PLAT==='vk'?15000:3000);}
 function cloudSave(flush){if(SHOT)return;if(!cloudReady){cloudLoad();return;}
   try{if(YP)yaSave(flush);else if(PLAT==='vk'&&VK)vkSaveCloud();}catch(e){}}
 // Яндекс: не больше 100 записей за 5 минут — держим запас (90), лишнее откладываем
@@ -59,7 +61,7 @@ const isObj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
 function mergeSave(d){if(!isObj(d))return false;const before=canon(noTs(S)),newer=(+d.ts||0)>BOOT.ts;
   for(const k in d)if(!(k in S))S[k]=d[k];
   for(const k of['lv','found','bonusAll','hintsUsed','plays','bestStreak'])S[k]=Math.max(+S[k]||0,+d[k]||0);
-  for(const k of['dict','daily','own','tip','ask'])S[k]=Object.assign({},isObj(d[k])?d[k]:{},isObj(S[k])?S[k]:{});
+  for(const k of['dict','daily','own','tip','ask','chg'])S[k]=Object.assign({},isObj(d[k])?d[k]:{},isObj(S[k])?S[k]:{});
   const a=typeof S.ex==='string'?S.ex:'',b=typeof d.ex==='string'?d.ex:'';let e='';for(let i=0;i<Math.max(a.length,b.length);i++)e+=a[i]==='1'||b[i]==='1'?'1':'0';S.ex=e;
   S.curs=isObj(S.curs)?S.curs:{};if(isObj(d.curs))for(const k in d.curs){const x=d.curs[k];if(isObj(x)&&(!S.curs[k]||(x.t||0)>(S.curs[k].t||0)))S.curs[k]=x;}
   const la=+S.lastDaily||0,lb=+d.lastDaily||0;
@@ -69,10 +71,14 @@ function mergeSave(d){if(!isObj(d))return false;const before=canon(noTs(S)),newe
   if(isObj(d.adc)&&(!S.adc||d.adc.d>S.adc.d||d.adc.d===S.adc.d&&d.adc.n>S.adc.n))S.adc=d.adc; // сколько раз сегодня брали монеты за рекламу
   if(isObj(d.fl)&&(!S.fl||d.fl.d>S.fl.d||d.fl.d===S.fl.d&&d.fl.n>S.fl.n))S.fl=d.fl; // бесплатные буквы дня (сколько взято)
   if(isObj(d.gift)&&(!S.gift||d.gift.d>S.gift.d))S.gift=d.gift; // подарок дня за рекламу уже взят
+  if(isObj(d.wk)&&(!S.wk||d.wk.w>S.wk.w))S.wk=d.wk; // подарок «Тетради недели» уже получен (неделя — ключ понедельника)
+  for(const k of['exAll','catW'])if(+d[k]>(+S[k]||0))S[k]=+d[k]; // счётчики «Отличника» и кота Ять
+  if(typeof payMerge==='function')payMerge(d); // покупки (js/pay.js): купленное, бонусы, токены и заказы VK — объединение
   if(newer){
-    const jarMax=typeof JAR_SIZE!=='undefined'?JAR_SIZE-1:99;
+    const js=typeof JAR_SIZE!=='undefined'?JAR_SIZE:0,jp=typeof JAR_PRIZE!=='undefined'?JAR_PRIZE:0;
     S.coins=Math.max(0,(+d.coins||0)+((+S.coins||0)-BOOT.coins));
-    S.jar=clamp((+d.jar||0)+((+S.jar||0)-BOOT.jar),0,jarMax);
+    // банка: облако + собранное здесь; переполнилась — приз (раньше лишние слова обрезались)
+    let jar=Math.max(0,(+d.jar||0)+((+S.jar||0)-BOOT.jar));if(js)while(jar>=js){jar-=js;S.coins+=jp;}S.jar=jar;
     for(const k of['sound','music'])if(k in d)S[k]=d[k];
     const has=(t,L,id)=>{const it=L&&L.find(x=>x.id===id);return !!it&&(!it.p||!!(S.own||{})[t+':'+id]);};
     if(has('s',typeof SKINS!=='undefined'&&SKINS,d.skin))S.skin=d.skin;if(has('o',typeof OUTFITS!=='undefined'&&OUTFITS,d.outfit))S.outfit=d.outfit;
@@ -90,7 +96,8 @@ async function cloudLoad(){if(cloudBusy||cloudReady||SHOT||cloudFails>=4||!(ysdk
   }catch(e){cloudFails++;if(cloudFails<4)setTimeout(cloudLoad,11000);}finally{cloudBusy=false;}}
 // старые сохранения: один незаконченный уровень S.cur → словарь S.curs по ключу уровня
 function migrate(){S.curs=isObj(S.curs)?S.curs:{};if(S.cur&&S.cur.key&&!S.curs[S.cur.key])S.curs[S.cur.key]=Object.assign({t:Date.now()},S.cur);delete S.cur;
-  if(!isObj(S.ask))S.ask={};if(!isObj(S.tip))S.tip={};}
+  if(!isObj(S.ask))S.ask={};if(!isObj(S.tip))S.tip={};
+  for(const k of['payT','payV'])if(S[k]!=null&&!Array.isArray(S[k]))S[k]=[];for(const k of['buy','buyB'])if(S[k]!=null&&!isObj(S[k]))S[k]={};}
 migrate();
 function addCoins(n){S.coins=Math.max(0,S.coins+n);save();updCoins();}
 function updCoins(){document.querySelectorAll('.cc').forEach(e=>e.textContent=S.coins);}
@@ -117,6 +124,7 @@ function inPlay(){return !!(typeof G!=='undefined'&&G&&!G.won&&!paused&&$('game'
 // на локальном компьютере (разработка) реклама — заглушка; на площадке без SDK/моста — «недоступна», без награды
 const LOCAL=/^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname)&&!/[?&]vk_app_id=/.test(location.search);
 const AD_FAIL='Реклама сейчас недоступна — загляни чуть позже';
+const VK_REAL=/[?&]vk_app_id=/.test(location.search); // настоящий VK (не ?vk=1 на маке): заглушек покупок нет
 // можно ли предлагать ролик за награду: есть SDK/мост (или заглушка на своём компьютере). В VK без моста кнопок «за рекламу» нет
 const adsOk=()=>!!(VK||ysdk||LOCAL);
 // без контекстного меню и «долгого тапа» (требование площадок); можно — поле поиска и картинка открытки (сохранить долгим нажатием)
@@ -162,15 +170,16 @@ async function initSDK(){
   if(PLAT==='vk'){
     try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
       await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;
-      VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',true);clearTimeout(cloudT);cloudSave();}else if(t==='VKWebAppViewRestore')setPause('vk',false);});
-      cloudLoad();if(typeof askProbe==='function')askProbe();if(typeof updGift==='function')updGift();
+      VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',true);clearTimeout(cloudT);cloudT=0;cloudSave();}else if(t==='VKWebAppViewRestore')setPause('vk',false);});
+      Promise.resolve(cloudLoad()).then(payInit,payInit);if(typeof askProbe==='function')askProbe();if(typeof updGift==='function')updGift();
       vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
     }catch(e){VK=null;}
+    if(!VK)payInit(); // покупки VK: с мостом — после облака (выше); без моста — только заглушка ?vk=1&paytest=1 на маке
     return;
   }
   if(/[?&]nosdk/.test(location.search))return;
   try{await loadScript('/sdk.js');}catch(e){}
-  if(!window.YaGames)return;
+  if(!window.YaGames){payInit();return;}
   try{ysdk=await withTimeout(YaGames.init(),20000);}catch(e){ysdk=null;return;}
   // игра только на русском: язык из SDK читаем, но интерфейс не меняем (в консоли выбран только русский)
   try{window.LANG=ysdk.environment.i18n.lang||'ru';}catch(e){window.LANG='ru';}
@@ -180,8 +189,10 @@ async function initSDK(){
   try{ysdk.getFlags&&ysdk.getFlags().then(f=>{if(typeof applyFlags==='function')applyFlags(f);}).catch(()=>{});}catch(e){}
   if(typeof updGift==='function')updGift();
   if(inPlay())YG.start();
-  cloudLoad();if(typeof askProbe==='function')askProbe();
+  Promise.resolve(cloudLoad()).then(payInit,payInit);if(typeof askProbe==='function')askProbe();
 }
+// покупки (js/pay.js) — после SDK/моста и облака; меню не ждёт
+function payInit(){if(typeof PAY!=='undefined')PAY.init();}
 
 /* ---------- реклама ---------- */
 function stubAd(cb){const ad=$('ad'),tEl=$('adT');adOpen();ad.classList.add('on');let n=3;tEl.textContent=n;
@@ -208,21 +219,21 @@ function showRewarded(cb0,onFail0){
 // Защита новичка: не раньше AD.minLv-го уровня и не в первые AD.sess с сессии. Не чаще раза в AD.gap с и не раньше AD.afterRew с
 // после ролика за награду. Площадки ещё и сами ограничивают частоту (VK — не чаще 30 с). Числа — флагами Яндекса (applyFlags, game.js).
 const AD={gap:180,afterRew:90,minLv:8,sess:180};
-let lastInter=0,lastRew=0,interOn=false;
+let lastInter=0,lastRew=0,interOn=false,interNext=null;
 function interDue(){const now=Date.now();
-  return !SHOT&&!!(ysdk||VK||LOCAL)&&S.lv>=AD.minLv&&now-T0>=AD.sess*1000&&now-lastInter>=AD.gap*1000&&now-lastRew>=AD.afterRew*1000;}
+  return !SHOT&&!(typeof PAY!=='undefined'&&PAY.own('no_ads'))&&!!(ysdk||VK||LOCAL)&&S.lv>=AD.minLv&&now-T0>=AD.sess*1000&&now-lastInter>=AD.gap*1000&&now-lastRew>=AD.afterRew*1000;}
 function maybeInterstitial(cb){
-  if(interOn)return; // реклама уже идёт — второй переход не запускаем
+  if(interOn){interNext=cb;return;} // реклама уже идёт — второй переход сделаем после неё (последний выбранный)
   S.plays=(S.plays||0)+1;
   if(!interDue()){cb();return;}
   // показ не состоялся (площадка отказала, нет рекламы) — паузу не засчитываем, попробуем на следующем переходе
-  const prev=lastInter;lastInter=Date.now();interOn=true;const done=()=>{interOn=false;cb();};
+  const prev=lastInter;lastInter=Date.now();interOn=true;const done=()=>{interOn=false;const f=interNext||cb;interNext=null;f();};
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{if(!(r&&r.result))lastInter=prev;}).catch(()=>{lastInter=prev;})
       .finally(()=>{adClose();done();});return;}
   if(!ysdk){stubAd(done);return;} // свой компьютер — заглушка
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:shown=>{if(shown===false)lastInter=prev;adClose();done();},onError:()=>{lastInter=prev;adClose();done();}}});
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hidden',true);clearTimeout(cloudT);cloudSave(true);}else setPause('hidden',false);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hidden',true);clearTimeout(cloudT);cloudT=0;cloudSave(true);}else setPause('hidden',false);});
 
 /* ================= звук (синтез, без файлов) ================= */
 // общий выход: регулятор громкости + компрессор (сумма звуков не хрипит)

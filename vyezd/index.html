@@ -87,6 +87,7 @@ canvas{display:block;touch-action:none}
 .big-stars .e{color:#8a939c;text-shadow:none}
 .newcar{background:#fff3d6;border-radius:16px;padding:8px;margin:10px 0}
 .newcar canvas{width:100%;height:70px}
+.newcar.sm{padding:4px 8px;margin:6px 0}.newcar.sm p{margin:2px 0}.newcar.sm canvas{height:46px}
 .row{display:flex;flex-direction:column;gap:10px;margin-top:12px}
 .ad{background:#111;color:#fff;text-align:center;font-size:22px;font-weight:800}
 .ad small{font-weight:500;opacity:.7;font-size:14px}
@@ -107,6 +108,17 @@ button.pill::before{content:"";position:absolute;top:-10px;bottom:-10px;left:-6p
 .btn.bst small{font-size:13.5px;opacity:1;line-height:1.15}
 .btn.on{outline:3px solid #ffd23f;outline-offset:2px}
 .lb{max-height:46vh;overflow:auto;overscroll-behavior:contain;margin-top:8px;text-align:left}.lbr{display:flex;gap:10px;align-items:center;padding:6px 8px;border-radius:10px}.lbr:nth-child(odd){background:rgba(0,0,0,.05)}.lbr.me{background:#ffe7a3}.lbr b{width:28px;text-align:right}.lbr span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbr i{font-style:normal;font-weight:800}
+.goal{font-size:15px;margin:8px 0 2px!important;color:#2d3436!important;font-weight:700}
+.goal .bar{display:inline-block;white-space:nowrap;margin:0 4px;vertical-align:1px}.goal .bar b{display:inline-block;width:11px;height:11px;border-radius:3px;background:#ddd6c6;margin:0 1px}.goal .bar b.on{background:#f0a500}
+.goal.tipl{background:#e6f6e9;border-radius:12px;padding:8px 10px;color:#1f5e2c!important}
+.goal.gift{background:#fff3d6;border-radius:12px;padding:8px 10px}
+.trip{margin:10px 0;background:#eaf4fb;border-radius:14px;padding:8px 12px 6px;font-weight:800;font-size:14px;color:#2d5b77}
+.trip>div:first-child{display:flex;justify-content:space-between;gap:8px}
+.trip .road{position:relative;height:34px;margin-top:4px;border-bottom:4px dashed #9fb7c6}
+.trip i{font-style:normal;font-size:26px;position:absolute;left:0;bottom:0;transform:scaleX(-1);animation:trip 2.4s ease-in-out .3s both}
+@keyframes trip{from{left:0}to{left:calc(100% - 32px)}}
+body.calm .trip i{animation:none;left:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){.trip i{animation:none;left:calc(100% - 32px)}}
 .coins-won{font-size:22px;font-weight:900;color:#e1a100!important}
 .clean{font-weight:800;color:#1e8a5a!important}
 .nw{white-space:nowrap}
@@ -116,6 +128,23 @@ button.pill::before{content:"";position:absolute;top:-10px;bottom:-10px;left:-6p
 @media (max-width:400px){.mh{padding-left:12px;padding-right:12px}.logo{font-size:17px}.logo .lc{display:none}.hdr-r{gap:5px}.hdr-r .pill{padding:5px 8px;font-size:14px}}
 @media (max-height:520px){.tip{font-size:14px;padding:6px 10px;top:4px}.gh{padding-top:4px;padding-bottom:0}.gh .icon{width:44px;height:44px;font-size:18px}.gt>div:first-child{font-size:15px}.gf{padding-top:4px;padding-bottom:6px}.gf .btn{padding-top:4px;padding-bottom:4px}.btn.bst{flex-direction:row;gap:6px;justify-content:center}}
 @media (min-width:900px) and (min-height:600px){#app{max-width:640px;box-shadow:0 0 50px rgba(0,0,0,.18)}}
+/* ПК/планшет, альбомное низкое окно (960×540, iframe на ноутбуке): панели двора — колонкой слева, двор — во всю высоту (клетка ~24 → ~32 px) */
+@media (min-aspect-ratio:4/3) and (max-height:640px) and (min-width:760px){
+  #app{max-width:760px;box-shadow:0 0 50px rgba(0,0,0,.18)}
+  #scr-game.on{display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto 1fr}
+  #scr-game .gh{grid-column:1;grid-row:1;flex-wrap:wrap;align-content:flex-start;padding:10px 8px 4px 12px}
+  #scr-game .gt{flex:1 1 90px}
+  #scr-game .gt{flex:1 1 120px}
+  #scr-game .gh-r{order:3;flex:1 1 auto;flex-direction:row;justify-content:space-between;align-items:center}
+  #scr-game #gSet{order:4}
+  #scr-game .stage{grid-column:2;grid-row:1/3}
+  #scr-game .gf{grid-column:1;grid-row:2;flex-direction:column;justify-content:flex-end;padding:8px 8px 12px 12px}
+  #scr-game .gf .btn,#scr-game .gf .btn.sq{flex:0 0 auto;width:100%}
+  #scr-game .gf .btn.sq{flex-direction:row;justify-content:center;gap:8px;padding:10px 0}
+  #scr-game .gf .btn.sq small{font-size:15px}
+  #scr-game .btn.bst{padding:10px 6px}
+  @supports not (inset:0){#scr-game .gf>*+*{margin-left:0;margin-top:10px}}
+}
 .btn.locked{opacity:.75;filter:saturate(.4)}
 .btn.locked small{display:block;font-size:13px;opacity:1}
 /* время суток */
@@ -139,8 +168,11 @@ button.pill::before{content:"";position:absolute;top:-10px;bottom:-10px;left:-6p
 .sd .ic{font-size:20px;display:block}
 /* настройки, сундуки */
 .set{display:flex;align-items:center;justify-content:space-between;background:#f1ede2;border-radius:14px;padding:10px 12px;margin-top:8px;font-weight:700;text-align:left;color:#2d3436;width:100%;min-height:48px}
-.set i{font-style:normal;font-weight:800;color:#b8390a}.set i.off{color:#57606f}
+.set i{font-style:normal;font-weight:800;color:#fff;background:#2b8a3e;border-radius:999px;padding:3px 12px;min-width:56px;text-align:center}.set i.off{color:#57606f;background:#dcd6c8}.set i.go,.pay .set i{background:none;color:#237032;padding:0;min-width:0}
+.pay{margin-top:12px;text-align:left}.pay h3{font-size:16px;margin:0 0 2px;color:#2d3436}.pay .set span{padding-right:10px}.pay .set small{font-weight:600}
+.pbuy b{white-space:nowrap;color:#1f5e2c;font-size:17px}.pcur{width:18px;height:18px;vertical-align:-3px;margin-left:3px}.pown i{color:#237032}
 .about{font-size:14px;text-align:left;color:#57606f}
+.how{text-align:left}.how p{font-size:14.5px;margin:7px 0;color:#2d3436}
 .chest{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0 2px;flex-wrap:wrap}
 .chest>span{background:rgba(22,44,32,.58);color:#fff;font-weight:800;border-radius:12px;padding:6px 12px;font-size:15px}
 .chest .btn{padding:8px 12px;font-size:15px}
@@ -223,6 +255,11 @@ const levelSeed=idx=>SEED_FIX[idx+1]||idx*31+7;
 function lvIndex(lv,p){const occ=baseOcc(lv),n=lv.vehicles.length;let mc=0;for(let k=0;k<n;k++)mc=Math.max(mc,closureOf(lv.vehicles,occ,lv.w,lv.h,k).size);
   return .5*n+2*lv.depth+.5*mc-.7*lv.free+(lv.amb?3:0)+(p.boss?2:0);}
 const DAILY=levelParams(20);
+// задание дня по ступеням (аудит 14): новичку — двор его уровня, а не стена на 24 машины. Внутри ступени у всех игроков одно и то же
+// задание (то же зерно дня, тот же выбор «лучшее из 3 зёрен» по трудности target); рейтинг считает дни, а не очки — честность не страдает.
+// Ступень: пройдено дворов <12 → как двор 9 (6×8, ~12 машин, индекс ~19); <20 → как двор 15 (7×9, ~16 машин, ~27); дальше — как было (двор 21, ~30)
+const DAILY_T=[{lv:8,target:19},{lv:14,target:27},{lv:20,target:30}];
+function dailyTier(){const u=S.unlocked||1;return u<13?0:u<21?1:2;}
 // гараж — долгая цель: машина за двор №3,6,9,15,21,27,36,45,54,72 (промежутки 3→6→9→18); все номера кратны 3 и не боссы —
 // там и так была бы межуровневая реклама, поэтому число межуровневых за 60 дворов не выросло (9)
 const CAR_AT=[3,6,9,15,21,27,36,45,54,72];
@@ -263,7 +300,7 @@ const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 // защита от сохранений неожиданной формы (ручная правка, старая версия): не даём им сломать игру и слияние
 function fixSave(){if(!isObj(S.stars))S.stars={};if(!isObj(S.daily))S.daily={};if(!Array.isArray(S.garage))S.garage=[];if(!isObj(S.chest))S.chest={};if(!isObj(S.paint))S.paint={};if(!isObj(S.yard))S.yard={};
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(typeof S.levelsDone!=='number')S.levelsDone=0;if(typeof S.adW!=='number'||!isFinite(S.adW))S.adW=0;if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
-  if(S.streak!=null&&!isObj(S.streak))delete S.streak;}
+  if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
 fixSave();
 // «точка отсчёта» с облаком: какое сохранение и сколько монет было общим у устройства и облака (при запуске, после слияния и после записи).
 // Монеты, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным — не теряются и не возвращаются
@@ -271,7 +308,8 @@ let BOOT_TS=S.ts||0,BOOT_COINS=S.coins;
 // облако: Яндекс — не чаще раза в 3,5 с (лимит 100 записей за 5 мин), VK — раза в 15 с; при сворачивании — сразу.
 // Пока облако не прочитано и не слито с локальным — в облако не пишем (иначе пустое новое устройство затрёт прогресс)
 let cloudT=0,cloudReady=false,cloudBusy=false,cloudTry=0,cloudBroken=0;
-function save(){S.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
+function save(){S.ts=nowMs(); // на Яндексе — время сервера: у двух устройств с разными часами слияние не ошибётся, какое сохранение новее
+try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
   if(!cloudReady){cloudLoad();return;}
   if((YP||VK)&&!cloudT)cloudT=setTimeout(cloudFlush,YP?3500:15000);}
 function cloudFlush(){clearTimeout(cloudT);cloudT=0;if(!cloudReady)return;
@@ -282,7 +320,7 @@ const noTs=o=>Object.assign({},o,{ts:0});
 // прочитать облако (при запуске, после входа в аккаунт или повтор после сбоя), слить с локальным и дописать в облако, чего там не хватает.
 // Битое облако VK (куски не сошлись) не считаем пустым: не пишем поверх, читаем ещё раз; после 3 неудач — берём локальное
 async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Date.now()-cloudTry<10000))return;cloudBusy=true;cloudTry=Date.now();
-  try{const d=YP?await YP.getData():await vkLoadCloud();
+  try{const d=YP?await timeLim(YP.getData(),8000):await vkLoadCloud();
     const before=canon(noTs(S));mergeSave(d);fixSave();cloudReady=true;cloudBroken=0;
     if(d&&typeof d.ts==='number')BOOT_TS=Math.max(BOOT_TS,d.ts);BOOT_COINS=S.coins;
     const ch=canon(noTs(S))!==before;
@@ -312,10 +350,13 @@ function mergeSave(d,ref){if(!isObj(d))return;
   for(const f of ['stars','daily','chest','yard'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(Array.isArray(d.garage))for(const i of d.garage)if(typeof i==='number'&&!S.garage.includes(i))S.garage.push(i);
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|chest|yard|garage|coins|streak)$/.test(k))S[k]=d[k]; // флажки (звук, подсказки)
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|chest|yard|garage|coins|streak|buy|buyB|payT|payV)$/.test(k))S[k]=d[k]; // флажки (звук, подсказки)
+  payMerge(d); // покупки — объединение
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
     if(!a||(b.last||0)>(a.last||0))S.streak=b;
     else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last,cyc:Math.max(a.cyc||0,b.cyc||0)};}}
+// ответ площадки с ограничением по времени: не ответила — считаем сбоем (облако повторим позже, cloudBusy снимется в finally)
+function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
 // ответ VK с ограничением по времени (вне VK мост может не ответить вовсе); VKWebAppInit на слабом телефоне может идти долго — ждём до 20 с
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
@@ -357,20 +398,24 @@ async function initVK(){
     await cloudLoad();
     vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
   }catch(e){VK=null;}
+  PAY.init(); // покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1)
+  updCoins(); // мост не ответил — с кнопок подсказки/эвакуатора уходит «за рекламу»
   window.__sdkDone=true;if(!G&&!window.__demo&&!modalOn&&$('scr-map').classList.contains('on'))maybeStreak();
 }
 async function initSDK(){
   if(window.YaGames){
     try{ysdk=await YaGames.init();
+      // «игра загружена» — сразу: меню уже на экране, облако и покупки догружаются следом (зависшее облако не должно держать ready)
+      try{ysdk.features&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
       ysdk.on&&ysdk.on('game_api_pause',()=>setPause('sdk',true));
       ysdk.on&&ysdk.on('game_api_resume',()=>setPause('sdk',false));
       try{ysdk.getFlags&&ysdk.getFlags().then(applyFlags).catch(()=>{});}catch(e){}
-      try{YP=await ysdk.getPlayer({scopes:false});await cloudLoad();}catch(e){}
+      try{YP=await timeLim(ysdk.getPlayer({scopes:false}),8000);await cloudLoad();}catch(e){}
     }catch(e){ysdk=null;}
   }
+  PAY.init(); // покупки: после SDK и облака; меню не ждёт
   // карту перерисовываем, только если она на экране (не выбрасываем из гаража); новичок уже во дворе 1 — там и остаётся
   window.__sdkDone=true;if(!G&&!window.__demo&&$('scr-map').classList.contains('on')&&!modalOn)openMap();
-  try{ysdk&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
   if(G&&!G.over&&!modalOn)YG.start();
 }
 
@@ -582,9 +627,30 @@ function drawVehicle(ctx,v,s,toPx,cs,fx){
     localBox(ctx,cx,cy+y0,an,-cs*.24,0,cs*.12,bw*.56,'#2d3436',cs*.03);
     localBox(ctx,cx,cy+y0,an,-cs*.24,-bw*.14,cs*.1,bw*.24,on?'#ff3838':'#8b1d1d',cs*.03);localBox(ctx,cx,cy+y0,an,-cs*.24,bw*.14,cs*.1,bw*.24,on?'#4a6bff':'#1e2a6b',cs*.03);}
   if(v.kind==='taxi'||v.deco==='taxi'){localBox(ctx,mid[0],mid[1]+y0,anm,0,0,cs*.12,cs*.34,'#2d3436',cs*.02);for(let k=0;k<3;k++)localBox(ctx,mid[0],mid[1]+y0,anm,(k%2?.03:-.03)*cs,(k-1)*cs*.1,cs*.05,cs*.07,'#fdcb6e',0);}
+  if(car&&v.mdl!=null)modelMarks(ctx,v,seg,dirAt,mid,anm,cs,bw,y0);
   // стрелка направления
   if(!(fx&&fx.noArrow)&&!v.noArrow)arrowAt(ctx,v,s,toPx,cs,y0);
 }
+// приметы машин гаража (аудит 14: Копейка, Девятка, Нива, Волга были одним корпусом разного цвета) — только рисунок, раскладка та же
+function modelMarks(ctx,v,seg,dirAt,mid,anm,cs,bw,y0){const [fx0,fy0]=seg[0],af=dirAt(0),[rx,ry]=seg[1],ar=dirAt(1),m=v.mdl,CH='#b9c4cc',DK='#2d3436';
+  const F=(fx,fy,w,h,c,r)=>localBox(ctx,fx0,fy0+y0,af,fx,fy,w,h,c,r),B=(fx,fy,w,h,c,r)=>localBox(ctx,rx,ry+y0,ar,fx,fy,w,h,c,r),M=(fx,fy,w,h,c,r)=>localBox(ctx,mid[0],mid[1]+y0,anm,fx,fy,w,h,c,r);
+  if(m===0){ // Копейка: круглые двойные фары и хромированные бамперы
+    F(bw*.5,0,cs*.06,bw*.98,CH,cs*.02);B(-bw*.5,0,cs*.06,bw*.98,CH,cs*.02);
+    for(const sd of [-1,1])for(const k of [.19,.33]){F(bw*.4,sd*bw*k,cs*.12,cs*.12,'#fffbe6',cs*.06);F(bw*.4,sd*bw*k,cs*.05,cs*.05,'#f6d365',cs*.025);}}
+  else if(m===1){ // Девятка: клиновидный нос — тёмная полоса-решётка и узкие вытянутые фары
+    F(bw*.47,0,cs*.07,bw*.9,DK,cs*.02);for(const sd of [-1,1])F(bw*.42,sd*bw*.28,cs*.06,cs*.24,'#fffbe6',cs*.02);
+    B(-bw*.47,0,cs*.08,bw*1.02,DK,cs*.03);} // и антикрыло сзади
+  else if(m===2){ // Нива: запаска на задней двери и багажник на крыше
+    B(-bw*.56,0,cs*.3,cs*.3,'#16191d',cs*.15);B(-bw*.56,0,cs*.12,cs*.12,'#95a5a6',cs*.06);
+    for(const k of [-.14,.14])M(k*cs,0,cs*.04,bw*.8,DK,cs*.01);M(0,-bw*.34,cs*.34,cs*.03,DK,0);M(0,bw*.34,cs*.34,cs*.03,DK,0);}
+  else if(m===3){ // Волга: хромированная решётка, молдинги по бортам и олень на капоте
+    F(bw*.49,0,cs*.07,bw*.96,CH,cs*.02);for(const k of [-.28,-.1,.1,.28])F(bw*.49,k*bw,cs*.07,cs*.02,'#95a5a6',0);
+    M(0,-bw*.49,cs*1.3,cs*.035,CH,0);M(0,bw*.49,cs*1.3,cs*.035,CH,0);
+    F(bw*.18,0,cs*.14,cs*.06,CH,cs*.02);F(bw*.24,0,cs*.05,cs*.1,CH,cs*.02);}
+  else if(m===4){ // Такси: зелёный огонёк «свободно» у лобового стекла
+    F(bw*.08,-bw*.3,cs*.08,cs*.08,'#2ecc71',cs*.04);}
+  else if(v.mdl===10){ // Запорожец: «уши» — воздухозаборники по бокам сзади
+    for(const sd of [-1,1])B(-cs*.02,sd*bw*.52,cs*.26,cs*.11,v.side,cs*.04);}}
 function arrowAt(ctx,v,s,toPx,cs,y0,glow){const f=v.L===2?s+.5:s+v.L-1-.62,p=toPx(trackPt(v.track,f)),[dx,dy]=DIRS[v.dir];
   ctx.save();ctx.translate(p[0],p[1]+y0-cs*.02);ctx.rotate(Math.atan2(dy,dx));ctx.beginPath();ctx.moveTo(-cs*.1,-cs*.16);ctx.lineTo(cs*.09,0);ctx.lineTo(-cs*.1,cs*.16);ctx.lineCap='round';ctx.lineJoin='round';
   if(glow){ctx.lineWidth=cs*.12;ctx.strokeStyle=glow;ctx.stroke();ctx.restore();return;}
@@ -598,7 +664,7 @@ function makeVehicle(cells,dir,color,w,h,kind){
 function recolor(v,c){const x=parseInt(c.slice(1),16),light=.299*(x>>16)+.587*(x>>8&255)+.114*(x&255)>170;
   return Object.assign(v,{color:c,light,side:shade(c,light?-.3:-.4),roof:shade(c,light?-.05:.16),edge:shade(c,light?-.55:-.6)});}
 function modelVehicle(m,col){const cells=[];for(let i=m.len-1;i>=0;i--)cells.push([i,0]);
-  const v=makeVehicle(cells,1,m.color,m.len,1,m.name==='Скорая'?'amb':m.name==='Такси'?'taxi':'');return col&&col!==m.color?recolor(v,col):v;}
+  const v=makeVehicle(cells,1,m.color,m.len,1,m.name==='Скорая'?'amb':m.name==='Такси'?'taxi':'');v.mdl=MODELS.indexOf(m);return col&&col!==m.color?recolor(v,col):v;}
 function drawModel(canvas,m,col){if(!canvas)return;const dpr=Math.min(2,window.devicePixelRatio||1),r=canvas.getBoundingClientRect(),W=r.width||150,H=r.height||80;
   canvas.width=W*dpr;canvas.height=H*dpr;const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
   const v=modelVehicle(m,col),cs=Math.min(W/(m.len+.6),H/1.35),ox=(W-m.len*cs)/2,oy=(H-cs)/2+cs*.08;
@@ -611,6 +677,7 @@ let G=null,W=0,H=0,cs=40,ox=0,oy=0,dpr=1,ground=null,lights=null,groundQ=1,groun
 // «спокойный режим»: без тряски, мигалок и пульсаций — настройка или системное «уменьшить движение»
 const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const calm=()=>S.calm===true||RM;
+const FINE=!!(window.matchMedia&&matchMedia('(pointer: fine)').matches); // мышь (ПК) — подсказки про колёсико, а не про пальцы
 const toPx=([x,y])=>[ox+(x+.5)*cs,oy+(y+.5)*cs];
 // камера: экран = мир·z + (x,y); мир — это двор при масштабе 1
 const cam={z:1,x:0,y:0,tw:null};
@@ -622,9 +689,9 @@ function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');cl
   const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 
 function startLevel(idx,daily){
-  const p=daily?DAILY:levelParams(idx);let seed=daily?todaySeed():levelSeed(idx),lv=genLevel(p,seed);
-  // задание дня: из трёх зёрен дня берём то, чья трудность ближе к 30 (иначе день ото дня разброс вдвое)
-  if(daily){let bi=Math.abs(lvIndex(lv,p)-30);for(let k=1;k<3;k++){const s2=seed*3+k,l2=genLevel(p,s2),d2=Math.abs(lvIndex(l2,p)-30);if(d2<bi){bi=d2;lv=l2;seed=s2;}}}
+  const DT=DAILY_T[dailyTier()],p=daily?levelParams(DT.lv):levelParams(idx);let seed=daily?todaySeed():levelSeed(idx),lv=genLevel(p,seed);
+  // задание дня: из трёх зёрен дня берём то, чья трудность ближе к цели ступени (иначе день ото дня разброс вдвое)
+  if(daily){const tg=DT.target;let bi=Math.abs(lvIndex(lv,p)-tg);for(let k=1;k<3;k++){const s2=seed*3+k,l2=genLevel(p,s2),d2=Math.abs(lvIndex(l2,p)-tg);if(d2<bi){bi=d2;lv=l2;seed=s2;}}}
   const R=rng(seed+99);
   // случайные цвета берём как раньше (тот же порядок вызовов R), потом отдельным шагом разводим соседей
   const base=lv.vehicles.map(v=>{const pal=PAL[Math.min(5,v.cells.length)],col=pal[Math.floor(R()*pal.length)];return{col,apD:.15+v.cells[0][1]*.035+R()*.08};});
@@ -665,7 +732,7 @@ function startLevel(idx,daily){
   tipAutoHide();
   renderHearts();show('scr-game');hideModal();requestAnimationFrame(()=>{layout();birdsInit();
     if(G&&G.yardCar>=0&&Math.random()<.5){const g=G;setTimeout(()=>{if(G===g&&!g.over)sayQuiet(pick('mine').replace('{n}',MODELS[g.yardCar].name),'win');},2600);}
-    if(G&&G.p.w>=8&&G.p.h>=11&&!S.zoomTip&&!window.__demo){S.zoomTip=1;save();G.pinchT=3;toast('Двор большой — раздвинь пальцы или нажми «🔍 Приблизить»',3500);}});YG.start();kick();
+    if(G&&G.p.w>=8&&G.p.h>=11&&!S.zoomTip&&!window.__demo){S.zoomTip=1;save();G.pinchT=FINE?0:3;toast(FINE?'Двор большой — покрути колёсико мыши или нажми «🔍 Приблизить»':'Двор большой — раздвинь пальцы или нажми «🔍 Приблизить»',3500);}});YG.start();kick();
 }
 let tipT=0;
 function tipAutoHide(){clearTimeout(tipT);const t=$('tip');if(t.style.display!=='block')return;
@@ -888,7 +955,8 @@ function nearCar(px,py){const {w,h}=G.p,fx=(px-ox)/cs,fy=(py-oy)/cs,lim=.35;let 
   return best;}
 function startExit(v,r,delay){const {w}=G.p;if(!G.exited){G.exited=true;if(!G.daily&&G.idx===0)$('tip').style.display='none';}v.cells.forEach(([x,y])=>G.occ[y*w+x]=-1);v.state='exit';v.t=-(delay||0);v.exitS=r.k+v.L+.9;
   if(!G.vs.some(u=>u.state==='idle'||u.state==='bump'))v.last=true; // последняя машина двора
-  if(!delay){SND.go();exitFx(v,true);}else v.fxWait=true;if(G.hint===v.id)G.hint=-1;
+  if(!delay){SND.go();exitFx(v,true);}else v.fxWait=true;
+  if(G.hint===v.id){G.hint=-1;const q=G.hintQ||[];while(q.length){const nx=G.vs[q.shift()];if(nx&&nx.state==='idle'){G.hint=nx.id;G.hintT=4;break;}}}
   if(G.amb&&G.amb.id===v.id&&!G.amb.done){G.amb.done=true;G.bonus+=5;say(pick('amb'),'win');}
   else if(v.id===G.police){G.policeT=.45;SND.siren();say(pick('police'),'win');}
   else if(!delay&&Math.random()<.15)say(pick('exit'),'bench');
@@ -906,7 +974,7 @@ function policeWave(){const {w,h}=G.p;let k=0;
 function ambTick(){const a=G.amb;if(!a||a.done)return;const v=G.vs[a.id];if(v.state!=='idle'&&v.state!=='bump')return;
   a.left--;if(a.left>0)return;
   a.left=a.limit;G.hearts--;renderHearts();G.shake=5;SND.siren();say(pick('ambLate'),'win');toast('🚑 Скорая опоздала! −1 ❤️');
-  if(G.hearts<=0&&!G.over){G.over=true;setTimeout(lose,700);}}
+  if(G.hearts<=0&&!G.over){G.over=true;loseLater(700);}}
 function tow(v){const {w}=G.p;G.helps++;v.cells.forEach(([x,y])=>G.occ[y*w+x]=-1);v.state='tow';v.t=0;G.towMode=false;$('gTow').classList.remove('on');
   SND.tow();say(pick('tow'),'bench');if(G.hint===v.id)G.hint=-1;updHud();}
 /* ================= голуби и кот ================= */
@@ -1038,7 +1106,7 @@ function update(dt){
   G.parts=G.parts.filter(p=>p.life>0);
   G.shake=Math.max(0,G.shake-dt*30);
   if(G.hintT>0)G.hintT-=dt;
-  if(!G.over&&G.vs.every(v=>v.state==='gone')){if(!G.winT){confetti();say(pick('win'),'bench');scare(W/2,H/2,W+H);camTo(1,0,0);}G.winT+=dt;if(G.winT>1.3)win();}
+  if(!G.over&&G.vs.every(v=>v.state==='gone')){if(!G.winT){confetti();say(winLine(),'bench');scare(W/2,H/2,W+H);camTo(1,0,0);}G.winT+=dt;if(G.winT>1.3)win();}
 }
 function confetti(){const cols=['#ff6b6b','#feca57','#48dbfb','#1dd1a1','#ff9ff3','#ffffff'];
   for(let i=0;i<90;i++){const a=-Math.PI/2+(Math.random()-.5)*1.6,sp=260+Math.random()*380;
@@ -1053,13 +1121,19 @@ function crash(v){
   if(G.soft){G.shake=4;if(!G.softTold){G.softTold=1;toast('Упёрлась! Ищи машину, перед которой дорога свободна 👀',3500);}return;}
   G.hearts--;renderHearts();
   setTimeout(()=>SND.honk2(),220);
-  if(Math.random()<.8){const wnd=Math.random()<.5;say(pick(wnd?'crashWin':'crashBench'),wnd?'win':'bench');}
+  if(Math.random()<.4){const wnd=Math.random()<.5;say(pick(wnd?'crashWin':'crashBench'),wnd?'win':'bench');}
 }
 const PH={
-  crashWin:['Ну куда ты едешь?!','Опять эти водители!','Сейчас полицию вызову!','Глаза разуй!','Мою ласточку помял!','Кто так паркуется?!','Люди спят вообще-то!','Я всё сняла на телефон!'],
-  crashBench:['Ох, батюшки!','Куда прёшь, окаянный!','Ишь, гонщик выискался!','Молодёжь пошла…','Чуть кота не задавил!','В наше время так не ездили!','Права купил, что ли?'],
-  exit:['Скатертью дорожка!','Наконец-то уехал!','И не возвращайся!','Счастливого пути, милок!','Одним меньше — дышать легче!'],
-  win:['Двор свободен — можно сушить бельё!','Тишина-то какая…','Ну наконец-то, красота!','Вот это я понимаю — водитель!'],
+  // аудит 14: без грубостей (аудитория 45+), реплика на аварию — в 40% случаев; победа и выезд — по 13–15 фраз, чтобы не повторялись
+  crashWin:['Ну куда ты едешь?!','Опять эти водители!','Ой, аккуратнее!','Мою ласточку помял!','Кто так паркуется?!','Люди спят вообще-то!','Потише там, внизу!','Ох, моя машинка!'],
+  crashBench:['Ох, батюшки!','Ой, аккуратнее, сынок!','Ишь, гонщик выискался!','Не торопись, милок!','Чуть кота не задавил!','В наше время так не ездили!','Тише едешь — дальше будешь!'],
+  exit:['Скатертью дорожка!','Наконец-то уехал!','Счастливого пути, милок!','Одним меньше — дышать легче!','Езжай с богом!','Вот и славно!','Ровно пошёл, молодец!','Путь свободен!','Аккуратненько, умница!','Привет семье передавай!','Сосед, до вечера!','Место освободилось!','Ну вот, и мусоровозу проехать!'],
+  win:['Двор свободен — можно сушить бельё!','Тишина-то какая…','Ну наконец-то, красота!','Вот это я понимаю — водитель!','Теперь и дети погуляют!','Можно и чайку попить!','Дворник доволен!','Лавочка аплодирует!','Хоть в футбол играй!','Как в выходной — пусто!','Золотые руки у водителя!','Молодец! Весь двор видел!','Вот бы так каждый день!','Кот спокойно дремлет — значит, всё хорошо'],
+  // по регионам (иногда вместо обычной реплики на победу)
+  reg0:['По-столичному чисто!','На Волге так и ездят — плавно!','Центр России не подвёл!'],
+  reg1:['Урал крепкий — и двор отстояли!','Сибирский мороз не помеха!','По-уральски, основательно!'],
+  reg2:['До Тихого океана — и ни одной пробки!','Дальний Восток — рука мастера!','С сопок всё видно — чисто!'],
+  reg3:['Хоть за границей, а двор как родной!','Даже туристы хлопают!','Вокруг света без пробок!'],
   amb:['Успели! Скорая уехала 🚑','Пропустили скорую — молодцы!'],
   ambLate:['Скорая опоздала! Больной ушёл пешком.','Скорую пропустите, ироды!'],
   police:['Граждане, освобождаем двор!','Всем разъехаться! Проверка документов!'],
@@ -1069,8 +1143,10 @@ const PH={
   catFlee:['Кота не задавите!','Мурзик, беги!','Барсик, домой!','Кот-то тут при чём?!','Васька, живо слезай!','Ой, котейку напугали!'],
   birds:['Голубей распугали!','Кыш, кыш, пернатые!','Опять голубей гоняют','Я их с утра кормила!'],
   birdsTap:['Не гоняй голубей!','Ишь, голубей пугает','Кыш! Кыш!','Им тоже жить где-то надо'],
-  mine:['Гляди-ка: {n} во дворе!','О, {n}! Вот это машина!','{n} — красота, а не машина!','Кто это на {n} приехал?']};
+  mine:['Гляди-ка: {n} во дворе!','О, {n}! Вот это машина!','{n} — красота, а не машина!','Чья это {n} во дворе?']};
 function pick(k){const a=PH[k];return a[Math.floor(Math.random()*a.length)];}
+// реплика на победу: иногда — про регион, где стоит двор
+function winLine(){const r=G&&!G.daily?Math.min(3,Math.floor(G.idx/10)):-1;return r>=0&&G.idx<50&&Math.random()<.3?pick('reg'+r):pick('win');}
 function say(text,where){if(!G)return;let x=W/2,y=oy,win=false;const A=G.anc||{wins:[],bench:[]};
   if(where==='win'&&A.wins.length){[x,y]=A.wins[Math.floor(Math.random()*A.wins.length)];win=true;}
   else if(A.bench.length)[x,y]=A.bench[Math.floor(Math.random()*A.bench.length)];
@@ -1097,7 +1173,9 @@ function drawBubble(b0){const I=b0.img||bubbleImg(b0),fs=I.fs,a=Math.max(0,Math.
   const tx=Math.max(bx+12,Math.min(bx+bw-12,bx0));ctx.fillStyle='#fff';ctx.beginPath();
   if(below){ctx.moveTo(tx-7,by+1);ctx.lineTo(tx,by-8);ctx.lineTo(tx+7,by+1);}else{ctx.moveTo(tx-7,by+bh-1);ctx.lineTo(tx,by+bh+8);ctx.lineTo(tx+7,by+bh-1);}ctx.fill();
   ctx.restore();}
-function afterCrash(){if(G.hearts<=0&&!G.over){G.over=true;setTimeout(lose,250);}}
+function afterCrash(){if(G.hearts<=0&&!G.over){G.over=true;loseLater(250);}}
+// окно поражения — с задержкой; если игрок успел нажать «Заново» или уйти на карту, оно не всплывает поверх нового двора
+function loseLater(ms){const g=G;setTimeout(()=>{if(G===g&&g.over)lose();},ms);}
 
 // слой неподвижных машин: перерисовывается, только когда меняется набор стоящих машин (тронулась, вернулась, уехала,
 // подсветка) или земля (новый двор, зум, поворот). В кадре рисуются лишь движущиеся, подсвеченные и спецмашины с мигалками
@@ -1212,7 +1290,7 @@ function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REA
 function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
 // «долг» межэкранной: S.adW — побед с прошлого показа; показ положен при S.adW ≥ AD_EVERY. Если сейчас нельзя (босс, новая машина,
 // пауза после рекламы, выход «На карту») — показ не сгорает, а ждёт следующей победы. Обнуляется только после настоящего показа
-function adDue(){return (S.adW||0)>=AD_EVERY&&(S.unlocked||1)>AD_FROM;}
+function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.unlocked||1)>AD_FROM;}
 function showInterstitial(cb0){
   const cb=shown=>{lastAdT=Date.now();if(shown!==false){S.adW=0;save();}cb0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(cb);return;}
@@ -1220,6 +1298,13 @@ function showInterstitial(cb0){
   if(!ysdk){stubAd(cb);return;}
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
 }
+function hintChain(id){const {w,h}=G.p,occ=G.occ.slice(),out=[],gone=new Set([id]);let cur=id;
+  const free=v=>canExit(v,occ,w,h,v.id).free;
+  for(let k=0;k<2;k++){G.vs[cur].cells.forEach(([x,y])=>occ[y*w+x]=-1);
+    const was=G.vs.filter(v=>v.state==='idle'&&!gone.has(v.id)&&canExit(v,G.occ,w,h,v.id).block===cur&&free(v));
+    const need=G.amb&&!G.amb.done?closureOf(G.vs,G.occ,w,h,G.amb.id):null;
+    const nx=(need&&was.find(v=>need.has(v.id)))||was[0];if(!nx)break;out.push(nx.id);gone.add(nx.id);cur=nx.id;}
+  return out;}
 function hint(){
   if(!G||G.over)return;
   const {w,h}=G.p,cand=G.vs.filter(v=>v.state==='idle'&&canExit(v,G.occ,w,h,v.id).free);
@@ -1227,33 +1312,176 @@ function hint(){
   // сначала — скорая и те, кто её запирает; потом полиция; иначе любая, кто может уехать
   let best=null;if(G.amb&&!G.amb.done){const need=closureOf(G.vs,G.occ,w,h,G.amb.id);best=cand.find(v=>v.id===G.amb.id)||cand.find(v=>need.has(v.id));}
   best=best||cand.find(v=>v.id===G.police)||cand[Math.floor(Math.random()*cand.length)];
-  const g=G,use=()=>{if(G!==g||g.over)return;g.hint=best.id;g.hintT=4;g.helps++;};
+  // подсказка показывает цепочку до 3 ходов: уехала подсвеченная — загорается следующая, которой она мешала
+  const g=G,use=()=>{if(G!==g||g.over)return;g.hint=best.id;g.hintT=4;g.hintQ=hintChain(best.id);g.helps++;};
+  if(S.freeHint&&!G.daily){S.freeHint=0;save();updCoins();SND.coin();toast('🎁 Бесплатная подсказка за серию побед');use();return;}
   // монеты есть — можно и за монеты, и за рекламу (кто-то бережёт монеты); нет — как раньше: окно «Не хватает монет»
   if(S.coins<PRICE.hint||!adOk()){spend('hint',use);return;}
-  modal(`<h2>💡 Подсказка</h2><p>Подсвечу машину, которой можно ехать.</p><div class="row"><button class="btn accent" id="mHintC">💡 За ${coinsTxt(PRICE.hint)}</button><button class="btn accent" id="mHintAd">📺 Бесплатно за рекламу</button><button class="btn" id="mCancel">Отмена</button></div>`);
+  modal(`<h2>💡 Подсказка</h2><p>Подсвечу машину, которой можно ехать.</p><div class="row"><button class="btn accent noenter" id="mHintC">💡 За ${coinsTxt(PRICE.hint)}</button><button class="btn accent noenter" id="mHintAd">📺 Бесплатно за рекламу</button><button class="btn" id="mCancel">Отмена</button></div>`);
   $('mHintC').onclick=()=>{hideModal();spend('hint',use);};$('mHintAd').onclick=()=>{hideModal();showRewarded(use);};$('mCancel').onclick=hideModal;
 }
 /* ================= монеты ================= */
 // экономика (27.09): двор 6–10 💰, реклама за монеты +30 ≈ 3 двора; подсказка ≈ 4–5 дворов, жизнь ≈ 7–8, эвакуатор ≈ 10 — роскошь; модель — tools/econ-sim.py
 // цель для монет (аудит 12): покраска машины из гаража и «своя машина во дворе» — не бустеры, выиграть ими нельзя
 const PRICE={hint:40,tow:100,life:70,paint:150,yard:250},DAILY_REWARD=20;let AD_COINS=30,AD_EVERY=3,X2_ON=true;
+// серия побед подряд (аудит 14): каждые WSTREAK побед без окна «Машины помяты» — одна бесплатная подсказка (S.freeHint, не копится).
+// econ-sim '{"wstreak":5}': игрок без рекламы покупает подсказок 12,8 → 9,8 за 60 дворов, роликов за награду у «всех» −6%; флаг Яндекса win_streak 3–10
+let WSTREAK=5;
 // удалённая настройка Яндекса (флаги в консоли, по умолчанию их нет — действуют значения выше). Границы жёсткие:
 // межэкранная — не чаще раза в 2 двора (по умолчанию 3) и не чаще раза в 180 с (ad_gap — только больше); ×2 за рекламу можно выключить флагом x2=0
 function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
   if((n=num('price_hint',20,120))!==null)PRICE.hint=n;if((n=num('price_life',30,200))!==null)PRICE.life=n;if((n=num('price_tow',40,300))!==null)PRICE.tow=n;
   if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;
-  if((n=num('price_paint',50,600))!==null)PRICE.paint=n;if((n=num('price_yard',50,800))!==null)PRICE.yard=n;if(f.x2==='0'||f.x2==='off')X2_ON=false;updCoins();}
+  if((n=num('price_paint',50,600))!==null)PRICE.paint=n;if((n=num('price_yard',50,800))!==null)PRICE.yard=n;if(f.x2==='0'||f.x2==='off')X2_ON=false;if((n=num('win_streak',3,10))!==null)WSTREAK=n;updCoins();}
 function updCoins(){const a=$('gCoins'),b=$('coinCnt');if(a)a.textContent='💰 '+S.coins;if(b)b.textContent=S.coins;
   // монет не хватает — на кнопке сразу видно, что можно за рекламу
-  for(const [id,k] of [['hintPr','hint'],['towPr','tow']]){const e=$(id);if(e)e.textContent=S.coins>=PRICE[k]?PRICE[k]+' 💰':'📺 бесплатно за рекламу';}}
+  // (во дворах обучения 1–3 и там, где ролик не показать, — просто цена; подпись короткая, чтобы кнопка не росла в три строки)
+  const adLbl=adOk()&&!(G&&!G.daily&&G.idx<3);
+  for(const [id,k] of [['hintPr','hint'],['towPr','tow']]){const e=$(id);if(e)e.textContent=k==='hint'&&S.freeHint&&G&&!G.daily?'🎁 бесплатно':S.coins>=PRICE[k]||!adLbl?PRICE[k]+' 💰':'📺 за рекламу';}}
 function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
 function spend(kind,then){const pr=PRICE[kind];
   if(S.coins>=pr){setCoins(S.coins-pr);SND.coin();then();return;}
-  modal(`<h2>Не хватает монет</h2><p>Нужно ${coinsTxt(pr)}, а у тебя ${coinsTxt(S.coins)}.</p><div class="row"><button class="btn accent" id="mAdFree">📺 Бесплатно за рекламу</button><button class="btn" id="mShop">💰 Получить монеты</button><button class="btn" id="mCancel">Отмена</button></div>`);
-  $('mAdFree').onclick=()=>{hideModal();showRewarded(then);};$('mShop').onclick=()=>{hideModal();openShop();};$('mCancel').onclick=hideModal;}
+  // ролик не показать (настоящий VK без моста) — кнопок рекламы нет; «Получить монеты» — только если там что-то есть
+  const ad=adOk(),shop=ad||(PAY.on&&!inYard());
+  modal(`<h2>Не хватает монет</h2><p>Нужно ${coinsTxt(pr)}, а у тебя ${coinsTxt(S.coins)}.${ad?'':' Монеты дают за каждый двор, больше — за три звезды и сундуки на карте.'}</p><div class="row">${ad?'<button class="btn accent noenter" id="mAdFree">📺 Бесплатно за рекламу</button>':''}${shop?'<button class="btn noenter" id="mShop">💰 Получить монеты</button>':''}<button class="btn" id="mCancel">Отмена</button></div>`);
+  if(ad)$('mAdFree').onclick=()=>{hideModal();showRewarded(then);};if(shop)$('mShop').onclick=()=>{hideModal();openShop();};$('mCancel').onclick=hideModal;}
 function openShop(){
-  modal(`<h2>Монеты 💰</h2><p>У тебя ${coinsTxt(S.coins)}. Монеты дают за каждый двор, больше — за три звезды, сложные дворы и сундуки за звёзды на карте.</p><div class="row"><button class="btn accent" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} за рекламу</button><button class="btn" id="mCancel">Закрыть</button></div>`);
-  $('mAdCoins').onclick=()=>{hideModal();showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');});};$('mCancel').onclick=hideModal;}
+  // покупки за деньги — только в спокойном месте (карта/гараж), не поверх двора; нет платежей — раздела нет совсем
+  const buy=PAY.on&&!inYard();
+  modal(`<h2>Монеты 💰</h2><p>У тебя ${coinsTxt(S.coins)}. Монеты дают за каждый двор, больше — за три звезды, сложные дворы и сундуки за звёзды на карте.</p>${buy?PAY.html():''}<div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} за рекламу</button>`:''}<button class="btn" id="mCancel">Закрыть</button></div>`);
+  if(buy){PAY.bind($('mcard'));PAY.re=openShop;}
+  if($('mAdCoins'))$('mAdCoins').onclick=()=>{hideModal();showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');});};$('mCancel').onclick=hideModal;}
+function inYard(){return !!(G&&!G.over&&$('scr-game').classList.contains('on'));}
+
+/* ---- товары «Выезда» (каталог — hobby-analytics/13-purchases-catalog.md, п. 4.1). Силы не продаём: рейтинг задания дня считает дни ----
+   vk — цена в голосах, обязана совпадать с ~/Projects/hobby-pay/catalog.json (сервер vk-pay отдаёт её VK) */
+const PAY_ROW='set';
+const PAY_ITEMS={
+  no_ads:{perm:1,bonus:150,vk:20,ic:'🚫',name:'Без рекламы между дворами',desc:'Навсегда, и сразу +150 💰. Ролики за награду остаются — по желанию'},
+  coins_s:{n:300,vk:5,ic:'💰',name:'Кошелёк: 300 💰',desc:'Хватит примерно на 7 подсказок',done:'+300 💰 — спасибо!'},
+  coins_l:{n:1000,vk:14,ic:'💰',name:'Сейф: 1000 💰',desc:'Выгоднее кошелька',done:'+1000 💰 — спасибо!'},
+  starter:{perm:1,bonus:500,vk:8,ic:'🎁',name:'Набор водителя',desc:'500 💰 и краска «Золото» для всех машин. Покупается один раз'},
+  paints:{perm:1,vk:7,ic:'🎨',name:'Особые краски',desc:'Перламутр, хром, красная вишня и мокрый асфальт — для всех машин гаража'}
+};
+const PAY_TEST={no_ads:149,coins_s:39,coins_l:99,starter:59,paints:49}; // цены только для ?paytest=1; настоящие — в консоли
+function payAdd(n){S.coins+=n;}
+function payFlush(){cloudFlush();}
+function payPause(on){setPause('pay',on);}
+// после покупки/восстановления: монеты на экране и перерисовать окно, где были кнопки (PAY.re — его функция)
+function payAfter(){updCoins();if(modalOn&&PAY.re)PAY.re();}
+/* ================= покупки за деньги: Яндекс Игры (ysdk.payments) и VK Игры (VKWebAppShowOrderBox) — общий модуль (одинаковый в 5 играх) =================
+   Товары игры — PAY_ITEMS (выше), id совпадают с id в консоли Яндекса («Инап-покупки») и в hobby-pay/catalog.json (VK).
+   Кнопок покупок НЕТ совсем, если платежи недоступны: нет SDK/моста (мак), каталог Яндекса пуст, VK не поддерживает оплату (iOS).
+   Постоянные (perm) — флаг S.buy[id], разовый бонус монет — один раз на игрока (S.buyB). Выдача — только после подтверждения площадки.
+   Яндекс: цена и значок валюты — только из getCatalog; расходуемые: выдать → сохранить (облако сразу) → consumePurchase;
+     незавершённые при запуске довыдаём (getPurchases). Токены выданных — S.payT (и в облаке), сбой consume не даст выдать второй раз.
+   VK: на кнопке число голосов (PAY_ITEMS.vk). success:true + order_id → выдать → сохранить → стереть ключ pay_<order_id>.
+     Страховка: сервер vk-pay при оплате пишет в хранилище VK игрока pay_<order_id>=id (расходуемые) и own_<id>=1 (постоянные);
+     при запуске читаем их и довыдаём. Выданные order_id — S.payV (последние 30); покупка без order_id оставляет метку «x:<id>»,
+     которая «съест» первый чужой pay_ этого товара — второй раз не выдастся.
+   Мак: ?paytest=1 — имитация Яндекса (localStorage «paytest»), ?vk=1&paytest=1 — имитация VK с сервером (localStorage «paytestvk»),
+   ?paytest=fail — отказ. В настоящем VK (vk_app_id) и в Яндексе заглушек нет */
+const payObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+const PAY={on:false,p:null,v:null,list:[],busy:false,
+  test:/[?&]paytest=/.test(location.search),
+  // запуск: после SDK/моста и облака. Незавершённые покупки обрабатываем, даже если каталог не пришёл
+  async init(){if(PAY.p||PAY.v)return;
+    if(PLAT==='vk')return PAY.initVK();
+    try{if(ysdk)PAY.p=ysdk.getPayments?await payT(ysdk.getPayments({signed:false})):ysdk.payments;
+      else if(PAY.test&&!window.YaGames)PAY.p=payStub();}catch(e){PAY.p=null;}
+    if(!PAY.p)return;
+    try{await PAY.restore();}catch(e){}
+    try{const c=await payT(PAY.p.getCatalog());PAY.list=(Array.isArray(c)?c:[]).filter(x=>x&&PAY_ITEMS[x.id]);}catch(e){PAY.list=[];}
+    PAY.on=PAY.list.length>0;if(PAY.on)payAfter();},
+  async initVK(){
+    if(VK){let ok=false;try{ok=!!(VK.supportsAsync&&await payT(VK.supportsAsync('VKWebAppShowOrderBox'),8000));}catch(e){}if(ok)PAY.v=payVK();}
+    else if(PAY.test&&!VK_REAL)PAY.v=payStubVK();
+    if(!PAY.v)return;
+    try{await PAY.restore();}catch(e){}
+    PAY.list=Object.keys(PAY_ITEMS).filter(id=>PAY_ITEMS[id].vk>0).map(id=>({id}));
+    PAY.on=PAY.list.length>0;if(PAY.on)payAfter();},
+  own(id){return !!(payObj(S.buy)&&S.buy[id]);},
+  item(id){return PAY.list.find(x=>x.id===id)||null;},
+  give(id){const it=PAY_ITEMS[id];
+    if(it.perm){if(!payObj(S.buy))S.buy={};S.buy[id]=1;
+      if(it.bonus){if(!payObj(S.buyB))S.buyB={};if(!S.buyB[id]){S.buyB[id]=1;payAdd(it.bonus);}}}
+    else payAdd(it.n||0);
+    if(it.give)it.give();},
+  // при запуске и «Восстановить покупки»: постоянные — выдать, если флага нет; расходуемые — довыдать и отметить
+  async restore(){let got=0;
+    if(PAY.v)got=await PAY.restoreVK();
+    else{const ps=await payT(PAY.p.getPurchases());
+      for(const x of (Array.isArray(ps)?ps:[])){const it=x&&PAY_ITEMS[x.productID];if(!it)continue;
+        if(it.perm){if(!PAY.own(x.productID)){PAY.give(x.productID);got=1;}}else if(await PAY.credit(x))got=1;}}
+    if(got){save();payFlush();payAfter();toast('Покупка зачислена',2600);}
+    return got;},
+  // VK: ключи own_<id> (постоянные, не стираем) и pay_<order_id> (расходуемые: выдать, сохранить, стереть)
+  async restoreVK(){const ks=await PAY.v.keys();let got=0;const done=[];if(!Array.isArray(S.payV))S.payV=[];
+    for(const k of ks){const m=/^(own|pay)_(.+)$/.exec(k.key||'');if(!m||!k.value)continue;
+      if(m[1]==='own'){const it=PAY_ITEMS[m[2]];if(it&&it.perm&&!PAY.own(m[2])){PAY.give(m[2]);got=1;}continue;}
+      const id=String(k.value),it=PAY_ITEMS[id];if(!it)continue;
+      if(S.payV.indexOf(m[2])<0){const x=S.payV.indexOf('x:'+id); // покупка без order_id уже выдана — это её заказ
+        if(x>=0)S.payV[x]=m[2];else{PAY.give(id);payMark(m[2]);got=1;}}
+      done.push(k.key);}
+    if(done.length){save();payFlush();for(const k of done)try{await PAY.v.clear(k);}catch(e){}}
+    return got;},
+  // расходуемая: выдать (если этот токен ещё не выдавали), сохранить в облако и только потом consumePurchase
+  async credit(x){const t=String(x.purchaseToken||'');if(!Array.isArray(S.payT))S.payT=[];let fresh=false;
+    if(!t||S.payT.indexOf(t)<0){PAY.give(x.productID);if(t)S.payT.push(t);if(S.payT.length>30)S.payT=S.payT.slice(-30);save();payFlush();fresh=true;}
+    try{if(t)await payT(PAY.p.consumePurchase(t));}catch(e){}
+    return fresh;},
+  async buy(id){const it=PAY_ITEMS[id];if(!it||PAY.busy||!PAY.on||!PAY.item(id)||(it.perm&&PAY.own(id)))return;PAY.busy=true;payPause(true);
+    try{if(PAY.v){const r=await PAY.v.order(id);if(!r||!r.success)throw new Error('cancel');
+        const oid=r.order_id!=null?String(r.order_id):'';if(!Array.isArray(S.payV))S.payV=[];
+        if(!oid||S.payV.indexOf(oid)<0){PAY.give(id);payMark(oid||'x:'+id);}
+        save();payFlush();if(oid)PAY.v.clear('pay_'+oid).catch(()=>{});}
+      else{const x=await PAY.p.purchase({id});
+        if(it.perm){PAY.give(id);save();payFlush();}
+        else await PAY.credit(x&&x.productID===id?x:{productID:id,purchaseToken:x&&x.purchaseToken});}
+      SND.coin();toast(it.done||'Готово! Спасибо за покупку',2800);payAfter(id);}
+    catch(e){toast('Покупка не состоялась',2200);}
+    finally{PAY.busy=false;payPause(false);}},
+  // «Восстановить покупки» (Об игре): заново читаем getPurchases / ключи VK
+  async again(){if(!(PAY.p||PAY.v)||PAY.busy)return;PAY.busy=true;let got=0;try{got=await PAY.restore();}catch(e){}PAY.busy=false;if(!got)toast('Покупки проверены — всё на месте',2400);},
+  // цена: VK — число голосов (требование VK); Яндекс — из каталога: число + значок валюты (getPriceCurrencyImage), иначе готовая строка price
+  price(pr){if(PAY.v){const n=PAY_ITEMS[pr.id].vk,a=n%10,b=n%100;return n+' '+(a===1&&b!==11?'голос':a>=2&&a<=4&&(b<12||b>14)?'голоса':'голосов');}
+    let img='';try{img=pr.getPriceCurrencyImage?pr.getPriceCurrencyImage('svg'):'';}catch(e){}
+    return img&&pr.priceValue?payEsc(pr.priceValue)+'<img class="pcur" src="'+payEsc(img)+'" alt="">':payEsc(pr.price||pr.priceValue||'');},
+  row(pr){const it=PAY_ITEMS[pr.id],own=it.perm&&PAY.own(pr.id),txt='<span>'+it.ic+' '+payEsc(it.name)+'<br><small>'+payEsc(it.desc)+'</small></span>';
+    return own?'<div class="'+PAY_ROW+' pown">'+txt+'<i>куплено</i></div>':'<button class="'+PAY_ROW+' pbuy" data-pid="'+payEsc(pr.id)+'">'+txt+'<b>'+PAY.price(pr)+'</b></button>';},
+  // список товаров (ids — только эти, по порядку каталога); owned=false — без уже купленных
+  html(ids,owned){const L=PAY.list.filter(pr=>(!ids||ids.indexOf(pr.id)>=0)&&(owned!==false||!(PAY_ITEMS[pr.id].perm&&PAY.own(pr.id))));
+    return L.length?'<div class="pay"><h3>Покупки</h3>'+L.map(PAY.row).join('')+'</div>':'';},
+  bind(root){(root||document).querySelectorAll('.pbuy').forEach(b=>b.onclick=()=>{try{(SND.tap||SND.click)();}catch(e){}PAY.buy(b.dataset.pid);});}
+};
+function payMark(v){if(!Array.isArray(S.payV))S.payV=[];if(S.payV.indexOf(v)<0)S.payV.push(v);if(S.payV.length>30)S.payV=S.payV.slice(-30);}
+// слияние облака (d) в сохранение T (по умолчанию S): купленное, выданные бонусы, токены и заказы — объединение (покупка не теряется ни с какой стороны)
+function payMerge(d,T){T=T||S;if(!payObj(d)||!payObj(T))return;
+  for(const f of ['buy','buyB'])if(payObj(d[f])){if(!payObj(T[f]))T[f]={};for(const k in d[f])if(d[f][k])T[f][k]=1;}
+  for(const f of ['payT','payV'])if(Array.isArray(d[f])){if(!Array.isArray(T[f]))T[f]=[];for(const t of d[f])if(typeof t==='string'&&T[f].indexOf(t)<0)T[f].push(t);if(T[f].length>30)T[f]=T[f].slice(-30);}}
+function payT(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||15000))]);}
+function payEsc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
+// VK: окно оплаты (игрок может думать долго — ждём до 10 мин) и ключи хранилища, которые пишет сервер vk-pay
+function payVK(){return {order:id=>vkSend('VKWebAppShowOrderBox',{type:'item',item:id},600000),
+  keys:async()=>{const r=await vkSend('VKWebAppStorageGetKeys',{count:1000,offset:0},8000),ks=((r&&r.keys)||[]).filter(k=>/^(own|pay)_/.test(k));
+    if(!ks.length)return [];const g=await vkSend('VKWebAppStorageGet',{keys:ks},8000);return (g&&g.keys)||[];},
+  clear:k=>vkSend('VKWebAppStorageSet',{key:k,value:''},8000)};}
+// имитация платежей для проверки на маке (?paytest=1): цены — PAY_TEST, покупки лежат в localStorage «paytest», consume их убирает
+function payStub(){const K='paytest',rd=()=>{try{return JSON.parse(localStorage.getItem(K))||[];}catch(e){return [];}},wr=a=>{try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}};
+  const cur='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#f5b400"/><text x="10" y="14.5" font-size="12" text-anchor="middle" font-family="Arial" font-weight="700" fill="#fff">T</text></svg>');
+  const wait=v=>new Promise(ok=>setTimeout(()=>ok(v),250)),fail=()=>window.__payCancel||/[?&]paytest=fail/.test(location.search);
+  return {getCatalog:()=>wait(Object.keys(PAY_TEST).map(id=>({id,title:id,description:'',imageURI:'',price:PAY_TEST[id]+' тест',priceValue:String(PAY_TEST[id]),priceCurrencyCode:'TST',getPriceCurrencyImage:()=>cur}))),
+    getPurchases:()=>wait(rd()),
+    purchase:({id})=>fail()?Promise.reject(new Error('cancel')):wait(null).then(()=>{const x={productID:id,purchaseToken:'t'+Date.now()+Math.random().toString(36).slice(2,6),developerPayload:''};const a=rd();a.push(x);wr(a);return x;}),
+    consumePurchase:t=>{if(window.__payNoConsume)return Promise.reject(new Error('fail'));wr(rd().filter(x=>x.purchaseToken!==t));return wait();}};}
+// имитация VK (?vk=1&paytest=1): «сервер» пишет pay_/own_ в localStorage «paytestvk», как vk-pay в хранилище VK.
+// __payNoOid — ответ без order_id, __payNoClear — стирание ключа не прошло, ?paytest=fail / __payCancel — отказ
+function payStubVK(){const K='paytestvk',rd=()=>{try{return JSON.parse(localStorage.getItem(K))||{};}catch(e){return {};}},wr=o=>{try{localStorage.setItem(K,JSON.stringify(o));}catch(e){}};
+  const wait=v=>new Promise(ok=>setTimeout(()=>ok(v),250)),fail=()=>window.__payCancel||/[?&]paytest=fail/.test(location.search);
+  return {order:id=>fail()?Promise.reject({error_type:'client_error'}):wait().then(()=>{const oid=String(Date.now()),o=rd();
+      if(PAY_ITEMS[id].perm)o['own_'+id]='1';else o['pay_'+oid]=id;wr(o);return window.__payNoOid?{success:true}:{success:true,order_id:+oid};}),
+    keys:()=>wait(Object.entries(rd()).filter(([k,v])=>v).map(([key,value])=>({key,value}))),
+    clear:k=>{if(window.__payNoClear)return Promise.reject(new Error('fail'));const o=rd();delete o[k];wr(o);return wait();}};}
 
 /* ================= рейтинг заданий дня =================
    Очки — сколько дней выполнено задание дня (растёт каждый день, у всех игроков одинаковое задание).
@@ -1280,7 +1508,7 @@ const LB={
     modal(`<h2>🏆 Рейтинг</h2><p>Сколько дней выполнено задание дня. У тебя: <b>${LB.days()}</b></p>
       <div class="lb">${rows||'<p>Пока пусто — будь первым!</p>'}</div>
       ${authed?'':'<p><small>Чтобы попасть в рейтинг, войди в аккаунт Яндекса.</small></p>'}
-      <div class="row">${authed||!(ysdk&&ysdk.auth)?'':'<button class="btn accent" id="lbAuth">Войти</button>'}<button class="btn" id="lbClose">Закрыть</button></div>`);
+      <div class="row">${authed||!(ysdk&&ysdk.auth)?'':'<button class="btn accent noenter" id="lbAuth">Войти</button>'}<button class="btn" id="lbClose">Закрыть</button></div>`);
     $('lbClose').onclick=back;
     // после входа — другой аккаунт и другое облако: перечитываем и сливаем, а не пишем туда сохранение этого устройства
     const a=$('lbAuth');if(a)a.onclick=async()=>{try{await ysdk.auth.openAuthDialog();YP=await ysdk.getPlayer({scopes:false});
@@ -1289,15 +1517,18 @@ const LB={
 
 /* ================= окна ================= */
 function hideModal(){$('modal').classList.remove('on');modalOn=false;}
-function modal(html){$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;}
+function modal(html){PAY.re=null;$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;}
 // пустая звезда — контуром ☆ (отличается не только цветом)
 function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="e">☆</span>';return s;}
 function win(){
-  G.over=true;YG.stop();SND.win();const st=Math.max(1,G.hearts);let newModel=null;
+  G.over=true;YG.stop();SND.win();const st=Math.max(1,G.hearts);let newModel=null,wsGift=false;
   if(G.daily){S.daily[todayKey()]=Math.max(S.daily[todayKey()]||0,st);}
   else{const i=G.idx;const first=!S.stars[i];S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);
-    const mi=CAR_AT.indexOf(i+1);if(first&&mi>=0&&MODELS[mi]&&!S.garage.includes(mi)){S.garage.push(mi);newModel=MODELS[mi];}S.levelsDone++;S.adW=(S.adW||0)+1;}
+    const mi=CAR_AT.indexOf(i+1);if(first&&mi>=0&&MODELS[mi]&&!S.garage.includes(mi)){S.garage.push(mi);newModel=MODELS[mi];}S.levelsDone++;S.adW=(S.adW||0)+1;
+    // серия побед подряд (без окна «Машины помяты»): каждые WSTREAK — бесплатная подсказка (не копится больше одной)
+    if(!S.freeHint){S.ws=(S.ws||0)+1;if(S.ws>=WSTREAK){S.freeHint=1;S.ws=0;wsGift=true;}}}
   const reward=(G.daily?DAILY_REWARD:(4+2*st)*(isBoss(G.idx)?2:1))+G.bonus;S.coins+=reward;
+  const tip=G.daily?'':winTip();
   save();updCoins();setTimeout(()=>SND.coin(),500);
   const hasNext=!G.daily;
   const regionDone=!G.daily&&isBoss(G.idx);
@@ -1305,13 +1536,19 @@ function win(){
   // ×2 за рекламу: не во дворах обучения (1–3), не когда следом межэкранная (два ролика подряд), в VK — только с мостом
   const x2=X2_ON&&(G.daily||G.idx>=3)&&!adNext&&!(PLAT==='vk'&&!VK&&VK_REAL);
   const clean=!G.crashes&&!G.helps;
+  // после босса «Дальше» ведёт на карту — там праздник региона; есть напоминание (сундук, задание дня, покраска) — главная кнопка «На карту»
+  const toMap=regionDone||!!tip;
+  const bNext=hasNext&&!regionDone?`<button class="btn${toMap?'':' green'}" id="mNext">Дальше →</button>`:'';
+  const bMap=`<button class="btn${toMap?' green':''}" id="mMap">${regionDone?'🗺 Дальше — на карту':toMap?'🗺 На карту':'На карту'}</button>`;
   modal(`<h2>${regionDone?'Регион пройден! 🏆':'Двор свободен! 🎉'}</h2><div class="big-stars">${starsHtml(st)}</div>
     <p>${G.daily?'Задание дня выполнено! Завтра будет новое.':levelName(G.idx)+': двор пройден за '+G.moves+' '+plural(G.moves,'ход','хода','ходов')}</p>
-    ${!G.daily&&G.idx===2?'<p><b>Дальше за каждую аварию — минус ❤️.</b></p>':''}
+    ${!G.daily&&G.idx===2?'<p><b>С 4-го двора каждая авария — минус ❤️.</b></p>':''}
     ${clean?'<p class="clean">✨ Чисто! Без аварий и подсказок</p>':''}
     <p class="coins-won" id="mWon">+${reward} 💰${G.bonus?' <small>(скорая успела!)</small>':''}</p>
     ${newModel?`<div class="newcar"><p>Новая машина в гараже: <b>${newModel.name}</b></p><canvas id="ncv"></canvas></div>`:''}
-    <div class="row">${hasNext?'<button class="btn green" id="mNext">Дальше →</button>':''}${x2?`<button class="btn accent x2" id="mX2">📺 ×2 монеты за рекламу <span class="nw">(+${reward}&nbsp;💰)</span></button>`:''}${G.daily&&LB.ok()?'<button class="btn accent" id="mLb">🏆 Рейтинг</button>':''}<button class="btn" id="mMap">На карту</button></div>`);
+    ${wsGift?`<p class="goal gift">🔥 ${WSTREAK} ${plural(WSTREAK,'победа','победы','побед')} подряд — подсказка в следующем дворе бесплатно!</p>`:''}
+    ${G.daily||newModel?'':winGoal(G.idx)}${tip?`<p class="goal tipl">${tip}</p>`:''}
+    <div class="row">${toMap?bMap+bNext:bNext+bMap}${x2?`<button class="btn accent x2" id="mX2">📺 ×2 монеты за рекламу <span class="nw">(+${reward}&nbsp;💰)</span></button>`:''}${G.daily&&LB.ok()?'<button class="btn accent noenter" id="mLb">🏆 Рейтинг</button>':''}</div>`);
   if(G.daily){LB.submit();const b=$('mLb');if(b)b.onclick=LB.show;}
   // награда — только после досмотренного ролика; второй раз за двор не даём
   const g=G,bx=$('mX2');if(bx)bx.onclick=()=>{if(g.x2)return;bx.disabled=true;
@@ -1323,13 +1560,40 @@ function win(){
   // реклама раз в AD_EVERY побед (долг не сгорает), не после босса/новой машины, не раньше 180 с после любой рекламы; перед показом — предупреждение
   const n=$('mNext');if(n)n.onclick=()=>{n.disabled=true;const go=()=>startLevel(G.idx+1);
     if(adNext&&adReady()){toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
-  $('mMap').onclick=()=>{hideModal();openMap();};
+  $('mMap').onclick=()=>{const k=regionDone?Math.floor(g.idx/10):-1;hideModal();openMap();if(k>=0)regionParty(k);};
 }
+/* ---- окно победы: «сколько до следующей награды» и одно напоминание о том, что ждёт на карте (аудит 14) ---- */
+function bar(done,all){const n=Math.min(10,all),k=Math.max(0,Math.min(n,Math.round(done/all*n)));return '<span class="bar" aria-hidden="true">'+'<b class="on"></b>'.repeat(k)+'<b></b>'.repeat(n-k)+'</span>';}
+function winGoal(idx){const done=S.unlocked-1; // пройдено дворов подряд
+  const k=MODELS.findIndex((m,i)=>!m.streak&&!S.garage.includes(i)&&CAR_AT[i]>done);
+  if(k>=0){const prev=k>0?CAR_AT[k-1]:0,left=CAR_AT[k]-done;
+    return `<p class="goal">🚗 До новой машины: ${bar(done-prev,CAR_AT[k]-prev)} ещё ${left} ${plural(left,'двор','двора','дворов')}</p>`;}
+  const t=Math.floor(idx/10),nx=CHEST[S.chest[t]||0]; // машины кончились — сундук этого десятка
+  if(nx){const n=chestStars(t);if(n<nx[0])return `<p class="goal">🎁 До сундука: ${bar(n,nx[0])} ${n}/${nx[0]} ⭐</p>`;}
+  return '';}
+function winTip(){
+  for(let k=0;k*10<S.unlocked-1;k++){const nx=CHEST[S.chest[k]||0];if(nx&&chestStars(k)>=nx[0])return '🎁 Сундук за звёзды готов — забери на карте!';}
+  if(!S.tipD&&!dailyLocked()){S.tipD=1;return '📅 Открылось задание дня — оно на карте!';}
+  if(!S.tipP&&S.coins>=PRICE.paint&&S.garage.length&&!Object.keys(S.paint).length){S.tipP=1;return '🎨 Монет хватает на покраску машины в гараже!';}
+  return '';}
+// праздник региона: после босса карта прокручивается к новому региону, «машинка переезжает», сундук рядом
+function regionParty(k){const from=k*10,next=(k+1)*10,reg=REGIONS.find(r=>r.from===next),old=REGIONS.slice().reverse().find(r=>r.from<=from);
+  let n=0;for(let i=from;i<next;i++)n+=S.stars[i]||0;
+  const ch=CHEST[S.chest[k]||0],chReady=ch&&chestStars(k)>=ch[0];
+  setTimeout(()=>{const hd=[...document.querySelectorAll('#mapList .region')].find(e=>reg&&e.textContent.indexOf(reg.name)>=0);if(hd)hd.scrollIntoView({block:'center',behavior:calm()?'auto':'smooth'});},50);
+  modal(`<h2>${reg?'🗺 '+reg.name+' — открыто!':'🔥 Дворы '+(from+1)+'–'+next+' пройдены!'}</h2>
+    <div class="trip"><div><span>🏁 ${levelName(next-1)}</span><span>${levelName(next)} 📍</span></div><div class="road"><i>🚗</i></div></div>
+    <p>${old&&reg?'«'+old.name+'» пройден':'Десяток дворов позади'}: ⭐ ${n}/30</p>
+    ${chReady?'<p class="goal tipl">🎁 Сундук за звёзды готов — он здесь, на карте!</p>':''}
+    <div class="row"><button class="btn green" id="rGo">Вперёд: ${levelName(next)} →</button><button class="btn" id="rStay">Посмотреть карту</button></div>`);
+  SND.win();
+  $('rGo').onclick=()=>startLevel(next);$('rStay').onclick=hideModal;}
 function lose(){
-  YG.stop();const canPay=S.coins>=PRICE.life;
+  if(!G)return;YG.stop();if(!G.daily&&S.ws){S.ws=0;save();} // серия побед подряд обрывается
+  const canPay=S.coins>=PRICE.life;
   // не хватает монет — кнопку «за монеты» не показываем (серая выглядела поломкой), остаётся «за рекламу»
   modal(`<h2>Машины помяты 💥</h2><p>${pick('lose')} Попробуем ещё?</p>
-    <div class="row">${canPay?`<button class="btn accent" id="mLife">❤️ +1 жизнь — ${PRICE.life} 💰</button>`:''}${G.usedRevive?'':'<button class="btn accent" id="mRev">📺 +1 жизнь за рекламу</button>'}<button class="btn" id="mRe">↻ Заново</button><button class="btn" id="mMap2">На карту</button></div>`);
+    <div class="row">${canPay?`<button class="btn accent noenter" id="mLife">❤️ +1 жизнь — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent noenter" id="mRev">📺 +1 жизнь за рекламу</button>'}<button class="btn" id="mRe">↻ Заново</button><button class="btn" id="mMap2">На карту</button></div>`);
   const revive=()=>{G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();};
   if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);SND.coin();revive();};
   const r=$('mRev');if(r)r.onclick=()=>{hideModal();showRewarded(()=>{G.usedRevive=true;revive();},lose);};
@@ -1376,25 +1640,32 @@ function openGarage(){
   resetGest();show('scr-garage');requestAnimationFrame(()=>g.querySelectorAll('canvas').forEach((c,i)=>drawModel(c,MODELS[i],S.garage.includes(i)?carColor(i):null)));
 }
 /* ---- покраска и «своя машина во дворе» — за монеты (не за рекламу: это цель, куда копить) ---- */
-const PAINT=[null,['#1e272e','чёрный'],['#0652dd','синий'],['#009432','зелёный'],['#ffc312','жёлтый'],['#833471','вишнёвый'],['#b2bec3','серебристый']];
-function carColor(i){const k=S.paint[i];return k&&PAINT[k]?PAINT[k][0]:MODELS[i].color;}
+// третий элемент — покупка, которая открывает краску (Яндекс): «Золото» — «Набор водителя», остальные — «Особые краски». Их наносить бесплатно
+const PAINT=[null,['#1e272e','чёрный'],['#0652dd','синий'],['#009432','зелёный'],['#ffc312','жёлтый'],['#833471','вишнёвый'],['#b2bec3','серебристый'],
+  ['#d4a52a','золото','starter'],['#efe7d8','перламутр','paints'],['#7f95a8','хром','paints'],['#b0132e','красная вишня','paints'],['#4a545e','мокрый асфальт','paints']];
+const paintOwn=k=>!k||!!PAINT[k]&&(!PAINT[k][2]||PAY.own(PAINT[k][2]));
+// особая краска видна, если куплена или её можно купить (есть в каталоге); иначе её нет вовсе
+const paintShow=k=>!k||!!PAINT[k]&&(!PAINT[k][2]||PAY.own(PAINT[k][2])||!!(PAY.on&&PAY.item(PAINT[k][2])));
+function carColor(i){const k=S.paint[i];return k&&PAINT[k]&&paintOwn(k)?PAINT[k][0]:MODELS[i].color;}
 function yardOk(i){return !!MODELS[i]&&MODELS[i].name!=='Скорая';} // скорая во дворе спутается с настоящей
 function yardCars(){return S.garage.filter(i=>S.yard[i]&&yardOk(i)).sort((a,b)=>a-b);}
 function buyCoins(pr,then,back){if(S.coins>=pr){setCoins(S.coins-pr);SND.coin();setTimeout(()=>SND.win(),200);then();return;}
   modal(`<h2>Не хватает монет</h2><p>Нужно ${coinsTxt(pr)}, а у тебя ${coinsTxt(S.coins)}. Монеты дают за каждый двор, больше — за три звезды и сундуки на карте.</p><div class="row"><button class="btn accent" id="mShop">💰 Получить монеты</button><button class="btn" id="mCancel">← Назад</button></div>`);
   $('mShop').onclick=()=>{hideModal();openShop();};$('mCancel').onclick=back;}
 function openCar(i,sel){const m=MODELS[i];if(!m||!S.garage.includes(i))return;const cur=S.paint[i]||0;if(sel==null)sel=cur;
-  const col=k=>k?PAINT[k][0]:m.color,inY=!!S.yard[i];
-  const sw=PAINT.map((p,k)=>`<button class="sw${k===sel?' on':''}" data-k="${k}" style="background:${col(k)}" aria-label="${k?p[1]:'родной цвет'}">${k===cur?'✓':''}</button>`).join('');
+  if(sel&&!paintShow(sel))sel=0;const col=k=>k?PAINT[k][0]:m.color,inY=!!S.yard[i],lock=!!sel&&!paintOwn(sel),pk=lock?PAINT[sel][2]:'',spec=!!sel&&!!PAINT[sel][2];
+  const sw=PAINT.map((p,k)=>paintShow(k)?`<button class="sw${k===sel?' on':''}" data-k="${k}" style="background:${col(k)}" aria-label="${k?p[1]:'родной цвет'}">${k===cur?'✓':!paintOwn(k)?'🔒':''}</button>`:'').join('');
   modal(`<h2>${m.name}</h2><div class="newcar"><canvas id="ncv"></canvas></div>
     <p><small>Цвет: ${sel?PAINT[sel][1]:'родной'}${sel===cur?' ✓':''}</small></p><div class="sws">${sw}</div>
-    <div class="row">${sel!==cur?`<button class="btn accent buy" id="cPaint">${sel?'🎨 Покрасить — '+PRICE.paint+' 💰':'🎨 Вернуть родной цвет'}</button>`:''}
+    ${lock?`<p><small>Эта краска — в покупке «${PAY_ITEMS[pk].name}».</small></p>`+PAY.html([pk]):''}
+    <div class="row">${sel!==cur&&!lock?`<button class="btn accent buy" id="cPaint">${sel?'🎨 Покрасить — '+(spec?'бесплатно':PRICE.paint+' 💰'):'🎨 Вернуть родной цвет'}</button>`:''}
     ${!yardOk(i)?'<p><small>Скорая во дворах не стоит — она на вызовах 🙂</small></p>':inY?'<p>🏠 Стоит во дворах: в каждом дворе одна из твоих машин.</p>':`<p><small>Твоя машина будет стоять во дворах среди других — и её тоже надо выпустить!</small></p><button class="btn green buy" id="cYard">🏠 Во дворы — ${PRICE.yard} 💰</button>`}
     <button class="btn" id="mCancel">Закрыть</button></div>`);
   $('mcard').querySelectorAll('.sw').forEach(b=>b.onclick=()=>openCar(i,+b.dataset.k));
   requestAnimationFrame(()=>drawModel($('ncv'),m,col(sel)));
   const pb=$('cPaint');if(pb)pb.onclick=()=>{const done=()=>{if(sel)S.paint[i]=sel;else delete S.paint[i];save();openGarage();toast('🎨 '+m.name+': '+(sel?PAINT[sel][1]:'родной цвет'));openCar(i);};
-    if(!sel){done();return;}buyCoins(PRICE.paint,done,()=>openCar(i,sel));};
+    if(!sel||spec){done();return;}buyCoins(PRICE.paint,done,()=>openCar(i,sel));};
+  if(lock){PAY.bind($('mcard'));PAY.re=()=>openCar(i,sel);}
   const yb=$('cYard');if(yb)yb.onclick=()=>buyCoins(PRICE.yard,()=>{S.yard[i]=1;save();openGarage();toast('🏠 '+m.name+' теперь стоит во дворах!');openCar(i);},()=>openCar(i,sel));
   $('mCancel').onclick=hideModal;}
 
@@ -1440,25 +1711,27 @@ function streakState(){const s=S.streak||{day:0,last:0,cyc:0},t=dayKey(0);
 // мягкий старт: до первого пройденного двора окно не показываем; 1-й день — тихо тостом; пропуск — восстановить за рекламу
 function maybeStreak(){if(G||window.__demo||$('modal').classList.contains('on')||$('ad').classList.contains('on'))return;
   const st=streakState();if(st.claimed||(S.levelsDone||0)<1)return;
-  const s=S.streak||{};if(st.broken&&s.day>=2)return streakRestore();
+  const s=S.streak||{};if(st.broken&&s.day>=2&&adOk())return streakRestore(); // вернуть серию можно только роликом — нет рекламы, нет и окна
   if(st.day===1)claimStreak(1,true);else showStreak();}
 function streakRestore(){const s=S.streak;
   modal(`<h2>Серия прервалась 😿</h2><p>Серия дошла до ${s.day}-го дня, но денёк пропущен. Бабушки на лавочке заметили… но могут и забыть.</p>
-    <div class="row"><button class="btn accent" id="sRes">📺 Вернуть серию за рекламу</button><button class="btn" id="sNew">Начать заново</button></div>`);
+    <div class="row"><button class="btn accent noenter" id="sRes">📺 Вернуть серию за рекламу</button><button class="btn noenter" id="sNew">Начать заново</button></div>`);
   $('sRes').onclick=()=>{hideModal();showRewarded(()=>{S.streak.last=dayKey(-1);save();showStreak();},()=>streakRestore());};
   $('sNew').onclick=()=>{hideModal();S.streak={day:0,last:0,cyc:s.cyc||0};save();maybeStreak();};}
 function streakCar(){return MODELS.findIndex((m,i)=>m.streak&&!S.garage.includes(i));}
 function showStreak(){const st=streakState(),car=streakCar();let cells='';
   for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day;
-    const ic=d===7?(car>=0?'🚗':'🎁'):'💰',val=d===7?(car>=0?'Машина':'+'+(STREAK[6]*2)):'+'+STREAK[d-1];
-    cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>День ${d}</small><span class="ic">${ic}</span>${val}${d===7&&car>=0?' + '+STREAK[6]+' 💰':''}</div>`;}
+    const ic=d===7?(car>=0?'🚗':'🎁'):'💰',val=d===7?(car>=0?MODELS[car].name:'+'+(STREAK[6]*2)):'+'+STREAK[d-1];
+    cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>День ${d}</small><span class="ic">${ic}</span>${val}${d===7&&car>=0?'<small>и +'+STREAK[6]+' 💰</small>':''}</div>`;}
   const r=st.claimed?0:streakReward(st.day);
   modal(`<h2>Серия дней 🔥</h2><p>${st.claimed?'Сегодняшняя награда уже твоя. Заходи завтра — день '+(st.day%7+1)+'!':st.broken?'Эх, серия прервалась — начинаем заново. Заходи каждый день!':'Заходи каждый день — награда растёт, на 7-й день подарок!'}</p>
     <div class="streak">${cells}</div>
-    <div class="row">${st.claimed?'<button class="btn" id="sClose">Закрыть</button>':`<button class="btn accent" id="sX2">📺 ×2 за рекламу (+${r.coins*2} 💰)</button><button class="btn green" id="sGet">Забрать +${r.coins} 💰${r.car>=0?' и машину':''}</button>`}</div>`);
+    ${car>=0&&!(st.day===7&&st.claimed)?`<div class="newcar sm"><p><small>На 7-й день — машина в гараж: <b>${MODELS[car].name}</b></small></p><canvas id="scv"></canvas></div>`:''}
+    <div class="row">${st.claimed?'<button class="btn" id="sClose">Закрыть</button>':`${adOk()?`<button class="btn accent noenter" id="sX2">📺 ×2 за рекламу (+${r.coins*2} 💰)</button>`:''}<button class="btn green" id="sGet">Забрать +${r.coins} 💰${r.car>=0?' и машину':''}</button>`}</div>`);
+  if($('scv'))requestAnimationFrame(()=>drawModel($('scv'),MODELS[car]));
   if(st.claimed){$('sClose').onclick=hideModal;return;}
   $('sGet').onclick=()=>claimStreak(1);
-  $('sX2').onclick=()=>{hideModal();showRewarded(()=>claimStreak(2),()=>showStreak());};}
+  if($('sX2'))$('sX2').onclick=()=>{hideModal();showRewarded(()=>claimStreak(2),()=>showStreak());};}
 function streakReward(day){const car=day===7?streakCar():-1;return{coins:day===7&&car<0?STREAK[6]*2:STREAK[day-1],car};}
 function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal();return;}
   const r=streakReward(st.day),s=S.streak||{cyc:0};S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
@@ -1473,7 +1746,7 @@ function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal
 function updStreakDot(){const b=$('btnStreak');b.innerHTML='🎁<small>Подарок</small>'+(streakState().claimed?'':'<span class="dot"></span>');}
 // после победы: награда 1-го дня серии — сразу тостом (раньше её видели, только вернувшись на карту); остальные дни ждут на карте
 function streakAfterWin(){if(window.__demo||(S.levelsDone||0)<1)return;const st=streakState();if(st.claimed)return;
-  const s=S.streak||{};if(st.day===1&&!(st.broken&&s.day>=2))claimStreak(1,true);else toast('🎁 Награда за серию дней ждёт на карте',3000);}
+  const s=S.streak||{};if(st.day===1&&!(st.broken&&s.day>=2&&adOk()))claimStreak(1,true);else toast('🎁 Награда за серию дней ждёт на карте',3000);}
 $('btnStreak').onclick=showStreak;
 $('gBack').onclick=openMap;$('garBack').onclick=openMap;$('btnGarage').onclick=openGarage;
 function dailyLocked(){return (S.unlocked||1)<7;}
@@ -1490,25 +1763,40 @@ function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</
     <button class="set" id="stSnd"><span>🔊 Звук</span>${on(S.sound!==false)}</button>
     <button class="set" id="stVib"><span>📳 Вибрация</span>${on(S.vib!==false)}</button>
     <button class="set" id="stCalm"><span>🌿 Спокойный режим<br><small>без тряски, мигалок и пульсации</small></span>${on(calm())}</button>
-    <div class="row"><button class="btn" id="stAbout">ℹ️ Об игре</button><button class="btn green" id="stClose">Готово</button></div>`);
+    ${PAY.on&&!inYard()?PAY.html(['no_ads'],false)+'<button class="set" id="stShop"><span>🛒 Все покупки<br><small>монеты, наборы, краски</small></span><i class="go">›</i></button>':''}
+    <div class="row"><button class="btn noenter" id="stHow">❓ Как играть</button><button class="btn noenter" id="stAbout">ℹ️ Об игре</button><button class="btn green" id="stClose">Готово</button></div>`);
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast('Включено в настройках телефона («уменьшить движение»)');return;}S.calm=!S.calm;save();applyCalm();openSettings();};
-  $('stAbout').onclick=openAbout;$('stClose').onclick=()=>{hideModal();if(G&&!G.over&&$('scr-game').classList.contains('on'))YG.start();};}
+  if($('stShop')){$('stShop').onclick=openShop;PAY.bind($('mcard'));PAY.re=openSettings;}
+  $('stAbout').onclick=openAbout;$('stHow').onclick=openHow;$('stClose').onclick=()=>{hideModal();if(G&&!G.over&&$('scr-game').classList.contains('on'))YG.start();};}
+// памятка «Как играть» — правила, которые в игре показываются один раз на несколько секунд
+function openHow(){
+  modal(`<h2>Как играть</h2><div class="how">
+    <p>👆 <b>Нажми на машину</b> — она едет туда, куда смотрит стрелка. Выпусти со двора всех.</p>
+    <p>💥 Впереди кто-то стоит — авария, минус ❤️ (с 4-го двора). Три аварии — двор заново.</p>
+    <p>🐍 Длинные машины едут <b>змейкой</b>: корпус повторяет путь кабины.</p>
+    <p>🚑 <b>Скорая</b>: выпусти её, пока не кончились ходы на счётчике.</p>
+    <p>🚓 <b>Полиция</b>: когда она уезжает, все, у кого путь свободен, уезжают сами.</p>
+    <p>🔦 В сложных дворах у одной машины нет стрелки — смотри на фары: <b>белые спереди, красные сзади</b>.</p>
+    <p>💡 Подсказка подсвечивает, кем ехать, 🚚 эвакуатор увозит любую машину. ${WSTREAK} побед подряд — подсказка бесплатно.</p></div>
+    <div class="row"><button class="btn" id="hBack">← Назад</button></div>`);
+  $('hBack').onclick=openSettings;}
 function openAbout(){
   modal(`<h2>Об игре</h2><p class="about">«Выезд со двора» — головоломка про тесный двор: выпусти все машины по стрелкам и не устрой аварию. Машины, дворы, кот и голуби нарисованы прямо в игре, звуки тоже собраны кодом.</p>
     ${PLAT==='vk'?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
     <p class="about">На ПК: Esc — назад, Enter — главная кнопка окна, H — подсказка, R — заново, +/− — приблизить.</p>
-    <div class="row"><button class="btn" id="abBack">← Назад</button></div>`);
+    <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ Восстановить покупки</button>':''}<button class="btn" id="abBack">← Назад</button></div>`);
+  if($('abPay'))$('abPay').onclick=()=>PAY.again();
   $('abBack').onclick=openSettings;}
 function applyCalm(){document.body.classList.toggle('calm',calm());}applyCalm();
 $('btnSet').onclick=openSettings;$('gSet').onclick=openSettings;
 /* ---- клавиатура на ПК ---- */
 document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on'))return;
   if(modalOn){
-    if(k==='Escape'){const b=['mCancel','lbClose','sClose','stClose','abBack','sOk','mMap','mMap2'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
+    if(k==='Escape'){const b=['mCancel','lbClose','sClose','stClose','abBack','sOk','mMap','mMap2','rStay','hBack'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
-      const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2):not(.buy)');if(b){e.preventDefault();b.click();}}
+      const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2):not(.buy):not(.noenter)');if(b){e.preventDefault();b.click();}}
     return;}
   if($('scr-garage').classList.contains('on')){if(k==='Escape')openMap();return;}
   if(!G||!$('scr-game').classList.contains('on'))return;
@@ -1520,7 +1808,9 @@ document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.
   else if(k==='-'||k==='_')zoomAt(W/2,H/2,cam.z/1.4);});
 /* ---- ярлык, оценка, избранное: одно предложение за сессию, после 2-й победы и не раньше 2 минут; отказ запоминаем ---- */
 const BOOT_T=Date.now();let askedNow=false,sessWins=0;
+// окно площадки — только пока на экране окно победы (не поверх следующего двора или межэкранной) и ничего не на паузе
 async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
+  if(pauseWhy.size||!(G&&G.over&&modalOn&&$('mWon')))return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{
     if(PLAT==='yandex'&&ysdk){
@@ -1541,6 +1831,7 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 // без контекстного меню и «долгого тапа» (требование площадок)
 document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hide',true);cloudFlush();}else setPause('hide',false);});
+if(document.hidden)setPause('hide',true); // запуск в фоновой вкладке: visibilitychange не придёт, пока её не откроют
 // новичок (ничего не пройдено) попадает сразу во двор 1, карта — после первой победы
 if(!/[?&]demo=/.test(location.search)&&!(S.levelsDone>0)&&S.unlocked===1&&!Object.keys(S.stars).length)startLevel(0);else openMap();
 // режим для скриншотов карточки: ?demo=N (уровень), ?demo=garage
@@ -1555,7 +1846,7 @@ if(!/[?&]demo=/.test(location.search)&&!(S.levelsDone>0)&&S.unlocked===1&&!Objec
 // VK: мост из js/vk-bridge.min.js (только в VK-сборке). Яндекс: SDK по относительному пути; локально 404 → заглушки рекламы
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
-window.__test={cam,birdsInit,scare,streakState,showStreak,claimStreak,dayKey,LEVELS,DAILY,genLevel,depth,get G(){return G;},tapCell:(x,y)=>tapAt(ox+(x+.5)*cs,oy+(y+.5)*cs),canExit,startLevel,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,get S(){return S;},set VK(v){VK=v;},get VK(){return VK;}};
+window.__test={DAILY_T,dailyTier,cam,birdsInit,scare,streakState,showStreak,claimStreak,dayKey,LEVELS,DAILY,genLevel,depth,get G(){return G;},tapCell:(x,y)=>tapAt(ox+(x+.5)*cs,oy+(y+.5)*cs),canExit,startLevel,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,get S(){return S;},set VK(v){VK=v;},get VK(){return VK;}};
 </script>
 </body>
 </html>

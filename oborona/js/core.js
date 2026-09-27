@@ -18,7 +18,10 @@ function fmtNum(n){return String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g,
 function fmtGold(n){n=Math.floor(n);return fmtNum(n)+' '+plural(n,'золотой','золотых','золотых');}
 function coinsTxt(n){return n+' '+plural(n,'монета','монеты','монет');}
 function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<12||h>14)?b:c;}
-function dayKey(t){const d=new Date(t||Date.now());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+/* время: у Яндекса — серверное (ysdk.serverTime), иначе часы устройства. Переводом часов не получить заново задание дня,
+   награду за вход, испытание дня и не попасть в таблицу недели «из будущего» (аудит 14) */
+function nowMs(){try{if(typeof ysdk!=='undefined'&&ysdk&&ysdk.serverTime){const t=+ysdk.serverTime();if(t>1e12)return t;}}catch(e){}return Date.now();}
+function dayKey(t){const d=new Date(t||nowMs());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function withTimeout(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
 const BOOT_T=Date.now();
 // «спокойный режим»: без тряски и пульсаций, если так просит система
@@ -32,7 +35,8 @@ function freshSave(){return {v:1,ts:0,gold:0,stars:{},forge:{},village:{},afkT:0
   dq:null,login:null,ret:{},diff:1,crown:{},bk:{},ach:{},wk:null,dch:null,dchN:0,skins:{},skin:{},deco:{}};}
 // поля-объекты могли прийти битыми (ручная правка, старая версия) — чиним
 function fixSave(){for(const k of['stars','forge','village','seen','introSeen','lose','ret','crown','bk','ach','skins','skin','deco'])if(!S[k]||typeof S[k]!=='object'||Array.isArray(S[k]))S[k]={};
-  if(!S.afkT)S.afkT=Date.now();if(S.boost==null||isNaN(S.boost))S.boost=900;if(S.shake==null)S.shake=REDUCED?0:1;}
+  if(!S.afkT)S.afkT=Date.now();if(S.boost==null||isNaN(S.boost))S.boost=900;if(S.shake==null)S.shake=REDUCED?0:1;
+  if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];}
 let S=freshSave();
 try{const r=!SHOT&&localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 fixSave();
@@ -41,7 +45,8 @@ const BOOT={ts:S.ts||0,gold:S.gold||0,boost:S.boost!=null?S.boost:900};
 /* облако: пишем только после того, как прочитали его (cloudLoaded) и свели (cloudPending пуст);
    не чаще раза в 5 с у Яндекса (лимит — 100 запросов за 5 минут) и раз в 15 с у VK; при сворачивании — сразу */
 let cloudLoaded=false,cloudPending=null,cloudT=0,cloudLast=0,cloudDirty=false;
-function cloudGap(){return PLAT==='vk'?15000:5000;}
+// VK пишет всё сохранение кусками (5–6 вызовов) — в бою не чаще раза в минуту, в меню — раз в 15 с; при сворачивании — сразу
+function cloudGap(){return PLAT==='vk'?(typeof G!=='undefined'&&G&&!G.over?60000:15000):5000;}
 function save(){if(SHOT)return;S.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
   cloudDirty=true;if(!cloudLoaded||cloudPending||cloudT)return;
   cloudT=setTimeout(()=>{cloudT=0;cloudSave();},Math.max(3000,cloudLast+cloudGap()-Date.now()));}
@@ -58,13 +63,18 @@ function mergeProgress(d,L,newer){const base=newer?d:L,other=newer?L:d;const o=O
   o.crown=obj(o.crown);mx(o.crown,obj(other.crown));o.bk=obj(o.bk);mx(o.bk,obj(other.bk));
   // облики и украшения: купленное — объединение; надетый облик — из основы, недостающее — из другого
   o.skins=obj(o.skins);mx(o.skins,obj(other.skins));o.deco=obj(o.deco);mx(o.deco,obj(other.deco));o.skin=Object.assign({},obj(other.skin),obj(o.skin));
-  o.forge=obj(o.forge);const of=obj(other.forge);for(const k in of){const a=o.forge[k],b=of[k];
-    if(typeof b==='object'||typeof a==='object'){const ao=typeof a==='object'?obj(a):{},bo=typeof b==='object'?obj(b):{};o.forge[k]=Object.assign({},ao,bo);}else o.forge[k]=Math.max(+a||0,+b||0);}
+  // кузница: берём целиком ту сторону, где её меняли позже (S.forgeT) — иначе сброс на одном устройстве откатывался бы облаком;
+  // у старых сохранений без отметки — объединение, как раньше
+  const fa=+o.forgeT||0,fb=+other.forgeT||0;
+  if(fa!==fb){if(fb>fa){o.forge=JSON.parse(JSON.stringify(obj(other.forge)));o.forgeT=fb;}}
+  else{o.forge=obj(o.forge);const of=obj(other.forge);for(const k in of){const a=o.forge[k],b=of[k];
+    if(typeof b==='object'||typeof a==='object'){const ao=typeof a==='object'?obj(a):{},bo=typeof b==='object'?obj(b):{};o.forge[k]=Object.assign({},ao,bo);}else o.forge[k]=Math.max(+a||0,+b||0);}}
   for(const k of['seen','bossKill','introSeen','ret','ach'])o[k]=Object.assign({},obj(o[k]),obj(other[k]));
   for(const k of['endBest','endRuns','runs','wins','kills','tut','lastCh','dchN','wkN','bestTw'])o[k]=Math.max(+o[k]||0,+other[k]||0);
   // Босс недели и испытание дня: свежая неделя/день побеждает, в ту же — лучшее из двух
   const wa=obj(o.wk),wb=obj(other.wk);if((+wb.w||0)>(+wa.w||0))o.wk=wb;else if(wa.w&&wa.w===wb.w)o.wk={w:wa.w,best:Math.max(+wa.best||0,+wb.best||0),got:Math.max(+wa.got||0,+wb.got||0),runs:Math.max(+wa.runs||0,+wb.runs||0)};
   const da=obj(o.dch),dd=obj(other.dch);if(dd.day&&(!da.day||dd.day>da.day))o.dch=dd;else if(da.day&&da.day===dd.day)o.dch=Object.assign({},da,{res:Math.max(+da.res||0,+dd.res||0),tried:Math.max(+da.tried||0,+dd.tried||0)});
+  if(typeof payMerge==='function'){payMerge(L,o);payMerge(d,o);} // покупки (js/pay.js): купленное — объединение
   if(newer){const db=d.boost!=null?d.boost:900;
     o.gold=Math.max(0,(+d.gold||0)+((+L.gold||0)-BOOT.gold));o.boost=Math.min(7200,Math.max(0,db+((L.boost!=null?L.boost:900)-BOOT.boost)));}
   return o;}
@@ -72,9 +82,11 @@ function cloudMerge(d){if(!d||typeof d!=='object'||Array.isArray(d))return false
   try{S=mergeProgress(d,S,newer);fixSave();}catch(e){return false;}
   if(newer){BOOT.ts=+d.ts;BOOT.gold=+d.gold||0;BOOT.boost=d.boost!=null?d.boost:900;}
   return true;}
-// облако прочитано: в бою только запоминаем (применим при выходе в меню, а до тех пор в облако не пишем), иначе сводим сразу
+// облако прочитано: посреди боя только запоминаем (в облако до сведения не пишем), иначе сводим сразу.
+// Сводим и когда бой уже кончился (экран итогов), и в начале следующего боя (newBattle зовёт cloudApply(true)):
+// серия «Ещё раз» без выхода в меню не блокирует запись в облако (аудит 14)
 function cloudIn(d){cloudLoaded=true;if(d&&typeof d==='object'){cloudPending=d;cloudApply();}else save();}
-function cloudApply(){if(!cloudPending||(typeof G!=='undefined'&&G))return;const d=cloudPending;cloudPending=null;
+function cloudApply(start){if(!cloudPending||(!start&&typeof G!=='undefined'&&G&&!G.over))return;const d=cloudPending;cloudPending=null;
   if(cloudMerge(d)){S.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}cloudDirty=true;cloudSave();if(typeof onSaveMerged==='function')onSaveMerged();}}
 
 /* ================= площадка: Яндекс Игры или VK ================= */
@@ -124,7 +136,7 @@ async function vkInit(tries){
   try{await vkSend('VKWebAppInit',{},SDK_WAIT);}catch(e){if(tries>0)vkInit(tries-1);return;}
   if(VK)return;VK=window.vkBridge;
   VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',1);cloudFlush();}else if(t==='VKWebAppViewRestore')setPause('vk',0);});
-  vkCloudInit(3);
+  vkCloudInit(3).then(()=>{if(typeof PAY!=='undefined')PAY.init();}); // покупки VK (js/pay.js): после моста и первого чтения облака
   vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});}
 // Яндекс: игрок и облако — с тайм-аутом, иначе повисший запрос оставит игру без облака навсегда
 async function ycloud(n){if(!ysdk)return;try{if(!YP)YP=await withTimeout(ysdk.getPlayer({scopes:false}),10000);cloudIn(await withTimeout(YP.getData(),10000));}
@@ -146,11 +158,16 @@ async function initSDK(){
   }
   if(typeof onReady==='function')onReady();
   try{ysdk&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
+  if(typeof PAY!=='undefined')PAY.init(); // покупки (js/pay.js): Яндекс; VK — после моста (vkInit), здесь только заглушка ?vk=1&paytest=1 без моста
 }
 /* Реклама: за награду — по желанию игрока (кнопки «… за рекламу»); межэкранная — бережно, правило П2 (решение владельца 27.09,
    hobby-analytics/12): только при уходе с экрана итогов после победы (кампания со 2-й главы, испытание дня, повергнутый Босс недели)
    и после осады; не в первые 5 минут захода и не ближе INTER_MIN минут к любой рекламе (ролик за награду тоже сбрасывает отсчёт).
    Никогда: посреди боя, при запуске, после поражения, сразу после ролика за награду. */
+// заглушка рекламы — только локально (мак, ?nosdk): в настоящем Яндексе без SDK награды без ролика нет
+const LOCAL=/^(localhost|127\.0\.0\.1|\[::1\])$|\.(localhost|test)$/.test(location.hostname)||/[?&]nosdk/.test(location.search);
+// можно ли показывать кнопки «… за рекламу»: в настоящем VK без моста и в Яндексе без SDK — нет
+function adOk(){if(PLAT==='vk')return !!VK||!VK_REAL;return !!ysdk||LOCAL;}
 function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen();let n=3;tEl.textContent=n;
   const it=setInterval(()=>{n--;tEl.textContent=n;if(n<=0){clearInterval(it);ad.classList.remove('on');adClose();cb();}},600);}
 function adOpen(){setPause('ad',1);YG.stop();}
@@ -168,7 +185,7 @@ function showRewarded(cb0,onFail0){
       .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL);onFail();}})
       .catch(()=>{adClose();toast(AD_FAIL);onFail();})
       .finally(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
-  if(!ysdk){stubAd(cb);return;}
+  if(!ysdk){if(LOCAL)stubAd(cb);else{toast(AD_FAIL);onFail();}return;}
   let got=false;
   try{ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{adClose();if(got)cb();else{toast('Досмотри видео до конца, чтобы получить награду');onFail();}},
@@ -180,15 +197,15 @@ const VK_REAL=/[?&]vk_app_id=/.test(location.search);
 let INTER_MIN=8,INTER_ON=true,lastAdT=0,sessT=BOOT_T,hideT=0,interBusy=false;
 function applyFlags(f){if(!f||typeof f!=='object')return;const n=parseInt(f.inter_min,10);if(isFinite(n)&&n>=5&&n<=12)INTER_MIN=n;
   if(f.inter==='0'||f.inter==='off')INTER_ON=false;}
-function interReady(){if(!INTER_ON||adBusy||interBusy||/[?&](bot|shot)/.test(location.search))return false;const now=Date.now();
+function interReady(){if(!INTER_ON||adBusy||interBusy||typeof PAY!=='undefined'&&PAY.own('no_ads')||/[?&](bot|shot)/.test(location.search))return false;const now=Date.now();
   if(now-sessT<5*60e3||now-lastAdT<INTER_MIN*60e3)return false;
-  return !(PLAT==='vk'&&!VK&&VK_REAL);}   // в VK без ответа моста — просто пропускаем, без заглушки
+  return adOk();}   // в VK без ответа моста и в Яндексе без SDK — просто пропускаем, без заглушки   // в VK без ответа моста — просто пропускаем, без заглушки
 function showInterstitial(cb0){if(interBusy)return;interBusy=true;let done=false;
   const cb=()=>{if(done)return;done=true;clearTimeout(t);interBusy=false;lastAdT=Date.now();cb0();};
   const t=setTimeout(()=>{if(PAUSE.ad)adClose();cb();},90000);   // площадка не ответила — не держим игрока
   if(PLAT==='vk'&&!VK){if(VK_REAL)cb();else stubAd(cb);return;}
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(()=>{adClose();cb();},()=>{adClose();cb();});return;}
-  if(!ysdk){stubAd(cb);return;}
+  if(!ysdk){if(LOCAL)stubAd(cb);else cb();return;}
   try{ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:()=>{adClose();cb();},onError:()=>{adClose();cb();},onOffline:cb}});}catch(e){adClose();cb();}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){hideT=Date.now();setPause('hidden',1);cloudFlush();}
   else{if(hideT&&Date.now()-hideT>30*60e3)sessT=Date.now();setPause('hidden',0);}});
@@ -212,7 +229,9 @@ const LB={
   async login(){try{await ysdk.auth.openAuthDialog();if(cloudT){clearTimeout(cloudT);cloudT=0;}cloudLoaded=false;cloudPending=null;
     YP=await withTimeout(ysdk.getPlayer({scopes:false}),10000);await ycloud(3);return true;}catch(e){return false;}},
   vkOk(){return !!VK;},
-  vkFriends(score){if(!VK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:Math.floor(score)},60000).catch(()=>{});}
+  vkFriends(score){if(!VK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:Math.floor(score)},60000).catch(e=>{
+    // отказ игрока (закрыл окно) — молча; иначе таблица не настроена или недоступна
+    const d=e&&(e.error_data||e.data)||{},c=d.error_code;if(c!==4)toast('Таблица друзей сейчас недоступна');});}
 };
 
 /* ================= звук: эффекты — синтез, музыка — записанные треки (ниже) =================

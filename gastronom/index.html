@@ -102,6 +102,8 @@ canvas{display:block;touch-action:none}
 .toast.on{opacity:1}
 .set{display:flex;align-items:center;justify-content:space-between;background:#f3e7d2;border-radius:14px;padding:10px 12px;margin-top:8px;font-weight:700;font-size:16px;text-align:left;color:#3b2a1a;width:100%;min-height:50px}
 .set i{font-style:normal;font-weight:800;color:#a93312}.set i.off{color:#6b5e50}
+.pay{margin-top:12px;text-align:left}.pay h3{font-size:16px;margin:0 0 2px;color:#3b2a1a}.pay .set span{padding-right:10px}.pay .set small{font-weight:600}
+.pbuy b{white-space:nowrap;color:#1f5e2c;font-size:17px}.pcur{width:18px;height:18px;vertical-align:-3px;margin-left:3px}.pown i{color:#237032}
 .about{font-size:15px;text-align:left;color:#5d4a36}
 .lb{max-height:46vh;overflow:auto;overscroll-behavior:contain;margin-top:8px;text-align:left}.lbr{display:flex;gap:10px;align-items:center;padding:6px 8px;border-radius:10px}.lbr:nth-child(odd){background:rgba(0,0,0,.05)}.lbr.me{background:#ffe7a3}.lbr b{width:28px;text-align:right}.lbr span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbr i{font-style:normal;font-weight:800}
 .bst-ex{display:flex;align-items:center;gap:12px;text-align:left;background:#f3e7d2;border-radius:14px;padding:10px 12px;margin-top:8px}
@@ -118,17 +120,28 @@ canvas{display:block;touch-action:none}
 .streak-t{font-weight:800!important;color:#8a4b0f!important}
 .shopad{display:none;align-items:center;gap:10px;margin:4px 14px 0;padding:8px 10px;background:#fff1cf;border-radius:14px;font-weight:700;font-size:14px;color:#6b4a2b;line-height:1.25}
 .shopad.on{display:flex}.shopad .btn{flex:none;padding:9px 12px;font-size:15px}.shopad span{flex:1;min-width:0}
+/* окно победы: тётя Валя, цель (ближайший предмет обстановки), грамота; праздник покупки */
+.vsay{display:flex;align-items:center;gap:10px;margin:6px 0 2px;text-align:left}.vsay canvas{width:56px;height:56px;border-radius:50%;flex:none;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.vsay span{background:#fff3d6;border-radius:14px;padding:8px 12px;font-weight:700;font-size:15px;line-height:1.3;color:#3b2a1a}
+.goal{display:flex;align-items:center;gap:10px;background:#fff1cf;border-radius:14px;padding:8px 10px;margin:10px 0 0;text-align:left}.goal canvas{width:64px;height:48px;flex:none;border-radius:8px}
+.goal>div{flex:1;min-width:0}.goal b{display:block;font-size:15px;line-height:1.25}.bar{height:10px;background:#e6d2ab;border-radius:6px;margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#f4b53f,#2b8a3e);border-radius:6px}
+.chest{background:#fff1cf;border-radius:14px;padding:8px 10px;margin:8px 0;font-weight:800;color:#8a4b0f;font-size:15px;line-height:1.3}
+.cel{position:relative;margin:8px 0 4px;border-radius:16px;overflow:hidden;box-shadow:inset 0 0 0 2px rgba(0,0,0,.06)}.cel canvas{display:block;width:100%;height:210px}
+.btn.glow{animation:glow 1.6s infinite}@keyframes glow{50%{box-shadow:0 4px 0 #cdb892,0 0 0 4px rgba(43,138,62,.45),0 6px 14px rgba(0,0,0,.12)}}
+.city.new{animation:cityOn 1.4s ease-out}@keyframes cityOn{0%{transform:scale(.7);filter:brightness(2.2);opacity:0}60%{transform:scale(1.06);filter:brightness(1.3)}}
 /* узкие, низкие экраны, ПК */
+@media (max-height:700px){.big-stars{font-size:36px;margin:2px 0}.vsay canvas{width:44px;height:44px}.card h2{font-size:22px}.goal{margin-top:6px}.chest{margin:6px 0}}
+@media (max-width:340px){.gt>div:first-child{font-size:16.5px}.sub{font-size:13.5px}}
 @media (max-width:380px){.mh{padding-left:10px;padding-right:10px}.logo{font-size:19px}.hdr-r{gap:5px}.pill{padding:6px 9px;font-size:15px}.gf{gap:6px;padding-left:6px;padding-right:6px}.gf .btn span{font-size:13px}.gf .btn small{font-size:11.5px}}
 @media (max-height:520px){.gh{padding-top:4px;padding-bottom:0}.gt>div:first-child{font-size:16px}.gf{padding-top:3px;padding-bottom:5px}.gf .btn{flex-direction:row;gap:6px;padding:4px 6px}.gf .btn b{font-size:18px}.gf .btn span{display:none}.mnav{padding-top:6px;padding-bottom:6px}.node-row{height:70px}.tip{font-size:15px;padding:7px 10px}}
 @media (min-width:900px) and (min-height:600px){#app{box-shadow:0 0 50px rgba(0,0,0,.18)}}
 /* меньше движения: системная настройка или «спокойный режим» */
-@media (prefers-reduced-motion:reduce){.node.cur,.card,.hearts.warn{animation:none}}
-body.calm .node.cur,body.calm .card,body.calm .hearts.warn{animation:none}
+@media (prefers-reduced-motion:reduce){.node.cur,.card,.hearts.warn,.btn.glow,.city.new{animation:none}}
+body.calm .node.cur,body.calm .card,body.calm .hearts.warn,body.calm .btn.glow,body.calm .city.new{animation:none}
 /* вырез экрана слева/справа (iPhone в альбомной ориентации) */
 .mh,.mnav,.gh,.gf{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 /* запасные отступы для старых браузеров без gap во flex (≈ те же, где нет inset) */
-@supports not (inset:0){.mnav>*+*,.gf>*+*,.gh>*+*,.hdr-r>*+*,.mh>*+*,.bst-ex>*+*,.lbr>*+*,.row2>*+*,.shopad>*+*{margin-left:8px}.streak>*{margin:2px}.row>*+*{margin-top:10px}.node-row>*+*{margin-left:12px}.node-row.r>*+*{margin-left:0;margin-right:12px}.gh-r>*+*{margin-top:3px}.grid>*{margin:6px}}
+@supports not (inset:0){.vsay>*+*,.goal>*+*{margin-left:10px}.mnav>*+*,.gf>*+*,.gh>*+*,.hdr-r>*+*,.mh>*+*,.bst-ex>*+*,.lbr>*+*,.row2>*+*,.shopad>*+*{margin-left:8px}.streak>*{margin:2px}.row>*+*{margin-top:10px}.node-row>*+*{margin-left:12px}.node-row.r>*+*{margin-left:0;margin-right:12px}.gh-r>*+*{margin-top:3px}.grid>*{margin:6px}}
 </style>
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
@@ -152,7 +165,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   </section>
 
   <section id="scr-shop" class="screen">
-    <header class="gh"><button class="icon" id="shopBack" aria-label="Назад">←</button><div class="gt"><div>Обстановка магазина</div><div class="sub">Всё купленное видно в зале</div></div><div class="pill sm" id="shopCoins">💰 0</div></header>
+    <header class="gh"><button class="icon" id="shopBack" aria-label="Назад">←</button><div class="gt"><div>Обстановка магазина</div><div class="sub">Всё купленное видно в зале</div></div><button class="pill sm" id="shopCoins" aria-label="Монеты">💰 0</button></header>
     <div class="shopad" id="shopAd"></div>
     <div class="grid" id="shopGrid"></div>
   </section>
@@ -180,19 +193,37 @@ function rng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^
 // порядок появления товаров: сначала самые узнаваемые
 const GOOD_ORDER=[1,5,8,4,9,7,2,10,11,3,6,13,14,16,12,15,17,18,19,20,21,22];
 const movable=(st,c)=>c!==0&&!(c&BOXF)&&iceOf(c)<=st.cl;
-function mkState(lv){const st={p:[],F:[],cl:0,n:0};
+function mkState(lv){const st={p:[],F:[],cl:0,n:0,x:0};
   for(let i=0;i<lv.S;i++){st.p.push(0);st.F.push(lv.sh[i][0].slice());for(const r of lv.sh[i])for(const c of r)if(c)st.n++;}
   return st;}
-function cloneSt(st){return{p:st.p.slice(),F:st.F.map(r=>r.slice()),cl:st.cl,n:st.n};}
+function cloneSt(st){return{p:st.p.slice(),F:st.F.map(r=>r.slice()),cl:st.cl,n:st.n,x:st.x};}
 // три одинаковых (коробка не в счёт, товар во льду — в счёт)
 function tripleT(r){const a=r[0],b=r[1],c=r[2];if(!a||!b||!c||(a&BOXF)||(b&BOXF)||(c&BOXF))return 0;const t=tOf(a);return tOf(b)===t&&tOf(c)===t?t:0;}
-// после хода: тройки исчезают, коробки рядом (эта полка и соседние по номеру) открываются, пустой ряд — подъезжает следующий
+// после хода: тройки исчезают, коробки рядом (эта полка и соседние по номеру) открываются, пустой ряд — подъезжает следующий.
+// Живая игра (lv.live — ставит startLevel и автопрогон «человеком»): если тройку больше не собрать никак (товар заперт в коробках/во льду) —
+// тётя Валя открывает все коробки и «размораживает» лёд (st.x), иначе уровень стал бы непроходимым навсегда (аудит 14).
+// Генератор и решатель уровней флаг не видят — раскладки уровней от этого не меняются
 function settle(lv,st,todo,ev){
+  for(;;){
   while(todo.length){const i=todo.pop(),row=st.F[i],t=tripleT(row);
     if(t){ev&&ev.push({k:'clear',i,t,cells:row.slice()});row[0]=row[1]=row[2]=0;st.cl++;st.n-=3;
       for(let j=i-1;j<=i+1;j++){if(j<0||j>=lv.S)continue;const r=st.F[j];
         for(let s=0;s<3;s++)if(r[s]&BOXF){r[s]&=~BOXF;ev&&ev.push({k:'open',i:j,s,t:tOf(r[s])});if(j!==i)todo.push(j);}}}
-    if(!row[0]&&!row[1]&&!row[2]&&st.p[i]<lv.sh[i].length-1){st.p[i]++;const nr=lv.sh[i][st.p[i]];row[0]=nr[0];row[1]=nr[1];row[2]=nr[2];ev&&ev.push({k:'adv',i});todo.push(i);}}}
+    if(!row[0]&&!row[1]&&!row[2]&&st.p[i]<lv.sh[i].length-1){st.p[i]++;const nr=lv.sh[i][st.p[i]];row[0]=nr[0];row[1]=nr[1];row[2]=nr[2];
+      if(st.x)for(let s=0;s<3;s++)row[s]&=255;ev&&ev.push({k:'adv',i});todo.push(i);}}
+  if(!lv.live||st.x||!st.n||!doomed(lv,st))return;
+  st.x=1;let ice=0;for(let i=0;i<lv.S;i++){const r=st.F[i];for(let s=0;s<3;s++){const c=r[s];if(!c)continue;
+      if(c&BOXF)ev&&ev.push({k:'open',i,s,t:tOf(c)});else if(iceOf(c)>st.cl)ice=1;r[s]=c&255;}todo.push(i);}
+  ev&&ev.push({k:'rescue',ice});}}
+// «вечный тупик»: ни один товар больше не собрать тройкой. Доступны штуки не в коробке и не во льду, кроме рядов за рядом с коробкой/льдом;
+// товар во льду годится как «якорь» (к нему можно подставить две такие же). Если тройки не собрать — лёд не оттает и коробки не откроются никогда
+function doomed(lv,st){if(st.x)return false;const fr={},pin={};
+  for(let i=0;i<lv.S;i++){const L=lv.sh[i];
+    for(let k=st.p[i];k<L.length;k++){const r=k===st.p[i]?st.F[i]:L[k];let blk=false;
+      for(const c of r){if(!c)continue;if(c&BOXF){blk=true;continue;}const t=tOf(c);if(iceOf(c)>st.cl){pin[t]=1;blk=true;}else fr[t]=(fr[t]||0)+1;}
+      if(blk)break;}}
+  for(const t in fr)if(fr[t]+(pin[t]?1:0)>=3)return false;
+  return true;}
 function doMove(lv,st,a,sa,b,sb,ev){const c=st.F[a][sa];st.F[a][sa]=0;st.F[b][sb]=c;ev&&ev.push({k:'move',a,sa,b,sb,c});settle(lv,st,[a,b],ev);}
 const freeSlot=r=>r[0]===0?0:r[1]===0?1:r[2]===0?2:-1;
 // есть ли вообще ход: двигаемый товар и пустое место на другой полке
@@ -216,7 +247,7 @@ function listMoves(lv,st,want){const out=[],S=lv.S,F=st.F,tg=[];let empt=false;
         out.push([sc,a,sa,b,freeSlot(q)]);}}}
   out.sort((x,y)=>y[0]-x[0]);return out;}
 function keyOf(st){let k='';for(let i=0;i<st.F.length;i++){const r=st.F[i];let a=r[0],b=r[1],c=r[2],t;
-    if(a>b){t=a;a=b;b=t;}if(b>c){t=b;b=c;c=t;}if(a>b){t=a;a=b;b=t;}k+=st.p[i]+':'+a+','+b+','+c+';';}return k+st.cl;}
+    if(a>b){t=a;a=b;b=t;}if(b>c){t=b;b=c;c=t;}if(a>b){t=a;a=b;b=t;}k+=st.p[i]+':'+a+','+b+','+c+';';}return k+st.cl+(st.x?'x':'');}
 // поиск в глубину с лучшими ходами первыми; путь — список [a,sa,b,sb] или null (не нашли за limit узлов)
 function solve(lv,st0,limit,want,seen0){const seen=new Set(seen0||[]);seen.add(keyOf(st0));const stack=[{st:cloneSt(st0),mv:listMoves(lv,st0,want),i:0,m:null}];let nodes=0;
   while(stack.length){const f=stack[stack.length-1];
@@ -239,7 +270,7 @@ function levelParams(i){
     ice:i>=5?Math.min(4,Math.floor((saw+cc)/3)+(boss?1:0)):0,
     box:i>=11?Math.min(3,(saw>=3?1:0)+(cc>=3?1:0)+(boss?1:0)):0,
     rare:i>=11&&(i%3===1||boss),
-    K:Math.min(12,3+Math.floor(d/3)+(boss?2:0)),pt:(boss?2:0)-Math.min(2,Math.floor(c/3))};}
+    K:Math.min(12,3+Math.floor(d/3)+(boss?2:0)),pt:(boss?2:0)-Math.min(2,Math.floor(c/3))+(i>=100?4:0)};} // после 100-го — терпения +4 (аудит 14)
 function shuffle(a,R){for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function buildLevel(P,R,i,rareId){
   const S=P.S,nb=[],sz=[];
@@ -283,7 +314,8 @@ function solveFast(lv,st,R,want,tries,limit){let best=null;
   return best||solve(lv,st,limit||30000,want);}
 function friendly(lv,n,R){let w=0,m=0;for(let k=0;k<n;k++){const x=playout(lv,R);if(x){w++;m+=x;}}lv.mpt=w?m/w/(lv.items/3):3;return w/n;}
 // нижняя граница дружелюбия: 1–3-й почти всегда проходятся «на глаз», дальше по «пиле»; босс — самый строгий
-function needFr(i){if(i<3)return .9;const k=i%10;return [.85,.8,.7,.75,.6,.55,.7,.5,.45,.35][k]-Math.min(.1,Math.floor(i/10)*.015);}
+// после 100-го (города по второму кругу) — чуть дружелюбнее: партий длиннее, игроку уже не нужен «вызов» (аудит 14: бот упирался в Ревизиях 110, 170)
+function needFr(i){if(i<3)return .9;const k=i%10;return [.85,.8,.7,.75,.6,.55,.7,.5,.45,.35][k]-(i>=100?.03:Math.min(.1,Math.floor(i/10)*.015));}
 function genLevel(i,seed,rareId){const P=levelParams(i);if(P.tut)return tutLevel();const need=needFr(i);let best=null;
   for(let k=0;k<120;k++){const R=rng(seed+k*1013),lv=buildLevel(P,R,i,rareId==null?-1:rareId);if(!lv)continue;
     const st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=>j));const sol=solve(lv,st,30000);if(!sol)continue;
@@ -318,12 +350,12 @@ function botPlay(lv,seed,limit){let st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=
   const cq=q=>({left:q.left,vis:q.vis.map(v=>Object.assign({},v)),served:q.served,angry:q.angry,R:q.R,nx:q.nx});
   let steps=0,slack=99,plan=null,undos=0,idle=0,restart=0;const R2=rng(seed+5),hist=new Set([keyOf(st)]),back=[];
   while(st.n>0&&steps<800){let m=null;
-    if(steps>lv.items*3&&!restart){restart=1;st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=>j));q=qInit(lv,rng(seed));qFill(lv,st,q);hist.clear();back.length=0;plan=solve(lv,st,60000);}
+    if(steps>lv.items*3&&!restart){restart=1;st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=>j));q=qInit(lv,rng(seed));qFill(lv,st,q);hist.clear();back.length=0;plan=solveFast(lv,st,R2,null,24,60000);}
     if((!plan||!plan.length)&&idle<6){plan=null;for(const x of listMoves(lv,st,q.vis.map(v=>v.t))){const s=cloneSt(st);doMove(lv,s,x[1],x[2],x[3],x[4]);if(!hist.has(keyOf(s))){m=[x[1],x[2],x[3],x[4]];break;}}}
     if(!m&&!(plan&&plan.length)){plan=solveFast(lv,st,R2,null,24);
       while((!plan||!plan.length)&&back.length){const b=back.pop();st=b[0];q=b[1];undos++;plan=solveFast(lv,st,R2,null);}
       if(!plan||!plan.length){if(restart)return{ok:false,steps,angry:q.angry,served:q.served,slack,undos};
-        restart=1;st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=>j));q=qInit(lv,rng(seed));qFill(lv,st,q);hist.clear();back.length=0;plan=solve(lv,st,60000);if(!plan)return{ok:false,steps,undos};continue;}}
+        restart=1;st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=>j));q=qInit(lv,rng(seed));qFill(lv,st,q);hist.clear();back.length=0;plan=solveFast(lv,st,R2,null,24,60000);if(!plan)return{ok:false,steps,undos};continue;}}
     if(!m)m=plan.shift();
     back.push([cloneSt(st),cq(q)]);if(back.length>30)back.shift();
     const ev=[];doMove(lv,st,m[0],m[1],m[2],m[3],ev);steps++;hist.add(keyOf(st));
@@ -358,21 +390,49 @@ const CITIES=[['Москва','#b3261e'],['Ленинград','#1f5f99'],['Го
   ['Свердловск','#6a1b9a'],['Новосибирск','#283593'],['Иркутск','#00838f'],['Хабаровск','#8e2436'],['Владивосток','#0277bd']];
 const cityOf=i=>CITIES[Math.floor(i/10)%CITIES.length];
 const levelTitle=i=>i<100?'Гастроном №'+(i%10+1):'Гастроном №'+(i+1);
-// покупатели: кто (рисунок в drawPerson) и что говорит; {a} — товар, {A} — с большой буквы
+// покупатели: кто (рисунок в drawPerson) и что говорит; {a} — товар («мне …», винительный), {N}/{n} — название (именительный, с большой/маленькой буквы).
+// Реплик втрое больше, чем в первой версии (аудит 14: повторы слышны уже к 5–6-му уровню). Только бытовые фразы эпохи, без цитат из фильмов
 const KINDS=['babka','school','police','intel','worker','student'];
 const PH={
-  ask:{babka:['Дочка, мне {a}!','Мне бы {a}, милая.'],school:['Мама велела купить {a}!','Мне {a}! И сдачу не потерять…'],
-    police:['Гражданочка, {a} попрошу.','Мне {a}. Я в очереди, всё по порядку!'],intel:['Будьте любезны, {a}.','Мне, пожалуйста, {a}.'],
-    worker:['Мне {a}, и побыстрее — смена!','{A} есть? Давай!'],student:['А {a} есть? На стипендию!','Мне {a}, в общежитие.'],revizor:['Проверка! Мне {a}.']},
-  happy:{babka:['Дай бог здоровья!','Спасибо, доченька!'],school:['Ура! Спасибо!','Мама будет рада!'],police:['Вот это порядок!','Благодарю!'],
-    intel:['Премного благодарен!','Весьма признателен!'],worker:['Во, дело!','Спасибо, хозяйка!'],student:['Спасибочки!','Ура, живём!'],revizor:['Замечаний нет!']},
-  angry:{babka:['Безобразие! Пойду в соседний.','Не дождалась…'],school:['Ну вот, мама заругает…','Эх, опоздаю!'],police:['Непорядок, товарищи!','Составим протокол… шучу.'],
-    intel:['Однако… сервис.','Зайду в другой раз.'],worker:['Эх, опоздаю на смену!','Всё, некогда!'],student:['Ладно, пойду в столовую.','Опять очередь…'],revizor:['Запишем в книгу жалоб!']},
-  valya:{start:['Вас много, а я одна!','Не толпитесь, граждане!','Всем хватит, не волнуйтесь!','Кто крайний? Занимайте!'],
-    combo:['Вот это работа!','Как на выставке!','Ай да я!'],angry:['Ну что ж вы так…','Не серчайте, заходите ещё!'],
-    clear:['Пожалуйста!','Свеженькое!','Следующий!','Берите, не стесняйтесь!'],stuck:['Ой, всё забито, как в кладовке!'],
-    win:['Всё продано! Можно и чайку.','План выполнен!','Витрина пустая — красота!'],box:['Дефицит! Откроем, как рядом разберёмся.'],
-    rare:['Выбросили дефицит!','Ой, дефицит! Берите, пока есть!'],boss:['Ревизия! Чтоб всё блестело!'],ice:['Мороженое не торопится — оттает!']}};
+  ask:{babka:['Дочка, мне {a}!','Мне бы {a}, милая.','Мне {a}, для зятя — он у меня инженер!','Внуков в гости жду — дай {a}.','Мне {a}, только без обмана!','А {n} почём нынче? Ладно, давай!'],
+    school:['Мама велела купить {a}!','Мне {a}! И сдачу не потерять…','Мне {a}, а на сдачу — ириску!','Бабушка сказала: {a}!','Мне {a}! Я в школу опаздываю!'],
+    police:['Гражданочка, {a} попрошу.','Мне {a}. Я в очереди, всё по порядку!','Товарищ продавец, {a}, пожалуйста.','{N} есть? Отлично, по порядку.','После дежурства — {a}.'],
+    intel:['Будьте любезны, {a}.','Мне, пожалуйста, {a}.','Не сочтите за труд — {a}.','Позвольте {a}, голубушка.','Мне бы {a}, к чаю с коллегами.'],
+    worker:['Мне {a}, и побыстрее — смена!','{N} есть? Давай!','Хозяйка, {a}! С получки беру.','Мне {a}, на всю бригаду.','{N} — и я пошёл!'],
+    student:['А {n} есть? На стипендию!','Мне {a}, в общежитие.','Мне {a}. Сессия, сил нет!','Мне {a}, на всю комнату.','Мне {a}, мы в стройотряд!'],
+    veteran:['Мне без очереди, мне положено! {N} есть?','Сынки, я без очереди. Мне {a}.','Ветерану — {a}, будьте добры.'],
+    revizor:['Проверка! Мне {a}.','Контрольная закупка! {N}.','Ревизия! Покажите {a}.']},
+  happy:{babka:['Дай бог здоровья!','Спасибо, доченька!','Вот уважила!','Пойду пирог печь!','Золотые руки!'],school:['Ура! Спасибо!','Мама будет рада!','Успел!','Сдачу не потерял!','Спасибо, тётенька!'],
+    police:['Вот это порядок!','Благодарю!','Образцовое обслуживание!','Так держать!','Объявляю благодарность!'],
+    intel:['Премного благодарен!','Весьма признателен!','Вы просто волшебница!','Чудесно, благодарю!','Сервис как в столице!'],
+    worker:['Во, дело!','Спасибо, хозяйка!','Вот это скорость!','Успел до смены!','Мастерски!'],student:['Спасибочки!','Ура, живём!','Будет пир!','Жить можно!','Всё, пошёл учить!'],
+    veteran:['Спасибо, дочка! Уважила.','Вот это по-нашему!','Дай бог здоровья, хозяюшка!'],revizor:['Замечаний нет!','Отметим в отчёте.','Всё по нормативу!']},
+  angry:{babka:['Безобразие! Пойду в соседний.','Не дождалась…','Я на вас в книгу жалоб!','Ноги-то не казённые!'],school:['Ну вот, мама заругает…','Эх, опоздаю!','Уроки ждут…','Пойду домой ни с чем…'],
+    police:['Непорядок, товарищи!','Составим протокол… шучу.','Нарушаете, гражданочка!','Служба не ждёт!'],intel:['Однако… сервис.','Зайду в другой раз.','Какое неуважение…','Пожалуй, откланяюсь.'],
+    worker:['Эх, опоздаю на смену!','Всё, некогда!','Бригада ждёт!','Ну, я пошёл.'],student:['Ладно, пойду в столовую.','Опять очередь…','На пару опоздаю!','Сессия не ждёт!'],
+    veteran:['Эх, молодёжь…','Не уважили старика.'],revizor:['Запишем в книгу жалоб!','Будет выговор!']},
+  // зевака: заходит, когда очередь кончилась, ничего не просит
+  look:['Я только посмотреть!','Что дают?','Кто последний? Ой, никого!','А колбасу не завозили?','Кто последний за колбасой?','Мне бы только спросить…'],
+  valya:{start:['Вас много, а я одна!','Не толпитесь, граждане!','Всем хватит, не волнуйтесь!','Кто крайний? Занимайте!','Не задерживайте очередь!','Товар руками не трогать!',
+      'Подходите, не стесняйтесь!','Больше двух в одни руки не даём!','Закрыто на переучёт… шучу, подходите!','Я вам не справочное бюро!','Свежий завоз, граждане!'],
+    combo:['Вот это работа!','Как на выставке!','Ай да я!','Работаем, как часы!','Стахановский темп!','Вот что значит опыт!'],
+    angry:['Ну что ж вы так…','Не серчайте, заходите ещё!','Я же не разорвусь!','Ну и ладно, следующий!'],
+    clear:['Пожалуйста!','Свеженькое!','Следующий!','Берите, не стесняйтесь!','Сдачи нет — возьмите коробок спичек.','Кушайте на здоровье!','Не толкайтесь, всем достанется!','Приходите ещё!'],
+    stuck:['Ой, всё забито, как в кладовке!','Куда ж я это поставлю?','Полки ломятся!'],
+    win:['Всё продано! Можно и чайку.','План выполнен!','Витрина пустая — красота!','План перевыполнен!','Всё, закрываемся на обед!','Уф, можно и присесть.'],
+    box:['Дефицит! Откроем, как рядом разберёмся.'],
+    rare:['Выбросили дефицит!','Ой, дефицит! Берите, пока есть!','Дефицит! Только для своих!'],boss:['Ревизия! Чтоб всё блестело!','Ревизор идёт! Все по местам!','Проверка! Ценники поправьте!'],
+    ice:['Мороженое не торопится — оттает!'],
+    rescue:['Ладно уж, открою дефицит!','Эх, для вас — всё открою!'],thaw:['Ладно, всё разморожу и открою!','Всё оттаяло, всё открыто!'],
+    // очередь кончилась, а товар ещё есть — тройка уходит «в кассу»
+    kassa:['В заказ отложу!','Себе на праздник!','Это в стол заказов.','Отложу для постоянных покупателей.','Пусть полежит под прилавком… шучу!'],
+    veteran:['Ветерану — без очереди!','Пропустите, граждане, ветеран!'],
+    // покупка обстановки: реплика к каждому предмету
+    decor:{ficus:'Фикус! Теперь как дома.',clock:'Часы! Обед теперь строго по расписанию.',poster:'Хлеб — всему голова! Правильно говорят.',beads:'Ой, бусы! Прямо как в молодости!',
+      scales:'Весы! Теперь всё до грамма.',calendar:'Календарь! Ни одного праздника не пропущу.',pennant:'Лучший магазин района — это мы!',lamps:'Светло-то как стало!',
+      radio:'Радиоточка! С утра — зарядка.',kassa:'Касса! Дзынь — и всё по-честному.',lace:'Салфеточки! Красота, как у мамы.',samovar:'Самовар — к чаю! Заходите.',
+      tiles:'Кафель! Чистота — залог здоровья.',frame:'Витрина — как в музее!',cat:'Барсик, брысь с прилавка! Ладно уж, лежи.',neon:'Вывеска горит — весь квартал видит!',
+      panels:'Дубовые панели — солидно!',fridge:'Холодильник! Докторская не заветрится.'}}};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 // обстановка магазина: покупается за монеты, видна в зале (или на витрине) на каждом уровне.
 // 8 первых — 1070 💰; с ×2 за рекламу (аудит 12) добавлены ещё 10 на 1950 💰 — цель на месяц. Порядок — по цене
@@ -403,10 +463,10 @@ let S={unlocked:1,stars:{},coins:60,daily:{},levelsDone:0,decor:{},album:[],tips
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 // защита от сохранений неожиданной формы (ручная правка, старая версия): не даём им сломать игру и слияние
-function fixSave(){for(const f of ['stars','daily','decor','tips','ask'])if(!isObj(S[f]))S[f]={};if(!Array.isArray(S.album))S.album=[];
+function fixSave(){for(const f of ['stars','daily','decor','tips','ask','chest'])if(!isObj(S[f]))S[f]={};if(!Array.isArray(S.album))S.album=[];
   for(const f of ['streak','adc'])if(S[f]!=null&&!isObj(S[f]))delete S[f];if(typeof S.adW!=='number'||!isFinite(S.adW))S.adW=0;
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(typeof S.levelsDone!=='number')S.levelsDone=0;
-  if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=60;}
+  if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=60;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
 fixSave();
 // «точка отсчёта» с облаком: сколько монет было общим у устройства и облака (при запуске, после слияния и после записи).
 // Монеты, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным — не теряются и не возвращаются
@@ -452,10 +512,11 @@ const YG={
 function mergeSave(d,ref){if(!isObj(d))return;
   const dt=typeof d.ts==='number'?d.ts:0,rt=ref==null?BOOT_TS:ref,newer=dt>rt;
   if(typeof d.unlocked==='number')S.unlocked=Math.max(S.unlocked,d.unlocked);if(typeof d.levelsDone==='number')S.levelsDone=Math.max(S.levelsDone||0,d.levelsDone);
-  for(const f of ['stars','daily','decor','tips'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
+  for(const f of ['stars','daily','decor','tips','chest'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(Array.isArray(d.album))for(const i of d.album)if(typeof i==='number'&&!S.album.includes(i))S.album.push(i);
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|decor|tips|album|coins|streak|adc)$/.test(k))S[k]=d[k]; // флажки (звук, вибрация)
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|decor|tips|chest|album|coins|streak|adc|buy|buyB|payT|payV)$/.test(k))S[k]=d[k]; // флажки (звук, вибрация)
+  payMerge(d); // покупки — объединение
   // серия дней — у кого позже последний день; ролики за монеты сегодня — больше из двух (лимит в день не обходится вторым устройством)
   if(isObj(d.streak)){const a=S.streak,b=d.streak;if(!isObj(a)||(b.last||0)>(a.last||0))S.streak=b;else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last};}
   if(isObj(d.adc)){const a=S.adc,b=d.adc;if(!isObj(a)||(b.d||0)>(a.d||0))S.adc=b;else if(b.d===a.d)S.adc={d:a.d,n:Math.max(a.n||0,b.n||0)};}}
@@ -500,6 +561,7 @@ async function initVK(){
     await cloudLoad();
     vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
   }catch(e){VK=null;}
+  PAY.init(); // покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1)
   window.__sdkDone=true;
 }
 async function initSDK(){
@@ -511,6 +573,7 @@ async function initSDK(){
       try{YP=await ysdk.getPlayer({scopes:false});await cloudLoad();}catch(e){}
     }catch(e){ysdk=null;}
   }
+  PAY.init(); // покупки: после SDK и облака; меню не ждёт
   // карту перерисовываем, только если она на экране; новичок уже на уровне 1 — там и остаётся
   window.__sdkDone=true;if(!G&&!window.__demo&&$('scr-map').classList.contains('on')&&!modalOn)openMap();
   try{ysdk&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
@@ -525,7 +588,8 @@ function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)
 // разблокировка на iOS: resume() и пустой буфер прямо в жесте (touchend/click/keydown, не pointerdown); обработчик не снимаем —
 // после звонка или сворачивания первое же касание снова оживит звук
 function unlockAudio(){if((S.sound===false&&!S.music)||muted)return;const a=ac();if(!a)return;
-  if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}}
+  if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}
+  musPrime();}
 ['touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true}));
 // атака 6 мс — без щелчка в начале звука
 function tone(type,f1,f2,dur,vol,delay){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02);}
@@ -553,24 +617,32 @@ const SND={
 };
 function vib(ms){try{if(S.vib!==false&&navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
 
-/* ================= музыка: место под записанный трек =================
+/* ================= музыка: записанные треки =================
    Музыку синтезом не делаем (владелец забраковал). Треки выбрал владелец 27.09: audio/main.m4a (обычные уровни и меню),
    audio/revision.m4a (Ревизия), смена с плавным переходом 1,2 с. В VK аудио на хостинге VK нельзя — нужен свой хостинг или архив без audio/.
-   Web Audio: fetch → decodeAudioData → петля; грузится после первого касания; пауза при рекламе/сворачивании; S.music — выключатель. */
+   Играем через <audio loop> → createMediaElementSource → GainNode: файл декодируется потоком, а не целиком в память
+   (раньше decodeAudioData держал ~150 МБ на двух треках — аудит 14, риск перезагрузки вкладки на слабых телефонах).
+   iOS: элемент нужно один раз запустить в жесте — это делает musPrime() из unlockAudio. Пауза при рекламе/сворачивании; S.music — выключатель. */
 const MUSF={main:'audio/main.m4a',rev:'audio/revision.m4a'},MUS_VOL=.22,MUS_TV={main:1,rev:.9};
 /* main — Green Salon (Yubatake, CC-BY 4.0), rev — Investigations (Kevin MacLeod, CC-BY 4.0): подписи в «Об игре» не удалять */
-const MUS={buf:{},ld:{},src:null,g:null,cur:null};
+const MUS={el:{},g:{},ok:{},bad:{},tm:{},cur:null};
 function musWant(){const gs=document.getElementById('scr-game');return G&&G.boss&&gs&&gs.classList.contains('on')?'rev':'main';}
-function musLoad(n){if(MUS.buf[n]||MUS.ld[n])return;MUS.ld[n]=1;fetch(MUSF[n]).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer();})
-  .then(ab=>new Promise((ok,no)=>{const p=AC.decodeAudioData(ab,ok,no);if(p&&p.catch)p.catch(no);})).then(b=>{MUS.buf[n]=b;}).catch(()=>{MUS.ld[n]=-1;});}
-function musStop(fade){const s=MUS.src,g=MUS.g;MUS.src=MUS.g=MUS.cur=null;if(!s)return;
-  try{const t=AC.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+fade);s.stop(t+fade+.05);}catch(e){try{s.stop();}catch(e2){}}}
+function musEl(n){if(MUS.el[n]||MUS.bad[n]||!AC)return MUS.el[n]||null;
+  try{const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');a.addEventListener('error',()=>{MUS.bad[n]=1;});a.src=MUSF[n];
+    const src=AC.createMediaElementSource(a),g=AC.createGain();g.gain.value=0;src.connect(g).connect(AC.destination);MUS.el[n]=a;MUS.g[n]=g;}catch(e){MUS.bad[n]=1;}
+  return MUS.el[n]||null;}
+function musFade(n,to,dur){const g=MUS.g[n];if(!g||!AC)return;try{const t=AC.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(to,t+dur);}catch(e){}}
+function musPlay(n){const a=musEl(n);if(!a)return;try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok[n]=1;},()=>{});else MUS.ok[n]=1;}catch(e){}}
+// в жесте (касание/клик): «разрешить» оба элемента на iOS — запустить беззвучно и сразу остановить ненужный
+function musPrime(){if(!S.music||!AC)return;for(const n of ['main','rev']){const a=musEl(n);if(!a||MUS.ok[n])continue;
+  try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok[n]=1;if(MUS.cur!==n)a.pause();},()=>{});}catch(e){}}}
 function musTick(){if(!AC)return;const on=!!S.music&&!muted&&!paused&&!document.hidden,n=musWant();
-  if(!on){if(MUS.src)musStop(.05);return;}
-  musLoad(n);if(n==='rev')musLoad('main');
-  if(MUS.cur===n||!MUS.buf[n]||AC.state!=='running')return;
-  musStop(1.2);const s=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;s.buffer=MUS.buf[n];s.loop=true;
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(MUS_VOL*MUS_TV[n],t+1.2);s.connect(g).connect(AC.destination);s.start();MUS.src=s;MUS.g=g;MUS.cur=n;}
+  if(!on){for(const k in MUS.el){if(!MUS.el[k].paused){musFade(k,0,.05);MUS.el[k].pause();}}MUS.cur=null;return;}
+  if(AC.state!=='running')return;
+  if(MUS.cur===n){const a=MUS.el[n];if(a&&a.paused)musPlay(n);return;}
+  const old=MUS.cur;if(old&&MUS.el[old]){musFade(old,0,1.2);const a=MUS.el[old];clearTimeout(MUS.tm[old]);MUS.tm[old]=setTimeout(()=>{if(MUS.cur!==old)a.pause();},1300);}
+  if(!musEl(n)){MUS.cur=null;return;}
+  MUS.cur=n;clearTimeout(MUS.tm[n]);musPlay(n);musFade(n,MUS_VOL*MUS_TV[n],1.2);}
 if(S.music==null)S.music=1;setInterval(musTick,300);
 
 /* ================= рисование: общие ================= */
@@ -719,7 +791,7 @@ function drawIce(g,cx,by,s,n){const u=s/100;rrect(g,cx-40*u,by-78*u,80*u,80*u,12
    (cx, by) — низ плеч, h — от низа плеч до макушки; mood: 1 доволен, 0 ждёт, -1 сердится; tk — время (моргание, покачивание) */
 const SKIN='#f2c9a7';
 function drawPerson(g,kind,cx,by,h,mood,tk,talk){const u=h/100,bob=Math.sin(tk*2+cx*.01)*1.2*u;by+=bob;const hx=cx,hy=by-60*u;g.save();g.lineCap='round';g.lineJoin='round';
-  const C={babka:'#7d5a44',school:'#f3f3ef',police:'#35557a',intel:'#8a8f94',worker:'#2f4f6f',student:'#1e8f7a',revizor:'#2d3436',valya:'#fbfbfb'}[kind];
+  const C={babka:'#7d5a44',school:'#f3f3ef',police:'#35557a',intel:'#8a8f94',worker:'#2f4f6f',student:'#1e8f7a',revizor:'#2d3436',valya:'#fbfbfb',veteran:'#5b5146'}[kind];
   // плечи
   g.beginPath();g.moveTo(cx-38*u,by+12*u);g.lineTo(cx-36*u,by-20*u);g.quadraticCurveTo(cx-34*u,by-36*u,cx-14*u,by-38*u);g.lineTo(cx+14*u,by-38*u);g.quadraticCurveTo(cx+34*u,by-36*u,cx+36*u,by-20*u);g.lineTo(cx+38*u,by+12*u);g.closePath();
   g.fillStyle=lin(g,cx-38*u,0,cx+38*u,0,[shade(C,-.18),C,shade(C,-.08),shade(C,-.28)]);g.fill();
@@ -738,6 +810,9 @@ function drawPerson(g,kind,cx,by,h,mood,tk,talk){const u=h/100,bob=Math.sin(tk*2
   else if(kind==='worker'){poly(g,[cx-14*u,by-38*u,cx-4*u,by-24*u,cx,by-36*u],shade(C,.15));poly(g,[cx+14*u,by-38*u,cx+4*u,by-24*u,cx,by-36*u],shade(C,.15));g.fillStyle='#f39c12';g.fillRect(cx-36*u,by-8*u,72*u,4*u);}
   else if(kind==='student'){g.fillStyle='#f1c40f';rrect(g,cx-18*u,by-40*u,36*u,10*u,5*u);g.fill();g.fillStyle='#e67e22';for(let k=0;k<3;k++)g.fillRect(cx-14*u+k*10*u,by-40*u,4*u,10*u);
     g.fillStyle='#f1c40f';g.fillRect(cx+6*u,by-32*u,8*u,24*u);g.fillStyle='#e67e22';g.fillRect(cx+6*u,by-24*u,8*u,3*u);g.fillRect(cx+6*u,by-16*u,8*u,3*u);}
+  // ветеран: пиджак, орденские планки и две медали
+  else if(kind==='veteran'){poly(g,[cx-10*u,by-38*u,cx,by-24*u,cx+10*u,by-38*u],'#f4f4f0');for(let k=0;k<3;k++){g.fillStyle=['#c0392b','#f39c12','#2e86de'][k];g.fillRect(cx-30*u+k*7*u,by-30*u,6*u,4*u);}
+    for(let k=0;k<2;k++){g.fillStyle=k?'#c0392b':'#d35400';g.fillRect(cx-27*u+k*9*u,by-25*u,3.5*u,6*u);ell(g,cx-25.3*u+k*9*u,by-16*u,4.2*u,4.2*u,'#f1c40f');ell(g,cx-25.3*u+k*9*u,by-16*u,2*u,2*u,'#c9950c');}}
   else if(kind==='babka'){poly(g,[cx-10*u,by-38*u,cx,by-30*u,cx+10*u,by-38*u],'#a0785c');for(let k=0;k<3;k++)ell(g,cx+2*u,by-24*u+k*11*u,2*u,2*u,'#3e2a1f');}
   // шея и волосы сзади
   g.fillStyle=shade(SKIN,-.12);g.fillRect(hx-6*u,hy+12*u,12*u,12*u);
@@ -757,6 +832,7 @@ function drawPerson(g,kind,cx,by,h,mood,tk,talk){const u=h/100,bob=Math.sin(tk*2
     g.fillStyle='#c0392b';g.fillRect(hx-17*u,hy-15*u,34*u,4*u);ell(g,hx,hy-17*u,3.5*u,3.5*u,'#f1c40f');ell(g,hx,hy-17*u,1.6*u,1.6*u,'#c0392b');}
   else if(kind==='intel'){g.fillStyle='#8d6e63';g.beginPath();g.moveTo(hx-15*u,hy+6*u);g.quadraticCurveTo(hx,hy+26*u,hx+15*u,hy+6*u);g.quadraticCurveTo(hx,hy+14*u,hx-15*u,hy+6*u);g.fill();
     ell(g,hx,hy-14*u,26*u,5*u,'#5d4037');g.beginPath();g.moveTo(hx-15*u,hy-14*u);g.quadraticCurveTo(hx-15*u,hy-32*u,hx,hy-30*u);g.quadraticCurveTo(hx+15*u,hy-32*u,hx+15*u,hy-14*u);g.closePath();g.fillStyle='#6d4c41';g.fill();g.fillStyle='#3e2723';g.fillRect(hx-15*u,hy-19*u,30*u,4*u);}
+  else if(kind==='veteran'){ell(g,hx-15*u,hy-3*u,4*u,7*u,'#d0d0d0');ell(g,hx+15*u,hy-3*u,4*u,7*u,'#d0d0d0');ell(g,hx,hy-14*u,20*u,8*u,'#6d6256');g.fillStyle='#5d5347';g.beginPath();g.ellipse(hx+7*u,hy-10*u,14*u,4*u,.12,0,Math.PI*2);g.fill();}
   else if(kind==='worker'){ell(g,hx,hy-14*u,21*u,9*u,'#6b6b6b');g.fillStyle='#595959';g.beginPath();g.ellipse(hx+8*u,hy-10*u,14*u,4*u,.15,0,Math.PI*2);g.fill();ell(g,hx,hy-19*u,4*u,2*u,'#7d7d7d');
     g.fillStyle='rgba(80,60,50,.35)';for(let k=0;k<10;k++)ell(g,hx-10*u+(k*7%20)*u,hy+11*u+(k*3%6)*u,.8*u,.8*u);}
   else if(kind==='student'){g.beginPath();g.moveTo(hx-18*u,hy);g.quadraticCurveTo(hx-16*u,hy-24*u,hx,hy-22*u);g.quadraticCurveTo(hx+16*u,hy-24*u,hx+18*u,hy);g.quadraticCurveTo(hx+8*u,hy-14*u,hx-18*u,hy);g.fillStyle='#a0522d';g.fill();
@@ -774,6 +850,7 @@ function drawPerson(g,kind,cx,by,h,mood,tk,talk){const u=h/100,bob=Math.sin(tk*2
   if(kind==='intel'||kind==='revizor'){g.strokeStyle='#2b2b2b';g.lineWidth=1.6*u;const r=kind==='revizor'?5.5*u:4.8*u;for(const k of[-1,1]){g.beginPath();g.arc(hx+k*6.5*u,ey,r,0,Math.PI*2);g.stroke();}g.beginPath();g.moveTo(hx-1.7*u,ey);g.lineTo(hx+1.7*u,ey);g.stroke();}
   ell(g,hx-10*u,hy+6*u,4*u,2.6*u,'rgba(230,110,100,.35)');ell(g,hx+10*u,hy+6*u,4*u,2.6*u,'rgba(230,110,100,.35)');
   g.strokeStyle=shade(SKIN,-.3);g.lineWidth=1.4*u;g.beginPath();g.moveTo(hx,hy+1*u);g.quadraticCurveTo(hx+2.5*u,hy+5*u,hx-.5*u,hy+6*u);g.stroke();
+  if(kind==='veteran'){g.fillStyle='#c8c8c8';g.beginPath();g.moveTo(hx-9*u,hy+10*u);g.quadraticCurveTo(hx,hy+5*u,hx+9*u,hy+10*u);g.quadraticCurveTo(hx,hy+8.5*u,hx-9*u,hy+10*u);g.fill();}
   if(kind==='police'){g.fillStyle='#5d4037';g.beginPath();g.moveTo(hx-8*u,hy+10*u);g.quadraticCurveTo(hx,hy+6*u,hx+8*u,hy+10*u);g.quadraticCurveTo(hx,hy+9*u,hx-8*u,hy+10*u);g.fill();}
   if(kind==='babka'){g.strokeStyle='rgba(120,80,60,.35)';g.lineWidth=1*u;for(const k of[-1,1]){g.beginPath();g.moveTo(hx+k*11*u,ey+3*u);g.lineTo(hx+k*13*u,ey+5*u);g.stroke();}}
   const my=hy+11*u;g.lineWidth=2*u;g.strokeStyle=kind==='valya'?'#c0392b':'#7a3b2e';
@@ -873,42 +950,44 @@ function drawFridge(q,x0,y,w,h){q.fillStyle=lin(q,0,y,0,y+h,['#dff0f3','#b6d3da'
 function buildHall(){const R=HALL;if(!R)return;hallCv=hallCv||document.createElement('canvas');hallCv.width=Math.ceil(R.w*dpr);hallCv.height=Math.ceil(R.h*dpr);const g=hallCv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
   const col=G&&G.daily?'#8e5a2a':cityOf(G?G.idx:0)[1],w=R.w,h=R.h;
   g.fillStyle=lin(g,0,0,0,h,[shade(col,.86),shade(col,.76)]);g.fillRect(0,0,w,h);
-  const ty=h*.5,ts=Math.max(12,Math.min(26,h*.1));
+  const ty=R.ty,ts=Math.max(12,Math.min(26,R.tall?w*.075:h*.1));
   if(hasDecor('tiles')){for(let y=ty,r=0;y<h;y+=ts,r++)for(let x=-(r%2)*ts/2,c=0;x<w;x+=ts,c++){g.fillStyle=(r+c)%2?'#d9e7f2':'#fdfdfb';g.fillRect(x,y,ts,ts);if((r+c)%4===0){ell(g,x+ts/2,y+ts/2,ts*.18,ts*.18,'#4f86b8');}}
     g.fillStyle='#4f86b8';g.fillRect(0,ty-4,w,4);}
   else{g.fillStyle='#f1eee6';g.fillRect(0,ty,w,h-ty);g.strokeStyle='rgba(120,110,95,.22)';g.lineWidth=1;g.beginPath();for(let y=ty;y<h;y+=ts){g.moveTo(0,y);g.lineTo(w,y);}for(let x=0;x<w;x+=ts){g.moveTo(x,ty);g.lineTo(x,h);}g.stroke();g.fillStyle=shade(col,.3);g.fillRect(0,ty-3,w,3);}
   const sw=Math.min(w*.62,380);drawSign(g,(w-sw)/2,R.sy,sw,R.sh,col);
-  if(hasDecor('poster')){const pw=Math.min(w*.14,70),ph=pw*1.35;drawPoster(g,w-pw-w*.05,h*.24,pw,ph);}
-  if(hasDecor('lamps'))for(let k=0;k<3;k++)drawLamp(g,w*(.28+k*.22),0,h*.24,Math.max(14,h*.09),true);
-  if(hasDecor('ficus'))drawFicus(g,w-Math.max(20,w*.05),h*.84,Math.min(h*.72,90));
+  if(hasDecor('poster')){const pw=R.posW,ph=pw*1.35;drawPoster(g,w-pw-w*.05,R.posY,pw,ph);}
+  if(hasDecor('lamps'))for(let k=0;k<3;k++)drawLamp(g,w*(.28+k*.22),0,R.lampL,R.lampW,true);
+  if(hasDecor('ficus'))drawFicus(g,w-Math.max(20,w*.05),R.base,R.ficH);
   // по краям от вывески: календарь над часами, вымпел над плакатом, радиоточка под часами
-  const sx0=(w-sw)/2,ckx=Math.max(26,w*.08),ckr=Math.max(12,Math.min(h*.1,26)),ckTop=h*.3-ckr;
+  const sx0=(w-sw)/2,ckx=R.ckx,ckr=R.ckr,ckTop=R.ckY-ckr;
   if(hasDecor('calendar')){const ch=Math.min(ckTop-R.sy-6,46,(sx0-8)*1.3);if(ch>=16)drawCalendar(g,Math.min(ckx,sx0-ch*.4-3),R.sy+2,ch*.76,ch);}
-  if(hasDecor('pennant')){const pw=Math.min(sx0-10,44),ph=Math.min((h*.24-R.sy-6)/1.12,pw*1.25);if(pw>=18&&ph>=18)drawPennant(g,Math.max(w-sx0/2,(w+sw)/2+pw*.62+3),R.sy+ph*.14+2,pw,ph);}
-  if(hasDecor('radio')){const rw=Math.min(R.vw*.5,40,ckx*1.3);drawRadio(g,ckx,h*.3+ckr+8,rw);}
+  if(hasDecor('pennant')){const pw=Math.min(sx0-10,44),ph=Math.min((R.posY-R.sy-6)/1.12,pw*1.25);if(pw>=18&&ph>=18)drawPennant(g,Math.max(w-sx0/2,(w+sw)/2+pw*.62+3),R.sy+ph*.14+2,pw,ph);}
+  if(hasDecor('radio')){const rw=Math.min(R.tall?w*.12:R.vw*.5,R.tall?52:40,ckx*1.3);
+    // высокий зал с низкой стеной: радиоточка не под часами (там облачко первого покупателя), а справа от них
+    if(R.tall&&R.ckY+ckr+8+rw*.8>R.bubTop-4)drawRadio(g,ckx+ckr+rw*.75,R.ckY-rw*.3,rw);else drawRadio(g,ckx,R.ckY+ckr+8,rw);}
   // прилавок и то, что на нём — отдельный слой поверх покупателей
   counterCv=counterCv||document.createElement('canvas');counterCv.width=hallCv.width;counterCv.height=hallCv.height;const q=counterCv.getContext('2d');q.setTransform(dpr,0,0,dpr,0,0);q.clearRect(0,0,w,h);
-  const cy=h*.8;q.fillStyle=lin(q,0,cy,0,h,['#9a6437','#7b4a26']);q.fillRect(0,cy,w,h-cy);q.fillStyle='#c98d56';q.fillRect(0,cy,w,Math.max(4,h*.03));
+  const cy=R.cy;q.fillStyle=lin(q,0,cy,0,h,['#9a6437','#7b4a26']);q.fillRect(0,cy,w,h-cy);q.fillStyle='#c98d56';q.fillRect(0,cy,w,Math.max(4,h*.03));
   q.fillStyle='rgba(190,225,240,.55)';q.fillRect(0,cy-Math.max(3,h*.02),w,Math.max(3,h*.02));
   if(hasDecor('fridge'))drawFridge(q,R.vw*.55,cy+Math.max(4,h*.03),w-R.vw*.55,h-cy-Math.max(4,h*.03));
-  else{q.strokeStyle='rgba(60,30,10,.35)';q.lineWidth=2;for(let x=w*.1;x<w;x+=Math.max(60,w*.16)){q.strokeRect(x,cy+h*.06,Math.max(40,w*.12),h*.1);}}
+  else{q.strokeStyle='rgba(60,30,10,.35)';q.lineWidth=2;const fh=h-cy;for(let x=w*.1;x<w;x+=Math.max(60,w*.16)){q.strokeRect(x,cy+fh*.3,Math.max(40,w*.12),fh*.5);}}
   const ks=Math.min(R.ph*.6,70);if(hasDecor('kassa'))drawKassa(q,R.vx+R.vw*.72,cy+2,ks);if(hasDecor('scales'))drawScales(q,w-Math.max(40,w*.12)-(hasDecor('ficus')?w*.06:0),cy+2,ks*.9);
   // между покупателями: самовар и кот
   if(hasDecor('samovar'))drawSamovar(q,R.cx0+R.cw,cy+3,ks*.72);
   if(hasDecor('cat'))drawCat(q,R.cx0+R.cw*2-ks*.08,cy+3,ks*.78);}
 function drawHall(tk){const R=HALL;ctx.drawImage(hallCv,R.x,R.y,R.w,R.h);
-  if(hasDecor('clock'))drawClock(ctx,R.x+Math.max(26,R.w*.08),R.y+R.h*.3,Math.max(12,Math.min(R.h*.1,26)));
+  if(hasDecor('clock'))drawClock(ctx,R.x+R.ckx,R.y+R.ckY,R.ckr);
   // покупатели (за прилавком), потом прилавок, потом Валя (с нашей стороны)
   const Q=G.queue;ctx.save();ctx.beginPath();ctx.rect(R.x,R.y,R.w,R.h);ctx.clip();for(const c of Q)drawCustomer(c,tk);
   ctx.drawImage(counterCv,R.x,R.y,R.w,R.h);
-  drawPerson(ctx,'valya',R.x+R.vx+R.vw*.35,R.y+R.h+R.ph*.1,R.ph*1.05,G.valyaMood,tk,G.valyaTalk);
+  drawPerson(ctx,'valya',R.x+R.vX,R.y+R.vY,R.vS,G.valyaMood,tk,G.valyaTalk);
   ctx.restore();for(const c of Q)drawWant(c,tk);}
 function custX(k){const R=HALL;return R.x+R.cx0+(k+.5)*R.cw;}
-function drawCustomer(c,tk){const R=HALL,mood=c.st==='happy'?1:c.st==='angry'?-1:c.pat<=3?-1:0;let x=c.x,y=R.y+R.h*.84,a=1;
+function drawCustomer(c,tk){const R=HALL,mood=c.st==='happy'?1:c.st==='angry'?-1:c.pat<=3?-1:0;let x=c.x,y=R.y+R.base,a=1;
   if(c.st==='happy'||c.st==='angry'){const k=Math.min(1,c.tt/0.9);a=1-Math.max(0,k-.4)/.6;if(c.st==='happy')y-=Math.abs(Math.sin(c.tt*9))*R.ph*.06;}
   if(c.shake>0)x+=Math.sin(c.shake*50)*3;ctx.globalAlpha=Math.max(0,a);drawPerson(ctx,c.kind,x,y,R.ph,mood,tk,c.talk);ctx.globalAlpha=1;}
 // облачко над покупателем: нужный товар и сколько ходов он ещё ждёт
-function drawWant(c,tk){if(c.st!=='wait'&&c.st!=='in')return;const R=HALL,s=R.bs,x=c.x,y=R.y+R.h*.84-R.ph*.86-s*.62;
+function drawWant(c,tk){if(c.look||c.st!=='wait'&&c.st!=='in')return;const R=HALL,s=R.bs,x=c.x,y=R.y+R.base-R.ph*.86-s*.62;
   const pulse=c.pat<=3&&!calm()?1+Math.sin(tk*8)*.04:1;ctx.save();ctx.translate(x,y);ctx.scale(pulse,pulse);
   ctx.fillStyle='rgba(0,0,0,.18)';rrect(ctx,-s*.55+2,-s*.52+3,s*1.1,s*1.04,s*.22);ctx.fill();
   ctx.fillStyle='#fffdf6';rrect(ctx,-s*.55,-s*.52,s*1.1,s*1.04,s*.22);ctx.fill();poly(ctx,[-s*.12,s*.5,s*.1,s*.5,-s*.02,s*.7],'#fffdf6');
@@ -929,6 +1008,10 @@ const ease=x=>x<0?0:x>1?1:1-Math.pow(1-x,3);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
 // тост живёт не меньше 2,5 с и дольше для длинного текста (кроме коротких служебных)
 function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
+  // на уровне — вверху зала, над вывеской (аудит 14: внизу тост закрывал нижнюю полку, куда надо нажать; внизу зала — реплику Вали)
+  const st=e.style;if(G&&HALL&&$('scr-game').classList.contains('on')){const a=$('app').getBoundingClientRect(),r=stage.getBoundingClientRect();
+    st.bottom='auto';st.left=(r.left-a.left+HALL.x+HALL.w/2)+'px';st.top=(r.top-a.top+HALL.y+6)+'px';st.maxWidth=Math.round(Math.max(200,HALL.w-16))+'px';}
+  else st.bottom=st.left=st.top=st.maxWidth='';
   const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 function tip(t){const e=$('tip'),was=e.style.display==='block';if(t){e.textContent=t;e.style.display='block';}else e.style.display='none';if(G&&HALL&&(was||t))layout();}
 function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
@@ -953,39 +1036,53 @@ function levelFor(i,daily){const rid=rareFor(),key=(daily?'d'+todaySeed():i)+':'
 const DAILY_IDX=27; // задание дня — по сложности как 28-й уровень (подъём «пилы» третьего города)
 
 function startLevel(idx,daily){hideModal();const lv0=levelFor(idx,daily);
-  const lv=Object.assign({},lv0,{sh:lv0.sh.map(L=>L.map(r=>r.slice()))});
+  const lv=Object.assign({},lv0,{sh:lv0.sh.map(L=>L.map(r=>r.slice())),live:1}); // live: «вечный тупик» с коробками разруливает settle
   const st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=>j));
   G={idx:daily?DAILY_IDX:idx,daily:!!daily,lv,st,q:qInit(lv,rng((daily?todaySeed():idx)*31+3)),queue:[],hearts:3,moves:0,angry:0,served:0,undo:[],
     fly:[],pops:[],adv:{},opens:[],fx:[],hide:{},sel:null,drag:null,hint:null,speech:null,valyaMood:0,valyaTalk:0,table:false,over:false,usedRevive:false,freeUndo:true,x2:false,
-    newCard:-1,combo:0,t:0,tutor:!daily&&idx===0};
+    newCard:-1,combo:0,t:0,tutor:!daily&&idx===0,won:false,vetOk:false,vetFront:false,lookN:0};
   G.boss=!daily&&isBoss(idx);
+  // ветеран «без очереди» (аудит 14): раз в 4 уровня с 11-го, не в Ревизию и не в задании дня; встаёт первым, за него +5 💰 в конце уровня.
+  // Раскладку и очередь (что просят, терпение) не меняет — только кто стоит первым
+  G.vetId=!daily&&!G.boss&&idx>=7&&idx%4===2&&lv.K>=2?(lv.K>=6?3:1):-1; // 4-й покупатель приходит позже (встаёт вперёд на глазах), на коротком уровне — 2-й
   qFill(lv,st,G.q);syncQueue(true);
   show('scr-game');tip('');layout();requestAnimationFrame(layout);
-  $('gLevel').textContent=daily?'📅 Задание дня':G.boss?'🔥 Ревизия · '+cityOf(idx)[0]:cityOf(idx)[0]+' · №'+(idx%10+1);renderHearts();updHud();updCoins();
-  // обучение действием: 1-й — перетащить, 2-й — ряд сзади, 3-й — терпение очереди; спецтовары — при первой встрече
-  const tp=S.tips;
+  renderHearts();updHud();updCoins();
+  // обучение действием: 1-й — перетащить, 2-й — ряд сзади и терпение очереди (числа видны уже здесь); спецтовары — при первой встрече.
+  // Подсказка висит до хода игрока (не меньше 3 с), следующая — после него (аудит 14: 7 с для 45+ мало)
+  const tp=S.tips,tq=[];G.tipQ=tq;
   if(G.tutor)tip('Перетащите сгущёнку к двум таким же. Три одинаковых — и покупатель доволен!');
-  else if(!daily&&idx===1&&!tp.back){tp.back=1;tip('Сзади стоит ещё ряд (он темнее). Опустеет полка — он выедет вперёд.');}
-  else if(!daily&&idx===2&&!tp.queue){tp.queue=1;tip('Число у покупателя — сколько ходов он ждёт. Ход с тройкой терпение не тратит.');}
-  else if(lvHas(lv,c=>iceOf(c)>0)&&!tp.ice){tp.ice=1;tip('❄️ Товар во льду: оттает, когда соберёте столько троек, сколько на нём написано.');}
-  else if(lvHas(lv,c=>c&BOXF)&&!tp.box){tp.box=1;tip('📦 Коробка «Дефицит» откроется, когда рядом (на этой или соседней полке) соберёте тройку.');}
-  if(!G.tutor&&$('tip').style.display==='block')later(()=>{if(G&&!G.tutor)tip('');},7000);
+  else{if(!daily&&idx===1&&!tp.back){tp.back=1;tq.push('Сзади стоит ещё ряд (он темнее). Опустеет полка — он выедет вперёд.');}
+    if(!daily&&idx>=1&&idx<=2&&!tp.queue){tp.queue=1;tq.push('Число у покупателя — сколько ходов он ждёт. Ход с тройкой терпение не тратит.');}
+    if(lvHas(lv,c=>iceOf(c)>0)&&!tp.ice){tp.ice=1;tq.push('❄️ Товар во льду: оттает, когда соберёте столько троек, сколько на нём написано.');}
+    if(lvHas(lv,c=>c&BOXF)&&!tp.box){tp.box=1;tq.push('📦 Коробка «Дефицит» откроется, когда рядом (на этой или соседней полке) соберёте тройку.');}
+    nextTip();}
   save();
   later(()=>{if(!G)return;if(G.boss)say(pick(PH.valya.boss),'valya');else say(pick(PH.valya.start),'valya');},500);
   if(!modalOn)YG.start();kick();}
+function nextTip(){if(!G)return;const t=G.tipQ&&G.tipQ.shift();if(t){tip(t);G.tipT=performance.now();G.tipOn=true;}else{G.tipOn=false;tip('');}}
 function lvHas(lv,f){return lv.sh.some(L=>L.some(r=>r.some(c=>c&&f(c))));}
-function updHud(){if(!G)return;$('gCity').textContent='Обслужено '+G.served+' из '+G.lv.K;}
+// шапка уровня; на узком экране Ревизия — без города в заголовке (город уходит во вторую строку), счёт короче (аудит 14: обрезалось)
+function updHud(){if(!G)return;const w=window.innerWidth||400,nar=w<=400,tiny=w<=340,city=cityOf(G.idx)[0],cnt=tiny?G.served+'/'+G.lv.K:G.served+' из '+G.lv.K;
+  $('gLevel').textContent=G.daily?'📅 Задание дня':G.boss?(nar?'🔥 Ревизия':'🔥 Ревизия · '+city):tiny?city:city+' · №'+(G.idx%10+1);
+  $('gCity').textContent=G.boss&&nar?city+' · '+cnt:tiny&&!G.daily?'№'+(G.idx%10+1)+' · обслужено '+cnt:'Обслужено '+cnt;}
 function renderHearts(){let s='';for(let i=0;i<3;i++)s+=`<span class="${i<G.hearts?'':'off'}">❤️</span>`;$('gHearts').innerHTML=s;}
 
 /* ---- очередь на экране: покупатели входят справа, довольные уходят влево, обиженные — вправо ---- */
-function kindFor(id){if(G.boss&&id===G.lv.K-1)return'revizor';return KINDS[(id*5+G.idx*3+(G.daily?2:0))%KINDS.length];}
+function kindFor(id){if(G.boss&&id===G.lv.K-1)return'revizor';if(id===G.vetId)return'veteran';return KINDS[(id*5+G.idx*3+(G.daily?2:0))%KINDS.length];}
 function syncQueue(first){const vis=G.q.vis;
+  const vi=vis.findIndex(v=>v.id===G.vetId);if(vi>=0&&!G.vetFront){G.vetFront=true;if(vi>0)vis.unshift(vis.splice(vi,1)[0]);later(()=>say(pick(PH.valya.veteran),'valya'),first?2600:300);}
   for(const c of G.queue)if(c.st==='wait'||c.st==='in'){const v=vis.find(x=>x.id===c.id);if(v){c.pat=v.pat;c.max=v.max;c.t=v.t;}}
   vis.forEach((v,k)=>{let c=G.queue.find(x=>x.id===v.id&&(x.st==='wait'||x.st==='in'));
     if(!c){c={id:v.id,t:v.t,pat:v.pat,max:v.max,kind:kindFor(v.id),st:first?'wait':'in',tt:0,talk:0,shake:0,x:first?null:HALL?HALL.x+HALL.w+60:9999,slot:k};G.queue.push(c);
-      if(!first&&Math.random()<.45)later(()=>askLine(c),450);}
+      if(c.kind==='veteran')later(()=>askLine(c),first?4200:1900);else if(!first&&Math.random()<.45)later(()=>askLine(c),450);}
     c.slot=k;});}
-function askLine(c){if(!G||c.st!=='wait'&&c.st!=='in')return;const a=GOODS[c.t]?GOODS[c.t].a:'';let s=pick(PH.ask[c.kind]).replace('{a}',a).replace('{A}',a.charAt(0).toUpperCase()+a.slice(1));say(s,c);}
+// зевака: заходит, говорит «Я только посмотреть!» и уходит; ничего не просит
+function spawnLook(){if(!G||G.over||!HALL||G.queue.some(c=>c.look))return;G.lookN++;
+  const c={id:-1-G.lookN,t:0,pat:99,max:99,kind:pick(KINDS),st:'in',tt:0,talk:0,shake:0,x:HALL.x+HALL.w+60,slot:1,look:true};G.queue.push(c);
+  later(()=>{if(c.st==='wait'||c.st==='in')say(pick(PH.look),c);},900);later(()=>{if(c.st==='wait'||c.st==='in'){c.st='happy';c.tt=0;}},4200);kick();}
+function askLine(c){if(!G||c.st!=='wait'&&c.st!=='in')return;const g=GOODS[c.t];if(!g)return;const a=g.a,n=g.n;
+  say(pick(PH.ask[c.kind]).replace('{a}',a).replace('{N}',n).replace('{n}',n.charAt(0).toLowerCase()+n.slice(1)),c);}
 function custLeave(v,happy){const c=G.queue.find(x=>x.id===v.id&&(x.st==='wait'||x.st==='in'));if(!c)return;c.st=happy?'happy':'angry';c.tt=0;
   say(pick((happy?PH.happy:PH.angry)[c.kind]),c);if(!happy){c.shake=.4;SND.grumble();vib(60);}}
 // реплика: одна за раз; who — 'valya' или покупатель
@@ -993,33 +1090,58 @@ function say(text,who){if(!G)return;G.speech={text,who,t:0,life:Math.max(2.2,1.2
   if(who==='valya')G.valyaTalk=.9;else if(who&&who.kind)who.talk=.9;}
 
 /* ---- размеры: зал сверху (портрет) или слева (альбом), витрина — сетка полок «змейкой» (соседние номера — рядом) ---- */
-function layout(){if(!G)return;const r=stage.getBoundingClientRect();if(r.width<60||r.height<60)return;W=r.width;H=r.height;dpr=Math.min(2,window.devicePixelRatio||1);
-  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';
-  const land=W>H*1.15;
-  if(land){const hw=Math.round(Math.min(Math.max(W*.34,230),400));HALL={x:0,y:0,w:hw,h:H};AREA={x:hw+4,y:4,w:W-hw-8,h:H-8};}
-  else{const hh=Math.round(Math.max(130,Math.min(H*.34,250)));HALL={x:0,y:0,w:W,h:hh};AREA={x:4,y:hh+2,w:W-8,h:H-hh-4};}
-  const te=$('tip');if(te.style.display==='block'){const th=te.offsetHeight+12;AREA.h=Math.max(AREA.h*.55,AREA.h-th);}
-  const R=HALL;R.vx=0;R.vw=Math.min(R.w*.24,R.h*.62);R.cx0=R.vw*.78;const end=R.w-(hasDecor('ficus')?Math.max(22,R.w*.08):R.w*.02);R.cw=(end-R.cx0)/3;
+// высокий зал в альбомной раскладке (компьютер, окно VK): очередь на всю ширину колонки и крупно, Валя крупно внизу слева перед прилавком
+// (видна целиком по пояс), над очередью — стена с вывеской и обстановкой; свободная высота уходит Вале и обстановке, а не в пустую стену
+function hallTall(R){const w=R.w,h=R.h,m=Math.max(6,w*.03),fic=hasDecor('ficus')?Math.max(24,w*.09):0;
+  R.vx=0;R.cx0=m;R.cw=(w-m*2-fic)/3;R.sy=Math.max(6,h*.02);R.sh=Math.max(26,Math.min(w*.13,54));
+  R.ph=Math.min(R.cw*1.42,h*.3);R.bs=Math.min(R.cw*.74,96,h*.15);
+  const wallTop=R.sy+R.sh+8,need=R.ph*.96+R.bs*1.16+h*.1; // очередь с облачками + полоса стены под обстановку
+  R.vS=Math.max(R.ph*1.1,Math.min(w*.66,(h-wallTop-need)/.9,h*.42)); // Валя: сколько останется, но не больше 2/3 ширины колонки
+  R.cy=h-R.vS*.9;R.base=R.cy+R.ph*.1;
+  const bubTop=R.base-R.ph*.86-R.bs*1.16,band=Math.max(20,bubTop-wallTop);R.bubTop=bubTop;
+  R.ty=wallTop+band*.72;R.ckx=Math.max(28,w*.1);R.ckr=Math.max(14,Math.min(band*.2,w*.08,40));R.ckY=wallTop+band*.42;
+  R.posW=Math.min(w*.17,band*.5,96);R.posY=wallTop+band*.12;R.lampL=wallTop+band*.18;R.lampW=Math.max(16,Math.min(w*.06,band*.16,34));R.ficH=Math.min((R.base-wallTop)*.85,150);
+  R.vX=w*.3;R.vY=h+R.vS*.1;R.vw=R.vX/.35;}
+// обычный зал (портрет и телефон в альбомной; и сцена «обновка в зале» в магазине)
+function hallStd(R){
+  R.vx=0;R.vw=Math.min(R.w*.24,R.h*.62);R.cx0=R.vw*.78;const end=R.w-(hasDecor('ficus')?Math.max(22,R.w*.08):R.w*.02);R.cw=(end-R.cx0)/3;
   // сверху вывеска, под ней облачка, под облачками головы покупателей (по пояс за прилавком)
   R.sh=Math.max(22,Math.min(R.h*.12,40));R.sy=Math.max(4,R.h*.025);R.bs=Math.min(R.cw*.7,R.h*.27,86);
   const headTop=R.sy+R.sh+4+R.bs*1.12;R.ph=Math.max(40,Math.min((R.h*.84-headTop)/.86,R.cw*1.15));
+  // прилавок, линия покупателей, плитка, стена и Валя (у нас — внизу слева, видна по плечи)
+  R.cy=R.h*.8;R.base=R.h*.84;R.ty=R.h*.5;R.ckx=Math.max(26,R.w*.08);R.ckr=Math.max(12,Math.min(R.h*.1,26));R.ckY=R.h*.3;R.posY=R.h*.24;R.posW=Math.min(R.w*.14,70);R.lampL=R.h*.24;R.lampW=Math.max(14,R.h*.09);R.ficH=Math.min(R.h*.72,90);
+  R.vX=R.vx+R.vw*.35;R.vY=R.h+R.ph*.1;R.vS=R.ph*1.05;}
+function layout(){if(!G)return;const r=stage.getBoundingClientRect();if(r.width<60||r.height<60)return;W=r.width;H=r.height;dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';
+  const land=W>H*1.15;
+  // альбомная: зал — левая колонка; высокая колонка (компьютер, окно VK 911×800) — зал шире, люди крупнее (см. hallTall)
+  let tall=false;
+  if(land){let hw=Math.round(Math.min(Math.max(W*.34,230),400));tall=H>hw&&H>=380;if(tall)hw=Math.round(Math.min(Math.max(W*.38,240),440));HALL={x:0,y:0,w:hw,h:H};AREA={x:hw+4,y:4,w:W-hw-8,h:H-8};}
+  // портрет: при 5+ полках зал ниже — товары крупнее (аудит 14: на телефоне 35–40 px, по бокам витрины пусто)
+  else{const hh=Math.round(Math.max(130,Math.min(H*(G.lv.S>=5&&H>=520?.27:.34),250)));HALL={x:0,y:0,w:W,h:hh};AREA={x:4,y:hh+2,w:W-8,h:H-hh-4};}
+  // подсказка: в альбомной — только над витриной (не закрывает Валю и её реплику)
+  const te=$('tip');te.style.left=land?(AREA.x+6)+'px':'';
+  if(te.style.display==='block'){const th=te.offsetHeight+12;AREA.h=Math.max(AREA.h*.55,AREA.h-th);}
+  const R=HALL;R.tall=tall;
+  if(R.tall)hallTall(R);else hallStd(R);
   const n=G.lv.S;let best=null;
   for(let cols=1;cols<=Math.min(n,6);cols++){const rows=Math.ceil(n/cols),u=Math.min(AREA.w/(cols*3.38+.1),AREA.h/(rows*1.52+.1),104);if(!best||u>best.u+.5)best={u,cols,rows};}
   U=best.u;const cols=best.cols,rows=best.rows,tw=cols*3.38*U-.1*U,th=rows*1.52*U-.1*U,x0=AREA.x+(AREA.w-tw)/2,y0=AREA.y+Math.max(0,(AREA.h-th)/2)*(land?1:.6);
   G.grid={cols,rows,x:x0,y:y0,w:tw,h:th};G.units=[];
   for(let i=0;i<n;i++){const rr=Math.floor(i/cols);let cc=i%cols;if(rr%2)cc=cols-1-cc;const x=x0+cc*3.38*U,y=y0+rr*1.52*U;
     G.units.push({x,y,w:3.28*U,h:1.42*U,pt:y+1.22*U,sx:x+.14*U});}
-  buildSprites();buildHall();buildShelves();
+  buildSprites();buildHall();buildShelves();updHud();
   for(const c of G.queue)if(c.st==='wait'||c.st==='in')c.x=c.x==null||c.st==='wait'?custX(c.slot):Math.min(c.x,HALL.x+HALL.w+60);
   render();}
 const slotX=(i,k)=>G.units[i].sx+(k+.5)*U;
+// товар крупнее в ячейке, когда витрина — узкая колонка в портрете (5+ полок): по бокам всё равно пусто (аудит 14)
 function buildSprites(){SPR={};SPRD={};const types=new Set(G.lv.types);lvHas(G.lv,c=>{types.add(tOf(c));return false;});
-  const w=Math.ceil(U*1.14),h=Math.ceil(U*1.12);
-  for(const t of types){const c=document.createElement('canvas');c.width=Math.ceil(w*dpr);c.height=Math.ceil(h*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);drawGood(g,t,w/2,h-U*.03,U);
+  const k=G.grid&&G.grid.cols===1&&G.lv.S>=5&&W<=H?1.12:1,w=Math.ceil(U*1.14*k),h=Math.ceil(U*1.12*k);
+  for(const t of types){const c=document.createElement('canvas');c.width=Math.ceil(w*dpr);c.height=Math.ceil(h*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);drawGood(g,t,w/2,h-U*.03,U*k);
     const d=document.createElement('canvas');d.width=c.width;d.height=c.height;const q=d.getContext('2d');q.drawImage(c,0,0);q.globalCompositeOperation='source-atop';q.fillStyle='rgba(45,28,12,.5)';q.fillRect(0,0,d.width,d.height);
     SPR[t]={c,w,h};SPRD[t]={c:d,w,h};}
-  const b=document.createElement('canvas');b.width=Math.ceil(w*dpr);b.height=Math.ceil(h*dpr);const g=b.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);drawBoxItem(g,w/2,h-U*.03,U);BOXS={c:b,w,h};}
-// шкаф-витрина: рама, задние стенки, полки; раскладушка — столик на ножках
+  const b=document.createElement('canvas');b.width=Math.ceil(w*dpr);b.height=Math.ceil(h*dpr);const g=b.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);drawBoxItem(g,w/2,h-U*.03,U*k);BOXS={c:b,w,h};}
+// шкаф-витрина: рама, задние стенки, полки; «Столик» (бустер) — раскладной столик на ножках
 function buildShelves(){shelfCv=shelfCv||document.createElement('canvas');shelfCv.width=cv.width;shelfCv.height=cv.height;const g=shelfCv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
   g.fillStyle=lin(g,0,AREA.y,0,AREA.y+AREA.h,['#e9d2ad','#d8b98c']);g.fillRect(AREA.x-4,AREA.y-2,AREA.w+8,AREA.h+6);
   const gr=G.grid,m=.12*U;
@@ -1037,7 +1159,7 @@ function buildShelves(){shelfCv=shelfCv||document.createElement('canvas');shelfC
   G.units.forEach((un,i)=>{const tbl=G.table&&i===G.lv.S-1;
     if(tbl){g.fillStyle='rgba(0,0,0,.12)';g.fillRect(un.x,un.y,un.w,un.h);g.strokeStyle='#8a8f94';g.lineWidth=U*.06;g.beginPath();g.moveTo(un.x+U*.3,un.pt+U*.1);g.lineTo(un.x+un.w-U*.3,un.y+un.h+U*.05);g.moveTo(un.x+un.w-U*.3,un.pt+U*.1);g.lineTo(un.x+U*.3,un.y+un.h+U*.05);g.stroke();
       rrect(g,un.x+U*.04,un.pt-U*.02,un.w-U*.08,U*.14,U*.05);g.fillStyle='#e7ecef';g.fill();g.strokeStyle='#9aa3a8';g.lineWidth=1.5;g.stroke();
-      g.fillStyle='rgba(255,255,255,.85)';g.font=`800 ${Math.round(U*.22)}px -apple-system,Segoe UI,Roboto,sans-serif`;g.textAlign='center';g.fillText('раскладушка',un.x+un.w/2,un.y+U*.3);return;}
+      g.fillStyle='rgba(255,255,255,.85)';g.font=`800 ${Math.round(U*.22)}px -apple-system,Segoe UI,Roboto,sans-serif`;g.textAlign='center';g.fillText('столик',un.x+un.w/2,un.y+U*.3);return;}
     g.fillStyle=lin(g,0,un.y,0,un.pt,['#f7ead0','#ead3a8']);g.fillRect(un.x,un.y,un.w,un.h);
     g.fillStyle='rgba(255,245,210,.5)';g.fillRect(un.x,un.y,un.w,U*.06);
     g.fillStyle=lin(g,0,un.pt,0,un.pt+U*.2,['#d39a60','#a8703f','#8a5530']);g.fillRect(un.x-U*.04,un.pt,un.w+U*.08,U*.2);
@@ -1055,22 +1177,28 @@ function tryMove(a,sa,b,sb,from){const st=G.st,c=st.F[a][sa];if(!movable(st,c)||
   G.undo.push(snap());if(G.undo.length>40)G.undo.shift();
   const ev=[];doMove(G.lv,st,a,sa,b,sb,ev);G.moves++;G.sel=null;G.hint=null;
   if(G.tutor){G.tutor=false;tip('');}
+  else if(G.tipOn){G.tipOn=false;later(nextTip,Math.max(0,3000-(performance.now()-G.tipT))+500);}
   const p0=from||{x:slotX(a,sa),y:G.units[a].pt};flyItem(c,p0.x,p0.y,b,sb,from?0.09:0.2);SND.drop();
   afterMove(ev,from?0.09:0.2,true);updUndo();return true;}
 function flyItem(c,x0,y0,i,s,dur){G.hide[i+':'+s]=1;G.fly.push({c,x0,y0,i,s,t:0,dur});}
 // события хода: тройки уходят покупателям (или просто в кассу), коробки рядом открываются, ряды выезжают; терпение — если тройки не было
-function afterMove(ev,delay,isMove){let clears=0,rare=-1;
+function afterMove(ev,delay,isMove){let clears=0,rare=-1,lonely=0;
   for(const e of ev){if(e.k==='clear'){const d=delay+clears*.12;clears++;const v=qClear(G.q,e.t);let tgt=null;
-      if(v){G.served++;const c=G.queue.find(x=>x.id===v.id&&(x.st==='wait'||x.st==='in'));if(c)tgt={x:c.x,y:HALL.y+HALL.h*.84-HALL.ph*.6,cust:v};}
+      if(v){G.served++;if(v.id===G.vetId)G.vetOk=true;const c=G.queue.find(x=>x.id===v.id&&(x.st==='wait'||x.st==='in'));if(c)tgt={x:c.x,y:HALL.y+HALL.base-HALL.ph*.6,cust:v};}
+      else if(G.q.left<=0&&!G.q.vis.length)lonely++;
       if(e.t>=RARE0){rare=e.t-RARE0;}
       G.pops.push({i:e.i,cells:e.cells,t:-d,tgt,served:v});G.undo=[];}
     else if(e.k==='open'){G.opens.push({i:e.i,s:e.s,t:-(delay+.15)});later(()=>SND.box(),(delay+.15)*1000);}
-    else if(e.k==='adv'){G.adv[e.i]={t:-(delay+(clears?0.3:0))};later(()=>SND.adv(),(delay+.3)*1000);}}
+    else if(e.k==='adv'){G.adv[e.i]={t:-(delay+(clears?0.3:0))};later(()=>SND.adv(),(delay+.3)*1000);}
+    else if(e.k==='rescue'){G.undo=[];later(()=>{say(pick(e.ice?PH.valya.thaw:PH.valya.rescue),'valya');toast(e.ice?'Тётя Валя открыла коробки и растопила лёд — дорешайте!':'Тётя Валя открыла все коробки «Дефицит» — дорешайте!');},(delay+.6)*1000);}}
   if(clears){G.combo++;later(()=>{SND.till(G?G.combo:0);vib(25);},delay*1000);
     if(clears>1||G.combo>=3)later(()=>say(pick(PH.valya.combo),'valya'),delay*1000+300);
     else if(Math.random()<.3)later(()=>{if(G&&!G.speech)say(pick(PH.valya.clear),'valya');},delay*1000+400);
     G.valyaMood=1;later(()=>{if(G)G.valyaMood=0;},1500);}
   else if(isMove)G.combo=0;
+  // очередь кончилась, а товар ещё есть: тройка уходит «в кассу» с репликой Вали, иногда заглядывает зевака (аудит 14: «пустой зал»)
+  if(lonely&&G.st.n>0){if(Math.random()<.45)later(()=>{if(G&&!G.speech)say(pick(PH.valya.kassa),'valya');},delay*1000+600);
+    if(G.lookN<2&&!G.queue.some(c=>c.look)&&Math.random()<.35)later(spawnLook,delay*1000+900);}
   if(rare>=0){const isNew=!S.album.includes(rare);if(isNew){S.album.push(rare);G.newCard=rare;save();}
     later(()=>{say(pick(PH.valya.rare),'valya');toast((isNew?'⭐ Новое в коллекции: ':'⭐ Дефицит: ')+RARE[rare].n);},delay*1000+500);}
   // терпение тает только от хода без тройки
@@ -1087,7 +1215,7 @@ function checkEnd(d){const st=G.st;
   if(!hasMove(G.lv,st)){later(()=>{if(G&&!G.over&&!hasMove(G.lv,G.st))stuck();},d*1000+700);}}
 function updUndo(){$('bUndo').classList.toggle('off',!(G&&G.undo.length));}
 
-/* ---- бустеры: отменить ход, подсказка, перемешать, раскладушка (+3 места) ---- */
+/* ---- бустеры: отменить ход, подсказка, перемешать, «Столик» (+3 места; одно название везде — аудит 14) ---- */
 // экономика (аудит 12, 27.09; модель ~/Projects/hobby-analytics/sims/gastronom-econ.py): первая отмена хода на уровне — бесплатно, дальше 10 💰;
 // задание дня 30 💰 + серия дней; +30 💰 за рекламу — не больше AD_DAY раз в день; межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут
 const PRICE={undo:10,hint:30,mix:40,table:60,life:60},DAILY_REWARD=30,AD_FROM=6;
@@ -1100,20 +1228,23 @@ function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(
   for(const [k,a,b] of [['undo',5,40],['hint',15,90],['mix',20,120],['table',30,180],['life',30,180]])if((n=num('price_'+k,a,b))!==null)PRICE[k]=n;
   if(f.x2==='0'||f.x2==='off')X2_ON=false;updCoins();}
 // названия наград на кнопках рекламы (правило Яндекса 4.5.1: видно, что именно даёт ролик)
-const BNAME={undo:'Отменить ход',hint:'Подсказка',mix:'Смешать',table:'Раскладушка'},BICON={undo:'↶',hint:'💡',mix:'🔀',table:'➕'};
+const BNAME={undo:'Отменить ход',hint:'Подсказка',mix:'Смешать',table:'Столик'},BICON={undo:'↶',hint:'💡',mix:'🔀',table:'➕'};
 const freeUndo=k=>k==='undo'&&G&&G.freeUndo;
 const BOOST={undo:{i:'↶',n:'Отменить ход',d:'Вернуть последний ход. Если тройка уже собрана — её не вернуть.'},
   hint:{i:'💡',n:'Подсказка',d:'Тётя Валя покажет удачный ход.'},
   mix:{i:'🔀',n:'Смешать',d:'Товары в передних рядах перемешаются — так, чтобы можно было дорешать.'},
-  table:{i:'➕',n:'Раскладушка',d:'Ещё одна полка на три места до конца уровня.'}};
+  table:{i:'➕',n:'Столик',d:'Тётя Валя поставит раскладной столик — ещё три места до конца уровня.'}};
 function useBoost(k){if(!G||G.over)return;
   if(k==='undo'&&!G.undo.length){toast('Отменять пока нечего');return;}
-  if(k==='table'&&G.table){toast('Раскладушка уже стоит');return;}
+  if(k==='table'&&G.table){toast('Столик уже стоит');return;}
+  // бустер, который ничего не сделает, монет не берёт (аудит 14)
+  if(k==='hint'&&!listMoves(G.lv,G.st,null).length){toast('Ходов не видно — попробуйте «Смешать» или «Столик»');return;}
+  if(k==='mix'&&!canMix()){toast('Перемешивать нечего');return;}
   const go=()=>({undo:doUndo,hint:doHint,mix:doMix,table:doTable})[k]();
   // первая отмена хода на уровне — бесплатно (промах пальцем не должен стоить монет или ролика)
   const fr=freeUndo(k),goFree=()=>{G.freeUndo=false;go();updCoins();};
   if(!S.tips['b_'+k]){S.tips['b_'+k]=1;save();const b=BOOST[k],can=fr||S.coins>=PRICE[k];
-    modal(`<h2>${b.i} ${b.n}</h2><p>${b.d}</p>${k==='undo'?'<p><small>Первая отмена на уровне — бесплатно, дальше '+PRICE.undo+' 💰.</small></p>':''}<div class="row">${can?`<button class="btn accent" id="bxGo">Использовать — ${fr?'бесплатно':PRICE[k]+' 💰'}</button>`:adOk()?`<button class="btn accent rw" id="bxAd">📺 ${BNAME[k]} за рекламу</button>`:''}<button class="btn" id="mCancel">Отмена</button></div>`);
+    modal(`<h2>${b.i} ${b.n}</h2><p>${b.d}</p>${k==='undo'?'<p><small>Первая отмена на уровне — бесплатно, дальше '+PRICE.undo+' 💰.</small></p>':''}<div class="row">${can?`<button class="btn accent buy" id="bxGo">Использовать — ${fr?'бесплатно':PRICE[k]+' 💰'}</button>`:adOk()?`<button class="btn accent rw" id="bxAd">📺 ${BNAME[k]} за рекламу</button>`:''}<button class="btn" id="mCancel">Отмена</button></div>`);
     if(can)$('bxGo').onclick=()=>{hideModal();if(fr)goFree();else spend(k,go);};else if($('bxAd'))$('bxAd').onclick=()=>{hideModal();showRewarded(go);};$('mCancel').onclick=hideModal;return;}
   if(fr){goFree();return;}
   spend(k,go);}
@@ -1123,9 +1254,10 @@ function doUndo(){const s=G.undo.pop();if(!s)return;G.st=s.st;G.q=s.q;G.hearts=s
   syncQueue(true);renderHearts();updHud();updUndo();SND.back();kick();}
 function doHint(){const want=G.q.vis.map(v=>v.t),p=solveFast(G.lv,G.st,rng(Date.now()),want,10,12000);
   let m=p&&p[0];if(!m){const mv=listMoves(G.lv,G.st,want)[0];if(mv)m=[mv[1],mv[2],mv[3],mv[4]];}
-  if(!m){toast('Ходов не видно — попробуйте «Смешать» или «Раскладушку»');return;}
+  if(!m){toast('Ходов не видно — попробуйте «Смешать» или «Столик»');return;}
   if(!p)toast('Похоже, без «Смешать» тут не обойтись');
   G.hint={a:m[0],sa:m[1],b:m[2],sb:m[3],t:0};say('Вот это — сюда!','valya');kick();}
+function canMix(){let n=0;for(let i=0;i<G.lv.S;i++)for(let s=0;s<3;s++)if(movable(G.st,G.st.F[i][s]))n++;return n>=2;}
 function doMix(){const st=G.st,pos=[],items=[];for(let i=0;i<G.lv.S;i++)for(let s=0;s<3;s++){const c=st.F[i][s];if(movable(st,c)){pos.push([i,s]);items.push(c);}}
   if(items.length<2){toast('Перемешивать нечего');return;}
   const R=rng(Date.now());let best=null;
@@ -1138,7 +1270,7 @@ function doMix(){const st=G.st,pos=[],items=[];for(let i=0;i<G.lv.S;i++)for(let 
   pos.forEach(([i,s],j)=>{flyItem(best[j],old[(j*7+3)%old.length].x,old[(j*7+3)%old.length].y,i,s,.35);});
   for(const e of ev)if(e.k==='clear')for(let s=0;s<3;s++)delete G.hide[e.i+':'+s];
   SND.adv();afterMove(ev,.4,false);updUndo();}
-function doTable(){G.table=true;G.lv.sh.push([[0,0,0]]);G.lv.S++;G.st.p.push(0);G.st.F.push([0,0,0]);G.undo=[];updUndo();layout();say('Поставлю раскладушку!','valya');SND.drop();}
+function doTable(){G.table=true;G.lv.sh.push([[0,0,0]]);G.lv.S++;G.st.p.push(0);G.st.F.push([0,0,0]);G.undo=[];updUndo();layout();say('Поставлю столик!','valya');SND.drop();}
 
 /* ---- ввод: перетаскивание или «нажал товар — нажал место» ---- */
 function cvPos(e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
@@ -1185,7 +1317,7 @@ function render(){if(!G||!HALL)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clea
   drawHall(tk);
   const st=G.st;
   for(let i=0;i<G.lv.S;i++){const un=G.units[i],L=G.lv.sh[i],p=st.p[i],a=G.adv[i],f=a?ease(a.t/.3):1;
-    if(p+1<L.length&&f>=1){const r=L[p+1];for(let k=0;k<3;k++)if(r[k])drawCell(r[k],slotX(i,k),un.pt-.34*U,.8,true);}
+    if(p+1<L.length&&f>=1){const r=L[p+1];for(let k=0;k<3;k++)if(r[k])drawCell(st.x?r[k]&255:r[k],slotX(i,k),un.pt-.34*U,.8,true);}
     const more=L.length-1-p-(p+1<L.length?1:0);if(more>0){ctx.fillStyle='rgba(255,240,200,.9)';for(let k=0;k<Math.min(more,4);k++)ell(ctx,un.x+U*.18+k*U*.14,un.pt+U*.1,U*.045,U*.045);}
     for(let k=0;k<3;k++){const c=st.F[i][k];if(!c||G.hide[i+':'+k])continue;let y=un.pt,sc=1,dim=false;
       if(f<1){y=un.pt-.34*U*(1-f);sc=.8+.2*f;dim=f<.5;}
@@ -1215,12 +1347,17 @@ function drawTutor(){const k=(G.t%2.2)/1.6;if(k>1)return;const x0=slotX(1,1),y0=
   ctx.globalAlpha=Math.min(1,k*5,(1-k)*5);ctx.font=`${Math.round(U*.7)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('👆',x+U*.1,y);ctx.globalAlpha=1;}
 function drawSpeech(){const s=G.speech;if(!s)return;const a=Math.min(1,s.t*6,(s.life-s.t)*3);if(a<=0)return;
   const fs=Math.round(Math.max(15,Math.min(18,W*.045))),font=`800 ${fs}px -apple-system,Segoe UI,Roboto,sans-serif`;ctx.font=font;
-  const maxW=Math.min(W*.8,340),words=s.text.split(' '),lines=[];let ln='';for(const w of words){const t=ln?ln+' '+w:w;if(ctx.measureText(t).width>maxW&&ln){lines.push(ln);ln=w;}else ln=t;}lines.push(ln);
+  const T=HALL.tall,vr=HALL.vX+HALL.vS*.3; // высокий зал: реплика Вали — справа от её головы, на прилавке; покупателя — над облачками
+  const maxW=T?(s.who==='valya'?Math.max(120,HALL.w-vr-30):Math.min(HALL.w-24,300)):Math.min(W*.8,340),words=s.text.split(' '),lines=[];let ln='';for(const w of words){const t=ln?ln+' '+w:w;if(ctx.measureText(t).width>maxW&&ln){lines.push(ln);ln=w;}else ln=t;}lines.push(ln);
   const bw=Math.max(...lines.map(l=>ctx.measureText(l).width))+24,bh=lines.length*(fs+4)+14;
   let ax=s.who==='valya'?HALL.x+HALL.vw*.35:s.who.x,ay=HALL.y+HALL.h-(s.who==='valya'?HALL.ph*.5:HALL.h*.35);
   let x=Math.max(6,Math.min(W-bw-6,ax-bw*.3)),y=HALL.y+HALL.h-bh*.55;if(W>H*1.15)y=Math.min(H-bh-6,ay+HALL.ph*.3);
+  let down=false;
+  if(T){if(s.who==='valya'){x=Math.max(6,Math.min(HALL.x+HALL.w-bw-6,HALL.x+vr));y=HALL.y+HALL.cy+14;ax=x+14;}
+    else{down=true;y=Math.max(HALL.y+4,HALL.y+HALL.base-HALL.ph*.86-HALL.bs*1.2-bh-12);x=Math.max(HALL.x+6,Math.min(HALL.x+HALL.w-bw-6,ax-bw*.5));}}
   ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.2)';rrect(ctx,x+2,y+3,bw,bh,12);ctx.fill();ctx.fillStyle=s.who==='valya'?'#fff3d6':'#ffffff';rrect(ctx,x,y,bw,bh,12);ctx.fill();
-  poly(ctx,[Math.max(x+14,Math.min(x+bw-14,ax))-8,y+2,Math.max(x+14,Math.min(x+bw-14,ax))+8,y+2,Math.max(x+10,Math.min(x+bw-10,ax)),y-10],s.who==='valya'?'#fff3d6':'#ffffff');
+  const tx=Math.max(x+14,Math.min(x+bw-14,ax));
+  if(down)poly(ctx,[tx-8,y+bh-2,tx+8,y+bh-2,tx,y+bh+10],'#ffffff');else poly(ctx,[tx-8,y+2,tx+8,y+2,Math.max(x+10,Math.min(x+bw-10,ax)),y-10],s.who==='valya'?'#fff3d6':'#ffffff');
   ctx.fillStyle='#3b2a1a';ctx.textAlign='left';ctx.textBaseline='top';lines.forEach((l,k)=>ctx.fillText(l,x+12,y+8+k*(fs+4)));ctx.globalAlpha=1;}
 // цикл кадров спит на карте и на паузе; в покое — реже (покупатели моргают и покачиваются)
 let loopOn=false,frameN=0;
@@ -1259,13 +1396,14 @@ function adReady(){return Date.now()-lastAdT>=AD_GAP&&adOk();}
 function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
 // межэкранная «положена»: не раньше, чем пройден 6-й уровень, и либо AD_EVERY побед с прошлого показа (S.adW, долг не сгорает),
 // либо с прошлой рекламы прошло AD_MIN минут (длинные уровни 60+ идут по 4–6 минут)
-function adDue(){return (S.unlocked||1)>AD_FROM&&((S.adW||0)>=AD_EVERY||Date.now()-lastAdT>=AD_MIN*60000);}
+function adDue(){return !PAY.own('no_ads')&&(S.unlocked||1)>AD_FROM&&((S.adW||0)>=AD_EVERY||Date.now()-lastAdT>=AD_MIN*60000);}
+// долг S.adW обнуляется только после настоящего показа (Яндекс wasShown, VK result) — как в «Выезде» (аудит 14)
 function showInterstitial(cb0){
-  const cb=()=>{lastAdT=Date.now();cb0();};
-  if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(cb);return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).catch(()=>{}).finally(()=>{adClose();cb();});return;}
-  if(!ysdk){stubAd(cb);return;}
-  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:()=>{adClose();cb();},onError:()=>{adClose();cb();}}});
+  const cb=shown=>{lastAdT=Date.now();if(shown){S.adW=0;save();}cb0();};
+  if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(()=>cb(true));return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();cb(!!(r&&r.result));},()=>{adClose();cb(false);});return;}
+  if(!ysdk){stubAd(()=>cb(true));return;}
+  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
 }
 
 /* ================= монеты ================= */
@@ -1284,11 +1422,143 @@ function spend(kind,then){const pr=PRICE[kind];
 function adCoinsLeft(){const t=dayKey(0);return Math.max(0,AD_DAY-(isObj(S.adc)&&S.adc.d===t?S.adc.n||0:0));}
 function watchCoins(done){if(!adCoinsLeft())return;
   showRewarded(()=>{const t=dayKey(0);if(!isObj(S.adc)||S.adc.d!==t)S.adc={d:t,n:0};S.adc.n=(S.adc.n||0)+1;setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');if(done)done();});}
-function openCoins(){const left=adCoinsLeft(),ok=adOk();
+function openCoins(){const left=adCoinsLeft(),ok=adOk(),buy=PAY.on&&!inLevel(); // покупки — только вне уровня
   modal(`<h2>Монеты 💰</h2><p>У вас ${coinsTxt(S.coins)}. Монеты дают за каждый уровень — больше за три звезды, за Ревизию и задание дня.</p>
     ${ok&&!left?'<p><small>Монеты за рекламу на сегодня закончились — завтра можно снова.</small></p>':''}
+    ${buy?PAY.html():''}
     <div class="row">${ok&&left?`<button class="btn accent rw" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}<button class="btn" id="mCancel">Закрыть</button></div>`);
+  if(buy){PAY.bind($('mcard'));PAY.re=openCoins;}
   const a=$('mAdCoins');if(a)a.onclick=()=>{hideModal();watchCoins();};$('mCancel').onclick=hideModal;}
+function inLevel(){return !!(G&&!G.over&&$('scr-game').classList.contains('on'));}
+
+/* ---- товары «Гастронома» (каталог — hobby-analytics/13-purchases-catalog.md, п. 4.5). Бустеры не дорожают, «пропуск уровня» не продаём ----
+   vk — цена в голосах, обязана совпадать с ~/Projects/hobby-pay/catalog.json (сервер vk-pay отдаёт её VK) */
+const PAY_ROW='set';
+const PAY_ITEMS={
+  no_ads:{perm:1,bonus:150,vk:20,ic:'🚫',name:'Без рекламы между уровнями',desc:'Навсегда, и сразу +150 💰. Ролики за награду остаются — по желанию'},
+  coins_s:{n:250,vk:5,ic:'💰',name:'Выручка: 250 💰',desc:'На обстановку магазина и помощь на полках',done:'+250 💰 — спасибо!'},
+  coins_l:{n:800,vk:14,ic:'💰',name:'Касса: 800 💰',desc:'Выгоднее выручки',done:'+800 💰 — спасибо!'}
+};
+const PAY_TEST={no_ads:149,coins_s:39,coins_l:99}; // цены только для ?paytest=1; настоящие — в консоли
+function payAdd(n){S.coins+=n;}
+function payFlush(){cloudFlush();}
+function payPause(on){setPause('pay',on);}
+// после покупки/восстановления: монеты на экране и перерисовать окно, где были кнопки (PAY.re — его функция)
+function payAfter(){updCoins();if(modalOn&&PAY.re)PAY.re();else if($('scr-shop').classList.contains('on'))openShop();}
+/* ================= покупки за деньги: Яндекс Игры (ysdk.payments) и VK Игры (VKWebAppShowOrderBox) — общий модуль (одинаковый в 5 играх) =================
+   Товары игры — PAY_ITEMS (выше), id совпадают с id в консоли Яндекса («Инап-покупки») и в hobby-pay/catalog.json (VK).
+   Кнопок покупок НЕТ совсем, если платежи недоступны: нет SDK/моста (мак), каталог Яндекса пуст, VK не поддерживает оплату (iOS).
+   Постоянные (perm) — флаг S.buy[id], разовый бонус монет — один раз на игрока (S.buyB). Выдача — только после подтверждения площадки.
+   Яндекс: цена и значок валюты — только из getCatalog; расходуемые: выдать → сохранить (облако сразу) → consumePurchase;
+     незавершённые при запуске довыдаём (getPurchases). Токены выданных — S.payT (и в облаке), сбой consume не даст выдать второй раз.
+   VK: на кнопке число голосов (PAY_ITEMS.vk). success:true + order_id → выдать → сохранить → стереть ключ pay_<order_id>.
+     Страховка: сервер vk-pay при оплате пишет в хранилище VK игрока pay_<order_id>=id (расходуемые) и own_<id>=1 (постоянные);
+     при запуске читаем их и довыдаём. Выданные order_id — S.payV (последние 30); покупка без order_id оставляет метку «x:<id>»,
+     которая «съест» первый чужой pay_ этого товара — второй раз не выдастся.
+   Мак: ?paytest=1 — имитация Яндекса (localStorage «paytest»), ?vk=1&paytest=1 — имитация VK с сервером (localStorage «paytestvk»),
+   ?paytest=fail — отказ. В настоящем VK (vk_app_id) и в Яндексе заглушек нет */
+const payObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+const PAY={on:false,p:null,v:null,list:[],busy:false,
+  test:/[?&]paytest=/.test(location.search),
+  // запуск: после SDK/моста и облака. Незавершённые покупки обрабатываем, даже если каталог не пришёл
+  async init(){if(PAY.p||PAY.v)return;
+    if(PLAT==='vk')return PAY.initVK();
+    try{if(ysdk)PAY.p=ysdk.getPayments?await payT(ysdk.getPayments({signed:false})):ysdk.payments;
+      else if(PAY.test&&!window.YaGames)PAY.p=payStub();}catch(e){PAY.p=null;}
+    if(!PAY.p)return;
+    try{await PAY.restore();}catch(e){}
+    try{const c=await payT(PAY.p.getCatalog());PAY.list=(Array.isArray(c)?c:[]).filter(x=>x&&PAY_ITEMS[x.id]);}catch(e){PAY.list=[];}
+    PAY.on=PAY.list.length>0;if(PAY.on)payAfter();},
+  async initVK(){
+    if(VK){let ok=false;try{ok=!!(VK.supportsAsync&&await payT(VK.supportsAsync('VKWebAppShowOrderBox'),8000));}catch(e){}if(ok)PAY.v=payVK();}
+    else if(PAY.test&&!VK_REAL)PAY.v=payStubVK();
+    if(!PAY.v)return;
+    try{await PAY.restore();}catch(e){}
+    PAY.list=Object.keys(PAY_ITEMS).filter(id=>PAY_ITEMS[id].vk>0).map(id=>({id}));
+    PAY.on=PAY.list.length>0;if(PAY.on)payAfter();},
+  own(id){return !!(payObj(S.buy)&&S.buy[id]);},
+  item(id){return PAY.list.find(x=>x.id===id)||null;},
+  give(id){const it=PAY_ITEMS[id];
+    if(it.perm){if(!payObj(S.buy))S.buy={};S.buy[id]=1;
+      if(it.bonus){if(!payObj(S.buyB))S.buyB={};if(!S.buyB[id]){S.buyB[id]=1;payAdd(it.bonus);}}}
+    else payAdd(it.n||0);
+    if(it.give)it.give();},
+  // при запуске и «Восстановить покупки»: постоянные — выдать, если флага нет; расходуемые — довыдать и отметить
+  async restore(){let got=0;
+    if(PAY.v)got=await PAY.restoreVK();
+    else{const ps=await payT(PAY.p.getPurchases());
+      for(const x of (Array.isArray(ps)?ps:[])){const it=x&&PAY_ITEMS[x.productID];if(!it)continue;
+        if(it.perm){if(!PAY.own(x.productID)){PAY.give(x.productID);got=1;}}else if(await PAY.credit(x))got=1;}}
+    if(got){save();payFlush();payAfter();toast('Покупка зачислена',2600);}
+    return got;},
+  // VK: ключи own_<id> (постоянные, не стираем) и pay_<order_id> (расходуемые: выдать, сохранить, стереть)
+  async restoreVK(){const ks=await PAY.v.keys();let got=0;const done=[];if(!Array.isArray(S.payV))S.payV=[];
+    for(const k of ks){const m=/^(own|pay)_(.+)$/.exec(k.key||'');if(!m||!k.value)continue;
+      if(m[1]==='own'){const it=PAY_ITEMS[m[2]];if(it&&it.perm&&!PAY.own(m[2])){PAY.give(m[2]);got=1;}continue;}
+      const id=String(k.value),it=PAY_ITEMS[id];if(!it)continue;
+      if(S.payV.indexOf(m[2])<0){const x=S.payV.indexOf('x:'+id); // покупка без order_id уже выдана — это её заказ
+        if(x>=0)S.payV[x]=m[2];else{PAY.give(id);payMark(m[2]);got=1;}}
+      done.push(k.key);}
+    if(done.length){save();payFlush();for(const k of done)try{await PAY.v.clear(k);}catch(e){}}
+    return got;},
+  // расходуемая: выдать (если этот токен ещё не выдавали), сохранить в облако и только потом consumePurchase
+  async credit(x){const t=String(x.purchaseToken||'');if(!Array.isArray(S.payT))S.payT=[];let fresh=false;
+    if(!t||S.payT.indexOf(t)<0){PAY.give(x.productID);if(t)S.payT.push(t);if(S.payT.length>30)S.payT=S.payT.slice(-30);save();payFlush();fresh=true;}
+    try{if(t)await payT(PAY.p.consumePurchase(t));}catch(e){}
+    return fresh;},
+  async buy(id){const it=PAY_ITEMS[id];if(!it||PAY.busy||!PAY.on||!PAY.item(id)||(it.perm&&PAY.own(id)))return;PAY.busy=true;payPause(true);
+    try{if(PAY.v){const r=await PAY.v.order(id);if(!r||!r.success)throw new Error('cancel');
+        const oid=r.order_id!=null?String(r.order_id):'';if(!Array.isArray(S.payV))S.payV=[];
+        if(!oid||S.payV.indexOf(oid)<0){PAY.give(id);payMark(oid||'x:'+id);}
+        save();payFlush();if(oid)PAY.v.clear('pay_'+oid).catch(()=>{});}
+      else{const x=await PAY.p.purchase({id});
+        if(it.perm){PAY.give(id);save();payFlush();}
+        else await PAY.credit(x&&x.productID===id?x:{productID:id,purchaseToken:x&&x.purchaseToken});}
+      SND.coin();toast(it.done||'Готово! Спасибо за покупку',2800);payAfter(id);}
+    catch(e){toast('Покупка не состоялась',2200);}
+    finally{PAY.busy=false;payPause(false);}},
+  // «Восстановить покупки» (Об игре): заново читаем getPurchases / ключи VK
+  async again(){if(!(PAY.p||PAY.v)||PAY.busy)return;PAY.busy=true;let got=0;try{got=await PAY.restore();}catch(e){}PAY.busy=false;if(!got)toast('Покупки проверены — всё на месте',2400);},
+  // цена: VK — число голосов (требование VK); Яндекс — из каталога: число + значок валюты (getPriceCurrencyImage), иначе готовая строка price
+  price(pr){if(PAY.v){const n=PAY_ITEMS[pr.id].vk,a=n%10,b=n%100;return n+' '+(a===1&&b!==11?'голос':a>=2&&a<=4&&(b<12||b>14)?'голоса':'голосов');}
+    let img='';try{img=pr.getPriceCurrencyImage?pr.getPriceCurrencyImage('svg'):'';}catch(e){}
+    return img&&pr.priceValue?payEsc(pr.priceValue)+'<img class="pcur" src="'+payEsc(img)+'" alt="">':payEsc(pr.price||pr.priceValue||'');},
+  row(pr){const it=PAY_ITEMS[pr.id],own=it.perm&&PAY.own(pr.id),txt='<span>'+it.ic+' '+payEsc(it.name)+'<br><small>'+payEsc(it.desc)+'</small></span>';
+    return own?'<div class="'+PAY_ROW+' pown">'+txt+'<i>куплено</i></div>':'<button class="'+PAY_ROW+' pbuy" data-pid="'+payEsc(pr.id)+'">'+txt+'<b>'+PAY.price(pr)+'</b></button>';},
+  // список товаров (ids — только эти, по порядку каталога); owned=false — без уже купленных
+  html(ids,owned){const L=PAY.list.filter(pr=>(!ids||ids.indexOf(pr.id)>=0)&&(owned!==false||!(PAY_ITEMS[pr.id].perm&&PAY.own(pr.id))));
+    return L.length?'<div class="pay"><h3>Покупки</h3>'+L.map(PAY.row).join('')+'</div>':'';},
+  bind(root){(root||document).querySelectorAll('.pbuy').forEach(b=>b.onclick=()=>{try{(SND.tap||SND.click)();}catch(e){}PAY.buy(b.dataset.pid);});}
+};
+function payMark(v){if(!Array.isArray(S.payV))S.payV=[];if(S.payV.indexOf(v)<0)S.payV.push(v);if(S.payV.length>30)S.payV=S.payV.slice(-30);}
+// слияние облака (d) в сохранение T (по умолчанию S): купленное, выданные бонусы, токены и заказы — объединение (покупка не теряется ни с какой стороны)
+function payMerge(d,T){T=T||S;if(!payObj(d)||!payObj(T))return;
+  for(const f of ['buy','buyB'])if(payObj(d[f])){if(!payObj(T[f]))T[f]={};for(const k in d[f])if(d[f][k])T[f][k]=1;}
+  for(const f of ['payT','payV'])if(Array.isArray(d[f])){if(!Array.isArray(T[f]))T[f]=[];for(const t of d[f])if(typeof t==='string'&&T[f].indexOf(t)<0)T[f].push(t);if(T[f].length>30)T[f]=T[f].slice(-30);}}
+function payT(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||15000))]);}
+function payEsc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
+// VK: окно оплаты (игрок может думать долго — ждём до 10 мин) и ключи хранилища, которые пишет сервер vk-pay
+function payVK(){return {order:id=>vkSend('VKWebAppShowOrderBox',{type:'item',item:id},600000),
+  keys:async()=>{const r=await vkSend('VKWebAppStorageGetKeys',{count:1000,offset:0},8000),ks=((r&&r.keys)||[]).filter(k=>/^(own|pay)_/.test(k));
+    if(!ks.length)return [];const g=await vkSend('VKWebAppStorageGet',{keys:ks},8000);return (g&&g.keys)||[];},
+  clear:k=>vkSend('VKWebAppStorageSet',{key:k,value:''},8000)};}
+// имитация платежей для проверки на маке (?paytest=1): цены — PAY_TEST, покупки лежат в localStorage «paytest», consume их убирает
+function payStub(){const K='paytest',rd=()=>{try{return JSON.parse(localStorage.getItem(K))||[];}catch(e){return [];}},wr=a=>{try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}};
+  const cur='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#f5b400"/><text x="10" y="14.5" font-size="12" text-anchor="middle" font-family="Arial" font-weight="700" fill="#fff">T</text></svg>');
+  const wait=v=>new Promise(ok=>setTimeout(()=>ok(v),250)),fail=()=>window.__payCancel||/[?&]paytest=fail/.test(location.search);
+  return {getCatalog:()=>wait(Object.keys(PAY_TEST).map(id=>({id,title:id,description:'',imageURI:'',price:PAY_TEST[id]+' тест',priceValue:String(PAY_TEST[id]),priceCurrencyCode:'TST',getPriceCurrencyImage:()=>cur}))),
+    getPurchases:()=>wait(rd()),
+    purchase:({id})=>fail()?Promise.reject(new Error('cancel')):wait(null).then(()=>{const x={productID:id,purchaseToken:'t'+Date.now()+Math.random().toString(36).slice(2,6),developerPayload:''};const a=rd();a.push(x);wr(a);return x;}),
+    consumePurchase:t=>{if(window.__payNoConsume)return Promise.reject(new Error('fail'));wr(rd().filter(x=>x.purchaseToken!==t));return wait();}};}
+// имитация VK (?vk=1&paytest=1): «сервер» пишет pay_/own_ в localStorage «paytestvk», как vk-pay в хранилище VK.
+// __payNoOid — ответ без order_id, __payNoClear — стирание ключа не прошло, ?paytest=fail / __payCancel — отказ
+function payStubVK(){const K='paytestvk',rd=()=>{try{return JSON.parse(localStorage.getItem(K))||{};}catch(e){return {};}},wr=o=>{try{localStorage.setItem(K,JSON.stringify(o));}catch(e){}};
+  const wait=v=>new Promise(ok=>setTimeout(()=>ok(v),250)),fail=()=>window.__payCancel||/[?&]paytest=fail/.test(location.search);
+  return {order:id=>fail()?Promise.reject({error_type:'client_error'}):wait().then(()=>{const oid=String(Date.now()),o=rd();
+      if(PAY_ITEMS[id].perm)o['own_'+id]='1';else o['pay_'+oid]=id;wr(o);return window.__payNoOid?{success:true}:{success:true,order_id:+oid};}),
+    keys:()=>wait(Object.entries(rd()).filter(([k,v])=>v).map(([key,value])=>({key,value}))),
+    clear:k=>{if(window.__payNoClear)return Promise.reject(new Error('fail'));const o=rd();delete o[k];wr(o);return wait();}};}
+
 
 /* ================= рейтинг заданий дня =================
    Очки — сколько дней выполнено задание дня (у всех игроков одинаковое задание).
@@ -1325,50 +1595,84 @@ const LB={
 /* ================= окна: победа, проигрыш, тупик ================= */
 function hideModal(){const was=modalOn;$('modal').classList.remove('on');modalOn=false;
   // окно закрыто поверх идущего уровня — для GameplayAPI игра снова «идёт»
-  if(was&&G&&!G.over&&$('scr-game').classList.contains('on')&&!pauseWhy.has('ad'))YG.start();}
-function modal(html){$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;if(G)YG.stop();}
+  if(was&&G&&!G.over&&$('scr-game').classList.contains('on')&&!pauseWhy.has('ad'))YG.start();
+  // тупик случился, пока было открыто окно, — покажем его теперь
+  if(was&&G&&!G.over&&$('scr-game').classList.contains('on')&&!hasMove(G.lv,G.st))later(()=>{if(G&&!G.over&&!modalOn&&!hasMove(G.lv,G.st))stuck();},400);}
+function modal(html){PAY.re=null;$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;if(G)YG.stop();}
 // пустая звезда — контуром ☆ (отличается не только цветом)
 function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="e">☆</span>';return s;}
 function cardCanvas(id,t){requestAnimationFrame(()=>{const c=$(id);if(!c)return;const r=c.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1),w=r.width||200,h=r.height||90;
   c.width=w*d;c.height=h*d;const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);const s=Math.min(h*1.2,w*.62);
   const gr=g.createRadialGradient(w/2,h*.55,0,w/2,h*.55,s*.8);gr.addColorStop(0,'rgba(255,215,90,.55)');gr.addColorStop(1,'rgba(255,215,90,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);drawGood(g,t,w/2,h*.94,s);});}
-function win(){if(!G||modalOn)return;G.over=true;YG.stop();SND.win();const st=Math.max(1,3-G.angry),i=G.idx;
-  say(pick(PH.valya.win),'valya');
+// грамота «Лучший магазин города» (аудит 14): после Ревизии по звёздам города 20/25/30★ → 10/20/30 💰, при улучшении — доплата до высшей ступени.
+// Суммы урезаны против отчёта (30/50/80) по модели ~/Projects/hobby-analytics/sims/gastronom-econ.py v6: иначе обстановка кончалась бы вдвое быстрее
+const CHEST=[[30,30],[25,20],[20,10]],VET_BONUS=5;
+function cityStars(c){let n=0;for(let i=c*10;i<c*10+10;i++)n+=S.stars[i]||0;return n;}
+function chestTier(cs){for(const x of CHEST)if(cs>=x[0])return x[1];return 0;}
+// ближайший не купленный предмет обстановки — цель в окне победы и значок на кнопке «Магазин»
+function nextDecor(){return DECOR.filter(d=>!hasDecor(d.id)).sort((a,b)=>a.p-b.p)[0]||null;}
+function goalHtml(){const d=nextDecor();if(!d)return '';const ok=S.coins>=d.p,pc=Math.min(100,Math.round(S.coins/d.p*100));
+  return `<div class="goal"><canvas id="goalCv"></canvas><div><b>${ok?'Хватает на «'+d.n+'»!':'До «'+d.n+'» — '+(d.p-S.coins)+' 💰'}</b><div class="bar"><i style="width:${pc}%"></i></div></div></div>`;}
+function goalDraw(){const d=nextDecor();if(d)requestAnimationFrame(()=>{const c=$('goalCv');if(c)decorPreview(c,d.id);});}
+// тётя Валя в окне: лицо в кружке и реплика (аудит 14: в окне победы её не было видно)
+function valyaHtml(t){return `<div class="vsay"><canvas id="vsCv"></canvas><span>${t}</span></div>`;}
+function valyaDraw(){requestAnimationFrame(()=>{const c=$('vsCv');if(!c)return;const d=Math.min(2,window.devicePixelRatio||1),w=56;c.width=w*d;c.height=w*d;const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);
+  g.save();g.beginPath();g.arc(w/2,w/2,w/2,0,Math.PI*2);g.clip();g.fillStyle='#f6dcb0';g.fillRect(0,0,w,w);drawPerson(g,'valya',w/2,w*1.3,w*1.12,1,0,0);g.restore();});}
+// окно поверх (💰/⚙ нажали в последнюю секунду) — закрываем его: победа не теряется (аудит 14)
+function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true;YG.stop();SND.win();const st=Math.max(1,3-G.angry),i=G.idx;
+  const vline=pick(PH.valya.win);say(vline,'valya');
   // задание дня: в первый раз за день — 30 💰 и серия дней; повтор — как обычный уровень
-  let reward=(2*st+Math.ceil(G.served/2))*(G.boss?2:1),sk=null;
+  let reward=(2*st+Math.ceil(G.served/2))*(G.boss?2:1),sk=null,bonus=0,chest=0;
   if(G.daily){const first=!S.daily[todayKey()];S.daily[todayKey()]=Math.max(S.daily[todayKey()]||0,st);if(first){sk=streakWin();reward=DAILY_REWARD+(sk?sk.bonus:0);}}
-  else{S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);S.levelsDone++;S.adW=(S.adW||0)+1;}
-  S.coins+=reward;save();updCoins();setTimeout(()=>SND.coin(),500);
-  const card=G.newCard,cityDone=!G.daily&&G.boss;
+  else{S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);S.levelsDone++;S.adW=(S.adW||0)+1;
+    if(G.vetOk)bonus+=VET_BONUS;
+    const c=Math.floor(i/10);if(S.stars[c*10+9]){if(!isObj(S.chest))S.chest={};const t=chestTier(cityStars(c)),had=S.chest[c]||0;if(t>had){chest=t-had;S.chest[c]=t;bonus+=chest;}}}
+  // после 6-го уровня — один раз: «открылось задание дня» (аудит 14: игрок не видел карту и не знал о нём)
+  const dOpen=!G.daily&&i===AD_FROM-1&&!S.tips.dOpen;if(dOpen)S.tips.dOpen=1;
+  S.coins+=reward+bonus;save();updCoins();setTimeout(()=>SND.coin(),500);
+  const card=G.newCard,cityDone=!G.daily&&G.boss,cs=G.daily?0:cityStars(Math.floor(i/10)),nd=nextDecor(),canBuy=!G.daily&&nd&&S.coins>=nd.p;
   // межэкранная после «Дальше»: не после Ревизии и новой карточки; решаем сразу — чтобы не предлагать ×2 и оценку перед роликом
   const adNext=!G.daily&&!cityDone&&card<0&&adDue()&&adReady();
   // ×2 за рекламу: не на первых трёх уровнях, не когда следом межэкранная (два ролика подряд), один раз за уровень, в VK — только с мостом
   const x2=X2_ON&&(G.daily||i>=3)&&!adNext&&adOk();
+  const nextT=CHEST.slice().reverse().find(x=>cs<x[0]);
   modal(`<h2>${cityDone?'Ревизия пройдена! 🏆':'Всё продано! 🎉'}</h2><div class="big-stars">${starsHtml(st)}</div>
+    ${valyaHtml('«'+vline+'»')}
     <p>${G.daily?'Задание дня выполнено! Завтра будет новое.':'Обслужено покупателей: '+G.served+(G.angry?', ушли недовольными: '+G.angry:'')}</p>
-    ${cityDone&&i+1<100?'<p><b>Дальше — '+cityOf(i+1)[0]+'!</b></p>':''}
-    <p class="coins-won" id="mWon">+${reward} 💰</p>
+    ${cityDone?'<p><b>Дальше — '+cityOf(i+1)[0]+'!</b></p>':''}
+    <p class="coins-won" id="mWon">+${reward+bonus} 💰</p>
+    ${G.vetOk&&!G.daily?'<p><small>🎖 Ветерану — уважение: +'+VET_BONUS+' 💰</small></p>':''}
+    ${chest?`<div class="chest">📜 Грамота «Лучший магазин города»: ${cs}★ — +${chest} 💰</div>`:cityDone&&nextT?`<p><small>📜 Грамота города: соберите ${nextT[0]}★ (сейчас ${cs}★) — +${nextT[1]-(S.chest&&S.chest[Math.floor(i/10)]||0)} 💰</small></p>`:''}
     ${sk?'<div id="mStreak">'+streakHtml(sk.day)+'</div>':''}
     ${card>=0?`<div class="newcard"><p>⭐ Новое в коллекции «Дефицит»: <b>${RARE[card].n}</b></p><canvas id="ncv"></canvas></div>`:''}
-    <div class="row">${G.daily?'':'<button class="btn green" id="mNext">Дальше →</button>'}${x2?`<button class="btn accent rw" id="mX2">📺 ×2 монеты за рекламу <span class="nw">(+${reward}&nbsp;💰)</span></button>`:''}${sk&&sk.lost&&adOk()?`<button class="btn accent rw" id="mRes">📺 Вернуть серию за рекламу <span class="nw">(день ${sk.lost+1})</span></button>`:''}${G.daily&&LB.ok()?'<button class="btn accent" id="mLb">🏆 Рейтинг</button>':''}<button class="btn" id="mMap">На карту</button></div>`);
+    ${dOpen?'<div class="chest">📅 Открылось задание дня: каждый день +'+DAILY_REWARD+' 💰 и подарок за серию дней!</div>':''}
+    ${G.daily?'':goalHtml()}
+    <div class="row">${G.daily?'':'<button class="btn green" id="mNext">Дальше →</button>'}${x2?`<button class="btn accent rw" id="mX2">📺 ×2 монеты за рекламу <span class="nw">(+${reward}&nbsp;💰)</span></button>`:''}${sk&&sk.lost&&adOk()?`<button class="btn accent rw" id="mRes">📺 Вернуть серию за рекламу <span class="nw">(день ${sk.lost+1})</span></button>`:''}${G.daily&&LB.ok()?'<button class="btn accent" id="mLb">🏆 Рейтинг</button>':''}${dOpen?'<button class="btn accent noent" id="mDaily">📅 К заданию дня</button>':''}${canBuy?'<button class="btn green noent" id="mShop">🏪 Обставить магазин</button>':''}<button class="btn" id="mMap">На карту</button></div>`);
   if(card>=0)cardCanvas('ncv',RARE0+card);
+  valyaDraw();if(!G.daily)goalDraw();
   if(G.daily){LB.submit();const b=$('mLb');if(b)b.onclick=LB.show;}
+  // следующий уровень строим заранее, пока открыто окно (аудит 14: на слабом телефоне генерация по нажатию «Дальше» — секунды «зависания»)
+  if(!G.daily)setTimeout(()=>{try{levelFor(i+1);}catch(e){}},450);
   // награда — только после досмотренного ролика; второй раз за уровень не даём
-  const g=G,bx=$('mX2');let got=reward;if(bx)bx.onclick=()=>{if(g.x2)return;bx.disabled=true;
+  const g=G,bx=$('mX2');let got=reward+bonus;if(bx)bx.onclick=()=>{if(g.x2)return;bx.disabled=true;
     showRewarded(()=>{if(g.x2)return;g.x2=true;setCoins(S.coins+reward);got+=reward;SND.coin();toast('+'+reward+' 💰 — удвоено!');
       const w=$('mWon');if(w&&G===g)w.innerHTML='+'+got+' 💰 <small>(×2)</small>';if(bx.parentNode)bx.parentNode.removeChild(bx);},()=>{bx.disabled=false;});};
   // вернуть серию: сегодняшний день становится следующим после прерванного, бонус — разница
   const br=$('mRes');if(br)br.onclick=()=>{br.disabled=true;
     showRewarded(()=>{if(!sk.lost)return;const d=sk.lost+1,add=STREAK[d-1]-STREAK[sk.day-1];S.streak={day:d,last:dayKey(0)};sk.lost=0;sk.day=d;setCoins(S.coins+add);got+=add;SND.coin();
       toast('🔥 Серия возвращена: день '+d+(add>0?', +'+add+' 💰':''));const w=$('mWon'),m=$('mStreak');if(w&&G===g)w.innerHTML='+'+got+' 💰';if(m)m.innerHTML=streakHtml(d);if(br.parentNode)br.parentNode.removeChild(br);},()=>{br.disabled=false;});};
-  setTimeout(()=>offerReturn(adNext),2200);
-  // межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут, первая — после 6-го уровня; перед показом — предупреждение
-  const n=$('mNext');if(n)n.onclick=()=>{n.disabled=true;const go=()=>startLevel(i+1);
-    if(adNext&&adReady()){S.adW=0;save();toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
+  // оценка/ярлык — только пока окно победы на экране (игрок мог уже нажать «Дальше»)
+  setTimeout(()=>offerReturn(adNext||!(G===g&&modalOn)),2200);
+  // межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут, первая — после 6-го уровня; перед показом — предупреждение.
+  // После Ревизии «Дальше» ведёт на карту: новый город открывается на глазах (аудит 14)
+  const n=$('mNext');if(n)n.onclick=()=>{n.disabled=true;const go=cityDone?()=>openMap({city:Math.floor((i+1)/10)}):()=>startLevel(i+1);
+    if(adNext&&adReady()){toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
+  const md=$('mDaily');if(md)md.onclick=()=>startLevel(0,true);
+  const ms=$('mShop');if(ms)ms.onclick=()=>{hideModal();openShop();};
   $('mMap').onclick=()=>{hideModal();openMap();};}
 function lose(){if(!G)return;YG.stop();SND.stuck();const canPay=S.coins>=PRICE.life;
   modal(`<h2>Очередь обиделась 😟</h2><p>Трое покупателей ушли, не дождавшись. Тётя Валя вздыхает: «Бывает…» Попробуем ещё?</p>
-    <div class="row">${canPay?`<button class="btn accent" id="mLife">❤️ Ещё попытка — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent rw" id="mRev">📺 Ещё попытка за рекламу</button>'}<button class="btn" id="mRe">↻ Заново</button><button class="btn" id="mMap2">На карту</button></div>`);
+    <div class="row">${canPay?`<button class="btn accent buy" id="mLife">❤️ Ещё попытка — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent rw" id="mRev">📺 Ещё попытка за рекламу</button>'}<button class="btn" id="mRe">↻ Заново</button><button class="btn" id="mMap2">На карту</button></div>`);
   const revive=()=>{G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();kick();if(!hasMove(G.lv,G.st))stuck();};
   if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);SND.coin();revive();};
   const r=$('mRev');if(r)r.onclick=()=>{hideModal();showRewarded(()=>{G.usedRevive=true;revive();},lose);};
@@ -1376,13 +1680,13 @@ function lose(){if(!G)return;YG.stop();SND.stuck();const canPay=S.coins>=PRICE.l
 // тупик: ставить некуда — предлагаем бустеры, иначе уровень заново
 // тупик: ставить некуда — бустеры за монеты и рядом тот же бустер за рекламу (многие берегут монеты на обстановку), иначе уровень заново
 function stuck(){if(!G||G.over||modalOn)return;SND.stuck();say(pick(PH.valya.stuck),'valya');
-  const ks=[];if(G.undo.length)ks.push('undo');ks.push('mix');if(!G.table)ks.push('table');
+  const ks=[];if(G.undo.length)ks.push('undo');if(canMix())ks.push('mix');if(!G.table)ks.push('table');
   const pay=k=>freeUndo(k)||S.coins>=PRICE[k];
-  const opt=k=>freeUndo(k)?`<button class="btn accent" id="sk_${k}">${BICON[k]} ${BNAME[k]} — бесплатно</button>`:
-    S.coins>=PRICE[k]?`<button class="btn accent" id="sk_${k}">${BICON[k]} ${BNAME[k]} — ${PRICE[k]} 💰</button>`:
+  const opt=k=>freeUndo(k)?`<button class="btn accent buy" id="sk_${k}">${BICON[k]} ${BNAME[k]} — бесплатно</button>`:
+    S.coins>=PRICE[k]?`<button class="btn accent buy" id="sk_${k}">${BICON[k]} ${BNAME[k]} — ${PRICE[k]} 💰</button>`:
     adOk()?`<button class="btn accent rw" id="sa_${k}">📺 ${BNAME[k]} за рекламу</button>`:'';
-  // «за рекламу» при наличии монет — для самого сильного бустера (раскладушка, если уже стоит — смешать)
-  const big=G.table?'mix':'table',extra=adOk()&&pay(big)?`<button class="btn accent rw" id="sa_${big}">📺 ${BNAME[big]} за рекламу</button>`:'';
+  // «за рекламу» при наличии монет — для самого сильного бустера (столик, если уже стоит — смешать)
+  const big=G.table?'mix':'table',extra=adOk()&&ks.includes(big)&&pay(big)?`<button class="btn accent rw" id="sa_${big}">📺 ${BNAME[big]} за рекламу</button>`:'';
   modal(`<h2>Полки забиты!</h2><p>Некуда поставить товар. Можно выручиться:</p><div class="row">
     ${ks.map(opt).join('')}${extra}
     <div class="row2"><button class="btn" id="mRe">↻ Заново</button><button class="btn" id="mMap2">На карту</button></div></div>`);
@@ -1394,11 +1698,13 @@ function stuck(){if(!G||G.over||modalOn)return;SND.stuck();say(pick(PH.valya.stu
 
 /* ================= карта городов ================= */
 function totalStars(){let n=0;for(const k in S.stars)n+=S.stars[k]||0;return n;}
-function openMap(){if(G)YG.stop();G=null;tip('');hideModal();const list=$('mapList');list.innerHTML='';
+// o.city — только что открытый город (после Ревизии): вывеска «загорается», карта показывает его (аудит 14)
+function openMap(o){o=o||{};if(G)YG.stop();G=null;tip('');hideModal();const list=$('mapList');list.innerHTML='';let newEl=null;
   const cur=S.unlocked-1,cities=Math.max(1,Math.floor(cur/10)+1);
   for(let c=0;c<=cities&&c<100;c++){const [name,col]=CITIES[c%CITIES.length],from=c*10,open=from<S.unlocked;let cs=0;for(let i=from;i<from+10;i++)cs+=S.stars[i]||0;
     const h=document.createElement('div');h.className='city'+(open?'':' locked');h.style.background=`linear-gradient(${shade(col,.12)},${col})`;
-    h.innerHTML=`<b>ГАСТРОНОМ</b><span>${name}${c>=CITIES.length?' ('+(Math.floor(c/CITIES.length)+1)+'-й заход)':''}</span><small>${open?'⭐ '+cs+' из 30':'🔒 откроется после Ревизии в городе '+CITIES[(c+CITIES.length-1)%CITIES.length][0]}</small>`;list.appendChild(h);
+    h.innerHTML=`<b>ГАСТРОНОМ</b><span>${name}${c>=CITIES.length?' ('+(Math.floor(c/CITIES.length)+1)+'-й заход)':''}</span><small>${open?'⭐ '+cs+' из 30'+(S.chest&&S.chest[c]?' · 📜 грамота':''):'🔒 откроется после Ревизии в городе '+CITIES[(c+CITIES.length-1)%CITIES.length][0]}</small>`;list.appendChild(h);
+    if(o.city===c&&open){h.classList.add('new');newEl=h;}
     if(!open)break;
     const route=document.createElement('div');route.className='route';list.appendChild(route);
     for(let i=from;i<from+10;i++){const un=i<S.unlocked,st=S.stars[i]||0,isCur=un&&!st,boss=isBoss(i);
@@ -1409,8 +1715,12 @@ function openMap(){if(G)YG.stop();G=null;tip('');hideModal();const list=$('mapLi
   const dd=S.daily[todayKey()],bd=$('btnDaily'),dl=S.unlocked<7;bd.classList.toggle('locked',dl);
   const sn=streakNow(),fire=sn?' · 🔥'+sn:'';
   bd.innerHTML=dl?'🔒 Задание дня<small>после 6-го уровня</small>':dd?'📅 Задание дня<small>'+'★'.repeat(dd)+' выполнено'+fire+'</small>':'📅 Задание дня<small>+'+DAILY_REWARD+' 💰'+fire+'</small>';
-  $('btnAlbum').innerHTML='⭐ Дефицит<small>'+S.album.length+' из '+NRARE+'</small>';$('btnShop').innerHTML='🏪 Магазин<small>обстановка</small>';
-  show('scr-map');const c=list.querySelector('.node.cur');if(c)c.scrollIntoView({block:'center'});}
+  $('btnAlbum').innerHTML='⭐ Дефицит<small>'+S.album.length+' из '+NRARE+'</small>';// хватает на ближайший предмет — кнопка «Магазин» подсвечена (аудит 14: игрок копил монеты и не знал зачем)
+  const nd=nextDecor(),cb=!!nd&&S.coins>=nd.p,bs=$('btnShop');bs.innerHTML='🏪 Магазин<small>'+(cb?'✨ можно купить':'обстановка')+'</small>';bs.classList.toggle('glow',cb);
+  show('scr-map');const c=list.querySelector('.node.cur');if(c)c.scrollIntoView({block:'center'});
+  if(newEl){newEl.scrollIntoView({block:'start'});toast('🏙 Открыт новый город: '+CITIES[o.city%CITIES.length][0]+'!');SND.till(2);}
+  // пока игрок смотрит карту — заранее строим текущий уровень и задание дня (без «зависания» по нажатию)
+  setTimeout(()=>{if(G||!$('scr-map').classList.contains('on'))return;try{levelFor(S.unlocked-1);if(S.unlocked>=7&&!S.daily[todayKey()])levelFor(0,true);}catch(e){}},700);}
 $('btnDaily').onclick=()=>{if(S.unlocked<7){toast('Задание дня откроется после 6-го уровня');return;}startLevel(0,true);};
 $('btnShop').onclick=()=>openShop();$('btnAlbum').onclick=()=>openAlbum();
 
@@ -1440,7 +1750,7 @@ function openShop(){const gd=$('shopGrid'),sc=$('scr-shop').classList.contains('
   DECOR.forEach(d=>{const has=hasDecor(d.id),e=document.createElement('div');e.className='gcard';
     e.innerHTML=`<canvas></canvas><b>${d.n}</b><p>${d.d}</p>${has?'<span class="have">✓ Стоит в зале</span>':`<button class="btn ${S.coins>=d.p?'green':''}">Купить — ${d.p} 💰</button>`}`;gd.appendChild(e);
     const b=e.querySelector('button');if(b)b.onclick=()=>{if(S.coins<d.p){toast('Не хватает монет: нужно '+coinsTxt(d.p));SND.bad();return;}
-      S.decor[d.id]=1;setCoins(S.coins-d.p);SND.till(0);toast('🏪 '+d.n+' — теперь в зале!');openShop();};});
+      S.decor[d.id]=1;setCoins(S.coins-d.p);openShop();celebrate(d.id);};});
   // не хватает на ближайший предмет — ролик за монеты прямо здесь (не больше AD_DAY в день)
   const nx=DECOR.filter(d=>!hasDecor(d.id)).sort((a,b)=>a.p-b.p)[0],left=adCoinsLeft(),sa=$('shopAd');
   const on=!!nx&&S.coins<nx.p&&adOk()&&left>0;sa.classList.toggle('on',on);
@@ -1448,6 +1758,38 @@ function openShop(){const gd=$('shopGrid'),sc=$('scr-shop').classList.contains('
   if(on)$('shAd').onclick=()=>watchCoins(()=>{if($('scr-shop').classList.contains('on'))openShop();});
   show('scr-shop');gd.scrollTop=sc;
   requestAnimationFrame(()=>gd.querySelectorAll('canvas').forEach((c,k)=>decorPreview(c,DECOR[k].id)));}
+/* ---- праздник покупки (аудит 14): зал «до/после» — предмет проявляется с блёстками, тётя Валя радуется своей репликой ---- */
+const SHELF_DECOR={lace:1,frame:1,panels:1}; // эти видны на витрине, а не в зале — показываем крупно сам предмет
+function hallScene(w,h,dec){const R={x:0,y:0,w,h},oH=HALL,oC=hallCv,oK=counterCv,oD=S.decor,oP=dpr;HALL=R;hallCv=null;counterCv=null;S.decor=dec;
+  const d=Math.min(2,window.devicePixelRatio||1);dpr=d;const c=document.createElement('canvas');c.width=Math.ceil(w*d);c.height=Math.ceil(h*d);
+  try{hallStd(R);buildHall();const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);g.drawImage(hallCv,0,0,w,h);if(hasDecor('clock'))drawClock(g,R.ckx,R.ckY,R.ckr);
+    ['babka','intel','school'].forEach((k,j)=>drawPerson(g,k,R.cx0+(j+.5)*R.cw,R.base,R.ph,1,j*.7,0));
+    g.drawImage(counterCv,0,0,w,h);drawPerson(g,'valya',R.vX,R.vY,R.vS,1,0,0);}
+  finally{HALL=oH;hallCv=oC;counterCv=oK;S.decor=oD;dpr=oP;}return c;}
+function celebrate(id){const d=DECOR.find(x=>x.id===id);if(!d)return;const line=PH.valya.decor[id]||'Красота!';
+  modal(`<h2>Обновка в зале! 🎉</h2><div class="cel"><canvas id="celCv"></canvas></div>${valyaHtml('«'+line+'»')}
+    <p><b>${d.n}</b> — теперь в вашем гастрономе.</p><div class="row"><button class="btn green" id="celPlay">▶ Играть дальше</button><button class="btn" id="celShop">Ещё обстановка</button></div>`);
+  valyaDraw();SND.till(1);vib(30);
+  $('celPlay').onclick=()=>{hideModal();startLevel(Math.max(0,S.unlocked-1));};$('celShop').onclick=hideModal;
+  requestAnimationFrame(()=>{const c=$('celCv');if(!c)return;const r=c.getBoundingClientRect(),w=Math.max(200,r.width||300),h=Math.max(120,r.height||210),dp=Math.min(2,window.devicePixelRatio||1);
+    c.width=Math.ceil(w*dp);c.height=Math.ceil(h*dp);const g=c.getContext('2d');g.setTransform(dp,0,0,dp,0,0);
+    let A,B,cx=w/2,cy=h/2;
+    if(SHELF_DECOR[id]){A=document.createElement('canvas');A.width=c.width;A.height=c.height;const a=A.getContext('2d');a.fillStyle='#f3e3c5';a.fillRect(0,0,A.width,A.height);
+      B=document.createElement('canvas');B.width=c.width;B.height=c.height;const b=B.getContext('2d');b.setTransform(dp,0,0,dp,0,0);const t=document.createElement('canvas');t.style.width=w+'px';t.style.height=h+'px';
+      document.body.appendChild(t);decorPreview(t,id);document.body.removeChild(t);b.drawImage(t,0,0,w,h);}
+    else{const without=Object.assign({},S.decor);delete without[id];A=hallScene(w,h,without);B=hallScene(w,h,S.decor);
+      // где появился предмет — по разнице картинок «до» и «после»
+      try{const pa=A.getContext('2d').getImageData(0,0,A.width,A.height).data,pb=B.getContext('2d').getImageData(0,0,B.width,B.height).data;let sx=0,sy=0,n=0;
+        for(let y=0;y<A.height;y+=3)for(let x=0;x<A.width;x+=3){const k=(y*A.width+x)*4;if(Math.abs(pa[k]-pb[k])+Math.abs(pa[k+1]-pb[k+1])+Math.abs(pa[k+2]-pb[k+2])>60){sx+=x;sy+=y;n++;}}
+        if(n){cx=sx/n/dp;cy=sy/n/dp;}}catch(e){}}
+    const sp=[];for(let k=0;k<(calm()?0:28);k++)sp.push({a:Math.random()*Math.PI*2,v:30+Math.random()*70,d:Math.random()*.5,s:2+Math.random()*3,c:['#ffd23f','#fff','#ff9f43','#7bed9f'][k%4]});
+    const t0=performance.now(),dur=calm()?0:1.8;
+    const frame=()=>{const t=(performance.now()-t0)/1000,k=dur?Math.min(1,t/.8):1;if(!document.body.contains(c))return;
+      g.setTransform(1,0,0,1,0,0);g.drawImage(A,0,0);g.globalAlpha=k;g.drawImage(B,0,0);g.globalAlpha=1;g.setTransform(dp,0,0,dp,0,0);
+      if(t<dur){const gl=g.createRadialGradient(cx,cy,0,cx,cy,60);gl.addColorStop(0,'rgba(255,230,120,'+(.55*(1-t/dur))+')');gl.addColorStop(1,'rgba(255,230,120,0)');g.fillStyle=gl;g.fillRect(0,0,w,h);
+        for(const p of sp){const q=t-p.d;if(q<0||q>1.2)continue;g.globalAlpha=Math.max(0,1-q/1.2);g.fillStyle=p.c;const x=cx+Math.cos(p.a)*p.v*q,y=cy+Math.sin(p.a)*p.v*q+20*q*q;g.fillRect(x-p.s/2,y-p.s/2,p.s,p.s);}g.globalAlpha=1;
+        requestAnimationFrame(frame);}};
+    frame();});}
 function openAlbum(){const gd=$('albGrid');gd.innerHTML='';$('albSub').textContent=S.album.length+' из '+NRARE+' собрано';
   RARE.forEach((r,k)=>{const has=S.album.includes(k),e=document.createElement('div');e.className='gcard'+(has?'':' lock');
     e.innerHTML=`<canvas id="alb${k}"></canvas><b>${has?r.n:'???'}</b><p>${has?r.c:'Ищите в коробках «Дефицит» — с 14-го уровня.'}</p>`;gd.appendChild(e);cardCanvas('alb'+k,RARE0+k);});
@@ -1461,30 +1803,33 @@ function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</
     <button class="set" id="stMus"><span>🎵 Музыка</span>${on(!!S.music)}</button>
     <button class="set" id="stVib"><span>📳 Вибрация</span>${on(S.vib!==false)}</button>
     <button class="set" id="stCalm"><span>🌿 Спокойный режим<br><small>без тряски и пульсации</small></span>${on(calm())}</button>
+    ${PAY.on&&!inLevel()?PAY.html(['no_ads'],false)+'<button class="set" id="stShop"><span>🛒 Все покупки<br><small>монеты, без рекламы между уровнями</small></span><i>›</i></button>':''}
     <div class="row">${G&&!G.over?'<button class="btn" id="stRe">↻ Начать уровень заново</button>':''}<button class="btn" id="stAbout">ℹ️ Об игре</button><button class="btn green" id="stClose">Готово</button></div>`);
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
   const m=$('stMus');if(m)m.onclick=()=>{S.music=S.music?0:1;save();unlockAudio();openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();vib(40);openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast('Включено в настройках телефона («уменьшить движение»)');return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   const re=$('stRe');if(re)re.onclick=()=>startLevel(G.daily?0:G.idx,G.daily);
+  if($('stShop')){$('stShop').onclick=openCoins;PAY.bind($('mcard'));PAY.re=openSettings;}
   $('stAbout').onclick=openAbout;$('stClose').onclick=()=>{hideModal();if(G&&!G.over&&$('scr-game').classList.contains('on'))YG.start();};}
 function openAbout(){
   modal(`<h2>Об игре</h2><p class="about">«Гастроном №1» — спокойная головоломка без таймера. Раскладывайте товары по полкам: три одинаковых в переднем ряду уходят покупателю. Тётя Валя, покупатели, товары и сам магазин нарисованы прямо в игре, звуки собраны кодом. Названия товаров — общие, без торговых марок; все совпадения случайны.</p>
     <p class="about"><b>Музыка.</b> «Green Salon» — Yubatake (opengameart.org), лицензия Creative Commons Attribution 4.0. «Investigations» — Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0.</p>
     ${PLAT==='vk'?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
     <p class="about">На компьютере: Esc — назад, Enter — главная кнопка окна, H — подсказка, U — отменить ход, R — заново.</p>
-    <div class="row"><button class="btn" id="abBack">← Назад</button></div>`);
+    <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ Восстановить покупки</button>':''}<button class="btn" id="abBack">← Назад</button></div>`);
+  if($('abPay'))$('abPay').onclick=()=>PAY.again();
   $('abBack').onclick=openSettings;}
 function applyCalm(){document.body.classList.toggle('calm',calm());}applyCalm();
 $('btnSet').onclick=openSettings;$('gSet').onclick=openSettings;$('gBack').onclick=()=>openMap();
-$('mCoins').onclick=openCoins;$('gCoins').onclick=openCoins;
+$('mCoins').onclick=openCoins;$('gCoins').onclick=openCoins;$('shopCoins').onclick=openCoins;
 $('bUndo').onclick=()=>useBoost('undo');$('bHint').onclick=()=>useBoost('hint');$('bMix').onclick=()=>useBoost('mix');$('bTable').onclick=()=>useBoost('table');
 /* ---- клавиатура на ПК ---- */
 document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on'))return;
   if(modalOn){
     if(k==='Escape'){const b=['mCancel','lbClose','stClose','abBack','mMap','mMap2'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
-      const b=$('mcard').querySelector('.btn:not([disabled]):not(.rw)');if(b){e.preventDefault();b.click();}}
+      const b=$('mcard').querySelector('.btn:not([disabled]):not(.rw):not(.buy):not(.noent)');if(b){e.preventDefault();b.click();}}
     return;}
   if($('scr-shop').classList.contains('on')||$('scr-album').classList.contains('on')){if(k==='Escape')openMap();return;}
   if(!G||!$('scr-game').classList.contains('on'))return;

@@ -7,24 +7,28 @@ const exCount=()=>((S.ex||'').match(/1/g)||[]).length;
 
 /* ================= облики ================= */
 let shopTab='zina';
-const owned=(kind,it)=>!it.p||!!(S.own||{})[kind+':'+it.id];
+// облик из покупки (it.pay) — только если куплен; обычные — бесплатные или за монеты
+const owned=(kind,it)=>it.pay?typeof PAY!=='undefined'&&PAY.own(it.pay):!it.p||!!(S.own||{})[kind+':'+it.id];
+const payShow=it=>!it.pay||owned('o',it)||typeof PAY!=='undefined'&&PAY.on&&!!PAY.item(it.pay);
 function openShop(){
   show('shopS');updCoins();
   const isZ=shopTab==='zina',list=isZ?OUTFITS:SKINS,cur=isZ?S.outfit:S.skin;
   let h=`<div class="dhead"><div class="av">${zinaSVG('happy')}</div><p>${isZ?'Полвека в одном платье ходила — хватит! Купи бабушке обновку, а я уж тебе слова подберу.':'Буквы на хорошем блюдце и складываются лучше. Это научный факт — я проверяла.'}</p></div>
    <div class="tabs"><button data-t="zina" class="${isZ?'on':''}">👗 Наряды</button><button data-t="plate" class="${isZ?'':'on'}">🍽️ Блюдца</button></div><div class="shopg">`;
-  for(const it of list){const own=owned(isZ?'o':'s',it),sel=cur===it.id;
+  for(const it of list){if(!payShow(it))continue;const own=owned(isZ?'o':'s',it),sel=cur===it.id;
     const pv=isZ?zinaSVG('norm',it.id)
       :`<div class="mini" id="pv_${it.id}" style="width:112px;height:112px;--lc:${it.lc}"><div class="plate"></div></div>`;
     h+=`<div class="item${sel?' sel':''}"><div class="pv">${pv}</div><b>${it.n}</b><small>${it.d}</small>
       ${sel?`<div class="ok">✓ ${isZ?'Надето':'На столе'}</div>`:own?`<button class="btn blue" data-id="${it.id}">Выбрать</button>`
+        :it.pay?`<small>В покупке «${PAY_ITEMS[it.pay].name}»</small><button class="btn pbuy" data-pid="${it.pay}">🎁 ${PAY.price(PAY.item(it.pay))}</button>`
         :`<button class="btn${S.coins<it.p?' ghost':''}" data-id="${it.id}" data-p="${it.p}">${it.p} <span class="coin"></span></button>`}</div>`;}
-  $('shopList').innerHTML=h+'</div>';
+  // покупки за деньги (js/pay.js) — внизу магазина, только если платежи площадки доступны; «чай» — только в «Благодарностях»
+  $('shopList').innerHTML=h+'</div>'+(typeof PAY!=='undefined'&&PAY.on?PAY.html(['no_ads','coins_s','coins_l','starter']):'');if(typeof PAY!=='undefined'&&PAY.on)PAY.bind($('shopList'));
   if(!isZ)for(const it of SKINS){const el=$('pv_'+it.id);applySkin(el,it.id);
     'слово'.split('').forEach((ch,i)=>{const a=-Math.PI/2+i*2*Math.PI/5,e=document.createElement('div');e.className='let';e.textContent=ch;
       Object.assign(e.style,{width:'30px',height:'30px',left:(56+Math.cos(a)*34-15)+'px',top:(56+Math.sin(a)*34-15)+'px',fontSize:'19px'});el.appendChild(e);});}
   $('shopList').querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{shopTab=b.dataset.t;SND.tap();openShop();});
-  $('shopList').querySelectorAll('.item .btn').forEach(b=>b.onclick=()=>buyItem(isZ,b.dataset.id));
+  $('shopList').querySelectorAll('.item .btn:not(.pbuy)').forEach(b=>b.onclick=()=>buyItem(isZ,b.dataset.id));
 }
 // баба Зина отвечает в своём пузыре наверху экрана (тост его перекрывал)
 function shopSay(t,mood){const p=document.querySelector('#shopList .dhead p'),av=document.querySelector('#shopList .dhead .av');if(p)p.textContent=t;if(av)av.innerHTML=zinaSVG(mood||'happy');$('shopList').scrollTop=0;}
@@ -49,10 +53,10 @@ function buyItem(isZ,id){
 // не хватает на облик: предложить монеты за рекламу (ECO.adCoins, не больше ECO.adCoinsDay раз в день)
 function adCoinsLeft(){const d=todayKey();if(!S.adc||S.adc.d!==d)return ECO.adCoinsDay;return Math.max(0,ECO.adCoinsDay-S.adc.n);}
 function shortModal(it,isZ,id){
-  const n=it.p-S.coins,left=adCoinsLeft(),cn=' <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>';
+  const n=it.p-S.coins,left=adsOk()?adCoinsLeft():0,cn=' <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>';
   modal(`<h2>Монеток маловато</h2><div style="width:110px;height:110px;margin:4px auto;position:relative">${isZ?zinaSVG('norm',id):`<div class="mini" id="cfPv" style="width:110px;height:110px"><div class="plate"></div></div>`}</div>
     <p>«${it.n}» — <b>${it.p}</b>${cn}, у тебя ${S.coins}. Не хватает <b>${n}</b>.</p>
-    ${left?`<p style="font-size:14.5px">Посмотри рекламу — дам <b>+${ECO.adCoins}</b>${cn}. Сегодня можно ещё ${left} ${plural(left,'раз','раза','раз')}.</p>`:'<p style="font-size:14.5px">На сегодня рекламные монетки кончились. Проходи уровни — накопим!</p>'}
+    ${left?`<p style="font-size:14.5px">Посмотри рекламу — дам <b>+${ECO.adCoins}</b>${cn}. Сегодня можно ещё ${left} ${plural(left,'раз','раза','раз')}.</p>`:`<p style="font-size:14.5px">${adsOk()?'На сегодня рекламные монетки кончились. ':''}Проходи уровни — накопим!</p>`}
     <div class="btns">${left?`<button class="btn green" id="mAd">🎬 +${ECO.adCoins} за рекламу</button>`:''}<button class="btn ghost" id="mNo">${left?'Потом':'Хорошо'}</button></div>`);
   if(!isZ)applySkin($('cfPv'),id);
   $('mNo').onclick=()=>{hideModal();SND.tap();shopSay('Проходи уровни — накопим! Я пока в старом похожу.','norm');};
@@ -161,26 +165,56 @@ async function drawCard(w){
 // открытка: показать, поделиться (если телефон умеет файлы), на стену VK или сохранить картинку
 async function shareDef(w,back){
   SND.tap();let c;try{c=await drawCard(w);}catch(e){toast('Не получилось нарисовать открытку');return;}
+  shareImg(c,'slovo-'+w,`«${yo(w).toUpperCase()}» — ${DEFS[w]} — баба Зина. Игра «Баба Зина: слова из букв»`,back,'Толковый словарь бабы Зины','Отправь родным — пусть тоже посмеются!');}
+// открытка за главу (аудит 14): «Я прошёл главу «Подъезд» с бабой Зиной»
+async function shareChap(c,back){
+  SND.tap();let cv;try{cv=await drawChapCard(c);}catch(e){toast('Не получилось нарисовать открытку');return;}
+  const ch=CHAPTERS[c%CHAPTERS.length];
+  shareImg(cv,'slovo-glava-'+(c+1),`Я прошёл главу «${ch.n}» с бабой Зиной! Игра «Баба Зина: слова из букв»`,back,'Баба Зина: слова из букв','Похвастайся родным — пусть знают, какой ты грамотей!');}
+async function drawChapCard(c){
+  const ch=CHAPTERS[c%CHAPTERS.length],W=1080,H=1080,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+  const F='"Trebuchet MS","Segoe UI",Roboto,Arial,sans-serif';
+  x.fillStyle='#fbf7ec';x.fillRect(0,0,W,H);x.strokeStyle='#dfe8f2';x.lineWidth=2;
+  for(let i=0;i<=W;i+=40){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke();x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}
+  x.fillStyle='#f0b3ad';x.fillRect(96,0,5,H);
+  x.textAlign='center';x.fillStyle='#e8661b';x.font=`800 38px ${F}`;x.fillText('🎉  ГЛАВА ПРОЙДЕНА!',W/2+30,110);
+  const cx=140,cw=860,cy=150,chh=420;
+  x.save();x.shadowColor='rgba(39,50,74,.18)';x.shadowBlur=30;x.shadowOffsetY=10;x.fillStyle='#fff';rrect(x,cx,cy,cw,chh,32);x.fill();x.restore();
+  x.save();rrect(x,cx,cy,cw,chh,32);x.clip();x.fillStyle=ch.c||'#dbe7fb';x.fillRect(cx,cy,cw,150);x.restore();
+  x.font=`110px ${F}`;x.fillText(ch.e,W/2+30,cy+120);
+  x.fillStyle='#5d6781';x.font=`600 44px ${F}`;x.fillText('Я прошёл главу',W/2+30,cy+220);
+  let fs=96;const nm='«'+ch.n+'»';x.font=`900 ${fs}px ${F}`;while(x.measureText(nm).width>cw-80&&fs>50){fs-=6;x.font=`900 ${fs}px ${F}`;}
+  x.fillStyle='#1d4fa3';x.fillText(nm,W/2+30,cy+220+fs*1.05);
+  x.fillStyle='#5d6781';x.font=`600 40px ${F}`;x.fillText('с бабой Зиной · уровни '+(c*CH_LEN+1)+'–'+(c+1)*CH_LEN,W/2+30,cy+chh-40);
+  x.save();x.translate(cx+cw-70,cy+60);x.rotate(.18);x.strokeStyle='#d0342c';x.lineWidth=6;x.beginPath();x.ellipse(0,0,56,46,0,0,Math.PI*2);x.stroke();
+  x.fillStyle='#d0342c';x.font=`900 64px ${F}`;x.textAlign='center';x.fillText('5+',0,22);x.restore();
+  const zy=H-330,im=await svgImg(zinaSVG('wow'),300);if(im)x.drawImage(im,120,zy,300,300);
+  x.textAlign='left';x.font=`900 84px ${F}`;x.fillStyle='#1d4fa3';x.fillText('Баба Зина',450,zy+160);
+  x.fillStyle='#e8661b';x.font=`900 48px ${F}`;x.fillText('слова из букв',454,zy+222);
+  return cv;
+}
+// показать картинку-открытку: поделиться файлом (телефон), на стену VK, сохранить или «нажми и подержи» (клиент VK)
+function shareImg(c,name,txt,back,title,sub){
   const url=c.toDataURL('image/png');
-  const blob=await new Promise(ok=>c.toBlob(ok,'image/png'));
-  let file=null;try{file=new File([blob],'slovo-'+w+'.png',{type:'image/png'});}catch(e){}
+  c.toBlob(blob=>shareImg2(c,url,blob,name,txt,back,title,sub),'image/png');}
+function shareImg2(c,url,blob,w,txt,back,title,sub){
+  let file=null;try{file=new File([blob],w+'.png',{type:'image/png'});}catch(e){}
   const canFiles=!!(file&&navigator.canShare&&navigator.canShare({files:[file]}));
   // в клиенте VK на телефоне скачать файл нельзя — предлагаем сохранить картинку долгим нажатием (только здесь меню разрешено)
   const hold=!canFiles&&(VK_MOBILE||PLAT==='vk'&&TOUCH);
-  const txt=`«${yo(w).toUpperCase()}» — ${DEFS[w]} — баба Зина. Игра «Баба Зина: слова из букв»`;
-  modal(`<h2>Открытка</h2><p>Отправь родным — пусть тоже посмеются!</p><img class="cardimg" src="${url}" alt="${w}">
+  modal(`<h2>Открытка</h2><p>${sub}</p><img class="cardimg" src="${url}" alt="Открытка">
     ${hold?'<p style="font-size:15px">Чтобы сохранить, нажми на картинку и подержи палец.</p>':''}
     <div class="btns">${hold?'':`<button class="btn green" id="cShare">${canFiles?'📤 Поделиться':'💾 Сохранить картинку'}</button>`}
       ${VK?'<button class="btn blue" id="cWall">На стену ВКонтакте</button>':''}
       <button class="btn ghost small" id="cBack">${back?'← Назад':'Закрыть'}</button></div>`);
   const done=()=>{if(back)back();else hideModal();};
   // скачать: проверить, получилось ли, браузер не даёт — поэтому не обещаем «сохранено», а подсказываем запасной путь
-  const download=()=>{const a=document.createElement('a');a.href=url;a.download='slovo-'+w+'.png';document.body.appendChild(a);a.click();a.remove();
+  const download=()=>{const a=document.createElement('a');a.href=url;a.download=w+'.png';document.body.appendChild(a);a.click();a.remove();
     toast(TOUCH?'Если картинка не скачалась — нажми на неё и подержи палец':'Картинка скачивается — ищи её в «Загрузках»');};
   $('cBack').onclick=()=>{SND.tap();done();};
   // сначала системное «Поделиться» с файлом (телефон), не вышло — просто скачиваем
   const cs=$('cShare');if(cs)cs.onclick=()=>{if(!canFiles){download();return;}
-    navigator.share({files:[file],title:'Толковый словарь бабы Зины',text:txt}).catch(e=>{if(!e||e.name!=='AbortError')download();});};
+    navigator.share({files:[file],title:title,text:txt}).catch(e=>{if(!e||e.name!=='AbortError')download();});};
   const wb=$('cWall');if(wb)wb.onclick=()=>{const id=new URLSearchParams(location.search).get('vk_app_id');
     vkSend('VKWebAppShowWallPostBox',{message:txt+(id?'\nhttps://vk.com/app'+id:'')},60000).catch(()=>{});};
 }

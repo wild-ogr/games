@@ -123,6 +123,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 @keyframes pop{0%{transform:scale(.4)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
 @keyframes flash{30%{background:#fff4c9;transform:scale(1.1)}}
 .cell.pick{outline:3px dashed var(--orange);outline-offset:1px}
+.cell.rid{outline:2px dashed var(--orange);outline-offset:1px}
+.cell.cat{color:#8a4fb0}
+.catfly{position:fixed;z-index:25;width:40px;height:40px;font-size:34px;line-height:40px;text-align:center;pointer-events:none}
 #preview{height:46px;display:flex;align-items:center;justify-content:center}
 #preview .w{display:flex;gap:3px;padding:6px 12px;border-radius:14px;background:var(--blue);color:#fff;font-weight:900;font-size:24px;text-transform:uppercase;letter-spacing:1px;
   box-shadow:0 3px 0 #163c7c;transition:background .15s}
@@ -131,6 +134,12 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 #preview .w.bonus{background:var(--gold);box-shadow:0 3px 0 #b9860f;color:#5a3a00}
 #preview .w.old{background:#6b7280;box-shadow:0 3px 0 #4b5160}
 #preview .w:empty{display:none}
+/* ввод нажатиями: ✕ слева, ✔ справа от слова */
+.pvb{display:none;width:44px;height:44px;border-radius:12px;margin:0 8px;font-size:22px;font-weight:900;background:#fff;color:var(--ink2);box-shadow:0 2px 0 #d5d9e3;align-items:center;justify-content:center;flex:none}
+.pvb.ok{background:var(--green2);color:#fff;box-shadow:0 3px 0 #185a2a}
+#pvX{order:-1}
+#preview.tap .pvb{display:flex}
+#preview.tap .w{cursor:pointer}
 @keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
 .wheelwrap{position:relative;display:flex;align-items:center;justify-content:center;padding:4px 0 calc(env(safe-area-inset-bottom) + 12px)}
 #wheel{position:relative;touch-action:none}
@@ -241,6 +250,20 @@ body.big #preview .w{font-size:28px}
 .stamp{display:inline-block;margin:8px auto 2px;padding:5px 14px;border:3px solid #d0342c;border-radius:12px;color:#d0342c;font-weight:900;font-size:17px;transform:rotate(-4deg);
   background:rgba(255,255,255,.6);letter-spacing:.5px;animation:stamp .45s cubic-bezier(.2,1.6,.5,1) .2s both}
 .stamp small{display:block;font-size:13.5px;font-weight:700;letter-spacing:0}
+.exb{font-size:20px;margin-left:2px}
+/* финал главы */
+.chfin{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0}
+.chfin .em{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 2px 0 #d5d9e3;flex:none}
+.chfin .em.nx{opacity:.75}
+.chfin .zz{width:110px;height:110px;flex:none}.chfin .zz svg{width:100%;height:100%}
+/* «Тетрадь недели» */
+.week{background:#fff;border-radius:12px;padding:8px 10px;margin:8px 0 0;box-shadow:0 2px 0 #e3e7ee}
+.week .wt{font-size:14px;color:var(--ink2);margin-bottom:6px}.week .wt b{color:var(--ink)}
+.week .wd{display:flex;gap:4px;justify-content:center}
+.week .wc{flex:1;max-width:40px;height:44px;border:1.5px solid #c9d6ea;border-radius:8px;background:#fbfdff;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+.week .wc small{font-size:11.5px;color:var(--ink2);line-height:1.4}
+.week .wc b{font-size:20px;line-height:1;color:#d0342c;font-style:italic;font-weight:900}
+.week .wc.now{border-color:var(--orange)}
 @keyframes stamp{from{transform:rotate(-4deg) scale(2.2);opacity:0}}
 /* облики */
 .shopg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -280,6 +303,10 @@ body.big #preview .w{font-size:28px}
 .setrow b{min-width:64px;padding:4px 10px;border-radius:999px;background:#2b7a3f;color:#fff;font-size:15px}
 .setrow.off b{background:#e3e7ee;color:#27324a}
 .setrow:active{transform:translateY(2px);box-shadow:0 1px 0 #d5d9e3}
+.pay{margin:14px 0 6px;text-align:left}.pay h3{font-size:17px;margin:0 0 2px;color:var(--ink)}
+.prow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 14px;margin:8px 0;border-radius:14px;background:#fff;box-shadow:0 3px 0 #d5d9e3;font:inherit;font-size:16px;font-weight:700;color:var(--ink);text-align:left;min-height:52px}
+.prow span{padding-right:10px}.prow small{font-size:13.5px;font-weight:600;color:#4a5570}.prow b{white-space:nowrap;color:#237a3b;font-size:17px}.prow i{font-style:normal;color:#237a3b;font-weight:800}
+button.prow{cursor:pointer}button.prow:active{transform:translateY(2px);box-shadow:0 1px 0 #d5d9e3}.pcur{width:18px;height:18px;vertical-align:-3px;margin-left:3px}
 /* узкий телефон: кнопки остаются 44+ px, ужимаем заголовок и монеты */
 @media (max-width:400px){.ghdr{gap:6px;padding-left:8px;padding-right:8px}.ghdr .ibtn{width:44px;height:44px;font-size:20px;border-radius:12px}
   .ghdr .coins{padding:5px 8px 5px 6px;font-size:16px}.ghdr .coins .coin{width:19px;height:19px}.ghdr .t b{font-size:16px}}
@@ -288,11 +315,11 @@ body.big #preview .w{font-size:28px}
 .mtop .ibtn small{font-size:12px;font-weight:800;color:var(--ink2);margin-top:1px;white-space:nowrap}
 /* старые браузеры (Chrome < 84, iOS < 14.1): нет gap во flex — запасные отступы */
 @supports not (inset:0){.mtop>div>*+*,.mbtns .row>*+*,.mbtns .row2>*+*,.ghdr>*+*,.hdr>*+*,.coins>*+*,.tabs>*+*{margin-left:8px}
-  .mbtns>*+*,.mcard .btns>*+*,.side>*+*{margin-top:12px}.words span{margin:3px}}
+  .mbtns>*+*,.mcard .btns>*+*,.side>*+*{margin-top:12px}.words span{margin:3px}.week .wd>*+*,.chfin>*+*{margin-left:4px}}
 /* меньше движения — если так настроено в системе */
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .lv.cur{animation:none}.confetti{display:none}}
-.confetti{position:fixed;z-index:35;width:10px;height:14px;pointer-events:none;border-radius:2px}
+.confetti{position:fixed;z-index:29;width:10px;height:14px;pointer-events:none;border-radius:2px}
 </style>
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
@@ -372,7 +399,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   </div>
   <div class="zina"><div class="av" id="zAv"></div><div class="say" id="zSay"></div></div>
   <div id="board"><div id="grid"></div></div>
-  <div id="preview"><div class="w"></div></div>
+  <div id="preview"><div class="w"></div><button class="pvb ok" id="pvOk" aria-label="Проверить слово">✔&#xFE0E;</button><button class="pvb" id="pvX" aria-label="Стереть">✕</button></div>
   <div class="wheelwrap" id="wheelWrap">
     <div id="wheel"><div class="plate"></div><svg id="wline"></svg></div>
     <div class="side l">
@@ -398,6 +425,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/text.js" defer></script>
 <script src="js/game.js" defer></script>
 <script src="js/extras.js" defer></script>
+<script src="js/pay.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/zina.js" defer></script>
 <script src="js/dict.js" defer></script>

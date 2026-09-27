@@ -611,6 +611,15 @@ function skinCanvas(c,skin,k){const W=c.width,H=c.height,g=c.getContext('2d');le
     for(let i=0;i<5;i++){const [x,y]=E[Math.floor(R()*E.length)],r=(1.6+R()*1.4)*k;g.fillStyle='rgba(255,250,210,.95)';
       g.beginPath();g.moveTo(x,y-r);g.quadraticCurveTo(x,y,x+r*.35,y);g.quadraticCurveTo(x,y,x,y+r);g.quadraticCurveTo(x,y,x-r*.35,y);g.quadraticCurveTo(x,y,x,y-r);g.fill();
       g.beginPath();g.moveTo(x-r*.7,y);g.quadraticCurveTo(x,y,x,y-r*.25);g.quadraticCurveTo(x,y,x+r*.7,y);g.quadraticCurveTo(x,y,x,y+r*.25);g.closePath();g.fill();}}
+  else if(skin==='firebird'){ // покупка «Жар-птица» (js/pay.js): огненная перекраска с объёмом + языки пламени и перья на верхних кромках
+    const t=mkCanvas(W,H),tg=t.getContext('2d');tg.drawImage(c,0,0);tg.globalAlpha=.48;tg.globalCompositeOperation='color';tg.fillStyle='#e8502a';tg.fillRect(0,0,W,H);
+    tg.globalAlpha=1;tg.globalCompositeOperation='destination-in';tg.drawImage(c,0,0);g.clearRect(0,0,W,H);g.drawImage(t,0,0);
+    g.globalCompositeOperation='source-atop';g.fillStyle='rgba(255,190,70,.14)';g.fillRect(0,0,W,H);g.globalCompositeOperation='source-over';
+    const F=E.filter((p,i)=>i%4===0);for(const [x,y] of F){const h=(2.4+R()*2.2)*k,w=(1+R()*.5)*k,lean=(R()-.5)*1.4*k;
+      g.beginPath();g.moveTo(x-w,y+.3*k);g.quadraticCurveTo(x-w*.8+lean*.5,y-h*.55,x+lean,y-h);g.quadraticCurveTo(x+w*.8+lean*.5,y-h*.55,x+w,y+.3*k);g.closePath();
+      g.fillStyle=R()<.5?'#ff8a1e':'#ffc531';g.fill();g.strokeStyle='rgba(150,40,10,.45)';g.lineWidth=.3*k;g.stroke();
+      g.beginPath();g.moveTo(x-w*.45,y+.2*k);g.quadraticCurveTo(x+lean*.4,y-h*.5,x+w*.45,y+.2*k);g.closePath();g.fillStyle='#fff2a8';g.fill();}
+    for(let i=0;i<6;i++){g.fillStyle='rgba(255,236,150,.95)';g.beginPath();g.arc(x0+R()*(x1-x0),y0+R()*(y1-y0)*.7,.5*k,0,TAU);g.fill();}}
   g.restore();return c;}
 
 /* ================= украшения деревни (значки dc_*; они же — в картинке деревни) ================= */
@@ -638,16 +647,28 @@ art('dc_fire',48,g=>{ell(g,0,15,16,4,'rgba(0,0,0,.2)',{ol:false,flat:true});glow
 /* картинка «Твоя деревня» над постройками: небо, холм, построенное (крупнее с уровнем) и купленные украшения */
 const VIL_POS={mint:[.16,.62],barn:[.31,.5],fair:[.47,.66],smith:[.64,.5],range:[.8,.64],herb:[.92,.46],wall:[.08,.42]};
 const DECO_POS={well:[.22,.8],flags:[.5,.2],kot:[.72,.81],swing:[.38,.8],carousel:[.58,.79],fire:[.9,.8]};
-function drawVillage(cv,W,H){const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+'px';
+/* картинка «твоя деревня»: все 7 построек на своих местах — купленные в цвете (крупнее с уровнем), остальные бледными силуэтами
+   (цель видна глазами — аудит 14). an={id,q:0..1} — только что купленная постройка «вырастает» с искрами */
+const VIL_GHOST={};
+function vilGhost(key,px){const id=key+'@'+px;if(VIL_GHOST[id])return VIL_GHOST[id];const s=drawArt(key,px),c=mkCanvas(px,px),g=c.getContext('2d');
+  g.drawImage(s,0,0);g.globalCompositeOperation='source-in';g.fillStyle='rgba(255,255,255,.42)';g.fillRect(0,0,px,px);return VIL_GHOST[id]=c;}
+function drawVillage(cv,W,H,an){const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+'px';
   const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.lineJoin='round';g.lineCap='round';
   const sk=g.createLinearGradient(0,0,0,H);sk.addColorStop(0,'#8ec9f0');sk.addColorStop(1,'#d8efff');g.fillStyle=sk;g.fillRect(0,0,W,H);
   g.fillStyle='#8fcf6a';g.beginPath();g.moveTo(0,H*.42);g.quadraticCurveTo(W*.3,H*.26,W*.6,H*.4);g.quadraticCurveTo(W*.85,H*.5,W,H*.36);g.lineTo(W,H);g.lineTo(0,H);g.fill();
   g.fillStyle='#6fb44e';g.beginPath();g.moveTo(0,H*.62);g.quadraticCurveTo(W*.5,H*.5,W,H*.64);g.lineTo(W,H);g.lineTo(0,H);g.fill();
   const put=(key,x,y,sz)=>{const c=drawArt(key,Math.ceil(sz*dpr));g.drawImage(c,x*W-sz/2,y*H-sz/2,sz,sz);};
-  const items=[];for(const b of BLD){const l=S.village[b.id]||0;if(!l)continue;const p=VIL_POS[b.id]||[.5,.5];items.push([p[1],b.ic,p[0],(.26+.05*l)*H]);}
+  const items=[];for(const b of BLD){const l=S.village[b.id]||0,p=VIL_POS[b.id]||[.5,.5];
+    if(!l){const sz=.3*H,c=vilGhost(b.ic,Math.ceil(sz*dpr));items.push([p[1],null,p[0],sz,c]);continue;}
+    let sz=(.26+.05*l)*H;if(an&&an.id===b.id){const q=an.q;sz*=q<.5?.4+q*1.5:1.15-.15*Math.min(1,(q-.5)*2);}items.push([p[1],b.ic,p[0],sz]);}
   for(const d of DECO)if(S.deco&&S.deco[d.id]&&d.id!=='flags'){const p=DECO_POS[d.id];items.push([p[1],'dc_'+d.id,p[0],.34*H]);}
-  items.sort((a,b)=>a[0]-b[0]);for(const [y,key,x,sz] of items)put(key,x,y,sz);
+  items.sort((a,b)=>a[0]-b[0]);for(const [y,key,x,sz,gh] of items){if(gh)g.drawImage(gh,x*W-sz/2,y*H-sz/2,sz,sz);else put(key,x,y,sz);}
+  if(an&&an.id){const p=VIL_POS[an.id]||[.5,.5],cx=p[0]*W,cy=p[1]*H,q=an.q;
+    // искры и пыль вокруг новой постройки
+    for(let i=0;i<14;i++){const a=i/14*TAU+i,d=(12+q*H*.28)*(.6+(i%3)*.2),al=Math.max(0,1-q*1.1);g.globalAlpha=al;g.fillStyle=i%3?'#ffd84a':'#fff4c0';g.beginPath();g.arc(cx+Math.cos(a)*d,cy+Math.sin(a)*d*.6-q*10,2.4-q*1.4+(i%2),0,TAU);g.fill();}
+    g.globalAlpha=Math.max(0,Math.min(1,(1-q)*2.5));if(an.txt){g.font='900 15px system-ui,sans-serif';g.textAlign='center';g.lineWidth=4;g.strokeStyle='rgba(40,25,10,.8)';const ty=Math.max(18,cy-H*.24-q*12),hw=g.measureText(an.txt).width/2+8,tx=Math.min(W-hw,Math.max(hw,cx));g.strokeText(an.txt,tx,ty);g.fillStyle='#ffe7a0';g.fillText(an.txt,tx,ty);}
+    g.globalAlpha=1;}
   if(S.deco&&S.deco.flags){const cols=['#e8433a','#ffd84a','#2f6fd6','#3aa04a','#f47ab0'],y0=H*.12,n=Math.round(W/22);g.strokeStyle='#5a3a22';g.lineWidth=1;
     const P=t=>[W*t,y0+H*.12*4*t*(1-t)];g.beginPath();for(let i=0;i<=24;i++){const q=P(i/24);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]);}g.stroke();
     for(let i=0;i<n;i++){const p0=P((i+.15)/n),p1=P((i+.85)/n),m=P((i+.5)/n);g.beginPath();g.moveTo(p0[0],p0[1]);g.lineTo(p1[0],p1[1]);g.lineTo(m[0],m[1]+9);g.closePath();g.fillStyle=cols[i%5];g.fill();}}
-  if(!items.length){g.fillStyle='rgba(40,30,20,.55)';g.font='600 14px sans-serif';g.textAlign='center';g.fillText('Пустое поле — построй что-нибудь!',W/2,H*.8);}}
+  if(!BLD.some(b=>S.village[b.id])){g.fillStyle='rgba(40,30,20,.6)';g.font='600 14px sans-serif';g.textAlign='center';g.fillText('Пока пусто — построй первый дом!',W/2,H*.93);}}

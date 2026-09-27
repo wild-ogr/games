@@ -40,6 +40,8 @@ body.run #hud,body.run #hudB{display:flex}
 #waveBtn.go{animation:pulse 1s infinite}@keyframes pulse{50%{transform:scale(1.06)}}
 #waveBtn img{width:22px;height:22px;vertical-align:-5px}
 #waveBtn small{display:block;font-size:12px;font-weight:800}
+#waveBtn .nw{font-style:normal;margin-right:4px}#waveBtn .nw img{width:17px;height:17px;vertical-align:-4px}#waveBtn .nw u{text-decoration:none;font-size:10px;vertical-align:4px;margin-right:2px}
+#info p.nwl{display:flex;align-items:center;gap:6px}#info p.nwl img{width:30px;height:30px;flex:none}#info p.nwl b{font-size:14px}
 #waveBtn[disabled]{background:rgba(255,255,255,.1);box-shadow:none;color:var(--mut);animation:none}
 /* кольцо выбора заставы */
 #ring{position:fixed;z-index:8;width:0;height:0;display:none}
@@ -56,12 +58,13 @@ body.run #hud,body.run #hudB{display:flex}
 #ring .rbt .ic{font-size:24px;line-height:50px;font-weight:900;color:#5a3a12}
 #ring .rbt u{position:absolute;left:50%;top:-20px;transform:translateX(-50%);text-decoration:none;background:rgba(18,16,34,.9);color:#ffe7a0;font-size:12px;font-weight:900;padding:1px 6px;border-radius:8px;white-space:nowrap}
 #ring .rc{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px dashed rgba(255,255,255,.7)}
-#info{position:fixed;z-index:9;left:50%;transform:translateX(-50%);top:calc(var(--st) + 58px);width:min(94vw,400px);background:rgba(18,16,34,.94);border:1px solid rgba(255,216,74,.35);border-radius:16px;padding:9px 12px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.45);pointer-events:none}
+#info{position:fixed;z-index:9;left:50%;transform:translateX(-50%);top:calc(var(--st) + 58px);width:94vw;max-width:400px;background:rgba(18,16,34,.94);border:1px solid rgba(255,216,74,.35);border-radius:16px;padding:9px 12px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.45);pointer-events:none}
 #info.on{display:block}
 #info.low{top:auto;bottom:calc(var(--sb) + 84px)}
 #info b{font-size:16px;color:#ffe7a0}#info p{margin:3px 0 0;font-size:14px;color:#e2e5f3;line-height:1.3}#info .st{font-size:13px;color:#a9e0ff;margin-top:4px;font-weight:700}#info .hint{color:#ffd84a;font-size:13.5px;margin-top:4px;font-weight:800}
-#voice{position:fixed;z-index:9;left:50%;transform:translateX(-50%);top:calc(var(--st) + 60px);width:min(94vw,420px);display:none;align-items:flex-end;gap:8px;pointer-events:auto}
-#voice.on{display:flex;animation:vin .3s ease-out}@keyframes vin{from{opacity:0}}
+#voice{position:fixed;z-index:9;left:50%;transform:translateX(-50%);top:calc(var(--st) + 60px);width:94vw;max-width:420px;display:none;align-items:flex-end;gap:8px;pointer-events:auto}
+#voice.on{display:flex;animation:vin .3s ease-out}
+#voice.low{top:auto;bottom:calc(var(--sb) + 86px);opacity:.95}@keyframes vin{from{opacity:0}}
 #voice img{width:56px;height:56px;flex:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))}
 #voice div{flex:1;background:#fff8e8;color:#2a1a10;border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:15px;line-height:1.32;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.4)}
 #voice div b{display:block;font-size:12px;color:#a0502a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
@@ -95,6 +98,11 @@ h2{font-size:20px;font-weight:900;margin:10px 2px 4px}
 .sub{color:var(--mut);font-size:14px;margin:0 2px 12px;line-height:1.35}
 .note{font-size:13px;color:var(--mut);font-weight:600}.mutd{opacity:.75}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:10px}
+/* покупки (js/pay.js) */
+.pay{margin:10px 0 0;text-align:left}.pay h3{font-size:16px;margin:0 0 4px}
+.prow{display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:6px 0;min-height:52px;text-align:left;color:var(--txt);font-weight:800;font-size:15px}
+.prow span{padding-right:10px;line-height:1.25}.prow small{font-size:12.5px;font-weight:600;color:var(--mut)}.prow b{white-space:nowrap;color:var(--gold);font-size:16px}.prow i{font-style:normal;color:var(--ok);font-weight:900}
+button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertical-align:-3px;margin-left:3px}
 .row{display:flex;align-items:center;gap:12px}
 .row img.ic{width:52px;height:52px;flex:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.35))}
 .row .t{flex:1;min-width:0}
@@ -247,6 +255,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <div id="toast"></div>
 
 <script src="js/core.js"></script>
+<script src="js/pay.js"></script>
 <script src="js/art.js"></script>
 <script src="js/data.js"></script>
 <script src="js/game.js"></script>
