@@ -17,8 +17,16 @@ function openMenu(){
   $('mRank').textContent=wordsTotal()?'🎓 Звание: '+rankName(wordsTotal()):'';
   // красная точка задания дня — не раньше 10-го уровня (новичка не зовём в трудное)
   $('dailyDot').classList.toggle('on',S.lv>=10&&!S.daily[todayKey()]);
-  sndIcon();
+  sndIcon();updGift();
 }
+// подарок дня: +ECO.gift монет за ролик, раз в день, по нажатию (с 3-го уровня; есть реклама — есть кнопка)
+const giftTaken=()=>!!(S.gift&&S.gift.d===todayKey());
+function updGift(){const b=$('btnGift');if(!b)return;const on=S.lv>=3&&ECO.gift>0&&adsOk()&&!giftTaken();
+  b.style.display=on?'':'none';if(on&&!b.disabled)b.innerHTML=`🎁 Подарок дня: +${ECO.gift} ${COIN_I} за рекламу`;}
+function takeGift(){const b=$('btnGift');if(!b||b.disabled||giftTaken())return;SND.tap();b.disabled=true;
+  showRewarded(()=>{b.disabled=false;if(giftTaken()){updGift();return;}S.gift={d:todayKey()};addCoins(ECO.gift);SND.coin();updGift();
+    $('mSay').textContent=pick(['Держи +'+ECO.gift+'! Из пенсии отложила. Завтра приходи — ещё припасу.','Вот тебе +'+ECO.gift+' на подсказки. Только не на семечки!']);},
+    ()=>{b.disabled=false;});}
 // значок + подпись; выключенное — другим значком и словом, а не прозрачностью
 function sndIcon(){$('btnSnd').innerHTML=(S.sound?'🔊':'🔇')+'<small>'+(S.sound?'Звук':'Без звука')+'</small>';
   $('btnMus').innerHTML=(S.music?'🎵':'🔕')+'<small>'+(S.music?'Музыка':'Без музыки')+'</small>';$('btnMus').classList.toggle('off',!S.music);$('btnSnd').classList.toggle('off',!S.sound);}
@@ -44,7 +52,7 @@ function openLevels(c){
     const st=i<S.lv?'done':i===S.lv?'cur':'lock';const d=LEVELS[i].d;
     h+=`<button class="lv ${st}${isTest(i)?' test':''}" data-i="${i}">${i+1}${d&&S.dict[d]?'<span class="bk">📖</span>':''}${exGet(i)?'<span class="ex" title="Без подсказок">🏅</span>':''}${st==='lock'?'<span class="lk">🔒</span>':''}</button>`;}
   $('lvList').innerHTML=h;
-  $('lvList').querySelectorAll('.lv').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i>S.lv){toast('Сначала пройди уровень '+(S.lv+1));return;}SND.tap();startLevel(i);});
+  $('lvList').querySelectorAll('.lv').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i>S.lv){toast('Сначала пройди уровень '+(S.lv+1));return;}SND.tap();maybeInterstitial(()=>startLevel(i));});
 }
 
 /* ---------- словарь бабы Зины ---------- */
@@ -107,8 +115,8 @@ function finishLevel(g){
   const isNew=!!dw&&(g.newDefs.includes(dw)||!S.dict[dw]);
   if(dw)S.dict[dw]=1;
   let streak=0,sbonus=0;
-  if(g.daily&&first){const y=new Date(Date.now()-864e5),yk=y.getFullYear()*10000+(y.getMonth()+1)*100+y.getDate();
-    S.streak=S.lastDaily===String(yk)?(S.streak||0)+1:1;S.lastDaily=String(todayKey());S.daily[todayKey()]=1;
+  if(g.daily&&first){
+    S.streak=S.lastDaily===dayKey(1)?(S.streak||0)+1:1;S.lastDaily=String(todayKey());S.daily[todayKey()]=1;
     S.bestStreak=Math.max(S.bestStreak||0,S.streak);streak=S.streak;sbonus=ECO.daily(S.streak)-ECO.daily(1);reward+=sbonus;}
   if(!g.daily&&first)S.lv=Math.max(S.lv,g.idx+1);
   delete S.curs[g.key];addCoins(reward);save();
@@ -148,9 +156,9 @@ function winModal(g,r,again){
     </div>`);
   if(!again)SND.coin();
   const sh=$('mShare');if(sh)sh.onclick=()=>shareDef(dw,()=>winModal(g,r,true));
+  // межэкранная — после любого пройденного уровня (и обычного, и задания дня), в момент перехода (правила — maybeInterstitial, core.js)
   $('mNext').onclick=()=>{hideModal();SND.tap();
-    if(nextI<0){openMenu();return;}
-    maybeInterstitial(()=>startLevel(nextI));};
+    maybeInterstitial(()=>{if(nextI<0)openMenu();else startLevel(nextI);});};
   // кнопку блокируем сразу (двойной тап не даёт двойную награду); если реклама не удалась — возвращаем
   const x2=$('mX2');if(x2)x2.onclick=()=>{if(r.x2||x2.disabled)return;x2.disabled=true;
     showRewarded(()=>{if(r.x2)return;r.x2=1;addCoins(Math.max(reward,ECO.x2min));SND.coin();x2.textContent='✅ Получено';},()=>{if(!r.x2)x2.disabled=false;});};
@@ -174,10 +182,10 @@ function openDaily(){
     <p>Серия: <b>${S.streak&&ns>1?S.streak:0} ${plural(S.streak&&ns>1?S.streak:0,'день','дня','дней')}</b>. ${ns>1?'Не прерывай!':'Начнём новую!'}</p>
     ${easy?'<p style="font-size:14px">Для новичков подобрала задание полегче. Но слов тут побольше, чем в начале, — подсказки брать не стыдно.</p>':''}
     <div class="btns"><button class="btn green" id="mGo">Начать</button><button class="btn ghost small" id="mNo">Потом</button></div>`);
-  $('mGo').onclick=()=>{hideModal();SND.tap();ac();startLevel(dailyIdx(),true);};$('mNo').onclick=()=>{hideModal();SND.tap();};
+  $('mGo').onclick=()=>{hideModal();SND.tap();ac();maybeInterstitial(()=>startLevel(dailyIdx(),true));};$('mNo').onclick=()=>{hideModal();SND.tap();};
 }
 // ключ дня n дней назад (20260926)
-function dayKey(n){const y=new Date(Date.now()-n*864e5);return String(y.getFullYear()*10000+(y.getMonth()+1)*100+y.getDate());}
+function dayKey(n){const y=new Date(nowMs()-n*864e5);return String(y.getFullYear()*10000+(y.getMonth()+1)*100+y.getDate());}
 function openStreakFix(){const n=S.streak||0;
   modal(`<h2>🔥 Серия под угрозой</h2><div style="width:100px;height:100px;margin:4px auto">${zinaSVG('wow')}</div>
     <p>Вчера ты не заходил, и серия в <b>${n} ${plural(n,'день','дня','дней')}</b> вот-вот сгорит.</p><p>Посмотри рекламу — скажу, что ты болел, и серия продолжится.</p>
@@ -229,7 +237,8 @@ function openCredits(){modal(`<h2>Благодарности</h2><p style="font-
 /* ---------- старт ---------- */
 function bind(){
   applyBig();
-  $('btnPlay').onclick=()=>{SND.tap();ac();startLevel(Math.min(S.lv,LEVELS.length-1));};
+  $('btnPlay').onclick=()=>{SND.tap();ac();maybeInterstitial(()=>startLevel(Math.min(S.lv,LEVELS.length-1)));};
+  $('btnGift').onclick=takeGift;
   $('btnChap').onclick=()=>{SND.tap();openChapters();};
   $('btnDict').onclick=()=>{SND.tap();dictTab='mine';openDict();};
   $('btnDaily').onclick=openDaily;
@@ -259,5 +268,5 @@ function onReady(){
   else if(S.lv===0&&!S.tip.tut&&!SHOT){ac();startLevel(0);} // новичок — сразу в первый уровень (обучение), меню — потом
   else openMenu();
 }
-window.__test={startLevel,submit,finishLevel,winModal,openShop,openRating,openDict,drawCard,shareDef,get G(){return G;},S:()=>S,LEVELS,DAILY,layoutGrid,layoutWheel};
+window.__test={applyFlags,freeLeft,maybeInterstitial,AD,PRICE,ECO,startLevel,submit,finishLevel,winModal,openShop,openRating,openDict,drawCard,shareDef,get G(){return G;},S:()=>S,LEVELS,DAILY,layoutGrid,layoutWheel};
 initSDK();

@@ -23,6 +23,15 @@ const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 // своя машина (localhost) — там вместо рекламы заглушка; на площадке без SDK награды даром нет
 const LOCAL=location.protocol==='file:'||/^(localhost|127\.0\.0\.1|\[::1\]|.*\.local|.*\.localhost)$/.test(location.hostname);
 let ysdk=null,YP=null,VK=null,paused=false,muted=false,adShowing=false;
+/* время (27.09, аудит 12): казна и Дар Жар-птицы — не по часам телефона, чтобы перевод часов вперёд не давал золото.
+   srvMs(): Яндекс — ysdk.serverTime(), иначе часы устройства (мак, SDK ещё грузится).
+   nowMs() — для золота: в VK сервера нет, но есть vk_ts (время сервера VK при запуске, в параметрах адреса) — часы устройства
+   принимаем, только если они не убежали вперёд больше чем на 10 мин от «vk_ts + сколько прошло с запуска».
+   dayMs() — для смены дня (задания, вход, поход дня): Яндекс — сервер, VK — часы устройства (vk_ts может отставать после сна телефона) */
+const T0P=performance.now(),VK_TS=(function(){const m=/[?&]vk_ts=(\d+)/.exec(location.search);return m?+m[1]*1000:0;})();
+function srvMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return 0;}
+function nowMs(){const t=srvMs();if(t)return t;if(VK_TS>1.6e12)return Math.min(Date.now(),VK_TS+(performance.now()-T0P)+600000);return Date.now();}
+function dayMs(){return srvMs()||Date.now();}
 
 /* ================= сохранение =================
    localStorage — сразу. Облако (Яндекс: player.setData, VK: VKWebAppStorage) — ТОЛЬКО после того, как облако прочитано
@@ -34,7 +43,7 @@ let S=freshSave();
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 function fixSave(){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v);
   for(const k of['forge','village','armory','done','best','rank','bought','stats','bossKill','evoSeen','skins','skin','ach','meet','bk','ask'])if(!ob(S[k]))S[k]={};
-  if(typeof S.gold!=='number'||!isFinite(S.gold))S.gold=0;if(!S.afkT)S.afkT=Date.now();}
+  if(typeof S.gold!=='number'||!isFinite(S.gold))S.gold=0;if(!S.afkT)S.afkT=nowMs();}
 fixSave();
 const BOOT={ts:S.ts||0,fresh:!S.ts}; // что было на этом устройстве при запуске
 let cloudBase=S.gold||0,cloudReady=false,cloudPending=null,cloudT=0,cloudLast=0,cloudBusy=false;
@@ -112,6 +121,7 @@ async function initSDK(){
         else if(t==='VKWebAppViewRestore'&&!adShowing){paused=false;setMuted(false);}});
       vkCloudInit(2);
       vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
+      vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(()=>{});
     }catch(e){VK=null;}
     return;
   }
@@ -121,23 +131,44 @@ async function initSDK(){
       ysdk.on&&ysdk.on('game_api_pause',()=>{paused=true;setMuted(true);});
       ysdk.on&&ysdk.on('game_api_resume',()=>{if(adShowing)return;paused=false;setMuted(false);});
     }catch(e){ysdk=null;}
+    try{ysdk&&ysdk.getFlags&&ysdk.getFlags().then(applyFlags).catch(()=>{});}catch(e){} // флаги из консоли Яндекса (межэкранная)
   }
   try{ysdk&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
   sdkDone=true;if(ysdk)yCloud(3);else if(LOCAL)cloudReady=true; // на маке без SDK облака нет — только localStorage
 }
 let sdkDone=false;
-// Реклама — только по желанию игрока (за награду). Полноэкранной нет.
+/* Реклама (решение владельца 27.09): за награду — по желанию игрока; межэкранная — мягко, только между походами (interAfterRun).
+   Межэкранная: после экрана итогов, с 4-го похода за всё время, не после первого похода захода, не чаще раза в 4 мин от ЛЮБОЙ рекламы,
+   поход не короче 45 с; под флагами Яндекса (ADV). Никогда — посреди похода, при запуске, в первом походе. */
+const VK_REAL=/[?&]vk_app_id=/.test(location.search);
+const ADV={on:true,gap:4,from:4,sess:0,last:0};
+try{ADV.last=+localStorage.getItem('bogatyr-ad')||0;}catch(e){}
+// флаги: inter = 0/off — выключить; inter_gap — минут между рекламой (2–30); inter_from — с какого похода (2–30). Чужие значения не берём
+function applyFlags(f){if(!f||typeof f!=='object')return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
+  if(f.inter==='0'||f.inter==='off')ADV.on=false;else if(f.inter==='1'||f.inter==='on')ADV.on=true;
+  if((n=num('inter_gap',2,30))!==null)ADV.gap=n;if((n=num('inter_from',2,30))!==null)ADV.from=n;}
+function adMark(){ADV.last=Date.now();try{localStorage.setItem('bogatyr-ad',String(ADV.last));}catch(e){}}
+// поход закончен и итоги забраны: показать межэкранную? (runT — длина похода, с). Считает походы захода — звать ровно раз за поход
+function interReady(runT){ADV.sess++;const now=Date.now();if(ADV.last>now)adMark(); // часы перевели назад — отсчёт заново
+  if(!ADV.on||S.runs<ADV.from||ADV.sess<2||!(runT>=45)||now-ADV.last<ADV.gap*60000||adBusy||adShowing)return false;
+  if(PLAT==='vk')return !!VK||(!VK_REAL&&LOCAL); // в настоящем VK без моста — нет; ?vk=1 на маке — заглушка
+  return !!ysdk||LOCAL;}
+function showInterstitial(cb0){let done=false;const cb=()=>{if(done)return;done=true;adMark();if(cb0)cb0();};
+  if(PLAT==='vk'&&!VK){if(!VK_REAL&&LOCAL)stubAd(cb);else cb();return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).catch(()=>{}).then(()=>{adClose();cb();vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(()=>{});});return;}
+  if(!ysdk){if(LOCAL)stubAd(cb);else cb();return;}
+  try{ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:()=>{adClose();cb();},onError:()=>{adClose();cb();},onOffline:()=>{adClose();cb();}}});}catch(e){adClose();cb();}}
 function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen();let n=3;tEl.textContent=n;
   const it=setInterval(()=>{n--;tEl.textContent=n;if(n<=0){clearInterval(it);ad.classList.remove('on');adClose();cb();}},600);}
 function adOpen(){adShowing=true;paused=true;setMuted(true);YG.stop();}
-function adClose(){adShowing=false;paused=document.hidden;setMuted(document.hidden);if(G&&!G.over&&!G.paused&&!G.pauseOpen&&!$('modal').classList.contains('on'))YG.start();} // окно или пауза открыты — start() вызовет их закрытие
+function adClose(){adShowing=false;adMark();paused=document.hidden;setMuted(document.hidden);if(G&&!G.over&&!G.paused&&!G.pauseOpen&&!$('modal').classList.contains('on'))YG.start();} // окно или пауза открыты — start() вызовет их закрытие
 const AD_FAIL='Реклама сейчас недоступна, попробуй позже';
 // пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
 let adBusy=false;
 function showRewarded(cb0,onFail0){
   if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
   const cb=()=>{adBusy=false;cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
-  if(PLAT==='vk'&&!VK){if(/[?&]vk_app_id=/.test(location.search)){toast(AD_FAIL);onFail();}else stubAd(cb);return;} // в VK мост не ответил — не даём награду даром; ?vk=1 на маке — заглушка
+  if(PLAT==='vk'&&!VK){if(VK_REAL){toast(AD_FAIL);onFail();}else stubAd(cb);return;} // в VK мост не ответил — не даём награду даром; ?vk=1 на маке — заглушка
   if(VK){
     adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
       .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL);onFail();}})
@@ -269,7 +300,7 @@ let toastT=0;
 function toast(s){const t=$('toast');t.textContent=s;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),Math.max(2500,1000+60*String(s).length));}
 
 /* ================= день (для заданий) ================= */
-function dayKey(t){const d=new Date(t||Date.now());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function dayKey(t){const d=new Date(t||dayMs());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function dayPrev(k){const [y,m,d]=k.split('-').map(Number);return dayKey(new Date(y,m-1,d-1).getTime());}
 
 /* ================= таблицы рекордов: Яндекс (endless, kills, weekly) и VK (таблица друзей) =================

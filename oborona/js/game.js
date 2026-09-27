@@ -141,7 +141,7 @@ function newBattle(o){
   renderBg();warmBattle();
   return G;}
 // спрайты этого боя рисуем заранее (заставы, снаряды, нечисть уровня и подмога боссов), остальное — при первом показе
-function warmBattle(){const keys=['spot','gate','skull','arrow','ball','ballG','pie','flaskG','flaskP','flaskK','frog','egg'];for(const k in ART)if(/^(t_|bar_)/.test(k))keys.push(k);
+function warmBattle(){const keys=['spot','gate','skull','arrow','ball','ballG','pie','flaskG','flaskP','flaskK','frog','egg'];for(const k in ART)if(/^(t_|bar_)[^~]*$/.test(k)){keys.push(k);const sk=k[0]==='t'?skinOf(k.split('_')[1]):skinOf('pushka')==='gold'?'gold':'';if(sk)keys.push(k+'~'+sk);}
   const ens=new Set(['kot','skel','snowb','rak','chert']);if(G.waves){for(const w of G.waves)for(const g of w.g)ens.add(g.t);}else for(const c of CH){for(const t of c.en)ens.add(t);ens.add(c.boss);}
   for(const t of ens)if(EN[t])keys.push(EN[t].art||t);sprWarm(keys);}
 function towerBanned(t){return !!(G&&G.rule==='noarch'&&t==='arch');}
@@ -162,7 +162,8 @@ function tstat(type,lvl,br){const d=TW[type],b=lvl===4?d.br[br-1]:null,i=lvl-1,F
   if(type==='mag'){o.dmg=(b?b.dmg:d.dmg[i])*dm;o.chain=(b?b.chain:d.chain[i])+(sp?1:0);o.frog=b&&b.frog||0;}
   if(type==='dub'){o.dmg=(b?b.dmg:d.dmg[i])*dm;o.stun=(b?b.stun:d.stun[i])+(sp?.3:0);o.sleep=b&&b.sleep||0;o.greed=b&&b.greed||0;}
   return o;}
-function towerKey(t){return 't_'+t.type+'_'+(t.lvl<4?t.lvl:t.lvl+(t.br===1?'a':'b'));}
+// облик (только внешний вид, куплен в деревне) — суффикс «~облик» у рисунка
+function towerKey(t){const k='t_'+t.type+'_'+(t.lvl<4?t.lvl:t.lvl+(t.br===1?'a':'b')),sk=typeof skinOf==='function'?skinOf(t.type):'';return sk?k+'~'+sk:k;}
 function tryBuild(i,type){const c=buildCost(type);if(!G||G.tw[i]||G.coins<c||!towerUnlocked(type))return false;
   const s=G.map.spots[i];G.coins-=c;G.tw[i]={i,type,lvl:1,br:0,x:s.x,y:s.y,cd:.3,inv:c,ang:-Math.PI/2,stunT:0,frostT:0,bounce:0,kills:0,dmgd:0,aim:(G.aimDef&&G.aimDef[type])||'first'};
   G.tw[i].st=tstat(type,1,0);G.tw[i].bounce=.35;SND.build();dust(s.x,s.y+6);G.built=(G.built||0)+1;if(G.tut===1)G.tut=2;return true;}
@@ -505,7 +506,7 @@ function tutSpot(){const s=G.map.spots;let best=0,bd=-1;for(let i=0;i<s.length;i
 function drawTower(t){const B=t.bounce>0?1+Math.sin(t.bounce/.35*Math.PI)*.08:1;
   drawSpr(towerKey(t),t.x,t.y-10,B,1/B*1.0+ (B-1)*0,false);
   if(t.type==='pushka'){const piv=[0,-17,-20,-23,-25][t.lvl]-(t.lvl===4?0:0);const rc=t.recoil>0?t.recoil*20:0;if(t.recoil>0)t.recoil-=1/60;
-    const ca=Math.cos(t.ang),sa=Math.sin(t.ang)*.62,da=Math.atan2(sa,ca),lf=Math.hypot(ca,sa);drawSpr('bar_'+(t.lvl<4?t.lvl:'4'+(t.br===1?'a':'b')),t.x-ca*rc,t.y+piv-sa*rc,lf,ca<0?-1:1,false,da);}
+    const ca=Math.cos(t.ang),sa=Math.sin(t.ang)*.62,da=Math.atan2(sa,ca),lf=Math.hypot(ca,sa);drawSpr('bar_'+(t.lvl<4?t.lvl:'4'+(t.br===1?'a':'b'))+(skinOf('pushka')==='gold'?'~gold':''),t.x-ca*rc,t.y+piv-sa*rc,lf,ca<0?-1:1,false,da);}
   worldT();const c=ctx;
   if(t.stunT>0){const y=t.y-58;c.font='900 '+wfs(14)+'px system-ui';c.textAlign='center';c.fillStyle='#fff';c.strokeStyle='rgba(0,0,0,.6)';c.lineWidth=3;
     const s=t.sleepFx>0?'z z z':t.burnFx>0?'🔥':'♪ ♫';c.strokeText(s,t.x,y+Math.sin(G.t*4)*2);c.fillText(s,t.x,y+Math.sin(G.t*4)*2);}

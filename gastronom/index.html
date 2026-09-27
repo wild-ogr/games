@@ -106,6 +106,18 @@ canvas{display:block;touch-action:none}
 .lb{max-height:46vh;overflow:auto;overscroll-behavior:contain;margin-top:8px;text-align:left}.lbr{display:flex;gap:10px;align-items:center;padding:6px 8px;border-radius:10px}.lbr:nth-child(odd){background:rgba(0,0,0,.05)}.lbr.me{background:#ffe7a3}.lbr b{width:28px;text-align:right}.lbr span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbr i{font-style:normal;font-weight:800}
 .bst-ex{display:flex;align-items:center;gap:12px;text-align:left;background:#f3e7d2;border-radius:14px;padding:10px 12px;margin-top:8px}
 .bst-ex b{font-size:28px}
+.row2{display:flex;gap:10px}.row2>.btn{flex:1;min-width:0;padding-left:8px;padding-right:8px}
+.nw{white-space:nowrap}
+/* серия дней (задание дня): 7 клеток в ряд, 7-я — подарок */
+.streak{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:10px 0 4px}
+.sd{background:#f1e6d0;border-radius:10px;padding:5px 0 4px;font-weight:800;font-size:14px;line-height:1.15;position:relative;color:#6b5e50}
+.sd small{display:block;font-size:11px;font-weight:700}
+.sd.done{background:#c8efcf;color:#2b7a3f}
+.sd.today{background:linear-gradient(#ffd36e,#ff9f43);color:#3a2206;box-shadow:0 3px 0 #c8741d}
+.sd.d7{background:#ffe9b8}.sd.d7.today{background:linear-gradient(#ffd36e,#ff7a45)}
+.streak-t{font-weight:800!important;color:#8a4b0f!important}
+.shopad{display:none;align-items:center;gap:10px;margin:4px 14px 0;padding:8px 10px;background:#fff1cf;border-radius:14px;font-weight:700;font-size:14px;color:#6b4a2b;line-height:1.25}
+.shopad.on{display:flex}.shopad .btn{flex:none;padding:9px 12px;font-size:15px}.shopad span{flex:1;min-width:0}
 /* узкие, низкие экраны, ПК */
 @media (max-width:380px){.mh{padding-left:10px;padding-right:10px}.logo{font-size:19px}.hdr-r{gap:5px}.pill{padding:6px 9px;font-size:15px}.gf{gap:6px;padding-left:6px;padding-right:6px}.gf .btn span{font-size:13px}.gf .btn small{font-size:11.5px}}
 @media (max-height:520px){.gh{padding-top:4px;padding-bottom:0}.gt>div:first-child{font-size:16px}.gf{padding-top:3px;padding-bottom:5px}.gf .btn{flex-direction:row;gap:6px;padding:4px 6px}.gf .btn b{font-size:18px}.gf .btn span{display:none}.mnav{padding-top:6px;padding-bottom:6px}.node-row{height:70px}.tip{font-size:15px;padding:7px 10px}}
@@ -116,7 +128,7 @@ body.calm .node.cur,body.calm .card,body.calm .hearts.warn{animation:none}
 /* вырез экрана слева/справа (iPhone в альбомной ориентации) */
 .mh,.mnav,.gh,.gf{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 /* запасные отступы для старых браузеров без gap во flex (≈ те же, где нет inset) */
-@supports not (inset:0){.mnav>*+*,.gf>*+*,.gh>*+*,.hdr-r>*+*,.mh>*+*,.bst-ex>*+*,.lbr>*+*{margin-left:8px}.row>*+*{margin-top:10px}.node-row>*+*{margin-left:12px}.node-row.r>*+*{margin-left:0;margin-right:12px}.gh-r>*+*{margin-top:3px}.grid>*{margin:6px}}
+@supports not (inset:0){.mnav>*+*,.gf>*+*,.gh>*+*,.hdr-r>*+*,.mh>*+*,.bst-ex>*+*,.lbr>*+*,.row2>*+*,.shopad>*+*{margin-left:8px}.streak>*{margin:2px}.row>*+*{margin-top:10px}.node-row>*+*{margin-left:12px}.node-row.r>*+*{margin-left:0;margin-right:12px}.gh-r>*+*{margin-top:3px}.grid>*{margin:6px}}
 </style>
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
@@ -141,6 +153,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 
   <section id="scr-shop" class="screen">
     <header class="gh"><button class="icon" id="shopBack" aria-label="Назад">←</button><div class="gt"><div>Обстановка магазина</div><div class="sub">Всё купленное видно в зале</div></div><div class="pill sm" id="shopCoins">💰 0</div></header>
+    <div class="shopad" id="shopAd"></div>
     <div class="grid" id="shopGrid"></div>
   </section>
 
@@ -361,16 +374,27 @@ const PH={
     win:['Всё продано! Можно и чайку.','План выполнен!','Витрина пустая — красота!'],box:['Дефицит! Откроем, как рядом разберёмся.'],
     rare:['Выбросили дефицит!','Ой, дефицит! Берите, пока есть!'],boss:['Ревизия! Чтоб всё блестело!'],ice:['Мороженое не торопится — оттает!']}};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-// обстановка магазина: покупается за монеты, видна в зале на каждом уровне
+// обстановка магазина: покупается за монеты, видна в зале (или на витрине) на каждом уровне.
+// 8 первых — 1070 💰; с ×2 за рекламу (аудит 12) добавлены ещё 10 на 1950 💰 — цель на месяц. Порядок — по цене
 const DECOR=[
   {id:'ficus',n:'Фикус в кадке',p:60,d:'Зелень в углу — и в зале уютнее.'},
   {id:'clock',n:'Часы на стене',p:80,d:'Идут по-настоящему, как на вашем телефоне.'},
   {id:'poster',n:'Плакат',p:100,d:'«Хлеб — всему голова!»'},
+  {id:'beads',n:'Бусы для тёти Вали',p:100,d:'Коралловые, к празднику. Тётя Валя довольна!'},
   {id:'scales',n:'Весы на прилавке',p:120,d:'Всё без обмана, до грамма.'},
+  {id:'calendar',n:'Отрывной календарь',p:120,d:'Всегда показывает сегодняшнее число.'},
+  {id:'pennant',n:'Вымпел',p:140,d:'«Лучший магазин района» — с бахромой.'},
   {id:'lamps',n:'Плафоны',p:150,d:'Тёплый свет над прилавком.'},
+  {id:'radio',n:'Радиоточка',p:160,d:'Висит на стене, как в каждом доме.'},
   {id:'kassa',n:'Касса',p:180,d:'Как в настоящем гастрономе — с клавишами.'},
+  {id:'lace',n:'Кружевные салфетки',p:180,d:'Беленькие, на каждой полке витрины.'},
+  {id:'samovar',n:'Самовар',p:200,d:'Блестит на прилавке. Чайку?'},
   {id:'tiles',n:'Кафель',p:220,d:'Нарядная плитка на стене.'},
-  {id:'neon',n:'Неоновая вывеска',p:260,d:'«ГАСТРОНОМ» светится красным.'}];
+  {id:'frame',n:'Резная витрина',p:220,d:'Золочёная резьба по раме витрины.'},
+  {id:'cat',n:'Кот Барсик',p:250,d:'Спит на прилавке. Мышей не ловит.'},
+  {id:'neon',n:'Неоновая вывеска',p:260,d:'«ГАСТРОНОМ» светится красным.'},
+  {id:'panels',n:'Дубовые панели',p:280,d:'Стена вокруг витрины обшита деревом.'},
+  {id:'fridge',n:'Холодильный прилавок',p:300,d:'За стеклом докторская, сыр и масло.'}];
 const hasDecor=id=>!!(S.decor&&S.decor[id]);
 
 /* ================= сохранение ================= */
@@ -380,6 +404,7 @@ try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof 
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 // защита от сохранений неожиданной формы (ручная правка, старая версия): не даём им сломать игру и слияние
 function fixSave(){for(const f of ['stars','daily','decor','tips','ask'])if(!isObj(S[f]))S[f]={};if(!Array.isArray(S.album))S.album=[];
+  for(const f of ['streak','adc'])if(S[f]!=null&&!isObj(S[f]))delete S[f];if(typeof S.adW!=='number'||!isFinite(S.adW))S.adW=0;
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(typeof S.levelsDone!=='number')S.levelsDone=0;
   if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=60;}
 fixSave();
@@ -430,7 +455,10 @@ function mergeSave(d,ref){if(!isObj(d))return;
   for(const f of ['stars','daily','decor','tips'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(Array.isArray(d.album))for(const i of d.album)if(typeof i==='number'&&!S.album.includes(i))S.album.push(i);
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|decor|tips|album|coins)$/.test(k))S[k]=d[k];} // флажки (звук, вибрация)
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|decor|tips|album|coins|streak|adc)$/.test(k))S[k]=d[k]; // флажки (звук, вибрация)
+  // серия дней — у кого позже последний день; ролики за монеты сегодня — больше из двух (лимит в день не обходится вторым устройством)
+  if(isObj(d.streak)){const a=S.streak,b=d.streak;if(!isObj(a)||(b.last||0)>(a.last||0))S.streak=b;else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last};}
+  if(isObj(d.adc)){const a=S.adc,b=d.adc;if(!isObj(a)||(b.d||0)>(a.d||0))S.adc=b;else if(b.d===a.d)S.adc={d:a.d,n:Math.max(a.n||0,b.n||0)};}}
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
 // ответ VK с ограничением по времени (вне VK мост может не ответить вовсе); VKWebAppInit на слабом телефоне может идти долго — ждём до 20 с
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
@@ -479,6 +507,7 @@ async function initSDK(){
     try{ysdk=await YaGames.init();
       ysdk.on&&ysdk.on('game_api_pause',()=>setPause('sdk',true));
       ysdk.on&&ysdk.on('game_api_resume',()=>setPause('sdk',false));
+      try{ysdk.getFlags&&ysdk.getFlags().then(applyFlags).catch(()=>{});}catch(e){}
       try{YP=await ysdk.getPlayer({scopes:false});await cloudLoad();}catch(e){}
     }catch(e){ysdk=null;}
   }
@@ -695,7 +724,9 @@ function drawPerson(g,kind,cx,by,h,mood,tk,talk){const u=h/100,bob=Math.sin(tk*2
   g.beginPath();g.moveTo(cx-38*u,by+12*u);g.lineTo(cx-36*u,by-20*u);g.quadraticCurveTo(cx-34*u,by-36*u,cx-14*u,by-38*u);g.lineTo(cx+14*u,by-38*u);g.quadraticCurveTo(cx+34*u,by-36*u,cx+36*u,by-20*u);g.lineTo(cx+38*u,by+12*u);g.closePath();
   g.fillStyle=lin(g,cx-38*u,0,cx+38*u,0,[shade(C,-.18),C,shade(C,-.08),shade(C,-.28)]);g.fill();
   if(kind==='valya'){g.strokeStyle='#d9d9d9';g.lineWidth=1.5*u;g.beginPath();g.moveTo(cx,by-36*u);g.lineTo(cx,by+12*u);g.stroke();for(let k=0;k<3;k++)ell(g,cx+4*u,by-24*u+k*12*u,1.8*u,1.8*u,'#c9c9c9');
-    poly(g,[cx-12*u,by-38*u,cx,by-26*u,cx+12*u,by-38*u],'#f2c9a7');}
+    poly(g,[cx-12*u,by-38*u,cx,by-26*u,cx+12*u,by-38*u],'#f2c9a7');
+    // бусы (обстановка): коралловые бусины дугой по вороту
+    if(hasDecor('beads'))for(let k=0;k<=10;k++){const t=k/10*2-1,x=cx+t*15*u,y=by-37.5*u+(1-t*t)*14*u;ell(g,x,y,2.5*u,2.5*u,k%2?'#d9483b':'#e8604f');ell(g,x-.8*u,y-.8*u,.9*u,.9*u,'rgba(255,255,255,.7)');}}
   else if(kind==='school'){poly(g,[cx-10*u,by-38*u,cx,by-28*u,cx+10*u,by-38*u],'#f3f3ef');poly(g,[cx-3*u,by-30*u,cx+3*u,by-30*u,cx+9*u,by-6*u,cx+1*u,by-10*u,cx-6*u,by-4*u],'#d63031');ell(g,cx,by-31*u,3.5*u,3*u,'#b71c1c');
     // бидон
     const bx=cx+34*u,byy=by-2*u;rrect(g,bx-9*u,byy-24*u,18*u,26*u,4*u);g.fillStyle=lin(g,bx-9*u,0,bx+9*u,0,['#8f9aa0','#e3e8ea','#8f9aa0']);g.fill();rrect(g,bx-5*u,byy-30*u,10*u,7*u,2*u);g.fillStyle='#b5bec2';g.fill();
@@ -780,6 +811,64 @@ function drawKassa(g,x,by,s){const u=s/100;rrect(g,x-30*u,by-42*u,60*u,42*u,5*u)
 function drawScales(g,x,by,s){const u=s/100;rrect(g,x-26*u,by-26*u,52*u,26*u,6*u);g.fillStyle=lin(g,0,by-26*u,0,by,['#fbfbf8','#d9d6cc']);g.fill();
   ell(g,x,by-40*u,15*u,15*u,'#fffdf5');g.strokeStyle='#9e9a8e';g.lineWidth=1.5*u;g.stroke();g.strokeStyle='#c0392b';g.lineWidth=2*u;g.beginPath();g.moveTo(x,by-40*u);g.lineTo(x+6*u,by-50*u);g.stroke();
   ell(g,x-20*u,by-28*u,15*u,4*u,'#cfd5d9');ell(g,x+20*u,by-28*u,15*u,4*u,'#cfd5d9');}
+const FNT='-apple-system,Segoe UI,Roboto,sans-serif';
+// отрывной календарь: (cx, y) — середина верха; число — сегодняшнее (время площадки)
+function drawCalendar(g,cx,y,w,h){const x=cx-w/2;g.fillStyle='rgba(0,0,0,.16)';g.fillRect(x+2,y+2,w,h);g.fillStyle=lin(g,0,y,0,y+h,['#8a5530','#6b3f22']);g.fillRect(x,y,w,h);
+  const pw=w*.8,px=cx-pw/2,py=y+h*.14,ph=h*.78;for(let k=3;k>0;k--){g.fillStyle=k%2?'#efe6d2':'#fbf6ea';g.fillRect(px+k*.6,py+k*1.1,pw,ph);}
+  g.fillStyle='#fffdf5';g.fillRect(px,py,pw,ph);g.fillStyle='#c0392b';g.fillRect(px,py,pw,ph*.27);
+  const d=new Date(nowMs()),M=['ЯНВ','ФЕВ','МАРТ','АПР','МАЙ','ИЮНЬ','ИЮЛЬ','АВГ','СЕН','ОКТ','НОЯБ','ДЕК'][d.getMonth()];
+  g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';g.font=`800 ${Math.max(5,Math.round(Math.min(ph*.21,pw/3.4)))}px ${FNT}`;g.fillText(M,cx,py+ph*.14);
+  g.fillStyle='#2d2016';g.font=`900 ${Math.round(Math.min(ph*.55,pw*.62))}px ${FNT}`;g.fillText(String(d.getDate()),cx,py+ph*.65);
+  for(const k of[-1,1])ell(g,cx+k*pw*.27,py+1,Math.max(1.2,w*.05),Math.max(1.2,w*.05),'#4a4036');}
+// вымпел «Лучший магазин района»: (cx, y) — перекладина
+function drawPennant(g,cx,y,w,h){g.strokeStyle='#8a6d2f';g.lineWidth=1;g.beginPath();g.moveTo(cx-w*.5,y);g.lineTo(cx,y-h*.12);g.lineTo(cx+w*.5,y);g.stroke();ell(g,cx,y-h*.12,1.6,1.6,'#6b5a3a');
+  poly(g,[cx-w*.5+2,y+h*.03,cx+w*.5-2,y+h*.03,cx+w*.5-2,y+h*.64,cx,y+h*.9,cx-w*.5+2,y+h*.64],'rgba(0,0,0,.18)');
+  const P=[cx-w*.5,y,cx+w*.5,y,cx+w*.5,y+h*.62,cx,y+h*.88,cx-w*.5,y+h*.62];poly(g,P,lin(g,cx-w/2,0,cx+w/2,0,['#9e1f16','#d23a2c','#b3261e']));
+  g.strokeStyle='#e9b949';g.lineWidth=Math.max(1,w*.035);g.stroke();
+  g.strokeStyle='#e9b949';g.lineWidth=1;g.beginPath();for(let k=0;k<=12;k++){const t=k/12,xx=cx-w*.5+t*w,yy=t<.5?y+h*.62+t*2*h*.26:y+h*.88-(t-.5)*2*h*.26;g.moveTo(xx,yy);g.lineTo(xx,yy+h*.08);}g.stroke();
+  g.fillStyle=lin(g,0,y-2,0,y+3,['#f7d774','#b8862b']);g.fillRect(cx-w*.62,y-1.5,w*1.24,3);ell(g,cx-w*.62,y,2.2,2.2,'#d4a53c');ell(g,cx+w*.62,y,2.2,2.2,'#d4a53c');
+  const st=(x0,y0,r)=>{g.beginPath();for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,rr=k%2?r*.45:r;g.lineTo(x0+Math.cos(a)*rr,y0+Math.sin(a)*rr);}g.closePath();g.fillStyle='#f7d774';g.fill();};
+  st(cx,y+h*.2,w*.13);const fs=Math.round(w*.15);
+  if(fs>=6){g.fillStyle='#f7d774';g.font=`900 ${fs}px ${FNT}`;g.textAlign='center';g.textBaseline='middle';g.fillText('ЛУЧШИЙ',cx,y+h*.42);g.fillText('МАГАЗИН',cx,y+h*.42+fs*1.1);}}
+// радиоточка на стене: (cx, y) — верх
+function drawRadio(g,cx,y,w){const h=w*.8,x=cx-w/2;g.strokeStyle='#3e3a36';g.lineWidth=1;g.beginPath();g.moveTo(cx+w*.3,y+2);g.quadraticCurveTo(cx+w*.5,y-h*.3,cx+w*.9,y-h*.5);g.stroke();
+  g.fillStyle='rgba(0,0,0,.18)';rrect(g,x+2,y+3,w,h,w*.14);g.fill();rrect(g,x,y,w,h,w*.14);g.fillStyle=lin(g,0,y,0,y+h,['#9b6a40','#6d4527']);g.fill();
+  rrect(g,x+w*.12,y+h*.14,w*.76,h*.56,w*.08);g.fillStyle='#e8d6b0';g.fill();g.strokeStyle='rgba(120,90,50,.45)';g.lineWidth=Math.max(.8,w*.025);g.beginPath();
+  for(let k=1;k<6;k++){const yy=y+h*.14+k*h*.56/6;g.moveTo(x+w*.16,yy);g.lineTo(x+w*.84,yy);}g.stroke();
+  ell(g,cx+w*.26,y+h*.84,w*.08,w*.08,'#2d2016');ell(g,cx-w*.2,y+h*.84,w*.14,w*.035,'#e9b949');}
+// самовар на прилавке: (cx, by) — низ, s — масштаб (≈ высота)
+function drawSamovar(g,cx,by,s){const u=s/100,gold=x0=>lin(g,x0-30*u,0,x0+30*u,0,['#8a5a1a','#e9b949','#fff0b8','#d19a2e','#7a4a12']);
+  shadowE(g,cx,by,24*u,u);poly(g,[cx-16*u,by,cx+16*u,by,cx+10*u,by-10*u,cx-10*u,by-10*u],gold(cx));
+  g.fillStyle=gold(cx);g.fillRect(cx-5*u,by-18*u,10*u,9*u);
+  for(const k of[-1,1]){g.strokeStyle='#3e2a1f';g.lineWidth=3.5*u;g.beginPath();g.arc(cx+k*27*u,by-48*u,7*u,k<0?Math.PI*.5:-Math.PI*.5,k<0?Math.PI*1.5:Math.PI*.5);g.stroke();}
+  ell(g,cx,by-46*u,26*u,29*u,gold(cx));ell(g,cx-9*u,by-56*u,5*u,10*u,'rgba(255,255,255,.35)');
+  g.strokeStyle='rgba(120,70,10,.5)';g.lineWidth=1.2*u;ell(g,cx,by-46*u,26*u,5*u);g.stroke();
+  g.fillStyle=gold(cx);g.fillRect(cx-9*u,by-80*u,18*u,6*u);poly(g,[cx-12*u,by-74*u,cx+12*u,by-74*u,cx+8*u,by-68*u,cx-8*u,by-68*u],gold(cx));
+  // заварочный чайник сверху
+  ell(g,cx,by-88*u,11*u,9*u,'#fdfbf5');ell(g,cx,by-96*u,6*u,2.5*u,'#e9e3d3');ell(g,cx,by-98*u,2*u,2*u,'#c0392b');
+  for(const [dx,dy] of[[-4,-88],[4,-86],[0,-83]])ell(g,cx+dx*u,by+dy*u,2*u,2*u,'#1f5f99');
+  g.strokeStyle='#fdfbf5';g.lineWidth=2.5*u;g.beginPath();g.moveTo(cx+10*u,by-88*u);g.lineTo(cx+17*u,by-94*u);g.stroke();
+  // краник
+  g.fillStyle='#b8862b';g.fillRect(cx-2.5*u,by-34*u,5*u,9*u);ell(g,cx,by-25*u,4*u,2*u,'#7a4a12');}
+// кот Барсик спит на прилавке: (cx, by) — низ, s — ширина
+function drawCat(g,cx,by,s){const u=s/100;shadowE(g,cx,by,44*u,u);
+  g.strokeStyle='#c46b2b';g.lineWidth=9*u;g.lineCap='round';g.beginPath();g.moveTo(cx+36*u,by-8*u);g.quadraticCurveTo(cx+52*u,by+2*u,cx+18*u,by-2*u);g.stroke();
+  ell(g,cx+4*u,by-17*u,40*u,18*u,lin(g,0,by-35*u,0,by,['#f0a257','#d97e36','#b8652a']));
+  g.strokeStyle='rgba(140,60,15,.55)';g.lineWidth=3.5*u;for(const dx of[-4,10,24]){g.beginPath();g.moveTo(cx+dx*u,by-34*u);g.quadraticCurveTo(cx+(dx+5)*u,by-24*u,cx+(dx+2)*u,by-16*u);g.stroke();}
+  ell(g,cx-18*u,by-3*u,9*u,4*u,'#f3c08a');ell(g,cx-2*u,by-3*u,9*u,4*u,'#f3c08a');
+  const hx=cx-32*u,hy=by-20*u;poly(g,[hx-13*u,hy-6*u,hx-10*u,hy-24*u,hx-1*u,hy-12*u],'#d97e36');poly(g,[hx+1*u,hy-12*u,hx+10*u,hy-24*u,hx+13*u,hy-6*u],'#d97e36');
+  poly(g,[hx-10*u,hy-9*u,hx-9*u,hy-19*u,hx-4*u,hy-12*u],'#f5b7a8');poly(g,[hx+4*u,hy-12*u,hx+9*u,hy-19*u,hx+10*u,hy-9*u],'#f5b7a8');
+  ell(g,hx,hy,16*u,14*u,lin(g,0,hy-14*u,0,hy+14*u,['#f0a257','#d97e36']));ell(g,hx,hy+5*u,8*u,5*u,'#f7d2a6');
+  g.strokeStyle='#5a2e10';g.lineWidth=1.8*u;for(const k of[-1,1]){g.beginPath();g.arc(hx+k*6*u,hy-1*u,3.5*u,.15*Math.PI,.85*Math.PI);g.stroke();}
+  poly(g,[hx-2*u,hy+3*u,hx+2*u,hy+3*u,hx,hy+5*u],'#c0587a');g.lineCap='butt';}
+// холодильный прилавок: стекло и товары вместо деревянных филёнок
+function drawFridge(q,x0,y,w,h){q.fillStyle=lin(q,0,y,0,y+h,['#dff0f3','#b6d3da']);q.fillRect(x0,y,w,h);
+  const s=Math.min(h*.9,Math.max(w/9,h*.45)),T=[9,10,19,11,2,16,9,10,19,11,2,16,9,10,19,11,2,16];let k=0;
+  for(let x=x0+s*.55;x<x0+w-s*.3;x+=s*.95,k++)drawGood(q,T[k%T.length],x,y+h*.86,s);
+  q.fillStyle='rgba(255,255,255,.25)';q.fillRect(x0,y,w,h);
+  q.fillStyle='rgba(255,255,255,.55)';for(let x=x0+w*.05;x<x0+w;x+=Math.max(70,w*.3))poly(q,[x,y+h,x+h*.35,y,x+h*.55,y,x+h*.2,y+h]);
+  q.fillStyle=lin(q,0,y+h-4,0,y+h,['#c9d3d6','#8c9a9e']);q.fillRect(x0,y+h-Math.max(3,h*.08),w,Math.max(3,h*.08));
+  q.fillStyle='#e6eef0';q.fillRect(x0,y,w,Math.max(2,h*.05));}
 // статичная часть зала (стена, плитка, вывеска, плакат, фикус) — в отдельный холст; часы, люди и облачка — каждый кадр
 function buildHall(){const R=HALL;if(!R)return;hallCv=hallCv||document.createElement('canvas');hallCv.width=Math.ceil(R.w*dpr);hallCv.height=Math.ceil(R.h*dpr);const g=hallCv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
   const col=G&&G.daily?'#8e5a2a':cityOf(G?G.idx:0)[1],w=R.w,h=R.h;
@@ -792,12 +881,21 @@ function buildHall(){const R=HALL;if(!R)return;hallCv=hallCv||document.createEle
   if(hasDecor('poster')){const pw=Math.min(w*.14,70),ph=pw*1.35;drawPoster(g,w-pw-w*.05,h*.24,pw,ph);}
   if(hasDecor('lamps'))for(let k=0;k<3;k++)drawLamp(g,w*(.28+k*.22),0,h*.24,Math.max(14,h*.09),true);
   if(hasDecor('ficus'))drawFicus(g,w-Math.max(20,w*.05),h*.84,Math.min(h*.72,90));
+  // по краям от вывески: календарь над часами, вымпел над плакатом, радиоточка под часами
+  const sx0=(w-sw)/2,ckx=Math.max(26,w*.08),ckr=Math.max(12,Math.min(h*.1,26)),ckTop=h*.3-ckr;
+  if(hasDecor('calendar')){const ch=Math.min(ckTop-R.sy-6,46,(sx0-8)*1.3);if(ch>=16)drawCalendar(g,Math.min(ckx,sx0-ch*.4-3),R.sy+2,ch*.76,ch);}
+  if(hasDecor('pennant')){const pw=Math.min(sx0-10,44),ph=Math.min((h*.24-R.sy-6)/1.12,pw*1.25);if(pw>=18&&ph>=18)drawPennant(g,Math.max(w-sx0/2,(w+sw)/2+pw*.62+3),R.sy+ph*.14+2,pw,ph);}
+  if(hasDecor('radio')){const rw=Math.min(R.vw*.5,40,ckx*1.3);drawRadio(g,ckx,h*.3+ckr+8,rw);}
   // прилавок и то, что на нём — отдельный слой поверх покупателей
   counterCv=counterCv||document.createElement('canvas');counterCv.width=hallCv.width;counterCv.height=hallCv.height;const q=counterCv.getContext('2d');q.setTransform(dpr,0,0,dpr,0,0);q.clearRect(0,0,w,h);
   const cy=h*.8;q.fillStyle=lin(q,0,cy,0,h,['#9a6437','#7b4a26']);q.fillRect(0,cy,w,h-cy);q.fillStyle='#c98d56';q.fillRect(0,cy,w,Math.max(4,h*.03));
   q.fillStyle='rgba(190,225,240,.55)';q.fillRect(0,cy-Math.max(3,h*.02),w,Math.max(3,h*.02));
-  q.strokeStyle='rgba(60,30,10,.35)';q.lineWidth=2;for(let x=w*.1;x<w;x+=Math.max(60,w*.16)){q.strokeRect(x,cy+h*.06,Math.max(40,w*.12),h*.1);}
-  const ks=Math.min(R.ph*.6,70);if(hasDecor('kassa'))drawKassa(q,R.vx+R.vw*.72,cy+2,ks);if(hasDecor('scales'))drawScales(q,w-Math.max(40,w*.12)-(hasDecor('ficus')?w*.06:0),cy+2,ks*.9);}
+  if(hasDecor('fridge'))drawFridge(q,R.vw*.55,cy+Math.max(4,h*.03),w-R.vw*.55,h-cy-Math.max(4,h*.03));
+  else{q.strokeStyle='rgba(60,30,10,.35)';q.lineWidth=2;for(let x=w*.1;x<w;x+=Math.max(60,w*.16)){q.strokeRect(x,cy+h*.06,Math.max(40,w*.12),h*.1);}}
+  const ks=Math.min(R.ph*.6,70);if(hasDecor('kassa'))drawKassa(q,R.vx+R.vw*.72,cy+2,ks);if(hasDecor('scales'))drawScales(q,w-Math.max(40,w*.12)-(hasDecor('ficus')?w*.06:0),cy+2,ks*.9);
+  // между покупателями: самовар и кот
+  if(hasDecor('samovar'))drawSamovar(q,R.cx0+R.cw,cy+3,ks*.72);
+  if(hasDecor('cat'))drawCat(q,R.cx0+R.cw*2-ks*.08,cy+3,ks*.78);}
 function drawHall(tk){const R=HALL;ctx.drawImage(hallCv,R.x,R.y,R.w,R.h);
   if(hasDecor('clock'))drawClock(ctx,R.x+Math.max(26,R.w*.08),R.y+R.h*.3,Math.max(12,Math.min(R.h*.1,26)));
   // покупатели (за прилавком), потом прилавок, потом Валя (с нашей стороны)
@@ -836,6 +934,16 @@ function tip(t){const e=$('tip'),was=e.style.display==='block';if(t){e.textConte
 function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
 function todaySeed(){const d=new Date(nowMs());return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
 function todayKey(){return String(todaySeed());}
+function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+/* ---- серия дней: задание дня N дней подряд — сверху к 30 💰 бонус +5/+5/+10/+10/+15/+20/+40 (7-й — подарок), пропуск — заново;
+   прервавшуюся серию (2–6 дней) можно вернуть за рекламу — как в «Выезде» ---- */
+const STREAK=[5,5,10,10,15,20,40];
+function streakNow(){const s=S.streak;return isObj(s)&&(s.last===dayKey(0)||s.last===dayKey(-1))?s.day||0:0;}
+function streakWin(){const s=isObj(S.streak)?S.streak:{day:0,last:0},t=dayKey(0);if(s.last===t)return null;
+  const cont=s.last===dayKey(-1)&&s.day>0,day=cont?s.day%7+1:1,lost=!cont&&s.day>=2&&s.day<7?s.day:0;
+  S.streak={day,last:t};return{day,bonus:STREAK[day-1],lost};}
+function streakHtml(day){let h='';for(let d=1;d<=7;d++)h+=`<div class="sd${d<day?' done':''}${d===day?' today':''}${d===7?' d7':''}"><small>${d===7?'🎁':d}</small>+${STREAK[d-1]}</div>`;
+  return `<div class="streak" aria-label="Серия дней">${h}</div><p class="streak-t">🔥 ${day===7?'Неделя подряд! Подарок':'Серия: день '+day} — +${STREAK[day-1]} 💰</p>`;}
 const levelSeed=i=>i*7919+17; // то же зерно, что в tools/check.js — автопрогон проверяет ровно эти уровни
 // редкий товар уровня — первая карточка, которой ещё нет в альбоме (раскладка от этого не меняется, только «что в коробке»)
 function rareFor(){for(let k=0;k<NRARE;k++)if(!S.album.includes(k))return k;return todaySeed()%NRARE;}
@@ -848,12 +956,12 @@ function startLevel(idx,daily){hideModal();const lv0=levelFor(idx,daily);
   const lv=Object.assign({},lv0,{sh:lv0.sh.map(L=>L.map(r=>r.slice()))});
   const st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=>j));
   G={idx:daily?DAILY_IDX:idx,daily:!!daily,lv,st,q:qInit(lv,rng((daily?todaySeed():idx)*31+3)),queue:[],hearts:3,moves:0,angry:0,served:0,undo:[],
-    fly:[],pops:[],adv:{},opens:[],fx:[],hide:{},sel:null,drag:null,hint:null,speech:null,valyaMood:0,valyaTalk:0,table:false,over:false,usedRevive:false,
+    fly:[],pops:[],adv:{},opens:[],fx:[],hide:{},sel:null,drag:null,hint:null,speech:null,valyaMood:0,valyaTalk:0,table:false,over:false,usedRevive:false,freeUndo:true,x2:false,
     newCard:-1,combo:0,t:0,tutor:!daily&&idx===0};
   G.boss=!daily&&isBoss(idx);
   qFill(lv,st,G.q);syncQueue(true);
   show('scr-game');tip('');layout();requestAnimationFrame(layout);
-  $('gLevel').textContent=daily?'📅 Задание дня':G.boss?'🔥 '+cityOf(idx)[0]+' · Ревизия':cityOf(idx)[0]+' · №'+(idx%10+1);renderHearts();updHud();updCoins();
+  $('gLevel').textContent=daily?'📅 Задание дня':G.boss?'🔥 Ревизия · '+cityOf(idx)[0]:cityOf(idx)[0]+' · №'+(idx%10+1);renderHearts();updHud();updCoins();
   // обучение действием: 1-й — перетащить, 2-й — ряд сзади, 3-й — терпение очереди; спецтовары — при первой встрече
   const tp=S.tips;
   if(G.tutor)tip('Перетащите сгущёнку к двум таким же. Три одинаковых — и покупатель доволен!');
@@ -914,7 +1022,18 @@ function buildSprites(){SPR={};SPRD={};const types=new Set(G.lv.types);lvHas(G.l
 // шкаф-витрина: рама, задние стенки, полки; раскладушка — столик на ножках
 function buildShelves(){shelfCv=shelfCv||document.createElement('canvas');shelfCv.width=cv.width;shelfCv.height=cv.height;const g=shelfCv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
   g.fillStyle=lin(g,0,AREA.y,0,AREA.y+AREA.h,['#e9d2ad','#d8b98c']);g.fillRect(AREA.x-4,AREA.y-2,AREA.w+8,AREA.h+6);
-  const gr=G.grid,m=.12*U;rrect(g,gr.x-m,gr.y-m,gr.w+2*m,gr.h+2*m,U*.14);g.fillStyle=lin(g,gr.x,0,gr.x+gr.w,0,['#6b3f22','#8a5530','#7a4829']);g.fill();
+  const gr=G.grid,m=.12*U;
+  // дубовые панели (обстановка): филёнки по стене вокруг витрины
+  if(hasDecor('panels')){const x0=AREA.x-4,y0=AREA.y-2,aw=AREA.w+8,ah=AREA.h+6;g.fillStyle=lin(g,x0,0,x0+aw,0,['#b27a47','#c48d57','#ad7443']);g.fillRect(x0,y0,aw,ah);
+    const pw=Math.max(60,Math.min(120,aw/Math.max(1,Math.round(aw/100)))),ph=Math.max(70,Math.min(150,ah/Math.max(1,Math.round(ah/130))));
+    for(let y=y0;y<y0+ah;y+=ph)for(let x=x0;x<x0+aw;x+=pw){g.fillStyle='rgba(90,50,20,.28)';g.fillRect(x+5,y+5,pw-10,ph-10);g.fillStyle=lin(g,0,y+7,0,y+ph-7,['#c99562','#b57e4b']);g.fillRect(x+7,y+7,pw-14,ph-14);
+      g.fillStyle='rgba(255,235,200,.25)';g.fillRect(x+7,y+7,pw-14,2);}
+    g.fillStyle='rgba(70,35,10,.18)';for(let x=x0;x<x0+aw;x+=pw)g.fillRect(x-1,y0,2,ah);}
+  rrect(g,gr.x-m,gr.y-m,gr.w+2*m,gr.h+2*m,U*.14);g.fillStyle=lin(g,gr.x,0,gr.x+gr.w,0,['#6b3f22','#8a5530','#7a4829']);g.fill();
+  // резная витрина (обстановка): золочёный кант, резьба по верху и низу, розетки в углах
+  if(hasDecor('frame')){const gd=lin(g,gr.x,0,gr.x+gr.w,0,['#b8862b','#f7d774','#d4a53c','#f7d774','#b8862b']);rrect(g,gr.x-m*.55,gr.y-m*.55,gr.w+m*1.1,gr.h+m*1.1,U*.1);g.strokeStyle=gd;g.lineWidth=Math.max(1.5,U*.035);g.stroke();
+    g.fillStyle=gd;for(const yy of[gr.y-m*.78,gr.y+gr.h+m*.78])for(let x=gr.x+U*.3;x<gr.x+gr.w-U*.2;x+=U*.34){ell(g,x,yy,U*.06,U*.028);g.fill();}
+    for(const [xx,yy] of[[gr.x-m*.5,gr.y-m*.5],[gr.x+gr.w+m*.5,gr.y-m*.5],[gr.x-m*.5,gr.y+gr.h+m*.5],[gr.x+gr.w+m*.5,gr.y+gr.h+m*.5]]){ell(g,xx,yy,U*.11,U*.11,'#e9b949');ell(g,xx,yy,U*.05,U*.05,'#8a5a1a');}}
   G.units.forEach((un,i)=>{const tbl=G.table&&i===G.lv.S-1;
     if(tbl){g.fillStyle='rgba(0,0,0,.12)';g.fillRect(un.x,un.y,un.w,un.h);g.strokeStyle='#8a8f94';g.lineWidth=U*.06;g.beginPath();g.moveTo(un.x+U*.3,un.pt+U*.1);g.lineTo(un.x+un.w-U*.3,un.y+un.h+U*.05);g.moveTo(un.x+un.w-U*.3,un.pt+U*.1);g.lineTo(un.x+U*.3,un.y+un.h+U*.05);g.stroke();
       rrect(g,un.x+U*.04,un.pt-U*.02,un.w-U*.08,U*.14,U*.05);g.fillStyle='#e7ecef';g.fill();g.strokeStyle='#9aa3a8';g.lineWidth=1.5;g.stroke();
@@ -923,6 +1042,9 @@ function buildShelves(){shelfCv=shelfCv||document.createElement('canvas');shelfC
     g.fillStyle='rgba(255,245,210,.5)';g.fillRect(un.x,un.y,un.w,U*.06);
     g.fillStyle=lin(g,0,un.pt,0,un.pt+U*.2,['#d39a60','#a8703f','#8a5530']);g.fillRect(un.x-U*.04,un.pt,un.w+U*.08,U*.2);
     g.fillStyle='rgba(255,255,255,.35)';g.fillRect(un.x-U*.04,un.pt,un.w+U*.08,U*.025);
+    // кружевные салфетки (обстановка): фестоны под полкой
+    if(hasDecor('lace')){const ly=un.pt+U*.2,r=U*.075;g.fillStyle='#fffdf7';g.beginPath();g.rect(un.x-U*.02,ly-U*.03,un.w+U*.04,U*.035);for(let x=un.x+r;x<un.x+un.w;x+=r*2){g.moveTo(x+r,ly);g.arc(x,ly,r,0,Math.PI);}g.fill();
+      g.fillStyle='rgba(160,120,80,.35)';for(let x=un.x+r;x<un.x+un.w;x+=r*2)ell(g,x,ly+r*.4,r*.28,r*.28);}
     // ценник
     const px=un.x+un.w-U*.52,py=un.pt+U*.03;g.fillStyle='#fffdf5';g.fillRect(px,py,U*.4,U*.14);g.fillStyle='#b3261e';g.font=`800 ${Math.round(U*.11)}px -apple-system,Segoe UI,Roboto,sans-serif`;g.textAlign='center';g.textBaseline='middle';
     g.fillText((i*37%90+10)+' коп.',px+U*.2,py+U*.075);});}
@@ -966,7 +1088,20 @@ function checkEnd(d){const st=G.st;
 function updUndo(){$('bUndo').classList.toggle('off',!(G&&G.undo.length));}
 
 /* ---- бустеры: отменить ход, подсказка, перемешать, раскладушка (+3 места) ---- */
-const PRICE={undo:20,hint:30,mix:40,table:60,life:60},AD_COINS=30,DAILY_REWARD=20;
+// экономика (аудит 12, 27.09; модель ~/Projects/hobby-analytics/sims/gastronom-econ.py): первая отмена хода на уровне — бесплатно, дальше 10 💰;
+// задание дня 30 💰 + серия дней; +30 💰 за рекламу — не больше AD_DAY раз в день; межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут
+const PRICE={undo:10,hint:30,mix:40,table:60,life:60},DAILY_REWARD=30,AD_FROM=6;
+let AD_COINS=30,AD_DAY=5,AD_EVERY=3,AD_MIN=4,AD_GAP=60000,X2_ON=true;
+// удалённая настройка Яндекса (флаги в консоли; нет флага — действуют значения выше). Рамки жёсткие, значение вне рамок не принимается:
+// ad_every 2–6 уровней, ad_minutes 3–8, ad_gap 60–300 с (межэкранная не чаще), ad_coins 10–100, ad_day 1–10, цены бустеров — см. ниже, x2=0 — выключить ×2
+function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
+  if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_minutes',3,8))!==null)AD_MIN=n;if((n=num('ad_gap',60,300))!==null)AD_GAP=n*1000;
+  if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_day',1,10))!==null)AD_DAY=n;
+  for(const [k,a,b] of [['undo',5,40],['hint',15,90],['mix',20,120],['table',30,180],['life',30,180]])if((n=num('price_'+k,a,b))!==null)PRICE[k]=n;
+  if(f.x2==='0'||f.x2==='off')X2_ON=false;updCoins();}
+// названия наград на кнопках рекламы (правило Яндекса 4.5.1: видно, что именно даёт ролик)
+const BNAME={undo:'Отменить ход',hint:'Подсказка',mix:'Смешать',table:'Раскладушка'},BICON={undo:'↶',hint:'💡',mix:'🔀',table:'➕'};
+const freeUndo=k=>k==='undo'&&G&&G.freeUndo;
 const BOOST={undo:{i:'↶',n:'Отменить ход',d:'Вернуть последний ход. Если тройка уже собрана — её не вернуть.'},
   hint:{i:'💡',n:'Подсказка',d:'Тётя Валя покажет удачный ход.'},
   mix:{i:'🔀',n:'Смешать',d:'Товары в передних рядах перемешаются — так, чтобы можно было дорешать.'},
@@ -975,9 +1110,12 @@ function useBoost(k){if(!G||G.over)return;
   if(k==='undo'&&!G.undo.length){toast('Отменять пока нечего');return;}
   if(k==='table'&&G.table){toast('Раскладушка уже стоит');return;}
   const go=()=>({undo:doUndo,hint:doHint,mix:doMix,table:doTable})[k]();
-  if(!S.tips['b_'+k]){S.tips['b_'+k]=1;save();const b=BOOST[k],can=S.coins>=PRICE[k];
-    modal(`<h2>${b.i} ${b.n}</h2><p>${b.d}</p><div class="row">${can?`<button class="btn accent" id="bxGo">Использовать — ${PRICE[k]} 💰</button>`:`<button class="btn accent" id="bxAd">📺 Бесплатно за рекламу</button>`}<button class="btn" id="mCancel">Отмена</button></div>`);
-    if(can)$('bxGo').onclick=()=>{hideModal();spend(k,go);};else $('bxAd').onclick=()=>{hideModal();showRewarded(go);};$('mCancel').onclick=hideModal;return;}
+  // первая отмена хода на уровне — бесплатно (промах пальцем не должен стоить монет или ролика)
+  const fr=freeUndo(k),goFree=()=>{G.freeUndo=false;go();updCoins();};
+  if(!S.tips['b_'+k]){S.tips['b_'+k]=1;save();const b=BOOST[k],can=fr||S.coins>=PRICE[k];
+    modal(`<h2>${b.i} ${b.n}</h2><p>${b.d}</p>${k==='undo'?'<p><small>Первая отмена на уровне — бесплатно, дальше '+PRICE.undo+' 💰.</small></p>':''}<div class="row">${can?`<button class="btn accent" id="bxGo">Использовать — ${fr?'бесплатно':PRICE[k]+' 💰'}</button>`:adOk()?`<button class="btn accent rw" id="bxAd">📺 ${BNAME[k]} за рекламу</button>`:''}<button class="btn" id="mCancel">Отмена</button></div>`);
+    if(can)$('bxGo').onclick=()=>{hideModal();if(fr)goFree();else spend(k,go);};else if($('bxAd'))$('bxAd').onclick=()=>{hideModal();showRewarded(go);};$('mCancel').onclick=hideModal;return;}
+  if(fr){goFree();return;}
   spend(k,go);}
 function doUndo(){const s=G.undo.pop();if(!s)return;G.st=s.st;G.q=s.q;G.hearts=s.hearts;G.angry=s.angry;G.served=s.served;G.moves=s.moves;G.over=false;
   G.fly=[];G.hide={};G.adv={};G.sel=null;G.hint=null;
@@ -1115,7 +1253,13 @@ function showRewarded(cb0,onFail0){
     onClose:()=>{adClose();if(got)cb();else{toast('Досмотрите видео до конца, чтобы получить награду');onFail();}},
     onError:()=>{adClose();toast(AD_FAIL);onFail();}}});
 }
-function adReady(){return Date.now()-lastAdT>=60000&&!(PLAT==='vk'&&!VK&&VK_REAL);}
+// межэкранная — не чаще раза в AD_GAP после ЛЮБОЙ рекламы (и за награду тоже) и после запуска
+function adReady(){return Date.now()-lastAdT>=AD_GAP&&adOk();}
+// реклама вообще возможна: в настоящем VK без моста — нет (кнопок «за рекламу» не показываем)
+function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
+// межэкранная «положена»: не раньше, чем пройден 6-й уровень, и либо AD_EVERY побед с прошлого показа (S.adW, долг не сгорает),
+// либо с прошлой рекламы прошло AD_MIN минут (длинные уровни 60+ идут по 4–6 минут)
+function adDue(){return (S.unlocked||1)>AD_FROM&&((S.adW||0)>=AD_EVERY||Date.now()-lastAdT>=AD_MIN*60000);}
 function showInterstitial(cb0){
   const cb=()=>{lastAdT=Date.now();cb0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(cb);return;}
@@ -1129,16 +1273,22 @@ function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&
 const coinsTxt=n=>n+' '+plural(n,'монета','монеты','монет');
 function updCoins(){for(const id of['coinCnt','gCoins','shopCoins']){const e=$(id);if(e)e.textContent=id==='coinCnt'?S.coins:'💰 '+S.coins;}
   // монет не хватает — на кнопке сразу видно, что можно за рекламу
-  for(const [id,k] of [['pUndo','undo'],['pHint','hint'],['pMix','mix'],['pTable','table']]){const e=$(id);if(e)e.textContent=S.coins>=PRICE[k]?PRICE[k]+' 💰':'📺 за рекламу';}
+  for(const [id,k] of [['pUndo','undo'],['pHint','hint'],['pMix','mix'],['pTable','table']]){const e=$(id);if(e)e.textContent=freeUndo(k)?'бесплатно':S.coins>=PRICE[k]||!adOk()?PRICE[k]+' 💰':'📺 за рекламу';}
   if(G)$('bTable').classList.toggle('off',G.table);updUndo();}
 function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
 function spend(kind,then){const pr=PRICE[kind];
   if(S.coins>=pr){setCoins(S.coins-pr);SND.coin();then();return;}
-  modal(`<h2>Не хватает монет</h2><p>Нужно ${coinsTxt(pr)}, а у вас ${coinsTxt(S.coins)}.</p><div class="row"><button class="btn accent" id="mAdFree">📺 Бесплатно за рекламу</button><button class="btn" id="mShopC">💰 Получить монеты</button><button class="btn" id="mCancel">Отмена</button></div>`);
-  $('mAdFree').onclick=()=>{hideModal();showRewarded(then);};$('mShopC').onclick=()=>{hideModal();openCoins();};$('mCancel').onclick=hideModal;}
-function openCoins(){
-  modal(`<h2>Монеты 💰</h2><p>У вас ${coinsTxt(S.coins)}. Монеты дают за каждый уровень — больше за три звезды и за Ревизию.</p><div class="row"><button class="btn accent" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} за рекламу</button><button class="btn" id="mCancel">Закрыть</button></div>`);
-  $('mAdCoins').onclick=()=>{hideModal();showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');});};$('mCancel').onclick=hideModal;}
+  modal(`<h2>Не хватает монет</h2><p>Нужно ${coinsTxt(pr)}, а у вас ${coinsTxt(S.coins)}.</p><div class="row">${adOk()?`<button class="btn accent rw" id="mAdFree">📺 ${BNAME[kind]} за рекламу</button>`:''}${adOk()&&adCoinsLeft()?'<button class="btn" id="mShopC">💰 Получить монеты</button>':''}<button class="btn" id="mCancel">Отмена</button></div>`);
+  const a=$('mAdFree'),c=$('mShopC');if(a)a.onclick=()=>{hideModal();showRewarded(then);};if(c)c.onclick=()=>{hideModal();openCoins();};$('mCancel').onclick=hideModal;}
+// +AD_COINS за рекламу — не больше AD_DAY раз в день (счётчик S.adc по дате площадки)
+function adCoinsLeft(){const t=dayKey(0);return Math.max(0,AD_DAY-(isObj(S.adc)&&S.adc.d===t?S.adc.n||0:0));}
+function watchCoins(done){if(!adCoinsLeft())return;
+  showRewarded(()=>{const t=dayKey(0);if(!isObj(S.adc)||S.adc.d!==t)S.adc={d:t,n:0};S.adc.n=(S.adc.n||0)+1;setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');if(done)done();});}
+function openCoins(){const left=adCoinsLeft(),ok=adOk();
+  modal(`<h2>Монеты 💰</h2><p>У вас ${coinsTxt(S.coins)}. Монеты дают за каждый уровень — больше за три звезды, за Ревизию и задание дня.</p>
+    ${ok&&!left?'<p><small>Монеты за рекламу на сегодня закончились — завтра можно снова.</small></p>':''}
+    <div class="row">${ok&&left?`<button class="btn accent rw" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}<button class="btn" id="mCancel">Закрыть</button></div>`);
+  const a=$('mAdCoins');if(a)a.onclick=()=>{hideModal();watchCoins();};$('mCancel').onclick=hideModal;}
 
 /* ================= рейтинг заданий дня =================
    Очки — сколько дней выполнено задание дня (у всех игроков одинаковое задание).
@@ -1184,38 +1334,62 @@ function cardCanvas(id,t){requestAnimationFrame(()=>{const c=$(id);if(!c)return;
   const gr=g.createRadialGradient(w/2,h*.55,0,w/2,h*.55,s*.8);gr.addColorStop(0,'rgba(255,215,90,.55)');gr.addColorStop(1,'rgba(255,215,90,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);drawGood(g,t,w/2,h*.94,s);});}
 function win(){if(!G||modalOn)return;G.over=true;YG.stop();SND.win();const st=Math.max(1,3-G.angry),i=G.idx;
   say(pick(PH.valya.win),'valya');
-  if(G.daily)S.daily[todayKey()]=Math.max(S.daily[todayKey()]||0,st);
-  else{S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);S.levelsDone++;}
-  const reward=G.daily?DAILY_REWARD:(2*st+Math.ceil(G.served/2))*(G.boss?2:1);S.coins+=reward;save();updCoins();setTimeout(()=>SND.coin(),500);
+  // задание дня: в первый раз за день — 30 💰 и серия дней; повтор — как обычный уровень
+  let reward=(2*st+Math.ceil(G.served/2))*(G.boss?2:1),sk=null;
+  if(G.daily){const first=!S.daily[todayKey()];S.daily[todayKey()]=Math.max(S.daily[todayKey()]||0,st);if(first){sk=streakWin();reward=DAILY_REWARD+(sk?sk.bonus:0);}}
+  else{S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);S.levelsDone++;S.adW=(S.adW||0)+1;}
+  S.coins+=reward;save();updCoins();setTimeout(()=>SND.coin(),500);
   const card=G.newCard,cityDone=!G.daily&&G.boss;
+  // межэкранная после «Дальше»: не после Ревизии и новой карточки; решаем сразу — чтобы не предлагать ×2 и оценку перед роликом
+  const adNext=!G.daily&&!cityDone&&card<0&&adDue()&&adReady();
+  // ×2 за рекламу: не на первых трёх уровнях, не когда следом межэкранная (два ролика подряд), один раз за уровень, в VK — только с мостом
+  const x2=X2_ON&&(G.daily||i>=3)&&!adNext&&adOk();
   modal(`<h2>${cityDone?'Ревизия пройдена! 🏆':'Всё продано! 🎉'}</h2><div class="big-stars">${starsHtml(st)}</div>
     <p>${G.daily?'Задание дня выполнено! Завтра будет новое.':'Обслужено покупателей: '+G.served+(G.angry?', ушли недовольными: '+G.angry:'')}</p>
     ${cityDone&&i+1<100?'<p><b>Дальше — '+cityOf(i+1)[0]+'!</b></p>':''}
-    <p class="coins-won">+${reward} 💰</p>
+    <p class="coins-won" id="mWon">+${reward} 💰</p>
+    ${sk?'<div id="mStreak">'+streakHtml(sk.day)+'</div>':''}
     ${card>=0?`<div class="newcard"><p>⭐ Новое в коллекции «Дефицит»: <b>${RARE[card].n}</b></p><canvas id="ncv"></canvas></div>`:''}
-    <div class="row">${G.daily?'':'<button class="btn green" id="mNext">Дальше →</button>'}${G.daily&&LB.ok()?'<button class="btn accent" id="mLb">🏆 Рейтинг</button>':''}<button class="btn" id="mMap">На карту</button></div>`);
+    <div class="row">${G.daily?'':'<button class="btn green" id="mNext">Дальше →</button>'}${x2?`<button class="btn accent rw" id="mX2">📺 ×2 монеты за рекламу <span class="nw">(+${reward}&nbsp;💰)</span></button>`:''}${sk&&sk.lost&&adOk()?`<button class="btn accent rw" id="mRes">📺 Вернуть серию за рекламу <span class="nw">(день ${sk.lost+1})</span></button>`:''}${G.daily&&LB.ok()?'<button class="btn accent" id="mLb">🏆 Рейтинг</button>':''}<button class="btn" id="mMap">На карту</button></div>`);
   if(card>=0)cardCanvas('ncv',RARE0+card);
   if(G.daily){LB.submit();const b=$('mLb');if(b)b.onclick=LB.show;}
-  setTimeout(offerReturn,2200);
-  // межэкранная реклама раз в 3 уровня, не после Ревизии и новой карточки, не чаще раза в минуту; перед показом — предупреждение
+  // награда — только после досмотренного ролика; второй раз за уровень не даём
+  const g=G,bx=$('mX2');let got=reward;if(bx)bx.onclick=()=>{if(g.x2)return;bx.disabled=true;
+    showRewarded(()=>{if(g.x2)return;g.x2=true;setCoins(S.coins+reward);got+=reward;SND.coin();toast('+'+reward+' 💰 — удвоено!');
+      const w=$('mWon');if(w&&G===g)w.innerHTML='+'+got+' 💰 <small>(×2)</small>';if(bx.parentNode)bx.parentNode.removeChild(bx);},()=>{bx.disabled=false;});};
+  // вернуть серию: сегодняшний день становится следующим после прерванного, бонус — разница
+  const br=$('mRes');if(br)br.onclick=()=>{br.disabled=true;
+    showRewarded(()=>{if(!sk.lost)return;const d=sk.lost+1,add=STREAK[d-1]-STREAK[sk.day-1];S.streak={day:d,last:dayKey(0)};sk.lost=0;sk.day=d;setCoins(S.coins+add);got+=add;SND.coin();
+      toast('🔥 Серия возвращена: день '+d+(add>0?', +'+add+' 💰':''));const w=$('mWon'),m=$('mStreak');if(w&&G===g)w.innerHTML='+'+got+' 💰';if(m)m.innerHTML=streakHtml(d);if(br.parentNode)br.parentNode.removeChild(br);},()=>{br.disabled=false;});};
+  setTimeout(()=>offerReturn(adNext),2200);
+  // межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут, первая — после 6-го уровня; перед показом — предупреждение
   const n=$('mNext');if(n)n.onclick=()=>{n.disabled=true;const go=()=>startLevel(i+1);
-    if(S.levelsDone%3===0&&!cityDone&&card<0&&adReady()){toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
+    if(adNext&&adReady()){S.adW=0;save();toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
   $('mMap').onclick=()=>{hideModal();openMap();};}
 function lose(){if(!G)return;YG.stop();SND.stuck();const canPay=S.coins>=PRICE.life;
   modal(`<h2>Очередь обиделась 😟</h2><p>Трое покупателей ушли, не дождавшись. Тётя Валя вздыхает: «Бывает…» Попробуем ещё?</p>
-    <div class="row">${canPay?`<button class="btn accent" id="mLife">❤️ Ещё попытка — ${PRICE.life} 💰</button>`:''}${G.usedRevive?'':'<button class="btn accent" id="mRev">📺 Ещё попытка за рекламу</button>'}<button class="btn" id="mRe">↻ Заново</button><button class="btn" id="mMap2">На карту</button></div>`);
+    <div class="row">${canPay?`<button class="btn accent" id="mLife">❤️ Ещё попытка — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent rw" id="mRev">📺 Ещё попытка за рекламу</button>'}<button class="btn" id="mRe">↻ Заново</button><button class="btn" id="mMap2">На карту</button></div>`);
   const revive=()=>{G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();kick();if(!hasMove(G.lv,G.st))stuck();};
   if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);SND.coin();revive();};
   const r=$('mRev');if(r)r.onclick=()=>{hideModal();showRewarded(()=>{G.usedRevive=true;revive();},lose);};
   $('mRe').onclick=()=>startLevel(G.daily?0:G.idx,G.daily);$('mMap2').onclick=()=>{hideModal();openMap();};}
 // тупик: ставить некуда — предлагаем бустеры, иначе уровень заново
+// тупик: ставить некуда — бустеры за монеты и рядом тот же бустер за рекламу (многие берегут монеты на обстановку), иначе уровень заново
 function stuck(){if(!G||G.over||modalOn)return;SND.stuck();say(pick(PH.valya.stuck),'valya');
-  const opt=(k,label)=>`<button class="btn accent" id="sk_${k}">${label} — ${S.coins>=PRICE[k]?PRICE[k]+' 💰':'📺 за рекламу'}</button>`;
+  const ks=[];if(G.undo.length)ks.push('undo');ks.push('mix');if(!G.table)ks.push('table');
+  const pay=k=>freeUndo(k)||S.coins>=PRICE[k];
+  const opt=k=>freeUndo(k)?`<button class="btn accent" id="sk_${k}">${BICON[k]} ${BNAME[k]} — бесплатно</button>`:
+    S.coins>=PRICE[k]?`<button class="btn accent" id="sk_${k}">${BICON[k]} ${BNAME[k]} — ${PRICE[k]} 💰</button>`:
+    adOk()?`<button class="btn accent rw" id="sa_${k}">📺 ${BNAME[k]} за рекламу</button>`:'';
+  // «за рекламу» при наличии монет — для самого сильного бустера (раскладушка, если уже стоит — смешать)
+  const big=G.table?'mix':'table',extra=adOk()&&pay(big)?`<button class="btn accent rw" id="sa_${big}">📺 ${BNAME[big]} за рекламу</button>`:'';
   modal(`<h2>Полки забиты!</h2><p>Некуда поставить товар. Можно выручиться:</p><div class="row">
-    ${G.undo.length?opt('undo','↶ Отменить ход'):''}${opt('mix','🔀 Смешать')}${G.table?'':opt('table','➕ Раскладушка')}
-    <button class="btn" id="mRe">↻ Начать заново</button><button class="btn" id="mMap2">На карту</button></div>`);
-  for(const k of['undo','mix','table']){const b=$('sk_'+k);if(b)b.onclick=()=>{hideModal();const go=()=>{({undo:doUndo,mix:doMix,table:doTable})[k]();YG.start();};
-    if(S.coins>=PRICE[k]){setCoins(S.coins-PRICE[k]);SND.coin();go();}else showRewarded(go,stuck);};}
+    ${ks.map(opt).join('')}${extra}
+    <div class="row2"><button class="btn" id="mRe">↻ Заново</button><button class="btn" id="mMap2">На карту</button></div></div>`);
+  const run=k=>{({undo:doUndo,mix:doMix,table:doTable})[k]();YG.start();};
+  for(const k of ks){const b=$('sk_'+k),a=$('sa_'+k);
+    if(b)b.onclick=()=>{hideModal();if(freeUndo(k)){G.freeUndo=false;run(k);updCoins();}else{setCoins(S.coins-PRICE[k]);SND.coin();run(k);}};
+    if(a)a.onclick=()=>{hideModal();showRewarded(()=>run(k),stuck);};}
   $('mRe').onclick=()=>startLevel(G.daily?0:G.idx,G.daily);$('mMap2').onclick=()=>{hideModal();openMap();};}
 
 /* ================= карта городов ================= */
@@ -1233,7 +1407,8 @@ function openMap(){if(G)YG.stop();G=null;tip('');hideModal();const list=$('mapLi
       if(un)row.querySelector('button').onclick=()=>startLevel(i);route.appendChild(row);}}
   $('totStars').textContent=totalStars();updCoins();
   const dd=S.daily[todayKey()],bd=$('btnDaily'),dl=S.unlocked<7;bd.classList.toggle('locked',dl);
-  bd.innerHTML=dl?'🔒 Задание дня<small>после 6-го уровня</small>':dd?'📅 Задание дня<small>'+'★'.repeat(dd)+' выполнено</small>':'📅 Задание дня<small>+'+DAILY_REWARD+' 💰</small>';
+  const sn=streakNow(),fire=sn?' · 🔥'+sn:'';
+  bd.innerHTML=dl?'🔒 Задание дня<small>после 6-го уровня</small>':dd?'📅 Задание дня<small>'+'★'.repeat(dd)+' выполнено'+fire+'</small>':'📅 Задание дня<small>+'+DAILY_REWARD+' 💰'+fire+'</small>';
   $('btnAlbum').innerHTML='⭐ Дефицит<small>'+S.album.length+' из '+NRARE+'</small>';$('btnShop').innerHTML='🏪 Магазин<small>обстановка</small>';
   show('scr-map');const c=list.querySelector('.node.cur');if(c)c.scrollIntoView({block:'center'});}
 $('btnDaily').onclick=()=>{if(S.unlocked<7){toast('Задание дня откроется после 6-го уровня');return;}startLevel(0,true);};
@@ -1245,13 +1420,34 @@ function decorPreview(c,id){const r=c.getBoundingClientRect(),d=Math.min(2,windo
   if(id==='ficus')drawFicus(g,w/2,h*.97,s*.85);else if(id==='clock')drawClock(g,w/2,h/2,h*.38);else if(id==='poster')drawPoster(g,w/2-h*.33,h*.05,h*.66,h*.9);
   else if(id==='scales')drawScales(g,w/2,h*.9,s*.9);else if(id==='kassa')drawKassa(g,w/2,h*.95,s*.95);else if(id==='lamps'){drawLamp(g,w*.3,0,h*.35,h*.3,true);drawLamp(g,w*.7,0,h*.35,h*.3,true);}
   else if(id==='tiles'){const ts=h/5;for(let y=0,r=0;y<h;y+=ts,r++)for(let x=-(r%2)*ts/2,c2=0;x<w;x+=ts,c2++){g.fillStyle=(r+c2)%2?'#d9e7f2':'#fdfdfb';g.fillRect(x,y,ts,ts);if((r+c2)%4===0)ell(g,x+ts/2,y+ts/2,ts*.18,ts*.18,'#4f86b8');}}
-  else if(id==='neon'){g.fillStyle='#3b2a1a';g.fillRect(0,0,w,h);drawSign(g,w*.05,h*.3,w*.9,h*.4,'#b3261e',true);}}
-function openShop(){const gd=$('shopGrid');gd.innerHTML='';updCoins();
+  else if(id==='neon'){g.fillStyle='#3b2a1a';g.fillRect(0,0,w,h);drawSign(g,w*.05,h*.3,w*.9,h*.4,'#b3261e',true);}
+  else if(id==='beads'){g.save();g.beginPath();g.rect(0,0,w,h);g.clip();const S0=S.decor;S.decor=Object.assign({},S0,{beads:1});drawPerson(g,'valya',w/2,h*1.12,h*.95,1,0,0);S.decor=S0;g.restore();}
+  else if(id==='calendar')drawCalendar(g,w/2,h*.08,h*.64,h*.84);
+  else if(id==='pennant')drawPennant(g,w/2,h*.14,h*.62,h*.8);
+  else if(id==='radio'){g.fillStyle='#efe0c4';g.fillRect(0,0,w,h);drawRadio(g,w/2,h*.22,h*.7);}
+  else if(id==='samovar')drawSamovar(g,w/2,h*.97,h*.92);
+  else if(id==='cat')drawCat(g,w/2+h*.1,h*.92,h*1.25);
+  else if(id==='fridge'){g.fillStyle='#9a6437';g.fillRect(0,0,w,h*.2);drawFridge(g,0,h*.2,w,h*.8);}
+  else if(id==='lace'){g.fillStyle=lin(g,0,0,0,h*.55,['#f7ead0','#ead3a8']);g.fillRect(0,0,w,h*.55);g.fillStyle=lin(g,0,h*.55,0,h*.75,['#d39a60','#a8703f','#8a5530']);g.fillRect(0,h*.55,w,h*.2);
+    const r=h*.07,ly=h*.75;g.fillStyle='#fffdf7';g.beginPath();g.rect(0,ly-h*.03,w,h*.035);for(let x=r;x<w;x+=r*2){g.moveTo(x+r,ly);g.arc(x,ly,r,0,Math.PI);}g.fill();
+    g.fillStyle='rgba(160,120,80,.35)';for(let x=r;x<w;x+=r*2)ell(g,x,ly+r*.4,r*.28,r*.28);drawGood(g,1,w*.3,h*.55,h*.5);drawGood(g,1,w*.5,h*.55,h*.5);drawGood(g,1,w*.7,h*.55,h*.5);}
+  else if(id==='frame'){rrect(g,w*.12,h*.1,w*.76,h*.8,h*.08);g.fillStyle=lin(g,0,0,w,0,['#6b3f22','#8a5530','#7a4829']);g.fill();g.fillStyle='#f3e3c5';g.fillRect(w*.2,h*.22,w*.6,h*.56);
+    rrect(g,w*.15,h*.14,w*.7,h*.72,h*.06);g.strokeStyle=lin(g,0,0,w,0,['#b8862b','#f7d774','#d4a53c','#f7d774','#b8862b']);g.lineWidth=3;g.stroke();
+    for(const [xx,yy] of[[w*.15,h*.14],[w*.85,h*.14],[w*.15,h*.86],[w*.85,h*.86]]){ell(g,xx,yy,h*.07,h*.07,'#e9b949');ell(g,xx,yy,h*.03,h*.03,'#8a5a1a');}}
+  else if(id==='panels'){g.fillStyle=lin(g,0,0,w,0,['#b27a47','#c48d57','#ad7443']);g.fillRect(0,0,w,h);const pw=w/3;
+    for(let x=0;x<w;x+=pw){g.fillStyle='rgba(90,50,20,.28)';g.fillRect(x+5,5,pw-10,h-10);g.fillStyle=lin(g,0,7,0,h-7,['#c99562','#b57e4b']);g.fillRect(x+7,7,pw-14,h-14);}}}
+function openShop(){const gd=$('shopGrid'),sc=$('scr-shop').classList.contains('on')?gd.scrollTop:0;gd.innerHTML='';updCoins();
   DECOR.forEach(d=>{const has=hasDecor(d.id),e=document.createElement('div');e.className='gcard';
     e.innerHTML=`<canvas></canvas><b>${d.n}</b><p>${d.d}</p>${has?'<span class="have">✓ Стоит в зале</span>':`<button class="btn ${S.coins>=d.p?'green':''}">Купить — ${d.p} 💰</button>`}`;gd.appendChild(e);
     const b=e.querySelector('button');if(b)b.onclick=()=>{if(S.coins<d.p){toast('Не хватает монет: нужно '+coinsTxt(d.p));SND.bad();return;}
       S.decor[d.id]=1;setCoins(S.coins-d.p);SND.till(0);toast('🏪 '+d.n+' — теперь в зале!');openShop();};});
-  show('scr-shop');requestAnimationFrame(()=>gd.querySelectorAll('canvas').forEach((c,k)=>decorPreview(c,DECOR[k].id)));}
+  // не хватает на ближайший предмет — ролик за монеты прямо здесь (не больше AD_DAY в день)
+  const nx=DECOR.filter(d=>!hasDecor(d.id)).sort((a,b)=>a.p-b.p)[0],left=adCoinsLeft(),sa=$('shopAd');
+  const on=!!nx&&S.coins<nx.p&&adOk()&&left>0;sa.classList.toggle('on',on);
+  sa.innerHTML=on?`<span>До «${nx.n}» не хватает ${nx.p-S.coins} 💰</span><button class="btn accent rw" id="shAd">📺 +${AD_COINS} 💰 за рекламу</button>`:'';
+  if(on)$('shAd').onclick=()=>watchCoins(()=>{if($('scr-shop').classList.contains('on'))openShop();});
+  show('scr-shop');gd.scrollTop=sc;
+  requestAnimationFrame(()=>gd.querySelectorAll('canvas').forEach((c,k)=>decorPreview(c,DECOR[k].id)));}
 function openAlbum(){const gd=$('albGrid');gd.innerHTML='';$('albSub').textContent=S.album.length+' из '+NRARE+' собрано';
   RARE.forEach((r,k)=>{const has=S.album.includes(k),e=document.createElement('div');e.className='gcard'+(has?'':' lock');
     e.innerHTML=`<canvas id="alb${k}"></canvas><b>${has?r.n:'???'}</b><p>${has?r.c:'Ищите в коробках «Дефицит» — с 14-го уровня.'}</p>`;gd.appendChild(e);cardCanvas('alb'+k,RARE0+k);});
@@ -1288,7 +1484,7 @@ document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.
   if(modalOn){
     if(k==='Escape'){const b=['mCancel','lbClose','stClose','abBack','mMap','mMap2'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
-      const b=$('mcard').querySelector('.btn:not([disabled])');if(b){e.preventDefault();b.click();}}
+      const b=$('mcard').querySelector('.btn:not([disabled]):not(.rw)');if(b){e.preventDefault();b.click();}}
     return;}
   if($('scr-shop').classList.contains('on')||$('scr-album').classList.contains('on')){if(k==='Escape')openMap();return;}
   if(!G||!$('scr-game').classList.contains('on'))return;
@@ -1296,7 +1492,8 @@ document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.
   if(k==='Escape')openMap();else if(c==='h'||c==='р')useBoost('hint');else if(c==='u'||c==='г')useBoost('undo');else if(c==='r'||c==='к')startLevel(G.daily?0:G.idx,G.daily);});
 /* ---- ярлык, оценка, избранное: одно предложение за сессию, после 2-й победы и не раньше 2 минут; отказ запоминаем ---- */
 const BOOT_T=Date.now();let askedNow=false,sessWins=0;
-async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000)return;
+// skip — следом межэкранная: два окна подряд раздражают (аудит 12)
+async function offerReturn(skip){if(askedNow||window.__demo)return;sessWins++;if(skip||sessWins<2||Date.now()-BOOT_T<120000)return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{
     if(PLAT==='yandex'&&ysdk){
@@ -1330,7 +1527,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('
 // VK: мост из js/vk-bridge.min.js (только в VK-сборке). Яндекс: SDK по относительному пути; локально 404 → заглушки рекламы
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
-window.__test={get G(){return G;},get S(){return S;},startLevel,tryMove,layout,render,update,levelFor,solveFast,listMoves,hasMove,useBoost,doUndo,doMix,doTable,doHint,openMap,openShop,openAlbum,mergeSave,set VK(v){VK=v;},get VK(){return VK;},vkSaveCloud,vkLoadCloud,showRewarded,showInterstitial};
+window.__test={get G(){return G;},get S(){return S;},startLevel,tryMove,layout,render,update,levelFor,solveFast,listMoves,hasMove,useBoost,doUndo,doMix,doTable,doHint,openMap,openShop,openAlbum,mergeSave,set VK(v){VK=v;},get VK(){return VK;},vkSaveCloud,vkLoadCloud,showRewarded,showInterstitial,applyFlags,adDue,adReady,adOk,adCoinsLeft,streakWin,streakNow,dayKey,win,stuck,lose,openCoins,hideModal,get PRICE(){return PRICE;},get AD(){return{AD_EVERY,AD_MIN,AD_GAP,AD_COINS,AD_DAY,X2_ON,lastAdT};},set lastAdT(v){lastAdT=v;}};
 </script>
 </body>
 </html>

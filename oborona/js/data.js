@@ -244,6 +244,29 @@ function giftGold(){return 40+30*chaptersDone();}
 function pityCoins(c,l){const n=Math.min(3,(S.lose&&S.lose[c+'-'+l])||0);return Math.round(START_COINS[c]*.15*n);}
 // казна «полна» для точки и тоста: от ёмкости (у новичка казна вмещает всего 32)
 function afkReadyAt(){return Math.min(50,Math.round(afkRate()*afkCapH()*.6));}
+/* ---------- облики застав и украшения деревни: только внешний вид, силы не дают (решение владельца 27.09, hobby-analytics/12 п. 3).
+   Открываются, когда деревня отстроена целиком (41 620 золотых): золоту снова есть куда идти. Всего 37 500 + 17 500 = 55 000.
+   Облик надевается на все заставы этого рода (S.skin[застава]); куплено — S.skins['застава.облик'], украшения — S.deco. ---------- */
+const SKINS=[
+  {id:'spring',n:'Весенний',about:'цветы на кровлях',cost:1000},
+  {id:'fair',n:'Ярмарочный',about:'гирлянда флажков',cost:1500},
+  {id:'winter',n:'Зимний',about:'снежные шапки и сосульки',cost:2000},
+  {id:'gold',n:'Золочёный',about:'позолота и искры',cost:3000}];
+const DECO=[
+  {id:'well',n:'Колодец-журавль',cost:1500},
+  {id:'flags',n:'Ярмарочные флажки',cost:2000},
+  {id:'kot',n:'Кот Баюн на заборе',cost:2500},
+  {id:'swing',n:'Качели',cost:3000},
+  {id:'carousel',n:'Карусель',cost:4000},
+  {id:'fire',n:'Купальский костёр',cost:4500}];
+function vilDone(){return BLD.every(b=>(S.village[b.id]||0)>=b.cost.length);}
+function skinOf(t){const k=S.skin&&S.skin[t];return k&&S.skins&&S.skins[t+'.'+k]?k:'';}
+// сколько золота ещё можно потратить (постройки + облики + украшения)
+function goldSink(){let n=0;for(const b of BLD)for(let l=S.village[b.id]||0;l<b.cost.length;l++)n+=b.cost[l];
+  for(const t of TW_ORDER)for(const k of SKINS)if(!(S.skins&&S.skins[t+'.'+k.id]))n+=k.cost;
+  for(const d of DECO)if(!(S.deco&&S.deco[d.id]))n+=d.cost;return n;}
+// реклама за золото («Удвоить», «Казна ×2», «+2 часа», «Гостинец») нужна, только пока золоту есть куда идти
+function goldWanted(){return S.gold<goldSink();}
 // род босса: «повержен / повержена / повержено»
 function defeatedWord(t){return 'повержен'+({f:'а',n:'о'}[EN[t].g]||'');}
 

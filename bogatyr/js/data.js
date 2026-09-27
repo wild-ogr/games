@@ -158,10 +158,12 @@ const CH=[
 ];
 const RUN_BOSS_T=300; // босс на 5-й минуте
 
-/* ================= Кузница (навсегда) ================= */
+/* ================= Кузница (навсегда) =================
+   27.09 (аудит 12): Здоровье и Сила — до 15 ур. («мастерская ковка», 11–15 ур. стоят 7,5–52 тыс., всего +245 тыс.) —
+   долгая цель для золота, когда остальное куплено; на прохождение глав почти не влияет (к этим ценам главы уже пройдены) */
 const FORGE=[
-  {id:'hp',name:'Здоровье',icon:'p_apple',per:'+10% здоровья',max:10},
-  {id:'might',name:'Сила',icon:'p_ring',per:'+6% урона',max:10},
+  {id:'hp',name:'Здоровье',icon:'p_apple',per:'+10% здоровья',max:15},
+  {id:'might',name:'Сила',icon:'p_ring',per:'+6% урона',max:15},
   {id:'armor',name:'Броня',icon:'p_mail',per:'+1 броня',max:5},
   {id:'spd',name:'Скорость',icon:'p_boots',per:'+4% скорости',max:5},
   {id:'magnet',name:'Притяжение',icon:'p_ball',per:'+20% притяжения',max:5},
@@ -196,7 +198,8 @@ const ECO={coin:.5,kill:1/40,time:3,chk:[1.1,1,1,.9,.8,.75,.7,.65],gift:[100,50]
 function afkRate(){const v=S.village;let lv=0;for(const k in v)lv+=v[k];
   return Math.round((10+3*lv+15*(v.mill||0)+8*Object.keys(S.done).length)*(1+.25*(v.fair||0)));} // золота в час (27.09: вдвое скромнее — «голодный паёк», см. ECO)
 function afkCapH(){return 6+1.5*(S.village.barn||0);}
-function afkGold(){if(!S.afkT)return 0;const h=Math.min(afkCapH(),(Date.now()-S.afkT)/3600e3);return Math.floor(h*afkRate());}
+function afkH(){return S.afkT?clamp((nowMs()-S.afkT)/3600e3,0,afkCapH()):0;} // часов в казне — по времени сервера (nowMs), не больше вместимости
+function afkGold(){return Math.floor(afkH()*afkRate());}
 
 /* ================= Реплики ================= */
 const PH={
@@ -257,7 +260,13 @@ const SKINS=[
   {id:'field',hero:'mik',name:'Золотая нива',pal:{body:'#f4e0a0',cap:'#e6b53a',belt:'#5aa04a'}},
   {id:'white',hero:'vol',name:'Белый волк',pal:{body:'#dfe8f0',cloak:'#f4f8ff',fur:'#f4f8ff'}},
   {id:'dawn',hero:'mar',name:'Воительница зари',pal:{body:'#e0703a',cloak:'#ffd84a',helm:'#ffd84a',rim:'#e0332a'}},
-  {id:'tsar',hero:'iva',name:'Иван-царевич',pal:{body:'#2f6ad8',hair:'#e0a83a',belt:'#e6b53a',hat:'crownhelm',helm:'#e6b53a',rim:'#e6b53a',messy:0}}
+  {id:'tsar',hero:'iva',name:'Иван-царевич',pal:{body:'#2f6ad8',hair:'#e0a83a',belt:'#e6b53a',hat:'crownhelm',helm:'#e6b53a',rim:'#e6b53a',messy:0}},
+  // 27.09 (аудит 12): облики за золото — только для красоты, силы не дают; долгая трата золота (всего 62 тыс.)
+  {id:'merch',hero:'sad',name:'Заморский купец',price:6000,pal:{body:'#1a6a4a',cloak:'#e6b53a',cap:'#1a6a4a',fur:'#f4f0e0'}},
+  {id:'autumn',hero:'mik',name:'Осенняя страда',price:8000,pal:{body:'#c0602a',cap:'#5a3a1a',belt:'#e6b53a'}},
+  {id:'firew',hero:'vol',name:'Огненный волк',price:12000,pal:{body:'#8a2a1a',cloak:'#c0402a',fur:'#e0703a'}},
+  {id:'snowq',hero:'mar',name:'Снежная королевна',price:16000,pal:{body:'#dfe8f0',cloak:'#6ab8ff',helm:'#f4f8ff',rim:'#8ad0ff',kok:'#8ad0ff'}},
+  {id:'firebird',hero:'iva',name:'Жар-птичник',price:20000,pal:{body:'#e6b53a',hair:'#c0392b',belt:'#c0392b'}}
 ];
 function skinKey(hero){const s=(S.skin||{})[hero];return s&&(S.skins||{})[hero+'@'+s]?hero+'@'+s:hero;}
 
@@ -345,9 +354,9 @@ const WEEKLY=[
   {id:'glass',name:'Стеклянный богатырь',about:'У богатыря половина здоровья, зато урон ×1,7.',mod:{hp:.5,might:1.7}},
   {id:'kolo',name:'Колобковая неделя',about:'Только колобки — зато их сразу два и катаются дольше.',mod:{only:'kolo',amount:1}}
 ];
-function weekNo(t){const d=new Date(t||Date.now());return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5+3)/7);} // недели с понедельника
+function weekNo(t){const d=new Date(t||dayMs());return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5+3)/7);} // недели с понедельника
 function weekly(){return WEEKLY[(weekNo()*3)%WEEKLY.length];}
-function weekLeftH(){const d=new Date(),dow=(d.getDay()+6)%7,end=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7-dow);return Math.ceil((end-d)/3600e3);}
+function weekLeftH(){const d=new Date(dayMs()),dow=(d.getDay()+6)%7,end=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7-dow);return Math.ceil((end-d)/3600e3);}
 function weeklyReward(){return 300+100*Object.keys(S.done).length;}
 /* ================= Поход дня (v13) =================
    Одинаковый для всех в этот день: глава (из первых трёх), богатырь (выдаётся на поход, даже если ещё не открыт) и правило из WEEKLY
@@ -355,7 +364,7 @@ function weeklyReward(){return 300+100*Object.keys(S.done).length;}
    Очки = одолено нечисти + 500 за босса. Таблица Яндекса 'daily' (создать в консоли, тип «число»): день×100000 + лучшие очки дня —
    свежий день всегда выше старых. VK: одна таблица друзей на игру (счёт — одолено всего). Награда за участие — раз в день, от 60 с. */
 const DAY0=Date.UTC(2026,0,1)/864e5,DAY_SCORE=1e5;
-function dayIdx(){const d=new Date();return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5-DAY0);}
+function dayIdx(){const d=new Date(dayMs());return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5-DAY0);}
 function dailyDef(){const day=dayKey(),seed=+day.split('-').join(''),R=mulberry(seed*31+7);R();R();
   const chi=Math.floor(R()*3),hero=HEROES[Math.floor(R()*HEROES.length)].id,pool=WEEKLY.filter(w=>w.id!==weekly().id),rule=pool[Math.floor(R()*pool.length)];
   return {day,seed,chi,hero,rule};}

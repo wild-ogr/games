@@ -67,6 +67,8 @@ function mergeSave(d){if(!isObj(d))return false;const before=canon(noTs(S)),newe
   if(isObj(d.dailyPick)&&(!S.dailyPick||d.dailyPick.d>S.dailyPick.d))S.dailyPick=d.dailyPick;
   if(isObj(d.fix)&&(!S.fix||d.fix.d>S.fix.d))S.fix=d.fix; // восстановленная серия
   if(isObj(d.adc)&&(!S.adc||d.adc.d>S.adc.d||d.adc.d===S.adc.d&&d.adc.n>S.adc.n))S.adc=d.adc; // сколько раз сегодня брали монеты за рекламу
+  if(isObj(d.fl)&&(!S.fl||d.fl.d>S.fl.d||d.fl.d===S.fl.d&&d.fl.n>S.fl.n))S.fl=d.fl; // бесплатные буквы дня (сколько взято)
+  if(isObj(d.gift)&&(!S.gift||d.gift.d>S.gift.d))S.gift=d.gift; // подарок дня за рекламу уже взят
   if(newer){
     const jarMax=typeof JAR_SIZE!=='undefined'?JAR_SIZE-1:99;
     S.coins=Math.max(0,(+d.coins||0)+((+S.coins||0)-BOOT.coins));
@@ -98,6 +100,9 @@ function updCoins(){document.querySelectorAll('.cc').forEach(e=>e.textContent=S.
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const VK_MOBILE=/[?&]vk_platform=mobile_/.test(location.search); // клиент VK на телефоне (WebView: скачивание файлов не работает)
 let ysdk=null,YP=null,VK=null,paused=false,muted=false;
+// «сейчас» для дней (задание дня, серия, бесплатная буква, подарок дня): на Яндексе — часы сервера
+// (перевод часов на телефоне не даёт лишних дней), иначе — часы устройства
+function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
 // причины паузы: реклама, пауза от Яндекса, VK свернул игру, вкладка скрыта. Снимаем паузу, только когда ушли все
 const PR=new Set();
 function setPause(r,on){if(on)PR.add(r);else PR.delete(r);paused=PR.has('ad')||PR.has('sdk')||PR.has('vk');muted=PR.size>0;
@@ -112,6 +117,8 @@ function inPlay(){return !!(typeof G!=='undefined'&&G&&!G.won&&!paused&&$('game'
 // на локальном компьютере (разработка) реклама — заглушка; на площадке без SDK/моста — «недоступна», без награды
 const LOCAL=/^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname)&&!/[?&]vk_app_id=/.test(location.search);
 const AD_FAIL='Реклама сейчас недоступна — загляни чуть позже';
+// можно ли предлагать ролик за награду: есть SDK/мост (или заглушка на своём компьютере). В VK без моста кнопок «за рекламу» нет
+const adsOk=()=>!!(VK||ysdk||LOCAL);
 // без контекстного меню и «долгого тапа» (требование площадок); можно — поле поиска и картинка открытки (сохранить долгим нажатием)
 document.addEventListener('contextmenu',e=>{const t=e.target;if(!(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.classList&&t.classList.contains('cardimg'))))e.preventDefault();});
 // iOS: щипок увеличивает страницу вопреки user-scalable=no
@@ -156,7 +163,7 @@ async function initSDK(){
     try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
       await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;
       VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',true);clearTimeout(cloudT);cloudSave();}else if(t==='VKWebAppViewRestore')setPause('vk',false);});
-      cloudLoad();if(typeof askProbe==='function')askProbe();
+      cloudLoad();if(typeof askProbe==='function')askProbe();if(typeof updGift==='function')updGift();
       vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
     }catch(e){VK=null;}
     return;
@@ -169,6 +176,9 @@ async function initSDK(){
   try{window.LANG=ysdk.environment.i18n.lang||'ru';}catch(e){window.LANG='ru';}
   try{ysdk.on&&ysdk.on('game_api_pause',()=>setPause('sdk',true));ysdk.on&&ysdk.on('game_api_resume',()=>setPause('sdk',false));}catch(e){}
   try{ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
+  // числа рекламы и цены — флагами из консоли Яндекса (applyFlags в game.js, рамки жёсткие); нет флагов — остаются как в коде
+  try{ysdk.getFlags&&ysdk.getFlags().then(f=>{if(typeof applyFlags==='function')applyFlags(f);}).catch(()=>{});}catch(e){}
+  if(typeof updGift==='function')updGift();
   if(inPlay())YG.start();
   cloudLoad();if(typeof askProbe==='function')askProbe();
 }
@@ -182,7 +192,7 @@ function adClose(){setPause('ad',false);setTimeout(()=>{if(inPlay())YG.start();}
 let adBusy=false;
 function showRewarded(cb0,onFail0){
   if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
-  const cb=()=>{adBusy=false;cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
+  const cb=()=>{adBusy=false;lastRew=Date.now();cb0();},onFail=()=>{adBusy=false;lastRew=Date.now();onFail0&&onFail0();};
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
       .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL);onFail();}})
       .catch(()=>{adClose();toast(AD_FAIL);onFail();})
@@ -193,14 +203,24 @@ function showRewarded(cb0,onFail0){
     onClose:()=>{adClose();if(got)cb();else{toast('Досмотри ролик до конца — тогда награда твоя');onFail();}},
     onError:()=>{adClose();toast(AD_FAIL);onFail();}}});
 }
-// между уровнями: не раньше 8-го уровня и 3 минут игры, раз в 3 уровня и не чаще раза в минуту; частоту ограничивает и площадка
-let lastInter=0;
+// межэкранная (отчёт 12, 27.09): после ЛЮБОГО пройденного уровня («Дальше», «В меню» в окне победы) и при входе в уровень из меню
+// («Играть», выбор уровня, задание дня) — только в этот момент перехода: не по таймеру, никогда во время уровня и не при запуске.
+// Защита новичка: не раньше AD.minLv-го уровня и не в первые AD.sess с сессии. Не чаще раза в AD.gap с и не раньше AD.afterRew с
+// после ролика за награду. Площадки ещё и сами ограничивают частоту (VK — не чаще 30 с). Числа — флагами Яндекса (applyFlags, game.js).
+const AD={gap:180,afterRew:90,minLv:8,sess:180};
+let lastInter=0,lastRew=0,interOn=false;
+function interDue(){const now=Date.now();
+  return !SHOT&&!!(ysdk||VK||LOCAL)&&S.lv>=AD.minLv&&now-T0>=AD.sess*1000&&now-lastInter>=AD.gap*1000&&now-lastRew>=AD.afterRew*1000;}
 function maybeInterstitial(cb){
+  if(interOn)return; // реклама уже идёт — второй переход не запускаем
   S.plays=(S.plays||0)+1;
-  if((!ysdk&&!VK)||S.lv<8||Date.now()-T0<180000||S.plays%3!==0||Date.now()-lastInter<60000){cb();return;}
-  lastInter=Date.now();
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).catch(()=>{}).finally(()=>{adClose();cb();});return;}
-  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:()=>{adClose();cb();},onError:()=>{adClose();cb();}}});
+  if(!interDue()){cb();return;}
+  // показ не состоялся (площадка отказала, нет рекламы) — паузу не засчитываем, попробуем на следующем переходе
+  const prev=lastInter;lastInter=Date.now();interOn=true;const done=()=>{interOn=false;cb();};
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{if(!(r&&r.result))lastInter=prev;}).catch(()=>{lastInter=prev;})
+      .finally(()=>{adClose();done();});return;}
+  if(!ysdk){stubAd(done);return;} // свой компьютер — заглушка
+  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:shown=>{if(shown===false)lastInter=prev;adClose();done();},onError:()=>{lastInter=prev;adClose();done();}}});
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hidden',true);clearTimeout(cloudT);cloudSave(true);}else setPause('hidden',false);});
 

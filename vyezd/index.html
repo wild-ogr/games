@@ -70,6 +70,10 @@ canvas{display:block;touch-action:none}
 .gcard b{display:block;margin-top:4px}
 .gcard small{color:#57606f;font-weight:600;font-size:14px}
 .gcard.lock{opacity:.55}
+.gcard.own{cursor:pointer}
+.sws{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:10px 0 4px}
+.sw{width:44px;height:44px;border-radius:50%;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.3);font-weight:900;font-size:20px;color:#fff;text-shadow:0 1px 3px #000}
+.sw.on{box-shadow:0 0 0 3px #fff,0 0 0 6px #2d3436}
 .gcard.lock canvas{filter:brightness(0) opacity(.25)}
 /* modal & ad */
 .modal,.ad{position:absolute;top:0;right:0;bottom:0;left:0;display:none;align-items:center;justify-content:center;background:rgba(20,30,40,.5);z-index:10;padding:20px}
@@ -149,7 +153,7 @@ body.calm .node.cur,body.calm .sd.today,body.calm .card{animation:none}
 /* вырез экрана слева/справа (iPhone в альбомной ориентации) */
 .mh,.mnav{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
 .gh,.gf{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
-@supports not (inset:0){.mnav>*+*,.gf>*+*,.gh>*+*,.hdr-r>*+*,.chest>*+*{margin-left:10px}.row>*+*{margin-top:10px}.node-row>*+*{margin-left:12px}.node-row.r>*+*{margin-left:0;margin-right:12px}.gh-r>*+*{margin-top:3px}.lbr>*+*{margin-left:10px}}
+@supports not (inset:0){.mnav>*+*,.gf>*+*,.gh>*+*,.hdr-r>*+*,.chest>*+*{margin-left:10px}.sws>*{margin:5px}.row>*+*{margin-top:10px}.node-row>*+*{margin-left:12px}.node-row.r>*+*{margin-left:0;margin-right:12px}.gh-r>*+*{margin-top:3px}.lbr>*+*{margin-left:10px}}
 </style>
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
@@ -173,7 +177,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   </section>
 
   <section id="scr-garage" class="screen">
-    <header class="gh"><button class="icon" id="garBack" aria-label="Назад">←</button><div class="gt"><div>Гараж</div><div class="sub">За города и серию дней</div></div></header>
+    <header class="gh"><button class="icon" id="garBack" aria-label="Назад">←</button><div class="gt"><div>Гараж</div><div class="sub">Нажми на машину: цвет и двор</div></div></header>
     <div class="gar-grid" id="garGrid"></div>
   </section>
 
@@ -257,8 +261,8 @@ let S={unlocked:1,stars:{},garage:[],daily:{},levelsDone:0};
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 // защита от сохранений неожиданной формы (ручная правка, старая версия): не даём им сломать игру и слияние
-function fixSave(){if(!isObj(S.stars))S.stars={};if(!isObj(S.daily))S.daily={};if(!Array.isArray(S.garage))S.garage=[];if(!isObj(S.chest))S.chest={};
-  if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(typeof S.levelsDone!=='number')S.levelsDone=0;if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
+function fixSave(){if(!isObj(S.stars))S.stars={};if(!isObj(S.daily))S.daily={};if(!Array.isArray(S.garage))S.garage=[];if(!isObj(S.chest))S.chest={};if(!isObj(S.paint))S.paint={};if(!isObj(S.yard))S.yard={};
+  if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(typeof S.levelsDone!=='number')S.levelsDone=0;if(typeof S.adW!=='number'||!isFinite(S.adW))S.adW=0;if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
   if(S.streak!=null&&!isObj(S.streak))delete S.streak;}
 fixSave();
 // «точка отсчёта» с облаком: какое сохранение и сколько монет было общим у устройства и облака (при запуске, после слияния и после записи).
@@ -305,10 +309,10 @@ const YG={
 function mergeSave(d,ref){if(!isObj(d))return;
   const dt=typeof d.ts==='number'?d.ts:0,rt=ref==null?BOOT_TS:ref,newer=dt>rt;
   if(typeof d.unlocked==='number')S.unlocked=Math.max(S.unlocked,d.unlocked);if(typeof d.levelsDone==='number')S.levelsDone=Math.max(S.levelsDone||0,d.levelsDone);
-  for(const f of ['stars','daily','chest'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
+  for(const f of ['stars','daily','chest','yard'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(Array.isArray(d.garage))for(const i of d.garage)if(typeof i==='number'&&!S.garage.includes(i))S.garage.push(i);
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|chest|garage|coins|streak)$/.test(k))S[k]=d[k]; // флажки (звук, подсказки)
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|chest|yard|garage|coins|streak)$/.test(k))S[k]=d[k]; // флажки (звук, подсказки)
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
     if(!a||(b.last||0)>(a.last||0))S.streak=b;
     else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last,cyc:Math.max(a.cyc||0,b.cyc||0)};}}
@@ -577,7 +581,7 @@ function drawVehicle(ctx,v,s,toPx,cs,fx){
   if(v.kind==='amb'||v.kind==='pol'){const on=calm()?1:(performance.now()/380|0)%2,[cx,cy]=seg[0],an=dirAt(0);
     localBox(ctx,cx,cy+y0,an,-cs*.24,0,cs*.12,bw*.56,'#2d3436',cs*.03);
     localBox(ctx,cx,cy+y0,an,-cs*.24,-bw*.14,cs*.1,bw*.24,on?'#ff3838':'#8b1d1d',cs*.03);localBox(ctx,cx,cy+y0,an,-cs*.24,bw*.14,cs*.1,bw*.24,on?'#4a6bff':'#1e2a6b',cs*.03);}
-  if(v.kind==='taxi'){localBox(ctx,mid[0],mid[1]+y0,anm,0,0,cs*.12,cs*.34,'#2d3436',cs*.02);for(let k=0;k<3;k++)localBox(ctx,mid[0],mid[1]+y0,anm,(k%2?.03:-.03)*cs,(k-1)*cs*.1,cs*.05,cs*.07,'#fdcb6e',0);}
+  if(v.kind==='taxi'||v.deco==='taxi'){localBox(ctx,mid[0],mid[1]+y0,anm,0,0,cs*.12,cs*.34,'#2d3436',cs*.02);for(let k=0;k<3;k++)localBox(ctx,mid[0],mid[1]+y0,anm,(k%2?.03:-.03)*cs,(k-1)*cs*.1,cs*.05,cs*.07,'#fdcb6e',0);}
   // стрелка направления
   if(!(fx&&fx.noArrow)&&!v.noArrow)arrowAt(ctx,v,s,toPx,cs,y0);
 }
@@ -590,11 +594,14 @@ function makeVehicle(cells,dir,color,w,h,kind){
   const v={cells,dir,L,color:c,light,side:shade(c,light?-.3:-.4),roof:shade(c,light?-.05:.16),edge:shade(c,light?-.55:-.6),kind:kind||'',art:L>=5};
   v.track=buildTrack(v,w,h);return v;
 }
-function modelVehicle(m){const cells=[];for(let i=m.len-1;i>=0;i--)cells.push([i,0]);
-  return makeVehicle(cells,1,m.color,m.len,1,m.name==='Скорая'?'amb':m.name==='Такси'?'taxi':'');}
-function drawModel(canvas,m){if(!canvas)return;const dpr=Math.min(2,window.devicePixelRatio||1),r=canvas.getBoundingClientRect(),W=r.width||150,H=r.height||80;
+// перекраска (машины игрока: покраска из гаража, своя машина во дворе): светлый кузов — тёмная стрелка
+function recolor(v,c){const x=parseInt(c.slice(1),16),light=.299*(x>>16)+.587*(x>>8&255)+.114*(x&255)>170;
+  return Object.assign(v,{color:c,light,side:shade(c,light?-.3:-.4),roof:shade(c,light?-.05:.16),edge:shade(c,light?-.55:-.6)});}
+function modelVehicle(m,col){const cells=[];for(let i=m.len-1;i>=0;i--)cells.push([i,0]);
+  const v=makeVehicle(cells,1,m.color,m.len,1,m.name==='Скорая'?'amb':m.name==='Такси'?'taxi':'');return col&&col!==m.color?recolor(v,col):v;}
+function drawModel(canvas,m,col){if(!canvas)return;const dpr=Math.min(2,window.devicePixelRatio||1),r=canvas.getBoundingClientRect(),W=r.width||150,H=r.height||80;
   canvas.width=W*dpr;canvas.height=H*dpr;const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
-  const v=modelVehicle(m),cs=Math.min(W/(m.len+.6),H/1.35),ox=(W-m.len*cs)/2,oy=(H-cs)/2+cs*.08;
+  const v=modelVehicle(m,col),cs=Math.min(W/(m.len+.6),H/1.35),ox=(W-m.len*cs)/2,oy=(H-cs)/2+cs*.08;
   drawVehicle(ctx,v,0,([x,y])=>[ox+(x+.5)*cs,oy+(y+.5)*cs],cs,{noArrow:true});}
 
 /* ================= игра ================= */
@@ -629,11 +636,12 @@ function startLevel(idx,daily){
   // первый босс (10-й) — со стрелками и лишними ходами для скорой: новичку хватит и большого двора
   if(p.boss&&!daily&&idx>=19){const c=vs.filter(v=>v.L===2&&!v.kind);if(c.length)c[seed%c.length].noArrow=true;}
   if(idx===9&&!daily&&lv.amb)lv.amb.limit+=2;
+  const yardCar=window.__demo?-1:placeYardCar(vs,p,daily?todaySeed():idx);
   G={p,idx,daily:!!daily,vs,obst:lv.obst||[],occ:new Array(p.w*p.h).fill(-1),hearts:3,parts:[],shake:0,over:false,hint:-1,hintT:0,winT:0,usedRevive:false,moves:0,
     amb:lv.amb?{id:lv.amb.id,limit:lv.amb.limit,left:lv.amb.limit,done:false}:null,police:lv.police!=null?lv.police:-1,policeT:0,
     bubbles:[],towMode:false,bonus:0,anc:{wins:[],bench:[],lit:[],lamps:[]},
     tod:todOf(idx,daily),birds:[],birdT:rnd(6,10),cat:{st:'wait',t:rnd(5,10)},soft:!daily&&idx<3,tutorId:-1,pinchT:0,exited:false,
-    combo:0,crashes:0,helps:0,slowT:0,fz:0,focus:-1,fx:0,fy:0,x2:false};
+    combo:0,crashes:0,helps:0,slowT:0,fz:0,focus:-1,fx:0,fy:0,x2:false,yardCar};
   resetGest();
   const T=TOD[G.tod],sg=$('scr-game');sg.style.background=T.bg;document.body.style.background=T.bg;sg.classList.toggle('dark',!!T.dark);
   cam.z=1;cam.x=cam.y=0;cam.tw=null;updZoomBtn();
@@ -656,12 +664,23 @@ function startLevel(idx,daily){
   else tip.style.display='none';
   tipAutoHide();
   renderHearts();show('scr-game');hideModal();requestAnimationFrame(()=>{layout();birdsInit();
+    if(G&&G.yardCar>=0&&Math.random()<.5){const g=G;setTimeout(()=>{if(G===g&&!g.over)sayQuiet(pick('mine').replace('{n}',MODELS[g.yardCar].name),'win');},2600);}
     if(G&&G.p.w>=8&&G.p.h>=11&&!S.zoomTip&&!window.__demo){S.zoomTip=1;save();G.pinchT=3;toast('Двор большой — раздвинь пальцы или нажми «🔍 Приблизить»',3500);}});YG.start();kick();
 }
 let tipT=0;
 function tipAutoHide(){clearTimeout(tipT);const t=$('tip');if(t.style.display!=='block')return;
   if(G&&!G.daily&&G.idx===0&&!G.exited)return; // 1-й двор: правило висит до первого выезда
   tipT=setTimeout(()=>{if(!(G&&G.towMode))t.style.display='none';},window.innerHeight<600?3200:4800);}
+/* ---- своя машина во дворе: одна подходящая по длине машина рисуется моделью из гаража (цвет с покраской, «шашечки» у такси).
+   Раскладка, зёрна и R() не трогаются — меняется только цвет одной обычной машины; соседи по цвету проверяются как в spreadColors ---- */
+function placeYardCar(vs,p,key){const yc=yardCars();if(!yc.length)return -1;
+  const {w,h}=p,own=new Array(w*h).fill(-1);vs.forEach(v=>v.cells.forEach(([x,y])=>own[y*w+x]=v.id));
+  const near=v=>{const n=new Set();v.cells.forEach(([x,y])=>{for(const [dx,dy] of DIRS){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=w||Y>=h)continue;const j=own[Y*w+X];if(j>=0&&j!==v.id)n.add(j);}});return[...n].map(j=>vs[j].color);};
+  for(let a=0;a<yc.length;a++){const mi=yc[(key+a)%yc.length],m=MODELS[mi],col=carColor(mi);
+    const cand=vs.filter(v=>v.L===m.len&&!v.kind&&!v.noArrow);
+    for(let b=0;b<cand.length;b++){const v=cand[(key*7+b)%cand.length];
+      if(near(v).every(c=>cdist(c,col)>=115)){recolor(v,col);if(m.name==='Такси')v.deco='taxi';v.mdl=mi;return mi;}}}
+  return -1;}
 function resetGest(){try{ptrs.clear();gest=null;}catch(e){}}
 // соседние (касающиеся) машины не должны быть одного или близкого цвета; детерминированно, без RNG
 function cdist(a,b){const x=parseInt(a.slice(1),16),y=parseInt(b.slice(1),16);return Math.hypot((x>>16)-(y>>16),(x>>8&255)-(y>>8&255),(x&255)-(y&255));}
@@ -1049,7 +1068,8 @@ const PH={
   catSit:['Барсик опять на капоте греется','Кот на машине — к деньгам!','Мурзик, слезь с машины!','Ишь, разлёгся, как барин','Капот тёплый — кот довольный'],
   catFlee:['Кота не задавите!','Мурзик, беги!','Барсик, домой!','Кот-то тут при чём?!','Васька, живо слезай!','Ой, котейку напугали!'],
   birds:['Голубей распугали!','Кыш, кыш, пернатые!','Опять голубей гоняют','Я их с утра кормила!'],
-  birdsTap:['Не гоняй голубей!','Ишь, голубей пугает','Кыш! Кыш!','Им тоже жить где-то надо']};
+  birdsTap:['Не гоняй голубей!','Ишь, голубей пугает','Кыш! Кыш!','Им тоже жить где-то надо'],
+  mine:['Гляди-ка: {n} во дворе!','О, {n}! Вот это машина!','{n} — красота, а не машина!','Кто это на {n} приехал?']};
 function pick(k){const a=PH[k];return a[Math.floor(Math.random()*a.length)];}
 function say(text,where){if(!G)return;let x=W/2,y=oy,win=false;const A=G.anc||{wins:[],bench:[]};
   if(where==='win'&&A.wins.length){[x,y]=A.wins[Math.floor(Math.random()*A.wins.length)];win=true;}
@@ -1169,12 +1189,13 @@ function adOpen(){setPause('ad',true);YG.stop();}
 // игра снова «идёт» для GameplayAPI, только если двор на экране и поверх нет окна
 function adClose(){setPause('ad',false);if(G&&!G.over&&!modalOn&&$('scr-game').classList.contains('on'))YG.start();}
 const AD_FAIL='Реклама сейчас недоступна — загляни чуть позже',VK_REAL=/[?&]vk_app_id=/.test(location.search);
-let lastAdT=Date.now(); // межэкранная — не чаще раза в 60 с (и не в первую минуту после запуска)
+// межэкранная: не раньше чем через AD_GAP после ЛЮБОЙ рекламы (и за награду тоже) и после запуска; первая — не раньше 11-го двора (AD_FROM)
+let lastAdT=Date.now(),AD_GAP=180000;const AD_FROM=11;
 // за награду — по желанию игрока; пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
 let adBusy=false;
 function showRewarded(cb0,onFail0){
   if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
-  const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
+  const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL){toast(AD_FAIL);onFail();}else stubAd(cb);return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
       .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL);onFail();}})
@@ -1186,13 +1207,18 @@ function showRewarded(cb0,onFail0){
     onClose:()=>{adClose();if(got)cb();else{toast('Досмотри видео до конца, чтобы получить награду');onFail();}},
     onError:()=>{adClose();toast(AD_FAIL);onFail();}}});
 }
-function adReady(){return Date.now()-lastAdT>=60000&&!(PLAT==='vk'&&!VK&&VK_REAL);}
+function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
+// кнопки «📺 … за рекламу» есть везде, кроме настоящего VK без моста (там ролик не показать)
+function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
+// «долг» межэкранной: S.adW — побед с прошлого показа; показ положен при S.adW ≥ AD_EVERY. Если сейчас нельзя (босс, новая машина,
+// пауза после рекламы, выход «На карту») — показ не сгорает, а ждёт следующей победы. Обнуляется только после настоящего показа
+function adDue(){return (S.adW||0)>=AD_EVERY&&(S.unlocked||1)>AD_FROM;}
 function showInterstitial(cb0){
-  const cb=()=>{lastAdT=Date.now();cb0();};
+  const cb=shown=>{lastAdT=Date.now();if(shown!==false){S.adW=0;save();}cb0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(cb);return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).catch(()=>{}).finally(()=>{adClose();cb();});return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),()=>false).then(ok=>{adClose();cb(ok);});return;}
   if(!ysdk){stubAd(cb);return;}
-  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:()=>{adClose();cb();},onError:()=>{adClose();cb();}}});
+  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
 }
 function hint(){
   if(!G||G.over)return;
@@ -1201,16 +1227,22 @@ function hint(){
   // сначала — скорая и те, кто её запирает; потом полиция; иначе любая, кто может уехать
   let best=null;if(G.amb&&!G.amb.done){const need=closureOf(G.vs,G.occ,w,h,G.amb.id);best=cand.find(v=>v.id===G.amb.id)||cand.find(v=>need.has(v.id));}
   best=best||cand.find(v=>v.id===G.police)||cand[Math.floor(Math.random()*cand.length)];
-  spend('hint',()=>{G.hint=best.id;G.hintT=4;G.helps++;});
+  const g=G,use=()=>{if(G!==g||g.over)return;g.hint=best.id;g.hintT=4;g.helps++;};
+  // монеты есть — можно и за монеты, и за рекламу (кто-то бережёт монеты); нет — как раньше: окно «Не хватает монет»
+  if(S.coins<PRICE.hint||!adOk()){spend('hint',use);return;}
+  modal(`<h2>💡 Подсказка</h2><p>Подсвечу машину, которой можно ехать.</p><div class="row"><button class="btn accent" id="mHintC">💡 За ${coinsTxt(PRICE.hint)}</button><button class="btn accent" id="mHintAd">📺 Бесплатно за рекламу</button><button class="btn" id="mCancel">Отмена</button></div>`);
+  $('mHintC').onclick=()=>{hideModal();spend('hint',use);};$('mHintAd').onclick=()=>{hideModal();showRewarded(use);};$('mCancel').onclick=hideModal;
 }
 /* ================= монеты ================= */
 // экономика (27.09): двор 6–10 💰, реклама за монеты +30 ≈ 3 двора; подсказка ≈ 4–5 дворов, жизнь ≈ 7–8, эвакуатор ≈ 10 — роскошь; модель — tools/econ-sim.py
-const PRICE={hint:40,tow:100,life:70},DAILY_REWARD=20;let AD_COINS=30,AD_EVERY=3,X2_ON=true;
+// цель для монет (аудит 12): покраска машины из гаража и «своя машина во дворе» — не бустеры, выиграть ими нельзя
+const PRICE={hint:40,tow:100,life:70,paint:150,yard:250},DAILY_REWARD=20;let AD_COINS=30,AD_EVERY=3,X2_ON=true;
 // удалённая настройка Яндекса (флаги в консоли, по умолчанию их нет — действуют значения выше). Границы жёсткие:
-// межэкранная — не чаще раза в 3 двора; ×2 за рекламу можно выключить флагом x2=0
+// межэкранная — не чаще раза в 2 двора (по умолчанию 3) и не чаще раза в 180 с (ad_gap — только больше); ×2 за рекламу можно выключить флагом x2=0
 function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
   if((n=num('price_hint',20,120))!==null)PRICE.hint=n;if((n=num('price_life',30,200))!==null)PRICE.life=n;if((n=num('price_tow',40,300))!==null)PRICE.tow=n;
-  if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_every',3,6))!==null)AD_EVERY=n;if(f.x2==='0'||f.x2==='off')X2_ON=false;updCoins();}
+  if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;
+  if((n=num('price_paint',50,600))!==null)PRICE.paint=n;if((n=num('price_yard',50,800))!==null)PRICE.yard=n;if(f.x2==='0'||f.x2==='off')X2_ON=false;updCoins();}
 function updCoins(){const a=$('gCoins'),b=$('coinCnt');if(a)a.textContent='💰 '+S.coins;if(b)b.textContent=S.coins;
   // монет не хватает — на кнопке сразу видно, что можно за рекламу
   for(const [id,k] of [['hintPr','hint'],['towPr','tow']]){const e=$(id);if(e)e.textContent=S.coins>=PRICE[k]?PRICE[k]+' 💰':'📺 бесплатно за рекламу';}}
@@ -1264,12 +1296,12 @@ function win(){
   G.over=true;YG.stop();SND.win();const st=Math.max(1,G.hearts);let newModel=null;
   if(G.daily){S.daily[todayKey()]=Math.max(S.daily[todayKey()]||0,st);}
   else{const i=G.idx;const first=!S.stars[i];S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);
-    const mi=CAR_AT.indexOf(i+1);if(first&&mi>=0&&MODELS[mi]&&!S.garage.includes(mi)){S.garage.push(mi);newModel=MODELS[mi];}S.levelsDone++;}
+    const mi=CAR_AT.indexOf(i+1);if(first&&mi>=0&&MODELS[mi]&&!S.garage.includes(mi)){S.garage.push(mi);newModel=MODELS[mi];}S.levelsDone++;S.adW=(S.adW||0)+1;}
   const reward=(G.daily?DAILY_REWARD:(4+2*st)*(isBoss(G.idx)?2:1))+G.bonus;S.coins+=reward;
   save();updCoins();setTimeout(()=>SND.coin(),500);
   const hasNext=!G.daily;
   const regionDone=!G.daily&&isBoss(G.idx);
-  const adNext=hasNext&&S.levelsDone%AD_EVERY===0&&!regionDone&&!newModel&&adReady();
+  const adNext=hasNext&&adDue()&&!regionDone&&!newModel&&adReady();
   // ×2 за рекламу: не во дворах обучения (1–3), не когда следом межэкранная (два ролика подряд), в VK — только с мостом
   const x2=X2_ON&&(G.daily||G.idx>=3)&&!adNext&&!(PLAT==='vk'&&!VK&&VK_REAL);
   const clean=!G.crashes&&!G.helps;
@@ -1288,9 +1320,9 @@ function win(){
       ()=>{bx.disabled=false;});};
   if(newModel)requestAnimationFrame(()=>drawModel($('ncv'),newModel));
   if(!G.daily)setTimeout(streakAfterWin,1500);setTimeout(offerReturn,2200);
-  // реклама раз в 3 двора (AD_EVERY), но не сразу после босса/новой машины; после ролика ×2 — не раньше чем через 60 с; перед показом — предупреждение
+  // реклама раз в AD_EVERY побед (долг не сгорает), не после босса/новой машины, не раньше 180 с после любой рекламы; перед показом — предупреждение
   const n=$('mNext');if(n)n.onclick=()=>{n.disabled=true;const go=()=>startLevel(G.idx+1);
-    if(S.levelsDone%AD_EVERY===0&&!regionDone&&!newModel&&adReady()){toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
+    if(adNext&&adReady()){toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
   $('mMap').onclick=()=>{hideModal();openMap();};
 }
 function lose(){
@@ -1327,17 +1359,44 @@ const CHEST=[[25,40],[30,60]];
 function chestStars(k){let n=0;for(let i=k*10;i<k*10+10;i++)n+=S.stars[i]||0;return n;}
 function chestRow(k){const n=chestStars(k),got=S.chest[k]||0,d=document.createElement('div');d.className='chest';
   const next=CHEST[got];let html=`<span>🎁 Дворы ${k*10+1}–${k*10+10}: ⭐ ${n}/30</span>`;
-  if(next&&n>=next[0])html+=`<button class="btn green">Забрать ${next[1]} 💰</button>`;
+  if(next&&n>=next[0])html+=`<button class="btn green" data-m="1">Забрать ${next[1]} 💰</button>`+(X2_ON&&adOk()?`<button class="btn accent" data-m="2">📺 ×2 за рекламу (+${next[1]*2} 💰)</button>`:'');
   else if(next)html+=`<span>${next[0]}⭐ → +${next[1]} 💰</span>`;else html+='<span>✓ собран</span>';
-  d.innerHTML=html;const b=d.querySelector('button');
-  if(b)b.onclick=()=>{const g=S.chest[k]||0,nx=CHEST[g];if(!nx||chestStars(k)<nx[0])return;S.chest[k]=g+1;S.coins+=nx[1];save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);toast('🎁 Сундук открыт: +'+coinsTxt(nx[1]));d.replaceWith(chestRow(k));};
+  d.innerHTML=html;const g0=got;
+  // ×2 — только за досмотренный ролик и только если сундук ещё не открыт (второй раз не даём)
+  const open=m=>{const g=S.chest[k]||0,nx=CHEST[g];if(g!==g0||!nx||chestStars(k)<nx[0])return;S.chest[k]=g+1;S.coins+=nx[1]*m;save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);
+    toast('🎁 Сундук открыт: +'+coinsTxt(nx[1]*m)+(m>1?' (×2)':''));if(d.parentNode)d.replaceWith(chestRow(k));};
+  d.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.m==='2'){d.querySelectorAll('button').forEach(x=>x.disabled=true);
+    showRewarded(()=>open(2),()=>d.querySelectorAll('button').forEach(x=>x.disabled=false));}else open(1);});
   return d;}
 function openGarage(){
   const g=$('garGrid');g.innerHTML='';
-  MODELS.forEach((m,i)=>{const has=S.garage.includes(i);const d=document.createElement('div');d.className='gcard'+(has?'':' lock');
-    d.innerHTML=`<canvas></canvas><b>${has?m.name:'???'}</b><small>${has?m.about:m.streak?'7 дней подряд 🔥':'Пройди двор '+CAR_AT[i]+' ('+levelName(CAR_AT[i]-1)+')'}</small>`;g.appendChild(d);});
-  resetGest();show('scr-garage');requestAnimationFrame(()=>g.querySelectorAll('canvas').forEach((c,i)=>drawModel(c,MODELS[i])));
+  MODELS.forEach((m,i)=>{const has=S.garage.includes(i);const d=document.createElement('div');d.className='gcard'+(has?' own':' lock');
+    d.innerHTML=`<canvas></canvas><b>${has?m.name:'???'}</b><small>${has?(S.yard[i]&&yardOk(i)?'🏠 во дворах':m.about):m.streak?'7 дней подряд 🔥':'Пройди двор '+CAR_AT[i]+' ('+levelName(CAR_AT[i]-1)+')'}</small>`;
+    if(has)d.onclick=()=>openCar(i);g.appendChild(d);});
+  resetGest();show('scr-garage');requestAnimationFrame(()=>g.querySelectorAll('canvas').forEach((c,i)=>drawModel(c,MODELS[i],S.garage.includes(i)?carColor(i):null)));
 }
+/* ---- покраска и «своя машина во дворе» — за монеты (не за рекламу: это цель, куда копить) ---- */
+const PAINT=[null,['#1e272e','чёрный'],['#0652dd','синий'],['#009432','зелёный'],['#ffc312','жёлтый'],['#833471','вишнёвый'],['#b2bec3','серебристый']];
+function carColor(i){const k=S.paint[i];return k&&PAINT[k]?PAINT[k][0]:MODELS[i].color;}
+function yardOk(i){return !!MODELS[i]&&MODELS[i].name!=='Скорая';} // скорая во дворе спутается с настоящей
+function yardCars(){return S.garage.filter(i=>S.yard[i]&&yardOk(i)).sort((a,b)=>a-b);}
+function buyCoins(pr,then,back){if(S.coins>=pr){setCoins(S.coins-pr);SND.coin();setTimeout(()=>SND.win(),200);then();return;}
+  modal(`<h2>Не хватает монет</h2><p>Нужно ${coinsTxt(pr)}, а у тебя ${coinsTxt(S.coins)}. Монеты дают за каждый двор, больше — за три звезды и сундуки на карте.</p><div class="row"><button class="btn accent" id="mShop">💰 Получить монеты</button><button class="btn" id="mCancel">← Назад</button></div>`);
+  $('mShop').onclick=()=>{hideModal();openShop();};$('mCancel').onclick=back;}
+function openCar(i,sel){const m=MODELS[i];if(!m||!S.garage.includes(i))return;const cur=S.paint[i]||0;if(sel==null)sel=cur;
+  const col=k=>k?PAINT[k][0]:m.color,inY=!!S.yard[i];
+  const sw=PAINT.map((p,k)=>`<button class="sw${k===sel?' on':''}" data-k="${k}" style="background:${col(k)}" aria-label="${k?p[1]:'родной цвет'}">${k===cur?'✓':''}</button>`).join('');
+  modal(`<h2>${m.name}</h2><div class="newcar"><canvas id="ncv"></canvas></div>
+    <p><small>Цвет: ${sel?PAINT[sel][1]:'родной'}${sel===cur?' ✓':''}</small></p><div class="sws">${sw}</div>
+    <div class="row">${sel!==cur?`<button class="btn accent buy" id="cPaint">${sel?'🎨 Покрасить — '+PRICE.paint+' 💰':'🎨 Вернуть родной цвет'}</button>`:''}
+    ${!yardOk(i)?'<p><small>Скорая во дворах не стоит — она на вызовах 🙂</small></p>':inY?'<p>🏠 Стоит во дворах: в каждом дворе одна из твоих машин.</p>':`<p><small>Твоя машина будет стоять во дворах среди других — и её тоже надо выпустить!</small></p><button class="btn green buy" id="cYard">🏠 Во дворы — ${PRICE.yard} 💰</button>`}
+    <button class="btn" id="mCancel">Закрыть</button></div>`);
+  $('mcard').querySelectorAll('.sw').forEach(b=>b.onclick=()=>openCar(i,+b.dataset.k));
+  requestAnimationFrame(()=>drawModel($('ncv'),m,col(sel)));
+  const pb=$('cPaint');if(pb)pb.onclick=()=>{const done=()=>{if(sel)S.paint[i]=sel;else delete S.paint[i];save();openGarage();toast('🎨 '+m.name+': '+(sel?PAINT[sel][1]:'родной цвет'));openCar(i);};
+    if(!sel){done();return;}buyCoins(PRICE.paint,done,()=>openCar(i,sel));};
+  const yb=$('cYard');if(yb)yb.onclick=()=>buyCoins(PRICE.yard,()=>{S.yard[i]=1;save();openGarage();toast('🏠 '+m.name+' теперь стоит во дворах!');openCar(i);},()=>openCar(i,sel));
+  $('mCancel').onclick=hideModal;}
 
 /* ================= события ================= */
 /* ---- зум и перетаскивание: тап срабатывает при отпускании, если палец почти не сдвинулся ---- */
@@ -1449,7 +1508,7 @@ document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.
   if(modalOn){
     if(k==='Escape'){const b=['mCancel','lbClose','sClose','stClose','abBack','sOk','mMap','mMap2'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
-      const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2)');if(b){e.preventDefault();b.click();}}
+      const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2):not(.buy)');if(b){e.preventDefault();b.click();}}
     return;}
   if($('scr-garage').classList.contains('on')){if(k==='Escape')openMap();return;}
   if(!G||!$('scr-game').classList.contains('on'))return;

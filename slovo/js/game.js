@@ -6,17 +6,34 @@ let G=null;
 const PRICE={letter:35,word:90};
 const JAR_SIZE=15,JAR_PRIZE=10;
 const ECO={replay:1,x2min:10,adCoins:20,adCoinsDay:3,test:2, // test — множитель награды за «испытание» (каждый 10-й уровень с 30-го)
+  freeLetter:1,gift:25,   // отчёт 12: бесплатная буква в день («Ять нашёл», не копится) и подарок дня в меню +25 за рекламу (раз в день)
   lvl:i=>2+Math.min(6,Math.floor((i+20)/40)),          // 2 (ур.1–20), 3 (21–60), 4 (61–100) … до 8
   daily:s=>10+Math.min(Math.max(s-1,0),5)*2};          // задание дня: 10, серия +2 в день, до 20
 const cellKey=(x,y)=>x+','+y;
+// настройки с сервера Яндекса (флаги в консоли разработчика, значения — строки; нет флага — действуют числа выше).
+// Рамки жёсткие: флагом нельзя сделать рекламу чаще раза в 150 с, раньше 8-го уровня или сразу после ролика
+function applyFlags(f){if(!f||typeof f!=='object')return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
+  if((n=num('ad_gap',150,600))!==null)AD.gap=n;          // секунд между межэкранными (180)
+  if((n=num('ad_after_rew',60,300))!==null)AD.afterRew=n; // секунд без межэкранной после ролика за награду (90)
+  if((n=num('ad_min_lv',8,40))!==null)AD.minLv=n;         // с какого уровня межэкранная (8)
+  if((n=num('price_letter',20,50))!==null)PRICE.letter=n; // 35
+  if((n=num('price_word',60,150))!==null)PRICE.word=n;    // 90
+  if((n=num('ad_coins',10,40))!==null)ECO.adCoins=n;      // монеты за ролик в «Обликах» (20)
+  if((n=num('x2_min',5,30))!==null)ECO.x2min=n;           // «Ещё +N за рекламу» после уровня — не меньше (10)
+  if((n=num('gift',10,50))!==null)ECO.gift=n;             // подарок дня (25)
+  if((n=num('free_letter',0,2))!==null)ECO.freeLetter=n;  // бесплатных букв в день (1)
+  if(G&&!G.won)updPrices();if(typeof updGift==='function')updGift();}
+// бесплатная буква дня: сколько осталось сегодня (день — по часам сервера, nowMs)
+function freeLeft(){const d=todayKey();return Math.max(0,ECO.freeLetter-(S.fl&&S.fl.d===d?+S.fl.n||0:0));}
+function useFree(){const d=todayKey();if(!S.fl||S.fl.d!==d)S.fl={d,n:0};S.fl.n++;save();}
 
 function levelData(idx,daily){return daily?DAILY[idx%DAILY.length]:LEVELS[idx%LEVELS.length];}
 function levelKey(idx,daily){return daily?'D'+todayKey():'L'+idx;}
 // ритм (tools/build.py, rhythm/gifts): 5-й в десятке — «передышка» (одно слово открыто), 10-й с 30-го — «испытание» (награда ×2)
 const isTest=(idx,daily)=>!daily&&idx>=29&&idx%10===9;
 const isRest=(idx,daily)=>!daily&&idx%10===4;
-function todayKey(){const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
-function dayNum(){return Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/86400000);}
+function todayKey(){const d=new Date(nowMs());return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+function dayNum(){const t=nowMs();return Math.floor((t-new Date(t).getTimezoneOffset()*60000)/86400000);}
 
 function startLevel(idx,daily){
   const lv=levelData(idx,daily),key=levelKey(idx,daily);
@@ -54,6 +71,7 @@ function startLevel(idx,daily){
   else if(isTest(idx,daily)&&!cur)zina('Испытание! Уровень потруднее, зато монет — вдвое больше.','wow',5);
   else if(isRest(idx,daily)&&!cur&&G.giftN)zina('Передышка! Одно слово я уже открыла — отдохни немножко.','happy',5);
   else if(G.giftN&&!cur)zina('Слово тут хитрое — одну букву я открыла. Не благодари.','happy',4.5);
+  else if(!daily&&idx>=2&&!S.tip.fl&&freeLeft()){S.tip.fl=1;save();glowHint();zina('Ять опять под диваном букву нашёл! Одна подсказка 💡 в день — даром.','happy',6);}
   else zina(say('start'),'norm',3);
   if(G.tut)startTutorial();
   YG.start();
@@ -218,33 +236,37 @@ function checkWin(){
 }
 
 /* ---------- подсказки ---------- */
-function updPrices(){$('prLet').textContent=PRICE.letter;$('prWord').textContent=PRICE.word;}
+function updPrices(){const f=freeLeft();$('prLet').textContent=f?'даром':PRICE.letter;$('hLet').title=f?'Открыть букву — сегодня даром':'Открыть букву';$('prWord').textContent=PRICE.word;}
+// окно подсказки: всегда два способа — за монеты и за рекламу (ролик; награда только за досмотренный). В VK без моста — только монеты
 function pay(kind,then){
-  const pr=PRICE[kind];
+  const pr=PRICE[kind],g=G,ad=adsOk(),enough=S.coins>=pr,ic=kind==='letter'?'💡':'📜';
   const doPay=()=>{addCoins(-pr);S.hintsUsed=(S.hintsUsed||0)+1;updPrices();then();};
-  if(S.coins>=pr&&S.tip.noAsk){doPay();return;}
-  if(S.coins>=pr){
-    modal(`<h2>${kind==='letter'?'💡 Открыть букву?':'📜 Открыть слово?'}</h2><div style="width:96px;height:96px;margin:4px auto">${zinaSVG('norm')}</div>
-      <p>${kind==='letter'?'Одну букву':'Самое длинное слово'} — за <b>${pr}</b> <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>. У тебя ${S.coins}.</p>
-      <label class="chk"><input type="checkbox" id="mNoAsk"> больше не спрашивать</label>
-      <div class="btns"><button class="btn green" id="mYes">Да, открыть</button><button class="btn ghost" id="mNo">Сам справлюсь</button></div>`);
-    $('mYes').onclick=()=>{if($('mNoAsk').checked){S.tip.noAsk=1;save();}hideModal();doPay();};
-    $('mNo').onclick=()=>{hideModal();SND.tap();};return;}
-  modal(`<h2>Монеток маловато</h2><div style="width:110px;height:110px;margin:6px auto">${zinaSVG('norm')}</div>
-    <p>Нужно ${pr}, а у тебя ${S.coins}. Посмотри рекламу — и подсказка бесплатно!</p>
-    <div class="btns"><button class="btn green" id="mAd">🎬 Подсказка за рекламу</button><button class="btn ghost" id="mNo">Сам справлюсь</button></div>`);
-  $('mAd').onclick=()=>{hideModal();showRewarded(()=>{if(G&&!G.won)then();});};
-  $('mNo').onclick=hideModal;
+  if(enough&&S.tip.noAsk){doPay();return;}
+  modal(`<h2>${kind==='letter'?'💡 Открыть букву?':'📜 Открыть слово?'}</h2><div style="width:96px;height:96px;margin:4px auto">${zinaSVG('norm')}</div>
+    <p>${kind==='letter'?'Одну букву':'Самое длинное слово'} — за <b>${pr}</b> ${COIN_I}${ad?' или за рекламу':''}. У тебя ${S.coins}.</p>
+    ${enough?'':`<p style="font-size:14.5px">Монеток пока маловато${ad?' — посмотри рекламу, и подсказка бесплатно!':'. Проходи уровни — накопим!'}</p>`}
+    ${enough?'<label class="chk"><input type="checkbox" id="mNoAsk"> за монеты — больше не спрашивать</label>':''}
+    <div class="btns"><button class="btn ${enough?'green':'ghost'}" id="mYes"${enough?'':' disabled'}>${ic} за ${pr} ${COIN_I}</button>
+      ${ad?`<button class="btn ${enough?'blue':'green'}" id="mAd">🎬 ${kind==='letter'?'Буква':'Слово'} за рекламу</button>`:''}
+      <button class="btn ghost" id="mNo">Сам справлюсь</button></div>`);
+  $('mYes').onclick=()=>{if(S.coins<pr)return;const na=$('mNoAsk');if(na&&na.checked){S.tip.noAsk=1;save();}hideModal();doPay();};
+  $('mNo').onclick=()=>{hideModal();SND.tap();};
+  const b=$('mAd');if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;
+    showRewarded(()=>{hideModal();if(G===g&&!g.won){S.hintsUsed=(S.hintsUsed||0)+1;then();}},()=>{b.disabled=false;});};
 }
 function hintLetter(){
   if(!G||G.won)return;poke();
   const closed=[...G.cells.values()].filter(c=>!c.open);if(!closed.length)return;
-  pay('letter',()=>{
+  const open=msg=>{
     // первая закрытая буква самого «пустого» слова — полезнее, чем случайная
     const ws=G.words.filter(w=>!w.found).sort((a,b)=>wordCells(a).filter(c=>c.open).length/a.w.length-wordCells(b).filter(c=>c.open).length/b.w.length);
     const c=wordCells(ws[0]).find(c=>!c.open)||closed[0];
-    G.hinted=true;openCell(c,0,'hint');SND.open();zina(say('hint'),'norm');checkAutoFoundAndWin();saveCur();
-  });
+    G.hinted=true;openCell(c,0,'hint');SND.open();zina(msg||say('hint'),'norm',msg?4.5:0);checkAutoFoundAndWin();saveCur();
+  };
+  // бесплатная буква дня — сразу, без окна и без монет
+  if(freeLeft()){useFree();S.hintsUsed=(S.hintsUsed||0)+1;updPrices();
+    open(pick(['Ять под диваном букву нашёл — держи, даром! Завтра ещё поищет.','Кот принёс букву. Бесплатно — раз в день. Завтра ещё принесёт.']));return;}
+  pay('letter',()=>open());
 }
 function hintWord(){
   if(!G||G.won)return;poke();

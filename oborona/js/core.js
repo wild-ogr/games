@@ -29,9 +29,9 @@ const SKEY='oborona-v1';
 const SHOT=/[?&]shot/.test(location.search);
 function freshSave(){return {v:1,ts:0,gold:0,stars:{},forge:{},village:{},afkT:0,afkBoost:null,sound:1,music:1,shake:REDUCED?0:1,
   boost:900,boostDay:'',endBest:0,endRuns:0,runs:0,wins:0,kills:0,seen:{},introSeen:{},tut:0,lastCh:0,gift:0,lose:{},
-  dq:null,login:null,ret:{},diff:1,crown:{},bk:{},ach:{},wk:null,dch:null,dchN:0};}
+  dq:null,login:null,ret:{},diff:1,crown:{},bk:{},ach:{},wk:null,dch:null,dchN:0,skins:{},skin:{},deco:{}};}
 // поля-объекты могли прийти битыми (ручная правка, старая версия) — чиним
-function fixSave(){for(const k of['stars','forge','village','seen','introSeen','lose','ret','crown','bk','ach'])if(!S[k]||typeof S[k]!=='object'||Array.isArray(S[k]))S[k]={};
+function fixSave(){for(const k of['stars','forge','village','seen','introSeen','lose','ret','crown','bk','ach','skins','skin','deco'])if(!S[k]||typeof S[k]!=='object'||Array.isArray(S[k]))S[k]={};
   if(!S.afkT)S.afkT=Date.now();if(S.boost==null||isNaN(S.boost))S.boost=900;if(S.shake==null)S.shake=REDUCED?0:1;}
 let S=freshSave();
 try{const r=!SHOT&&localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
@@ -56,6 +56,8 @@ function mergeProgress(d,L,newer){const base=newer?d:L,other=newer?L:d;const o=O
   const mx=(a,b)=>{for(const k in b)a[k]=Math.max(+a[k]||0,+b[k]||0);};
   o.stars=obj(o.stars);mx(o.stars,obj(other.stars));o.village=obj(o.village);mx(o.village,obj(other.village));
   o.crown=obj(o.crown);mx(o.crown,obj(other.crown));o.bk=obj(o.bk);mx(o.bk,obj(other.bk));
+  // облики и украшения: купленное — объединение; надетый облик — из основы, недостающее — из другого
+  o.skins=obj(o.skins);mx(o.skins,obj(other.skins));o.deco=obj(o.deco);mx(o.deco,obj(other.deco));o.skin=Object.assign({},obj(other.skin),obj(o.skin));
   o.forge=obj(o.forge);const of=obj(other.forge);for(const k in of){const a=o.forge[k],b=of[k];
     if(typeof b==='object'||typeof a==='object'){const ao=typeof a==='object'?obj(a):{},bo=typeof b==='object'?obj(b):{};o.forge[k]=Object.assign({},ao,bo);}else o.forge[k]=Math.max(+a||0,+b||0);}
   for(const k of['seen','bossKill','introSeen','ret','ach'])o[k]=Object.assign({},obj(o[k]),obj(other[k]));
@@ -138,18 +140,22 @@ async function initSDK(){
         ysdk.on&&ysdk.on('game_api_pause',()=>setPause('sdk',1));
         ysdk.on&&ysdk.on('game_api_resume',()=>setPause('sdk',0));
         ycloud(3);
+        try{ysdk.getFlags&&ysdk.getFlags().then(applyFlags).catch(()=>{});}catch(e){}
       }catch(e){ysdk=null;}
     }
   }
   if(typeof onReady==='function')onReady();
   try{ysdk&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
 }
-// Реклама — только по желанию игрока (за награду). Полноэкранную посреди боя не показываем.
+/* Реклама: за награду — по желанию игрока (кнопки «… за рекламу»); межэкранная — бережно, правило П2 (решение владельца 27.09,
+   hobby-analytics/12): только при уходе с экрана итогов после победы (кампания со 2-й главы, испытание дня, повергнутый Босс недели)
+   и после осады; не в первые 5 минут захода и не ближе INTER_MIN минут к любой рекламе (ролик за награду тоже сбрасывает отсчёт).
+   Никогда: посреди боя, при запуске, после поражения, сразу после ролика за награду. */
 function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen();let n=3;tEl.textContent=n;
   const it=setInterval(()=>{n--;tEl.textContent=n;if(n<=0){clearInterval(it);ad.classList.remove('on');adClose();cb();}},600);}
 function adOpen(){setPause('ad',1);YG.stop();}
 // после рекламы «игра идёт» — только если бой идёт и не открыта пауза или окно (окно само вызовет start при закрытии)
-function adClose(){setPause('ad',0);if(G&&!G.over&&!G.paused&&!paused&&!$('modal').classList.contains('on'))YG.start();musicSync();}
+function adClose(){lastAdT=Date.now();setPause('ad',0);if(G&&!G.over&&!G.paused&&!paused&&!$('modal').classList.contains('on'))YG.start();musicSync();}
 const AD_FAIL='Реклама сейчас недоступна, попробуй позже';
 // пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
 let adBusy=false;
@@ -157,7 +163,7 @@ function showRewarded(cb0,onFail0){
   if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
   const cb=()=>{adBusy=false;cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
   // в VK мост не ответил — награду даром не даём; заглушка только для ?vk=1 на маке
-  if(PLAT==='vk'&&!VK){if(/[?&]vk_app_id=/.test(location.search)){toast(AD_FAIL);onFail();}else stubAd(cb);return;}
+  if(PLAT==='vk'&&!VK){if(VK_REAL){toast(AD_FAIL);onFail();}else stubAd(cb);return;}
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
       .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL);onFail();}})
       .catch(()=>{adClose();toast(AD_FAIL);onFail();})
@@ -168,7 +174,24 @@ function showRewarded(cb0,onFail0){
     onClose:()=>{adClose();if(got)cb();else{toast('Досмотри видео до конца, чтобы получить награду');onFail();}},
     onError:()=>{adClose();toast(AD_FAIL);onFail();}}});}catch(e){adClose();toast(AD_FAIL);onFail();}
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hidden',1);cloudFlush();}else setPause('hidden',0);});
+/* межэкранная. Интервал — флагом Яндекса inter_min (минуты; берём только 5…12, иначе 8), inter=0/off — выключить.
+   Заход: с запуска или с возвращения после 30+ минут в фоне — первые 5 минут межэкранной нет. */
+const VK_REAL=/[?&]vk_app_id=/.test(location.search);
+let INTER_MIN=8,INTER_ON=true,lastAdT=0,sessT=BOOT_T,hideT=0,interBusy=false;
+function applyFlags(f){if(!f||typeof f!=='object')return;const n=parseInt(f.inter_min,10);if(isFinite(n)&&n>=5&&n<=12)INTER_MIN=n;
+  if(f.inter==='0'||f.inter==='off')INTER_ON=false;}
+function interReady(){if(!INTER_ON||adBusy||interBusy||/[?&](bot|shot)/.test(location.search))return false;const now=Date.now();
+  if(now-sessT<5*60e3||now-lastAdT<INTER_MIN*60e3)return false;
+  return !(PLAT==='vk'&&!VK&&VK_REAL);}   // в VK без ответа моста — просто пропускаем, без заглушки
+function showInterstitial(cb0){if(interBusy)return;interBusy=true;let done=false;
+  const cb=()=>{if(done)return;done=true;clearTimeout(t);interBusy=false;lastAdT=Date.now();cb0();};
+  const t=setTimeout(()=>{if(PAUSE.ad)adClose();cb();},90000);   // площадка не ответила — не держим игрока
+  if(PLAT==='vk'&&!VK){if(VK_REAL)cb();else stubAd(cb);return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(()=>{adClose();cb();},()=>{adClose();cb();});return;}
+  if(!ysdk){stubAd(cb);return;}
+  try{ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:()=>{adClose();cb();},onError:()=>{adClose();cb();},onOffline:cb}});}catch(e){adClose();cb();}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){hideT=Date.now();setPause('hidden',1);cloudFlush();}
+  else{if(hideT&&Date.now()-hideT>30*60e3)sessT=Date.now();setPause('hidden',0);}});
 
 // контекстное меню (правый клик, долгий тап) не открываем — это игра, а не страница
 document.addEventListener('contextmenu',e=>e.preventDefault());
