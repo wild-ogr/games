@@ -1,0 +1,347 @@
+'use strict';
+/* ================= игра: кроссворд + круг букв ================= */
+let G=null;
+/* экономика (26.09, v1.3): «голодный паёк» — без рекламы ~1 подсказка на 4–5 уровней, реклама за награду заметно выгодна.
+   Модель трёх типов игроков — tools/econ.py (поменял числа — поправь и там). Стартовые 50 — freshSave в core.js. Уровень: ECO.lvl, серия дня — ECO.daily, реклама за монеты — ECO.adCoins */
+const PRICE={letter:35,word:90};
+const JAR_SIZE=15,JAR_PRIZE=10;
+const ECO={replay:1,x2min:10,adCoins:20,adCoinsDay:3,test:2, // test — множитель награды за «испытание» (каждый 10-й уровень с 30-го)
+  lvl:i=>2+Math.min(6,Math.floor((i+20)/40)),          // 2 (ур.1–20), 3 (21–60), 4 (61–100) … до 8
+  daily:s=>10+Math.min(Math.max(s-1,0),5)*2};          // задание дня: 10, серия +2 в день, до 20
+const cellKey=(x,y)=>x+','+y;
+
+function levelData(idx,daily){return daily?DAILY[idx%DAILY.length]:LEVELS[idx%LEVELS.length];}
+function levelKey(idx,daily){return daily?'D'+todayKey():'L'+idx;}
+// ритм (tools/build.py, rhythm/gifts): 5-й в десятке — «передышка» (одно слово открыто), 10-й с 30-го — «испытание» (награда ×2)
+const isTest=(idx,daily)=>!daily&&idx>=29&&idx%10===9;
+const isRest=(idx,daily)=>!daily&&idx%10===4;
+function todayKey(){const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+function dayNum(){return Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/86400000);}
+
+function startLevel(idx,daily){
+  const lv=levelData(idx,daily),key=levelKey(idx,daily);
+  G={idx,daily:!!daily,lv,key,words:lv.w.map(([w,x,y,d])=>({w,x,y,d,found:false})),cells:new Map(),bonus:new Set(),
+     letters:lv.l.split(''),sel:[],newDefs:[],combo:0,miss:0,won:false,idleT:0,idleN:0,hintMode:false,hinted:false,tut:!daily&&idx===0&&!S.tip.tut,
+     rank0:typeof rankName==='function'?rankName(wordsTotal()):''};
+  for(const wd of G.words)for(let i=0;i<wd.w.length;i++){const x=wd.x+(wd.d?0:i),y=wd.y+(wd.d?i:0),k=cellKey(x,y);
+    if(!G.cells.has(k))G.cells.set(k,{x,y,ch:wd.w[i],open:false,el:null});}
+  // восстановить незаконченный уровень
+  const cur=S.curs[key];
+  if(cur){
+    (cur.open||[]).forEach(k=>{const c=G.cells.get(k);if(c)c.open=true;});
+    (cur.bonus||[]).forEach(w=>G.bonus.add(w));
+    if(cur.order&&cur.order.length===G.letters.length)G.letters=cur.order.split('');
+    G.words.forEach(wd=>{if(wordCells(wd).every(c=>c.open))wd.found=true;});
+    G.hinted=!!cur.hinted;cur.t=Date.now();
+  }else{
+    // новый заход: клетки-подарки из сборки (передышка, редкое слово, трудная основа) открыты сразу — это не подсказка
+    (lv.o||[]).forEach(k=>{const c=G.cells.get(k);if(c){c.open=true;c.gift=true;}});
+    G.words.forEach(wd=>{if(wordCells(wd).every(c=>c.open))wd.found=true;});G.giftN=(lv.o||[]).length;
+    S.curs[key]={open:[...G.cells].filter(([k,c])=>c.open).map(([k])=>k),bonus:[],t:Date.now()};trimCurs();save();}
+  show('game');
+  const ch=chapOf(idx);
+  $('gTitle').textContent=daily?'Задание дня':'Уровень '+(idx+1);
+  $('gSub').textContent=daily?('Серия: '+(S.streak||0)+' '+plural(S.streak||0,'день','дня','дней')):isTest(idx)?'⚡ Испытание ×2':(ch.e+' '+ch.n);
+  G.half=G.words.filter(w=>w.found).length*2>=G.words.length;updCount();
+  zinaFace('norm');
+  drawLine();stopTutorial();
+  buildGrid();buildWheel();updJar();updPrices();updCoins();
+  const first=!daily&&idx%CH_LEN===0&&!S.curs[key].greeted;
+  if(G.tut)zina('Проведи пальцем по буквам, чтобы составить слово. Попробуй: «'+shortestWord().toUpperCase()+'»!','happy',99);
+  else if(daily)zina(say('daily'),'happy');
+  else if(first){zina('Глава «'+ch.n+'». '+ch.s,'happy',6);S.curs[key].greeted=1;save();}
+  else if(!daily&&idx===1&&!S.tip.btns)explainButtons();
+  else if(isTest(idx,daily)&&!cur)zina('Испытание! Уровень потруднее, зато монет — вдвое больше.','wow',5);
+  else if(isRest(idx,daily)&&!cur&&G.giftN)zina('Передышка! Одно слово я уже открыла — отдохни немножко.','happy',5);
+  else if(G.giftN&&!cur)zina('Слово тут хитрое — одну букву я открыла. Не благодари.','happy',4.5);
+  else zina(say('start'),'norm',3);
+  if(G.tut)startTutorial();
+  YG.start();
+}
+function shortestWord(){return G.words.slice().sort((a,b)=>a.w.length-b.w.length)[0].w;}
+function wordCells(wd){const r=[];for(let i=0;i<wd.w.length;i++)r.push(G.cells.get(cellKey(wd.x+(wd.d?0:i),wd.y+(wd.d?i:0))));return r;}
+function saveCur(){if(!G||G.won||SHOT)return;const o=S.curs[G.key]||{};
+  S.curs[G.key]={open:[...G.cells].filter(([k,c])=>c.open).map(([k])=>k),bonus:[...G.bonus],order:G.letters.join(''),greeted:o.greeted,hinted:G.hinted?1:0,t:Date.now()};trimCurs();save();}
+// незаконченные уровни храним по ключу: 5 последних обычных + сегодняшнее задание дня (старые дневные — не нужны)
+function trimCurs(){const tk='D'+todayKey(),ks=Object.keys(S.curs);
+  ks.forEach(k=>{if(k[0]==='D'&&k!==tk)delete S.curs[k];});
+  ks.filter(k=>k[0]==='L'&&S.curs[k]).sort((a,b)=>(S.curs[b].t||0)-(S.curs[a].t||0)).slice(5).forEach(k=>delete S.curs[k]);}
+// «Слов: 2 из 5» в шапке уровня
+function updCount(){if(!G)return;const n=G.words.filter(w=>w.found).length;$('gCnt').textContent='Слов: '+n+' из '+G.words.length;}
+
+/* ---------- кроссворд ---------- */
+function buildGrid(){
+  const grid=$('grid');grid.innerHTML='';
+  for(const c of G.cells.values()){const e=document.createElement('div');e.className='cell'+(c.open?' open':'')+(c.gift?' gift':'');e.textContent=c.open?c.ch:'';c.el=e;grid.appendChild(e);}
+  layoutGrid();
+}
+function layoutGrid(){
+  if(!G)return;const b=$('board'),[gw,gh]=G.lv.g;
+  const bw=b.clientWidth-20,bh=b.clientHeight-12;
+  const big=!!S.big,cs=Math.max(Math.min(26,Math.floor(bw/gw)),Math.min(Math.floor(bw/gw),Math.floor(bh/gh),($('app').clientHeight>=780?74:62)*(big?1.15:1)|0));
+  const gap=Math.max(2,Math.round(cs*.08));
+  const grid=$('grid');grid.style.width=gw*cs+'px';grid.style.height=gh*cs+'px';
+  for(const c of G.cells.values()){const s=c.el.style;s.left=c.x*cs+'px';s.top=c.y*cs+'px';s.width=s.height=(cs-gap)+'px';s.fontSize=Math.round(cs*(big?.64:.56))+'px';s.borderRadius=Math.round(cs*.2)+'px';}
+}
+function openCell(c,delay,cls){
+  if(c.open)return;c.open=true;
+  setTimeout(()=>{c.el.textContent=c.ch;c.el.classList.add('open','pop');if(cls)c.el.classList.add(cls);setTimeout(()=>c.el.classList.remove('pop'),400);},delay||0);
+}
+
+/* ---------- круг букв ---------- */
+let WH={D:260,R:90,ls:60,pts:[]};
+function buildWheel(){
+  const wh=$('wheel');wh.querySelectorAll('.let').forEach(e=>e.remove());
+  applySkin(wh,S.skin);
+  G.letters.forEach((ch,i)=>{const e=document.createElement('div');e.className='let';e.textContent=ch;e.dataset.i=i;wh.appendChild(e);});
+  layoutWheel();
+}
+function layoutWheel(){
+  if(!G)return;const W=$('app').clientWidth,H=$('app').clientHeight,[gw,gh]=G.lv.g;
+  // круг букв уступает место кроссворду: клетки хотим не мельче ~36 px (на низком экране — сначала уменьшаем круг)
+  // «Крупные буквы» (S.big): клетки хотим ~на 15 % крупнее, круг чуть меньше, но буквы в нём крупнее
+  // круг уменьшаем, только если кроссворд упирается в высоту: если в ширину — клетки всё равно не вырастут (тогда крупнее только буквы)
+  const small=H<=700,fixed=(small?52:120)+Math.round(clamp(H*.06,38,50))+34,cell=Math.min(36,Math.floor((W-20)/gw));
+  const room=H-fixed-gh*cell-18;
+  const n=G.letters.length,dmin0=n>=7&&H>=680?190:small?172:180;
+  const D0=Math.round(clamp(Math.min(W-150,H*.33,room),dmin0,300));
+  const big=!!S.big&&(H-fixed-60-D0)/gh<(W-20)/gw;
+  const D=big?Math.round(clamp(D0*.92,dmin0-10,280)):D0;
+  const bigL=!!S.big&&(n<=6||D>=210),ls=Math.round(D*(n<=5?.27:n<=6?.25:n<=7?.225:.205)*(bigL?1.08:1)),R=D/2-ls*.62-8;
+  const wh=$('wheel');wh.style.width=wh.style.height=D+'px';
+  WH={D,R,ls,pts:[],els:[...wh.querySelectorAll('.let')],rect:null};
+  wh.querySelectorAll('.let').forEach((e,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;const x=D/2+Math.cos(a)*R,y=D/2+Math.sin(a)*R;WH.pts[i]=[x,y];
+    e.style.width=e.style.height=ls+'px';e.style.left=(x-ls/2)+'px';e.style.top=(y-ls/2)+'px';e.style.fontSize=Math.round(ls*(S.big?.68:.62))+'px';});
+  $('wline').setAttribute('viewBox','0 0 '+D+' '+D);
+  $('preview').style.height=Math.round(clamp(H*.06,38,50))+'px';
+  layoutGrid();
+}
+function wheelRect(){return WH.rect||(WH.rect=$('wheel').getBoundingClientRect());}
+function letterAt(px,py){const r=wheelRect(),x=px-r.left,y=py-r.top;
+  for(let i=0;i<WH.pts.length;i++){const [lx,ly]=WH.pts[i];if(Math.hypot(lx-x,ly-y)<WH.ls*.62)return i;}return -1;}
+let wPoly=null;
+function drawLine(px,py){
+  const sv=$('wline');if(!wPoly||wPoly.parentNode!==sv){sv.textContent='';wPoly=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    wPoly.setAttribute('fill','none');wPoly.setAttribute('stroke-linecap','round');wPoly.setAttribute('stroke-linejoin','round');wPoly.setAttribute('opacity','.85');sv.appendChild(wPoly);}
+  const pts=G?G.sel.map(i=>WH.pts[i]):[];
+  if(px!=null&&pts.length){const r=wheelRect();pts.push([px-r.left,py-r.top]);}
+  if(pts.length>1){wPoly.setAttribute('points',pts.map(p=>p.join(',')).join(' '));wPoly.setAttribute('stroke',skinOf(S.skin).line);wPoly.setAttribute('stroke-width',Math.round(WH.ls*.22));wPoly.style.display='';}
+  else wPoly.style.display='none';
+}
+function updSel(){
+  (WH.els||[]).forEach((e,i)=>e.classList.toggle('on',G.sel.includes(i)));
+  const w=$('preview').firstElementChild;w.className='w';w.textContent=G.sel.map(i=>G.letters[i]).join('');
+}
+function selAdd(i){
+  if(i<0)return;const s=G.sel;
+  if(s.length>1&&s[s.length-2]===i){s.pop();SND.letter(s.length-1);updSel();return;}
+  if(s.includes(i))return;s.push(i);SND.letter(s.length-1);updSel();
+}
+let dragging=false;
+function wheelDown(e){if(!G||G.won||G.hintMode)return;const i=letterAt(e.clientX,e.clientY);if(i<0)return;
+  ac();WH.rect=null;dragging=true;G.sel=[];selAdd(i);drawLine(e.clientX,e.clientY);poke();try{$('wheel').setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();}
+// движение пальца: событий бывает до 120 в секунду — обрабатываем последнее, раз в кадр
+let wmE=null,wmRaf=0;
+function wheelMove(e){if(!dragging)return;wmE={x:e.clientX,y:e.clientY};if(!wmRaf)wmRaf=requestAnimationFrame(wheelMoveNow);}
+function wheelMoveNow(){wmRaf=0;if(!dragging||!wmE)return;selAdd(letterAt(wmE.x,wmE.y));drawLine(wmE.x,wmE.y);}
+function wheelUp(e){if(!dragging)return;if(e&&e.clientX!=null){wmE={x:e.clientX,y:e.clientY};wheelMoveNow();}dragging=false;const w=G.sel.map(i=>G.letters[i]).join('');G.sel=[];drawLine();
+  (WH.els||[]).forEach(e=>e.classList.remove('on'));submit(w);}
+
+/* ---------- проверка слова ---------- */
+function flashPreview(w,cls){const el=$('preview').firstElementChild;el.textContent=w;el.className='w '+cls;
+  clearTimeout(flashPreview._t);flashPreview._t=setTimeout(()=>{el.className='w';el.textContent='';},cls==='bad'||cls==='old'?1200:900);}
+function submit(w){
+  if(!w)return;if(w.length<2){$('preview').firstElementChild.textContent='';return;}
+  if(w.length<3){flashPreview(w,'bad');SND.bad();zina(say('short'),'stern');return;}
+  const wd=G.words.find(x=>x.w===w);
+  if(wd){
+    if(wd.found){flashPreview(w,'old');SND.old();zina(say('old'),'stern');highlightWord(wd);return;}
+    foundWord(wd,false);return;
+  }
+  if(isWord(w)){
+    if(G.bonus.has(w)){flashPreview(w,'old');SND.old();zina(say('old'),'stern');return;}
+    G.bonus.add(w);const nd=collectDef(w);S.bonusAll=(S.bonusAll||0)+1;S.jar=(S.jar||0)+1;flashPreview(w+(nd?' 📖':''),'bonus');SND.bonus();buzz('word');
+    flyTo(w,$('hJar'));
+    if(S.jar>=JAR_SIZE){S.jar=0;setTimeout(()=>{addCoins(JAR_PRIZE);SND.coin();zina(say('jar')+' +'+JAR_PRIZE,'happy');},500);}
+    else zina(say('bonus')+defNote(nd),'happy',nd?4.5:3.2);
+    updJar();saveCur();return;
+  }
+  flashPreview(w,'bad');SND.bad();buzz('bad');G.combo=0;G.miss++;
+  // «честная учительница»: настоящее слово — объясняем, почему не подходит (js/zina.js), иначе догадка по окончанию; «не знаю» — только для незнакомых
+  const why=whyNot(w)||(looksPlural(w)?'plural':looksVerb(w)?'verb':'bad');
+  if(G.miss===3){glowHint();if(why==='bad'){zina(say('badx3'),'norm',4);return;}}
+  // первые 5 уровней объяснение висит до следующего слова — чтобы успели прочитать
+  zina(say(why),why==='bad'||why==='verb'||why==='rude'?'stern':'norm',why!=='bad'&&!G.daily&&G.idx<5?99:0);
+}
+// «розы», «розу», «розой», «роз» — есть ли в словаре начальная форма
+function looksPlural(w){
+  const ends=['ами','ями','ов','ев','ей','ой','ей','ом','ем','ам','ям','ах','ях','ую','ы','и','а','я','у','ю','е'];
+  const tails=['','а','я','о','е','ь','й','ия','ие'];
+  for(const e of ends)if(w.endsWith(e)){const st=w.slice(0,-e.length);
+    if(st.length>=3&&(tails.some(t=>isWord(st+t))||isWord(st.slice(0,-1)+'ок')||isWord(st.slice(0,-1)+'ец')))return true;}
+  return w.length>=3&&['а','я'].some(t=>isWord(w+t));}
+function looksVerb(w){return /(ть|ти|ться|тся|чь|ешь|ишь|ет|ит|ут|ют|ат|ят|ал|ил|ел|ул|ла|ли)$/.test(w)&&w.length>=4;}
+function collectDef(w){if(DEFS[w]&&!S.dict[w]){S.dict[w]=1;G.newDefs.push(w);return true;}return false;}
+const DEF_NOTE=' 📖 Про это слово у меня есть запись в словаре!';
+// приписку про словарь говорим один раз за уровень, дальше хватает значка 📖 во вспышке
+function defNote(nd){if(!nd||G.defNoted)return '';G.defNoted=true;return DEF_NOTE;}
+function foundWord(wd,byHint){
+  wd.found=true;const nd=collectDef(wd.w);const cs=wordCells(wd);
+  // своё слово: буквы «прыгают» из строки в клетки; подсказка и «меньше движения» — клетки открываются по очереди, как раньше
+  if(!byHint)flashPreview(wd.w+(nd?' 📖':''),'ok');
+  const land=!byHint&&flyLetters(cs,nd?1.6:0);
+  cs.forEach((c,i)=>{const t=land?land[i]:i*70;if(!c.open)openCell(c,t,byHint?'hint':null);else{setTimeout(()=>{c.el.classList.add('flash');setTimeout(()=>c.el.classList.remove('flash'),600);},t);}});
+  const left=G.words.filter(w=>!w.found).length,half=!G.half&&(G.words.length-left)*2>=G.words.length&&left>1;if(half)G.half=true;
+  if(!byHint){SND.word(wd.w.length,G.combo);S.found=(S.found||0)+1;G.combo++;G.miss=0;
+    const long=wd.w.length>=7;buzz(long?'long':'word');if(long)boardStamp(pick(['Молодец!','Пять с плюсом!','Вот это слово!']));
+    const note=defNote(nd);
+    if(G.tut){zina('Молодец! Засчитываю только предметы — «кто? что?», и по одной штуке: «нос», а не «носы».','happy',7);
+      const g=G;setTimeout(()=>{if(G===g&&!g.won)zina('Ищи остальные слова! Сколько осталось — написано сверху.','happy',6);},7000);}
+    else if(!left)zina(pick(['Всё! Все слова на месте!','Готово! Кроссворд сдан!','Последнее! Ура!']),'happy',6);
+    else if(note)zina(say(wd.w.length>=6?'wordLong':'word')+note,'happy',4.5);
+    else if(left===1)zina(say('oneLeft'),'wow',3.5);
+    else if(half)zina(say('half'),'happy',3.5);
+    else if(G.combo===3)zina(say('streak'),'wow');
+    else zina(say(wd.w.length>=6?'wordLong':'word'),'happy',3.2);}
+  updCount();
+  if(G.tut){G.tut=false;S.tip.tut=1;stopTutorial();}
+  saveCur();checkWin();
+}
+function highlightWord(wd){wordCells(wd).forEach((c,i)=>setTimeout(()=>{c.el.classList.add('flash');setTimeout(()=>c.el.classList.remove('flash'),600);},i*50));}
+function checkAutoFound(){for(const wd of G.words)if(!wd.found&&wordCells(wd).every(c=>c.open)){wd.found=true;}updCount();}
+function checkWin(){
+  checkAutoFound();
+  if(G.won||!G.words.every(w=>w.found))return;
+  G.won=true;YG.stop();const g=G,res=finishLevel(g);lbSubmit();
+  setTimeout(()=>{if(G!==g)return;SND.win();buzz('win');confetti();zinaFace('happy');},450);
+  setTimeout(()=>{if(G===g)winModal(g,res);},1300);
+}
+
+/* ---------- подсказки ---------- */
+function updPrices(){$('prLet').textContent=PRICE.letter;$('prWord').textContent=PRICE.word;}
+function pay(kind,then){
+  const pr=PRICE[kind];
+  const doPay=()=>{addCoins(-pr);S.hintsUsed=(S.hintsUsed||0)+1;updPrices();then();};
+  if(S.coins>=pr&&S.tip.noAsk){doPay();return;}
+  if(S.coins>=pr){
+    modal(`<h2>${kind==='letter'?'💡 Открыть букву?':'📜 Открыть слово?'}</h2><div style="width:96px;height:96px;margin:4px auto">${zinaSVG('norm')}</div>
+      <p>${kind==='letter'?'Одну букву':'Самое длинное слово'} — за <b>${pr}</b> <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>. У тебя ${S.coins}.</p>
+      <label class="chk"><input type="checkbox" id="mNoAsk"> больше не спрашивать</label>
+      <div class="btns"><button class="btn green" id="mYes">Да, открыть</button><button class="btn ghost" id="mNo">Сам справлюсь</button></div>`);
+    $('mYes').onclick=()=>{if($('mNoAsk').checked){S.tip.noAsk=1;save();}hideModal();doPay();};
+    $('mNo').onclick=()=>{hideModal();SND.tap();};return;}
+  modal(`<h2>Монеток маловато</h2><div style="width:110px;height:110px;margin:6px auto">${zinaSVG('norm')}</div>
+    <p>Нужно ${pr}, а у тебя ${S.coins}. Посмотри рекламу — и подсказка бесплатно!</p>
+    <div class="btns"><button class="btn green" id="mAd">🎬 Подсказка за рекламу</button><button class="btn ghost" id="mNo">Сам справлюсь</button></div>`);
+  $('mAd').onclick=()=>{hideModal();showRewarded(()=>{if(G&&!G.won)then();});};
+  $('mNo').onclick=hideModal;
+}
+function hintLetter(){
+  if(!G||G.won)return;poke();
+  const closed=[...G.cells.values()].filter(c=>!c.open);if(!closed.length)return;
+  pay('letter',()=>{
+    // первая закрытая буква самого «пустого» слова — полезнее, чем случайная
+    const ws=G.words.filter(w=>!w.found).sort((a,b)=>wordCells(a).filter(c=>c.open).length/a.w.length-wordCells(b).filter(c=>c.open).length/b.w.length);
+    const c=wordCells(ws[0]).find(c=>!c.open)||closed[0];
+    G.hinted=true;openCell(c,0,'hint');SND.open();zina(say('hint'),'norm');checkAutoFoundAndWin();saveCur();
+  });
+}
+function hintWord(){
+  if(!G||G.won)return;poke();
+  const ws=G.words.filter(w=>!w.found);if(!ws.length)return;
+  pay('word',()=>{G.hinted=true;const wd=ws.sort((a,b)=>b.w.length-a.w.length)[0];SND.open();zina(say('hintWord'),'happy');foundWord(wd,true);});
+}
+function checkAutoFoundAndWin(){checkAutoFound();checkWin();}
+function shuffleLetters(){
+  if(!G||G.won)return;poke();const old=G.letters.join('');
+  for(let k=0;k<10;k++){shuffle(G.letters);if(G.letters.join('')!==old)break;}
+  const wh=$('wheel');wh.querySelectorAll('.let').forEach((e,i)=>{e.textContent=G.letters[i];e.animate([{transform:'scale(.3) rotate(-90deg)'},{transform:'scale(1)'}],{duration:280,easing:'ease-out'});});
+  SND.shuffle();zina(say('shuffle'),'norm',2.5);saveCur();
+}
+function updJar(){$('jarCnt').textContent=G?G.bonus.size:0;}
+function showJar(){
+  poke();const n=S.jar||0;
+  modal(`<h2>🍯 Банка бонусов</h2><p>Слова, которых нет в кроссворде, но они настоящие. Собери ${JAR_SIZE} — получишь <b>${coinsTxt(JAR_PRIZE)}</b>.</p>
+   <div class="bar" style="height:14px;margin:12px 0"><i style="width:${n/JAR_SIZE*100}%"></i></div><p><b>${n} из ${JAR_SIZE}</b></p>
+   <div class="words">${G.bonus.size?[...G.bonus].map(w=>'<span>'+w+'</span>').join(''):'<p>На этом уровне пока ни одного. Ищи слова покороче!</p>'}</div>
+   <div class="btns"><button class="btn blue" id="mOk">Понятно</button></div>`);
+  $('mOk').onclick=hideModal;
+}
+
+/* ---------- баба Зина говорит ---------- */
+function zina(t,mood,sec){const e=$('zSay');e.textContent=t;e.classList.add('on');e.classList.remove('pin');if(mood)zinaFace(mood);
+  clearTimeout(zina._t);if(sec!==99)zina._t=setTimeout(zinaHide,Math.max(sec||3.2,1.5+t.length*.06)*1000);}
+function zinaHide(){$('zSay').classList.remove('on','pin');zinaFace('norm');}
+$('zSay').addEventListener('click',()=>{const e=$('zSay');if(!e.classList.contains('on'))return;clearTimeout(zina._t);
+  if(e.classList.contains('pin'))zinaHide();else e.classList.add('pin');});
+const MOODS=['norm','happy','wow','stern'];
+function zinaFace(m){const av=$('zAv');if(av.dataset.o!==S.outfit){av.dataset.o=S.outfit;av.innerHTML=MOODS.map(x=>`<i class="face" data-m="${x}">${zinaSVG(x)}</i>`).join('');}
+  av.querySelectorAll('.face').forEach(f=>f.classList.toggle('on',f.dataset.m===m));}
+function glowHint(){const e=$('hLet');e.classList.remove('glow');void e.offsetWidth;e.classList.add('glow');}
+function poke(){if(G){G.idleT=0;}}
+setInterval(()=>{if(!G||G.won||paused||!$('game').classList.contains('on')||document.hidden)return;G.idleT++;
+  if(G.idleT===30&&G.idleN<2){G.idleN++;zina(say('idle'),'norm',5);glowHint();G.idleT=0;}},1000);
+
+/* ---------- обучение ---------- */
+// уровень 2: баба Зина объясняет кнопки и подсвечивает их
+function explainButtons(){S.tip.btns=1;save();
+  zina('Справа — подсказки: 💡 буква и 📜 целое слово. Слева — 🍯 банка для лишних слов и 🔀 перемешать буквы.','happy',10);
+  ['hLet','hWord','hJar','hShuf'].forEach((id,i)=>setTimeout(()=>{const e=$(id);e.classList.remove('glow');void e.offsetWidth;e.classList.add('glow');},i*300));}
+let tutAnim=null;
+function startTutorial(){
+  stopTutorial();const w=shortestWord();const idx=[],used=new Set();
+  for(const ch of w){const i=G.letters.findIndex((c,j)=>c===ch&&!used.has(j));used.add(i);idx.push(i);}
+  const dot=document.createElement('div');dot.id='tutDot';
+  dot.style.cssText='position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(255,138,61,.85);border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:5;pointer-events:none;transition:left .45s ease-in-out,top .45s ease-in-out,opacity .3s';
+  $('wheel').appendChild(dot);let k=0;
+  const step=()=>{if(!document.getElementById('tutDot'))return;const i=idx[k%idx.length],p=WH.pts[i];
+    dot.style.left=(p[0]-17)+'px';dot.style.top=(p[1]-17)+'px';dot.style.opacity=k%(idx.length+1)===idx.length?0:1;
+    if(k%(idx.length+1)===idx.length){k++;tutAnim=setTimeout(step,500);return;}k++;tutAnim=setTimeout(step,600);};
+  step();
+}
+function stopTutorial(){clearTimeout(tutAnim);const d=document.getElementById('tutDot');if(d)d.remove();}
+
+/* ---------- эффекты ---------- */
+function flyTo(text,target){
+  const from=$('preview').getBoundingClientRect(),to=target.getBoundingClientRect();
+  const e=document.createElement('div');e.className='fly';e.textContent=text.toUpperCase();e.style.fontSize='22px';
+  const x0=from.left+from.width/2-30,y0=from.top;e.style.left=x0+'px';e.style.top=y0+'px';document.body.appendChild(e);
+  // только transform/opacity — без пересчёта раскладки на каждом кадре
+  requestAnimationFrame(()=>{e.style.transform=`translate(${to.left+4-x0}px,${to.top+10-y0}px) scale(.36)`;e.style.opacity='.2';});
+  setTimeout(()=>e.remove(),560);
+}
+// буквы слова летят дугой из строки над кругом в свои клетки. Возвращает, через сколько мс каждая буква «сядет» (или null — без полёта)
+function flyLetters(cs,extra){
+  const pv=$('preview').firstElementChild;if(CALM()||!pv||typeof pv.animate!=='function')return null;
+  const r=pv.getBoundingClientRect();if(!r.width||!cs.length||!cs[0].el)return null;
+  const n=cs.length,step=(r.width-24)/(n+(extra||0)),y0=r.top+r.height/2,fs=parseFloat(getComputedStyle(pv).fontSize)||24,out=[];
+  cs.forEach((c,i)=>{const t=c.el.getBoundingClientRect(),x0=r.left+12+step*(i+.5),dx=t.left+t.width/2-x0,dy=t.top+t.height/2-y0,delay=i*55;
+    const e=document.createElement('div');e.className='flyl';e.textContent=c.ch;e.style.fontSize=fs+'px';e.style.left=(x0-20)+'px';e.style.top=(y0-20)+'px';
+    document.body.appendChild(e);const k=Math.max(.5,Math.min(1.6,t.height*.56/fs));
+    e.animate([{transform:'translate(0,0) scale(1)',opacity:.95},{transform:`translate(${dx*.45}px,${dy*.45-46}px) scale(1.2)`,opacity:1,offset:.45},
+      {transform:`translate(${dx}px,${dy}px) scale(${k})`,opacity:.9}],{duration:380,delay,easing:'cubic-bezier(.35,.1,.45,1)',fill:'both'});
+    setTimeout(()=>e.remove(),delay+400);out.push(delay+360);});
+  return out;
+}
+// печать красной ручкой посреди кроссворда — за длинное слово (7–8 букв)
+function boardStamp(t){const b=$('board'),e=document.createElement('div');e.className='bstamp'+(CALM()?' still':'');e.textContent=t;b.appendChild(e);setTimeout(()=>e.remove(),1700);}
+function confetti(){
+  const cols=['#ff8a3d','#f5b72d','#2f6fd6','#34a853','#e2463b','#9a64b8'];
+  for(let i=0;i<60;i++){const e=document.createElement('div');e.className='confetti';e.style.background=pick(cols);
+    const x=Math.random()*innerWidth;e.style.left=x+'px';e.style.top='-20px';document.body.appendChild(e);
+    const dx=(Math.random()-.5)*200,rot=Math.random()*720;
+    e.animate([{transform:'translate(0,0) rotate(0)'},{transform:`translate(${dx}px,${innerHeight+40}px) rotate(${rot}deg)`}],{duration:1500+Math.random()*1300,easing:'cubic-bezier(.3,.6,.6,1)',delay:Math.random()*300}).onfinish=()=>e.remove();}
+}
+
+/* ---------- ввод с клавиатуры (компьютер) ---------- */
+document.addEventListener('keydown',e=>{
+  if($('modal').classList.contains('on')){if(e.key==='Escape'&&!(G&&G.won&&$('game').classList.contains('on')))hideModal();return;}
+  if(!G||G.won||!$('game').classList.contains('on'))return;
+  const k=e.key.toLowerCase().replace('ё','е');
+  if(k==='1'){hintLetter();return;}if(k==='2'){hintWord();return;}
+  if(k==='enter'){const w=G.sel.map(i=>G.letters[i]).join('');G.sel=[];updSel();submit(w);return;}
+  if(k==='backspace'){G.sel.pop();updSel();return;}
+  if(k==='escape'){G.sel=[];updSel();return;}
+  if(k===' '){shuffleLetters();e.preventDefault();return;}
+  if(/^[а-я]$/.test(k)){const i=G.letters.findIndex((c,j)=>c===k&&!G.sel.includes(j));if(i>=0){ac();poke();G.sel.push(i);SND.letter(G.sel.length-1);updSel();}}
+});
