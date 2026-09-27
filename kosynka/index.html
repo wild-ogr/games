@@ -1,0 +1,1440 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Косынка во дворе</title>
+<style>
+:root{--ink:#2d3436;--muted:#6b7378;--card:#fffdf7;--accent:#b8390a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;background:#1f5d3a;overscroll-behavior:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);overflow:hidden;touch-action:manipulation;font-size:18px}
+#app{position:relative;width:100%;height:100%;margin:0 auto;overflow:hidden;background:#1f5d3a}
+.screen{position:absolute;top:0;right:0;bottom:0;left:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+.btn{background:#fff;border-radius:16px;padding:12px 16px;font-weight:700;min-height:52px;box-shadow:0 4px 0 #c7c1b0,0 6px 14px rgba(0,0,0,.14);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #c7c1b0}
+.btn.accent{background:linear-gradient(#d9480f,#b8390a);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.25);box-shadow:0 4px 0 #8a2a06,0 6px 14px rgba(0,0,0,.15)}
+.btn.accent:active{box-shadow:0 1px 0 #8a2a06}
+.btn.green{background:linear-gradient(#2b8a3e,#237032);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.25);box-shadow:0 4px 0 #17501f,0 6px 14px rgba(0,0,0,.15)}
+.btn.green:active{box-shadow:0 1px 0 #17501f}
+.btn[disabled]{opacity:.5}
+.btn small{opacity:.9;font-size:.78em;font-weight:600}
+.icon{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.9);font-size:22px;font-weight:800;box-shadow:0 3px 0 rgba(0,0,0,.18);flex:0 0 auto}
+.pill{background:rgba(255,255,255,.92);color:var(--ink);border-radius:999px;padding:6px 12px;font-weight:800;font-size:17px;box-shadow:0 2px 0 rgba(0,0,0,.15);white-space:nowrap}
+button.pill{position:relative;min-height:40px}
+button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;right:-4px}
+/* меню */
+#scr-menu{align-items:center;overflow-y:auto;overscroll-behavior:contain}
+.mbg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0}
+.mwrap{position:relative;z-index:1;width:100%;max-width:460px;padding:10px 16px 18px;display:flex;flex-direction:column;gap:12px;min-height:100%;justify-content:center}
+.mwrap .mh{position:absolute;top:10px;left:16px;right:16px}.mwrap .logo{margin-top:56px}
+.mh{display:flex;align-items:center;gap:10px}
+.mh .sp{flex:1}
+.logo{color:#fff;text-align:center;margin-top:4px;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 8px rgba(0,0,0,.35)}
+.logo h1{margin:0;font-size:34px;line-height:1.1;letter-spacing:.5px}
+.logo div{font-size:17px;font-weight:700;opacity:.95}
+.host{display:flex;align-items:flex-end;gap:8px;min-height:92px}
+.host canvas{width:84px;height:92px;flex:0 0 84px}
+.bub{position:relative;background:#fffdf7;border-radius:18px;padding:10px 14px;font-weight:700;font-size:17px;line-height:1.3;box-shadow:0 4px 12px rgba(0,0,0,.2);margin-bottom:22px;flex:1}
+.bub::after{content:"";position:absolute;left:-9px;bottom:14px;border:9px solid transparent;border-right-color:#fffdf7;border-left:0}
+.mbtns{display:flex;flex-direction:column;gap:12px}
+.mbtns .btn{font-size:20px;min-height:58px}
+.modes{display:flex;gap:8px;background:rgba(0,0,0,.22);border-radius:16px;padding:5px}
+.modes button{flex:1;border-radius:12px;padding:10px 4px;font-weight:800;font-size:16px;color:#fff;min-height:48px;background:transparent;line-height:1.15}
+.modes button.on{background:#fffdf7;color:#2d3436;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.mrow{display:flex;gap:10px}
+.mrow .btn{flex:1;font-size:16px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
+.mrow .btn b{font-size:24px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#e8590c;margin-left:4px;vertical-align:2px}
+.note{color:#fff;text-align:center;font-size:15px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+/* игра */
+.gh{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,0,0,.25);color:#fff;flex:0 0 auto}
+.gt{flex:1;min-width:0;line-height:1.15}
+.gt b{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt span{font-size:15px;opacity:.95;white-space:nowrap}
+.stage{position:relative;flex:1;min-height:0;overflow:hidden}
+#cv{position:absolute;top:0;left:0;touch-action:none}
+.gf{display:flex;gap:8px;padding:6px 10px 8px;background:rgba(0,0,0,.25);flex:0 0 auto;justify-content:center}
+.gf .btn{flex:1;max-width:150px;min-height:56px;padding:4px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;font-size:22px}
+.gf .btn small{font-size:14px;font-weight:700;opacity:1}
+.gf .btn.hide{display:none}
+.gf .btn{position:relative}.cnt{position:absolute;top:-7px;right:-3px;background:#d9480f;color:#fff;border-radius:999px;font-size:13px;font-style:normal;font-weight:800;padding:1px 7px;line-height:1.35;box-shadow:0 1px 0 rgba(0,0,0,.25)}.cnt.ad{background:#2d3436}
+.say{position:absolute;left:8px;bottom:8px;max-width:min(92%,420px);display:flex;align-items:flex-end;gap:6px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:3}
+.say.on{opacity:1}
+.say canvas{width:52px;height:57px;flex:0 0 52px}
+.say div{background:#fffdf7;border-radius:14px;padding:8px 12px;font-weight:700;font-size:16px;line-height:1.3;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+/* окна */
+.modal,.ad{position:absolute;top:0;right:0;bottom:0;left:0;display:none;align-items:center;justify-content:center;background:rgba(20,30,40,.55);z-index:10;padding:16px}
+.modal{overflow-y:auto;overscroll-behavior:contain}
+.modal.on,.ad.on{display:flex}
+.card{background:var(--card);border-radius:24px;padding:20px 16px 16px;width:100%;max-width:400px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);animation:pop .25s ease-out;margin:auto}
+@keyframes pop{from{transform:scale(.88);opacity:0}}
+.card h2{margin:0 0 6px;font-size:25px}
+.card p{margin:6px 0;color:#4b5358;font-weight:600;line-height:1.35}
+.card .about{text-align:left;font-size:16px}
+.row{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.row2{display:flex;gap:10px}.row2 .btn{flex:1}
+.ad{background:#111;color:#fff;text-align:center;font-size:22px;font-weight:800}
+.ad small{font-weight:500;opacity:.7;font-size:15px}
+.adt{font-size:54px;margin-top:16px}
+.toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;font-size:16px;line-height:1.3;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;text-align:center;width:max-content;max-width:90%}
+.toast.on{opacity:1}
+.coins-won{font-size:24px;font-weight:900;color:#c98a00!important}
+.wstat{display:flex;justify-content:center;gap:18px;font-weight:800;font-size:17px;margin:8px 0}
+.wstat span{display:flex;flex-direction:column;align-items:center}.wstat small{font-weight:600;color:#5d666b;font-size:14px}
+.achn{background:#fff3d6;border-radius:14px;padding:8px 10px;margin:8px 0;font-weight:700;font-size:16px}
+.set{display:flex;align-items:center;justify-content:space-between;background:#f1ede2;border-radius:14px;padding:10px 12px;margin-top:8px;font-weight:700;text-align:left;color:#2d3436;width:100%;min-height:52px;font-size:17px}
+.set span{padding-right:8px}
+.set small{font-weight:600;color:#5d666b;font-size:14px}
+.set i{font-style:normal;font-weight:800;color:#fff;background:#2b8a3e;border-radius:999px;padding:3px 12px;min-width:60px;text-align:center;white-space:nowrap}.set i.off{color:#4b5358;background:#dcd6c8}.set i.go,.pay .set i{background:none;color:#237032;padding:0;min-width:0}
+.pay{margin-top:12px;text-align:left}.pay h3{font-size:17px;margin:0 0 2px;color:#2d3436}.pay .set span{padding-right:10px}.pay .set small{font-weight:600}
+.pbuy b{white-space:nowrap;color:#1f5e2c;font-size:17px}.pcur{width:18px;height:18px;vertical-align:-3px;margin-left:3px}.pown i{color:#237032}
+.tabs{display:flex;gap:6px;margin:8px 0}.tabs button{flex:1;border-radius:12px;background:#ece6d8;padding:10px 4px;font-weight:800;font-size:15px;min-height:46px}.tabs button.on{background:#2d3436;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:6px}
+.it{background:#f1ede2;border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:700;font-size:14px;line-height:1.2;min-height:150px;position:relative}
+.it canvas{width:100%;height:84px;border-radius:10px}
+.it.cur{outline:3px solid #2b8a3e}
+.it b{font-size:15px}
+.it .pr{margin-top:auto;font-weight:800}
+.it .pr.own{color:#237032}.it .pr.lock{color:#8a5a00;font-size:13px}
+.stt{width:100%;border-collapse:collapse;font-size:16px;margin-top:6px}.stt td{padding:6px 4px;border-bottom:1px solid #e6e0d2;text-align:left}.stt td:last-child{text-align:right;font-weight:800}
+.ach{display:flex;gap:10px;align-items:center;text-align:left;padding:7px 8px;border-radius:12px;font-size:15px;font-weight:700}.ach:nth-child(odd){background:rgba(0,0,0,.04)}.ach i{font-style:normal;font-size:22px;flex:0 0 30px;text-align:center}.ach span{flex:1}.ach small{display:block;font-weight:600;color:#5d666b}.ach.no{opacity:.55}.ach b{white-space:nowrap}
+.streak{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.sd{background:#f1ede2;border-radius:12px;padding:6px 2px;font-weight:800;font-size:14px;display:flex;flex-direction:column;align-items:center}
+.sd small{font-weight:600;font-size:13px;color:#5d666b}.sd .ic{font-size:22px}
+.sd.done{background:#d3f0d9}.sd.today{background:#ffe7a3;outline:3px solid #f0a500}
+.lb{max-height:46vh;overflow:auto;overscroll-behavior:contain;margin-top:8px;text-align:left}.lbr{display:flex;gap:10px;align-items:center;padding:6px 8px;border-radius:10px}.lbr:nth-child(odd){background:rgba(0,0,0,.05)}.lbr.me{background:#ffe7a3}.lbr b{width:28px;text-align:right}.lbr span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbr i{font-style:normal;font-weight:800}
+.how p{text-align:left;font-size:16px}
+.scroll{max-height:56vh;overflow-y:auto;overscroll-behavior:contain}
+/* узкие/низкие экраны */
+@media (max-width:370px){.logo h1{font-size:29px}.gf .btn{font-size:20px}.gf .btn small{font-size:13px}.mbtns .btn{font-size:18px}}
+@media (max-height:560px){.gf{padding-top:3px;padding-bottom:4px}.gf .btn{min-height:46px;flex-direction:row;gap:6px}.gh{padding-top:3px;padding-bottom:3px}.gh .icon{width:44px;height:44px}.host{min-height:70px}.host canvas{width:64px;height:70px;flex-basis:64px}}
+@media (min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}.card{max-width:460px}}
+/* меньше движения: системная настройка или «спокойный режим» в игре */
+@media (prefers-reduced-motion:reduce){.card{animation:none}}
+body.calm .card{animation:none}
+/* вырез экрана (iPhone в альбомной ориентации) */
+.gh,.gf{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+/* запасные отступы для старых браузеров без gap во flex (≈ те же, где нет inset) */
+@supports not (inset:0){.mwrap>*+*,.mbtns>*+*,.row>*+*{margin-top:12px}.mh>*+*,.mrow>*+*,.gf>*+*,.gh>*+*,.row2>*+*,.modes>*+*,.tabs>*+*,.ach>*+*,.lbr>*+*{margin-left:8px}.grid>*{margin:5px}.host>*+*{margin-left:8px}.say>*+*{margin-left:6px}.wstat>*+*{margin-left:18px}.it>*+*{margin-top:4px}}
+@media (max-height:560px){@supports not (inset:0){.gf .btn>*+*{margin-left:6px}}}
+</style>
+<script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
+(function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
+if(a&&!document.hidden)a.play().catch(function(){});}
+['touchend','click','keydown'].forEach(function(e){document.addEventListener(e,on,{capture:true,passive:true});});
+document.addEventListener('visibilitychange',function(){if(!a)return;if(document.hidden)a.pause();else a.play().catch(function(){});});})();</script>
+</head>
+<body>
+<div id="app">
+  <section id="scr-menu" class="screen on">
+    <canvas class="mbg" id="mbg"></canvas>
+    <div class="mwrap">
+      <header class="mh"><button class="icon" id="btnSet" aria-label="Настройки">⚙️</button><div class="sp"></div><button class="pill" id="mCoins" aria-label="Монеты">💰 <span id="coinCnt">0</span></button></header>
+      <div class="logo"><h1 id="gName">Косынка</h1><div id="gSub">во дворе</div></div>
+      <div class="host"><canvas id="hostCv" width="168" height="184"></canvas><div class="bub" id="hostSay">…</div></div>
+      <div class="modes" id="modes"></div>
+      <div class="mbtns">
+        <button class="btn accent" id="btnPlay">▶ Играть</button>
+        <button class="btn" id="btnNew">🆕 Новая раздача</button>
+        <button class="btn green" id="btnDaily">📅 Расклад дня</button>
+      </div>
+      <div class="mrow">
+        <button class="btn" id="btnDecor"><b>🎨</b>Украшения</button>
+        <button class="btn" id="btnStats"><b>📊</b>Успехи</button>
+        <button class="btn" id="btnStreak"><b>🎁</b>Подарок</button>
+      </div>
+      <div class="note" id="mNote"></div>
+    </div>
+  </section>
+
+  <section id="scr-game" class="screen">
+    <header class="gh"><button class="icon" id="gBack" aria-label="В меню">←</button><div class="gt"><b id="gTitle">Косынка</b><span id="gInfo"></span></div><button class="pill" id="gCoins" aria-label="Монеты">💰 0</button><button class="icon" id="gSet" aria-label="Настройки">⚙️</button></header>
+    <div class="stage" id="stage"><canvas id="cv"></canvas><div class="say" id="say"><canvas id="sayCv" width="104" height="114"></canvas><div id="sayT"></div></div></div>
+    <footer class="gf"><button class="btn" id="bUndo">↶<small id="undoL">Отмена</small></button><button class="btn" id="bHint">💡<small id="hintL">Подсказка</small></button><button class="btn green hide" id="bCollect">✨<small>Собрать</small></button><button class="btn" id="bNew">🔄<small>Новая</small></button></footer>
+  </section>
+
+  <div id="modal" class="modal"><div class="card" id="mcard"></div></div>
+  <div id="ad" class="ad"><div>📺 Реклама<br><small>игра продолжится через</small><div id="adT" class="adt">3</div></div></div>
+  <div id="toast" class="toast"></div>
+</div>
+<script>
+'use strict';
+/* ================= какая игра: флаг сборки =================
+   tools/build.py подставляет сюда игру (klondike | spider | freecell) и собирает отдельный index.html на каждую — это ОТДЕЛЬНЫЕ игры
+   со своими названием, сохранением, покупками и рейтингом. В исходнике (разработка на маке) игру выбирает ?game=… (по умолчанию Косынка) */
+const BUILD_GAME='klondike';
+const GID=BUILD_GAME||((/[?&]game=(klondike|spider|freecell)/.exec(location.search)||[])[1])||'klondike';
+/*LOGIC-BEGIN*/
+/* ================= правила пасьянсов (чистая логика: без экрана; её же гоняют tools/test.sh и tools/seeds.js в jsc) =================
+   Карта — число: масть SU = (id%52)/13 (0 ♠, 1 ♥, 2 ♦, 3 ♣), достоинство RK = id%13 (0 — туз … 12 — король).
+   В «Пауке» 104 карты: id до 415 (8 «колод по 13» нужных мастей), у каждой карты свой id — анимации не путают одинаковые карты.
+   Состояние: p — стопки (последний элемент — верхняя карта), d — сколько карт снизу стопки лежит рубашкой вверх. */
+function rng(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+function shuffled(ids,seed){const a=ids.slice(),r=rng(seed);for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+const SU=c=>((c%52)/13)|0,RK=c=>c%13,RED=c=>{const s=((c%52)/13)|0;return s===1||s===2;};
+function range(n){const a=[];for(let i=0;i<n;i++)a.push(i);return a;}
+function stClone(s){return {g:s.g,p:s.p.map(a=>a.slice()),d:s.d.slice(),draw:s.draw,suits:s.suits,done:s.done};}
+const topc=a=>a[a.length-1];
+// ход: {f:откуда, j:с какой карты, t:куда} или {s:1} — колода (взять / перевернуть / раздать ряд)
+
+/* ---- Косынка (Klondike): 0 колода, 1 сброс, 2–5 дом (стопка 2+масть), 6–12 столбцы. Колоду можно перебирать без ограничений ---- */
+const KL={id:'klondike',TAB:6,NT:7,FND:2,
+  kind(i){return i===0?'stock':i===1?'waste':i<6?'found':'tab';},
+  deal(seed,draw){const c=shuffled(range(52),seed),p=[],d=[];for(let i=0;i<13;i++){p.push([]);d.push(0);}let k=0;
+    for(let col=0;col<7;col++){for(let j=0;j<=col;j++)p[6+col].push(c[k++]);d[6+col]=col;}
+    while(k<52)p[0].push(c[k++]);d[0]=p[0].length;return {g:'klondike',p,d,draw:draw===3?3:1,done:0};},
+  isRun(a,j){for(let k=j+1;k<a.length;k++){const x=a[k-1],y=a[k];if(RK(x)!==RK(y)+1||RED(x)===RED(y))return false;}return true;},
+  canPick(s,i,j){const a=s.p[i],k=KL.kind(i);if(j<0||j>=a.length)return false;
+    if(k==='tab')return j>=s.d[i]&&KL.isRun(a,j);return (k==='waste'||k==='found')&&j===a.length-1;},
+  canDrop(s,f,j,t){if(f===t)return false;const a=s.p[f],c=a[j],n=a.length-j,k=KL.kind(t);
+    if(k==='found')return n===1&&t===2+SU(c)&&s.p[t].length===RK(c);
+    if(k!=='tab')return false;const b=s.p[t];if(!b.length)return RK(c)===12;const x=topc(b);return RK(x)===RK(c)+1&&RED(x)!==RED(c);},
+  flip(s,i){if(i>=6&&s.d[i]>0&&s.d[i]>=s.p[i].length)s.d[i]=s.p[i].length-1;},
+  move(s,f,j,t){const cs=s.p[f].splice(j);for(const c of cs)s.p[t].push(c);KL.flip(s,f);if(f===0)s.d[0]=s.p[0].length;},
+  canStock(s){return s.p[0].length>0||s.p[1].length>0;},
+  stock(s){const st=s.p[0],w=s.p[1];if(st.length){const n=Math.min(s.draw,st.length);for(let k=0;k<n;k++)w.push(st.pop());}
+    else if(w.length){s.p[0]=w.reverse();s.p[1]=[];}else return false;s.d[0]=s.p[0].length;return true;},
+  won(s){return s.p[2].length+s.p[3].length+s.p[4].length+s.p[5].length===52;},
+  fcount(s){return s.p[2].length+s.p[3].length+s.p[4].length+s.p[5].length;},
+  // в дом без риска: туз и двойка всегда; дальше — если обе масти другого цвета уже выше на одну (и своя пара — не ниже на две)
+  safe(s,c){const r=RK(c),su=SU(c),L=q=>s.p[2+q].length;if(L(su)!==r)return false;if(r<=1)return true;
+    const o=su===1||su===2?[0,3]:[1,2],same=su===0?3:su===3?0:su===1?2:1;return L(o[0])>=r&&L(o[1])>=r&&L(same)>=r-1;},
+  autoMove(s){for(const i of [1,6,7,8,9,10,11,12]){const a=s.p[i];if(!a.length||(i>=6&&s.d[i]>=a.length))continue;const c=topc(a);if(KL.safe(s,c))return {f:i,j:a.length-1,t:2+SU(c)};}return null;},
+  // ходы для решателя и подсказки — по порядку полезности; бессмысленные (король с пустого на пустой, дом → столбец) не предлагаем
+  moves(s){const out=[],p=s.p,d=s.d;const am=KL.autoMove(s);if(am)return [am];
+    let firstEmpty=-1;for(let i=6;i<13;i++)if(!p[i].length){firstEmpty=i;break;}
+    const toFound=[],reveal=[],other=[],part=[];
+    for(let i=6;i<13;i++){const a=p[i];if(!a.length)continue;const c=topc(a);if(p[2+SU(c)].length===RK(c))toFound.push({f:i,j:a.length-1,t:2+SU(c)});}
+    const w=p[1];if(w.length){const c=topc(w);if(p[2+SU(c)].length===RK(c))toFound.push({f:1,j:w.length-1,t:2+SU(c)});}
+    for(let i=6;i<13;i++){const a=p[i];if(!a.length)continue;const j0=d[i];
+      // весь открытый хвост (самая нижняя открытая карта)
+      let j=a.length-1;while(j>j0&&RK(a[j-1])===RK(a[j])+1&&RED(a[j-1])!==RED(a[j]))j--;
+      for(let t=6;t<13;t++){if(t===i)continue;if(!p[t].length&&t!==firstEmpty)continue;
+        if(KL.canDrop(s,i,j,t)){if(j===0&&!p[t].length)continue;(j>0?reveal:other).push({f:i,j,t,w:j===j0?d[i]:0});}}
+      // часть хвоста — только если открывшаяся карта сразу идёт в дом
+      for(let k=j+1;k<a.length;k++){const u=a[k-1];if(p[2+SU(u)].length!==RK(u))continue;
+        for(let t=6;t<13;t++){if(t===i||!p[t].length)continue;if(KL.canDrop(s,i,k,t))part.push({f:i,j:k,t});}}}
+    reveal.sort((x,y)=>y.w-x.w);
+    const wst=[];if(w.length)for(let t=6;t<13;t++){if(!p[t].length&&t!==firstEmpty)continue;if(KL.canDrop(s,1,w.length-1,t))wst.push({f:1,j:w.length-1,t});}
+    for(const m of toFound)out.push(m);for(const m of reveal)out.push(m);for(const m of wst)out.push(m);for(const m of part)out.push(m);for(const m of other)out.push(m);
+    if(KL.canStock(s))out.push({s:1});
+    return out;},
+  key(s){const cols=[];for(let i=6;i<13;i++)cols.push(s.d[i]+':'+s.p[i].join(','));cols.sort();
+    return s.p[0].join(',')+'|'+s.p[1].join(',')+'|'+s.p[2].length+','+s.p[3].length+','+s.p[4].length+','+s.p[5].length+'|'+cols.join(';');},
+  // оценка для поиска «лучший сначала»: дом, открытые карты
+  score(s){let v=KL.fcount(s)*6;for(let i=6;i<13;i++)v-=s.d[i]*4;return v;}
+};
+
+/* ---- Паук: 0 колода, 1–8 собранные масти, 9–18 столбцы. Раздать ряд — только когда нет пустых столбцов ---- */
+const SP={id:'spider',TAB:9,NT:10,FND:1,
+  kind(i){return i===0?'stock':i<9?'found':'tab';},
+  deal(seed,suits){suits=suits===4?4:suits===2?2:1;const ids=[];const S=suits===1?[0]:suits===2?[0,1]:[0,1,2,3],copies=8/S.length;
+    for(let k=0;k<copies;k++)for(const su of S)for(let r=0;r<13;r++)ids.push(k*52+su*13+r);
+    const c=shuffled(ids,seed),p=[],d=[];for(let i=0;i<19;i++){p.push([]);d.push(0);}let k=0;
+    for(let col=0;col<10;col++){const n=col<4?6:5;for(let j=0;j<n;j++)p[9+col].push(c[k++]);d[9+col]=n-1;}
+    while(k<104)p[0].push(c[k++]);d[0]=p[0].length;return {g:'spider',p,d,draw:1,suits,done:0};},
+  isRun(a,j){for(let k=j+1;k<a.length;k++){const x=a[k-1],y=a[k];if(RK(x)!==RK(y)+1||SU(x)!==SU(y))return false;}return true;},
+  canPick(s,i,j){const a=s.p[i];if(i<9||j<0||j>=a.length)return false;return j>=s.d[i]&&SP.isRun(a,j);},
+  canDrop(s,f,j,t){if(f===t||t<9)return false;const c=s.p[f][j],b=s.p[t];if(!b.length)return true;return RK(topc(b))===RK(c)+1;},
+  flip(s,i){if(i>=9&&s.d[i]>0&&s.d[i]>=s.p[i].length)s.d[i]=s.p[i].length-1;},
+  // собранная масть (король … туз одной масти, открытые) уходит в дом
+  collect(s,i){const a=s.p[i];if(a.length<13)return false;const j=a.length-13;if(j<s.d[i]||RK(a[j])!==12||!SP.isRun(a,j))return false;
+    const cs=a.splice(j);s.p[1+s.done]=cs;s.done++;SP.flip(s,i);return true;},
+  move(s,f,j,t){const cs=s.p[f].splice(j);for(const c of cs)s.p[t].push(c);SP.flip(s,f);SP.collect(s,t);},
+  canStock(s){if(!s.p[0].length)return false;for(let i=9;i<19;i++)if(!s.p[i].length)return false;return true;},
+  stock(s){if(!SP.canStock(s))return false;for(let i=9;i<19;i++)s.p[i].push(s.p[0].pop());s.d[0]=s.p[0].length;for(let i=9;i<19;i++)SP.collect(s,i);return true;},
+  won(s){return s.done===8;},
+  fcount(s){return s.done*13;},
+  autoMove(){return null;},
+  // нижняя карта открытой масти-последовательности
+  runStart(s,i){const a=s.p[i];let j=a.length-1;while(j>s.d[i]&&RK(a[j-1])===RK(a[j])+1&&SU(a[j-1])===SU(a[j]))j--;return j;},
+  moves(s){const p=s.p,d=s.d,A=[],B=[],C=[],D=[],E=[];let firstEmpty=-1;for(let i=9;i<19;i++)if(!p[i].length){firstEmpty=i;break;}
+    for(let i=9;i<19;i++){const a=p[i];if(!a.length)continue;const j0=SP.runStart(s,i);
+      for(let j=j0;j<a.length;j++){const c=a[j],under=j>0?a[j-1]:-1,onParent=j>d[i]&&j>0&&RK(under)===RK(c)+1,sameUnder=onParent&&SU(under)===SU(c);
+        if(sameUnder)continue; // уже лежит на своей масти — не разрываем
+        const reveals=j===d[i]&&j>0,empties=j===0;
+        for(let t=9;t<19;t++){if(t===i)continue;const b=p[t];
+          if(!b.length){if(t!==firstEmpty||empties)continue;if(!(reveals||(!onParent&&j>d[i])))continue;E.push({f:i,j,t,w:(reveals?20:0)+a.length-j});continue;}
+          const x=topc(b);if(RK(x)!==RK(c)+1)continue;
+          const same=SU(x)===SU(c);
+          if(same){A.push({f:i,j,t,w:(reveals?100:0)+(empties?50:0)+a.length-j+(x===topc(b)?0:0)});}
+          else if(reveals||empties){B.push({f:i,j,t,w:(reveals?d[i]*3+10:0)+(empties?20:0)});}
+          else if(!onParent){C.push({f:i,j,t,w:a.length-j});}}}}
+    A.sort((x,y)=>y.w-x.w);B.sort((x,y)=>y.w-x.w);C.sort((x,y)=>y.w-x.w);E.sort((x,y)=>y.w-x.w);
+    const out=A.concat(B,C,E);if(SP.canStock(s))out.push({s:1});return out;},
+  key(s){const cols=[];for(let i=9;i<19;i++){const a=s.p[i];let t=s.d[i]+':';for(let k=0;k<a.length;k++)t+=(a[k]%52)+',';cols.push(t);}cols.sort();return s.p[0].length+'|'+s.done+'|'+cols.join(';');},
+  // оценка: собранные масти, закрытые карты, пустые столбцы, связки «по масти» (ценнее) и «не по масти»; раздавать ряд — попозже
+  score(s){let v=s.done*500;for(let i=9;i<19;i++){const a=s.p[i];v-=s.d[i]*25;if(!a.length){v+=40;continue;}
+      for(let k=Math.max(s.d[i],1);k<a.length;k++){const x=a[k-1],y=a[k];if(RK(x)===RK(y)+1)v+=SU(x)===SU(y)?10:2;}}
+    return v-s.p[0].length;}
+};
+
+/* ---- Свободная ячейка (FreeCell): 0–3 ячейки, 4–7 дом (стопка 4+масть), 8–15 столбцы. Все карты открыты ---- */
+const FC={id:'freecell',TAB:8,NT:8,FND:4,
+  kind(i){return i<4?'cell':i<8?'found':'tab';},
+  deal(seed){const c=shuffled(range(52),seed),p=[],d=[];for(let i=0;i<16;i++){p.push([]);d.push(0);}for(let k=0;k<52;k++)p[8+k%8].push(c[k]);return {g:'freecell',p,d,draw:1,done:0};},
+  isRun:KL.isRun,
+  // сколько карт можно перенести разом (через свободные ячейки и пустые столбцы)
+  cap(s,toEmpty,f){let fc=0,ec=0;for(let i=0;i<4;i++)if(!s.p[i].length)fc++;for(let i=8;i<16;i++)if(!s.p[i].length&&i!==f)ec++;if(toEmpty)ec--;return (fc+1)*Math.pow(2,Math.max(0,ec));},
+  canPick(s,i,j){const a=s.p[i],k=FC.kind(i);if(j<0||j>=a.length)return false;if(k==='cell')return j===a.length-1;if(k==='found')return false;return FC.isRun(a,j);},
+  canDrop(s,f,j,t){if(f===t)return false;const a=s.p[f],c=a[j],n=a.length-j,k=FC.kind(t),b=s.p[t];
+    if(k==='cell')return n===1&&!b.length;
+    if(k==='found')return n===1&&t===4+SU(c)&&b.length===RK(c);
+    if(!b.length)return n<=FC.cap(s,true,f);const x=topc(b);return RK(x)===RK(c)+1&&RED(x)!==RED(c)&&n<=FC.cap(s,false,f);},
+  flip(){},
+  move(s,f,j,t){const cs=s.p[f].splice(j);for(const c of cs)s.p[t].push(c);},
+  canStock(){return false;},stock(){return false;},
+  won(s){return s.p[4].length+s.p[5].length+s.p[6].length+s.p[7].length===52;},
+  fcount(s){return s.p[4].length+s.p[5].length+s.p[6].length+s.p[7].length;},
+  safe(s,c){const r=RK(c),su=SU(c),L=q=>s.p[4+q].length;if(L(su)!==r)return false;if(r<=1)return true;
+    const o=su===1||su===2?[0,3]:[1,2],same=su===0?3:su===3?0:su===1?2:1;return L(o[0])>=r&&L(o[1])>=r&&L(same)>=r-1;},
+  autoMove(s){for(let i=0;i<16;i++){if(i>=4&&i<8)continue;const a=s.p[i];if(!a.length)continue;const c=topc(a);if(FC.safe(s,c))return {f:i,j:a.length-1,t:4+SU(c)};}return null;},
+  // для решателя — одиночные ходы (длинные переносы складываются из них); подсказка берёт первый
+  moves(s){const p=s.p,am=FC.autoMove(s);if(am)return [am];const F=[],T=[],CT=[],E=[],TC=[];let fe=-1,fcell=-1;
+    for(let i=8;i<16;i++)if(!p[i].length){fe=i;break;}for(let i=0;i<4;i++)if(!p[i].length){fcell=i;break;}
+    const src=[];for(let i=0;i<4;i++)if(p[i].length)src.push(i);for(let i=8;i<16;i++)if(p[i].length)src.push(i);
+    for(const i of src){const a=p[i],c=topc(a),j=a.length-1;
+      if(p[4+SU(c)].length===RK(c))F.push({f:i,j,t:4+SU(c)});
+      for(let t=8;t<16;t++){if(t===i||!p[t].length)continue;const x=topc(p[t]);if(RK(x)===RK(c)+1&&RED(x)!==RED(c)){
+        const under=i>=8&&j>0?a[j-1]:-1,onParent=under>=0&&RK(under)===RK(c)+1&&RED(under)!==RED(c);if(onParent)continue;
+        (i<4?CT:T).push({f:i,j,t,w:i>=8?-FC.depthNeed(s,i):0});}}
+      if(fe>=0&&(i<4||a.length>1)){const under=i>=8?a[j-1]:-1,onParent=under>=0&&RK(under)===RK(c)+1&&RED(under)!==RED(c);if(!onParent||i<4)E.push({f:i,j,t:fe});}
+      if(i>=8&&fcell>=0)TC.push({f:i,j,t:fcell,w:-FC.depthNeed(s,i)});}
+    T.sort((x,y)=>y.w-x.w);TC.sort((x,y)=>y.w-x.w);
+    return F.concat(CT,T,E,TC);},
+  // глубина: сколько карт лежит над самой нужной (младшей по дому) картой столбца
+  depthNeed(s,i){const a=s.p[i];let best=99;for(let k=0;k<a.length;k++){const c=a[k],need=RK(c)-s.p[4+SU(c)].length;if(need<best)best=need;}return best;},
+  key(s){const cells=[];for(let i=0;i<4;i++)if(s.p[i].length)cells.push(s.p[i][0]);cells.sort((a,b)=>a-b);const cols=[];for(let i=8;i<16;i++)cols.push(s.p[i].join(','));cols.sort();
+    return cells.join(',')+'|'+s.p[4].length+','+s.p[5].length+','+s.p[6].length+','+s.p[7].length+'|'+cols.join(';');},
+  // оценка: дом, свободные ячейки и столбцы, насколько глубоко закопаны нужные дому карты, «перевёрнутые» (старшая над младшей)
+  score(s){let v=FC.fcount(s)*10;for(let i=0;i<4;i++)if(s.p[i].length)v-=4;const L=[s.p[4].length,s.p[5].length,s.p[6].length,s.p[7].length];
+    for(let i=8;i<16;i++){const a=s.p[i];if(!a.length){v+=6;continue;}
+      for(let k=0;k<a.length;k++){const c=a[k];if(RK(c)-L[SU(c)]<=1)v-=a.length-1-k;}
+      let mn=99;for(let k=0;k<a.length;k++){const r=RK(a[k]);if(r>mn)v-=2;if(r<mn)mn=r;}}
+    return v;}
+};
+const RULES={klondike:KL,spider:SP,freecell:FC};
+
+// применить ход к состоянию (без проверки)
+function applyMove(R,s,m){if(m.s)return R.stock(s);R.move(s,m.f,m.j,m.t);return true;}
+// проверка хода по правилам (для прогона решений и ввода игрока)
+function legal(R,s,m){if(m.s)return R.canStock(s);return R.canPick(s,m.f,m.j)&&R.canDrop(s,m.f,m.j,m.t);}
+
+/* ---- решатель: поиск «лучший сначала» с запоминанием позиций; lim — сколько позиций смотреть.
+   Ответ: {ok:true,path} — решение (список ходов с начала), {ok:false,full:true} — выхода нет, {ok:false} — не успел ---- */
+function solve(R,s0,lim){const seen=new Set(),heap=[];let nodes=0,uid=0;
+  const push=n=>{heap.push(n);let i=heap.length-1;while(i>0){const q=(i-1)>>1;if(cmp(heap[q],heap[i])<=0)break;const t=heap[q];heap[q]=heap[i];heap[i]=t;i=q;}};
+  const pop=()=>{const r=heap[0],l=heap.pop();if(heap.length){heap[0]=l;let i=0;for(;;){const a=2*i+1,b=a+1;let m=i;if(a<heap.length&&cmp(heap[a],heap[m])<0)m=a;if(b<heap.length&&cmp(heap[b],heap[m])<0)m=b;if(m===i)break;const t=heap[m];heap[m]=heap[i];heap[i]=t;i=m;}}return r;};
+  function cmp(a,b){return b.v-a.v||a.u-b.u;}
+  const path=n=>{const out=[];while(n.par){out.push(n.m);n=n.par;}return out.reverse();};
+  const root={s:stClone(s0),par:null,m:null,v:R.score(s0),u:uid++,g:0};seen.add(R.key(root.s));push(root);
+  while(heap.length){const n=pop();if(R.won(n.s))return {ok:true,path:path(n),nodes};if(++nodes>lim)return {ok:false,nodes};
+    const ms=R.moves(n.s);
+    for(let k=0;k<ms.length;k++){const m=ms[k],s=stClone(n.s);applyMove(R,s,m);const key=R.key(s);if(seen.has(key))continue;seen.add(key);
+      // порядок ходов (первые — полезнее) слегка поднимает оценку, глубина чуть опускает — ищем короткие и естественные решения
+      push({s,par:n,m,v:R.score(s)-k*0.5-(n.g+1)*0.02,u:uid++,g:n.g+1});}}
+  return {ok:false,full:true,nodes};}
+/*LOGIC-END*/
+/*SEEDS-BEGIN*/
+// решаемые раздачи: номера для R.deal(номер, режим), подобраны tools/seeds.sh — решатель нашёл решение, и оно проверено ходом по правилам.
+// Каждая игра — в своём блоке /*G:…*/ (сборка оставляет только свой). Режим 4 масти у Паука — без списка (случайные раздачи)
+const SEEDS_ALL={};const seedList=s=>s.split(",").map(x=>parseInt(x,36));
+SEEDS_ALL.klondike={1:seedList("8dtqr6,grnhia,p5h89g,xjaz0k,n686af,4fbmt6,ct5dka,l6z4bg,tksv2k,2g2ku5,j7q2cf,rljt3l,gtiv6,8un9ma,h8h0dg,pmar4k,y04hvq,6ve7nb,4w55oa,d9ywfg,lnsn6k,u1mdxq,2ww3pb,bapugf,jojl7l,s2dbyp,xn1qa,9bgshg,hpaj8k,ygy0qu,7c7qif,o3v80p,whoyrv,5cyojg,dqsfak,m4m61q,3dpmkf,brjdbl,sj6utv,1egklg,9sabck,i6423q,qjxsuu,yxrjm0,7t19dl,g6v04p,okoqvv,wyihmz,5ts7ek,e7ly5q,mlfowu,uz9fo0,c8cw6p,km6mxv,t00doz,1va3gk,a93u7q,imxkyu,r0rbq0,89us8p,p1i9qz,xfc0i5,eofh0u,n297s0,vg2yj4,4bcoap,cp6f1v,l305sz,2c3mbq,apxd2u,j3r3u0,rhkul4,cukcp,h4i1uz,pibsm5,xw5jd9,6rf94u,f58zw0,vwwhea,txnff9,2sx56u,b6qvy0,jkkmp4,ryedga,to37v,97htyz,hlbkq5,pz5bh9,ycz28f,788s00,fm2ir4,nzw9ia,wdq09e,58zq0z,dmtgs5,m0n7j9,39qo20,bnket4,1ahm2z,9obcu5,i253l9,qfyucf,7p2av4,ogpsde,e3mzn9,mhgqef,3qk6x4,c4dxoa,ki7ofe,sw1f6k,1rb4y5,a54vp9,iiymgf,qwsd7j,85vtqa,gjpkhe,xbd1zo,66mrr9,mya99j,vc400p,47dpsa,cl7gje,tcuy1o,izs5bj,rdlw2p,8vlua,h0j3ck,pecu3o,6ngamf,f1a1dj,nf3s4p,vsxivt,4o78ne,d20zek,lfuq5o,jglo6p,93ivgk,hhcm7o,pv6cyu,y903py,fi3k8p,nvxazt,w9r1qz,550rik,diui9o,lwo90u,uahzry,35rpjj,bjlgap,jxf71t,sb8xsz,16inkk,hy652u,qbzvty,yptml4,7l3ccp,fyx33t,ocqtuz,wqkkm3,5luado,dzo14u,urbin4,3ml8ep,c0ez5t,ke8pwz,ieznxy,qstep4,z6n5g8,gfqlyz,x7e3h9,62nt8u,eghjzy,mubar4,v851i8,ch8i0z,245pau,ahzg1y,ivt6t4,r9mxk8,4wnbt,8iqe2z,gwk4u3,xo7mcd,6jhc3y,exb2v4,nb4tm8,voykde,4k8a4z,cy20w3,lbvrn9,tppied,2kz85y,aysyx4,lq66z,8zjwy3,hddnp9,pr7egd,70auz4,fe4lq8,nryche,511t03,31sr14,bfmhs8,jtg8je,s79zai,9gdft9,hu76kd,7h4du8,fuy4le,o8rvci,wmlm3o,dvp2md,m9itdj,unck4n,3im9w8,bwg0ne,so3i5o,qoug6n,z2o6xt,7xxwpe,gbrngi,ople7o,x3f4ys,ecilhj,mqcc8n,cd9jii,206qsd,ae0hjj,8erfki,gsl6bo,p6ex2s,xk8nty,6fidlj,etc4cn,4g9bmi,2h09nj,auu0en,rmhhwx,hr7oi,8vkyfo,h9ep6s,pn8fxy,y126p2,6wbwgn,fa5n7t,nnzdyx,w1t4q3,4x2uho,dawl8s,loqbzy,u2k2r2,2xtsin,bbnj9t,jpha0x,ykqjo,9cehas,hq881y,yhvpk8,7d5fbt,fqz62x,o4swu3,wimnl7,5dwdcs,drq43y,m5juv2,ujdlm8,bsh24x,k6asw3,1fe9es,9t805y,qkvho8,yyp8fc,7tyy6x,g7soy3,5upw7y,e8jmz2,mmddq8,v074hc,3vgu8x,kn4br7,t0y2id,aa1j12,inv9s8,r1p0jc,zfirai,8ash23,gom7t7,p2fykd,6bjf32,epd5u8,n36wlc,vh0nci,4cad43,l3xumd,thrldh,2d1b52,aqv1w8,riijei,ds963,h5fqod,pj9hfh,f66opc,nk0fgi,4t3vz7,tyl48n,2tuu08,b7okrc,jlibii,rzc29m,uls17,98fisd,hm99jh,q030an,ydwr1r,796gtc,fn07ki,o0tybm,wenp2s,59xeud,dnr5lh,m1kwcn,3aocvc,boi3mi,k2budm,1bfawd,9p91nh,i32sen,7pzzoi,ohnh6s,wvh7xw,5qqxph,mief7r,uw85yx,3rhvqi,c5bmhm,1s8trh,ijwb9r,qxq20x,oyh01w,xcaqt2,67kgkn,ele7br,mz7y2x,48belm,292cmn,amw3dr,j0pu4x,rejkw1,9tanm,h1gs5w,pfaix2,xt49o6,f27q6x,ng1gy1,vtv7p7,4p4xgs,d2yo7w,tum5q6,2pvvhr,b3pm8x,jhjd01,rvd3r7,qmtis,94gk9w,pw41s6,y9xsjc,757iax,fj1921,nwuzt7,waoqkb,55ygbw,lxlxu6,ubfolc,36pecx,bkj541,sc6mmb,17gcdw,9la352,hz3tw6,qcxknc,yqrbeg,7m1161,odoiob,5mrz72,e0lpy6,mefgpc,kf6eqb,1o9v92,a23m06,qtr3ig,z7ku9m,82uk17,ggoasb,x8bsal,63li26,ehf8tc,mv8zkg,ci66ub,kvzxlh,t9tocl,253e46,aix4vc,5uc57,8jo2wb,gxhtnh,pbbkel,6kf0xc,ey8rog,vpw96q,4l5yyb,lctggl,2lwwzc,azqnqg,jdkehm,rre58q,mnv0b,90hlrh,ps539r,y5yu0v,718jsg,ff2ajm,nsw1aq,51zhth,dft8kl,ltmzbr,u7gq2v,bgk6lm,13hdvh,9hb4ml,ymscw1,7i22nm,fvvteq,wnjax0,dwmrfr,magi6v,3jjypm,bxdpgq,kb7g7w,sp16z0,1kawql,ibye8v,qps501,7yvliq,gcpc9w,x4cts6,5zmjjr,mra121,v53rt5,ce78bw,ks0z30,aey6cv,1vdmq,8fp4dw,gtiv50,p7clw6,xl6cna,6gg2ev,n83jx5,vlxaob,4h70fw,cv0r70,l8uhy6,tmo8pa,j9lfz5,iowhw,8win90,hace06,po64ra,y1zvig,nox2sb,w2qtjf,4y0jb0,dbua26,lpo0ta,u3hrkg,bcl835,jqeyub,s48plf,zifd0,hr5wva,q4znmg,yitedk,7e3455,o5qlnf,dsnsxa,ukbafk,3fl075,k78hpf,sl28gl,1gby86,9u5oza,i7zfqg,qlt6hk,yzmx8q,g8qdrf,omk4il,x0dv9p,mnb2jk,v14taq,3wej2b,ca89tf,ko20kl,t1vrbp,1x5h3a,aaz7ug,iosylk,r2mpcq,zggg3u,8bq5vf,gpjwml,p3dndp,6ch3wg,vhyc5u,4d81xf,l4vjfp,tipa6v,j5mhgq,8sjoql,h6dfhp,xy0wzz,6tamrk,nky49u,vyrv10,4u1ksl,d7vbjp,tzit1z,2usitk,b8m9kq,jmg0bu,99d7lp,q10p3z,yeufv5,7a45mq,fnxwdu,5av3np,doouev,m2il5z,ugcbx5,3bm1oq,bpfsfu,sh39y4,1cczpp,i40h7z,qhu7z5,yvnyq9,g4rf90,oil604,wwewra,5romiv,e5id9z,mjc415,ux5us9,3sfkju,c69bb0,kk3224,sxwsta,1t6ikv,a709bz,iku035,87r7d0,glky44,ozeova,xd8fme,68i5dz,embw55,vdzdnf,4993f0,cn2u64,l0wkxa,teqboe,j1niy9,rfh9pf,aqzh0,h2egza,pg87qe,xu1yhk,6pbo95,f35f09,ngz5rf,4q2ma4,d3wd1a,lhq3se,tvjujk,2qtkb5,b4nb29,jih1tf,rwaskj,rkic4,95e93a,px1qlk,fjyxvf,nxsomj,wbmfdp,56w55a,ucddeo,37n369,blgtxf,sd4bfp,18e17a,9m7rye,i01ipk,yrp07u,g0sgqj,oem7hp,5npo0e,e1jerk,mfd5io,3ogm1f,c2acsj,kg43jp,stxuat,1p7k2e,a31atk,igv1ko,83s8uj,ghlzlp,x99h3z,64j6vk,eicxmo,mw6odu,45a4wj,cj3vnp,kwxmet,tard5z,2612xk,ixokfu,rbib6y,8klrpp,gyfigt,pc997z,xq2zz3,6lcpqo,ez6ghu,nd078y,vqty04,4m3nrp,czxeit,ldr59z,trkw13,2mulso,b0ocju,jei3ay,rsbu24,nljtp,91fakt,hf91bz,y6wiu9,7268lu,ffzzcy,nttq44,w7ngv8,52x6mt,dgqxdz,33o4nu,bhhvey,jvbm64,14f2ot,9i8tfz,q9way9,7izrgy,fwti84,oan8z8,wogzqe,mbe709,bybea4,kc5518,icw329,qqpttd,z4jkkj,7ztac4,gdn138,orgrue,x5aili,60k8d3,eedz49,ms7pvd,v61gmj,41b6e4,cf4x58,ksynwe,t6seni,afvv69,itplxd,r7jcoj,8gmt78,p8aapi,6hdr89,vmuzhn,4i4p98,cvyg0e,l9s6ri,tnlxio,awpe1d,rocvjn,jmlb8,8xgc2e,hba2ti,pp3tko,y2xkbs,6y7a3d,fc10uj,npurln,w3oict,lqlpmo,u4fgds,2zp65d,bdiwwj,jrcnnn,s56eet,10g46e,9e9uxi,hs3loo,q5xcfs,yjr36y,7f0syj,fsujpn,o6oagt,wki17x,5frqzi,dtlhqo,m7f8hs,ul8z8y,3gip0j,bucfrn,1h9n1i,i8x4js,qmqvay,z0km22,7vubtn,onhtbx,x1bk33,5wl9uo,eaf0ls,v22i42,3xc7vn,kozpdx,t2tg53,1y35wo,abwwns,ipqney,r3ke62,zhe4x8,8cnuot,p4bc73,6desps,er8jgy,n52a82,viw0z8,4e5qqt,l5t893,2ewors,asqfiy,j6k6a2,rkdx18,fnmst,8thdjx,h7b4b3,pl4v27,xyyltd,4uz9lx,lmmr47,u0ghvd,2vq7my,b9jye2,wh5nx,9aawf3,yfs4oh,7b1ug2,fovl78,wgj2pi,5bssh3,uha0qh,bqdh98,k4780c,1daoj3,9r4fa7,7rvdb8,wxclkm,5smbc7,e6g23d,mk9suh,c7704c,syuhmm,1u47e7,qzlfnn,zdf6er,88ow6c,gmimxi,p0cdom,xe64fs,69fu7d,n13bpn,vex2gr,4a6s8c,co0izi,tfo0hs,2axq9d,aorh0h,j2l7rn,rgeyir,8pif1i,h3c5sm,xuznaw,6q9d2h,f433tn,nhwukr,vvqlbx,d4u1um,twhjcw,b5kzvn,96bxwm,hk5ons,pxzfew,772vxn,fkwmor,nyqdfx,dlnkps,lzhbgw,udb282,38krzn,bmeiqr,k089hx,se2091,19bq0m,i0z7iw,qesya2,ysmp16,7nwesr,g1q5jx,ofjwb1,5oncts,e2h3kw,mgauc2,3peaur,c381lx,kh1sd1,suvj47,1q58vs,ihsqe2,qvmh56,z9g7wc,84pxnx,gijof1,owdf67,65gvow,ejamg2,mx4d76,vay3yc,467tpx,ck1kh1,tbp1zb,26yrqw,iym996,rcg00c,7pprx,8ljgj1,gzd7a7,pd6y1b,xr0osh,6maek2,f045b6,ndxw2c,d0v3c7,leou3b,tsikuh,2nsam2,b1m1d6,rt9ivg,oj8n1,92cze7,hg6q5b,y7u7nl,733xf6,fgxo6c,w8l5om,53uvg7,dhom7b,lvicyh,u9c3pl,bifk8c,jw9azg,sa31qm,15cri7,9j6i9b,hx090h,yonqir,5koebb,dyi52h,3lfccc,bz933g,sqwklq,1m6adb,a0014h,qrnimr,z5h9dv,80qz5g,gekpwm,osegnq,x687ew,61hx6h,efbnxl,mt5eor,v6z5fv,cg2lym,t7q3gw,22zt8h,agtjzl,iunaqr,r8h1hv,3qr9g,8hki0m,gve8rq,p97ziw,xn1qa0,ew56sr,n9yxjv,vnsob1,4j2e2m,cww4tq,lapvkw,tojmc0,axn2ur,jbgtlv,rpakd1,kka4m,8ye0vq,pq1ie0,nqsgf1,w4m765,4zvwxq,lrjeg0,30muyr,jsach1,s64385,11dszq,9f7jqw,ht1ai0,q6v196,ykos0a,7fyhrv,fts8j1,o7lza5,wlfq1b,5gpfsw,m8cxb6,um6o2a,3hgdtv,bva4l1,k93vc5,smxm3b,1i7buw,9w12m0,i9utd6,qnok4a,z1iavg,7ws0n1,galre5,oofi5b,mp6g6a,v306xg,cc3ng5,kpxe7b,t3r4yf,iqoc8a,r4i2zg,zibtqk,8dlji5,p5910f,xj2rrl,6echj6,es68aa,n5zz1g,4f3fk5,csx6bb,l6qx2f,2fudl6,ato4ca,j7hv3g,8uf2db,h88t4f,xzwamp,6v60ea,f8zr5g,w0n8nq,4vwyfb,d9qp6f,lnkfxl,u1e6op,2wnwga,bahn7g,jobdyk,s254pq,hp2bzl,q2w2qp,ygpthv,7bzj9g,fpta0k,o3n0rq,whgriu,5cqhaf,dqk81l,m4dysp,3dhfbg,brb62k,siynku,9s243l,i5vuup,qjpllv,yxjccz,7st24k,okgjmu,wyaae0,5tk05l,e7dqwp,ml7hnv,uz18ez,klyfou,1v1w7l,a8vmyp,impdpv,r0j4gz,89mkzq,p1a2i0,6adj0p,eo79rv,n210iz,4b4h1q,coy7su,l2ryk0,tglpb4,app5tv,j3iwkz,cmd3q,8qg3uu,h49um0,pi3ld4,xvxc4a,6r71vv,niuje5,ljlhf4,2soxxv,b6iooz,jkcfg5,ry6679,tfvyu,hl3dh4,pyx48a,780kqz,flubi5,nzo299,wdht0f,58ris0,m0f0aa,ue8r1e,39igsz,bnc7k5,k15yb9,sezp2f,1a9eu0,i1wwca,qfqn3e,ytkduk,7ou3m5,g2nud9,oghl4f,wubbvj,5pl1n4,mh8j5e,uv29wk,3qbzo5,khzh6f,svt7xj,1r2xp4,a4woga,iiqf7e,85nmh9,gjhd8f,66ekia,ek8b9e,my220k,vbvsro,475ij9,ckz9af,kyt01j,tcmqsp,27wgka,alq7be,izjy2k,8mh5cf,h0aw3j,xrydlt,f11u4k,nevkvo,vspbmu,4nz1ef,d1ss5j,lfmiwp,ttg9nt,2opzfe,pgxgf,93ao7j,hh4eyp,y8rwgz,741m8k,fhvczo,nvp3qu,w9iuhy,54sk9j,dimb0p,lwg1rt,35jiak,jx6zsu,sb0qjy,hxxxtt,qbrokz,yplfc3,ocimly,dzftvt,ur3be3,3md15o,c06rwu,ke0iny,1n3z6p,iergoz,z6ey79,81onyu,gfiepy,otc5h4,x75w88,62flzt,eg9cqz,v7wu99,ch0ary,kuu1j4,t8nsa8,ahr8sz,r9eqb9,4og2u,8ii6ty,ex2vm3,nawmd9,4k02vy,cxttn4,lbnke8,tphb5e,2kr0wz,aykro3,jceif9,lhyxy,8zbpp4,hd5gg8,y4sxyi,702nq3,fdweh9,nrq58d,w5jvzj,50tlr4,denci8,lsh39e,31kjs3,bfeaj9,s71s1j,12bht4,9g58k8,htyzbe,q7sq2i,ylmgto,7gw6l9,fupxcd,o8jo3j,wmdeun,5hn4m8,m9am4i,un4cvo,3ie2n9,ka1k5j,1j50o8,9wyrfe,iasi6i,z2fzos,7xppgd,gbjg7j,x36xpt,ecae8i,mq44zo,v3xvqs,3z7lid,cd1c9j,adsaai,irm11o,r5frss,phkd,8ej8bj,gscz2n,xk0gkx,et3x3o,n6xnus,4g14dj,ctuv4n,l7olvt,tlicmx,2gs2ei,ault5o,rm9any,hj0fj,8vcr6n,6w3p7o,nnr6py,w1kxh2,4wun8n,daodzt,u2bvi3,2xll9o,bbfc0s,jp92ry,s32tj2,ycjan,9c6a1t,hq00sx,q3trk3,7cx82s,o4kpl2,5do63t,drhwux,3ef44s,bs8uvy,9szswx,i6tjo3,qknaf7,yyh16d,7tqqxy,g7khp2,ole8g8,wz7z7c,5uhoyx,e8bfq3,mm56h7,3v8mzy,kmw4i8,1vzl0x,a9tbs3,inn2j7,r1gtad,goe0k8,p27rbc,xg1i2i,ep4yl7,n2ypcd,vgsg3h,4c25v2,cpvwm8,l3pndc,thje4i,aqmun7,dk1x2,8rdso8,h57jfc,pj1a6i,xwv0xm,f5yhgd,njs87h,vxlyyn,4svoq8,lkj68i,tycwzm,2tmmr7,b7gdid,jla49h,987bjc,hm12ai,pzut1m,ydojss,fms0bh,dniyci,uf6fus,3ag5md,k23n4n,sfxdvr,1b73nc,9p0uei,qgobws,yui2nw,7prsfh,g3lj6n,wv90ox,5qiqgi,e4ch7m,mi67ys,uvzypw,c53f8n,kix5zr,swqwqx,qxhurw,86lban,67c9bm,el602s,myzqtw,4837cn,clwy3r,kzqoux,tdkfm1,28u5dm,amnw4s,j0hmvw,rebdn2,9l3en,8neu5r,h18kwx,xsw2f7,f1zixw,4owq7r,tudyh7,b3hezw,jhb5r2,qem9r,948d0x,hi23s1,74zb1w,fit1t2,wagjbc,djjzu1,lxdql7,ub7hcb,36h73w,sbyfdc,9l1vw1,hyvmn7,yqj45h,7lstx2,fzmko6,odgbfc,wra26g,5mjry1,e0dip7,me79gb,us107h,3napz2,ssry8g,qtiw9h,z7cn0l,82mcs6,ggg3jc,ou9uag,mv0sbh,v8uj2l,4448u6,chxzlc,t9lh3m,24v6v7,aioxmb,iwiodh,racf4l,5m4w6,8jfvnc,gx9meg,pb3d5m,xox3wq,6k6tob,ey0kfh,nbub6l,vpo1xr,4kxrpc,cyrigg,lcl97m,tqezyq,2lopqb,azighh,jdc78l,rr5xzr,mfnrc,he359m,prww0q,nsnu1r,w6hksv,51rakg,ltes2q,u78itw,32i8lh,bgbzcl,ju5q3r,s7zguv,9h2xdm,ymk5n0,7htvel,fvnm5r,o9hcwv,wnb3o1,dwek6q,ma8axw,uo21p0,3jbrgl,kaz8yv,soszq1,1k2phm,9xwg8q,qpjxr0,z3doi6,oqavs1,x44mj5,5zecaq,ed831w,v4vkk6,405abr,krsru1,20w8cq,aepz3w,isjpv0,r6dgm6,gtanw1,xky5eb,eu1lx0,n7vco6,4gyt6v,l8map5,tmg1gb,2hpr7w,avjhz0,j9d8q6,rn6zha,igp8v,ha46r5,pnxxib,6x1e10,fav4s6,noovja,w2imag,4xsc21,lpftkb,u39kbf,bcd0u6,jq6rla,9d3yv5,hqxpmb,yil74l,7duww6,fronna,o5ieeg,wjc55k,m69cff,uk336l,3fcsy6,bt6jpa,k70agg,sku17k,9txhqb,i7r8hf,qlkz8l,7uofra,g8i6ig,ombx9k,5vfdsb,e994jf,mn2val,v0wm1p,3w6bta,ca02kg,knttbk,t1nk2q,1wx9ub,iokrcl,r2ei3p,zg88uv,8bhymg,p35g4q,xgz6vu,6c8wnf,n3we5p,4czuog,cqtlfk,l4nc6q,2dqspf,j5ea7p,rj80yv,ehqqg,8sbhhk,6t2fil,nkpx0v,vyjnrz,llgv1u,tzalt0,2ukbkl,b8e2bp,jm7t2v,s01jtz,vb9lk,hmyr3u,q0shv0,yem8m4,79vydp,fnpp4v,o1jfvz,wfd6n5,dogn5u,bp7l6v,sgv2p5,1c4sgq,i3s9z0,7qph8v,g4j7zz,oicyr5"),3:seedList("9kk3r7,qc7l9h,7lb1s6,fz4sjc,wqsa1m,dzvqkb,3msxu6,c0molc,kegfcg,ssa63m,a1dmmb,z6uuvr,824knc,gfybeg,ots25m,x7lswq,62viob,v8cqxr,chg7gg,t93oyq,24deqb,ai75hh,iw0w8l,8iy3ig,pall0q,6jp1jh,nbcj1r,vp69sv,lc3h2q,2l6xlh,jcuf3r,8zrmdm,hdld4q,prf3vw,y58un0,70ikel,w5zso1,df396q,lswzxw,320ggl,bfu77r,9gl58q,huevzw,ym2di6,fv5u0v,wmtbj5,5i31aq,dvws1w,m9qit0,unk9k6,3itzbr,bwnq2v,sob7l5,z2vwda,7y5m4v,gbzcw1,x3mueb,5ywk5w,v4dsfa,cdh8y1,t54qgb,20eg7w,r5voha,15e8v,8ez501,gssvr5,p6mmib,etjts6,n7dkja,4gh121,l84ikb,tly9bf,av1pu6,rmp7cg,hyx41,8vsnv5,png5df,y19w4l,6wjlw6,w20u5k,4xajx5,db4aob,loy1ff,u2rs6l,bbv8pa,jpozgg,s3iq7k,ysfz5,9cm6qb,yi3ezp,7dd4ra,fr6vig,o50m9k,5e42sb,drxtjf,m5rkal,ujlb1p,3ev0ta,k6iibk,1flyub,i79gcl,ql373p,yywxuv,7u6nmg,g80edk,olu54q,wznvvu,5uxlnf,mml35p,v0etwv,3vojog,c9iafk,knc16q,t15rxu,1wfhpf,aa98gl,io2z7p,zfqgpz,8b06hk,gotx8q,p2nnzu,epkv9p,n3em0v,4ci2jk,cqbtaq,l45k1u,thzat0,2d90kl,ar2rbp,j4wi2v,dzylk,8rtpcq,h5ng3u,pjh6v0,6skndp,f6ee4v,vy1vn5,4tbleq,tysto4,2u2jfp,b7wa6v,jlq0xz,uthgq,98n87u,q0apq4,ye4gha,79e68v,o11nr5,wevei9,5a549u,dnyv10,m1sls4,ufmcja,3aw2av,bopt1z,sgdak9,1bn0bu,i3ahu4,qh48la,yuxzce,g41fv5,ohv6m9,5qyn50,e4sdw4,mim4na,uwfvee,3rpl5z,c5jbx5,kjd2o9,1sgj70,a6a9y4,ik40pa,qxxrge,zbri7k,8717z5,gkuyq9,oyophf,67s604,mzfnie,vd9e9k,cmcus9,l06ljf,te0caj,29a224,an3sta,j0xjke,a1035,h1ohlf,pfi8cj,6olova,f2ffme,ng96dk,vu2x4o,d36dnf,lh04ej,tutv5p,jhr2fk,rvkt6o,quiy9,hii0gj,ya5hyt,75f7qe,nx2p8o,wawfzu,5665rf,djzwij,36x3se,bkqujk,jyklao,scec1u,17o1tf,9lhskj,qd5a2t,yqz0tz,7m8qlk,g02hco,odw83u,wrpyuy,5mzomj,e0tfdp,usgwvz,3nqmnk,1ohkoj,a2bbfp,ig526t,ggw07u,oupqyy,ehmy8t,mvgozz,cidw9u,ta1ds4,aj4uat,rasbt3,pbj9u4,xpd0l8,nca7v3,vq3ym9,4ldodu,tquwn8,2m4met,azyd5z,rrluo9,90pb6y,hej1y4,y66jge,71g97z,ff9zz3,nt3qq9,52778y,dg0y04,ltuor8,u7ofie,32y59z,julms9,s8fdjd,13p3ay,9hiu24,hvckt8,q96bke,yn02bi,7i9s33,fw3iu9,o9x9ld,wnr0cj,mao7me,bxlew9,kbf5nd,sp8wej,1kim64,9yccx8,ic63oe,z3tl6o,7z3ay9,oqqsgj,x4kj7n,5zu8z8,ednzqe,40l709,ceexrd,ks8oij,t62f9n,21c518,iszmji,r6tdao,23329,8fwttd,gtqkkj,p7kbbn,tmvy4t,avzeni,j9t5eo,rnmw5s,iwlxd,8wqcoj,hak3fn,podu6t,y27kxx,6xhapi,fbb1go,w2yiyy,4y88qj,dc1zhn,lpvq8t,u3pgzx,2yz6ri,jqmo9s,s4gf0y,zq4sj,9djvjn,hrdmat,q57d1x,7eatko,fs4kbs,wjs1u2,5f1rln,dsvict,m6p93x,ukizv3,3fspmo,btmgds,k7g74y,9udeet,yzumo7,7v4cfs,x0lkp8,5vvagt,mnirz3,3wm8hs,cafz8y,ko9q02,t23gr8,1xd6it,ab6x9x,ip0o13,r2ues7,zgo5jd,8bxvay,xhf3kc,vi61ld,4dfrcy,l538v8,2e6pdx,as0g53,j5u6w7,rjnxnd,exney,8sre62,pkevoc,xy8mfi,6tic73,nl5tpd,vyzkgh,4u9a82,tzqihi,2v0893,b8tz07,jmnprd,vr6a2,99kx18,7abv27,fo5ltd,o1zckh,5b2t38,dowjuc,m2qali,3btr47,bpnhvd,1ckp58,i486ni,qi1xem,7r5dxd,g4z4oh,oisvfn,wwmm6r,uxdk7s,c6h0qh,kkarhn,sy4i8r,1te80c,a77yri,il1pim,qyvg9s,87ywsh,glsnjn,ozmear,xdg51x,68puti,cnajln,l14acr,tey13x,2a7qvi,ao1hmm,j1v8ds,8osfnn,h2m6er,pgfx5x,xu9nx1,6pjdom,vv0ly2,lhxt7x,2r19qm,jior8w,rwii02,rs7rn,px9g11,fk6naw,ny0e22,dkxlbx,lyrc31,ucl2u7,37usls,blojcw,sdc0v6,18lqmr,yrwpnb,oetwx6,wsnnoc,5nxdfx,e1r471,mfkuy7,3oobgw,1pf9hx,a39091,ih2r07,quwhrb,ghtp16,ovnfsc,x9h6jg,eikn27,va84kh,45huc2,ixw9vb,rbq0mh,6zqe2,gyn7wc,pcgyng,xqapem,6lkf67,vr1nfl,d053yc,trslgm,2n2b87,b0w1zb,jepsqh,rsjjhl,nt996,91n00c,ptahim,y7489q,fg7osh,nu1fjl,w7v6ar,534w2c,lusdkm,33vu3b,bhpkuh,jvjbll,s9d2cr,14ms4c,9igivg,qa40dq,7j7gwh,fx17nl,oauyer,woop5v,dxs5om,mblwfq,byj3pl,sq6l7v,1lgazg,z4ra00,800zrl,x5i811,eelojq,msffaw,v69620,cfcmkr,kt6dbv,t70431,ag3klq,8guimr,p8i051,6hlgnq,evf7ew,vn2ox6,cw65fv,l9zw71,tntmy5,2j3cpq,awx3gw,rokkz6,8xo1hv,hbhs91,ppbj05,6yeziw,fc8qa0,w3w7sa,4z5xjv,u4n5tb,2zwvkw,bdqmc0,jrkd36,10ntlv,9ehkd1,hsbb45,yjysmf,7f8ie0,m7mxxb,ulgoof,buk576,k8dvya,1hhch1,9vb385,i94tzb,qmykqf,z0sbhl,g9vs0a,onpirg,5wsza5,eamq1b,v2a7jl,3xjxb6,ipycuf,zhlucp,8cvk4a,gqpavg,p4j1mk,erg8wf,n59znl,4edg6a,cs76xg,2f4e7b,j6rvpl,rklmgp,fvc8a,h7itqk,plckhq,6ug10f,f89rrl,nm3iip,vzx99v,d90psk,u0o7au,2vxx2f,b9rntl,jnlekp,wov3g,9ailuk,hocclq,yfzu40,7b9jvl,fp3amp,o2x1dv,5c0hwk,dpu8nq,uhhq60,bql6op,k4exfv,si8o6z,1didyk,9rc4pq,i55vgu,ywtcz4,g5wthv,ojqk8z,wxkb05,5su0rq,mkhia0,c7epjv,sz2725,1ubwtq,a85nku,ilzec0,qzt534,zdmvua,88wllv,p0k345,n1b154,4aehnv,co88ez,l21z65,tfvpx9,2b5fou,aoz6g0,j2sx74,rgmnya,8pq4gz,xv7cqf,f4at94,vvyare,livi19,b5spb4,jjmg2a,spwkz,96jnc5,hkde39,py74uf,77ald4,fl4c4a,nyy2ve,wcrtmk,581je5,dlva59,lzp0wf,udirnj,38shf4,k0fyxe,se9pok,i16wyf,wtlcho,5ov299,mgijrj,uucaip,3pm0aa,c3fr1e,kh9hsk,1qcyb9,a46p2f,z9nxbt,84xn3e,girduk,xaevcu,ejibvj,vb5tdt,46fj5e,ky30no,276h6f,al07xj,iytyop,rcnpft,7xf7e,8lr5yk,pdengu,xr8e7y,6mi3zj,f0buqp,ne5lht,vrzc8z,4n920k,d12sro,lewjiu,2o001j,b1tqsp,oqy2k,92koto,hgefku,pu86by,y81x34,73bmup,fh5dlt,nuz4cz,w8sv43,dhwbmu,lvq2dy,u9jt54,jwh0ez,hx7yfy,qb1p74,yovfy8,7k55pt,wpmdz9,dypuhy,mcjl94,uqdc08,1mdzsu,a07qjy,ie1hb4,z5oyte,80yokz,gesfc3,osm639,x6fwud,efjdd4,ku4259,t7xswd,r8oqxe,3ygoz,8hs7g3,gvly79,ewcw88,vo0dqi,4ja3i3,cx3u99,laxl0d,torbrj,2k11j4,axusa8,jboj1e,rpi9si,krzk3,8ylqb9,hcfh2d,pq97tj,503md9,ddxd4d,lrr3vj,u5kumn,30uke8,beob5e,jsi1wi,s6bsno,11lif9,ht8zxj,7g677e,ftzxyi,o7topo,wlnfgs,duqvzj,m8kmqn,umedht,3ho39e,bvhu0i,k9bkro,sn5bis,ia2isn,qnw9jt,gatgto,oon7ks,5xqo3j,ebkeun,mpe5lt,v37wcx,3yhm4i,ccbcvo,ad2awn,iqw1nt,r4psex,zijj63,8dt8xo,grmzos,p5gqfy,esdxpt,vk1f83,4fb4zo,ct4vqs,j7pkix,rljba3,8umrss,h8gijy,pma9b2,y04028,6vdptt,f97gkx,nn17c3,w0uy37,d9yely,lns5d2,u1lw48,2wvlvt,bapcmx,joj3e3,s2cu57,hpa1f2,7c78ox,fq0zg3,o3uq77,whogyd,dqrxh2,uifezc,3dp4qx,brivi3,sj6d0d,1eg2ry,9s9tj2,yxr1si,7t0rk3,g6uib7,wyhzth,e7lgc8,mlf73c,uz8xui,3uinm3,c8ced7,km654d,szzvvh,imx35c,zekknm,89uaf7,gno16d,eoez7c,n28pyi,4bc6h7,cp5x8d,tgteqn,2c34i8,cu2j7,8qntad,xw51jr,6rerbc,nj28tm,vwvzks,4s5pcd,d5zg3h,ljt6un,txmxlr,2swndc,jkk4vm,rydvms,tnled,97hc5h,hlb2wn,pz4tnr,nzvros,wdpifw,58z87h,dmsyyn,m0mppr,uegggx,39q68i,k1dnqs,sf7ehw,1ah49h,i24lrr,qfycix,7p1t1m,ogpajw,wuj1b2,5psr2n,e3mhtr,mhg8kx,3qjp3m,ki76lw,sw0xd2,1ran4n,a54dvr,iiy4mx,qwrve1,gjp2nw,oxitf2,66m9xr,ekg0ox,my9rg1,vc3i77,47d7ys,cl6ypw,kz0ph2,tcug86,2845zr,rdle97,8v40s,8mourw,h0ilj2,f19jk1,vsx12b,d20hl2,2oxoux,b2rfm1,ruex4b,pomvw,93idn2,hhc4e6,pv5v5c,y8zlwg,749bo1,fi32f7,nvwt6b,w9qjxh,5509p2,diu0g6,lwnr7c,uahhyg,35r7q1,sb8fzh,9kbwi6,qbze0g,ypt4rm,fywlab,wqk2sl,5ltsk6,dznjbc,3mkql7,ke883h,1nbom6,iez64g,gfq45h,otjuwl,62nbfc,egh26g,muasxm,v84joq,43e9gb,ch807h,t8vhpr,2457hc,ivsozm,r9mfqq,4w5ib,8ipw9h,paddrr,6jguag,nb4bsq,4k7sbh,cy1j2l,tpp0kv,2kyqcg,aysh3m,lpodh,8zjf4l,pr6wmv,y50ne1,70ad5m,fe43wq,nrxunw,w5rlf0,511b6l,dev1xr,lsosov,bflzyq,s79hh0,12j78l,9gcxzr,q80fi1,ylu695,7h3w0q,fuxmrw,o8rdj0,wml4a6,5huu1r,m9ibk1,3ils2q,bwfitw,ka99l0,1jcq3r,9x6guv,z2np4b,7xxevw,gbr5n0,opkwe6,x3en5a,5yocwv,mqbuf5,v45l6b,kr2sg6,t4wj7a,2068yv,adzzq1,irtqh5,r5nh8b,x6zw,8eqxr0,gskoi6,p6ef9a,n75dab,vkz41f,4g8tt0,cu2kk6,tlq22g,2gzru1,autil5,j8n9cb,rmh03f,hqpv0,pn7y4g,fa55eb,nnyw5f,4x2co6,2xtap5,jpgs7f,s3aiyl,yk8q6,yhv7qq,fqyo9f,o4sf0l,wim5rp,5dvvja,drpmag,m5jd1k,ujd3sq,3emtkb,bsgkbf,k6ab2l,sk41tp,1fdrla,i7193k,qkuzuq,yyoqlu,7tygdf,g7s74l,ollxvp,5upeeg,mmcvwq,3vgcff,c9a36l,kn3txp,t0xkov,inuryq,zfi9h0,golpzp,xg97hz,epco0q,vh05j0,4c9val,cq3m1p,l3xcsv,thr3jz,2d0tbk,aquk2q,j4oatu,drrcl,8rli3p,h5f8uv,xx2qd5,6scg4q,f666vu,4t3e5p,d6x4wv,tykmf5,2tuc6q,b7o2xu,jlhtp0,ula7p,98f0yv,hm8rpz,ydw989,795yzu,o0tgi4,59wx0v,m1kej5,3anv1u,bohlt0,k2bck4,1bet2v,9p8jtz,i32al5,qgw1c9,yups3f,ohmzda,wvgq4e,5qqfvz,e4k6n5,uw7o5f,3rhdx0,c5b4o4,kj4vfa,swym6e,1s8bxz,a622p5,ijvtg9,qxpk7f,zbjayj,86t0q4,gkmrha,oygi8e,eldpi9,vd170j,48aws4,cm4nja,kzyeae,tds51k,amvlk9,j0pcbf,9ssu4,8nmjla,h1gace,pfa13k,ng0z4j,vtupvp,4p4fna,d2y6ee,b3p4ff,jhiv6j,rvclxp,qmbpa,pw3jyo,7570hf,fj0r8j,nwuhzp,wao8qt,djrp9k,lxlg0o,36owjf,bkinaj,jyce1p,sc64st,17fuke,9l9lbk,hz3c2o,yqqtky,7m0jcj,odo0ut,e0l84o,meeyvu,c1c65p,kf5wwt,ssznnz,1o9dfk,ifwuxu,82u27p,kvzfrz,252wao,rak4k4,5tubp,gxhbtz,pbb2l3,6kej3u,ey89uy,nc20m4,vpvrd8,cyz7vz,lcsyn3,tqmpe9,2lwf5u,jdjwo4,rrdnf8,mnd6t,90h3xz,heaup3,ps4lg9,y5yc7d,ff1sq4,nsvjh8,51yzzz,dfsqr3,ltmhi9,32py0y,bgjos4,judfj8,s876ae,13gw1z,9hamt3,7i1ku4,o9p2ce,wnit3i,5isiv3,mag0dd,uo9r4j,3jjgw4,bxd7n8,kb6yee,sp0p5i,9y45o9,z3ldxn,7yv3p8,gcouge,oqil7i,x4cbyo,5zm1q9,edfshd,ks0h9i,aexojd,isrfaj,r6l61n,1uvt8,8fomke,p7c42o,n8323n,vlwsut,4h6ime,cv09di,l8u04o,tmnqvs,2hxgnd,avr7ej,j9ky5n,ioeoe,8wi5fi,po5mxs,6x93gj,fb2u7n,nowkyt,4y01hi,2yqzij,9dboao,yiswk2,7e2mbn,frwd2t,o5q3tx,5etkco,dsnb3s,m6h1uy,ukasm2,3fkidn,bte94t,1gbgeo,9u575s,i7yxwy,qlsoo2,x0ddg7,e9gtyy,mnakq2,3we18t,ko1ir3,1x4z9s,aayq0y,iosgs2,zgfyac,8bpo1x,gpjet3,p3d5k7,xh6wbd,eqacu2,n443l8,vhxucc,4d7k3x,cr1av3,ars8w2,rjfqec,8sj6x3,h6cxo7,xy0f6h,6ta4y2,f73vp8,nkxmgc,vyrd7i,4u12z3,d7utq7,llokhd,2us102,b8lrr8,jmfiic,viz13,99cps7,7a3nt8,fnxekc,o1r5bi,wfkw2m,5aulu7,doocld,m2i3ch,ugbu3n,3bljv8,bpfamc,k391di,1cchw7,9q68nd,i3zzeh,qhtq5n,7qx6oc,g4qxfi,oiko6m,wweexs,e5hvgh,3sf2qc,c68thi,kk2k8m,sxwazs,a6zrih,ikti9n,87qpji,oze71s,xd7xsw,n0552r,vdyvtx,cn2ccm,l0w33s,29zjmh,antadn,j1n14r,aqhni,8ok8em,h2dz5s,pg7pww,xu1go2,6pb6fn,ngynxx,vusep1,4q24gm,d3vv7s,lhplyw,tvjcq2,2qt2hn,b4mt8r,rwaar1,rk0im,95dr9s,hj7i0w,764par,fjyg1x,nxs6t1,56vnbs,dkpe2w,blgc3x,jza2v1,sd3tm7,18djds,9m7a4w,qdurn6,yroiec,7my85x,g0ryx1,5np66w,mfcnp6,ut6egc,stxchb,1p728w,a30t02,quoaic,z8i19g,ghlhs7,x98zah,eicft6,v9zxbg,kwx4lb,taqvch,260l42,ajubv6,ixo2mc,8kl9w7,xq2i5l,6lc7x6,ez5yoc,nczpfg,vqtg6m,4m35y7,czwwpb,ldqngh,trke7l,b0nuqc,91esrb,hf8jih,pt2a9l,725qsc,ffzhjg,ntt8am,w7mz1q,u8dx2r,jvb4cm,s94v3q,hw22dl,ynpjvv,oamr5q,dxjyfl,3kh5pg,byawgm,kc4n7q,1l83qh,icvl8r,qqpbzv,gdmj9q,x5a0s0,60jqjl,eedhar,v60yt1,41aokm,cf4fbq,t6rwu0,itp43v,r7iuv1,2skmm,8gmbdq,p89sw0,xm3jn6,ev705v,n90qx1,4i47fq,l9roy0,tnlfp6,awow7v,rocdq5,jm3hq,y2x2ia,fc0j11,npu9s5,4yxqaw,dcrh20,lql7t6,u4eyka,2zoobv,bdif31,s55wlb,10fmcw,q5wuma,yjqldg,7f0b51,fsu1w5,wkhjef,5fr960,dtkzx6,m7eqoa,ul8hfg,slzfgf,9v2vz6,i8wmqa,z0k48k,7vtu05,onhbif,x1b29l,5wks16,eaeisa,mo89jg,v220ak,3xbq25,1y2o36,ipq5lg,r3jwck,zhdn3q,gqh3mf,p4audl,xi4l4p,vivj5q,4e58xb,cryzof,l5sqfl,tjmh6p,aspxpg,j6jogk,rkdf7q,fn4zb,h7amhl,pl4d8p,xyy3zv,6u7trg,nlvb9q,vzp20u,4uyrsf,lmm9ap,b9jgkk,9aaell,ho45cp,q1xw3v,fov3dq,o2ou4u,5bsanl,dpm1ep,m3fs5v,uh9iwz,3cj8ok,k46q6u,si0gy0,9r3xgp,i4xo7v,qireyz,ywl5q5,7ruvhq,g5om8u,ojid00,wxc3r4,e6fk9v,3tcrjq,c76iau,kl0920,sytzt4,1u3pkp,a7xgbv,zdeol9,88oecu,gmi540,xe5mma,69fcdv,en934z,n12tw5,co0160,l1trx4,2ax8fv,aoqz6z,j2kpy5,rgegp9,8phx80,h3bnz4,ph5eqa,xuz5he,6q8v8z,nhwcr9,vvq3if,d4tk14,twh1je,2rqraz,b5ki25,jje8t9,shpc0,96bg34,hk56ua,pxyxle,ybsock,772e45,fkw4v9,57tc54,udakek,38ka65,se1ifj,19b874,9n4yya,i0yppe,7nvwz9,wtd58p,5omv0a,e2glre,mgacik,uu439o,3pdt19,suv1ap,1q4r2a,a3yhte,ihs8kk,qvlzbo,z9fq2u,gij6lj,owcxcp,xa6o3t,65gdve,eja4mk,mx3vdo,467bwf,ck12nj,kxutep,tbok5t,26y9xe,aks0ok,iylrfo,7p7yf")};
+
+
+const SEEDS=SEEDS_ALL[GID]||{};
+/*SEEDS-END*/
+/* ---- настройки игр серии: название, режимы, «родной» стол и персонаж ---- */
+const GAMES={
+  klondike:{name:'Косынка',sub:'во дворе',title:'Косынка во дворе',skey:'kosynka-v1',host:'zina',table:'yard',
+    modes:[{id:1,name:'По одной',full:'по одной карте',coins:10},{id:3,name:'По три',full:'по три карты',coins:15}],daily:1,
+    how:[`🃏 Собери все карты в <b>дом</b> (четыре стопки вверху) — по мастям, от туза до короля.`,
+      `⬇️ В столбцах карты кладут <b>по убыванию, чередуя цвет</b>: на чёрную девятку — красную восьмёрку. Можно переносить целую цепочку.`,
+      `👑 В пустой столбец — только <b>король</b> (или цепочка с короля).`,
+      `🃏 Нажми на <b>колоду</b> — откроется карта (или три — в режиме «по три»). Колоду можно перебирать сколько угодно.`,
+      `👆 Карту можно тащить пальцем или просто <b>нажать</b> — она сама встанет на подходящее место.`]},
+  
+  
+};
+const GC=GAMES[GID],R=RULES[GID];
+document.title=GC.title;
+
+/* ================= сохранение ================= */
+const SKEY=GC.skey;
+let S={coins:50,st:{},daily:{},ach:{},own:{},seq:{},games:0,wins:0};
+try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
+const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+// защита от сохранений неожиданной формы (ручная правка, старая версия): не даём им сломать игру и слияние
+function fixSave(){for(const f of ['st','daily','ach','own','seq'])if(!isObj(S[f]))S[f]={};for(const k in S.st)if(!isObj(S.st[k]))delete S.st[k];
+  for(const f of ['tables','backs','faces'])if(!Array.isArray(S.own[f]))S.own[f]=[];
+  for(const f of ['games','wins','adW'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
+  if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};
+  if(!GC.modes.some(m=>m.id===S.mode))S.mode=GC.modes[0].id;}
+fixSave();
+// «точка отсчёта» с облаком: какое сохранение и сколько монет было общим у устройства и облака (при запуске, после слияния и после записи).
+// Монеты, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным — не теряются и не возвращаются
+let BOOT_TS=S.ts||0,BOOT_COINS=S.coins;
+// облако: Яндекс — не чаще раза в 3,5 с (лимит 100 записей за 5 мин), VK — раза в 15 с; при сворачивании — сразу.
+// Пока облако не прочитано и не слито с локальным — в облако не пишем (иначе пустое новое устройство затрёт прогресс)
+let cloudT=0,cloudReady=false,cloudBusy=false,cloudTry=0,cloudBroken=0;
+function save(){S.ts=nowMs(); // на Яндексе — время сервера: у двух устройств с разными часами слияние не ошибётся, какое сохранение новее
+try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
+  if(!cloudReady){cloudLoad();return;}
+  if((YP||VK)&&!cloudT)cloudT=setTimeout(cloudFlush,YP?3500:15000);}
+function cloudFlush(){clearTimeout(cloudT);cloudT=0;if(!cloudReady)return;
+  try{if(YP){const ts=S.ts,c=S.coins;YP.setData(S,true).then(()=>{BOOT_TS=ts;BOOT_COINS=c;}).catch(()=>{});}else if(VK)vkSaveCloud();}catch(e){}}
+// JSON с упорядоченными ключами — чтобы сравнивать сохранения без учёта порядка и ts
+function canon(o){return JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((r,x)=>(r[x]=v[x],r),{}):v);}
+const noTs=o=>Object.assign({},o,{ts:0});
+// прочитать облако (при запуске, после входа в аккаунт или повтор после сбоя), слить с локальным и дописать в облако, чего там не хватает.
+// Битое облако VK (куски не сошлись) не считаем пустым: не пишем поверх, читаем ещё раз; после 3 неудач — берём локальное
+async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Date.now()-cloudTry<10000))return;cloudBusy=true;cloudTry=Date.now();
+  try{const d=YP?await timeLim(YP.getData(),8000):await vkLoadCloud();
+    const before=canon(noTs(S));mergeSave(d);fixSave();cloudReady=true;cloudBroken=0;
+    if(d&&typeof d.ts==='number')BOOT_TS=Math.max(BOOT_TS,d.ts);BOOT_COINS=S.coins;
+    const ch=canon(noTs(S))!==before;
+    if(ch){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}}
+    if(!d||canon(noTs(d))!==canon(noTs(S))){save();cloudFlush();}
+    if(ch&&typeof onCloud==='function')onCloud();
+  }catch(e){if(e&&e.broken&&++cloudBroken>=3){cloudReady=true;BOOT_COINS=S.coins;save();}}finally{cloudBusy=false;}}
+
+/* ================= площадка: Яндекс Игры или VK ================= */
+// VK передаёт в адрес игры параметры запуска (vk_app_id и др.); ?vk=1 — проверка VK-режима на маке
+const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
+let ysdk=null,YP=null,VK=null,paused=false;
+// причины паузы (реклама, свёрнуто, пауза площадки, окно оплаты): снимаем паузу, только когда ушли все — а не «вслепую» при возврате
+const pauseWhy=new Set();
+function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
+  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
+  if(!paused&&typeof kick==='function')kick();}
+const YG={
+  start(){try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
+  stop(){try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.stop();}catch(e){}}
+};
+// слияние облака с локальным: успехи, расклады дня, достижения, украшения — максимум/объединение (прогресс не теряется);
+// монеты — облачные + то, что изменилось на устройстве после «точки отсчёта» (если облако новее); настройки — из более нового
+function mergeSave(d,ref){if(!isObj(d))return;
+  const dt=typeof d.ts==='number'?d.ts:0,rt=ref==null?BOOT_TS:ref,newer=dt>rt;
+  for(const f of ['games','wins'])if(typeof d[f]==='number')S[f]=Math.max(S[f]||0,d[f]);
+  for(const f of ['daily','ach','seq'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
+  if(isObj(d.st))for(const m in d.st){const a=d.st[m];if(!isObj(a))continue;if(!isObj(S.st[m]))S.st[m]={};const b=S.st[m];
+    for(const k of ['p','w','bs'])if(typeof a[k]==='number')b[k]=Math.max(b[k]||0,a[k]);
+    for(const k of ['bt','bm'])if(typeof a[k]==='number'&&a[k]>0)b[k]=b[k]>0?Math.min(b[k],a[k]):a[k];
+    if(typeof a.cs==='number'&&newer)b.cs=a.cs;}
+  if(isObj(d.own))for(const f of ['tables','backs','faces'])if(Array.isArray(d.own[f])){if(!Array.isArray(S.own[f]))S.own[f]=[];for(const x of d.own[f])if(typeof x==='string'&&S.own[f].indexOf(x)<0)S.own[f].push(x);}
+  if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|games|wins|daily|ach|seq|st|own|coins|streak|buy|buyB|payT|payV)$/.test(k))S[k]=d[k]; // настройки, выбранный стол и т. п.
+  payMerge(d); // покупки — объединение
+  if(isObj(d.streak)){const a=S.streak,b=d.streak;
+    if(!a||(b.last||0)>(a.last||0))S.streak=b;
+    else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last,cyc:Math.max(a.cyc||0,b.cyc||0)};}}
+// ответ площадки с ограничением по времени: не ответила — считаем сбоем (облако повторим позже, cloudBusy снимется в finally)
+function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
+function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
+// ответ VK с ограничением по времени (вне VK мост может не ответить вовсе); VKWebAppInit на слабом телефоне может идти долго — ждём до 20 с
+function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
+// VK хранит значение до 4096 байт — режем на куски по 1800 символов (сохранение — латиница и цифры).
+// Двойной буфер: новые куски пишутся по очереди в «a0…» или «b0…», а указатель svn="b:5:<длина>" — строго последним;
+// пока новый набор не дописан, старый цел. Запись последовательная (без гонок и частотных ошибок VK)
+const VK_CHUNK=1800,VK_MAXCH=40,vkSent={};let vkCur=null,vkQ=null,vkAgain=false;
+async function vkPut(k,v){if(vkSent[k]===v)return;await vkSend('VKWebAppStorageSet',{key:k,value:v},8000);vkSent[k]=v;}
+function vkSaveCloud(){if(vkQ){vkAgain=true;return vkQ;}
+  vkQ=(async()=>{try{do{vkAgain=false;const str=JSON.stringify(S),ts=S.ts,c=S.coins,n=Math.ceil(str.length/VK_CHUNK),pre=vkCur==='a'?'b':'a';if(n>VK_MAXCH)return;
+      for(let i=0;i<n;i++)await vkPut(pre+i,str.slice(i*VK_CHUNK,(i+1)*VK_CHUNK));
+      await vkPut('svn',pre+':'+n+':'+str.length);vkCur=pre;BOOT_TS=ts;BOOT_COINS=c;}while(vkAgain);}catch(e){}finally{vkQ=null;}})();
+  return vkQ;}
+const BROKEN={broken:true};
+async function vkLoadCloud(){const r0=await vkSend('VKWebAppStorageGet',{keys:['svn']}),e0=((r0&&r0.keys)||[]).find(k=>k.key==='svn'),raw=e0&&e0.value||'';
+  if(!raw)return null; // облака нет
+  const m=/^([ab]):(\d+):(\d+)$/.exec(raw);let pre='sv',n=+raw||0,len=-1; // старый формат: svn = число кусков sv0…
+  if(m){pre=m[1];n=+m[2];len=+m[3];}
+  if(!n||n>VK_MAXCH)throw BROKEN;
+  const keys=[];for(let i=0;i<n;i++)keys.push(pre+i);
+  const r=await vkSend('VKWebAppStorageGet',{keys}),mm={};((r&&r.keys)||[]).forEach(k=>mm[k.key]=k.value);
+  let str='';for(const k of keys){if(typeof mm[k]!=='string'||!mm[k])throw BROKEN;str+=mm[k];}
+  if(len>=0&&str.length!==len)throw BROKEN;
+  let d;try{d=JSON.parse(str);}catch(e){throw BROKEN;}if(!isObj(d))throw BROKEN;
+  if(pre!=='sv'){vkCur=pre;for(const k of keys)vkSent[k]=mm[k];vkSent.svn=raw;}
+  return d;}
+// облако пришло позже меню: перерисовать то, что на экране (раскладку на столе не трогаем — она своя у устройства)
+function onCloud(){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}updCoins();applyLook();
+  if(!modalOn&&$('scr-menu').classList.contains('on'))openMenu();}
+async function initVK(){
+  // меню уже на экране; мост VK и облако догружаем следом (VKWebAppInit может отвечать секунды)
+  try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
+    await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;
+    VK.subscribe(e=>{const t=e.detail&&e.detail.type;
+      if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
+      else if(t==='VKWebAppViewRestore')setPause('hide',false);});
+    await cloudLoad();
+    vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
+  }catch(e){VK=null;}
+  PAY.init(); // покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1)
+  updCoins();updButtons();
+  window.__sdkDone=true;if(!window.__demo&&!modalOn&&$('scr-menu').classList.contains('on')){openMenu();maybeStreak();}
+}
+async function initSDK(){
+  if(window.YaGames){
+    try{ysdk=await YaGames.init();
+      // «игра загружена» — сразу: меню уже на экране, облако и покупки догружаются следом (зависшее облако не должно держать ready)
+      try{ysdk.features&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
+      ysdk.on&&ysdk.on('game_api_pause',()=>setPause('sdk',true));
+      ysdk.on&&ysdk.on('game_api_resume',()=>setPause('sdk',false));
+      try{ysdk.getFlags&&ysdk.getFlags().then(applyFlags).catch(()=>{});}catch(e){}
+      try{YP=await timeLim(ysdk.getPlayer({scopes:false}),8000);await cloudLoad();}catch(e){}
+    }catch(e){ysdk=null;}
+  }
+  PAY.init(); // покупки: после SDK и облака; меню не ждёт
+  window.__sdkDone=true;if(!window.__demo&&$('scr-menu').classList.contains('on')&&!modalOn){openMenu();maybeStreak();}
+  if(inPlay())YG.start();
+}
+
+/* ================= звук (собран кодом, без музыки) ================= */
+let AC=null,muted=false,acUnlocked=false;
+// контекст будим при любом состоянии, кроме running: suspended (автозапуск) и interrupted (iOS после звонка/Siri)
+function acWake(){if(AC&&AC.state!=='running'){try{const p=AC.resume();p&&p.catch&&p.catch(()=>{});}catch(e){}}}
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&!muted)acWake();return AC;}
+// разблокировка на iOS: resume() и пустой буфер прямо в жесте (touchend/click/keydown, не pointerdown); обработчик не снимаем —
+// после звонка или сворачивания первое же касание снова оживит звук
+function unlockAudio(){if(S.sound===false||muted)return;const a=ac();if(!a)return;
+  if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}}
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true}));
+// атака 6 мс — без щелчка в начале звука
+function tone(type,f1,f2,dur,vol){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.02);}
+const NZ={};function noiseBuf(a,dur){const k=Math.round(dur*100);if(NZ[k]&&NZ[k].sampleRate===a.sampleRate)return NZ[k];const n=a.createBuffer(1,Math.max(1,Math.floor(a.sampleRate*dur)),a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);return NZ[k]=n;}
+function noise(dur,vol,freq){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime,s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();f.type='lowpass';f.frequency.value=freq;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.004);s.buffer=noiseBuf(a,dur);s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);}
+const LADDER=[523,587,659,698,784,880,988,1047,1175,1319,1397,1568,1760];
+const SND={
+  // карта легла: короткий мягкий шорох
+  place(){noise(.06,.09,2400);},
+  flip(){noise(.05,.06,3800);},
+  draw(){noise(.09,.07,3000);setTimeout(()=>noise(.05,.05,3400),50);},
+  deal(){for(let i=0;i<6;i++)setTimeout(()=>noise(.04,.05,3000),i*55);},
+  // в дом: нота выше с каждой картой масти (туз — до, король — ля)
+  home(r){const f=LADDER[Math.max(0,Math.min(12,r|0))];tone('triangle',f,f*1.005,.16,.04);},
+  suit(){[784,988,1175,1568].forEach((f,i)=>setTimeout(()=>tone('triangle',f,f,.16,.05),i*80));},
+  no(){tone('sine',220,180,.12,.05);},
+  win(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone('triangle',f,f,.2,.08),i*120));},
+  tap(){tone('sine',600,500,.05,.04);},
+  coin(){tone('triangle',990,1320,.12,.06);setTimeout(()=>tone('triangle',1320,1760,.12,.05),90);},
+  undo(){noise(.05,.05,1800);}
+};
+function buzz(ms){try{if(S.vib!==false&&navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
+
+/* ================= рисование: масти, карты, рубашки, столы, персонажи ================= */
+const $=id=>document.getElementById(id);
+// скруглённый прямоугольник; старые браузеры без roundRect (Chrome < 99, Safari < 16) — через arcTo
+function rrect(g,x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+// масти рисуем сами (значки ♥ на части Android выходят цветными эмодзи); w — высота значка
+function suitPath(g,s,cx,cy,w){g.beginPath();
+  if(s===1){g.moveTo(cx,cy+.46*w);g.bezierCurveTo(cx-.72*w,cy-.02*w,cx-.44*w,cy-.66*w,cx,cy-.26*w);g.bezierCurveTo(cx+.44*w,cy-.66*w,cx+.72*w,cy-.02*w,cx,cy+.46*w);}
+  else if(s===2){g.moveTo(cx,cy-.5*w);g.lineTo(cx+.38*w,cy);g.lineTo(cx,cy+.5*w);g.lineTo(cx-.38*w,cy);g.closePath();}
+  else if(s===0){g.moveTo(cx,cy-.5*w);g.bezierCurveTo(cx+.7*w,cy-.02*w,cx+.46*w,cy+.5*w,cx,cy+.2*w);g.bezierCurveTo(cx-.46*w,cy+.5*w,cx-.7*w,cy-.02*w,cx,cy-.5*w);
+    g.moveTo(cx,cy+.08*w);g.lineTo(cx+.17*w,cy+.5*w);g.lineTo(cx-.17*w,cy+.5*w);g.closePath();}
+  else{const r=.21*w;g.moveTo(cx+r,cy-.25*w);g.arc(cx,cy-.25*w,r,0,7);g.moveTo(cx-.24*w+r,cy+.08*w);g.arc(cx-.24*w,cy+.08*w,r,0,7);g.moveTo(cx+.24*w+r,cy+.08*w);g.arc(cx+.24*w,cy+.08*w,r,0,7);
+    g.moveTo(cx-.05*w,cy);g.lineTo(cx+.05*w,cy);g.lineTo(cx+.17*w,cy+.5*w);g.lineTo(cx-.17*w,cy+.5*w);g.closePath();}}
+function suit(g,s,cx,cy,w,col){suitPath(g,s,cx,cy,w);g.fillStyle=col;g.fill();}
+// цвет масти: обычная колода — красные/чёрные, «четыре цвета» — бубны синие, трефы зелёные (легче различать)
+function suitCol(s,retro){if(S.c4){if(s===2)return '#1d5fc4';if(s===3)return '#1e7b34';}return s===1||s===2?(retro?'#b3261e':'#d0312d'):(retro?'#2b2118':'#1b1b1b');}
+const RL_RU=['Т','2','3','4','5','6','7','8','9','10','В','Д','К'],RL_EN=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const rankL=r=>(S.letters==='en'?RL_EN:RL_RU)[r];
+const FONT='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif';
+// лицевая сторона: крупное достоинство и масть в верхней полосе (её видно, даже когда карта прикрыта), большая масть в середине
+function drawFace(g,id,w,h){const r=RK(id),s=SU(id),retro=S.face==='retro',col=suitCol(s,retro),rad=w*.09;
+  rrect(g,.5,.5,w-1,h-1,rad);g.fillStyle=retro?'#f6ecd2':'#fffef9';g.fill();g.lineWidth=1;g.strokeStyle=retro?'rgba(90,60,20,.55)':'rgba(0,0,0,.38)';g.stroke();
+  g.fillStyle='rgba(0,0,0,.06)';g.fillRect(w*.05,h-2.5,w*.9,1.5);
+  const lab=rankL(r),fs=w*.44;g.font=(retro?'bold ':'800 ')+fs+'px '+(retro?'Georgia,"Times New Roman",serif':FONT);g.textBaseline='top';g.fillStyle=col;
+  const mw=g.measureText(lab).width,maxW=w*.56;g.save();g.translate(w*.06,w*.03);if(mw>maxW)g.scale(maxW/mw,1);g.fillText(lab,0,0);g.restore();
+  suit(g,s,w*.79,w*.27,w*.3,col);
+  if(r>=10){const px=w*.13,py=h*.4,pw=w*.74,ph=h*.52;rrect(g,px,py,pw,ph,w*.08);g.fillStyle=r===12?'#ffe7a8':r===11?'#ffd9e2':'#dcebff';g.fill();g.lineWidth=Math.max(1,w*.025);g.strokeStyle=col;g.stroke();
+    // корона у короля и дамы, шапочка у валета
+    const cx=w/2,cy=py+ph*.2,cw2=pw*.26;g.beginPath();
+    if(r>=11){g.moveTo(cx-cw2,cy+cw2*.5);g.lineTo(cx-cw2,cy-cw2*.3);g.lineTo(cx-cw2*.5,cy+cw2*.1);g.lineTo(cx,cy-cw2*.5);g.lineTo(cx+cw2*.5,cy+cw2*.1);g.lineTo(cx+cw2,cy-cw2*.3);g.lineTo(cx+cw2,cy+cw2*.5);g.closePath();g.fillStyle=r===12?'#e0a100':'#d4a017';g.fill();}
+    else{g.ellipse?g.ellipse(cx,cy+cw2*.2,cw2,cw2*.55,0,Math.PI,0):g.arc(cx,cy+cw2*.2,cw2,Math.PI,0);g.closePath();g.fillStyle=col;g.fill();}
+    g.font='800 '+(w*.4)+'px '+(retro?'Georgia,serif':FONT);g.textAlign='center';g.textBaseline='middle';g.fillStyle=col;g.fillText(lab,cx,py+ph*.55);g.textAlign='left';
+    suit(g,s,cx,py+ph*.84,w*.2,col);}
+  else suit(g,s,w/2,h*.64,r===0?w*.62:w*.5,col);}
+/* ---- рубашки ---- */
+const BACKS=[
+  {id:'red',name:'Классика',free:1},{id:'blue',name:'Синяя',free:1},{id:'check',name:'Клетка',price:100},{id:'car',name:'Машинка со двора',price:150},
+  {id:'cat',name:'Кот',price:150},{id:'khoh',name:'Хохлома',price:250},{id:'gzhel',name:'Гжель',price:250},
+  {id:'cosmos',name:'Космос',pay:'backs'},{id:'matr',name:'Матрёшки',pay:'backs'},{id:'samovar',name:'Самовар',pay:'backs'},{id:'gold',name:'Золотая',pay:'backs'}];
+function drawBack(g,w,h,st){const rad=w*.09;rrect(g,.5,.5,w-1,h-1,rad);g.fillStyle='#fff';g.fill();g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=1;g.stroke();
+  const m=Math.max(2,w*.07),iw=w-2*m,ih=h-2*m;g.save();rrect(g,m,m,iw,ih,rad*.6);g.clip();
+  const lat=(bg,ln,step)=>{g.fillStyle=bg;g.fillRect(m,m,iw,ih);g.strokeStyle=ln;g.lineWidth=Math.max(1,w*.03);g.beginPath();for(let k=-h;k<w+h;k+=step){g.moveTo(k,0);g.lineTo(k+h,h);g.moveTo(k+h,0);g.lineTo(k,h);}g.stroke();};
+  const cx=w/2,cy=h/2;
+  if(st==='blue')lat('#1f4e9c','rgba(255,255,255,.28)',w*.2);
+  else if(st==='check'){g.fillStyle='#2f7d4a';g.fillRect(m,m,iw,ih);g.fillStyle='rgba(255,255,255,.35)';const q=w*.14;for(let y=0;y<h;y+=q)for(let x=0;x<w;x+=q)if(((x/q|0)+(y/q|0))%2)g.fillRect(x,y,q,q);}
+  else if(st==='car'){g.fillStyle='#7cc4e8';g.fillRect(m,m,iw,ih);g.fillStyle='#5a6572';g.fillRect(m,cy+w*.18,iw,ih);
+    g.fillStyle='#e8590c';rrect(g,cx-w*.3,cy-w*.02,w*.6,w*.22,w*.06);g.fill();rrect(g,cx-w*.17,cy-w*.16,w*.34,w*.18,w*.06);g.fill();
+    g.fillStyle='#d6f0ff';g.fillRect(cx-w*.12,cy-w*.12,w*.1,w*.1);g.fillRect(cx+w*.02,cy-w*.12,w*.1,w*.1);
+    g.fillStyle='#222';for(const dx of [-.17,.17]){g.beginPath();g.arc(cx+w*dx,cy+w*.2,w*.07,0,7);g.fill();}}
+  else if(st==='cat'){g.fillStyle='#f0a347';g.fillRect(m,m,iw,ih);g.fillStyle='rgba(255,255,255,.18)';for(let y=m;y<h;y+=w*.16)g.fillRect(m,y,iw,w*.05);
+    const r=w*.25;g.fillStyle='#fff3e0';g.beginPath();g.moveTo(cx-r*.95,cy-r*.3);g.lineTo(cx-r*.7,cy-r*1.25);g.lineTo(cx-r*.15,cy-r*.8);g.lineTo(cx+r*.15,cy-r*.8);g.lineTo(cx+r*.7,cy-r*1.25);g.lineTo(cx+r*.95,cy-r*.3);g.arc(cx,cy-r*.1,r,-.2,Math.PI+.2);g.fill();
+    g.fillStyle='#2d3436';for(const dx of [-.4,.4]){g.beginPath();g.ellipse?g.ellipse(cx+r*dx,cy-r*.2,r*.12,r*.2,0,0,7):g.arc(cx+r*dx,cy-r*.2,r*.14,0,7);g.fill();}
+    g.fillStyle='#e67e8a';g.beginPath();g.moveTo(cx-r*.12,cy+r*.1);g.lineTo(cx+r*.12,cy+r*.1);g.lineTo(cx,cy+r*.25);g.fill();}
+  else if(st==='khoh'){g.fillStyle='#1b1b1b';g.fillRect(m,m,iw,ih);g.strokeStyle='#e0a100';g.lineWidth=Math.max(1,w*.035);
+    for(let k=0;k<3;k++){const y=m+ih*(k+.5)/3;g.beginPath();for(let x=m;x<=w-m;x+=2)g.lineTo(x,y+Math.sin(x/w*9+k)*w*.06);g.stroke();
+      for(let q=0;q<3;q++){g.fillStyle=q%2?'#c0392b':'#e0a100';g.beginPath();g.arc(m+iw*(q+.5)/3,y-w*.08,w*.06,0,7);g.fill();}}}
+  else if(st==='gzhel'){g.fillStyle='#f7f9ff';g.fillRect(m,m,iw,ih);g.strokeStyle='#1d4fa8';g.lineWidth=Math.max(1,w*.04);rrect(g,m+w*.05,m+w*.05,iw-w*.1,ih-w*.1,rad*.5);g.stroke();
+    g.fillStyle='#1d4fa8';for(let k=0;k<6;k++){const a=k*Math.PI/3;g.beginPath();g.ellipse?g.ellipse(cx+Math.cos(a)*w*.13,cy+Math.sin(a)*w*.13,w*.1,w*.05,a,0,7):g.arc(cx+Math.cos(a)*w*.13,cy+Math.sin(a)*w*.13,w*.07,0,7);g.fill();}
+    g.fillStyle='#fff';g.beginPath();g.arc(cx,cy,w*.06,0,7);g.fill();}
+  else if(st==='cosmos'){g.fillStyle='#14163a';g.fillRect(m,m,iw,ih);g.fillStyle='#fff';const r0=rng(7);for(let k=0;k<22;k++){g.globalAlpha=.4+r0()*.6;g.fillRect(m+r0()*iw,m+r0()*ih,1.3,1.3);}g.globalAlpha=1;
+    g.save();g.translate(cx,cy);g.rotate(-.5);g.fillStyle='#e8e8f0';g.beginPath();g.moveTo(0,-w*.3);g.quadraticCurveTo(w*.12,-w*.1,w*.1,w*.18);g.lineTo(-w*.1,w*.18);g.quadraticCurveTo(-w*.12,-w*.1,0,-w*.3);g.fill();
+    g.fillStyle='#c0392b';g.beginPath();g.moveTo(-w*.1,w*.1);g.lineTo(-w*.18,w*.24);g.lineTo(-w*.08,w*.2);g.moveTo(w*.1,w*.1);g.lineTo(w*.18,w*.24);g.lineTo(w*.08,w*.2);g.fill();
+    g.fillStyle='#f39c12';g.beginPath();g.moveTo(-w*.06,w*.2);g.lineTo(0,w*.36);g.lineTo(w*.06,w*.2);g.fill();g.fillStyle='#5dade2';g.beginPath();g.arc(0,-w*.08,w*.045,0,7);g.fill();g.restore();}
+  else if(st==='matr'){g.fillStyle='#f6d155';g.fillRect(m,m,iw,ih);const r=w*.2;
+    g.fillStyle='#c0392b';g.beginPath();g.arc(cx,cy+r*.55,r*1.05,0,7);g.fill();g.beginPath();g.arc(cx,cy-r*.55,r*.72,0,7);g.fill();
+    g.fillStyle='#f8dcc0';g.beginPath();g.arc(cx,cy-r*.5,r*.46,0,7);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(cx,cy+r*.6,r*.55,0,7);g.fill();
+    g.fillStyle='#2b8a3e';for(const dx of [-.22,.22]){g.beginPath();g.arc(cx+r*dx,cy+r*.6,r*.18,0,7);g.fill();}g.fillStyle='#c0392b';g.beginPath();g.arc(cx,cy+r*.45,r*.15,0,7);g.fill();}
+  else if(st==='samovar'){g.fillStyle='#1f6f6b';g.fillRect(m,m,iw,ih);const r=w*.22,gr=g.createLinearGradient(cx-r,0,cx+r,0);gr.addColorStop(0,'#a8741a');gr.addColorStop(.45,'#ffd86b');gr.addColorStop(1,'#a8741a');g.fillStyle=gr;
+    g.beginPath();g.ellipse?g.ellipse(cx,cy+r*.1,r,r*.8,0,0,7):g.arc(cx,cy+r*.1,r,0,7);g.fill();g.fillRect(cx-r*.3,cy-r*1.1,r*.6,r*.5);g.fillRect(cx-r*.55,cy+r*.8,r*1.1,r*.25);g.fillRect(cx+r*.9,cy+r*.1,r*.45,r*.12);
+    g.fillStyle='#fff3c4';g.beginPath();g.arc(cx,cy-r*1.2,r*.2,0,7);g.fill();}
+  else if(st==='gold'){const gr=g.createLinearGradient(0,0,w,h);gr.addColorStop(0,'#8a6212');gr.addColorStop(.5,'#f3cf6b');gr.addColorStop(1,'#8a6212');g.fillStyle=gr;g.fillRect(m,m,iw,ih);
+    g.strokeStyle='rgba(90,60,10,.55)';g.lineWidth=Math.max(1,w*.03);for(let k=1;k<4;k++){g.beginPath();g.moveTo(cx,cy-ih*k/8);g.lineTo(cx+iw*k/8,cy);g.lineTo(cx,cy+ih*k/8);g.lineTo(cx-iw*k/8,cy);g.closePath();g.stroke();}}
+  else lat('#b3261e','rgba(255,255,255,.28)',w*.2);
+  g.restore();}
+/* ---- столы (места): зелёное сукно, двор, дача, санаторий… «Родной» стол своей игры бесплатный ---- */
+const TABLES=[
+  {id:'green',name:'Зелёное сукно',free:1},{id:'yard',name:'Двор: стол для домино',price:200},{id:'dacha',name:'Дача: клеёнка в клетку',price:200},{id:'san',name:'Санаторий: скатерть',price:200},
+  {id:'navy',name:'Синее сукно',price:150},{id:'wine',name:'Вишнёвое сукно',price:150},{id:'kitchen',name:'Кухня бабы Зины',price:250},{id:'gastro',name:'Прилавок гастронома',price:300},{id:'oak',name:'Дубовый стол',price:350},
+  {id:'train',name:'Купе поезда',pay:'tables'},{id:'sea',name:'Пляж',pay:'tables'},{id:'ny',name:'Новогодний стол',pay:'tables'}];
+const LIGHT_T={dacha:1,san:1,kitchen:1,sea:1}; // светлые столы — подписи и места для карт тёмные
+function speck(g,W,H,n,a,b,seed){const r=rng(seed||3);for(let i=0;i<n;i++){g.fillStyle=r()<.5?a:b;g.fillRect(r()*W,r()*H,1.5,1.5);}}
+function drawTable(g,W,H,st){const r=rng(11);
+  const cloth=(c1,c2)=>{const gr=g.createRadialGradient(W/2,H*.35,10,W/2,H*.4,Math.max(W,H)*.8);gr.addColorStop(0,c1);gr.addColorStop(1,c2);g.fillStyle=gr;g.fillRect(0,0,W,H);speck(g,W,H,W*H/90,'rgba(255,255,255,.035)','rgba(0,0,0,.06)');};
+  const wood=(c,ln,pl)=>{g.fillStyle=c;g.fillRect(0,0,W,H);const ph=pl||Math.max(46,H/9);for(let y=0;y<H;y+=ph){g.fillStyle='rgba(0,0,0,.28)';g.fillRect(0,y,W,2);
+      g.strokeStyle=ln;g.lineWidth=1;for(let k=0;k<4;k++){const yy=y+ph*(.2+k*.2);g.beginPath();g.moveTo(0,yy);for(let x=0;x<=W;x+=24)g.lineTo(x,yy+Math.sin(x*.02+y+k)*2.5);g.stroke();}}};
+  if(st==='yard'){wood('#3f7f5a','rgba(0,0,0,.08)');speck(g,W,H,W*H/60,'rgba(255,255,255,.07)','rgba(0,0,0,.08)');
+    // тени листвы
+    for(let i=0;i<40;i++){g.fillStyle='rgba(0,30,10,.05)';g.beginPath();const x=r()*W,y=r()*H,q=12+r()*26;g.ellipse?g.ellipse(x,y,q,q*.55,r()*3,0,7):g.arc(x,y,q,0,7);g.fill();}}
+  else if(st==='dacha'){g.fillStyle='#fbf6ee';g.fillRect(0,0,W,H);const q=Math.max(26,Math.min(W,H)/14);g.fillStyle='rgba(206,52,52,.38)';
+    for(let x=0;x<W;x+=q*2)g.fillRect(x,0,q,H);for(let y=0;y<H;y+=q*2)g.fillRect(0,y,W,q);}
+  else if(st==='san'){g.fillStyle='#efe6d2';g.fillRect(0,0,W,H);g.strokeStyle='rgba(120,95,50,.13)';g.lineWidth=1.5;const q=38;
+    for(let y=0;y<H+q;y+=q)for(let x=(y/q%2)*q/2;x<W+q;x+=q){g.beginPath();g.moveTo(x,y-q*.3);g.lineTo(x+q*.2,y);g.lineTo(x,y+q*.3);g.lineTo(x-q*.2,y);g.closePath();g.stroke();}}
+  else if(st==='kitchen'){g.fillStyle='#f5ecbf';g.fillRect(0,0,W,H);const q=70;
+    for(let y=20;y<H+q;y+=q)for(let x=((y/q|0)%2)*q/2+20;x<W+q;x+=q){g.fillStyle='rgba(255,255,255,.95)';for(let k=0;k<8;k++){const a=k*Math.PI/4;g.beginPath();g.arc(x+Math.cos(a)*9,y+Math.sin(a)*9,5.5,0,7);g.fill();}g.fillStyle='#f2b705';g.beginPath();g.arc(x,y,6,0,7);g.fill();}}
+  else if(st==='gastro')wood('#8a5a33','rgba(60,30,10,.18)');
+  else if(st==='oak')wood('#5a3a22','rgba(0,0,0,.18)',Math.max(60,H/7));
+  else if(st==='navy')cloth('#2d5a93','#152c4c');
+  else if(st==='wine')cloth('#8a2c40','#48121f');
+  else if(st==='train'){wood('#6b2f1f','rgba(0,0,0,.2)',Math.max(70,H/6));g.fillStyle='rgba(255,255,255,.85)';const cx=W*.88,cy=H*.9;for(let k=0;k<24;k++){const a=k/24*Math.PI*2;g.beginPath();g.arc(cx+Math.cos(a)*70,cy+Math.sin(a)*70,11,0,7);g.fill();}g.beginPath();g.arc(cx,cy,68,0,7);g.fill();}
+  else if(st==='sea'){const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#f0d9a6');gr.addColorStop(1,'#e2c080');g.fillStyle=gr;g.fillRect(0,0,W,H);speck(g,W,H,W*H/40,'rgba(255,255,255,.25)','rgba(120,80,20,.12)');
+    for(let i=0;i<7;i++){const x=r()*W,y=r()*H;g.fillStyle='rgba(255,240,230,.8)';g.beginPath();g.arc(x,y,7,Math.PI,0);g.fill();}}
+  else if(st==='ny'){cloth('#1f3f7a','#0e1f40');g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.5;for(let i=0;i<30;i++){const x=r()*W,y=r()*H,s=4+r()*8;g.beginPath();for(let k=0;k<3;k++){const a=k*Math.PI/3;g.moveTo(x-Math.cos(a)*s,y-Math.sin(a)*s);g.lineTo(x+Math.cos(a)*s,y+Math.sin(a)*s);}g.stroke();}}
+  else cloth('#2f7d4a','#1a4d2f');}
+const tableLight=()=>!!LIGHT_T[S.table];
+/* ---- персонажи: баба Зина (платок, очки), тётя Валя (наколка продавщицы), кот ---- */
+function drawHost(c,who){const g=c.getContext('2d'),w=c.width,h=c.height;g.clearRect(0,0,w,h);const cx=w/2,fy=h*.44,fr=w*.24;
+  if(who==='cat'){g.fillStyle='#8d8d8d';g.beginPath();g.arc(cx,h*.6,w*.3,0,7);g.fill();g.beginPath();g.moveTo(cx-w*.3,h*.52);g.lineTo(cx-w*.26,h*.22);g.lineTo(cx-w*.08,h*.36);g.lineTo(cx+w*.08,h*.36);g.lineTo(cx+w*.26,h*.22);g.lineTo(cx+w*.3,h*.52);g.fill();
+    g.fillStyle='#9ccc65';for(const dx of [-.12,.12]){g.beginPath();g.arc(cx+w*dx,h*.56,w*.055,0,7);g.fill();}g.fillStyle='#222';for(const dx of [-.12,.12])g.fillRect(cx+w*dx-1.5,h*.52,3,h*.08);
+    g.fillStyle='#e67e8a';g.beginPath();g.moveTo(cx-w*.04,h*.66);g.lineTo(cx+w*.04,h*.66);g.lineTo(cx,h*.7);g.fill();return;}
+  // туловище
+  g.fillStyle=who==='valya'?'#f4f4f4':'#6c4f8f';g.beginPath();g.moveTo(cx-w*.42,h);g.quadraticCurveTo(cx-w*.4,h*.7,cx,h*.68);g.quadraticCurveTo(cx+w*.4,h*.7,cx+w*.42,h);g.fill();
+  if(who==='valya'){g.fillStyle='#2f6fb3';g.fillRect(cx-w*.2,h*.78,w*.4,h*.22);}
+  // лицо
+  g.fillStyle='#f3c9a4';g.beginPath();g.arc(cx,fy,fr,0,7);g.fill();
+  if(who==='valya'){g.fillStyle='#b5532b';g.beginPath();g.arc(cx,fy-fr*.35,fr*1.05,Math.PI*1.02,Math.PI*1.98);g.fill();g.beginPath();g.arc(cx,fy-fr*1.25,fr*.55,0,7);g.fill();
+    g.fillStyle='#fff';g.beginPath();g.moveTo(cx-fr*.8,fy-fr*.72);g.quadraticCurveTo(cx,fy-fr*1.5,cx+fr*.8,fy-fr*.72);g.quadraticCurveTo(cx,fy-fr*.95,cx-fr*.8,fy-fr*.72);g.fill();
+    g.fillStyle='#c0392b';g.beginPath();g.ellipse?g.ellipse(cx,fy+fr*.45,fr*.22,fr*.1,0,0,7):g.arc(cx,fy+fr*.45,fr*.15,0,7);g.fill();}
+  else{g.fillStyle='#c0392b';g.beginPath();g.arc(cx,fy-fr*.1,fr*1.16,Math.PI*.92,Math.PI*2.08);g.lineTo(cx+fr*.5,fy+fr*1.2);g.lineTo(cx,fy+fr*.95);g.lineTo(cx-fr*.5,fy+fr*1.2);g.closePath();g.fill();
+    g.fillStyle='#f3c9a4';g.beginPath();g.arc(cx,fy+fr*.05,fr*.86,0,7);g.fill();
+    g.fillStyle='rgba(255,255,255,.9)';for(const [dx,dy] of [[-.8,-.5],[-.3,-.95],[.3,-.95],[.8,-.5],[-1,.1],[1,.1]]){g.beginPath();g.arc(cx+fr*dx,fy+fr*dy,fr*.07,0,7);g.fill();}
+    g.strokeStyle='#5a4a3a';g.lineWidth=Math.max(1.5,w*.015);for(const dx of [-.34,.34]){g.beginPath();g.arc(cx+fr*dx,fy-fr*.02,fr*.24,0,7);g.stroke();}g.beginPath();g.moveTo(cx-fr*.1,fy-fr*.02);g.lineTo(cx+fr*.1,fy-fr*.02);g.stroke();
+    g.strokeStyle='#8e3b2e';g.beginPath();g.arc(cx,fy+fr*.3,fr*.26,.2,Math.PI-.2);g.stroke();}
+  g.fillStyle='#2d3436';for(const dx of [-.34,.34]){g.beginPath();g.arc(cx+fr*dx,fy-fr*.02,fr*.08,0,7);g.fill();}
+  g.fillStyle='rgba(231,110,110,.35)';for(const dx of [-.55,.55]){g.beginPath();g.arc(cx+fr*dx,fy+fr*.3,fr*.14,0,7);g.fill();}}
+
+/* ================= стол на экране ================= */
+const cv=$('cv'),ctx=cv.getContext('2d'),stage=$('stage');
+let G=null,W=0,H=0,dpr=1,LY=null,modalOn=false;
+// «спокойный режим»: без разлёта карт и прыжков — настройка или системное «уменьшить движение»
+const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+const calm=()=>S.calm===true||RM;
+const now=()=>performance.now();
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
+// тост живёт не меньше 2,5 с и дольше для длинного текста
+function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
+  const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
+const inPlay=()=>!!(G&&!G.won&&!modalOn&&$('scr-game').classList.contains('on'));
+const modeOf=id=>GC.modes.find(m=>m.id===id)||GC.modes[0];
+const tabs=()=>{const a=[];for(let i=R.TAB;i<R.TAB+R.NT;i++)a.push(i);return a;};
+// куда идёт карта в дом (Косынка и Ячейка — стопка своей масти; у Паука дом собирается сам)
+const foundFor=c=>GID==='klondike'?2+SU(c):GID==='freecell'?4+SU(c):-1;
+
+/* ---- раскладка: размер карт по ширине (7/10/8 столбцов) и высоте экрана ---- */
+function computeLayout(){const NT=R.NT,pad=W<520?4:12,gk=GID==='spider'?.07:.1,land=W>H*1.1,hk=land?(GID==='klondike'?5:GID==='spider'?5.5:4.8):(GID==='klondike'?3.3:GID==='spider'?3.5:3.4);
+  let cw=(W-2*pad)/(NT+(NT-1)*gk);cw=Math.min(cw,(H-2*pad)/(1.42*hk),150);cw=Math.max(20,Math.floor(cw));
+  const ch=Math.round(cw*1.42),gap=Math.floor(cw*gk),tw=NT*cw+(NT-1)*gap,x0=Math.round((W-tw)/2),top=pad+2,tabY=top+ch+Math.max(10,Math.round(ch*.16));
+  const col=k=>x0+k*(cw+gap),sl=[];
+  if(GID==='klondike'){sl[0]={x:col(0),y:top};sl[1]={x:col(1),y:top};for(let s=0;s<4;s++)sl[2+s]={x:col(3+s),y:top};for(let k=0;k<7;k++)sl[6+k]={x:col(k),y:tabY};}
+  else if(GID==='spider'){sl[0]={x:col(9),y:top};for(let k=0;k<8;k++)sl[1+k]={x:col(k),y:top};for(let k=0;k<10;k++)sl[9+k]={x:col(k),y:tabY};}
+  else{for(let k=0;k<4;k++)sl[k]={x:col(k),y:top};for(let k=0;k<4;k++)sl[4+k]={x:col(4+k),y:top};for(let k=0;k<8;k++)sl[8+k]={x:col(k),y:tabY};}
+  LY={cw,ch,gap,pad,top,tabY,sl,fd:Math.max(5,Math.round(ch*(GID==='spider'?.11:.13))),fu:Math.round(ch*(GID==='spider'?.27:.3))};}
+// шаг по столбцу: сжимаем, чтобы длинный столбец поместился до низа экрана
+function colStep(pi){const a=G.st.p[pi],n=a.length,d=Math.min(G.st.d[pi],Math.max(0,n-1));let fd=LY.fd,fu=LY.fu;if(n<2)return [fd,fu];
+  const avail=H-LY.pad-LY.tabY-LY.ch,nd=d,nu=n-1-nd;let need=nd*fd+nu*fu;
+  if(need>avail){fu=Math.max(LY.ch*.25,(avail-nd*fd)/Math.max(1,nu));need=nd*fd+nu*fu;if(need>avail){const k=avail/need;fd*=k;fu*=k;}}
+  return [fd,fu];}
+function faceUp(pi,j){const k=R.kind(pi);if(k==='stock')return false;if(k==='tab')return j>=G.st.d[pi];return true;}
+// где лежит карта j стопки pi (левый верхний угол)
+function cardXY(pi,j,step){const s=LY.sl[pi],k=R.kind(pi),a=G.st.p[pi];
+  if(k==='tab'){const [fd,fu]=step||colStep(pi),d=G.st.d[pi];let y=s.y;for(let q=0;q<j;q++)y+=q<d?fd:fu;return {x:s.x,y};}
+  if(k==='waste'&&G.st.draw===3){const n=a.length,f=Math.max(0,j-(n-3));return {x:s.x+f*LY.cw*.34,y:s.y};}
+  if(k==='stock'&&GID==='spider'){const grp=Math.floor(j/10),n=Math.ceil(a.length/10);return {x:s.x-(n-1-grp)*LY.cw*.22,y:s.y};}
+  if(k==='stock'){return {x:s.x-Math.min(2,Math.floor(j/8))*.8,y:s.y-Math.min(2,Math.floor(j/8))*.8};}
+  return {x:s.x,y:s.y};}
+
+/* ---- «спрайты» карт: у каждой карты — где она на экране и куда плывёт; меняем состояние — карты сами переезжают ---- */
+let SPR={};
+const ease=t=>1-Math.pow(1-t,3);
+function sprPos(s,t){if(t<=s.t0)return {x:s.fx,y:s.fy};if(t>=s.t0+s.dur)return {x:s.tx,y:s.ty};const k=ease((t-s.t0)/s.dur);return {x:s.fx+(s.tx-s.fx)*k,y:s.fy+(s.ty-s.fy)*k};}
+const FLIP=180;
+// delay(id,pi,j) — задержка перед полётом (раздача, автосбор); instant — без анимации (поворот экрана, загрузка)
+function setTargets(delay,instant){const t=now(),st=G.st;let z=0;const seen={};
+  for(let pi=0;pi<st.p.length;pi++){const a=st.p[pi];if(!a.length)continue;const step=R.kind(pi)==='tab'?colStep(pi):null;
+    for(let j=0;j<a.length;j++){const id=a[j],p=cardXY(pi,j,step),up=faceUp(pi,j);seen[id]=1;let s=SPR[id];
+      if(!s)s=SPR[id]={x:p.x,y:p.y,fx:p.x,fy:p.y,tx:p.x,ty:p.y,t0:0,dur:0,up,want:up,ft:0};
+      s.z=z++;s.pi=pi;s.j=j;
+      if(instant||calm()&&!delay){s.fx=s.tx=p.x;s.fy=s.ty=p.y;s.t0=0;s.dur=0;s.up=s.want=up;s.ft=0;continue;}
+      const dl=delay?delay(id,pi,j)||0:0;
+      if(Math.abs(s.tx-p.x)>.5||Math.abs(s.ty-p.y)>.5||dl){const c=sprPos(s,t),dist=Math.hypot(p.x-c.x,p.y-c.y);s.fx=c.x;s.fy=c.y;s.tx=p.x;s.ty=p.y;s.t0=t+dl;s.dur=dist<1?0:Math.min(420,160+dist*.35)*(calm()?.6:1);}
+      if(s.want!==up){s.want=up;s.ft=Math.max(t,s.t0+s.dur*.6);}}}
+  for(const id in SPR)if(!seen[id])delete SPR[id];
+  kick();}
+// выложить колоду в начало раздачи (карты летят из колоды)
+function dealFrom(){const s=GID==='freecell'?{x:W/2-LY.cw/2,y:-LY.ch*1.2}:LY.sl[0];SPR={};
+  const st=G.st;let k=0;const order={};
+  if(GID==='klondike'){for(let r=0;r<7;r++)for(let c=r;c<7;c++)order[st.p[6+c][r]]=k++;}
+  else if(GID==='spider'){for(let r=0;r<6;r++)for(let c=0;c<10;c++){const a=st.p[9+c];if(r<a.length)order[a[r]]=k++;}}
+  else{for(let r=0;r<7;r++)for(let c=0;c<8;c++){const a=st.p[8+c];if(r<a.length)order[a[r]]=k++;}}
+  for(let pi=0;pi<st.p.length;pi++)for(const id of st.p[pi])SPR[id]={x:s.x,y:s.y,fx:s.x,fy:s.y,tx:s.x,ty:s.y,t0:0,dur:0,up:false,want:false,ft:0};
+  const step=calm()?6:(GID==='spider'?22:30);
+  setTargets(id=>order[id]!=null?80+order[id]*step:0);}
+
+/* ---- кэш картинок карт (перерисовка — только при смене размера, колоды или рубашки) ---- */
+let FACE={},BACKC=null,TBL=null,TBLkey='';
+function faceImg(id){const k=id%52;let c=FACE[k];if(c)return c;c=document.createElement('canvas');c.width=Math.round(LY.cw*dpr);c.height=Math.round(LY.ch*dpr);
+  const g=c.getContext('2d');g.scale(dpr,dpr);drawFace(g,k,LY.cw,LY.ch);return FACE[k]=c;}
+function backImg(){if(BACKC)return BACKC;const c=document.createElement('canvas');c.width=Math.round(LY.cw*dpr);c.height=Math.round(LY.ch*dpr);const g=c.getContext('2d');g.scale(dpr,dpr);drawBack(g,LY.cw,LY.ch,S.back||'red');return BACKC=c;}
+function tableImg(){const key=W+'x'+H+':'+S.table+':'+dpr;if(TBL&&TBLkey===key)return TBL;TBL=document.createElement('canvas');TBL.width=Math.round(W*dpr);TBL.height=Math.round(H*dpr);
+  const g=TBL.getContext('2d');g.scale(dpr,dpr);drawTable(g,W,H,S.table||'green');TBLkey=key;return TBL;}
+function lookChanged(){FACE={};BACKC=null;TBL=null;if(G&&LY)render();}
+
+function layout(){const r=stage.getBoundingClientRect();W=Math.max(1,r.width);H=Math.max(1,r.height);dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';
+  computeLayout();FACE={};BACKC=null;if(G)setTargets(null,true);render();}
+
+/* ---- рисование кадра ---- */
+function slotBox(x,y,label,s){const g=ctx,lt=tableLight();rrect(g,x+1,y+1,LY.cw-2,LY.ch-2,LY.cw*.09);g.fillStyle=lt?'rgba(0,0,0,.06)':'rgba(0,0,0,.14)';g.fill();
+  g.lineWidth=1.5;g.strokeStyle=lt?'rgba(0,0,0,.28)':'rgba(255,255,255,.4)';g.stroke();const col=lt?'rgba(0,0,0,.3)':'rgba(255,255,255,.45)';
+  if(s!=null)suit(g,s,x+LY.cw/2,y+LY.ch/2,LY.cw*.42,col);
+  else if(label){g.fillStyle=col;g.font='800 '+Math.round(LY.cw*.42)+'px '+FONT;g.textAlign='center';g.textBaseline='middle';g.fillText(label,x+LY.cw/2,y+LY.ch/2);g.textAlign='left';}}
+function drawCard(id,x,y,s,t){let up=s.up,sx=1;
+  if(s.ft&&s.want!==s.up){if(t>=s.ft){const k=(t-s.ft)/FLIP;if(k>=1){s.up=s.want;s.ft=0;up=s.up;}else{sx=Math.abs(Math.cos(Math.PI*k));up=k<.5?s.up:s.want;}}}
+  const img=up?faceImg(id):backImg();
+  if(sx<.999){ctx.save();ctx.translate(x+LY.cw/2,y);ctx.scale(Math.max(.02,sx),1);ctx.drawImage(img,-LY.cw/2,0,LY.cw,LY.ch);ctx.restore();}
+  else ctx.drawImage(img,x,y,LY.cw,LY.ch);}
+function glow(x,y,w,h,a){ctx.save();ctx.globalAlpha=a;rrect(ctx,x-2,y-2,w+4,h+4,LY.cw*.12);ctx.fillStyle='rgba(255,210,63,.28)';ctx.fill();ctx.lineWidth=Math.max(4,LY.cw*.1);ctx.strokeStyle='#ffc400';ctx.stroke();ctx.restore();}
+function render(){if(!LY)return;const t=now();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.drawImage(tableImg(),0,0,W,H);if(!G)return;const st=G.st;
+  // места под стопки
+  for(let pi=0;pi<st.p.length;pi++){const k=R.kind(pi),s=LY.sl[pi];if(!s)continue;
+    if(k==='stock'){if(!st.p[pi].length)slotBox(s.x,s.y,GID==='klondike'&&st.p[1].length?'↻':'');}
+    else if(k==='found'){if(GID==='spider'){if(pi===1)slotBox(s.x,s.y,'');}else slotBox(s.x,s.y,'',pi-R.FND);}
+    else if(k==='cell'||k==='tab')slotBox(s.x,s.y,k==='tab'&&GID==='klondike'?rankL(12):'');
+    else if(k==='waste'&&!st.p[1].length&&GID==='klondike'){}}
+  if(G.fx){drawFx(t);return;}
+  const drag=G.drag&&G.drag.on?G.drag:null,dragSet=drag?drag.ids:null,moving=[];
+  for(let pi=0;pi<st.p.length;pi++){const a=st.p[pi];for(let j=0;j<a.length;j++){const id=a[j],s=SPR[id];if(!s)continue;if(dragSet&&dragSet.indexOf(id)>=0)continue;
+      if(t<s.t0+s.dur){moving.push([id,s]);continue;}drawCard(id,s.tx,s.ty,s,t);}}
+  moving.sort((a,b)=>a[1].t0-b[1].t0);for(const [id,s] of moving){const p=sprPos(s,t);drawCard(id,p.x,p.y,s,t);}
+  // подсказка: мягко мигающая рамка вокруг карты и места, куда её положить
+  if(G.hl){const e=t-G.hl.t0,D=2600;if(e>D)G.hl=null;else{const a=calm()?1:.75+.25*Math.cos(e/260*Math.PI);const h=G.hl;
+      if(h.stock){const s=LY.sl[0],p=st.p[0].length?cardXY(0,st.p[0].length-1):s;glow(p.x,p.y,LY.cw,LY.ch,a);}
+      else{const a0=st.p[h.f];if(h.j<a0.length){const p0=cardXY(h.f,h.j),pl=cardXY(h.f,a0.length-1);glow(p0.x,p0.y,LY.cw,pl.y-p0.y+LY.ch,a);}
+        const b=st.p[h.t],pt=b.length?cardXY(h.t,b.length-1):LY.sl[h.t];glow(pt.x,pt.y,LY.cw,LY.ch,a*.8);}}}
+  if(drag){if(drag.over>=0){const b=st.p[drag.over],pt=b.length?cardXY(drag.over,b.length-1):LY.sl[drag.over];glow(pt.x,pt.y,LY.cw,LY.ch,.9);}
+    const step=R.kind(drag.pi)==='tab'?colStep(drag.pi):null,base=cardXY(drag.pi,drag.j,step);
+    for(let k=0;k<drag.ids.length;k++){const p=cardXY(drag.pi,drag.j+k,step),s=SPR[drag.ids[k]];ctx.save();ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=10;ctx.shadowOffsetY=4;
+      drawCard(drag.ids[k],drag.x-drag.ox+(p.x-base.x),drag.y-drag.oy+(p.y-base.y),s,t);ctx.restore();}}}
+function animating(t){if(G&&(G.hl||G.fx||G.shake))return true;for(const id in SPR){const s=SPR[id];if(t<s.t0+s.dur||s.ft&&s.want!==s.up)return true;}return false;}
+// цикл кадров спит, когда ничего не движется (и на паузе); любое изменение — kick()
+let loopOn=false;
+function kick(){if(loopOn)return;loopOn=true;requestAnimationFrame(loop);}
+function loop(){if(paused&&!G){loopOn=false;return;}render();if(G&&animating(now()))requestAnimationFrame(loop);else loopOn=false;}
+
+/* ---- победный «разлёт» карт из дома (в спокойном режиме — без него) ---- */
+function celebrate(done){if(calm()||window.__demo){setTimeout(done,350);return;}
+  const st=G.st,cards=[];for(let pi=0;pi<st.p.length;pi++)if(R.kind(pi)==='found')st.p[pi].forEach((id,j)=>cards.push({id,pi,j}));
+  cards.sort((a,b)=>b.j-a.j||a.pi-b.pi);const t0=now(),r=rng(Date.now()&0xffff);
+  G.fx={t0,done,last:t0,parts:cards.map((c,k)=>{const p=cardXY(c.pi,c.j);return {id:c.id,x:p.x,y:p.y,vx:(r()<.5?-1:1)*(60+r()*200),vy:-(100+r()*260),st:t0+k*55,on:false};})};
+  G.fxEnd=setTimeout(endFx,Math.min(5200,cards.length*55+2600));kick();}
+function drawFx(t){const f=G.fx,dt=Math.min(.05,(t-f.last)/1000);f.last=t;const gy=900,floor=H-LY.ch;
+  for(const p of f.parts){if(t<p.st){drawCard(p.id,p.x,p.y,{up:true,want:true},t);continue;}
+    p.vy+=gy*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.y>floor){p.y=floor;p.vy*=-.62;}drawCard(p.id,p.x,p.y,{up:true,want:true},t);}}
+function endFx(){if(!G||!G.fx)return;clearTimeout(G.fxEnd);const d=G.fx.done;G.fx=null;render();d&&d();}
+
+/* ---- касания: нажал — карта сама едет на лучшее место; потащил — кладёшь, куда хочешь ---- */
+function cvPos(e){const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
+function inR(x,y,rx,ry,rw,rh){return x>=rx&&x<=rx+rw&&y>=ry&&y<=ry+rh;}
+function hitTest(x,y){const st=G.st;
+  for(let pi=st.p.length-1;pi>=0;pi--){const a=st.p[pi],k=R.kind(pi),s=LY.sl[pi];
+    if(k==='stock'){const n=a.length;const bx=GID==='spider'&&n?cardXY(0,0).x:s.x;if(inR(x,y,bx-4,s.y-4,s.x+LY.cw-bx+8,LY.ch+8))return {pi,stock:true};continue;}
+    if(!a.length)continue;
+    if(k==='tab'){const step=colStep(pi);for(let j=a.length-1;j>=0;j--){const p=cardXY(pi,j,step),hh=j===a.length-1?LY.ch:cardXY(pi,j+1,step).y-p.y;if(inR(x,y,p.x,p.y,LY.cw,hh))return {pi,j,pick:R.canPick(st,pi,j),up:faceUp(pi,j)};}continue;}
+    const j=a.length-1,p=cardXY(pi,j);if(inR(x,y,p.x,p.y,LY.cw,LY.ch))return {pi,j,pick:R.canPick(st,pi,j),up:true};}
+  return null;}
+// куда можно бросить перетаскиваемые карты: стопка с наибольшим перекрытием, где ход разрешён
+function dropTarget(d){const st=G.st,x=d.x-d.ox,y=d.y-d.oy;let best=-1,ba=0;
+  for(let t=0;t<st.p.length;t++){const k=R.kind(t);if(k==='stock'||k==='waste'||t===d.pi)continue;const s=LY.sl[t];if(!s)continue;
+    let rx=s.x,ry=s.y,rw=LY.cw,rh=LY.ch;if(k==='tab'&&st.p[t].length){const pl=cardXY(t,st.p[t].length-1);rh=pl.y-s.y+LY.ch;}
+    const ox=Math.max(0,Math.min(x+LY.cw,rx+rw)-Math.max(x,rx)),oy=Math.max(0,Math.min(y+LY.ch,ry+rh)-Math.max(y,ry)),ar=ox*oy;if(ar<=0)continue;
+    let tt=t;if(k==='found'){if(d.ids.length!==1)continue;tt=foundFor(st.p[d.pi][d.j]);if(tt<0)continue;}
+    if(ar>ba&&R.canDrop(st,d.pi,d.j,tt)){ba=ar;best=tt;}}
+  return best;}
+let ptr=null;
+cv.addEventListener('pointerdown',e=>{if(!G||G.won||G.busy||modalOn)return;if(G.fx){endFx();return;}if(ptr)return;const p=cvPos(e),h=hitTest(p.x,p.y);
+  ptr={id:e.pointerId,x0:p.x,y0:p.y,h,t:now()};if(h&&h.pick){try{cv.setPointerCapture(e.pointerId);}catch(er){}}});
+cv.addEventListener('pointermove',e=>{if(!ptr||ptr.id!==e.pointerId||!G)return;const p=cvPos(e),h=ptr.h;
+  if(!G.drag&&h&&h.pick&&Math.hypot(p.x-ptr.x0,p.y-ptr.y0)>8){const c=cardXY(h.pi,h.j);G.drag={on:true,pi:h.pi,j:h.j,ids:G.st.p[h.pi].slice(h.j),ox:ptr.x0-c.x,oy:ptr.y0-c.y,x:p.x,y:p.y,over:-1};G.hl=null;}
+  if(G.drag){G.drag.x=p.x;G.drag.y=p.y;G.drag.over=dropTarget(G.drag);render();}});
+function ptrEnd(e){if(!ptr||ptr.id!==e.pointerId)return;const h=ptr.h;ptr=null;if(!G)return;
+  if(G.drag){const d=G.drag;G.drag=null;const t=e.type==='pointercancel'?-1:dropTarget(d);
+    if(t>=0)doMove(d.pi,d.j,t);else{// вернуть на место из точки, где отпустили
+      const step=R.kind(d.pi)==='tab'?colStep(d.pi):null,base=cardXY(d.pi,d.j,step),tt=now();
+      d.ids.forEach((id,k)=>{const s=SPR[id],p=cardXY(d.pi,d.j+k,step);s.fx=d.x-d.ox+(p.x-base.x);s.fy=d.y-d.oy+(p.y-base.y);s.t0=tt;s.dur=200;});kick();}
+    return;}
+  if(e.type==='pointercancel'||!h)return;
+  if(h.stock){stockTap();return;}
+  if(h.pick)tapMove(h.pi,h.j);else if(h.up)nudge();}
+cv.addEventListener('pointerup',ptrEnd);cv.addEventListener('pointercancel',ptrEnd);
+function nudge(){SND.no();buzz(15);}
+// нажатие: лучшее место для карты — дом, потом столбец (у Паука — сначала своей масти), пустой столбец, у Ячейки — свободная ячейка
+function bestTarget(pi,j){const st=G.st,a=st.p[pi],c=a[j],n=a.length-j;
+  if(n===1&&!(GID==='klondike'&&R.kind(pi)==='found')){const f=foundFor(c);if(f>=0&&R.canDrop(st,pi,j,f))return f;}
+  let best=-1,bs=-1e9;const ci=pi>=R.TAB?pi-R.TAB:-1;
+  for(const t of tabs()){if(t===pi||!R.canDrop(st,pi,j,t))continue;const b=st.p[t];let sc;
+    if(b.length){sc=100;if(GID==='spider'&&SU(b[b.length-1])===SU(c))sc+=50;}else{if(R.kind(pi)==='tab'&&j===0)continue;sc=10;}
+    sc-=ci>=0?Math.abs(t-R.TAB-ci)*.5:(t-R.TAB)*.5;if(sc>bs){bs=sc;best=t;}}
+  if(best<0&&GID==='freecell'&&n===1&&R.kind(pi)==='tab')for(let t=0;t<4;t++)if(!st.p[t].length){best=t;break;}
+  return best;}
+function tapMove(pi,j){const t=bestTarget(pi,j);if(t<0){nudge();shake(pi,j);return;}doMove(pi,j,t);}
+function shake(pi,j){if(calm())return;const a=G.st.p[pi],tt=now();for(let k=j;k<a.length;k++){const s=SPR[a[k]];if(!s)continue;s.fx=s.tx+(k%2?-1:1)*LY.cw*.08;s.fy=s.ty;s.t0=tt;s.dur=180;}kick();}
+
+/* ---- ходы, отмена, автоматический дом ---- */
+const UNDO_FREE=10,UNDO_AD=10,HINT_FREE=3,HINT_AD=3;
+// без ограничений: «Без рекламы» (кроме расклада дня: там у всех поровну) или когда ролик не показать
+const noLimit=()=>!G.daily&&PAY.own('no_ads');
+const undoLeft=()=>noLimit()?99:G.undoCap-G.undoUsed,hintLeft=()=>noLimit()?99:G.hintCap-G.hintUsed;
+function pushHist(){G.hist.push({st:stClone(G.st),moves:G.moves});if(G.hist.length>300)G.hist.shift();}
+function doMove(f,j,t){if(!G||G.won)return;const st=G.st;if(!R.canPick(st,f,j)||!R.canDrop(st,f,j,t)){nudge();return;}
+  const doneBefore=st.done,fb=R.fcount(st);pushHist();R.move(st,f,j,t);G.moves++;afterMove(R.kind(t)==='found',st.done>doneBefore,fb);}
+function stockTap(){if(!G||G.won)return;const st=G.st;
+  if(!R.canStock(st)){if(GID==='spider'&&st.p[0].length){toast('Раздавать можно, когда нет пустых столбцов — положи в них карты');nudge();}return;}
+  const doneBefore=st.done,fb=R.fcount(st);pushHist();R.stock(st);G.moves++;if(GID==='spider')SND.deal();else SND.draw();afterMove(false,st.done>doneBefore,fb,true);}
+function afterMove(home,suitDone,fb,stock){const st=G.st,autos=[];
+  // сам уносит в дом карты, которым больше нечего делать в столбцах (правило «безопасного» хода)
+  if(S.auto!==false){let m,g=0;while((m=R.autoMove(st))&&g++<60){R.move(st,m.f,m.j,m.t);autos.push(st.p[m.t][st.p[m.t].length-1]);}}
+  const ad={};autos.forEach((id,k)=>ad[id]=140+k*110);
+  setTargets((id,pi)=>ad[id]!=null?ad[id]:GID==='spider'&&R.kind(pi)==='found'?120+RK(id)*45:GID==='spider'&&stock&&R.kind(pi)==='tab'?(pi-R.TAB)*40:0);
+  if(!G.counted){G.counted=true;const m=stat();m.p=(m.p||0)+1;save();}
+  if(GID==='freecell'){let c=0;for(let i=0;i<4;i++)if(st.p[i].length)c++;G.maxCells=Math.max(G.maxCells||0,c);}
+  const fa=R.fcount(st);
+  if(suitDone){setTimeout(()=>SND.suit(),200);buzz(20);if(Math.random()<.5)say('suit');}
+  else if(fa>fb){SND.home(fa%13);for(let k=1;k<=autos.length;k++)setTimeout(()=>SND.home((fb+1+k)%13),140+k*110);}
+  else if(!stock)SND.place();
+  G.hl=null;updButtons();saveCur();
+  if(R.won(st)){G.won=true;G.busy=true;YG.stop();const wait=Math.max(450,autos.length*110+450,GID==='spider'?800:0);setTimeout(onWin,wait);}}
+function undo(){if(!G||G.won||G.busy)return;if(!G.hist.length){toast('Отменять пока нечего');return;}
+  if(undoLeft()<=0){outOf('undo');return;}
+  const h=G.hist.pop();G.st=h.st;G.moves=h.moves;G.undoUsed++;G.hl=null;setTargets();SND.undo();updButtons();saveCur();}
+// кончились отмены или подсказки: в раскладе дня — поровну у всех; иначе — ещё порция за рекламу
+function outOf(kind){const u=kind==='undo',n=u?UNDO_AD:HINT_AD,word=u?'отмен':'подсказки';
+  if(G.daily){toast(u?'В раскладе дня отмен больше нет — у всех поровну':'В раскладе дня подсказок больше нет — у всех поровну',3200);return;}
+  const give=()=>{if(!G)return;if(u)G.undoCap+=n;else G.hintCap+=n;updButtons();saveCur();toast(u?'+'+n+' отмен':'+'+n+' подсказки');if(!u)hint();};
+  if(!adOk()){give();return;}
+  modal(`<h2>${u?'↶ Отмены кончились':'💡 Подсказки кончились'}</h2><p>На эту раздачу было ${u?UNDO_FREE+' отмен':HINT_FREE+' подсказки'}. Посмотри рекламу — и будет ещё ${n} ${word}.</p>
+    ${PAY.on&&PAY.item('no_ads')&&!PAY.own('no_ads')?'<p><small>Или купи «Без рекламы» в настройках: отмены и подсказки станут без ограничений.</small></p>':''}
+    <div class="row"><button class="btn accent noenter" id="mAd">📺 +${n} ${word} за рекламу</button><button class="btn" id="mCancel">Не надо</button></div>`);
+  $('mAd').onclick=()=>{hideModal();showRewarded(give,()=>{});};$('mCancel').onclick=closeToGame;}
+/* ---- подсказка: решатель ищет путь к победе от текущей позиции; не успел — первый полезный ход по правилам ----
+   Решатель работает в отдельном потоке (Web Worker из того же кода правил), чтобы слабый телефон не «замирал»; нет потока — прямо здесь, с меньшим бюджетом.
+   «План»: найденное решение запоминаем (позиция → следующая позиция) — пока игрок идёт по нему, подсказка мгновенная и ведёт к победе */
+let SW=null,swN=0;const swWait={};
+function solverWorker(){if(SW!==null)return SW;SW=false;
+  try{const B='/*LOGIC-'+'BEGIN*/',E='/*LOGIC-'+'END*/',src=[].map.call(document.scripts,x=>x.textContent).find(t=>t.indexOf(B)>=0);if(!src||!window.Worker||!window.Blob||!window.URL)return SW;
+    const code=src.slice(src.indexOf(B),src.indexOf(E))+'\nonmessage=function(e){var d=e.data;postMessage({id:d.id,r:solve(RULES[d.g],d.st,d.lim)});};';
+    const w=new Worker(URL.createObjectURL(new Blob([code],{type:'text/javascript'})));
+    w.onmessage=e=>{const f=swWait[e.data.id];if(f){delete swWait[e.data.id];f(e.data.r);}};
+    w.onerror=()=>{SW=false;for(const k in swWait){swWait[k]({ok:false});delete swWait[k];}};SW=w;}catch(e){SW=false;}
+  return SW;}
+function solveAsync(st,lim){return new Promise(ok=>{const w=solverWorker();if(!w){ok(solve(R,st,Math.min(lim,GID==='spider'?6000:15000)));return;}
+  const id=++swN,to=setTimeout(()=>{if(swWait[id]){delete swWait[id];ok({ok:false});}},12000);swWait[id]=r=>{clearTimeout(to);ok(r);};
+  try{w.postMessage({id,g:GID,st:stClone(st),lim});}catch(e){delete swWait[id];clearTimeout(to);ok(solve(R,st,6000));}});}
+function planSet(g,path,st0){const s=stClone(st0);if(!g.plan)g.plan=new Map();for(const m of path){const k=R.key(s);applyMove(R,s,m);g.plan.set(k,R.key(s));}}
+function planNext(st){if(!G||!G.plan)return null;const nk=G.plan.get(R.key(st));if(!nk)return null;
+  for(const m of R.moves(st)){const s=stClone(st);applyMove(R,s,m);if(R.key(s)===nk)return m;}return null;}
+function hintFrom(st,res){if(res&&res.ok&&res.path.length){planSet(G,res.path,st);return res.path[0];}
+  const seen=new Set(G.hist.map(h=>R.key(h.st)));seen.add(R.key(st));
+  for(const m of R.moves(st)){const s=stClone(st);applyMove(R,s,m);if(!seen.has(R.key(s)))return m;}
+  return res&&res.full?null:(R.moves(st)[0]||null);}
+function findHint(){const st=G.st;return planNext(st)||hintFrom(st,solve(R,st,GID==='spider'?6000:15000));}
+// после раздачи — сразу ищем решение в фоне: первая подсказка будет мгновенной
+function planAhead(){const g=G,st0=stClone(G.st);if(!solverWorker())return;solveAsync(st0,GID==='spider'?150000:80000).then(r=>{if(G===g&&r&&r.ok)planSet(g,r.path,st0);});}
+async function hint(){if(!G||G.won||G.busy||G.thinking)return;if(hintLeft()<=0){outOf('hint');return;}
+  const g=G,st=G.st,k=R.key(st);let m=planNext(st);
+  if(!m){g.thinking=true;const tt=setTimeout(()=>toast('Думаю…',1200),350);const res=await solveAsync(st,60000);clearTimeout(tt);g.thinking=false;
+    if(G!==g||G.won||R.key(G.st)!==k)return; // пока думали, сделали ход — подсказка устарела
+    m=hintFrom(st,res);}
+  if(!m){say('stuck',true);toast('Похоже, эта раздача уже не сойдётся. Отмени несколько ходов или начни новую',4000);return;}
+  if(m.s&&GID==='spider'&&!R.canStock(G.st)){toast('Положи карты в пустые столбцы — потом раздавай из колоды');return;}
+  G.hintUsed++;G.hl=m.s?{stock:true,t0:now()}:{f:m.f,j:m.j,t:m.t,t0:now()};
+  SND.tap();updButtons();saveCur();kick();}
+/* ---- «Собрать»: всё открыто — карты сами уходят в дом ---- */
+function collectPath(){if(!G||G.won||GID==='spider')return null;const s=stClone(G.st);if(GID==='klondike')for(let i=6;i<13;i++)if(s.d[i]>0)return null;
+  const path=[];let idle=0;const lim=GID==='klondike'?3*(s.p[0].length+s.p[1].length)+4:0;
+  for(let g=0;g<600;g++){if(R.won(s))return path;let m=null;
+    for(let i=0;i<s.p.length&&!m;i++){const k=R.kind(i);if(k==='found'||k==='stock')continue;const a=s.p[i];if(!a.length)continue;const c=a[a.length-1],f=foundFor(c);if(f>=0&&s.p[f].length===RK(c))m={f:i,j:a.length-1,t:f};}
+    if(m){R.move(s,m.f,m.j,m.t);path.push(m);idle=0;continue;}
+    if(GID==='klondike'&&R.canStock(s)&&idle<lim){R.stock(s);path.push({s:1});idle++;continue;}
+    return null;}
+  return null;}
+function collect(){const path=collectPath();if(!path||!path.length)return;G.busy=true;pushHist();const st=G.st,order={};let k=0;
+  for(const m of path){applyMove(R,st,m);G.moves++;if(!m.s)order[st.p[m.t][st.p[m.t].length-1]]=k++;}
+  setTargets(id=>order[id]!=null?order[id]*70:0);for(let q=0;q<k;q+=2)setTimeout(()=>SND.home(q%13),q*70);
+  updButtons();G.won=true;YG.stop();setTimeout(onWin,k*70+500);}
+function updButtons(){if(!G)return;const u=undoLeft(),h=hintLeft(),lim=!noLimit();
+  $('undoL').innerHTML='Отмена'+(lim?(u>0?' <i class="cnt">'+u+'</i>':(G.daily||!adOk()?'':' <i class="cnt ad">📺</i>')):'');
+  $('hintL').innerHTML='Подсказка'+(lim?(h>0?' <i class="cnt">'+h+'</i>':(G.daily||!adOk()?'':' <i class="cnt ad">📺</i>')):'');
+  const c=!G.won&&!G.busy&&!!collectPath();$('bCollect').classList.toggle('hide',!c);$('bNew').classList.toggle('hide',c);updInfo();}
+function fmtT(ms){const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function updInfo(){if(!G)return;const md=GC.modes.length>1?modeOf(G.mode).full:'';$('gInfo').textContent=S.timer?(md?md+' · ':'')+'ходов '+G.moves+' · '+fmtT(G.time):G.daily?GC.name+(md?', '+md:''):md;}
+// время раздачи идёт, только пока она на экране и ничего не мешает
+setInterval(()=>{if(inPlay()&&!paused&&!document.hidden){G.time+=1000;if(S.timer)updInfo();if(G.time%15000===0)saveCur();}},1000);
+
+/* ================= персонаж-комментатор: редко и коротко, игре не мешает ================= */
+const LINES={
+  zina:{start:['Ну, раскладывай. А я погляжу.','Карты любят порядок — как тетради.','Не торопись, милок. Пасьянс спешки не любит.','Садись поудобнее — разложим.','Кто пасьянс раскладывает, тот нервы бережёт.'],
+    suit:['Масть собрана — пять!','Вот! Голова работает.'],
+    stuck:['Хм… Может, отменить пару ходов?','Бывает. Отмени пару ходов — и по новой.'],
+    win:['Сошёлся! А я говорила.','Пять с плюсом! Ещё разок?','Вот это я понимаю — ни одной помарки.','Умница! Садись, пять.'],
+    daily:['Расклад дня разложен! Завтра — новый.'],hello:['Здравствуй! Разложим пасьянс?','А я тебя ждала. Карты уже на столе.','Заходи, милок. Косынку разложим — и за чай.']},
+  
+  };
+const HOSTL=LINES[GID==='freecell'?'san':GC.host];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function say(kind,force){if(!force&&Math.random()<.35)return;const t=pick(HOSTL[kind]||HOSTL.start);if(!t)return;
+  drawHost($('sayCv'),GC.host);$('sayT').textContent=t;const e=$('say');e.classList.add('on');clearTimeout(say._t);say._t=setTimeout(()=>e.classList.remove('on'),3400);}
+
+/* ================= раздача ================= */
+const CKEY=SKEY+'-cur'; // текущая раздача — только на этом устройстве (в облако не пишем: большая и своя у каждого экрана)
+function saveCur(){if(window.__demo)return;try{if(!G||G.won){localStorage.removeItem(CKEY);return;}
+  localStorage.setItem(CKEY,JSON.stringify({g:GID,seed:G.seed,mode:G.mode,daily:G.daily,st:G.st,moves:G.moves,time:G.time,uu:G.undoUsed,uc:G.undoCap,hu:G.hintUsed,hc:G.hintCap,mc:G.maxCells||0,counted:G.counted,hist:G.hist.slice(-80)}));}catch(e){}}
+function loadCur(){try{const o=JSON.parse(localStorage.getItem(CKEY));if(!isObj(o)||o.g!==GID||!isObj(o.st)||!Array.isArray(o.st.p))return null;
+    // проверка целостности: все карты на месте, по одному разу
+    const all=[].concat.apply([],o.st.p);if(all.length!==(GID==='spider'?104:52)||new Set(all).size!==all.length)return null;
+    if(o.daily&&o.daily!==dayKey(0))return null;return o;}catch(e){return null;}}
+function newG(st,seed,mode,daily){return {st,seed,mode,daily,moves:0,time:0,hist:[],undoUsed:0,undoCap:UNDO_FREE,hintUsed:0,hintCap:HINT_FREE,won:false,counted:false,busy:false,hl:null,drag:null,fx:null};}
+// номер раздачи: «решаемые» — по списку проверенных раздач (у каждого игрока свой порядок), иначе — случайная
+function nextSeed(mode){const L=SEEDS[mode];
+  if(S.solv!==false&&L&&L.length){if(typeof S.off!=='number')S.off=Math.floor(Math.random()*L.length);const n=S.seq[mode]||0;S.seq[mode]=n+1;return L[(S.off+n*7)%L.length];}
+  return 1+Math.floor(Math.random()*2147483000);}
+function dayNum(){const k=dayKey(0);return Math.round(Date.UTC(Math.floor(k/10000),Math.floor(k/100)%100-1,k%100)/864e5);}
+function dailySeed(){const L=SEEDS[GC.daily];return L[(dayNum()*131)%L.length];}
+function startDeal(daily,mode){mode=daily?GC.daily:mode!=null?mode:S.mode;const seed=daily?dailySeed():nextSeed(mode);
+  G=newG(R.deal(seed,mode),seed,mode,daily?dayKey(0):0);save();openGame();dealFrom();SND.deal();setTimeout(()=>say('start'),900);saveCur();planAhead();}
+function resumeDeal(o){G=newG(o.st,o.seed,o.mode,o.daily||0);G.moves=o.moves|0;G.time=o.time|0;G.undoUsed=o.uu|0;G.undoCap=o.uc||UNDO_FREE;G.hintUsed=o.hu|0;G.hintCap=o.hc||HINT_FREE;G.counted=!!o.counted;G.maxCells=o.mc|0;
+  G.hist=Array.isArray(o.hist)?o.hist.filter(h=>h&&h.st&&Array.isArray(h.st.p)):[];openGame();setTargets(null,true);planAhead();}
+function openGame(){hideModal();show('scr-game');$('gTitle').textContent=G.daily?'📅 Расклад дня':GC.name;$('gTitle').style.fontSize=GC.name.length>10?'16px':'';
+  layout();updButtons();updCoins();YG.start();}
+// бросить раздачу (текущую на экране или сохранённую): серия побед обнуляется; «долг» межэкранной растёт, только если раздачу правда играли
+function abandon(){const c=G&&!G.won?G:loadCur();if(c){if(c.moves>=5&&!c.daily)S.adW=(S.adW||0)+1;if(c.counted){const k=String(c.mode);if(isObj(S.st[k]))S.st[k].cs=0;}}
+  G=null;try{localStorage.removeItem(CKEY);}catch(e){}save();}
+function askNew(then){const c=G&&!G.won?G:loadCur();
+  if(c&&c.moves>0){modal(`<h2>Новая раздача?</h2><p>${c.daily?'Расклад дня':'Эта раздача'} не разложена — начнём другую? Её уже не вернуть.</p>
+    <div class="row"><button class="btn accent" id="mYes">🆕 Да, новую</button><button class="btn" id="mCancel">${G&&!G.won?'Продолжить эту':'Не надо'}</button></div>`);
+    $('mYes').onclick=()=>{hideModal();abandon();then();};$('mCancel').onclick=()=>{hideModal();if(inPlay())YG.start();};return;}
+  if(c)abandon();then();}
+// новая обычная раздача: сначала, если пора, межэкранная (не при запуске, не чаще раза в AD_GAP, с AD_FROM-й раздачи, по «долгу»)
+function newDeal(mode){askNew(()=>{const go=()=>startDeal(0,mode);if(adDue()&&adReady())showInterstitial(go);else go();});}
+function openDaily(){const cur=loadCur();if(G&&G.daily===dayKey(0)&&!G.won){openGame();return;}
+  if(cur&&cur.daily===dayKey(0)&&!(G&&!G.won)){resumeDeal(cur);return;}
+  const done=!!S.daily[dayKey(0)];
+  modal(`<h2>📅 Расклад дня</h2><p>Одна и та же раздача сегодня у всех игроков — ${GC.daily===3?'по три карты':modeOf(GC.daily).full||'классика'}. Она точно решаемая.</p>
+    <p>${done?'✅ Сегодня уже разложен! Можно разложить ещё раз — просто так.':'Разложи — получишь +'+DAILY_BONUS+' 💰, а в рейтинге засчитается день.'}</p>
+    <p><small>Отмен — ${UNDO_FREE}, подсказок — ${HINT_FREE}, одинаково у всех.</small></p><p>Разложено дней: <b>${LB.days()}</b></p>
+    <div class="row"><button class="btn green" id="mGo">▶ ${done?'Разложить ещё раз':'Разложить'}</button>${LB.ok()?'<button class="btn noenter" id="mLb">🏆 Рейтинг</button>':''}<button class="btn" id="mCancel">Закрыть</button></div>`);
+  $('mGo').onclick=()=>{hideModal();askNew(()=>startDeal(1));};if($('mLb'))$('mLb').onclick=()=>LB.show();$('mCancel').onclick=hideModal;}
+
+/* ================= победа: статистика, монеты, достижения ================= */
+const DAILY_BONUS=20;
+function stat(){const k=String(G?G.mode:S.mode);if(!isObj(S.st[k]))S.st[k]={};return S.st[k];}
+const ACH=[
+  {id:'w1',ic:'🌱',name:'Первая победа',d:'Разложить первую раздачу',c:20,t:a=>a.w>=1},
+  {id:'w10',ic:'🌿',name:'Десяточка',d:'Разложить 10 раздач',c:50,t:a=>a.w>=10},
+  {id:'w50',ic:'🌳',name:'Полсотни',d:'Разложить 50 раздач',c:100,t:a=>a.w>=50},
+  {id:'w100',ic:'🏆',name:'Сотня',d:'Разложить 100 раздач',c:200,t:a=>a.w>=100},
+  {id:'nu',ic:'✍️',name:'Без помарок',d:'Разложить без единой отмены',c:30,t:a=>a.undo===0},
+  {id:'nh',ic:'🧠',name:'Своим умом',d:'Разложить без подсказок',c:30,t:a=>a.hint===0},
+  {id:'f5',ic:'⏱',name:'Быстрые руки',d:'Разложить быстрее чем за 5 минут',c:30,t:a=>a.time<300000},
+  {id:'s5',ic:'🔥',name:'Пять подряд',d:'5 побед подряд без брошенных раздач',c:50,t:a=>a.cs>=5},
+  {id:'d1',ic:'📅',name:'Расклад дня',d:'Разложить расклад дня',c:20,t:a=>a.days>=1},
+  {id:'d7',ic:'🗓',name:'Неделя раскладов',d:'Разложить расклад дня 7 раз',c:70,t:a=>a.days>=7}]
+  .concat(GID==='klondike'?[{id:'k3',ic:'🃏',name:'По три',d:'Разложить в режиме «по три карты»',c:40,t:a=>a.mode===3}]:
+    GID==='spider'?[{id:'p2',ic:'🕸',name:'Две масти',d:'Разложить паука в две масти',c:40,t:a=>a.mode===2},{id:'p4',ic:'🕷',name:'Четыре масти',d:'Разложить паука в четыре масти',c:100,t:a=>a.mode===4}]:
+    [{id:'c2',ic:'📦',name:'Экономно',d:'Разложить, ни разу не заняв больше двух ячеек',c:50,t:a=>a.cells<=2}]);
+function onWin(){if(!G)return;G.won=true;G.busy=false;YG.stop();try{localStorage.removeItem(CKEY);}catch(e){}
+  const m=stat(),sec=Math.max(1,Math.round(G.time/1000));m.w=(m.w||0)+1;m.cs=(m.cs||0)+1;m.bs=Math.max(m.bs||0,m.cs);m.bt=m.bt>0?Math.min(m.bt,sec):sec;m.bm=m.bm>0?Math.min(m.bm,G.moves):G.moves;
+  S.wins=(S.wins||0)+1;S.games=(S.games||0)+1;if(!G.daily)S.adW=(S.adW||0)+1;
+  let coins=modeOf(G.mode).coins,firstDaily=false;
+  if(G.daily&&!S.daily[G.daily]){S.daily[G.daily]=1;coins+=DAILY_BONUS;firstDaily=true;}
+  const got=[],a={w:S.wins,undo:G.undoUsed,hint:G.hintUsed,time:G.time,cs:m.cs,days:LB.days(),mode:G.mode,cells:G.maxCells||0};
+  for(const x of ACH)if(!S.ach[x.id]&&x.t(a)){S.ach[x.id]=1;coins+=x.c;got.push(x);}
+  G.coins=coins;S.coins+=coins;save();cloudFlush();updCoins();if(firstDaily)LB.submit();
+  SND.win();buzz(30);celebrate(()=>showWin(got,firstDaily));}
+// склонение по числу: 1 ход, 2 хода, 5 ходов
+function plw(n,a,b,c){const t=n%100,u=n%10;return t>10&&t<20?c:u===1?a:u>1&&u<5?b:c;}
+function showWin(got,firstDaily){if(!G)return;const m=stat(),x2=!window.__demo&&X2_ON&&adOk()&&S.wins>2&&!(adDue()&&adReady())&&!G.daily;
+  modal(`<h2 id="mWon">${G.daily?'Расклад дня разложен! 🎉':'Разложено! 🎉'}</h2>
+    <div class="host" style="min-height:0;margin:4px 0"><canvas id="winHost" width="112" height="122" style="width:56px;height:61px;flex:0 0 56px"></canvas><div class="bub" style="margin-bottom:10px;font-size:16px">${pick(G.daily&&firstDaily?HOSTL.daily:HOSTL.win)}</div></div>
+    <div class="wstat"><span>${G.moves}<small>${plw(G.moves,'ход','хода','ходов')}</small></span>${S.timer?`<span>${fmtT(G.time)}<small>время</small></span>`:''}<span>${m.cs||1}<small>${plw(m.cs||1,'победа','победы','побед')} подряд</small></span></div>
+    <p class="coins-won" id="wCoins">+${G.coins} 💰</p>
+    ${got.map(x=>`<div class="achn">${x.ic} ${x.name} — +${x.c} 💰</div>`).join('')}
+    <div class="row">${x2?`<button class="btn accent noenter x2" id="mX2">📺 ×2 монеты за рекламу (+${G.coins})</button>`:''}
+      <button class="btn green" id="mNext">🆕 Новая раздача</button>${G.daily&&LB.ok()?'<button class="btn noenter" id="mLb">🏆 Рейтинг</button>':''}<button class="btn noenter" id="mMenu">В меню</button></div>`);
+  drawHost($('winHost'),GC.host);
+  if($('mX2'))$('mX2').onclick=()=>{const g=G;showRewarded(()=>{if(g.x2)return;g.x2=true;S.coins+=g.coins;save();updCoins();SND.coin();$('wCoins')&&($('wCoins').textContent='+'+g.coins*2+' 💰 (×2)');const b=$('mX2');b&&b.remove();},()=>{});};
+  $('mNext').onclick=()=>{hideModal();newDeal();};$('mMenu').onclick=()=>{hideModal();G=null;openMenu();};if($('mLb'))$('mLb').onclick=()=>LB.show();
+  streakAfterWin();setTimeout(offerReturn,1200);}
+
+/* ================= меню ================= */
+function drawMenuBg(){const c=$('mbg'),r=$('scr-menu').getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);
+  const g=c.getContext('2d');g.scale(d,d);drawTable(g,r.width,r.height,S.table||'green');g.fillStyle='rgba(0,0,0,'+(tableLight()?.42:.12)+')';g.fillRect(0,0,r.width,r.height);}
+function openMenu(){YG.stop();G&&!G.won&&saveCur();if(G&&G.won)G=null;show('scr-menu');drawMenuBg();drawHost($('hostCv'),GC.host);
+  $('gName').textContent=GC.name;$('gSub').textContent=GC.sub;
+  if(!openMenu._said){openMenu._said=1;$('hostSay').textContent=pick(HOSTL.hello);}
+  const cur=G&&!G.won?null:loadCur(),has=!!(G&&!G.won)||!!cur;
+  const md=$('modes');md.style.display=GC.modes.length>1?'':'none';
+  md.innerHTML=GC.modes.map(m=>`<button data-m="${m.id}" class="${m.id===S.mode?'on':''}">${m.name}</button>`).join('');
+  md.querySelectorAll('button').forEach(b=>b.onclick=()=>{S.mode=+b.dataset.m;save();SND.tap();openMenu();});
+  const gm=G&&!G.won?G:cur,other=gm&&(gm.daily||gm.mode!==S.mode);
+  $('btnPlay').innerHTML=has?'▶ Продолжить'+(other?' <small>('+(gm.daily?'расклад дня':modeOf(gm.mode).name.toLowerCase())+')</small>':''):'▶ Играть';
+  $('btnNew').style.display=has?'':'none';
+  $('btnNew').innerHTML='🆕 Новая раздача'+(GC.modes.length>1?' <small>('+modeOf(S.mode).name.toLowerCase()+')</small>':'');
+  $('btnDaily').innerHTML='📅 Расклад дня'+(S.daily[dayKey(0)]?' ✓':'');
+  $('btnStreak').innerHTML='<b>🎁</b>Подарок'+(streakState().claimed||(S.wins||0)<1?'':'<span class="dot"></span>');
+  $('mNote').textContent=S.solv===false||!SEEDS[S.mode]?(GID==='spider'&&S.mode===4?'В четыре масти не каждая раздача сходится — это для знатоков':'Раздачи случайные — не каждая сходится'):'Все раздачи решаемые — проверены заранее';
+  updCoins();}
+$('btnPlay').onclick=()=>{if(G&&!G.won){openGame();return;}const cur=loadCur();if(cur){resumeDeal(cur);return;}startDeal(0);};
+$('btnNew').onclick=()=>newDeal(S.mode);
+$('btnDaily').onclick=()=>openDaily();
+$('gBack').onclick=()=>{if(G&&G.fx)endFx();openMenu();};
+$('bUndo').onclick=undo;$('bHint').onclick=hint;$('bCollect').onclick=collect;$('bNew').onclick=()=>newDeal(G?G.mode:S.mode);
+$('mCoins').onclick=()=>openShop();$('gCoins').onclick=()=>openShop();$('btnSet').onclick=openSettings;$('gSet').onclick=openSettings;
+$('btnStats').onclick=()=>openStats();$('btnDecor').onclick=()=>openDecor('tables');$('btnStreak').onclick=showStreak;
+
+/* ================= окна ================= */
+function hideModal(){$('modal').classList.remove('on');modalOn=false;}
+function modal(html){PAY.re=null;$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;YG.stop();}
+function closeToGame(){hideModal();if(inPlay())YG.start();}
+/* ---- успехи: статистика по режимам и достижения ---- */
+function openStats(){const rows=GC.modes.map(md=>{const a=S.st[String(md.id)]||{},p=a.p||0,w=a.w||0;
+    return `${GC.modes.length>1?`<tr><td colspan="2" style="font-weight:800;padding-top:10px">${md.full[0].toUpperCase()+md.full.slice(1)}</td></tr>`:''}
+      <tr><td>Сыграно</td><td>${p}</td></tr><tr><td>Разложено</td><td>${w}${p?' ('+Math.round(w/p*100)+'%)':''}</td></tr>
+      <tr><td>Лучшее время</td><td>${a.bt?fmtT(a.bt*1000):'—'}</td></tr><tr><td>Меньше всего ходов</td><td>${a.bm||'—'}</td></tr><tr><td>Побед подряд: сейчас / рекорд</td><td>${a.cs||0} / ${a.bs||0}</td></tr>`;}).join('');
+  const ach=ACH.map(x=>`<div class="ach ${S.ach[x.id]?'':'no'}"><i>${S.ach[x.id]?x.ic:'🔒'}</i><span>${x.name}<small>${x.d}</small></span><b>${S.ach[x.id]?'✓':'+'+x.c+' 💰'}</b></div>`).join('');
+  modal(`<h2>📊 Успехи</h2><div class="scroll"><table class="stt">${rows}<tr><td>Расклад дня: разложено дней</td><td>${LB.days()}</td></tr></table>
+    <h3 style="margin:14px 0 4px">Достижения ${Object.keys(S.ach).length}/${ACH.length}</h3>${ach}</div>
+    <div class="row"><button class="btn green" id="mCancel">Закрыть</button></div>`);$('mCancel').onclick=closeToGame;}
+/* ---- украшения: столы, рубашки, карты. Монеты — только на украшения; «особые» — в наборах за покупку ---- */
+const FACES=[{id:'std',name:'Обычные',free:1},{id:'retro',name:'Старинные',price:300}];
+const DECOR={tables:{list:TABLES,key:'table',own:'tables',name:'Столы'},backs:{list:BACKS,key:'back',own:'backs',name:'Рубашки'},faces:{list:FACES,key:'face',own:'faces',name:'Карты'}};
+function isFree(kind,it){return it.free||kind==='tables'&&it.id===GC.table;}
+function owns(kind,it){return isFree(kind,it)||it.pay&&PAY.own(it.pay)||S.own[DECOR[kind].own].indexOf(it.id)>=0;}
+// особое украшение видно, если оно куплено или его можно купить (есть в каталоге площадки); иначе его нет вовсе
+function visible(kind,it){return !it.pay||owns(kind,it)||PAY.on&&!!PAY.item(it.pay);}
+const curOf=kind=>S[DECOR[kind].key]||(kind==='tables'?GC.table:kind==='backs'?'red':'std');
+function openDecor(kind){const D=DECOR[kind],cur=curOf(kind),items=D.list.filter(it=>visible(kind,it));
+  modal(`<h2>🎨 Украшения</h2><p>У тебя ${S.coins} 💰 — монеты дают за каждую разложенную раздачу.</p>
+    <div class="tabs">${Object.keys(DECOR).map(k=>`<button data-k="${k}" class="${k===kind?'on':''}">${DECOR[k].name}</button>`).join('')}</div>
+    <div class="scroll"><div class="grid">${items.map(it=>{const own=owns(kind,it),on=it.id===cur;
+      return `<button class="it ${on?'cur':''}" data-id="${it.id}"><canvas data-pv="${it.id}"></canvas><b>${it.name}</b><span class="pr ${own?'own':it.pay?'lock':''}">${on?'✓ Выбрано':own?'Выбрать':it.pay?'🛒 в наборе':it.price+' 💰'}</span></button>`;}).join('')}</div></div>
+    <div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}<button class="btn green" id="mCancel">Готово</button></div>`);
+  $('mcard').querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{SND.tap();openDecor(b.dataset.k);});
+  $('mcard').querySelectorAll('.it').forEach(b=>b.onclick=()=>decorTap(kind,D.list.find(x=>x.id===b.dataset.id)));
+  if($('mAdCoins'))$('mAdCoins').onclick=()=>{showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');openDecor(kind);},()=>{});};
+  $('mCancel').onclick=()=>{closeToGame();if($('scr-menu').classList.contains('on'))openMenu();};
+  requestAnimationFrame(()=>$('mcard').querySelectorAll('canvas[data-pv]').forEach(c=>previewDecor(kind,c.dataset.pv,c)));}
+function previewDecor(kind,id,c){const r=c.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1),w=Math.max(60,r.width),h=Math.max(40,r.height);c.width=Math.round(w*d);c.height=Math.round(h*d);const g=c.getContext('2d');g.scale(d,d);
+  if(kind==='tables'){drawTable(g,w,h,id);return;}
+  drawTable(g,w,h,S.table||GC.table);const cw=h*.62,ch=cw*1.42*.95;const sv=S.face;
+  if(kind==='backs'){g.save();g.translate(w/2-cw*.55,(h-ch)/2+2);drawBack(g,cw,ch,id);g.restore();g.save();g.translate(w/2-cw*.4,(h-ch)/2+6);drawBack(g,cw,ch,id);g.restore();}
+  else{S.face=id;for(const [k,x] of [[12,-.7],[23,.05]]){g.save();g.translate(w/2+cw*x-cw*.1,(h-ch)/2+2);drawFace(g,k,cw,ch);g.restore();}S.face=sv;}}
+function decorTap(kind,it){const D=DECOR[kind];if(!it)return;
+  if(owns(kind,it)){S[D.key]=it.id;save();SND.tap();applyLook();openDecor(kind);return;}
+  if(it.pay){const p=PAY_ITEMS[it.pay];modal(`<h2>${p.ic} ${p.name}</h2><p>${p.desc}</p>${inPlayWin()?'<p><small>Купить можно в меню, между раздачами.</small></p>':PAY.html([it.pay])}<div class="row"><button class="btn" id="mBack">← Назад</button></div>`);
+    PAY.bind($('mcard'));PAY.re=()=>openDecor(kind);$('mBack').onclick=()=>openDecor(kind);return;}
+  if(S.coins<it.price){modal(`<h2>Не хватает монет</h2><p>«${it.name}» стоит ${it.price} 💰, а у тебя ${S.coins} 💰. Монеты дают за каждую разложенную раздачу, расклад дня и достижения.</p>
+      <div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}${PAY.on?'<button class="btn noenter" id="mShop">💰 Получить монеты</button>':''}<button class="btn" id="mBack">← Назад</button></div>`);
+    if($('mAdCoins'))$('mAdCoins').onclick=()=>showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');openDecor(kind);},()=>{});
+    if($('mShop'))$('mShop').onclick=()=>openShop();$('mBack').onclick=()=>openDecor(kind);return;}
+  modal(`<h2>${it.name}</h2><p>Купить за ${it.price} 💰? У тебя ${S.coins} 💰.</p><div class="row"><button class="btn green" id="mBuy">Купить за ${it.price} 💰</button><button class="btn" id="mBack">← Назад</button></div>`);
+  $('mBuy').onclick=()=>{if(S.coins<it.price)return;S.own[D.own].push(it.id);S[D.key]=it.id;setCoins(S.coins-it.price);SND.coin();applyLook();openDecor(kind);};$('mBack').onclick=()=>openDecor(kind);}
+// выбранные стол, рубашка и колода (особые — только пока куплены: например, после возврата покупки)
+function applyLook(){for(const k in DECOR){const D=DECOR[k],id=S[D.key],it=D.list.find(x=>x.id===id);if(id&&(!it||!owns(k,it)))delete S[D.key];}
+  S.table=curOf('tables');S.back=curOf('backs');S.face=curOf('faces');lookChanged();if($('scr-menu').classList.contains('on'))drawMenuBg();}
+/* ---- настройки ---- */
+function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</i>';
+  modal(`<h2>Настройки</h2><div class="scroll">
+    <button class="set" id="stSnd"><span>🔊 Звук</span>${on(S.sound!==false)}</button>
+    <button class="set" id="stVib"><span>📳 Вибрация</span>${on(S.vib!==false)}</button>
+    <button class="set" id="stAuto"><span>🏠 Сам убирать карты в дом<br><small>когда в столбцах они больше не нужны</small></span>${GID==='spider'?'<i class="off">—</i>':on(S.auto!==false)}</button>
+    <button class="set" id="stSolv"><span>✅ Только решаемые раздачи<br><small>${GID==='spider'?'одна и две масти':'проверены заранее'}</small></span>${on(S.solv!==false)}</button>
+    <button class="set" id="stTimer"><span>⏱ Время и ходы<br><small>показывать вверху во время игры</small></span>${on(!!S.timer)}</button>
+    <button class="set" id="stLet"><span>🔤 Буквы на картах</span><i class="go">${S.letters==='en'?'J Q K A':'В Д К Т'}</i></button>
+    <button class="set" id="stC4"><span>🎨 Четыре цвета мастей<br><small>бубны синие, трефы зелёные</small></span>${on(!!S.c4)}</button>
+    <button class="set" id="stCalm"><span>🌿 Спокойный режим<br><small>без разлёта карт и лишнего движения</small></span>${on(calm())}</button>
+    ${PAY.on&&!inPlayWin()?PAY.html(['no_ads'],false)+'<button class="set" id="stShop"><span>🛒 Все покупки<br><small>монеты, особые столы и рубашки</small></span><i class="go">›</i></button>':''}</div>
+    <div class="row"><button class="btn noenter" id="stHow">❓ Как играть</button><button class="btn noenter" id="stAbout">ℹ️ Об игре</button><button class="btn green" id="stClose">Готово</button></div>`);
+  $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
+  $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
+  $('stAuto').onclick=()=>{if(GID==='spider')return;S.auto=S.auto===false;save();openSettings();};
+  $('stSolv').onclick=()=>{S.solv=S.solv===false;save();toast(S.solv?'Новые раздачи будут решаемыми':'Новые раздачи будут случайными');openSettings();};
+  $('stTimer').onclick=()=>{S.timer=!S.timer;save();updInfo();openSettings();};
+  $('stLet').onclick=()=>{S.letters=S.letters==='en'?'ru':'en';save();lookChanged();openSettings();};
+  $('stC4').onclick=()=>{S.c4=!S.c4;save();lookChanged();openSettings();};
+  $('stCalm').onclick=()=>{if(RM){toast('Включено в настройках телефона («уменьшить движение»)');return;}S.calm=!S.calm;save();applyCalm();openSettings();};
+  if($('stShop')){$('stShop').onclick=()=>openShop();PAY.bind($('mcard'));PAY.re=openSettings;}
+  $('stAbout').onclick=openAbout;$('stHow').onclick=openHow;$('stClose').onclick=()=>{closeToGame();if($('scr-menu').classList.contains('on'))openMenu();};}
+// покупки за деньги — только в меню и между раздачами, не посреди раздачи
+function inPlayWin(){return !!(G&&!G.won&&$('scr-game').classList.contains('on'));}
+function openHow(){modal(`<h2>Как играть</h2><div class="how scroll">${GC.how.map(t=>'<p>'+t+'</p>').join('')}
+    <p>↶ <b>Отмена</b> — вернуть ход, 💡 <b>подсказка</b> — покажет, какой ход сделать. ✨ <b>Собрать</b> — когда всё открыто, карты сами уйдут в дом.</p>
+    <p>📅 <b>Расклад дня</b> — одна раздача для всех игроков. 💰 Монеты — на новые столы, рубашки и карты.</p></div>
+    <div class="row"><button class="btn" id="hBack">← Назад</button></div>`);$('hBack').onclick=openSettings;}
+function openAbout(){modal(`<h2>Об игре</h2><p class="about">«${GC.title}» — пасьянс «${GC.name}» с крупными картами. Карты, столы и персонажи нарисованы прямо в игре, звуки собраны кодом. ${S.solv!==false&&(GID!=='spider'||S.mode!==4)?'Раздачи в режиме «только решаемые» заранее проверены: каждую можно разложить.':''}</p>
+    ${PLAT==='vk'?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
+    <p class="about">На компьютере: Z — отмена, H — подсказка, ${GID==='freecell'?'':'пробел — колода, '}N — новая раздача, Esc — назад, Enter — главная кнопка окна.</p>
+    <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ Восстановить покупки</button>':''}<button class="btn" id="abBack">← Назад</button></div>`);
+  if($('abPay'))$('abPay').onclick=()=>PAY.again();$('abBack').onclick=openSettings;}
+function applyCalm(){document.body.classList.toggle('calm',calm());}applyCalm();
+
+/* ================= реклама (SDK площадки; без него — заглушка) ================= */
+// заглушка — только на маке (без SDK / ?vk=1); в настоящем VK без ответа моста награды нет
+function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen();let n=3;tEl.textContent=n;const it=setInterval(()=>{n--;tEl.textContent=n;if(n<=0){clearInterval(it);ad.classList.remove('on');adClose();cb();}},600);}
+function adOpen(){setPause('ad',true);YG.stop();}
+// игра снова «идёт» для GameplayAPI, только если раздача на экране и поверх нет окна
+function adClose(){setPause('ad',false);if(inPlay())YG.start();}
+const AD_FAIL='Реклама сейчас недоступна — загляни чуть позже',VK_REAL=/[?&]vk_app_id=/.test(location.search),
+  AD_LOCAL=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname); // заглушка рекламы — только на маке; на площадке без SDK награду даром не даём
+// межэкранная: не раньше чем через AD_GAP после ЛЮБОЙ рекламы (и за награду тоже) и после запуска; первая — не раньше AD_FROM-й раздачи
+let lastAdT=Date.now(),AD_GAP=180000;const AD_FROM=2;
+// за награду — по желанию игрока; пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
+let adBusy=false;
+function showRewarded(cb0,onFail0){
+  if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
+  const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
+  if(PLAT==='vk'&&!VK){if(VK_REAL){toast(AD_FAIL);onFail();}else stubAd(cb);return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
+      .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL);onFail();}})
+      .catch(()=>{adClose();toast(AD_FAIL);onFail();})
+      .finally(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
+  if(!ysdk){if(AD_LOCAL)stubAd(cb);else{toast(AD_FAIL);onFail();}return;}
+  let got=false;
+  ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
+    onClose:()=>{adClose();if(got)cb();else{toast('Досмотри видео до конца, чтобы получить награду');onFail();}},
+    onError:()=>{adClose();toast(AD_FAIL);onFail();}}});
+}
+function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
+// кнопки «📺 … за рекламу» есть везде, кроме настоящего VK без моста (там ролик не показать)
+function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
+// «долг» межэкранной: S.adW — раздач с прошлого показа (разложенных и брошенных после 5+ ходов); показ положен при S.adW ≥ AD_EVERY.
+// Если сейчас нельзя (пауза после рекламы) — показ не сгорает, а ждёт следующей раздачи. Обнуляется только после настоящего показа
+function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.games||0)>=AD_FROM;}
+function showInterstitial(cb0){
+  const cb=shown=>{lastAdT=Date.now();if(shown!==false){S.adW=0;save();}cb0();};
+  if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(cb);return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),()=>false).then(ok=>{adClose();cb(ok);});return;}
+  if(!ysdk){if(AD_LOCAL)stubAd(cb);else cb0();return;}
+  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
+}
+
+/* ================= монеты ================= */
+// монеты — только на украшения (столы, рубашки, карты); выиграть ими нельзя. Раздача 10–40 💰, расклад дня +20, достижения, серия дней
+let AD_COINS=30,AD_EVERY=2,X2_ON=true;
+// удалённая настройка Яндекса (флаги в консоли, по умолчанию их нет — действуют значения выше). Границы жёсткие:
+// межэкранная — не чаще раза в 2 раздачи и не чаще раза в 180 с (ad_gap — только больше); ×2 за рекламу можно выключить флагом x2=0
+function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
+  if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;
+  if(f.x2==='0'||f.x2==='off')X2_ON=false;updCoins();}
+function updCoins(){const a=$('gCoins'),b=$('coinCnt');if(a)a.textContent='💰 '+S.coins;if(b)b.textContent=S.coins;}
+function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
+function openShop(){
+  // покупки за деньги — только вне раздачи; нет платежей — раздела нет совсем
+  const buy=PAY.on&&!inPlayWin();
+  modal(`<h2>Монеты 💰</h2><p>У тебя ${S.coins} 💰. Монеты дают за каждую разложенную раздачу, расклад дня, достижения и подарки за серию дней. Тратятся на украшения: столы, рубашки, карты.</p>${buy?PAY.html():''}
+    <div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}<button class="btn noenter" id="mDecor">🎨 Украшения</button><button class="btn" id="mCancel">Закрыть</button></div>`);
+  if(buy){PAY.bind($('mcard'));PAY.re=openShop;}
+  if($('mAdCoins'))$('mAdCoins').onclick=()=>{hideModal();showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');},()=>{});};
+  $('mDecor').onclick=()=>openDecor('tables');$('mCancel').onclick=closeToGame;}
+
+/* ---- товары пасьянсов (каталог — ~/Brain/hobby/solitaire.md и CLAUDE.md проекта). Силы не продаём: рейтинг считает дни, в раскладе дня у всех поровну отмен и подсказок ----
+   vk — цена в голосах, обязана совпадать с ~/Projects/hobby-pay/catalog.json (сервер vk-pay отдаёт её VK) */
+const PAY_ROW='set';
+const PAY_ITEMS={
+  no_ads:{perm:1,bonus:150,vk:14,ic:'🚫',name:'Без рекламы',desc:'Навсегда без рекламы между раздачами, отмены и подсказки без ограничений (кроме расклада дня), и сразу +150 💰'},
+  coins_s:{n:300,vk:5,ic:'💰',name:'Кошелёк: 300 💰',desc:'Хватит на пару новых рубашек или стол',done:'+300 💰 — спасибо!'},
+  coins_l:{n:1000,vk:14,ic:'💰',name:'Сейф: 1000 💰',desc:'Выгоднее кошелька',done:'+1000 💰 — спасибо!'},
+  tables:{perm:1,vk:8,ic:'🏖',name:'Особые столы',desc:'Купе поезда, пляж и новогодний стол'},
+  backs:{perm:1,vk:7,ic:'🃏',name:'Особые рубашки',desc:'Космос, матрёшки, самовар и золотая'}
+};
+const PAY_TEST={no_ads:99,coins_s:39,coins_l:99,tables:59,backs:49}; // цены только для ?paytest=1; настоящие — в консоли
+function payAdd(n){S.coins+=n;}
+function payFlush(){cloudFlush();}
+function payPause(on){setPause('pay',on);}
+// после покупки/восстановления: монеты на экране, выбранное оформление и перерисовать окно, где были кнопки (PAY.re — его функция)
+function payAfter(){updCoins();applyLook();if(G)updButtons();if(modalOn&&PAY.re)PAY.re();}
+/* ================= покупки за деньги: Яндекс Игры (ysdk.payments) и VK Игры (VKWebAppShowOrderBox) — общий модуль (одинаковый в 5 играх) =================
+   Товары игры — PAY_ITEMS (выше), id совпадают с id в консоли Яндекса («Инап-покупки») и в hobby-pay/catalog.json (VK).
+   Кнопок покупок НЕТ совсем, если платежи недоступны: нет SDK/моста (мак), каталог Яндекса пуст, VK не поддерживает оплату (iOS).
+   Постоянные (perm) — флаг S.buy[id], разовый бонус монет — один раз на игрока (S.buyB). Выдача — только после подтверждения площадки.
+   Яндекс: цена и значок валюты — только из getCatalog; расходуемые: выдать → сохранить (облако сразу) → consumePurchase;
+     незавершённые при запуске довыдаём (getPurchases). Токены выданных — S.payT (и в облаке), сбой consume не даст выдать второй раз.
+   VK: на кнопке число голосов (PAY_ITEMS.vk). success:true + order_id → выдать → сохранить → стереть ключ pay_<order_id>.
+     Страховка: сервер vk-pay при оплате пишет в хранилище VK игрока pay_<order_id>=id (расходуемые) и own_<id>=1 (постоянные);
+     при запуске читаем их и довыдаём. Выданные order_id — S.payV (последние 30); покупка без order_id оставляет метку «x:<id>»,
+     которая «съест» первый чужой pay_ этого товара — второй раз не выдастся.
+   Мак: ?paytest=1 — имитация Яндекса (localStorage «paytest»), ?vk=1&paytest=1 — имитация VK с сервером (localStorage «paytestvk»),
+   ?paytest=fail — отказ. В настоящем VK (vk_app_id) и в Яндексе заглушек нет */
+const payObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+const PAY={on:false,p:null,v:null,list:[],busy:false,
+  test:/[?&]paytest=/.test(location.search),
+  // запуск: после SDK/моста и облака. Незавершённые покупки обрабатываем, даже если каталог не пришёл
+  async init(){if(PAY.p||PAY.v)return;
+    if(PLAT==='vk')return PAY.initVK();
+    try{if(ysdk)PAY.p=ysdk.getPayments?await payT(ysdk.getPayments({signed:false})):ysdk.payments;
+      else if(PAY.test&&!window.YaGames)PAY.p=payStub();}catch(e){PAY.p=null;}
+    if(!PAY.p)return;
+    try{await PAY.restore();}catch(e){}
+    try{const c=await payT(PAY.p.getCatalog());PAY.list=(Array.isArray(c)?c:[]).filter(x=>x&&PAY_ITEMS[x.id]);}catch(e){PAY.list=[];}
+    PAY.on=PAY.list.length>0;if(PAY.on)payAfter();},
+  async initVK(){
+    if(VK){let ok=false;try{ok=!!(VK.supportsAsync&&await payT(VK.supportsAsync('VKWebAppShowOrderBox'),8000));}catch(e){}if(ok)PAY.v=payVK();}
+    else if(PAY.test&&!VK_REAL)PAY.v=payStubVK();
+    if(!PAY.v)return;
+    try{await PAY.restore();}catch(e){}
+    PAY.list=Object.keys(PAY_ITEMS).filter(id=>PAY_ITEMS[id].vk>0).map(id=>({id}));
+    PAY.on=PAY.list.length>0;if(PAY.on)payAfter();},
+  own(id){return !!(payObj(S.buy)&&S.buy[id]);},
+  item(id){return PAY.list.find(x=>x.id===id)||null;},
+  give(id){const it=PAY_ITEMS[id];
+    if(it.perm){if(!payObj(S.buy))S.buy={};S.buy[id]=1;
+      if(it.bonus){if(!payObj(S.buyB))S.buyB={};if(!S.buyB[id]){S.buyB[id]=1;payAdd(it.bonus);}}}
+    else payAdd(it.n||0);
+    if(it.give)it.give();},
+  // при запуске и «Восстановить покупки»: постоянные — выдать, если флага нет; расходуемые — довыдать и отметить
+  async restore(){let got=0;
+    if(PAY.v)got=await PAY.restoreVK();
+    else{const ps=await payT(PAY.p.getPurchases());
+      for(const x of (Array.isArray(ps)?ps:[])){const it=x&&PAY_ITEMS[x.productID];if(!it)continue;
+        if(it.perm){if(!PAY.own(x.productID)){PAY.give(x.productID);got=1;}}else if(await PAY.credit(x))got=1;}}
+    if(got){save();payFlush();payAfter();toast('Покупка зачислена',2600);}
+    return got;},
+  // VK: ключи own_<id> (постоянные, не стираем) и pay_<order_id> (расходуемые: выдать, сохранить, стереть)
+  async restoreVK(){const ks=await PAY.v.keys();let got=0;const done=[];if(!Array.isArray(S.payV))S.payV=[];
+    for(const k of ks){const m=/^(own|pay)_(.+)$/.exec(k.key||'');if(!m||!k.value)continue;
+      if(m[1]==='own'){const it=PAY_ITEMS[m[2]];if(it&&it.perm&&!PAY.own(m[2])){PAY.give(m[2]);got=1;}continue;}
+      const id=String(k.value),it=PAY_ITEMS[id];if(!it)continue;
+      if(S.payV.indexOf(m[2])<0){const x=S.payV.indexOf('x:'+id); // покупка без order_id уже выдана — это её заказ
+        if(x>=0)S.payV[x]=m[2];else{PAY.give(id);payMark(m[2]);got=1;}}
+      done.push(k.key);}
+    if(done.length){save();payFlush();for(const k of done)try{await PAY.v.clear(k);}catch(e){}}
+    return got;},
+  // расходуемая: выдать (если этот токен ещё не выдавали), сохранить в облако и только потом consumePurchase
+  async credit(x){const t=String(x.purchaseToken||'');if(!Array.isArray(S.payT))S.payT=[];let fresh=false;
+    if(!t||S.payT.indexOf(t)<0){PAY.give(x.productID);if(t)S.payT.push(t);if(S.payT.length>30)S.payT=S.payT.slice(-30);save();payFlush();fresh=true;}
+    try{if(t)await payT(PAY.p.consumePurchase(t));}catch(e){}
+    return fresh;},
+  async buy(id){const it=PAY_ITEMS[id];if(!it||PAY.busy||!PAY.on||!PAY.item(id)||(it.perm&&PAY.own(id)))return;PAY.busy=true;payPause(true);
+    try{if(PAY.v){const r=await PAY.v.order(id);if(!r||!r.success)throw new Error('cancel');
+        const oid=r.order_id!=null?String(r.order_id):'';if(!Array.isArray(S.payV))S.payV=[];
+        if(!oid||S.payV.indexOf(oid)<0){PAY.give(id);payMark(oid||'x:'+id);}
+        save();payFlush();if(oid)PAY.v.clear('pay_'+oid).catch(()=>{});}
+      else{const x=await PAY.p.purchase({id});
+        if(it.perm){PAY.give(id);save();payFlush();}
+        else await PAY.credit(x&&x.productID===id?x:{productID:id,purchaseToken:x&&x.purchaseToken});}
+      SND.coin();toast(it.done||'Готово! Спасибо за покупку',2800);payAfter(id);}
+    catch(e){toast('Покупка не состоялась',2200);}
+    finally{PAY.busy=false;payPause(false);}},
+  // «Восстановить покупки» (Об игре): заново читаем getPurchases / ключи VK
+  async again(){if(!(PAY.p||PAY.v)||PAY.busy)return;PAY.busy=true;let got=0;try{got=await PAY.restore();}catch(e){}PAY.busy=false;if(!got)toast('Покупки проверены — всё на месте',2400);},
+  // цена: VK — число голосов (требование VK); Яндекс — из каталога: число + значок валюты (getPriceCurrencyImage), иначе готовая строка price
+  price(pr){if(PAY.v){const n=PAY_ITEMS[pr.id].vk,a=n%10,b=n%100;return n+' '+(a===1&&b!==11?'голос':a>=2&&a<=4&&(b<12||b>14)?'голоса':'голосов');}
+    let img='';try{img=pr.getPriceCurrencyImage?pr.getPriceCurrencyImage('svg'):'';}catch(e){}
+    return img&&pr.priceValue?payEsc(pr.priceValue)+'<img class="pcur" src="'+payEsc(img)+'" alt="">':payEsc(pr.price||pr.priceValue||'');},
+  row(pr){const it=PAY_ITEMS[pr.id],own=it.perm&&PAY.own(pr.id),txt='<span>'+it.ic+' '+payEsc(it.name)+'<br><small>'+payEsc(it.desc)+'</small></span>';
+    return own?'<div class="'+PAY_ROW+' pown">'+txt+'<i>куплено</i></div>':'<button class="'+PAY_ROW+' pbuy" data-pid="'+payEsc(pr.id)+'">'+txt+'<b>'+PAY.price(pr)+'</b></button>';},
+  // список товаров (ids — только эти, по порядку каталога); owned=false — без уже купленных
+  html(ids,owned){const L=PAY.list.filter(pr=>(!ids||ids.indexOf(pr.id)>=0)&&(owned!==false||!(PAY_ITEMS[pr.id].perm&&PAY.own(pr.id))));
+    return L.length?'<div class="pay"><h3>Покупки</h3>'+L.map(PAY.row).join('')+'</div>':'';},
+  bind(root){(root||document).querySelectorAll('.pbuy').forEach(b=>b.onclick=()=>{try{(SND.tap||SND.click)();}catch(e){}PAY.buy(b.dataset.pid);});}
+};
+function payMark(v){if(!Array.isArray(S.payV))S.payV=[];if(S.payV.indexOf(v)<0)S.payV.push(v);if(S.payV.length>30)S.payV=S.payV.slice(-30);}
+// слияние облака (d) в сохранение T (по умолчанию S): купленное, выданные бонусы, токены и заказы — объединение (покупка не теряется ни с какой стороны)
+function payMerge(d,T){T=T||S;if(!payObj(d)||!payObj(T))return;
+  for(const f of ['buy','buyB'])if(payObj(d[f])){if(!payObj(T[f]))T[f]={};for(const k in d[f])if(d[f][k])T[f][k]=1;}
+  for(const f of ['payT','payV'])if(Array.isArray(d[f])){if(!Array.isArray(T[f]))T[f]=[];for(const t of d[f])if(typeof t==='string'&&T[f].indexOf(t)<0)T[f].push(t);if(T[f].length>30)T[f]=T[f].slice(-30);}}
+function payT(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||15000))]);}
+function payEsc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
+// VK: окно оплаты (игрок может думать долго — ждём до 10 мин) и ключи хранилища, которые пишет сервер vk-pay
+function payVK(){return {order:id=>vkSend('VKWebAppShowOrderBox',{type:'item',item:id},600000),
+  keys:async()=>{const r=await vkSend('VKWebAppStorageGetKeys',{count:1000,offset:0},8000),ks=((r&&r.keys)||[]).filter(k=>/^(own|pay)_/.test(k));
+    if(!ks.length)return [];const g=await vkSend('VKWebAppStorageGet',{keys:ks},8000);return (g&&g.keys)||[];},
+  clear:k=>vkSend('VKWebAppStorageSet',{key:k,value:''},8000)};}
+// имитация платежей для проверки на маке (?paytest=1): цены — PAY_TEST, покупки лежат в localStorage «paytest», consume их убирает
+function payStub(){const K='paytest',rd=()=>{try{return JSON.parse(localStorage.getItem(K))||[];}catch(e){return [];}},wr=a=>{try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}};
+  const cur='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#f5b400"/><text x="10" y="14.5" font-size="12" text-anchor="middle" font-family="Arial" font-weight="700" fill="#fff">T</text></svg>');
+  const wait=v=>new Promise(ok=>setTimeout(()=>ok(v),250)),fail=()=>window.__payCancel||/[?&]paytest=fail/.test(location.search);
+  return {getCatalog:()=>wait(Object.keys(PAY_TEST).map(id=>({id,title:id,description:'',imageURI:'',price:PAY_TEST[id]+' тест',priceValue:String(PAY_TEST[id]),priceCurrencyCode:'TST',getPriceCurrencyImage:()=>cur}))),
+    getPurchases:()=>wait(rd()),
+    purchase:({id})=>fail()?Promise.reject(new Error('cancel')):wait(null).then(()=>{const x={productID:id,purchaseToken:'t'+Date.now()+Math.random().toString(36).slice(2,6),developerPayload:''};const a=rd();a.push(x);wr(a);return x;}),
+    consumePurchase:t=>{if(window.__payNoConsume)return Promise.reject(new Error('fail'));wr(rd().filter(x=>x.purchaseToken!==t));return wait();}};}
+// имитация VK (?vk=1&paytest=1): «сервер» пишет pay_/own_ в localStorage «paytestvk», как vk-pay в хранилище VK.
+// __payNoOid — ответ без order_id, __payNoClear — стирание ключа не прошло, ?paytest=fail / __payCancel — отказ
+function payStubVK(){const K='paytestvk',rd=()=>{try{return JSON.parse(localStorage.getItem(K))||{};}catch(e){return {};}},wr=o=>{try{localStorage.setItem(K,JSON.stringify(o));}catch(e){}};
+  const wait=v=>new Promise(ok=>setTimeout(()=>ok(v),250)),fail=()=>window.__payCancel||/[?&]paytest=fail/.test(location.search);
+  return {order:id=>fail()?Promise.reject({error_type:'client_error'}):wait().then(()=>{const oid=String(Date.now()),o=rd();
+      if(PAY_ITEMS[id].perm)o['own_'+id]='1';else o['pay_'+oid]=id;wr(o);return window.__payNoOid?{success:true}:{success:true,order_id:+oid};}),
+    keys:()=>wait(Object.entries(rd()).filter(([k,v])=>v).map(([key,value])=>({key,value}))),
+    clear:k=>{if(window.__payNoClear)return Promise.reject(new Error('fail'));const o=rd();delete o[k];wr(o);return wait();}};}
+
+
+/* ================= рейтинг раскладов дня =================
+   Очки — сколько дней разложен расклад дня (у всех игроков одна раздача, отмен и подсказок поровну).
+   Яндекс: лидерборд с техническим именем daily (создать в консоли). VK: таблица друзей VKWebAppShowLeaderBoardBox.
+   Нет SDK/моста — кнопки нет (никаких заглушек). */
+const LB={
+  days(){return Object.keys(S.daily||{}).length;},
+  ok(){return PLAT==='vk'?!!VK:!!(ysdk&&(ysdk.leaderboards||ysdk.getLeaderboards));},
+  async submit(){const n=LB.days();if(!n)return;
+    if(PLAT==='vk')return; // VK сам запоминает результат из ShowLeaderBoardBox
+    try{if(!ysdk)return;if(ysdk.leaderboards&&ysdk.leaderboards.setScore)await ysdk.leaderboards.setScore('daily',n);
+      else{const lb=await ysdk.getLeaderboards();await lb.setLeaderboardScore('daily',n);}}catch(e){}},
+  async entries(){const o={includeUser:true,quantityAround:2,quantityTop:10};
+    try{if(ysdk.leaderboards&&ysdk.leaderboards.getEntries)return await ysdk.leaderboards.getEntries('daily',o);
+      const lb=await ysdk.getLeaderboards();return await lb.getLeaderboardEntries('daily',o);}catch(e){return null;}},
+  async show(){
+    if(PLAT==='vk'){if(!VK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:LB.days()},60000).catch(()=>toast('Таблица друзей сейчас недоступна'));return;}
+    modal(`<h2>🏆 Рейтинг</h2><p>Загружаем…</p>`);
+    const r=await LB.entries();const list=(r&&r.entries)||[];
+    const me=r&&typeof r.userRank==='number'?r.userRank:0,authed=!!(YP&&YP.getMode&&YP.getMode()!=='lite');
+    const esc=t=>String(t||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+    const rows=list.map(e=>`<div class="lbr${e.rank===me?' me':''}"><b>${e.rank}</b><span>${esc(e.player&&e.player.publicName)||'Игрок'}</span><i>${e.score} 📅</i></div>`).join('');
+    modal(`<h2>🏆 Рейтинг</h2><p>Сколько дней разложен расклад дня. У тебя: <b>${LB.days()}</b></p>
+      <div class="lb">${rows||'<p>Пока пусто — будь первым!</p>'}</div>
+      ${authed?'':'<p><small>Чтобы попасть в рейтинг, войди в аккаунт Яндекса.</small></p>'}
+      <div class="row">${authed||!(ysdk&&ysdk.auth)?'':'<button class="btn accent noenter" id="lbAuth">Войти</button>'}<button class="btn" id="lbClose">Закрыть</button></div>`);
+    $('lbClose').onclick=()=>{hideModal();if(G&&G.won)openMenu();else if(inPlay())YG.start();};
+    // после входа — другой аккаунт и другое облако: перечитываем и сливаем, а не пишем туда сохранение этого устройства
+    const a=$('lbAuth');if(a)a.onclick=async()=>{try{await ysdk.auth.openAuthDialog();YP=await ysdk.getPlayer({scopes:false});
+      clearTimeout(cloudT);cloudT=0;cloudReady=false;cloudTry=0;await cloudLoad(true);updCoins();await LB.submit();}catch(e){}LB.show();};}
+};
+
+/* ---- серия дней: 7 дней подряд, награда растёт; пропуск — всё заново ---- */
+const STREAK=[10,15,20,25,30,40,60];
+// «сегодня» для расклада дня и серии: на Яндексе — по часам сервера (перевод часов телефона не даёт лишних дней), иначе — по часам устройства
+function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
+function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+function streakState(){const s=S.streak||{day:0,last:0,cyc:0},t=dayKey(0);
+  if(s.last===t)return{claimed:true,day:s.day};
+  const cont=s.last===dayKey(-1)&&s.day>0;return{claimed:false,day:cont?s.day%7+1:1,broken:!cont&&s.day>0&&s.day<7};}
+// мягкий старт: до первой разложенной раздачи окно не показываем; 1-й день — тихо тостом
+function maybeStreak(){if(G&&!G.won||window.__demo||modalOn||$('ad').classList.contains('on'))return;
+  const st=streakState();if(st.claimed||(S.wins||0)<1)return;if(st.day===1)claimStreak(1,true);else showStreak();}
+function showStreak(){const st=streakState();let cells='';
+  for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day;
+    cells+=`<div class="sd ${done?'done':''} ${today?'today':''}"><small>День ${d}</small><span class="ic">${d===7?'🎁':'💰'}</span>+${STREAK[d-1]}</div>`;}
+  const r=STREAK[st.day-1]||STREAK[0],first=(S.wins||0)<1;
+  modal(`<h2>Подарок за вход 🎁</h2><p>${first?'Разложи первую раздачу — и начнём копить подарки!':st.claimed?'Сегодняшний подарок уже твой. Заходи завтра — день '+(st.day%7+1)+'!':st.broken?'Эх, серия прервалась — начинаем заново. Заходи каждый день!':'Заходи каждый день — подарок растёт, на 7-й день — самый большой!'}</p>
+    <div class="streak">${cells}</div>
+    <div class="row">${st.claimed||first?`<button class="btn" id="sClose">Закрыть</button>`:`${adOk()?`<button class="btn accent noenter" id="sX2">📺 ×2 за рекламу (+${r*2} 💰)</button>`:''}<button class="btn green" id="sGet">Забрать +${r} 💰</button>`}</div>`);
+  if(st.claimed||first){$('sClose').onclick=closeToGame;return;}
+  $('sGet').onclick=()=>claimStreak(1);
+  if($('sX2'))$('sX2').onclick=()=>{hideModal();showRewarded(()=>claimStreak(2),()=>showStreak());};}
+function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal();return;}
+  const r=STREAK[st.day-1],s=S.streak||{cyc:0};S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
+  S.coins+=r*mult;save();updCoins();SND.coin();
+  if(quiet){toast('🎁 Подарок за вход: день 1, +'+r+' 💰. Заходи завтра!',3500);if($('scr-menu').classList.contains('on'))openMenu();return;}
+  modal(`<h2>${st.day===7?'Неделя подряд! 🏆':'День '+st.day+' ✓'}</h2><p class="coins-won">+${r*mult} 💰${mult>1?' <small>(×2)</small>':''}</p>
+    <p>${st.day<7?'Завтра — день '+(st.day+1)+': +'+STREAK[st.day]+' 💰':'Серия начнётся заново — и снова с подарками!'}</p>
+    <div class="row"><button class="btn green" id="sOk">Отлично!</button></div>`);
+  $('sOk').onclick=()=>{hideModal();if($('scr-menu').classList.contains('on'))openMenu();};}
+// после первой победы: подарок 1-го дня — сразу тостом; остальные дни ждут в меню
+function streakAfterWin(){if(window.__demo||(S.wins||0)<1)return;const st=streakState();if(st.claimed)return;if(st.day===1)claimStreak(1,true);}
+
+/* ---- клавиатура на ПК ---- */
+document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey&&k!=='z'||e.metaKey&&k!=='z'||e.altKey||$('ad').classList.contains('on'))return;
+  if(modalOn){
+    if(k==='Escape'){const b=['mCancel','lbClose','sClose','stClose','abBack','hBack','mBack','sOk','mMenu'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
+    else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
+      const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2):not(.buy):not(.noenter)');if(b){e.preventDefault();b.click();}}
+    return;}
+  if($('scr-menu').classList.contains('on')){if(k==='Enter'){e.preventDefault();$('btnPlay').click();}return;}
+  if(!G||!$('scr-game').classList.contains('on'))return;const c=k.toLowerCase();
+  if(k==='Escape')openMenu();
+  else if(c==='z'||c==='я'||k==='Backspace'){e.preventDefault();undo();}
+  else if(c==='h'||c==='р')hint();
+  else if(k===' '||c==='d'||c==='в'){e.preventDefault();if(R.canStock(G.st)||GID==='spider')stockTap();}
+  else if(c==='n'||c==='т')newDeal(G.mode);});
+/* ---- ярлык, оценка, избранное: одно предложение за сессию, после 2-й победы и не раньше 2 минут; отказ запоминаем ---- */
+const BOOT_T=Date.now();let askedNow=false,sessWins=0;
+// окно площадки — только пока на экране окно победы (не поверх следующей раздачи или межэкранной) и ничего не на паузе
+async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
+  if(pauseWhy.size||!(G&&G.won&&modalOn&&$('mWon')))return;
+  if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
+  try{
+    if(PLAT==='yandex'&&ysdk){
+      if(due('review',30)&&ysdk.feedback){const c=await ysdk.feedback.canReview();if(c&&c.value){mark('review');await ysdk.feedback.requestReview();return;}}
+      if(due('shortcut',14)&&ysdk.shortcut){const c=await ysdk.shortcut.canShowPrompt();if(c&&c.canShow){mark('shortcut');await ysdk.shortcut.showPrompt();return;}}}
+    else if(PLAT==='vk'&&VK){
+      if(!S.ask.fav){mark('fav');await vkSend('VKWebAppAddToFavorites',{},60000);return;}
+      if(due('home',30)){const i=await vkSend('VKWebAppAddToHomeScreenInfo',{},4000).catch(()=>null);
+        if(i&&i.is_feature_supported&&!i.is_added_to_home_screen){mark('home');await vkSend('VKWebAppAddToHomeScreen',{},60000);return;}}
+      if(due('invite',14)&&(S.wins||0)>=5){mark('invite');await vkSend('VKWebAppShowInviteBox',{},60000);return;}}
+  }catch(e){}}
+window.addEventListener('resize',()=>{if($('scr-game').classList.contains('on')){const r=stage.getBoundingClientRect();if(Math.abs(r.width-W)>1||Math.abs(r.height-H)>1||Math.min(2,window.devicePixelRatio||1)!==dpr)layout();}
+  else if($('scr-menu').classList.contains('on'))drawMenuBg();});
+// iOS WebView при повороте иногда шлёт resize до смены размеров — повторяем чуть позже
+window.addEventListener('orientationchange',()=>setTimeout(()=>window.dispatchEvent(new Event('resize')),300));
+// щипок на iOS увеличивает всю страницу (user-scalable=no там не работает)
+document.addEventListener('gesturestart',e=>e.preventDefault());
+// без контекстного меню и «долгого тапа» (требование площадок)
+document.addEventListener('contextmenu',e=>e.preventDefault());
+// звук и игра на паузу, когда вкладка скрыта (требование Яндекс Игр)
+document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hide',true);cloudFlush();saveCur();}else setPause('hide',false);});
+if(document.hidden)setPause('hide',true); // запуск в фоновой вкладке: visibilitychange не придёт, пока её не откроют
+applyLook();
+/* ---- запуск: меню; режим для скриншотов карточки — ?demo=play|win|menu|decor|daily|stats (&m=режим &n=сколько ходов решения сделать) ---- */
+(()=>{const q=new URLSearchParams(location.search),d=q.get('demo');if(!d){openMenu();return;}window.__demo=true;save=()=>{};
+  if(q.get('m'))S.mode=+q.get('m');if(q.get('table'))S.table=q.get('table');if(q.get('back'))S.back=q.get('back');lookChanged();
+  const L=SEEDS[S.mode]||SEEDS[GC.daily],seed=L[(+q.get('seed')||3)%L.length];
+  const play=n=>{G=newG(R.deal(seed,S.mode),seed,S.mode,0);openGame();const r=solve(R,G.st,200000);if(r.ok){const k=Math.min(n,r.path.length);for(let i=0;i<k;i++){applyMove(R,G.st,r.path[i]);G.moves++;}}
+    G.time=(+q.get('t')||0)*1000;setTargets(null,true);updButtons();render();};
+  if(d==='play'){play(+q.get('n')||0);if(q.get('hint'))setTimeout(()=>hint(),600);}
+  else if(d==='win'){play(9999);S.wins=Math.max(3,S.wins);G.time=204000;G.won=true;G.coins=modeOf(S.mode).coins;showWin([ACH[4]],false);}
+  else if(d==='daily'){openMenu();openDaily();}
+  else if(d==='decor'){openMenu();openDecor(q.get('k')||'backs');}
+  else if(d==='stats'){openMenu();openStats();}
+  else openMenu();})();
+// VK: мост из js/vk-bridge.min.js (только в VK-сборке). Яндекс: SDK по относительному пути; локально 404 → заглушки рекламы
+if(PLAT==='vk')initVK();
+else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
+window.__test={get G(){return G;},set G(v){G=v;},get S(){return S;},R,RULES,SEEDS,solve,applyMove,legal,stClone,doMove,stockTap,undo,hint,findHint,collect,collectPath,solveAsync,planNext,tapMove,bestTarget,startDeal,newDeal,layout,render,setTargets,hitTest,cardXY,
+  mergeSave,showRewarded,showInterstitial,openMenu,openDecor,openSettings,openStats,openShop,openDaily,onWin,endFx,get LY(){return LY;},get SPR(){return SPR;},vkSaveCloud,vkLoadCloud,cloudFlush,set VK(v){VK=v;},get VK(){return VK;},PAY,dayKey};
+</script>
+</body>
+</html>
