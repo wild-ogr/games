@@ -497,6 +497,9 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 /* ================= площадка: Яндекс Игры или VK ================= */
 // VK передаёт в адрес игры параметры запуска (vk_app_id и др.); ?vk=1 — проверка VK-режима на маке
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
+// название игры: в VK знак «№» в названии запрещён — там «Гастроном номер 1» (как в каталоге VK), на Яндексе «Гастроном №1»
+const GAME_NAME=PLAT==='vk'?'Гастроном номер 1':'Гастроном №1';
+document.title=GAME_NAME;{const l=document.querySelector('.mh .logo');if(l)l.textContent='🛒 '+GAME_NAME;}
 let ysdk=null,YP=null,VK=null,paused=false;
 // причины паузы (реклама, свёрнуто, пауза площадки): снимаем паузу, только когда ушли все — а не «вслепую» при возврате
 const pauseWhy=new Set();
@@ -1813,7 +1816,7 @@ function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</
   if($('stShop')){$('stShop').onclick=openCoins;PAY.bind($('mcard'));PAY.re=openSettings;}
   $('stAbout').onclick=openAbout;$('stClose').onclick=()=>{hideModal();if(G&&!G.over&&$('scr-game').classList.contains('on'))YG.start();};}
 function openAbout(){
-  modal(`<h2>Об игре</h2><p class="about">«Гастроном №1» — спокойная головоломка без таймера. Раскладывайте товары по полкам: три одинаковых в переднем ряду уходят покупателю. Тётя Валя, покупатели, товары и сам магазин нарисованы прямо в игре, звуки собраны кодом. Названия товаров — общие, без торговых марок; все совпадения случайны.</p>
+  modal(`<h2>Об игре</h2><p class="about">«${GAME_NAME}» — спокойная головоломка без таймера. Раскладывайте товары по полкам: три одинаковых в переднем ряду уходят покупателю. Тётя Валя, покупатели, товары и сам магазин нарисованы прямо в игре, звуки собраны кодом. Названия товаров — общие, без торговых марок; все совпадения случайны.</p>
     <p class="about"><b>Музыка.</b> «Green Salon» — Yubatake (opengameart.org), лицензия Creative Commons Attribution 4.0. «Investigations» — Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0.</p>
     ${PLAT==='vk'?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
     <p class="about">На компьютере: Esc — назад, Enter — главная кнопка окна, H — подсказка, U — отменить ход, R — заново.</p>
