@@ -1,0 +1,1553 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Рыбалка с Петровичем</title>
+<style>
+:root{--ink:#26343b;--muted:#5a6770;--card:#fffdf6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;background:#1f3a4a;overscroll-behavior:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);overflow:hidden;touch-action:manipulation}
+#app{position:relative;max-width:560px;height:100%;margin:0 auto;background:linear-gradient(#a8d8ef,#d9efe6 40%,#8fbf8a);overflow:hidden}
+.screen{position:absolute;top:0;right:0;bottom:0;left:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+.btn{background:#fff;border-radius:16px;padding:12px 16px;font-weight:700;font-size:17px;box-shadow:0 4px 0 #c3c8c0,0 6px 14px rgba(0,0,0,.12);transition:transform .08s;min-height:48px}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #c3c8c0}
+.btn.accent{background:linear-gradient(#e8590c,#c44a08);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.25);box-shadow:0 4px 0 #8f3505,0 6px 14px rgba(0,0,0,.15)}
+.btn.accent:active{box-shadow:0 1px 0 #8f3505}
+.btn.green{background:linear-gradient(#2b8a3e,#237032);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.25);box-shadow:0 4px 0 #17501f,0 6px 14px rgba(0,0,0,.15)}
+.btn.blue{background:linear-gradient(#1c7ab8,#155f96);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.25);box-shadow:0 4px 0 #0d4169,0 6px 14px rgba(0,0,0,.15)}
+.btn[disabled]{opacity:.55}
+.btn small{opacity:.9;font-size:.8em}
+.icon{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.9);font-size:22px;font-weight:800;box-shadow:0 3px 0 rgba(0,0,0,.12);flex:none}
+.pill{background:rgba(255,255,255,.92);border-radius:999px;padding:7px 12px;font-weight:800;font-size:16px;box-shadow:0 3px 0 rgba(0,0,0,.1);white-space:nowrap}
+button.pill{cursor:pointer;position:relative;min-height:40px}
+button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;right:-4px}
+.pill.sm{padding:5px 10px;font-size:15px}
+.dot{position:absolute;top:4px;right:6px;width:11px;height:11px;border-radius:50%;background:#e03131;box-shadow:0 0 0 2px #fff}
+/* карта мест */
+.mh,.gh{display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top,0px));flex:none}
+.logo{font-weight:900;font-size:21px;line-height:1.08;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25);flex:1;min-width:0}
+.hdr-r{display:flex;gap:6px;align-items:center}
+.mapwrap{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:4px 12px 12px;-webkit-overflow-scrolling:touch}
+.rankb{display:flex;justify-content:center;margin:2px 0 8px}
+.rankb button{background:rgba(255,255,255,.85);border-radius:999px;padding:6px 14px;font-weight:800;font-size:15px;color:#2d4a57}
+.plc{position:relative;display:flex;width:100%;text-align:left;background:#fff;border-radius:18px;margin-bottom:10px;overflow:hidden;box-shadow:0 4px 0 rgba(0,0,0,.12),0 6px 16px rgba(0,0,0,.1);min-height:96px;padding:0}
+.plc canvas{width:118px;height:auto;flex:none;display:block;align-self:stretch;object-fit:cover}
+.plc .pi{flex:1;padding:9px 11px;min-width:0}
+.plc b{display:block;font-size:17.5px;line-height:1.2}
+.plc small{display:block;color:var(--muted);font-weight:600;font-size:14px;line-height:1.3;margin-top:2px}
+.plc .fc{color:#1f6f8b;font-weight:800}
+.plc.lock{background:#eef0ec}.plc.lock canvas{filter:grayscale(.7) brightness(.85)}
+.plc .pr{display:inline-block;margin-top:5px;background:#ffe9a8;color:#6a4b00;border-radius:999px;padding:3px 10px;font-weight:900;font-size:14.5px}
+.plc .pr.no{background:#e6e3da;color:#6b6b62}
+.plc.new::after{content:"";position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:50%;background:#e03131}
+.mnav{flex:none;padding:8px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.55);display:flex;flex-direction:column;gap:8px}
+.nrow{display:flex;gap:8px}.nrow .btn{flex:1;padding:10px 6px;font-size:16px;position:relative}
+.nrow .btn.sq{flex:none;width:70px;line-height:1.05;font-size:22px;padding:6px 2px}.nrow .btn.sq small{display:block;font-size:12px;font-weight:800}
+/* рыбалка */
+#scr-fish{background:#6fa9c4}
+#cv{position:absolute;top:0;left:0;width:100%;height:100%;display:block;touch-action:none}
+#scr-fish .gh{position:relative;z-index:2;background:linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,0))}
+.gt{flex:1;min-width:0;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);font-weight:900;font-size:17px;line-height:1.15}
+.gt .sub{font-size:13.5px;font-weight:700;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbar{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;gap:8px;align-items:flex-end;padding:8px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));pointer-events:none}
+.fbar>*{pointer-events:auto}
+#baitBtn{background:rgba(255,255,255,.93);border-radius:14px;padding:6px 10px;font-weight:800;font-size:15px;box-shadow:0 3px 0 rgba(0,0,0,.15);text-align:left;line-height:1.15;min-height:48px;max-width:46%}
+#baitBtn small{display:block;font-size:12px;font-weight:700;color:var(--muted)}
+#hint{flex:1;text-align:center;color:#fff;font-weight:800;font-size:16.5px;line-height:1.25;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 12px rgba(0,0,0,.35);pointer-events:none;min-height:24px;align-self:center}
+#fCasts{flex:none;align-self:center;font-size:15px;padding:6px 10px}
+#hint.big{color:#ffe066;font-size:24px;font-weight:900}
+#say{position:absolute;z-index:3;max-width:66%;background:#fffdf3;border-radius:14px;padding:8px 11px;font-weight:700;font-size:15px;line-height:1.3;box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transition:opacity .3s;pointer-events:none;color:#2a3338}
+#say.on{opacity:1}
+#say b{display:block;font-size:12.5px;color:#9c5a12;margin-bottom:1px}
+#say::after{content:"";position:absolute;bottom:-8px;left:22px;border:8px solid transparent;border-top-color:#fffdf3;border-bottom:0}
+#say.r::after{left:auto;right:22px}
+#catch{position:absolute;left:50%;top:44%;z-index:4;transform:translate(-50%,-50%);width:88%;max-width:360px;background:var(--card);border-radius:22px;padding:12px 14px 14px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none}
+#catch.on{display:block;animation:pop .28s ease-out}
+#catch canvas{width:100%;height:auto;display:block}
+#catch h3{margin:2px 0 0;font-size:22px}
+#catch .w{font-size:19px;font-weight:900;color:#1f6f8b;margin:2px 0}
+#catch .tags{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin:4px 0 8px}
+#catch .tags span{background:#fff0c2;color:#6a4b00;border-radius:999px;padding:3px 9px;font-weight:800;font-size:13.5px}
+#catch .tags span.g{background:#d3f2d8;color:#1f5e2c}
+#catch p{margin:2px 0 8px;color:var(--muted);font-weight:600;font-size:14.5px;line-height:1.3}
+/* снасти, альбом */
+.scr2{background:linear-gradient(#cfe8f3,#eef6ec)}
+.scr2 .gh{background:#2f6b86}
+.scr2 .gt{text-shadow:none}
+.tabs{display:flex;gap:6px;padding:8px 12px 0;flex:none}
+.tabs button{flex:1;background:rgba(255,255,255,.7);border-radius:12px 12px 0 0;padding:10px 4px;font-weight:800;font-size:15px;color:#3d5561}
+.tabs button.on{background:#fff;color:#1f4c61}
+.list{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:10px 12px 16px;background:#fff;margin:0 12px 12px;border-radius:0 0 16px 16px}
+.ti{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #eceae2}
+.ti:last-child{border-bottom:0}
+.ti .ic{font-size:30px;width:40px;text-align:center;flex:none}
+.ti .tx{flex:1;min-width:0}
+.ti .tx b{display:block;font-size:16px}
+.ti .tx small{display:block;color:var(--muted);font-weight:600;font-size:13.5px;line-height:1.3}
+.lvl{display:flex;gap:3px;margin-top:4px}.lvl i{width:18px;height:6px;border-radius:3px;background:#dde2e4}.lvl i.on{background:#2b8a3e}
+.ti .btn{flex:none;padding:8px 12px;font-size:15px;min-height:44px}
+.ti .have{flex:none;font-weight:800;color:#237032;font-size:15px}
+.sect{font-weight:900;color:#2f6b86;font-size:15px;margin:12px 2px 4px}
+.sect:first-child{margin-top:0}
+.alb{display:flex;flex-wrap:wrap;justify-content:space-between}
+.fc2{width:32%;background:#f4f1e8;border-radius:14px;margin-bottom:8px;padding:6px 4px 7px;text-align:center;position:relative}
+.fc2 canvas{width:100%;height:auto;display:block}
+.fc2 b{display:block;font-size:13px;line-height:1.15;min-height:30px}
+.fc2 small{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.fc2.no b{color:#8a8f92}
+.fc2 .tr{position:absolute;top:4px;right:6px;font-size:15px}
+.fc2.leg{background:#fff1c9}
+/* окна */
+.modal,.ad{position:absolute;top:0;right:0;bottom:0;left:0;display:none;align-items:center;justify-content:center;background:rgba(15,30,40,.55);z-index:10;padding:16px}
+.modal{overflow-y:auto;overscroll-behavior:contain}
+.modal.on,.ad.on{display:flex}
+.card{background:var(--card);border-radius:24px;padding:20px 16px 16px;width:100%;max-width:390px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);animation:pop .25s ease-out;margin:auto}
+@keyframes pop{from{transform:scale(.88);opacity:0}}
+#catch.on{animation-name:popc}
+@keyframes popc{from{transform:translate(-50%,-50%) scale(.88);opacity:0}}
+.card h2{margin:0 0 6px;font-size:23px}
+.card p{margin:6px 0;color:var(--muted);font-weight:600;font-size:16px;line-height:1.35}
+.card canvas.fish{width:100%;max-width:300px;height:auto}
+.row{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.row2{display:flex;gap:8px}.row2>*{flex:1}
+.coins-won{font-size:22px;font-weight:900;color:#b07c00!important}
+.quote{background:#fff3d6;border-radius:14px;padding:8px 12px;color:#5a4a2a!important;text-align:left}
+.quote b{display:block;font-size:13px;color:#9c5a12}
+.goal{font-size:15px!important;margin:8px 0 2px!important;color:#2d3436!important;font-weight:700}
+.goal.tipl{background:#e6f6e9;border-radius:12px;padding:8px 10px;color:#1f5e2c!important}
+.ctab{width:100%;border-collapse:collapse;margin:6px 0;font-size:15px;text-align:left}
+.ctab td{padding:5px 4px;border-bottom:1px solid #eee8da;font-weight:700}
+.ctab td:last-child{text-align:right;white-space:nowrap;color:#1f6f8b}
+.ctab tr.lost td{color:#8a8f92;font-weight:600}
+.ad{background:#111;color:#fff;text-align:center;font-size:22px;font-weight:800}
+.ad small{font-weight:500;opacity:.7;font-size:14px}
+.adt{font-size:54px;margin-top:16px}
+.toast{position:absolute;left:50%;top:84px;transform:translateX(-50%);background:rgba(0,0,0,.84);color:#fff;padding:10px 14px;border-radius:12px;font-weight:700;font-size:16px;line-height:1.3;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;text-align:center;width:max-content;max-width:90%}
+.toast.on{opacity:1}
+.set{display:flex;align-items:center;justify-content:space-between;background:#eef0e8;border-radius:14px;padding:10px 12px;margin-top:8px;font-weight:700;font-size:16px;text-align:left;color:#2d3436;width:100%;min-height:50px}
+.set i{font-style:normal;font-weight:800;color:#fff;background:#2b8a3e;border-radius:999px;padding:3px 12px;min-width:56px;text-align:center;flex:none}.set i.off{color:#57606f;background:#dcd8cc}.set i.go,.pay .set i{background:none;color:#237032;padding:0;min-width:0}
+.set small{font-weight:600;color:#57606f}
+.pay{margin-top:12px;text-align:left}.pay h3{font-size:16px;margin:0 0 2px;color:#2d3436}.pay .set span{padding-right:10px}.pay .set small{font-weight:600}
+.pbuy b{white-space:nowrap;color:#1f5e2c;font-size:17px}.pcur{width:18px;height:18px;vertical-align:-3px;margin-left:3px}.pown i{color:#237032}
+.about{font-size:15px!important;text-align:left}
+.how{text-align:left}.how p{font-size:15.5px;margin:7px 0;color:#2d3436}
+.streak{display:flex;flex-wrap:wrap;justify-content:space-between;margin:12px 0 4px}
+.sd{width:23.5%;margin-bottom:6px;background:#eef0e8;border-radius:12px;padding:6px 2px;font-weight:800;font-size:15px;line-height:1.2;position:relative;color:#57606f}
+.sd small{display:block;font-size:13px;font-weight:700}
+.sd.done{background:#c8efcf;color:#2b7a3f}
+.sd.done::after{content:"✓";position:absolute;top:2px;right:6px;font-size:13px}
+.sd.today{background:linear-gradient(#ffd36e,#ff9f43);color:#3a2206;box-shadow:0 3px 0 #c8741d}
+.sd.d7{width:49%;background:#ffe9b8}
+.sd .ic{font-size:20px;display:block}
+.lb{max-height:46vh;overflow:auto;overscroll-behavior:contain;margin-top:8px;text-align:left}.lbr{display:flex;gap:10px;align-items:center;padding:6px 8px;border-radius:10px}.lbr:nth-child(odd){background:rgba(0,0,0,.05)}.lbr.me{background:#ffe7a3}.lbr b{width:28px;text-align:right}.lbr span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbr i{font-style:normal;font-weight:800}
+.ach{display:flex;align-items:center;gap:10px;background:#eef0e8;border-radius:12px;padding:8px 10px;margin-top:6px;text-align:left}
+.ach.done{background:#c8efcf}.ach b{display:block;font-size:15px}.ach small{color:#57606f;font-weight:600;font-size:13.5px}.ach .ai{font-size:24px;flex:none;width:32px;text-align:center}
+.ach.no .ai{filter:grayscale(1);opacity:.5}
+.bait{display:flex;align-items:center;gap:10px;width:100%;background:#eef0e8;border-radius:14px;padding:9px 10px;margin-top:7px;text-align:left;font-weight:700;min-height:54px}
+.bait.on{background:#d3f2d8;box-shadow:0 0 0 3px #2b8a3e inset}
+.bait .ic{font-size:26px;width:34px;text-align:center;flex:none}
+.bait span{flex:1;min-width:0}
+.bait small{display:block;color:var(--muted);font-weight:600;font-size:13.5px}
+.bait i{font-style:normal;font-weight:900;color:#1f6f8b;flex:none}
+.bait[disabled]{opacity:.5}
+.bait .ok{color:#237032;font-size:12.5px;font-weight:800}
+.nw{white-space:nowrap}
+body.calm .card,body.calm #catch.on{animation:none}
+@media (prefers-reduced-motion:reduce){.card,#catch.on{animation:none}}
+@media (max-width:400px){.logo{font-size:19px}}
+@media (max-width:370px){.logo{font-size:17px}.hdr-r{gap:5px}.hdr-r .pill{padding:6px 8px;font-size:15px}.btn{font-size:16px}.plc canvas{width:96px}.nrow .btn{font-size:15px}}
+@media (min-aspect-ratio:1/1) and (min-width:700px){#app{max-width:1100px;box-shadow:0 0 50px rgba(0,0,0,.25)}.mapwrap .plcs{display:flex;flex-wrap:wrap;justify-content:space-between}.mapwrap .plc{width:49.3%}.list,.tabs{max-width:760px;width:100%;margin-left:auto;margin-right:auto}.tabs{padding-left:0;padding-right:0}.fc2{width:19%}.mnav{flex-direction:row}.mnav .nrow{flex:1}}
+@media (min-aspect-ratio:1/1) and (max-height:600px){.plc{min-height:84px}.mnav{padding-top:6px;padding-bottom:6px}.nrow .btn{min-height:42px;padding:7px 6px}.nrow .btn.sq{font-size:18px}}
+.mh,.gh,.mnav{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+@supports not (inset:0){.hdr-r>*+*,.nrow>*+*,.gh>*+*,.row2>*+*,.tabs>*+*,.fbar>*+*,.ti>*+*,.bait>*+*,.ach>*+*,.lbr>*+*{margin-left:8px}.row>*+*,.mnav>*+*{margin-top:10px}.lvl>*+*{margin-left:3px}}
+</style>
+<script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
+(function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
+if(a&&!document.hidden)a.play().catch(function(){});}
+['touchend','click','keydown'].forEach(function(e){document.addEventListener(e,on,{capture:true,passive:true});});
+document.addEventListener('visibilitychange',function(){if(!a)return;if(document.hidden)a.pause();else a.play().catch(function(){});});})();</script>
+</head>
+<body>
+<div id="app">
+  <section id="scr-map" class="screen on">
+    <header class="mh"><div class="logo" id="logo">🎣 Рыбалка с Петровичем</div><div class="hdr-r"><button class="icon" id="btnSet" aria-label="Настройки" data-en-aria="Settings">⚙️</button><button class="pill" id="mCoins" aria-label="Монеты" data-en-aria="Coins">💰 <span id="coinCnt">0</span></button></div></header>
+    <div class="mapwrap" id="mapWrap"><div class="rankb" id="rankB"></div><div class="plcs" id="plcs"></div></div>
+    <nav class="mnav"><div class="nrow"><button id="btnDaily" class="btn accent" data-en="📅 Daily task">📅 Задание дня</button><button id="btnWeek" class="btn blue" data-en="🏆 Contest">🏆 Турнир недели</button></div>
+      <div class="nrow"><button id="btnAlb" class="btn" data-en="🐟 Album">🐟 Альбом</button><button id="btnShop" class="btn" data-en="🎣 Tackle">🎣 Снасти</button><button id="btnStreak" class="btn sq" aria-label="Серия дней" data-en-aria="Daily gift">🎁<small data-en="Gift">Подарок</small></button></div></nav>
+  </section>
+
+  <section id="scr-fish" class="screen">
+    <canvas id="cv"></canvas>
+    <header class="gh"><button class="icon" id="fBack" aria-label="На карту" data-en-aria="To the map">←</button><div class="gt"><div id="fTitle">Пруд</div><div id="fSub" class="sub"></div></div><button class="pill sm" id="fCoins" aria-label="Монеты" data-en-aria="Coins">💰 0</button><button class="icon" id="fSet" aria-label="Настройки" data-en-aria="Settings">⚙️</button></header>
+    <div class="fbar"><button id="baitBtn"></button><div id="hint"></div><div class="pill" id="fCasts" aria-label="Забросы" data-en-aria="Casts">🎣 5</div></div>
+    <div id="say"></div>
+    <div id="catch"></div>
+  </section>
+
+  <section id="scr-shop" class="screen scr2">
+    <header class="gh"><button class="icon" id="shBack" aria-label="Назад" data-en-aria="Back">←</button><div class="gt"><div data-en="Tackle shop">Снасти и наживка</div><div class="sub" data-en="Everything for coins from the catch">Всё — за монеты из улова</div></div><button class="pill sm" id="shCoins">💰 0</button></header>
+    <div class="tabs" id="shTabs"><button data-k="t" class="on" data-en="Tackle">Снасти</button><button data-k="b" data-en="Bait">Наживка</button></div>
+    <div class="list" id="shList"></div>
+  </section>
+
+  <section id="scr-alb" class="screen scr2">
+    <header class="gh"><button class="icon" id="alBack" aria-label="Назад" data-en-aria="Back">←</button><div class="gt"><div data-en="Fish album">Альбом рыб</div><div class="sub" id="alSub"></div></div></header>
+    <div class="tabs" id="alTabs"></div>
+    <div class="list" id="alList"></div>
+  </section>
+
+  <div id="modal" class="modal"><div class="card" id="mcard"></div></div>
+  <div id="ad" class="ad"><div><span data-en="📺 Ad<br><small>back in a moment</small>">📺 Реклама<br><small>скоро продолжим</small></span><div id="adT" class="adt">3</div></div></div>
+  <div id="toast" class="toast"></div>
+</div>
+
+<script>
+'use strict';
+/*LOGIC*/
+/* ================= ЛОГИКА: рыбы, места, снасти, выбор поклёвки, вываживание, бот. Без DOM — её гоняют tools/check.sh и tools/econ.sh (jsc) ================= */
+function rng(seed){let s=seed>>>0||1;return ()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+/* наживка. Червь — бесплатно и без счёта; банки — по 10 штук (1 штука на заброс); блесна — покупается один раз */
+const BAITS=[
+  {id:'worm',acc:'червя',n:'Червь',en:'Worm',ic:'🐛',free:1,d:'Копаный на огороде. Берут почти все',de:'Dug in the garden. Almost every fish bites'},
+  {id:'maggot',acc:'опарыша',n:'Опарыш',en:'Maggots',ic:'⚪',pack:10,p:15,d:'Плотва, уклейка, язь, хариус',de:'Roach, bleak, ide, grayling'},
+  {id:'dough',acc:'тесто',n:'Тесто',en:'Dough',ic:'🍞',pack:10,p:15,d:'Карась, линь, лещ, толстолобик',de:'Crucian, tench, bream, bighead'},
+  {id:'blood',acc:'мотыля',n:'Мотыль',en:'Bloodworm',ic:'🔴',pack:10,p:20,d:'Лещ, ёрш, сиг, омуль, корюшка',de:'Bream, ruffe, whitefish, omul, smelt'},
+  {id:'corn',acc:'кукурузу',n:'Кукуруза',en:'Corn',ic:'🌽',pack:10,p:25,d:'Карп, сазан, белый амур — рыба покрупнее',de:'Carp and grass carp — bigger fish'},
+  {id:'live',acc:'живца',n:'Живец',en:'Live bait',ic:'🐟',pack:10,p:40,d:'Щука, судак, сом, налим, калуга',de:'Pike, zander, catfish, burbot'},
+  {id:'spoon',acc:'блесну',n:'Блесна',en:'Spoon lure',ic:'🥄',perm:1,p:350,d:'Навсегда. Окунь, щука, жерех, лосось, хариус',de:'Forever. Perch, pike, asp, salmon, grayling'}
+];
+const BAIT={};BAITS.forEach(b=>BAIT[b.id]=b);
+
+/* снасти: 5 ступеней. Удочка — дальность заброса и «мягкость» (гасит рывки), леска — на сколько кг рассчитана, катушка — скорость подмотки */
+const TACKLE={
+  rod:{n:'Удочка',en:'Rod',ic:'🎣',lv:[['Ореховое удилище','Hazel stick'],['Бамбуковая','Bamboo rod'],['Телескоп','Telescopic rod'],['Карбоновая','Carbon rod'],['Удочка мастера','Master rod']],
+    p:[0,150,500,1400,3500],dist:[14,18,23,28,34],k:[1,1.12,1.25,1.4,1.55]},
+  line:{n:'Леска',en:'Line',ic:'🧵',lv:[['Леска 0,14 мм','Line 0.14 mm'],['Леска 0,18 мм','Line 0.18 mm'],['Леска 0,22 мм','Line 0.22 mm'],['Леска 0,28 мм','Line 0.28 mm'],['Плетёнка 0,35 мм','Braid 0.35 mm']],
+    p:[0,120,400,1200,3000],kg:[2,3.5,6,10,16]},
+  reel:{n:'Катушка',en:'Reel',ic:'⚙️',lv:[['Без катушки','No reel'],['Инерционная','Centrepin reel'],['«Нева»','«Neva» reel'],['Безынерционная','Spinning reel'],['Мультипликатор','Baitcaster']],
+    p:[0,150,500,1400,3500],spd:[1.6,2.1,2.7,3.3,4]}
+};
+const TK_KEYS=['rod','line','reel'];
+const TOURN_TK={rod:2,line:2,reel:2}; // турнир недели — у всех одинаковая «казённая» снасть
+
+/* стиль борьбы: [сила рывка, пауза от, до (с), длина рывка от, до] */
+const STY={calm:[1.4,3,5,.6,1],dart:[2,1.2,2.6,.4,.8],deep:[1.65,2,4,1,2],jump:[2.2,1.5,3,.5,1]};
+/* рыбы. w — вес от/до (кг), r — как часто, pb+pk·w — цена в монетах, s — сила, st — манера, b — на что берёт (множитель), t — время суток,
+   bite — как клюёт (dip — топит, lay — кладёт набок, drag — уводит), lk — рисунок [форма, спина, бок, брюхо, плавники, узор], f — байка */
+const FISH={
+  rotan:{n:'Ротан',en:'Rotan',w:[.03,.3],r:5,pb:1,pk:10,s:.8,st:'calm',b:{worm:1.5,blood:1,live:.4},lk:['bull','#3b3a2a','#6b6a4a','#b8b08a','#4a4a36','mottle'],f:'Съест всё, что шевелится. Кот Васька его уважает.'},
+  karas:{n:'Карась',en:'Crucian carp',w:[.05,1.2],r:6,pb:2,pk:8,s:.7,st:'calm',b:{worm:1,dough:1.6,corn:.8,maggot:.8},t:{morning:1.3,evening:1.3},lk:['deep','#5f6f60','#c9d2c8','#eef1ea','#8a8f7a','scale'],f:'Любит тину и тёплую воду. Жарить — в сметане, на чугунной сковородке.'},
+  karasz:{n:'Золотой карась',en:'Golden crucian',w:[.1,1.5],r:3,pb:3,pk:9,s:.75,st:'calm',b:{worm:1,dough:1.6,corn:1},lk:['deep','#6b4a18','#c99a3a','#f0d98a','#8a5a1a','scale'],f:'Желаний не исполняет — проверено дедом Митяем.'},
+  plotva:{n:'Плотва',en:'Roach',w:[.05,.8],r:6,pb:2,pk:9,s:.7,st:'dart',b:{worm:1,maggot:1.6,dough:1,blood:1},lk:['std','#3d5566','#c6d0d6','#eef2f4','#d8452a','scale'],f:'Красные глаза и плавники — плотву ни с кем не спутаешь.'},
+  okun:{n:'Окунь',en:'Perch',w:[.05,1.5],r:5,pb:2,pk:10,s:1,st:'dart',b:{worm:1.3,blood:1,live:1.3,spoon:1.8},t:{day:1.2,night:.3},lk:['perch','#3d5a2a','#93a65a','#e8e2b8','#e0662a','stripes'],f:'Полосатый разбойник. Ходит стаями — где один, там и десяток.'},
+  lin:{n:'Линь',en:'Tench',w:[.2,2.5],r:2,pb:4,pk:10,s:.9,st:'deep',b:{worm:1.3,dough:1,corn:.8},t:{morning:1.5,day:.6},lk:['std','#2f4a24','#6f8a3a','#c9c98a','#3a5a2a','none'],f:'Говорят, слизь линя лечит других рыб. Сам линь молчит.'},
+  karp:{n:'Карп',en:'Carp',w:[.8,8],r:.8,pb:8,pk:9,s:1.25,st:'deep',b:{corn:2,dough:1.3,worm:.4},lk:['deep','#4a3a1c','#b8903a','#ecd9a0','#6a4a20','bigscale'],f:'Пруд у дачи копали ещё в колхозе — и карпа тогда же запустили.'},
+  peskar:{n:'Пескарь',en:'Gudgeon',w:[.02,.08],r:5,pb:1,pk:40,s:.5,st:'calm',b:{worm:1.5,blood:1},lk:['std','#5a5a48','#a9a88c','#e6e2cc','#8a8a70','dots'],f:'Тот самый премудрый пескарь. Всю жизнь осторожничал — а на червя клюнул.'},
+  ukleyka:{n:'Уклейка',en:'Bleak',w:[.02,.1],r:6,pb:1,pk:30,s:.5,st:'dart',b:{maggot:1.8,dough:1,worm:.6},lk:['slim','#4a6a7a','#dfe8ee','#f8fbfc','#b8c4c8','none'],f:'Серебристая мелочь, клюёт без остановки. Кот доволен.'},
+  ersh:{n:'Ёрш',en:'Ruffe',w:[.02,.15],r:4,pb:1,pk:25,s:.6,st:'calm',b:{worm:1.5,blood:1.6},lk:['perch','#4a4430','#8f8456','#d8d0a8','#6a6040','dots'],f:'Колючий, как ёжик. Зато уха из ершей — самая наваристая.'},
+  golavl:{n:'Голавль',en:'Chub',w:[.2,3],r:2,pb:3,pk:8,s:1.1,st:'dart',b:{worm:1,maggot:1,dough:.6,spoon:1},lk:['std','#2f3e36','#b8bcae','#eceee6','#8a3a2a','bigscale'],f:'Лобастый и осторожный: увидит рыбака на берегу — не клюнет.'},
+  yaz:{n:'Язь',en:'Ide',w:[.3,3],r:2,pb:3,pk:8,s:1,st:'dart',b:{worm:1,maggot:1.3,corn:.8},lk:['std','#3a4a50','#c8c2a8','#ecead8','#c85a3a','scale'],f:'Золотистый, степенный. Любит тихие плёсы у кустов.'},
+  shuka:{n:'Щука',en:'Pike',w:[.5,12],r:1.6,pb:4,pk:6,s:1.2,st:'dart',b:{live:2.5,spoon:2,worm:.15},t:{morning:1.3,night:.4},bite:'drag',lk:['long','#3a4a22','#7a8a3a','#e0dca8','#6a6a2a','spots'],f:'Щучья челюсть — на удачу. У Петровича над дверью висит.'},
+  nalim:{n:'Налим',en:'Burbot',w:[.3,5],r:1,pb:4,pk:7,s:.9,st:'deep',b:{worm:1.3,live:1.5,blood:1},t:{night:3,evening:1.3,day:.2,morning:.5},lk:['eel','#3a3424','#6a5f3a','#c8bc92','#4a4230','mottle'],f:'Единственная пресноводная треска. Любит холод и ночь.'},
+  gustera:{n:'Густера',en:'White bream',w:[.1,.6],r:5,pb:2,pk:12,s:.7,st:'calm',b:{worm:1,maggot:1.3,blood:1.2,dough:1},bite:'lay',lk:['deep','#51606a','#cfd6da','#f2f4f5','#9aa4aa','scale'],f:'Ходит стаей: поймал одну — жди ещё.'},
+  lesh:{n:'Лещ',en:'Bream',w:[.3,6],r:3,pb:3,pk:8,s:.85,st:'deep',b:{worm:1,blood:1.5,dough:1.2,corn:1},bite:'lay',lk:['deep','#4a4630','#b8a878','#e8dcb8','#5a5238','scale'],f:'Поплавок не топит, а кладёт набок — это лещ! Подсекай.'},
+  chehon:{n:'Чехонь',en:'Sabre carp',w:[.1,.8],r:3,pb:2,pk:12,s:.8,st:'dart',b:{maggot:1.3,worm:1,spoon:.6},lk:['slim','#5a6a78','#dde4ea','#f6f8f9','#b0b8c0','none'],f:'Сабля-рыба. Вяленую чехонь на Волге любят не меньше воблы.'},
+  vobla:{n:'Вобла',en:'Caspian roach',w:[.1,.5],r:5,pb:2,pk:14,s:.7,st:'dart',b:{worm:1,maggot:1.3,dough:1},lk:['std','#4a5058','#c9ced2','#eef0f2','#c86a4a','scale'],f:'Та самая вобла. На газетке, на лавочке, с разговорами.'},
+  sudak:{n:'Судак',en:'Zander',w:[.5,9],r:1.3,pb:5,pk:9,s:1.1,st:'dart',b:{live:2.5,spoon:1.2,worm:.2},t:{evening:1.6,night:1.8,day:.5},bite:'drag',lk:['perch2','#4a5040','#9a9a80','#e8e6d6','#6a6a58','bars'],f:'Клыкастый и строгий. Берёт в сумерках.'},
+  zhereh:{n:'Жерех',en:'Asp',w:[.5,6],r:1.2,pb:5,pk:9,s:1.35,st:'jump',b:{spoon:2.5,live:1.4},t:{morning:1.4,day:1.1,night:.2},lk:['std','#3a4a58','#bcc4ca','#eef0f2','#8a6a5a','none'],f:'Бьёт мальков хвостом, как веслом. Сильный и резкий.'},
+  sazan:{n:'Сазан',en:'Wild carp',w:[1,15],r:1.2,pb:8,pk:8,s:1.35,st:'deep',b:{corn:2.5,dough:1.3,worm:.5},lk:['deep','#3a3018','#a88a3a','#e8d49a','#5a4218','bigscale'],f:'Дикий карп. Тянет, как буксир.'},
+  som:{n:'Сом',en:'Wels catfish',w:[3,60],r:.5,pb:10,pk:5,s:1.3,st:'deep',b:{live:2,worm:.6},t:{night:3,evening:1.4,day:.2},bite:'drag',lk:['cat','#2c2e26','#4c4e40','#b8b49a','#2c2e26','mottle'],f:'Хозяин омута. Говорят, утку может проглотить.'},
+  ryapushka:{n:'Ряпушка',en:'Vendace',w:[.03,.2],r:5,pb:1,pk:30,s:.6,st:'dart',b:{blood:1.5,maggot:1.3,worm:.7},lk:['slim','#3a5a70','#d0dae2','#f2f6f8','#9ab0bc','none'],f:'Северная селёдочка. Копчёная — объедение.'},
+  snetok:{n:'Снеток',en:'Smelt fry',w:[.005,.02],r:4,pb:1,pk:100,s:.4,st:'calm',b:{blood:1.5,maggot:1},lk:['slim','#8a9aa2','#e2e8ea','#f8fafa','#c0c8cc','none'],f:'Крошечный, почти прозрачный. Сушёный снеток — псковская классика.'},
+  koryushka:{n:'Корюшка',en:'Smelt',w:[.02,.1],r:5,pb:1,pk:40,s:.5,st:'dart',b:{blood:1.3,maggot:1.3,worm:1},lk:['slim','#4a7a6a','#d8e4dc','#f4f8f6','#aac0b4','none'],f:'Пахнет свежим огурцом! Весной за ней весь Питер на берегу.'},
+  sig:{n:'Сиг',en:'Whitefish',w:[.3,3],r:2,pb:4,pk:11,s:.95,st:'dart',b:{blood:1.6,maggot:1.2,worm:.7},lk:['salmon','#3a4e5e','#c8d2d8','#eef2f4','#9aa8b0','none'],f:'Благородная северная рыба. Рот маленький — подсекай нежно.'},
+  paliya:{n:'Палия',en:'Arctic char',w:[.5,5],r:1,pb:6,pk:12,s:1.15,st:'deep',b:{live:1.5,spoon:1.8,worm:.5},lk:['salmon','#3a4a3a','#8a9a7a','#e89a5a','#d8703a','dots'],f:'Ладожский голец с оранжевым брюхом. Живёт на глубине.'},
+  losos:{n:'Лосось',en:'Salmon',w:[1.5,10],r:.6,pb:10,pk:10,s:1.4,st:'jump',b:{spoon:2.5,live:1.2},lk:['salmon','#3a4e62','#c4ccd4','#f0f2f4','#7a8a98','xspots'],f:'Прыгает над водой свечкой. Держи крепче!'},
+  omul:{n:'Омуль',en:'Omul',w:[.2,1.5],r:5,pb:3,pk:14,s:.9,st:'dart',b:{blood:1.5,maggot:1.3,worm:1},lk:['salmon','#2f4a5e','#c2ced8','#eef2f6','#8aa0b0','none'],f:'Байкальский омуль — тот самый, про которого поют.'},
+  harius:{n:'Хариус',en:'Grayling',w:[.2,1.8],r:3,pb:3,pk:14,s:1,st:'jump',b:{maggot:1.3,worm:1,spoon:1.5},lk:['grayling','#3a4658','#9aa2b2','#e2e4ea','#7a4a8a','dots'],f:'Спинной плавник — как парус, переливается радугой.'},
+  lenok:{n:'Ленок',en:'Lenok',w:[.5,5],r:1.5,pb:5,pk:12,s:1.15,st:'dart',b:{spoon:2,live:1.3,worm:.6},lk:['salmon','#4a4a3a','#b09a6a','#e8d8b0','#9a6a4a','xspots'],f:'Сибирская форель. Любит быструю холодную воду.'},
+  taimen:{n:'Таймень',en:'Taimen',w:[3,40],r:.35,pb:15,pk:7,s:1.45,st:'jump',b:{live:1.5,spoon:2},lk:['long2','#3a3a38','#9a6a5a','#e0c8b0','#b04a3a','xspots'],f:'Сибирский царь-рыба. Отпускают его с поклоном.'},
+  amur:{n:'Белый амур',en:'Grass carp',w:[2,25],r:.8,pb:10,pk:6,s:1.35,st:'deep',b:{corn:2,dough:1.3},lk:['std','#4a5a3a','#b8b890','#e8e8d0','#7a7a5a','bigscale'],f:'Ест траву, как корова. Весит порой не меньше телёнка.'},
+  tolstolob:{n:'Толстолобик',en:'Bighead carp',w:[3,30],r:.7,pb:10,pk:5,s:1.2,st:'deep',b:{dough:2,corn:1},lk:['deep2','#6a7078','#c8ccd0','#eeeff0','#9aa0a6','none'],f:'Лоб широкий, глаза внизу. Фотографируется неохотно.'},
+  zmeegolov:{n:'Змееголов',en:'Snakehead',w:[1,8],r:1,pb:6,pk:9,s:1.25,st:'dart',b:{live:2,spoon:1.5},lk:['eel2','#3a4228','#7a8050','#d0c8a0','#4a4a30','mottle'],f:'Может дышать воздухом и переползать по траве. Честно.'},
+  verhoglyad:{n:'Верхогляд',en:'Topmouth culter',w:[.5,7],r:1.2,pb:5,pk:9,s:1.2,st:'jump',b:{spoon:2,live:1.5},lk:['slim','#4a5a6a','#d0d8de','#f2f4f6','#9aa8b0','none'],f:'Рот смотрит вверх — отсюда и имя.'},
+  kaluga:{n:'Калуга',en:'Kaluga sturgeon',w:[20,150],r:.15,pb:40,pk:3,s:1.5,st:'deep',b:{live:2},rel:1,lk:['sturgeon','#4a5058','#8a929a','#e8e8e0','#5a6068','plates'],f:'Самая большая пресноводная рыба России. Сфотографировался — и отпусти: она в Красной книге.'},
+  skripun:{n:'Косатка-скрипун',en:'Squeaker catfish',w:[.05,.4],r:5,pb:1,pk:25,s:.7,st:'calm',b:{worm:1.5,blood:1},lk:['cat2','#6a5a2a','#c8a84a','#ecdca0','#8a7a3a','mottle'],f:'Скрипит, когда вытащишь. Не обижайся — это он так здоровается.'},
+  kizhuch:{n:'Кижуч',en:'Coho salmon',w:[2,7],r:2,pb:6,pk:9,s:1.35,st:'jump',b:{spoon:2.2,live:1.2,worm:.3},lk:['salmon','#2f4660','#c0c8d2','#eef0f4','#5a6a80','xspots'],f:'Серебристый лосось. Прыгает так, что брызги до берега.'},
+  nerka:{n:'Нерка',en:'Sockeye',w:[1.5,4],r:2,pb:6,pk:11,s:1.25,st:'jump',b:{spoon:1.8,worm:.6,maggot:.6},lk:['salmon','#2a5a3a','#c8302a','#e8b0a0','#2a4a30','none'],f:'Красная рыба в прямом смысле: к нересту краснеет целиком.'},
+  chavycha:{n:'Чавыча',en:'Chinook',w:[5,30],r:.5,pb:15,pk:8,s:1.45,st:'jump',b:{spoon:2,live:1.5},lk:['salmon','#2f4a58','#b8c0c8','#eceff2','#4a5a68','xspots'],f:'Королевский лосось. Самый крупный из тихоокеанских.'},
+  golets:{n:'Голец',en:'Dolly Varden',w:[.5,4],r:2.5,pb:4,pk:10,s:1.05,st:'dart',b:{worm:1,spoon:1.5,maggot:1},lk:['salmon','#3a4e48','#8aa098','#f0a070','#e07a4a','dots'],f:'Пятнистый, с оранжевым брюшком. Самая частая рыба Камчатки.'},
+  mikizha:{n:'Микижа',en:'Rainbow trout',w:[.5,5],r:1.5,pb:5,pk:11,s:1.3,st:'jump',b:{spoon:1.8,worm:.8,maggot:.8},lk:['salmon','#3a5040','#a8b0a0','#e8e0d8','#8a7a70','rainbow'],f:'Камчатская радужная форель — с розовой полосой по боку.'},
+  kundzha:{n:'Кунджа',en:'White-spotted char',w:[.5,6],r:1.5,pb:5,pk:10,s:1.2,st:'dart',b:{spoon:1.6,live:1.3,worm:.7},lk:['salmon','#3a4a52','#9aa8b0','#e8ecee','#7a8a92','bigdots'],f:'Белые пятна крупные, как горох. Хищница, но красавица.'}
+};
+/* рыбы-легенды: одна на место, клюёт только на свою наживку в своё время суток (подсказка — в карточке места) */
+const LEG={
+  boris:{n:'Карп Борис',en:'Boris the Carp',w:[12,16],pb:300,pk:0,s:1.4,st:'deep',bait:'corn',tod:['morning'],lk:['deep','#6a4a10','#e0b030','#f8e8a0','#a06a10','bigscale'],f:'Живёт в пруду с 1987 года. Дед Митяй ловил его трижды — и трижды отпускал.'},
+  marfa:{n:'Щука Марфа',en:'Marfa the Pike',w:[14,18],pb:350,pk:0,s:1.45,st:'dart',bait:'live',tod:['morning','evening'],bite:'drag',lk:['long','#2f3e1c','#6a7a2a','#e8e2a8','#5a5a20','spots'],f:'Утаскивала утят и блёсны всей деревни. Сдалась только тебе.'},
+  kuzmich:{n:'Сом Кузьмич',en:'Kuzmich the Catfish',w:[80,110],pb:450,pk:0,s:1.35,st:'deep',bait:'live',tod:['night'],bite:'drag',lk:['cat','#23251e','#43453a','#c0bca0','#23251e','mottle'],f:'Хозяин волжского омута. Усы — как у председателя колхоза.'},
+  general:{n:'Лещ Генерал',en:'The General Bream',w:[7,9],pb:350,pk:0,s:1.2,st:'deep',bait:'blood',tod:['evening'],bite:'lay',lk:['deep','#3a3620','#c0a860','#f0e0b0','#4a4228','scale'],f:'Лещ-лапоть. Ходит по Селигеру важно, как на параде.'},
+  varyag:{n:'Лосось Варяг',en:'Varyag the Salmon',w:[14,18],pb:450,pk:0,s:1.5,st:'jump',bait:'spoon',tod:['morning'],lk:['salmon','#2e4258','#d0d8e0','#f4f6f8','#6a7a88','xspots'],f:'Приходит с Ладоги раз в год. Прыгает выше лодки.'},
+  batyushka:{n:'Таймень Батюшка',en:'Father Taimen',w:[45,55],pb:500,pk:0,s:1.5,st:'jump',bait:'spoon',tod:['evening'],lk:['long2','#34302e','#b0604a','#e8d0b8','#c04a30','xspots'],f:'Ему, говорят, лет сто. Отпускай с поклоном — так положено.'},
+  tsaritsa:{n:'Калуга Царица',en:'Tsaritsa Kaluga',w:[160,200],pb:600,pk:0,s:1.45,st:'deep',bait:'live',tod:['night','morning'],rel:1,lk:['sturgeon','#3e444c','#8a929a','#f0f0e8','#50565e','plates'],f:'Старше всех рыбаков на Амуре. Фото на память — и обратно в реку.'},
+  korol:{n:'Чавыча Король',en:'King Chinook',w:[38,45],pb:550,pk:0,s:1.55,st:'jump',bait:'spoon',tod:['morning','day'],lk:['salmon','#27404e','#c0c8d0','#f2f4f6','#40505e','xspots'],f:'Камчатский король. Медведи на берегу завидуют.'}
+};
+for(const k in LEG){LEG[k].leg=1;LEG[k].id=k;}
+for(const k in FISH)FISH[k].id=k;
+/* находки: иногда вместо рыбы (юмор, в альбом — раздел «Находки») */
+const JUNK={
+  boot:{n:'Старый сапог',en:'Old boot',ic:'👢',f:'Сорок третий размер. Второй, наверное, ещё там.'},
+  kettle:{n:'Чайник без носика',en:'Spoutless kettle',ic:'☕',f:'Баба Зина говорит — её. В 1979-м упустила.'},
+  cap:{n:'Кепка Петровича',en:'Petrovich\'s cap',ic:'🧢',f:'Петрович обрадовался: «Моя! В позапрошлом году ветром унесло!»'},
+  snag:{n:'Коряга',en:'Snag',ic:'🌿',f:'Зацеп! Коряга похожа на лося. Или на тёщу — кому как.'},
+  bell:{n:'Велосипедный звонок',en:'Bicycle bell',ic:'🔔',f:'Дзинь! Работает. Велосипеда рядом не нашлось.'}
+};
+const JUNK_P=.03;
+/* места: p — цена «путёвки» в монетах, fish — кто водится, leg — легенда, look — пейзаж */
+const PLACES=[
+  {id:'prud',n:'Пруд у дачи',en:'Dacha pond',reg:'Подмосковье',regE:'Moscow region',p:0,pm:1,fish:['rotan','karas','karasz','plotva','okun','lin','karp'],leg:'boris',look:'dacha'},
+  {id:'rechka',n:'Речка у деревни',en:'Village stream',reg:'Тверская область',regE:'Tver region',p:200,pm:1,fish:['peskar','ukleyka','ersh','plotva','golavl','yaz','shuka','nalim'],leg:'marfa',look:'birch'},
+  {id:'volga',n:'Волга',en:'The Volga',reg:'под Астраханью',regE:'near Astrakhan',p:700,pm:1,fish:['gustera','vobla','chehon','lesh','sudak','zhereh','sazan','som'],leg:'kuzmich',look:'volga'},
+  {id:'seliger',n:'Селигер',en:'Lake Seliger',reg:'Тверская область',regE:'Tver region',p:1500,pm:1.1,fish:['snetok','ryapushka','okun','lesh','lin','shuka','sudak','nalim'],leg:'general',look:'lake'},
+  {id:'ladoga',n:'Ладожское озеро',en:'Lake Ladoga',reg:'Карелия',regE:'Karelia',p:2600,pm:1.2,fish:['koryushka','ryapushka','okun','sig','sudak','paliya','losos'],leg:'varyag',look:'rocks'},
+  {id:'baikal',n:'Байкал',en:'Lake Baikal',reg:'Иркутская область',regE:'Irkutsk region',p:4000,pm:1.25,fish:['omul','harius','sig','okun','lenok','shuka','taimen'],leg:'batyushka',look:'baikal'},
+  {id:'amur',n:'Амур',en:'The Amur',reg:'Хабаровский край',regE:'Khabarovsk',p:6000,pm:1.1,fish:['skripun','sazan','verhoglyad','zmeegolov','amur','tolstolob','kaluga'],leg:'tsaritsa',look:'amur'},
+  {id:'kamchatka',n:'Камчатка',en:'Kamchatka',reg:'река Камчатка',regE:'Kamchatka river',p:8500,pm:1.2,fish:['golets','mikizha','kundzha','nerka','kizhuch','chavycha'],leg:'korol',look:'kamch'}
+];
+const TODS=['morning','day','evening','night'],TOD_N={morning:['Утро','Morning'],day:['День','Day'],evening:['Вечер','Evening'],night:['Ночь','Night']};
+const WXS=['sun','cloud','rain','wind','fog'],WX_N={sun:['Ясно','Sunny'],cloud:['Облачно','Cloudy'],rain:['Дождик','Rain'],wind:['Ветрено','Windy'],fog:['Туман','Fog']},WX_IC={sun:'☀️',cloud:'⛅',rain:'🌧',wind:'🌬',fog:'🌁'};
+const TOD_M={morning:1.2,day:.85,evening:1.2,night:.9},WX_M={sun:.9,cloud:1.1,rain:1.15,wind:.95,fog:1.05};
+function fishOf(id){return FISH[id]||LEG[id]||null;}
+// цена улова: pm — множитель места (дальние водоёмы — дороже, как и путёвка туда)
+function price(f,w,pi){return Math.max(1,Math.round((f.pb+f.pk*w)*(f.leg?1:(PLACES[pi]&&PLACES[pi].pm)||1)));}
+function trophyW(f){return f.w[0]+.75*(f.w[1]-f.w[0]);}
+// время суток по часам игрока, погода — по дате, часу и месту (одинаковая у всех, «прогноз» честный)
+function todOf(h){return h>=5&&h<10?'morning':h>=10&&h<17?'day':h>=17&&h<22?'evening':'night';}
+function wxOf(dayN,h,pi){const R=rng(dayN*977+Math.floor(h/3)*131+pi*7919+3);const x=R();return x<.34?'sun':x<.6?'cloud':x<.76?'rain':x<.9?'wind':'fog';}
+function biteMul(tod,wx){return TOD_M[tod]*WX_M[wx];}
+// кто клюнет: df — доля дальности заброса (0 — у берега, 1 — максимум удочки). Вернёт {f,w} или {junk} или null (на эту наживку здесь не берут)
+function baitWorks(pi,bait){return PLACES[pi].fish.some(id=>(FISH[id].b[bait]||0)>0);}
+function pickFish(pi,bait,tod,wx,df,R){const P=PLACES[pi];
+  const L=LEG[P.leg];if(L&&bait===L.bait&&L.tod.indexOf(tod)>=0&&df>.55&&R()<1/30)return {f:L,w:Math.round((L.w[0]+(L.w[1]-L.w[0])*R())*1000)/1000};
+  let tot=0;const ws=P.fish.map(id=>{const f=FISH[id],big=f.w[1]>2.5;let x=f.r*(f.b[bait]||0)*(f.t&&f.t[tod]!=null?f.t[tod]:1)*(big?(.45+df*1.1):(1.2-df*.4));if(wx==='rain'&&f.b.live)x*=1.2;tot+=x;return x;});
+  if(tot<=0)return null;
+  if(R()<JUNK_P&&bait!=='spoon'){const ks=Object.keys(JUNK);return {junk:ks[Math.floor(R()*ks.length)]};}
+  let u=R()*tot,k=0;for(;k<ws.length-1;k++){u-=ws[k];if(u<0)break;}
+  const f=FISH[P.fish[k]],big=bait==='live'||bait==='corn'||bait==='spoon'?.35:0;
+  const e=Math.max(1.1,2.5-.9*df-big),w=f.w[0]+(f.w[1]-f.w[0])*Math.pow(R(),e);
+  return {f,w:Math.max(.005,Math.round(w*1000)/1000)};}
+// сколько ждать поклёвки (с)
+function waitTime(tod,wx,R){return clamp((2.2+R()*4.6)/biteMul(tod,wx),1.6,9);}
+// окно подсечки (с)
+function hookWin(f,calm){return (f.leg?.75:f.w[1]>2.5?.85:1)+(calm?.5:0);}
+
+/* вываживание. Мелочь (сила рыбы меньше трети прочности снасти) идёт к берегу сама — палец только ускоряет.
+   Крупная: палец держит — подматываем (натяжение растёт), отпустил — леска свободнее, но рыба уходит дальше.
+   Натяжение > 1 дольше 0,45 с (спокойный режим — 0,9 с) — обрыв. Слабина дольше 4 с — рыба сходит. Дальше maxD — ушла. */
+function fightNew(f,w,dist,tk,calm,R){const B=f.s*Math.pow(w,.55),cap=TACKLE.line.kg[tk.line]*TACKLE.rod.k[tk.rod]*(calm?1.25:1);
+  return {B,cap,D:dist,D0:dist,maxD:Math.max(dist+14,24),E:1,T:0,rush:0,next:1.2+R()*1.5,warn:false,brk:0,slack:0,t:0,small:w<.6&&!f.leg,res:null,jump:0,calm:!!calm};}
+function fightStep(ft,f,hold,dt,R,tk){if(ft.res)return ft.res;ft.t+=dt;
+  const spd=TACKLE.reel.spd[tk.reel];
+  if(ft.small){ft.D-=dt*spd*(hold?1.7:1.05);ft.T=.12+.08*Math.sin(ft.t*9);if(ft.D<=.8)ft.res='ok';return ft.res;}
+  const sy=STY[f.st];
+  if(ft.rush>0){ft.rush-=dt;if(ft.rush<=0){ft.rush=0;ft.next=sy[1]+R()*(sy[2]-sy[1]);}}
+  else{ft.next-=dt;if(ft.next<=0){ft.rush=(sy[3]+R()*(sy[4]-sy[3]))*(.6+.4*ft.E);if(f.st==='jump'&&R()<.55)ft.jump=.9;}}
+  if(ft.jump>0)ft.jump=Math.max(0,ft.jump-dt);
+  ft.warn=ft.rush<=0&&ft.next<.4;
+  const P=ft.B*(.35+.65*ft.E)*(ft.rush>0?sy[0]:.5),raw=hold?P+.22*ft.B+.25:P*.3,tgt=raw/ft.cap;
+  ft.T+=(tgt-ft.T)*Math.min(1,dt*(hold?6:4));
+  const sw=(1+f.s)*(.3+.7*ft.E);
+  ft.D+=hold?dt*(-spd*(ft.rush>0?.25:1)+(ft.rush>0?sw*.9:sw*.12)):dt*(ft.rush>0?sw*1.1:sw*.2);
+  ft.D=Math.max(0,ft.D);
+  ft.E=Math.max(0,ft.E-dt*(.03+.22*ft.T*ft.T)/(1+.25*Math.sqrt(ft.B)));
+  if(ft.T>1)ft.brk+=dt;else ft.brk=Math.max(0,ft.brk-dt*2);
+  if(ft.T<.1&&!hold)ft.slack+=dt;else ft.slack=Math.max(0,ft.slack-dt*2);
+  if(ft.brk>(ft.calm?.9:.45))ft.res='break';
+  else if(ft.slack>4)ft.res='slack';
+  else if(ft.D>ft.maxD)ft.res='gone';
+  else if(ft.D<=1)ft.res='ok';
+  else if(ft.t>120)ft.res='gone';
+  return ft.res;}
+
+/* бот: один заброс целиком (поклёвка → подсечка с «человеческой» реакцией → вываживание: держит, пока натяжение не в красной зоне).
+   skill 0…1: реакция 0,55…0,3 с, порог натяжения .7….9. Возвращает {kind:'fish'|'junk'|'miss'|'none'|'break'|'slack'|'gone', f, w, t — секунд} */
+function botCast(pi,bait,tod,wx,tk,calm,skill,R,dist){
+  const maxd=TACKLE.rod.dist[tk.rod],d=dist!=null?dist:maxd*(.55+.45*R()),df=d/maxd;let t=1+waitTime(tod,wx,R);
+  const pk=pickFish(pi,bait,tod,wx,df,R);if(!pk)return {kind:'none',t:t+6};
+  if(pk.junk)return {kind:'junk',junk:pk.junk,t:t+3};
+  const f=pk.f,react=.55-.25*skill+(R()-.5)*.25;t+=1.5;
+  if(react>hookWin(f,calm))return {kind:'miss',f,w:pk.w,t};
+  const ft=fightNew(f,pk.w,d,tk,calm,R),thr=.7+.2*skill;let hold=true,lag=0,res=null;const dt=1/30;
+  for(let i=0;i<30*130&&!res;i++){lag-=dt;
+    if(lag<=0){const want=ft.T<thr&&!(ft.warn&&skill>.5)&&!(ft.rush>0&&ft.T>thr*.8);if(want!==hold){hold=want;lag=.12+.1*(1-skill);}}
+    res=fightStep(ft,f,hold,dt,R,tk);}
+  t+=ft.t+2;
+  return res==='ok'?{kind:'fish',f,w:pk.w,t}:{kind:res||'gone',f,w:pk.w,t};}
+/*/LOGIC*/
+
+/* ================= язык: пока игра русская; английский — заготовка (строки L('рус','eng')), включается только на маке ?lang=en ================= */
+const IS_LOCAL=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+let LANG=IS_LOCAL&&/[?&]lang=en/.test(location.search)?'en':'ru';
+const L=(ru,en)=>LANG==='en'&&en?en:ru;
+function plural(n,a,b,c){n=Math.abs(n)%100;const k=n%10;return n>10&&n<20?c:k>1&&k<5?b:k===1?a:c;}
+function pl(n,r1,r2,r5,e1,eN){return LANG==='en'?(n===1?e1:eN):plural(n,r1,r2,r5);}
+const nm=o=>LANG==='en'&&o.en?o.en:o.n;
+function applyStatic(){if(LANG!=='en')return;document.documentElement.lang='en';
+  document.querySelectorAll('[data-en]').forEach(e=>{e.innerHTML=e.dataset.en;});
+  document.querySelectorAll('[data-en-aria]').forEach(e=>e.setAttribute('aria-label',e.dataset.enAria));}
+const GAME_NAME=L('Рыбалка с Петровичем','Fishing with Petrovich');
+
+/* ================= сохранение ================= */
+const SKEY='rybak-v1';
+let S={coins:40,open:{0:1},tk:{rod:0,line:0,reel:0},bait:{},own:{},sel:'worm',alb:{},legs:{},junk:{},caught:0,sessions:0,casts:0,daily:{},ach:{},tips:{},visit:{},adW:0,cat:0};
+try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
+const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+const NUMOBJ=['open','tk','own','daily','ach','tips','visit','legs','junk'];
+const NUMS=['caught','sessions','casts','cat','bigW'];
+// защита от сохранений неожиданной формы (ручная правка, старая версия)
+function fixSave(){for(const f of NUMOBJ.concat(['bait','alb']))if(!isObj(S[f]))S[f]={};
+  if(!S.open[0])S.open[0]=1;for(const k of TK_KEYS)if(!(S.tk[k]>=0&&S.tk[k]<=4))S.tk[k]=0;
+  for(const f of NUMS.concat(['adW']))if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;
+  if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=40;if(!BAIT[S.sel])S.sel='worm';
+  for(const k in S.bait)if(typeof S.bait[k]!=='number'||!(S.bait[k]>=0))S.bait[k]=0;
+  for(const k in S.alb)if(!isObj(S.alb[k])||!fishOf(k))delete S.alb[k];
+  if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.week!=null&&!isObj(S.week))delete S.week;if(S.dprog!=null&&!isObj(S.dprog))delete S.dprog;
+  if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
+fixSave();
+// «точка отсчёта» с облаком (как в «Выезде»): монеты, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным
+let BOOT_TS=S.ts||0,BOOT_COINS=S.coins;
+// облако: Яндекс — не чаще раза в 3,5 с, VK — раза в 15 с; при сворачивании — сразу. Пока облако не прочитано и не слито — не пишем
+let cloudT=0,cloudReady=false,cloudBusy=false,cloudTry=0,cloudBroken=0;
+function save(){S.ts=nowMs();
+  try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
+  if(!cloudReady){cloudLoad();return;}
+  if((YP||VK)&&!cloudT)cloudT=setTimeout(cloudFlush,YP?3500:15000);}
+function cloudFlush(){clearTimeout(cloudT);cloudT=0;if(!cloudReady)return;
+  try{if(YP){const ts=S.ts,c=S.coins;YP.setData(S,true).then(()=>{BOOT_TS=ts;BOOT_COINS=c;}).catch(()=>{});}else if(VK)vkSaveCloud();}catch(e){}}
+function canon(o){return JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((r,x)=>(r[x]=v[x],r),{}):v);}
+const noTs=o=>Object.assign({},o,{ts:0});
+async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Date.now()-cloudTry<10000))return;cloudBusy=true;cloudTry=Date.now();
+  try{const d=YP?await timeLim(YP.getData(),8000):await vkLoadCloud();
+    const before=canon(noTs(S));mergeSave(d);fixSave();cloudReady=true;cloudBroken=0;
+    if(d&&typeof d.ts==='number')BOOT_TS=Math.max(BOOT_TS,d.ts);BOOT_COINS=S.coins;
+    const ch=canon(noTs(S))!==before;
+    if(ch){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}}
+    if(!d||canon(noTs(d))!==canon(noTs(S))){save();cloudFlush();}
+    if(ch&&typeof onCloud==='function')onCloud();
+  }catch(e){if(e&&e.broken&&++cloudBroken>=3){cloudReady=true;BOOT_COINS=S.coins;save();}}finally{cloudBusy=false;}}
+
+/* ================= площадка: Яндекс Игры или VK (модули — из «Выезда»/«Дурака») ================= */
+const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
+let ysdk=null,YP=null,VK=null,paused=false;
+const pauseWhy=new Set();
+function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
+  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
+  if(!paused&&typeof kick==='function')kick();}
+const YG={
+  start(){try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
+  stop(){try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.stop();}catch(e){}}
+};
+// слияние облака с локальным: прогресс — максимум/объединение, монеты — облачные + изменение на устройстве, настройки и наживка — из более нового
+function mergeSave(d,ref){if(!isObj(d))return;
+  const dt=typeof d.ts==='number'?d.ts:0,rt=ref==null?BOOT_TS:ref,newer=dt>rt;
+  for(const f of NUMS)if(typeof d[f]==='number')S[f]=Math.max(S[f]||0,d[f]);
+  for(const f of NUMOBJ)if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
+  if(isObj(d.alb)){if(!isObj(S.alb))S.alb={};for(const k in d.alb){const a=S.alb[k]||{},b=d.alb[k];if(!isObj(b))continue;
+    S.alb[k]={n:Math.max(a.n||0,b.n||0),mx:Math.max(a.mx||0,b.mx||0),tr:Math.max(a.tr||0,b.tr||0)};}}
+  if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
+  if(isObj(d.week)){const a=S.week,b=d.week;if(!a||(b.w||0)>(a.w||0))S.week=b;else if(b.w===a.w)a.best=Math.max(a.best||0,b.best||0);}
+  if(newer&&isObj(d.bait))S.bait=Object.assign({},d.bait);
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|coins|alb|week|bait|streak|buy|buyB|payT|payV|open|tk|own|daily|ach|tips|visit|legs|junk|caught|sessions|casts|cat|bigW)$/.test(k))S[k]=d[k]; // флажки и настройки
+  payMerge(d);
+  if(isObj(d.streak)){const a=S.streak,b=d.streak;
+    if(!a||(b.last||0)>(a.last||0))S.streak=b;
+    else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last,cyc:Math.max(a.cyc||0,b.cyc||0)};}}
+function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
+function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
+function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
+// VK: куски по 1800 символов, двойной буфер «a0…»/«b0…», указатель svn="b:5:<длина>" — последним
+const VK_CHUNK=1800,VK_MAXCH=40,vkSent={};let vkCur=null,vkQ=null,vkAgain=false;
+async function vkPut(k,v){if(vkSent[k]===v)return;await vkSend('VKWebAppStorageSet',{key:k,value:v},8000);vkSent[k]=v;}
+function vkSaveCloud(){if(vkQ){vkAgain=true;return vkQ;}
+  vkQ=(async()=>{try{do{vkAgain=false;const str=JSON.stringify(S),ts=S.ts,c=S.coins,n=Math.ceil(str.length/VK_CHUNK),pre=vkCur==='a'?'b':'a';if(n>VK_MAXCH)return;
+      for(let i=0;i<n;i++)await vkPut(pre+i,str.slice(i*VK_CHUNK,(i+1)*VK_CHUNK));
+      await vkPut('svn',pre+':'+n+':'+str.length);vkCur=pre;BOOT_TS=ts;BOOT_COINS=c;}while(vkAgain);}catch(e){}finally{vkQ=null;}})();
+  return vkQ;}
+const BROKEN={broken:true};
+async function vkLoadCloud(){const r0=await vkSend('VKWebAppStorageGet',{keys:['svn']}),e0=((r0&&r0.keys)||[]).find(k=>k.key==='svn'),raw=e0&&e0.value||'';
+  if(!raw)return null;
+  const m=/^([ab]):(\d+):(\d+)$/.exec(raw);let pre='sv',n=+raw||0,len=-1;
+  if(m){pre=m[1];n=+m[2];len=+m[3];}
+  if(!n||n>VK_MAXCH)throw BROKEN;
+  const keys=[];for(let i=0;i<n;i++)keys.push(pre+i);
+  const r=await vkSend('VKWebAppStorageGet',{keys}),mm={};((r&&r.keys)||[]).forEach(k=>mm[k.key]=k.value);
+  let str='';for(const k of keys){if(typeof mm[k]!=='string'||!mm[k])throw BROKEN;str+=mm[k];}
+  if(len>=0&&str.length!==len)throw BROKEN;
+  let d;try{d=JSON.parse(str);}catch(e){throw BROKEN;}if(!isObj(d))throw BROKEN;
+  if(pre!=='sv'){vkCur=pre;for(const k of keys)vkSent[k]=mm[k];vkSent.svn=raw;}
+  return d;}
+// облако пришло позже меню: перерисовать то, что на экране
+function onCloud(){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}updCoins();
+  if(!G&&!modalOn&&$('scr-map').classList.contains('on'))openMap();else if($('scr-shop').classList.contains('on'))openShop(shopTab);}
+async function initVK(){
+  try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
+    await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;
+    VK.subscribe(e=>{const t=e.detail&&e.detail.type;
+      if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
+      else if(t==='VKWebAppViewRestore')setPause('hide',false);});
+    await cloudLoad();
+    vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
+  }catch(e){VK=null;}
+  PAY.init();updCoins();
+  window.__sdkDone=true;if(!G&&!window.__demo&&!modalOn&&$('scr-map').classList.contains('on')){openMap();maybeStreak();}
+}
+async function initSDK(){
+  if(window.YaGames){
+    try{ysdk=await YaGames.init();
+      // «игра загружена» — сразу: меню уже на экране, облако и покупки догружаются следом
+      try{ysdk.features&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
+      ysdk.on&&ysdk.on('game_api_pause',()=>setPause('sdk',true));
+      ysdk.on&&ysdk.on('game_api_resume',()=>setPause('sdk',false));
+      try{ysdk.getFlags&&ysdk.getFlags().then(applyFlags).catch(()=>{});}catch(e){}
+      try{YP=await timeLim(ysdk.getPlayer({scopes:false}),8000);await cloudLoad();}catch(e){}
+    }catch(e){ysdk=null;}
+  }
+  PAY.init();
+  window.__sdkDone=true;if(!G&&!window.__demo&&$('scr-map').classList.contains('on')&&!modalOn){openMap();maybeStreak();}
+  if(G&&!G.over&&!modalOn)YG.start();
+}
+
+/* ================= звук (синтез, без музыки): плеск, заброс, катушка, колокольчик ================= */
+let AC=null,muted=false,acUnlocked=false;
+function acWake(){if(AC&&AC.state!=='running'){try{const p=AC.resume();p&&p.catch&&p.catch(()=>{});}catch(e){}}}
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&!muted)acWake();return AC;}
+function unlockAudio(){if(S.sound===false||muted)return;const a=ac();if(!a)return;
+  if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}}
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true}));
+const sndOn=()=>!(muted||S.sound===false);
+function tone(type,f1,f2,dur,vol,delay){if(!sndOn())return;const a=ac();if(!a)return;const t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02);}
+const NZ={};function noiseBuf(a,dur){const k=Math.round(dur*100);if(NZ[k]&&NZ[k].sampleRate===a.sampleRate)return NZ[k];const n=a.createBuffer(1,Math.max(1,Math.floor(a.sampleRate*dur)),a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);return NZ[k]=n;}
+// шум с фильтром; f2 — куда «уезжает» частота фильтра (свист заброса, плеск)
+function noise(dur,vol,freq,type,f2,delay){if(!sndOn())return;const a=ac();if(!a)return;const t=a.currentTime+(delay||0),s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();f.type=type||'lowpass';f.frequency.setValueAtTime(freq,t);if(f2)f.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.buffer=noiseBuf(a,dur);s.connect(f).connect(g).connect(a.destination);s.start(t);}
+// колокольчик: несколько чистых обертонов с долгим затуханием
+function bellTone(f,vol,delay){if(!sndOn())return;const a=ac();if(!a)return;const t=a.currentTime+(delay||0);
+  [[1,1],[2.76,.45],[5.4,.2]].forEach(([m,v])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f*m;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol*v,t+.004);g.gain.exponentialRampToValueAtTime(.0006,t+1.1/m+.25);o.connect(g).connect(a.destination);o.start(t);o.stop(t+1.5);});}
+const SND={
+  cast(){noise(.35,.12,600,'bandpass',3200);},                                  // свист лески
+  plop(s){s=s||1;noise(.22*s,.22,900,'lowpass',180);tone('sine',520,140,.12,.07*s);}, // бульк поплавка
+  splash(s){s=s||1;noise(.5*s,.28,1400,'lowpass',250);noise(.25,.1,3000,'highpass');},// плеск рыбы
+  nib(){tone('sine',380,300,.05,.02);},                                          // лёгкая поклёвка
+  bell(){bellTone(2093,.09);bellTone(2093,.07,.16);},                            // колокольчик — клюёт!
+  hook(){noise(.08,.15,2000,'bandpass');tone('triangle',300,700,.08,.05);},
+  click(){noise(.018,.07,3800,'bandpass');},                                     // трещотка катушки
+  brk(){tone('sawtooth',900,110,.28,.05);noise(.15,.12,2500,'highpass');},       // обрыв
+  catch(){[523,659,784,1047].forEach((f,i)=>tone('triangle',f,f,.18,.07,i*.1));},
+  legend(){[392,523,659,784,1047,1319].forEach((f,i)=>tone('triangle',f,f,.26,.08,i*.12));setTimeout(()=>bellTone(2637,.08),700);},
+  lose(){[392,349,294].forEach((f,i)=>tone('sine',f,f*.99,.22,.05,i*.16));},
+  phone(){for(let k=0;k<2;k++)for(let i=0;i<10;i++)tone('square',i%2?480:440,i%2?480:440,.04,.018,k*.6+i*.04);}, // старый телефон: дзынь-дзынь
+  meow(){tone('sine',650,900,.14,.05);tone('sine',900,560,.25,.05,.14);},
+  junk(){tone('square',220,160,.12,.03);noise(.2,.12,700);},
+  tap(){tone('sine',600,500,.05,.04);},
+  coin(){tone('triangle',990,1320,.12,.06);tone('triangle',1320,1760,.12,.05,.09);},
+  no(){tone('square',200,160,.1,.025);}
+};
+let touched=false;['pointerdown','keydown'].forEach(t=>document.addEventListener(t,()=>{touched=true;},{capture:true,passive:true}));
+function buzz(ms){try{if(touched&&S.vib!==false&&navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
+
+/* ================= реклама (SDK площадки; без него — заглушка только на маке) ================= */
+function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen();let n=3;tEl.textContent=n;const it=setInterval(()=>{n--;tEl.textContent=n;if(n<=0){clearInterval(it);ad.classList.remove('on');adClose();cb();}},window.__fastAd?30:600);}
+function adOpen(){setPause('ad',true);YG.stop();}
+function adClose(){setPause('ad',false);if(G&&!G.over&&!modalOn&&$('scr-fish').classList.contains('on'))YG.start();}
+const AD_FAIL=L('Реклама сейчас недоступна — загляни чуть позже','Ads are unavailable right now — try later'),VK_REAL=/[?&]vk_app_id=/.test(location.search);
+// межэкранная: только между рыбалками, по «долгу» S.adW (рыбалок с прошлого показа ≥ AD_EVERY=3), с 4-й рыбалки, не раньше AD_GAP после ЛЮБОЙ рекламы и после запуска
+let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=3,AD_COINS=30,AD_FROM=3,X2_ON=true;
+let adBusy=false;
+function showRewarded(cb0,onFail0){
+  if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
+  const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
+  if(PLAT==='vk'&&!VK){if(VK_REAL){toast(AD_FAIL);onFail();}else stubAd(cb);return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
+      .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL);onFail();}})
+      .catch(()=>{adClose();toast(AD_FAIL);onFail();})
+      .finally(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
+  if(!ysdk){stubAd(cb);return;}
+  let got=false;
+  ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
+    onClose:()=>{adClose();if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
+    onError:()=>{adClose();toast(AD_FAIL);onFail();}}});
+}
+function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
+function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
+function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.sessions||0)>AD_FROM;}
+function showInterstitial(cb0){
+  const cb=shown=>{lastAdT=Date.now();if(shown!==false){S.adW=0;save();}cb0();};
+  if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(cb);return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),()=>false).then(ok=>{adClose();cb(ok);});return;}
+  if(!ysdk){stubAd(cb);return;}
+  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
+}
+// удалённая настройка Яндекса (флаги консоли). Границы жёсткие: межэкранная — не чаще раза в 2 рыбалки и раза в 180 с (по умолчанию — раз в 3)
+function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
+  if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;
+  if(f.x2==='0'||f.x2==='off')X2_ON=false;updCoins();}
+
+/* ================= монеты ================= */
+// экономика — tools/econ.sh (модель на той же логике): рыбалка на пруду ≈ 20–35 💰, на дальних местах — 100+; снасти 120–2000, путёвки 200–4500
+const coinsTxt=n=>n+' 💰';
+function updCoins(){for(const id of ['fCoins','shCoins'])if($(id))$(id).textContent='💰 '+S.coins;if($('coinCnt'))$('coinCnt').textContent=S.coins;}
+function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
+function adCoinsLeft(){const k=todayKey();if(!isObj(S.adc)||S.adc.d!==k)S.adc={d:k,n:0};return 5-S.adc.n;}
+function openCoins(){
+  // покупки за деньги — только вне рыбалки; нет платежей — раздела нет совсем
+  const buy=PAY.on&&!inGame(),adc=adOk()&&adCoinsLeft()>0;
+  modal(`<h2>${L('Монеты 💰','Coins 💰')}</h2><p>${L('У тебя','You have')} ${coinsTxt(S.coins)}. ${L('Монеты дают за улов, задание дня, серию дней и достижения. Тратятся на снасти, наживку и путёвки на новые места.','Coins come from your catch, daily tasks, the daily gift and achievements. Spend them on tackle, bait and trips.')}</p>${buy?payHtml():''}<div class="row">${adc?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} ${L('за рекламу','for an ad')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+  if(buy){PAY.bind($('mcard'));PAY.re=openCoins;}
+  if($('mAdCoins'))$('mAdCoins').onclick=()=>{hideModal();showRewarded(()=>{adCoinsLeft();S.adc.n++;setCoins(S.coins+AD_COINS);SND.coin();toast('+'+coinsTxt(AD_COINS));});};$('mCancel').onclick=hideModal;}
+function inGame(){return !!(G&&!G.over&&$('scr-fish').classList.contains('on'));}
+
+/* ---- товары «Бравого рыбака» (каталог — hobby-analytics/13-purchases-catalog.md; VK — hobby-pay/catalog.json).
+   Продаём то, что видно заранее: без рекламы, монеты, набор и ящик наживки. Лутбоксов нет. В турнире недели снасть у всех одинаковая — покупки не помогают */
+const PAY_ROW='set';
+const PAY_ITEMS={
+  no_ads:{perm:1,bonus:150,vk:14,ic:'🚫',name:'Без рекламы между рыбалками',en:'No ads between trips',desc:'Навсегда, и сразу +150 💰. Ролики за награду остаются — по желанию',de:'Forever, plus 150 coins. Optional reward videos stay'},
+  coins_s:{n:400,vk:5,ic:'💰',name:'Кошелёк рыбака: 400 💰',en:'Wallet: 400 coins',desc:'Хватит на новую катушку или леску',de:'Enough for a new reel or line',done:'+400 💰 — спасибо!'},
+  coins_l:{n:1300,vk:14,ic:'💰',name:'Сундук рыбака: 1300 💰',en:'Chest: 1300 coins',desc:'Выгоднее кошелька',de:'Better value than the wallet',done:'+1300 💰 — спасибо!'},
+  starter:{perm:1,bonus:500,vk:8,ic:'🎒',name:'Набор рыбака',en:'Angler\'s kit',desc:'500 💰, блесна навсегда и по 10 штук каждой наживки. Один раз',de:'500 coins, a spoon lure and 10 of each bait. Once',
+    give(){if(!isObj(S.buyB))S.buyB={};if(!S.buyB.starter_b){S.buyB.starter_b=1;for(const b of BAITS)if(b.pack)S.bait[b.id]=(S.bait[b.id]||0)+10;}}},
+  bait_box:{vk:7,ic:'🧰',name:'Ящик наживки',en:'Bait box',desc:'По 20 штук опарыша, теста, мотыля, кукурузы и живца',de:'20 each of maggots, dough, bloodworm, corn and live bait',done:'Наживка в ящике — спасибо!',
+    give(){for(const b of BAITS)if(b.pack)S.bait[b.id]=(S.bait[b.id]||0)+20;}}
+};
+const PAY_TEST={no_ads:99,coins_s:39,coins_l:99,starter:59,bait_box:49}; // цены только для ?paytest=1; настоящие — в консоли
+function payAdd(n){S.coins+=n;}
+function payFlush(){cloudFlush();}
+function payPause(on){setPause('pay',on);}
+function payAfter(){updCoins();if(modalOn&&PAY.re)PAY.re();else if($('scr-shop').classList.contains('on'))openShop(shopTab);}
+// надписи общего модуля PAY — по-английски снаружи (модуль не трогаем)
+function payHtml(ids,owned){let h=PAY.html(ids,owned);if(LANG==='en'){for(const id in PAY_ITEMS){const it=PAY_ITEMS[id];if(it.en)h=h.split(payEsc(it.name)).join(payEsc(it.en));if(it.de)h=h.split(payEsc(it.desc)).join(payEsc(it.de));}h=h.replace('<h3>Покупки</h3>','<h3>Purchases</h3>').split('>куплено<').join('>owned<');}return h;}
+/* ================= покупки за деньги: Яндекс Игры (ysdk.payments) и VK Игры (VKWebAppShowOrderBox) — общий модуль (одинаковый в 5 играх) =================
+   Товары игры — PAY_ITEMS (выше), id совпадают с id в консоли Яндекса («Инап-покупки») и в hobby-pay/catalog.json (VK).
+   Кнопок покупок НЕТ совсем, если платежи недоступны: нет SDK/моста (мак), каталог Яндекса пуст, VK не поддерживает оплату (iOS).
+   Постоянные (perm) — флаг S.buy[id], разовый бонус монет — один раз на игрока (S.buyB). Выдача — только после подтверждения площадки.
+   Яндекс: цена и значок валюты — только из getCatalog; расходуемые: выдать → сохранить (облако сразу) → consumePurchase;
+     незавершённые при запуске довыдаём (getPurchases). Токены выданных — S.payT (и в облаке), сбой consume не даст выдать второй раз.
+   VK: на кнопке число голосов (PAY_ITEMS.vk). success:true + order_id → выдать → сохранить → стереть ключ pay_<order_id>.
+     Страховка: сервер vk-pay при оплате пишет в хранилище VK игрока pay_<order_id>=id (расходуемые) и own_<id>=1 (постоянные);
+     при запуске читаем их и довыдаём. Выданные order_id — S.payV (последние 30); покупка без order_id оставляет метку «x:<id>»,
+     которая «съест» первый чужой pay_ этого товара — второй раз не выдастся.
+   Мак: ?paytest=1 — имитация Яндекса (localStorage «paytest»), ?vk=1&paytest=1 — имитация VK с сервером (localStorage «paytestvk»),
+   ?paytest=fail — отказ. В настоящем VK (vk_app_id) и в Яндексе заглушек нет */
+const payObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+const PAY={on:false,p:null,v:null,list:[],busy:false,
+  test:/[?&]paytest=/.test(location.search),
+  // запуск: после SDK/моста и облака. Незавершённые покупки обрабатываем, даже если каталог не пришёл
+  async init(){if(PAY.p||PAY.v)return;
+    if(PLAT==='vk')return PAY.initVK();
+    try{if(ysdk)PAY.p=ysdk.getPayments?await payT(ysdk.getPayments({signed:false})):ysdk.payments;
+      else if(PAY.test&&!window.YaGames)PAY.p=payStub();}catch(e){PAY.p=null;}
+    if(!PAY.p)return;
+    try{await PAY.restore();}catch(e){}
+    try{const c=await payT(PAY.p.getCatalog());PAY.list=(Array.isArray(c)?c:[]).filter(x=>x&&PAY_ITEMS[x.id]);}catch(e){PAY.list=[];}
+    PAY.on=PAY.list.length>0;if(PAY.on)payAfter();},
+  async initVK(){
+    if(VK){let ok=false;try{ok=!!(VK.supportsAsync&&await payT(VK.supportsAsync('VKWebAppShowOrderBox'),8000));}catch(e){}if(ok)PAY.v=payVK();}
+    else if(PAY.test&&!VK_REAL)PAY.v=payStubVK();
+    if(!PAY.v)return;
+    try{await PAY.restore();}catch(e){}
+    PAY.list=Object.keys(PAY_ITEMS).filter(id=>PAY_ITEMS[id].vk>0).map(id=>({id}));
+    PAY.on=PAY.list.length>0;if(PAY.on)payAfter();},
+  own(id){return !!(payObj(S.buy)&&S.buy[id]);},
+  item(id){return PAY.list.find(x=>x.id===id)||null;},
+  give(id){const it=PAY_ITEMS[id];
+    if(it.perm){if(!payObj(S.buy))S.buy={};S.buy[id]=1;
+      if(it.bonus){if(!payObj(S.buyB))S.buyB={};if(!S.buyB[id]){S.buyB[id]=1;payAdd(it.bonus);}}}
+    else payAdd(it.n||0);
+    if(it.give)it.give();},
+  // при запуске и «Восстановить покупки»: постоянные — выдать, если флага нет; расходуемые — довыдать и отметить
+  async restore(){let got=0;
+    if(PAY.v)got=await PAY.restoreVK();
+    else{const ps=await payT(PAY.p.getPurchases());
+      for(const x of (Array.isArray(ps)?ps:[])){const it=x&&PAY_ITEMS[x.productID];if(!it)continue;
+        if(it.perm){if(!PAY.own(x.productID)){PAY.give(x.productID);got=1;}}else if(await PAY.credit(x))got=1;}}
+    if(got){save();payFlush();payAfter();toast('Покупка зачислена',2600);}
+    return got;},
+  // VK: ключи own_<id> (постоянные, не стираем) и pay_<order_id> (расходуемые: выдать, сохранить, стереть)
+  async restoreVK(){const ks=await PAY.v.keys();let got=0;const done=[];if(!Array.isArray(S.payV))S.payV=[];
+    for(const k of ks){const m=/^(own|pay)_(.+)$/.exec(k.key||'');if(!m||!k.value)continue;
+      if(m[1]==='own'){const it=PAY_ITEMS[m[2]];if(it&&it.perm&&!PAY.own(m[2])){PAY.give(m[2]);got=1;}continue;}
+      const id=String(k.value),it=PAY_ITEMS[id];if(!it)continue;
+      if(S.payV.indexOf(m[2])<0){const x=S.payV.indexOf('x:'+id); // покупка без order_id уже выдана — это её заказ
+        if(x>=0)S.payV[x]=m[2];else{PAY.give(id);payMark(m[2]);got=1;}}
+      done.push(k.key);}
+    if(done.length){save();payFlush();for(const k of done)try{await PAY.v.clear(k);}catch(e){}}
+    return got;},
+  // расходуемая: выдать (если этот токен ещё не выдавали), сохранить в облако и только потом consumePurchase
+  async credit(x){const t=String(x.purchaseToken||'');if(!Array.isArray(S.payT))S.payT=[];let fresh=false;
+    if(!t||S.payT.indexOf(t)<0){PAY.give(x.productID);if(t)S.payT.push(t);if(S.payT.length>30)S.payT=S.payT.slice(-30);save();payFlush();fresh=true;}
+    try{if(t)await payT(PAY.p.consumePurchase(t));}catch(e){}
+    return fresh;},
+  async buy(id){const it=PAY_ITEMS[id];if(!it||PAY.busy||!PAY.on||!PAY.item(id)||(it.perm&&PAY.own(id)))return;PAY.busy=true;payPause(true);
+    try{if(PAY.v){const r=await PAY.v.order(id);if(!r||!r.success)throw new Error('cancel');
+        const oid=r.order_id!=null?String(r.order_id):'';if(!Array.isArray(S.payV))S.payV=[];
+        if(!oid||S.payV.indexOf(oid)<0){PAY.give(id);payMark(oid||'x:'+id);}
+        save();payFlush();if(oid)PAY.v.clear('pay_'+oid).catch(()=>{});}
+      else{const x=await PAY.p.purchase({id});
+        if(it.perm){PAY.give(id);save();payFlush();}
+        else await PAY.credit(x&&x.productID===id?x:{productID:id,purchaseToken:x&&x.purchaseToken});}
+      SND.coin();toast(it.done||'Готово! Спасибо за покупку',2800);payAfter(id);}
+    catch(e){toast('Покупка не состоялась',2200);}
+    finally{PAY.busy=false;payPause(false);}},
+  // «Восстановить покупки» (Об игре): заново читаем getPurchases / ключи VK
+  async again(){if(!(PAY.p||PAY.v)||PAY.busy)return;PAY.busy=true;let got=0;try{got=await PAY.restore();}catch(e){}PAY.busy=false;if(!got)toast('Покупки проверены — всё на месте',2400);},
+  // цена: VK — число голосов (требование VK); Яндекс — из каталога: число + значок валюты (getPriceCurrencyImage), иначе готовая строка price
+  price(pr){if(PAY.v){const n=PAY_ITEMS[pr.id].vk,a=n%10,b=n%100;return n+' '+(a===1&&b!==11?'голос':a>=2&&a<=4&&(b<12||b>14)?'голоса':'голосов');}
+    let img='';try{img=pr.getPriceCurrencyImage?pr.getPriceCurrencyImage('svg'):'';}catch(e){}
+    return img&&pr.priceValue?payEsc(pr.priceValue)+'<img class="pcur" src="'+payEsc(img)+'" alt="">':payEsc(pr.price||pr.priceValue||'');},
+  row(pr){const it=PAY_ITEMS[pr.id],own=it.perm&&PAY.own(pr.id),txt='<span>'+it.ic+' '+payEsc(it.name)+'<br><small>'+payEsc(it.desc)+'</small></span>';
+    return own?'<div class="'+PAY_ROW+' pown">'+txt+'<i>куплено</i></div>':'<button class="'+PAY_ROW+' pbuy" data-pid="'+payEsc(pr.id)+'">'+txt+'<b>'+PAY.price(pr)+'</b></button>';},
+  // список товаров (ids — только эти, по порядку каталога); owned=false — без уже купленных
+  html(ids,owned){const L=PAY.list.filter(pr=>(!ids||ids.indexOf(pr.id)>=0)&&(owned!==false||!(PAY_ITEMS[pr.id].perm&&PAY.own(pr.id))));
+    return L.length?'<div class="pay"><h3>Покупки</h3>'+L.map(PAY.row).join('')+'</div>':'';},
+  bind(root){(root||document).querySelectorAll('.pbuy').forEach(b=>b.onclick=()=>{try{(SND.tap||SND.click)();}catch(e){}PAY.buy(b.dataset.pid);});}
+};
+function payMark(v){if(!Array.isArray(S.payV))S.payV=[];if(S.payV.indexOf(v)<0)S.payV.push(v);if(S.payV.length>30)S.payV=S.payV.slice(-30);}
+// слияние облака (d) в сохранение T (по умолчанию S): купленное, выданные бонусы, токены и заказы — объединение (покупка не теряется ни с какой стороны)
+function payMerge(d,T){T=T||S;if(!payObj(d)||!payObj(T))return;
+  for(const f of ['buy','buyB'])if(payObj(d[f])){if(!payObj(T[f]))T[f]={};for(const k in d[f])if(d[f][k])T[f][k]=1;}
+  for(const f of ['payT','payV'])if(Array.isArray(d[f])){if(!Array.isArray(T[f]))T[f]=[];for(const t of d[f])if(typeof t==='string'&&T[f].indexOf(t)<0)T[f].push(t);if(T[f].length>30)T[f]=T[f].slice(-30);}}
+function payT(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||15000))]);}
+function payEsc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
+// VK: окно оплаты (игрок может думать долго — ждём до 10 мин) и ключи хранилища, которые пишет сервер vk-pay
+function payVK(){return {order:id=>vkSend('VKWebAppShowOrderBox',{type:'item',item:id},600000),
+  keys:async()=>{const r=await vkSend('VKWebAppStorageGetKeys',{count:1000,offset:0},8000),ks=((r&&r.keys)||[]).filter(k=>/^(own|pay)_/.test(k));
+    if(!ks.length)return [];const g=await vkSend('VKWebAppStorageGet',{keys:ks},8000);return (g&&g.keys)||[];},
+  clear:k=>vkSend('VKWebAppStorageSet',{key:k,value:''},8000)};}
+// имитация платежей для проверки на маке (?paytest=1): цены — PAY_TEST, покупки лежат в localStorage «paytest», consume их убирает
+function payStub(){const K='paytest',rd=()=>{try{return JSON.parse(localStorage.getItem(K))||[];}catch(e){return [];}},wr=a=>{try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}};
+  const cur='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#f5b400"/><text x="10" y="14.5" font-size="12" text-anchor="middle" font-family="Arial" font-weight="700" fill="#fff">T</text></svg>');
+  const wait=v=>new Promise(ok=>setTimeout(()=>ok(v),250)),fail=()=>window.__payCancel||/[?&]paytest=fail/.test(location.search);
+  return {getCatalog:()=>wait(Object.keys(PAY_TEST).map(id=>({id,title:id,description:'',imageURI:'',price:PAY_TEST[id]+' тест',priceValue:String(PAY_TEST[id]),priceCurrencyCode:'TST',getPriceCurrencyImage:()=>cur}))),
+    getPurchases:()=>wait(rd()),
+    purchase:({id})=>fail()?Promise.reject(new Error('cancel')):wait(null).then(()=>{const x={productID:id,purchaseToken:'t'+Date.now()+Math.random().toString(36).slice(2,6),developerPayload:''};const a=rd();a.push(x);wr(a);return x;}),
+    consumePurchase:t=>{if(window.__payNoConsume)return Promise.reject(new Error('fail'));wr(rd().filter(x=>x.purchaseToken!==t));return wait();}};}
+// имитация VK (?vk=1&paytest=1): «сервер» пишет pay_/own_ в localStorage «paytestvk», как vk-pay в хранилище VK.
+// __payNoOid — ответ без order_id, __payNoClear — стирание ключа не прошло, ?paytest=fail / __payCancel — отказ
+function payStubVK(){const K='paytestvk',rd=()=>{try{return JSON.parse(localStorage.getItem(K))||{};}catch(e){return {};}},wr=o=>{try{localStorage.setItem(K,JSON.stringify(o));}catch(e){}};
+  const wait=v=>new Promise(ok=>setTimeout(()=>ok(v),250)),fail=()=>window.__payCancel||/[?&]paytest=fail/.test(location.search);
+  return {order:id=>fail()?Promise.reject({error_type:'client_error'}):wait().then(()=>{const oid=String(Date.now()),o=rd();
+      if(PAY_ITEMS[id].perm)o['own_'+id]='1';else o['pay_'+oid]=id;wr(o);return window.__payNoOid?{success:true}:{success:true,order_id:+oid};}),
+    keys:()=>wait(Object.entries(rd()).filter(([k,v])=>v).map(([key,value])=>({key,value}))),
+    clear:k=>{if(window.__payNoClear)return Promise.reject(new Error('fail'));const o=rd();delete o[k];wr(o);return wait();}};}
+
+
+/* ================= рейтинг: турнир недели =================
+   Все ловят в одном месте одной «казённой» снастью (TOURN_TK) на червя, 5 забросов; очки — общий вес улова (граммы), в зачёт — лучшая попытка недели.
+   Яндекс: лидерборд week (создать в консоли), счёт = номер недели·100000 + граммы — таблица сама «обнуляется» каждую неделю (старые недели уходят вниз),
+   в своём окне показываем только текущую неделю. VK: таблица друзей VKWebAppShowLeaderBoardBox (граммы). Нет SDK/моста — кнопки нет. */
+const LB={
+  best(){const w=weekNum();return S.week&&S.week.w===w?S.week.best||0:0;},
+  ok(){return PLAT==='vk'?!!VK:!!(ysdk&&(ysdk.leaderboards||ysdk.getLeaderboards));},
+  async submit(){const g=LB.best();if(!g||PLAT==='vk')return;const sc=weekNum()*100000+Math.min(99999,g);
+    try{if(!ysdk)return;if(ysdk.leaderboards&&ysdk.leaderboards.setScore)await ysdk.leaderboards.setScore('week',sc);
+      else{const lb=await ysdk.getLeaderboards();await lb.setLeaderboardScore('week',sc);}}catch(e){}},
+  async entries(){const o={includeUser:true,quantityAround:2,quantityTop:10};
+    try{if(ysdk.leaderboards&&ysdk.leaderboards.getEntries)return await ysdk.leaderboards.getEntries('week',o);
+      const lb=await ysdk.getLeaderboards();return await lb.getLeaderboardEntries('week',o);}catch(e){return null;}},
+  async show(back){back=back||hideModal;
+    if(PLAT==='vk'){if(!VK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:LB.best()},60000).catch(()=>toast(L('Таблица друзей сейчас недоступна','Leaderboard unavailable')));return;}
+    modal(`<h2>🏆 ${L('Турнир недели','Weekly contest')}</h2><p>${L('Загружаем…','Loading…')}</p>`);
+    const r=await LB.entries(),wk=weekNum(),list=((r&&r.entries)||[]).filter(e=>Math.floor(e.score/100000)===wk);
+    const me=r&&typeof r.userRank==='number'?r.userRank:0,authed=!!(YP&&YP.getMode&&YP.getMode()!=='lite');
+    const esc=t=>String(t||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+    const rows=list.map(e=>`<div class="lbr${e.rank===me?' me':''}"><b>${e.rank}</b><span>${esc(e.player&&e.player.publicName)||L('Рыбак','Angler')}</span><i>${kgTxt((e.score%100000)/1000)}</i></div>`).join('');
+    modal(`<h2>🏆 ${L('Турнир недели','Weekly contest')}</h2><p>${L('Общий вес улова за одну рыбалку. Твой лучший:','Total catch weight in one trip. Your best:')} <b>${kgTxt(LB.best()/1000)}</b></p>
+      <div class="lb">${rows||'<p>'+L('Пока пусто — будь первым!','Empty so far — be the first!')+'</p>'}</div>
+      ${authed?'':'<p><small>'+L('Чтобы попасть в таблицу, войди в аккаунт.','Sign in to get on the board.')+'</small></p>'}
+      <div class="row">${authed||!(ysdk&&ysdk.auth)?'':'<button class="btn accent noenter" id="lbAuth">'+L('Войти','Sign in')+'</button>'}<button class="btn" id="lbClose">${L('Закрыть','Close')}</button></div>`);
+    $('lbClose').onclick=back;
+    const a=$('lbAuth');if(a)a.onclick=async()=>{try{await ysdk.auth.openAuthDialog();YP=await ysdk.getPlayer({scopes:false});
+      clearTimeout(cloudT);cloudT=0;cloudReady=false;cloudTry=0;await cloudLoad(true);updCoins();await LB.submit();}catch(e){}LB.show(back);};}
+};
+
+/* ================= общее: экраны, окна, тосты, дата ================= */
+const $=id=>document.getElementById(id);
+const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+const calm=()=>S.calm===true||RM;
+let G=null,modalOn=false;
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(id!=='scr-fish')stopLoop();}
+function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
+  const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
+function hideModal(){$('modal').classList.remove('on');modalOn=false;if(G&&!G.over)kick();}
+function modal(html){PAY.re=null;$('say').classList.remove('on');$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;}
+function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
+function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+function todayKey(){return String(dayKey(0));}
+function dayNum(){const d=new Date(nowMs());return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5);}
+function weekNum(){return Math.floor((dayNum()+3)/7);} // недели с понедельника
+function hourNow(){return new Date(nowMs()).getHours();}
+const TOD_H={morning:7,day:13,evening:19,night:1};
+function condFor(pi,tod){return {tod,wx:wxOf(dayNum(),TOD_H[tod],pi)};}
+function kgTxt(w){w=+w||0;return LANG==='en'?(w<1?Math.round(w*1000)+' g':w.toFixed(w<10?2:1)+' kg'):(w<1?Math.round(w*1000)+' г':(w<10?w.toFixed(2):w.toFixed(1)).replace('.',',')+' кг');}
+function biteIcons(m){return m>1.2?'🐟🐟🐟':m>.95?'🐟🐟':'🐟';}
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+
+/* ================= цвета ================= */
+function hx(c){c=c.replace('#','');return [parseInt(c.slice(0,2),16),parseInt(c.slice(2,4),16),parseInt(c.slice(4,6),16)];}
+function mixH(a,b,t){const A=hx(a),B=hx(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).map(v=>(v<16?'0':'')+v.toString(16)).join('');}
+function shadeH(a,k){return '#'+hx(a).map(v=>Math.max(0,Math.min(255,Math.round(v*k)))).map(v=>(v<16?'0':'')+v.toString(16)).join('');}
+function rgba(a,al){const A=hx(a);return 'rgba('+A[0]+','+A[1]+','+A[2]+','+al+')';}
+const SKY={morning:['#86b6e6','#ffd0a3'],day:['#4d93d9','#cde9f7'],evening:['#4b4f8f','#ff9e5e'],night:['#0a1330','#2a3a66']};
+const LIGHT={morning:.93,day:1,evening:.74,night:.36};
+const WXG={sun:0,cloud:.35,rain:.55,wind:.12,fog:.45},WXC={sun:'#9aa6ae',cloud:'#9aa6ae',rain:'#7a8791',wind:'#a8b4bc',fog:'#c9d0d4'};
+const WATER={dacha:'#3f8a78',birch:'#3f8488',volga:'#4a86a0',lake:'#357a94',rocks:'#346a86',baikal:'#1f86b4',amur:'#5a8474',kamch:'#2f6f8c'};
+// палитра сцены: небо с учётом погоды, свет, дымка
+function pal(look,tod,wx){const sk=SKY[tod],k=WXG[wx],gc=tod==='night'?'#1c2433':WXC[wx];
+  const top=mixH(sk[0],gc,k),bot=mixH(sk[1],gc,k*.9),li=LIGHT[tod]*(1-k*.25);
+  const tint=c=>{let x=shadeH(c,li);if(tod==='night')x=mixH(x,'#1a2a55',.3);else if(tod==='evening')x=mixH(x,'#ff9a5a',.08);else if(tod==='morning')x=mixH(x,'#ffc89a',.06);return x;};
+  const far=c=>mixH(tint(c),bot,.28+(wx==='fog'?.35:0));
+  const w0=WATER[look]||'#4f7f8a';
+  return {top,bot,li,tint,far,water1:mixH(tint(w0),bot,.3),water2:shadeH(tint(w0),.62),tod,wx,look};}
+
+/* ================= рисунок рыбы (кодом): форма, окраска, узор, плавники ================= */
+const SHAPES={std:[.3,0],deep:[.46,0],deep2:[.36,0],slim:[.22,0],perch:[.34,1],perch2:[.26,1],long:[.19,0],long2:[.21,0],salmon:[.27,0],grayling:[.26,2],eel:[.16,0],eel2:[.18,0],cat:[.21,0],cat2:[.23,0],bull:[.33,0],sturgeon:[.18,0]};
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+// (x,y) — центр, L — длина, смотрит влево; sil — силуэт (ещё не пойман)
+function drawFish(g,lk,x,y,L,sil){const sh=lk[0],sp=SHAPES[sh]||SHAPES.std,h=sp[0]*L/2,n=x-L/2,xt=x+L*.3,xe=x+L/2,
+    cat=sh==='cat'||sh==='cat2',stu=sh==='sturgeon',eel=sh==='eel'||sh==='eel2',bigHead=sh==='bull'||sh==='deep2'||cat;
+  const tailH=h*(eel?.7:stu?1.1:1.05),ped=h*(eel?.55:.3);
+  g.save();g.lineJoin='round';
+  const fin=sil?'#253036':lk[4],col=sil?'#2c373d':null;
+  // хвост
+  g.beginPath();g.moveTo(xt-L*.02,y-ped);g.quadraticCurveTo(xe-L*.02,y-tailH*.6,xe+L*.02,y-tailH);g.quadraticCurveTo(xe-L*.07,y,xe+L*.02,y+tailH*(stu?.6:1));g.quadraticCurveTo(xe-L*.02,y+tailH*.6,xt-L*.02,y+ped);g.closePath();
+  g.fillStyle=fin;g.globalAlpha=sil?1:.92;g.fill();g.globalAlpha=1;
+  // спинной плавник
+  const dx0=x-L*(sh==='grayling'?.18:eel?.1:.06),dx1=x+L*(eel?.28:sh==='grayling'?.2:.14),top=y-h*(bigHead?.92:.98);
+  g.beginPath();g.moveTo(dx0,top+h*.08);
+  if(sp[1]===1){for(let i=0;i<=6;i++){const xx=dx0+(dx1-dx0)*i/6*.55;g.lineTo(xx,top-h*.55+(i%2)*h*.2);}g.lineTo(dx0+(dx1-dx0)*.6,top+h*.02);g.quadraticCurveTo(dx1,top-h*.45,dx1+L*.03,top+h*.25);}
+  else if(sp[1]===2){g.quadraticCurveTo(dx0+L*.05,top-h*1.4,dx1,top-h*.9);g.lineTo(dx1+L*.03,top+h*.25);}
+  else if(eel){g.quadraticCurveTo(x,top-h*.45,dx1+L*.05,y-h*.4);g.lineTo(dx1,y-h*.2);}
+  else{g.quadraticCurveTo(dx0+L*.04,top-h*.75,dx1,top-h*.35);g.lineTo(dx1-L*.02,top+h*.3);}
+  g.closePath();g.fillStyle=fin;g.fill();
+  if(sh==='salmon'||sh==='grayling'||sh==='long2'){g.beginPath();g.ellipse(x+L*.24,y-h*.72,L*.03,h*.18,0,0,7);g.fill();} // жировой плавник
+  // брюшные и анальный
+  g.beginPath();g.moveTo(x-L*.05,y+h*.75);g.quadraticCurveTo(x+L*.02,y+h*1.45,x+L*.07,y+h*.8);g.closePath();g.fill();
+  g.beginPath();g.moveTo(x+L*.13,y+h*.7);g.quadraticCurveTo(x+L*.2,y+h*1.25,x+L*.26,y+h*.5);g.closePath();g.fill();
+  // тело
+  const nY=y+h*(cat?.05:bigHead?.1:.18),nx=n+(stu?-L*.05:0);
+  const body=new Path2D();
+  body.moveTo(nx,nY);
+  body.bezierCurveTo(n+L*(stu?.1:.07),y-h*(bigHead?1.15:.95),x-L*.1,y-h*1.08,x+L*.08,y-h*.92);
+  body.bezierCurveTo(x+L*.2,y-h*.75,xt-L*.05,y-ped*1.2,xt,y-ped);
+  body.lineTo(xt,y+ped);
+  body.bezierCurveTo(xt-L*.05,y+ped*1.3,x+L*.15,y+h*.85,x,y+h*.96);
+  body.bezierCurveTo(x-L*.18,y+h*1.05,n+L*.08,y+h*(cat?.95:.85),nx,nY);
+  body.closePath();
+  if(sil){g.fillStyle=col;g.fill(body);g.restore();return;}
+  const gr=g.createLinearGradient(0,y-h,0,y+h);gr.addColorStop(0,lk[1]);gr.addColorStop(.42,lk[2]);gr.addColorStop(1,lk[3]);
+  g.fillStyle=gr;g.fill(body);
+  g.save();g.clip(body);
+  const pat=lk[5],PR=rng(L*7+pat.length*13|0);g.fillStyle='rgba(0,0,0,.2)';
+  if(pat==='stripes'||pat==='bars'){g.fillStyle=pat==='stripes'?'rgba(20,35,10,.45)':'rgba(30,30,20,.35)';for(let i=0;i<(pat==='stripes'?6:7);i++){const xx=x-L*.2+i*L*.085;g.beginPath();g.moveTo(xx,y-h*1.1);g.quadraticCurveTo(xx+L*.03,y,xx-L*.01,y+h*.35);g.lineTo(xx+L*.035,y+h*.3);g.quadraticCurveTo(xx+L*.06,y,xx+L*.04,y-h*1.1);g.fill();}}
+  else if(pat==='spots'){g.fillStyle='rgba(235,230,170,.55)';for(let i=0;i<26;i++){g.beginPath();g.ellipse(n+L*.2+PR()*L*.55,y-h*.7+PR()*h*1.3,L*.018,h*.09,0,0,7);g.fill();}}
+  else if(pat==='xspots'||pat==='dots'){g.fillStyle=pat==='dots'&&lk[3].charAt(1)>'c'?'rgba(40,40,40,.4)':'rgba(25,25,25,.45)';for(let i=0;i<(pat==='dots'?18:28);i++){g.beginPath();g.arc(n+L*.2+PR()*L*.6,y-h*.85+PR()*h*(pat==='dots'?1.3:1.05),L*.009,0,7);g.fill();}}
+  else if(pat==='bigdots'){g.fillStyle='rgba(250,250,250,.7)';for(let i=0;i<16;i++){g.beginPath();g.arc(n+L*.2+PR()*L*.6,y-h*.8+PR()*h*1.2,L*.018,0,7);g.fill();}}
+  else if(pat==='mottle'){g.fillStyle='rgba(20,20,10,.28)';for(let i=0;i<12;i++){g.beginPath();g.ellipse(n+L*.2+PR()*L*.65,y-h*.6+PR()*h*1.1,L*.05,h*.22,PR()*3,0,7);g.fill();}}
+  else if(pat==='rainbow'){const rg=g.createLinearGradient(0,y-h*.3,0,y+h*.2);rg.addColorStop(0,'rgba(230,90,130,0)');rg.addColorStop(.5,'rgba(230,90,130,.55)');rg.addColorStop(1,'rgba(230,90,130,0)');g.fillStyle=rg;g.fillRect(n,y-h*.3,L,h*.5);g.fillStyle='rgba(25,25,25,.4)';for(let i=0;i<22;i++){g.beginPath();g.arc(n+L*.2+PR()*L*.6,y-h*.85+PR()*h*1.2,L*.008,0,7);g.fill();}}
+  else if(pat==='plates'){g.fillStyle='rgba(235,235,225,.6)';for(let i=0;i<9;i++){g.beginPath();g.moveTo(n+L*.25+i*L*.07,y-h*.75);g.lineTo(n+L*.28+i*L*.07,y-h*.95);g.lineTo(n+L*.31+i*L*.07,y-h*.75);g.fill();g.beginPath();g.moveTo(n+L*.25+i*L*.07,y+h*.1);g.lineTo(n+L*.28+i*L*.07,y-h*.05);g.lineTo(n+L*.31+i*L*.07,y+h*.1);g.fill();}}
+  if(pat==='scale'||pat==='bigscale'){const s=L*(pat==='bigscale'?.05:.032);g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=Math.max(.6,L*.004);
+    for(let yy=y-h;yy<y+h;yy+=s*.7)for(let xx=n+L*.22+((yy/s|0)%2)*s*.5;xx<xt;xx+=s){g.beginPath();g.arc(xx,yy,s*.5,-1.2,1.2);g.stroke();}}
+  // блик по спине
+  const hl=g.createLinearGradient(0,y-h,0,y);hl.addColorStop(0,'rgba(255,255,255,0)');hl.addColorStop(.6,'rgba(255,255,255,.22)');hl.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=hl;g.fillRect(n,y-h*.6,L,h*.5);
+  // боковая линия
+  g.strokeStyle='rgba(0,0,0,.18)';g.lineWidth=Math.max(.7,L*.004);g.beginPath();g.moveTo(n+L*.2,y-h*.3);g.quadraticCurveTo(x,y-h*.2,xt,y);g.stroke();
+  g.restore();
+  g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=Math.max(.8,L*.006);g.stroke(body);
+  // жаберная крышка, грудной плавник, глаз, рот, усы
+  const gx=n+L*(bigHead?.24:stu?.2:.19);
+  g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=Math.max(.8,L*.007);g.beginPath();g.moveTo(gx,y-h*.7);g.quadraticCurveTo(gx+L*.035,y,gx,y+h*.7);g.stroke();
+  g.fillStyle=fin;g.globalAlpha=.85;g.beginPath();g.moveTo(gx+L*.02,y+h*.25);g.quadraticCurveTo(gx+L*.12,y+h*.35,gx+L*.1,y+h*.65);g.quadraticCurveTo(gx+L*.05,y+h*.55,gx+L*.02,y+h*.25);g.fill();g.globalAlpha=1;
+  const ex=n+L*(cat?.08:stu?.13:.085),ey=y-h*(cat?.25:.3),er=Math.max(1.2,L*(cat?.012:sh==='deep2'?.018:.022));
+  g.fillStyle=pat==='none'&&lk[4]==='#d8452a'?'#e04a2a':'#f4efe0';if(lk[4]==='#d8452a')g.fillStyle='#e04a2a';
+  g.beginPath();g.arc(ex,ey,er,0,7);g.fill();g.fillStyle='#111';g.beginPath();g.arc(ex-er*.15,ey,er*.62,0,7);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(ex-er*.35,ey-er*.3,er*.22,0,7);g.fill();
+  g.strokeStyle='rgba(0,0,0,.45)';g.beginPath();g.moveTo(nx+L*.005,nY);g.lineTo(nx+L*(cat?.07:.035),nY+h*(cat?.05:.02));g.stroke();
+  if(cat||eel||stu||sh==='deep'&&lk[5]==='bigscale'){g.strokeStyle=cat?'rgba(40,35,25,.85)':'rgba(60,50,30,.7)';g.lineWidth=Math.max(.8,L*(cat?.006:.004));
+    const ln=cat?L*.22:L*.06;for(const a of cat?[.3,.8]:[.6]){g.beginPath();g.moveTo(nx+L*.02,nY);g.quadraticCurveTo(nx-ln*.4,nY+h*a*.5,nx-ln*.2,nY+ln*a);g.stroke();}}
+  g.restore();}
+const FISH_IMG={};
+// картинка рыбы на холсте (для альбома, окна улова); кэш по id и размеру
+function fishCanvas(id,w,sil){const k=id+':'+w+':'+(sil?1:0);if(FISH_IMG[k])return FISH_IMG[k];const f=fishOf(id),c=document.createElement('canvas'),h=Math.round(w*.52),dp=Math.min(2,window.devicePixelRatio||1);
+  c.width=w*dp;c.height=h*dp;c.style.width='';const g=c.getContext('2d');g.scale(dp,dp);const hh=(SHAPES[f.lk[0]]||SHAPES.std)[0];
+  drawFish(g,f.lk,w*.5,h*.5+(hh>.4?h*.04:0),w*(hh>.4?.74:hh<.2?.9:.84),sil);return FISH_IMG[k]=c;}
+function fishImg(id,w,sil){const c=fishCanvas(id,w,sil),o=document.createElement('canvas');o.width=c.width;o.height=c.height;o.getContext('2d').drawImage(c,0,0);return o;}
+
+/* ================= пейзаж: небо, дальний берег, отражение, вода ================= */
+function paintSky(g,W,H,hz,P,R){const sg=g.createLinearGradient(0,0,0,hz);sg.addColorStop(0,P.top);sg.addColorStop(1,P.bot);g.fillStyle=sg;g.fillRect(0,0,W,hz+2);
+  const u=Math.min(W,H)/100,tod=P.tod;
+  if(tod==='night'){g.fillStyle='rgba(255,255,240,.85)';for(let i=0;i<70;i++){const s=R()*1.3+.4;g.globalAlpha=.3+R()*.7;g.fillRect(R()*W,R()*hz*.85,s,s);}g.globalAlpha=1;}
+  if(P.wx==='rain'||P.wx==='fog'&&tod!=='night')return;
+  const sun=tod==='morning'?[W*.22,hz-u*9]:tod==='day'?[W*.76,hz*.3]:tod==='evening'?[W*.8,hz-u*7]:[W*.72,hz*.3];
+  const rad=u*(tod==='day'?5:tod==='night'?4:6.5),cl=tod==='night'?'#f4f1dc':tod==='day'?'#fff8d8':'#ffd08a';
+  const gl=g.createRadialGradient(sun[0],sun[1],rad*.5,sun[0],sun[1],rad*(tod==='night'?5:7));gl.addColorStop(0,rgba(cl,tod==='day'?.55:.6));gl.addColorStop(1,rgba(cl,0));g.fillStyle=gl;g.fillRect(0,0,W,hz);
+  g.globalAlpha=P.wx==='cloud'?.6:1;g.fillStyle=cl;g.beginPath();g.arc(sun[0],sun[1],rad,0,7);g.fill();
+  if(tod==='night'){g.fillStyle='rgba(180,175,150,.35)';for(const [dx,dy,r] of [[-.3,-.2,.22],[.25,.15,.18],[-.05,.35,.12],[.35,-.3,.1]]){g.beginPath();g.arc(sun[0]+dx*rad,sun[1]+dy*rad,r*rad,0,7);g.fill();}}
+  g.globalAlpha=1;P.sun=sun;}
+function treeLine(g,W,y0,amp,step,col,R){g.fillStyle=col;g.beginPath();g.moveTo(-10,y0+30);for(let x=-step;x<W+step;x+=step*(.6+R()*.5)){const r=step*(.7+R()*.5);g.moveTo(x+r,y0-R()*amp);g.arc(x,y0-R()*amp,r,0,7);}g.fill();g.fillRect(-2,y0-2,W+4,40);}
+function pine(g,x,yb,h,col){g.fillStyle=col;g.beginPath();for(let i=0;i<4;i++){const t=yb-h*(.22+i*.24),w=h*(.34-i*.07);g.moveTo(x,t-h*.24);g.lineTo(x+w,t+h*.06);g.lineTo(x-w,t+h*.06);g.closePath();}g.fill();g.fillRect(x-h*.03,yb-h*.25,h*.06,h*.25);}
+function birch(g,x,yb,h,trunk,leaf,R){g.fillStyle=trunk;g.fillRect(x-h*.025,yb-h*.8,h*.05,h*.8);g.fillStyle='rgba(20,20,20,.55)';for(let i=0;i<5;i++)g.fillRect(x-h*.025,yb-h*(.15+i*.14),h*.03,h*.02);
+  g.fillStyle=leaf;for(let i=0;i<6;i++){g.beginPath();g.ellipse(x+(R()-.5)*h*.3,yb-h*(.7+R()*.35),h*.14,h*.2,0,0,7);g.fill();}}
+function house(g,x,yb,w,h,wall,roof,lit){g.fillStyle=wall;g.fillRect(x-w/2,yb-h,w,h);g.fillStyle=roof;g.beginPath();g.moveTo(x-w*.62,yb-h);g.lineTo(x,yb-h*1.8);g.lineTo(x+w*.62,yb-h);g.closePath();g.fill();
+  g.fillStyle=lit?'#ffd66b':'rgba(40,50,60,.6)';g.fillRect(x-w*.18,yb-h*.72,w*.36,h*.36);if(lit){const gl=g.createRadialGradient(x,yb-h*.55,1,x,yb-h*.55,w);gl.addColorStop(0,'rgba(255,210,110,.35)');gl.addColorStop(1,'rgba(255,210,110,0)');g.fillStyle=gl;g.fillRect(x-w,yb-h*1.5,w*2,h*2);}}
+function church(g,x,yb,s,wall,gold){g.fillStyle=wall;g.fillRect(x-s*.5,yb-s,s,s);g.fillRect(x-s*.18,yb-s*1.45,s*.36,s*.45);
+  g.fillStyle=gold;g.beginPath();g.moveTo(x-s*.2,yb-s*1.45);g.bezierCurveTo(x-s*.34,yb-s*1.72,x-s*.02,yb-s*1.85,x,yb-s*2);g.bezierCurveTo(x+s*.02,yb-s*1.85,x+s*.34,yb-s*1.72,x+s*.2,yb-s*1.45);g.closePath();g.fill();
+  g.fillRect(x-s*.015,yb-s*2.25,s*.03,s*.27);g.fillRect(x-s*.08,yb-s*2.17,s*.16,s*.025);}
+function mountains(g,W,yb,hmax,col,snow,R,n){const pts=[];for(let i=0;i<=n;i++)pts.push([W*i/n+(R()-.5)*W/n*.5,yb-hmax*(.45+R()*.55)]);
+  g.fillStyle=col;g.beginPath();g.moveTo(-5,yb);for(let i=0;i<pts.length;i++){const p=pts[i];if(i>0){const q=pts[i-1];g.lineTo((p[0]+q[0])/2,yb-hmax*(.15+R()*.2));}g.lineTo(p[0],p[1]);}g.lineTo(W+5,yb);g.closePath();g.fill();
+  if(snow){g.fillStyle=snow;for(const p of pts){if(yb-p[1]<hmax*.62)continue;const hh=(yb-p[1])*.22;g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]+hh*.9,p[1]+hh);g.lineTo(p[0]+hh*.3,p[1]+hh*.75);g.lineTo(p[0]-hh*.2,p[1]+hh*1.05);g.lineTo(p[0]-hh*.9,p[1]+hh);g.closePath();g.fill();}}}
+// дальний берег каждого места
+function paintFar(g,W,H,hz,P,R){const u=Math.min(W,H)/100,f=P.far,lit=P.tod==='night'||P.tod==='evening';
+  switch(P.look){
+    case 'dacha':treeLine(g,W,hz-u*2,u*4,u*5,f('#3d6b45'),R);treeLine(g,W,hz,u*2,u*3.5,f('#2e5b34'),R);
+      house(g,W*.66,hz-u*1.5,u*9,u*6,f('#a0703e'),f('#b8412e'),lit);g.fillStyle=f('#7a5a3a');for(let x=W*.52;x<W*.82;x+=u*1.6)g.fillRect(x,hz-u*3.2,u*.45,u*2.5);g.fillRect(W*.52,hz-u*2.6,W*.3,u*.4);
+      birch(g,W*.26,hz,u*14,f('#f0ede6'),f('#6f9a45'),R);birch(g,W*.3,hz,u*11,f('#f0ede6'),f('#7aa34d'),R);
+      g.fillStyle=f('#6f9a45');g.fillRect(0,hz-u*.8,W,u*.9);break;
+    case 'birch':g.fillStyle=f('#8fb35a');g.fillRect(0,hz-u*3,W,u*3.2);for(let i=0;i<9;i++)birch(g,W*(.05+i*.11)+R()*u*3,hz-u*2,u*(10+R()*6),f('#eeeae0'),f(i%2?'#6f9a45':'#86ad52'),R);
+      house(g,W*.46,hz-u*2,u*6,u*4,f('#8a6034'),f('#5a6a7a'),lit);house(g,W*.56,hz-u*2,u*5,u*3.5,f('#9a7044'),f('#8a3a2a'),lit);church(g,W*.8,hz-u*2.5,u*5,f('#8a6a44'),f('#5a7a9a'));
+      g.fillStyle=f('#7aa34d');g.fillRect(0,hz-u*1.2,W,u*1.3);break;
+    case 'volga':g.fillStyle=f('#d8c48e');g.fillRect(0,hz-u*1.3,W,u*1.4);treeLine(g,W,hz-u*1.4,u*1.8,u*2.4,f('#56804a'),R);
+      church(g,W*.2,hz-u*2,u*4.5,f('#f2eee4'),f('#e0b030'));church(g,W*.25,hz-u*2,u*3,f('#f2eee4'),f('#e0b030'));break;
+    case 'lake':treeLine(g,W,hz-u*1,u*2,u*3,f('#355a3c'),R);for(let i=0;i<26;i++)pine(g,R()*W,hz-u*.5,u*(6+R()*6),f(i%2?'#26492e':'#2e5536'));
+      g.fillStyle=f('#f2eee6');g.fillRect(W*.62,hz-u*4,u*12,u*3.2);church(g,W*.68,hz-u*4,u*4,f('#f2eee6'),f('#8a9aa8'));
+      g.fillStyle=f('#2e5536');g.beginPath();g.ellipse(W*.35,hz,u*9,u*2.4,0,Math.PI,0);g.fill();for(let i=0;i<6;i++)pine(g,W*.3+i*u*2,hz-u*1,u*(5+R()*3),f('#26492e'));break;
+    case 'rocks':g.fillStyle=f('#80868c');for(let i=0;i<7;i++){const x=W*i/6+(R()-.5)*u*6,w=u*(9+R()*7),h=u*(2.5+R()*3);g.beginPath();g.ellipse(x,hz,w,h,0,Math.PI,0);g.fill();}
+      for(let i=0;i<18;i++)pine(g,R()*W,hz-u*(2+R()*2),u*(6+R()*5),f(i%2?'#294a31':'#315839'));
+      const lx=W*.84,lb=hz-u*3;g.fillStyle=f('#f4f2ec');g.beginPath();g.moveTo(lx-u*1.4,lb);g.lineTo(lx-u*.9,lb-u*11);g.lineTo(lx+u*.9,lb-u*11);g.lineTo(lx+u*1.4,lb);g.fill();
+      g.fillStyle=f('#c0392b');g.fillRect(lx-u*1.2,lb-u*4,u*2.4,u*2);g.fillRect(lx-u*1,lb-u*8.2,u*2,u*2);g.fillStyle=lit?'#ffe28a':f('#3a4a55');g.fillRect(lx-u*.8,lb-u*12.4,u*1.6,u*1.5);g.fillStyle=f('#c0392b');g.fillRect(lx-u*1.1,lb-u*12.9,u*2.2,u*.6);break;
+    case 'baikal':mountains(g,W,hz,u*22,f('#6d82a0'),f('#eef3f8'),R,6);mountains(g,W,hz,u*10,f('#4f6a74'),null,R,9);treeLine(g,W,hz,u*1.2,u*1.8,f('#355a3c'),R);break;
+    case 'amur':g.fillStyle=f('#6f8f6a');g.beginPath();g.moveTo(0,hz);for(let x=0;x<=W;x+=4)g.lineTo(x,hz-u*(6+Math.sin(x/W*6+1)*3+Math.sin(x/W*13)*1.2));g.lineTo(W,hz);g.fill();
+      treeLine(g,W,hz-u*.8,u*2.2,u*2.6,f('#3f6a45'),R);
+      g.strokeStyle=f('#6a6e72');g.lineWidth=u*.5;g.beginPath();g.moveTo(W*.5,hz-u*3.5);g.lineTo(W*1.02,hz-u*3.5);g.stroke();g.lineWidth=u*.35;
+      for(let i=0;i<5;i++){const a=W*(.5+i*.1);g.beginPath();g.moveTo(a,hz-u*3.5);g.quadraticCurveTo(a+W*.05,hz-u*7,a+W*.1,hz-u*3.5);g.stroke();g.beginPath();g.moveTo(a,hz-u*3.5);g.lineTo(a,hz);g.stroke();}break;
+    case 'kamch':{const vx=W*.6,vb=hz,vh=u*30,vw=u*34;g.fillStyle=f('#5a5e6a');g.beginPath();g.moveTo(vx-vw,vb);g.lineTo(vx-vw*.12,vb-vh);g.lineTo(vx+vw*.12,vb-vh);g.lineTo(vx+vw,vb);g.fill();
+      g.fillStyle=f('#f2f4f8');g.beginPath();g.moveTo(vx-vw*.12,vb-vh);g.lineTo(vx+vw*.12,vb-vh);g.lineTo(vx+vw*.34,vb-vh*.62);g.lineTo(vx+vw*.16,vb-vh*.7);g.lineTo(vx,vb-vh*.58);g.lineTo(vx-vw*.18,vb-vh*.7);g.lineTo(vx-vw*.32,vb-vh*.62);g.closePath();g.fill();
+      g.fillStyle=rgba(mixH(P.bot,'#ffffff',.3),.55);for(let i=0;i<5;i++){g.beginPath();g.arc(vx+i*u*3,vb-vh-u*(2+i*2.3),u*(2+i*.7),0,7);g.fill();}
+      mountains(g,W,hz,u*9,f('#4a5a5e'),null,R,7);treeLine(g,W,hz,u*1.5,u*2,f('#2f4f38'),R);break;}
+  }}
+// фон сцены (без анимации): небо, берег, отражение, вода. thumb — для карточки места (без ближнего берега)
+function paintBg(g,W,H,geo,pi,P,thumb){const R=rng(pi*131+7),hz=geo.hz,u=Math.min(W,H)/100;
+  paintSky(g,W,H,hz,P,R);
+  const far=document.createElement('canvas');far.width=Math.ceil(W);far.height=Math.ceil(hz);const fg=far.getContext('2d');paintFar(fg,W,H,hz,P,rng(pi*131+11));
+  g.drawImage(far,0,0,W,hz);
+  if(P.wx==='fog'){const fgr=g.createLinearGradient(0,hz-u*14,0,hz+u*4);fgr.addColorStop(0,'rgba(220,226,230,0)');fgr.addColorStop(1,'rgba(220,226,230,.75)');g.fillStyle=fgr;g.fillRect(0,hz-u*14,W,u*18);}
+  const wg=g.createLinearGradient(0,hz,0,H);wg.addColorStop(0,P.water1);wg.addColorStop(1,P.water2);g.fillStyle=wg;g.fillRect(0,hz,W,H-hz);
+  // отражение берега — перевёрнуто, сжато и притушено
+  g.save();g.globalAlpha=.3;g.translate(0,hz*2);g.scale(1,-1);g.drawImage(far,0,hz*.35,W,hz*.65,0,hz-hz*.65*.7,W,hz*.65*.7);g.restore();
+  g.fillStyle=rgba(P.bot,.18);g.fillRect(0,hz,W,u*1.2);
+  if(P.sun&&P.wx!=='rain'){const sx=P.sun[0],cl=P.tod==='night'?'#f4f1dc':'#ffe0a0';g.save();g.translate(sx,hz);g.scale(1,3.2);const gr=g.createRadialGradient(0,0,1,0,0,u*14);gr.addColorStop(0,rgba(cl,P.tod==='day'?.16:.3));gr.addColorStop(1,rgba(cl,0));g.fillStyle=gr;g.fillRect(-u*14,0,u*28,u*14);g.restore();}
+  if(thumb)return;
+  // коса слева, где сидит Петрович
+  const yA=geo.yOf(9),yB=geo.shY;g.fillStyle=P.tint('#4f7a36');g.beginPath();g.moveTo(-5,yA+u*1.5);g.quadraticCurveTo(W*.16,yA-u*.5,W*.27,yA+(yB-yA)*.55);g.quadraticCurveTo(W*.3,yB,W*.2,yB+u*4);g.lineTo(-5,yB+u*4);g.closePath();g.fill();
+  g.fillStyle=P.tint('#8a7a4a');g.beginPath();g.moveTo(-5,yA+u*2.2);g.quadraticCurveTo(W*.16,yA+u*.3,W*.27,yA+(yB-yA)*.55+u*.8);g.lineTo(W*.27,yA+(yB-yA)*.55);g.quadraticCurveTo(W*.16,yA-u*.5,-5,yA+u*1.5);g.fill();
+  // ближний берег
+  const y0=geo.shY,gg=g.createLinearGradient(0,y0,0,H);gg.addColorStop(0,P.tint('#6a9a42'));gg.addColorStop(1,P.tint('#3c6526'));
+  g.fillStyle=P.tint('#7a6a40');g.beginPath();g.moveTo(-5,y0+u*1);for(let x=0;x<=W+10;x+=W/12)g.lineTo(x,y0-u*.3+Math.sin(x*.05+pi)*u*.8);g.lineTo(W+5,H);g.lineTo(-5,H);g.fill();
+  g.fillStyle=gg;g.beginPath();g.moveTo(-5,y0+u*2.2);for(let x=0;x<=W+10;x+=W/16)g.lineTo(x,y0+u*1.2+Math.sin(x*.07+pi*2)*u*1);g.lineTo(W+5,H);g.lineTo(-5,H);g.fill();
+  g.strokeStyle=P.tint('#86b050');g.lineWidth=Math.max(1,u*.35);g.beginPath();for(let i=0;i<120;i++){const x=R()*W,y=y0+u*2+R()*(H-y0);g.moveTo(x,y);g.lineTo(x+(R()-.5)*u*2,y-u*(1.2+R()*2));}g.stroke();}
+
+/* ================= рыбалка: состояние, геометрия, цикл кадров ================= */
+const cv=$('cv'),cx=cv.getContext('2d');
+let GEO=null,BG=null,CLOUDS=[],SHIM=[],raf=0,lastT=0;
+function geoMake(W,H){const land=W>H*1.1,hz=H*(land?.36:.31),shY=H*(land?.84:.8),k=(shY-hz)*.97;
+  return {W,H,hz,shY,u:Math.min(W,H)/100,land,yOf:d=>hz+k*9/(9+d),dOf:y=>Math.max(0,9*(k/Math.max(1,y-hz)-1)),ps:d=>9/(9+d),
+    tip:{x:W*(land?.6:.64),y:hz+(shY-hz)*.52},butt:{x:W*1.03,y:H*1.04}};}
+function layout(){const r=$('scr-fish').getBoundingClientRect(),W=Math.max(200,r.width),H=Math.max(200,r.height),dp=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(W*dp);cv.height=Math.round(H*dp);cx.setTransform(dp,0,0,dp,0,0);GEO=geoMake(W,H);if(G)buildBg();}
+function buildBg(){if(!G||!GEO)return;const dp=Math.min(2,window.devicePixelRatio||1),W=GEO.W,H=GEO.H;
+  BG=document.createElement('canvas');BG.width=Math.round(W*dp);BG.height=Math.round(H*dp);const g=BG.getContext('2d');g.scale(dp,dp);
+  G.P=pal(PLACES[G.pi].look,G.cond.tod,G.cond.wx);paintBg(g,W,H,GEO,G.pi,G.P,false);
+  const R=rng(G.pi*17+3),n={sun:2,cloud:5,rain:7,wind:4,fog:2}[G.cond.wx],u=GEO.u;CLOUDS=[];
+  for(let i=0;i<n;i++){const w=u*(14+R()*16),h=w*.45,c=document.createElement('canvas');c.width=Math.ceil(w*2*dp);c.height=Math.ceil(h*2*dp);const cg=c.getContext('2d');cg.scale(dp,dp);
+    const base=G.cond.tod==='night'?'#3a4466':G.cond.wx==='rain'?'#8a949c':G.cond.tod==='evening'?'#f3c2a4':'#ffffff';
+    for(let k=0;k<7;k++){const x=w*(.4+R()*1.2),y=h*(.7+R()*.6),r=h*(.35+R()*.35);const gr=cg.createRadialGradient(x,y,1,x,y,r);gr.addColorStop(0,rgba(base,.85));gr.addColorStop(1,rgba(base,0));cg.fillStyle=gr;cg.fillRect(0,0,w*2,h*2);}
+    CLOUDS.push({c,w:w*2,h:h*2,x:R()*W,y:GEO.hz*(.05+R()*.55),v:u*(.3+R()*.5)*(G.cond.wx==='wind'?3:1)});}
+  SHIM=[];for(let i=0;i<90;i++){const t=Math.pow(R(),1.6),y=GEO.hz+u*.8+t*(GEO.shY-GEO.hz-u);SHIM.push({x:R()*W,y,l:u*(1.5+t*6)*(.6+R()*.8),ph:R()*7,s:.6+R()*1.4,dark:R()<.35});}}
+function kick(){if(!raf&&G&&$('scr-fish').classList.contains('on')){lastT=performance.now();raf=requestAnimationFrame(loop);}}
+function stopLoop(){if(raf)cancelAnimationFrame(raf);raf=0;}
+function loop(t){raf=0;if(!G||!$('scr-fish').classList.contains('on'))return;const dt=Math.min(.05,(t-lastT)/1000||.016);lastT=t;
+  if(!paused&&!modalOn)update(dt);render();
+  if(!paused)raf=requestAnimationFrame(loop);}
+// таймеры рыбалки: не срабатывают, если рыбалка уже другая
+function later(fn,ms){const g=G;setTimeout(()=>{if(G===g&&!g.over)fn();},ms);}
+
+/* ================= реплики ================= */
+const PH={
+  petr:{idle:['Клюёт?','А вот в восемьдесят шестом я тут такого леща взял — во!','Главное в рыбалке — не рыба. Главное — тишина.','Червя поплюй — на удачу.','Моя-то думает, я в гараже.','Не шуми, рыбу распугаешь.','Эх, хорошо сидим…','Ветер с запада — клёв как у Гагарина!','Я тут с шести утра. Пока только комары клюют.','Рыба — она ведь тоже думает. Только медленно.'],
+    big:['Ну ты даёшь!','Вот это экземпляр! Фоткай скорее!','Это ж на всю сковородку!','Молодец! Я такую только во сне видел.'],
+    small:['Коту на завтрак.','Мелочь, а приятно.','Хорош, хорош… для начала.','С почином!'],
+    lost:['Эх! Сошла…','Леска-то, видать, слабовата.','Бывает. Рыба тоже не дура.','Не горюй, ещё клюнет.'],
+    brk:['Оборвал! Тут снасть покрепче нужна.','Эх, лопнула… Леску бы потолще.'],
+    junk:['Ха! Улов века!','Сдавай в музей!','Вот это рыба… с каблуком!'],
+    early:['Рано подсекаешь! Дай заглотить.','Не торопись — пусть утопит.'],
+    miss:['Проспал поклёвку!','Эх, наживку объели.'],
+    leg:['Да это же легенда! Не может быть…','Сорок лет тут сижу — первый раз вижу!']},
+  wife:['Ужин стынет! Сколько можно сидеть?','Опять до темноты? Картошка остыла!','Ты хоть рыбу-то поймал? Иди уже домой!','Кот орёт, ужин стынет — а он на речке!','Приходи, пирожки готовы. И рыбу неси!'],
+  cat:['Мяу!','Мррр… (кот смотрит на ведро)','Мяу? (это мне?)']
+};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+let sayT=0;
+function say(who,txt,ms){if(LANG==='en'||!G)return;const e=$('say'),W=GEO.W,H=GEO.H;
+  const nm={petr:'Петрович',cat:'Кот Васька',mit:'Дед Митяй',wife:'📞 Жена'}[who]||'';e.innerHTML=(nm?'<b>'+nm+'</b>':'')+esc(txt);
+  e.classList.toggle('r',who==='cat'&&false);
+  const px=who==='petr'?W*.03:who==='cat'?W*.1:W*.05,py=who==='petr'?GEO.yOf(9)-GEO.u*24:who==='cat'?GEO.shY-GEO.u*14:0;
+  e.style.left=Math.round(px)+'px';e.style.top='0px';e.classList.add('on');
+  const h=e.offsetHeight;e.style.top=Math.round(who==='mit'||who==='wife'?128:Math.max(60,py-h))+'px';
+  clearTimeout(sayT);sayT=setTimeout(()=>e.classList.remove('on'),ms||Math.max(2600,1200+txt.length*55));}
+function hint(t,big){const e=$('hint');e.textContent=t||'';e.classList.toggle('big',!!big);}
+
+/* ================= старт рыбалки ================= */
+function curTk(){return G&&G.tourn?TOURN_TK:S.tk;}
+function baitCnt(id){const b=BAIT[id];return b.free?Infinity:b.perm?(hasSpoon()?Infinity:0):(S.bait[id]||0);}
+function hasSpoon(){return !!(S.own.spoon||PAY.own('starter'));}
+function startFish(pi,opt){opt=opt||{};hideModal();
+  const tod=opt.tod||todOf(hourNow()),cond=condFor(pi,tod);if(opt.wx)cond.wx=opt.wx;
+  G={pi,tourn:!!opt.tourn,cond,used:0,max:5,extra:0,catch:[],phase:'aim',t:0,fl:null,pk:null,ft:null,hold:false,earned:0,over:false,ripples:[],parts:[],cat:{t:0},petr:{t:0,next:8+Math.random()*10,fl:0},R:Math.random,ptime:0,spook:0,lostN:0};
+  if(G.tourn){G.bait='worm';}else{if(baitCnt(S.sel)<=0||!baitWorks(pi,S.sel))S.sel='worm';G.bait=S.sel;}
+  S.visit[pi]=(S.visit[pi]||0)+1;save();
+  show('scr-fish');layout();G.phase='aim';
+  const P=PLACES[pi];$('fTitle').textContent=(G.tourn?'🏆 ':'')+nm(P);
+  $('fSub').textContent=WX_IC[G.cond.wx]+' '+L(WX_N[G.cond.wx][0],WX_N[G.cond.wx][1])+' · '+L(TOD_N[tod][0],TOD_N[tod][1])+(G.tourn?' · '+L('турнир недели','weekly contest'):'');
+  updHud();updCoins();YG.start();kick();
+  if(!S.tips.intro){S.tips.intro=1;save();later(()=>say('mit',L('Я дед Митяй. Коснись воды — закинем удочку. Куда коснёшься, туда и полетит поплавок.',''),6000),600);}
+  else if(Math.random()<.5)later(()=>say('petr',pick(PH.petr.idle)),2500);
+  hint(L('Коснись воды — заброс','Tap the water to cast'));}
+function updHud(){if(!G)return;const left=G.max+G.extra-G.used;$('fCasts').textContent='🎣 '+Math.max(0,left);
+  const b=BAIT[G.bait],c=baitCnt(G.bait);$('baitBtn').innerHTML=b.ic+' '+esc(nm(b))+'<small>'+(G.tourn?L('турнир: только червь','contest: worm only'):c===Infinity?L('наживка ▾','bait ▾'):c+' '+L('шт. · сменить ▾','left · change ▾'))+'</small>';}
+
+/* ================= ввод ================= */
+function pDown(e){if(!G||modalOn||paused)return;e.preventDefault();const r=cv.getBoundingClientRect();act(e.clientX-r.left,e.clientY-r.top);}
+function pUp(){if(G)G.hold=false;}
+cv.addEventListener('pointerdown',pDown);window.addEventListener('pointerup',pUp);window.addEventListener('pointercancel',pUp);
+function act(x,y){const ph=G.phase;
+  if(ph==='aim'){if(x==null){x=GEO.W*.55;y=GEO.yOf(TACKLE.rod.dist[curTk().rod]*.7);}
+    if(y<GEO.hz+GEO.u*2){hint(L('Ниже — на воду','Lower — onto the water'));return;}
+    if(y>GEO.shY-GEO.u){hint(L('Дальше от берега — на воду','Further out — onto the water'));return;}
+    doCast(x,y);}
+  else if(ph==='nibble'||ph==='wait'&&G.pk)early();
+  else if(ph==='wait'){G.hold=true;}
+  else if(ph==='bite')doHook();
+  else if(ph==='fight'||ph==='reel')G.hold=true;
+  else if(ph==='card')nextCast();}
+function doCast(x,y){const tk=curTk(),maxd=TACKLE.rod.dist[tk.rod];let d=GEO.dOf(y);
+  if(baitCnt(G.bait)<=0){G.bait='worm';S.sel='worm';updHud();}
+  if(d>maxd){d=maxd;toast(L('Дальше не добросить — удочка короткая','Can\'t cast further — the rod is too short'),1800);}
+  d=Math.max(3,d);x=clamp(x,GEO.W*.08,GEO.W*.94);
+  const b=BAIT[G.bait];if(b.pack&&!G.tourn){S.bait[G.bait]=Math.max(0,(S.bait[G.bait]||0)-1);}
+  G.used++;S.casts++;save();updHud();
+  G.fl={x,y:GEO.yOf(d),d,sx:GEO.tip.x,sy:GEO.tip.y,dip:0,sink:0,lay:0,drag:0,vis:1};G.phase='fly';G.t=0;G.pk=null;G.spook=0;
+  SND.cast();hint('');}
+function early(){SND.no();G.pk=null;G.phase='wait';G.t=0;G.tw=waitTime(G.cond.tod,G.cond.wx,G.R)+1.5;G.fl.dip=.35;ripple(G.fl.x,G.fl.y,1);
+  hint(L('Рано! Рыба ушла — ждём следующую','Too early! The fish left — wait for the next'));if(!G.spook++)say('petr',pick(PH.petr.early));}
+function doHook(){const pk=G.pk;SND.hook();buzz(40);
+  if(pk.junk){G.ft={small:true,D:G.fl.d,D0:G.fl.d,T:.2,E:0,t:0,res:null,junk:1};G.phase='reel';hint(L('Что-то тяжёлое… тянем','Something heavy… reel in'));return;}
+  G.ft=fightNew(pk.f,pk.w,G.fl.d,curTk(),calm(),G.R);G.phase=G.ft.small?'reel':'fight';G.fwx=0;
+  if(G.ft.small)hint(L('Попалась! Мелочь сама идёт к берегу','Hooked! Small fish comes in by itself'));
+  else{hint(L('Держи палец — подматывай. Краснеет — отпусти!','Hold to reel in. Red — let go!'));
+    if(!S.tips.fight){S.tips.fight=1;save();say('mit',L('Крупная! Держи палец — подматывай. Полоска покраснела — отпусти, а то леска лопнет.',''),6500);}
+    SND.splash(1);splash(G.fl.x,G.fl.y,1.2);}}
+
+/* ================= кадр: логика ================= */
+function ripple(x,y,s){G.ripples.push({x,y,r:0,s:s||1,life:1});}
+function splash(x,y,s){const n=Math.round(10*s);for(let i=0;i<n;i++)G.parts.push({x,y,vx:(Math.random()-.5)*GEO.u*14*s,vy:-GEO.u*(8+Math.random()*14)*s,life:.6+Math.random()*.4,r:GEO.u*(.3+Math.random()*.5)});ripple(x,y,s*1.5);}
+function update(dt){G.t+=dt;G.ptime+=dt;const ph=G.phase,f=G.fl;
+  for(const r of G.ripples){r.r+=dt*GEO.u*6*r.s;r.life-=dt*.7;}G.ripples=G.ripples.filter(r=>r.life>0);
+  for(const p of G.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=GEO.u*45*dt;p.life-=dt;}G.parts=G.parts.filter(p=>p.life>0);
+  if(G.cond.wx==='rain'&&Math.random()<dt*14){const y=GEO.hz+Math.random()*(GEO.shY-GEO.hz);G.ripples.push({x:Math.random()*GEO.W,y,r:0,s:.35*GEO.ps(GEO.dOf(y))*2,life:.6});}
+  G.petr.t+=dt;G.petr.next-=dt;if(G.petr.next<=0){G.petr.next=25+Math.random()*40;if(Math.random()<.45&&!G.over){G.petr.fl=1.4;later(()=>{if(G.phase==='wait'||G.phase==='aim')say('petr',pick(['Опа! Ёршик.','Есть! Мелкий, но свой.','Ха, окунёк!']));},400);}else if(Math.random()<.5&&(G.phase==='wait'||G.phase==='aim'))say('petr',pick(PH.petr.idle));}
+  if(G.petr.fl>0)G.petr.fl-=dt;
+  if(f){f.dip=Math.max(0,f.dip-dt*1.6);}
+  if(ph==='fly'){const k=Math.min(1,G.t/.6);if(k>=1){G.phase='wait';G.t=0;G.tw=waitTime(G.cond.tod,G.cond.wx,G.R);SND.plop(.8+GEO.ps(f.d));ripple(f.x,f.y,1.2);splash(f.x,f.y,.35);hint(L('Ждём поклёвку…','Waiting for a bite…'));
+      if(!S.tips.wait){S.tips.wait=1;save();later(()=>say('mit',L('Гляди на поплавок. Дёргается — рыба пробует, не спеши. Утонул или зазвенел колокольчик — жми скорей!',''),7000),500);}}}
+  else if(ph==='wait'){if(G.t>=G.tw){const pk=pickFish(G.pi,G.bait,G.cond.tod,G.cond.wx,f.d/TACKLE.rod.dist[curTk().rod],G.R);
+      if(!pk){G.phase='aim';G.used--;S.casts--;const b=BAIT[G.bait];if(b.pack&&!G.tourn)S.bait[G.bait]=(S.bait[G.bait]||0)+1;G.bait=S.sel='worm';save();G.fl=null;updHud();
+        toast(L('Тишина… Здесь на «'+nm(b)+'» не берут — надел червя','Nothing bites on this bait here — switched to worms'),3500);hint(L('Коснись воды — заброс','Tap the water to cast'));return;}
+      G.pk=pk;const st=pk.f?pk.f.st:'calm';G.nib=pk.junk?0:st==='calm'?1+Math.floor(G.R()*3):Math.floor(G.R()*3);G.phase='nibble';G.t=0;G.nt=.3+G.R()*.5;}}
+  else if(ph==='nibble'){if(G.nib>0&&G.t>=G.nt){G.nib--;f.dip=.5;SND.nib();ripple(f.x,f.y,.6);G.nt=G.t+.6+G.R()*.9;hint(L('Пробует… не спеши','Nibbling… wait'));}
+    else if(G.nib<=0&&G.t>=G.nt){G.phase='bite';G.t=0;G.win=G.pk.junk?1.4:hookWin(G.pk.f,calm());SND.bell();buzz(30);ripple(f.x,f.y,1);hint(L('Клюёт! Жми!','Bite! Tap now!'),1);}}
+  else if(ph==='bite'){const b=G.pk.f&&(G.pk.f.bite||'dip');const k=Math.min(1,G.t/.35);
+    if(b==='lay')f.lay=k;else if(b==='drag'){f.sink=k*.8;f.drag+=dt*GEO.u*5;}else f.sink=k;
+    if(G.t>G.win){G.phase='miss';f.sink=0;f.lay=0;SND.no();hint(L('Не успел — наживку объели','Too slow — the bait is gone'));say('petr',pick(PH.petr.miss));G.catch.push({miss:1});later(nextCast,1600);}}
+  else if(ph==='reel'){const ft=G.ft;if(ft.junk){ft.t+=dt;ft.D-=dt*TACKLE.reel.spd[curTk().reel]*(G.hold?1.4:.9);if(ft.D<=.8)ft.res='ok';}else fightStep(ft,G.pk.f,G.hold,dt,G.R,curTk());
+    reelSound(dt,G.hold?1:.6);if(ft.res==='ok')landed();}
+  else if(ph==='fight'){const ft=G.ft,wasRush=ft.rush>0;fightStep(ft,G.pk.f,G.hold,dt,G.R,curTk());
+    if(!wasRush&&ft.rush>0){const p=fishPos();splash(p.x,p.y,.5+.4*GEO.ps(ft.D));SND.splash(.7);buzz(25);}
+    if(ft.jump>.85){const p=fishPos();splash(p.x,p.y,.9);}
+    if(G.hold)reelSound(dt,1);
+    if(ft.T>1&&!calm())G.shake=.3;
+    if(ft.res)fightEnd(ft.res);}
+  else if(ph==='land'){if(G.t>.7)showCatch();}
+  G.shake=Math.max(0,(G.shake||0)-dt);
+  G.catT=(G.catT||0)+dt;}
+let clickAcc=0;function reelSound(dt,k){clickAcc+=dt*k;if(clickAcc>.075){clickAcc=0;SND.click();}}
+function fishPos(){const ft=G.ft,f=G.fl,k=clamp(ft.D/ft.D0,0,1.4),wx=Math.sin(G.t*.9)*GEO.W*.1*k+Math.sin(G.t*2.3)*GEO.W*.02;
+  return {x:clamp(GEO.W*.55+(f.x-GEO.W*.55)*k+wx,GEO.W*.05,GEO.W*.95),y:GEO.yOf(Math.max(.5,ft.D))};}
+function fightEnd(res){const pk=G.pk;G.hold=false;
+  if(res==='ok'){landed();return;}
+  G.fl=null;G.phase='lost';G.lostN++;
+  if(res==='break'){SND.brk();buzz([60,40,60]);hint(L('Обрыв! Леска не выдержала','Snap! The line broke'));say('petr',pick(PH.petr.brk));}
+  else{SND.lose();hint(res==='slack'?L('Слабина — рыба сошла с крючка','Slack line — the fish got off'):L('Ушла на глубину…','It escaped into the deep…'));say('petr',pick(PH.petr.lost));}
+  G.catch.push({lost:1,id:pk.f.id,res});
+  if(!S.tips.lost&&!pk.f.leg){S.tips.lost=1;save();later(()=>say('mit',res==='break'?L('Леска слабая для такой рыбы. Купи потолще в «Снастях» — или чаще отпускай, когда краснеет.',''):L('Не отпускай надолго — рыба уйдёт. Держи, пока полоска зелёная.',''),6500),2600);}
+  later(nextCast,2200);}
+function landed(){G.phase='land';G.t=0;const p=G.ft&&!G.ft.junk&&G.fl?fishPos():{x:GEO.W*.5,y:GEO.shY};splash(p.x,p.y,1);SND.splash(1.2);G.fl=null;hint('');}
+
+/* ================= улов: карточка рыбы ================= */
+function showCatch(){if(G.phase==='card')return;G.phase='card';const pk=G.pk,box=$('catch');if(!(G.pk.f&&G.pk.f.leg))$('say').classList.remove('on');
+  if(pk.junk){const j=JUNK[pk.junk],first=!S.junk[pk.junk];S.junk[pk.junk]=(S.junk[pk.junk]||0)+1;let bonus=1;if(pk.junk==='cap'&&first)bonus=20;
+    G.earned+=bonus;S.coins+=bonus;G.catch.push({junk:pk.junk,c:bonus});SND.junk();say('petr',pk.junk==='cap'?'Моя кепка! В позапрошлом году ветром унесло! Держи двадцатку.':pick(PH.petr.junk));
+    box.innerHTML=`<div style="font-size:64px;line-height:1.2">${j.ic}</div><h3>${esc(nm(j))}</h3><div class="tags">${first?'<span>'+L('новая находка','new find')+'</span>':''}<span>+${coinsTxt(bonus)}</span></div><p>${esc(LANG==='en'?'':j.f)}</p><button class="btn green" id="cNext" style="width:100%">${L('Дальше','Next')}</button>`;
+    save();checkAch();updCoins();box.classList.add('on');$('cNext').onclick=nextCast;return;}
+  const f=pk.f,w=pk.w,a=S.alb[f.id]||{n:0,mx:0,tr:0},first=!a.n,rec=a.n>0&&w*1000>a.mx,tr=w>=trophyW(f)&&!f.leg,firstTr=tr&&!a.tr;
+  let c=price(f,w,G.pi),tags=[];if(first){c+=10;tags.push('<span>'+L('новая в альбоме','new in album')+' +10</span>');}
+  if(firstTr){c+=20;tags.push('<span>🏆 '+L('трофей','trophy')+' +20</span>');}else if(tr)tags.push('<span>🏆 '+L('трофей','trophy')+'</span>');
+  if(rec)tags.push('<span class="g">'+L('личный рекорд','personal best')+'</span>');
+  a.n++;a.mx=Math.max(a.mx,Math.round(w*1000));if(tr)a.tr=1;S.alb[f.id]=a;if(f.leg)S.legs[f.id]=1;
+  S.caught++;S.bigW=Math.max(S.bigW||0,Math.round(w*1000));G.earned+=c;S.coins+=c;G.catch.push({id:f.id,w,c});
+  dailyProgress(f,w);save();checkAch();updCoins();
+  if(f.leg){SND.legend();buzz([80,50,80,50,120]);say('petr',pick(PH.petr.leg),4500);}
+  else{SND.catch();buzz(30);if(w>=Math.max(1.5,f.w[1]*.5))say('petr',pick(PH.petr.big));else if(Math.random()<.35)say(w<.2&&Math.random()<.6?'cat':'petr',w<.2&&Math.random()<.6?pick(PH.cat):pick(PH.petr.small));}
+  const img=fishImg(f.id,300);
+  box.innerHTML=`<h3>${f.leg?'✨ ':''}${esc(nm(f))}</h3><div class="w">${kgTxt(w)} · +${coinsTxt(c)}</div><div id="cImg"></div><div class="tags">${tags.join('')}</div>${f.leg?'<p>'+esc(LANG==='en'?'':f.f)+'</p>':first?'<p>'+esc(LANG==='en'?'':f.f)+'</p>':''}${f.rel?'<p>'+L('Сфотографировал и отпустил — она в Красной книге.','Photo taken, fish released — it\'s endangered.')+'</p>':''}<button class="btn green" id="cNext" style="width:100%">${L('Дальше','Next')}</button>`;
+  $('cImg').appendChild(img);box.classList.add('on');$('cNext').onclick=nextCast;
+  if(!S.tips.first){S.tips.first=1;save();later(()=>say('mit',L('Молодец! Пять забросов — и домой, а то жена заругает. Рыбу продаём, монеты — на снасти.',''),6000),900);}}
+function nextCast(){if(!G||G.over)return;$('catch').classList.remove('on');G.fl=null;G.pk=null;G.ft=null;G.hold=false;
+  if(G.used>=G.max+G.extra){endSession();return;}
+  G.phase='aim';updHud();hint(L('Коснись воды — заброс','Tap the water to cast'));}
+
+/* ================= конец рыбалки: звонок жены, итоги ================= */
+function endSession(){G.phase='done';hint('');
+  const canExtra=!G.tourn&&!G.extra&&adOk()&&(S.sessions||0)>=2;
+  SND.phone();buzz([100,80,100]);
+  modal(`<h2>📞 ${L('Звонит жена','Your wife is calling')}</h2><p class="quote"><b>${L('Жена','Wife')}</b>${esc(L(pick(PH.wife),'Dinner is getting cold! Come home!'))}</p>
+    <div class="row">${canExtra?`<button class="btn accent noenter" id="eMore">📺 ${L('Ещё 3 заброса за рекламу','3 more casts for an ad')}</button>`:''}<button class="btn green" id="eHome">🏠 ${L('Иду-иду!','Coming!')}</button></div>`);
+  $('eHome').onclick=()=>{hideModal();finish();};
+  if($('eMore'))$('eMore').onclick=()=>{hideModal();showRewarded(()=>{G.extra=3;G.phase='aim';updHud();kick();hint(L('Ещё три заброса! Коснись воды','Three more casts! Tap the water'));},()=>finish());};}
+function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;S.adW=(S.adW||0)+1;
+  const fish=G.catch.filter(c=>c.id&&!c.lost),kg=fish.reduce((s,c)=>s+c.w,0),small=fish.filter(c=>c.w<.25&&!fishOf(c.id).leg);
+  let catLine='';if(small.length&&!G.tourn){S.cat=(S.cat||0)+1;catLine=L('Мелкую рыбёшку — коту Ваське. Мурлычет 🐈','A small fish for Vaska the cat. He purrs 🐈');}
+  let tLine='';if(G.tourn){const g=Math.round(kg*1000),wk=weekNum();if(!S.week||S.week.w!==wk)S.week={w:wk,best:0};const nb=g>(S.week.best||0);if(nb)S.week.best=g;
+    tLine=`<p class="goal tipl">🏆 ${L('Турнир недели','Weekly contest')}: ${kgTxt(kg)}${nb?' — '+L('твой лучший результат!','your best!'):' · '+L('лучший','best')+' '+kgTxt(S.week.best/1000)}</p>`;
+    if(!S.daily['t'+todayKey()]){S.daily['t'+todayKey()]=1;S.coins+=15;G.earned+=15;tLine+=`<p>${L('За участие сегодня','For taking part today')}: +${coinsTxt(15)}</p>`;}
+    if(nb)LB.submit();}
+  const dl=dailyAfterSession(kg,fish.length);
+  save();checkAch();updCoins();
+  const rows=G.catch.map(c=>c.miss?'':c.junk?`<tr><td>${JUNK[c.junk].ic} ${esc(nm(JUNK[c.junk]))}</td><td>+${c.c||1}</td></tr>`:c.lost?`<tr class="lost"><td>${esc(nm(fishOf(c.id)))} — ${c.res==='break'?L('оборвал','snapped'):L('сошла','got away')}</td><td>—</td></tr>`:`<tr><td>${fishOf(c.id).leg?'✨ ':''}${esc(nm(fishOf(c.id)))}</td><td>${kgTxt(c.w)} · +${c.c}</td></tr>`).join('');
+  const x2=X2_ON&&adOk()&&!G.tourn&&(S.sessions||0)>=3&&G.earned>=10&&!(adDue()&&adReady());
+  const head=fish.length?(fish.some(c=>fishOf(c.id).leg)?L('Легендарный улов! ✨','Legendary catch! ✨'):kg>=5?L('Богатый улов!','Great catch!'):L('Улов','Your catch')):L('Сегодня не клевало','No luck today');
+  modal(`<h2 id="rWin">${head}</h2>${rows?'<table class="ctab">'+rows+'</table>':'<p>'+L('Бывает и так. Зато воздух какой!','It happens. But what fresh air!')+'</p>'}
+    <p>${L('Всего','Total')}: <b>${kgTxt(kg)}</b></p><p class="coins-won">+${coinsTxt(G.earned)}</p>${tLine}${dl}${catLine?'<p>'+catLine+'</p>':''}${goalLine()}
+    <div class="row">${x2?`<button class="btn accent noenter x2" id="rX2">📺 ×2 ${L('монеты за рекламу','coins for an ad')} (+${coinsTxt(G.earned)})</button>`:''}
+    <div class="row2"><button class="btn" id="rMap">🗺 ${L('На карту','Map')}</button><button class="btn green" id="rAgain">🎣 ${L('Ещё','Again')}</button></div></div>`);
+  const g=G;
+  if($('rX2'))$('rX2').onclick=()=>{if(g.x2)return;hideModal();showRewarded(()=>{if(g.x2)return;g.x2=1;setCoins(S.coins+g.earned);SND.coin();toast('+'+coinsTxt(g.earned));afterRes(g,'map');},()=>afterRes(g,'map'));};
+  $('rMap').onclick=()=>afterRes(g,'map');$('rAgain').onclick=()=>afterRes(g,'again');
+  offerReturn();}
+function afterRes(g,where){hideModal();const go=()=>{if(where==='again'&&!g.tourn)startFish(g.pi,{tod:g.cond.tod});else if(where==='again')startFish(g.pi,{tourn:true,tod:g.cond.tod});else{G=null;openMap();}};
+  if(adDue()&&adReady())showInterstitial(go);else go();}
+function goalLine(){const n=nextGoal();return n?`<p class="goal">${n}</p>`:'';}
+function nextGoal(){const tk=TK_KEYS.map(k=>({k,l:S.tk[k]})).filter(x=>x.l<4).map(x=>({t:TACKLE[x.k],p:TACKLE[x.k].p[x.l+1],n:TACKLE[x.k].lv[x.l+1]}));
+  const np=PLACES.findIndex((p,i)=>!S.open[i]);const opts=tk.map(x=>({p:x.p,s:L(x.t.ic+' '+x.n[0],x.t.ic+' '+x.n[1])}));if(np>0&&S.open[np-1])opts.push({p:PLACES[np].p,s:'🗺 '+L('Путёвка: ','Trip: ')+nm(PLACES[np])});
+  if(!opts.length)return '';opts.sort((a,b)=>a.p-b.p);const o=opts[0];
+  return o.p<=S.coins?L('Хватает на: ','You can afford: ')+esc(o.s)+' ('+coinsTxt(o.p)+')':L('Копим на: ','Saving for: ')+esc(o.s)+' — '+L('ещё','need')+' '+coinsTxt(o.p-S.coins);}
+
+/* ================= кадр: рисунок ================= */
+function render(){if(!G||!GEO)return;const g=cx,W=GEO.W,H=GEO.H,u=GEO.u,t=G.ptime,P=G.P||(G.P=pal(PLACES[G.pi].look,G.cond.tod,G.cond.wx));
+  g.save();if(G.shake>0&&!calm())g.translate((Math.random()-.5)*u*.5,(Math.random()-.5)*u*.5);
+  if(BG)g.drawImage(BG,0,0,W,H);else{g.fillStyle='#6fa9c4';g.fillRect(0,0,W,H);}
+  // облака
+  for(const c of CLOUDS){const x=((c.x+t*c.v)%(W+c.w))-c.w/2;g.globalAlpha=G.cond.wx==='fog'?.45:.85;g.drawImage(c.c,x,c.y-c.h/2,c.w,c.h);}g.globalAlpha=1;
+  // блики на воде
+  const wk=G.cond.wx==='wind'?2.4:1;g.lineCap='round';
+  for(const s of SHIM){const a=(Math.sin(t*s.s*1.3+s.ph)+1)/2,x=((s.x+t*u*.9*wk*s.s)%(W+s.l*2))-s.l;
+    g.strokeStyle=s.dark?'rgba(0,25,35,'+(.1*a).toFixed(3)+')':'rgba(255,255,255,'+(.05+.2*a).toFixed(3)+')';g.lineWidth=Math.max(1,s.l*.08);g.beginPath();g.moveTo(x,s.y);g.lineTo(x+s.l,s.y);g.stroke();}
+  if(P.sun&&G.cond.wx!=='rain'){const cl=P.tod==='night'?'255,250,220':'255,236,180',R=rng(Math.floor(t*6));for(let i=0;i<18;i++){const k=R(),y=GEO.hz+k*k*(GEO.shY-GEO.hz)*.9,w=u*(1+k*5);const x=P.sun[0]+(R()-.5)*u*(4+k*22);
+    g.strokeStyle='rgba('+cl+','+(.25+R()*.45).toFixed(2)+')';g.lineWidth=Math.max(1,u*.25*(1+k));g.beginPath();g.moveTo(x-w/2,y);g.lineTo(x+w/2,y);g.stroke();}}
+  // круги на воде и брызги
+  for(const r of G.ripples){g.strokeStyle='rgba(255,255,255,'+(.5*r.life).toFixed(3)+')';g.lineWidth=Math.max(1,u*.25);g.beginPath();g.ellipse(r.x,r.y,r.r+u*.5,(r.r+u*.5)*.32,0,0,7);g.stroke();}
+  drawPetr(g,t);drawReeds(g,t);
+  // рыба на леске, поплавок, леска, удочка
+  let end=null,T=0;const ph=G.phase,f=G.fl;
+  if(f&&(ph==='fly')){const k=Math.min(1,G.t/.6);end={x:f.sx+(f.x-f.sx)*k,y:f.sy+(f.y-f.sy)*k-Math.sin(k*Math.PI)*H*.2};drawFloat(g,end.x,end.y,Math.max(.3,1-k*.6)*1.2,f,true);}
+  else if(f&&(ph==='fight'||ph==='reel')&&G.ft){const p=fishPos(),ft=G.ft,ps=GEO.ps(ft.D);T=Math.min(1.3,ft.T);end=p;
+    const L0=u*(4+Math.pow(G.pk.f?G.pk.w:.5,.35)*5)*ps*2.2;
+    if(ft.jump>0&&G.pk.f){const k=1-ft.jump/.9,hgt=Math.sin(k*Math.PI)*u*16*ps*2;g.save();g.translate(p.x,p.y-hgt);g.rotate((k-.5)*1.1);drawFish(g,G.pk.f.lk,0,0,L0*1.3);g.restore();end={x:p.x,y:p.y-hgt};}
+    else{g.fillStyle='rgba(10,25,30,'+(ft.D<8?.35:.2)+')';g.beginPath();g.ellipse(p.x,p.y+u*.6,L0*.55,L0*.16,0,0,7);g.fill();
+      if(Math.random()<.3)ripple(p.x,p.y,.3+ps*.4);
+      g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=Math.max(1,u*.2);g.beginPath();g.moveTo(p.x-u*2*ps,p.y+u*.2);g.lineTo(p.x,p.y);g.lineTo(p.x+u*2*ps,p.y+u*.2);g.stroke();}}
+  else if(f){drawFloat(g,f.x+f.drag,f.y,GEO.ps(f.d)*2.2,f,false);end={x:f.x+f.drag,y:f.y-u*3*GEO.ps(f.d)*2.2};
+    if(ph==='bite'&&!calm()||ph==='bite'&&Math.floor(t*4)%2===0){const a=.5+.5*Math.sin(t*14);g.strokeStyle='rgba(255,220,60,'+(.5+.4*a).toFixed(2)+')';g.lineWidth=u*.6;g.beginPath();g.ellipse(f.x+f.drag,f.y,u*(4+a*1.5),u*(1.6+a*.5),0,0,7);g.stroke();}}
+  if(!end&&(ph==='aim'||ph==='done')){const b=rodTip(null,0),hx=b.x-GEO.u*1.5+Math.sin(t*1.3)*GEO.u*.6,hy=b.y+GEO.u*11;g.strokeStyle='rgba(250,250,245,.7)';g.lineWidth=1;g.beginPath();g.moveTo(b.x,b.y);g.lineTo(hx,hy);g.stroke();drawFloat(g,hx,hy+GEO.u*2.2,1.1,{},true);}
+  if(ph==='land'&&G.pk){const k=Math.min(1,G.t/.7),x0=W*.5,y0=GEO.shY-u*4,x=x0+(W*.42-x0)*k,y=y0-Math.sin(k*Math.PI)*H*.16+(H*.86-y0)*k;
+    if(G.pk.f){g.save();g.translate(x,y);g.rotate(k*6);drawFish(g,G.pk.f.lk,0,0,u*(10+Math.min(12,G.pk.w*2)));g.restore();}else{g.font=Math.round(u*9)+'px sans-serif';g.textAlign='center';g.fillText(JUNK[G.pk.junk].ic,x,y);}}
+  const tip=rodTip(end,T);
+  if(end){g.strokeStyle=P.tod==='night'?'rgba(230,230,210,.55)':'rgba(250,250,245,.75)';g.lineWidth=1;g.beginPath();g.moveTo(tip.x,tip.y);
+    const sag=ph==='fight'?u*10*(1-Math.min(1,T)):ph==='fly'?u*2:u*7;g.quadraticCurveTo((tip.x+end.x)/2,(tip.y+end.y)/2+sag,end.x,end.y);g.stroke();}
+  for(const p of G.parts){g.fillStyle='rgba(235,245,250,'+Math.min(1,p.life*1.5).toFixed(2)+')';g.beginPath();g.arc(p.x,p.y,p.r,0,7);g.fill();}
+  drawNear(g,t);drawRod(g,tip,T);
+  if(G.cond.wx==='rain'){g.strokeStyle='rgba(220,230,240,.35)';g.lineWidth=1;g.beginPath();for(let i=0;i<70;i++){const x=Math.random()*W,y=Math.random()*H;g.moveTo(x,y);g.lineTo(x-u*.6,y+u*3);}g.stroke();}
+  if(P.tod==='night'){g.fillStyle='rgba(10,20,50,.12)';g.fillRect(0,0,W,H);}
+  if(ph==='fight'&&G.ft)drawTension(g,G.ft);
+  else if(ph==='reel'&&G.ft){g.font='800 '+Math.round(clamp(u*3.4,13,17))+'px -apple-system,Segoe UI,Roboto,sans-serif';g.textAlign='center';g.fillStyle='rgba(255,255,255,.95)';g.shadowColor='rgba(0,0,0,.6)';g.shadowBlur=4;g.fillText('🐟 '+Math.max(0,G.ft.D).toFixed(0)+' '+L('м','m'),W/2,GEO.hz*.55+30);g.shadowBlur=0;}
+  g.restore();}
+function rodTip(end,T){const b=GEO.tip,ph=G.phase;let x=b.x,y=b.y;
+  if(ph==='fly'){const k=Math.min(1,G.t/.6);y-=Math.sin(Math.min(1,k*2)*Math.PI)*GEO.u*10;x-=Math.sin(Math.min(1,k*2)*Math.PI)*GEO.u*3;}
+  if(ph==='bite'&&G.t<.15)y-=GEO.u*4;
+  if(end&&(ph==='fight'||ph==='reel')){x+=(end.x-x)*.06*T;y+=GEO.u*7*T+(G.hold?GEO.u*1.5:0);}
+  if(G.phase==='land'){y-=GEO.u*6*Math.sin(Math.min(1,G.t/.7)*Math.PI);}
+  return {x,y};}
+function drawRod(g,tip,T){const b=GEO.butt,u=GEO.u,mx=(b.x+tip.x)/2,my=(b.y+tip.y)/2,dx=tip.x-b.x,dy=tip.y-b.y,len=Math.hypot(dx,dy),nx=-dy/len,ny=dx/len,bend=u*(2+10*T);
+  const cxp=mx+nx*bend*(dx<0?-1:1)*-1,cyp=my+Math.abs(ny)*bend;
+  const pt=k=>({x:(1-k)*(1-k)*b.x+2*(1-k)*k*cxp+k*k*tip.x,y:(1-k)*(1-k)*b.y+2*(1-k)*k*cyp+k*k*tip.y});
+  const lvl=curTk().rod,col=['#6b4a2a','#b8964a','#3a3f47','#23272c','#1c2a3a'][lvl],night=G.cond.tod==='night';
+  g.lineCap='round';let prev=pt(0);
+  for(let i=1;i<=24;i++){const k=i/24,p=pt(k);g.strokeStyle=k<.18?(night?'#6a5238':'#b98d5a'):col;g.lineWidth=Math.max(1.2,u*(k<.18?2.4:1.5*(1-k)+.3));g.beginPath();g.moveTo(prev.x,prev.y);g.lineTo(p.x,p.y);g.stroke();prev=p;}
+  // кольца
+  g.strokeStyle='rgba(200,200,200,.8)';g.lineWidth=1;for(const k of [.45,.62,.78,.9]){const p=pt(k);g.beginPath();g.arc(p.x,p.y+u*.5,u*.45*(1.2-k),0,7);g.stroke();}
+  // катушка
+  const rl=curTk().reel;if(rl>0){const p=pt(.3),r=u*(2+rl*.25);g.fillStyle=['#777','#8a8a8a','#b0b4b8','#c9a03a','#3a3f47'][rl];g.beginPath();g.arc(p.x+u*1.5,p.y+u*1.2,r,0,7);g.fill();
+    g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.arc(p.x+u*1.5,p.y+u*1.2,r*.45,0,7);g.fill();const a=(G.hold&&(G.phase==='fight'||G.phase==='reel'))?G.ptime*14:0;
+    g.strokeStyle='#ddd';g.lineWidth=Math.max(1,u*.4);g.beginPath();g.moveTo(p.x+u*1.5,p.y+u*1.2);g.lineTo(p.x+u*1.5+Math.cos(a)*r*1.3,p.y+u*1.2+Math.sin(a)*r*1.3);g.stroke();}}
+function drawFloat(g,x,y,s,f,air){const u=GEO.u,h=u*3.2*s,w=u*1.1*s;g.save();
+  let dy=0,rot=0;if(!air){dy=(f.dip||0)*h*.35+(f.sink||0)*h*1.6+Math.sin(G.ptime*2.2)*u*.12*s;rot=-(f.lay||0)*Math.PI/2;}
+  if(!air){g.beginPath();g.rect(x-u*20,y-u*40,u*40,u*40);g.clip();}
+  g.translate(x,y+dy);g.rotate(rot);
+  g.fillStyle='#f4f1ea';g.beginPath();g.ellipse(0,0,w,h*.32,0,Math.PI,0);g.fill();
+  g.fillStyle='#e03131';g.beginPath();g.ellipse(0,-h*.05,w*.98,h*.25,0,Math.PI,0);g.fill();
+  g.fillStyle='#333';g.fillRect(-w*.12,-h*1.05,w*.24,h*.8);g.fillStyle='#ff6b1a';g.fillRect(-w*.16,-h*1.1,w*.32,h*.38);
+  if(G.cond.tod==='night'){g.fillStyle='rgba(120,255,140,.9)';g.beginPath();g.arc(0,-h*1.1,w*.3,0,7);g.fill();const gl=g.createRadialGradient(0,-h*1.1,1,0,-h*1.1,w*2.5);gl.addColorStop(0,'rgba(120,255,140,.5)');gl.addColorStop(1,'rgba(120,255,140,0)');g.fillStyle=gl;g.fillRect(-w*3,-h*2,w*6,h*2);}
+  g.restore();
+  if(!air){g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=1;g.beginPath();g.ellipse(x,y,w*1.6,w*.45,0,0,7);g.stroke();
+    if((f.sink||0)<.8){g.fillStyle='rgba(224,49,49,.18)';g.beginPath();g.ellipse(x,y+h*.12,w*.7,h*.12,0,0,7);g.fill();}}}
+function drawPetr(g,t){const u=GEO.u,y0=GEO.yOf(9),yb=y0+(GEO.shY-y0)*.2,x=GEO.W*.1,s=GEO.H*.12*GEO.ps(8)*1.7,night=G.cond.tod==='night',tn=G.P.tint;
+  // его поплавок и леска
+  const fx=GEO.W*.36,fy=GEO.yOf(13)+Math.sin(t*1.7)*u*.15,up=G.petr.fl>0?Math.sin(Math.min(1,(1.4-G.petr.fl)/1.4)*Math.PI):0;
+  const hx=x+s*.28,hy=yb-s*.62,tx=x+s*1.35,ty=yb-s*1.25-up*s*.6;
+  g.strokeStyle='rgba(240,240,235,.5)';g.lineWidth=1;g.beginPath();g.moveTo(tx,ty);if(up>0.05){g.lineTo(tx+s*.05,ty+s*.6);g.stroke();g.save();g.translate(tx+s*.05,ty+s*.7);g.rotate(Math.sin(t*20)*.4+1.5);drawFish(g,FISH.ersh.lk,0,0,s*.35);g.restore();}
+  else{g.quadraticCurveTo((tx+fx)/2,(ty+fy)/2+u*3,fx,fy);g.stroke();g.fillStyle='#e03131';g.fillRect(fx-u*.25,fy-u*1.2,u*.5,u*1.2);}
+  g.strokeStyle=tn('#4a3a2a');g.lineWidth=Math.max(1,u*.45);g.beginPath();g.moveTo(hx-s*.1,hy+s*.12);g.lineTo(tx,ty);g.stroke();
+  // ведро-сиденье, ноги, ватник, голова, кепка
+  g.fillStyle=tn('#6d7478');g.beginPath();g.moveTo(x-s*.2,yb);g.lineTo(x-s*.16,yb-s*.35);g.lineTo(x+s*.16,yb-s*.35);g.lineTo(x+s*.2,yb);g.fill();
+  g.fillStyle=tn('#2f3a44');g.fillRect(x+s*.02,yb-s*.4,s*.35,s*.1);g.fillRect(x+s*.3,yb-s*.4,s*.08,s*.4);
+  g.fillStyle=tn('#1e2226');g.fillRect(x+s*.28,yb-s*.05,s*.16,s*.06);
+  g.fillStyle=tn('#46566a');rr(g,x-s*.18,yb-s*.9,s*.4,s*.55,s*.1);g.fill();
+  g.strokeStyle=tn('#46566a');g.lineWidth=s*.1;g.beginPath();g.moveTo(x+s*.12,yb-s*.78);g.lineTo(hx,hy);g.stroke();
+  g.fillStyle=tn('#e3b48e');g.beginPath();g.arc(x+s*.03,yb-s*1.02,s*.14,0,7);g.fill();g.beginPath();g.arc(x+s*.17,yb-s*1.0,s*.045,0,7);g.fill();
+  g.fillStyle=tn('#8a8a88');g.beginPath();g.ellipse(x+s*.12,yb-s*.94,s*.07,s*.03,.2,0,7);g.fill();g.fillStyle='#222';g.beginPath();g.arc(x+s*.1,yb-s*1.06,s*.018,0,7);g.fill();
+  g.fillStyle=tn('#3f3a30');g.beginPath();g.ellipse(x+s*.02,yb-s*1.11,s*.16,s*.08,0,Math.PI,0);g.fill();g.fillRect(x+s*.05,yb-s*1.12,s*.2,s*.03);
+  if(night){g.fillStyle='rgba(255,180,80,.9)';g.beginPath();g.arc(x+s*.18,yb-s*.98,s*.025,0,7);g.fill();}}
+function drawReeds(g,t){const u=GEO.u,W=GEO.W,y=GEO.shY,wk=G.cond.wx==='wind'?2.5:1,R=rng(G.pi*9+5),col=G.P.tint('#4d6a2a'),head=G.P.tint('#6a4a2a');
+  g.lineCap='round';for(let i=0;i<26;i++){const left=i<14,x=left?R()*W*.16:W*(.84+R()*.2),h=u*(10+R()*12),bx=x,by=y+u*(1+R()*2),sw=Math.sin(t*(.8+R()*.6)*wk+i)*u*(.8+R())*wk*.8;
+    g.strokeStyle=col;g.lineWidth=Math.max(1,u*.35);g.beginPath();g.moveTo(bx,by);g.quadraticCurveTo(bx,by-h*.6,bx+sw,by-h);g.stroke();
+    if(i%3===0){g.fillStyle=head;g.beginPath();g.ellipse(bx+sw*.95,by-h*.92,u*.55,u*1.8,sw*.02,0,7);g.fill();}}}
+function drawNear(g,t){const u=GEO.u,W=GEO.W,H=GEO.H,yb=GEO.shY+(H-GEO.shY)*.52,night=G.cond.tod==='night',tn=G.P.tint;
+  // костёр ночью и вечером
+  if(night||G.cond.tod==='evening'&&G.cond.wx!=='rain'){const fx=W*.44,fy=GEO.shY+(H-GEO.shY)*.35,k=.8+.2*Math.sin(t*9)+.1*Math.sin(t*23);
+    const gl=g.createRadialGradient(fx,fy,1,fx,fy,u*(night?22:14)*k);gl.addColorStop(0,'rgba(255,170,70,'+(night?.45:.25)+')');gl.addColorStop(1,'rgba(255,170,70,0)');g.fillStyle=gl;g.fillRect(fx-u*25,fy-u*25,u*50,u*50);
+    g.fillStyle='#4a3020';g.save();g.translate(fx,fy);g.rotate(.3);g.fillRect(-u*3,-u*.5,u*6,u*1);g.rotate(-.6);g.fillRect(-u*3,-u*.5,u*6,u*1);g.restore();
+    for(const [c,sz] of [['#ff7a1a',1],['#ffc43a',.62],['#fff2b0',.3]]){g.fillStyle=c;g.beginPath();g.moveTo(fx-u*1.8*sz,fy);g.quadraticCurveTo(fx-u*1.4*sz,fy-u*3*sz*k,fx+Math.sin(t*7)*u*.4,fy-u*5*sz*k);g.quadraticCurveTo(fx+u*1.4*sz,fy-u*3*sz*k,fx+u*1.8*sz,fy);g.fill();}}
+  // ведро с уловом
+  const bx=W*.13,bw=u*8,bh=u*7;const n=G.catch.filter(c=>c.id&&!c.lost).length;
+  g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(bx,yb+u*.5,bw*.65,u*1.3,0,0,7);g.fill();
+  const bg=g.createLinearGradient(bx-bw/2,0,bx+bw/2,0);bg.addColorStop(0,tn('#8d969c'));bg.addColorStop(.5,tn('#c9d0d4'));bg.addColorStop(1,tn('#7a8388'));g.fillStyle=bg;
+  g.beginPath();g.moveTo(bx-bw*.5,yb-bh);g.lineTo(bx+bw*.5,yb-bh);g.lineTo(bx+bw*.38,yb);g.lineTo(bx-bw*.38,yb);g.closePath();g.fill();
+  for(let i=0;i<Math.min(4,n);i++){const tx=bx-bw*.25+i*bw*.17,ty=yb-bh-u*.6-Math.sin(t*3+i)*u*.3;g.fillStyle=tn(['#8a9aa2','#c99a3a','#5f6f60','#3d5566'][i]);g.beginPath();g.moveTo(tx,ty+u*1.5);g.lineTo(tx-u*1.2,ty-u*1.2);g.lineTo(tx+u*1.2,ty-u*1.2);g.fill();}
+  g.fillStyle=tn('#3a5058');g.beginPath();g.ellipse(bx,yb-bh,bw*.5,u*1.2,0,0,7);g.fill();g.strokeStyle=tn('#9aa2a8');g.lineWidth=Math.max(1,u*.3);g.beginPath();g.ellipse(bx,yb-bh,bw*.5,u*1.2,0,0,7);g.stroke();
+  g.beginPath();g.arc(bx,yb-bh,bw*.5,Math.PI*1.05,Math.PI*1.95);g.stroke();
+  // кот Васька (со спины), хвост ходит; в сумерках глаза светятся, когда оборачивается
+  const cxp=W*.27,cy=yb,cs=u*7,turn=G.phase==='land'||G.phase==='card';
+  g.fillStyle=tn('#e08a3a');g.beginPath();g.ellipse(cxp,cy-cs*.55,cs*.5,cs*.6,0,0,7);g.fill();
+  g.strokeStyle=tn('#e08a3a');g.lineWidth=cs*.16;g.lineCap='round';const tw=Math.sin(t*2.1)*cs*.35;g.beginPath();g.moveTo(cxp+cs*.35,cy-cs*.1);g.quadraticCurveTo(cxp+cs*1.1,cy,cxp+cs*1.05+tw*.3,cy-cs*.55+tw*.2);g.stroke();
+  g.fillStyle=tn('#e08a3a');g.beginPath();g.arc(cxp,cy-cs*1.25,cs*.36,0,7);g.fill();
+  g.beginPath();g.moveTo(cxp-cs*.34,cy-cs*1.3);g.lineTo(cxp-cs*.26,cy-cs*1.75);g.lineTo(cxp-cs*.06,cy-cs*1.55);g.fill();g.beginPath();g.moveTo(cxp+cs*.34,cy-cs*1.3);g.lineTo(cxp+cs*.26,cy-cs*1.75+(Math.sin(t*.7)>.95?cs*.1:0));g.lineTo(cxp+cs*.06,cy-cs*1.55);g.fill();
+  g.strokeStyle=tn('#b8621f');g.lineWidth=cs*.07;for(let i=0;i<3;i++){g.beginPath();g.moveTo(cxp-cs*.35,cy-cs*(.8-i*.22));g.quadraticCurveTo(cxp,cy-cs*(.7-i*.22),cxp+cs*.35,cy-cs*(.8-i*.22));g.stroke();}
+  if(turn){g.fillStyle=night?'#b8ff6a':'#6aa84f';g.beginPath();g.arc(cxp-cs*.13,cy-cs*1.27,cs*.07,0,7);g.arc(cxp+cs*.13,cy-cs*1.27,cs*.07,0,7);g.fill();g.fillStyle='#f28c8c';g.beginPath();g.arc(cxp,cy-cs*1.15,cs*.05,0,7);g.fill();}}
+function drawTension(g,ft){const W=GEO.W,u=GEO.u,bw=Math.min(W*.8,400),bh=clamp(u*2.8,13,20),x0=(W-bw)/2,y0=74,T=Math.min(1.3,ft.T),sc=v=>x0+bw*v/1.3,fs=Math.round(clamp(u*3.3,13,16));
+  g.fillStyle='rgba(0,0,0,.42)';rr(g,x0-8,y0-fs-10,bw+16,bh+fs+18,12);g.fill();
+  g.fillStyle='rgba(64,192,87,.35)';g.fillRect(sc(0),y0,sc(.7)-sc(0),bh);g.fillStyle='rgba(250,176,5,.4)';g.fillRect(sc(.7),y0,sc(1)-sc(.7),bh);g.fillStyle='rgba(250,82,82,.45)';g.fillRect(sc(1),y0,sc(1.3)-sc(1),bh);
+  g.fillStyle=T>1?'#fa5252':T>.7?'#fab005':'#40c057';g.fillRect(sc(0),y0,sc(T)-sc(0),bh);
+  g.fillStyle='#fff';g.fillRect(sc(T)-1.5,y0-3,3,bh+6);
+  g.font='800 '+fs+'px -apple-system,Segoe UI,Roboto,sans-serif';g.textBaseline='alphabetic';g.textAlign='left';g.fillStyle='#fff';
+  g.fillText(ft.rush>0?L('⚡ Рывок! Отпусти','⚡ Rush! Let go'):ft.warn?L('Сейчас дёрнет…','About to pull…'):L('Натяжение лески','Line tension'),x0,y0-5);
+  g.textAlign='right';g.fillText(Math.max(0,ft.D).toFixed(0)+' '+L('м','m'),x0+bw,y0-5);
+  if(ft.brk>0){g.strokeStyle='rgba(250,82,82,'+(.5+.5*Math.sin(G.ptime*30)).toFixed(2)+')';g.lineWidth=3;g.strokeRect(x0-2,y0-2,bw+4,bh+4);}}
+
+/* ================= карта мест ================= */
+const THUMB={};
+function placeThumb(i,cond){const k=i+cond.tod+cond.wx;if(!THUMB[k]){const W=236,H=200,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d'),geo=geoMake(W,H*1.6);geo.hz=H*.56;
+    paintBg(g,W,H*1.9,geo,i,pal(PLACES[i].look,cond.tod,cond.wx),true);THUMB[k]=c;}
+  const o=document.createElement('canvas');o.width=236;o.height=200;o.getContext('2d').drawImage(THUMB[k],0,0);return o;}
+const RANKS=[[0,'Новичок','Beginner'],[15,'Любитель','Amateur'],[50,'Рыболов','Angler'],[120,'Бывалый','Seasoned'],[250,'Знаток','Expert'],[500,'Мастер','Master'],[1000,'Гроссмейстер удочки','Grandmaster']];
+function rankOf(n){let r=RANKS[0];for(const x of RANKS)if(n>=x[0])r=x;return r;}
+function legHint(i){const P=PLACES[i],lg=LEG[P.leg];if(S.legs[P.leg])return `<small>✨ ${esc(nm(lg))} — ${L('поймана!','caught!')}</small>`;
+  if((S.visit[i]||0)>=3)return `<small>✨ ${L('Легенда','Legend')}: ${esc(nm(lg))} — ${lg.tod.map(x=>L(TOD_N[x][0],TOD_N[x][1]).toLowerCase()).join(L(' или ',' or '))}, ${L('на','on')} ${esc(L(BAIT[lg.bait].acc,nm(BAIT[lg.bait]).toLowerCase()))}</small>`;
+  return (S.visit[i]||0)?`<small>✨ ${L('Говорят, тут водится легенда…','They say a legend lives here…')}</small>`:'';}
+function openMap(){G=null;show('scr-map');updCoins();updStreakDot();const r=rankOf(S.caught);
+  $('rankB').innerHTML=`<button id="rankBtn">🏅 ${L(r[1],r[2])} · ${L('поймано','caught')}: ${S.caught}</button>`;$('rankBtn').onclick=openRank;
+  const wrap=$('plcs');wrap.innerHTML='';const tod=window.__todForce||todOf(hourNow());
+  PLACES.forEach((p,i)=>{const open=!!S.open[i],prev=i===0||!!S.open[i-1],cond=condFor(i,tod),m=biteMul(cond.tod,cond.wx),sp=p.fish.filter(id=>S.alb[id]).length;
+    const b=document.createElement('button');b.className='plc'+(open?'':' lock')+(!open&&prev&&S.coins>=p.p?' new':'');b.appendChild(placeThumb(i,cond));
+    const d=document.createElement('div');d.className='pi';
+    d.innerHTML=`<b>${esc(nm(p))}</b><small>${esc(L(p.reg,p.regE))} · ${L('видов','species')} ${sp}/${p.fish.length}</small>`+(open?`<small class="fc">${WX_IC[cond.wx]} ${L(TOD_N[tod][0],TOD_N[tod][1])} · ${L('клёв','bite')} ${biteIcons(m)}</small>${legHint(i)}`
+      :`<span class="pr${S.coins>=p.p&&prev?'':' no'}">${prev?'🎫 '+L('Путёвка','Trip')+' '+coinsTxt(p.p):'🔒 '+L('после «','after «')+esc(nm(PLACES[i-1]))+'»'}</span>`);
+    b.appendChild(d);b.onclick=()=>{SND.tap();open?pickTime(i):buyPlace(i);};wrap.appendChild(b);});
+  const d=dailyTask();$('btnDaily').innerHTML=L('📅 Задание дня','📅 Daily task')+(d.done?' ✓':'<span class="dot"></span>');}
+function pickTime(i){const P=PLACES[i],now=todOf(hourNow());
+  modal(`<h2>${esc(nm(P))}</h2><p>${L('Когда едем? Погода — по прогнозу. На зорьке клюёт лучше.','When do we go? Weather follows the forecast. Dawn and dusk bite best.')}</p><div class="row">${TODS.map(t=>{const c=condFor(i,t);
+    return `<button class="btn${t===now?' green':''}" data-t="${t}">${WX_IC[c.wx]} ${L(TOD_N[t][0],TOD_N[t][1])}${t===now?' <small>('+L('сейчас','now')+')</small>':''} · ${biteIcons(biteMul(t,c.wx))}</button>`;}).join('')}<button class="btn" id="mCancel">${L('Назад','Back')}</button></div>`);
+  $('mcard').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>startFish(i,{tod:b.dataset.t}));$('mCancel').onclick=hideModal;}
+function buyPlace(i){const P=PLACES[i];if(i>0&&!S.open[i-1]){toast(L('Сначала открой «'+P.n+'» по порядку: «'+PLACES[i-1].n+'»','Unlock «'+nm(PLACES[i-1])+'» first'));return;}
+  if(S.coins<P.p){notEnough(P.p);return;}
+  modal(`<h2>🎫 ${esc(nm(P))}</h2><p>${esc(L(P.reg,P.regE))}. ${L('Путёвка','Trip')}: <b>${coinsTxt(P.p)}</b></p><p>${L('Там водятся','Fish there')}: ${P.fish.map(id=>esc(nm(FISH[id]).toLowerCase())).join(', ')}.</p>
+    <div class="row"><button class="btn green buy" id="bpOk">🎫 ${L('Купить путёвку','Buy the trip')}</button><button class="btn" id="mCancel">${L('Позже','Later')}</button></div>`);
+  $('bpOk').onclick=()=>{if(S.coins<P.p)return;S.coins-=P.p;S.open[i]=1;save();SND.coin();hideModal();openMap();toast(L('Путёвка куплена! Добро пожаловать: ','Welcome to ')+nm(P)+' 🎣',3000);checkAch();};$('mCancel').onclick=hideModal;}
+function notEnough(p){const need=p-S.coins,ad=adOk()&&adCoinsLeft()>0;
+  modal(`<h2>${L('Не хватает монет','Not enough coins')}</h2><p>${L('Нужно ещё','You need')} ${coinsTxt(need)}. ${L('Улов продаётся — порыбачь ещё немного!','Your catch sells — fish a little more!')}</p>
+    <div class="row">${ad?`<button class="btn accent noenter" id="neAd">📺 +${coinsTxt(AD_COINS)} ${L('за рекламу','for an ad')}</button>`:''}<button class="btn green" id="mCancel">🎣 ${L('Порыбачить','Go fishing')}</button>${PAY.on&&!inGame()?`<button class="btn noenter" id="neBuy" style="font-size:15px;min-height:40px">${L('Купить монеты','Buy coins')}</button>`:''}</div>`);
+  if($('neAd'))$('neAd').onclick=()=>{hideModal();showRewarded(()=>{adCoinsLeft();S.adc.n++;setCoins(S.coins+AD_COINS);SND.coin();toast('+'+coinsTxt(AD_COINS));if($('scr-shop').classList.contains('on'))openShop(shopTab);else if(!G)openMap();});};
+  if($('neBuy'))$('neBuy').onclick=openCoins;$('mCancel').onclick=hideModal;}
+
+/* ================= снасти и наживка ================= */
+let shopTab='t';
+function tkEff(k,l){const T=TACKLE[k];return k==='rod'?L('заброс до ','cast up to ')+T.dist[l]+' '+L('м','m'):k==='line'?L('держит до ','holds up to ')+String(T.kg[l]).replace('.',LANG==='en'?'.':',')+' '+L('кг','kg'):L('подмотка ','reel speed ')+String(T.spd[l]).replace('.',LANG==='en'?'.':',')+' '+L('м/с','m/s');}
+function openShop(tab){shopTab=tab||shopTab;show('scr-shop');updCoins();$('shTabs').querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b.dataset.k===shopTab);b.onclick=()=>openShop(b.dataset.k);});
+  let h='';
+  if(shopTab==='t'){h+=`<div class="sect">${L('Снасти — крупной рыбе нужна крепкая леска и мягкая удочка','Tackle — big fish need strong line and a soft rod')}</div>`;
+    for(const k of TK_KEYS){const T=TACKLE[k],l=S.tk[k],nx=l<4;h+=`<div class="ti"><span class="ic">${T.ic}</span><div class="tx"><b>${esc(L(T.lv[l][0],T.lv[l][1]))}</b><small>${tkEff(k,l)}${nx?' → '+esc(L(T.lv[l+1][0],T.lv[l+1][1]))+': '+tkEff(k,l+1):' · '+L('лучше не бывает','top level')}</small><div class="lvl">${[0,1,2,3,4].map(i=>'<i class="'+(i<=l?'on':'')+'"></i>').join('')}</div></div>${nx?`<button class="btn ${S.coins>=T.p[l+1]?'green':''} buy" data-k="${k}">${coinsTxt(T.p[l+1])}</button>`:'<span class="have">✓</span>'}</div>`;}
+    h+=`<p class="about" style="margin:10px 2px 0;color:#5a6770;font-weight:600;font-size:14px">${L('В турнире недели снасть у всех одинаковая — честно.','In the weekly contest everyone uses the same tackle.')}</p>`;}
+  else{h+=`<div class="sect">${L('Наживка — 1 штука на заброс. Червь — бесплатно','Bait — one per cast. Worms are free')}</div>`;
+    for(const b of BAITS){const c=baitCnt(b.id);h+=`<div class="ti"><span class="ic">${b.ic}</span><div class="tx"><b>${esc(nm(b))}</b><small>${esc(L(b.d,b.de))}${b.pack?' · '+L('у тебя','you have')+' '+c:''}</small></div>${b.free?'<span class="have">∞</span>':b.perm?(c?'<span class="have">✓</span>':`<button class="btn ${S.coins>=b.p?'green':''} buy" data-b="${b.id}">${coinsTxt(b.p)}</button>`):`<button class="btn ${S.coins>=b.p?'green':''} buy" data-b="${b.id}">+${b.pack} · ${coinsTxt(b.p)}</button>`}</div>`;}}
+  if(PAY.on)h+=payHtml();
+  $('shList').innerHTML=h;
+  $('shList').querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>buyTk(b.dataset.k));$('shList').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>buyBait(b.dataset.b));
+  if(PAY.on){PAY.bind($('shList'));}}
+function buyTk(k){const T=TACKLE[k],l=S.tk[k];if(l>=4)return;const p=T.p[l+1];if(S.coins<p){notEnough(p);return;}
+  S.coins-=p;S.tk[k]=l+1;save();SND.coin();buzz(20);toast(T.ic+' '+L('Новая снасть: ','New tackle: ')+L(T.lv[l+1][0],T.lv[l+1][1])+'!',2600);openShop('t');}
+function buyBait(id){const b=BAIT[id];if(S.coins<b.p){notEnough(b.p);return;}S.coins-=b.p;if(b.perm)S.own.spoon=1;else S.bait[id]=(S.bait[id]||0)+b.pack;save();SND.coin();toast(b.ic+' '+nm(b)+(b.perm?'':' +'+b.pack),1800);openShop('b');}
+function openBait(){if(!G)return;if(G.tourn){toast(L('В турнире у всех червь — так честнее','Contest: worms only, to be fair'));return;}
+  if(G.phase!=='aim'){toast(L('Сменить наживку можно перед забросом','Change bait before casting'));return;}
+  modal(`<h2>${L('Наживка','Bait')}</h2>${BAITS.map(b=>{const c=baitCnt(b.id),w=baitWorks(G.pi,b.id);return `<button class="bait${G.bait===b.id?' on':''}" data-b="${b.id}" ${c>0?'':'disabled'}><span class="ic">${b.ic}</span><span>${esc(nm(b))} <em class="ok" style="font-style:normal;${w?'':'color:#a33'}">${w?L('здесь клюёт','bites here'):L('здесь не берут','no takers here')}</em><small>${esc(L(b.d,b.de))}</small></span><i>${c===Infinity?'∞':c}</i></button>`;}).join('')}
+    <div class="row"><button class="btn noenter" id="bShop">🎣 ${L('Купить наживку','Buy bait')}</button><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+  $('mcard').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{S.sel=G.bait=b.dataset.b;save();SND.tap();updHud();hideModal();});
+  $('bShop').onclick=()=>{hideModal();if(G.used>0){toast(L('Сначала закончи рыбалку','Finish the trip first'));return;}G=null;openShop('b');};$('mCancel').onclick=hideModal;}
+$('baitBtn').onclick=openBait;
+
+/* ================= альбом рыб ================= */
+function spCount(){return Object.keys(FISH).filter(id=>S.alb[id]).length;}
+function openAlb(){show('scr-alb');$('alTabs').style.display='none';const all=Object.keys(FISH),tr=all.filter(id=>S.alb[id]&&S.alb[id].tr).length;
+  $('alSub').textContent=L('Видов','Species')+': '+spCount()+' / '+all.length+' · 🏆 '+tr+' · ✨ '+Object.keys(S.legs).length+'/8';
+  const box=$('alList');box.innerHTML='';const seen={};
+  const card=(id,leg)=>{const f=fishOf(id),a=S.alb[id],got=!!a,b=document.createElement('button');b.className='fc2'+(got?'':' no')+(leg?' leg':'');
+    b.appendChild(fishImg(id,120,!got));b.insertAdjacentHTML('beforeend',`<b>${got||!leg?esc(nm(f)):'???'}</b><small>${got?kgTxt(a.mx/1000)+' · ×'+a.n:leg?L('легенда','legend'):'—'}</small>${a&&a.tr?'<span class="tr">🏆</span>':''}`);
+    b.onclick=()=>fishInfo(id);return b;};
+  PLACES.forEach((p,i)=>{const ids=p.fish.filter(id=>!seen[id]);ids.forEach(id=>seen[id]=1);if(!ids.length)return;
+    box.insertAdjacentHTML('beforeend',`<div class="sect">${esc(nm(p))} · ${p.fish.filter(id=>S.alb[id]).length}/${p.fish.length}</div>`);const gr=document.createElement('div');gr.className='alb';ids.forEach(id=>gr.appendChild(card(id)));box.appendChild(gr);});
+  box.insertAdjacentHTML('beforeend',`<div class="sect">✨ ${L('Рыбы-легенды','Legendary fish')} · ${Object.keys(S.legs).length}/8</div>`);const gl=document.createElement('div');gl.className='alb';PLACES.forEach(p=>gl.appendChild(card(p.leg,1)));box.appendChild(gl);
+  box.insertAdjacentHTML('beforeend',`<div class="sect">👢 ${L('Находки','Finds')} · ${Object.keys(S.junk).length}/5</div>`);const gj=document.createElement('div');gj.className='alb';
+  for(const k in JUNK){const j=JUNK[k],got=S.junk[k];gj.insertAdjacentHTML('beforeend',`<div class="fc2${got?'':' no'}"><div style="font-size:40px;line-height:62px">${got?j.ic:'❔'}</div><b>${got?esc(nm(j)):'???'}</b><small>${got?'×'+got:'—'}</small></div>`);}box.appendChild(gj);}
+function fishInfo(id){const f=fishOf(id),a=S.alb[id],got=!!a,leg=!!f.leg;
+  const where=leg?[PLACES.find(p=>p.leg===id)]:PLACES.filter(p=>p.fish.indexOf(id)>=0),known=got||!leg||where.some(p=>(S.visit[PLACES.indexOf(p)]||0)>=3);
+  const baits=leg?[f.bait]:Object.keys(f.b).filter(b=>f.b[b]>=.5).sort((x,y)=>f.b[y]-f.b[x]);
+  const tods=leg?f.tod:f.t?Object.keys(f.t).filter(x=>f.t[x]>1):[];
+  const img=fishImg(id,300,!got);img.className='fish';
+  modal(`<h2>${leg?'✨ ':''}${got||!leg?esc(nm(f)):'???'}</h2><div id="fiImg"></div>
+    ${got?`<p><b>${L('Рекорд','Record')}: ${kgTxt(a.mx/1000)}</b> · ${L('поймано','caught')} ${a.n}${a.tr?' · 🏆':''}</p><p class="quote">${esc(LANG==='en'?'':f.f)}</p>`:''}
+    <p class="about">📍 ${where.map(p=>esc(nm(p))).join(', ')}<br>${known?'🎣 '+L('Берёт на','Bait')+': '+baits.map(b=>esc(L(BAIT[b].acc,nm(BAIT[b]).toLowerCase()))).join(', ')+(tods.length?'<br>🕑 '+L('Лучше','Best')+': '+tods.map(x=>L(TOD_N[x][0],TOD_N[x][1]).toLowerCase()).join(', '):''):L('Порыбачь здесь ещё — и местные расскажут, на что она берёт.','Fish here more — the locals will tell you what it takes.')}
+    ${!leg?'<br>⚖️ '+kgTxt(f.w[0])+' – '+kgTxt(f.w[1])+' · 🏆 '+L('трофей от','trophy from')+' '+kgTxt(trophyW(f)):''}</p>
+    <div class="row"><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+  $('fiImg').appendChild(img);$('mCancel').onclick=hideModal;}
+
+/* ================= задание дня, турнир недели ================= */
+const KG_T=[1.2,3,5,4,3.5,4,8,8],DAILY_C=40;
+function dailyTask(){const k=todayKey();if(isObj(S.dtask)&&S.dtask.k===k)return S.dtask;
+  const R=rng(+k*7+3),opens=PLACES.map((p,i)=>i).filter(i=>S.open[i]),pi=opens[Math.min(opens.length-1,Math.floor(Math.pow(R(),.6)*opens.length))],ty=['sp','kg','n'][Math.floor(R()*3)];
+  const d={k,ty,pi,prog:0,done:S.daily[k]?1:0};
+  if(ty==='sp'){const c=PLACES[pi].fish.filter(id=>FISH[id].r>=1&&(FISH[id].b.worm||0)>=.5);d.fid=c[Math.floor(R()*c.length)];const r=FISH[d.fid].r;d.n=r>=4?3:r>=2?2:1;}
+  else if(ty==='kg')d.kg=KG_T[pi];else d.n=4;
+  S.dtask=d;save();return d;}
+function dailyText(d){const p=esc(nm(PLACES[d.pi]));return d.ty==='sp'?L('«'+p+'»: поймать '+esc(nm(FISH[d.fid]).toLowerCase())+' — '+d.n+' шт.','At '+p+': catch '+d.n+' × '+esc(nm(FISH[d.fid]))):d.ty==='kg'?L('За одну рыбалку на «'+p+'» — улов от '+kgTxt(d.kg),'In one trip at '+p+' — catch at least '+kgTxt(d.kg)):L('За одну рыбалку на «'+p+'» — '+d.n+' рыбы или больше','In one trip at '+p+' — '+d.n+' fish or more');}
+function completeDaily(d){d.done=1;S.daily[d.k]=1;S.coins+=DAILY_C;if(G)G.earned+=DAILY_C;save();updCoins();SND.coin();toast('📅 '+L('Задание дня выполнено!','Daily task done!')+' +'+coinsTxt(DAILY_C),3000);}
+function dailyProgress(f,w){const d=dailyTask();if(d.done||d.ty!=='sp'||G.pi!==d.pi||f.id!==d.fid)return;d.prog=(d.prog||0)+1;if(d.prog>=d.n)completeDaily(d);else toast('📅 '+d.prog+' / '+d.n,1500);}
+function dailyAfterSession(kg,n){const d=dailyTask();if(G.pi!==d.pi)return d.done&&G.catch.length?'':'';
+  if(!d.done&&(d.ty==='kg'&&kg>=d.kg||d.ty==='n'&&n>=d.n))completeDaily(d);
+  return d.done?`<p class="goal tipl">📅 ${L('Задание дня выполнено ✓','Daily task done ✓')}</p>`:`<p class="goal">📅 ${dailyText(d)}${d.ty==='sp'?' ('+(d.prog||0)+'/'+d.n+')':''}</p>`;}
+function openDaily(){const d=dailyTask(),days=Object.keys(S.daily).filter(k=>/^\d+$/.test(k)).length;
+  modal(`<h2>📅 ${L('Задание дня','Daily task')}</h2><p class="goal ${d.done?'tipl':''}">${dailyText(d)}${d.ty==='sp'?' ('+Math.min(d.n,d.prog||0)+'/'+d.n+')':''}</p>
+    <p>${d.done?L('Выполнено ✓ Завтра — новое задание.','Done ✓ A new one tomorrow.'):L('Награда','Reward')+': +'+coinsTxt(DAILY_C)}</p><p><small>${L('Выполнено дней','Days completed')}: ${days}</small></p>
+    <div class="row">${d.done?'':`<button class="btn green" id="dGo">🎣 ${L('Поехали','Let\'s go')}</button>`}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+  if($('dGo'))$('dGo').onclick=()=>startFish(d.pi);$('mCancel').onclick=hideModal;}
+function weekPlace(){return weekNum()%PLACES.length;}
+function openWeek(){const pi=weekPlace(),P=PLACES[pi],b=LB.best(),t=TOURN_TK;
+  modal(`<h2>🏆 ${L('Турнир недели','Weekly contest')}</h2><p><b>${esc(nm(P))}</b> · ${esc(L(P.reg,P.regE))}</p>
+    <p class="about">${L('Пять забросов, в зачёт — общий вес улова. Снасть казённая, у всех одинаковая: ','Five casts, total weight counts. Everyone gets the same tackle: ')}${esc(L(TACKLE.rod.lv[t.rod][0],TACKLE.rod.lv[t.rod][1]).toLowerCase())}, ${esc(L(TACKLE.line.lv[t.line][0],TACKLE.line.lv[t.line][1]).toLowerCase())}, ${esc(L(TACKLE.reel.lv[t.reel][0],TACKLE.reel.lv[t.reel][1]))}; ${L('наживка — червь. Считается лучшая попытка недели.','bait — worms. Your best attempt of the week counts.')}</p>
+    <p>${L('Твой лучший результат','Your best')}: <b>${kgTxt(b/1000)}</b></p>
+    <div class="row"><button class="btn green" id="wGo">🎣 ${L('Участвовать','Take part')}</button>${LB.ok()?`<button class="btn blue noenter" id="wLb">🏆 ${L('Таблица','Leaderboard')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+  $('wGo').onclick=()=>startFish(pi,{tourn:true});if($('wLb'))$('wLb').onclick=()=>LB.show(openWeek);$('mCancel').onclick=hideModal;}
+
+/* ================= звание, достижения ================= */
+const ACH=[
+  {id:'first',ic:'🎣',n:'С почином!',e:'First catch',d:'Поймать первую рыбу',r:10,ok:()=>S.caught>=1},
+  {id:'sp10',ic:'📖',n:'Знаток',e:'Know-it-all',d:'10 видов рыб в альбоме',r:50,ok:()=>spCount()>=10},
+  {id:'sp25',ic:'📚',n:'Ихтиолог',e:'Ichthyologist',d:'25 видов рыб',r:120,ok:()=>spCount()>=25},
+  {id:'spall',ic:'🏅',n:'Все рыбы',e:'All the fish',d:'Все виды из альбома',r:400,ok:()=>spCount()>=Object.keys(FISH).length},
+  {id:'trophy',ic:'🏆',n:'Трофей',e:'Trophy',d:'Поймать трофейную рыбу',r:30,ok:()=>Object.keys(S.alb).some(k=>S.alb[k].tr)},
+  {id:'kg10',ic:'⚓',n:'Тяжеловес',e:'Heavyweight',d:'Рыба тяжелее 10 кг',r:80,ok:()=>(S.bigW||0)>=10000},
+  {id:'leg1',ic:'✨',n:'Легенда',e:'Legend',d:'Поймать рыбу-легенду',r:100,ok:()=>Object.keys(S.legs).length>=1},
+  {id:'legall',ic:'👑',n:'Все легенды',e:'All legends',d:'Все 8 легенд',r:500,ok:()=>Object.keys(S.legs).length>=8},
+  {id:'n100',ic:'🐟',n:'Сотня',e:'A hundred',d:'Поймать 100 рыб',r:60,ok:()=>S.caught>=100},
+  {id:'n500',ic:'🐠',n:'Пятьсот!',e:'Five hundred',d:'Поймать 500 рыб',r:200,ok:()=>S.caught>=500},
+  {id:'cat',ic:'🐈',n:'Друг кота',e:'Cat\'s friend',d:'Угостить кота Ваську 20 раз',r:40,ok:()=>(S.cat||0)>=20},
+  {id:'junk',ic:'👢',n:'Кладоискатель',e:'Treasure hunter',d:'Найти все 5 находок',r:50,ok:()=>Object.keys(S.junk).length>=5},
+  {id:'places',ic:'🗺',n:'Путешественник',e:'Traveller',d:'Порыбачить на всех 8 водоёмах',r:150,ok:()=>PLACES.every((p,i)=>S.visit[i])},
+  {id:'streak7',ic:'📅',n:'Неделя подряд',e:'Week in a row',d:'Серия дней: 7 дней',r:50,ok:()=>false}
+];
+function checkAch(){const got=[];for(const a of ACH)if(!S.ach[a.id]&&a.ok()){S.ach[a.id]=1;S.coins+=a.r;got.push(a);}
+  if(got.length){save();updCoins();setTimeout(()=>{SND.coin();toast('🏅 '+got.map(a=>L(a.n,a.e)+' +'+coinsTxt(a.r)).join(' · '),3500);},900);}}
+function openRank(){const n=S.caught||0,r=rankOf(n),i=RANKS.indexOf(r),nx=RANKS[i+1];
+  modal(`<h2>🏅 ${L(r[1],r[2])}</h2><p>${L('Поймано рыб','Fish caught')}: <b>${n}</b>.${nx?' '+L('До звания «'+nx[1]+'» — ещё '+(nx[0]-n),'Next rank «'+nx[2]+'» in '+(nx[0]-n))+'.':''}</p>
+    <p class="about">${L('Самая крупная','Biggest fish')}: ${kgTxt((S.bigW||0)/1000)} · ${L('рыбалок','trips')}: ${S.sessions||0}</p>
+    ${ACH.map(a=>`<div class="ach ${S.ach[a.id]?'done':'no'}"><span class="ai">${a.ic}</span><span><b>${esc(L(a.n,a.e))}</b><small>${esc(L(a.d,''))} · +${coinsTxt(a.r)}${S.ach[a.id]?' ✓':''}</small></span></div>`).join('')}
+    <div class="row"><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);$('mCancel').onclick=hideModal;}
+
+/* ---- серия дней: 7 дней подряд, награда растёт; на 7-й — ещё и банка живца ---- */
+const STREAK=[10,10,15,15,20,25,40];
+function streakState(){const s=S.streak||{day:0,last:0,cyc:0},t=dayKey(0);
+  if(s.last===t)return{claimed:true,day:s.day};
+  const cont=s.last===dayKey(-1)&&s.day>0;return{claimed:false,day:cont?s.day%7+1:1,broken:!cont&&s.day>0&&s.day<7};}
+function maybeStreak(){if(G||window.__demo||$('modal').classList.contains('on')||$('ad').classList.contains('on'))return;
+  const st=streakState();if(st.claimed||(S.caught||0)<1)return;
+  const s=S.streak||{};if(st.broken&&s.day>=2&&adOk())return streakRestore();
+  if(st.day===1)claimStreak(1,true);else showStreak();}
+function streakRestore(){const s=S.streak;
+  modal(`<h2>${L('Серия прервалась','Streak broken')} 😿</h2><p>${L('Серия дошла до '+s.day+'-го дня, но денёк пропущен. Петрович на берегу заметил… но может и забыть.','Your streak reached day '+s.day+', but a day was missed.')}</p>
+    <div class="row"><button class="btn accent noenter" id="sRes">📺 ${L('Вернуть серию за рекламу','Restore the streak for an ad')}</button><button class="btn noenter" id="sNew">${L('Начать заново','Start over')}</button></div>`);
+  $('sRes').onclick=()=>{hideModal();showRewarded(()=>{S.streak.last=dayKey(-1);save();showStreak();},()=>streakRestore());};
+  $('sNew').onclick=()=>{hideModal();S.streak={day:0,last:0,cyc:s.cyc||0};save();maybeStreak();};}
+function showStreak(){const st=streakState();let cells='';
+  for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day;
+    cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>${L('День','Day')} ${d}</small><span class="ic">${d===7?'🎁':'💰'}</span>+${STREAK[d-1]}${d===7?'<small>+ '+L('10 живцов','10 live bait')+'</small>':''}</div>`;}
+  const r=st.claimed?0:STREAK[st.day-1];
+  modal(`<h2>${L('Серия дней','Daily gift')} 🔥</h2><p>${st.claimed?L('Сегодняшний подарок уже твой. Заходи завтра — день '+(st.day%7+1)+'!','Today\'s gift is yours. Come back tomorrow!'):st.broken?L('Серия прервалась — начинаем заново. Заходи каждый день!','The streak broke — starting over.'):L('Заходи каждый день — подарок растёт, на 7-й день ещё и банка живца!','Come every day — the gift grows!')}</p>
+    <div class="streak">${cells}</div>
+    <div class="row">${st.claimed?'<button class="btn" id="sClose">'+L('Закрыть','Close')+'</button>':`${adOk()?`<button class="btn accent noenter" id="sX2">📺 ×2 ${L('за рекламу','for an ad')} (+${coinsTxt(r*2)})</button>`:''}<button class="btn green" id="sGet">${L('Забрать','Take')} +${coinsTxt(r)}</button>`}</div>`);
+  if(st.claimed){$('sClose').onclick=hideModal;return;}
+  $('sGet').onclick=()=>claimStreak(1);
+  if($('sX2'))$('sX2').onclick=()=>{hideModal();showRewarded(()=>claimStreak(2),()=>showStreak());};}
+function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal();return;}
+  const c=STREAK[st.day-1],s=S.streak||{cyc:0};S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
+  if(st.day===7){S.bait.live=(S.bait.live||0)+10;if(!S.ach.streak7){S.ach.streak7=1;S.coins+=50;}}
+  S.coins+=c*mult;save();updCoins();SND.coin();updStreakDot();
+  if(quiet){toast('🎁 '+L('Серия дней: день 1, +','Daily gift: day 1, +')+coinsTxt(c)+L('. Заходи завтра!','. Come back tomorrow!'),3500);return;}
+  modal(`<h2>${st.day===7?L('Неделя подряд! 🏆','A week in a row! 🏆'):L('День','Day')+' '+st.day+' ✓'}</h2><p class="coins-won">+${coinsTxt(c*mult)}${mult>1?' <small>(×2)</small>':''}</p>
+    ${st.day===7?'<p class="goal tipl">🐟 '+L('И банка живца (10 шт.) — щука будет рада','Plus 10 live bait')+'</p>':''}
+    <p>${st.day<7?L('Завтра — день '+(st.day+1)+': +'+coinsTxt(STREAK[st.day]),'Tomorrow: +'+coinsTxt(STREAK[st.day])):L('Серия начнётся заново — и снова с подарками!','The streak starts over — with gifts again!')}</p>
+    <div class="row"><button class="btn green" id="sOk">${L('Отлично!','Great!')}</button></div>`);$('sOk').onclick=hideModal;}
+function updStreakDot(){const b=$('btnStreak');b.innerHTML='🎁<small>'+L('Подарок','Gift')+'</small>'+(streakState().claimed?'':'<span class="dot"></span>');}
+$('btnStreak').onclick=showStreak;
+
+/* ================= настройки, «Как играть», «Об игре» ================= */
+function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="off">'+L('выкл','off')+'</i>';if(G&&!G.over)YG.stop();
+  modal(`<h2>${L('Настройки','Settings')}</h2>
+    <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
+    <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
+    <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('вываживание мягче, подсекать можно дольше, без тряски','gentler fights, longer bite window, no shaking')}</small></span>${on(calm())}</button>
+    ${PAY.on&&!inGame()?payHtml(['no_ads'],false)+'<button class="set" id="stShop"><span>🛒 '+L('Все покупки','All purchases')+'<br><small>'+L('монеты, набор рыбака, наживка','coins, kits, bait')+'</small></span><i class="go">›</i></button>':''}
+    <div class="row"><button class="btn noenter" id="stHow">❓ ${L('Как играть','How to play')}</button><button class="btn noenter" id="stAbout">ℹ️ ${L('Об игре','About')}</button><button class="btn green" id="stClose">${L('Готово','Done')}</button></div>`);
+  $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
+  $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
+  $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Enabled in your device settings'));return;}S.calm=!S.calm;save();applyCalm();if(G&&G.ft&&!G.ft.small&&G.pk&&G.pk.f){G.ft.calm=calm();G.ft.cap=TACKLE.line.kg[curTk().line]*TACKLE.rod.k[curTk().rod]*(calm()?1.25:1);}openSettings();};
+  if($('stShop')){$('stShop').onclick=openCoins;PAY.bind($('mcard'));PAY.re=openSettings;}
+  $('stAbout').onclick=openAbout;$('stHow').onclick=openHow;$('stClose').onclick=()=>{hideModal();if(G&&!G.over&&$('scr-fish').classList.contains('on'))YG.start();};}
+function openHow(){
+  modal(`<h2>${L('Как играть','How to play')}</h2><div class="how">
+    <p>🎣 ${L('<b>Заброс</b> — коснись воды: туда полетит поплавок. Дальше от берега клюёт крупнее, но удочка добросит не везде.','<b>Cast</b> — tap the water where the float should land.')}</p>
+    <p>👀 ${L('<b>Поклёвка</b> — поплавок дёргается: рыба пробует, не спеши. Утонул, лёг набок или зазвенел колокольчик — <b>жми</b>, это подсечка.','<b>Bite</b> — when the float sinks or the bell rings, tap to hook.')}</p>
+    <p>🐟 ${L('<b>Мелочь</b> сама идёт к берегу. <b>Крупная</b> борется: держи палец — подматываешь, отпустишь — леска свободнее. Полоска натяжения краснеет — отпусти, иначе обрыв. Надолго не отпускай — рыба сойдёт.','<b>Small fish</b> come in by themselves. <b>Big fish</b> fight: hold to reel, let go when the bar turns red.')}</p>
+    <p>🪝 ${L('<b>Наживка</b> решает, кто клюнет: карась любит тесто, щука — живца, сазан — кукурузу. Время суток и погода тоже важны.','<b>Bait</b> decides who bites.')}</p>
+    <p>🛒 ${L('Рыба продаётся за монеты. На них — снасти, наживка и путёвки на Волгу, Байкал, Камчатку…','Fish sell for coins: buy tackle, bait and trips.')}</p>
+    <p>✨ ${L('В каждом месте живёт рыба-легенда. Местные подскажут, когда и на что она берёт.','Every place has a legendary fish.')}</p></div>
+    <div class="row"><button class="btn" id="hBack">← ${L('Назад','Back')}</button></div>`);
+  $('hBack').onclick=openSettings;}
+function openAbout(){
+  modal(`<h2>${L('Об игре','About')}</h2><p class="about">${L('«'+GAME_NAME+'» — спокойная рыбалка на пруду у дачи, на Волге, Селигере, Ладоге, Байкале, Амуре и Камчатке. 44 вида рыб, 8 рыб-легенд, снасти и наживка. Рядом на берегу — сосед Петрович со своими байками, у ведра — кот Васька, а дома ждёт жена с ужином.','A calm fishing game across Russia: 44 species, 8 legends, tackle and bait.')}</p>
+    <p class="about">${L('Это уютная аркада, а не точный симулятор: рыбы, вес и повадки — «как в жизни», но упрощённо. Всё нарисовано и озвучено прямо в игре. Никаких сундуков со случайной наградой: за монеты и покупки всегда видно, что получишь. В турнире недели снасть у всех одинаковая.','A cosy arcade, not a simulator. No random loot boxes. Everyone uses the same tackle in the weekly contest.')}</p>
+    ${PLAT==='vk'?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
+    <p class="about">${L('На ПК: пробел или Enter — заброс, подсечка и подмотка (держать), Esc — назад.','On PC: Space or Enter — cast, hook, reel (hold); Esc — back.')}</p>
+    <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ '+L('Восстановить покупки','Restore purchases')+'</button>':''}<button class="btn" id="abBack">← ${L('Назад','Back')}</button></div>`);
+  if($('abPay'))$('abPay').onclick=()=>PAY.again();
+  $('abBack').onclick=openSettings;}
+function applyCalm(){document.body.classList.toggle('calm',calm());}
+$('btnSet').onclick=openSettings;$('fSet').onclick=openSettings;
+$('mCoins').onclick=openCoins;$('fCoins').onclick=()=>toast(L('Монеты — за улов. Тратить — на карте, в «Снастях»','Coins come from the catch'));
+$('btnShop').onclick=()=>{SND.tap();openShop('t');};$('shBack').onclick=openMap;$('shCoins').onclick=openCoins;
+$('btnAlb').onclick=()=>{SND.tap();openAlb();};$('alBack').onclick=openMap;
+$('btnDaily').onclick=openDaily;$('btnWeek').onclick=openWeek;
+$('fBack').onclick=()=>{if(!G)return openMap();if(G.over){G=null;return openMap();}
+  if(G.used===0&&G.phase==='aim'){YG.stop();G=null;openMap();return;}
+  modal(`<h2>${L('Домой?','Head home?')}</h2><p>${L('Улов сохранится, рыбалка закончится.','Your catch is kept, the trip ends.')}</p><div class="row"><button class="btn green" id="qStay">🎣 ${L('Ещё посижу','Stay')}</button><button class="btn" id="qGo">🏠 ${L('Домой','Home')}</button></div>`);
+  $('qStay').onclick=hideModal;$('qGo').onclick=()=>{hideModal();if(G.phase==='fight'||G.phase==='reel'||G.phase==='bite'||G.phase==='nibble'){G.catch.push({miss:1});}$('catch').classList.remove('on');finish();};};
+/* ---- клавиатура на ПК ---- */
+document.addEventListener('keydown',e=>{const k=e.key;if(e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on'))return;
+  if(modalOn){if(e.repeat)return;
+    if(k==='Escape'){const b=['mCancel','lbClose','sClose','stClose','abBack','sOk','rMap','hBack','qStay','eHome'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
+    else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
+      const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2):not(.buy):not(.noenter)');if(b){e.preventDefault();b.click();}}
+    return;}
+  if(!$('scr-fish').classList.contains('on')){if(k==='Escape'&&!$('scr-map').classList.contains('on')){openMap();}return;}
+  if(!G)return;
+  if(k==='Escape'){$('fBack').click();return;}
+  if(k==='Enter'||k===' '){e.preventDefault();if(e.repeat){if(G.phase==='fight'||G.phase==='reel')G.hold=true;return;}
+    if(G.phase==='card'){nextCast();return;}if(G.phase==='aim'){act(null,null);return;}act(GEO.W/2,GEO.H/2);}});
+document.addEventListener('keyup',e=>{if((e.key==='Enter'||e.key===' ')&&G)G.hold=false;});
+/* ---- ярлык, оценка, избранное: одно предложение за сессию, после 2-й рыбалки и не раньше 2 минут; отказ запоминаем ---- */
+const BOOT_T=Date.now();let askedNow=false,sessN=0;
+async function offerReturn(){if(askedNow||window.__demo)return;sessN++;if(sessN<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
+  if(pauseWhy.size||!(G&&G.over&&modalOn&&$('rWin')))return;
+  if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
+  try{
+    if(PLAT==='yandex'&&ysdk){
+      if(due('review',30)&&ysdk.feedback){const c=await ysdk.feedback.canReview();if(c&&c.value){mark('review');await ysdk.feedback.requestReview();return;}}
+      if(due('shortcut',14)&&ysdk.shortcut){const c=await ysdk.shortcut.canShowPrompt();if(c&&c.canShow){mark('shortcut');await ysdk.shortcut.showPrompt();return;}}}
+    else if(PLAT==='vk'&&VK){
+      if(!S.ask.fav){mark('fav');await vkSend('VKWebAppAddToFavorites',{},60000);return;}
+      if(due('home',30)){const i=await vkSend('VKWebAppAddToHomeScreenInfo',{},4000).catch(()=>null);
+        if(i&&i.is_feature_supported&&!i.is_added_to_home_screen){mark('home');await vkSend('VKWebAppAddToHomeScreen',{},60000);return;}}
+      if(due('invite',14)&&(S.caught||0)>=30){mark('invite');await vkSend('VKWebAppShowInviteBox',{},60000);return;}}
+  }catch(e){}}
+
+/* ================= запуск ================= */
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hide',true);cloudFlush();}else setPause('hide',false);});
+window.addEventListener('resize',()=>{if($('scr-fish').classList.contains('on')&&G){layout();render();}});
+if(document.hidden)setPause('hide',true);
+applyStatic();document.title=GAME_NAME;$('logo').textContent='🎣 '+GAME_NAME;applyCalm();updCoins();
+const DEMO=new URLSearchParams(location.search).get('demo');
+// новичок — сразу на пруд (утро, ясно), карта — после первой рыбалки
+if(!DEMO&&!(S.sessions>0)&&!(S.caught>0))startFish(0,{tod:'morning',wx:'sun'});else openMap();
+if(PLAT==='vk')initVK();
+else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
+// режимы для скриншотов (сохранение не пишется): ?demo=map|shop|bait|alb|fish&p=N&tod=…&wx=…
+(()=>{if(!DEMO)return;window.__demo=true;save=()=>{};const q=new URLSearchParams(location.search),p=+(q.get('p')||0);if(q.get('tod'))window.__todForce=q.get('tod');
+  S.tips={intro:1,wait:1,fight:1,first:1,lost:1};S.coins=Math.max(S.coins,1240);S.caught=Math.max(S.caught,137);S.sessions=Math.max(S.sessions,40);for(let i=0;i<6;i++){S.open[i]=1;S.visit[i]=4;}S.tk={rod:2,line:2,reel:2};
+  const R=rng(5);for(const id in FISH)if(R()<.55||['karas','okun','plotva','shuka','lesh','sudak','som','omul','harius'].indexOf(id)>=0)S.alb[id]={n:1+Math.floor(R()*20),mx:Math.round((FISH[id].w[0]+(FISH[id].w[1]-FISH[id].w[0])*R()*.8)*1000),tr:R()<.2?1:0};
+  S.legs.boris=1;S.alb.boris={n:1,mx:14200,tr:0};S.junk.boot=1;S.junk.cap=1;S.bait={maggot:14,dough:8,blood:12,corn:6,live:9};S.own.spoon=1;S.streak={day:3,last:dayKey(0),cyc:0};
+  if(DEMO==='shop')openShop(q.get('tab')||'t');else if(DEMO==='alb')openAlb();else if(DEMO==='fish')startFish(p,{tod:q.get('tod')||'morning',wx:q.get('wx')||null});else openMap();})();
+window.__test={get G(){return G;},get S(){return S;},get GEO(){return GEO;},startFish,act,update,render,layout,buildBg,showCatch,nextCast,finish,endSession,openMap,openShop,openAlb,openDaily,openWeek,fishInfo,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,fightNew,pickFish,doHook,
+  set VK(v){VK=v;},get VK(){return VK;},set adGap(v){AD_GAP=v;},PAY,FISH,LEG,PLACES,BAITS,ACH,dailyTask,checkAch,landed};
+</script>
+</body>
+</html>
