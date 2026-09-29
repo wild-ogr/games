@@ -59,6 +59,7 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .mnav{padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:rgba(255,255,255,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .nrow{display:flex;gap:8px;max-width:520px;margin:0 auto}
 .nrow .btn{flex:1;padding:10px 4px;font-size:15.5px;white-space:nowrap;position:relative}
+.nrow .btn{min-width:0;overflow:visible}@media (max-width:430px){.nrow .btn{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:56px;white-space:normal;line-height:1.12;font-size:14px;padding:6px 3px;text-overflow:clip;word-break:normal;overflow-wrap:normal}.nrow{gap:6px}}@media (max-width:340px){.nrow .btn{font-size:13px;padding:6px 2px}.nrow{gap:5px}}
 .nrow .btn .dot{position:absolute;top:5px;right:8px;width:10px;height:10px;border-radius:50%;background:#ff4757;box-shadow:0 0 0 2px #fff}
 /* игра */
 #scr-game{background:#2b1d14}
@@ -94,7 +95,7 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .ix i{display:block;width:.26em;height:.26em;margin:.02em auto 0}
 .pip{position:absolute;left:32%;top:40%;width:.5em;height:.5em}
 .fc{position:absolute;left:28%;top:30%;width:62%;height:56%;border-radius:.06em;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,"Times New Roman",serif;font-weight:900;background:#f3eee2;box-shadow:inset 0 0 0 .015em #c9bfa8}
-.fc b{font-size:.34em;line-height:1}.fc i{width:.24em;height:.24em;display:block}
+.fc.fg{padding:0}.fc b{font-size:.34em;line-height:1}.fc i{width:.24em;height:.24em;display:block}
 .cd svg{display:block;width:100%;height:100%}
 .s0,.s1{color:#15171a}.s2,.s3{color:#c8102e}
 .four .s2{color:#0b5cc4}.four .s1{color:#157a34}
@@ -133,7 +134,8 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .pot .mt{margin-left:3px}.pot:empty{display:none}
 .fly{position:absolute;z-index:8;transform:translate(-50%,-50%);color:#ffe28a;font-weight:900;font-size:15px;background:rgba(0,0,0,.6);border-radius:999px;padding:2px 8px;transition:left .55s ease-in-out,top .55s ease-in-out,opacity .3s;pointer-events:none;white-space:nowrap}
 .bub{position:absolute;left:50%;transform:translateX(-50%);background:#fff;color:#2d3436;border-radius:14px;padding:5px 9px;font-weight:700;font-size:13.5px;line-height:1.22;box-shadow:0 4px 14px rgba(0,0,0,.35);width:max-content;max-width:160px;opacity:0;transition:opacity .25s;z-index:7;pointer-events:none;text-align:center}
-.bub.on{opacity:1}
+.bub.on{opacity:1}.bub.bs::before{display:none}.tbl.pl .bub{max-width:132px;font-size:12.5px;padding:4px 8px}
+@media (max-aspect-ratio:1/1) and (max-height:760px){.rz{padding:6px 8px;margin-bottom:6px}.rz .pre button{min-height:36px;padding:5px 2px;font-size:13.5px}.rz .sl{margin-top:6px}.rz .sl button{width:38px;height:38px}.rz input{height:30px}}
 .bub::before{content:"";position:absolute;left:50%;top:-7px;margin-left:calc(-7px - var(--sh,0px));border:7px solid transparent;border-top:0;border-bottom-color:#fff}
 .bub.up::before{top:auto;bottom:-7px;border:7px solid transparent;border-bottom:0;border-top-color:#fff}
 .me-nm{position:absolute;z-index:3;color:#fff;font-weight:800;font-size:14px;text-align:center;pointer-events:none;line-height:1.2}
@@ -223,6 +225,10 @@ body.calm .card{animation:none}body.calm .cd.deal,body.calm .cd.flip{animation:n
 @media (prefers-reduced-motion:reduce){.card,.cd.deal,.cd.flip{animation:none}}
 @media (max-width:370px){.logo{font-size:19px}.hdr-r{gap:5px}.hdr-r .pill{padding:6px 8px;font-size:15px}.btn{font-size:16px}.arow .btn{font-size:15.5px}.tile b{font-size:16px}}
 @media (min-aspect-ratio:1/1) and (min-width:700px){#app{max-width:1100px;box-shadow:0 0 50px rgba(0,0,0,.25)}}
+/* VK web 29.09: окно 911×560…700 — панель ставки в одну строку (стол остаётся выше); верхний соперник — подпись сбоку (.tsd) */
+@media (min-aspect-ratio:1/1) and (min-width:700px) and (max-height:720px){.rz{max-width:880px;display:flex;align-items:center;gap:10px;padding:6px 8px}.rz .pre{flex:1.25}.rz .sl{flex:1;margin-top:0}.rz .sl button{width:42px;height:42px}}
+@supports not (inset:0){.rz>*+*{margin-left:10px}}
+.seat.tsd .nm{position:absolute;top:50%;margin:0;transform:translateY(-50%)}
 .mh,.mnav,.gh,.acts{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
 @supports not (inset:0){.hdr-r>*+*,.nrow .btn+.btn,.gh>*+*,.row2>*+*,.opt3>*+*,.tabs>*+*,.tiles>*+*,.arow>*+*,.rz .pre>*+*,.rz .sl>*+*{margin-left:8px}.row>*+*{margin-top:10px}.place>*+*,.lbr>*+*,.combo>*+*,.places div>*+*{margin-left:10px}}
 </style>
@@ -492,6 +498,118 @@ const SUITP=['M50 6C60 22 92 38 92 60C92 74 82 82 70 82C62 82 56 78 53 72C54 84 
   'M32 28a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM11 58a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM53 58a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM46 50L41 94H59L54 50Z',
   'M50 4L88 50L50 96L12 50Z','M50 90C22 68 6 50 6 31C6 16 17 6 30 6C40 6 46 12 50 20C54 12 60 6 70 6C83 6 94 16 94 31C94 50 78 68 50 90Z'];
 const suitSvg=s=>'<svg viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" d="'+SUITP[s]+'"/></svg>';
+/* CARDS — общий модуль фигур (~/Projects/hobby-analytics/cards/cards.js), копия */
+/* CARDS — рисованные фигуры игральных карт (Валет, Дама, Король, Туз) для всех карточных игр серии.
+   Встроенный SVG, без внешних файлов и шрифтов; только var/function (старые WebView).
+   API:  CARDS.face(rank, suit, w, h)  -> строка <svg>  (rank: 11|'J' Валет, 12|'Q' Дама, 13|'K' Король, 14|'A' Туз;
+                                          suit: 0♠ 1♣ 2♦ 3♥ или 's','c','d','h' или '♠♣♦♥'; w,h — px, без них 100% размера места)
+         CARDS.ok(rank)  -> true, если для ранга есть рисунок (11..14)
+         CARDS.suit(suit, w, h) -> строка <svg> одной масти
+   Цвет мантии/масти берётся из CSS `color` (currentColor): красные/чёрные/«четыре цвета» — обычными классами.
+   Пропорции рисунка 62:80 (примерно область 62% x 56% карты 1:1.42). Кэш строк по (ранг, масть, w, h). */
+var CARDS = (function () {
+  var SP = [
+    'M50 6C60 22 92 38 92 60C92 74 82 82 70 82C62 82 56 78 53 72C54 84 59 91 67 95H33C41 91 46 84 47 72C44 78 38 82 30 82C18 82 8 74 8 60C8 38 40 22 50 6Z',
+    'M32 28a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM11 58a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM53 58a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM46 50L41 94H59L54 50Z',
+    'M50 4L88 50L50 96L12 50Z',
+    'M50 90C22 68 6 50 6 31C6 16 17 6 30 6C40 6 46 12 50 20C54 12 60 6 70 6C83 6 94 16 94 31C94 50 78 68 50 90Z'];
+  var OL = '#2a2320', GO = '#e6b422', SK = '#f6d7b0', BL = '#2a5db0', ST = ' stroke="' + OL + '" stroke-width=".9" stroke-linejoin="round"';
+  var cache = {};
+
+  function suitIdx(s) {
+    if (typeof s === 'number') return s & 3;
+    var k = 'scdh'.indexOf(String(s).charAt(0).toLowerCase());
+    if (k < 0) k = '♠♣♦♥'.indexOf(String(s).charAt(0));
+    return k < 0 ? 0 : k;
+  }
+  function rankIdx(r) {
+    if (typeof r === 'number') return r;
+    var k = { J: 11, Q: 12, K: 13, A: 14, 'В': 11, 'Д': 12, 'К': 13, 'Т': 14 }[String(r).toUpperCase()];
+    return k || 0;
+  }
+  function pip(s, x, y, k) { // масть в рамке 100x100, масштаб k, левый верхний угол (x,y)
+    return '<path fill="currentColor"' + ST + ' d="' + SP[s] + '" transform="translate(' + x + ' ' + y + ') scale(' + k + ')" stroke-width="' + (0.9 / k).toFixed(1) + '"/>';
+  }
+  // верхняя половина фигуры 62x40 (низ y=40 — линия симметрии); нижняя — поворот на 180
+  function half(r, s) {
+    var o = '';
+    if (r === 13) { // Король: борода, корона, меч справа, масть слева
+      o += '<rect x="27" y="24" width="8" height="8" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M6 40C6 34 14 30 31 30C48 30 56 34 56 40Z" fill="currentColor"' + ST + '/>';
+      o += '<path d="M19 31.5L31 40L43 31.5" fill="none" stroke="' + GO + '" stroke-width="3.4"/>';
+      o += '<path d="M7 37.5H55" stroke="' + GO + '" stroke-width="2"/>';
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<ellipse cx="31" cy="15" rx="7.6" ry="8.6" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M23.6 15.5C22.5 27 39.5 27 38.4 15.5C36.5 21 25.5 21 23.6 15.5Z" fill="#e9e6df"' + ST + '/>';
+      o += '<circle cx="28" cy="14" r="1.1" fill="' + OL + '"/><circle cx="34" cy="14" r="1.1" fill="' + OL + '"/>';
+      o += '<path d="M21.5 9.5L20.5 1.5L26.5 6L31 0.5L35.5 6L41.5 1.5L40.5 9.5Z" fill="' + GO + '"' + ST + '/>';
+      o += '<circle cx="31" cy="7.4" r="1.4" fill="' + BL + '"/>';
+      o += '</g>';
+      o += '<path d="M50 5L51.5 0.5L53 5V29H50Z" fill="#dfe3e8"' + ST + '/>';
+      o += '<rect x="45.5" y="28.5" width="11" height="3" rx="1" fill="' + GO + '"' + ST + '/>';
+      o += '<rect x="50" y="31" width="3" height="6" fill="#7a4a24"' + ST + '/>';
+      o += pip(s, 6, 6, .13);
+    } else if (r === 12) { // Дама: длинные волосы, диадема, цветок слева, масть справа
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<path d="M21.5 16C19 4 43 4 40.5 16L43 29L19 29Z" fill="#b5651d"' + ST + '/></g>';
+      o += '<rect x="27" y="24" width="8" height="8" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M6 40C6 34 14 30 31 30C48 30 56 34 56 40Z" fill="currentColor"' + ST + '/>';
+      o += '<path d="M21 31.5C25 36 37 36 41 31.5" fill="none" stroke="' + GO + '" stroke-width="3"/>';
+      o += '<path d="M7 37.5H55" stroke="' + GO + '" stroke-width="2"/>';
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<ellipse cx="31" cy="15" rx="7" ry="8.4" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M24 12C27 6 35 6 38 12C34 9.5 28 9.5 24 12Z" fill="#b5651d"/>';
+      o += '<circle cx="28.2" cy="15" r="1.1" fill="' + OL + '"/><circle cx="33.8" cy="15" r="1.1" fill="' + OL + '"/>';
+      o += '<path d="M28 19.6Q31 21.6 34 19.6" fill="none" stroke="#c0392b" stroke-width="1.3"/>';
+      o += '<path d="M23.5 9L24.5 3.5L28 7L31 2L34 7L37.5 3.5L38.5 9Z" fill="' + GO + '"' + ST + '/>';
+      o += '<circle cx="31" cy="5.5" r="1.2" fill="' + BL + '"/>';
+      o += '<circle cx="21.6" cy="21" r="1.6" fill="' + GO + '"/><circle cx="40.4" cy="21" r="1.6" fill="' + GO + '"/>';
+      o += '</g>';
+      o += '<path d="M12 39V25" stroke="#2e7d32" stroke-width="1.8"/><circle cx="12" cy="21.5" r="4.6" fill="currentColor"' + ST + '/><circle cx="12" cy="21.5" r="1.7" fill="' + GO + '"/>';
+      o += pip(s, 45, 6, .13);
+    } else { // Валет: берет с пером, копьё слева, масть справа
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<path d="M21.5 22C19 5 43 5 40.5 22L37 17L25 17Z" fill="#7a4a24"' + ST + '/></g>';
+      o += '<rect x="27" y="24" width="8" height="8" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M6 40C6 34 14 30 31 30C48 30 56 34 56 40Z" fill="currentColor"' + ST + '/>';
+      o += '<path d="M23 31.5L31 37L39 31.5" fill="none" stroke="' + BL + '" stroke-width="3.2"/>';
+      o += '<path d="M7 37.5H55" stroke="' + GO + '" stroke-width="2"/>';
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<ellipse cx="31" cy="15.5" rx="7" ry="8" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M24 13C27 8 35 8 38 13C34 11 28 11 24 13Z" fill="#7a4a24"/>';
+      o += '<circle cx="28.2" cy="15.5" r="1.1" fill="' + OL + '"/><circle cx="33.8" cy="15.5" r="1.1" fill="' + OL + '"/>';
+      o += '<path d="M28.4 20Q31 21.4 33.6 20" fill="none" stroke="#c0392b" stroke-width="1.3"/>';
+      o += '<path d="M20.5 10.5C20 3.5 34 0.5 41.5 6C43 9 38.5 10 34 9C29 10.5 24 11.5 20.5 10.5Z" fill="currentColor"' + ST + '/>';
+      o += '<path d="M40 6C47 -1 52 4 56 1C53 9 46 9 40 8Z" fill="' + GO + '"' + ST + '/>';
+      o += '</g>';
+      o += '<rect x="10.2" y="6" width="1.8" height="34" fill="#7a4a24"' + ST + '/>';
+      o += '<path d="M11 0L15 6.5L11 9L7 6.5Z" fill="#dfe3e8"' + ST + '/>';
+      o += pip(s, 45, 6, .13);
+    }
+    return o;
+  }
+  function frame(inner, w, h) {
+    var sz = (w ? ' width="' + w + '"' : ' width="100%"') + (h ? ' height="' + h + '"' : ' height="100%"');
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 62 80"' + sz + ' preserveAspectRatio="xMidYMid meet" style="overflow:visible" aria-hidden="true">' + inner + '</svg>';
+  }
+  function face(rank, suit, w, h) {
+    var r = rankIdx(rank), s = suitIdx(suit), key = r + ',' + s + ',' + (w || 0) + ',' + (h || 0);
+    if (cache[key]) return cache[key];
+    var o;
+    if (r === 14) { // Туз: большая масть в кольце
+      o = '<circle cx="31" cy="40" r="27" fill="none" stroke="' + GO + '" stroke-width="2.4"/><circle cx="31" cy="40" r="23" fill="none" stroke="currentColor" stroke-width=".8"/>' + pip(s, 12, 21, .38);
+    } else if (r >= 11 && r <= 13) {
+      var t = half(r, s);
+      o = t + '<g transform="rotate(180 31 40)">' + t + '</g><path d="M2 40H60" stroke="' + OL + '" stroke-width=".8" opacity=".55"/>';
+    } else return '';
+    return (cache[key] = frame(o, w, h));
+  }
+  function suit(s, w, h) {
+    var i = suitIdx(s);
+    return '<svg viewBox="0 0 100 100" width="' + (w || '100%') + '" height="' + (h || '100%') + '" aria-hidden="true"><path fill="currentColor" d="' + SP[i] + '"/></svg>';
+  }
+  return { face: face, suit: suit, ok: function (r) { r = rankIdx(r); return r >= 11 && r <= 14; } };
+})();
 const SUIT_CH=['♠','♣','♦','♥'];
 const cardTxt=c=>rankN(CR(c))+SUIT_CH[CS(c)];
 // названия достоинств для описаний комбинаций
@@ -740,9 +858,22 @@ async function vkLoadCloud(){const r0=await vkSend('VKWebAppStorageGet',{keys:['
 // облако пришло позже меню: перерисовать то, что на экране
 function onCloud(){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}updCoins();
   if(!G&&!modalOn&&$('scr-menu').classList.contains('on'))openMenu();else if($('scr-shop').classList.contains('on'))openShop();}
+// VK web: высота окна под экран браузера (модерация VK 29.09: VKWebAppResizeWindow)
+var VK_FIT={top:130,min:560,max:900,last:0,t:0};
+function vkFit(vh){if(!vh||!window.vkBridge)return;
+  var h=Math.round(Math.max(VK_FIT.min,Math.min(VK_FIT.max,vh-VK_FIT.top)));
+  if(Math.abs(h-VK_FIT.last)<8)return;VK_FIT.last=h;
+  var w=Math.max(600,Math.min(1000,window.innerWidth||911));
+  window.vkBridge.send('VKWebAppResizeWindow',{width:w,height:h}).catch(function(){VK_FIT.last=0;});}
+function vkFitInit(){try{
+  window.vkBridge.subscribe(function(e){var d=e&&e.detail;
+    if(d&&d.type==='VKWebAppUpdateConfig'&&d.data&&d.data.viewport_height){clearTimeout(VK_FIT.t);
+      VK_FIT.t=setTimeout(function(){vkFit(d.data.viewport_height);},200);}});
+  window.vkBridge.send('VKWebAppGetConfig').then(function(c){if(c&&c.viewport_height)vkFit(c.viewport_height);}).catch(function(){});
+}catch(e){}}
 async function initVK(){
   try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
-    await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;
+    await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;vkFitInit();
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
       else if(t==='VKWebAppViewRestore')setPause('hide',false);});
@@ -1064,7 +1195,7 @@ function curLook(){return pickLook('l','cap');}
 /* ================= карты ================= */
 const FACE={};
 function faceHtml(c){const k=LANG+c;if(FACE[k])return FACE[k];const s=CS(c),r=CR(c),sv=suitSvg(s),t=rankN(r);
-  const mid=r>=11&&r<=13?`<div class="fc"><b>${t}</b><i>${sv}</i></div>`:`<div class="pip"${r===14?' style="width:.6em;height:.6em;left:26%;top:34%"':''}>${sv}</div>`;
+  const mid=r>=11&&r<=13?`<div class="fc fg">${CARDS.face(r,s)}</div>`:`<div class="pip"${r===14?' style="width:.6em;height:.6em;left:26%;top:34%"':''}>${sv}</div>`;
   return FACE[k]=`<div class="f s${s}"><div class="ix"><b>${t}</b><i>${sv}</i></div>${mid}</div>`;}
 // карта: c ≥ 0 — лицом, иначе рубашкой. x,y — левый верхний угол, w — ширина
 function cardHtml(c,x,y,w,cls,st){return `<div class="cd ${cls||''}" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${(w*1.4).toFixed(1)}px;font-size:${w.toFixed(1)}px;${st||''}">${c>=0?faceHtml(c):'<div class="b bk-'+curBack()+'"></div>'}</div>`;}
@@ -1072,8 +1203,20 @@ function cardHtml(c,x,y,w,cls,st){return `<div class="cd ${cls||''}" style="left
 /* ================= стол: раскладка от размеров =================
    Места по овалу: 0 — вы (снизу по центру), дальше по часовой стрелке (слева вверх и направо). */
 function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+// телефон (портрет, VK/Яндекс 29.09): рядами сверху вниз — верхний ряд соперников, их ставки, карты стола, банк,
+// нижний ряд соперников (по краям), свои карты. Соперник никогда не стоит на уровне карт стола и своих карт
+// (раньше по эллипсу: при 3 соперниках левый/правый закрывали карты стола, на узких — и нижние свои).
+const PROWS={2:['c1'],3:['l1','r1'],4:['l1','c1','r1'],5:['l2','l1','r1','r2'],6:['l2','l1','c1','r1','r2']};
+function layoutP(W,H,n,dense){const cwMe=clamp(Math.min(W*.19,H*.12),52,92),chMe=cwMe*1.4,A=clamp(Math.min(W*.14,H*.075),40,60);
+  const y0=H-chMe-(dense?10:34),meTop=y0-6,cx=W/2,xs=Math.max(42,W*.11),y1=A/2+12,r1b=y1+A/2+39,low=n>=5,y2=meTop-4-(A/2+39),r2t=y2-A/2-8;
+  const bt=r1b,bb=low?r2t:meTop-30;
+  if(!dense&&bb-bt<26+32+6+1.4*36)return layoutP(W,H,n,true); // совсем низко (узкий телефон + панель ставки): без строки силы руки
+  const cwB=clamp(Math.min(W*.15,(W-16)/5.4,(bb-bt-26-32-6)/1.4),dense?24:30,70);
+  const by=bt+26+Math.max(0,bb-bt-26-32-6-cwB*1.4)*.5,cy=by+cwB*.7-6;
+  const seats=[{x:cx,y:y0+8}];(PROWS[n]||[]).forEach(k=>seats.push({x:k[0]==='l'?xs:k[0]==='r'?W-xs:cx,y:k[1]==='1'?y1:y2,row:+k[1]}));
+  return G.L={W,H,land:false,pl:true,dense:!!dense,cx,cy,rx:W/2-6,ry:(y0+chMe*.35-4)/2,fcy:(y0+chMe*.35+4)/2,A,cwMe,chMe,cwB,seats,by,potY:by+cwB*1.4+16};}
 function layout(){const tb=$('tbl'),W=tb.clientWidth,H=tb.clientHeight;if(!G||!W||!H)return null;
-  const n=G.seats.length,land=W>H*1.15;
+  const n=G.seats.length,land=W>H*1.15;if(!land)return layoutP(W,H,n);
   const cwMe=land?clamp(H*.13,48,86):clamp(Math.min(W*.19,H*.12),58,92),chMe=cwMe*1.4;
   const A=land?clamp(H*.11,42,68):clamp(Math.min(W*.14,H*.075),44,62);
   const top=A*.5+18,bottom=H-chMe-34;
@@ -1086,18 +1229,24 @@ function layout(){const tb=$('tbl'),W=tb.clientWidth,H=tb.clientHeight;if(!G||!W
   return G.L={W,H,land,cx,cy,rx,ry,A,cwMe,chMe,cwB,seats};}
 // точка между местом и центром стола (доля k пути)
 function toward(Y,i,k){const s=Y.seats[i];return {x:s.x+(Y.cx-s.x)*k,y:s.y+(Y.cy-s.y)*k};}
-function betPos(Y,i){if(i===0)return {x:Y.cx,y:Y.seats[0].y-30};const p=toward(Y,i,.44);return p;}
-function potPos(Y){return {x:Y.cx,y:Y.cy-Y.cwB*.7-18};}
+// низкий альбомный стол (VK web 911×560…700): у соперника строго сверху подпись сбоку, ставка — сразу под аватаром
+function topSide(Y,i){const st=Y.seats[i];return !!(i>0&&Y.land&&Y.ry<215&&Math.abs(st.x-Y.cx)<4&&st.y<Y.cy);}
+function betPos(Y,i){if(i===0)return {x:Y.cx,y:Y.seats[0].y-30};if(Y.pl){const st=Y.seats[i];return st.row===1?{x:st.x+(Y.cx-st.x)*.28,y:st.y+Y.A/2+51}:{x:st.x+(st.x<Y.cx?1:-1)*(Y.A/2+32),y:st.y+4};}if(topSide(Y,i))return {x:Y.cx,y:Y.seats[i].y+Y.A/2+15};const p=toward(Y,i,.44);return p;}
+// фишка дилера: у своего места — справа от своих карт (не на плашке «Колл»); у соперника в портрете — на нижнем внешнем краю аватара
+function dPos(Y,i){if(i===0)return {x:Y.cx+Y.cwMe*1.12+16,y:Y.seats[0].y+6};const st=Y.seats[i];
+  if(Y.pl){const side=st.x<Y.cx-4?-1:1;return {x:st.x+side*Y.A*.48,y:st.y+Y.A*.22};}
+  if(topSide(Y,i))return {x:Y.cx+52,y:st.y+Y.A/2+15};const q=toward(Y,i,.3);return {x:q.x+16,y:q.y+16};}
+function potPos(Y){return Y.pl?{x:Y.cx,y:Y.potY}:{x:Y.cx,y:Y.cy-Y.cwB*.7-18};}
 
 /* ================= рисование стола ================= */
-function render(){if(!G)return;const Y=layout();if(!L)return;const s=G.s,D=G.disp,n=G.seats.length,fx=G.fx||{};
+function render(){if(!G)return;const Y=layout();if(!Y)return;const s=G.s,D=G.disp,n=G.seats.length,fx=G.fx||{};
   const sd=s.phase==='end'&&s.res&&s.res.sd&&D.show,winSeats=D.won?D.won:[];
-  let h=`<div class="felt tb-${curTable()}" style="left:${(Y.cx-Y.rx).toFixed(0)}px;top:${(Y.cy-Y.ry).toFixed(0)}px;width:${(2*Y.rx).toFixed(0)}px;height:${(2*Y.ry).toFixed(0)}px"></div>`;
+  let h=`<div class="felt tb-${curTable()}" style="left:${(Y.cx-Y.rx).toFixed(0)}px;top:${((Y.pl?Y.fcy:Y.cy)-Y.ry).toFixed(0)}px;width:${(2*Y.rx).toFixed(0)}px;height:${(2*Y.ry).toFixed(0)}px"></div>`;
   // общие карты
   const bw=Y.cwB,gap=bw*.1,bx0=Y.cx-(5*bw+4*gap)/2,by=Y.cy-bw*.7+6,hi=D.hi||null;
   for(let j=0;j<5;j++){const x=bx0+j*(bw+gap);
-    if(j<D.board){const c=s.board[j],cls=(fx.flip&&fx.flip.indexOf(j)>=0?'flip':'')+(hi?(hi.indexOf(c)>=0?' win':' dim'):'');h+=cardHtml(c,x,by,bw,cls);}
-    else h+=`<div class="cd" style="left:${x.toFixed(1)}px;top:${by.toFixed(1)}px;width:${bw}px;height:${(bw*1.4).toFixed(1)}px;border:2px dashed rgba(255,255,255,.18)"></div>`;}
+    if(j<D.board){const c=s.board[j],cls='bd '+(fx.flip&&fx.flip.indexOf(j)>=0?'flip':'')+(hi?(hi.indexOf(c)>=0?' win':' dim'):'');h+=cardHtml(c,x,by,bw,cls);}
+    else h+=`<div class="cd bd" style="left:${x.toFixed(1)}px;top:${by.toFixed(1)}px;width:${bw}px;height:${(bw*1.4).toFixed(1)}px;border:2px dashed rgba(255,255,255,.18)"></div>`;}
   // банк
   const potAll=D.pot+D.bet.reduce((a,b)=>a+b,0),pp=potPos(Y);
   h+=`<div class="pot" id="potEl" style="left:${pp.x}px;top:${pp.y}px">${potAll>0?L('Банк','Pot')+': '+fmt(potAll)+MT:''}</div>`;
@@ -1105,35 +1254,60 @@ function render(){if(!G)return;const Y=layout();if(!L)return;const s=G.s,D=G.dis
   for(let i=1;i<n;i++){const st=Y.seats[i],p=s.seats[i],id=G.seats[i].id,A=Y.A,sp=G.seats[i];
     const gone=p.out&&!(s.phase==='end'&&p.c.length&&G.disp.show&&p.show),turn=s.phase==='bet'&&s.cur===i,fold=p.f&&!p.out,won=winSeats[i]>0;
     const mood=G.mood[i]||(won&&D.show?'happy':'norm');
-    let cls='seat'+(turn?' turn':'')+(fold?' fold':'')+(gone?' out':'')+(won&&D.won?' won':'');
+    const tsd=topSide(Y,i);
+    let cls='seat'+(turn?' turn':'')+(fold?' fold':'')+(gone?' out':'')+(won&&D.won?' won':'')+(tsd?' tsd':'');
     const nm=sp.kind==='bot'?T2(CHARS[id].n):esc(sp.name||'');
     h+=`<div class="${cls}" style="left:${st.x.toFixed(1)}px;top:${(st.y-A/2).toFixed(1)}px"><div class="av" style="width:${A}px;height:${A}px">${portrait(id,mood)}</div>
-      <div class="nm">${nm}<span class="sk">${gone?L('выбыл','out'):fmt(D.st[i])+MT}</span></div>`;
+      <div class="nm"${tsd?` style="right:calc(50% + ${(A/2+7).toFixed(0)}px)"`:''}>${nm}<span class="sk">${gone?L('выбыл','out'):fmt(D.st[i])+MT}</span></div>`;
     const tag=G.tag[i];if(tag)h+=`<div class="stt ${tag.c}" style="top:${-8}px">${tag.t}</div>`;
     const b=G.bub[i];if(b&&b.until>Date.now()){const up=st.y>Y.cy+Y.ry*.2,sh=st.x<95?95-st.x:st.x>Y.W-95?Y.W-95-st.x:0;h+=`<div class="bub on${up?' up':''}" style="${up?'bottom:100%;margin-bottom:8px':'top:100%;margin-top:4px'};transform:translateX(calc(-50% + ${sh}px));--sh:${sh}px">${esc(b.t)}</div>`;}
     h+='</div>';
     // карты соперника: рубашкой — сбоку от аватара (к центру), при вскрытии — лицом
     if(p.c.length&&!gone&&!p.f){const open=sd&&p.show,A2=Y.A;let cw,x0,y0;
-      if(open){cw=Math.min(bw*.86,A2*.78);const hp=toward(Y,i,.34);x0=hp.x-cw*1.02;y0=hp.y-cw*.7;}
+      if(open&&Y.pl){cw=Math.min(bw*.8,A2*.6);x0=st.x-cw*1.02;y0=st.y-A2*.33;}
+      else if(open&&tsd){cw=Math.min(bw*.86,A2*.78);x0=st.x+A2/2+6;y0=st.y-cw*.7;}
+      else if(open){cw=Math.min(bw*.86,A2*.78);const hp=toward(Y,i,.34);x0=hp.x-cw*1.02;y0=hp.y-cw*.7;}
       else{cw=A2*.42;const side=st.x<Y.cx-4?1:st.x>Y.cx+4?-1:1;x0=side>0?st.x+A2*.42:st.x-A2*.42-cw*1.6;y0=st.y-A2*.36;}
       for(let k=0;k<2;k++){const c=open?p.c[k]:-1,cls=(fx.deal?'deal':'')+(open&&hi?(hi.indexOf(c)>=0?' win':' dim'):'')+(open&&fx.open?' flip':'');
-        h+=cardHtml(c,x0+k*cw*(open?1.04:.6),y0,cw,cls,fx.deal?dealVar(Y,x0,y0,i,k):'');}}
+        h+=cardHtml(c,x0+k*cw*(open?1.04:.6),y0,cw,cls,(open&&Y.pl?'z-index:4;':'')+(fx.deal?dealVar(Y,x0,y0,i,k):''));}}
   }
   // ставки и кнопка дилера
   for(let i=0;i<n;i++){if(D.bet[i]>0){const q=betPos(Y,i);h+=`<div class="bet" data-s="${i}" style="left:${q.x.toFixed(1)}px;top:${q.y.toFixed(1)}px">${MT}${fmt(D.bet[i])}</div>`;}}
-  if(s.btn>=0){const q=s.btn===0?{x:Y.cx-Y.cwMe*1.35,y:Y.seats[0].y-18}:toward(Y,s.btn,.3);h+=`<div class="dbtn" style="left:${(q.x+(s.btn===0?0:16)).toFixed(1)}px;top:${(q.y+(s.btn===0?0:16)).toFixed(1)}px">D</div>`;}
+  if(s.btn>=0){const q=dPos(Y,s.btn);h+=`<div class="dbtn" style="left:${q.x.toFixed(1)}px;top:${q.y.toFixed(1)}px">D</div>`;}
   // вы
   const me=s.seats[0],st0=Y.seats[0],cw=Y.cwMe,x0=Y.cx-cw*1.04,y0=st0.y-8;
-  if(me.c.length&&!me.out){for(let k=0;k<2;k++){const c=me.c[k],cls=(fx.deal?'deal':'')+(me.f?' dim':'')+(hi&&D.show?(hi.indexOf(c)>=0?' win':' dim'):'');
+  if(me.c.length&&!me.out){for(let k=0;k<2;k++){const c=me.c[k],cls='mc '+(fx.deal?'deal':'')+(me.f?' dim':'')+(hi&&D.show?(hi.indexOf(c)>=0?' win':' dim'):'');
     h+=cardHtml(c,x0+k*cw*1.08,y0,cw,cls,(me.f?'transform:translateY(10px);':'')+(fx.deal?dealVar(Y,x0,y0,0,k):''));}}
   const mA=Math.min(Y.A,46),mx=Math.max(8,x0-mA-12)+mA/2;
   const turn0=s.phase==='bet'&&s.cur===0;
   h+=`<div class="seat${turn0?' turn':''}${me.f&&!me.out?' fold':''}${winSeats[0]>0&&D.won?' won':''}" style="left:${mx}px;top:${(y0+4).toFixed(1)}px"><div class="av" style="width:${mA}px;height:${mA}px">${meSvg(curLook(),G.mood[0]||(winSeats[0]>0&&D.show?'happy':'norm'))}</div>
     <div class="nm">${L('Вы','You')}<span class="sk">${fmt(D.st[0])}${MT}</span></div>${G.tag[0]?`<div class="stt ${G.tag[0].c}" style="top:-8px">${G.tag[0].t}</div>`:''}</div>`;
-  h+=`<div class="hand-lbl" id="handLbl" style="top:${(Y.H-24).toFixed(0)}px">${G.hintHtml||''}</div>`;
-  h+=`<div class="say" style="top:${(by+bw*1.4+10).toFixed(0)}px"><span>${G.say||''}</span></div>`;
+  h+=`<div class="hand-lbl" id="handLbl" style="top:${(Y.H-24).toFixed(0)}px${Y.dense?';display:none':''}">${G.hintHtml||''}</div>`;
+  h+=`<div class="say" style="top:${(by+bw*1.4+10).toFixed(0)}px"><span>${Y.land&&G.say||''}</span></div>`;
   h+=`<div class="tip${G.tip?' on':''}" id="tipEl" style="top:${(Y.cy-Y.ry*.62).toFixed(0)}px">${G.tip||''}</div>`;
-  $('tbl').innerHTML=h;G.fx={};}
+  const tb=$('tbl');tb.classList.toggle('pl',!!Y.pl);tb.innerHTML=h;G.fx={};placeBubs();}
+// реплики соперников: снизу/сверху/сбоку от аватара — где не закрывают карты стола, свои карты, банк, других игроков и другие реплики;
+// места нет (узкий экран) — реплику не показываем
+function placeBubs(){const tb=$('tbl'),bs=tb.querySelectorAll('.bub.on');if(!bs.length)return;
+  const o=tb.getBoundingClientRect(),W=o.width,H=o.height,rr=e=>{const r=e.getBoundingClientRect();return {l:r.left-o.left,t:r.top-o.top,r:r.right-o.left,b:r.bottom-o.top};};
+  const hard=[],done=[],seatR=[];
+  tb.querySelectorAll('.cd.bd,.cd.mc,.pot,.hand-lbl,.say span').forEach(e=>{if(e.offsetWidth&&(e.classList.contains('cd')||e.textContent.trim()))hard.push(rr(e));});
+  tb.querySelectorAll(':scope>.cd:not(.bd):not(.mc)').forEach(e=>seatR.push({st:null,r:rr(e),w:1}));
+  tb.querySelectorAll('.seat').forEach(st=>st.querySelectorAll(':scope>.av,:scope>.nm,:scope>.stt').forEach(e=>{if(e.offsetWidth&&(e.classList.contains('av')||e.textContent.trim()))seatR.push({st,r:rr(e)});}));
+  tb.querySelectorAll('.bet,.dbtn').forEach(e=>seatR.push({st:null,r:rr(e),w:1}));
+  const ov=(a,b)=>Math.max(0,Math.min(a.r,b.r)-Math.max(a.l,b.l)+4)*Math.max(0,Math.min(a.b,b.b)-Math.max(a.t,b.t)+4);
+  bs.forEach(bu=>{const st=bu.parentElement,sr=rr(st),av=st.querySelector('.av'),ar=rr(av),bw=bu.offsetWidth,bh=bu.offsetHeight,ax=(ar.l+ar.r)/2,ay=(ar.t+ar.b)/2;
+    const stt=st.querySelector('.stt');const top=stt&&stt.textContent.trim()?Math.min(ar.t,rr(stt).t):ar.t;
+    const fx=x=>Math.max(4,Math.min(W-4-bw,x)),up=bu.classList.contains('up');
+    const C=[['d',fx(ax-bw/2),sr.b+8],['u',fx(ax-bw/2),top-8-bh],['s',ar.r+9,ay-bh/2],['s',ar.l-9-bw,ay-bh/2],['d',fx(ax-bw/2),sr.b+34],['s',ar.r+9,ar.t],['s',ar.l-9-bw,ar.t]];
+    if(up)C.unshift(C.splice(1,1)[0]);
+    let best=null;C.forEach(([k,x,y])=>{const b={l:x,t:y,r:x+bw,b:y+bh};let sc=0;
+      if(b.l<2||b.r>W-2||b.t<2||b.b>H-2)sc+=1e7;
+      hard.forEach(h=>sc+=ov(b,h)?1e6+ov(b,h):0);seatR.forEach(q=>{if(q.st!==st){const v=ov(b,q.r);sc+=q.w?v*q.w:v?1e6:0;}});done.forEach(d=>sc+=ov(b,d)?1e6:0);
+      if(!best||sc<best.sc)best={k,b,sc};});
+    if(best.sc>=1e6){bu.style.display='none';return;}
+    const b=best.b;done.push(b);bu.classList.toggle('up',best.k==='u');bu.classList.toggle('bs',best.k==='s');
+    bu.style.cssText=`left:${(b.l-sr.l).toFixed(0)}px;top:${(b.t-sr.t).toFixed(0)}px;bottom:auto;margin:0;transform:none;--sh:${((b.l+bw/2)-ax).toFixed(0)}px`;});}
 // откуда «летит» карта при раздаче: из центра стола
 function dealVar(Y,x,y,i,k){return `--dx:${(Y.cx-x).toFixed(0)}px;--dy:${(Y.cy-y).toFixed(0)}px;animation-delay:${(i*.06+k*.25)*(calm()?0:1)}s;`;}
 function subTitle(){if(!G)return '';const s=G.s;
@@ -1160,9 +1334,10 @@ function potNow(){const s=G.s;return s.seats.reduce((a,p)=>a+p.tot,0);}
 function raiseOpts(){const s=G.s,Lg=legal(s),pot=potNow(),call=Lg.call;
   const mk=f=>clamp(Math.round((s.cb+(pot+call)*f)/s.sb)*s.sb,Lg.minTo,Lg.maxTo);
   return [{k:'min',t:L('Мин','Min'),v:Lg.minTo},{k:'half',t:L('½ банка','½ pot'),v:mk(.5)},{k:'pot',t:L('Банк','Pot'),v:mk(1)},{k:'all',t:L('Ва-банк','All-in'),v:Lg.maxTo}];}
-function renderActs(){const box=$('acts');if(!G){box.innerHTML='';return;}const s=G.s;
+function renderActs(){renderActs0();const h=$('acts').offsetHeight;if(G&&G.actsH!==h){const f=G.actsH==null;G.actsH=h;if(!f)render();}}
+function renderActs0(){const box=$('acts');if(!G){box.innerHTML='';return;}const s=G.s;
   if(!G.waitHuman||s.phase!=='bet'||s.cur!==0){G.rz=null;
-    const w=s.phase==='bet'&&s.cur>0?(G.seats[s.cur].kind==='bot'?T2(CHARS[G.seats[s.cur].id].n):'')+' '+L('думает…','is thinking…'):(G.barMsg||'');
+    const w=s.phase==='bet'&&s.cur>0?(G.seats[s.cur].kind==='bot'?T2(CHARS[G.seats[s.cur].id].n):'')+' '+L('думает…','is thinking…'):(G.say&&G.L&&!G.L.land?G.say:G.barMsg||'');
     box.innerHTML=`<div class="wait">${w}</div>`;return;}
   const Lg=legal(s),me=s.seats[0],bet0=s.cb===0;
   let rz='';
