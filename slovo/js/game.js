@@ -61,7 +61,8 @@ function startLevel(idx,daily){
   show('game');
   const ch=chapOf(idx);
   $('gTitle').textContent=daily?'Задание дня':'Уровень '+(idx+1);
-  $('gSub').textContent=daily?('Серия: '+(S.streak||0)+' '+plural(S.streak||0,'день','дня','дней')):isTest(idx)?'⚡ Испытание ×2':(ch.e+' '+ch.n);
+  const sd=daily?['🔥','Серия: '+(S.streak||0)+' '+plural(S.streak||0,'день','дня','дней'),' '+(S.streak||0)]:isTest(idx)?['⚡',' Испытание ×2',' ×2']:[ch.e,' '+ch.n,''];
+  const gs=$('gSub');gs.textContent='';gs.dataset.full=daily?sd[1]:sd[0]+sd[1];gs.dataset.short=sd[0]+sd[2];fitSub();
   G.half=G.words.filter(w=>w.found).length*2>=G.words.length;updCount();
   G.rid=riddleOf(G);
   zinaFace('norm');
@@ -88,10 +89,13 @@ function saveCur(){if(!G||G.won||SHOT)return;const o=S.curs[G.key]||{};
   S.curs[G.key]={open:[...G.cells].filter(([k,c])=>c.open).map(([k])=>k),bonus:[...G.bonus],order:G.letters.join(''),greeted:o.greeted,hinted:G.hinted?1:0,t:Date.now()};trimCurs();save();}
 // незаконченные уровни храним по ключу: 5 последних обычных + сегодняшнее задание дня (старые дневные — не нужны)
 function trimCurs(){const tk='D'+todayKey(),ks=Object.keys(S.curs);
-  ks.forEach(k=>{if(k[0]==='D'&&k!==tk)delete S.curs[k];});
+  ks.forEach(k=>{if(k[0]==='D'&&k!==tk&&!(G&&G.key===k))delete S.curs[k];}); // задание, начатое до полуночи, не стираем, пока его решают (аудит 18)
   ks.filter(k=>k[0]==='L'&&S.curs[k]).sort((a,b)=>(S.curs[b].t||0)-(S.curs[a].t||0)).slice(5).forEach(k=>delete S.curs[k]);}
+// шапка уровня на узком экране (360): не обрезаем главу многоточием («💰 …»), а оставляем только значок (аудит 18, UX п. 8)
+function fitSub(){const e=$('gSub');if(!e||!e.dataset.full)return;e.textContent=e.dataset.full;e.title=e.dataset.full;
+  if(e.scrollWidth>e.clientWidth+1)e.textContent=e.dataset.short;}
 // «Слов: 2 из 5» в шапке уровня
-function updCount(){if(!G)return;const n=G.words.filter(w=>w.found).length;$('gCnt').textContent='Слов: '+n+' из '+G.words.length;}
+function updCount(){if(!G)return;const n=G.words.filter(w=>w.found).length;$('gCnt').textContent='Слов: '+n+' из '+G.words.length;fitSub();}
 
 /* ---------- кроссворд ---------- */
 function buildGrid(){
@@ -206,11 +210,13 @@ function submit(w){
     if(wd.found){flashPreview(w,'old');SND.old();zina(say('old'),'stern');highlightWord(wd);return;}
     foundWord(wd,false);return;
   }
+  // словарь не догрузился (плохая сеть) — не «не знаю», а просим повторить; в промахи не считаем (аудит 18)
+  if(!dictReady()){ensureDict();flashPreview(w,'old');zina('Погоди, тетрадку со словами ищу… Скажи это слово ещё раз чуть позже.','norm');return;}
   if(isWord(w)){
     if(G.bonus.has(w)){flashPreview(w,'old');SND.old();zina(say('old'),'stern');return;}
     G.bonus.add(w);const nd=collectDef(w);S.bonusAll=(S.bonusAll||0)+1;S.jar=(S.jar||0)+1;flashPreview(w+(nd?' 📖':''),'bonus');SND.bonus();buzz('word');
     flyTo(w,$('hJar'));
-    if(S.jar>=JAR_SIZE){S.jar=0;setTimeout(()=>{addCoins(JAR_PRIZE);SND.coin();zina(say('jar')+' +'+JAR_PRIZE,'happy');},500);}
+    if(S.jar>=JAR_SIZE){S.jar=0;setTimeout(()=>{addCoins(JAR_PRIZE);SND.coin();zina(say('jar')+' +'+JAR_PRIZE,'happy');const hj=$('hJar');hj.classList.remove('glow');void hj.offsetWidth;hj.classList.add('glow');},500);}
     else zina(say('bonus')+defNote(nd),'happy',nd?4.5:3.2);
     updJar();saveCur();return;
   }
@@ -236,6 +242,9 @@ function collectDef(w){if(DEFS[w]&&!S.dict[w]){S.dict[w]=1;G.newDefs.push(w);ret
 const DEF_NOTE=' 📖 Про это слово у меня есть запись в словаре!';
 // приписку про словарь говорим один раз за уровень, дальше хватает значка 📖 во вспышке
 function defNote(nd){if(!nd||G.defNoted)return '';G.defNoted=true;return DEF_NOTE;}
+// спорные ответы кроссворда (аудит 18: «старуха», «косяк», «чёрт», «баба») — Зина сама объясняет по-доброму, какое значение имела в виду
+const SOFTW={'старуха':'Старуха — это я, что ли? Не обижаюсь: зато опыта у меня — целый сундук!','косяк':'Косяк — это у двери, внучок! И рыба в море косяком ходит.',
+  'черт':'Чёрт — из сказки: его кузнец Вакула перехитрил!','баба':'Баба — это я! Баба Зина, прошу любить и жаловать.'};
 function foundWord(wd,byHint){
   wd.found=true;const nd=collectDef(wd.w);const cs=wordCells(wd);
   // своё слово: буквы «прыгают» из строки в клетки; подсказка и «меньше движения» — клетки открываются по очереди, как раньше
@@ -250,6 +259,7 @@ function foundWord(wd,byHint){
       const g=G;setTimeout(()=>{if(G===g&&!g.won)zina('Ищи остальные слова! Сколько осталось — написано сверху.','happy',6);},7000);}
     else if(!left)zina(pick(['Всё! Все слова на месте!','Готово! Кроссворд сдан!','Последнее! Ура!']),'happy',6);
     else if(G.rid===wd)zina(pick(['Загадку отгадал! Ну голова!','Отгадал! Я эту загадку на соседке Гале проверяла — она не смогла.','Правильно! Вот что значит начитанный.']),'wow',4.5);
+    else if(SOFTW[wd.w]&&left)zina(SOFTW[wd.w],'happy',5);
     else if(note)zina(say(wd.w.length>=6?'wordLong':'word')+note,'happy',4.5);
     else if(left===1)zina(say('oneLeft'),'wow',3.5);
     else if(half)zina(say('half'),'happy',3.5);
@@ -318,7 +328,8 @@ function shuffleLetters(){
   const wh=$('wheel');wh.querySelectorAll('.let').forEach((e,i)=>{e.textContent=G.letters[i];e.animate([{transform:'scale(.3) rotate(-90deg)'},{transform:'scale(1)'}],{duration:280,easing:'ease-out'});});
   SND.shuffle();zina(say('shuffle'),'norm',2.5);saveCur();
 }
-function updJar(){$('jarCnt').textContent=G?G.bonus.size:0;}
+function updJar(){const n=Math.max(0,Math.min(JAR_SIZE,S.jar||0)),c=$('jarCnt'),p=$('jarPg');c.textContent=n;c.classList.toggle('z',!n);
+  if(p)p.setAttribute('stroke-dasharray',(n/JAR_SIZE*113.1).toFixed(1)+' 200');$('hJar').title='Банка бонусных слов: '+n+' из '+JAR_SIZE;}
 function showJar(){
   poke();const n=S.jar||0;
   modal(`<h2>🍯 Банка бонусов</h2><p>Слова, которых нет в кроссворде, но они настоящие. Собери ${JAR_SIZE} — получишь <b>${coinsTxt(JAR_PRIZE)}</b>.</p>

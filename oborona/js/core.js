@@ -14,9 +14,9 @@ function shade(hex,a){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255
   if(a>0){r+=(255-r)*a;g+=(255-g)*a;b+=(255-b)*a;}else{r*=1+a;g*=1+a;b*=1+a;}
   return 'rgb('+(r|0)+','+(g|0)+','+(b|0)+')';}
 function rgba(hex,al){const n=parseInt(hex.slice(1),16);return 'rgba('+(n>>16)+','+(n>>8&255)+','+(n&255)+','+al+')';}
-function fmtNum(n){return String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
-function fmtGold(n){n=Math.floor(n);return fmtNum(n)+' '+plural(n,'золотой','золотых','золотых');}
-function coinsTxt(n){return n+' '+plural(n,'монета','монеты','монет');}
+function fmtNum(n){return String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g,LANG==='en'?',':' ');}
+function fmtGold(n){n=Math.floor(n);return fmtNum(n)+' '+plw(n,'золотой','золотых','золотых','gold','gold');}
+function coinsTxt(n){return n+' '+plw(n,'монета','монеты','монет','coin','coins');}
 function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<12||h>14)?b:c;}
 /* время: у Яндекса — серверное (ysdk.serverTime), иначе часы устройства. Переводом часов не получить заново задание дня,
    награду за вход, испытание дня и не попасть в таблицу недели «из будущего» (аудит 14) */
@@ -132,9 +132,23 @@ async function vkSaveCloud(){if(vkBusy){vkAgain=true;return;}vkBusy=true;
 // битое облако — не пустое: не затираем, а перечитываем; только если оно так и не собралось, пишем своё
 async function vkCloudInit(tries){try{cloudIn(await vkLoadCloud());}catch(e){
   if(tries>0)setTimeout(()=>vkCloudInit(tries-1),10000);else if(e&&e.broken)cloudIn(null);else setTimeout(()=>vkCloudInit(0),60000);}}
+// VK web: высота окна под экран браузера (модерация VK 29.09: VKWebAppResizeWindow)
+var VK_FIT={top:130,min:560,max:900,last:0,t:0};
+function vkFit(vh){if(!vh||!window.vkBridge)return;
+  var h=Math.round(Math.max(VK_FIT.min,Math.min(VK_FIT.max,vh-VK_FIT.top)));
+  if(Math.abs(h-VK_FIT.last)<8)return;VK_FIT.last=h;
+  var w=Math.max(600,Math.min(1000,window.innerWidth||911));
+  window.vkBridge.send('VKWebAppResizeWindow',{width:w,height:h}).catch(function(){VK_FIT.last=0;});}
+function vkFitInit(){try{
+  window.vkBridge.subscribe(function(e){var d=e&&e.detail;
+    if(d&&d.type==='VKWebAppUpdateConfig'&&d.data&&d.data.viewport_height){clearTimeout(VK_FIT.t);
+      VK_FIT.t=setTimeout(function(){vkFit(d.data.viewport_height);},200);}});
+  window.vkBridge.send('VKWebAppGetConfig').then(function(c){if(c&&c.viewport_height)vkFit(c.viewport_height);}).catch(function(){});
+}catch(e){}}
 async function vkInit(tries){
   try{await vkSend('VKWebAppInit',{},SDK_WAIT);}catch(e){if(tries>0)vkInit(tries-1);return;}
   if(VK)return;VK=window.vkBridge;
+  vkFitInit(); // VK web: подогнать высоту окна под экран (без ожидания)
   VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',1);cloudFlush();}else if(t==='VKWebAppViewRestore')setPause('vk',0);});
   vkCloudInit(3).then(()=>{if(typeof PAY!=='undefined')PAY.init();}); // покупки VK (js/pay.js): после моста и первого чтения облака
   vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});}
@@ -149,6 +163,7 @@ async function initSDK(){
     try{await loadScript('/sdk.js');}catch(e){}
     if(window.YaGames){
       try{ysdk=await withTimeout(YaGames.init(),15000);
+        try{langFromSdk(ysdk.environment.i18n.lang);}catch(e){} // язык площадки (js/lang.js)
         ysdk.on&&ysdk.on('game_api_pause',()=>setPause('sdk',1));
         ysdk.on&&ysdk.on('game_api_resume',()=>setPause('sdk',0));
         ycloud(3);
@@ -188,7 +203,7 @@ function showRewarded(cb0,onFail0){
   if(!ysdk){if(LOCAL)stubAd(cb);else{toast(AD_FAIL);onFail();}return;}
   let got=false;
   try{ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
-    onClose:()=>{adClose();if(got)cb();else{toast('Досмотри видео до конца, чтобы получить награду');onFail();}},
+    onClose:()=>{adClose();if(got)cb();else{toast(Lg('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
     onError:()=>{adClose();toast(AD_FAIL);onFail();}}});}catch(e){adClose();toast(AD_FAIL);onFail();}
 }
 /* межэкранная. Интервал — флагом Яндекса inter_min (минуты; берём только 5…12, иначе 8), inter=0/off — выключить.
@@ -335,4 +350,4 @@ setInterval(musTick,200);
 /* ================= тост ================= */
 let toastT=0;
 // держится не меньше 2,5 с: 1 с + 60 мс на знак
-function toast(s){const t=$('toast');t.textContent=s;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),Math.max(2500,1000+60*String(s).length));}
+function toast(s){s=langToast(s);const t=$('toast');t.textContent=s;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),Math.max(2500,1000+60*String(s).length));}

@@ -13,7 +13,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 button{font-family:inherit;color:inherit;border:0;cursor:pointer}
 #cv{position:fixed;left:0;top:0;width:100%;height:100%;display:block;touch-action:none}
 /* ---------- бой: верх и низ ---------- */
-#hud,#hudB{position:fixed;left:0;right:0;z-index:5;display:none;align-items:center;gap:8px;padding:0 max(10px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px));pointer-events:none}
+#hud,#hudB{position:fixed;left:0;right:0;z-index:5;display:none;align-items:center;gap:8px;padding:0 10px;padding:0 max(10px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px));pointer-events:none}
 body.run #hud,body.run #hudB{display:flex}
 #hud{top:0;padding-top:calc(var(--st) + 8px);height:calc(var(--st) + 52px);background:linear-gradient(180deg,rgba(10,8,22,.75),rgba(10,8,22,0))}
 #hudB{bottom:0;height:78px;padding-bottom:calc(var(--sb) + 6px);background:linear-gradient(0deg,rgba(10,8,22,.8),rgba(10,8,22,0));justify-content:space-between}
@@ -118,6 +118,8 @@ button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertic
 .btn[disabled]{filter:grayscale(1) brightness(.7);pointer-events:none}
 .btn img{width:18px;height:18px}
 .big{width:100%;padding:14px;font-size:16px;border-radius:16px;white-space:normal;line-height:1.2}
+/* длинные подписи кнопок рекламы (особенно по-английски) переносятся, а не вылезают за окно */
+.btns .btn.ad{white-space:normal;line-height:1.2}
 #mapCv{width:100%;border-radius:20px;display:block;margin:6px 0 10px;box-shadow:0 10px 30px rgba(0,0,0,.35);touch-action:pan-y}
 .lvls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .lvl{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:16px;padding:8px 4px 6px;text-align:center;font-weight:800;font-size:13px;line-height:1.15;min-height:74px;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
@@ -148,6 +150,8 @@ button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertic
 .panel .sub{text-align:center}
 .btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .btns.h{flex-direction:row}.btns.h>*{flex:1}
+/* кнопки окна прижаты к низу панели, когда она прокручивается (низкое окно VK на ноутбуке 911×560–700, телефоны) */
+.panel .btns.stick{position:-webkit-sticky;position:sticky;bottom:-18px;z-index:2;margin:12px -18px -18px;padding:14px 18px 18px;background:linear-gradient(180deg,rgba(26,33,64,0),#1a2140 14px)}
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
 .stats div{background:rgba(255,255,255,.06);border-radius:14px;padding:8px;text-align:center;font-size:13px;color:var(--mut)}
 .stats b{display:block;font-size:19px;color:#fff}
@@ -164,7 +168,7 @@ button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertic
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media (max-width:430px){.title{font-size:14px}}
 /* узкий телефон: верхняя панель боя плотнее, кнопки остаются 44 px */
-@media (max-width:400px){#hud{gap:4px;padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px))}.hp{gap:3px;padding:3px 8px 3px 3px;font-size:15px}.hp img{width:20px;height:20px}.wv{padding:3px 7px}.rb.spd{width:48px}}
+@media (max-width:400px){#hud{gap:4px;padding-left:6px;padding-right:6px;padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px))}.hp{gap:3px;padding:3px 8px 3px 3px;font-size:15px}.hp img{width:20px;height:20px}.wv{padding:3px 7px}.rb.spd{width:48px}}
 #loading{position:fixed;top:0;right:0;bottom:0;left:0;z-index:100;background:radial-gradient(120% 80% at 50% 0%,#2a3566 0%,#141a2e 60%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;font-weight:900;font-size:20px}
 #loading small{font-size:14px;color:var(--mut);font-weight:700;max-width:80vw;text-align:center}
 /* задания дня, награда за вход, благодарности, подсветка */
@@ -206,24 +210,24 @@ if(a&&!document.hidden)a.play().catch(function(){});}
 document.addEventListener('visibilitychange',function(){if(!a)return;if(document.hidden)a.pause();else a.play().catch(function(){});});})();</script>
 </head>
 <body>
-<div id="loading">Тридевятая оборона<small>защита башен</small><small>Воевода точит стрелы…</small></div>
+<div id="loading"><span data-en="Thrice-Nine Defense">Тридевятая оборона</span><small data-en="tower defense">защита башен</small><small data-en="The captain is sharpening arrows…">Воевода точит стрелы…</small></div>
 <canvas id="cv"></canvas>
 
 <div id="hud">
   <div class="hp" id="hLives"><img id="icHeart" alt=""><span>20</span></div>
   <div class="hp" id="hCoins"><img id="icCoin" alt=""><span>0</span></div>
-  <div class="hp wv"><small>волна</small><span id="hWave">0/0</span></div>
+  <div class="hp wv"><small data-en="wave">волна</small><span id="hWave">0/0</span></div>
   <div class="sp"></div>
-  <button class="rb spd" id="speedBtn" aria-label="Скорость"><b id="spdX">×1</b><small id="spdB"></small></button>
-  <button class="rb plus" id="boostBtn" aria-label="Запас ускорения">⏩</button>
-  <button class="rb" id="pauseBtn" aria-label="Пауза">❚❚</button>
+  <button class="rb spd" id="speedBtn" aria-label="Скорость" data-en-aria="Speed"><b id="spdX">×1</b><small id="spdB"></small></button>
+  <button class="rb plus" id="boostBtn" aria-label="Запас ускорения" data-en-aria="Speed-up reserve">⏩</button>
+  <button class="rb" id="pauseBtn" aria-label="Пауза" data-en-aria="Pause">❚❚</button>
 </div>
 <div id="hudB">
   <div class="spells">
-    <button class="spell" id="spThunder" aria-label="Гром Перуна"><img id="icThunder" alt=""><i></i><u>Гром</u></button>
-    <button class="spell" id="spCat" aria-label="Кот Баюн"><img id="icCat" alt=""><i></i><u>Кот</u></button>
+    <button class="spell" id="spThunder" aria-label="Гром Перуна" data-en-aria="Perun's Thunder"><img id="icThunder" alt=""><i></i><u data-en="Thunder">Гром</u></button>
+    <button class="spell" id="spCat" aria-label="Кот Баюн" data-en-aria="Bayun the Cat"><img id="icCat" alt=""><i></i><u data-en="Cat">Кот</u></button>
   </div>
-  <button id="waveBtn">В бой!</button>
+  <button id="waveBtn">⚔</button>
 </div>
 <div id="ring"></div>
 <div id="info"></div>
@@ -231,10 +235,10 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 
 <div id="menu">
   <div class="topbar">
-    <div class="title">Тридевятая оборона<small>защита башен</small></div>
+    <div class="title"><span data-en="Thrice-Nine Defense">Тридевятая оборона</span><small data-en="tower defense">защита башен</small></div>
     <div class="pill"><img id="pStarIc" alt=""><span id="pStar">0</span></div>
     <div class="pill"><img id="pGoldIc" alt=""><span id="pGold">0</span></div>
-    <button class="ibtn" id="setBtn" aria-label="Настройки">⚙</button>
+    <button class="ibtn" id="setBtn" aria-label="Настройки" data-en-aria="Settings">⚙</button>
   </div>
   <div class="tabs">
     <section class="tab" id="tabMap"></section>
@@ -243,21 +247,23 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
     <section class="tab" id="tabSiege"></section>
   </div>
   <nav>
-    <button data-tab="Map" id="navM"><img id="nav1" alt="">Карта</button>
-    <button data-tab="Forge" id="navF"><img id="nav2" alt="">Кузница</button>
-    <button data-tab="Village" id="navV"><img id="nav3" alt="">Деревня</button>
-    <button data-tab="Siege" id="navS"><img id="nav4" alt="">Испытания</button>
+    <button data-tab="Map" id="navM"><img id="nav1" alt=""><span data-en="Map">Карта</span></button>
+    <button data-tab="Forge" id="navF"><img id="nav2" alt=""><span data-en="Forge">Кузница</span></button>
+    <button data-tab="Village" id="navV"><img id="nav3" alt=""><span data-en="Village">Деревня</span></button>
+    <button data-tab="Siege" id="navS"><img id="nav4" alt=""><span data-en="Trials">Испытания</span></button>
   </nav>
 </div>
 
 <div id="modal"><div class="panel" id="mBody"></div></div>
-<div id="ad"><div>Реклама</div><div id="adT">3</div></div>
+<div id="ad"><div data-en="Ad">Реклама</div><div id="adT">3</div></div>
 <div id="toast"></div>
 
+<script src="js/lang.js"></script>
 <script src="js/core.js"></script>
 <script src="js/pay.js"></script>
 <script src="js/art.js"></script>
 <script src="js/data.js"></script>
+<script src="js/en.js"></script>
 <script src="js/game.js"></script>
 <script src="js/ui.js"></script>
 </body>

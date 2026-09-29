@@ -47,13 +47,17 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .mrow{display:flex;gap:10px}
 .mrow .btn{flex:1;font-size:16px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
 .mrow .btn b{font-size:24px}
+.mrow.m4 .btn{min-width:0;font-size:15px;padding:10px 3px}.mrow.m4 #btnMore{flex:0 0 64px}
+@media (max-width:380px){.mrow.m4 .btn{font-size:13px}.mrow.m4 #btnMore{flex-basis:56px}}
+.soc-o{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;background:#f1ede2;border-radius:14px;padding:8px 10px;text-align:left;font-weight:700;font-size:15px;color:#2d3436;line-height:1.3}
+.soc-o span{flex:1;min-width:0}.soc-o .btn{flex:none;padding:8px 12px;font-size:15px;min-height:44px;width:auto;margin:0}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#e8590c;margin-left:4px;vertical-align:2px}
 .note{color:#fff;text-align:center;font-size:15px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7)}
 /* игра */
 .gh{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,0,0,.25);color:#fff;flex:0 0 auto}
 .gt{flex:1;min-width:0;line-height:1.15}
 .gt b{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gt span{font-size:15px;opacity:.95;white-space:nowrap}
+.gt span{display:block;font-size:15px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stage{position:relative;flex:1;min-height:0;overflow:hidden}
 #cv{position:absolute;top:0;left:0;touch-action:none}
 .gf{display:flex;gap:8px;padding:6px 10px 8px;background:rgba(0,0,0,.25);flex:0 0 auto;justify-content:center}
@@ -85,6 +89,30 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .wstat{display:flex;justify-content:center;gap:18px;font-weight:800;font-size:17px;margin:8px 0}
 .wstat span{display:flex;flex-direction:column;align-items:center}.wstat small{font-weight:600;color:#5d666b;font-size:14px}
 .achn{background:#fff3d6;border-radius:14px;padding:8px 10px;margin:8px 0;font-weight:700;font-size:16px}
+.achs{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:8px 0}.achs span{background:#fff3d6;border-radius:12px;padding:5px 9px;font-weight:700;font-size:14px}
+.wgoal{margin:6px 0 2px;font-weight:700;font-size:15px;color:#4b5358}.wgoal.rec{color:#b35c00}
+.wgbar{height:8px;border-radius:99px;background:#ece6d8;overflow:hidden;margin:4px 24px 0}.wgbar i{display:block;height:100%;background:#e0a100;border-radius:99px}
+.cfly{position:fixed;z-index:30;font-size:22px;pointer-events:none;transition:transform .65s cubic-bezier(.5,-0.2,.7,1),opacity .65s}
+.pill.bump{position:relative;z-index:11;animation:bump .35s ease-out}@keyframes bump{50%{transform:scale(1.18)}}
+/* меню «что сегодня» */
+.today{background:rgba(255,253,247,.94);border-radius:18px;padding:4px 6px;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.trow{display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;text-align:left;color:#2d3436;font-weight:700;font-size:15px;line-height:1.25;border-radius:12px;min-height:44px}
+.trow+.trow{border-top:1px solid rgba(0,0,0,.07)}.trow .ti{font-size:22px;flex:0 0 28px;text-align:center}.trow span{flex:1;min-width:0}
+.trow small{display:block;font-weight:600;color:#5d666b;font-size:14px}.trow .ok{color:#237032}.trow .go{color:#237032;font-weight:800}
+.trow .dot{margin-left:0}
+/* низкий экран: три карточки в ряд, меню плотнее */
+.mwrap>*{flex-shrink:0}
+@media (max-height:700px){.mwrap{gap:8px;padding-bottom:10px}.logo h1{font-size:30px}.logo div{font-size:15px}.host{min-height:76px}.host canvas{width:70px;height:76px;flex-basis:70px}.host .bub{font-size:15px;margin-bottom:12px;padding:8px 12px}.note{font-size:13px}.mbtns{gap:9px}.mbtns .btn{min-height:50px}.mrow .btn{padding:7px 6px}.mrow .btn b{font-size:21px}
+  .today{display:flex;padding:3px}.trow{flex-direction:column;justify-content:flex-start;text-align:center;gap:1px;min-height:0;padding:5px 3px;font-size:13px;line-height:1.2}
+  .trow+.trow{border-top:0;border-left:1px solid rgba(0,0,0,.07)}.trow .ti{font-size:18px;flex:none}.trow span{flex:none;width:100%}.trow small{font-size:12px}.trow .go{display:none}}
+@media (max-height:700px){@supports not (inset:0){.today>*+*{margin-left:0}}}
+@media (max-height:600px){.mbtns .btn{min-height:46px;font-size:18px}.mrow .btn{min-height:44px}.mrow .btn b{font-size:18px}.modes button{min-height:40px}.trow .ti{display:none}.mwrap{gap:7px}.host{min-height:62px}.host canvas{width:56px;height:62px;flex-basis:56px}.host .bub{margin-bottom:8px}
+  .mrow.m4 .btn{flex-direction:column;gap:0}}
+@media (max-height:600px) and (min-width:400px){.mrow .btn{flex-direction:row;gap:6px}}
+@media (max-width:360px){.mrow.m4 .btn{font-size:12px;letter-spacing:-.2px}.mrow.m4 .btn b{font-size:19px}}
+@media (max-height:600px) and (max-width:699px){.card .scroll{max-height:50vh}}
+@media (max-height:600px) and (max-width:360px){.mwrap .note{display:none}}
+@media (max-height:600px) and (max-width:699px){#mcard .host{display:none}#mcard h2{font-size:22px}#mcard .wstat{margin:4px 0}}
 .set{display:flex;align-items:center;justify-content:space-between;background:#f1ede2;border-radius:14px;padding:10px 12px;margin-top:8px;font-weight:700;text-align:left;color:#2d3436;width:100%;min-height:52px;font-size:17px}
 .set span{padding-right:8px}
 .set small{font-weight:600;color:#5d666b;font-size:14px}
@@ -112,12 +140,17 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 @media (max-width:370px){.logo h1{font-size:29px}.gf .btn{font-size:20px}.gf .btn small{font-size:13px}.mbtns .btn{font-size:18px}}
 @media (max-height:560px){.gf{padding-top:3px;padding-bottom:4px}.gf .btn{min-height:46px;flex-direction:row;gap:6px}.gh{padding-top:3px;padding-bottom:3px}.gh .icon{width:44px;height:44px}.host{min-height:70px}.host canvas{width:64px;height:70px;flex-basis:64px}}
 @media (min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}.card{max-width:460px}}
+/* компьютер, низкое окно (VK web после VKWebAppResizeWindow — 560…900): окно целиком в экране, прокручивается только список внутри */
+@media (min-width:700px){.card{max-height:100%;display:flex;flex-direction:column;overflow-y:auto}.card>*{flex-shrink:0}.card>.scroll{flex:0 1 auto;min-height:0;max-height:none}}
+@media (min-width:700px) and (max-height:700px){.modal{padding:8px 16px}.card{padding:14px 14px 12px}.card h2{font-size:22px}.it{min-height:118px}.it canvas{height:58px}.row.hz{flex-direction:row}.row.hz .btn{flex:1;padding:10px 8px;font-size:16px}}
+@media (min-width:700px) and (max-height:700px){@supports not (inset:0){.row.hz>*+*{margin-top:0;margin-left:10px}}}
 /* меньше движения: системная настройка или «спокойный режим» в игре */
 @media (prefers-reduced-motion:reduce){.card{animation:none}}
 body.calm .card{animation:none}
 /* вырез экрана (iPhone в альбомной ориентации) */
 .gh,.gf{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 /* запасные отступы для старых браузеров без gap во flex (≈ те же, где нет inset) */
+@supports not (inset:0){.achs>*{margin:3px}.trow+.trow{margin:0}.soc-o>*+*{margin-left:8px}}
 @supports not (inset:0){.mwrap>*+*,.mbtns>*+*,.row>*+*{margin-top:12px}.mh>*+*,.mrow>*+*,.gf>*+*,.gh>*+*,.row2>*+*,.modes>*+*,.tabs>*+*,.ach>*+*,.lbr>*+*{margin-left:8px}.grid>*{margin:5px}.host>*+*{margin-left:8px}.say>*+*{margin-left:6px}.wstat>*+*{margin-left:18px}.it>*+*{margin-top:4px}}
 @media (max-height:560px){@supports not (inset:0){.gf .btn>*+*{margin-left:6px}}}
 </style>
@@ -146,7 +179,10 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
         <button class="btn" id="btnDecor"><b>🎨</b>Украшения</button>
         <button class="btn" id="btnStats"><b>📊</b>Успехи</button>
         <button class="btn" id="btnStreak"><b>🎁</b>Подарок</button>
+        <button class="btn" id="btnMore" style="display:none"><b>🎲</b>Игры</button>
       </div>
+      <div class="today" id="mToday"></div>
+      <!-- сюда позже — полоска «🎯 Задания дня» (модуль QUEST, после пилота в «Гастрономе») -->
       <div class="note" id="mNote"></div>
     </div>
   </section>
@@ -427,8 +463,9 @@ function mergeSave(d,ref){if(!isObj(d))return;
     if(typeof a.cs==='number'&&newer)b.cs=a.cs;}
   if(isObj(d.own))for(const f of ['tables','backs','faces'])if(Array.isArray(d.own[f])){if(!Array.isArray(S.own[f]))S.own[f]=[];for(const x of d.own[f])if(typeof x==='string'&&S.own[f].indexOf(x)<0)S.own[f].push(x);}
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|games|wins|daily|ach|seq|st|own|coins|streak|buy|buyB|payT|payV)$/.test(k))S[k]=d[k]; // настройки, выбранный стол и т. п.
+  for(const k in d)if(k!=='soc'&&(!(k in S)||newer&&!/^(ts|games|wins|daily|ach|seq|st|own|coins|streak|buy|buyB|payT|payV|soc)$/.test(k)))S[k]=d[k]; // настройки, выбранный стол и т. п.
   payMerge(d); // покупки — объединение
+  SOC.merge(d.soc); // соц-предложения VK: сливаем в тот же объект S.soc (модуль держит ссылку)
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
     if(!a||(b.last||0)>(a.last||0))S.streak=b;
     else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last,cyc:Math.max(a.cyc||0,b.cyc||0)};}}
@@ -437,6 +474,149 @@ function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
 // ответ VK с ограничением по времени (вне VK мост может не ответить вовсе); VKWebAppInit на слабом телефоне может идти долго — ждём до 20 с
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
+/*SOC*/
+/* ===== SOC v2 (29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
+   Общий модуль для всех игр. Источник — ~/Projects/hobby-analytics/soc/soc.js (правки — только там, потом soc-sync.sh).
+   Правила VK: 2.6.2 — никаких наград за приглашение/«поделиться»/избранное/экран (разрешено лишь за вступление в сообщество —
+   в наших играх НЕ даём); 2.6.3 — само-предложения не в первую сессию, отказ помним, повтор не чаще раза в 30 дней, ≤3 раз.
+   Покер (18+) в список не добавлять никогда. 12+ (Дурак, Козёл) — с пометкой «12+».
+   Старый синтаксис: без optional chaining и nullish-оператора, без CSS-свойства inset. Нужны из игры: PLAT ('vk'|…), VK (мост после VKWebAppInit или null), vkSend(метод,параметры,мс). */
+var SOC=(function(){
+  var GROUP=241793582,DAY=864e5,VER=2;
+  // i — место в спрайте dvor.jpg (по 96 px), g — группа (c карты, p головоломки, s сказка, r спокойные), a — возраст,
+  // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
+  var GAMES=[
+    {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p'},
+    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p',off:'web'},
+    {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s'},
+    {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s'},
+    {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',off:'all'},
+    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c',off:'web'},
+    {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c'},
+    {id:54792011,t:'Паук на даче',a:0,i:7,g:'c'},
+    {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c'},
+    {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all'},
+    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p',off:'web'},
+    {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r'},
+    {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p'}
+  ];
+  var N=GAMES.length;
+  function qp(k){var m=new RegExp('[?&]'+k+'=([^&#]*)').exec(location.search);return m?decodeURIComponent(m[1]):'';}
+  var APP=+qp('vk_app_id')||0,PF=qp('vk_platform'),WEB=PF.indexOf('desktop')===0;
+  var st={},O={},T0=Date.now(),asked=false,homeOk=null,readyOn=false;
+  function tx(ru,en){return typeof LANG!=='undefined'&&LANG==='en'?en:ru;} // VK всегда по-русски; обёртка — по правилам игр
+  function nop(){}
+  function saveFn(){(O.save||nop)();}
+  function toastFn(t){(O.toast||nop)(t);}
+
+  // только настоящий VK (vk_app_id в адресе) и живой мост
+  function ok(){return typeof PLAT!=='undefined'&&PLAT==='vk'&&typeof VK!=='undefined'&&!!VK&&APP>0;}
+  function send(m,p){return vkSend(m,p||{},60000);}
+  function me(){for(var i=0;i<N;i++)if(GAMES[i].id===APP)return GAMES[i];return null;}
+  function done(k){st[k]={d:1};saveFn();}
+  function tried(k){var x=st[k]||{};x.n=(x.n||0)+1;x.t=Date.now();st[k]=x;saveFn();}
+  function due(k){var x=st[k]||{};return !x.d&&(x.n||0)<3&&(!x.t||Date.now()-x.t>30*DAY);}
+
+  /* SOC.init(S, {save, toast, cls, modal, close}) — один раз при запуске, после загрузки сохранения (считает сессии).
+     cls — классы кнопок (по умолчанию 'btn noenter': Enter их не жмёт); modal(html) — показать окно игры и вернуть его
+     контейнер; close() — закрыть окно игры. Без modal — своё лёгкое окно. */
+  function init(S,opt){O=opt||{};if(!S.soc||typeof S.soc!=='object')S.soc={};st=S.soc;
+    st.ses=(st.ses||0)+1;if(qp('vk_is_favorite')==='1')st.fav={d:1};saveFn();ready();}
+  // после VKWebAppInit (мост готов): узнать, можно ли значок на экран (только Android)
+  function ready(){if(readyOn||!ok())return;readyOn=true;
+    if(PF.indexOf('android')>=0)vkSend('VKWebAppAddToHomeScreenInfo',{},4000).then(function(r){
+      homeOk=!!(r&&r.is_feature_supported&&!r.is_added_to_home_screen);},function(){homeOk=false;});
+    else homeOk=false;}
+  // облако: вызвать из слияния сохранений игры — SOC.merge(d.soc); сессии — максимум, «сделано» — навсегда, попытки — больше/позже
+  function merge(d){if(!d||typeof d!=='object')return;
+    for(var k in d){var a=st[k],b=d[k];
+      if(k==='ses'){if(typeof b==='number'&&b>(st.ses||0))st.ses=b;continue;}
+      if(!b||typeof b!=='object')continue;
+      if(!a||typeof a!=='object'){st[k]=b;continue;}
+      if(a.d||b.d){st[k]={d:1};continue;}
+      a.n=Math.max(a.n||0,b.n||0);a.t=Math.max(a.t||0,b.t||0);}}
+
+  // --- действия (кнопки в ⚙ жмёт сам игрок; ограничений частоты нет, наград нет) ---
+  function fav(){return send('VKWebAppAddToFavorites').then(function(r){if(r&&r.result)done('fav');return !!(r&&r.result);},function(){tried('fav');return false;});}
+  function home(){return send('VKWebAppAddToHomeScreen').then(function(r){if(r&&r.result){done('home');homeOk=false;}return !!(r&&r.result);},function(){tried('home');return false;});}
+  // «Приведи друга» (модуль REF, если он есть в игре и включён): вместо окна приглашения — ссылка с меткой #ref=<id>,
+  // иначе друг, открывший игру с телефона, не засчитается (окно приглашения передаёт автора только на сайте ВК)
+  function refOn(){return typeof REF!=='undefined'&&!!REF&&typeof REF.on==='function'&&REF.on();}
+  function invite(){if(refOn())return send('VKWebAppShare',{link:REF.link()}).then(function(){done('inv');return true;},function(){tried('inv');return false;});
+    return send('VKWebAppShowInviteBox').then(function(r){if(r&&r.success!==false)done('inv');return true;},function(){tried('inv');return false;});}
+  function share(){return send('VKWebAppShare',{link:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){return true;},function(){return false;});}
+  function group(){return send('VKWebAppJoinGroup',{group_id:GROUP}).then(function(r){if(r&&r.result)done('grp');return !!(r&&r.result);},function(){tried('grp');return false;});}
+  function open(g){return send('VKWebAppOpenApp',{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
+    toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
+
+  // --- список «Ещё игры»: без себя, без 18+, без неопубликованных на этой площадке; сначала родственные, дальше — сдвиг по дню ---
+  function list(n){var m=me(),mg=m?m.g:'',out=[],i,g,day=Math.floor(Date.now()/DAY);
+    for(i=0;i<N;i++){g=GAMES[i];if(g.id===APP||g.a>=18||g.off==='all'||(g.off==='web'&&WEB))continue;out.push(g);}
+    out.sort(function(a,b){var x=(b.g===mg)-(a.g===mg);if(x)return x;return ((a.i+day)%N)-((b.i+day)%N);});
+    return out.slice(0,n||6);}
+
+  function css(){if(document.getElementById('socCss'))return;var s=document.createElement('style');s.id='socCss';
+    s.textContent='.soc-list{margin:6px 0 4px;text-align:left}'+
+      '.soc-g{display:flex;align-items:center;width:100%;padding:7px 4px;border:0;border-top:1px solid rgba(0,0,0,.08);background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}'+
+      '.soc-g:first-child{border-top:0}'+
+      '.soc-ic{width:48px;height:48px;border-radius:11px;flex:none;margin-right:12px;background-color:#ddd;background-repeat:no-repeat;box-shadow:0 1px 3px rgba(0,0,0,.2)}'+
+      '.soc-t{flex:1;min-width:0;font-weight:700;font-size:17px;line-height:1.2}'+
+      '.soc-t small{font-weight:800;color:#8a6d4b;margin-left:4px;white-space:nowrap}'+
+      '.soc-a{font-size:24px;opacity:.5;margin-left:6px}'+
+      '.soc-box{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:9999;overflow:auto;padding:12px 16px}'+
+      '.soc-card{background:#fff;color:#222;border-radius:16px;max-width:420px;margin:0 auto;padding:14px 16px;font:17px/1.3 sans-serif}'+
+      '.soc-set>*+*{margin-top:8px}'+
+      '@media (max-height:620px){.soc-g{padding:4px}}'+
+      '@media (max-height:440px) and (min-width:600px){.soc-list{display:-webkit-box;display:flex;flex-wrap:wrap}.soc-g{width:50%;border-top:0}}';
+    document.head.appendChild(s);}
+  function btn(k,label){return '<button class="'+(O.cls||'btn noenter')+'" data-soc="'+k+'">'+label+'</button>';}
+
+  // --- кнопки для ⚙ (HTML); в Яндексе и без моста — пусто ---
+  function settingsHtml(){if(!ok())return '';
+    var b=btn('inv',tx('👥 Позвать друзей','👥 Invite friends'))+btn('share',tx('📤 Поделиться игрой','📤 Share the game'));
+    if(!(st.fav&&st.fav.d))b+=btn('fav',tx('⭐ В избранное','⭐ Add to favourites'));
+    if(homeOk)b+=btn('home',tx('📲 На экран телефона','📲 Add to home screen'));
+    b+=btn('grp',tx('📣 Наше сообщество','📣 Our community'))+btn('more',tx('🎲 Ещё игры во дворе','🎲 More yard games'));
+    return '<div class="soc-set">'+b+'</div>';}
+  // навесить обработчики после вставки HTML: SOC.bind(контейнер, back) — back() вызывается при «Назад» из «Ещё игры»
+  function bind(root,back){if(!root)return;var bs=root.querySelectorAll('[data-soc]');
+    for(var i=0;i<bs.length;i++)bs[i].onclick=function(){var k=this.getAttribute('data-soc');
+      if(k==='inv')invite();else if(k==='share')share();else if(k==='fav')fav().then(function(){if(back)back();});
+      else if(k==='home')home().then(function(){if(back)back();});else if(k==='grp')group();else if(k==='more')showMore(back);};}
+
+  // --- окно «Ещё игры во дворе»: через modal() игры (O.modal) или своё лёгкое. back — куда вернуться по «Назад» ---
+  function showMore(back){if(!ok())return;css();var G=list(6),spr=O.sprite||'js/dvor.jpg',h='';
+    for(var i=0;i<G.length;i++)h+='<button class="soc-g" data-g="'+i+'"><span class="soc-ic" style="background-image:url('+spr+');background-position:'+(-48*G[i].i)+'px 0;background-size:'+(48*N)+'px 48px"></span>'+
+      '<span class="soc-t">'+G[i].t+(G[i].a>=12?'<small>'+G[i].a+'+</small>':'')+'</span><span class="soc-a">›</span></button>';
+    var head='<h2>'+tx('Ещё игры во дворе','More yard games')+'</h2>',
+      foot='<div class="row"><button class="'+(O.cls||'btn noenter')+'" id="socClose">'+(back?tx('← Назад','← Back'):tx('Закрыть','Close'))+'</button></div>',
+      root,box=null;
+    if(O.modal)root=O.modal(head+'<div class="soc-list">'+h+'</div>'+foot);
+    else{box=document.createElement('div');box.className='soc-box';box.id='socBox';
+      box.innerHTML='<div class="soc-card">'+head+'<div class="soc-list">'+h+'</div>'+foot+'</div>';document.body.appendChild(box);root=box;
+      box.onclick=function(e){if(e.target===box)close();};}
+    function close(){if(box){if(box.parentNode)box.parentNode.removeChild(box);}else if(O.close)O.close();}
+    var c=root.querySelector('#socClose');if(c)c.onclick=function(){if(back&&O.modal)back();else close();};
+    var rows=root.querySelectorAll('[data-g]');
+    for(var j=0;j<rows.length;j++)rows[j].onclick=function(){open(G[+this.getAttribute('data-g')]);};}
+
+  /* --- одно само-предложение за сессию (звать из окна победы). wins — число побед всего; busy — игра занята
+     (реклама < 60 с назад, пауза, следом межэкранная). Вернёт {k, t, b, run} или null — строку и кнопку рисует игра.
+     Показ сразу считается «отказом» (≤3 раз, не чаще раза в 30 дней); успех fav/home/inv/grp — больше никогда. --- */
+  function offer(wins,busy){if(!ok()||asked||busy||(st.ses||0)<2||Date.now()-T0<120000)return null;
+    var o=null;
+    if(due('fav'))o={k:'fav',t:tx('Добавьте игру в избранное — будет всегда под рукой.','Add the game to favourites — always at hand.'),b:tx('⭐ В избранное','⭐ Add to favourites'),run:fav};
+    else if(homeOk&&st.ses>=3&&due('home'))o={k:'home',t:tx('Значок игры на экране — заходить в одно касание.','A game icon on your screen — one tap to play.'),b:tx('📲 На экран телефона','📲 Add to home screen'),run:home};
+    else if(st.ses>=3&&(wins||0)>=5&&due('inv'))o={k:'inv',t:tx('Позовите друзей — будет с кем посоревноваться.','Invite friends — someone to compete with.'),b:tx('👥 Позвать друзей','👥 Invite friends'),run:invite};
+    else if(st.ses>=4&&due('grp'))o={k:'grp',t:tx('Новости и новые игры — в сообществе «Игры во дворе».','News and new games — in the "Yard Games" community.'),b:tx('📣 Наше сообщество','📣 Our community'),run:group};
+    else{var x=st.more||{};if(!x.t||Date.now()-x.t>7*DAY){var g=list(1)[0];
+      if(g)o={k:'more',t:tx('Попробуйте ещё: «'+g.t+'»'+(g.a>=12?' ('+g.a+'+)':'')+'.','Try another one: "'+g.t+'".'),b:tx('🎲 Открыть','🎲 Open'),run:function(){return open(g);}};}}
+    if(!o)return null;asked=true;if(o.k==='more'){st.more={t:Date.now()};saveFn();}else tried(o.k);return o;}
+
+  return {v:VER,ok:ok,init:init,ready:ready,merge:merge,fav:fav,home:home,invite:invite,share:share,group:group,open:open,list:list,
+    settingsHtml:settingsHtml,bind:bind,showMore:showMore,offer:offer,games:GAMES};
+})();
+/*/SOC*/
 // VK хранит значение до 4096 байт — режем на куски по 1800 символов (сохранение — латиница и цифры).
 // Двойной буфер: новые куски пишутся по очереди в «a0…» или «b0…», а указатель svn="b:5:<длина>" — строго последним;
 // пока новый набор не дописан, старый цел. Запись последовательная (без гонок и частотных ошибок VK)
@@ -462,11 +642,25 @@ async function vkLoadCloud(){const r0=await vkSend('VKWebAppStorageGet',{keys:['
   return d;}
 // облако пришло позже меню: перерисовать то, что на экране (раскладку на столе не трогаем — она своя у устройства)
 function onCloud(){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}updCoins();applyLook();
+  if(PLAT!=='vk'&&LB.days()>Math.max(LB.sent,LB0))LB.submit(); // дни с другого устройства — в рейтинг сразу
   if(!modalOn&&$('scr-menu').classList.contains('on'))openMenu();}
+// VK web: высота окна под экран браузера (модерация VK 29.09: VKWebAppResizeWindow)
+var VK_FIT={top:130,min:560,max:900,last:0,t:0};
+function vkFit(vh){if(!vh||!window.vkBridge)return;
+  var h=Math.round(Math.max(VK_FIT.min,Math.min(VK_FIT.max,vh-VK_FIT.top)));
+  if(Math.abs(h-VK_FIT.last)<8)return;VK_FIT.last=h;
+  var w=Math.max(600,Math.min(1000,window.innerWidth||911));
+  vkSend('VKWebAppResizeWindow',{width:w,height:h}).catch(function(){VK_FIT.last=0;});}
+function vkFitInit(){try{
+  window.vkBridge.subscribe(function(e){var d=e&&e.detail;
+    if(d&&d.type==='VKWebAppUpdateConfig'&&d.data&&d.data.viewport_height){clearTimeout(VK_FIT.t);
+      VK_FIT.t=setTimeout(function(){vkFit(d.data.viewport_height);},200);}});
+  vkSend('VKWebAppGetConfig').then(function(c){if(c&&c.viewport_height)vkFit(c.viewport_height);}).catch(function(){});
+}catch(e){}}
 async function initVK(){
   // меню уже на экране; мост VK и облако догружаем следом (VKWebAppInit может отвечать секунды)
   try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
-    await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;
+    await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;vkFitInit();SOC.ready();updMore();updButtons();if(modalOn&&modalRe)modalRe();
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
       else if(t==='VKWebAppViewRestore')setPause('hide',false);});
@@ -679,6 +873,7 @@ function computeLayout(){const NT=R.NT,pad=W<520?4:12,gk=GID==='spider'?.07:.1,l
 function colStep(pi){const a=G.st.p[pi],n=a.length,d=Math.min(G.st.d[pi],Math.max(0,n-1));let fd=LY.fd,fu=LY.fu;if(n<2)return [fd,fu];
   const avail=H-LY.pad-LY.tabY-LY.ch,nd=d,nu=n-1-nd;let need=nd*fd+nu*fu;
   if(need>avail){fu=Math.max(LY.ch*.25,(avail-nd*fd)/Math.max(1,nu));need=nd*fd+nu*fu;if(need>avail){const k=avail/need;fd*=k;fu*=k;}}
+  else if(GID==='spider'&&nu>0)fu=Math.max(fu,Math.min(LY.ch*.42,(avail-nd*fd)/nu)); // Паук: свободное место — открытые карты крупнее (аудит UX 18 №2)
   return [fd,fu];}
 function faceUp(pi,j){const k=R.kind(pi);if(k==='stock')return false;if(k==='tab')return j>=G.st.d[pi];return true;}
 // где лежит карта j стопки pi (левый верхний угол)
@@ -757,10 +952,12 @@ function render(){if(!LY)return;const t=now();ctx.setTransform(dpr,0,0,dpr,0,0);
       if(h.stock){const s=LY.sl[0],p=st.p[0].length?cardXY(0,st.p[0].length-1):s;glow(p.x,p.y,LY.cw,LY.ch,a);}
       else{const a0=st.p[h.f];if(h.j<a0.length){const p0=cardXY(h.f,h.j),pl=cardXY(h.f,a0.length-1);glow(p0.x,p0.y,LY.cw,pl.y-p0.y+LY.ch,a);}
         const b=st.p[h.t],pt=b.length?cardXY(h.t,b.length-1):LY.sl[h.t];glow(pt.x,pt.y,LY.cw,LY.ch,a*.8);}}}
-  if(drag){if(drag.over>=0){const b=st.p[drag.over],pt=b.length?cardXY(drag.over,b.length-1):LY.sl[drag.over];glow(pt.x,pt.y,LY.cw,LY.ch,.9);}
+  if(drag){for(const q of drag.ok||[]){if(q===drag.over)continue;const b=st.p[q],pt=b.length?cardXY(q,b.length-1):LY.sl[q];glow(pt.x,pt.y,LY.cw,LY.ch,.3);}
+    if(drag.over>=0){const b=st.p[drag.over],pt=b.length?cardXY(drag.over,b.length-1):LY.sl[drag.over];glow(pt.x,pt.y,LY.cw,LY.ch,.9);}
     const step=R.kind(drag.pi)==='tab'?colStep(drag.pi):null,base=cardXY(drag.pi,drag.j,step);
-    for(let k=0;k<drag.ids.length;k++){const p=cardXY(drag.pi,drag.j+k,step),s=SPR[drag.ids[k]];ctx.save();ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=10;ctx.shadowOffsetY=4;
-      drawCard(drag.ids[k],drag.x-drag.ox+(p.x-base.x),drag.y-drag.oy+(p.y-base.y),s,t);ctx.restore();}}}
+    for(let k=0;k<drag.ids.length;k++){const p=cardXY(drag.pi,drag.j+k,step),s=SPR[drag.ids[k]];const x=drag.x-drag.ox+(p.x-base.x),y=drag.y-drag.oy+(p.y-base.y),cx=x+LY.cw/2,cy=y+LY.ch/2;
+      ctx.save();ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=14;ctx.shadowOffsetY=7;ctx.translate(cx,cy);ctx.scale(1.04,1.04);ctx.translate(-cx,-cy);
+      drawCard(drag.ids[k],x,y,s,t);ctx.restore();}}}
 function animating(t){if(G&&(G.hl||G.fx||G.shake))return true;for(const id in SPR){const s=SPR[id];if(t<s.t0+s.dur||s.ft&&s.want!==s.up)return true;}return false;}
 // цикл кадров спит, когда ничего не движется (и на паузе); любое изменение — kick()
 let loopOn=false;
@@ -796,11 +993,17 @@ function dropTarget(d){const st=G.st,x=d.x-d.ox,y=d.y-d.oy;let best=-1,ba=0;
     let tt=t;if(k==='found'){if(d.ids.length!==1)continue;tt=foundFor(st.p[d.pi][d.j]);if(tt<0)continue;}
     if(ar>ba&&R.canDrop(st,d.pi,d.j,tt)){ba=ar;best=tt;}}
   return best;}
+// все места, куда можно положить карты (для лёгкой подсветки при перетаскивании)
+function dropOk(pi,j){const st=G.st,r=[];if(!R.canPick(st,pi,j))return r;const n=st.p[pi].length-j;
+  for(let t=0;t<st.p.length;t++){const k=R.kind(t);if(k==='stock'||k==='waste'||t===pi||!LY.sl[t])continue;
+    if(k==='found'){if(n!==1||r.indexOf(t)>=0)continue;const f=foundFor(st.p[pi][j]);if(f===t&&R.canDrop(st,pi,j,f))r.push(f);continue;}
+    if(R.canDrop(st,pi,j,t))r.push(t);}
+  return r;}
 let ptr=null;
 cv.addEventListener('pointerdown',e=>{if(!G||G.won||G.busy||modalOn)return;if(G.fx){endFx();return;}if(ptr)return;const p=cvPos(e),h=hitTest(p.x,p.y);
   ptr={id:e.pointerId,x0:p.x,y0:p.y,h,t:now()};if(h&&h.pick){try{cv.setPointerCapture(e.pointerId);}catch(er){}}});
 cv.addEventListener('pointermove',e=>{if(!ptr||ptr.id!==e.pointerId||!G)return;const p=cvPos(e),h=ptr.h;
-  if(!G.drag&&h&&h.pick&&Math.hypot(p.x-ptr.x0,p.y-ptr.y0)>8){const c=cardXY(h.pi,h.j);G.drag={on:true,pi:h.pi,j:h.j,ids:G.st.p[h.pi].slice(h.j),ox:ptr.x0-c.x,oy:ptr.y0-c.y,x:p.x,y:p.y,over:-1};G.hl=null;}
+  if(!G.drag&&h&&h.pick&&Math.hypot(p.x-ptr.x0,p.y-ptr.y0)>8){const c=cardXY(h.pi,h.j);G.drag={on:true,pi:h.pi,j:h.j,ids:G.st.p[h.pi].slice(h.j),ox:ptr.x0-c.x,oy:ptr.y0-c.y,x:p.x,y:p.y,over:-1,ok:dropOk(h.pi,h.j)};G.hl=null;}
   if(G.drag){G.drag.x=p.x;G.drag.y=p.y;G.drag.over=dropTarget(G.drag);render();}});
 function ptrEnd(e){if(!ptr||ptr.id!==e.pointerId)return;const h=ptr.h;ptr=null;if(!G)return;
   if(G.drag){const d=G.drag;G.drag=null;const t=e.type==='pointercancel'?-1:dropTarget(d);
@@ -810,6 +1013,7 @@ function ptrEnd(e){if(!ptr||ptr.id!==e.pointerId)return;const h=ptr.h;ptr=null;i
     return;}
   if(e.type==='pointercancel'||!h)return;
   if(h.stock){stockTap();return;}
+  if(h.pick&&R.kind(h.pi)==='found')return; // карта из дома обратно — только перетаскиванием (случайный тап её не трогает)
   if(h.pick)tapMove(h.pi,h.j);else if(h.up)nudge();}
 cv.addEventListener('pointerup',ptrEnd);cv.addEventListener('pointercancel',ptrEnd);
 function nudge(){SND.no();buzz(15);}
@@ -822,7 +1026,8 @@ function bestTarget(pi,j){const st=G.st,a=st.p[pi],c=a[j],n=a.length-j;
     sc-=ci>=0?Math.abs(t-R.TAB-ci)*.5:(t-R.TAB)*.5;if(sc>bs){bs=sc;best=t;}}
   if(best<0&&GID==='freecell'&&n===1&&R.kind(pi)==='tab')for(let t=0;t<4;t++)if(!st.p[t].length){best=t;break;}
   return best;}
-function tapMove(pi,j){const t=bestTarget(pi,j);if(t<0){nudge();shake(pi,j);return;}doMove(pi,j,t);}
+function tapMove(pi,j){const h=G.hl;if(h&&!h.stock&&h.f===pi&&h.j===j&&R.canDrop(G.st,pi,j,h.t)){doMove(pi,j,h.t);return;}
+  const t=bestTarget(pi,j);if(t<0){nudge();shake(pi,j);return;}doMove(pi,j,t);}
 function shake(pi,j){if(calm())return;const a=G.st.p[pi],tt=now();for(let k=j;k<a.length;k++){const s=SPR[a[k]];if(!s)continue;s.fx=s.tx+(k%2?-1:1)*LY.cw*.08;s.fy=s.ty;s.t0=tt;s.dur=180;}kick();}
 
 /* ---- ходы, отмена, автоматический дом ---- */
@@ -832,10 +1037,10 @@ const noLimit=()=>!G.daily&&PAY.own('no_ads');
 const undoLeft=()=>noLimit()?99:G.undoCap-G.undoUsed,hintLeft=()=>noLimit()?99:G.hintCap-G.hintUsed;
 function pushHist(){G.hist.push({st:stClone(G.st),moves:G.moves});if(G.hist.length>300)G.hist.shift();}
 function doMove(f,j,t){if(!G||G.won)return;const st=G.st;if(!R.canPick(st,f,j)||!R.canDrop(st,f,j,t)){nudge();return;}
-  const doneBefore=st.done,fb=R.fcount(st);pushHist();R.move(st,f,j,t);G.moves++;afterMove(R.kind(t)==='found',st.done>doneBefore,fb);}
+  const doneBefore=st.done,fb=R.fcount(st);pushHist();R.move(st,f,j,t);G.moves++;G.lastFree=true;afterMove(R.kind(t)==='found',st.done>doneBefore,fb);}
 function stockTap(){if(!G||G.won)return;const st=G.st;
   if(!R.canStock(st)){if(GID==='spider'&&st.p[0].length){toast('Раздавать можно, когда нет пустых столбцов — положи в них карты');nudge();}return;}
-  const doneBefore=st.done,fb=R.fcount(st);pushHist();R.stock(st);G.moves++;if(GID==='spider')SND.deal();else SND.draw();afterMove(false,st.done>doneBefore,fb,true);}
+  const doneBefore=st.done,fb=R.fcount(st);pushHist();R.stock(st);G.moves++;G.lastFree=true;if(GID==='spider')SND.deal();else SND.draw();afterMove(false,st.done>doneBefore,fb,true);}
 function afterMove(home,suitDone,fb,stock){const st=G.st,autos=[];
   // сам уносит в дом карты, которым больше нечего делать в столбцах (правило «безопасного» хода)
   if(S.auto!==false){let m,g=0;while((m=R.autoMove(st))&&g++<60){R.move(st,m.f,m.j,m.t);autos.push(st.p[m.t][st.p[m.t].length-1]);}}
@@ -848,10 +1053,11 @@ function afterMove(home,suitDone,fb,stock){const st=G.st,autos=[];
   else if(fa>fb){SND.home(fa%13);for(let k=1;k<=autos.length;k++)setTimeout(()=>SND.home((fb+1+k)%13),140+k*110);}
   else if(!stock)SND.place();
   G.hl=null;updButtons();saveCur();
-  if(R.won(st)){G.won=true;G.busy=true;YG.stop();const wait=Math.max(450,autos.length*110+450,GID==='spider'?800:0);setTimeout(onWin,wait);}}
+  if(R.won(st))winLater(Math.max(450,autos.length*110+450,GID==='spider'?800:0));}
 function undo(){if(!G||G.won||G.busy)return;if(!G.hist.length){toast('Отменять пока нечего');return;}
-  if(undoLeft()<=0){outOf('undo');return;}
-  const h=G.hist.pop();G.st=h.st;G.moves=h.moves;G.undoUsed++;G.hl=null;setTargets();SND.undo();updButtons();saveCur();}
+  // сверх лимита — последний ход можно вернуть бесплатно (один раз после каждого хода; не в раскладе дня, там у всех поровну)
+  let free=false;if(undoLeft()<=0){if(G.daily||!G.lastFree){outOf('undo');return;}free=true;G.lastFree=false;if(!S.tipFree){S.tipFree=1;toast('Последний ход вернули бесплатно. Дальше — ещё отмены за рекламу',3200);}}
+  const h=G.hist.pop();G.st=h.st;G.moves=h.moves;if(!free)G.undoUsed++;G.hl=null;setTargets();SND.undo();updButtons();saveCur();}
 // кончились отмены или подсказки: в раскладе дня — поровну у всех; иначе — ещё порция за рекламу
 function outOf(kind){const u=kind==='undo',n=u?UNDO_AD:HINT_AD,word=u?'отмен':'подсказки';
   if(G.daily){toast(u?'В раскладе дня отмен больше нет — у всех поровну':'В раскладе дня подсказок больше нет — у всех поровну',3200);return;}
@@ -906,13 +1112,13 @@ function collectPath(){if(!G||G.won||GID==='spider')return null;const s=stClone(
 function collect(){const path=collectPath();if(!path||!path.length)return;G.busy=true;pushHist();const st=G.st,order={};let k=0;
   for(const m of path){applyMove(R,st,m);G.moves++;if(!m.s)order[st.p[m.t][st.p[m.t].length-1]]=k++;}
   setTargets(id=>order[id]!=null?order[id]*70:0);for(let q=0;q<k;q+=2)setTimeout(()=>SND.home(q%13),q*70);
-  updButtons();G.won=true;YG.stop();setTimeout(onWin,k*70+500);}
+  winLater(k*70+500);}
 function updButtons(){if(!G)return;const u=undoLeft(),h=hintLeft(),lim=!noLimit();
   $('undoL').innerHTML='Отмена'+(lim?(u>0?' <i class="cnt">'+u+'</i>':(G.daily||!adOk()?'':' <i class="cnt ad">📺</i>')):'');
   $('hintL').innerHTML='Подсказка'+(lim?(h>0?' <i class="cnt">'+h+'</i>':(G.daily||!adOk()?'':' <i class="cnt ad">📺</i>')):'');
   const c=!G.won&&!G.busy&&!!collectPath();$('bCollect').classList.toggle('hide',!c);$('bNew').classList.toggle('hide',c);updInfo();}
 function fmtT(ms){const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
-function updInfo(){if(!G)return;const md=GC.modes.length>1?modeOf(G.mode).full:'';$('gInfo').textContent=S.timer?(md?md+' · ':'')+'ходов '+G.moves+' · '+fmtT(G.time):G.daily?GC.name+(md?', '+md:''):md;}
+function updInfo(){if(!G)return;const md=GC.modes.length>1?modeOf(G.mode).full:'',ms=GC.modes.length>1?modeOf(G.mode).name.toLowerCase():'';$('gInfo').textContent=S.timer?'⏱ '+fmtT(G.time)+' · '+G.moves+' '+plw(G.moves,'ход','хода','ходов')+(ms?' · '+ms:''):G.daily?GC.name+(md?', '+md:''):md;}
 // время раздачи идёт, только пока она на экране и ничего не мешает
 setInterval(()=>{if(inPlay()&&!paused&&!document.hidden){G.time+=1000;if(S.timer)updInfo();if(G.time%15000===0)saveCur();}},1000);
 
@@ -949,14 +1155,14 @@ function startDeal(daily,mode){mode=daily?GC.daily:mode!=null?mode:S.mode;const 
   G=newG(R.deal(seed,mode),seed,mode,daily?dayKey(0):0);save();openGame();dealFrom();SND.deal();setTimeout(()=>say('start'),900);saveCur();planAhead();}
 function resumeDeal(o){G=newG(o.st,o.seed,o.mode,o.daily||0);G.moves=o.moves|0;G.time=o.time|0;G.undoUsed=o.uu|0;G.undoCap=o.uc||UNDO_FREE;G.hintUsed=o.hu|0;G.hintCap=o.hc||HINT_FREE;G.counted=!!o.counted;G.maxCells=o.mc|0;
   G.hist=Array.isArray(o.hist)?o.hist.filter(h=>h&&h.st&&Array.isArray(h.st.p)):[];openGame();setTargets(null,true);planAhead();}
-function openGame(){hideModal();show('scr-game');$('gTitle').textContent=G.daily?'📅 Расклад дня':GC.name;$('gTitle').style.fontSize=GC.name.length>10?'16px':'';
+function openGame(){hideModal();show('scr-game');$('gTitle').textContent=G.daily?'📅 Расклад дня':GID==='freecell'&&innerWidth<420?'Ячейка':GC.name;$('gTitle').style.fontSize=GC.name.length>10&&$('gTitle').textContent!=='Ячейка'?'16px':'';
   layout();updButtons();updCoins();YG.start();}
 // бросить раздачу (текущую на экране или сохранённую): серия побед обнуляется; «долг» межэкранной растёт, только если раздачу правда играли
-function abandon(){const c=G&&!G.won?G:loadCur();if(c){if(c.moves>=5&&!c.daily)S.adW=(S.adW||0)+1;if(c.counted){const k=String(c.mode);if(isObj(S.st[k]))S.st[k].cs=0;}}
+function abandon(){const c=G&&!G.won?G:loadCur();if(c){if(c.moves>=5&&!c.daily)S.adW=(S.adW||0)+1;if(c.counted&&!c.daily){const k=String(c.mode);if(isObj(S.st[k]))S.st[k].cs=0;}}
   G=null;try{localStorage.removeItem(CKEY);}catch(e){}save();}
 function askNew(then){const c=G&&!G.won?G:loadCur();
   if(c&&c.moves>0){modal(`<h2>Новая раздача?</h2><p>${c.daily?'Расклад дня':'Эта раздача'} не разложена — начнём другую? Её уже не вернуть.</p>
-    <div class="row"><button class="btn accent" id="mYes">🆕 Да, новую</button><button class="btn" id="mCancel">${G&&!G.won?'Продолжить эту':'Не надо'}</button></div>`);
+    <div class="row"><button class="btn accent noenter" id="mYes">🆕 Да, новую</button><button class="btn" id="mCancel">${G&&!G.won?'Продолжить эту':'Не надо'}</button></div>`);
     $('mYes').onclick=()=>{hideModal();abandon();then();};$('mCancel').onclick=()=>{hideModal();if(inPlay())YG.start();};return;}
   if(c)abandon();then();}
 // новая обычная раздача: сначала, если пора, межэкранная (не при запуске, не чаще раза в AD_GAP, с AD_FROM-й раздачи, по «долгу»)
@@ -972,7 +1178,7 @@ function openDaily(){const cur=loadCur();if(G&&G.daily===dayKey(0)&&!G.won){open
 
 /* ================= победа: статистика, монеты, достижения ================= */
 const DAILY_BONUS=20;
-function stat(){const k=String(G?G.mode:S.mode);if(!isObj(S.st[k]))S.st[k]={};return S.st[k];}
+function stat(g){g=g||G;const k=String(g?g.mode:S.mode);if(!isObj(S.st[k]))S.st[k]={};return S.st[k];}
 const ACH=[
   {id:'w1',ic:'🌱',name:'Первая победа',d:'Разложить первую раздачу',c:20,t:a=>a.w>=1},
   {id:'w10',ic:'🌿',name:'Десяточка',d:'Разложить 10 раздач',c:50,t:a=>a.w>=10},
@@ -987,29 +1193,51 @@ const ACH=[
   .concat(GID==='klondike'?[{id:'k3',ic:'🃏',name:'По три',d:'Разложить в режиме «по три карты»',c:40,t:a=>a.mode===3}]:
     GID==='spider'?[{id:'p2',ic:'🕸',name:'Две масти',d:'Разложить паука в две масти',c:40,t:a=>a.mode===2},{id:'p4',ic:'🕷',name:'Четыре масти',d:'Разложить паука в четыре масти',c:100,t:a=>a.mode===4}]:
     [{id:'c2',ic:'📦',name:'Экономно',d:'Разложить, ни разу не заняв больше двух ячеек',c:50,t:a=>a.cells<=2}]);
-function onWin(){if(!G)return;G.won=true;G.busy=false;YG.stop();try{localStorage.removeItem(CKEY);}catch(e){}
-  const m=stat(),sec=Math.max(1,Math.round(G.time/1000));m.w=(m.w||0)+1;m.cs=(m.cs||0)+1;m.bs=Math.max(m.bs||0,m.cs);m.bt=m.bt>0?Math.min(m.bt,sec):sec;m.bm=m.bm>0?Math.min(m.bm,G.moves):G.moves;
+// победа (аудит QA 18 №1–2): засчитываем СРАЗУ (монеты, статистика, день), окно — после разлёта карт и только если на экране та же раздача
+// (новая раздача, «←», N/Esc за эти секунды не превращают пустую раздачу в «разложенную» и не теряют победу)
+function winLater(wait){const g=G;g.won=true;g.busy=true;YG.stop();winRecord(g);updButtons();setTimeout(()=>winShow(g),wait);}
+function onWin(){if(!G)return;const g=G;winRecord(g);winShow(g);}
+function winShow(g){if(G!==g)return;g.busy=false;SND.win();buzz(30);celebrate(()=>{if(G===g)showWin(g.got,g.firstDaily);});}
+function winRecord(G){if(G.rec)return;G.rec=true;G.won=true;try{localStorage.removeItem(CKEY);}catch(e){}
+  const m=stat(G),sec=Math.max(1,Math.round(G.time/1000));const old=(m.w||0)>=2;G.recT=old&&m.bt>0&&sec<m.bt;G.recM=old&&m.bm>0&&G.moves<m.bm;G.recTs=sec;m.w=(m.w||0)+1;m.cs=(m.cs||0)+1;m.bs=Math.max(m.bs||0,m.cs);m.bt=m.bt>0?Math.min(m.bt,sec):sec;m.bm=m.bm>0?Math.min(m.bm,G.moves):G.moves;
   S.wins=(S.wins||0)+1;S.games=(S.games||0)+1;if(!G.daily)S.adW=(S.adW||0)+1;
   let coins=modeOf(G.mode).coins,firstDaily=false;
   if(G.daily&&!S.daily[G.daily]){S.daily[G.daily]=1;coins+=DAILY_BONUS;firstDaily=true;}
   const got=[],a={w:S.wins,undo:G.undoUsed,hint:G.hintUsed,time:G.time,cs:m.cs,days:LB.days(),mode:G.mode,cells:G.maxCells||0};
   for(const x of ACH)if(!S.ach[x.id]&&x.t(a)){S.ach[x.id]=1;coins+=x.c;got.push(x);}
-  G.coins=coins;S.coins+=coins;save();cloudFlush();updCoins();if(firstDaily)LB.submit();
-  SND.win();buzz(30);celebrate(()=>showWin(got,firstDaily));}
+  G.coins=coins;G.got=got;G.firstDaily=firstDaily;S.coins+=coins;save();cloudFlush();if(firstDaily)LB.submit();} // счётчик монет обновит окно победы (coinsRoll) или следующий экран
 // склонение по числу: 1 ход, 2 хода, 5 ходов
 function plw(n,a,b,c){const t=n%100,u=n%10;return t>10&&t<20?c:u===1?a:u>1&&u<5?b:c;}
 function showWin(got,firstDaily){if(!G)return;const m=stat(),x2=!window.__demo&&X2_ON&&adOk()&&S.wins>2&&!(adDue()&&adReady())&&!G.daily;
   modal(`<h2 id="mWon">${G.daily?'Расклад дня разложен! 🎉':'Разложено! 🎉'}</h2>
     <div class="host" style="min-height:0;margin:4px 0"><canvas id="winHost" width="112" height="122" style="width:56px;height:61px;flex:0 0 56px"></canvas><div class="bub" style="margin-bottom:10px;font-size:16px">${pick(G.daily&&firstDaily?HOSTL.daily:HOSTL.win)}</div></div>
     <div class="wstat"><span>${G.moves}<small>${plw(G.moves,'ход','хода','ходов')}</small></span>${S.timer?`<span>${fmtT(G.time)}<small>время</small></span>`:''}<span>${m.cs||1}<small>${plw(m.cs||1,'победа','победы','побед')} подряд</small></span></div>
-    <p class="coins-won" id="wCoins">+${G.coins} 💰</p>
-    ${got.map(x=>`<div class="achn">${x.ic} ${x.name} — +${x.c} 💰</div>`).join('')}
+    <p class="coins-won" id="wCoins">+${calm()||window.__demo?G.coins:0} 💰</p>${winGoal()}
+    ${got.length>1?`<div class="achs">${got.map(x=>`<span>${x.ic} ${x.name} +${x.c} 💰</span>`).join('')}</div>`:got.map(x=>`<div class="achn">${x.ic} ${x.name} — +${x.c} 💰</div>`).join('')}
     <div class="row">${x2?`<button class="btn accent noenter x2" id="mX2">📺 ×2 монеты за рекламу (+${G.coins})</button>`:''}
       <button class="btn green" id="mNext">🆕 Новая раздача</button>${G.daily&&LB.ok()?'<button class="btn noenter" id="mLb">🏆 Рейтинг</button>':''}<button class="btn noenter" id="mMenu">В меню</button></div>`);
   drawHost($('winHost'),GC.host);
   if($('mX2'))$('mX2').onclick=()=>{const g=G;showRewarded(()=>{if(g.x2)return;g.x2=true;S.coins+=g.coins;save();updCoins();SND.coin();$('wCoins')&&($('wCoins').textContent='+'+g.coins*2+' 💰 (×2)');const b=$('mX2');b&&b.remove();},()=>{});};
-  $('mNext').onclick=()=>{hideModal();newDeal();};$('mMenu').onclick=()=>{hideModal();G=null;openMenu();};if($('mLb'))$('mLb').onclick=()=>LB.show();
-  streakAfterWin();setTimeout(offerReturn,1200);}
+  $('mNext').onclick=()=>{const md=G&&!G.daily?G.mode:undefined;hideModal();newDeal(md);};$('mMenu').onclick=()=>{hideModal();G=null;openMenu();};if($('mLb'))$('mLb').onclick=()=>LB.show();
+  streakAfterWin();coinsRoll(G);setTimeout(offerReturn,1200);}
+// строка под монетами: рекорд (быстрее / меньше ходов, чем раньше в этом режиме) или ближайшее украшение
+function winGoal(){if(G.recT)return `<p class="wgoal rec">🏆 Рекорд: быстрее всех твоих раздач — ${fmtT(G.recTs*1000)}</p>`;
+  if(G.recM)return `<p class="wgoal rec">🏆 Рекорд: меньше всего ходов — ${G.moves}</p>`;
+  const gl=nextGoal();if(!gl)return '';const pc=Math.min(100,Math.round(S.coins/gl.it.price*100));
+  const nm=DECOR_W[gl.kind].toLowerCase()+' «'+gl.it.name+'»';
+  return `<p class="wgoal">🎯 ${gl.left>0?'До цели ('+nm+') — ещё '+gl.left+' 💰':DECOR_W[gl.kind]+' «'+gl.it.name+'» — монет хватает! Загляни в украшения'}</p><div class="wgbar"><i style="width:${pc}%"></i></div>`;}
+// монеты «накручиваются» и летят в счётчик (в спокойном режиме — сразу, без движения)
+function coinsRoll(g){const el=$('wCoins'),pill=$('gCoins');if(!el||calm()||window.__demo){updCoins();return;}
+  const n=g.coins,t0=Date.now(),D=Math.min(1100,300+n*12);let last=0;if(pill)pill.textContent='💰 '+(S.coins-n);
+  const tick=()=>{if(!$('wCoins')||G!==g){updCoins();return;}const k=Math.min(1,(Date.now()-t0)/D),v=Math.round(n*(1-Math.pow(1-k,3)));
+    if(!g.x2)el.textContent='+'+v+' 💰';if(v-last>=Math.max(3,n/6)){last=v;SND.coin();}
+    if(k<1){requestAnimationFrame(tick);return;}fly();};
+  const fly=()=>{const a=el.getBoundingClientRect(),b=pill&&pill.getBoundingClientRect();if(!b||!b.width){updCoins();return;}
+    for(let i=0;i<5;i++){const c=document.createElement('div');c.className='cfly';c.textContent='💰';c.style.left=(a.left+a.width/2-11+(i-2)*8)+'px';c.style.top=(a.top+4)+'px';document.body.appendChild(c);
+      setTimeout(()=>{c.style.transform='translate('+(b.left+b.width/2-a.left-a.width/2-(i-2)*8)+'px,'+(b.top+b.height/2-a.top-16)+'px) scale(.6)';c.style.opacity='.3';},30+i*70);
+      setTimeout(()=>c.remove(),800+i*70);}
+    setTimeout(()=>{updCoins();if(pill){pill.classList.remove('bump');void pill.offsetWidth;pill.classList.add('bump');setTimeout(()=>pill.classList.remove('bump'),400);}SND.coin();},680+4*70);};
+  requestAnimationFrame(tick);}
 
 /* ================= меню ================= */
 function drawMenuBg(){const c=$('mbg'),r=$('scr-menu').getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);
@@ -1027,19 +1255,36 @@ function openMenu(){YG.stop();G&&!G.won&&saveCur();if(G&&G.won)G=null;show('scr-
   $('btnNew').innerHTML='🆕 Новая раздача'+(GC.modes.length>1?' <small>('+modeOf(S.mode).name.toLowerCase()+')</small>':'');
   $('btnDaily').innerHTML='📅 Расклад дня'+(S.daily[dayKey(0)]?' ✓':'');
   $('btnStreak').innerHTML='<b>🎁</b>Подарок'+(streakState().claimed||(S.wins||0)<1?'':'<span class="dot"></span>');
+  menuToday();
   $('mNote').textContent=S.solv===false||!SEEDS[S.mode]?(GID==='spider'&&S.mode===4?'В четыре масти не каждая раздача сходится — это для знатоков':'Раздачи случайные — не каждая сходится'):'Все раздачи решаемые — проверены заранее';
   updCoins();}
+// «что сегодня»: расклад дня, подарок за вход, ближайшее украшение (цель для монет)
+function menuToday(){const el=$('mToday');if(!el)return;const dd=!!S.daily[dayKey(0)],st=streakState(),w0=(S.wins||0)<1,gl=nextGoal(),gift=!st.claimed&&!w0;
+  const row=(a,ic,t,sub,go)=>`<button class="trow" data-a="${a}"><b class="ti">${ic}</b><span>${t}<small>${sub}</small></span>${go?'<b class="go">›</b>':''}</button>`;
+  const rows=[row('daily','📅','Расклад дня',dd?'<b class="ok">разложен ✓</b>':'не разложен · +'+DAILY_BONUS+' 💰',!dd),
+    row('gift','🎁','Подарок за вход'+(gift?' <i class="dot"></i>':''),w0?'после первой победы':st.claimed?'завтра +'+STREAK[st.day%7]+' 💰':'день '+st.day+': +'+STREAK[st.day-1]+' 💰 ждёт',gift)];
+  if(gl)rows.push(row('goal','🎯',DECOR_W[gl.kind]+' «'+gl.it.name+'»',gl.left>0?'ещё '+gl.left+' 💰':'<b class="ok">монет хватает!</b>',true));
+  el.innerHTML=rows.join('');
+  el.querySelectorAll('.trow').forEach(b=>b.onclick=()=>{SND.tap();const a=b.dataset.a;if(a==='daily')openDaily();else if(a==='gift')showStreak();else openDecor(gl?gl.kind:'tables');});}
+const DECOR_W={tables:'Стол',backs:'Рубашка',faces:'Карты'};
+// ближайшая цель для монет: самое дешёвое не купленное украшение за монеты (особые — за покупку — не в счёт)
+function nextGoal(){let b=null;for(const k in DECOR)for(const it of DECOR[k].list){if(it.pay||!it.price||owns(k,it))continue;if(!b||it.price<b.it.price)b={kind:k,it};}
+  if(b)b.left=Math.max(0,b.it.price-S.coins);return b;}
 $('btnPlay').onclick=()=>{if(G&&!G.won){openGame();return;}const cur=loadCur();if(cur){resumeDeal(cur);return;}startDeal(0);};
 $('btnNew').onclick=()=>newDeal(S.mode);
 $('btnDaily').onclick=()=>openDaily();
 $('gBack').onclick=()=>{if(G&&G.fx)endFx();openMenu();};
 $('bUndo').onclick=undo;$('bHint').onclick=hint;$('bCollect').onclick=collect;$('bNew').onclick=()=>newDeal(G?G.mode:S.mode);
 $('mCoins').onclick=()=>openShop();$('gCoins').onclick=()=>openShop();$('btnSet').onclick=openSettings;$('gSet').onclick=openSettings;
-$('btnStats').onclick=()=>openStats();$('btnDecor').onclick=()=>openDecor('tables');$('btnStreak').onclick=showStreak;
+$('btnStats').onclick=()=>openStats();
+$('btnMore').onclick=()=>{SND.tap();SOC.showMore();};
+/* «🎲 Игры» в меню — только VK с мостом (SOC.ok()); с ней строка из 4 кнопок — класс m4 ужимает её */
+function updMore(){const b=$('btnMore'),on=SOC.ok();if(b){b.style.display=on?'':'none';b.parentNode.classList.toggle('m4',on);}}$('btnDecor').onclick=()=>openDecor('tables');$('btnStreak').onclick=showStreak;
 
 /* ================= окна ================= */
 function hideModal(){$('modal').classList.remove('on');modalOn=false;}
-function modal(html){PAY.re=null;$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;YG.stop();}
+let modalRe=null; // как перерисовать открытое окно (кнопки рекламы появляются, когда ответит мост VK)
+function modal(html){PAY.re=null;modalRe=null;$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;YG.stop();}
 function closeToGame(){hideModal();if(inPlay())YG.start();}
 /* ---- успехи: статистика по режимам и достижения ---- */
 function openStats(){const rows=GC.modes.map(md=>{const a=S.st[String(md.id)]||{},p=a.p||0,w=a.w||0;
@@ -1063,11 +1308,12 @@ function openDecor(kind){const D=DECOR[kind],cur=curOf(kind),items=D.list.filter
     <div class="tabs">${Object.keys(DECOR).map(k=>`<button data-k="${k}" class="${k===kind?'on':''}">${DECOR[k].name}</button>`).join('')}</div>
     <div class="scroll"><div class="grid">${items.map(it=>{const own=owns(kind,it),on=it.id===cur;
       return `<button class="it ${on?'cur':''}" data-id="${it.id}"><canvas data-pv="${it.id}"></canvas><b>${it.name}</b><span class="pr ${own?'own':it.pay?'lock':''}">${on?'✓ Выбрано':own?'Выбрать':it.pay?'🛒 в наборе':it.price+' 💰'}</span></button>`;}).join('')}</div></div>
-    <div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}<button class="btn green" id="mCancel">Готово</button></div>`);
+    <div class="row hz">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}<button class="btn green" id="mCancel">Готово</button></div>`);
   $('mcard').querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{SND.tap();openDecor(b.dataset.k);});
   $('mcard').querySelectorAll('.it').forEach(b=>b.onclick=()=>decorTap(kind,D.list.find(x=>x.id===b.dataset.id)));
   if($('mAdCoins'))$('mAdCoins').onclick=()=>{showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');openDecor(kind);},()=>{});};
   $('mCancel').onclick=()=>{closeToGame();if($('scr-menu').classList.contains('on'))openMenu();};
+  modalRe=()=>openDecor(kind);
   requestAnimationFrame(()=>$('mcard').querySelectorAll('canvas[data-pv]').forEach(c=>previewDecor(kind,c.dataset.pv,c)));}
 function previewDecor(kind,id,c){const r=c.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1),w=Math.max(60,r.width),h=Math.max(40,r.height);c.width=Math.round(w*d);c.height=Math.round(h*d);const g=c.getContext('2d');g.scale(d,d);
   if(kind==='tables'){drawTable(g,w,h,id);return;}
@@ -1087,6 +1333,10 @@ function decorTap(kind,it){const D=DECOR[kind];if(!it)return;
 // выбранные стол, рубашка и колода (особые — только пока куплены: например, после возврата покупки)
 function applyLook(){for(const k in DECOR){const D=DECOR[k],id=S[D.key],it=D.list.find(x=>x.id===id);if(id&&(!it||!owns(k,it)))delete S[D.key];}
   S.table=curOf('tables');S.back=curOf('backs');S.face=curOf('faces');lookChanged();if($('scr-menu').classList.contains('on'))drawMenuBg();}
+/* ---- «Друзья и игры» (VK, модуль SOC): отдельное окно из настроек ---- */
+function openSocial(){if(!SOC.ok()){openSettings();return;}
+  modal(`<h2>Друзья и игры</h2>${SOC.settingsHtml()}<div class="row"><button class="btn" id="socBack">← Назад</button></div>`);
+  SOC.bind($('mcard'),openSocial);$('socBack').onclick=openSettings;}
 /* ---- настройки ---- */
 function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</i>';
   modal(`<h2>Настройки</h2><div class="scroll">
@@ -1098,8 +1348,9 @@ function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</
     <button class="set" id="stLet"><span>🔤 Буквы на картах</span><i class="go">${S.letters==='en'?'J Q K A':'В Д К Т'}</i></button>
     <button class="set" id="stC4"><span>🎨 Четыре цвета мастей<br><small>бубны синие, трефы зелёные</small></span>${on(!!S.c4)}</button>
     <button class="set" id="stCalm"><span>🌿 Спокойный режим<br><small>без разлёта карт и лишнего движения</small></span>${on(calm())}</button>
+    ${SOC.ok()?'<button class="set" id="stSoc"><span>👥 Друзья и игры<br><small>позвать, поделиться, ещё игры</small></span><i class="go">›</i></button>':''}
     ${PAY.on&&!inPlayWin()?PAY.html(['no_ads'],false)+'<button class="set" id="stShop"><span>🛒 Все покупки<br><small>монеты, особые столы и рубашки</small></span><i class="go">›</i></button>':''}</div>
-    <div class="row"><button class="btn noenter" id="stHow">❓ Как играть</button><button class="btn noenter" id="stAbout">ℹ️ Об игре</button><button class="btn green" id="stClose">Готово</button></div>`);
+    <div class="row hz"><button class="btn noenter" id="stHow">❓ Как играть</button><button class="btn noenter" id="stAbout">ℹ️ Об игре</button><button class="btn green" id="stClose">Готово</button></div>`);
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stAuto').onclick=()=>{if(GID==='spider')return;S.auto=S.auto===false;save();openSettings();};
@@ -1109,6 +1360,7 @@ function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</
   $('stC4').onclick=()=>{S.c4=!S.c4;save();lookChanged();openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast('Включено в настройках телефона («уменьшить движение»)');return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   if($('stShop')){$('stShop').onclick=()=>openShop();PAY.bind($('mcard'));PAY.re=openSettings;}
+  if($('stSoc'))$('stSoc').onclick=openSocial;
   $('stAbout').onclick=openAbout;$('stHow').onclick=openHow;$('stClose').onclick=()=>{closeToGame();if($('scr-menu').classList.contains('on'))openMenu();};}
 // покупки за деньги — только в меню и между раздачами, не посреди раздачи
 function inPlayWin(){return !!(G&&!G.won&&$('scr-game').classList.contains('on'));}
@@ -1142,7 +1394,7 @@ function showRewarded(cb0,onFail0){
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
       .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL);onFail();}})
       .catch(()=>{adClose();toast(AD_FAIL);onFail();})
-      .finally(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
+      .then(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
   if(!ysdk){if(AD_LOCAL)stubAd(cb);else{toast(AD_FAIL);onFail();}return;}
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
@@ -1180,7 +1432,7 @@ function openShop(){
     <div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}<button class="btn noenter" id="mDecor">🎨 Украшения</button><button class="btn" id="mCancel">Закрыть</button></div>`);
   if(buy){PAY.bind($('mcard'));PAY.re=openShop;}
   if($('mAdCoins'))$('mAdCoins').onclick=()=>{hideModal();showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');},()=>{});};
-  $('mDecor').onclick=()=>openDecor('tables');$('mCancel').onclick=closeToGame;}
+  $('mDecor').onclick=()=>openDecor('tables');$('mCancel').onclick=closeToGame;modalRe=openShop;}
 
 /* ---- товары пасьянсов (каталог — ~/Brain/hobby/solitaire.md и CLAUDE.md проекта). Силы не продаём: рейтинг считает дни, в раскладе дня у всех поровну отмен и подсказок ----
    vk — цена в голосах, обязана совпадать с ~/Projects/hobby-pay/catalog.json (сервер vk-pay отдаёт её VK) */
@@ -1320,10 +1572,11 @@ function payStubVK(){const K='paytestvk',rd=()=>{try{return JSON.parse(localStor
 const LB={
   days(){return Object.keys(S.daily||{}).length;},
   ok(){return PLAT==='vk'?!!VK:!!(ysdk&&(ysdk.leaderboards||ysdk.getLeaderboards));},
+  sent:0,
   async submit(){const n=LB.days();if(!n)return;
     if(PLAT==='vk')return; // VK сам запоминает результат из ShowLeaderBoardBox
     try{if(!ysdk)return;if(ysdk.leaderboards&&ysdk.leaderboards.setScore)await ysdk.leaderboards.setScore('daily',n);
-      else{const lb=await ysdk.getLeaderboards();await lb.setLeaderboardScore('daily',n);}}catch(e){}},
+      else{const lb=await ysdk.getLeaderboards();await lb.setLeaderboardScore('daily',n);}LB.sent=n;}catch(e){}},
   async entries(){const o={includeUser:true,quantityAround:2,quantityTop:10};
     try{if(ysdk.leaderboards&&ysdk.leaderboards.getEntries)return await ysdk.leaderboards.getEntries('daily',o);
       const lb=await ysdk.getLeaderboards();return await lb.getLeaderboardEntries('daily',o);}catch(e){return null;}},
@@ -1343,6 +1596,7 @@ const LB={
     const a=$('lbAuth');if(a)a.onclick=async()=>{try{await ysdk.auth.openAuthDialog();YP=await ysdk.getPlayer({scopes:false});
       clearTimeout(cloudT);cloudT=0;cloudReady=false;cloudTry=0;await cloudLoad(true);updCoins();await LB.submit();}catch(e){}LB.show();};}
 };
+const LB0=LB.days(); // дней на этом устройстве до облака
 
 /* ---- серия дней: 7 дней подряд, награда растёт; пропуск — всё заново ---- */
 const STREAK=[10,15,20,25,30,40,60];
@@ -1354,15 +1608,22 @@ function streakState(){const s=S.streak||{day:0,last:0,cyc:0},t=dayKey(0);
   const cont=s.last===dayKey(-1)&&s.day>0;return{claimed:false,day:cont?s.day%7+1:1,broken:!cont&&s.day>0&&s.day<7};}
 // мягкий старт: до первой разложенной раздачи окно не показываем; 1-й день — тихо тостом
 function maybeStreak(){if(G&&!G.won||window.__demo||modalOn||$('ad').classList.contains('on'))return;
-  const st=streakState();if(st.claimed||(S.wins||0)<1)return;if(st.day===1)claimStreak(1,true);else showStreak();}
-function showStreak(){const st=streakState();let cells='';
+  const st=streakState();if(st.claimed||(S.wins||0)<1)return;if(canRestore(st))return streakRestore();if(st.day===1)claimStreak(1,true);else showStreak();}
+// серия прервалась (дошла до 2+ дней) — вернуть её можно только роликом (как в «Выезде»); нет рекламы — нет и окна
+function canRestore(st){const s=S.streak||{};return st.broken&&s.day>=2&&(S.wins||0)>=1&&adOk();}
+function streakRestore(){const s=S.streak;
+  modal(`<h2>Серия прервалась</h2><p>Подарки дошли до ${s.day}-го дня, но денёк пропущен. Можно вернуть серию — и сегодня будет подарок ${s.day%7+1}-го дня: +${STREAK[s.day%7]} 💰.</p>
+    <div class="row"><button class="btn accent noenter" id="sRes">📺 Вернуть серию за рекламу</button><button class="btn noenter" id="sNew">Начать заново</button></div>`);
+  $('sRes').onclick=()=>{hideModal();showRewarded(()=>{S.streak.last=dayKey(-1);save();showStreak();if($('scr-menu').classList.contains('on'))menuToday();},()=>streakRestore());};
+  $('sNew').onclick=()=>{hideModal();S.streak={day:0,last:0,cyc:s.cyc||0};save();maybeStreak();if($('scr-menu').classList.contains('on')&&!modalOn)openMenu();};}
+function showStreak(){const st=streakState();if(!st.claimed&&canRestore(st)){streakRestore();return;}let cells='';
   for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day;
     cells+=`<div class="sd ${done?'done':''} ${today?'today':''}"><small>День ${d}</small><span class="ic">${d===7?'🎁':'💰'}</span>+${STREAK[d-1]}</div>`;}
   const r=STREAK[st.day-1]||STREAK[0],first=(S.wins||0)<1;
   modal(`<h2>Подарок за вход 🎁</h2><p>${first?'Разложи первую раздачу — и начнём копить подарки!':st.claimed?'Сегодняшний подарок уже твой. Заходи завтра — день '+(st.day%7+1)+'!':st.broken?'Эх, серия прервалась — начинаем заново. Заходи каждый день!':'Заходи каждый день — подарок растёт, на 7-й день — самый большой!'}</p>
     <div class="streak">${cells}</div>
     <div class="row">${st.claimed||first?`<button class="btn" id="sClose">Закрыть</button>`:`${adOk()?`<button class="btn accent noenter" id="sX2">📺 ×2 за рекламу (+${r*2} 💰)</button>`:''}<button class="btn green" id="sGet">Забрать +${r} 💰</button>`}</div>`);
-  if(st.claimed||first){$('sClose').onclick=closeToGame;return;}
+  modalRe=showStreak;if(st.claimed||first){$('sClose').onclick=closeToGame;return;}
   $('sGet').onclick=()=>claimStreak(1);
   if($('sX2'))$('sX2').onclick=()=>{hideModal();showRewarded(()=>claimStreak(2),()=>showStreak());};}
 function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal();return;}
@@ -1379,7 +1640,7 @@ function streakAfterWin(){if(window.__demo||(S.wins||0)<1)return;const st=streak
 /* ---- клавиатура на ПК ---- */
 document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey&&k!=='z'||e.metaKey&&k!=='z'||e.altKey||$('ad').classList.contains('on'))return;
   if(modalOn){
-    if(k==='Escape'){const b=['mCancel','lbClose','sClose','stClose','abBack','hBack','mBack','sOk','mMenu'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
+    if(k==='Escape'){const b=['socClose','socBack','mCancel','lbClose','sClose','stClose','abBack','hBack','mBack','sOk','mMenu'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
       const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2):not(.buy):not(.noenter)');if(b){e.preventDefault();b.click();}}
     return;}
@@ -1400,11 +1661,12 @@ async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(ses
     if(PLAT==='yandex'&&ysdk){
       if(due('review',30)&&ysdk.feedback){const c=await ysdk.feedback.canReview();if(c&&c.value){mark('review');await ysdk.feedback.requestReview();return;}}
       if(due('shortcut',14)&&ysdk.shortcut){const c=await ysdk.shortcut.canShowPrompt();if(c&&c.canShow){mark('shortcut');await ysdk.shortcut.showPrompt();return;}}}
-    else if(PLAT==='vk'&&VK){
-      if(!S.ask.fav){mark('fav');await vkSend('VKWebAppAddToFavorites',{},60000);return;}
-      if(due('home',30)){const i=await vkSend('VKWebAppAddToHomeScreenInfo',{},4000).catch(()=>null);
-        if(i&&i.is_feature_supported&&!i.is_added_to_home_screen){mark('home');await vkSend('VKWebAppAddToHomeScreen',{},60000);return;}}
-      if(due('invite',14)&&(S.wins||0)>=5){mark('invite');await vkSend('VKWebAppShowInviteBox',{},60000);return;}}
+    // VK: одно предложение за сессию через SOC (п. 2.6.3: не в первую сессию, отказ — не раньше 30 дней, ≤3 раз; без наград) —
+    // строкой и кнопкой ПОД кнопками окна победы; сам диалог VK — только по нажатию игрока
+    else if(PLAT==='vk'){const row=document.querySelector('#mcard .row');if(!row)return;
+      const o=SOC.offer(S.wins||0,Date.now()-lastAdT<60000||pauseWhy.size>0||(adDue()&&adReady()));if(!o)return;askedNow=true;
+      const d=document.createElement('div');d.className='soc-o';d.innerHTML='<span>'+o.t+'</span><button class="btn noenter" id="mSoc">'+o.b+'</button>';
+      row.parentNode.insertBefore(d,row.nextSibling);/* под кнопками: главные не сдвигаются */const b=$('mSoc');b.onclick=()=>{b.disabled=true;o.run();};}
   }catch(e){}}
 window.addEventListener('resize',()=>{if($('scr-game').classList.contains('on')){const r=stage.getBoundingClientRect();if(Math.abs(r.width-W)>1||Math.abs(r.height-H)>1||Math.min(2,window.devicePixelRatio||1)!==dpr)layout();}
   else if($('scr-menu').classList.contains('on'))drawMenuBg();});
@@ -1431,6 +1693,7 @@ applyLook();
   else if(d==='stats'){openMenu();openStats();}
   else openMenu();})();
 // VK: мост из js/vk-bridge.min.js (только в VK-сборке). Яндекс: SDK по относительному пути; локально 404 → заглушки рекламы
+SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal()});updMore();
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
 window.__test={get G(){return G;},set G(v){G=v;},get S(){return S;},R,RULES,SEEDS,solve,applyMove,legal,stClone,doMove,stockTap,undo,hint,findHint,collect,collectPath,solveAsync,planNext,tapMove,bestTarget,startDeal,newDeal,layout,render,setTargets,hitTest,cardXY,

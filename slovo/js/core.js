@@ -17,14 +17,25 @@ const T0=Date.now(); // начало сессии: межуровневая ре
 /* ================= словарь (Set строим при первом слове, а не на старте) ================= */
 // MORE — добавка бонусных слов из js/zina.js (кеды, жюри…): отдельно от dict.js, чтобы уровни не пересобирались
 // DENY — слова из словаря, которые засчитывать нельзя («она», «кости», «лет»: не «одна штука» или не предмет; js/zina.js, разделы «!» в data/zina-no.txt)
-let MAIN=null,EXTRA=null,MORE=null,WHY=null,DENY=null;
-function isWord(w){if(!MAIN){if(typeof DICT_MAIN==='undefined')return false;MAIN=new Set(DICT_MAIN.split(' '));EXTRA=new Set(DICT_EXTRA.split(' '));
-    MORE=new Set(typeof ZINA_MORE==='string'&&ZINA_MORE?ZINA_MORE.split(' '):[]);DENY=new Set(typeof ZINA_DENY==='string'&&ZINA_DENY?ZINA_DENY.split(' '):[]);}
-  return !DENY.has(w)&&(MAIN.has(w)||EXTRA.has(w)||MORE.has(w));}
+// RUDEH — отпечатки грубого (ZINA_RUDE): не засчитывается, даже если слово есть в словаре (аудит 18: педофил, хохол, дура…)
+let MAIN=null,EXTRA=null,MORE=null,WHY=null,DENY=null,RUDEH=null;
+// словарь готов: dict.js и zina.js загружены. Без zina.js бонусы не засчитываем вовсе — иначе пройдёт грубое и «она/кости»
+const dictReady=()=>typeof DICT_MAIN!=='undefined'&&typeof ZINA_NO==='object';
+// аудит 18: dict.js/zina.js не догрузились (плохая сеть) — пробуем ещё раз: не чаще раза в 3 с, после 4 попыток — раз в минуту
+const DLOAD={n:{},t:{}};
+function ensureDict(){[['js/dict.js',typeof DICT_MAIN==='undefined'],['js/zina.js',typeof ZINA_NO!=='object']].forEach(([f,need])=>{
+  const n=DLOAD.n[f]||0,ago=Date.now()-(DLOAD.t[f]||0);if(!need||ago<(n>=4?60000:3000))return;DLOAD.n[f]=n+1;DLOAD.t[f]=Date.now();
+  loadScript(f+'?r='+(n+1),15000).catch(()=>{});});}
+addEventListener('load',()=>setTimeout(()=>{if(!dictReady())ensureDict();},1500));
+function isWord(w){if(!dictReady())return false;
+  if(!MAIN){MAIN=new Set(DICT_MAIN.split(' '));EXTRA=new Set(DICT_EXTRA.split(' '));
+    MORE=new Set(typeof ZINA_MORE==='string'&&ZINA_MORE?ZINA_MORE.split(' '):[]);DENY=new Set(typeof ZINA_DENY==='string'&&ZINA_DENY?ZINA_DENY.split(' '):[]);
+    RUDEH=new Set(typeof ZINA_RUDE==='string'&&ZINA_RUDE?ZINA_RUDE.split(' '):[]);WHY=null;}
+  return !DENY.has(w)&&(MAIN.has(w)||EXTRA.has(w)||MORE.has(w))&&!RUDEH.has(h32(w));}
 // почему настоящее слово не засчитано (js/zina.js): adj, pron, num, adv, func, name, rude, form, plural, verb; '' — не знаем
 // грубое хранится отпечатками (tools/zina.py, h32) — чтобы в игре не лежал мат текстом
 function h32(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
-function whyNot(w){if(!WHY){WHY=new Map();if(typeof ZINA_NO==='object')for(const k in ZINA_NO)ZINA_NO[k].split(' ').forEach(x=>WHY.set(x,k));
+function whyNot(w){if(!WHY||(!WHY.size&&typeof ZINA_NO==='object')){WHY=new Map();if(typeof ZINA_NO==='object')for(const k in ZINA_NO)ZINA_NO[k].split(' ').forEach(x=>WHY.set(x,k));
     if(typeof ZINA_RUDE==='string'&&ZINA_RUDE)ZINA_RUDE.split(' ').forEach(x=>WHY.set('#'+x,'rude'));}
   return WHY.get('#'+h32(w))||WHY.get(w)||'';}
 
@@ -60,7 +71,7 @@ const isObj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
 // монеты и банка — облако + заработанное здесь после последней синхронизации; настройки — из более нового. S меняется на месте.
 function mergeSave(d){if(!isObj(d))return false;const before=canon(noTs(S)),newer=(+d.ts||0)>BOOT.ts;
   for(const k in d)if(!(k in S))S[k]=d[k];
-  for(const k of['lv','found','bonusAll','hintsUsed','plays','bestStreak'])S[k]=Math.max(+S[k]||0,+d[k]||0);
+  for(const k of['lv','found','bonusAll','hintsUsed','plays','bestStreak','wins'])S[k]=Math.max(+S[k]||0,+d[k]||0);
   for(const k of['dict','daily','own','tip','ask','chg'])S[k]=Object.assign({},isObj(d[k])?d[k]:{},isObj(S[k])?S[k]:{});
   const a=typeof S.ex==='string'?S.ex:'',b=typeof d.ex==='string'?d.ex:'';let e='';for(let i=0;i<Math.max(a.length,b.length);i++)e+=a[i]==='1'||b[i]==='1'?'1':'0';S.ex=e;
   S.curs=isObj(S.curs)?S.curs:{};if(isObj(d.curs))for(const k in d.curs){const x=d.curs[k];if(isObj(x)&&(!S.curs[k]||(x.t||0)>(S.curs[k].t||0)))S.curs[k]=x;}
@@ -164,12 +175,26 @@ async function vkLoadCloud(){
   if(!isObj(d))throw vkBroken();
   for(const k of keys)vkSent[k]=m[k];vkSent.svn=svn;vkSlot=slot||null;return d;}
 
+// VK web: высота окна под экран браузера (модерация VK 29.09: VKWebAppResizeWindow)
+var VK_FIT={top:130,min:560,max:900,last:0,t:0};
+function vkFit(vh){if(!vh||!window.vkBridge)return;
+  var h=Math.round(Math.max(VK_FIT.min,Math.min(VK_FIT.max,vh-VK_FIT.top)));
+  if(Math.abs(h-VK_FIT.last)<8)return;VK_FIT.last=h;
+  var w=Math.max(600,Math.min(1000,window.innerWidth||911));
+  vkSend('VKWebAppResizeWindow',{width:w,height:h},8000).catch(function(){VK_FIT.last=0;});}
+function vkFitInit(){try{
+  window.vkBridge.subscribe(function(e){var d=e&&e.detail;
+    if(d&&d.type==='VKWebAppUpdateConfig'&&d.data&&d.data.viewport_height){clearTimeout(VK_FIT.t);
+      VK_FIT.t=setTimeout(function(){vkFit(d.data.viewport_height);},200);}});
+  vkSend('VKWebAppGetConfig',{},8000).then(function(c){if(c&&c.viewport_height)vkFit(c.viewport_height);}).catch(function(){});
+}catch(e){}}
+
 async function initSDK(){
   // меню (или первый уровень для новичка) — сразу; SDK/мост и облако догружаем следом, облако сольётся в onCloud
   if(typeof onReady==='function')onReady();
   if(PLAT==='vk'){
     try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
-      await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;
+      await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;vkFitInit();
       VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',true);clearTimeout(cloudT);cloudT=0;cloudSave();}else if(t==='VKWebAppViewRestore')setPause('vk',false);});
       Promise.resolve(cloudLoad()).then(payInit,payInit);if(typeof askProbe==='function')askProbe();if(typeof updGift==='function')updGift();
       vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});

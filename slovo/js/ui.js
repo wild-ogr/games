@@ -304,7 +304,7 @@ function bind(){
   window.addEventListener('pointerup',wheelUp);window.addEventListener('pointercancel',wheelUp);
   $('modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!(G&&G.won&&$('game').classList.contains('on')))hideModal();});
   // layoutWheel сам вызывает layoutGrid; iOS при повороте иногда отдаёт старые размеры — пересчитываем ещё раз чуть позже
-  window.addEventListener('resize',()=>layoutWheel());
+  window.addEventListener('resize',()=>{layoutWheel();fitSub();});
   window.addEventListener('orientationchange',()=>setTimeout(()=>layoutWheel(),300));
 }
 function onReady(){

@@ -671,4 +671,4 @@ function drawVillage(cv,W,H,an){const dpr=Math.min(2,window.devicePixelRatio||1)
   if(S.deco&&S.deco.flags){const cols=['#e8433a','#ffd84a','#2f6fd6','#3aa04a','#f47ab0'],y0=H*.12,n=Math.round(W/22);g.strokeStyle='#5a3a22';g.lineWidth=1;
     const P=t=>[W*t,y0+H*.12*4*t*(1-t)];g.beginPath();for(let i=0;i<=24;i++){const q=P(i/24);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]);}g.stroke();
     for(let i=0;i<n;i++){const p0=P((i+.15)/n),p1=P((i+.85)/n),m=P((i+.5)/n);g.beginPath();g.moveTo(p0[0],p0[1]);g.lineTo(p1[0],p1[1]);g.lineTo(m[0],m[1]+9);g.closePath();g.fillStyle=cols[i%5];g.fill();}}
-  if(!BLD.some(b=>S.village[b.id])){g.fillStyle='rgba(40,30,20,.6)';g.font='600 14px sans-serif';g.textAlign='center';g.fillText('Пока пусто — построй первый дом!',W/2,H*.93);}}
+  if(!BLD.some(b=>S.village[b.id])){g.fillStyle='rgba(40,30,20,.6)';g.font='600 14px sans-serif';g.textAlign='center';g.fillText(Lg('Пока пусто — построй первый дом!','Empty for now — build your first house!'),W/2,H*.93);}}

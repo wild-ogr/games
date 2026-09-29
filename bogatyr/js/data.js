@@ -424,6 +424,6 @@ const LORE={
 const BEST_ORDER=['muh','bat','wolf','lesh','piy','kik','ogon','vod','voron','skel','upyr','idol','prizr','koldun','rycar','kot',
   'wolf_i','ledyan','snow','shatun','ryba','rak','rusalka','vod_s','chert','ognev','skel_f','idol_f',
   'solo','yaga','gory','kosh','egg','karach','morcar','tugar','liho'];
-function bestWhere(id){if(id==='kot')return 'Баба-Яга (глава 2)';if(id==='egg')return 'Царство Кощея (глава 4)';
-  const i=CH.findIndex(c=>c.boss===id||c.en.includes(id));return i<0?'':CH[i].name+' (глава '+(i+1)+')';}
+function bestWhere(id){if(id==='kot')return EN.yaga.n+L(' (глава 2)',' (chapter 2)');if(id==='egg')return CH[3].name+L(' (глава 4)',' (chapter 4)');
+  const i=CH.findIndex(c=>c.boss===id||c.en.includes(id));return i<0?'':CH[i].name+L(' (глава ',' (chapter ')+(i+1)+')';}
 function bestStars(id,n){const b=EN[id].boss||id==='egg',t=b?[1,5,20]:[10,100,1000];return t.filter(x=>n>=x).length;}

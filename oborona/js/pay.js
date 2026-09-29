@@ -4,9 +4,12 @@
    vk — цена в голосах, обязана совпадать с ~/Projects/hobby-pay/catalog.json (сервер vk-pay отдаёт её VK) ---- */
 const PAY_ROW='prow';
 const PAY_ITEMS={
-  no_ads:{perm:1,vk:14,ic:'🚫',name:'Без рекламы между боями',desc:'Навсегда. «Удвоить», «Ещё попытка», «Гостинец» остаются за рекламу — по желанию'},
-  speed_x2:{perm:1,vk:11,ic:'⏩',name:'Вечное ускорение ×2',desc:'Скорость ×2 больше не тратит запас ускорения (×3 тратит, как раньше)',done:'×2 теперь бесплатно всегда!'},
-  skins_firebird:{perm:1,vk:14,ic:'🔥',name:'Облик застав «Жар-птица»',desc:'Огненные перья на всех пяти родах застав — сразу, без отстроенной деревни. Только вид',done:'Жар-птица надета на все заставы!',give(){for(const t of TW_ORDER)S.skin[t]='firebird';}}
+  no_ads:{perm:1,vk:14,ic:'🚫',name:'Без рекламы между боями',desc:'Навсегда. «Удвоить», «Ещё попытка», «Гостинец» остаются за рекламу — по желанию',
+    en:{name:'No ads between battles',desc:'Forever. “Double”, “One more try” and “Gift” stay available for an ad — if you want them'}},
+  speed_x2:{perm:1,vk:11,ic:'⏩',name:'Вечное ускорение ×2',desc:'Скорость ×2 больше не тратит запас ускорения (×3 тратит, как раньше)',done:'×2 теперь бесплатно всегда!',
+    en:{name:'Eternal speed ×2',desc:'Speed ×2 no longer uses the speed-up reserve (×3 still does)',done:'×2 is now free forever!'}},
+  skins_firebird:{perm:1,vk:14,ic:'🔥',name:'Облик застав «Жар-птица»',desc:'Огненные перья на всех пяти родах застав — сразу, без отстроенной деревни. Только вид',done:'Жар-птица надета на все заставы!',
+    en:{name:'Outpost look “Firebird”',desc:'Fiery feathers on all five kinds of outposts — right away, no finished village needed. Looks only',done:'All outposts now wear the Firebird!'},give(){for(const t of TW_ORDER)S.skin[t]='firebird';}}
 };
 const PAY_TEST={no_ads:99,speed_x2:79,skins_firebird:99}; // цены только для ?paytest=1; настоящие — в консоли
 function payAdd(n){S.gold=(+S.gold||0)+n;} // золото не продаём — нужно только общему модулю

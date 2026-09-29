@@ -277,7 +277,7 @@ function goldSink(){let n=0;for(const b of BLD)for(let l=S.village[b.id]||0;l<b.
 // реклама за золото («Удвоить», «Казна ×2», «+2 часа», «Гостинец») нужна, только пока золоту есть куда идти
 function goldWanted(){return S.gold<goldSink();}
 // род босса: «повержен / повержена / повержено»
-function defeatedWord(t){return 'повержен'+({f:'а',n:'о'}[EN[t].g]||'');}
+function defeatedWord(t){return Lg('повержен'+({f:'а',n:'о'}[EN[t].g]||''),'is defeated');}
 
 /* ---------- задания дня (3 в день) и награда за вход (7 дней) ----------
    Считаются по итогам боя (onBattleEnd), поэтому бот и тесты их не трогают. */
@@ -323,7 +323,7 @@ function weekReward(){return 150+50*Math.min(8,chaptersDone());}
 // очки: 0…9999 — снятое здоровье босса в сотых долях процента; 10000…19999 — победа (чем быстрее, тем больше)
 function weekScore(kill,pct,t){return kill?10000+Math.max(0,9999-Math.floor(t)):Math.max(0,Math.min(9999,Math.floor(pct*10000)));}
 function fmtTime(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
-function fmtWeek(s){s=s%WEEK_SCORE;return s>=10000?'победа за '+fmtTime(9999-(s-10000)):'урон '+(s/100).toFixed(1).replace('.',',')+'%';}
+function fmtWeek(s){s=s%WEEK_SCORE;return s>=10000?Lg('победа за ','won in ')+fmtTime(9999-(s-10000)):Lg('урон ','damage ')+dnum((s/100).toFixed(1))+'%';}
 
 /* ---------- Испытание дня ----------
    Уже пройденный уровень + одно правило. Выбирается один раз в день (запоминаем в S.dch). Награда — только за первую попытку дня;
@@ -385,22 +385,22 @@ const LORE={
 };
 // порядок в книге: нечисть по главам (как встречается), подмога боссов, потом боссы
 const BOOK=(()=>{const a=[];for(const c of CH)for(const t of c.en)if(!a.includes(t))a.push(t);for(const t of['kot','snowb'])a.push(t);for(const c of CH)a.push(c.boss);a.push('egg');return a;})();
-function bookWhere(id){if(id==='kot')return 'Баба-яга (глава 2)';if(id==='snowb')return 'Студёные горы (глава 5)';if(id==='egg')return 'Царство Кощея (глава 4)';
-  const i=CH.findIndex(c=>c.boss===id||c.en.includes(id));return i<0?'':CH[i].name+' (глава '+(i+1)+')';}
+function bookWhere(id){const ch=i=>' ('+Lg('глава ','chapter ')+i+')';if(id==='kot')return EN.yaga.n+ch(2);if(id==='snowb')return CH[4].name+ch(5);if(id==='egg')return CH[3].name+ch(4);
+  const i=CH.findIndex(c=>c.boss===id||c.en.includes(id));return i<0?'':CH[i].name+ch(i+1);}
 function bookTip(id){const d=EN[id],t=[];
-  if(d.boss)return id==='kosh'?'Жми на яйцо пальцем, когда появится, — и бей всеми заставами.':'Чары Перуна и заставы на «сильного» — по боссу. Кот Баюн усыпит его ненадолго.';
-  if(id==='egg')return 'Жми пальцем и бей заставами — пока цело, Кощей бессмертен.';
-  if(d.fly)t.push('летает: бьют только стрельцы и колдун');
-  if(d.pres>=.4)t.push('стрелы пролетают насквозь — нужен колдун');else if(d.pres)t.push('стрелы берут плохо');
-  if(d.armor>=.35)t.push('броня режет стрелы и ядра — бей колдуном и ядом');else if(d.armor)t.push('немного брони');
-  if(d.mres)t.push('колдовство вполсилы — лучше пушка и стрелы');
-  if(d.regen)t.push('яд Яги мешает ему заживать');
-  if(d.lives>1)t.push('прорвётся — отнимет '+d.lives+' '+plural(d.lives,'жизнь','жизни','жизней'));
-  if(d.ab==='heal')t.push('лечит соседей — бей первым');
-  if(d.ab==='hop')t.push('прыгает вперёд — ставь заставы и у ворот');
-  if(d.ab==='split')t.push('рассыпается на снежки — бей по площади');
-  if(d.ab==='rage')t.push('раненый бежит вдвое быстрее — кисель и дуб его держат');
-  if(!t.length)t.push(d.spd>=55?'быстрый — ставь заставы вдоль длинной дороги':'обычный: годится любая застава');
+  if(d.boss)return id==='kosh'?Lg('Жми на яйцо пальцем, когда появится, — и бей всеми заставами.','Tap the egg as soon as it appears — and hit it with every outpost.'):Lg('Чары Перуна и заставы на «сильного» — по боссу. Кот Баюн усыпит его ненадолго.','Perun’s Thunder and outposts set to “strongest” — all at the boss. Bayun the Cat puts it to sleep for a moment.');
+  if(id==='egg')return Lg('Жми пальцем и бей заставами — пока цело, Кощей бессмертен.','Tap it and hit it with outposts — while it is whole, Koschei cannot die.');
+  if(d.fly)t.push(Lg('летает: бьют только стрельцы и колдун','flies: only archers and the sorcerer can hit it'));
+  if(d.pres>=.4)t.push(Lg('стрелы пролетают насквозь — нужен колдун','arrows pass right through — you need the sorcerer'));else if(d.pres)t.push(Lg('стрелы берут плохо','arrows barely hurt it'));
+  if(d.armor>=.35)t.push(Lg('броня режет стрелы и ядра — бей колдуном и ядом','armor blunts arrows and cannonballs — use the sorcerer and poison'));else if(d.armor)t.push(Lg('немного брони','a bit of armor'));
+  if(d.mres)t.push(Lg('колдовство вполсилы — лучше пушка и стрелы','magic works at half strength — cannons and arrows do better'));
+  if(d.regen)t.push(Lg('яд Яги мешает ему заживать','Yaga’s poison stops it from healing'));
+  if(d.lives>1)t.push(Lg('прорвётся — отнимет ','breaks through — costs you ')+d.lives+' '+plw(d.lives,'жизнь','жизни','жизней','life','lives'));
+  if(d.ab==='heal')t.push(Lg('лечит соседей — бей первым','heals its neighbors — take it out first'));
+  if(d.ab==='hop')t.push(Lg('прыгает вперёд — ставь заставы и у ворот','hops ahead — put outposts near the gate too'));
+  if(d.ab==='split')t.push(Lg('рассыпается на снежки — бей по площади','splits into snowballs — use splash damage'));
+  if(d.ab==='rage')t.push(Lg('раненый бежит вдвое быстрее — кисель и дуб его держат','runs twice as fast when hurt — jelly and the oak hold it back'));
+  if(!t.length)t.push(d.spd>=55?Lg('быстрый — ставь заставы вдоль длинной дороги','fast — line the long stretch of road with outposts'):Lg('обычный: годится любая застава','ordinary: any outpost will do'));
   const s=t.join('; ');return s[0].toUpperCase()+s.slice(1)+'.';}
 function bookKnown(id){return !!((S.seen||{})[id]||(S.bk||{})[id]||(S.bossKill||{})[id]);}
 

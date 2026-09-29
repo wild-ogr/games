@@ -4,10 +4,15 @@
    vk — цена в голосах, обязана совпадать с ~/Projects/hobby-pay/catalog.json (сервер vk-pay отдаёт её VK) */
 const PAY_ROW='prow';
 const PAY_ITEMS={
-  no_ads:{perm:1,vk:14,ic:'🚫',name:'Без рекламы между походами',desc:'Навсегда. Жар-птица, «Подняться», ×2 и ×3 остаются за рекламу — по желанию'},
-  skins_fest:{perm:1,vk:11,ic:'🎉',name:'Праздничные облики',desc:'Масленичный, Новогодний и Купальский облики для всех 9 богатырей. Только внешний вид',done:'Праздничные облики — во вкладке «Богатыри»!'},
-  mead:{perm:1,vk:7,ic:'🍯',name:'Чаша мёда мастеру',desc:'Поддержать автора: золотая рамка «Меценат» у портретов богатырей',done:'Спасибо, меценат! Мёд пьём за твоё здоровье'}
+  no_ads:{perm:1,vk:14,ic:'🚫',name:'Без рекламы между походами',desc:'Навсегда. Жар-птица, «Подняться», ×2 и ×3 остаются за рекламу — по желанию',
+    en:{name:'No ads between runs',desc:'Forever. Firebird, “Get up”, ×2 and ×3 stay available for ads — if you want them'}},
+  skins_fest:{perm:1,vk:11,ic:'🎉',name:'Праздничные облики',desc:'Масленичный, Новогодний и Купальский облики для всех 9 богатырей. Только внешний вид',done:'Праздничные облики — во вкладке «Богатыри»!',
+    en:{name:'Holiday outfits',desc:'Maslenitsa, New Year and Kupala outfits for all 9 heroes. Looks only',done:'Holiday outfits are on the “Heroes” tab!'}},
+  mead:{perm:1,vk:7,ic:'🍯',name:'Чаша мёда мастеру',desc:'Поддержать автора: золотая рамка «Меценат» у портретов богатырей',done:'Спасибо, меценат! Мёд пьём за твоё здоровье',
+    en:{name:'A cup of mead for the maker',desc:'Support the author: a golden “Patron” frame on hero portraits',done:'Thank you, patron! We drink mead to your health'}}
 };
+// английские name/desc/done (поле en) — наложением js/i18n.js: applyLang() ставит нужный язык
+for(const id in PAY_ITEMS)if(PAY_ITEMS[id].en)trData(PAY_ITEMS[id],PAY_ITEMS[id].en);
 const PAY_TEST={no_ads:99,skins_fest:79,mead:49}; // цены только для ?paytest=1; настоящие — в консоли
 function payAdd(n){S.gold=(+S.gold||0)+n;} // золото не продаём — нужно только общему модулю
 function payFlush(){cloudFlush();}
