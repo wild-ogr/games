@@ -326,6 +326,9 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
     on('rNext',()=>afterAd(ia,()=>{toMenu('Map');mapSel=next[0];renderMap();if(!$('modal').classList.contains('on'))openIntro(next[0],next[1]);}));
     on('rWall',()=>afterAd(ia,()=>{toMenu('Village');const w=document.querySelector('[data-b="wall"]');if(w){w.classList.add('hl');w.scrollIntoView({block:'center'});}}));
     on('rAgain',()=>afterAd(ia,()=>startLevel(c,l)));on('rMap',()=>afterAd(ia,()=>{toMenu('Map');if(canForge())toast(Lg('Есть звёзды для кузницы!','You have stars for the forge!'));}));
+    // VK: одно предложение за сессию (модуль SOC) — строкой и кнопкой ПОД кнопками окна победы; диалог VK — только по нажатию игрока
+    if(PLAT==='vk'){try{const o=SOC.offer(S.wins,Date.now()-lastAdT<60000||paused||interBusy);if(o){retAsked=true;const d=document.createElement('div');d.className='soc-o';d.innerHTML='<span>'+o.t+'</span><button class="btn ghost" id="mSoc">'+o.b+'</button>';
+      $('mBody').appendChild(d);const b=$('mSoc');b.onclick=()=>{b.disabled=true;o.run();};}}catch(e){}}
     if(l===5&&c===CH.length-1)setTimeout(()=>toast(Lg('Тридевятое царство спасено! Осада и Босс недели ждут.','The Thrice-Nine Kingdom is saved! The Siege and the Boss of the Week await.')),800);
   }else{const cons=loseGold(c,G.wave);S.gold+=cons;S.lose=S.lose||{};S.lose[key]=(S.lose[key]||0)+1;const pity=pityCoins(c,l);const bref=boostRefund(.5);save();
     const lines=Lg(['Нечисть прорвалась в город и съела все пирожки. Все!','Ворота не выдержали. Воевода ищет виноватых (это ты).','Прорвались, окаянные! Надо строить хитрее — или прокачаться в кузнице.'],
@@ -557,6 +560,11 @@ function openBeast(id){const d=EN[id],k=bookKnown(id),n=(S.bk||{})[id]||0,boss=d
   showModal(h+'<div class="btns stick"><button class="btn big" id="bstBack">'+Lg('К книге','Back to the book')+'</button></div>');on('bstBack',openBook);}
 
 /* ================= настройки ================= */
+// VK: друзья, избранное, сообщество, «Ещё игры» (модуль SOC); наград нет (правила VK 2.6.2)
+function openSocial(){if(!SOC.ok()){openSettings();return;}
+  showModal('<h3>Друзья и игры</h3>'+SOC.settingsHtml()+'<div class="btns"><button class="btn ghost" id="socBack">← Назад</button></div>');
+  SOC.bind($('mBody'),openSocial);on('socBack',openSettings);}
+function updMore(){const b=$('btnMore');if(b)b.style.display=SOC.ok()?'':'none';}
 function openSettings(){const oo=v=>v?Lg('Вкл','On'):Lg('Выкл','Off');showModal('<h3>'+Lg('Настройки','Settings')+'</h3>'+
   // язык: в VK всегда русский — переключателя нет
   (LANG_VK?'':'<div class="tg">'+Lg('Язык','Language')+' <div class="seg" style="margin:0;flex:none"><button data-lang="ru" class="'+(LANG==='ru'?'on':'')+'" style="padding:4px 14px">RU</button><button data-lang="en" class="'+(LANG==='en'?'on':'')+'" style="padding:4px 14px">EN</button></div></div>')+
@@ -565,10 +573,11 @@ function openSettings(){const oo=v=>v?Lg('Вкл','On'):Lg('Выкл','Off');sho
   '<div class="tg">'+Lg('Тряска экрана','Screen shake')+' <button class="btn '+(S.shake?'green':'ghost')+'" id="sShk">'+oo(S.shake)+'</button></div>'+
   '<div class="tg" style="border:0;padding-bottom:0">'+Lg('Сложность кампании','Campaign difficulty')+'</div>'+diffSegHTML()+
   '<p class="sub" style="margin-top:12px">'+Lg('Тридевятая оборона: защита башен.<br>Реклама за награду — по желанию. Между боями иногда бывает короткая реклама.','Thrice-Nine Defense: fairy-tale tower defense.<br>Rewarded ads are optional. A short ad sometimes plays between battles.')+'</p>'+
+  (SOC.ok()?'<button class="btn ghost" id="sSoc" style="width:100%;margin-top:8px;justify-content:center">👥 Друзья и игры ›</button>':'')+
   '<div class="btns stick"><button class="btn ghost" id="sCred">'+Lg('🎻 Благодарности','🎻 Credits')+'</button><button class="btn big" id="sOk">'+Lg('Готово','Done')+'</button></div>');
   for(const b of document.querySelectorAll('[data-lang]'))b.onclick=()=>{SND.click();setLang(b.dataset.lang,true);openSettings();};
   on('sSnd',()=>{S.sound=S.sound?0:1;save();openSettings();});on('sMus',()=>{S.music=S.music?0:1;save();musicSync();openSettings();});on('sOk',hideModal);
-  on('sShk',()=>{S.shake=S.shake?0:1;save();openSettings();});on('sCred',openCredits);diffSegBind();
+  on('sShk',()=>{S.shake=S.shake?0:1;save();openSettings();});on('sCred',openCredits);on('sSoc',openSocial);diffSegBind();
   // покупки Яндекса (js/pay.js) — только в меню; нет платежей — раздела нет
   if(typeof payHere==='function'&&payHere()){const c=document.createElement('div');c.innerHTML=payHtml()+'<button class="btn ghost" id="payRe" style="width:100%;margin-top:4px">'+Lg('↻ Восстановить покупки','↻ Restore purchases')+'</button>';
     const b=$('mBody').querySelector('.btns');b.parentNode.insertBefore(c,b);PAY.bind(c);PAY.re=openSettings;on('payRe',()=>PAY.again());}}
@@ -624,8 +633,7 @@ async function retOffer(){if(G||retAsked||S.wins<3||Date.now()-BOOT_T<120000||Da
   try{if(ysdk){
       if(!R.review&&S.wins>=5&&ysdk.feedback){const c=await ysdk.feedback.canReview();if(c&&c.value)return ask('review',()=>ysdk.feedback.requestReview());}
       if(!R.short&&ysdk.shortcut){const c=await ysdk.shortcut.canShowPrompt();if(c&&c.canShow)return ask('short',()=>ysdk.shortcut.showPrompt());}}
-    if(VK){if(!R.fav)return ask('fav',()=>vkSend('VKWebAppAddToFavorites',{},60000));
-      if(!R.home){const r=await vkSend('VKWebAppAddToHomeScreenInfo');if(r&&r.is_feature_supported&&!r.is_added_to_home_screen)return ask('home',()=>vkSend('VKWebAppAddToHomeScreen',{},60000));R.home=1;save();}}
+    // VK: избранное, экран «Домой», друзья, сообщество — через SOC.offer в окне победы (п. 2.6.3), тут только Яндекс
   }catch(e){}}
 // силуэт закрытой главы — один раз, без медленного canvas filter на каждом кадре карты
 function silhouette(key){const id='sil:'+key;if(mapCache[id])return mapCache[id];const s=artCanvas(key,128),c=document.createElement('canvas');c.width=c.height=128;
@@ -637,6 +645,7 @@ function onSaveMerged(){if(!G){openTab(curTab);loginOffer();}}
 function onLang(){for(const k in HUDC)delete HUDC[k];if(typeof cv==='undefined'||!cv)return;if(G)hudTick(true);else if($('menu'))openTab(curTab);}
 function onReady(){
   cv=$('cv');ctx=cv.getContext('2d');
+  $('btnMore').onclick=()=>{SND.click();SOC.showMore();};updMore();
   $('hLives').querySelector('span').id='hLivesT';$('hCoins').querySelector('span').id='hCoinsT';
   $('icHeart').src=ic('heart',64);$('icCoin').src=ic('coin',64);$('icThunder').src=ic('sp_thunder',112);$('icCat').src=ic('sp_cat',112);
   $('pStarIc').src=ic('star',48);$('pGoldIc').src=ic('ingot',48);

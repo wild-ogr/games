@@ -85,7 +85,8 @@ body.wide #voice{left:16px;transform:none;top:80px;bottom:auto;width:340px}
 .title small{display:block;font-weight:700;font-size:12px;color:var(--mut);letter-spacing:0}
 .pill{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:999px;padding:5px 10px 5px 5px;font-weight:900;font-size:15px}
 .pill img{width:22px;height:22px}
-.ibtn{width:44px;height:44px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:17px;flex:none}
+.soc-o{display:flex;flex-direction:column;align-items:center;margin-top:14px;text-align:center}.soc-o span{font-size:14px;color:var(--mut);margin-bottom:6px}.soc-o .btn{padding:8px 14px}@supports not (inset:0){.soc-o>*+*{margin-top:6px}}
+#btnMore{width:48px;height:48px}.soc-set .btn{width:100%;justify-content:center}.ibtn{width:44px;height:44px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:17px;flex:none}
 .tabs{flex:1;overflow:hidden;position:relative}
 .tab{position:absolute;top:0;right:0;bottom:0;left:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 14px 20px;display:none;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .tab.on{display:block}
@@ -238,6 +239,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
     <div class="title"><span data-en="Thrice-Nine Defense">Тридевятая оборона</span><small data-en="tower defense">защита башен</small></div>
     <div class="pill"><img id="pStarIc" alt=""><span id="pStar">0</span></div>
     <div class="pill"><img id="pGoldIc" alt=""><span id="pGold">0</span></div>
+    <button class="ibtn" id="btnMore" style="display:none" aria-label="Ещё игры во дворе">🎲</button>
     <button class="ibtn" id="setBtn" aria-label="Настройки" data-en-aria="Settings">⚙</button>
   </div>
   <div class="tabs">
