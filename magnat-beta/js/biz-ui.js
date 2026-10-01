@@ -159,7 +159,7 @@ function act(name,...a){let r;try{r=GAME.act(name,...a);}catch(e){console.error(
   if(typeof r==='string'&&r!=='ok'&&MSG[r]){snd('no');toast(MSG[r]());}return r;}
 const MSG={cash:()=>L('Не хватает денег','Not enough money'),hand:()=>L('Нет свободных рук ✋','No free hands ✋'),en:()=>L('Мало сил ⚡ — отдохните','Too little energy ⚡ — take a rest'),
   req:()=>L('Условия ещё не выполнены','Requirements not met yet'),rest:()=>L('У вас выходной','You’re on a day off'),out:()=>L('Вы на больничном','You’re on sick leave'),
-  wait:()=>L('Эта настройка откроется после 3 месяцев работы','This setting unlocks after 3 months of work'),month:()=>L('Режим налога меняют в январе','The tax regime is changed in January'),
+  wait:()=>L('Эта настройка откроется после 3 месяцев работы','This setting unlocks after 3 months of work'),month:()=>L('Режим налога меняют раз в 12 месяцев','The tax regime can be changed once every 12 months'),
   no:()=>L('Сейчас нельзя','Not possible right now'),ip:()=>L('Сначала нужно оформить ИП','Register as a sole trader first'),ooo:()=>L('Сначала нужно ООО','You need an LLC first'),
   max:()=>L('В городе уже много таких точек','The city already has plenty of these'),stage:()=>L('Откроется в следующей главе','Unlocks in the next chapter'),
   have:()=>L('Сначала откройте предыдущее дело','Open the previous business first'),cap:()=>L('Нужен капитал побольше','You need more capital'),city:()=>L('В этом городе у вас нет представительства','You have no office in that city')};
@@ -229,8 +229,9 @@ function pinBar(W){const M0=W.me;if(!M0||stI()>1)return '';const H=E.hands(W),en
     `<button class="pb noenter" data-b="pinfo" data-k="rt" aria-label="${esc(L('Рейтинг','Rating'))}"><b>⭐ ${num(M0.rt,2)}</b><small>${L('рейтинг','rating')}</small></button>${bt}</div>`;}
 function pinInfo(k){const W=w(),M0=W&&W.me;if(!M0)return;const H=E.hands(W);let t='',h='',btn='';
   if(k==='en'){const mx=E.enMax(W);t='⚡ '+L('Силы','Energy')+': '+Math.round(M0.en)+L(' из ',' of ')+mx;
-    h=L(`Каждый заказ отнимает силы — сколько, написано в заказе. За ночь сон возвращает +30${M0.job?', а работа на складе забирает 5':''}. Выходной — 1 день, ещё +50.`,`Every order takes energy — the amount is shown on the order. A night’s sleep gives back +30${M0.job?', the warehouse job takes 5':''}. A day off — 1 day, another +50.`)+'</p><p>'+L('Когда сил меньше 30, риск сорвать заказ вдвое выше.','Below 30 energy the risk of failing an order doubles.')+'</p>'+pkEnHtml()+'<p>';
-    if(M0.rest<=0&&M0.out<=0)btn=`<button class="btn green noenter" data-b="restgo">🛌 ${L('Взять выходной: +50 ⚡','Take a day off: +50 ⚡')}</button>`;}
+    const eb=E.enBonus?E.enBonus(W):0,rg=E.rg?E.rg(W):0,lx=E.luxEn?E.luxEn(W):0;   // M17: «Режим дня» (💎) и вещи дают больше сил за ночь
+    h=L(`Каждый заказ отнимает силы — сколько, написано в заказе. За ночь сон возвращает +${30+eb}${eb?` (обычно 30${rg?`, режим дня +${rg*E.REG_STEP}`:''}${lx?`, вещи +${lx}`:''})`:''}${M0.job?', а работа на складе забирает 5':''}. Выходной — 1 день, силы до максимума.`,`Every order takes energy — the amount is shown on the order. A night’s sleep gives back +${30+eb}${eb?` (base 30${rg?`, daily routine +${rg*E.REG_STEP}`:''}${lx?`, things +${lx}`:''})`:''}${M0.job?', the warehouse job takes 5':''}. A day off — 1 day, energy back to full.`)+'</p><p>'+L('Когда сил меньше 30, риск сорвать заказ вдвое выше. Больше сил за ночь дают удобная кровать, бассейн и дача (Кабинет → вещи).','Below 30 energy the risk of failing an order doubles. A comfy bed, a pool pass and a dacha give more energy per night (Office → things).')+'</p>'+pkRegHtml()+pkEnHtml()+'<p>';
+    if(M0.rest<=0&&M0.out<=0)btn=`<button class="btn green noenter" data-b="restgo">🛌 ${L('Взять выходной: силы до максимума','Take a day off: energy back to full')}</button>`;}
   else if(k==='hand'){t='✋ '+L('Руки','Hands')+': '+L(`свободно ${H.free} из ${H.tot}`,`${H.free} of ${H.tot} free`);
     h=L('Руки — сколько дел вы ведёте одновременно. Каждый заказ занимает одну руку, пока не будет готов; работа на складе — тоже одну.','Hands are how many things you do at once. Each order takes a hand until it’s done; the warehouse job takes one too.')+
       (M0.gigs.length?'</p><p>'+L('Сейчас в работе: ','In progress: ')+M0.gigs.map(g=>esc(low(gShort(g.t)))+' ('+days(g.left)+')').join(', ')+'.':'')+'</p>'+pkHandHtml()+'<p>';
@@ -246,28 +247,36 @@ function pkHandHtml(){try{const n=GAME.handNext&&GAME.handNext();if(!n)return GA
   return `<button class="btn cr w noenter" data-b="pkbuy" data-k="hand" id="bzPkHand">✋ ${L('+1 рука навсегда','+1 hand for good')} <span style="white-space:nowrap">— ${n}&nbsp;💎</span></button>`;}catch(e){return '';}}
 function pkEnHtml(){try{const n=GAME.enNext&&GAME.enNext();if(!n)return GAME.enLv&&GAME.enLv()?`<p class="bz-note">⚡ ${L('Запас сил уже самый большой.','Your energy reserve is already at its largest.')}</p>`:'';
   return `<button class="btn cr w noenter" data-b="pkbuy" data-k="en" id="bzPkEn">⚡ ${L('+'+E.EN_STEP+' к запасу сил навсегда','+'+E.EN_STEP+' to your energy reserve for good')} <span style="white-space:nowrap">— ${n}&nbsp;💎</span></button>`;}catch(e){return '';}}
-function pkBuy(k){const hand=k==='hand',n=hand?GAME.handNext():GAME.enNext();if(!n)return;
+// M17: «Режим дня» — восстановление сил за 💎 навсегда: +10 ⚡ за ночь за ступень (E.REG_CR: 40 / 90 / 160 💎)
+function pkRegHtml(){try{const n=GAME.regNext&&GAME.regNext();if(!n)return GAME.regLv&&GAME.regLv()?`<p class="bz-note">🌅 ${L('«Режим дня» — все ступени уже ваши.','“Daily routine” — all steps are yours.')}</p>`:'';
+  return `<button class="btn cr w noenter" data-b="pkbuy" data-k="reg" id="bzPkReg">🌅 ${L('Режим дня: +'+E.REG_STEP+' ⚡ за ночь навсегда','Daily routine: +'+E.REG_STEP+' ⚡ per night for good')} <span style="white-space:nowrap">— ${n}&nbsp;💎</span></button>`;}catch(e){return '';}}
+function pkBuy(k){if(k==='reg'){const n=GAME.regNext();if(!n)return;crAsk(n,L(`Режим дня: +${E.REG_STEP} ⚡ за ночь — навсегда`,`Daily routine: +${E.REG_STEP} ⚡ per night — for good`),()=>{const r=GAME.buyReg();
+    if(r==='ok'){snd('win');buzz(20);toast('🌅 '+L(`Теперь за ночь +${30+E.enBonus(w())} ⚡`,`Now +${30+E.enBonus(w())} ⚡ per night`),2600);try{GAME.emit('o2',{k:'reg',n:GAME.regLv()});}catch(e){}try{render();}catch(e){}}else if(r==='cr')crNo(n);},true);return;}
+  const hand=k==='hand',n=hand?GAME.handNext():GAME.enNext();if(!n)return;
   crAsk(n,hand?L('Ещё одна рука — навсегда','One more hand — for good'):L(`Запас сил +${E.EN_STEP} — навсегда`,`Energy reserve +${E.EN_STEP} — for good`),()=>{
     const r=hand?GAME.buyHand():GAME.buyEn();
     if(r==='ok'){snd('win');buzz(20);toast(hand?'✋ '+L('Теперь у вас на одну руку больше!','You now have one more hand!'):'⚡ '+L(`Запас сил теперь ${E.enMax(w())}`,`Energy reserve is now ${E.enMax(w())}`),2600);try{render();}catch(e){}}
     else if(r==='cr')crNo(n);},true);}
 function openRest(){const W=w(),M0=W&&W.me;if(!M0)return;if(M0.rest>0||M0.out>0){pinInfo(M0.out>0?'out':'rest');return;}
-  modal(`<h2>🛌 ${L('Выходной на день','A day off')}</h2><div class="say">${UI.face('happy')}<div><p>${L(`Отдыхать — тоже работа. За день прибавится +50 ⚡ сверх обычного сна (сейчас ${Math.round(M0.en)} из ${E.enMax(W)}). Новые заказы в этот день не берём.`,`Resting is work too. In one day you get +50 ⚡ on top of the usual sleep (now ${Math.round(M0.en)} of ${E.enMax(W)}). No new orders that day.`)}</p></div></div>
+  modal(`<h2>🛌 ${L('Выходной на день','A day off')}</h2><div class="say">${UI.face('happy')}<div><p>${L(`Отдыхать — тоже работа. За день силы восстановятся до максимума (сейчас ${Math.round(M0.en)} из ${E.enMax(W)}). Новые заказы в этот день не берём.`,`Resting is work too. In one day your energy comes back to full (now ${Math.round(M0.en)} of ${E.enMax(W)}). No new orders that day.`)}</p></div></div>
     <div class="row"><button class="btn green noenter" id="bzRY">🛌 ${L('Отдохнуть день','Rest for a day')}</button><button class="btn" id="bzRN" data-esc>${L('Не сейчас','Not now')}</button></div>`);
   try{modalRe=openRest;}catch(e){}
-  $$('bzRN').onclick=()=>{snd('tap');hideModal();};$$('bzRY').onclick=()=>{hideModal();if(act('gigRest')==='ok'){snd('tap');toast(L('Выходной: +50 сил за день','Day off: +50 energy in a day'));}};}
+  $$('bzRN').onclick=()=>{snd('tap');hideModal();};$$('bzRY').onclick=()=>{hideModal();if(act('gigRest')==='ok'){snd('tap');toast(L('Выходной: завтра силы — до максимума','Day off: full energy tomorrow'));}};}
 function rToday(el){const W=w(),M0=W.me,st=W.st;let h='';
   h+=pinBar(W);
   h+=`<div class="bz-sec" style="margin-top:0">${esc(statusLine(W))}</div>`;
   // главное сверху: цель → (планёрка/вехи META) → деньги месяца → работа
   h+=debtCard(W);
+  h+=(window.OWNUI?OWNUI.evCard(W):'');   // M17: событие с выбором (js/owner-ui.js)
   h+=goalCard(W);
   h+='<div id="metaSlot" data-keep="1"></div>';
   h+=monthCard(W);
   if(M0&&stI()<=1)h+=jobCard(W);
+  if(window.FRUI&&FRUI.todayCard)h+=FRUI.todayCard(W);   // M20: «Друзья» — кто ждёт ответа (js/friends-ui.js)
   // урок Школы
   const les=lesDue(W);if(les)h+=`<button class="card tap bz-li" data-b="les" data-n="${les.n}" style="padding:14px 18px"><span class="bz-ic">📘<i></i></span><span class="f1"><b>${L('Школа Людмилы: урок ','Lyudmila’s school: lesson ')+les.n}</b><small>${esc(LES[les.n].t())}</small></span><span class="chev">›</span></button>`;
   if(M0)h+=handsCard(W);
+  if(M0)h+=(window.OWNUI?OWNUI.ownCard(W)+OWNUI.eduCard(W):'');   // M17: дела хозяина и учёба
   if(W.biz.length)h+=incomeCard(W);
   h+=taxCard(W);
   h+=oooCard(W);
@@ -291,6 +300,7 @@ function monthCard(W){const M0=W.me,sg=W.mon.sg||{},d=W.d,DN=E.DAYS||30,dg=dayGa
     if(n)row('🏪',L('Точки','Outlets')+' ('+n+')',L('прибыль с начала месяца','profit so far this month'),(pts>0?'+':'')+M(pts),pts>=0?'good':'bad');
     const gr=(sg.gig&&sg.gig.rev)||0;if(gr)row('🧾',M0&&M0.job?L('Зарплата и заказы','Wage and orders'):L('Заказы','Orders'),L('с начала месяца','so far this month'),'+'+M(gr),'good');
     const life=(E.LIFE&&E.LIFE[W.st])||45000;row('🏠',L('Жизнь и взносы','Living costs and fees'),L('спишутся в конце месяца','charged at month end'),'−'+M(life+(W.ip&&!W.ooo?4750:0)),'bad');
+    if(window.OWNUI&&W.biz.length)rows.push(OWNUI.pasRow(W));   // M17: «живу на пассиве»
     if(last){let np=0;try{np=E.netOf(last.pl);}catch(e){}total=np;tl=L('Прибыль прошлого месяца','Last month’s profit');}}
   const hd=`<div class="mh"><span class="bz-lab">💰 ${L('Этот месяц','This month')} · ${L('день ','day ')}${d+1}${L(' из ',' of ')}${DN}</span>${dg!=null&&dg!==0?`<span class="bz-d ${dg>0?'up':'dn'}">${dg>0?'▲ +':'▼ −'}${M(Math.abs(dg))}<small> ${L('за день','today')}</small></span>`:''}</div>`;
   return `<div class="card bz-month">${hd}<div class="mrs">${rows.join('')}</div>${total!=null?`<div class="mt"><span>${tl}</span><b class="${total>=0?'good':'bad'}">${total>0?'+':''}${M(total)}</b></div>`:''}</div>`;}
@@ -321,7 +331,7 @@ function goalCard(W){const g=E.goal(W);if(!g||!GOALS[g.k])return '';
   {const d=odInfo(W);if(d)return `<div class="card bz-goal"><div class="bz-lab">🎯 ${L('Цель','Goal')}</div><div class="gh"><b>${L('Сначала закрыть долг банку','First, repay the bank debt')}</b></div><small>${L(`Осталось вернуть ${M(d.a)}, у вас на руках ${M(Math.max(0,W.cash))}. Потом вернёмся к цели «${gT(g.k)}».`,`${M(d.a)} left to repay, you hold ${M(Math.max(0,W.cash))}. Then back to “${gT(g.k)}”.`)}</small></div>`;}const auc=W.opi.some(x=>x.st==='auc'),p=g.k==='opi'?(auc?.5:0):Math.max(0,Math.min(1,g.cur/g.need));let sub;
   const give=String(goalGive(W,g.k)).replace(/(\d) (\d)/g,'$1\u00a0$2'),gv=give?`<div class="gv">✨ ${L('Что даст: ','What it gives: ')}${esc(give)}</div>`:'';
   if(g.k==='mgr'){const c=mgrCand(W);
-    if(c)return `<button class="card tap bz-goal noenter" data-b="goal" data-k="mgr" id="bzGoal"><div class="bz-lab">🎯 ${L('Цель','Goal')}</div><div class="gh"><b>${gT('mgr')}</b></div><small>${L(`Нанять в «${bn(c.b.t)}» — ${M(c.w)} в месяц. Прибыль точки с ним ~${Mr(c.p)}, а у вас освободится рука ✋ для новой точки.`,`Hire for “${bn(c.b.t)}” — ${M(c.w)} a month. Its profit with a manager ~${Mr(c.p)}, and a hand ✋ frees up for a new outlet.`)}</small><span class="btn accent sm" style="margin-top:10px;display:inline-flex">${L('Нанять','Hire')}</span></button>`;
+    if(c)return `<button class="card tap bz-goal noenter" data-b="goal" data-k="mgr" id="bzGoal"><div class="bz-lab">🎯 ${L('Цель','Goal')}</div><div class="gh"><b>${gT('mgr')}</b></div><small>${L(`Нанять в «${bn(c.b.t)}» за 30 % прибыли (~${Mr(c.w)} в месяц). Вам останется ~${Mr(c.p)}, а рука ✋ освободится для новой точки.`,`Hire for “${bn(c.b.t)}” for 30% of the profit (~${Mr(c.w)} a month). You keep ~${Mr(c.p)}, and a hand ✋ frees up for a new outlet.`)}</small><span class="btn accent sm" style="margin-top:10px;display:inline-flex">${L('Нанять','Hire')}</span></button>`;
     return `<button class="card tap bz-goal" data-b="goal" data-k="mgr" id="bzGoal"><div class="bz-lab">🎯 ${L('Цель','Goal')}</div><div class="gh"><b>${gT('mgr')}</b></div><small>${L('Откройте точку, где стоите сами (ларёк, шаурма…), — туда и нужен управляющий','Open an outlet you run yourself (a kiosk, shawarma…) — that’s where a manager helps')}</small></button>`;}
   const left=Math.max(0,g.need-g.cur);
   if(p>=1)sub=`${M(Math.max(0,g.cur))} ${L('из','of')} ${M(g.need)} · <b class="good">${L('хватает — нажмите','enough — tap here')}</b>`;
@@ -330,12 +340,12 @@ function goalCard(W){const g=E.goal(W);if(!g||!GOALS[g.k])return '';
   if(g.k==='opi'||g.k==='nedra'&&E.nedraOk(W))sub=g.k==='opi'?(auc?L('идут торги — во вкладке «Карьер»','an auction is on — see the Quarry tab'):L('перечень участков — во вкладке «Карьер»','the plot list is in the Quarry tab')):L('всё готово — нажмите','all set — tap here');
   return `<button class="card tap bz-goal" data-b="goal" data-k="${g.k}" id="bzGoal"><div class="bz-lab">🎯 ${L('Цель — на что копим','Goal — what we’re saving for')}</div><div class="gh"><b>${gT(g.k)}</b><span>${Math.floor(p*100)}${L(' %','%')}</span></div>${prog(p)}<small>${sub}</small>${parts}${gv}</button>`;}
 // кандидат на первого управляющего: точка, где вы стоите сами, с лучшей прибылью при управляющем
-function mgrCand(W){let best=null;for(const b of W.biz){const B=E.BIZ[b.t];if(!B||b.st!=='w'||b.mgr||!B.hand||!B.mw||W.opd[b.t])continue;const x=E.mgrProf(W,b);if(!x)continue;if(!best||x.mgr>best.p)best={b,p:x.mgr,w:B.mw};}return best;}
+function mgrCand(W){let best=null;for(const b of W.biz){const B=E.BIZ[b.t];if(!B||b.st!=='w'||b.mgr||!B.hand||!B.mw||W.opd[b.t])continue;const x=E.mgrProf(W,b);if(!x)continue;if(!best||x.mgr>best.p)best={b,p:x.mgr,w:x.mw};}return best;}   // M17: w — доля управляющего в месяц (30 %)
 function goalGo(k){const W=w();
   if(k==='bike'){UI.go('gigs');hlQ='#bzEq-bike';return;}
   if(k==='vend'||k==='kiosk'){if(!W.ip&&!W.reg){openIP();return;}openBizModal(k);return;}
   if(k==='mgr'){const c=mgrCand(W);if(!c){V.biz='list';UI.go('biz');return;}
-    modalYes(L('Нанять управляющего — ','Hire a manager — ')+bn(c.b.t),L(`Зарплата ${M(c.w)} в месяц. Прибыль точки будет ~${Mr(c.p)} в месяц, а ваша рука освободится для новой точки.`,`Wage ${M(c.w)} a month. The outlet’s profit will be ~${Mr(c.p)} a month, and your hand frees up for a new outlet.`),L('Нанять','Hire'),()=>{if(act('bizMgr',c.b.id,true)==='ok'){snd('coin');toast(L('Управляющий нанят — рука свободна','Manager hired — a hand is free'));}});return;}
+    modalYes(L('Нанять управляющего — ','Hire a manager — ')+bn(c.b.t),L(`Он берёт 30 % прибыли точки (~${Mr(c.w)} в месяц; в плохой месяц — оклад 15 000 ₽, но не больше прибыли). Вам останется ~${Mr(c.p)} в месяц, а рука освободится для новой точки.`,`He takes 30% of the outlet’s profit (~${Mr(c.w)} a month; in a bad month a 15,000 ₽ wage, never more than the profit). You keep ~${Mr(c.p)} a month, and your hand frees up for a new outlet.`),L('Нанять','Hire'),()=>{if(act('bizMgr',c.b.id,true)==='ok'){snd('coin');toast(L('Управляющий нанят — рука свободна','Manager hired — a hand is free'));}});return;}
   if(k==='ooo'){openOOO();return;}
   if(k==='base'||k==='quarry'){UI.go('net');return;}
   if(k==='opi'){UI.go(stI()>=3?'pit':'net');return;}
@@ -372,9 +382,9 @@ function taxCard(W){let t,sub='',btn='';
   if(W.taxm==='npd'){t=L('Самозанятый: налог 4 % с заказов','Self-employed: 4% tax on orders');sub=L('Зарплату кладовщика облагает работодатель. Для своей точки нужно ИП: перепродавать товар самозанятым нельзя.','Your employer taxes the warehouse wage. A business needs sole-trader status: the self-employed can’t resell goods.');}
   else if(W.taxm==='usn6'||W.taxm==='usn15'){t=W.taxm==='usn6'?L('ИП, УСН 6 % с доходов','Sole trader, 6% tax on revenue'):L('ИП, УСН 15 % с прибыли','Sole trader, 15% tax on profit');
     sub=W.ooo?L('ООО на упрощёнке; бухгалтер — 90 000 ₽ в месяц.','LLC on the simplified tax; accountant 90,000 ₽ a month.'):(W.taxm==='usn6'?L('Взносы ИП — 4 750 ₽ в месяц, они уменьшают налог 6 %.','Sole-trader contributions are 4,750 ₽ a month; they reduce the 6% tax.'):L('Взносы ИП — 4 750 ₽ в месяц, они входят в расходы и уменьшают прибыль для налога 15 %.','Sole-trader contributions are 4,750 ₽ a month; they count as expenses and reduce the profit taxed at 15%.'));
-    if(E.taxOk(W)){const c=E.taxCmp(W);sub+=' '+(c.n?L(`За ${mons(c.n)} налог был бы: 6 % — ${M(c.usn6)}, 15 % — ${M(c.usn15)}.`,`Over ${mons(c.n)} the tax would be: 6% — ${M(c.usn6)}, 15% — ${M(c.usn15)}.`):'')+' '+L('Сейчас можно выбрать режим на год:','You can choose the regime for the year now:');
+    if(E.taxOk(W)){const c=E.taxCmp(W),ad=E.taxAdv?E.taxAdv(W):null;sub+=' '+(c.n?L(`За ${mons(c.n)} налог был бы: 6 % — ${M(c.usn6)}, 15 % — ${M(c.usn15)}.`,`Over ${mons(c.n)} the tax would be: 6% — ${M(c.usn6)}, 15% — ${M(c.usn15)}.`):'')+(ad?' '+L(`Людмила: на ваших точках за год ${ad.best==='usn6'?'6 %':'15 %'} выгоднее (${M(ad.u6)} против ${M(ad.u15)}).`,`Lyudmila: for your outlets over a year ${ad.best==='usn6'?'6%':'15%'} is cheaper (${M(ad.u6)} vs ${M(ad.u15)}).`):'')+' '+L('Сейчас можно выбрать режим на год:','You can choose the regime for the year now:');
       btn=`<div class="pick"><button data-b="taxm" data-v="usn6" class="noenter${W.taxm==='usn6'?' on':''}">6 % ${L('с доходов','of revenue')}</button><button data-b="taxm" data-v="usn15" class="noenter${W.taxm==='usn15'?' on':''}">15 % ${L('с прибыли','of profit')}</button></div>`;}
-    else sub+=' '+L('Режим можно сменить в январе.','You can switch the regime in January.');}
+    else{const n=E.taxNext?E.taxNext(W):0;sub+=' '+L(`Сменить режим можно раз в 12 месяцев — ещё ${mons(Math.max(1,n))}.`,`You can switch once every 12 months — ${mons(Math.max(1,n))} to go.`);}}
   else return '';
   if(!W.ip){if(W.reg&&W.reg.k==='ip')btn=`<div class="tip">📄 ${L('ИП оформляется: ещё ','Registration in progress: ')+days(Math.max(1,W.reg.t-W.t))+L('',' left')}</div>`;
     else btn=`<button class="btn${E.goal(W)&&E.goal(W).k==='vend'?' accent':''} w noenter" data-b="ip" style="margin-top:10px" id="bzIP">📄 ${L('Оформить ИП — 0 ₽, 3 дня','Register as a sole trader — 0 ₽, 3 days')}</button>`;}
@@ -418,7 +428,7 @@ function rGigs(el){const W=w(),M0=W.me;if(!M0){el.innerHTML='';return;}const H=E
   const soon=M0.gigs.length?Math.min(...M0.gigs.map(g=>g.left)):0;
   const bwhy=M0.out>0?WHY_G.out():M0.rest>0?WHY_G.rest():H.free<1?WHY_G.hand()+(soon?L(' — освободится через ',' — free in ')+days(soon):''):!live.length?L('Заказов пока нет','No jobs yet'):live.every(g=>E.gigCanTake(W,g)!=='ok')&&live.some(g=>E.gigCanTake(W,g)==='en')?L('Мало сил ⚡ — возьмите выходной 🛌','Low energy ⚡ — take a day off 🛌'):L('Нет подходящих заказов','No suitable jobs');
   const lowEn=!best&&M0.rest<=0&&M0.out<=0&&H.free>0&&live.some(g=>E.gigCanTake(W,g)==='en');
-  h+=lowEn?`<button class="btn w noenter bz-best" data-b="rest" id="bzBest">🛌 ${L('Сил мало — взять выходной: +50 ⚡','Low energy — take a day off: +50 ⚡')}</button>`
+  h+=lowEn?`<button class="btn w noenter bz-best" data-b="rest" id="bzBest">🛌 ${L('Сил мало — взять выходной: силы до максимума','Low energy — take a day off: back to full')}</button>`
     :`<button class="btn green w noenter bz-best" data-b="gbest" id="bzBest"${best?'':' disabled'}>✋ ${best?(window.innerWidth<380?L('Лучший','Best'):L('Взять лучший','Take the best'))+`: ${esc(low(gShort(best.t)))}, ${M(best.pay)}`:esc(bwhy)}</button>`;
   // просьба друга из «Телефона» — карточкой над доской, чтобы не истекала молча
   try{const F=W.fr,pq=F&&F.q&&F.q.find(q=>!q.big&&window.STORYUI&&STORYUI.openAsk&&FRN[q.w]);
@@ -525,11 +535,12 @@ function rBiz(el){const W=w();if(V.biz==='pt'){const b=W.biz.find(x=>x.id===V.id
   const pts=W.biz.filter(b=>!isPit(b.t)&&!isMid(b.t));let h='';let s=0,n=0;for(const b of pts){const p=lastPm(b);if(p!=null){s+=p;n++;}}
   h+=`<div class="bz-top"><div class="bz-sub">${pts.length} ${pl(pts.length,'точка','точки','точек','outlet','outlets')}${n?' · '+L('прибыль за месяц ','profit last month ')+money0(s):''}</div><div class="bz-h1">${L('Своё дело','My business')}</div></div>`;
   if(W.ned)h+=`<div class="bz-back"><button class="back" data-b="tab" data-t="obj">← ${L('Объекты','Assets')}</button></div>`;
-  if(!W.ip&&!W.ned){h+=`<div class="card"><b>📄 ${L('Сначала — ИП','First — sole-trader status')}</b><p class="bz-note">${L('Перепродавать товар самозанятым нельзя. ИП оформляется бесплатно за 3 дня; налог — 6 % с доходов.','The self-employed can’t resell goods. Registration is free and takes 3 days; tax is 6% of revenue.')}</p>${W.reg?`<div class="tip">📄 ${L('Оформляется: ещё ','In progress: ')+days(Math.max(1,W.reg.t-W.t))+L('',' left')}</div>`:`<button class="btn accent w noenter" data-b="ip" style="margin-top:10px">${L('Оформить ИП','Register')}</button>`}</div>`;}
+  if(!W.ip&&!W.ned){h+=`<div class="card"><b>📄 ${L('Сначала — ИП','First — sole-trader status')}</b><p class="bz-note">${L('Перепродавать товар самозанятым нельзя. ИП оформляется бесплатно за 3 дня; налог — на выбор: 6 % с выручки или 15 % с прибыли.','The self-employed can’t resell goods. Registration is free and takes 3 days; the tax is your choice: 6% of revenue or 15% of profit.')}</p>${W.reg?`<div class="tip">📄 ${L('Оформляется: ещё ','In progress: ')+days(Math.max(1,W.reg.t-W.t))+L('',' left')}</div>`:`<button class="btn accent w noenter" data-b="ip" style="margin-top:10px">${L('Оформить ИП','Register')}</button>`}</div>`;}
   if(pts.length)h+=`<div class="card bz-list">`+pts.map(b=>ptRow(W,b)).join('')+'</div>';
   else h+=`<div class="card mut">${L(`Пока ни одной точки. Первое дело — кофейный автомат: ${M(E.BIZ.vend.cap)}, руки не занимает.`,`No outlets yet. The first business is a coffee vending machine: ${M(E.BIZ.vend.cap)} and it needs no hands.`)}</div>`;
   if(!W.ned)h+=`<button class="btn accent w" data-b="bnew" id="bzNew" style="margin:4px 0 14px">＋ ${L('Открыть новое дело','Open a new business')}</button>`;
-  h+=`<p class="bz-note" style="margin:0 4px">${L('Точка без управляющего занимает руку ✋ и приносит на 5 % больше; пока вас нет — на 10 % меньше. Управляющий освобождает руку, но стоит зарплату.','An outlet without a manager takes a hand ✋ and earns 5% more; while you’re away — 10% less. A manager frees the hand but costs a wage.')}</p>`;
+  h+=`<p class="bz-note" style="margin:0 4px">${L('Точка без управляющего занимает руку ✋ и приносит больше (хозяйский глаз); пока вас нет — на 10 % меньше. Управляющий освобождает руку и берёт 30 % прибыли точки.','An outlet without a manager takes a hand ✋ and earns more (the owner’s eye); while you’re away — 10% less. A manager frees the hand and takes 30% of the outlet’s profit.')}</p>`;
+  if(!W.ned)h+=(window.OWNUI?OWNUI.bizCards(W):'');   // M17: маркетинг города
   el.innerHTML=h;}
 function ptRow(W,b){const p=lastPm(b);return `<button class="bz-li" data-b="bpt" data-id="${b.id}"><span class="bz-ic">${bico(b.t)}${bizDot(W,b)?'<i></i>':''}</span><span class="f1"><b>${esc(bn(b.t))}</b><small>${esc(bizState(W,b))}</small></span><span class="v ${p==null?'':p>=0?'good':'bad'}">${b.st==='w'&&p!=null?money0(p):'—'}<small>${b.st==='w'&&p!=null?L('за месяц','a month'):''}</small></span></button>`;}
 const NEED_WHY={stage:()=>L('откроется в следующей главе','unlocks in the next chapter'),ip:()=>L('нужно ИП','needs sole-trader status'),max:()=>L('в городе уже максимум','city limit reached'),city:()=>L('нет представительства в городе','no office in this city'),no:()=>L('недоступно','unavailable')};
@@ -540,7 +551,8 @@ function needTxt(W,t,r){const B=E.BIZ[t],n=B.need||{};
   return (NEED_WHY[r]||NEED_WHY.no)();}
 function catRow(W,t,c){const B=E.BIZ[t],r=E.bizCan(W,t,c),f=E.bizForecast(W,t),lock=r!=='ok'&&r!=='cash'&&r!=='ip';
   const hand=!B.hand?L('без рук','no hands'):B.hand<1?L('½ руки','½ hand'):L('1 рука','1 hand');
-  const line=`${L('вложения','invest')} ${M(B.cap)} · ${L('прибыль','profit')} ~${Mr(f.prof)}${L('/мес','/mo')}${f.prof>0?' · '+L('окупится за ~','pays back in ~')+mons(Math.ceil(f.pay)):''} · ${hand}`;
+  const sat=window.OWNUI?OWNUI.catLine(W,t,c):'';   // M17: насыщение рынка
+  const line=`${L('вложения','invest')} ${M(B.cap)} · ${L('прибыль','profit')} ~${Mr(f.prof)}${L('/мес','/mo')}${f.prof>0?' · '+L('окупится за ~','pays back in ~')+mons(Math.ceil(f.pay)):''} · ${hand}${sat?' · '+sat:''}`;
   return `<button class="bz-li${lock?' lock':''}" data-b="bcat" data-t="${t}" id="bzCat-${t}"><span class="bz-ic">${bico(t)}</span><span class="f1"><b>${esc(bn(t))}</b><small>${esc(line)}</small>${r!=='ok'?`<small style="color:${lock?'var(--muted)':'var(--warn)'}">${lock?'🔒 ':''}${esc(needTxt(W,t,r))}</small>`:''}</span><span class="chev">›</span></button>`;}
 function catView(W){const c=V.city||W.home||'kuz';let h=`<div class="bz-back"><button class="back" data-b="bback">← ${L('Мои точки','My outlets')}</button></div>
   <div class="bz-top"><div class="bz-sub">${L('Прогноз Людмилы — при средних условиях','Lyudmila’s forecast — under average conditions')}</div><div class="bz-h1">${L('Открыть дело','Open a business')}</div></div>`;
@@ -560,14 +572,15 @@ function openBizModal(t,c){const W=w(),B=E.BIZ[t];if(!B)return;c=c||V.city||W.ho
     <span>${L('Выручка','Revenue')}</span><b>~${Mr(f.rev)}${L('/мес','/mo')}</b><span>${L('Расходы','Costs')}</span><b>~${Mr(f.vc+f.f+f.risk)}${L('/мес','/mo')}</b>
     <span>${L('Прибыль','Profit')}</span><b class="${f.prof>=0?'good':'bad'}">~${Mr(f.prof)}${L('/мес','/mo')}</b>${f.prof>0?`<span>${L('Окупаемость','Payback')}</span><b>~${mons(Math.ceil(f.pay))}</b>`:''}
     <span>${L('Руки','Hands')}</span><b>${!B.hand?L('не занимает','none'):B.hand<1?L('полруки','half a hand'):L('одна рука ✋','one hand ✋')}</b></div>
-    <p class="bz-note">${KNOB_TIP[t]?esc(KNOB_TIP[t]())+' '+L('Это настроите после открытия — в карточке точки.','You’ll set this after opening — on the outlet card.'):''}</p>`+(t==='vend'&&E.vendOps&&E.vendOps(W,1)>E.vendOps(W)?`<div class="tip">🧰 ${L(`С этим автоматом понадобится оператор: +${M(E.VEND_OP)} в месяц на 10 автоматов.`,`With this machine you’ll need an operator: +${M(E.VEND_OP)} a month per 10 machines.`)}</div>`:'');
-  const pm=f.prof-B.mw;
-  if(needMgr&&B.mw)h+=`<div class="tip${pm<0?' bad':''}">✋ ${L(`Свободных рук нет — точка откроется сразу с управляющим: ${M(B.mw)} в месяц, прибыль будет ~${Mr(pm)}.`,`No free hands — the outlet opens with a manager: ${M(B.mw)} a month, profit ~${Mr(pm)}.`)}${pm<0?' '+L('С управляющим она в минусе. Сначала освободите руку: закончите заказ, уволитесь со склада или поставьте управляющего в точку побольше.','With a manager it loses money. Free a hand first: finish an order, quit the warehouse, or put a manager into a bigger outlet.'):''}</div>`;
+    ${window.OWNUI?OWNUI.passport(W,t,c):''}<p class="bz-note">${KNOB_TIP[t]?esc(KNOB_TIP[t]())+' '+L('Это настроите после открытия — в карточке точки.','You’ll set this after opening — on the outlet card.'):''}</p>`+(t==='vend'&&E.vendOps&&E.vendOps(W,1)>E.vendOps(W)?`<div class="tip">🧰 ${L(`С этим автоматом понадобится оператор: +${M(E.VEND_OP)} в месяц на 10 автоматов.`,`With this machine you’ll need an operator: +${M(E.VEND_OP)} a month per 10 machines.`)}</div>`:'');
+  // M17: управляющий — 30 % прибыли точки (прогноз с ним — той же формулой, что в модели)
+  const pm=B.mw?E.bizForecast(W,{t,c,rt:3.5,k:E.defKnob(t),mgr:1,wm:3,ev:{},lv:1}).prof:f.prof;
+  if(needMgr&&B.mw)h+=`<div class="tip${pm<0?' bad':''}">✋ ${L(`Свободных рук нет — точка откроется сразу с управляющим: он берёт 30 % прибыли, вам останется ~${Mr(pm)} в месяц.`,`No free hands — the outlet opens with a manager: he takes 30% of the profit, you keep ~${Mr(pm)} a month.`)}${pm<0?' '+L('С управляющим она в минусе. Сначала освободите руку: закончите заказ, уволитесь со склада или поставьте управляющего в точку побольше.','With a manager it loses money. Free a hand first: finish an order, quit the warehouse, or put a manager into a bigger outlet.'):''}</div>`;
   // запас на жизнь: после покупки должно остаться ~1,5 месяца обязательных расходов (иначе — овердрафт в конце месяца)
   let wait=false;if(r==='ok'&&!W.ooo&&!W.ned){const left=W.cash-B.cap,res=E.bizRes(W);if(left<res){wait=true;
     h+=`<div class="tip bad">⚠️ ${L(`После покупки останется ${M(left)}, а в конце месяца платить за жизнь и взносы ~${M(Math.round(res/1.5/1000)*1000)}. Людмила советует накопить ещё ${M(res-left)} — иначе овердрафт и плохая кредитная история.`,`After buying you’ll have ${M(left)} left, but living costs and contributions at month end are ~${M(Math.round(res/1.5/1000)*1000)}. Lyudmila advises saving another ${M(res-left)} — otherwise an overdraft and a bad credit history.`)}</div>`;}}
   let btn='';
-  if(r==='ok')btn=`<button class="btn ${wait?'':'green '}noenter" id="bzOpen">${L('Открыть за ','Open for ')+M(B.cap)}</button>${!needMgr&&B.hand&&B.mw?`<button class="btn noenter" id="bzOpenM">${L('Открыть сразу с управляющим','Open with a manager')} <small class="${pm<0?'bad':''}">${M(B.mw)}${L('/мес','/mo')} · ${L('прибыль ~','profit ~')+Mr(pm)}</small></button>`:''}`;
+  if(r==='ok')btn=`<button class="btn ${wait?'':'green '}noenter" id="bzOpen">${L('Открыть за ','Open for ')+M(B.cap)}</button>${!needMgr&&B.hand&&B.mw?`<button class="btn noenter" id="bzOpenM">${L('Открыть сразу с управляющим','Open with a manager')} <small class="${pm<0?'bad':''}">${L('30 % прибыли · вам ~','30% of profit · you keep ~')+Mr(pm)}</small></button>`:''}`;
   else if(r==='ip')btn=W.reg?`<div class="tip">📄 ${L('ИП оформляется: ещё ','Registration: ')+days(Math.max(1,W.reg.t-W.t))+L('. Потом можно открывать.',' left. Then you can open.')}</div>`:`<div class="tip">📄 ${L('Нужно ИП: бесплатно, 3 дня.','You need sole-trader status: free, 3 days.')}</div><button class="btn green noenter" id="bzIP2">${L('Оформить ИП','Register as a sole trader')}</button>`;
   else{const nt=needTxt(W,t,r);h+=`<div class="tip">🔒 ${esc(nt.charAt(0).toUpperCase()+nt.slice(1))}</div>`;}
   modal(h+`<div class="row">${btn}<button class="btn${wait?' green':''}" id="bzNo" data-esc>${wait?L('Подожду','I’ll wait'):L('Закрыть','Close')}</button></div>`);
@@ -622,18 +635,19 @@ function gdList(W,b,K){return `<div class="bz-gd">`+K.o.map(o=>{const x=o[3]||{}
   `<p class="bz-note" style="margin-top:0">${L('Справа — прибыль в месяц в среднем за год, до налога.','On the right — profit a month, yearly average, before tax.')}</p>`;}
 function fcCard(W,b,k){const f=E.bizForecast(W,b,k),n=f.now;
   return `<div class="bz-fc" id="bzFc">${L('Прогноз на этот месяц','Forecast for this month')}: ${L('выручка','revenue')} <b>~${Mr(n.rev)}</b>, ${L('прибыль','profit')} <b class="${n.prof>=0?'good':'bad'}">~${Mr(n.prof)}</b>${Math.abs(n.prof-f.prof)>Math.max(3000,Math.abs(f.prof)*.15)?`<br><span class="mut">${L('в среднем за год','yearly average')}: ~${Mr(f.prof)}${L('/мес','/mo')}</span>`:''}<br><span class="mut" style="font-size:14px">${L('до налога и износа','before tax and depreciation')}</span></div>`;}
-function vendNote(W,b){if(!E.vendOps)return '';const n=W.biz.filter(x=>x.t==='vend').length,ops=E.vendOps(W),sp=b?E.vendSpot(W,b):E.vendSpot(W,{t:'vend',c:W.home||'kuz'});
+function vendNote(W,b){if(!E.vendOps)return '';const n=W.biz.filter(x=>x.t==='vend').length,ops=E.vendOps(W),sp=E.satOf?1:b?E.vendSpot(W,b):E.vendSpot(W,{t:'vend',c:W.home||'kuz'});   // M17: «лучшие места» — теперь насыщение рынка (строка «Рынок насыщен» выше)
   return `<p class="bz-note">🧰 ${L(`Автоматов: ${n}. До ${E.VEND_SELF} обслуживаете сами, без рук; дальше нужен оператор — ${M(E.VEND_OP)} в месяц на каждые 10 автоматов`,`Machines: ${n}. Up to ${E.VEND_SELF} you service them yourself, no hands; beyond that you need an operator — ${M(E.VEND_OP)} a month per 10 machines`)}${ops?L(` (сейчас ${ops})`,` (now ${ops})`):''}.${sp<.995?' '+L(`Лучшие места уже заняты: у этого спрос ниже на ${FMT.pct(1-sp)}.`,`The best spots are taken: this one has ${FMT.pct(1-sp)} less demand.`):''}</p>`;}
 // «📺 Реклама точки»: +20 % покупателей на 15 дней, раз в игровой месяц на точку
-function promoCard(W,b){if(b.st!=='w'||E.SMALL.indexOf(b.t)<0)return '';const on=b.ad>W.t;if(!on&&!adOk())return '';
+function promoCard(W,b,inner){if(b.st!=='w'||E.SMALL.indexOf(b.t)<0)return '';const on=b.ad>W.t;if(!on&&!adOk())return '';   // inner — только содержимое (M17: строкой в «Маркетинге точки»)
   const pc=Math.round(E.PROMO_K*100);let body;
   if(on)body=`<p class="bz-note" style="color:var(--good)">✓ ${L(`Реклама идёт ещё ${days(b.ad-W.t)}: покупателей больше на ${pc} %.`,`The ad runs ${days(b.ad-W.t)} more: ${pc}% more customers.`)}</p>`;
   else if(E.bizPromoOk(W,b.id)&&adL('promo'))body=`<p class="bz-note">${L(`Листовки, вывеска и объявления в районе: +${pc} % покупателей на ${days(E.PROMO_D)}. Раз в месяц.`,`Flyers, a sign and local listings: +${pc}% customers for ${days(E.PROMO_D)}. Once a month.`)}</p><button class="btn sm w noenter" data-b="promo" data-id="${b.id}" style="margin-top:8px">📺 ${L('Запустить рекламу точки — за рекламу','Run the outlet ad — for an ad')}</button>`;
   else body=`<p class="bz-note">${b.adM===W.m?L('В этом месяце реклама уже была — следующая в новом месяце.','The outlet was advertised this month — next time next month.'):L('На сегодня реклама точек закончилась — загляните завтра.','No more outlet ads today — come back tomorrow.')}</p>`;
+  if(inner)return `<div style="padding:6px 0 10px"><b>📺 ${L('Реклама точки за ролик','Outlet ad for a video')}</b>${body}</div>`;
   return `<div class="card"><b>📣 ${L('Реклама точки','Outlet ad')}</b>${body}</div>`;}
 // прогноз прибыли с управляющим: строка для карточки точки (красным — если с ним в минусе)
 function mgrLine(W,b){const x=E.mgrProf(W,b);if(!x)return '';const bad=x.mgr<0,thin=!bad&&x.mgr<x.dep;
-  return `<p class="bz-note${bad?' bad':''}" style="margin:0 0 10px">📊 ${L('Прибыль в месяц: с управляющим ~','Profit a month: with a manager ~')+Mr(x.mgr)+L(', самому ~',', yourself ~')+Mr(x.self)}${bad?'. '+L('С ним точка в минусе — лучше стоять самому или поставить управляющего в точку побольше.','With him the outlet loses money — better run it yourself or put the manager into a bigger outlet.'):thin?'. '+L('С ним точка едва окупает износ.','With him the outlet barely covers depreciation.'):''}</p>`;}
+  return `${window.OWNUI?OWNUI.tip('mgr'):''}<p class="bz-note${bad?' bad':''}" style="margin:0 0 10px">📊 ${L('Прибыль в месяц: с управляющим ~','Profit a month: with a manager ~')+Mr(x.mgr)+L(' (он берёт 30 %, не меньше 15 000 ₽, но не больше прибыли), самому ~',' (he takes 30%, at least 15,000 ₽ but never more than the profit), yourself ~')+Mr(x.self)}${bad?'. '+L('С ним точка в минусе — лучше стоять самому или поставить управляющего в точку побольше.','With him the outlet loses money — better run it yourself or put the manager into a bigger outlet.'):thin?'. '+L('С ним точка едва окупает износ.','With him the outlet barely covers depreciation.'):''}</p>`;}
 function ptView(W,b){const B=E.BIZ[b.t],from=V.from;let h=`<div class="bz-back"><button class="back" data-b="bback">← ${from==='net'?L('Сеть','Network'):from==='pit'?L('Карьер','Quarry'):from==='today'?L('Сегодня','Today'):L('Мои точки','My outlets')}</button></div>`;
   h+=`<div class="card"><div class="bz-hd"><span class="bz-ic lg">${bico(b.t)}</span><div class="f1"><h2>${esc(bn(b.t))}</h2><small>⭐ ${num(b.rt||0,2)} · ${esc(cityN(b.c))}${b.wm?' · '+L('работает ','open ')+mons(b.wm):''}</small></div></div>`;
   if(b.st==='b'){const tot=b.tot||B.days;h+=`<p class="bz-note">${esc(bizState(W,b))}</p>${prog((tot-b.left)/tot)}`;
@@ -643,7 +657,7 @@ function ptView(W,b){const B=E.BIZ[b.t],from=V.from;let h=`<div class="bz-back">
     const pm=b.pm||[];h+=`<div class="bz-lab" style="margin-top:12px">${L('Прибыль по месяцам','Profit by month')}${pm.length?' · '+L('последний ','last ')+money0(pm[pm.length-1]):''}</div>`+(pm.length?barsSvg(pm):`<p class="bz-note">${L('Первые цифры — после закрытия месяца. С начала месяца: выручка ','First figures at month end. This month so far: revenue ')+M(b.m.r)}</p>`);
     for(const k in b.ev){const e=b.ev[k];if(e&&e[0]>W.m&&EVT[k])h+=`<div class="tip">📰 ${esc(T(EVT[k]))} — ${L('ещё ','for ')+mons(e[0]-W.m)}</div>`;}
     if(b.stk>0)h+=`<p class="bz-note">📦 ${L('Товар на полке: ','Stock on the shelf: ')+M(b.stk)} — ${L('это не расход, а запас','not a cost but stock')}</p>`;}
-  h+='</div>'+promoCard(W,b);
+  h+='</div>'+(window.OWNUI?'':promoCard(W,b));   // M17: реклама за ролик — строкой в «Маркетинге точки» (js/owner-ui.js)
   // главная ручка
   if(B.knob||B.sl){h+=`<div class="card bz-knob">`;
     if(B.knob){h+=`<b>${T(KNOB_T[B.knob.k])}</b>`+(B.knob.list?gdList(W,b,B.knob):`<div class="pick">`+B.knob.o.map(o=>`<button data-b="knob" data-k="${B.knob.k}" data-v="${o[0]}" class="noenter${b.k[B.knob.k]===o[0]?' on':''}">${esc(opv(o))}</button>`).join('')+'</div>');
@@ -656,12 +670,14 @@ function ptView(W,b){const B=E.BIZ[b.t],from=V.from;let h=`<div class="bz-back">
     if(B.gd)h+=`<b style="display:block;margin-top:14px">${T(KNOB_T[B.gd.k])}</b>`+gdList(W,b,B.gd)+`<p class="bz-note">${L('Менять можно когда угодно: запас подстроится со следующей закупки.','You can switch any time: stock adjusts from the next purchase.')}</p>`;
     h+='</div>';}
   else if(!isPit(b.t))h+=`<div class="card">${fcCard(W,b)}<p class="bz-note">${esc(KNOB_TIP[b.t]?KNOB_TIP[b.t]():'')}</p></div>`;
+  if(window.OWNUI)h+=OWNUI.ptCards(W,b,promoCard(W,b,true));   // M17: рынок, уровни, маркетинг, обучение — после главной настройки
   // управление
   let rows='';
   if(W.opd[b.t])rows+=`<div class="bz-li"><span class="bz-ic">👔</span><span class="f1"><b>${L('Сетью управляет опердиректор','An ops director runs the network')}</b><small>${L('управляющие точек не нужны','outlets need no managers')}</small></span></div>`;
-  else if(B.mw){if(b.mgr){rows+=`<div class="bz-li"><span class="bz-ic">👔</span><span class="f1"><b>${L('Управляющий','Manager')} · ${M(B.mw)}${L('/мес','/mo')}</b><small>${L('рука свободна; держит настройки, хитрых решений не принимает','your hand is free; keeps the settings, no clever decisions')}</small></span><button class="btn sm noenter" data-b="mgr" data-id="${b.id}" data-v="0">${L('Встать самому','Run it myself')}</button></div>`+mgrLine(W,b);
+  else if(B.mw){if(b.mgr){rows+=`<div class="bz-li"><span class="bz-ic">👔</span><span class="f1"><b>${L('Управляющий','Manager')} · ${b.mp?M(b.mp)+L(' за прошлый месяц',' last month'):L('30 % прибыли','30% of profit')}</b><small>${L('рука свободна; держит настройки, хитрых решений не принимает','your hand is free; keeps the settings, no clever decisions')}</small></span><button class="btn sm noenter" data-b="mgr" data-id="${b.id}" data-v="0">${L('Встать самому','Run it myself')}</button></div>`+mgrLine(W,b);
       rows+=`<div class="bz-li"><span class="bz-ic">🔍</span><span class="f1"><b>${L('Ревизия Людмилы','Lyudmila’s audit')}</b><small>${L('проверит, не тает ли выручка','checks whether takings go missing')}${b.aud!=null?' · '+L('была в ','last in ')+FMT.mon(b.aud):''}</small></span><span style="display:flex;flex-direction:column"><button class="btn sm noenter" data-b="audit" data-id="${b.id}">${M(E.AUDIT)}</button>${adL('audit')?`<button class="btn sm noenter" data-b="auditAd" data-id="${b.id}" style="margin-top:6px">📺 ${L('за рекламу','for an ad')}</button>`:''}</span></div>`;}
-    else rows+=`<div class="bz-li"><span class="bz-ic">✋</span><span class="f1"><b>${B.hand?L('Вы стоите сами','You run it yourself'):L('Без управляющего','No manager')}</b><small>${B.hand?L('+5 % «хозяйский глаз», но занята рука','+5% “owner’s eye”, but a hand is busy'):''}</small></span><button class="btn sm noenter" data-b="mgr" data-id="${b.id}" data-v="1" id="bzMgr">${L('Нанять','Hire')} · ${M(B.mw)}</button></div>`+(b.st==='w'?mgrLine(W,b):'');}
+    else rows+=`<div class="bz-li"><span class="bz-ic">✋</span><span class="f1"><b>${B.hand?L('Вы стоите сами','You run it yourself'):L('Без управляющего','No manager')}</b><small>${B.hand?L('+5 % «хозяйский глаз», но занята рука','+5% “owner’s eye”, but a hand is busy'):''}</small></span><button class="btn sm noenter" data-b="mgr" data-id="${b.id}" data-v="1" id="bzMgr">${L('Нанять','Hire')} · 30 %</button></div>`+(b.st==='w'?mgrLine(W,b):'');}
+  rows+=(window.OWNUI?OWNUI.ptRows(W,b):'');   // M17: проверка точки, встать за прилавок
   if(!(isPit(b.t)&&W.st==='quarry'&&W.biz.filter(x=>isPit(x.t)).length<=1))rows+=`<div class="bz-li"><span class="bz-ic">🤝</span><span class="f1"><b>${L('Продать','Sell')}</b><small>${L('покупатель даст ~','a buyer offers ~')+M(E.bizSellPrice(W,b))}</small></span><button class="btn sm noenter" data-b="sell" data-id="${b.id}">${L('Продать','Sell')}</button></div>`;
   if(rows)h+=`<div class="card bz-list">${rows}</div>`;
   return h;}
@@ -719,7 +735,7 @@ function opiCard(W,p){const g=T(PG[p.g]),nm=T(p.nm),fair=Math.round(p.V*E.OPI_AD
 
 /* ================= окна: ИП, ООО, увольнение, кредиты, недра, главы ================= */
 function doIP(){const r=act('regIP');if(r==='ok'){snd('coin');toast(L('Документы поданы: ИП будет через 3 дня','Papers filed: registration in 3 days'));}}
-function openIP(){const W=w();if(W.ip)return;
+function openIP(){const W=w();if(W.ip)return;if(window.OWNUI&&OWNUI.openIP)return OWNUI.openIP();   // M17: окно ИП с выбором налога
   modal(`<h2>📄 ${L('Своё ИП','Sole trader')}</h2><div class="say">${UI.face('happy')}<div><p>${L('Для своей точки нужно ИП: самозанятым перепродавать товар нельзя. Оформим бесплатно, за 3 дня. Налог — 6 % с доходов, взносы 4 750 ₽ в месяц, в январе можно выбрать 15 % с прибыли.','A business needs sole-trader status: the self-employed can’t resell goods. It’s free and takes 3 days. Tax is 6% of revenue, contributions 4,750 ₽ a month; in January you can switch to 15% of profit.')}</p><p>${L('Бухгалтерию возьму на себя — за пирожки.','I’ll keep the books — for some pies.')}</p></div></div>
     <div class="row">${W.reg?`<div class="tip">📄 ${L('Уже оформляется: ещё ','Already in progress: ')+days(Math.max(1,W.reg.t-W.t))}</div>`:`<button class="btn green noenter" id="bzIpY">📄 ${L('Оформить ИП','Register')}</button>`}<button class="btn" id="bzIpN" data-esc>${L('Позже','Later')}</button></div>`);
   try{modalRe=openIP;}catch(e){}if($$('bzIpY'))$$('bzIpY').onclick=()=>{hideModal();doIP();};$$('bzIpN').onclick=()=>{snd('tap');hideModal();};}
@@ -756,7 +772,7 @@ const CHAP={
     // после пролога Людмила уже знакома — не представляется заново
     sayFn:()=>(S.tut&&S.tut.b_pro)||(window.STORYUI&&STORYUI.prologueDue&&w()&&w().fr&&w().fr.hero&&w().fr.hero.set&&STORYUI.prologueDue()===false)?['Ну что, начнём? Заказы — на доске, я рядом.','Well, shall we start? The orders are on the board — I’m right here.']:null,
     btn:['Посмотреть заказы','See the orders'],tab:'gigs'},
-  small:{n:2,t:['Своё дело','My business'],li:[['Точки работают сами — выручка каждый день','Outlets work by themselves — revenue every day'],['Руки ✋ нужны точкам: управляющий освобождает руку','Outlets need hands ✋: a manager frees one'],['Отчёты как у настоящей компании и «Школа Людмилы»','Real company reports and Lyudmila’s School']],
+  small:{n:2,t:['Своё дело','My business'],li:[['Точки работают сами — выручка каждый день','Outlets work by themselves — revenue every day'],['Руки ✋ нужны точкам: управляющий освобождает руку за 30 % прибыли','Outlets need hands ✋: a manager frees one for 30% of the profit'],['Улучшения точек, маркетинг, курсы и дела хозяина','Outlet upgrades, marketing, courses and owner’s tasks'],['Разные дела выгоднее одинаковых: рынок города не резиновый','Different businesses beat identical ones: a city’s market has limits']],
     say:['Первое своё дело! Автомат работает сам и рук не занимает — заказы можно брать как раньше. А у ларька придётся стоять самому: тогда таксовать некогда, берём заказы, пока есть свободные руки. Книги веду я.','Your first business! The machine runs by itself and needs no hands — keep taking orders. A kiosk you’ll have to run yourself: then there’s no time for taxi shifts, so take orders only while you have free hands. I’ll keep the books.'],btn:['Поехали','Let’s go'],tab:'biz'},
   mid:{n:3,t:['Сеть','Network'],li:[['Сети: от 3 точек — скидка на закупку и опердиректор','Chains: from 3 outlets — purchase discount and an ops director'],['Склад и опт, стройбаза, самосвалы','Wholesale, a builders’ yard, dump trucks'],['Второй город: Екатеринбург или Петрозаводск','A second city: Yekaterinburg or Petrozavodsk']],
     say:['ООО готово! Берите меня на полставки — я вам нужнее, чем внукам. Теперь мы управляем не точками, а системой.','The LLC is ready! Take me on part-time — you need me more than my grandchildren do. Now we run a system, not outlets.'],btn:['Поехали','Let’s go'],tab:'net'},
@@ -813,7 +829,7 @@ function offline(s){const W=w();if(!W||W.ned)return false;const mo=s.months||0;s
   const pts=W.biz.length,mg=W.biz.some(b=>b.mgr);
   // строки сходятся с «Стали богаче»: разница (налог, износ, проценты) — отдельной строкой (аудит M3: 58 458 − 38 000 ≠ 16 971)
   // суммируем так, как показано на экране (132 тыс. ₽ — это 132 000), чтобы столбик сходился глазами
-  const shown=x=>{const t=String(M(x)).replace(/[\s\u00a0\u202f]/g,'').replace('−','-').replace(',','.');const v=parseFloat(t)||0;return Math.round(v*(/млрд|bn/.test(t)?1e9:/млн|m₽/.test(t)?1e6:/тыс|k₽/.test(t)?1e3:1));};
+  const shown=x=>{let t=String(M(x)).replace(/[\s\u00a0\u202f]/g,'').replace('−','-');t=LANG==='en'?t.replace(/,/g,''):t.replace(',','.');const v=parseFloat(t)||0;return Math.round(v*(/млрд|bn/.test(t)?1e9:/млн|m₽/.test(t)?1e6:/тыс|k₽/.test(t)?1e3:1));};
   const sgSum=Object.keys(s.sg||{}).filter(k=>Math.round(s.sg[k].e)).reduce((a,k)=>a+shown(s.sg[k].e),0),rest=segs?shown(s.np)-sgSum:0;
   // честная подсказка: вживую выгоднее (темп до ухода — по дневной истории денег; без неё — общими словами)
   const live=(()=>{if(s.ext||!(s.days>0))return '';let r=0;try{const t0=W.t-s.days,h=(S.bzh||[]).filter(x=>x[0]<=t0);if(h.length>=3){const a=h[Math.max(0,h.length-11)],b=h[h.length-1];if(b[0]>a[0])r=(b[1]-a[1])/(b[0]-a[0]);}}catch(e){}
@@ -838,8 +854,11 @@ function closeExtra(rep){const W=w();if(!W||W.ned)return '';let h='';const sg=re
   // строка «Налог и прочее» — чтобы сумма по направлениям сходилась с прибылью месяца
   if(ks.length>1){let sum=0;for(const k of ks)sum+=sg[k].e;let net=0;try{net=E.netOf(rep.pl);}catch(e){net=sum;}const rest=Math.round(net-sum),tax=Math.round(rep.pl.tax||0);
     h+=`<div class="lbl">${L('Прибыль по направлениям','Profit by segment')}</div><div class="clist">`+ks.map(k=>`<div><span>${esc(SEG[k]?T(SEG[k]):k)}</span><b class="${sg[k].e>=0?'':'dn'}">${M(sg[k].e)}</b></div>`).join('')
-      +(Math.abs(rest)>=1?`<div><span>${Math.abs(rest+tax)<2?L('Налог','Tax'):L('Налог, проценты и прочее','Tax, interest and other')}</span><b class="${rest>=0?'':'dn'}">${M(rest)}</b></div>`:'')
+      +(Math.abs(rest)>=1?(()=>{const P=rep.pl,it=[[L('Износ точек и вещей','Depreciation'),-(P.dep||0)],[L('Проценты по кредитам','Loan interest'),-(P.int||0)],[L('Налог','Tax'),-tax]].filter(x=>Math.abs(x[1])>=1);   // M19: остаток — по статьям (сумма = прибыль, сверено с ECON.netOf)
+        const o=Math.round(rest-it.reduce((a,x)=>a+x[1],0));if(Math.abs(o)>=1)it.push([L('Прочее','Other'),o]);return it.map(x=>`<div><span>${x[0]}</span><b class="${x[1]>=0?'':'dn'}">${M(x[1])}</b></div>`).join('');})():'')
       +`<div><span><b>${L('Итого прибыль','Total profit')}</b></span><b class="${net>=0?'':'dn'}">${M(net)}</b></div></div>`;}
+  if(window.OWNUI)h+=OWNUI.closeLines(rep);   // M17: «до Сети», «живу на пассиве», итог рекламы
+  if(window.STORYUI&&STORYUI.closeLine)h+=STORYUI.closeLine(rep);   // M20: «💬 Друзья за месяц: сэкономили N ₽» (js/story-ui.js)
   // урок — кнопкой прямо здесь, без отдельного пузыря «Первый месяц позади» (было 3 окна подряд: итог → пузырь → урок; аудит M3)
   const les=lesDue(W);if(les){if(S.tut&&!S.tut.b_money){S.tut.b_money=1;save();}
     h+=`<div class="tip">📘 ${L('Урок Людмилы на ваших цифрах: ','Lyudmila’s lesson on your own numbers: ')}${esc(LES[les.n].t())}<br><button class="btn sm noenter" data-b="cles" data-n="${les.n}" style="margin-top:8px">📘 ${L('Открыть урок','Open the lesson')}</button> <span class="mut" style="font-size:15px">${L('или позже — на «Сегодня»','or later — on Today')}</span></div>`;}
@@ -859,12 +878,19 @@ const ZTXT={z_od:()=>L('Денег не хватило — банк дал ов�
   z_opi:()=>L('Идут торги за участок. Бобров точно пойдёт — решайте, сколько готовы дать.','A plot auction is on. Bobrov will surely bid — decide how much you’re willing to pay.'),
   z_nedra:()=>L('Капитал и карьер готовы — пора в недра!','Capital and quarry are ready — time for mining!'),
   z_factor:()=>L('Покупатели должны, а денег на счёте нет. Факторинг даст деньги сразу за 3 %.','Buyers owe us and the account is empty. Factoring gives cash now for 3%.'),
+  z_ev:()=>L('Случилось кое-что — нужно ваше решение. Карточка на «Сегодня».','Something came up and needs your decision. The card is on Today.'),
+  z_tax:a=>L(`На ваших точках «${a.m==='usn6'?'6 % с выручки':'15 % с прибыли'}» выгоднее примерно на ${M(a.save)} в год. Сменить режим?`,`For your outlets “${a.m==='usn6'?'6% of revenue':'15% of profit'}” is about ${M(a.save)} a year cheaper. Switch the regime?`),
+  z_up:a=>L(`«${a.ru}» в «${bn(a.bt)}» окупится за ${mons(Math.max(1,Math.ceil(a.pay)))}: ≈ +${Mr(a.g)} в месяц. Берём?`,`“${a.en}” for “${bn(a.bt)}” pays back in ${mons(Math.max(1,Math.ceil(a.pay)))}: ≈ +${Mr(a.g)} a month. Shall we?`),
+  z_sat:a=>L(`У нас уже ${a.n} «${bn(a.bt)}» — рынок насыщен на ${Math.round(a.p*100)} %. Следующую точку лучше другого вида или в другом городе.`,`We already have ${a.n} “${bn(a.bt)}” — the market is ${Math.round(a.p*100)}% saturated. Make the next outlet a different kind, or in another city.`),
+  z_hand:()=>L('Рука свободна — займите её делом хозяина: переговоры, проверка, поиск места.','A hand is free — give it an owner’s task: negotiation, an inspection, scouting.'),
   ok:()=>L('Всё идёт по плану. Время работает на нас.','All goes to plan. Time is on our side.')};
 function zGo(it){const W=w(),a=it.a||{};switch(it.k){
-  case 'z_od':return ()=>UI.go('fin');case 'z_tired':return ()=>{if(act('gigRest')==='ok')toast(L('Выходной: +50 сил за день','Day off: +50 energy in a day'));};
+  case 'z_od':return ()=>UI.go('fin');case 'z_tired':return ()=>{if(act('gigRest')==='ok')toast(L('Выходной: завтра силы — до максимума','Day off: full energy tomorrow'));};
   case 'z_gig':return ()=>{if(act('gigTake',a.id)==='ok'){snd('coin');toast(L('Заказ взят','Order taken'));}};
   case 'z_ip':return openIP;case 'z_vend':return ()=>openBizModal('vend');
-  case 'z_loss':case 'z_mgrloss':return ()=>BIZUI.openBiz(a.id);case 'z_ooo':return openOOO;case 'z_opi':return ()=>UI.go('pit');case 'z_nedra':return openNedra;case 'z_factor':return ()=>UI.go('net');}return null;}
+  case 'z_loss':case 'z_mgrloss':return ()=>BIZUI.openBiz(a.id);
+  case 'z_ev':return ()=>{UI.go('today');setTimeout(()=>{const e=$$('owEv');if(e)e.scrollIntoView({block:'center'});},60);};case 'z_tax':return ()=>{if(act('taxSet',a.m)==='ok'){snd('coin');toast(L('Режим налога сменён','Tax regime switched'));}};
+  case 'z_up':return ()=>BIZUI.openBiz(a.id);case 'z_sat':return ()=>{V.biz='cat';UI.go('biz');};case 'z_hand':return ()=>{if(window.OWNUI)OWNUI.openJobs();};case 'z_ooo':return openOOO;case 'z_opi':return ()=>UI.go('pit');case 'z_nedra':return openNedra;case 'z_factor':return ()=>UI.go('net');}return null;}
 function advOpen(){const W=w();const it=(E.advise(W)||[])[0]||{k:'ok'};const f=ZTXT[it.k];const g=zGo(it);
   UI.adv({html:esc(f?f(it.a||{}):ZTXT.ok()),mood:it.pri>=70?'worry':it.k==='ok'?'happy':'calm',go:g,goLbl:g?L('Сделать','Do it'):null});}
 function idle(){const W=w(),c=[],DO=L('Сделать','Do it'),SH=L('Показать','Show me');
@@ -981,12 +1007,12 @@ function onClick(e){const b=e.target.closest('[data-b]');if(!b||b.disabled)retur
     case 'gdet':snd('tap');openGig(id);break;
     case 'gopt':snd('tap');gSel[id]=b.dataset.o;openGig(id);break;
     case 'rest':snd('tap');openRest();break;
-    case 'restgo':if(act('gigRest')==='ok'){snd('tap');toast(L('Выходной: +50 сил за день','Day off: +50 energy in a day'));}break;
+    case 'restgo':if(act('gigRest')==='ok'){snd('tap');toast(L('Выходной: завтра силы — до максимума','Day off: full energy tomorrow'));}break;
     case 'pinfo':snd('tap');pinInfo(b.dataset.k);break;
     case 'pkbuy':snd('tap');pkBuy(b.dataset.k);break;
     case 'fask':{try{STORYUI.openAsk(id);}catch(x){}break;}
     case 'gbest':{const g=bestGig(W);if(!g)break;const r=act('gigTake',g.id);if(r==='ok'){snd('coin');buzz(15);toast(L('Взято: ','Taken: ')+low(gShort(g.t))+L(' — готово через ',' — done in ')+days(g.days),2200);}break;}
-    case 'grest':if(act('gigRest')==='ok'){snd('tap');toast(L('Выходной: +50 сил за день','Day off: +50 energy in a day'));}break;
+    case 'grest':if(act('gigRest')==='ok'){snd('tap');toast(L('Выходной: завтра силы — до максимума','Day off: full energy tomorrow'));}break;
     case 'gauto':{const t=b.dataset.t;act('gigAuto',t,!W.me.auto[t]);snd('tap');break;}
     case 'brCr':crAsk(E.CR_BIZ.breath,L('Второе дыхание: +50 сил','Second wind: +50 energy'),()=>{if(act('breath')==='ok')snd('coin');},0,'breath');break;
     case 'gift':{const n=GAME.gift(false);if(n){snd('coin');toast('+'+n+' 💎');try{UI.fly(b,n,'cr');}catch(x){}}break;}

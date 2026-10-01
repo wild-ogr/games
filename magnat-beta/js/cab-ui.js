@@ -243,6 +243,7 @@ function needTxt(x,nd){if(!nd)return '';const v=nd.need;switch(nd.k){
   case 'eq':return T('когда капитал ','when equity is ')+M(v)+' · '+T('сейчас ','now ')+M(nd.cur);
   case 'ach':return nd.v==='z_biz1'?T('когда откроете своё дело','when you open your own business'):T('после достижения','after an achievement');
   case 'pts':return T(`когда будет ${v} ${plural(v,'точка','точки','точек')} · сейчас ${nd.cur}`,`at ${v} outlets · now ${nd.cur}`);
+  case 'gigs':return T(`после ${v} заказов · сейчас ${nd.cur}`,`after ${v} jobs · now ${nd.cur}`);   // M17: удобная кровать
   case 'city':return T('когда откроете дело во втором городе','when you open in a second city');
   case 'has':{const p=E.luxOf(nd.v);return T('к вещи: ','goes with: ')+(p?p.ico+' '+lxName(p):'');}
   case 'stg':return T('в главе ','in chapter ')+chName(E.STAGES.indexOf(nd.v)+1);
@@ -267,7 +268,8 @@ function itemRow(x){const s=st(x.id),w=W();let cls='',side='',sub='';const use=x
     if(s.nd.k==='eq')sub+=bar(s.nd.cur/s.nd.need);}
   else{cls='later';sub=`🔒 ${T('в главе ','in chapter ')}${chName(x.ch)} · ${M(x.p)}`;}
   const rep=repId===x.id&&Date.now()-repT<6000&&REP[x.id]?`<span class="cb-rep">${QL()}${esc(repTxt(x.id))}${QR()}</span>`:'';
-  return `<div class="cb-it ${cls}"><i>${lxIco(x,cls)}</i><div><b>${esc(lxName(x))}${decoTxt(x.id)}</b><small>${sub}</small>${setBadge(x)}${rep}</div><div class="cb-side">${side}</div></div>`;}
+  const ef=x.ef?`<small style="color:var(--good,#2e7d32)">⚡ +${x.ef} ${T('сил за ночь — навсегда','energy per night — for good')}</small>`:'';   // M17: вещи, которые дают силы
+  return `<div class="cb-it ${cls}"><i>${lxIco(x,cls)}</i><div><b>${esc(lxName(x))}${decoTxt(x.id)}</b><small>${sub}</small>${ef}${setBadge(x)}${rep}</div><div class="cb-side">${side}</div></div>`;}
 function repTxt(id){const r=REP[id];if(!r)return '';return T(fem()&&r[3]?r[3]:r[1],r[2]);}
 function slotsHtml(){const w=W();let h='<div class="cb-slots">';for(const s of E.LUXS){const x=E.luxCur(w,s),n=E.LUX.filter(y=>y.s===s&&(!y.p||y.id in w.lx)).length;
     h+=`<button class="cb-slot noenter${n>1?' cb-many':''}" data-cb="slot:${s}"><b>${lxIco(x)}</b><span>${T(SLOT[s][1],SLOT[s][2])}</span><small>${esc(lxName(x))}${decoTxt(x.id)}</small></button>`;}
@@ -319,13 +321,14 @@ function top(){const rk=S.rk|0,n=GAME.stars().n,nx=GAME.RK[rk+1];
 function open(t,from){css();if(t)tab=t;if(!GAME.W)return;slotOpen='';if(tab==='wall')GAME.wallSeen();if(tab==='lx'){const sn=S.lxSeen&&typeof S.lxSeen==='object'?S.lxSeen:(S.lxSeen={});for(const x of lxList())if(st(x.id).st==='sale')sn[x.id]=1;}
   try{STAT.ev('cab',{t:tab,f:from||'x'});}catch(e){}
   const body=tab==='wall'?tabWall():tab==='rk'?tabRk():tabLx();
-  modal(`<h2>🏛 ${T('Кабинет','Office')}</h2>${top()}<div class="cb-tabs"><button class="noenter${tab==='lx'?' on':''}" data-cb="tab:lx">🛍 ${T('Вещи','Things')}</button><button class="noenter${tab==='wall'?' on':''}" data-cb="tab:wall">🖼 ${T('Стена почёта','Wall of fame')}</button><button class="noenter${tab==='rk'?' on':''}" data-cb="tab:rk">★ ${T('Звания','Ranks')}</button></div>
+  modal(`<h2>🏛 ${T('Кабинет','Office')}</h2>${top()}<div class="cb-tabs"><button class="noenter${tab==='lx'?' on':''}" data-cb="tab:lx">🛍 ${T('Вещи','Things')}</button><button class="noenter${tab==='wall'?' on':''}" data-cb="tab:wall">🖼 ${T('Стена почёта','Wall of fame')}</button><button class="noenter${tab==='rk'?' on':''}" data-cb="tab:rk">★ ${T('Звания','Ranks')}</button>${window.FRUI?`<button class="noenter" data-cb="fr">👥 ${T('Друзья','Friends')}</button>`:''}</div>
     <div id="cbBody" style="--wf:${(GAME.cosCur('wf')||{c:'#8d5a2b'}).c}">${body}</div><div class="row"><button class="btn" id="cbClose" data-esc="1">${T('Закрыть','Close')}</button></div>`);
   try{modalRe=()=>open();}catch(e){}bind();badge();}
 function sub(html,re){css();modal(`<div style="--wf:${(GAME.cosCur('wf')||{c:'#8d5a2b'}).c}">${html}</div>`);try{modalRe=re;}catch(e){}bind();}
 function bind(){const mc=$c('mcard');if(!mc)return;mc.querySelectorAll('[data-cb]').forEach(b=>b.onclick=()=>act(b.dataset.cb,b));const c=$c('cbClose');if(c)c.onclick=()=>{snd('tap');hideModal();refresh();};}
 function act(a,btn){const i=a.indexOf(':'),k=i<0?a:a.slice(0,i),v=i<0?'':a.slice(i+1);
   if(k==='tab'){snd('tap');open(v);}
+  else if(k==='fr'){snd('tap');if(window.FRUI)FRUI.open('cab');}   // M18: окно «Друзья» (js/friends-ui.js)
   else if(k==='back'){snd('tap');if(slotOpen&&a==='back'&&btn&&btn.closest&&!btn.closest('.cb-big')){open('lx');}else open();}
   else if(k==='slot'){snd('tap');slotOpen=v;sub(slotSheet(v),()=>sub(slotSheet(v)));}
   else if(k==='buy')buy(v,btn);

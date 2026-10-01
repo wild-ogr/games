@@ -2,7 +2,7 @@
    Зона UI-2. Экраны рисуются в переданный элемент: FIN.renderMarket(el[, 'px'|'con']), FIN.renderFin(el[, 'sum'|'rep'|'bank'|'riv']).
    FIN.openReport(m) — окно с отчётами месяца m (БДР/ДДС/Баланс). FIN.refresh() — перерисовать то, что сейчас на экране.
    ADV — тексты главбуха Людмилы Санны: ADV.text(item), ADV.month(rep), ADV.news(n), ADV.ev(a).
-   Свой CSS — в <style id="finCss">. Все суммы в таблицах — млн ₽ с 1 знаком; деньги — FMT.money, количества — FMT.qty. */
+   Свой CSS — в <style id="finCss">. Суммы в таблицах и графиках — в единице по размеру чисел этой таблицы/графика (FMT.unitOf → FMT.inU, подпись FMT.uName); одиночные суммы — FMT.money, количества — FMT.qty. */
 (function(){
 'use strict';
 const E=ECON;
@@ -10,10 +10,10 @@ const Wd=()=>GAME.W;
 const en=()=>typeof LANG!=='undefined'&&LANG==='en';
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 const num=(x,d)=>FMT.num(x,d);
-const mm=x=>{x=Math.round(x||0);return x===0?'—':FMT.mln(x);};           // млн ₽ в таблицах
-// единица графиков: пока суммы меньше миллиона (глава 1) — тысячи рублей
-function unitK(){try{const w=Wd();let mx=0;for(const x of (w.hist||[]))mx=Math.max(mx,Math.abs(x.rev||0),Math.abs(x.np||0),Math.abs(x.cash||0),Math.abs(x.eq||0),Math.abs(x.debt||0));return mx<1e6?1e3:1e6;}catch(e){return 1e6;}}
-const mln=()=>unitK()===1e3?L('тыс. ₽','k ₽'):L('млн ₽','m ₽');
+const mm=(x,u)=>{x=Math.round(x||0);return x===0?'—':FMT.inU(x,u);};      // ячейка таблицы в единице u этой таблицы
+// единица графика — по тем же числам, что рисуем (подпись, ось и подсказки совпадают)
+const hUnit=(hs,ks)=>{const a=[];for(const x of hs||[])for(const k of ks)a.push(x[k]);return FMT.unitOf(a);};
+let dThr=5e4;   // изменение меньше — серая стрелка «•»; в главах 1–2 порог меньше (от единицы сумм)
 const sgnMoney=x=>(x>0?'+':'')+FMT.money(x);
 const setRe=f=>{try{modalRe=f;}catch(e){}};
 const snd=k=>{try{typeof SND!=='undefined'&&SND[k]&&SND[k]();}catch(e){}};
@@ -115,7 +115,7 @@ const CSS=`
 .f-hdr{display:grid;grid-template-columns:1fr auto;align-items:baseline;grid-gap:8px;gap:8px}
 .f-rp{font-size:15px;margin:2px 0 0}.f-rp span{display:inline-block;margin:0 10px 2px 0;white-space:nowrap;color:var(--muted,#667085)}.f-rp span.me{font-weight:600;color:var(--ink,#0e1320)}.f-rp i{font-style:normal}
 .f-pro{font-size:17px;line-height:1.45;margin:8px 0}.f-pro b{white-space:nowrap;font-weight:600}
-.f-proq{font:inherit;font-size:15px;font-weight:600;color:var(--accent,#2e5bff);background:var(--icbg,#f2f4f7);border:0;border-radius:10px;padding:2px 12px;min-height:44px;margin:4px 0 0 6px;cursor:pointer}
+.f-proq{font:inherit;font-size:16px;font-weight:600;display:inline-block;box-sizing:border-box;vertical-align:middle;color:var(--accent,#2e5bff);background:var(--icbg,#f2f4f7);border:0;border-radius:10px;padding:2px 14px;min-height:48px;min-width:48px;margin:4px 0 0 6px;cursor:pointer}
 .f-prox{font-size:16px;color:var(--ink,#0e1320);background:var(--icbg,#f2f4f7);border-radius:12px;padding:8px 12px;margin-top:6px}.f-prox p{margin:4px 0}
 /* заголовок экрана и «назад» */
 .f-top{display:flex;align-items:center;margin:2px 0 14px}
@@ -313,16 +313,18 @@ function priceSpec(g,r,n,spark){const w=Wd();if(!w||!w.mk[g])return null;let a=p
   const c=spark?null:costOf(w,g);
   return {title:NM.good(g)+' · '+NM.reg(r),sub:L('Цена за единицу','Price per unit')+', ₽/'+u,kind:'line',lbl:a.map(x=>x.m),cur:true,
     ser:[{name:L('Цена','Price'),col:spark?(up?CV.good:CV.bad):CV.cash,v,chg:true,fmt:x=>num(x)+' ₽/'+u,w:3.5}],marks,ref:c};}
-const mFmt=v=>FMT.money(v*unitK());const mFmt6=v=>FMT.money(v*1e6);
-function revSpec(n){const w=Wd(),hs=n?w.hist.slice(-n):w.hist;return {title:L('Выручка и чистая прибыль','Revenue and net profit'),sub:mln()+' '+L('по месяцам','by month'),kind:'bar',lbl:hs.map(x=>x.m),zero:true,neg:L('Убыток','Loss'),
-  ser:[{name:L('Выручка','Revenue'),col:CV.rev,v:hs.map(x=>x.rev/unitK()),fmt:mFmt},{name:L('Чистая прибыль','Net profit'),col:v=>v>=0?CV.np:CV.bad,v:hs.map(x=>x.np/unitK()),fmt:mFmt}]};}
-function cashSpec(n){const w=Wd(),hs=n?w.hist.slice(-n):w.hist;return {title:L('Деньги, капитал и долг','Cash, equity and debt'),sub:mln()+' '+L('на конец месяца','at month end'),kind:'line',lbl:hs.map(x=>x.m),zero:true,si:1,
-  ser:[{name:L('Долг','Debt'),col:CV.debt,v:hs.map(x=>x.debt/unitK()),fmt:mFmt,w:2.5},{name:L('Деньги','Cash'),col:CV.cash,v:hs.map(x=>x.cash/unitK()),fmt:mFmt},{name:L('Капитал','Equity'),col:CV.eq,v:hs.map(x=>x.eq/unitK()),fmt:mFmt}]};}
+const uFmt=u=>v=>FMT.money(v*u);
+function revSpec(n){const w=Wd(),hs=n?w.hist.slice(-n):w.hist,u=hUnit(hs,['rev','np']);return {u,title:L('Выручка и чистая прибыль','Revenue and net profit'),sub:FMT.uName(u)+' '+L('по месяцам','by month'),kind:'bar',lbl:hs.map(x=>x.m),zero:true,neg:L('Убыток','Loss'),
+  ser:[{name:L('Выручка','Revenue'),col:CV.rev,v:hs.map(x=>x.rev/u),fmt:uFmt(u)},{name:L('Чистая прибыль','Net profit'),col:v=>v>=0?CV.np:CV.bad,v:hs.map(x=>x.np/u),fmt:uFmt(u)}]};}
+function cashSpec(n){const w=Wd(),hs=n?w.hist.slice(-n):w.hist,u=hUnit(hs,['debt','cash','eq']);return {u,title:L('Деньги, капитал и долг','Cash, equity and debt'),sub:FMT.uName(u)+' '+L('на конец месяца','at month end'),kind:'line',lbl:hs.map(x=>x.m),zero:true,si:1,
+  ser:[{name:L('Долг','Debt'),col:CV.debt,v:hs.map(x=>x.debt/u),fmt:uFmt(u),w:2.5},{name:L('Деньги','Cash'),col:CV.cash,v:hs.map(x=>x.cash/u),fmt:uFmt(u)},{name:L('Капитал','Equity'),col:CV.eq,v:hs.map(x=>x.eq/u),fmt:uFmt(u)}]};}
 function rivSpec(n){const w=Wd();const N=Math.max(1,Math.min(n||72,Math.max(w.hist.length,...w.bots.map(b=>b.v.length))));const lbl=[];for(let i=0;i<N;i++)lbl.push(w.m-N+i);
   const al=a=>{const o=[];for(let i=0;i<N;i++){const j=a.length-N+i;o.push(j>=0?a[j]:null);}return o;};
-  const ser=w.bots.map(b=>({name:NM.bot(b.id),col:botCol(b.id),v:al(b.v),fmt:mFmt6,w:2.5}));
-  ser.push({name:L('Вы','You'),col:CV.eq,v:al(w.hist.map(x=>x.eq/1e6)),fmt:mFmt6,w:4});
-  return {title:L('Стоимость компаний','Company values'),sub:mln()+' '+L('на конец месяца','at month end'),kind:'line',lbl,si:ser.length-1,ser};}
+  // стоимость ботов хранится в млн (b.v), своя — в рублях; единица — по всем линиям графика
+  const bv=w.bots.map(b=>al(b.v).map(x=>x==null?null:x*1e6)),yv=al(w.hist.map(x=>x.eq)),u=FMT.unitOf([].concat(yv,...bv)),dv=a=>a.map(x=>x==null?null:x/u);
+  const ser=w.bots.map((b,i)=>({name:NM.bot(b.id),col:botCol(b.id),v:dv(bv[i]),fmt:uFmt(u),w:2.5}));
+  ser.push({name:L('Вы','You'),col:CV.eq,v:dv(yv),fmt:uFmt(u),w:4});
+  return {u,title:L('Стоимость компаний','Company values'),sub:FMT.uName(u)+' '+L('на конец месяца','at month end'),kind:'line',lbl,si:ser.length-1,ser};}
 
 /* ================= РЫНОК ================= */
 function stockHtml(w,r,g){const tot=stockAll(w,g),here=w.inv[r][g].q;return tot>=1?`${L('На складах','In stock')}: <b>${FMT.qty(tot,g)}</b>, ${regIn(r)}: <b>${FMT.qty(here,g)}</b>`:`<span class="f-mut">${L('На складах нет','None in stock')}</span>`;}
@@ -510,10 +512,11 @@ function bsRows(b,o){const has=k=>!!(b[k]||o&&o[k]);return [['h',L('Активы
   ['h',L('Капитал','Equity'),null],['i',L('Уставный капитал','Share capital'),b.cap,'cap'],['i',L('Нераспределённая прибыль','Retained earnings'),b.ret,'ret'],...(has('drw')?[['i',L('Изъято на личные покупки собственника','Owner’s personal purchases (drawings)'),-(b.drw||0),'drw']]:[]),['s',L('Итого капитал','Total equity'),b.E,'E'],
   ['b',L('Итого пассивы (кредиты + капитал)','Total liabilities & equity'),b.debt+b.E,'LE']];}
 // rows: [вид, название, значение, ключ]; cols — функции (row) → число; tag — pl|cf|bs (для пояснений)
-function table(heads,rows,cols,tag){let h=`<div class="f-card f-rt"><div class="f-rh"><span class="c0">${mln()}</span>${heads.map(x=>`<span class="cv">${x}</span>`).join('')}</div>`;
+function table(heads,rows,cols,tag){const all=[];for(const row of rows)if(row[0]!=='h')for(const f of cols)all.push(f(row));const u=FMT.unitOf(all);
+  let h=`<div class="f-card f-rt"><div class="f-rh"><span class="c0">${FMT.uName(u)}</span>${heads.map(x=>`<span class="cv">${x}</span>`).join('')}</div>`;
   for(const row of rows){const [k,t]=row;if(k==='h'){h+=`<div class="f-rr h">${t}</div>`;continue;}
     const id=tag+':'+row[3],hint=hintOf(tag,row[3]),open=hint&&st.hx===id;
-    h+=`<div class="f-rr ${k}"${hint?` data-a="hx" data-v="${id}" role="button" tabindex="0" aria-expanded="${!!open}"`:''}><div class="rn">${t}${hint?`<i class="tg">${open?'▴':'?'}</i>`:''}</div><div class="rv"><span class="c0"></span>${cols.map((f,j)=>{const v=f(row);return `<span class="cv${j?' p':''}${v<0?' neg':''}">${v==null?'':mm(v)}</span>`;}).join('')}</div>${open?`<div class="exp">${hint}</div>`:''}</div>`;}
+    h+=`<div class="f-rr ${k}"${hint?` data-a="hx" data-v="${id}" role="button" tabindex="0" aria-expanded="${!!open}"`:''}><div class="rn">${t}${hint?`<i class="tg">${open?'▴':'?'}</i>`:''}</div><div class="rv"><span class="c0"></span>${cols.map((f,j)=>{const v=f(row);return `<span class="cv${j?' p':''}${v<0?' neg':''}">${v==null?'':mm(v,u)}</span>`;}).join('')}</div>${open?`<div class="exp">${hint}</div>`:''}</div>`;}
   return h+'</div>';}
 const RK={pl:[['Прибыли и убытки','Profit & loss'],['БДР','P&L'],['Заработали ли мы за месяц','Did we earn money this month']],
   cf:[['Движение денег','Cash flow'],['ДДС','CF'],['Откуда пришли и куда ушли деньги','Where money came from and went']],
@@ -565,8 +568,9 @@ function mxHtml(w){const mt=E.metrics(w);if(!mt)return `<div class="f-card f-mut
   return '<div class="f-card"><p class="f-note" style="margin-top:0">'+L('Нажмите на показатель — объясню, что он значит.','Tap a ratio to see what it means.')+'</p>'+it.map(x=>`<button class="f-met${st.mx===x[0]?' on':''}" data-a="mx" data-v="${x[0]}" aria-expanded="${st.mx===x[0]}"><div><span>${x[1]} <i class="f-q">?</i></span><b>${x[2]}</b></div>${st.mx===x[0]?`<small>${x[3]}</small>`:''}</button>`).join('')+'</div>';}
 function histHtml(w){const hs=w.hist.slice(-24).reverse();if(!hs.length)return `<div class="f-card f-mut">${L('История появится после первого закрытого месяца.','History appears after the first month closes.')}</div>`;
   const rows=hs.map(x=>['i',FMT.date(x.m),x.rev,x]),cols=[r=>r[3].rev,r=>r[3].np,r=>r[3].cash];
-  let h=`<div class="f-card f-rt"><div class="f-rh"><span class="c0">${mln()}</span><span class="cv">${L('выручка','revenue')}</span><span class="cv">${L('прибыль','profit')}</span><span class="cv">${L('деньги','cash')}</span></div>`;
-  for(const r of rows)h+=`<div class="f-rr"><div class="rn">${r[1]}</div><div class="rv"><span class="c0"></span>${cols.map((f,j)=>{const v=f(r);return `<span class="cv${j===1?'':' p'}${v<0?' neg':''}">${mm(v)}</span>`;}).join('')}</div></div>`;
+  const u=hUnit(hs,['rev','np','cash']);
+  let h=`<div class="f-card f-rt"><div class="f-rh"><span class="c0">${FMT.uName(u)}</span><span class="cv">${L('выручка','revenue')}</span><span class="cv">${L('прибыль','profit')}</span><span class="cv">${L('деньги','cash')}</span></div>`;
+  for(const r of rows)h+=`<div class="f-rr"><div class="rn">${r[1]}</div><div class="rv"><span class="c0"></span>${cols.map((f,j)=>{const v=f(r);return `<span class="cv${j===1?'':' p'}${v<0?' neg':''}">${mm(v,u)}</span>`;}).join('')}</div></div>`;
   return h+`</div><p class="f-note">${L('Графики по месяцам — на экране «Итоги»: нажмите на график, чтобы увидеть всю историю.','Monthly charts are on the Summary screen: tap a chart to see the full history.')}</p>`;}
 
 /* ================= ФИНАНСЫ (стиль Г): Итоги → Отчёты → отчёт; Банк и Соперники — отдельные входы ================= */
@@ -581,11 +585,11 @@ const topBar=(back,title,sub)=>`<div class="f-top">${back?`<button class="f-back
 function sayBox(t,mood){let svg='';try{svg=(window.UI&&UI.face)?UI.face(mood||'calm'):typeof advisorSvg==='function'?advisorSvg(mood||'calm'):'';}catch(e){}
   return `<div class="f-card f-say"><div class="pp">${svg}</div><div class="st"><div class="sn">${ADV.name()}, ${L('главбух','chief accountant')}</div>${t}</div></div>`;}
 function sparkSvg(v,w){if(v.length<2)return '';return draw({lbl:v.map((x,i)=>i),kind:'line',ser:[{v,col:CV.cash}]},Math.max(80,Math.round(w)),36,{spark:true}).svg;}
-const sgnM=x=>(x>0?'+':x<0?'−':'')+(Math.abs(x)<1e6?FMT.money(Math.abs(x)):FMT.mln(Math.abs(x))+' '+L('млн','m'));
+const sgnM=x=>(x>0?'+':x<0?'−':'')+FMT.money(Math.abs(x));
 function kpi(k,label,v,dHtml,sp,hot){return `<button class="f-card f-kpi${hot?' hot':''}" data-a="kpi" data-v="${k}"><div class="kl">${label}</div><div class="kv">${FMT.money(v)}</div><div class="kd">${dHtml||'&nbsp;'}</div><div class="spk">${sp}</div></button>`;}
-const dArrow=(d,good,txt)=>{if(d==null)return '';const cls=Math.abs(d)<5e4||good==null?'f-eq':(d>0)===good?'f-up':'f-dn';return `<span class="${cls}">${d>0?'▲':d<0?'▼':'•'} ${sgnM(d)}${txt?' '+txt:''}</span>`;};
+const dArrow=(d,good,txt)=>{if(d==null)return '';const cls=Math.abs(d)<dThr||good==null?'f-eq':(d>0)===good?'f-up':'f-dn';return `<span class="${cls}">${d>0?'▲':d<0?'▼':'•'} ${sgnM(d)}${txt?' '+txt:''}</span>`;};
 function finSum(w,el){const wide=isWide(el),r=w.reps[w.reps.length-1],p=w.reps[w.reps.length-2],cur=!r,R=r||curRep(w);
-  const net=E.netOf(R.pl),hs=w.hist.slice(-12),cw=wOf(el),kw=wide?(cw-40)/4-28:(cw-10)/2-28;
+  const net=E.netOf(R.pl),hs=w.hist.slice(-12),cw=wOf(el),kw=wide?(cw-40)/4-28:(cw-10)/2-28;dThr=Math.min(5e4,hUnit(hs,['np','cash','debt','eq'])*.05);
   const title=cur?L('Этот месяц','This month'):(en()?MON_EN[R.m%12]+' results':'Итоги '+monGen(R.m));
   const sub=cur?L('первый отчёт будет в конце месяца','the first report comes at month end'):L('нажмите на карточку — разберём подробно','tap a card for details');
   const mt=E.metrics(w),de=mt?mt.de:0,debt=R.bal.debt;
@@ -606,7 +610,7 @@ function finSum(w,el){const wide=isWide(el),r=w.reps[w.reps.length-1],p=w.reps[w
     ${early?'':`<button data-a="go" data-v="riv"><span class="lic">${LIC.cup}</span><div class="li"><b>${L('Соперники и рейтинг','Rivals & leaderboard')}</b><span>${L('Вы','You are')} ${pos}${L('-й из',' of')} ${rv.length} · ${L('стоимость','value')} ${FMT.money(GAME.value())}</span></div><span class="chev">›</span></button>`}</div>`;
   const rng=[[3,L('3 мес','3 mo')],[6,L('6 мес','6 mo')],[12,L('Год','Year')],[0,L('Всё','All')]];
   const chW=wide?Math.round((cw-18)*1.45/2.45)-34:cw-34;
-  const ch=w.hist.length?`<div class="f-card"><div class="f-hdr"><b style="font-weight:600">${L('Выручка и прибыль','Revenue and profit')}</b><span class="f-mut">${mln()}</span></div>
+  const ch=w.hist.length?`<div class="f-card"><div class="f-hdr"><b style="font-weight:600">${L('Выручка и прибыль','Revenue and profit')}</b><span class="f-mut">${FMT.uName(revSpec(st.rn).u)}</span></div>
     <div class="f-tabs n4" style="margin:10px 0 6px">${rng.map(([n,t])=>`<button class="f-tab${st.rn===n?' on':''}" data-a="rn" data-v="${n}">${t}</button>`).join('')}</div>
     <div class="f-ch2">${chartBox('fin:rev',revSpec,st.rn,chW,wide?240:210)}</div>${leg([[CV.rev,L('Выручка','Revenue')],[CV.np,L('Чистая прибыль','Net profit')],[CV.bad,L('Убыток','Loss')]])}
     <div class="f-mut" style="font-size:14px">${L('ведите пальцем — цифры, нажмите — крупно','slide for figures, tap to enlarge')}</div></div>`:'';
@@ -616,28 +620,29 @@ function finSum(w,el){const wide=isWide(el),r=w.reps[w.reps.length-1],p=w.reps[w
 function debtOfW(w){let d=0;for(const l of w.loans)d+=l.a;return d;}
 // «Откуда прибыль»: водопад выручка → чистая, мост прибыль → деньги
 function finProfit(w,el){const wide=isWide(el),list=repList(w),R=w.reps[w.reps.length-1]||curRep(w),P=w.reps[w.reps.length-2]||null,p=R.pl,net=E.netOf(p),ea=w.ned===false;
-  const rows=[[L('Выручка','Revenue'),p.rev,'t'],[L('Сырьё и переменные затраты','Materials & variable costs'),-p.cogs],[ea?L('Аренда и зарплаты','Rent & wages'):L('Постоянные расходы','Fixed costs'),-p.fix],[ea?L('Доставка','Delivery'):L('Логистика (ж/д)','Logistics (rail)'),-p.log],
+  const rows0=[[L('Выручка','Revenue'),p.rev,'t'],[L('Сырьё и переменные затраты','Materials & variable costs'),-p.cogs],[ea?L('Аренда и зарплаты','Rent & wages'):L('Постоянные расходы','Fixed costs'),-p.fix],[ea?L('Доставка','Delivery'):L('Логистика (ж/д)','Logistics (rail)'),-p.log],
     [ea?L('Жизнь, взносы, бухгалтер','Living costs, contributions, accountant'):L('Офис','Office'),-p.adm],[L('Разведка','Exploration'),-p.expl],[L('Амортизация','Depreciation'),-p.dep],[L('Прочие доходы и расходы','Other income & expenses'),p.oth],[L('Проценты банку','Interest'),-p.int],[ea?L('Налог','Tax'):L('Налог 25 %','Tax 25%'),-p.tax],[L('Чистая прибыль','Net profit'),net,'t']]
-    .filter(x=>x[2]||Math.round(x[1]/(ea?100:1e5)));
+  ;// одна единица на весь экран (водопад и мост); строка прячется, только если в этой единице она меньше 0,05
+  const dInv=R.bal.inv-(P?P.bal.inv:0),inv=E.sumCF(R.cf,'i'),fin=E.sumCF(R.cf,'f'),dc=R.c1-R.c0,oth=dc-(net+p.dep-dInv+inv+fin);
+  const u=FMT.unitOf(rows0.map(x=>x[1]).concat([dInv,inv,fin,dc,oth])),rows=rows0.filter(x=>x[2]||Math.abs(x[1])>=u*.05);
   let run=0,lo=0,hi=Math.max(1,p.rev);const seg=[];for(const [n,v,t] of rows){let a,b;if(t){a=Math.min(0,v);b=Math.max(0,v);run=v;}else{a=Math.min(run,run+v);b=Math.max(run,run+v);run+=v;}seg.push([a,b]);lo=Math.min(lo,a);hi=Math.max(hi,b);}
   const sc=x=>(x-lo)/(hi-lo)*100;
   const wf='<div class="f-wf">'+rows.map(([n,v,t],i)=>{const [a,b]=seg[i],col=t?(i===0?'var(--accent,#2e5bff)':v>=0?'var(--good,#12a150)':'var(--bad,#e5484d)'):v>=0?'var(--good,#12a150)':'var(--wneg,#f4b4b6)';
-    return `<div class="wr"><div class="wl"><span>${n}</span><b class="${t?'':v<0?'f-dn':'f-up'}">${t?FMT.mln(v):(v>0?'+':'')+FMT.mln(v)}</b></div><div class="wb"><i style="left:${sc(a).toFixed(2)}%;width:${Math.max(.8,sc(b)-sc(a)).toFixed(2)}%;background:${col}"></i></div></div>`;}).join('')+'</div>';
+    return `<div class="wr"><div class="wl"><span>${n}</span><b class="${t?'':v<0?'f-dn':'f-up'}">${t?FMT.inU(v,u):(v>0?'+':'')+FMT.inU(v,u)}</b></div><div class="wb"><i style="left:${sc(a).toFixed(2)}%;width:${Math.max(.8,sc(b)-sc(a)).toFixed(2)}%;background:${col}"></i></div></div>`;}).join('')+'</div>';
   // мост: прибыль → деньги
-  const dInv=R.bal.inv-(P?P.bal.inv:0),inv=E.sumCF(R.cf,'i'),fin=E.sumCF(R.cf,'f'),dc=R.c1-R.c0,oth=dc-(net+p.dep-dInv+inv+fin);
   const br=[[L('Чистая прибыль','Net profit'),net],[L('+ Амортизация (расход без денег)','+ Depreciation (non-cash cost)'),p.dep],
     [dInv>0?L('− Деньги ушли в запасы на складах','− Cash tied up in inventory'):L('+ Склад уменьшился','+ Inventory went down'),-dInv],
     [inv<=0?L('− Стройка, лицензии, вагоны','− Construction, licences, wagons'):L('+ Продажа активов','+ Asset sales'),inv],
     [fin>=0?L('+ Кредиты и взносы в капитал','+ Loans and capital paid in'):L('− Вернули банку','− Repaid to the bank'),fin],
     [L('± Прочее (расчёты, налоги)','± Other (settlements, taxes)'),oth],[dc>=0?L('= Денег стало больше на','= Cash went up by'):L('= Денег стало меньше на','= Cash went down by'),dc]]
-    .filter((x,i)=>i===0||i===6||Math.abs(x[1])>=5e4);
-  const brg=`<div class="f-brg">${br.map(([n,v],i)=>`<div class="br${i===br.length-1?' tot':''}"><span>${n}</span><b class="${v<0?'f-dn':i===br.length-1?'f-up':''}">${(v>0?'+':'')+FMT.mln(v)}</b></div>`).join('')}</div>`;
+    .filter((x,i)=>i===0||i===6||Math.abs(x[1])>=u*.05);
+  const brg=`<div class="f-brg">${br.map(([n,v],i)=>`<div class="br${i===br.length-1?' tot':''}"><span>${n}</span><b class="${v<0?'f-dn':i===br.length-1?'f-up':''}">${(v>0?'+':'')+FMT.inU(v,u)}</b></div>`).join('')}</div>`;
   const costs=rows.filter(x=>!x[2]&&x[1]<0).sort((a,b)=>a[1]-b[1]),big=costs[0];
   const per=p.rev?Math.round(net/p.rev*100):0;
   const say=!p.rev?L('Выручки пока нет — продавать нечего. Прибыль появится, когда заработает добыча.','No revenue yet — nothing to sell. Profit will come once production starts.')
     :(per>=0?L(`Из каждых 100 ₽ выручки нам остаётся <b>${per} ₽</b>.`,`Out of every 100 ₽ of revenue we keep <b>${per} ₽</b>.`):L(`С каждых 100 ₽ выручки мы теряем <b>${-per} ₽</b>.`,`We lose <b>${-per} ₽</b> on every 100 ₽ of revenue.`))
       +(big?' '+L(`Больше всего съедает статья «${esc(big[0])}».`,`The biggest bite is “${esc(big[0])}”.`):'');
-  const top=topBar('sum',L('Откуда прибыль','Where profit comes from'),(R.cur?L('Сейчас · ','Now · '):'')+FMT.date(R.m)+' · '+mln());
+  const top=topBar('sum',L('Откуда прибыль','Where profit comes from'),(R.cur?L('Сейчас · ','Now · '):'')+FMT.date(R.m)+' · '+FMT.uName(u));
   const cardW=`<div class="f-card">${wf}</div>`,cardB=`<div class="f-card"><b style="font-size:18px;font-weight:600">${L('Почему деньги изменились не так, как прибыль','Why cash changed differently from profit')}</b>${brg}</div>`,
     btn=`<button class="f-card f-nxt" data-a="rep" data-v="pl"><span>${L('Все строки','All lines')}</span><b>${L('Полный отчёт БДР →','Full P&L report →')}</b></button>`;
   if(wide)return `${top}<div class="f-cols"><div class="col w2">${cardW}</div><div class="col">${sayBox(say,per>=0?'calm':'worry')}${cardB}${btn}</div></div>`;
@@ -645,7 +650,7 @@ function finProfit(w,el){const wide=isWide(el),list=repList(w),R=w.reps[w.reps.l
 function repIdx(w,list){let i=st.rm==null?(w.reps.length?w.reps.length-1:0):list.findIndex(x=>x.m===st.rm);if(i<0)i=list.length-1;return i;}
 function repListHtml(list,i,sel){const r=list[i],net=E.netOf(r.pl),dc=r.c1-r.c0,mt=E.metrics(Wd());
   const v={pl:`${L('Чистая прибыль','Net profit')} <b class="${net>=0?'f-up':'f-dn'}">${sgnM(net)}</b>`,cf:`${L('За месяц','This month')} <b class="${dc>=0?'f-up':'f-dn'}">${sgnM(dc)}</b>`,
-    bs:`${L('Капитал','Equity')} <b>${FMT.mln(r.bal.E)} ${L('млн','m')}</b>`,mx:mt?`ROE <b>${FMT.pct(mt.roe)}</b> · ${L('долг/EBITDA','debt/EBITDA')} <b>${mt.de>=99?'—':num(mt.de,1)}</b>`:'',
+    bs:`${L('Капитал','Equity')} <b>${FMT.money(r.bal.E)}</b>`,mx:mt?`ROE <b>${FMT.pct(mt.roe)}</b> · ${L('долг/EBITDA','debt/EBITDA')} <b>${mt.de>=99?'—':num(mt.de,1)}</b>`:'',
     hist:`<b>${Wd().hist.length}</b> ${pl(Wd().hist.length,'месяц','месяца','месяцев','month','months')}`};
   return `<div class="f-card f-lst f-rl">${RK_ORD.map(k=>`<button class="${sel===k?'sel':''}" data-a="rep" data-v="${k}"><span class="lic">${rkA(k)}</span><div class="li"><b>${rkT(k)}</b><span>${rkD(k)}</span>${v[k]?`<span class="v2">${v[k]}</span>`:''}</div><span class="chev">›</span></button>`).join('')}</div>`;}
 function nextBtn(k){const n=RK_ORD[(RK_ORD.indexOf(k)+1)%RK_ORD.length];return `<button class="f-card f-nxt" data-a="rep" data-v="${n}"><span>${L('Следующий отчёт','Next report')}</span><b>${rkT(n)} →</b></button>`;}
@@ -661,15 +666,24 @@ const grOf=(n,g)=>Math.max(0,Math.min(12,g|0,n-6));
 function loanFirst(a,n,k,rate,g){const i=rate/12;g=grOf(n,g);if(g>0)return {int:a*i,body:0};if(k==='eq')return {int:a*i,body:a/n};const t=a*i/(1-Math.pow(1+i,-n));return {int:a*i,body:t-a*i};}
 function loanAfter(a,n,k,rate,g){const i=rate/12,m=n-grOf(n,g);if(k==='eq')return a/m+a*i;return a*i/(1-Math.pow(1+i,-m));}
 function loanOver(a,n,k,rate,g){const i=rate/12;g=grOf(n,g);const m=n-g;return a*i*g+(k==='eq'?a*i*(m+1)/2:a*i/(1-Math.pow(1+i,-m))*m-a);}
-function finBank(w){let h='';const o=E.loanOffer(w);
+// шаг суммы кредита — от лимита: до 3 млн — 10 тыс., до 30 млн — 100 тыс., дальше — 1 млн (не мельче шага банка ECON.loanUnit)
+function loanStep(w,max){const lu=E.loanUnit?E.loanUnit(w):1e6;return Math.max(lu,max<3e6?1e4:max<3e7?1e5:1e6);}
+function finBank(w){let h='';const o=E.loanOffer(w);let dB=0;for(const l of w.loans)if(l.k!=='mort'&&l.k!=='fr')dB+=l.a;const lim=dB+o.max;
+  // полоса «взято X из лимита Y» и кредитная история (главы 1–4: нужна 50 для ООО, с кредитом растёт вдвое быстрее)
+  const limBar=lim>0?`<div class="f-mut" style="margin-top:10px">${L('Лимит банка','Bank limit')}: ${L('взято','used')} <b>${FMT.money(dB)}</b> ${L('из','of')} <b>${FMT.money(lim)}</b></div><div class="f-bar"><i style="width:${Math.max(dB>0?1.5:0,Math.min(100,dB/lim*100)).toFixed(1)}%"></i></div>`:'';
+  let chH='';if(!w.ned&&E.chInfo){try{const c=E.chInfo(w),n=Math.floor(c.ch);
+    chH=`<div class="f-mut" style="margin-top:8px">${L('Кредитная история','Credit history')} <b>${n}</b> ${L('из','of')} <b>${c.need}</b>${c.ok?' ✓':''}</div><div class="f-bar"><i style="width:${Math.min(100,c.ch/c.need*100).toFixed(1)}%;background:var(--good,#12a150)"></i></div>`
+      +`<div class="f-mut" style="font-size:15px">${c.per<0?L('Минус на счёте в конце месяца (овердрафт) — история падает на 25.','A negative balance at month end (overdraft) cuts the history by 25.'):c.loan?L('Кредит есть — история растёт на 3 в месяц; погасите кредит досрочно — ещё +10.','You have a loan — the history grows by 3 a month; repay it early for +10 more.'):L('Без кредита история растёт на 1,5 в месяц, с кредитом — вдвое быстрее (3 в месяц).','Without a loan the history grows by 1.5 a month, with a loan twice as fast (3 a month).')}`
+      +` ${L('Чем она выше, тем больше лимит и ниже ставка; 50 нужно, чтобы открыть ООО.','The higher it is, the bigger the limit and the lower the rate; 50 is needed to open an LLC.')}${!c.ok&&c.eta>0?' '+L('Дойдёт до 50 примерно через','It will reach 50 in about')+' '+c.eta+' '+pl(c.eta,'месяц','месяца','месяцев','month','months')+'.':''}</div>`;}catch(e){}}
   h+=`<div class="f-card"><div class="f-kv"><span>${L('Ключевая ставка ЦБ','Central bank key rate')}</span><b>${FMT.pct(w.key,2)}</b>
     ${o.max>0||w.ned?`<span>${L('Банк даст до','Bank will lend up to')}</span><b>${FMT.money(o.max)}</b><span>${L('Под','At')}</span><b>${FMT.pct(o.rate,1)} ${L('годовых','a year')}</b>`:''}</div>${o.max>0||w.ned?'':`<p class="f-mut">${L('Пока банк кредит не даст: нужен доход от своего дела и кредитная история.','The bank won’t lend yet: it needs income from your own business and a credit history.')}</p>`}
-    ${w.ned?`<div class="f-mut">${L('Лимит: большее из 300 млн ₽ и 3,5 годовой EBITDA (средняя за 3 месяца × 12), плюс 70 % оставшейся стройки, но не больше 1,5 собственного капитала — минус текущий долг. Ставка = ключевая + 3 %; чем больше долг к EBITDA, тем выше ставка.','Limit: the larger of 300m ₽ and 3.5× annual EBITDA (3-month average × 12), plus 70% of remaining construction, but no more than 1.5× equity — minus current debt. Rate = key + 3%; the higher debt to EBITDA, the higher the rate.')}</div>`:''}</div>`;
-  if(o.max>=1e6){if(st.la==null||st.la>o.max)st.la=Math.min(o.max,Math.max(1e6,Math.round(o.max/2/1e6)*1e6));
+    ${w.ned?`<div class="f-mut">${L('Лимит: большее из 300 млн ₽ и 3,5 годовой EBITDA (средняя за 3 месяца × 12), плюс 70 % оставшейся стройки, но не больше 1,5 собственного капитала — минус текущий долг. Ставка = ключевая + 3 %; чем больше долг к EBITDA, тем выше ставка.','Limit: the larger of 300m ₽ and 3.5× annual EBITDA (3-month average × 12), plus 70% of remaining construction, but no more than 1.5× equity — minus current debt. Rate = key + 3%; the higher debt to EBITDA, the higher the rate.')}</div>`:''}${limBar}${chH}</div>`;
+  const lu=loanStep(w,o.max);
+  if(o.max>0){if(st.la==null||st.la>o.max)st.la=Math.min(o.max,Math.max(lu,Math.round(o.max/2/lu)*lu));
     const a=st.la,gr=grOf(st.ln,st.lg),f=loanFirst(a,st.ln,st.lk,o.rate,gr),ov=loanOver(a,st.ln,st.lk,o.rate,gr);
     h+=`<div class="f-card" id="finLoan"><b>${L('Новый кредит','New loan')}</b><div class="f-big" id="flA">${FMT.money(a)}</div>
-      <input type="range" class="f-rng" id="flR" min="1" max="${Math.round(o.max/1e6)}" step="1" value="${Math.round(a/1e6)}" aria-label="${L('Сумма кредита','Loan amount')}">
-      <div class="f-chips">${[25,50,100].map(p=>`<button class="f-chip" data-a="la" data-v="${Math.max(1e6,Math.round(o.max*p/100/1e6)*1e6)}">${p} %</button>`).join('')}</div>
+      <input type="range" class="f-rng" id="flR" min="1" max="${Math.ceil(o.max/lu)}" step="1" value="${Math.min(Math.ceil(o.max/lu),Math.round(a/lu))}" aria-label="${L('Сумма кредита','Loan amount')}">
+      <div class="f-chips">${[25,50,100].map(p=>`<button class="f-chip" data-a="la" data-v="${p===100?o.max:Math.min(o.max,Math.max(lu,Math.round(o.max*p/100/lu)*lu))}">${p} %</button>`).join('')}</div>
       <div class="f-mut">${L('Срок','Term')}</div><div class="f-chips n4">${[12,24,36,60].map(n=>`<button class="f-chip${st.ln===n?' on':''}" data-a="ln" data-v="${n}"><small>${L('срок','term')}</small>${n} ${L('мес.','mo')}</button>`).join('')}</div>
       <div class="f-mut">${L('График','Schedule')}</div><div class="f-chips n2"><button class="f-chip${st.lk==='ann'?' on':''}" data-a="lk" data-v="ann">${L('Аннуитет','Annuity')}</button><button class="f-chip${st.lk==='eq'?' on':''}" data-a="lk" data-v="eq">${L('Равными долями','Equal principal')}</button></div>
       <div class="f-mut" style="margin-bottom:6px">${st.lk==='ann'?L('Аннуитет — платёж каждый месяц одинаковый.','Annuity — the same payment every month.'):L('Равными долями — долг гасится поровну, платёж сначала больше, потом меньше; переплата ниже.','Equal principal — debt is repaid in equal parts; payments start higher and fall; less interest overall.')}</div>
@@ -679,14 +693,14 @@ function finBank(w){let h='';const o=E.loanOffer(w);
         ${gr?`<span>${L('После отсрочки','After the grace period')}</span><b id="flG">${FMT.money(loanAfter(a,st.ln,st.lk,o.rate,gr))}</b>`:''}
         <span>${L('Переплата за весь срок','Total interest')}</span><b id="flO">${FMT.money(ov)}</b></div>
       <button class="btn blue noenter" data-a="take">🏦 ${L('Взять кредит','Take the loan')}</button></div>`;}
-  else h+=`<div class="f-warn">${L('Сейчас банк новых денег не даст: лимит исчерпан. Лимит растёт вместе с EBITDA и капиталом.','The bank won’t lend more right now: the limit is used up. It grows with EBITDA and equity.')}</div>`;
+  else if(dB>0)h+=`<div class="f-warn">${L('Сейчас банк новых денег не даст: лимит исчерпан. Лимит растёт вместе с EBITDA и капиталом.','The bank won’t lend more right now: the limit is used up. It grows with EBITDA and equity.')}</div>`;
   h+=`<h3>${L('Ваши кредиты','Your loans')}</h3>`;
   if(!w.loans.length)h+=`<div class="f-card f-mut">${L('Долгов нет — спим спокойно.','No debt — sleeping soundly.')}</div>`;
   for(const l of w.loans){const i=Math.round(l.a*l.r/12),b=Math.min(l.a,Math.round(E.loanPay(l)));
     const nm=l.k==='mort'?L('Ипотека','Mortgage'):l.k==='fr'?L('Займ друга, без процентов','Loan from a friend, interest-free'):l.k==='od'?L('Овердрафт','Overdraft'):l.san?L('Кредит санации','Restructured loan'):l.k==='eq'?L('Кредит, равными долями','Loan, equal principal'):L('Кредит, аннуитет','Loan, annuity');
     h+=`<div class="f-card"><b>${nm}</b><div class="f-kv"><span>${L('Остаток долга','Outstanding')}</span><b>${FMT.money(l.a)}</b><span>${L('Ставка','Rate')}</span><b>${FMT.pct(l.r,1)}</b>
       <span>${L('Осталось','Remaining')}</span><b>${l.n} ${pl(l.n,'месяц','месяца','месяцев','month','months')}</b>
-      <span>${L('Платёж в конце месяца','Payment at month end')}</span><b>${FMT.money(i+b)}</b><span class="f-mut">${L('проценты + долг','interest + principal')}</span><b class="f-mut">${FMT.mln(i)} + ${FMT.mln(b)} ${mln()}</b></div>
+      <span>${L('Платёж в конце месяца','Payment at month end')}</span><b>${FMT.money(i+b)}</b><span class="f-mut">${L('проценты + долг','interest + principal')}</span><b class="f-mut">${FMT.money(i)} + ${FMT.money(b)}</b></div>
       ${l.gr>0?`<div class="f-mut">${L('Отсрочка долга ещё','Principal grace for')} ${l.gr} ${pl(l.gr,'месяц','месяца','месяцев','month','months')} — ${L('платим только проценты.','interest only.')}</div>`:''}
       ${l.k==='od'?`<div class="f-mut">${L('Овердрафт гасится целиком в конце месяца.','An overdraft is repaid in full at month end.')}</div>`:''}
       <button class="btn noenter" data-a="repay" data-id="${l.id}"${w.cash<=0?' disabled':''}>${L('Погасить досрочно…','Repay early…')}</button></div>`;}
@@ -704,7 +718,7 @@ function finRiv(w,el){let h=topBar('sum',L('Соперники и рейтинг
     +`<p class="f-note" style="margin-bottom:0">${L('Стоимость = капитал: деньги и имущество за вычетом долгов.','Value = equity: cash and assets minus debt.')}</p></div>`;
   const wide=isWide(el),cw=wOf(el),chW=wide?Math.round((cw-18)/2)-34:cw-34;
   const ch=(w.hist.length||w.bots.some(b=>b.v.length))?`<div class="f-card"><b style="font-weight:600">${L('Стоимость по месяцам','Value by month')}</b>`+leg([[CV.eq,L('Вы','You'),1]].concat(w.bots.map(b=>[botCol(b.id),NM.bot(b.id),1])))
-    +`<div class="f-ch2">${chartBox('riv',rivSpec,24,chW,220)}</div><div class="f-mut" style="font-size:14px">${L('млн ₽','m ₽')} · ${L('ведите пальцем — цифры, нажмите — крупно','slide for figures, tap to enlarge')}</div></div>`:'';
+    +`<div class="f-ch2">${chartBox('riv',rivSpec,24,chW,220)}</div><div class="f-mut" style="font-size:14px">${FMT.uName(rivSpec(24).u)} · ${L('ведите пальцем — цифры, нажмите — крупно','slide for figures, tap to enlarge')}</div></div>`:'';
   const wgx=GAME.weekGain(),wg=wgx.gain,lbOk=typeof LB!=='undefined'&&LB.ok&&LB.ok();
   const lb=lbOk?`<div class="f-card"><b style="font-weight:600">🏆 ${L('Лучшая неделя','Best week')}</b><div class="f-mut" style="margin:4px 0">${L('Рейтинг игроков: на сколько процентов выросла стоимость компании за календарную неделю — честно и для новичка. Сейчас','Players’ leaderboard: by what percentage company value grew over a calendar week — fair for newcomers too. Now')}: <b>+${LB.pct?LB.pct(wgx.score):FMT.pct(wgx.pct)}</b> (${sgnMoney(wg)})</div><div class="f-b1"><button class="btn noenter" data-a="lb">${L('Открыть рейтинг','Open leaderboard')}</button></div></div>`:'';
   const fame=(typeof S!=='undefined'&&Array.isArray(S.fame))?S.fame:[];
@@ -736,7 +750,7 @@ function renderFin(el,tab){if(!el)return;css();lastF=el;if(tab)st.fv=VIEWS[tab]|
     else if(a==='repay')openRepay(b.dataset.id);};
   el.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.f-rr[data-a]')){e.preventDefault();e.target.click();}};
   swipe(el,d=>monthStep(el,d));
-  const rg=el.querySelector('#flR');if(rg)rg.oninput=()=>{const o=E.loanOffer(Wd());st.la=+rg.value*1e6;const gr=grOf(st.ln,st.lg),f=loanFirst(st.la,st.ln,st.lk,o.rate,gr);const gg=el.querySelector('#flG');if(gg)gg.textContent=FMT.money(loanAfter(st.la,st.ln,st.lk,o.rate,gr));
+  const rg=el.querySelector('#flR');if(rg)rg.oninput=()=>{const o=E.loanOffer(Wd());st.la=Math.min(o.max,+rg.value*loanStep(Wd(),o.max));const gr=grOf(st.ln,st.lg),f=loanFirst(st.la,st.ln,st.lk,o.rate,gr);const gg=el.querySelector('#flG');if(gg)gg.textContent=FMT.money(loanAfter(st.la,st.ln,st.lk,o.rate,gr));
     el.querySelector('#flA').textContent=FMT.money(st.la);el.querySelector('#flP').textContent=FMT.money(f.int+f.body);el.querySelector('#flI').textContent=FMT.money(f.int);el.querySelector('#flO').textContent=FMT.money(loanOver(st.la,st.ln,st.lk,o.rate,gr));};}
 function monthStep(el,d){const w=Wd(),list=repList(w);let i=repIdx(w,list);const j=clamp(i+d,0,list.length-1);if(j===i)return;st.rm=list[j].m;renderFin(el);}
 // свайп влево/вправо по переключателю месяцев и по отчёту — соседний месяц
@@ -749,7 +763,7 @@ function openRepay(id){const w=Wd(),l=w.loans.find(x=>x.id===id);if(!l)return;co
   const opts=[.25,.5,1].map(k=>Math.round(max*k)).filter((v,i,a)=>v>0&&a.indexOf(v)===i);
   modal(`<div id="finDlg"><h2>${L('Погасить досрочно','Repay early')}</h2><p>${L('Остаток долга','Outstanding')}: <b>${FMT.money(l.a)}</b>. ${L('На счёте','In the account')}: <b>${FMT.money(w.cash)}</b>.</p>
     <p class="f-mut">${L('Досрочное погашение без штрафов; проценты дальше считаются с меньшего остатка. Не отдавайте последние деньги — зарплату и сырьё платить нечем будет.','No early repayment fee; interest is then charged on the smaller balance. Don’t hand over your last money — you still need to pay for wages and materials.')}</p>
-    <div class="f-chips${opts.length===2?' n2':''}">${opts.map(v=>`<button class="f-chip" data-v="${v}">${v>=l.a?L('Всё','All')+' · ':''}${FMT.mln(v)} ${mln()}</button>`).join('')}</div>
+    <div class="f-chips${opts.length===2?' n2':''}">${opts.map(v=>`<button class="f-chip" data-v="${v}">${v>=l.a?L('Всё','All')+' · ':''}${FMT.money(v)}</button>`).join('')}</div>
     <div class="row"><button class="btn" id="mCancel" data-esc>${L('Отмена','Cancel')}</button></div></div>`);
   setRe(()=>openRepay(id));
   document.querySelectorAll('#finDlg .f-chip').forEach(b=>b.onclick=()=>{const r=GAME.act('repay',id,+b.dataset.v);hideModal();if(r==='ok'){snd('coin');toastS(L('Погашено: ','Repaid: ')+FMT.money(+b.dataset.v));}FIN.refresh();});

@@ -24,13 +24,33 @@
    Этап 5 (28.09, отчёт 27): пролог «Пари 11 „Б“» вместо таблицы «10 лет» (F.hero), переходящий кубок (F.cup), арка Топтыгина tpt1 → tpt2 → bear1 → tpt4 (→ tpt5 во втором сезоне),
    выбор партнёра для недр (part), Людмила: first1, lud1, mem (90-е, 6 историй), lud2 (пенсия), ludcall; друзья: owl2, owl4, beav4, beav6, bars3, bars5, vit4, vit5; второй сезон
    (холдинг №2+): beav5 (якорный инвестор «Бобров и Ко» — СП bshare 10 %), bars4, owl3 (СП fund), tpt5. Просьбы: займов меньше, «сходи со мной» (visit) без денег.
-   Большие сцены (кроме встреч, IPO, событий глав — BIG_FREE) идут по одной и не чаще раза в 20 дней. Модель сюжета по реальным дням — прогон в отчёте этапа 5 (день без большой сцены — 0 из 96). */
+   Большие сцены (кроме встреч, IPO, событий глав — BIG_FREE) идут по одной и не чаще раза в 20 дней. Модель сюжета по реальным дням — прогон в отчёте этапа 5 (день без большой сцены — 0 из 96).
+   M18 (01.10, hobby-analytics/release-b/M18-magnat-friends2.md): отношения F[id].rel −100…+100 и 5 уровней (lvOf), tr = (rel+100)/2 — для старого кода; миграция tr·2−100.
+   Польза в числах — таблица PK (по уровням); «📞 Позвонить» — friendChat, «🏠 Сходить в гости» — friendVisit(W,id,src) (src='econ' — визит уже оплачен делом хозяина),
+   «🙏 Попросить помощь» — callOpts/friendCall (NEED — уровень, CD — откат в мес.); предложения друзей (RQ offer), пари с Борисом (RQ pari), «точка Бориса рядом» при холоде,
+   возврат к нейтралу без общения, счёт «кто кому» F[id].st, события для STAT — очередь F.sx (забирает js/stat-hooks.js). Проверка баланса пользы — tools/sim-friends.sh. */
 (function(root){
 'use strict';
 const E=root.ECON;if(!E||E.STORY)return;
 const _=E._,{pay,recv,pl,rnd0,clamp}=_;
 const FR=['owl','beav','bars','vit'],ALL=FR.concat(['bear']);
 const TR0={owl:62,beav:57,bars:60,vit:64};
+// M18: отношения rel −100…+100 (tr 0–100 — производное, для старого кода); уровни 0 «в ссоре», 1 «прохладно», 2 «приятели», 3 «друзья», 4 «не разлей вода»
+const REL0={owl:20,beav:10,bars:16,vit:24},REL_HOME=10,LV_MIN=[-100,-49,-15,30,70];
+function lvOf(r){return r<=-50?0:r<=-16?1:r<30?2:r<70?3:4;}
+const relTr=r=>Math.round((r+100)/2);
+// польза друзей в числах (по уровням 0…4) — одна таблица для модели и окна «Друзья»
+const PK={
+  guarDr:[0,0,0,-.02,-.03],rateUp:[.01,.005,0,0,0],guarLim:1.15,bridgeK:2,           // Соня: поручительство −2/−3 п. п. и лимит ×1,15; плохие отношения: ставка +1/+0,5 п. п.; «перекрою платёж» — 2 платежа банку без процентов
+  buyD:.03,buyM:[0,0,0,2,3],pari:.01,rival:[.88,.92,1,1,1],                          // Борис: общая закупка −3 % на 2/3 мес.; пари на 1 % капитала (до 500 тыс.); прохладно — «точка рядом» −8 % покупателей (в ссоре −12 %) на 3 мес.
+  build:[0,0,.15,.2,.25],rep:[0,0,0,.4,.6],cap:[0,0,0,.03,.05],                         // Пётр: стройка −15/−20/−25 % оставшихся дней (заводы недр — не больше −10 %); ремонт −40/−60 %; новая точка −3/−5 % цены
+  sup:[0,0,0,.01,.015],logd:[0,0,0,.03,.05],logUp:[.1,0,0,0,0],move:[0,0,0,.5,.75],gig:1.5,ship:.04,cap1:5e4,capL:3e4,   // Витя (до «Недр»): закупка −1/−1,5 %, доставка −3/−5 %; переезд точки −50/−75 %; заказ ×1,5; «везу товар» −4 % на 2 мес.; скидки на закупку — до 50 тыс. ₽ в месяц, на доставку — до 30 тыс.
+  fixM:3,visitE:20,visit:4,call:1,peace:15};   // звонок +1, в гостях +4 (от +50 — вдвое меньше: крепкую дружбу делают поступки), помириться +15
+// M20 (решение владельца 01.10): пари с Борисом — ставка на выбор: деньги (PK.pari) или 💎. 💎 живут вне мира (S.cr): модель копит «к зачислению» F.crp (+/−),
+// окно друзей (friends-ui.js) переводит их в GAME.addCr/spend. Ставка 💎 списывается сразу, выигрыш — вдвое; частота — как у пари (раз в 4 мес.)
+const PARI_CR=5;
+const crN=()=>{const f=root.STORY&&root.STORY.crHave;try{return typeof f==='function'?f():1e9;}catch(e){return 1e9;}};
+function crAdd(F,n){F.crp=(F.crp||0)+n;}
 const STG=['gig','small','mid','quarry','nedra'];
 const si=W=>W.ned?4:Math.max(0,STG.indexOf(W.st||'gig'));
 
@@ -80,17 +100,30 @@ const HERO0=()=>({g:'m',n:'',nc:'',set:0});
 function lud0(){return {loyal:0,ret:0,rm:-1,cm:-99,n:0,gift:0};}
 function init(W){const F={v:1,m0:W.m,rags:W.ned?0:1,rs:((W.seed||7)^0x5f3759df)>>>0||9,n:1,ld:-1,lm:W.m,cm:W.m-1,q:[],dn:{},fd:[],ch:[],jv:[],ln:[],rh:[],rq:W.m+3,nt:W.t,rd:W.t,ls:-99,buy:-1,vlg:-1,gp:-1,
     hero:HERO0(),lud:lud0(),tp:{},part:'',mem:0,memM:-99,lt:[],aw:null,h0:W.m,lb:-99,lbm:W.m};
-  for(const id of FR)F[id]={tr:TR0[id],k:tgt(id,0),c:0,no:0,cq:-9,cg:-9,ln:null,gu:-1};
+  for(const id of FR)F[id]=Object.assign({tr:relTr(REL0[id]),k:tgt(id,0),c:0,no:0,cq:-9,cg:-9,ln:null,gu:-1},fr0(W,REL0[id]));
+  F.om=W.m+3;F.sx=[];F.lvq=[];
   F.bear={k:3,seen:W.ned?1:0,c:0};
   if(W.ned)F.dn.pro=W.t;          // мир начат сразу с недр (старые сохранения, IPO): пролог «10 лет» пропускаем
   W.fr=F;for(const id of ALL)F[id].c=capOf(W,id);return F;}
+// M18: поля отношений друга — rel, lc (месяц последнего общения), vm (в гостях), km (звонок), ms (уже ворчал), rm (месяц «точки рядом»), pm (пари), fx (профилактика до месяца), ga (польза для письма), cd (откаты просьб), st — счёт «кто кому»
+// st: g — вы помогли, h — он помог, n — отказов, sv — он сэкономил вам ₽, ln — вы одолжили ему ₽, bk — он вернул ₽, lt — задержек возврата
+function fr0(W,rel){return {rel,lc:W.m,vm:-9,km:-9,ms:0,rm:-99,pm:-99,fx:-99,ga:0,cd:{},st:{g:0,h:0,n:0,sv:0,ln:0,bk:0,lt:0}};}
 function fr(W){return W.fr&&W.fr.v?W.fr:init(W);}
+// старый сейв: «счёт дружбы» восстанавливаем по истории F.ch (последние 40 событий)
+function stBack(F,id,st){for(const c of F.ch||[]){if(!c||c.w!==id)continue;const a=c.a||{};
+  if(c.k.indexOf('rq_')===0){if(c.o==='a'){st.g++;if(c.k==='rq_loan'&&a.a)st.ln+=a.a;}else if(c.k!=='rq_advice'&&c.k!=='rq_visit')st.n++;}
+  else if(c.k==='lendback'&&a.a)st.bk+=a.a;else if(c.k.indexOf('call_')===0)st.h++;else if(c.k==='congr')st.g++;}}
 function storyMigrate(W,fx){if(!W.fr||typeof W.fr!=='object'||!W.fr.v){init(W);if(fx)fx.push('fr');return;}
   const F=W.fr,num=(o,k,d)=>{if(typeof o[k]!=='number'||!isFinite(o[k]))o[k]=d;};
   for(const k of ['q','fd','ch','jv','ln','rh'])if(!Array.isArray(F[k]))F[k]=[];if(!F.dn||typeof F.dn!=='object')F.dn={};
   num(F,'m0',W.m);num(F,'n',1);num(F,'rq',W.m+3);num(F,'nt',W.t);num(F,'rd',W.t);num(F,'ls',-99);num(F,'buy',-1);num(F,'vlg',-1);num(F,'gp',-1);
   num(F,'rs',9);num(F,'rags',0);num(F,'ld',-1);num(F,'lm',W.m);num(F,'cm',W.m-1);
-  for(const id of FR){if(!F[id]||typeof F[id]!=='object')F[id]={};const x=F[id];num(x,'tr',TR0[id]);num(x,'k',tgt(id,0));num(x,'c',0);num(x,'no',0);num(x,'cq',-9);num(x,'cg',-9);num(x,'gu',-1);if(x.gu===0&&!F.gu1)x.gu=-1;if(x.ln===undefined)x.ln=null;}F.gu1=1;
+  for(const id of FR){if(!F[id]||typeof F[id]!=='object')F[id]={};const x=F[id];num(x,'tr',TR0[id]);num(x,'k',tgt(id,0));num(x,'c',0);num(x,'no',0);num(x,'cq',-9);num(x,'cg',-9);num(x,'gu',-1);if(x.gu===0&&!F.gu1)x.gu=-1;if(x.ln===undefined)x.ln=null;
+    // M18: доверие 0–100 → отношения −100…+100 (57 → +14, 80 → +60); недостающие поля — по умолчанию
+    if(typeof x.rel!=='number'||!isFinite(x.rel)){x.rel=clamp(Math.round(x.tr*2-100),-100,100);if(fx)fx.push('fr.rel');}
+    const d0=fr0(W,x.rel);for(const k in d0)if(k!=='st'&&k!=='cd')num(x,k,d0[k]);if(!x.cd||typeof x.cd!=='object')x.cd={};
+    if(!x.st||typeof x.st!=='object'){x.st=d0.st;stBack(F,id,x.st);}for(const k in d0.st)num(x.st,k,0);x.tr=relTr(x.rel);}F.gu1=1;
+  num(F,'om',W.m+2);num(F,'crp',0);if(!Array.isArray(F.sx))F.sx=[];if(!Array.isArray(F.lvq))F.lvq=[];if(F.pari&&typeof F.pari!=='object')F.pari=null;
   if(!F.bear||typeof F.bear!=='object')F.bear={k:3,seen:W.ned?1:0,c:0};
   if(!F.hero||typeof F.hero!=='object')F.hero=HERO0();if(F.hero.g!=='f')F.hero.g='m';if(typeof F.hero.nc!=='string')F.hero.nc='';if(typeof F.hero.n!=='string')F.hero.n='';
   if(!F.lud||typeof F.lud!=='object')F.lud=lud0();{const l=F.lud,d=lud0();for(const k in d)num(l,k,d[k]);}
@@ -108,26 +141,39 @@ function recvA(W,a,k){const c=CFK[k]||k;cfK(W,c);return recv(W,a,c);}
 function sgAdd(W,seg,rev,e){const s=W.mon.sg||(W.mon.sg={});const x=s[seg]||(s[seg]={rev:0,e:0});x.rev+=rev;x.e+=e;}
 
 /* ---------------- доверие, история, лента ---------------- */
-function tr(F,id,d){if(FR.indexOf(id)<0||!F[id]||!d)return 0;const o=F[id].tr;F[id].tr=clamp(o+d,0,100);return F[id].tr-o;}
+// d — в единицах шкалы −100…+100; nc — «без общения» (молчание, забытая просьба): месяц последнего контакта не трогаем
+function tr(F,id,d,nc){if(FR.indexOf(id)<0||!F[id]||!d)return 0;const x=F[id];if(typeof x.rel!=='number')x.rel=clamp(Math.round((x.tr||60)*2-100),-100,100);
+  const o=x.rel,l0=lvOf(o);x.rel=clamp(Math.round(o+d),-100,100);x.tr=relTr(x.rel);if(!nc){x.lc=F.lm;x.ms=0;}
+  const l1=lvOf(x.rel);if(l1!==l0){if(!F.lvq)F.lvq=[];F.lvq.push({w:id,a:l0,b:l1});}
+  if(x.rel!==o&&nc!==2)sx(F,{k:'rel',w:id,d:x.rel-o,l:l1});return x.rel-o;}   // nc=2 — медленный возврат к нейтралу, в статистику не шлём
+function lv(F,id){return F&&F[id]&&typeof F[id].rel==='number'?lvOf(F[id].rel):2;}
+function stc(F,id,k,n){const x=F[id];if(x&&x.st)x.st[k]=(x.st[k]||0)+(n||1);}
+// статистика STAT: очередь событий (js/stat-hooks.js забирает), не больше 20
+function sx(F,e){if(!F.sx)F.sx=[];F.sx.push(e);if(F.sx.length>20)F.sx.shift();}
+// польза от друга деньгами: копим «он сэкономил вам» и сумму для письма «итоги» (раз в квартал)
+function gain(F,id,a){if(!(a>0)||!F[id])return;stc(F,id,'sv',a);F[id].ga=(F[id].ga||0)+a;const g=F.gw||(F.gw={});g[id]=(g[id]||0)+a;}
+// M20: итог пользы за месяц для окна «Закрытие месяца» — F.gh {m, a, w:{друг: ₽}} (копится в F.gw с прошлого закрытия)
+function ghSnap(F,m){const g=F.gw||{};let a=0;for(const k in g)a+=g[k];F.gh={m,a:rnd0(a),w:g};F.gw={};}
 function hearts(t){return Math.max(1,Math.min(5,Math.ceil((t||0)/20)));}
 function log(W,F,w,k,o,d,a){F.ch.push({t:W.t,m:W.m,w,k,o:o||'',d:d||0,a:a||null});if(F.ch.length>40)F.ch.splice(0,F.ch.length-40);}
 function feed(W,F,w,k,a,c){F.fd.push({t:W.t,m:W.m,w,k,a:a||null,c:c?1:0,g:0});if(F.fd.length>30)F.fd.splice(0,F.fd.length-30);if(w==='bear')F.bear.seen=1;}
-function yes(F,id){if(F[id])F[id].no=0;}
-function no(F,id){if(!F[id])return 0;F[id].no++;if(F[id].no>=3){F[id].no=0;return tr(F,id,-10);}return 0;}
+function yes(F,id){if(F[id]){F[id].no=0;stc(F,id,'g');}}
+// отказ — мягко: −5, три отказа подряд — ещё −10
+function no(F,id){if(!F[id])return 0;F[id].no++;stc(F,id,'n');let d=tr(F,id,-5);if(F[id].no>=3){F[id].no=0;d+=tr(F,id,-10);}return d;}
 function eqOf(W){return Math.max(0,E.equity(W));}
 function cashFree(W){return W.cash-(W.ned?20e6:Math.max(3000,Math.min(5e5,E.equity(W)*.02)));}
 
 /* ---------------- займы: другу (актив) и от друга (W.loans k:'fr') ---------------- */
 function lendMk(W,F,w,a,mo){if(!acctOk(W))return 'no';a=rnd0(a);if(a<=0)return 'no';if(cashFree(W)<a)return 'cash';
-  payA(W,a,'lend');F.ln.push({id:'fl'+(F.n++),w,a,due:W.m+mo,m0:W.m});return 'ok';}
-function frLoan(W,F,w,a,n){a=rnd0(a);n=Math.max(1,n|0);const l={id:'l'+(W.nid++),a,a0:a,r:0,n,n0:n,k:'fr',fr:w,gr:n-1};W.loans.push(l);recv(W,a,'loan');F[w].ln=l.id;return l;}
+  payA(W,a,'lend');F.ln.push({id:'fl'+(F.n++),w,a,due:W.m+mo,m0:W.m});stc(F,w,'ln',a);sx(F,{k:'lend',w,a:Math.round(a/1e3)});return 'ok';}
+function frLoan(W,F,w,a,n){a=rnd0(a);n=Math.max(1,n|0);const l={id:'l'+(W.nid++),a,a0:a,r:0,n,n0:n,k:'fr',fr:w,gr:n-1};W.loans.push(l);recv(W,a,'loan');F[w].ln=l.id;stc(F,w,'h');sx(F,{k:'help',w,p:'loan'});return l;}
 function frLoanMax(W,id){return nice(Math.max(5e3,capOf(W,id)*.1));}
 
 /* ---------------- совместные предприятия (метод долевого участия) ---------------- */
 // r — средняя доходность СП в месяц к его капиталу, s — разброс
-const JV={trans:{r:.02,s:.012},base:{r:.018,s:.015},pit:{r:.024,s:.01},fund:{r:.013,s:.006},bshare:{r:.012,s:.008}};   // bshare — акции «Бобров и Ко» (якорный инвестор, второй сезон)
+const JV={trans:{r:.02,s:.012},base:{r:.018,s:.015},pit:{r:.024,s:.01},fund:{r:.013,s:.006},bshare:{r:.012,s:.008},pnt:{r:.03,s:.015},gaz:{r:.02,s:.01}};   // M20: gaz — «Газель на двоих» с Витей (глава «Своё дело»/«Сеть»): ~2 % в месяц к вложению, без рук   // pnt — «точка на двоих» с Борисом (M18, глава «Своё дело»): без рук, ~4 % в месяц к вложению   // bshare — акции «Бобров и Ко» (якорный инвестор, второй сезон)
 function jvCreate(W,w,t,sh,a){const F=fr(W);if(!acctOk(W)||!JV[t]||!F[w])return 'no';a=rnd0(a);sh=clamp(+sh||.5,.1,1);if(a<=0)return 'no';if(cashFree(W)<a)return 'cash';
-  payA(W,a,'jvin');const j={id:'j'+(F.n++),w,t,sh,in0:a,inv:a,base:rnd0(a/sh),m0:W.m,d:.5,dm:-99,p:[]};F.jv.push(j);log(W,F,w,'jv',t,0,{a,sh});return 'ok';}
+  payA(W,a,'jvin');const j={id:'j'+(F.n++),w,t,sh,in0:a,inv:a,base:rnd0(a/sh),m0:W.m,d:.5,dm:-99,p:[]};F.jv.push(j);log(W,F,w,'jv',t,0,{a,sh});sx(F,{k:'jv',w,t,a:Math.round(a/1e3)});return 'ok';}
 // правило дивидендов (0 / 50 / 100 % прибыли) — раз в год вместе с другом
 function jvDiv(W,id,pct){const F=fr(W),j=F.jv.find(x=>x.id===id);if(!j)return 'no';if(j.dm>=0&&W.m-j.dm<12)return 'wait';
   j.d=pct>=1?1:pct>=.5?.5:0;j.dm=W.m;log(W,F,j.w,'jvdiv',j.t,0,{d:j.d});return 'ok';}
@@ -160,7 +206,7 @@ const SC={
   beav1:{w:'beav',when:(W,F)=>F.rags&&!W.ned&&si(W)>=1&&W.biz&&W.biz.length>=1&&(F.bobk||W.m-F.m0>=8),
     o:{a:{fx:(W,F)=>tr(F,'beav',2)},b:{fx:(W,F)=>tr(F,'beav',2)}}},
   beav2:{w:'beav',when:(W,F)=>F.rags&&!W.ned&&F.dn.beav1>=0&&W.t-F.dn.beav1>=90&&si(W)<=2&&W.biz&&W.biz.some(b=>E.BIZ&&E.BIZ[b.t]&&E.BIZ[b.t].seg==='retail'),
-    o:{a:{fx:(W,F)=>{F.buy=W.m+12;yes(F,'beav');return tr(F,'beav',8);}},b:{fx:()=>0}}},
+    o:{a:{fx:(W,F)=>{F.buy=W.m+12;F.buyR=.05;yes(F,'beav');return tr(F,'beav',8);}},b:{fx:()=>0}}},
   bars1:{w:'bars',when:(W,F)=>F.rags&&!W.ned&&si(W)>=1&&W.m-F.m0>=26,prm:()=>({a:45000}),
     o:{a:{fx:(W,F)=>{F.gp=W.m+24;yes(F,'bars');return tr(F,'bars',15);}},b:{fx:(W,F)=>no(F,'bars')}}},
   beav3:{w:'beav',big:1,when:(W,F)=>F.rags&&!W.ned&&si(W)>=1&&W.m-F.m0>=54,prm:W=>({a:nice(clamp(eqOf(W)*.1,3e4,4e6))}),
@@ -220,6 +266,18 @@ const SC={
   // Людмила вспоминает 90-е: 6 историй, не чаще раза в игровой год, к событиям игры
   // …или раньше, если больших сцен не было 14 месяцев (у неспешного игрока реальный день короче) — чтобы в каждом дне была заметная сцена
   mem:{w:'lud',big:1,rep:1,when:(W,F)=>F.rags&&F.mem<MEM_N&&W.m-F.memM>=10&&(memDue(W,F)||W.m-F.lbm>=14&&(W.biz||[]).length>0),prm:(W,F)=>({v:F.mem}),o:{a:{fx:(W,F)=>{F.mem++;F.memM=W.m;return 0;}}}},
+  /* ---- M20: «плохие» развилки (M15 §4.3) — когда друг обижен (уровень ≤ 1). Экономика не меняется (минусы — те же PK), это голос минуса:
+     друг объясняет, что случилось; a — попробовать помириться (❤ +8, как полвизита-примирения), b — оставить как есть (0). По одному разу. ---- */
+  // Соня отказывает в поручительстве (прохладно/ссора, есть банк и кредиты)
+  owlno:{w:'owl',when:(W,F)=>F.rags&&!W.ned&&si(W)>=1&&lv(F,'owl')<=1&&(W.loans||[]).some(l=>l.k!=='fr'&&l.k!=='od'),o:{a:{fx:(W,F)=>tr(F,'owl',8)},b:{fx:()=>0}}},
+  // Борис: «на торгах уступать не буду» (прохладно/ссора, глава «Сеть» или «Карьер»)
+  beavno:{w:'beav',when:(W,F)=>F.rags&&!W.ned&&si(W)>=2&&lv(F,'beav')<=1,o:{a:{fx:(W,F)=>tr(F,'beav',8)},b:{fx:()=>0}}},
+  // Пётр уходит к Топтыгину (глава «Карьер», прохладно/ссора) — помирились: остаётся; нет — работает на «Медведь Капитал» (F.bars.tpt)
+  barsno:{w:'bars',when:(W,F)=>F.rags&&!W.ned&&W.st==='quarry'&&lv(F,'bars')<=1,o:{a:{fx:(W,F)=>{F.bars.stay=1;return tr(F,'bars',8);}},b:{fx:(W,F)=>{F.bars.tpt=1;return 0;}}}},
+  // Витя: «машины заняты — ищи другого перевозчика» (прохладно/ссора, есть точки с товаром)
+  vitno:{w:'vit',when:(W,F)=>F.rags&&!W.ned&&si(W)>=1&&lv(F,'vit')<=1&&supOn(W),o:{a:{fx:(W,F)=>tr(F,'vit',8)},b:{fx:()=>0}}},
+  // встреча у Петра без вас: двое и больше друзей обижены
+  partyno:{w:'owl',when:(W,F)=>F.rags&&!W.ned&&si(W)>=1&&FR.filter(id=>lv(F,id)<=1).length>=2,o:{a:{fx:(W,F)=>{let d=0;for(const id of FR)if(lv(F,id)<=1){const x=tr(F,id,5);if(id==='owl')d=x;}return d;}},b:{fx:()=>0}}},   // в ответе — только Соня (она пишет), остальным обиженным тоже +5
   /* ---- второй сезон: холдинг №2 и дальше ---- */
   // Борис идёт на биржу и зовёт в якорные инвесторы: 10 % «Бобров и Ко» (совместное дело по методу долевого участия)
   beav5:{w:'beav',when:(W,F)=>W.hold>=2&&W.m-F.h0>=6&&acctOk(W),prm:W=>({a:nice(clamp(eqOf(W)*.03,5e6,1e8))}),
@@ -240,7 +298,7 @@ const SC={
   help:{w:'beav',rep:1,when:(W,F)=>W.odM>0&&(F.beav.tr>=80||F.beav.hlp)&&!F.beav.ln&&W.m-(F.hm===undefined?-99:F.hm)>=12,prm:W=>({a:frLoanMax(W,'beav'),n:6}),
     o:{a:{fx:(W,F,q)=>{F.hm=W.m;frLoan(W,F,'beav',q.a.a,q.a.n);return tr(F,'beav',2);}},b:{fx:(W,F)=>{F.hm=W.m;return 0;}}}}
 };
-const ORDER=['pro','vit1','owl1','first1','beav1','beav2','bars1','owl2','beav4','beav3','vit4','vit3','bars3','tpt1','lud1','owl4','bars2','tpt2','bars5','beav6','part','ned1','bear1','vit5','lud3','tpt4','mem',
+const ORDER=['pro','vit1','owl1','first1','beav1','beav2','bars1','owl2','beav4','beav3','vit4','vit3','bars3','tpt1','lud1','owl4','bars2','tpt2','bars5','beav6','part','ned1','bear1','vit5','lud3','tpt4','owlno','vitno','beavno','barsno','partyno','mem',
   'beav5','bars4','owl3','lud2','tpt5','ludcall','help'];
 // «большие» сцены, которые не ждут очереди (встречи, IPO и события глав); остальные большие — по одной и не чаще раза в BIG_GAP дней
 const BIG_FREE={pro:1,beav3:1,ned1:1,part:1,help:1};const BIG_GAP=20;
@@ -268,9 +326,53 @@ const RQ={
   watch:{a:{fx:(W,F,q)=>{yes(F,q.w);return tr(F,q.w,5);}},b:{fx:(W,F,q)=>no(F,q.w)}},
   advice:{a:{fx:(W,F,q)=>{yes(F,q.w);return tr(F,q.w,3);}},b:{fx:(W,F,q)=>{yes(F,q.w);return tr(F,q.w,3);}}},   // совет: оба ответа хороши
   // «сходи со мной» (первое сентября у сына Петра, футбол с Борисом…): без денег, отказ без штрафа
-  visit:{a:{fx:(W,F,q)=>{yes(F,q.w);return tr(F,q.w,5);}},b:{fx:(W,F,q)=>{yes(F,q.w);return 0;}}}};
+  visit:{a:{fx:(W,F,q)=>{yes(F,q.w);return tr(F,q.w,5);}},b:{fx:(W,F,q)=>{yes(F,q.w);return 0;}}},
+  // M18: друг сам предлагает помощь или дело (раз в 3–5 месяцев); отказ — без штрафа
+  offer:{a:{ok:(W,F,q)=>q.a.p==='jv'?okCash(W,F,q):offerOk(W,F,q.w,q.a.p)?true:'no',fx:(W,F,q)=>{perkOn(W,F,q.w,q.a.p,q.a);return tr(F,q.w,3);}},b:{fx:()=>0}},
+  // пари с Борисом: «выручка следующего месяца будет выше на 10 %?»; не принял — не беда
+  pari:{a:{fx:(W,F,q)=>{F.pari={w:q.w,a:q.a.a,m:W.m+1,base:q.a.base,tg:q.a.tg};F[q.w].pm=W.m;sx(F,{k:'pari',w:q.w,r:'on'});return tr(F,q.w,2);}},
+    c:{ok:()=>crN()>=PARI_CR?true:'crno',fx:(W,F,q)=>{F.pari={w:q.w,a:0,cr:PARI_CR,m:W.m+1,base:q.a.base,tg:q.a.tg};crAdd(F,-PARI_CR);F[q.w].pm=W.m;sx(F,{k:'pari',w:q.w,r:'on',cr:1});return tr(F,q.w,2);}},   // M20: на 💎
+    b:{fx:(W,F,q)=>{F[q.w].pm=W.m;return tr(F,q.w,-1);}}}};   // M20: отказ от пари — −1 («скучный ты стал»)
+/* ---------------- M18: польза друзей ---------------- */
+// сколько платим банку в месяц (проценты + тело) — для «Перекрою платёж» Сони
+function bankPay(W){let s=0;for(const l of W.loans||[])if(l.k!=='fr'){try{s+=l.a*l.r/12+Math.min(l.a,E.loanPay(l));}catch(e){}}return rnd0(s);}
+function repairsOn(W){return (W.biz||[]).some(b=>b.st==='w');}
+function supOn(W){return (W.biz||[]).some(b=>b.st==='w'&&E.BIZ&&E.BIZ[b.t]&&(E.BIZ[b.t].sd||E.BIZ[b.t].v));}
+// лучший заказ на доске, который можно «усилить» от друга (глава 1)
+function gigSrc(W,w){const M=W.me;if(!M||W.ned||si(W)>1||!Array.isArray(M.board))return null;const ok=w==='bars'?['loader','handy','courier']:['courier','taxi','loader','handy','tutor'];
+  let best=null;for(const g of M.board){if(g.fr||ok.indexOf(g.t)<0||!(g.G>0))continue;try{if(E.gigOk&&!E.gigOk(W,g.t))continue;}catch(e){}if(!best||g.pay>best.pay)best=g;}return best;}
+function gigGive(W,F,w){const g0=gigSrc(W,w);if(!g0)return 0;const g=JSON.parse(JSON.stringify(g0));g.id='g'+(W.nid++);g.G=rnd0(g0.G*PK.gig);g.pay=rnd0((g.G-(g0.C||0)-g.G*.04)/50)*50;g.exp=W.t+6;g.fr=w;g.prem=1;
+  W.me.board.unshift(g);gain(F,w,Math.max(0,g.pay-g0.pay));return g.pay;}
+function offerOk(W,F,w,p){const x=F[w];if(!x)return false;
+  if(p==='ship')return !W.ned&&supOn(W)&&!(F.vship>=W.m);if(p==='gig')return !!gigSrc(W,w);if(p==='prof')return repairsOn(W)&&!(x.fx>=W.m);
+  if(p==='rate')return !(x.gu>=W.m)&&!!(E.loanOffer&&E.loanOffer(W).max>0);if(p==='buy')return !W.ned&&supOn(W)&&!(F.buy>=W.m);if(p==='jv')return acctOk(W)&&(w==='owl'||!W.ned);return false;}
+// включить помощь (из предложения друга или звонка «Попросить помощь»)
+function perkOn(W,F,w,p,a){const x=F[w],L=lv(F,w);a=a||{};let v=0;
+  if(p==='ship')F.vship=W.m+1;
+  else if(p==='gig')v=gigGive(W,F,w);
+  else if(p==='prof')x.fx=W.m+PK.fixM-1;
+  else if(p==='rate'||p==='guar')x.gu=W.m+3;
+  else if(p==='buy'){F.buy=W.m+Math.max(3,PK.buyM[L])-1;F.buyR=PK.buyD;}
+  else if(p==='jv')jvCreate(W,w,JVT[w]||'pnt',w==='owl'?.5:.5,a.a);
+  stc(F,w,'h');sx(F,{k:'help',w,p});log(W,F,w,'perk',p,0,v?{a:v}:null);return v;}
+// предложение от друга: кто и что (самое полезное из доступного по уровню)
+// M20: совместные дела по предложению друга (§9): Борис — точка на двоих, Витя — «Газель на двоих», Соня — доля в фонде «Сова Инвест» (после её презентации owl4, ещё в первом холдинге)
+const JVT={beav:'pnt',vit:'gaz',owl:'fund'};
+function jvAmt(W,w){const eq=eqOf(W);return w==='vit'?nice(clamp(eq*.08,1e5,8e5)):w==='owl'?nice(clamp(eq*.05,1e6,5e7)):nice(clamp(eq*.15,5e4,2e7));}
+function offerMake(W,F){const s=si(W),c=[];
+  for(const w of FR){if(F.q.some(q=>q.w===w))continue;const L=lv(F,w);if(L<2)continue;const add=(p,wt)=>{if(offerOk(W,F,w,p))c.push([w,p,wt*(L>=3?1.5:1)]);};
+    if(w==='vit'){add('ship',2);if(s===0)add('gig',3);if(L>=3&&s>=1&&s<=2&&!F.jv.some(j=>j.w==='vit'&&(j.t==='gaz'||j.t==='trans'))&&eqOf(W)>=3e5)add('jv',1.5);}
+    if(w==='bars'){add('prof',2);if(s===0)add('gig',2);}
+    if(w==='owl'){add('rate',s>=1?1.5:0);if(L>=3&&W.hold===1&&F.dn.owl4!==undefined&&!F.jv.some(j=>j.w==='owl')&&eqOf(W)>=2e7)add('jv',1.5);}
+    if(w==='beav'&&L>=3){if(s>=1&&s<=2&&!F.jv.some(j=>j.w==='beav'&&j.t==='pnt')&&eqOf(W)>=3e5)add('jv',2);add('buy',1.5);}}
+  if(!c.length)return null;let tot=0;for(const x of c)tot+=x[2];let r=rnd(F)*tot,pk=c[0];for(const x of c){r-=x[2];if(r<=0){pk=x;break;}}
+  const [w,p]=pk,a={p};if(p==='jv')a.a=jvAmt(W,w);
+  return {id:'q'+(F.n++),k:'rq',r:'offer',w,t:W.t,a,x:W.t+45};}
+function pariMake(W,F){const r=W.reps&&W.reps[W.reps.length-1];const base=r&&r.pl?r.pl.rev:0;if(!(base>0))return null;
+  return {id:'q'+(F.n++),k:'rq',r:'pari',w:'beav',t:W.t,a:{a:nice(clamp(eqOf(W)*PK.pari,2e3,5e5)),base:rnd0(base),tg:rnd0(base*1.1)},x:W.t+30};}
 function rqMake(W,F){const s=si(W),eq=eqOf(W),pool=[];
-  for(const w of FR){if(F.q.some(x=>x.w===w))continue;
+  // M20: пари и предложение друга слот просьб не занимают (раньше пари Бориса вытесняло его просьбы — минус почти не срабатывал)
+  for(const w of FR){if(F.q.some(x=>x.w===w&&x.r!=='pari'&&x.r!=='offer'))continue;
     // займов меньше (вес 3 → 1,5): просьбы «сходи со мной» (visit) — без денег
     if(w!=='owl'&&acctOk(W)&&eq>=2e4)pool.push([w,'loan',1.5]);
     pool.push([w,'gift',1]);
@@ -310,12 +412,14 @@ function scenesDay(W,F){
   if(F.dn.owl1===undefined&&F.rags&&si(W)>=2)F.dn.owl1=W.t;
   // «первая выручка» — только пока точек немного (старое сохранение с сетью её не получит)
   if(F.dn.first1===undefined&&(W.biz||[]).length>3&&!F.q.some(x=>x.k==='first1'))F.dn.first1=W.t;
-  if(F.rags&&W.ned){for(const k of ['beav1','beav2','bars1','beav3','vit3','bars2','owl2','beav4','bars3','tpt1','tpt2','part','first1','bars5','beav6'])if(F.dn[k]===undefined&&!F.q.some(x=>x.k===k))F.dn[k]=W.t;
+  if(F.rags&&W.ned){for(const k of ['beav1','beav2','bars1','beav3','vit3','bars2','owl2','beav4','bars3','tpt1','tpt2','part','first1','bars5','beav6','owlno','vitno','beavno','barsno','partyno'])if(F.dn[k]===undefined&&!F.q.some(x=>x.k===k))F.dn[k]=W.t;
     if(!F.part)F.part='owl';if(F.dn.tpt1!==undefined)F.bear.met=1;
     // неотвеченный выбор партнёра к моменту входа в недра — по умолчанию фонд Сони (как в окне главы 5)
     const pq=F.q.find(x=>x.k==='part');if(pq){F.q=F.q.filter(x=>x!==pq);F.dn.part=W.t;}}
   // просьбы: протухшая просьба уходит без штрафа («справился сам»)
-  for(const x of F.q.slice())if(x.k==='rq'&&W.t>=x.x){F.q=F.q.filter(y=>y!==x);feed(W,F,x.w,'self',{r:x.r,v:x.a&&x.a.v});}}
+  for(const x of F.q.slice())if(x.k==='rq'&&W.t>=x.x){F.q=F.q.filter(y=>y!==x);feed(W,F,x.w,'self',{r:x.r,v:x.a&&x.a.v});
+    // M18: оставили просьбу без ответа — чуть прохладнее (−3); предложение и пари — без штрафа
+    if(x.r!=='offer'&&x.r!=='pari'){const d=tr(F,x.w,-3,1);log(W,F,x.w,'ign',x.r,d);}}}
 // месяц «жизни» друзей: капитал, встреча выпускников, лента, просьбы
 function monthLite(W,F,m){const y=(m-F.m0)/12,mm=m-F.m0;
   for(const id of ALL){const x=F[id];x.k=clamp(x.k+(tgt(id,y)-x.k)*.25+SD[id]*nrm(F),.05,5);x.c=capOf(W,id);}
@@ -333,7 +437,27 @@ function monthLite(W,F,m){const y=(m-F.m0)/12,mm=m-F.m0;
     feed(W,F,w,'life',{v},lifeCg(w,v));}
   if((W.ned||F.bear.seen)&&rnd(F)<.2){feed(W,F,'bear','bearnews',{v:Math.floor(rnd(F)*3)});}
   // просьбы друзей: раз в 2–4 месяца
-  if(m>=F.rq&&!F.q.some(x=>x.k==='rq')&&(W.t>=40)){const q=rqMake(W,F);if(q)qPush(W,F,q);F.rq=m+2+Math.floor(rnd(F)*3);}}
+  if(m>=F.rq&&!F.q.some(x=>x.k==='rq')&&(W.t>=40)){const q=rqMake(W,F);if(q)qPush(W,F,q);F.rq=m+2+Math.floor(rnd(F)*3);}
+  relMonth(W,F,m);}
+// M18: месяц отношений — молчание, «обогнал Бориса», «точка рядом» при холоде, предложения и пари, письма «итоги пользы»
+function relMonth(W,F,m){
+  for(const w of FR){const x=F[w],idle=m-x.lc;
+    // 4+ месяца без общения — к нейтралу (+10): плюс тает на 1 в месяц, обида проходит на 1 раз в 2 месяца (быстрее — помириться: позвонить, зайти в гости, помочь)
+    if(idle>=4){if(x.rel>REL_HOME)tr(F,w,-1,2);else if(x.rel<REL_HOME&&m%2===0)tr(F,w,1,2);}
+    if(idle>=4&&x.rel>=30&&!x.ms){x.ms=1;feed(W,F,w,'miss');}
+    if(m%3===0&&(x.ga||0)>=500){feed(W,F,w,'sav',{a:rnd0(x.ga)});x.ga=0;}}
+  // обогнали Бориса по капиталу (с запасом 10 %, чтобы не мигало) — он ворчит (−3) и зовёт на реванш-пари
+  if(!W.ned){const you=eqOf(W),bv=capOf(W,'beav');if(F.ob===undefined)F.ob=you>bv?1:0;
+    else if(!F.ob&&you>bv*1.1&&you>2e4){F.ob=1;const d=tr(F,'beav',-3,1);log(W,F,'beav','ovt','',d);feed(W,F,'beav','ovt');F.pq=1;}
+    else if(F.ob&&you<bv*.9){F.ob=0;feed(W,F,'beav','ovt2');}}
+  // прохладно с Борисом: раз в год может поставить точку рядом с вашей — −8 % покупателей (в ссоре −12 %) на 3 месяца
+  const B=F.beav,Lb=lv(F,'beav');
+  if(!W.ned&&Lb<=1&&m-B.rm>=12&&rnd(F)<.35){const pts=(W.biz||[]).filter(b=>b.st==='w'&&E.BIZ&&E.BIZ[b.t]&&E.BIZ[b.t].st==='small'&&b.ev);
+    if(pts.length){const b=pts[Math.floor(rnd(F)*pts.length)];b.ev.bfr=[m+3,PK.rival[Lb]];B.rm=m;feed(W,F,'beav','rival',{bt:b.t,p:Math.round((1-PK.rival[Lb])*100)});log(W,F,'beav','rival',b.t,0);sx(F,{k:'minus',w:'beav',p:'rival'});}}
+  // друг сам предлагает помощь или дело — раз в 4–6 месяцев
+  if(m>=F.om&&W.t>=40&&!F.q.some(x=>x.r==='offer')){const q=offerMake(W,F);if(q){qPush(W,F,q);sx(F,{k:'offer',w:q.w,p:q.a.p});}F.om=m+4+Math.floor(rnd(F)*3);}
+  // пари с Борисом: не чаще раза в 4 месяца (после «обгона» — сразу); его просьбы пари не ждут (M20)
+  if(!W.ned&&W.st!=='quarry'&&Lb>=1&&!F.pari&&m-B.pm>=4&&m-F.m0>=3&&!F.q.some(x=>x.r==='pari')&&(F.pq||rnd(F)<.3)){const q=pariMake(W,F);if(q){qPush(W,F,q);F.pq=0;B.pm=m;}}}
 // «Поздравить» у бытовых новостей — только у настоящих поводов (забег, день рождения), не у «пробки»
 const LIFE_N=12;
 const LCG={owl:[2,8],beav:[0,9],vit:[2,7],bars:[6,10]};
@@ -345,8 +469,19 @@ function scanNews(W,F){for(const n of W.news){if(n.t<=F.nt)continue;const a=n.a|
     if(n.k==='lost'&&FR.indexOf(a.b)>=0)feed(W,F,a.b,'gg',{g:a.g});
     else if(n.k==='biz'&&a.k==='opilost'&&FR.indexOf(a.who)>=0)feed(W,F,a.who,'gg',{g:a.pg});
     else if(n.k==='biz'&&a.k==='bobr')feed(W,F,'beav','bobr');
+    else if(n.k==='bizev'&&a.c>0&&REPK[a.k])repHelp(W,F,a);
+    else if(n.k==='bizev'&&a.k==='demol'&&a.c>0)moveHelp(W,F,a);
+    else if(n.k==='biz'&&a.k==='open')capHelp(W,F,a);
     else if(n.k==='bizev'&&a.k==='bobrov'){F.bobk=1;if(F.dn.beav1!==undefined&&W.m-(F.k3m===undefined?-99:F.k3m)>=12){F.k3m=W.m;feed(W,F,'beav','kiosk3',{s:si(W)});}}}
   if(W.news.length)F.nt=Math.max(F.nt,W.news[W.news.length-1].t);}
+// M18: Пётр — ремонт поломок дешевле (−40/−60 %; «профилактика» — бесплатно) и простой короче; Витя — переезд точки (снос НТО) за полцены; Пётр — монтаж новой точки дешевле
+const REPK={brk:1,pump:1,oven:1,pcbrk:1,warr:1};
+function repHelp(W,F,a){const L=lv(F,'bars'),r=F.bars.fx>=W.m?1:PK.rep[L];if(!(r>0))return;const x=rnd0(a.c*r);if(x<=0)return;
+  recv(W,x,'oth');pl(W,'oth',x);gain(F,'bars',x);const b=(W.biz||[]).find(q=>q.id===a.id);if(b&&b.down>1)b.down=Math.max(1,b.down-1);
+  log(W,F,'bars','rep',a.bt||'',0,{a:x});if(W.t-(F.bars.rt||-99)>=20){F.bars.rt=W.t;feed(W,F,'bars','rep',{a:x,bt:a.bt,c:a.c});}}
+function moveHelp(W,F,a){const r=PK.move[lv(F,'vit')];if(!(r>0))return;const x=rnd0(a.c*r);recv(W,x,'oth');pl(W,'oth',x);gain(F,'vit',x);log(W,F,'vit','move',a.bt||'',0,{a:x});feed(W,F,'vit','move',{a:x,bt:a.bt});}
+function capHelp(W,F,a){const r=PK.cap[lv(F,'bars')];if(!(r>0)||!E.BIZ||!E.BIZ[a.bt]||E.BIZ[a.bt].st!=='small')return;const b=(W.biz||[]).slice().reverse().find(q=>q.t===a.bt&&q.st==='b'&&!q.tot&&!q.frd);if(!b)return;b.frd=1;
+  const x=rnd0(b.paid*r);if(x<=0)return;recv(W,x,'capex');b.paid-=x;b.cost-=x;if(lv(F,'bars')>=4&&b.left>1)b.left--;gain(F,'bars',x);log(W,F,'bars','cap',a.bt,0,{a:x});feed(W,F,'bars','cap',{a:x,bt:a.bt});}
 function loansDay(W,F){for(const id of FR){const x=F[id];if(!x.ln)continue;if(!W.loans.some(l=>l.id===x.ln)){x.ln=null;const d=tr(F,id,5);log(W,F,id,'repaid','',d);feed(W,F,id,'thanks');}}}
 
 /* ---------------- хуки ---------------- */
@@ -356,27 +491,48 @@ function storyDay(W,off,out){const F=fr(W);if(F.ld===W.t)return;F.ld=W.t;
   // месяцы «жизни» друзей (и пропущенные — после офлайна)
   if(F.lm<W.m){const from=Math.max(F.lm+1,W.m-12);for(let m=from;m<=W.m;m++)monthLite(W,F,m);F.lm=W.m;}
   loansDay(W,F);scanNews(W,F);
+  // M18: сменился уровень отношений — друг пишет (не чаще раза в 30 дней на друга)
+  if(F.lvq&&F.lvq.length){for(const e of F.lvq){const x=F[e.w];if(!x||W.t-(x.lvt||-99)<30)continue;x.lvt=W.t;feed(W,F,e.w,e.b>e.a?'lvup':'lvdn',{a:e.a,b:e.b});}F.lvq=[];}
   const n0=F.q.length;scenesDay(W,F);if(out&&F.q.length>n0)out.push({k:'story'});}
 // закрытие месяца: СП, возвраты займов друзьям, ретро-бонусы, поручительства. M — месяц, в который пишем; src — откуда брать закупки/логистику
 function book(W,F,M,srcM){jvMonth(W,F);
   // займы друзьям: срок пришёл — друг возвращает (друзья не подводят)
-  for(const x of F.ln.slice())if(W.m>=x.due){recvA(W,x.a,'lendb');F.ln=F.ln.filter(y=>y!==x);feed(W,F,x.w,'back2',{a:x.a});log(W,F,x.w,'lendback','',0,{a:x.a});}
+  // M18: вернут или задержат? Надёжность — от друга и отношений (Борис в год краха — хуже); задержка — один раз на 2 месяца, потом вернут с «процентом» 5 %. Не пропадает никогда
+  for(const x of F.ln.slice())if(W.m>=x.due){const L=lv(F,x.w),y=(W.m-F.m0)/12,crash=x.w==='beav'&&y>=4.5&&y<6;
+    const p=clamp(.72+.06*L-(crash?.35:0)+(x.w==='owl'||x.w==='bars'?.1:0),.3,.97);
+    if(!x.dl&&rnd(F)>p){x.dl=1;x.due=W.m+2;stc(F,x.w,'lt');feed(W,F,x.w,'late',{a:x.a});log(W,F,x.w,'lendlate','',0,{a:x.a});continue;}
+    const bon=x.dl?rnd0(x.a*.05):0;recvA(W,x.a,'lendb');if(bon){recv(W,bon,'oth');pl(W,'oth',bon);}F.ln=F.ln.filter(y=>y!==x);stc(F,x.w,'bk',x.a+bon);
+    const d=tr(F,x.w,x.dl?3:5);feed(W,F,x.w,'back2',{a:x.a,b:bon});log(W,F,x.w,'lendback','',d,{a:x.a+bon});}
+  pariClose(W,F,M);
   retro(W,srcM||M,F);
   // поручительство за Петра по ипотеке: при доверии ≥ 50 он платит всегда; ниже — изредка платёж ложится на вас
   if(F.gp>=W.m&&F.bars.tr<50&&rnd(F)<.05){const a=pay(W,45000,'oth');pl(W,'oth',-a);feed(W,F,'bars','gpay',{a});}
   // поручительство Сони: просрочка по такому кредиту (овердрафт) — доверие −50, один раз на кредит
-  if(W.odM>0)for(const l of W.loans)if(l.gu==='owl'&&!l.guP){l.guP=1;const d=tr(F,'owl',-50);log(W,F,'owl','gulate','',d);}}
-function storyClose(W,M,off){const F=fr(W);if(F.cm>=W.m)return;F.cm=W.m;book(W,F,M,null);}
+  if(W.odM>0)for(const l of W.loans)if(l.gu==='owl'&&!l.guP){l.guP=1;const d=tr(F,'owl',-20);log(W,F,'owl','gulate','',d);}}
+// пари с Борисом: закрывается месяц спора — выручка ≥ цели → Борис платит ставку, иначе платите вы (прочие доходы/расходы). Честная игра: ❤ Бориса +3 в любом случае
+function pariClose(W,F,M){const P=F.pari;if(!P||W.m<P.m)return;F.pari=null;if(W.m>P.m||!M||!M.pl){if(P.cr)crAdd(F,P.cr);return;}   // пропущенный месяц — ставку 💎 возвращаем
+  const rev=M.pl.rev||0,win=rev>=P.tg,a=P.a,cr=P.cr||0;
+  if(cr){if(win)crAdd(F,2*cr);}   // 💎: ставка уже списана — выигрыш возвращает её вдвое
+  else if(win){recv(W,a,'oth');pl(W,'oth',a);gain(F,P.w,a);}else{const x=pay(W,Math.min(a,Math.max(0,W.cash)),'oth');pl(W,'oth',-x);}
+  const d=tr(F,P.w,3);feed(W,F,P.w,win?'pwin':'plose',{a,cr,r:rnd0(rev),tg:P.tg});log(W,F,P.w,win?'pwin':'plose','',d,cr?{a:0,cr}:{a});sx(F,{k:'pari',w:P.w,r:win?'win':'lose'});}
+function storyClose(W,M,off){const F=fr(W);if(F.cm>=W.m)return;F.cm=W.m;book(W,F,M,null);ghSnap(F,W.m);}
 // после закрытия, которое прошло без хука (мир недр без точек): пишем в новый месяц, закупки берём из отчёта
 function storyAfter(W){const F=fr(W);const last=W.m-1;if(F.cm>=last)return;const n=Math.min(12,last-F.cm);
-  const r=W.reps[W.reps.length-1];for(let i=0;i<n;i++)book(W,F,W.mon,i===n-1&&r?r:{cf:{}});F.cm=last;}
+  const r=W.reps[W.reps.length-1];for(let i=0;i<n;i++)book(W,F,W.mon,i===n-1&&r?r:{cf:{}});F.cm=last;ghSnap(F,last);}
 // ретро-бонусы: общая закупка с Борисом (−5 % товара, 12 мес.), машины Вити (−25 % доставки в месяц звонка; после выкупа доли у Топтыгина — −15 % всегда)
-function retro(W,M,F){const cf=M&&M.cf||{};
-  if(F.buy>=W.m){const a=rnd0(Math.max(0,-(cf.supp||0))*.05);if(a>0){recv(W,a,'supp');pl(W,'cogs',-a);sgAdd(W,'retail',0,a);}}
-  const r=Math.max(F.vlg===W.m?.25:0,F.vit.disc||0);if(r>0){const a=rnd0(Math.max(0,-(cf.log||0))*r);if(a>0){recv(W,a,'log');pl(W,'log',-a);}}}
+function retro(W,M,F){const cf=M&&M.cf||{},supp=Math.max(0,-(cf.supp||0)),lg=Math.max(0,-(cf.log||0)),Lv=lv(F,'vit');
+  // закупки: общая закупка с Борисом (−4…5 %), Витя «везу товар» (−6 %, 2 мес.), Витя-друг (−1/−2 % всегда); вместе не больше 8 %
+  const ned=!!W.ned,rb=F.buy>=W.m&&!ned?(F.buyR||.05):0,rv=ned?0:Math.max(F.vship>=W.m?PK.ship:0,PK.sup[Lv]),rs=Math.min(.05,rb+rv);   // в «Недрах» — только прежние скидки (доля Топтыгина, машины на месяц)
+  if(rs>0&&supp>0){const a=Math.min(PK.cap1,rnd0(supp*rs));if(a>0){recv(W,a,'supp');pl(W,'cogs',-a);sgAdd(W,'retail',0,a);if(rb)gain(F,'beav',rnd0(a*rb/rs));if(rv)gain(F,'vit',rnd0(a*rv/rs));}}
+  // доставка: машины Вити (−25 % в месяц звонка), Витя-друг (−10/−15 %), после выкупа доли у Топтыгина — −15 % всегда; в ссоре — +10 %
+  const r=Math.max(F.vlg===W.m?.25:0,F.vit.disc||0,ned?0:PK.logd[Lv]);if(r>0&&lg>0){const a=rnd0(lg*r>PK.capL&&!F.vit.disc&&F.vlg!==W.m?PK.capL:lg*r);if(a>0){recv(W,a,'log');pl(W,'log',-a);gain(F,'vit',a);}}
+  else if(PK.logUp[Lv]>0&&lg>0&&!ned){const a=rnd0(lg*PK.logUp[Lv]);if(a>0&&W.cash>a){pay(W,a,'log');pl(W,'log',a);}}}
 function storyBal(W){let jv=0,lend=0;const F=W.fr;if(F&&F.v){for(const j of F.jv)jv+=j.inv;for(const x of F.ln)lend+=x.a;}return {jv,lend};}
-function storyGuar(W){const F=W.fr;return F&&F.v&&F.owl&&F.owl.gu>=W.m?{lim:1.3,dr:-.01}:null;}
-function storyGuarUse(W,l){const F=W.fr;if(F&&F.v&&F.owl.gu>=W.m){l.gu='owl';F.owl.gu=-1;log(W,F,'owl','guse','',0,{a:l.a});}}
+// поручительство Сони (−2/−3 п. п. и лимит ×1,3 на один кредит); в холоде — ставка +0,5 п. п. (в ссоре +1): «в банке про вас наслышаны»
+function storyGuar(W){const F=W.fr;if(!F||!F.v||!F.owl)return null;const L=lv(F,'owl');
+  if(F.owl.gu>=W.m)return {lim:PK.guarLim,dr:PK.guarDr[L]||-.01};if(PK.rateUp[L]>0&&!W.ned)return {lim:1,dr:PK.rateUp[L]};return null;}
+function storyGuarUse(W,l){const F=W.fr;if(F&&F.v&&F.owl.gu>=W.m){l.gu='owl';F.owl.gu=-1;const dr=-(PK.guarDr[lv(F,'owl')]||-.01);
+  gain(F,'owl',rnd0(l.a*dr*Math.min(3,(l.n||12)/12)));log(W,F,'owl','guse','',0,{a:l.a,r:dr});}}   // «сэкономила вам» — проценты за срок (до 3 лет), оценка
 
 /* ---------------- действия игрока ---------------- */
 // ответ на сцену/просьбу: qid — id из W.fr.q, o — 'a'|'b'|'c'. → {res:'ok', d (доверие), k, w, o, cr?} | {res:'no'|'cash'|…}
@@ -389,24 +545,50 @@ function friendAnswer(W,qid,o){const F=fr(W),q=F.q.find(x=>x.id===qid||x.k===qid
   const d=(s.o&&s.o[op.o]?s.o[op.o].fx(W,F,q):0)||0;
   F.q=F.q.filter(x=>x!==q);if(q.k!=='rq'&&q.k!=='reu')F.dn[q.k]=W.t;if(!q.big)F.ls=W.t;
   const r={res:'ok',d,k:q.k,w:q.w,o:op.o,r:q.r,a:q.a};
+  // M18: пришли на встречу выпускников — ❤ всем друзьям +5
+  if(q.k==='reu'){for(const id of FR)tr(F,id,5);r.all=5;}
+  if(q.k==='rq')sx(F,{k:'ans',w:q.w,r:q.r,o:op.o});
   // встреча выпускников: 💎 за место (один раз на встречу)
   if(q.k==='reu'||q.k==='pro'){const h=reuOf(F,q);if(h){r.place=reuPlace(h);r.y=h.y;if(!h.cr)r.cr=h.cr=REU_CR[r.place-1]||2;
     // переходящий кубок 11 «Б» — у того, кто дальше всех на встрече
     const lead=Object.keys(h.r).filter(id=>id!=='bear').sort((x,y)=>h.r[y]-h.r[x])[0];if(lead){r.cup0=F.cup||'beav';F.cup=lead;r.cup=lead;}}}
   log(W,F,q.w,q.k==='rq'?'rq_'+q.r:q.k,op.o,d,q.a);return r;}
 // «📞 Позвонить»: что можно попросить у друга сейчас. → [{k, ok:true|код, need (доверие), a (сумма)}]
-const CALL={beav:['loan'],vit:['loan','truck'],owl:['guar','check'],bars:['expert','build']};
-const NEED={loan:40,truck:50,guar:60,check:30,expert:40,build:60};
-function callOpts(W,w){const F=fr(W),x=F[w];if(!x||!CALL[w])return [];const q=Math.floor(W.m/3),out=[];
-  for(const k of CALL[w]){let ok=true;
-    if(x.tr<NEED[k])ok='trust';else if(x.cq===q&&k!=='check')ok='quarter';
+// M18: «🙏 Попросить помощь» — у каждого своё, открывается по уровню отношений (NEED — индекс уровня), у каждой просьбы свой откат (CD, мес.)
+const CALL={owl:['check','guar','bridge'],beav:['pari','loan','buy'],bars:['build','fix','expert'],vit:['gig','loan','truck']};
+const NEED={check:1,guar:3,bridge:3,pari:1,loan:2,buy:3,build:2,fix:2,expert:2,gig:1,truck:3};
+const CD={check:0,guar:6,bridge:6,pari:4,loan:3,buy:6,build:6,fix:6,expert:1,gig:1,truck:3};
+function cdOf(x,k,m){const c=x.cd&&typeof x.cd[k]==='number'?x.cd[k]:-99;return Math.max(0,c-m);}
+function callOpts(W,w){const F=fr(W),x=F[w];if(!x||!CALL[w])return [];if(!x.cd||typeof x.cd!=='object')x.cd={};const L=lv(F,w),out=[];
+  for(const k of CALL[w]){let ok=true;const cd=cdOf(x,k,W.m);
+    if(k==='gig'&&(W.ned||si(W)>1||!W.me))continue;                                  // заказы от друга — только в главе «Карьера» и в начале «Своего дела»
+    if(k==='expert'&&!W.ned&&W.st!=='quarry'&&!(W.opi||[]).some(p=>p.st==='auc'||p.st==='list'))continue;
+    if(k==='pari'&&(W.ned||W.st==='quarry'))continue;
+    if(L<NEED[k])ok='trust';else if(cd>0)ok='cd';
     else if(k==='loan'&&x.ln)ok='owe';
-    else if(k==='guar'&&(x.gu>=W.m||!(E.loanOffer&&E.loanOffer(W).max>0)))ok=x.gu>=W.m?'quarter':'bank';
+    else if(k==='bridge'&&x.ln)ok='owe';
+    else if(k==='bridge'&&bankPay(W)<=0)ok='nobank';
+    else if(k==='guar'&&x.gu>=W.m)ok='active';
+    else if(k==='guar'&&!(E.loanOffer&&E.loanOffer(W).max>0))ok='bank';
+    else if(k==='pari'&&(F.pari||F.q.some(q=>q.r==='pari')))ok='active';
+    else if(k==='pari'&&!(W.reps&&W.reps.length&&W.reps[W.reps.length-1].pl.rev>0))ok='norev';
+    else if(k==='buy'&&(W.ned||!supOn(W)))ok='nosup';
+    else if(k==='buy'&&F.buy>=W.m)ok='active';
     else if(k==='build'&&!buildList(W).length)ok='nobuild';
+    else if(k==='fix'&&!repairsOn(W))ok='nopts';
+    else if(k==='fix'&&x.fx>=W.m)ok='active';
     else if(k==='expert'&&!expertList(W).length)ok='noauc';
-    else if(k==='truck'&&F.vlg===W.m)ok='quarter';
-    out.push({k,ok,need:NEED[k],a:k==='loan'?frLoanMax(W,w):0});}
+    else if(k==='gig'&&!gigSrc(W,w))ok='nogig';
+    else if(k==='truck'&&F.vlg===W.m)ok='active';
+    const o={k,ok,need:NEED[k],cd,a:0,w};
+    if(k==='loan')o.a=frLoanMax(W,w);if(k==='bridge')o.a=bridgeA(W);if(k==='pari')o.a=nice(clamp(eqOf(W)*PK.pari,2e3,5e5));
+    if(k==='gig'){const g=gigSrc(W,w);o.a=g?rnd0(g.pay*PK.gig):0;}if(k==='build')o.a=PK.build[L];
+    out.push(o);}
   return out;}
+function bridgeA(W){return Math.min(frLoanMax(W,'owl'),Math.max(1e4,nice(bankPay(W)*PK.bridgeK)));}
+// совет по налогу (Соня): что дешевле по вашим месяцам — УСН 6 % или 15 %, и можно ли сменить сейчас
+function taxAdv(W){if(!W.ip||W.ned||!E.taxCmp)return null;const c=E.taxCmp(W);if(!c||c.n<2)return {n:c?c.n:0};const best=c.usn15<c.usn6?'usn15':'usn6';
+  return {n:c.n,cur:W.taxm,best,diff:rnd0(Math.abs(c.usn6-c.usn15)/c.n*12),can:!!(E.taxOk&&E.taxOk(W))};}
 function buildList(W){const a=[];for(const o of W.obj||[])if(o.st==='b'||o.up)a.push(o);for(const b of W.biz||[])if(b.st==='b')a.push(b);return a;}
 function expertList(W){const a=[];for(const x of W.auc||[]){const p=E.plotById(W,x.p);if(p&&p.dep)a.push({r:x.r,g:x.g,res:p.dep.res,vc:p.dep.vc,V:x.V,p:x.p});}
   for(const p of W.opi||[])if(p.st==='auc'||p.st==='list')a.push({r:W.home||'kuz',g:p.g,V:p.V,res:p.res,opi:1});return a;}
@@ -414,14 +596,30 @@ function expertList(W){const a=[];for(const x of W.auc||[]){const p=E.plotById(W
 function checkOf(W){const r=W.reps&&W.reps[W.reps.length-1];let out=0,e=0;if(r){const c=r.cf;for(const k of ['supp','fix','log','adm','int','tax'])out+=Math.max(0,-(c[k]||0));e=E.ebitdaOf(r.pl);}
   let debt=0;for(const l of W.loans)if(l.k!=='fr')debt+=l.a;return {cashM:out>0?W.cash/out:99,lev:e>0?debt/(e*12):debt>0?99:0,od:W.odM>0,debt};}
 function friendCall(W,w,k,arg){const F=fr(W),x=F[w];const op=callOpts(W,w).find(y=>y.k===k);if(!op)return {res:'no'};if(op.ok!==true)return {res:op.ok};
-  arg=arg||{};const q=Math.floor(W.m/3);let r={res:'ok',k,w};
+  arg=arg||{};const L=lv(F,w);let r={res:'ok',k,w};
   if(k==='loan'){const a=Math.max(1000,Math.min(op.a,nice(arg.a||op.a))),n=arg.n===12?12:6;frLoan(W,F,w,a,n);r.a=a;r.n=n;}
-  else if(k==='guar'){x.gu=W.m+3;}
-  else if(k==='check'){r.c=checkOf(W);}
-  else if(k==='expert'){r.list=expertList(W);}
-  else if(k==='build'){let n=0;for(const o of buildList(W)){const j=o.up||o;if(j.left>1){j.left=Math.max(1,Math.ceil(j.left*.9));n++;}}r.n=n;}
-  else if(k==='truck'){F.vlg=W.m;}
-  if(k!=='check')x.cq=q;log(W,F,w,'call_'+k,'',0,r.a?{a:r.a,n:r.n}:null);return r;}
+  else if(k==='bridge'){const a=op.a;frLoan(W,F,w,a,3);r.a=a;r.n=3;gain(F,w,rnd0(a*((E.bizLoanRate?E.bizLoanRate(W):.2)/4)));}   // «перекрою платёж»: 3 месяца без процентов (экономия — как проценты банка за квартал)
+  else if(k==='guar'){x.gu=W.m+3;r.dr=-PK.guarDr[L];stc(F,w,'h');}
+  else if(k==='check'){r.c=checkOf(W);r.tax=taxAdv(W);}
+  else if(k==='pari'){const q=pariMake(W,F);if(!q)return {res:'norev'};const cr=arg.cr?PARI_CR:0;if(cr&&crN()<cr)return {res:'crno'};
+    F.pari={w,a:cr?0:q.a.a,cr,m:W.m+1,base:q.a.base,tg:q.a.tg};if(cr)crAdd(F,-cr);x.pm=W.m;r.a=F.pari.a;r.cr=cr;r.tg=q.a.tg;r.base=q.a.base;sx(F,{k:'pari',w,r:'on',cr:cr?1:0});}
+  else if(k==='buy'){perkOn(W,F,w,'buy');r.m=Math.max(3,PK.buyM[L]);}
+  else if(k==='expert'){r.list=expertList(W);stc(F,w,'h');}
+  else if(k==='build'){let n=0;const f=PK.build[L]||.1;for(const o of buildList(W)){const j=o.up||o;if(j.left>1){const c=Math.max(1,Math.round(j.left*(o.t&&E.OBJ&&E.OBJ[o.t]?Math.min(.1,f):f)));j.left=Math.max(1,j.left-c);n++;}}r.n=n;r.f=f;stc(F,w,'h');}
+  else if(k==='fix'){perkOn(W,F,w,'prof');r.m=PK.fixM;}
+  else if(k==='gig'){r.a=perkOn(W,F,w,'gig');}
+  else if(k==='truck'){F.vlg=W.m;stc(F,w,'h');}
+  if(!x.cd||typeof x.cd!=='object')x.cd={};if(CD[k])x.cd[k]=W.m+CD[k];x.lc=W.m;x.ms=0;
+  if(k!=='check')sx(F,{k:'ask',w,p:k});log(W,F,w,'call_'+k,'',0,r.a?{a:r.a,n:r.n}:null);return r;}
+// M18: «📞 Позвонить» — просто поговорить: раз в месяц на друга ❤ +1
+function friendChat(W,w){const F=fr(W),x=F[w];if(!x||FR.indexOf(w)<0)return {res:'no'};if(x.km===W.m)return {res:'month',w};
+  x.km=W.m;const d=tr(F,w,x.rel>=50?.5:PK.call);log(W,F,w,'chat','',d);return {res:'ok',w,k:'chat',d,L:lv(F,w)};}
+// «🏠 Сходить в гости» — раз в месяц на друга: ❤ +4 (от +50 — +2), а если в ссоре или прохладно — «помирились» (+15). Силы ⚡ −20 в главах 1–2.
+// src='econ' — визит уже «оплачен» делом хозяина (руки, силы) в biz.js/«Дела хозяина»: здесь только отношения
+function friendVisit(W,w,src){const F=fr(W),x=F[w];if(!x||FR.indexOf(w)<0)return {res:'no'};if(x.vm===W.m)return {res:'month',w};
+  if(src!=='econ'&&W.me&&!W.ned){if((W.me.en||0)<PK.visitE)return {res:'en',w};W.me.en-=PK.visitE;}
+  const L=lv(F,w),peace=L<=1;x.vm=W.m;const d=tr(F,w,peace?PK.peace:x.rel>=50?PK.visit/2:PK.visit);stc(F,w,'g');log(W,F,w,peace?'peace':'visit','',d);sx(F,{k:'visit',w,p:peace?1:0});
+  if(peace)feed(W,F,w,'peace');return {res:'ok',w,k:'visit',d,peace:peace?1:0,L:lv(F,w)};}
 // «Поздравить» новость друга: +2 доверия, раз в квартал на друга
 function congrats(W,idx){const F=fr(W),f=F.fd[idx];if(!f||!f.c||f.g||!F[f.w]||f.w==='bear')return 'no';const q=Math.floor(W.m/3);if(F[f.w].cg===q)return 'quarter';
   f.g=1;F[f.w].cg=q;const d=tr(F,f.w,2);log(W,F,f.w,'congr',f.k,d);return 'ok';}
@@ -430,11 +628,11 @@ function storyTouch(W){fr(W);return 'ok';}   // пустое действие: �
 // IPO: новый холдинг — друзья те же (доверие, история, встречи), займы и СП остались в старой компании
 // info — запись IPO {hold, eq} (для кадра «Фото на память»: «начинали с 5 000 ₽ — сегодня …»)
 function storyCarry(W,F0,info){if(!F0||!F0.v)return fr(W);const F=init(W);F.m0=F0.m0;F.rags=F0.rags;
-  for(const id of FR){F[id].tr=F0[id].tr;F[id].k=F0[id].k;for(const k of ['hlp','disc','plan','opi','solo','wed','intern'])if(F0[id]&&F0[id][k]!==undefined)F[id][k]=F0[id][k];}F.bear.seen=1;F.bear.met=F0.bear&&F0.bear.met?1:0;
+  for(const id of FR){F[id].tr=F0[id].tr;F[id].k=F0[id].k;if(typeof F0[id].rel==='number')F[id].rel=F0[id].rel;if(F0[id].st)F[id].st=Object.assign({},F0[id].st);for(const k of ['hlp','disc','plan','opi','solo','wed','intern'])if(F0[id]&&F0[id][k]!==undefined)F[id][k]=F0[id][k];}F.bear.seen=1;F.bear.met=F0.bear&&F0.bear.met?1:0;
   F.dn=Object.assign({},F0.dn);F.fd=F0.fd.slice(-15);F.ch=F0.ch.slice(-20);F.rh=F0.rh.slice();F.n=F0.n+1;F.rs=F0.rs;F.mn=F0.mn;
   // герой, Людмила, арка Топтыгина и выборы игрока идут с ним в новый холдинг
   F.hero=Object.assign(HERO0(),F0.hero||{});F.lud=Object.assign(lud0(),F0.lud||{});F.tp=Object.assign({},F0.tp||{});F.part=F0.part||'';
-  F.mem=F0.mem||0;F.memM=F0.memM===undefined?-99:F0.memM;if(F0.b1m!==undefined)F.b1m=F0.b1m;F.cloth=F0.cloth;F.lt=(F0.lt||[]).slice();F.h0=W.m;F.cup=F0.cup;
+  F.mem=F0.mem||0;F.memM=F0.memM===undefined?-99:F0.memM;if(F0.b1m!==undefined)F.b1m=F0.b1m;F.cloth=F0.cloth;F.lt=(F0.lt||[]).slice();F.h0=W.m;F.cup=F0.cup;F.crp=(F0.crp||0)+(F0.pari&&F0.pari.cr?F0.pari.cr:0);   // 💎 к зачислению и ставка 💎 незакрытого пари — с игроком
   info=info||{};qPush(W,F,{id:'s'+(F.n++),k:'ipo',w:'all',t:W.t,a:{h:W.hold,h0:info.hold||W.hold-1,eq:info.eq||0,m:W.m,st:F0.rags?1:0},big:1});return F;}
 // герой: пол и имя (пролог, настройки)
 function storyHero(W,h){const F=fr(W),x=F.hero;h=h||{};
@@ -458,14 +656,27 @@ function thread(W,w){const F=fr(W),a=[];for(const x of F.ch)if(x.w===w||x.w==='a
   F.fd.forEach((x,i)=>{if(x.w===w)a.push({t:x.t,m:x.m,type:'feed',x,i});});for(const x of F.q)if(x.w===w||x.w==='all')a.push({t:x.t,type:'ask',x});
   return a.sort((p,q)=>p.t-q.t);}
 function friend(W,id){const F=fr(W),x=F[id]||{};let owe=0,lent=0;for(const l of W.loans)if(l.k==='fr'&&l.fr===id)owe+=l.a;for(const y of F.ln)if(y.w===id)lent+=y.a;
-  return {id,tr:x.tr||0,h:hearts(x.tr),cap:capOf(W,id),c0:x.c||0,owe,lent,jv:F.jv.filter(j=>j.w===id),q:F.q.filter(q=>q.w===id),bot:!!botOf(W,id),gu:x.gu>=W.m?x.gu:-1};}
+  const rel=typeof x.rel==='number'?x.rel:0,L=lvOf(rel);
+  // что сейчас действует от друга (для окна «Друзья»): активные скидки и сроки
+  const on={};if(id==='vit'){if(F.vship>=W.m)on.ship=F.vship;if(F.vlg===W.m)on.truck=W.m;if(F.vit.disc)on.disc=F.vit.disc;}
+  if(id==='beav'){if(F.buy>=W.m)on.buy=F.buy;if(F.pari)on.pari=F.pari;}if(id==='bars'&&x.fx>=W.m)on.fix=x.fx;if(id==='owl'&&x.gu>=W.m)on.guar=x.gu;
+  return {id,tr:x.tr||0,h:hearts(x.tr),rel,lv:L,next:L<4?LV_MIN[L+1]:null,st:Object.assign({g:0,h:0,n:0,sv:0,ln:0,bk:0,lt:0},x.st||{}),idle:W.m-(typeof x.lc==='number'?x.lc:W.m),
+    chat:x.km===W.m?0:1,visit:x.vm===W.m?0:1,on,cap:capOf(W,id),c0:x.c||0,owe,lent,jv:F.jv.filter(j=>j.w===id),q:F.q.filter(q=>q.w===id),bot:!!botOf(W,id),gu:x.gu>=W.m?x.gu:-1,
+    log:F.ch.filter(c=>c.w===id).slice(-8).reverse()};}
 // календарь телефона: ближайшие даты сюжета (встреча, возвраты займов, решения по СП)
+// M20: «💬 Друзья за месяц: сэкономили N ₽» — для окна закрытия месяца (m — месяц отчёта)
+function monthGain(W,m){const F=fr(W),g=F.gh;if(!g||g.m!==m||!(g.a>0))return null;let top='',tv=0;for(const k in g.w||{})if(g.w[k]>tv){tv=g.w[k];top=k;}return {a:g.a,top,tv:rnd0(tv)};}
 function dates(W){const F=fr(W),a=[],nx=(Math.floor(W.m/60)+1)*60;a.push({m:nx,k:'reu',y:10+nx/12});
   for(const x of F.ln)a.push({m:x.due,k:'lendback',w:x.w,a:x.a});
   for(const l of W.loans)if(l.k==='fr')a.push({m:W.m+Math.max(0,l.n-1),k:'owe',w:l.fr,a:l.a});
   for(const j of F.jv)a.push({m:j.dm<0?W.m:j.dm+12,k:'jvdiv',w:j.w,t:j.t,id:j.id});
-  if(F.owl.gu>=W.m)a.push({m:F.owl.gu,k:'guar',w:'owl'});
-  return a.sort((p,q)=>p.m-q.m);}
+  if(F.owl.gu>=W.m)a.push({m:F.owl.gu,d:29,k:'guar',w:'owl'});
+  // M20: итог пари, конец профилактики Петра, общей закупки с Борисом и «везу товар» Вити (d — день месяца: действует до конца месяца m)
+  if(F.pari&&F.pari.m>=W.m)a.push({m:F.pari.m,d:29,k:'pari',w:F.pari.w||'beav',a:F.pari.a,cr:F.pari.cr||0,tg:F.pari.tg});
+  if(F.bars.fx>=W.m)a.push({m:F.bars.fx,d:29,k:'prof',w:'bars'});
+  if(F.buy>=W.m&&!W.ned)a.push({m:F.buy,d:29,k:'buy',w:'beav'});
+  if(F.vship>=W.m&&!W.ned)a.push({m:F.vship,d:29,k:'ship',w:'vit'});
+  return a.sort((p,q)=>p.m-q.m||(p.d||0)-(q.d||0));}
 
 /* ---------------- подключение к ходу времени (если econ.js не зовёт хуки сам) ---------------- */
 function safe(f){return function(){try{return f.apply(null,arguments);}catch(e){try{console.error('story',e);}catch(x){}}};}
@@ -483,7 +694,8 @@ if(!NAT.guar&&E.loanOffer&&E.takeLoan){const lo=E.loanOffer,tk=E.takeLoan;
     if(g&&r==='ok'&&W.loans.length>n0){const l=W.loans[W.loans.length-1];l.r=Math.max(.01,l.r+g.dr);storyGuarUse(W,l);}return r;};}
 
 const STORY={FR,ALL,SC,ORDER,RQ,CALL,NEED,JV,REF,NAT,partA,init:fr,acctOk,capOf,hearts,standings,place,unread,thread,friend,dates,callOpts,optsOf,checkOf,expertList,buildList,jvPrice,frLoanMax,nice,ref,reuPlace,
-  carry:storyCarry,reuOf,day:(W)=>storyDay(W,false,null),si,prologueDue,mm,MEM_N,LIFE_N,hero:W=>fr(W).hero};
-Object.assign(E,{storyDay,storyClose,storyBal,storyMigrate,storyGuar,storyGuarUse,storyCarry,friendAnswer,friendCall,jvCreate,jvDiv,jvExit,congrats,storyRead,storyTouch,storyHero,storyPrologue,STORY});
+  carry:storyCarry,reuOf,day:(W)=>storyDay(W,false,null),si,prologueDue,mm,MEM_N,LIFE_N,hero:W=>fr(W).hero,
+  PK,CD,LV_MIN,PARI_CR,monthGain,crHave:null,REL_HOME,lvOf,lv:(W,id)=>lv(fr(W),id),taxAdv,bankPay,bridgeA,offerOk:(W,w,p)=>offerOk(W,fr(W),w,p)};
+Object.assign(E,{storyDay,storyClose,storyBal,storyMigrate,storyGuar,storyGuarUse,storyCarry,friendAnswer,friendCall,friendChat,friendVisit,jvCreate,jvDiv,jvExit,congrats,storyRead,storyTouch,storyHero,storyPrologue,STORY});
 root.STORY=STORY;
 })(typeof window!=='undefined'?window:this);

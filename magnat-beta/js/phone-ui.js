@@ -220,6 +220,10 @@ function service(){const w=W(),p=P();if(!w||!p)return;
   if(early()&&w.me&&Array.isArray(w.me.board)&&w.t-(p.mh==null?-99:p.mh)>=15){const g=w.me.board.find(x=>x.t==='handy'&&x.id!==p.mg&&x.exp-w.t>=2);
     if(g&&(!E.gigOk||E.gigOk(w,'handy'))){p.mg=g.id;p.mh=w.t;
       say('mih',`Есть вызов — мастер на час, ${mR(g.pay)} на руки. Возьмёшь, пока не увели?`,`There’s a call-out — handyman for an hour, ${mE(g.pay)} in hand. Take it before someone else does?`,[['gigs']],{g:g.id});}}
+  // M18: Людмила один раз объясняет, зачем друзья (главы 1–2): когда друг впервые помог или попросил, но не раньше 2-го месяца; одно письмо, без окон
+  if(SY()&&w.fr&&w.fr.v&&!w.fr.lx&&early()&&(w.m-(w.fr.m0||0)>=2)&&((w.fr.ch||[]).some(c=>FRS.indexOf(c.w)>=0)||w.m-(w.fr.m0||0)>=4)&&!tutOn()){w.fr.lx=w.t;
+    say('lud','Одно наблюдение по делу. Друзья — это не только поздравления: Соня поручится в банке и подскажет налог, Пётр починит и смонтирует дешевле, Витя довезёт и закупит дешевле, а Борис… с Борисом можно поспорить на деньги или на 💎 😄 Помогайте им — и они помогут. Отношения видно в «Друзьях»: шкала от «в ссоре» до «не разлей вода». Следите за ней, как за кассой.',
+      'One business note. Friends aren’t just for birthdays: Sonya will vouch for you at the bank and advise on tax, Pyotr will fix and fit things cheaper, Vitya will deliver and buy cheaper, and Boris… you can bet money or 💎 with Boris 😄 Help them and they’ll help you. Relations are in “Friends”: a scale from “on the outs” to “inseparable”. Watch it like you watch the till.',[['friends']],{mood:'happy'});}
   // сюжет: новые просьбы и сцены — пуш «нужен ответ»
   if(SY()&&w.fr&&Array.isArray(w.fr.q)){for(const q of w.fr.q){if(p.qs.indexOf(q.id)>=0)continue;p.qs.push(q.id);
       const id=q.w==='all'?'owl':q.w;let tx=q.ph||'';if(!tx){const r=su('msg',w,{t:q.t,type:'ask',x:q});tx=(r&&r.tx)||askTx(q);}
@@ -249,7 +253,7 @@ function cal(){const w=W();if(!w)return [];const now=w.m*30+w.d,a=[];
           :d.k==='owe'?T(`Вернуть долг: ${nm}, ${money(d.a)}`,`Repay ${nm}: ${money(d.a)}`)
           :d.k==='jvdiv'?T(`Совместное дело с ${nm}: решение по дивидендам`,`Joint venture with ${nm}: dividend decision`)
           :d.k==='guar'?T('Поручительство Сони заканчивается','Sonya’s guarantee ends'):T('Дата','Date');}
-      a.push({D:d.m*30,tx,w:wh,imp:d.k!=='jvdiv',key:'s'+d.k+(d.w||'')+d.m,go:d.w?['chat',d.w]:null});}}
+      a.push({D:d.m*30+(d.d||0),tx,w:wh,imp:d.k!=='jvdiv',key:'s'+d.k+(d.w||'')+d.m,go:d.w?['chat',d.w]:null});}}
   return a.filter(x=>x.D>=now).sort((p,q)=>p.D-q.D);}
 function remind(){const w=W(),p=P();if(!w||!p)return;const now=w.m*30+w.d;
   for(const x of cal()){if(!x.imp||!x.key||x.D-now!==1||p.rem[x.key])continue;p.rem[x.key]=w.t;
@@ -292,16 +296,18 @@ const ICO={
   news:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="15" height="15" rx="2"/><path d="M18 9h3v9a2 2 0 01-2 2M7 9h7M7 13h7M7 16h4"/></svg>',
   chats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
   call:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>',
+  friends:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3 20c.4-3.6 2.8-5.6 6-5.6s5.6 2 6 5.6M14.6 14.6c.6-.2 1.2-.3 1.9-.3 2.6 0 4.4 1.7 4.8 4.7"/></svg>',
   phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>'};
 function bankOn(){const w=W();if(!w)return false;if(bankLoans(w).length)return true;try{return E.loanOffer(w).max>0;}catch(e){return false;}}
 function newsUnread(){const w=W();if(!w||!w.fr||!SY())return 0;let n=0;for(const f of w.fr.fd)if(f.t>w.fr.rd)n++;return n;}
 function apps(){const w=W(),a=[['orders',T('Заказы','Jobs'),early()&&w.me?(w.me.board||[]).length:(w&&w.offers||[]).length,0]];
   if(bankOn())a.push(['bank',T('Банк','Bank'),w&&w.odM>0?1:0,w&&w.odM>0]);
+  if(SY()&&window.FRUI&&w&&w.fr)a.push(['friends',T('Друзья','Friends'),(w.fr.q||[]).filter(q=>FRS.indexOf(q.w)>=0).length,1]);   // M18: окно «Друзья» (js/friends-ui.js)
   a.push(['cal',T('Календарь','Calendar'),0,0],['news',T('Новости','News'),newsUnread(),1]);return a;}
 function appsHtml(){return '<div class="ph-apps">'+apps().map(x=>`<button class="ph-app noenter" data-p="app" data-a="${x[0]}"><span class="ph-ai">${ICO[x[0]]}${x[2]&&x[3]?`<i class="ph-b">${x[2]>9?'9+':x[2]}</i>`:''}</span><span class="ph-al">${x[1]}</span></button>`).join('')+'</div>';}
 function rowHtml(id,full){const c=who(id),l=lastOf(id),u=unread(id);
   const sub=full?esc(c.sub):l?esc(l.tx):esc(c.sub);
-  const hr=full&&isFr(id)&&id!=='bear'&&SY()?(()=>{try{const f=STORY.friend(W(),id);return `<span class="ph-hr" aria-label="${T('доверие','trust')} ${f.tr}">${'❤'.repeat(f.h)}</span>`;}catch(e){return '';}})():'';
+  const hr=full&&isFr(id)&&id!=='bear'&&SY()?(()=>{try{const f=STORY.friend(W(),id);return ` <span class="ph-hr" style="color:${LVC[f.lv]}">· ${esc(lvN(f.lv))}</span>`;}catch(e){return '';}})():'';
   return `<button class="ph-row noenter" data-p="go" data-v="${full?'contact':'chat'}" data-a="${id}">${face(id,'calm',48)}<span class="ph-rt"><b>${esc(c.n)}${hr}</b><span>${sub}</span></span><span class="ph-rr">${l&&!full?`<small>${esc(when(l.t))}</small>`:''}${u?`<i class="ph-b">${u>9?'9+':u}</i>`:''}</span></button>`;}
 function chatList(n){const ids=contacts().map(id=>({id,l:lastOf(id),u:unread(id)})).filter(x=>x.l||x.u);ids.sort((a,b)=>(b.u?1:0)-(a.u?1:0)||(b.l?b.l.t:-1)-(a.l?a.l.t:-1));
   const sh=n?ids.slice(0,n):ids;if(!sh.length)return `<div class="ph-empty">${T('Пока тихо. Сообщения появятся, когда что-то случится.','All quiet. Messages will appear when something happens.')}</div>`;
@@ -316,7 +322,7 @@ function tabs(on){return `<div class="ph-tabs"><button class="noenter${on==='cha
 function vChats(){return {t:T('Чаты','Chats'),h:tabs('chats')+chatList(0)};}
 function vContacts(){return {t:T('Контакты','Contacts'),h:tabs('contacts')+'<div class="ph-list">'+contacts().map(id=>rowHtml(id,true)).join('')+'</div>'};}
 function actBtn(a){const k=a[0];const L2={bank:['🏦 Открыть банк','🏦 Open the bank'],gigs:['Посмотреть заказы','See the jobs'],report:['📊 Отчёт','📊 Report'],obj:['Открыть объекты','Open assets'],
-    market:['Открыть рынок','Open the market'],con:['Контракты','Contracts'],biz:['Открыть бизнес','Open business'],map:['Открыть карту','Open the map'],cal:['Календарь','Calendar']}[k];
+    market:['Открыть рынок','Open the market'],con:['Контракты','Contracts'],biz:['Открыть бизнес','Open business'],map:['Открыть карту','Open the map'],cal:['Календарь','Calendar'],friends:['👥 Открыть «Друзья»','👥 Open “Friends”']}[k];
   if(!L2)return '';return `<button class="btn sm noenter" data-p="act" data-k="${k}" data-m="${a[1]!=null?esc(a[1]):''}">${T(L2[0],L2[1])}</button>`;}
 function bubble(x,id){const w=W();
   if(x.m){const m=x.m,old=m.g&&!gigLive(m.g);return `<div class="ph-m${m.me?' me':''}${old?' old':''}"><div>${esc(T(m.ru,m.en))}</div>${old?`<div class="ph-ok">${T('Уже неактуально — заказ ушёл','No longer relevant — the job is gone')}</div>`:m.a?'<div class="ph-ma">'+m.a.map(actBtn).join('')+'</div>':''}<small>${esc(when(m.t))}</small></div>`;}
@@ -342,14 +348,14 @@ function vChat(id){const c=who(id),th=thread(id);
   return {t:c.n,h:head+`<div class="ph-msgs">${body}</div>`,chat:1};}
 function vContact(id){const c=who(id),w=W();let info='';
   if(isFr(id)&&SY()&&id!=='bear'){try{const f=STORY.friend(w,id);
-    info=`<div class="ph-facts"><div><span>${T('Доверие','Trust')}</span><b>${'❤'.repeat(f.h)} ${f.tr}</b></div><div><span>${T('Капитал','Net worth')}</span><b>${money(f.cap)}</b></div>`
+    info=`<div class="ph-facts"><div><span>${T('Отношения','Relations')}</span><b style="color:${LVC[f.lv]}">${esc(lvN(f.lv))} · ${f.rel>0?'+':''}${f.rel}</b></div><div><span>${T('Капитал','Net worth')}</span><b>${money(f.cap)}</b></div>`
       +(f.owe?`<div><span>${T('Вы должны','You owe')}</span><b class="bad">${money(f.owe)}</b></div>`:'')+(f.lent?`<div><span>${T('Должен вам','Owes you')}</span><b>${money(f.lent)}</b></div>`:'')
       +(f.jv&&f.jv.length?`<div><span>${T('Совместные дела','Joint ventures')}</span><b>${f.jv.length}</b></div>`:'')+'</div>';}catch(e){info='';}}
   else if(id==='bear'&&SY()){try{info=`<div class="ph-facts"><div><span>${T('Капитал','Net worth')}</span><b>${money(STORY.capOf(w,'bear'))}</b></div></div>`;}catch(e){}}
   else if(id==='elv'&&w){let d=0;for(const l of bankLoans(w))d+=l.a;info=`<div class="ph-facts"><div><span>${T('Ваш долг банку','Your bank debt')}</span><b>${money(d)}</b></div></div>`;}
   const callL=id==='lud'?T('Спросить совета','Ask for advice'):id==='elv'?T('Позвонить в банк','Call the bank'):id==='mih'?T('Позвонить','Call'):T('Позвонить','Call');
   return {t:c.n,h:`<div class="ph-card">${face(id,'happy',96)}<h3>${esc(c.n)}</h3><p class="ph-sub">${esc(c.sub)}</p>${info}
-    <div class="ph-btns">${FRS.indexOf(id)>=0&&typeof SU().openFriend==='function'?`<button class="btn noenter" data-p="fr" data-a="${id}">👥 <span>${T('Совместные дела','Joint ventures')}</span></button>`:''}<button class="btn noenter" data-p="go" data-v="chat" data-a="${id}">${ICO.chats}<span>${T('Переписка','Messages')}</span></button>${id!=='bear'?`<button class="btn blue noenter" data-p="call" data-a="${id}">${ICO.call}<span>${callL}</span></button>`:''}</div></div>`};}
+    <div class="ph-btns">${FRS.indexOf(id)>=0&&(window.FRUI||typeof SU().openFriend==='function')?`<button class="btn accent noenter" data-p="fr" data-a="${id}">❤ <span>${T('Отношения и помощь','Relations and help')}</span></button>`:''}<button class="btn noenter" data-p="go" data-v="chat" data-a="${id}">${ICO.chats}<span>${T('Переписка','Messages')}</span></button>${id!=='bear'?`<button class="btn blue noenter" data-p="call" data-a="${id}">${ICO.call}<span>${callL}</span></button>`:''}</div></div>`};}
 let callRes=null;
 function vCall(id){const c=who(id),w=W();let h=`<div class="ph-call">${face(id,callRes&&callRes.mood||'happy',120)}<h3>${esc(c.n)}</h3>`;
   const hi=su('hello',w,id);h+=`<div class="ph-m"><div>${esc((hi&&hi.tx)||T('Привет, председатель! Чем помочь?','Hi, chairman! How can I help?'))}</div></div>`;
@@ -357,7 +363,7 @@ function vCall(id){const c=who(id),w=W();let h=`<div class="ph-call">${face(id,c
   let ops=[];if(SY()&&FRS.indexOf(id)>=0){try{ops=STORY.callOpts(w,id);}catch(e){ops=[];}}
   if(!ops.length)h+=`<div class="ph-empty">${T('Сейчас просить не о чем — просто поболтали.','Nothing to ask for now — just a friendly chat.')}</div>`;
   h+='<div class="ph-ma col">'+ops.map(op=>{const ok=op.ok===true,lb=callLbl(op.k,op);
-    const rs=ok?'':`<small class="ph-why">${esc(op.ok==='trust'?T(`нужно доверие ${op.need}`,`needs trust ${op.need}`):why(op.ok))}</small>`;
+    const rs=ok?'':`<small class="ph-why">${esc(op.ok==='trust'?T(`откроется на уровне «${lvN(op.need)}»`,`opens at “${lvN(op.need)}”`):op.ok==='cd'?T(`можно снова через ${pln(op.cd,'месяц','месяца','месяцев','month','months')}`,`again in ${pln(op.cd,'месяц','месяца','месяцев','month','months')}`):why(op.ok))}</small>`;
     if(op.k==='loan'&&ok&&typeof SU().call!=='function')return `<div class="ph-hint">${esc(lb)}</div><div class="ph-two"><button class="btn sm blue noenter" data-p="ck" data-a="${id}" data-k="loan" data-n="6">${T('на 6 мес.','for 6 months')}</button><button class="btn sm noenter" data-p="ck" data-a="${id}" data-k="loan" data-n="12">${T('на 12 мес.','for 12 months')}</button></div>`;
     return `<button class="btn sm noenter" data-p="ck" data-a="${id}" data-k="${op.k}"${ok?'':' disabled'}>${esc(lb)}${rs}</button>`;}).join('')+'</div>';
   h+=`<button class="btn w noenter ph-hang" data-p="back">${T('Положить трубку','Hang up')}</button></div>`;
@@ -429,7 +435,12 @@ function doAct(k,m){const leave=()=>{if(!wide()&&isOn)close();};
   else if(k==='biz'){if(openBiz(m))leave();}
   else if(k==='chat'){go('chat',m);}
   else if(k==='cal'){go('app','cal');}
-  else if(k==='adv'){leave();try{UI.advOpen();}catch(e){}}}
+  else if(k==='adv'){leave();try{UI.advOpen();}catch(e){}}
+  else if(k==='friends')frOpen();}
+function frOpen(){try{if(window.FRUI)FRUI.open('phone');else su('openFriends');}catch(e){console.error(e);}}
+// M18: уровни отношений — как в окне «Друзья»
+const LVC=['#c62828','#c8641e','#5a6675','#2e7d32','#b8860b'];
+function lvN(i){try{if(window.FRUI)return FRUI.lvName(i);}catch(e){}return ['в ссоре','прохладно','приятели','друзья','не разлей вода'][i|0]||'';}
 
 /* ---------------- действия в телефоне ---------------- */
 const TAKE={hand:['Все руки заняты','All hands are busy'],en:['Не хватает сил — отдохните','Not enough energy — take a rest'],rest:['Сегодня выходной','It’s your day off'],out:['Вы пока на больничном','You’re on sick leave'],
@@ -460,6 +471,7 @@ function doCall(id){callRes=null;
   if(id==='lud'){if(!wide()&&isOn)close();try{UI.advOpen();}catch(e){}return;}
   if(id==='elv'){doAct('bank');return;}
   if(id==='mih'){doAct(early()?'gigs':'obj');return;}
+  if(FRS.indexOf(id)>=0&&SY()){try{const r=GAME.act('friendChat',id);if(r&&r.res==='ok'&&r.d)tst('❤ +'+r.d);}catch(e){}}   // M18: звонок другу — это общение
   go('call',id);}
 
 /* ---------------- отрисовка ---------------- */
@@ -488,11 +500,12 @@ function renderEmbed(el){if(el)embedEl=el;el=embedEl;if(!el||!el.isConnected||(e
   el.innerHTML=`<div class="ph-emb"><h2 class="ph-h2">${T('Телефон','Phone')}</h2>${vHome().h}</div>`;}
 function onClick(e){const b=e.target.closest('[data-p]');if(!b||b.disabled)return;const p=b.dataset.p,a=b.dataset.a;
   const inPh=!!b.closest('#phone');
+  if(p==='app'&&a==='friends'){snd('tap');frOpen();return;}
   if(!inPh&&p!=='cg'&&p!=='take'){snd('tap');if(p==='go')open(b.dataset.v,a);else if(p==='app')open('app',a);else if(p==='act')doAct(b.dataset.k,b.dataset.m);else if(p==='call')open('call',a);return;}
   if(p==='go'){snd('tap');go(b.dataset.v,a);}else if(p==='app'){snd('tap');go('app',a);}else if(p==='back'){snd('tap');back();}
   else if(p==='act')doAct(b.dataset.k,b.dataset.m);else if(p==='call')doCall(a);else if(p==='ck')callKind(a,b.dataset.k,b.dataset.n);
   else if(p==='ans')answer(b.dataset.q,b.dataset.o);else if(p==='big'){snd('tap');su('big',b.dataset.q);setTimeout(rerender,300);}
-  else if(p==='fr'){snd('tap');su('openFriend',a);}
+  else if(p==='fr'){snd('tap');if(window.FRUI)FRUI.card(a);else su('openFriend',a);}
   else if(p==='cg')congr(b.dataset.i);else if(p==='take')take(b.dataset.g);}
 
 /* ---------------- бейдж в шапке ---------------- */

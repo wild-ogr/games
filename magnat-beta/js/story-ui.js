@@ -48,7 +48,7 @@ function path(w){const F=w&&w.fr;if(!F||!F.v)return 999;return F.rags?w.m-F.m0:9
 function who(id){const w=W(),mm=path(w),ned=!!(w&&w.ned);let s=['',''];
   if(id==='owl')s=ned||mm>=125?['фонд «Сова Инвест»','Owl Invest fund']:mm>=75?['аналитик, копит на свой фонд','analyst, saving up for her own fund']:mm>=40?['банк «Сибирский кредит», начальник отдела','Siberian Credit bank, head of department']:['банк «Сибирский кредит», кредитный инспектор','Siberian Credit bank, loan officer'];
   else if(id==='beav')s=ned||mm>=66?['«Бобров и Ко»','Beaver & Co']:mm>=54&&w.fr.dn&&w.fr.dn.beav3!==undefined?['начинает заново','starting over']:mm>=20?['ларьки и стройбаза','kiosks and a builders’ yard']:['ларёк у остановки','a bus-stop kiosk'];
-  else if(id==='bars')s=ned||mm>=90?['«Барсуков и сыновья»','Barsukov & Sons']:['горный инженер, карьер «Сосновый лог»','mining engineer, Pine Hollow quarry'];
+  else if(id==='bars')s=!ned&&w.fr&&w.fr.bars&&w.fr.bars.tpt&&!w.fr.bars.stay&&SY.lv(w,'bars')<=1?['главный инженер «Медвежьего» разреза (у Топтыгина)','chief engineer at Toptygin’s Bear open pit']:ned||mm>=90?['«Барсуков и сыновья»','Barsukov & Sons']:['горный инженер, карьер «Сосновый лог»','mining engineer, Pine Hollow quarry'];
   else if(id==='vit')s=mm>=110||ned?['«ВитТранс»: самосвалы и вагоны','VitTrans: trucks and rail cars']:mm>=45?['«ВитТранс», самосвалы','VitTrans, dump trucks']:mm>=2?['Газель, грузоперевозки','a van, deliveries']:['такси','taxi driver'];
   else if(id==='bear')s=['«Медведь Капитал», Москва','Bear Capital, Moscow'];
   else if(id==='lud')s=w&&w.fr&&w.fr.lud&&w.fr.lud.ret?['на пенсии, на связи по пятницам','retired, on the phone on Fridays']:['главбух, мама Сони','chief accountant, Sonya’s mum'];
@@ -147,6 +147,22 @@ const SC={
   part:{m:'wow',big:1,t:()=>T('Роснедра нас ждут, но на федеральные торги нужен партнёр с деньгами. Предложений два: фонд Сони «Сова Инвест» и «Медведь Капитал» Топтыгина. Условия похожие. Кого берём?','The subsoil agency is waiting, but national auctions need a partner with money. There are two offers: Sonya’s Owl Invest fund and Toptygin’s Bear Capital. The terms are similar. Who do we take?'),
     o:{a:()=>[T('Фонд «Сова Инвест» (Соня)','Owl Invest fund (Sonya)'),T('❤ Сони +10','❤ Sonya +10')],b:()=>[T('«Медведь Капитал» (Топтыгин)','Bear Capital (Toptygin)'),T('на IPO Топтыгин будет в зале — со своей стороны','Toptygin will be in the hall at the IPO — on his own side')]},
     r:{a:()=>T('Соня уже звонила: «Мама сказала — только в тебя». Ну, в добрый путь!','Sonya has already called: “Mum said — only you.” Well, off we go!'),b:()=>T('Деньги у него честные, хоть и холодные. Ладно — посмотрим, кто кого.','His money is honest, if cold. All right — we’ll see who wins.')}},
+  // M20: «плохие» развилки — друг обижен (уровень «прохладно» или «в ссоре»)
+  owlno:{m:'worry',t:()=>T(`Мне звонили из кредитного отдела — спрашивали про тебя. Раньше я бы сразу сказала: «Ручаюсь». А сейчас… Прости, поручиться не могу. Между нами что-то не так, а в банке такое чувствуют.`,'The credit department called me — asking about you. Before, I’d have said right away, “I vouch for them.” But now… Sorry, I can’t vouch. Something’s off between us, and banks pick up on that.'),
+    o:{a:()=>[T('Соня, давай поговорим. Прости, если обидел'+G('','а'),'Sonya, let’s talk. Sorry if I hurt you'),'❤ +8'],b:()=>[T(G('Понимаю. Справлюсь сам','Понимаю. Справлюсь сама'),'I understand. I’ll manage'),T('поручительство — снова с уровня «друзья»','the guarantee comes back at “friends”')]},
+    r:{a:()=>T('Спасибо, что сказал'+G('','а')+'. Давай в воскресенье к маме — там и поговорим.','Thanks for saying it. Come to Mum’s on Sunday — we’ll talk there.'),b:()=>T('Хорошо. Если что — я всё ещё здесь.','Okay. I’m still here, if anything.')}},
+  beavno:{m:'strict',t:()=>T('Слышал, ты метишь на торги за карьер. Я тоже пойду. И скажу честно: уступать не буду. Раньше, может, и уступил бы — по старой дружбе. Да где она теперь, эта дружба?','I hear you’re after the quarry auction. I’m going too. And honestly: I won’t back down. Before, maybe I would have — for old times’ sake. But where’s that friendship now?'),
+    o:{a:()=>[T('Боря, хватит дуться. Давай мириться','Borya, stop sulking. Let’s make up'),'❤ +8'],b:()=>[T('Посмотрим, кто кого','We’ll see who wins'),T('торги — на общих правилах','the auction is on equal terms')]},
+    r:{a:()=>T('Ладно… С тебя шашлык. А на торгах всё равно не поддамся 😄','Fine… You owe me a barbecue. I still won’t go easy at the auction 😄'),b:()=>T('Посмотрим.','We’ll see.')}},
+  barsno:{m:'worry',t:()=>T(`Топтыгин зовёт главным инженером на «Медвежий» разрез. Платит втрое. Раньше я бы сначала спросил тебя — мы же вместе всё начинали. А теперь… ты и не звонишь. Думаю, соглашусь.`,'Toptygin wants me as chief engineer at the Bear open pit. Triple the pay. Before, I’d have asked you first — we started all this together. But now… you don’t even call. I think I’ll say yes.'),
+    o:{a:()=>[T('Петя, не уходи. Я был'+G('','а')+' неправ'+G('','а')+' — давай всё обсудим','Petya, don’t go. I was wrong — let’s talk it through'),'❤ +8'],b:()=>[T('Удачи на новом месте','Good luck in the new job'),T('Пётр будет работать на «Медведь Капитал»','Pyotr will work for Bear Capital')]},
+    r:{a:()=>T('…Ладно. Остаюсь. Но звони хоть иногда, а?','…Okay. I’m staying. But call now and then, eh?'),b:()=>T('Спасибо. Не поминай лихом.','Thanks. No hard feelings.')}},
+  vitno:{m:'calm',t:()=>T('Слушай, машины на этой неделе заняты — у меня теперь постоянные клиенты, им в первую очередь. Ищи другого перевозчика. Дороже выйдет, сам'+G('','а')+' понимаешь.','Listen, the trucks are busy this week — I’ve got regular clients now, they come first. Find another carrier. It’ll cost more, you know how it is.'),
+    o:{a:()=>[T('Вить, прости, что пропадал'+G('','а')+'. Мириться — пицца с меня','Vitya, sorry I went quiet. Let’s make up — pizza’s on me'),'❤ +8'],b:()=>[T('Ладно, найду других','Fine, I’ll find others'),T('скидки Вити — снова с уровня «друзья»','Vitya’s discounts come back at “friends”')]},
+    r:{a:()=>T('Пицца — это аргумент! Ладно, для тебя машину найду.','Pizza is a strong argument! Fine, I’ll find a truck for you.'),b:()=>T('Без обид. Бизнес.','No offence. Business.')}},
+  partyno:{m:'worry',t:()=>T('Мы в субботу собирались у Петра — шашлыки, гитара, как в 11 «Б». Тебя не позвали. Решили, тебе теперь не до нас… Мне было грустно, правда.','We got together at Pyotr’s on Saturday — barbecue, guitar, like back in class 11B. You weren’t invited. We figured you don’t have time for us now… I was sad, honestly.'),
+    o:{a:()=>[T('Обидно. Позовите в следующий раз — приду','That hurts. Invite me next time — I’ll come'),T('❤ обиженных друзей +5','❤ of upset friends +5')],b:()=>[T('Работы много, правда','I really am swamped'),'']},
+    r:{a:()=>T('Позовём! Я скажу ребятам. Они обрадуются.','We will! I’ll tell the others. They’ll be glad.'),b:()=>T('Понимаю. Береги себя.','I understand. Take care of yourself.')}},
   vit5:{m:'calm',t:()=>T('Слушай… я тебе столько возил со скидкой и ни разу толком спасибо не сказал. Так вот: спасибо. Если бы не ты, «ВитТранс» был бы «МедведьТранс». Водители до сих пор зовут тебя «наш председатель».','Listen… I’ve hauled for you at a discount all this time and never properly said thanks. So: thank you. If not for you, VitTrans would be BearTrans. My drivers still call you “our president”.'),
     o:{a:()=>[T('Вот для этого и друзья','That’s what friends are for'),'❤ +5']},r:{a:()=>T('Обнимаю! Марина передаёт привет.','Big hug! Marina says hi.')}},
   tpt4:{m:'strict',big:1,t:()=>T('Топтыгин, без предисловий. Вижу, вы идёте на биржу. Стану якорным инвестором — размещение пройдёт дороже. Взамен — место в совете директоров. Решайте.','Toptygin, no preamble. I see you’re going public. I’ll be your anchor investor — the listing will go better. In return — a seat on the board. Your call.'),
@@ -236,20 +252,43 @@ const RQT={
       ['Старший просит компьютер. Покупать или пусть сам заработает?','My eldest wants a computer. Buy it or let him earn it?',['Купи, пусть учится','Buy it, let him learn'],['Пусть заработает','Let him earn it']],
       ['Предлагают должность главного инженера, но в другой город. Что скажешь?','I’ve been offered chief engineer, but in another city. What do you say?',['Соглашайся','Take it'],['Здесь твои люди','Your people are here']]]}};
 const rqAdv=q=>{const L2=RQT.advice[q.w]||RQT.advice.owl;return L2[((q.a&&q.a.v)||0)%L2.length];};
+// M18: надёжность возврата займа (подсказка у кнопки) и тексты предложений / пари
+function relW(w){const L=SY.lv?SY.lv(W(),w):2;if(w==='owl'||w==='bars')return T('возвращает в срок','pays back on time');return L>=3?T('обычно в срок','usually on time'):T('бывает, задерживает на 2 мес.','sometimes 2 months late');}
+const OFR={ship:[['Мои ребята на неделе везут товар с оптовой базы — давай и тебе закуплю по их цене? Два месяца закупка на {p} дешевле.','My guys are hauling goods from the wholesale depot this week — shall I buy yours at their price? Two months of supplies {p} cheaper.'],['Давай!','Let’s do it!'],'закупка −{p} на 2 мес.; ❤ +3','supplies −{p} for 2 months; ❤ +3'],
+  gig:[['Есть клиент — платит в полтора раза больше обычного. Отдаю тебе, мне некогда.','I’ve got a client who pays one and a half times the usual. It’s yours, I’m too busy.'],['Беру заказ','I’ll take it'],'оплата ×1,5 — заказ уже на доске; ❤ +3','pay ×1.5 — the job is on your board; ❤ +3'],
+  gigb:[['Сосед просит помочь с переездом, платит щедро — в полтора раза выше обычного. Пойдёшь вместо меня?','A neighbour needs help moving and pays well — one and a half times the usual. Will you go instead of me?'],['Пойду','I’ll go'],'оплата ×1,5 — заказ уже на доске; ❤ +3','pay ×1.5 — the job is on your board; ❤ +3'],
+  prof:[['Давай в выходные пройдусь по твоим точкам — профилактика. Три месяца ремонт за мой счёт.','Let me go round your places this weekend — preventive checks. Three months of repairs on me.'],['Спасибо, Петя!','Thanks, Petya!'],'3 мес. ремонт поломок бесплатно; ❤ +3','3 months of free repairs; ❤ +3'],
+  rate:[['У нас в банке программа для своих. Поручусь — кредит на {r} п. п. дешевле. Действует 3 месяца.','My bank has a scheme for friends. I’ll vouch for you — a loan {r} p.p. cheaper. Valid for 3 months.'],['Спасибо, Соня!','Thanks, Sonya!'],'кредит в банке на {r} п. п. дешевле, лимит +15 %; ❤ +3','bank loan {r} p.p. cheaper, limit +15%; ❤ +3'],
+  buy:[['Беру товар оптом — давай вскладчину? Выйдет на {b} дешевле, пару месяцев.','I’m buying stock wholesale — shall we split it? {b} cheaper for a couple of months.'],['Давай вскладчину','Let’s split it'],'закупка −{b}; ❤ +3','supplies −{b}; ❤ +3'],
+  // M20: «Газель на двоих» (Витя) и доля в фонде Сони — ещё в первом холдинге
+  jvvit:[['Присмотрел вторую Газель — почти новая. Одному тянуть тяжело. Давай на двоих? Вклад {a}, доля пополам. Вожу я, твои руки свободны, прибыль — пополам.','I’ve spotted a second van — almost new. Too much for me alone. Shall we go halves? You put in {a}, half the share. I drive, your hands stay free, profit split down the middle.'],['Берём Газель!','Let’s get the van!'],'вклад {a}, ~2 % в месяц к вкладу, без рук; ❤ +3','invest {a}, ~2% a month on it, no hands needed; ❤ +3'],
+  jvowl:[['Фонд «Сова Инвест» набирает первых пайщиков. Своим — без комиссии. Вложишь {a}? Доход скромный, зато ровный — я считаю каждый рубль.','The Owl Invest fund is taking its first investors. No fee for friends. Will you put in {a}? Modest returns, but steady — I count every rouble.'],['Вхожу в фонд','I’m in'],'вклад {a}, ~1,3 % в месяц, ровно, без рук; ❤ +3','invest {a}, ~1.3% a month, steady, no hands needed; ❤ +3'],
+  jv:[['Есть место под точку, одному тянуть не хочу. Откроем на двоих? Вклад {a}, доля пополам. Я присмотрю — твои руки свободны.','I’ve found a spot for a new place but don’t want to go it alone. Shall we open it together? You put in {a}, half the share. I’ll run it — your hands stay free.'],['Открываем!','Let’s open it!'],'вклад {a}, ~3 % в месяц к вкладу, без рук; ❤ +3','invest {a}, ~3% a month on it, no hands needed; ❤ +3']};
+const pctS=x=>(Math.round(x*1000)/10).toLocaleString(en()?'en':'ru')+(en()?'%':' %');
+function offerAsk(q){const a=q.a||{},p=a.p==='gig'&&q.w==='bars'?'gigb':a.p==='jv'&&(q.w==='vit'||q.w==='owl')?'jv'+q.w:a.p,x=OFR[p]||OFR.ship,P=SY.PK||{},L=SY.lv?SY.lv(W(),q.w):3;
+  const f=t=>t.replace('{p}',pctS(P.ship||.04)).replace('{b}',pctS(P.buyD||.03)).replace('{r}',String(Math.round(-((P.guarDr||[])[Math.max(3,L)]||-.02)*100))).replace('{a}',money(a.a||0));
+  return {m:'happy',tx:f(T(x[0][0],x[0][1])),o:{a:[T(x[1][0],x[1][1]),f(T(x[2],x[3]))],b:[T('Спасибо, не сейчас','Thanks, not now'),'']}};}
+// M20: ставка на выбор — деньги или 💎 (STORY.PARI_CR)
+function pariAsk(q){const a=q.a||{},c=SY.PARI_CR||5;return {m:'happy',tx:T(`Спорим на ${money(a.a)} или на ${c} 💎? Говорю: в следующем месяце твоя выручка не дотянет до ${money(a.tg)} (это +10 % к прошлому). Проиграю — плачу честно.`,`Bet you ${money(a.a)} or ${c} 💎? I say next month your revenue won’t reach ${money(a.tg)} (that’s +10% on last month). If I lose, I pay up.`),
+  o:{a:[T(`Спорим на ${money(a.a)}`,`Bet ${money(a.a)}`),T(`выручка ≥ ${money(a.tg)} — Борис платит ${money(a.a)}, иначе платите вы; ❤ +2`,`revenue ≥ ${money(a.tg)} — Boris pays ${money(a.a)}, otherwise you pay; ❤ +2`)],
+    c:[T(`Спорим на ${c} 💎`,`Bet ${c} 💎`),T(`${c} 💎 — сразу; выручка ≥ ${money(a.tg)} — вернутся ${2*c} 💎, иначе пропадут; ❤ +2`,`${c} 💎 now; revenue ≥ ${money(a.tg)} — you get ${2*c} 💎 back, otherwise they’re gone; ❤ +2`)],b:[T('Не буду спорить','I won’t bet'),'❤ −1']}};}
 function ask(w,q){const a=q.a||{};
   if(q.k==='rq'){const v=(a.v||0)%3;
     if(q.r==='visit'){const L2=RQT.visit[q.w]||RQT.visit.beav,x=L2[v%L2.length];return {m:'happy',tx:T(x[0],x[1]),o:{a:[T(x[2][0],x[2][1]),'❤ +5'],b:[T(x[3][0],x[3][1]),'']}};}
     if(q.r==='loan'){const L2=a.a>2e7?RQT.hugeloan[q.w]||RQT.hugeloan.beav:a.a>1e6?RQT.bigloan[q.w]||RQT.bigloan.beav:RQT.loan[q.w]||RQT.loan.beav,x=L2[v%L2.length];
       return {m:'worry',tx:T(`${x[0]} ${money(a.a)} на ${mon(a.n)}? Верну обязательно.`,`${x[1]} ${money(a.a)} for ${mon(a.n)}? I’ll pay you back for sure.`),
-        o:{a:[T(`Займу ${money(a.a)}`,`Lend ${money(a.a)}`),T(`вернёт через ${mon(a.n)}; ❤ +10`,`repaid in ${mon(a.n)}; ❤ +10`)],b:[T('Сейчас не могу','Can’t right now'),'']}};}
-    if(q.r==='gift'){const x=RQT.gift[v];return {m:'happy',tx:T(x[0],x[1]),o:{a:[T(`Прийти с подарком (${money(a.a)})`,`Come with a gift (${money(a.a)})`),T('❤ +5','❤ +5')],b:[T('Поздравлю по телефону','I’ll call to congratulate'),'']}};}
-    if(q.r==='watch'){const x=RQT.watch[v];return {m:'calm',tx:T(x[0],x[1]),o:{a:[T('Присмотрю','I’ll keep an eye on it'),T('❤ +5','❤ +5')],b:[T('Не получится','I can’t'),'']}};}
+        o:{a:[T(`Займу ${money(a.a)}`,`Lend ${money(a.a)}`),T(`вернёт через ${mon(a.n)} (${relW(q.w)}); ❤ +10`,`repaid in ${mon(a.n)} (${relW(q.w)}); ❤ +10`)],b:[T('Сейчас не могу','Can’t right now'),'❤ −5']}};}
+    if(q.r==='gift'){const x=RQT.gift[v];return {m:'happy',tx:T(x[0],x[1]),o:{a:[T(`Прийти с подарком (${money(a.a)})`,`Come with a gift (${money(a.a)})`),T('❤ +5','❤ +5')],b:[T('Поздравлю по телефону','I’ll call to congratulate'),'❤ −5']}};}
+    if(q.r==='watch'){const x=RQT.watch[v];return {m:'calm',tx:T(x[0],x[1]),o:{a:[T('Присмотрю','I’ll keep an eye on it'),T('❤ +5','❤ +5')],b:[T('Не получится','I can’t'),'❤ −5']}};}
+    if(q.r==='offer')return offerAsk(q);if(q.r==='pari')return pariAsk(q);
     const x=rqAdv(q);return {m:'calm',tx:T(x[0],x[1]),o:{a:[T(x[2][0],x[2][1]),''],b:[T(x[3][0],x[3][1]),'']}};}
   if(q.k==='reu'||q.k==='pro'){const y=a.y||10;return {m:'happy',tx:T(`Встреча выпускников «${y} лет»! Кафе «Юность», в субботу. Все будут — приходи.`,`Class reunion “${y} years”! Youth Café, Saturday. Everyone’s coming — join us.`),
     o:{a:[T('Приду!','I’ll be there!'),'']}};}
   const s=SC[q.k];if(!s)return {m:'calm',tx:T('Есть разговор — нужно твоё решение.','We need to talk — I need your decision.'),o:{}};
   const o={};for(const k in s.o)o[k]=s.o[k](a,w);return {m:s.m,tx:s.t(a,w),o};}
 function reply(q,o){if(q.k==='rq'){if(o!=='a'&&q.r==='visit')return T('Понимаю! Расскажу потом, как всё прошло.','No problem! I’ll tell you how it went.');
+    if(q.r==='offer')return o==='a'?T('Договорились! Так и сделаю.','Deal! I’ll sort it.'):T('Ладно, если что — предложение в силе.','Okay, the offer stands if you change your mind.');
+    if(q.r==='pari')return o!=='b'?T('Спорим! Разбивай. Посмотрим в конце месяца 😄','It’s a bet! Shake on it. We’ll see at month end 😄'):T('Эх, трусишь 😄 Ладно, в другой раз.','Chicken 😄 Okay, next time.');
     if(o!=='a')return q.r==='advice'?T('Спасибо, подумаю. С тобой всегда проще.','Thanks, I’ll think it over. It’s always easier with you.'):T(FEM[q.w]?'Ничего, понимаю. Как-нибудь сама.':'Ничего, понимаю. Как-нибудь сам.','No worries, I understand. I’ll manage.');
     return {loan:T('Спасибо! Верну в срок, слово даю.','Thank you! I’ll pay back on time, you have my word.'),gift:T('Вот это подарок! Как хорошо, что ты с нами.','What a gift! So good to have you here.'),
       watch:T('Спасибо! Теперь могу спокойно отдохнуть.','Thanks! Now I can relax properly.'),advice:T('Спасибо, так и сделаю.','Thanks, I’ll do just that.'),
@@ -309,12 +348,41 @@ function feedTx(w,f){const a=f.a||{};
   if(f.k==='wed2')return a.o==='a'?T(`Марина передаёт: ты ${G('лучший свидетель','лучшая свидетельница')} на свете. Особенно когда ${G('уронил','уронила')} кольцо 😄`,`Marina says you’re the best ${G('best man','best woman')} in the world. Especially when you dropped the ring 😄`)
     :T(`Свадьба отгремела! Марина говорит, ты ${G('танцевал','танцевала')} лучше всех 😄`,'The wedding’s over! Marina says you danced better than anyone 😄');
   if(f.k==='gpay')return T(`Прости… в этом месяце банк списал платёж по моей ипотеке с тебя (${money(a.a)}). Мне очень стыдно.`,`I’m sorry… this month the bank took my mortgage payment from you (${money(a.a)}). I’m really ashamed.`);
+  // M18: письма об отношениях и пользе — у каждого своим голосом
+  if(f.k==='back2'&&a.b)return T(`Возвращаю ${money(a.a)} и ещё ${money(a.b)} сверху — за ожидание. Спасибо, что ${G('поверил','поверила')}!`,`Here’s your ${money(a.a)} back plus ${money(a.b)} for the wait. Thanks for trusting me!`);
+  if(f.k==='late')return ({beav:T(`Слушай… с деньгами туго. ${money(a.a)} верну через два месяца — с процентом, слово Боброва.`,`Listen… money’s tight. I’ll return the ${money(a.a)} in two months — with interest, Bobrov’s word.`),
+    vit:T(`Прости, ${hv()}, клиент задержал оплату. ${money(a.a)} отдам через два месяца, с процентом!`,`Sorry, ${hv()}, a client paid late. I’ll give you the ${money(a.a)} in two months, with interest!`)})[f.w]||T(`Задержу возврат ${money(a.a)} на два месяца — прости. Верну с процентом.`,`I’ll be two months late with the ${money(a.a)} — sorry. I’ll pay it back with interest.`);
+  if(f.k==='sav'){const x={vit:[`Посчитал: за эти месяцы мои машины и оптовики сэкономили тебе ${money(a.a)}. Обращайся!`,`I did the maths: these months my trucks and wholesalers saved you ${money(a.a)}. Any time!`],
+      bars:[`Для справки: ремонт и монтаж через меня сэкономили тебе ${money(a.a)}. Не благодари.`,`For the record: repairs and fitting through me saved you ${money(a.a)}. No thanks needed.`],
+      owl:[`Я посчитала: с моим поручительством ты платишь банку меньше — примерно на ${money(a.a)}.`,`I worked it out: with my guarantee you pay the bank less — about ${money(a.a)}.`],
+      beav:[`Итог нашей дружбы за квартал: плюс ${money(a.a)} тебе. Не зазнавайся 😄`,`Our friendship this quarter: ${money(a.a)} in your pocket. Don’t get cocky 😄`]}[f.w];return x?T(x[0],x[1]):'';}
+  if(f.k==='rep')return T(`Слышал, у тебя поломка (${bizN(a.bt)}). Заехал, починил своими — вышло на ${money(a.a)} дешевле.`,`Heard something broke at your ${bizN(a.bt)}. I dropped by and fixed it — ${money(a.a)} cheaper.`);
+  if(f.k==='cap')return T(`Смонтировал тебе новую точку (${bizN(a.bt)}) со своими ребятами — сэкономили ${money(a.a)}.`,`Fitted out your new ${bizN(a.bt)} with my crew — saved you ${money(a.a)}.`);
+  if(f.k==='move')return T(`Переезд точки (${bizN(a.bt)}) — на моих машинах: с тебя меньше на ${money(a.a)}.`,`Moving your ${bizN(a.bt)} — on my trucks: ${money(a.a)} off for you.`);
+  if(f.k==='rival')return T(`Не обижайся — открыл свою точку рядом с твоей (${bizN(a.bt)}). Бизнес есть бизнес. Покупателей у тебя станет меньше на ${a.p} % месяца на три.`,`No hard feelings — I opened my place right next to your ${bizN(a.bt)}. Business is business. You’ll lose about ${a.p}% of customers for three months.`);
+  if(f.k==='ovt')return T('Ну ты даёшь — обогнал меня по капиталу! Ничего, реванш за мной. Давай пари?','Well, look at you — you’ve overtaken me! Fine, I’ll get my revenge. Fancy a bet?');
+  if(f.k==='ovt2')return T('Хе-хе, я снова впереди. Догоняй!','Heh, I’m ahead again. Catch up!');
+  if(f.k==='pwin'&&a.cr)return T(`Выручка ${money(a.r)} — ты ${G('выиграл','выиграла')}! Твои ${a.cr} 💎 назад и ещё ${a.cr} 💎 сверху.`,`Revenue ${money(a.r)} — you win! Your ${a.cr} 💎 back plus ${a.cr} 💎 on top.`);
+  if(f.k==='plose'&&a.cr)return T(`Выручка ${money(a.r)}, а нужно было ${money(a.tg)}. Пари моё — ${a.cr} 💎 мои 😄 Реванш?`,`Revenue ${money(a.r)}, and you needed ${money(a.tg)}. The bet’s mine — the ${a.cr} 💎 are mine 😄 Rematch?`);
+  if(f.k==='pwin')return T(`Выручка ${money(a.r)} — ты ${G('выиграл','выиграла')}! Держи ${money(a.a)}, честно заработано.`,`Revenue ${money(a.r)} — you win! Here’s your ${money(a.a)}, fair and square.`);
+  if(f.k==='plose')return T(`Выручка ${money(a.r)}, а нужно было ${money(a.tg)}. Пари моё — с тебя ${money(a.a)} 😄 Реванш?`,`Revenue ${money(a.r)}, and you needed ${money(a.tg)}. The bet’s mine — you owe me ${money(a.a)} 😄 Rematch?`);
+  if(f.k==='peace')return ({beav:T('Ладно, мир. Ты всё-таки свой — 11 «Б» не пропьёшь.','Alright, truce. You’re one of us after all — Class 11B for life.'),owl:T('Спасибо, что пришёл. Я правда рада. Мир?','Thanks for coming. I’m really glad. Friends again?'),
+    bars:T('…Проходи. Чай будешь? Давно надо было поговорить.','…Come in. Tea? We should have talked long ago.'),vit:T('О, наконец-то! Всё, мир-дружба-жвачка!','Oh, finally! That’s it — friends again!')})[f.w]||'';
+  if(f.k==='miss')return ({beav:T('Совсем пропал! Зазнался, что ли? Позвони хоть.','You’ve vanished! Too grand for us now? At least give me a call.'),owl:T('Давно не слышались… Мама спрашивает, как ты.','We haven’t talked in ages… Mum asks how you are.'),
+    bars:T('Давно не заходил. Всё нормально?','Haven’t seen you in a while. Everything alright?'),vit:T('Эй, ты куда пропал? Заезжай, чай попьём!','Hey, where did you go? Drop by for tea!')})[f.w]||'';
+  if(f.k==='lvup'){const n=lvName(a.b);return a.b>=4?({beav:T('Знаешь… ты мне ближе брата. Только никому.','You know… you’re closer than a brother to me. Don’t tell anyone.'),owl:T('Ты у меня самый надёжный человек. Правда.','You’re the most reliable person I know. Really.'),bars:T('На тебя можно положиться. Это редкость.','I can count on you. That’s rare.'),vit:T('Братишка! Для тебя — всё что угодно!','Buddy! Anything for you!')})[f.w]+` (${n})`
+    :T(`С тобой приятно иметь дело! Теперь мы — «${n}».`,`Good to deal with you! Now we’re “${n}”.`);}
+  if(f.k==='lvdn'){const n=lvName(a.b);return a.b<=1?T(`Что-то между нами похолодало… Теперь у нас «${n}». Захочешь помириться — заходи в гости.`,`Things have cooled between us… We’re “${n}” now. If you want to make up — come round.`):T(`Мы как-то отдалились. Теперь просто «${n}».`,`We’ve drifted apart a bit. Now just “${n}”.`);}
   const x=FEED[f.k];return x?T(x[0],x[1]):T('Есть новости!','Got some news!');}
-const FMOOD={gg:'happy',self:'calm',gpay:'worry',bobr:'strict',leave:'calm',vitlook:'worry',plant:'strict',bearnews:'strict'};
+const FMOOD={gg:'happy',self:'calm',gpay:'worry',bobr:'strict',leave:'calm',vitlook:'worry',plant:'strict',bearnews:'strict',late:'worry',rival:'strict',miss:'worry',lvdn:'worry',plose:'happy',pwin:'worry',ovt:'wow'};
+// уровни отношений (M18) — те же слова в телефоне и окне «Друзья»
+const LVN=[['в ссоре','on the outs'],['прохладно','cool'],['приятели','pals'],['друзья','friends'],['не разлей вода','inseparable']];
+function lvName(i){const x=LVN[Math.max(0,Math.min(4,i|0))];return T(x[0],x[1]);}
+function bizN(t){const B=E.BIZ&&E.BIZ[t];return B?T(String(B.n||'').toLowerCase(),String(B.en||'').toLowerCase()):T('точка','business');}
 
 /* ---------------- история (W.fr.ch) ---------------- */
 const pct=x=>Math.round(x*100)+(en()?'%':' %');
-const JVN={trans:['«ВитТранс»','VitTrans'],base:['стройбаза на двоих','the shared builders’ yard'],pit:['карьер «Сосновый лог»','Pine Hollow quarry'],fund:['фонд','the fund']};
+const JVN={trans:['«ВитТранс»','VitTrans'],base:['стройбаза на двоих','the shared builders’ yard'],pit:['карьер «Сосновый лог»','Pine Hollow quarry'],fund:['фонд «Сова Инвест»','the Owl Invest fund'],gaz:['«Газель на двоих»','the shared van']};
 const jvName=t=>{const x=JVN[t]||JVN.trans;return T(x[0],x[1]);};
 function logMsg(w,x){const a=x.a||{},d=x.d?` · ❤ ${x.d>0?'+':''}${x.d}`:'';
   if(x.k==='reu'||x.k==='pro'){const h=SY.reuOf(w.fr,{a})||{};const p=h.r?SY.reuPlace(h):0;return {tx:T(`🥂 Встреча выпускников «${h.y||a.y||10} лет»`,`🥂 Class reunion “${h.y||a.y||10} years”`)+(p?T(`: вы — ${p}-е место`,`: you placed ${p}`):''),me:true,mood:'happy'};}
@@ -330,6 +398,11 @@ function logMsg(w,x){const a=x.a||{},d=x.d?` · ❤ ${x.d>0?'+':''}${x.d}`:'';
     congr:[T('Вы поздравили 🎉','You sent congratulations 🎉'),1],
     gulate:[T('По кредиту, за который я поручилась, — просрочка. Мне было очень неловко перед банком.','The loan I guaranteed is overdue. I was really embarrassed in front of the bank.'),0],
     guse:[T(`Поручительство оформлено: кредит ${money(a.a)}, ставка на один процент ниже.`,`Guarantee done: a ${money(a.a)} loan at a rate one percent lower.`),0]};
+  // M18: то, о чём друг сам пишет письмом, в переписке второй раз не показываем
+  if({rep:1,cap:1,move:1,pwin:1,plose:1,rival:1,ovt:1,lendlate:1,peace:1}[x.k])return {tx:'',me:true};
+  const M2={chat:T('📞 Поболтали','📞 A friendly chat'),visit:T('🏠 Вы заходили в гости','🏠 You came round'),ign:T('Просьба осталась без ответа','A request went unanswered'),
+    perk:x.o==='jv'?(x.w==='vit'?T('🤝 Купили Газель на двоих','🤝 Bought a van together'):x.w==='owl'?T('🤝 Вошли в фонд Сони','🤝 Joined Sonya’s fund'):T('🤝 Открыли точку на двоих','🤝 Opened a place together')):T('🤝 Помощь друга: ','🤝 A friend’s help: ')+perkName(x.o)+(a.a?' (+'+money(a.a)+')':'')};
+  if(M2[x.k])return {tx:M2[x.k]+d,me:true,mood:'happy'};
   if(x.k.indexOf('call_')===0){const k=x.k.slice(5);return {tx:'📞 '+(k==='loan'&&a.a?T(`Заняли ${money(a.a)} на ${mon(a.n||6)}`,`Borrowed ${money(a.a)} for ${mon(a.n||6)}`):callLabel(k,{a:a.a}))+d,me:true,mood:'happy'};}
   const m=M[x.k];if(!m)return {tx:T('Вы ответили','You replied')+d,me:true,mood:'calm'};
   return {tx:m[0]+d,me:!!m[1],mood:x.k==='gulate'?'strict':'happy'};}
@@ -337,33 +410,53 @@ function logMsg(w,x){const a=x.a||{},d=x.d?` · ❤ ${x.d>0?'+':''}${x.d}`:'';
 /* ---------------- API для телефона ---------------- */
 const WHY={cash:['не хватает денег','not enough money'],trust:['нужно больше доверия','needs more trust'],quarter:['уже просили в этом квартале','already asked this quarter'],
   owe:['сначала верните прошлый займ','repay the previous loan first'],bank:['банк пока не даёт кредит','the bank isn’t lending yet'],nobuild:['сейчас нет строек','no construction right now'],
-  noauc:['сейчас нет торгов','no auctions right now'],card:['карта уже есть','you already have the card'],wait:['решали меньше года назад','agreed less than a year ago'],no:['пока недоступно','not available yet']};
+  noauc:['сейчас нет торгов','no auctions right now'],cd:['уже помогал — позже','already helped — later'],active:['уже действует','already on'],nobank:['нет платежей банку','no bank payments'],norev:['нужна выручка за месяц','needs a month of revenue'],nosup:['нет точек с товаром','no businesses buying stock'],nopts:['нет работающих точек','no working businesses'],crno:['не хватает 💎','not enough 💎'],nogig:['подходящих заказов нет','no suitable jobs'],month:['уже в этом месяце','already this month'],en:['не хватает сил ⚡','not enough energy ⚡'],card:['карта уже есть','you already have the card'],wait:['решали меньше года назад','agreed less than a year ago'],no:['пока недоступно','not available yet']};
 function why(c){const x=WHY[c]||WHY.no;return T(x[0],x[1]);}
 function msg(w,it){w=w||W();const x=it.x;
   if(it.type==='feed')return {tx:feedTx(w,x),mood:FMOOD[x.k]||'happy',me:false};
   if(it.type==='ask'){const s=ask(w,x);const opts=[];for(const o in s.o)opts.push({o,tx:s.o[o][0],hint:s.o[o][1]||''});return {tx:s.tx,mood:s.m,me:false,opts};}
   if(it.type==='log')return logMsg(w,x);
   return null;}
-function callLabel(k,op){const a=op&&op.a;
-  const x={loan:[`Занять до ${money(a||0)} без процентов`,`Borrow up to ${money(a||0)} interest-free`],truck:['Машины на месяц: доставка −25 %','Trucks for a month: delivery −25%'],
-    guar:[SY.NAT.guar?'Поручительство: лимит банка +30 %, ставка на 1 % ниже':'Поручительство: ставка по кредиту на 1 % ниже',SY.NAT.guar?'Guarantee: bank limit +30%, rate 1% lower':'Guarantee: loan rate 1% lower'],
-    check:['Проверить мои финансы','Check my finances'],expert:['Оценить участки на торгах','Assess plots at auction'],build:['Помочь со стройкой: −10 % срока','Help with construction: −10% time']}[k];
+function perkName(p){const x={ship:['закупка дешевле','cheaper supplies'],gig:['выгодный заказ','a well-paid job'],prof:['профилактика точек','preventive checks'],rate:['поручительство в банке','a bank guarantee'],
+  guar:['поручительство в банке','a bank guarantee'],buy:['общая закупка','joint purchasing'],jv:['точка на двоих','a joint place']}[p];return x?T(x[0],x[1]):p;}
+function callLabel(k,op){const a=op&&op.a,P=SY.PK||{},w=W(),L=op&&op.w&&SY.lv?SY.lv(w,op.w):3,pc=x=>pctS(x);
+  const x={loan:[`Занять до ${money(a||0)} без процентов`,`Borrow up to ${money(a||0)} interest-free`],truck:['Машины на месяц: доставка −25 %','Trucks for a month: delivery −25%'],
+    guar:[`Поручительство: кредит на ${Math.round(-(P.guarDr?P.guarDr[Math.max(3,L)]:-.02)*100)} п. п. дешевле`,`Guarantee: a loan ${Math.round(-(P.guarDr?P.guarDr[Math.max(3,L)]:-.02)*100)} p.p. cheaper`],
+    bridge:[`Перекрыть платёж банку: ${money(a||0)} на 3 мес. без процентов`,`Cover my bank payment: ${money(a||0)} for 3 months interest-free`],
+    check:['Проверить финансы и налог','Check my finances and tax'],expert:['Техаудит: участки и карьеры на торгах','Tech audit: plots and quarries at auction'],
+    build:[`Ускорить стройку: −${pc(a||.2)} срока`,`Speed up construction: −${pc(a||.2)} time`],
+    fix:[`Профилактика точек: ${P.fixM||3} мес. ремонт бесплатно`,`Preventive checks: ${P.fixM||3} months of free repairs`],
+    pari:[`Пари на ${money(a||0)}: выручка +10 % за месяц`,`Bet ${money(a||0)}: revenue +10% in a month`],
+    buy:[`Общая закупка: товар −${pc(P.buyD||.03)}`,`Joint purchasing: goods −${pc(P.buyD||.03)}`],
+    gig:a?[`Подкинуть заказ: ${money(a)} (×1,5)`,`Pass me a job: ${money(a)} (×1.5)`]:['Подкинуть выгодный заказ (×1,5)','Pass me a well-paid job (×1.5)']}[k];
   return x?T(x[0],x[1]):k;}
 const HELLO={owl:[['Привет! Слушаю внимательно.','Hi! I’m all ears.'],'calm'],beav:[['О, {v}! Звонишь сдаваться? 😄','Oh, {v}! Calling to surrender? 😄'],'happy'],
   bars:[['Да. Слушаю.','Yes. Listening.'],'calm'],vit:[['Алло-алло! Витя на связи!','Hello-hello! Vitya here!'],'happy'],bear:[['Топтыгин. Коротко, пожалуйста.','Toptygin. Briefly, please.'],'strict']};
 function hello(w,id){const x=HELLO[id]||HELLO.vit;let tx=T(x[0][0],x[0][1]).replace('{v}',hv());const f=w&&w.fr&&w.fr[id];
+  if(f&&typeof f.rel==='number'&&f.rel<=-16&&id!=='bear')return {tx:T('Да?.. Слушаю. Что '+G('хотел','хотела')+'?','Yes?.. I’m listening. What do you want?'),mood:'strict'};
   if(f&&f.tr<35&&id!=='bear')return {tx:T('Привет… Давно не слышались.','Hi… It’s been a while.'),mood:'worry'};return {tx,mood:x[1]};}
+// совет Сони по налогу (M18): по вашим месяцам — что дешевле, УСН 6 % «с доходов» или 15 % «доходы минус расходы»
+function taxTx(t){if(!t)return '';if(!t.best)return T(' Про налог скажу, когда наберётся пара месяцев отчётов.',' I’ll advise on tax once there are a couple of months of reports.');
+  const nm=m=>m==='usn15'?T('УСН 15 % («доходы минус расходы»)','simplified 15% (income minus costs)'):T('УСН 6 % («с доходов»)','simplified 6% (on income)');
+  if(t.best===t.cur)return T(` Налог: у тебя ${nm(t.cur)} — это и есть дешевле. Всё правильно.`,` Tax: you’re on ${nm(t.cur)} — that’s the cheaper one. Well done.`);
+  return T(` Налог: ${nm(t.best)} тебе дешевле примерно на ${money(t.diff)} в год. `,` Tax: ${nm(t.best)} would save you about ${money(t.diff)} a year. `)+(t.can?T('Сменить можно прямо сейчас — в разделе налогов.','You can switch right now — in the tax section.'):T('Сменить можно в январе.','You can switch in January.'));}
 function after(w,res){w=w||W();if(!res||res.res!=='ok')return {tx:'',toast:res?why(res.res):'',mood:'worry'};
   const wh=res.w==='all'?(ALLW[res.k]||'owl'):res.w;const d=res.d?(res.w==='all'||res.k==='tpt4'?` ❤ ${T('друзей','friends')} +5`:` ❤ ${nk(wh)}: ${res.d>0?'+':''}${res.d}`):'';
   if(res.k&&res.k!=='reu'&&res.k!=='pro'&&!('o' in res)&&SY.CALL[res.w]){   // звонок
     let tx='';const k=res.k;
     if(k==='loan')tx=T(`Держи ${money(res.a)}. Вернёшь через ${mon(res.n)} — без процентов.`,`Here’s ${money(res.a)}. Pay me back in ${mon(res.n)} — no interest.`);
-    else if(k==='guar')tx=T('Поручусь. Бери кредит в ближайшие 3 месяца — оформим под меня.','I’ll vouch for you. Take a loan within 3 months — we’ll put it under my name.')+(SY.NAT.guar?T(' Лимит будет на 30 % выше, ставка — на один процент ниже.',' The limit will be 30% higher, the rate one percent lower.'):T(' Ставка будет на один процент ниже.',' The rate will be one percent lower.'));
+    else if(k==='guar'){const dr=Math.round((res.dr||.02)*100);tx=T(`Поручусь. Бери кредит в ближайшие 3 месяца — оформим под меня. Ставка на ${dr} п. п. ниже, лимит на 15 % выше.`,`I’ll vouch for you. Take a loan within 3 months — we’ll put it under my name. The rate ${dr} p.p. lower, the limit 15% higher.`);}
     else if(k==='check'){const c=res.c||{};const cm=c.cashM>=99?T('надолго','for a long time'):T(`на ${(Math.round(c.cashM*10)/10).toLocaleString(en()?'en':'ru')} мес.`,`for ${(Math.round(c.cashM*10)/10).toLocaleString('en')} months`);
-      tx=T(`Смотрю твои цифры. Денег хватит ${cm} расходов. ${c.lev>=99?'Долг из заработка пока не гасится.':c.lev<=0?'Долгов нет.':`Долг гасится из заработка примерно за ${(Math.round(c.lev*10)/10).toLocaleString('ru')} ${(x=>x%1?'года':pln(x,'год','года','лет','year','years'))(Math.round(c.lev*10)/10)}.`}`,`Looking at your numbers. Cash covers expenses ${cm}. ${c.lev>=99?'Earnings don’t cover the debt yet.':c.lev<=0?'No debt.':`Your debt would take about ${(Math.round(c.lev*10)/10).toLocaleString('en')} years of earnings to repay.`}`)
-        +(c.od?T(' Есть овердрафт — закрой его первым делом.',' You’re in overdraft — close it first.'):c.lev>3?T(' Долг великоват, я бы притормозила.',' The debt is on the high side, I’d slow down.'):T(' Всё спокойно, можно расти.',' All calm, you can grow.'));}
+      tx=T(`Смотрю твои цифры. Денег хватит ${cm} расходов. ${c.lev>=99?'Долг из заработка пока не гасится.':c.lev<=.05?(c.debt>0?'Долг маленький — гасится из заработка за пару месяцев.':'Долгов нет.'):`Долг гасится из заработка примерно за ${(Math.round(c.lev*10)/10).toLocaleString('ru')} ${(x=>x%1?'года':pln(x,'год','года','лет','year','years'))(Math.round(c.lev*10)/10)}.`}`,`Looking at your numbers. Cash covers expenses ${cm}. ${c.lev>=99?'Earnings don’t cover the debt yet.':c.lev<=.05?(c.debt>0?'The debt is small — earnings clear it in a couple of months.':'No debt.'):`Your debt would take about ${(Math.round(c.lev*10)/10).toLocaleString('en')} years of earnings to repay.`}`)
+        +(c.od?T(' Есть овердрафт — закрой его первым делом.',' You’re in overdraft — close it first.'):c.lev>3?T(' Долг великоват, я бы притормозила.',' The debt is on the high side, I’d slow down.'):T(' Всё спокойно, можно расти.',' All calm, you can grow.'))+taxTx(res.tax);}
     else if(k==='expert'){const L2=res.list||[];tx=L2.length?T('Посмотрел участки на торгах:','I looked at the plots up for auction:')+' '+L2.slice(0,3).map(x=>(x.opi?'':(window.NM?NM.reg(x.r)+', ':''))+gName(x.g)+(x.res?T(`: запас ${Math.round(x.res/1e3).toLocaleString('ru')} тыс.`,`: reserve ${Math.round(x.res/1e3).toLocaleString('en')}k`):'')+(x.vc?T(`, добыча ${x.vc.toLocaleString('ru')} ₽/ед.`,`, mining cost ${x.vc.toLocaleString('en')} ₽/unit`):'')).join('; ')+'. '+T('Бери, если лицензия не дороже 60 % оценки.','Take one if the licence costs under 60% of its value.'):T('Торгов сейчас нет — позвони, как объявят.','No auctions right now — call me when they’re announced.');}
-    else if(k==='build')tx=T(`Пришлю своих ребят — ускорили строек: ${res.n||0}.`,`I’ll send my crew — constructions sped up: ${res.n||0}.`);
+    else if(k==='build')tx=T(`Пришлю своих ребят — стройка короче на ${pctS(res.f||.15)}. Ускорили: ${res.n||0}.`,`I’ll send my crew — construction ${pctS(res.f||.15)} shorter. Sped up: ${res.n||0}.`);
+    else if(k==='bridge')tx=T(`Держи ${money(res.a)} — перекроешь платёж банку. Вернёшь через 3 месяца, без процентов.`,`Here’s ${money(res.a)} — cover your bank payment. Pay me back in 3 months, no interest.`);
+    else if(k==='pari'&&res.cr)tx=T(`Спорим на ${res.cr} 💎: в следующем месяце выручка ${money(res.tg)} или больше — получишь ${2*res.cr} 💎. Нет — мои. По рукам!`,`It’s a bet, ${res.cr} 💎: next month revenue ${money(res.tg)} or more — you get ${2*res.cr} 💎. If not — they’re mine. Shake!`);
+    else if(k==='pari')tx=T(`Спорим на ${money(res.a)}: в следующем месяце выручка ${money(res.tg)} или больше — плачу я. Нет — ты. По рукам!`,`It’s a bet, ${money(res.a)}: next month revenue ${money(res.tg)} or more — I pay. If not — you do. Shake!`);
+    else if(k==='buy')tx=T(`Беру на двоих — товар на ${pctS(SY.PK.buyD||.03)} дешевле, ${mon(res.m||2)}.`,`I’ll buy for both of us — goods ${pctS(SY.PK.buyD||.03)} cheaper for ${mon(res.m||2)}.`);
+    else if(k==='fix')tx=T(`В выходные пройдусь по твоим точкам. ${mon(res.m||3)} ремонт — за мой счёт.`,`I’ll go round your places at the weekend. ${mon(res.m||3)} of repairs on me.`);
+    else if(k==='gig')tx=res.a?T(`Лови заказ — клиент платит ${money(res.a)}. Уже на твоей доске!`,`Here’s a job — the client pays ${money(res.a)}. It’s on your board!`):T('Сейчас ничего подходящего, позвони позже.','Nothing suitable right now, call later.');
     else if(k==='truck')tx=T('Машины твои! В этом месяце доставка на 25 % дешевле.','The trucks are yours! Delivery is 25% cheaper this month.');
     return {tx,toast:k==='loan'?T(`+${money(res.a)} от друга`,`+${money(res.a)} from a friend`):'',mood:'happy'};}
   // ответ на сцену
@@ -381,6 +474,11 @@ function date(w,d){const x=d.w?nk(d.w):'';
   if(d.k==='owe')return T(`Вернуть ${x}: ${money(d.a)}`,`Repay ${x}: ${money(d.a)}`);
   if(d.k==='jvdiv')return T(`Совместное дело с ${d.w==='owl'?'Соней':d.w==='beav'?'Борисом':d.w==='bars'?'Петром':'Витей'}: решить про дивиденды`,`Joint venture with ${x}: agree on dividends`);
   if(d.k==='guar')return T('Поручительство Сони: успеть взять кредит','Sonya’s guarantee: take the loan in time');
+  // M20
+  if(d.k==='pari'){const st=d.cr?`${d.cr} 💎`:money(d.a||0);return T(`Итог пари с Борисом: выручка месяца ≥ ${money(d.tg||0)}? Ставка ${st}`,`Bet with ${x} settles: month revenue ≥ ${money(d.tg||0)}? Stake ${st}`);}
+  if(d.k==='prof')return T('Профилактика Петра заканчивается — дальше ремонт за свой счёт','Pyotr’s preventive checks end — repairs are on you after this');
+  if(d.k==='buy')return T(`Общая закупка с Борисом заканчивается (товар −${pctS(SY.PK.buyD||.03)})`,`Joint purchasing with Boris ends (goods −${pctS(SY.PK.buyD||.03)})`);
+  if(d.k==='ship')return T(`Витя возит ваш товар со скидкой (−${pctS(SY.PK.ship||.04)}) — последний месяц`,`Vitya hauls your goods at a discount (−${pctS(SY.PK.ship||.04)}) — last month`);
   return '';}
 
 /* ---------------- окна ---------------- */
@@ -507,7 +605,19 @@ function openLoan(id){const w=W();const op=SY.callOpts(w,id).find(x=>x.k==='loan
     bind('[data-ok]',()=>{let r;try{r=GAME.act('friendCall',id,'loan',{a,n});}catch(e){r={res:'no'};}if(!r||r.res!=='ok'){snd('no');toast(why(r&&r.res||'no'));return;}
       snd('coin');const af=after(W(),r);open(`<div class="st-hd">${pic(id,'happy',72)}<div><b>${esc(nm(id))}</b></div></div><p class="st-say">${esc(af.tx)}</p><div class="row"><button class="btn w accent" data-x="1">${T('Спасибо!','Thanks!')}</button></div>`);bind('[data-x]',()=>close());});};
   draw();return true;}
-function call(id,k){if(k==='loan')return openLoan(id);return false;}
+function call(id,k){if(k==='loan')return openLoan(id);if(k==='pari')return openPari(id);return false;}
+// M20: пари по звонку — ставка на выбор: деньги или 💎
+function openPari(id){const w=W();const op=SY.callOpts(w,id).find(x=>x.k==='pari');if(!op)return false;if(op.ok!==true){toast(why(op.ok));return true;}
+  const c=SY.PARI_CR||5,have=window.GAME&&GAME.cr?GAME.cr():0;
+  open(`<div class="st-hd">${pic(id,'happy',72)}<div><b>${esc(nm(id))}</b><small>${esc(who(id).sub)}</small></div></div>
+    <p class="st-say">${esc(T('Спорим, что в следующем месяце твоя выручка не вырастет на 10 %? На что играем?','Bet your revenue won’t grow 10% next month? What are we playing for?'))}</p>
+    <div class="row"><div><button class="btn w accent noenter" data-p="m">${T(`Спорим на ${money(op.a)}`,`Bet ${money(op.a)}`)}</button><p class="st-hint">${T('выиграли — Борис платит, проиграли — вы; ❤ +2','win — Boris pays, lose — you pay; ❤ +2')}</p></div>
+    <div><button class="btn w noenter" data-p="c"${have>=c?'':' disabled'}>${T(`Спорим на ${c} 💎`,`Bet ${c} 💎`)}${have>=c?'':`<span class="st-why">${esc(why('crno'))}</span>`}</button><p class="st-hint">${T(`${c} 💎 — сразу, выиграли — вернутся ${2*c} 💎`,`${c} 💎 now, win — you get ${2*c} 💎 back`)}</p></div>
+    <button class="btn w noenter" data-x="1">${T('Не сейчас','Not now')}</button></div>`,()=>openPari(id));
+  bind('[data-x]',()=>close());
+  bind('[data-p]',b=>{let r;try{r=GAME.act('friendCall',id,'pari',b.dataset.p==='c'?{cr:1}:{});}catch(e){r={res:'no'};}if(!r||r.res!=='ok'){snd('no');toast(why(r&&r.res||'no'));return;}
+    snd('tap');const af=after(W(),r);open(`<div class="st-hd">${pic(id,'happy',72)}<div><b>${esc(nm(id))}</b></div></div><p class="st-say">${esc(af.tx)}</p><div class="row"><button class="btn w accent" data-x="1">${T('По рукам!','Deal!')}</button></div>`);bind('[data-x]',()=>close());});
+  return true;}
 // звонок без телефона
 function doCall(id,k){if(k==='loan')return openLoan(id);let r;try{r=GAME.act('friendCall',id,k);}catch(e){r={res:'no'};}
   if(!r||r.res!=='ok'){snd('no');toast(why(r&&r.res||'no'));return;}snd('tap');const af=after(W(),r);
@@ -515,7 +625,8 @@ function doCall(id,k){if(k==='loan')return openLoan(id);let r;try{r=GAME.act('fr
   bind('[data-x]',()=>close());bind('[data-b]',()=>openFriend(id));}
 
 // друзья: «Кто из нас дальше» и карточки
-function openFriends(){const w=W();if(!w)return;SY.init(w);const st=SY.standings(w);
+function openFriends(){if(window.FRUI&&FRUI.open)return FRUI.open();const w=W();if(!w)return;   // M18: окно «Друзья» — js/friends-ui.js
+  SY.init(w);const st=SY.standings(w);
   let h=`<h2>👥 ${T('Друзья из 11 «Б»','Friends from class 11B')}</h2><p class="st-sub">${T('Кто из нас дальше — капитал сейчас','Who’s ahead — net worth today')}</p><table class="st-tb">`;
   st.forEach((x,i)=>{h+=`<tr${x.id==='you'?' class="me"':''}><td class="n">${i+1}</td><td>${pic(x.id,'calm',40)}</td><td><b>${esc(x.id==='you'?T('Вы','You'):nm(x.id))}</b>${x.id!=='you'?`<span class="ph">${esc(who(x.id).sub)}</span>`:''}</td><td class="v">${money(x.v)}</td></tr>`;});
   h+='</table>';
@@ -524,7 +635,8 @@ function openFriends(){const w=W();if(!w)return;SY.init(w);const st=SY.standings
   const all=w.fr.q.filter(q=>q.w==='all'||q.w==='lud'||q.w==='bear');for(const q of all)h+=`<div class="row"><button class="btn w accent noenter" data-q="${q.id}">${q.k==='reu'||q.k==='pro'?'🥂 '+T('Встреча выпускников','Class reunion'):TITLE[q.k]?T(TITLE[q.k][0],TITLE[q.k][1]):T('Открыть событие','Open the event')}</button></div>`;
   h+=`<div class="row"><button class="btn w" data-x="1">${T('Закрыть','Close')}</button></div>`;
   open(h,openFriends);bind('[data-f]',b=>openFriend(b.dataset.f));bind('[data-q]',b=>big(b.dataset.q));bind('[data-x]',()=>close());}
-function openFriend(id){const w=W();if(!w)return;const f=SY.friend(w,id),c=who(id);
+function openFriend(id){if(window.FRUI&&FRUI.card)return FRUI.card(id);const w=W();if(!w)return;
+  const f=SY.friend(w,id),c=who(id);
   let h=`<div class="st-hd">${pic(id,'happy',72)}<div><b>${esc(c.n)}</b><small>${esc(c.sub)}</small>${hearts(f.tr)}</div></div>`;
   h+=`<div class="st-facts"><div><span>${T('Капитал','Net worth')}</span><b>${money(f.cap)}</b></div>${f.owe?`<div><span>${T('Вы должны','You owe')}</span><b>${money(f.owe)}</b></div>`:''}${f.lent?`<div><span>${T('Должен вам','Owes you')}</span><b>${money(f.lent)}</b></div>`:''}</div>`;
   for(const q of f.q){const s=ask(w,q);h+=`<div class="st-card"><p class="st-say">${esc(s.tx)}</p><button class="btn w accent noenter" data-q="${q.id}">${T('Ответить','Reply')}</button></div>`;}
@@ -710,6 +822,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 if(window.GAME&&GAME.doIpo&&E.storyCarry){const d0=GAME.doIpo;GAME.doIpo=function(){const w0=GAME.W,F0=w0&&w0.fr;const r=d0.apply(GAME,arguments);
   if(r&&F0&&GAME.W&&GAME.W!==w0){try{E.storyCarry(GAME.W,F0,{hold:r.hold,eq:r.eq});GAME.act('storyTouch');}catch(e){console.error(e);}}return r;};}
 
-window.STORYUI={who,msg,why,after,big,callLabel,call,hello,feed:feedApi,date,openFriends,openFriend,openAsk,openReunion,ask,feedTx:(f)=>feedTx(W(),f),
-  prologue,prologueDue,openHero,openIpoScene,awayHtml,teaser:()=>teaser(),partner,G,heroName,hv,speaker:spk,title:k=>TITLE[k]?T(TITLE[k][0],TITLE[k][1]):''};
+// M20: строка в окне «Закрытие месяца» (biz-ui.js closeExtra): сколько сэкономили друзья за этот месяц
+function closeLine(rep){const w=W();if(!w||!w.fr||!rep||!SY.monthGain)return '';let g=null;try{g=SY.monthGain(w,rep.m);}catch(e){g=null;}if(!g)return '';
+  const top=g.top&&g.tv<g.a?T(` (больше всех — ${nk(g.top)}: ${money(g.tv)})`,` (most of all — ${nk(g.top)}: ${money(g.tv)})`):g.top?T(` (это ${nk(g.top)})`,` (that was ${nk(g.top)})`):'';
+  return `<p class="about st-cl">💬 ${T(`Друзья за месяц: сэкономили ${money(g.a)}`,`Friends this month: saved you ${money(g.a)}`)}${esc(top)}</p>`;}
+window.STORYUI={closeLine,who,msg,why,after,big,callLabel,call,hello,feed:feedApi,date,openFriends,openFriend,openAsk,openReunion,ask,feedTx:(f)=>feedTx(W(),f),
+  prologue,prologueDue,openHero,openIpoScene,awayHtml,teaser:()=>teaser(),partner,G,heroName,hv,speaker:spk,title:k=>TITLE[k]?T(TITLE[k][0],TITLE[k][1]):'',
+  lvName,pic,nm,jvName,pct,perkName,taxTx,relW,log:x=>logMsg(W(),x)};   // M18: для окна «Друзья» (js/friends-ui.js)
 })();

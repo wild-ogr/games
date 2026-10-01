@@ -105,7 +105,7 @@ const PK={geo:['Геолог','Geologist','Разведка дешевле на 
   heir:['Наследство','Legacy','Ещё один участок без торгов в начале холдинга','One more plot without an auction at the start of a holding']};
 const pkName=k=>T(PK[k][0],PK[k][1]),pkDesc=k=>T(PK[k][2],PK[k][3]);
 function mileTxt(m){return T(m.ru,m.en);}
-function mileProg(m){if(m.done)return '✓';if(m.f==='m')return FMT.money(Math.max(0,m.cur))+' / '+FMT.money(m.need);if(m.f==='r')return FMT.num(m.cur,2)+' / '+FMT.num(m.need,1);return Math.floor(m.cur)+' / '+m.need;}
+function mileProg(m){if(m.done)return '✓';if(m.f==='p')return Math.round(Math.min(1,m.cur)*100)+' %';if(m.f==='m')return FMT.money(Math.max(0,m.cur))+' / '+FMT.money(m.need);if(m.f==='r')return FMT.num(m.cur,2)+' / '+FMT.num(m.need,1);return Math.floor(m.cur)+' / '+m.need;}
 const bar=f=>`<div class="mt-bar"><i style="width:${(Math.max(0,Math.min(1,f))*100).toFixed(1)}%"></i></div>`;
 function cosName(c){return c?T(c.ru,c.en):'';}
 

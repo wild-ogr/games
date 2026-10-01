@@ -212,10 +212,10 @@ const STAT_LAN=/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)|\.local$/.test(loca
   STAT_REC=(LOCAL||STAT_LAN)&&/[?&]rec=1/.test(location.search);
 const STAT_SINK=LOCAL?/[?&]stat=sink(?::(\d+))?/.exec(location.search):null;
 const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':LOCAL||STAT_LAN?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-// бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta1' (отдельно от настоящих цифр)
+// бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta2' (бета-1 — 'beta1'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta1':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta2':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
   if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
@@ -397,8 +397,9 @@ var SOC=(function(){
     settingsHtml:settingsHtml,bind:bind,showMore:showMore,offer:offer,games:GAMES};
 })();
 /*/SOC*/
-// VK: куски по 1800 символов, двойной буфер «a0…»/«b0…», указатель svn="b:5:<длина>" — последним. Мир ~25–45 КБ → до 50 кусков
-const VK_CHUNK=1800,VK_MAXCH=50,vkSent={};let vkCur=null,vkQ=null,vkAgain=false;
+// VK: куски по 1800 символов, двойной буфер «a0…»/«b0…», указатель svn="b:5:<длина>" — последним. Мир в «Недрах» дорастает до 90+ тыс. знаков (sim, 01.10) →
+// до 200 кусков (360 тыс.; у VK лимит 1000 ключей на игрока, значение ≤ 4096 байт — 1800 знаков кириллицы влезают), читаем пачками по 50 ключей
+const VK_CHUNK=1800,VK_MAXCH=200,VK_GETN=50,vkSent={};let vkCur=null,vkQ=null,vkAgain=false;
 async function vkPut(k,v){if(vkSent[k]===v)return;await vkSend('VKWebAppStorageSet',{key:k,value:v},8000);vkSent[k]=v;}
 function vkSaveCloud(){if(vkQ){vkAgain=true;return vkQ;}
   vkQ=(async()=>{try{do{vkAgain=false;const str=JSON.stringify(S),ts=S.ts,c=S.cr,n=Math.ceil(str.length/VK_CHUNK),pre=vkCur==='a'?'b':'a';if(n>VK_MAXCH)return;
@@ -412,7 +413,7 @@ async function vkLoadCloud(){const r0=await vkSend('VKWebAppStorageGet',{keys:['
   if(m){pre=m[1];n=+m[2];len=+m[3];}
   if(!n||n>VK_MAXCH)throw BROKEN;
   const keys=[];for(let i=0;i<n;i++)keys.push(pre+i);
-  const r=await vkSend('VKWebAppStorageGet',{keys}),mm={};((r&&r.keys)||[]).forEach(k=>mm[k.key]=k.value);
+  const mm={};for(let j=0;j<keys.length;j+=VK_GETN){const r=await vkSend('VKWebAppStorageGet',{keys:keys.slice(j,j+VK_GETN)},8000);((r&&r.keys)||[]).forEach(k=>mm[k.key]=k.value);}
   let str='';for(const k of keys){if(typeof mm[k]!=='string'||!mm[k])throw BROKEN;str+=mm[k];}
   if(len>=0&&str.length!==len)throw BROKEN;
   let d;try{d=JSON.parse(str);}catch(e){throw BROKEN;}if(!isObj(d))throw BROKEN;
@@ -953,6 +954,8 @@ SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(
     return Promise.resolve(b0.call(PAY,id)).then(r=>{STAT.ev('buy',{i:id,r:payOk===id?'ok':'no'});return r;});};}
 if(PLAT==='apk'){setTimeout(()=>{sdkReady();},0);}
 else if(PLAT==='vk')initVK();
+// M15 A8: на github.io и в бете SDK Яндекса нет — не грузим /sdk.js (иначе 404 и ошибка загрузки в STAT), сразу initSDK (без YaGames — заглушка: локальное сохранение, без рекламы площадки)
+else if(BETA||/(^|\.)github\.io$/.test(location.hostname))setTimeout(()=>{initSDK();},0);
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
 window.__shell={mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,PAY,LB,get S(){return S;},set S(v){S=v;},set VK(v){VK=v;},get VK(){return VK;}};
 

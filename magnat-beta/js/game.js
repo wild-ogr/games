@@ -16,7 +16,15 @@ const FMT={num,
     if(a>=1e9)return s+num(a/1e9,a>=1e11?0:a>=1e10?1:2)+(en()?' bn ₽':' млрд ₽');
     if(a>=1e6)return s+num(a/1e6,a>=1e8?0:1)+(en()?' m ₽':' млн ₽');
     if(a>=1e3)return s+num(a/1e3,0)+(en()?' k ₽':' тыс. ₽');return s+a+' ₽';},
-  mln(x){return num((x||0)/1e6,Math.abs(x)>=1e8?0:1);},
+  // таблицы и графики (M16): единица — по самому большому числу таблицы/графика, подпись берётся из той же единицы:
+  // до 100 тыс. — рубли, до 100 млн — тыс. ₽, до 100 млрд — млн ₽, дальше — млрд ₽ (в выбранной единице числа не длиннее «99 999»)
+  unit(mx){mx=Math.abs(mx||0);return mx<1e5?1:mx<1e8?1e3:mx<1e11?1e6:1e9;},
+  unitOf(a){let m=0;for(const x of a||[])if(x!=null&&isFinite(x))m=Math.max(m,Math.abs(x));return FMT.unit(m);},
+  uName(u){return u===1?'₽':u===1e3?(en()?'k ₽':'тыс. ₽'):u===1e6?(en()?'m ₽':'млн ₽'):(en()?'bn ₽':'млрд ₽');},
+  // число в единице u; ненулевая сумма никогда не превращается в «0,0»: 2 знака, а если и так ноль — «<0,01»
+  inU(x,u){x=Math.round(x||0);u=u||1;if(!x)return '0';if(u===1)return num(x,0);const v=x/u,a=Math.abs(v);let d=a>=99.95?0:1;
+    if(x&&+a.toFixed(d)===0)d=2;if(x&&+a.toFixed(d)===0)return (x<0?'−':'')+'<'+num(.01,2);return num(v,d);},
+  mln(x){return num((x||0)/1e6,Math.abs(x)>=1e8?0:1);},   // устарело: в интерфейсе — FMT.money или FMT.inU/uName
   qty(q,g){const u=NM.unit(g),a=Math.abs(q||0);
     if(a>=1e6)return num(q/1e6,2)+(en()?' m ':' млн ')+u;if(a>=1e3)return num(q/1e3,a>=1e4?0:1)+(en()?'k ':' тыс. ')+u;return num(q,0)+' '+u;},
   pct(x,d){return num((x||0)*100,d||0)+(en()?'%':' %');},
@@ -61,6 +69,7 @@ function onClose(rep,off){if(!off)S.adW=(S.adW||0)+1;
   if(!off&&typeof LB!=='undefined'&&LB.submit){try{LB.submit();}catch(e){}}}
 function handle(out,off){for(const e of out){
   if(e.k==='close'){onClose(e.rep,off);if(!off)emit('close',e.rep);}
+  else if(e.k==='own'){emit('own',e);if(e.w==='visit')emit('ownVisit',{fr:e.a,off:!!off,r:e.fr||null});}   // M17: дела хозяина (js/owner.js); ownVisit — хук для модуля друзей: «сходил в гости к другу» (fr — owl|beav|bars|vit)
   else if(!off){if(e.k==='found')emit('found',e.p);else if(e.k==='built')emit('built',e.o);else if(e.k==='upgraded')emit('upgraded',e.o);else if(e.k==='auc')emit('auc',e.a,e.res);else if(e.k==='gig')emit('gig',e);}}}
 function dayStep(){let out;try{out=E.tick(W,false);}catch(e){broken(e);return;}handle(out,false);persist();emit('day');}
 // сломанное сохранение: не затираем молча — копия в резерв, окно «исправить / начать заново»
@@ -271,11 +280,12 @@ Object.defineProperty(GAME,'GIFT',{get(){if(!W)return GIFT;const p=PL();const c=
 /* покупки за 💎 навсегда (28.09, владелец: «руки 4 и 5 за кристаллы», «энергии больше 100»): 4-я и 5-я рука ✋ (E.HAND_CR 60/150 💎), запас сил ⚡ +20 ступенями до 160 (E.EN_CR 40/80/140 💎).
    Хранятся в S.pk (hand, enx) — облако берёт больший уровень, переживают IPO и «начать заново» (как «Доля основателя»); в мире — копия W.pk (модель: E.hx, E.enMax). */
 function pkSync(){if(!W)return;if(!S.pk||typeof S.pk!=='object')S.pk={};if(!W.pk||typeof W.pk!=='object')W.pk={};
-  for(const k of ['hand','enx']){const v=Math.max(S.pk[k]|0,W.pk[k]|0);if(v){S.pk[k]=v;W.pk[k]=v;}}}
+  for(const k of ['hand','enx','reg']){const v=Math.max(S.pk[k]|0,W.pk[k]|0);if(v){S.pk[k]=v;W.pk[k]=v;}}}   // reg — «Режим дня» (M17, E.REG_CR)
 function pkLv(k){pkSync();return (S.pk&&S.pk[k])|0;}
 function buyPk(k,prices){const l=pkLv(k);if(!prices||l>=prices.length)return 'max';if(!GAME.spend(prices[l],k))return 'cr';S.pk[k]=l+1;pkSync();persist(true);emit('change');return 'ok';}
 Object.assign(GAME,{handLv:()=>pkLv('hand'),enLv:()=>pkLv('enx'),handNext:()=>{const l=pkLv('hand');return E.HAND_CR&&l<E.HAND_CR.length?E.HAND_CR[l]:0;},
-  enNext:()=>{const l=pkLv('enx');return E.EN_CR&&l<E.EN_CR.length?E.EN_CR[l]:0;},buyHand:()=>buyPk('hand',E.HAND_CR),buyEn:()=>buyPk('enx',E.EN_CR),pkSync});
+  enNext:()=>{const l=pkLv('enx');return E.EN_CR&&l<E.EN_CR.length?E.EN_CR[l]:0;},buyHand:()=>buyPk('hand',E.HAND_CR),buyEn:()=>buyPk('enx',E.EN_CR),
+  regLv:()=>pkLv('reg'),regNext:()=>{const l=pkLv('reg');return E.REG_CR&&l<E.REG_CR.length?E.REG_CR[l]:0;},buyReg:()=>buyPk('reg',E.REG_CR),pkSync});
 Object.assign(GAME,{planRerollOk,planReroll,plan:()=>{const p=PL();planTasksNow();return p;},CAL,CAL7_CR,planGift,planX2,planX2Ok,planClaim,taskCur,taskDone,
   miles:st=>W&&E.bizMiles?E.bizMiles(W,st):[],qgPick,qgCur,qgOk,
   ipoShares(){return Math.max(1,Math.floor(Math.sqrt(Math.max(0,value())/1e9)*10));},perkOffer,perkPick,
