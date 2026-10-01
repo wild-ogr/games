@@ -32,7 +32,7 @@ GAME.on('built',oid=>{try{const o=W().obj.find(x=>x.id===oid);STAT.ev('built',{t
 GAME.on('auc',(a,res)=>{STAT.ev('auc',{r:String(res||'')});});
 // M17 (js/owner-ui.js → GAME.emit('o2')): налог (tax: m — режим, w — ip|set), уровень точки (pup: t, n; до M19 — lvl, совпадал с «уровнем» STAT), маркетинг (mk: m — инструмент, r — итог),
 // курс героя (edu: c), обучение персонала (stf: w — sell|mast), дело хозяина (job: j), «Режим дня» (reg: n — ступень), ответ на событие главы 2 (ev2: e, i, r); s — глава
-GAME.on('o2',o=>{if(!o||!o.k)return;const s=GAME.stage(),x=Object.assign({},o);const k=x.k;delete x.k;x.s=s;const map={lvl:'pup',mk:'mk',edu:'edu',st:'stf',job:'job',reg:'reg',ev:'ev2',tax:'tax'};
+GAME.on('o2',o=>{if(!o||!o.k)return;const s=GAME.stage(),x=Object.assign({},o);const k=x.k;delete x.k;x.s=s;const map={lvl:'pup',mk:'mk',edu:'edu',st:'stf',job:'job',reg:'reg',ev:'ev2',tax:'tax',mx:'mx'};
   for(const q in x)if(typeof x[q]==='string')x[q]=x[q].slice(0,16);if(map[k])STAT.ev(map[k],x);});
 // M18: друзья — fr {k: rel|help|ask|ans|visit|offer|pari|lend|jv|minus, w — друг, d/l — изменение и уровень, p/r/o/t — что именно}; очередь W.fr.sx (js/story.js), не больше 40 за сеанс, мелкие ±1–2 не шлём
 let frN=0;

@@ -30,8 +30,13 @@ const crTxt=n=>n+' 💎';
 /* ================= сохранение ================= */
 const SKEY='magnat-v1';
 let S={w:null,cr:20,crE:{},adW:0,ask:{},tut:{},fame:[]};
-try{const r=localStorage.getItem(SKEY);if(r){let o=null;try{o=JSON.parse(r);}catch(e){}if(isObj(o))S=Object.assign(S,o);else try{localStorage.setItem('magnat-backup-'+Date.now(),r);}catch(e){}}}catch(e){}   // сейв не читается — кладём копию рядом, а не теряем молча (игра начнётся заново, облако может вернуть мир)
-const OBJF=['crE','ask','tut','cos','pk','psG','psT','wall','lxE','lxc','col','colG'];   // M8: стена почёта, вещи, украшения вещей, наборы — объединение // cos — украшения за 💎, pk — улучшения «Доли основателя» (объединение, берём больший уровень); psG/psT — «Путёвка председателя» (день начала / сколько взято по ключу покупки)
+// M24: мир пишем упакованным без потерь (js/savepack.js: имена полей массивов — один раз; 90 тыс. знаков → ~55), читаем — распаковываем; игра видит только обычный мир.
+// Старый сейв (без метки w.$pk) читается как есть; без PACK или если проверка обратимости не прошла — пишем как раньше
+function wIn(o){if(isObj(o)&&isObj(o.w)&&o.w.$pk===1){try{o.w=PACK.unpack(o.w);}catch(e){try{localStorage.setItem('magnat-backup-'+Date.now(),JSON.stringify(o));}catch(x){}o.w=null;}}return o;}
+function sOut(){return isObj(S.w)&&typeof PACK!=='undefined'?Object.assign({},S,{w:PACK.packSafe(S.w)}):S;}
+try{const r=localStorage.getItem(SKEY);if(r){let o=null;try{o=wIn(JSON.parse(r));}catch(e){}if(isObj(o))S=Object.assign(S,o);else try{localStorage.setItem('magnat-backup-'+Date.now(),r);}catch(e){}}}catch(e){}   // сейв не читается — кладём копию рядом, а не теряем молча (игра начнётся заново, облако может вернуть мир)
+const OBJF=['crE','ask','tut','cos','pk','psG','psT','wall','lxE','lxc','col','colG','thU'];   // M27: thU — открытые темы оформления (js/themes.js), объединение
+   // M8: стена почёта, вещи, украшения вещей, наборы — объединение // cos — украшения за 💎, pk — улучшения «Доли основателя» (объединение, берём больший уровень); psG/psT — «Путёвка председателя» (день начала / сколько взято по ключу покупки)
 // защита от сохранений неожиданной формы (ручная правка, старая версия)
 function fixSave(){for(const f of OBJF)if(!isObj(S[f]))S[f]={};
   if(S.w!=null&&!isObj(S.w))S.w=null;
@@ -40,6 +45,9 @@ function fixSave(){for(const f of OBJF)if(!isObj(S[f]))S[f]={};
   if(!Array.isArray(S.fame))S.fame=[];S.fame=S.fame.filter(isObj);
   for(const f of ['ts','lastT','maxT'])if(S[f]!=null&&(typeof S[f]!=='number'||!isFinite(S[f])))delete S[f];
   if(S.wk!=null&&!isObj(S.wk))delete S.wk;if(S.adCr!=null&&!isObj(S.adCr))delete S.adCr;if(S.adR!=null&&!isObj(S.adR))delete S.adR;
+  if(S.th!=null&&typeof S.th!=='string')delete S.th;if(S.adTot!=null&&(typeof S.adTot!=='number'||!isFinite(S.adTot)))delete S.adTot; // M27: темы
+  // M28: S.st0 — первый запуск игры (мс; для «Стартового набора» — первые 10 реальных дней). Старый игрок — день первого запуска из статистики (S.stc.c, ГГГГММДД)
+  if(typeof S.st0!=='number'||!isFinite(S.st0)||S.st0<=0){const c=isObj(S.stc)?+S.stc.c:0;S.st0=c>2e7?Date.UTC(Math.floor(c/1e4),Math.floor(c/100)%100-1,c%100):Date.now();}
   if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
 fixSave();
 // «точка отсчёта» с облаком (как монеты в «Козле»): 💎, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным
@@ -47,19 +55,19 @@ let BOOT_TS=S.ts||0,BOOT_CR=S.cr;
 // облако: Яндекс — не чаще раза в 3,5 с, VK — раза в 15 с; при сворачивании — сразу. Пока облако не прочитано и не слито — не пишем
 let cloudT=0,cloudReady=false,cloudBusy=false,cloudTry=0,cloudBroken=0;
 function save(){S.ts=nowMs();
-  try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
+  try{localStorage.setItem(SKEY,JSON.stringify(sOut()));}catch(e){}
   if(!cloudReady){cloudLoad();return;}
   if((YP||VK)&&!cloudT)cloudT=setTimeout(cloudFlush,YP?3500:15000);}
 function cloudFlush(){clearTimeout(cloudT);cloudT=0;if(!cloudReady)return;
-  try{if(YP){const ts=S.ts,c=S.cr;YP.setData(S,true).then(()=>{BOOT_TS=ts;BOOT_CR=c;}).catch(()=>{});}else if(VK)vkSaveCloud();}catch(e){}}
+  try{if(YP){const ts=S.ts,c=S.cr;YP.setData(sOut(),true).then(()=>{BOOT_TS=ts;BOOT_CR=c;}).catch(()=>{});}else if(VK)vkSaveCloud();}catch(e){}}
 function canon(o){return JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((r,x)=>(r[x]=v[x],r),{}):v);}
 const noTs=o=>Object.assign({},o,{ts:0});
 async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Date.now()-cloudTry<10000))return;cloudBusy=true;cloudTry=Date.now();
-  try{const d=YP?await timeLim(YP.getData(),8000):await vkLoadCloud();
+  try{const d=wIn(YP?await timeLim(YP.getData(),8000):await vkLoadCloud());
     const before=canon(noTs(S));mergeSave(d);fixSave();cloudReady=true;cloudBroken=0;
     if(d&&typeof d.ts==='number')BOOT_TS=Math.max(BOOT_TS,d.ts);BOOT_CR=S.cr;
     const ch=canon(noTs(S))!==before;
-    if(ch){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}}
+    if(ch){try{localStorage.setItem(SKEY,JSON.stringify(sOut()));}catch(e){}}
     if(!d||canon(noTs(d))!==canon(noTs(S))){save();cloudFlush();}
     if(ch)cloudChanged();
   }catch(e){if(e&&e.broken&&++cloudBroken>=3){cloudReady=true;BOOT_CR=S.cr;save();}}finally{cloudBusy=false;}}
@@ -212,10 +220,10 @@ const STAT_LAN=/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)|\.local$/.test(loca
   STAT_REC=(LOCAL||STAT_LAN)&&/[?&]rec=1/.test(location.search);
 const STAT_SINK=LOCAL?/[?&]stat=sink(?::(\d+))?/.exec(location.search):null;
 const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':LOCAL||STAT_LAN?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-// бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta2' (бета-1 — 'beta1'; отдельно от настоящих цифр)
+// бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta3' (бета-1 — 'beta1', бета-2 — 'beta2'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta2':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta3':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
   if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
@@ -230,7 +238,7 @@ const wGen=o=>isObj(o)&&isObj(o.w)?(o.rst|0)*1000+(typeof o.w.hold==='number'?o.
 const wDays=o=>isObj(o)&&isObj(o.w)&&typeof o.w.t==='number'?o.w.t:-1;
 // слияние облака с локальным: мир — где больше холдинг/дней (при равенстве — новее ts), 💎 — облачные + изменение на устройстве,
 // fame — объединение по hold, «за что дали» — объединение, покупки — payMerge, настройки — из более нового
-function mergeSave(d,ref){if(!isObj(d))return;
+function mergeSave(d,ref){if(!isObj(d))return;wIn(d);
   const dt=typeof d.ts==='number'?d.ts:0,rt=ref==null?BOOT_TS:ref,newer=dt>rt;
   if(isObj(d.w)){const ga=wGen(S),gb=wGen(d),ta=wDays(S),tb=wDays(d);
     if(gb>ga||gb===ga&&(tb>ta||tb===ta&&dt>(S.ts||0))){S.w=d.w;for(const f of ['wk','lastT','offMore','freeM','ph','adD','gift'])if(f in d)S[f]=d[f];}}
@@ -243,12 +251,13 @@ function mergeSave(d,ref){if(!isObj(d))return;
   else if(isObj(d.adCr)&&isObj(S.adCr)&&d.adCr.d===S.adCr.d)S.adCr.n=Math.max(S.adCr.n||0,d.adCr.n||0);
   if(isObj(d.adR)&&(!isObj(S.adR)||(d.adR.d|0)>(S.adR.d|0)))S.adR=d.adR;else if(isObj(d.adR)&&isObj(S.adR)&&d.adR.d===S.adR.d)S.adR.n=Math.max(S.adR.n|0,d.adR.n|0);   // общий предел роликов: берём больший счёт дня
   if(typeof d.maxT==='number')S.maxT=Math.max(S.maxT||0,d.maxT);
+  if(typeof d.st0==='number'&&d.st0>0)S.st0=S.st0>0?Math.min(S.st0,d.st0):d.st0;   // M28: первый запуск — самый ранний с любого устройства
   if(typeof d.rst==='number')S.rst=Math.max(S.rst||0,d.rst);
-  for(const f of ['rk','rkG','udN'])if(typeof d[f]==='number')S[f]=Math.max(S[f]|0,d[f]);   // звание не падает и на другом устройстве
+  for(const f of ['rk','rkG','udN','adTot'])if(typeof d[f]==='number')S[f]=Math.max(S[f]|0,d[f]);   // звание не падает и на другом устройстве
   if(typeof d.adW==='number')S.adW=Math.max(S.adW||0,d.adW);
   if(typeof d.lbB==='number')S.lbB=Math.max(S.lbB||0,d.lbB);
   if(typeof QUEST!=='undefined'&&isObj(d.quest)){if(!isObj(S.quest))S.quest=d.quest;else QUEST.merge(d.quest);}   // «Ролики дня»: тот же день — максимумы
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|w|cr|crE|ask|tut|fame|adCr|adR|maxT|adW|lbB|wk|lastT|offMore|freeM|buy|buyB|payT|payV|soc|stc|quest|rk|rkG|udN|wall|lxE|lxc|col|colG)$/.test(k))S[k]=d[k]; // флажки и настройки
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|w|cr|crE|ask|tut|fame|adCr|adR|maxT|st0|adW|lbB|wk|lastT|offMore|freeM|buy|buyB|payT|payV|soc|stc|quest|rk|rkG|udN|adTot|thU|wall|lxE|lxc|col|colG)$/.test(k))S[k]=d[k]; // флажки и настройки
   SOC.merge(d.soc);STAT.merge(d.stc); // соц-предложения VK (модуль держит ссылку на S.soc) и отметки статистики — сливаем, а не заменяем
   payMerge(d);}
 function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
@@ -397,12 +406,12 @@ var SOC=(function(){
     settingsHtml:settingsHtml,bind:bind,showMore:showMore,offer:offer,games:GAMES};
 })();
 /*/SOC*/
-// VK: куски по 1800 символов, двойной буфер «a0…»/«b0…», указатель svn="b:5:<длина>" — последним. Мир в «Недрах» дорастает до 90+ тыс. знаков (sim, 01.10) →
+// VK: куски по 1800 символов, двойной буфер «a0…»/«b0…», указатель svn="b:5:<длина>" — последним. Мир в «Недрах» дорастал до 90+ тыс. знаков (sim, 01.10; с упаковкой js/savepack.js — до ~55) →
 // до 200 кусков (360 тыс.; у VK лимит 1000 ключей на игрока, значение ≤ 4096 байт — 1800 знаков кириллицы влезают), читаем пачками по 50 ключей
 const VK_CHUNK=1800,VK_MAXCH=200,VK_GETN=50,vkSent={};let vkCur=null,vkQ=null,vkAgain=false;
 async function vkPut(k,v){if(vkSent[k]===v)return;await vkSend('VKWebAppStorageSet',{key:k,value:v},8000);vkSent[k]=v;}
 function vkSaveCloud(){if(vkQ){vkAgain=true;return vkQ;}
-  vkQ=(async()=>{try{do{vkAgain=false;const str=JSON.stringify(S),ts=S.ts,c=S.cr,n=Math.ceil(str.length/VK_CHUNK),pre=vkCur==='a'?'b':'a';if(n>VK_MAXCH)return;
+  vkQ=(async()=>{try{do{vkAgain=false;const str=JSON.stringify(sOut()),ts=S.ts,c=S.cr,n=Math.ceil(str.length/VK_CHUNK),pre=vkCur==='a'?'b':'a';if(n>VK_MAXCH)return;
       for(let i=0;i<n;i++)await vkPut(pre+i,str.slice(i*VK_CHUNK,(i+1)*VK_CHUNK));
       await vkPut('svn',pre+':'+n+':'+str.length);vkCur=pre;BOOT_TS=ts;BOOT_CR=c;}while(vkAgain);}catch(e){}finally{vkQ=null;}})();
   return vkQ;}
@@ -416,7 +425,7 @@ async function vkLoadCloud(){const r0=await vkSend('VKWebAppStorageGet',{keys:['
   const mm={};for(let j=0;j<keys.length;j+=VK_GETN){const r=await vkSend('VKWebAppStorageGet',{keys:keys.slice(j,j+VK_GETN)},8000);((r&&r.keys)||[]).forEach(k=>mm[k.key]=k.value);}
   let str='';for(const k of keys){if(typeof mm[k]!=='string'||!mm[k])throw BROKEN;str+=mm[k];}
   if(len>=0&&str.length!==len)throw BROKEN;
-  let d;try{d=JSON.parse(str);}catch(e){throw BROKEN;}if(!isObj(d))throw BROKEN;
+  let d;try{d=wIn(JSON.parse(str));}catch(e){throw BROKEN;}if(!isObj(d))throw BROKEN;
   if(pre!=='sv'){vkCur=pre;for(const k of keys)vkSent[k]=mm[k];vkSent.svn=raw;}
   return d;}
 // SDK/мост готов (или не пришёл) — хук игры ровно один раз
@@ -519,7 +528,7 @@ let adBusy=false;
 function showRewarded(cb0,onFail0){
   if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
   if(adRewLeft()<=0){adBusy=false;toast(L('Ролики за награду на сегодня закончились — завтра будут снова','No more reward videos today — back tomorrow'));onFail0&&onFail0();return;}
-  const cb=()=>{adBusy=false;lastAdT=Date.now();adRewLeft();S.adR.n=(S.adR.n|0)+1;if(S.adR.n===AD_REW_DAY)STAT.ev('adcap',{});try{save();}catch(e){}cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
+  const cb=()=>{adBusy=false;lastAdT=Date.now();adRewLeft();S.adR.n=(S.adR.n|0)+1;S.adTot=(S.adTot|0)+1;if(AD_REW_DAY&&S.adR.n===AD_REW_DAY)STAT.ev('adcap',{});try{save();}catch(e){}cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
   if(PLAT==='apk'){const A=apkAds();if(A&&A.rewarded){adOpen();A.rewarded(ok=>{adClose();STAT.ad('rew',ok?'ok':'fail','apk');if(ok)cb();else{toast(adFail());onFail();}});}else if(!APK_REAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail','noapk');toast(adFail());onFail();}return;}
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(adFail());onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
@@ -533,13 +542,13 @@ function showRewarded(cb0,onFail0){
     onError:()=>{adClose();STAT.ad('rew','err');toast(adFail());onFail();}}});
 }
 function adPlat(){return !(PLAT==='vk'&&!VK&&VK_REAL)&&!(PLAT==='apk'&&APK_REAL&&!apkAds());}   // площадка умеет рекламу (мост/SDK)
-// общий дневной предел роликов за награду — 20 в день на все места вместе (решение владельца 30.09); свои лимиты мест (GAME.adLeft, adCrLeft) — внутри него
-const AD_REW_DAY=20;
-function adRewLeft(){const d=payDay();if(!S.adR||typeof S.adR!=='object'||S.adR.d!==d)S.adR={d:d,n:0};return Math.max(0,AD_REW_DAY-(S.adR.n|0));}
+// общий дневной предел роликов за награду: 0 — нет предела (решение владельца 01.10: убрали 20 в день; баланс держат лимиты мест GAME.adLeft, adCrLeft и лесенка). S.adR — счёт роликов дня (для STAT)
+const AD_REW_DAY=0;
+function adRewLeft(){const d=payDay();if(!S.adR||typeof S.adR!=='object'||S.adR.d!==d)S.adR={d:d,n:0};return AD_REW_DAY?Math.max(0,AD_REW_DAY-(S.adR.n|0)):999;}
 function adOk(){return adPlat()&&adRewLeft()>0;}   // кнопки «📺 … за рекламу» — только при adOk(): кончился предел — кнопки прячутся
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&adPlat();}
 // строка для окон с роликами: сколько осталось сегодня / «завтра»
-function adDayHtml(){if(!adPlat())return '';const n=adRewLeft();
+function adDayHtml(){if(!adPlat()||!AD_REW_DAY)return '';const n=adRewLeft();
   return '<p class="mut addl" style="font-size:16px;text-align:center">📺 '+(n>0?L('Роликов за награду сегодня: осталось ','Reward videos left today: ')+n+L(' из ',' of ')+AD_REW_DAY:L('Ролики за награду на сегодня закончились — завтра будут снова','No more reward videos today — back tomorrow'))+'</p>';}
 // не раньше 3-го месяца, не после отчёта с санацией, убытком или овердрафтом (не добивать в плохой месяц), не при «Без рекламы»
 function adDue(){const w=S.w,r=w&&Array.isArray(w.reps)&&w.reps.length?w.reps[w.reps.length-1]:null;let bad=false;try{bad=!!(r&&r.pl&&ECON.netOf(r.pl)<0)||(w&&w.odM>0);}catch(e){}
@@ -563,7 +572,8 @@ function updCr(){const e=$('crCnt');if(e)e.textContent=S.cr;}
 // оформление «Кабинет председателя» (покупка office): включено, пока игрок не выключил в настройках
 // «Лихие 90-е» (покупка set90) — тема th-90s (CSS — js/meta-ui.js); включена, пока не выключили; главнее «Кабинета» (две темы сразу не смешиваем)
 const th90On=()=>PAY.own('set90')&&S.th90!==false,thOffOn=()=>PAY.own('office')&&S.office!==false&&!th90On();
-function applyOffice(){if(!document.body)return;document.body.classList.toggle('th-office',thOffOn());document.body.classList.toggle('th-90s',th90On());}
+function applyOffice(){if(window.THEME){THEME.apply();return;}if(!document.body)return; // M27: темы — js/themes.js (THEME); здесь — только до его загрузки
+  document.body.classList.toggle('th-office',thOffOn());document.body.classList.toggle('th-90s',th90On());}
 
 /* ---- товары «Магната» (каталог — hobby-analytics/13-purchases-catalog.md). Не продаём рубли, место в рейтинге и «удачу» торгов ----
    vk — цена в голосах (в hobby-pay/catalog.json — под ключом «54794426» (VK app_id игры)) */
@@ -601,13 +611,30 @@ const PAY_ITEMS={
     en:{name:'Chain signs and colours',desc:'6 emblems and 6 sign colours at once — just for looks'}},
   set90:{perm:1,vk:11,ic:'📼',name:'Коллекция «Лихие 90-е»',desc:'Тема оформления «Ларёк 90-х», 3 эмблемы, цвет вывесок «Малиновый пиджак» и кожаная рамка — только для красоты',
     en:{name:'The Wild 90s collection',desc:'“90s kiosk” theme, 3 emblems, the “Raspberry blazer” sign colour and a leather frame — just for looks'},
-    give(){S.th90=true;}}
+    give(){S.th90=true;}},
+  // 01.10 (решил владелец): тема «Тёплый плакат» (79 ₽ / 11, навсегда, только вид) — тема poster в js/themes.js (unlock pay th_poster); после покупки payAfter(id) → THEME.bought включает её сама
+  th_poster:{perm:1,vk:11,ic:'🖼',name:'Тема «Тёплый плакат»',desc:'Оформление игры в тёплых цветах старого плаката — только для красоты. Навсегда',
+    en:{name:'“Warm poster” theme',desc:'The game in the warm colours of an old poster — just for looks. Forever'}},
+  // M28, 01.10 (утвердил владелец): щепотка 29 ₽ / 4, набор недропользователя 149 ₽ / 21 (один раз, виден с главы «Карьер» — js/shop.js),
+  // «Вся красота» 199 ₽ / 28 (office + set90 + th_poster + livery, за уже купленное +40 💎). Эмблема «Золотая кирка» (em_gpick) — в js/shop.js
+
+  cr_xs:{n:25,vk:4,ic:'💎',name:'Щепотка кристаллов: 25 💎',desc:'Чтобы попробовать: ускорить стройку или купить украшение',done:'+25 💎 — спасибо!',
+    en:{name:'A pinch of crystals: 25 💎',desc:'To try it out: speed up construction or buy a decoration',done:'+25 💎 — thank you!'}},
+  nedra_pack:{perm:1,bonus:400,vk:21,ic:'⛏',name:'Набор недропользователя',desc:'400 💎 и эмблема «Золотая кирка» перед названием холдинга. Один раз',
+    en:{name:'Mineral rights holder’s pack',desc:'400 💎 and the “Golden pickaxe” emblem next to your holding’s name. One time only'},
+    give(){if(!payObj(S.cos))S.cos={};S.cos.em_gpick=1;}},
+  look_all:{perm:1,vk:28,ic:'🎨',name:'Вся красота',desc:'Темы «Кабинет председателя», «Тёплый плакат», коллекция «Лихие 90-е» и «Вывески и цвета сети». Что уже куплено — заменим на +40 💎 за каждое',
+    en:{name:'All the looks',desc:'The “Chairman’s office” and “Warm poster” themes, “The Wild 90s” collection and “Chain signs and colours”. Anything you already own is swapped for +40 💎 each'},
+    give(){payLookAll();}}
 };
 // «Путёвка председателя»: каждая покупка — свой ключ в S.psG (= номер дня покупки), взятые посылки — S.psT[ключ]. Облако сливает оба
 // объекта по ключам (max) — посылки не размножаются. Эмблема «Путёвка» и рамка «Санаторная» — в S.cos. Посылки забирают в META (meta-ui.js)
 function payDay(){const d=new Date(nowMs());return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5);}
 function passGive(){if(!isObj(S.psG))S.psG={};let k;do k='p'+nowMs().toString(36)+Math.random().toString(36).slice(2,6);while(S.psG[k]!=null);
   S.psG[k]=payDay();if(!isObj(S.cos))S.cos={};S.cos.em_pass=1;S.cos.fr_sana=1;}
+// «Стартовый набор» (решение владельца 01.10): в продаже только первые 10 реальных дней с первого запуска (S.st0, облако — самый ранний); купленный виден всегда
+const STARTER_DAYS=10;
+function starterOn(){return PAY.own('starter')||nowMs()-(S.st0||nowMs())<STARTER_DAYS*864e5;}
 // «Всё и сразу»: включает no_ads, manager, office; что уже было куплено — +60 💎 за каждое (один раз: S.buyB.bundle_c)
 function payBundle(){if(!payObj(S.buy))S.buy={};if(!payObj(S.buyB))S.buyB={};let c=0;
   for(const id of ['no_ads','manager','office']){if(S.buy[id])c++;else S.buy[id]=1;}
@@ -615,12 +642,16 @@ function payBundle(){if(!payObj(S.buy))S.buy={};if(!payObj(S.buyB))S.buyB={};let
 // английский для общего модуля PAY (сам модуль не трогаем): надписи его разметки и тосты переводит обёртка
 function payHtml(ids,owned){const h=PAY.html(ids,owned);return LANG==='en'?h.replace('<h3>Покупки</h3>','<h3>Purchases</h3>').replace(/<i>куплено<\/i>/g,'<i>owned</i>'):h;}
 const TOAST_EN={'Покупка зачислена':'Purchase added','Готово! Спасибо за покупку':'Done! Thanks for your purchase','Покупка не состоялась':'The purchase didn’t go through','Покупки проверены — всё на месте':'Purchases checked — everything is in place'};
-const PAY_TEST={no_ads:99,sponsor:99,manager:149,cr_s:49,cr_l:129,cr_xl:299,pass:149,office:79,starter:79,bundle:299,tea:49,livery:79,set90:79}; // цены только для ?paytest=1; настоящие — в консоли
+const PAY_TEST={no_ads:99,sponsor:99,manager:149,cr_s:49,cr_l:129,cr_xl:299,pass:149,office:79,starter:79,bundle:299,tea:49,livery:79,set90:79,th_poster:79,cr_xs:29,nedra_pack:149,look_all:199}; // цены только для ?paytest=1; настоящие — в консоли
+// «Вся красота»: включает office, set90, th_poster, livery; что уже было — +40 💎 за каждое (один раз: S.buyB.look_all_c)
+function payLookAll(){if(!payObj(S.buy))S.buy={};if(!payObj(S.buyB))S.buyB={};let c=0;
+  for(const id of ['office','set90','th_poster','livery']){if(S.buy[id])c++;else S.buy[id]=1;}
+  if(c&&!S.buyB.look_all_c){S.buyB.look_all_c=1;payAdd(40*c);}}
 function payAdd(n){S.cr+=n;}
 function payFlush(){cloudFlush();}
 function payPause(on){setPause('pay',on);}
 // после покупки/восстановления: 💎 на экране, оформление, перерисовать окно, где были кнопки (PAY.re), и интерфейс
-function payAfter(){updCr();applyOffice();if(modalOn&&PAY.re)PAY.re();try{window.uiRefresh&&window.uiRefresh();}catch(e){setTimeout(()=>{throw e;});}}
+function payAfter(id){updCr();try{if(id&&window.THEME)THEME.bought(id);}catch(e){}applyOffice();if(modalOn&&PAY.re)PAY.re();try{window.uiRefresh&&window.uiRefresh();}catch(e){setTimeout(()=>{throw e;});}}
 /* ================= покупки за деньги: Яндекс Игры (ysdk.payments) и VK Игры (VKWebAppShowOrderBox) — общий модуль (одинаковый в 5 играх) =================
    Товары игры — PAY_ITEMS (выше), id совпадают с id в консоли Яндекса («Инап-покупки») и в hobby-pay/catalog.json (VK).
    Кнопок покупок НЕТ совсем, если платежи недоступны: нет SDK/моста (мак), каталог Яндекса пуст, VK не поддерживает оплату (iOS).
@@ -799,7 +830,7 @@ function setLang(l){l=normLang(l);if(IS_VK)l='ru';if(l===LANG)return;LANG=l;appl
   if(modalOn&&modalRe)modalRe();}
 
 /* ================= настройки, покупки, «Об игре» ================= */
-function openSave(){const code=(()=>{try{return btoa(unescape(encodeURIComponent(JSON.stringify(S))));}catch(e){return '';}})();
+function openSave(){const code=(()=>{try{return btoa(unescape(encodeURIComponent(JSON.stringify(sOut()))));}catch(e){return '';}})();
   modal(`<h2>💾 ${L('Сохранение','Save')}</h2><p class="about">${L('Игра сохраняется сама на этом устройстве'+(PLAT==='apk'?'':' и в облаке площадки')+'. Чтобы перенести холдинг на другое устройство — скопируйте код и вставьте его там.','The game saves itself on this device'+(PLAT==='apk'?'':' and in the platform cloud')+'. To move your holding to another device, copy the code and paste it there.')}</p>
     <textarea id="svCode" rows="4" style="width:100%;font-size:13px;border-radius:12px;padding:8px" readonly>${code}</textarea>
     <div class="row"><button class="btn noenter" id="svCopy">📋 ${L('Скопировать','Copy')}</button></div>
@@ -807,11 +838,11 @@ function openSave(){const code=(()=>{try{return btoa(unescape(encodeURIComponent
     <textarea id="svIn" rows="3" style="width:100%;font-size:13px;border-radius:12px;padding:8px" placeholder="${L('вставьте код','paste the code')}"></textarea>
     <div class="row"><button class="btn noenter" id="svLoad">⬆️ ${L('Загрузить','Load')}</button><button class="btn" id="svBack" data-esc>${L('← Назад','← Back')}</button></div>`);
   $('svCopy').onclick=()=>{const t=$('svCode');t.select();try{navigator.clipboard?navigator.clipboard.writeText(t.value).then(()=>toast(L('Код скопирован','Code copied'))):document.execCommand('copy');}catch(e){}};
-  $('svLoad').onclick=()=>{let d=null;try{d=JSON.parse(decodeURIComponent(escape(atob($('svIn').value.trim()))));}catch(e){}
+  $('svLoad').onclick=()=>{let d=null;try{d=wIn(JSON.parse(decodeURIComponent(escape(atob($('svIn').value.trim())))));}catch(e){}
     if(!isObj(d)||!isObj(d.w)||d.w.v!==1){toast(L('Код не подходит — проверьте, что скопирован целиком','The code doesn’t fit — make sure it was copied in full'));return;}
-    S=d;fixSave();S.ts=nowMs();try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}cloudFlush();
+    S=d;fixSave();S.ts=nowMs();try{localStorage.setItem(SKEY,JSON.stringify(sOut()));}catch(e){}cloudFlush();
     // до перезагрузки игра не должна перезаписать загруженное (game.js при уходе со страницы кладёт в S.w старый мир и сохраняет)
-    const keep=JSON.stringify(S);save=function(){try{localStorage.setItem(SKEY,keep);}catch(e){}};cloudReady=false;location.reload();};
+    const keep=JSON.stringify(sOut());save=function(){try{localStorage.setItem(SKEY,keep);}catch(e){}};cloudReady=false;location.reload();};
   $('svBack').onclick=openSettings;}
 // «Начать игру заново»: два шага — предупреждение, потом удержание красной кнопки 2 с. Копия сейва — в резерв; 💎 и покупки остаются
 function openReset(){
@@ -837,9 +868,8 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('меньше анимации и движения','less animation and motion')}</small></span>${on(calm())}</button>
     ${IS_VK?'':`<button class="set" id="stLang"><span>🌐 Язык / Language</span><i>${LANG==='en'?'EN':'RU'}</i></button>`}
-    ${PAY.own('office')?`<button class="set" id="stOff"><span>🏛 ${L('Кабинет председателя','Chairman’s office')}<br><small>${L('оформление игры','game theme')}</small></span>${on(thOffOn())}</button>`:''}
-    ${PAY.own('set90')?`<button class="set" id="st90"><span>📼 ${L('Ларёк 90-х','90s kiosk')}<br><small>${L('оформление игры','game theme')}</small></span>${on(th90On())}</button>`:''}
-    ${PAY.on?payHtml(['no_ads'],false)+`<button class="set" id="stShop"><span>🛒 ${L('Все покупки','All purchases')}<br><small>${L('кристаллы, управляющий, оформление','crystals, manager, theme')}</small></span><i class="go">›</i></button>`:''}
+    ${window.THEME?`<button class="set" id="stTheme"><span>🎨 ${L('Оформление','Themes')}<br><small>${L('сейчас: ','now: ')}${(THEME.list().filter(t=>t.cur)[0]||{name:''}).name}</small></span><i class="go">›</i></button>`:''}
+    ${PAY.on?payHtml(['no_ads'],false):''}<button class="set" id="stShop"><span>🛒 ${L('Магазин','Shop')}<br><small>${PAY.on?L('кристаллы, наборы, оформление, награды','crystals, bundles, looks, rewards'):L('кристаллы, оформление, награды','crystals, looks, rewards')}</small></span><i class="go">›</i></button>
     ${storyOn()&&STORYUI.openHero?`<button class="set" id="stHero"><span>👤 ${L('Как меня зовут','My name')}<br><small>${L('имя и пол героя','hero’s name and gender')}</small></span><i class="go">›</i></button>`:''}
     ${storyOn()&&STORYUI.prologue?`<button class="set" id="stPro"><span>📖 ${L('Вспомнить пролог','Replay the prologue')}<br><small>${L('встреча 11 «Б» и пари','the Class 11B reunion and the bet')}</small></span><i class="go">›</i></button>`:''}
     ${STAT.available()?`<button class="set" id="stStat"><span>${L('📊 Анонимная статистика','📊 Anonymous statistics')}<br><small>${STAT.note()}</small></span>${on(STAT.enabled())}</button>`:''}
@@ -853,9 +883,8 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Turned on in your device settings (“reduce motion”)'));return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   if($('stLang'))$('stLang').onclick=()=>{const l=LANG==='en'?'ru':'en';LANG_MAN=l;try{localStorage.setItem(LANG_KEY,l);}catch(e){}setLang(l);};
-  if($('stOff'))$('stOff').onclick=()=>{if(thOffOn())S.office=false;else{S.office=true;S.th90=false;}save();applyOffice();openSettings();};
-  if($('st90'))$('st90').onclick=()=>{S.th90=!th90On();save();applyOffice();openSettings();};
-  if($('stShop'))$('stShop').onclick=openShop;
+  if($('stTheme'))$('stTheme').onclick=()=>{SND.tap();THEME.open(openSettings);};
+  if($('stShop'))$('stShop').onclick=()=>{SND.tap();openShop();};
   PAY.re=openSettings;if(PAY.on)PAY.bind($('mcard'));
   if($('stTut'))$('stTut').onclick=()=>{hideModal();UI.restartTut();};
   if($('stHero'))$('stHero').onclick=()=>{SND.tap();hideModal();STORYUI.openHero(()=>setTimeout(openSettings,60));};
@@ -878,6 +907,19 @@ function socMoreHtml(){return SOC.ok()?`<button class="btn w noenter socmore" da
 function socMoreUpd(){try{window.uiRefresh&&window.uiRefresh();}catch(e){}}
 document.addEventListener('click',e=>{const b=e.target&&e.target.closest?e.target.closest('[data-socmore]'):null;if(!b||!SOC.ok())return;
   SND.tap();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();socStat();});
+/* «📤 Похвастаться» (спец. SOC, «окно рекорда»): маленькая кнопка в окнах больших моментов — новая глава (small = первая точка), IPO, звание «Магнат».
+   Только VK с мостом (SOC.ok), жмёт сам игрок, без наград (п. 2.6.2) и без всплывающих окон — поэтому не входит в «одно предложение за сессию».
+   VK всегда по-русски: текст — только русский (параметр text VK берёт лишь на телефоне), ссылка — на игру; в Яндексе пусто */
+const SOC_BRAG={small:'Первая точка открыта — теперь у меня своё дело! Играю в «Из ларька в магнаты»',
+  mid:'Новая глава: у меня своя сеть и ООО! Играю в «Из ларька в магнаты»',quarry:'Новая глава: свой карьер! Играю в «Из ларька в магнаты»',
+  nedra:'Новая глава: выхожу в недра! Играю в «Из ларька в магнаты»',ipo:'Мой холдинг вышел на биржу — IPO! Играю в «Из ларька в магнаты»',
+  rank:'Мне присвоено звание «Магнат»! Играю в «Из ларька в магнаты»'};
+// не .row: последний .row окна на телефоне — липкий низ с главной кнопкой (theme.css), поэтому строку ставим ПЕРЕД ним
+function socBragHtml(k){return SOC.ok()&&SOC_BRAG[k]?`<div class="socbrag" style="margin:12px 0 0;text-align:center"><button class="btn noenter" data-socbrag="${k}">📤 ${L('Похвастаться друзьям','Tell your friends')}</button></div>`:'';}
+document.addEventListener('click',e=>{const b=e.target&&e.target.closest?e.target.closest('[data-socbrag]'):null;if(!b||!SOC.ok()||!VK)return;
+  const k=b.getAttribute('data-socbrag'),q=new URLSearchParams(location.search),app=+q.get('vk_app_id')||54794426,mob=/^mobile_/.test(q.get('vk_platform')||'');
+  const p={link:'https://vk.com/app'+app};if(mob&&SOC_BRAG[k])p.text=SOC_BRAG[k];
+  SND.tap();STAT.ev('mod',{m:'soc',a:'brag',k});vkSend('VKWebAppShare',p,60000).catch(()=>{});});
 // «Кристаллы и покупки»: что такое 💎, товары PAY (если платежи есть) и «+3 💎 за рекламу»
 function openShop(){const lb=adOk()&&window.GAME&&GAME.ladLabel?GAME.ladLabel():'',ad=!!lb,x=ad?GAME.lad():null;   // «Ролики дня» — лесенка 2/3/3/4/6 💎 (game.js, QUEST)
   const ids=PAY.list.map(x=>x.id).filter(id=>id!=='sponsor'||adPlat()); // спонсор без роликов бесполезен — без рекламы на площадке не продаём
@@ -922,7 +964,7 @@ async function offerReturn(){if(askedNow||window.__demo)return;sessCloses++;
     // VK: сам ничего не зовём — одно предложение за сессию рисует socOffer() строкой в окне «Закрытие месяца» (п. 2.6.3)
   }catch(e){}}
 /* VK: одно само-предложение за сессию (модуль SOC: не в первую сессию, не раньше 2 минут, отказ — не раньше 30 дней, ≤3 раз, согласие — никогда больше; без наград).
-   Зовёт интерфейс сразу после показа окна «Закрытие месяца»; строка и кнопка — ПОД кнопками окна (главные не сдвигаются), диалог VK — только по нажатию.
+   Зовёт интерфейс сразу после показа окна «Закрытие месяца»; строка и кнопка — над рядом кнопок окна (он на телефоне — липкий низ; ставим в том же кадре, до отрисовки), диалог VK — только по нажатию.
    busy — следом межэкранная; ещё не предлагаем в первом закрытии месяца за сессию и сразу после рекламы */
 let socCloses=0;
 function socOffer(busy){if(PLAT!=='vk'||!SOC.ok()||window.__demo)return;socCloses++;
@@ -931,7 +973,7 @@ function socOffer(busy){if(PLAT!=='vk'||!SOC.ok()||window.__demo)return;socClose
   const o=SOC.offer(Math.floor(((S.w&&S.w.t)||0)/30),!!busy||Date.now()-lastAdT<60000||pauseWhy.size>0);if(!o)return;
   const d=document.createElement('div');d.className='soc-o';d.style.cssText='margin-top:12px;text-align:center;font-size:17px';
   d.innerHTML='<p style="margin:0 0 8px">'+o.t+'</p><button class="btn noenter" id="mSoc">'+o.b+'</button>';
-  row.parentNode.insertBefore(d,row.nextSibling);STAT.ev('mod',{m:'soc',a:'of_'+o.k});
+  row.parentNode.insertBefore(d,row);STAT.ev('mod',{m:'soc',a:'of_'+o.k});
   const b=$('mSoc');b.onclick=()=>{b.disabled=true;SND.tap();STAT.ev('mod',{m:'soc',a:'ok_'+o.k});o.run();};}
 
 /* ================= запуск ================= */

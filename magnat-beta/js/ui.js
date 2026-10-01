@@ -648,7 +648,7 @@ function openOffline(s){if(BZ()&&BZ().offline(s))return;const W=w(),mo=s.months|
   modal(h);try{modalRe=()=>openOffline(s);}catch(e){}
   $$('oOk').onclick=()=>{snd('tap');closeM();if(!s.ext&&BZ()&&BZ().offAd)BZ().offAd();};
   if($$('oExt'))$$('oExt').onclick=()=>{hideModal();STAT.place('shift');showRewarded(()=>{const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);},()=>setTimeout(nextQ,60));};
-  if($$('oShop'))$$('oShop').onclick=()=>{snd('tap');try{openShop();}catch(e){}};}
+  if($$('oShop'))$$('oShop').onclick=()=>{snd('tap');try{openShop('pack');}catch(e){}};}
 
 /* ================= окно: торги ================= */
 function openAuc(aid){const W=w(),a=E.aucById(W,aid);if(!a||a.done){tst(L('Торги уже закончились','The auction is over'));return;}
@@ -706,7 +706,7 @@ function openIpo(){const W=w();if(!GAME.ipoReady())return;const v=GAME.value(),h
   $$('iGo').onclick=()=>{const rec=GAME.doIpo();if(!rec){closeM();return;}snd('win');salute();
     // сюжет покажет IPO тремя кадрами (событие ipo) — вместо второго окна короткий тост, чтобы не было 5 окон подряд
     if(window.STORYUI&&STORYUI.openIpoScene){hideModal();go('map');toast('🎉 '+L(`Холдинг №${rec.hold} на бирже: ${M(rec.eq)}. Новый холдинг №${w().hold} — капитал ${M(w().cap)}`,`Holding No. ${rec.hold} is listed: ${M(rec.eq)}. New holding No. ${w().hold} — capital ${M(w().cap)}`),5000);return;}
-    modal(`<h2>🎉 ${L('Поздравляем!','Congratulations!')}</h2><div class="say">${face('wow')}<div><p>${L(`Холдинг №${rec.hold} на бирже: ${M(rec.eq)}. Новый холдинг №${w().hold} ждёт вас — капитал ${M(w().cap)}, репутация ${w().rep}.`,`Holding No. ${rec.hold} is listed: ${M(rec.eq)}. New holding No. ${w().hold} awaits — capital ${M(w().cap)}, reputation ${w().rep}.`)}</p></div></div><div class="row"><button class="btn green" id="iOk">${L('За дело!','Let’s go!')}</button></div>`);
+    modal(`<h2>🎉 ${L('Поздравляем!','Congratulations!')}</h2><div class="say">${face('wow')}<div><p>${L(`Холдинг №${rec.hold} на бирже: ${M(rec.eq)}. Новый холдинг №${w().hold} ждёт вас — капитал ${M(w().cap)}, репутация ${w().rep}.`,`Holding No. ${rec.hold} is listed: ${M(rec.eq)}. New holding No. ${w().hold} awaits — capital ${M(w().cap)}, reputation ${w().rep}.`)}</p></div></div>${typeof socBragHtml==='function'?socBragHtml('ipo'):''}<div class="row"><button class="btn green" id="iOk">${L('За дело!','Let’s go!')}</button></div>`);
     $$('iOk').onclick=()=>{snd('tap');closeM();go('map');};};}
 
 /* ================= окно: как играть ================= */

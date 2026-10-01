@@ -748,7 +748,7 @@ function openIpoScene(qid){const w=W();const q=w&&w.fr&&w.fr.q.find(x=>x.id===qi
       h=`<h2>📷 ${T('Фото на память','A photo to remember')}</h2><div class="st-photo">${pic('you','happy',50)}${pic('lud','happy',50)}${near.map(id=>pic(id,'happy',50)).join('')}</div>`
         +(far.length?`<p class="st-hint" style="text-align:center">💐 ${esc(far.map(nk).join(', '))} ${T(far.length>1?'прислали цветы':FEM[far[0]]?'прислала цветы':'прислал цветы','sent flowers')}</p>`:'')
         +`<p class="st-say"><b>${esc(path)}</b></p><p class="st-hint" style="text-align:center">${T('Фото — в «Зале славы». Людмила Санна не скрывает слёз.','The photo goes to the Hall of Fame. Lyudmila Sanna doesn’t hide her tears.')}</p>`
-        +`<div class="row"><button class="btn w accent noenter" data-ok="1">${T('Спасибо всем!','Thank you all!')}</button></div>`;}
+        +(typeof socBragHtml==='function'?socBragHtml('ipo'):'')+`<div class="row"><button class="btn w accent noenter" data-ok="1">${T('Спасибо всем!','Thank you all!')}</button></div>`;}
     open(h,draw);bind('[data-nx]',()=>{snd('tap');f++;draw();});
     bind('[data-ok]',()=>{if(F.tp.anchor===1&&!F.tp.paid){F.tp.paid=1;try{GAME.addCr(10,'anchor');}catch(e){}}answer(q,'a');});}
   draw();return true;}

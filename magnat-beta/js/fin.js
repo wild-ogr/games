@@ -494,7 +494,9 @@ const HINT={
   'bs:cip':['Сколько уже заплачено за незаконченную стройку.','What has been paid so far for unfinished construction.'],
   'bs:fa':['Заводы, разрезы и вагоны за вычетом амортизации.','Plants, mines and wagons net of depreciation.'],
   'bs:ret':['Вся заработанная и не выведенная прибыль с начала холдинга.','All profit earned and kept since the holding began.'],'bs:drw':['Деньги, которые вы взяли из дела на личные вещи (Кабинет → «Вещи»). Прибыль месяца они не уменьшают, а капитал — да: деньги ушли из компании.','Money you took out of the business for personal things (Office → “Things”). They don’t reduce monthly profit, but they do reduce equity: the money left the company.'],'cf:drw':['Личные вещи героя: смартфон, машина, дача… Это не расход дела, а изъятие собственника.','The hero’s personal things: phone, car, dacha… Not a business expense but an owner’s drawing.']};
-const hintOf=(tag,id)=>{const h=HINT[tag+':'+id];return h?L(h[0],h[1]):'';};
+const hintOf=(tag,id)=>{const w2=window.FDT&&FDT.whatOf(tag,id);if(w2)return w2;const h=HINT[tag+':'+id];return h?L(h[0],h[1]):'';};
+// M25: строку можно раскрыть (▸) — под ней «что это» и разбивка по делам/точкам/кредитам (js/fin-dt.js)
+const dxOk=(tag,key,rep)=>!!(rep&&key&&window.FDT&&FDT.canOpen(tag,key));
 const earlyW=()=>{const w=Wd();return !!w&&w.ned===false;};
 function plRows(p){const E1=E.ebitdaOf(p),N=E.netOf(p),ea=earlyW();
   return [['n',L('Выручка','Revenue'),p.rev,'rev'],['i',L('Себестоимость проданного (переменная)','Cost of goods sold (variable)'),-p.cogs,'cogs'],
@@ -512,11 +514,12 @@ function bsRows(b,o){const has=k=>!!(b[k]||o&&o[k]);return [['h',L('Активы
   ['h',L('Капитал','Equity'),null],['i',L('Уставный капитал','Share capital'),b.cap,'cap'],['i',L('Нераспределённая прибыль','Retained earnings'),b.ret,'ret'],...(has('drw')?[['i',L('Изъято на личные покупки собственника','Owner’s personal purchases (drawings)'),-(b.drw||0),'drw']]:[]),['s',L('Итого капитал','Total equity'),b.E,'E'],
   ['b',L('Итого пассивы (кредиты + капитал)','Total liabilities & equity'),b.debt+b.E,'LE']];}
 // rows: [вид, название, значение, ключ]; cols — функции (row) → число; tag — pl|cf|bs (для пояснений)
-function table(heads,rows,cols,tag){const all=[];for(const row of rows)if(row[0]!=='h')for(const f of cols)all.push(f(row));const u=FMT.unitOf(all);
+function table(heads,rows,cols,tag,rep){const all=[];for(const row of rows)if(row[0]!=='h')for(const f of cols)all.push(f(row));const u=FMT.unitOf(all);
   let h=`<div class="f-card f-rt"><div class="f-rh"><span class="c0">${FMT.uName(u)}</span>${heads.map(x=>`<span class="cv">${x}</span>`).join('')}</div>`;
   for(const row of rows){const [k,t]=row;if(k==='h'){h+=`<div class="f-rr h">${t}</div>`;continue;}
-    const id=tag+':'+row[3],hint=hintOf(tag,row[3]),open=hint&&st.hx===id;
-    h+=`<div class="f-rr ${k}"${hint?` data-a="hx" data-v="${id}" role="button" tabindex="0" aria-expanded="${!!open}"`:''}><div class="rn">${t}${hint?`<i class="tg">${open?'▴':'?'}</i>`:''}</div><div class="rv"><span class="c0"></span>${cols.map((f,j)=>{const v=f(row);return `<span class="cv${j?' p':''}${v<0?' neg':''}">${v==null?'':mm(v,u)}</span>`;}).join('')}</div>${open?`<div class="exp">${hint}</div>`:''}</div>`;}
+    const id=tag+':'+row[3],hint=hintOf(tag,row[3]),dx=dxOk(tag,row[3],rep),can=hint||dx,open=can&&st.hx===id;
+    let more='';if(open){const d=dx?FDT.rowHtml(rep,tag,row[3],row[2]):'';more=`<div class="dtx" data-a="nop">${hint?`<div class="exp">${hint}</div>`:''}${d}</div>`;}
+    h+=`<div class="f-rr ${k}${open?' open':''}"${can?` data-a="hx" data-v="${id}" role="button" tabindex="0" aria-expanded="${!!open}"`:''}><div class="rn">${dx?`<span class="dt-m" aria-hidden="true">${open?'▾':'▸'}</span>`:''}${t}${hint&&!dx?`<i class="tg">${open?'▴':'?'}</i>`:''}</div><div class="rv"><span class="c0"></span>${cols.map((f,j)=>{const v=f(row);return `<span class="cv${j?' p':''}${v<0?' neg':''}">${v==null?'':mm(v,u)}</span>`;}).join('')}</div>${more}</div>`;}
   return h+'</div>';}
 const RK={pl:[['Прибыли и убытки','Profit & loss'],['БДР','P&L'],['Заработали ли мы за месяц','Did we earn money this month']],
   cf:[['Движение денег','Cash flow'],['ДДС','CF'],['Откуда пришли и куда ушли деньги','Where money came from and went']],
@@ -534,21 +537,21 @@ function repBody(list,i,kind){const r=list[i],prev=list[i-1]||null,w=Wd();let h=
   if(kind==='pl'){const yr=Math.floor(r.m/12),ytd=plSum(list.filter(x=>Math.floor(x.m/12)===yr&&x.m<=r.m));
     const rows=plRows(r.pl),rp=prev?plRows(prev.pl):null,ry=plRows(ytd);
     const heads=[r.cur?L('сейчас','now'):FMT.mon(r.m)];if(rp)heads.push(r.cur||!prev?L('прошлый','previous'):FMT.mon(prev.m));heads.push(L('с начала года','year to date'));
-    const cols=[row=>row[2]];if(rp)cols.push(row=>rp[rows.indexOf(row)][2]);cols.push(row=>ry[rows.indexOf(row)][2]);
-    h+=table(heads,rows,cols,'pl');
+    const by=(t,row)=>{const x=t.find(y=>y[3]===row[3]);return x?x[2]:0;};const cols=[row=>row[2]];if(rp)cols.push(row=>by(rp,row));cols.push(row=>by(ry,row));   // по ключу строки: строка «Доля в совместных делах» есть не в каждом месяце (M24: падало в «Недрах» с друзьями)
+    h+=table(heads,rows,cols,'pl',r);
     if(r.cur)h+=`<p class="f-note">${L('Месяц ещё идёт: постоянные расходы, амортизация, проценты и налог начислятся при закрытии.','The month is still running: fixed costs, depreciation, interest and tax are booked at month end.')}</p>`;}
   else if(kind==='cf'){const rows=cfRows(r,prev),rp=prev?cfRows(prev,r):null;
     const heads=[r.cur?L('сейчас','now'):FMT.mon(r.m)];if(rp)heads.push(FMT.mon(prev.m));
     const val=(rs,row)=>{if(row[0]==='n')return rs[0][2];const f=rs.find(x=>x[3]&&x[3]===row[3]);return f?f[2]:0;};
     const cols=[row=>row[2]];if(rp)cols.push(row=>row[0]==='h'?null:val(rp,row));
-    h+=table(heads,rows,cols,'cf');
+    h+=table(heads,rows,cols,'cf',r);
     const d=r.c1-r.c0-(E.sumCF(r.cf,'o')+E.sumCF(r.cf,'i')+E.sumCF(r.cf,'f'));
     h+=`<p class="f-note">* ${L('Проценты по кредитам — в операционной деятельности (как в РСБУ).','Interest is shown in operating activities (as under Russian accounting rules).')}</p>`;
     h+=d===0?`<div class="f-ok">✓ ${L('Остаток на конец = начало + движение за месяц','Closing = opening + net change')}</div>`:`<div class="f-bad">⚠ ${L('Расхождение ДДС','Cash flow mismatch')}: ${FMT.money(d)}</div>`;}
   else{const b=r.bal,pb=prev?prev.bal:null,rows=bsRows(b,pb),rp=pb?bsRows(pb,b):null;
     const heads=[r.cur?L('сейчас','now'):L('на конец','closing')];if(rp)heads.push(L('на начало','opening'));
     const cols=[row=>row[2]];if(rp)cols.push(row=>rp[rows.indexOf(row)][2]);
-    h+=table(heads,rows,cols,'bs');
+    h+=table(heads,rows,cols,'bs',r);
     h+=b.diff===0?`<div class="f-ok">✓ ${L('Актив = Пассив','Assets = Liabilities + Equity')}</div>`:`<div class="f-bad">⚠ ${L('Баланс не сходится на','Balance is off by')} ${FMT.money(b.diff)}</div>`;}
   h+=`<div class="f-tip">💡 ${L(REP_TIP[kind][0],REP_TIP[kind][1])}</div>`;
   return h;}
@@ -615,8 +618,9 @@ function finSum(w,el){const wide=isWide(el),r=w.reps[w.reps.length-1],p=w.reps[w
     <div class="f-ch2">${chartBox('fin:rev',revSpec,st.rn,chW,wide?240:210)}</div>${leg([[CV.rev,L('Выручка','Revenue')],[CV.np,L('Чистая прибыль','Net profit')],[CV.bad,L('Убыток','Loss')]])}
     <div class="f-mut" style="font-size:14px">${L('ведите пальцем — цифры, нажмите — крупно','slide for figures, tap to enlarge')}</div></div>`:'';
   const top=`<div class="f-top"><div class="f-tt"><div class="f-ttl">${title}</div><div class="f-sub">${sub}</div></div></div>`;
-  if(wide)return `${top}${kp}<div class="f-cols"><div class="col w2">${ch}</div><div class="col">${say1}${lst}</div></div>`;
-  return `${top}${say1}${kp}${lst}${ch}`;}
+  if(wide)return `${top}${kp}<div class="f-cols"><div class="col w2">${ch}</div><div class="col">${say1}${lst}${anBtn()}</div></div>`;
+  return `${top}${say1}${kp}${lst}${anBtn()}${ch}`;}
+const anBtn=()=>{try{return window.FDT?FDT.btnHtml():'';}catch(e){return '';}};
 function debtOfW(w){let d=0;for(const l of w.loans)d+=l.a;return d;}
 // «Откуда прибыль»: водопад выручка → чистая, мост прибыль → деньги
 function finProfit(w,el){const wide=isWide(el),list=repList(w),R=w.reps[w.reps.length-1]||curRep(w),P=w.reps[w.reps.length-2]||null,p=R.pl,net=E.netOf(p),ea=w.ned===false;
@@ -656,8 +660,8 @@ function repListHtml(list,i,sel){const r=list[i],net=E.netOf(r.pl),dc=r.c1-r.c0,
 function nextBtn(k){const n=RK_ORD[(RK_ORD.indexOf(k)+1)%RK_ORD.length];return `<button class="f-card f-nxt" data-a="rep" data-v="${n}"><span>${L('Следующий отчёт','Next report')}</span><b>${rkT(n)} →</b></button>`;}
 function finReps(w,el){const list=repList(w),i=repIdx(w,list),wide=isWide(el);
   if(wide){const k=st.rk||'pl';return topBar('sum',L('Отчёты','Reports'),L('выберите отчёт слева','pick a report on the left'))
-    +`<div class="f-cols"><div class="col w08">${mswHtml(list,i)}${repListHtml(list,i,k)}</div><div class="col w2"><div class="f-ttl" style="font-size:22px;margin:4px 4px 10px">${rkT(k)} <span class="ab">${rkA(k)}</span></div>${repBody(list,i,k)}${nextBtn(k)}</div></div>`;}
-  return topBar('sum',L('Отчёты','Reports'),L('выберите отчёт — откроется на весь экран','pick a report — it opens full screen'))+mswHtml(list,i)+repListHtml(list,i,null)
+    +`<div class="f-cols"><div class="col w08">${mswHtml(list,i)}${repListHtml(list,i,k)}${anBtn()}</div><div class="col w2"><div class="f-ttl" style="font-size:22px;margin:4px 4px 10px">${rkT(k)} <span class="ab">${rkA(k)}</span></div>${repBody(list,i,k)}${nextBtn(k)}</div></div>`;}
+  return topBar('sum',L('Отчёты','Reports'),L('выберите отчёт — откроется на весь экран','pick a report — it opens full screen'))+mswHtml(list,i)+repListHtml(list,i,null)+anBtn()
     +sayBox(L('Начните с БДР: он отвечает на главный вопрос — заработали мы или нет.','Start with the P&L: it answers the main question — did we make money.'),'calm');}
 function finRep1(w,el){const list=repList(w),i=repIdx(w,list),k=st.rk||'pl';
   return topBar('reps',`${rkT(k)} <span class="ab">${rkA(k)}</span>`,rkD(k))+(k==='mx'||k==='hist'?'':mswHtml(list,i))+repBody(list,i,k)+nextBtn(k);}
@@ -704,7 +708,7 @@ function finBank(w){let h='';const o=E.loanOffer(w);let dB=0;for(const l of w.lo
       ${l.gr>0?`<div class="f-mut">${L('Отсрочка долга ещё','Principal grace for')} ${l.gr} ${pl(l.gr,'месяц','месяца','месяцев','month','months')} — ${L('платим только проценты.','interest only.')}</div>`:''}
       ${l.k==='od'?`<div class="f-mut">${L('Овердрафт гасится целиком в конце месяца.','An overdraft is repaid in full at month end.')}</div>`:''}
       <button class="btn noenter" data-a="repay" data-id="${l.id}"${w.cash<=0?' disabled':''}>${L('Погасить досрочно…','Repay early…')}</button></div>`;}
-  h+=`<div class="${w.odM>0?'f-warn':'f-tip'}">🛟 ${L('Если при закрытии месяца денег не хватит, банк сам даст овердрафт на месяц (ключевая + 8 %). Санация — только если овердрафт нужен третий месяц подряд, долг больше 4 годовых EBITDA (или EBITDA не больше нуля) и больше четверти капитала: тогда банк продаст часть активов за 60 % цены и сведёт долги в один кредит на 5 лет. Игра продолжится.','If cash runs short at month end, the bank gives an automatic one-month overdraft (key rate + 8%). Restructuring happens only if an overdraft is needed for the third month in a row, debt exceeds 4× annual EBITDA (or EBITDA is zero or less) and is over a quarter of equity: then the bank sells some assets at 60% and rolls debts into one 5-year loan. The game goes on.')}</div>`;
+  h+=`<div class="${w.odM>0?'f-warn':'f-tip'}">☂ ${L('Если при закрытии месяца денег не хватит, банк сам даст овердрафт на месяц (ключевая + 8 %). Санация — только если овердрафт нужен третий месяц подряд, долг больше 4 годовых EBITDA (или EBITDA не больше нуля) и больше четверти капитала: тогда банк продаст часть активов за 60 % цены и сведёт долги в один кредит на 5 лет. Игра продолжится.','If cash runs short at month end, the bank gives an automatic one-month overdraft (key rate + 8%). Restructuring happens only if an overdraft is needed for the third month in a row, debt exceeds 4× annual EBITDA (or EBITDA is zero or less) and is over a quarter of equity: then the bank sells some assets at 60% and rolls debts into one 5-year loan. The game goes on.')}</div>`;
   return h;}
 const BOT_CH={cautious:['Осторожный семейный бизнес: без долгов и резких движений.','A cautious family business: no debt, no sudden moves.'],
   bold:['Напористый: берёт кредиты, строит много и давит ценой.','Pushy: borrows, builds a lot and undercuts on price.'],
@@ -733,7 +737,7 @@ function renderFin(el,tab){if(!el)return;css();lastF=el;if(tab)st.fv=VIEWS[tab]|
   let v=st.fv||'sum';if(v==='rep'&&isWide(el))v='reps';if(v==='reps'&&!isWide(el)&&st.fv==='rep')v='rep';
   const body=v==='profit'?finProfit(w,el):v==='reps'?finReps(w,el):v==='rep'?finRep1(w,el):v==='bank'?topBar('sum',L('Банк и кредиты','Bank & loans'),L('ставки, лимит и ваши кредиты','rates, limit and your loans'))+finBank(w):v==='riv'?finRiv(w,el):finSum(w,el);
   el.innerHTML=`<div class="fin${isWide(el)?' f-wide':''}">${body}</div>`;
-  el.onclick=e=>{const b=e.target.closest('[data-a]');if(!b||!el.contains(b)||b.disabled)return;const a=b.dataset.a;snd('tap');
+  el.onclick=e=>{const b=e.target.closest('[data-a]');if(!b||!el.contains(b)||b.disabled)return;const a=b.dataset.a;if(a==='nop')return;snd('tap');
     if(a==='go'){go(el,b.dataset.v);}
     else if(a==='kpi'){const k=b.dataset.v;if(k==='np')go(el,'profit');else if(k==='debt')go(el,'bank');else if(k==='val')go(el,'riv');else{CH['fin:cash']=CH['fin:cash']||{mk:cashSpec};openChart('fin:cash');}}
     else if(a==='rep'){st.rk=b.dataset.v;go(el,isWide(el)?'reps':'rep');}
@@ -772,9 +776,9 @@ function openRepay(id){const w=Wd(),l=w.loans.find(x=>x.id===id);if(!l)return;co
 /* окно отчётов месяца (зовёт UI-1 из окна закрытия месяца) */
 function openReport(m,kind){const w=Wd();if(!w)return;css();const list=repList(w);let i=list.findIndex(x=>x.m===m);if(i<0)i=Math.max(0,w.reps.length-1);
   let k=kind||'pl';
-  const draw=()=>{modal(`<div id="finRep" class="fin"><h2>${L('Отчёты','Reports')}</h2>${repBlock(list,i,k)}<div class="row"><button class="btn" id="mCancel" data-esc>${L('Закрыть','Close')}</button></div></div>`);
+  const draw=()=>{modal(`<div id="finRep" class="fin"><h2>${L('Отчёты','Reports')}</h2>${repBlock(list,i,k)}${anBtn()}<div class="row"><button class="btn" id="mCancel" data-esc>${L('Закрыть','Close')}</button></div></div>`);
     setRe(()=>openReport(list[i].m,k));
-    const box=document.getElementById('finRep');box.onclick=e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;snd('tap');
+    const box=document.getElementById('finRep');box.onclick=e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled||b.dataset.a==='nop')return;snd('tap');
       if(b.dataset.a==='tab'){k=b.dataset.v;draw();}else if(b.dataset.a==='hx'){st.hx=st.hx===b.dataset.v?null:b.dataset.v;draw();}else if(b.dataset.a==='rprev'&&i>0){i--;draw();}else if(b.dataset.a==='rnext'&&i<list.length-1){i++;draw();}};
     document.getElementById('mCancel').onclick=e=>{e.stopPropagation();hideModal();};};
   draw();}

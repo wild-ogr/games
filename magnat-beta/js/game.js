@@ -43,7 +43,7 @@ const CR={speed:10,expl:4,urgent:6},AD_CR=3,AD_CR_MAX=5;
 // награды за рекламу — сколько раз в реальный день (по nowMs(); игровые лимиты — в модели, js/biz.js): ×2 за заказ, реклама точки, проверка сделки,
 // второе дыхание, ускорить открытие точки/карьера, срочный заказ, ревизия, ускорить стройку (недра), экспресс-поезд, отсрочка по контракту
 const GIFT=2;
-const AD_DAY={x2:5,promo:3,chk:5,breath:5,open:3,urg:3,audit:3,build:3,exp:3,con:3,rw:2};   // лимиты мест — внутри общего предела 20 роликов в день (shell.js adOk); rw — ×2 в окне награды (M8)
+const AD_DAY={x2:5,promo:3,chk:5,breath:5,open:3,urg:3,audit:3,build:3,exp:3,con:3,rw:2};   // лимиты мест (общего предела нет с 01.10, shell.js AD_REW_DAY=0); rw — ×2 в окне награды (M8)
 // 💎 за первые шаги (один раз на игрока)
 // 💎 за главы «из грязи в князи» — ECON.BIZ_ACH (js/biz.js)
 const ACH={expl:3,lic:3,b_coalpit:3,b_orepit:3,b_limepit:3,b_logging:3,b_sawmill:5,b_furnace:8,b_steel:8,b_rolling:10,b_store:2,profit:3,year:5};
@@ -113,7 +113,11 @@ const GAME={get DAY_MS(){const b=dayBase();return spd()===2?b/2:b;},get DAY_BASE
   fast(n){for(let i=0;i<n;i++)dayStep();},
   act(name,...a){if(!W)return null;let r;
     if(name==='setAuto')r=(W.auto[a[0]][a[1]]=!!a[2]);
-    else{if(typeof E[name]!=='function')throw new Error('нет действия '+name);r=E[name](W,...a);}
+    else{if(typeof E[name]!=='function')throw new Error('нет действия '+name);
+      // M25: деньги действия игрока — под тегом «a.действие[.кто]» (раскрытие строк отчётов); проданное — запомнить, чем было
+      const a0=typeof a[0]==='string'&&a[0].length<24?a[0]:'',t0=E.tg?E.tg('a.'+name+(a0?'.'+a0:'')):'';
+      if(a0&&/sell|Sell/.test(name)&&E.dtName){const b=(W.biz||[]).find(x=>x.id===a0)||W.obj.find(x=>x.id===a0)||(Array.isArray(W.re)?W.re:[]).find(x=>x.id===a0);if(b)E.dtName(W,b.id,(b.t||b.cls)+'.'+(b.c||b.r||''));}
+      try{r=E[name](W,...a);}finally{if(E.tg)E.tg(t0);}}
     checkAch();persist(true);emit('change',name,r);return r;},
   cr(){return S.cr||0;},
   addCr(n,why){S.cr=(S.cr||0)+n;persist(true);emit('cr',n,why);emit('change');},
@@ -397,7 +401,7 @@ function wkClaim(){const r=S.wkR;if(!r||r.got)return 0;r.got=1;if(r.t)wallAdd('c
 Object.assign(GAME,{wkClose,plDay,PH,PH_ST,RK,RK_F,COL,LXC,stars,rankOf,rkLock,rkLockTxt,rankSync,rkClaim,wallSync,wallGrams,phGold,colSync,colClaim,luxBuy,luxUse,lxcBuy,wfBuy,wkClaim,
   wallSeen:()=>{S.wN=0;persist(true);},stN,realDay});
 /* «Ролики дня» (M8 п. 3.1, модуль QUEST, механика Б): лесенка 2 → 3 → 3 → 4 → 6 💎 вместо плоских «+3 💎 × 5», пауза 120 с, сброс в полночь по nowMs().
-   Живёт внутри общего предела 20 роликов (ok/adOk = adOk() shell.js: предел кончился — лесенка прячется). Цепочку QUEST не включаем — её роль играет Планёрка.
+   ok/adOk = adOk() shell.js (общего предела роликов нет с 01.10). Цепочку QUEST не включаем — её роль играет Планёрка.
    «Договор со спонсором» удваивает ступеньку. Состояние — S.quest (облако: QUEST.merge в mergeSave). STAT: place('ladder') перед роликом, lad {n} после. */
 const LAD=[2,3,3,4,6],LAD_GAP=120;
 const sponsorOn=()=>payOwn('sponsor');

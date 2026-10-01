@@ -390,7 +390,7 @@ function x2Ok(n){try{return n>0&&ad()&&GAME.adLeft('rw')>0;}catch(e){return fals
 function show(o){css();rw=o;lastRw=Date.now();const e=(o.cr||0)*(sponsor()?2:1);
   const x2=x2Ok(o.cr)?`<button class="btn noenter mt-x2b" id="rwX2">📺 ${e===o.cr?T('×2 за рекламу','×2 for an ad'):T('За рекламу','For an ad')}: +${o.cr} → +${cr(o.cr+e)}</button>`:'';
   modal(`<div class="rw"><div class="rw-e">${o.ico}</div><h2>${esc(o.title)}</h2>${o.cr?`<div class="rw-cr">+${cr(o.cr)}</div>`:''}${o.lines&&o.lines.length?'<ul>'+o.lines.map(x=>`<li>${x}</li>`).join('')+'</ul>':''}
-    <button class="btn green" id="rwTake">${T('Забрать','Take')}${o.cr?' +'+cr(o.cr):''}</button>${x2}${o.note?`<p class="rw-note">${o.note}</p>`:''}<button class="rw-link noenter" id="rwCab">${T('Посмотреть в кабинете','See it in the Office')}</button></div>`);
+    <button class="btn green" id="rwTake">${T('Забрать','Take')}${o.cr?' +'+cr(o.cr):''}</button>${x2}${o.note?`<p class="rw-note">${o.note}</p>`:''}${o.soc&&typeof socBragHtml==='function'?socBragHtml(o.soc):''}<button class="rw-link noenter" id="rwCab">${T('Посмотреть в кабинете','See it in the Office')}</button></div>`);
   try{modalRe=null;}catch(e){}
   $c('rwTake').onclick=()=>{const b=$c('rwTake').getBoundingClientRect();snd('coin');hideModal();if(o.cr&&window.UI&&UI.fly&&!calmMode())try{UI.fly({x:b.left+b.width/2,y:b.top},o.cr,'cr');}catch(x){}
     stat(o,'take');rw=null;refresh();};
@@ -407,7 +407,7 @@ function quiet(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof
   try{if(window.BIZUI&&BIZUI.tutStep&&BIZUI.tutStep())return false;}catch(e){}try{if(window.UI&&UI.tutStep&&UI.tutStep())return false;}catch(e){}
   if(window.PHONE&&PHONE.isOpen)return false;return true;}
 // одно окно на всё, что накопилось: звание(я) + набор(ы) + итог недели; 💎 — суммой (зачисляется сразу), ×2 — на всю сумму
-function flush(){let p=pend();if(!p.length)return;const q=a=>T('«','“')+a+T('»','”');let sum=0;const lines=[],parts=[];let ico='🏅',title='';
+function flush(){let p=pend();if(!p.length)return;let rkSoc=false;const q=a=>T('«','“')+a+T('»','”');let sum=0;const lines=[],parts=[];let ico='🏅',title='';
   // звание — последним: набор и итог недели сами поднимают ★
   p=p.filter(x=>x.k!=='rk');
   for(const x of p){if(x.k==='col'){const c=GAME.COL[x.id],n=GAME.colClaim(x.id);sum+=n;parts.push('col');title=T('Набор собран: ','Set complete: ')+T(c.ru,c.en);ico=c.ico;
@@ -417,13 +417,13 @@ function flush(){let p=pend();if(!p.length)return;const q=a=>T('«','“')+a+T('
       if(r.t)lines.push(['','🥉','🥈','🥇'][r.t]+' '+esc(cupInfo('cup_w_'+r.k).t)+' — '+T('на полку кубков','on the trophy shelf'));
       lines.push(`📋 ${T('Планёрка — все поручения','Briefing — all tasks')}: ${r.pd} ${T('из 7 дней','of 7 days')}${r.pd>=5?' · 🏅 '+T('грамота','certificate')+' '+q(T('Ударник недели','Worker of the week')):''}`);}}
   GAME.rankSync();
-  if((S.rk|0)>(S.rkG|0)){const r=GAME.rkClaim();sum+=r.cr;parts.push('rk');const nm=rkName(S.rk|0);title=T('Звание: ','Rank: ')+nm;ico='🎖';
+  if((S.rk|0)>(S.rkG|0)){const r=GAME.rkClaim();sum+=r.cr;parts.push('rk');const nm=rkName(S.rk|0);title=T('Звание: ','Rank: ')+nm;ico='🎖';rkSoc=r.lv.some(i=>GAME.RK[i]&&GAME.RK[i].ru==='Магнат'); // VK: «📤 Похвастаться» — за звание «Магнат»
     lines.unshift(`★ ${(S.rk|0)+1} · <b>${esc(nm)}</b>${r.lv.length>1?' ('+T('званий: ','ranks: ')+r.lv.length+')':''}`+r.cos.map(id=>'<br>🎁 '+esc(cosTxt(id))).join(''));
     for(const id of r.cos){const c=GAME.COS.find(y=>y.id===id);if(c&&c.k==='wf')GAME.cosSel('wf',id);else if(c&&!GAME.cosCur(c.k))GAME.cosSel(c.k,id);}
     try{if(window.META&&META.applyCos)META.applyCos();}catch(e){}}
   if(!parts.length)return;const k=parts.length>1?'multi':parts[0];if(k==='multi'){title=T('Сегодня у вас','Today you’ve got');ico='🎉';}
   if(!calmMode())try{UI.salute(true);}catch(e){}snd('win');
-  show({k,ico,title,cr:sum,lines});badge();}
+  show({k,ico,title,cr:sum,lines,soc:rkSoc?'rank':''});badge();}
 function tick(){if(!GAME.W)return;if(typeof modalOn!=='undefined'&&modalOn){busyT=Date.now();return;}
   if(!pend().length||Date.now()-busyT<1500||Date.now()-lastRw<90000||!quiet())return;flush();}
 setInterval(tick,1500);

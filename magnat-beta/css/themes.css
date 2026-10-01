@@ -1,0 +1,238 @@
+/* ================= M27 · темы оформления поверх вида A (реестр и выбор — js/themes.js; класс body.th-<id>) =================
+   Любая не основная тема ставит ещё body.th-x (общие правила ниже), тёмная — body.th-dark.
+   «Кабинет председателя» (th-office) — переменные в css/theme.css, «Ларёк 90-х» (th-90s) — в js/meta-ui.js; остальные — здесь.
+   Тема меняет только цвета/шрифт/форму, разметка и тексты одни. Старые WebView: без inset/gap, -webkit- для анимаций. */
+
+/* ---- «Тёплый плакат»: Rubik (OFL, урезан до нужных знаков: кириллица 13 КБ + латиница 27 КБ) для букв, цифры — Manrope (OFL, 3 КБ):
+   у Rubik «0» почти такой же ширины, как «О» (482 и 531 ед.), — «ООО» читалось как «000»; у Manrope ноль заметно уже и выше ---- */
+@font-face{font-family:"PosterF";font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/rubik-cyrillic.woff2) format("woff2");unicode-range:U+0400-045F,U+0490-0491}
+@font-face{font-family:"PosterF";font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/rubik-latin.woff2) format("woff2");unicode-range:U+0020-002F,U+003A-007E,U+00A0-00FF,U+2013-2014,U+2018-201E,U+2022,U+2026,U+2039-203A,U+2116,U+2212}
+@font-face{font-family:"PosterF";font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/poster-num.woff2) format("woff2");unicode-range:U+0030-0039}
+
+/* ---- общее для всех не основных тем: формулы вида A от цветов темы ---- */
+body.th-x{
+  --lk-hb:var(--hd-btn);--lkc:var(--card);--lkb:linear-gradient(180deg,var(--card),var(--soft));--lkt:var(--soft2);--lk-app:var(--bg);
+  --lk-pos:var(--good-t);--lk-neg:var(--bad-t);--lk-acc:linear-gradient(180deg,var(--accent),var(--accent-d));
+  --lk-go:linear-gradient(180deg,var(--good),var(--good));--lk-gosh:0 8px 16px -8px var(--good);
+  --lk-bar:var(--accent)}
+body.th-dark{--lxbg:#d9dfe8;--lk-go:linear-gradient(180deg,#22a35f,#13804a);--lk-gosh:0 8px 16px -8px rgba(0,0,0,.6);--lkhi:none;--lk-ed:rgba(255,255,255,.06);--lk-shc:0,0,0;--lkb:var(--soft);
+  --lk-x2:linear-gradient(180deg,#ffd76a,#f0a92c);--lk-x2ink:#2b1a00}
+/* тёмные темы: то, что раньше было только для «Кабинета» (модули рисуют свои светлые плашки) */
+body.th-dark .pbar>button{border:1px solid var(--line)}
+body.th-dark .fu-row{background:var(--card)}body.th-dark .fu-q{background:#4a3a20;color:#ffd98a}body.th-dark .fu-say.me{background:#26402c}body.th-dark .fu-pk li.act{background:#26402c}
+body.th-dark #rkBtn{color:#ffd66b}
+body.th-dark #mcard{border:1px solid var(--line)}
+html.lk-a body.th-dark lk-i.bd{box-shadow:inset 0 1.5px 0 rgba(255,255,255,.35),inset 0 -2px 0 rgba(0,0,0,.2)}
+
+/* ---- вид A в окнах модулей: строки друзей, плитки Кабинета, карточки сюжета и аналитики — без рамки, с мягкой тенью ---- */
+html.lk-a .fu-row,html.lk-a .cb-slot,html.lk-a .cb-cup,html.lk-a .st-card,html.lk-a .st-away,html.lk-a .an-c,html.lk-a .dt-l{border-color:transparent;box-shadow:0 1px 1px rgba(var(--lk-shc),.05),0 6px 16px -6px rgba(var(--lk-shc),.2)}
+html.lk-a .fu-row,html.lk-a .cb-slot,html.lk-a .cb-cup{background:var(--lkc,var(--card))}
+html.lk-a .cb-slot.cb-many{border-color:var(--gold)}html.lk-a .fu-row:active{border-color:var(--accent)}
+html.lk body.th-poster .fu-row,html.lk body.th-poster .cb-slot,html.lk body.th-poster .cb-cup,html.lk body.th-poster .st-card,html.lk body.th-poster .st-away,html.lk body.th-poster .an-c,html.lk body.th-poster .dt-l{border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink)}
+body.th-dark .fu-row,body.th-dark .cb-slot,body.th-dark .cb-cup,body.th-dark .st-card,body.th-dark .st-away,body.th-dark .an-c,body.th-dark .dt-l{border-color:var(--line)}
+
+/* ================= «Тёплый плакат» (th-poster, покупка th_poster) — бумага, наклейки, жёсткая тень ================= */
+body.th-poster{
+  --font:"PosterF",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;--numfont:"PosterF",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --bg:#f4ecdf;--page:#e9dfcd;--card:#fffaf2;--card2:#fbf3e6;--ink:#2a211b;--ink2:#46392f;--muted:#6b5b4d;--line:#eadcc8;--line2:#cdb9a0;
+  --accent:#b5431d;--accent-d:#963615;--accent-t:#fbe6dc;--on-accent:#fff;--blue:#1f6f8b;--good:#1d7a5f;--good-t:#e0f1e9;--bad:#c0392b;--bad-t:#fbe3df;
+  --warn:#9a5b00;--warn-t:#fdf0d2;--gold:#c98a12;--soft:#f3e7d6;--soft2:#f8efe2;--track:#e7d7c1;--barfill:#2a211b;--icbg:#f3e7d6;
+  --sh:3px 3px 0 #2a211b;--sh2:0 20px 60px rgba(42,33,27,.35);--btnsh:3px 3px 0 #2a211b;--r:18px;--r2:14px;
+  --hd-bg:#f4ecdf;--hd-ink:#2a211b;--hd-mut:#6b5b4d;--hd-btn:#fffaf2;--hdcash:#2a211b;--hd-line:#2a211b;--nav-bg:#fffaf2;--nav-ink:#6b5b4d;--nav-on:#2a211b;--nav-onbg:#f2c14e;
+  --map-bg:#fffaf2;--map-land:#f1e2c9;--map-landln:#e2cfb0;--map-ridge:#cdb9a0;--rail:#2a211b;--mk-ln:#2a211b;--mk-sel:#b5431d;--badge-bg:#b5431d;--aucb:#b5431d;
+  --chart-rev:#b5431d;--hl:#b5431d;--hl2:rgba(181,67,29,.22);--tip-ln:#c98a12;--say-bg:#f8efe2;--tip-bg:#fdf3dc;--toast-bg:#2a211b;--cr1:#6a4fd8;--cr2:#5a3fc8;
+  --lk-cr:#6a4fd8;--lk-crsh:3px 3px 0 #2a211b;--lk-acc:#b5431d;--lk-go:#1d7a5f;--lk-gosh:3px 3px 0 #2a211b;--lk-x2:#f2c14e;--lk-x2sh:2px 2px 0 #2a211b;--lk-x2ink:#2a211b;
+  --lk-bar:repeating-linear-gradient(-45deg,#c98a12 0,#c98a12 6px,#e0a83a 6px,#e0a83a 12px);--lkc:var(--card);--lkb:var(--card);--lkt:var(--card2);--lkhi:none;--lk-shc:42,33,27;
+  letter-spacing:0}
+body.th-poster,body.th-poster button,body.th-poster .btn,body.th-poster input,body.th-poster select{font-family:var(--font)}
+html.lk body.th-poster h2,html.lk body.th-poster .bz-h1,html.lk body.th-poster .rh h2{font-weight:700;letter-spacing:-.01em}
+html.lk body.th-poster h3,html.lk body.th-poster .bz-sec{color:var(--ink);font-weight:700;font-size:17px}
+/* шапка */
+html.lk body.th-poster #hdr{border-bottom:2px solid var(--hd-line);border-radius:0;box-shadow:none}
+html.lk body.th-poster .hbtn{border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);border-radius:14px;background:var(--hd-btn)}
+html.lk body.th-poster #crBtn{background:#efe6ff;color:var(--ink);box-shadow:2px 2px 0 var(--ink)}
+html.lk body.th-poster .hbtn:active{-webkit-transform:translate(2px,2px);transform:translate(2px,2px);box-shadow:none}
+html.lk body.th-poster .mbar{height:10px;border-radius:6px;border:2px solid var(--ink);background:var(--card);box-shadow:none}
+html.lk body.th-poster .mbar i{border-radius:0}
+/* карточки-наклейки */
+html.lk body.th-poster .card,html.lk body.th-poster .f-card,html.lk body.th-poster .plot{border:2px solid var(--ink);box-shadow:var(--sh);border-radius:var(--r);background:var(--card)}
+html.lk body.th-poster .mt-card,html.lk body.th-poster .cb-card{border:2px solid var(--ink);box-shadow:var(--sh);border-radius:var(--r)}
+html.lk body.th-poster .plot.hid,html.lk body.th-poster .plot.bot{border:2px dashed var(--line2);box-shadow:none}
+html.lk body.th-poster .tile{border:2px solid var(--ink);background:var(--card2);border-radius:14px;box-shadow:none}
+html.lk body.th-poster .tile.pos{background:var(--good-t)}html.lk body.th-poster .tile.neg{background:var(--bad-t)}
+html.lk body.th-poster .tip{border:2px dashed var(--gold);background:var(--tip-bg);box-shadow:none}
+html.lk body.th-poster .say{border:2px solid var(--line2);box-shadow:none}
+html.lk body.th-poster .bz-li{border-top:2px dotted var(--line2)}
+html.lk body.th-poster .bz-li:first-child{border-top:0}
+html.lk body.th-poster .bz-hand{border:2px solid var(--ink);background:var(--card2);box-shadow:2px 2px 0 var(--ink)}
+html.lk body.th-poster .f-kpi.hot{background:#fdf0d2}
+html.lk body.th-poster .tag,html.lk body.th-poster .chip{border:1.5px solid var(--ink2);box-shadow:none}
+/* кнопки: печатные */
+html.lk body.th-poster .btn{border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);border-radius:var(--r2);background:var(--card);font-weight:600}
+html.lk body.th-poster .btn.accent,html.lk body.th-poster .btn.blue{background:var(--accent);box-shadow:3px 3px 0 var(--ink)}
+html.lk body.th-poster .btn.green{background:var(--good);box-shadow:3px 3px 0 var(--ink)}
+html.lk body.th-poster .btn.cr{background:#6a4fd8;box-shadow:3px 3px 0 var(--ink)}
+html.lk body.th-poster .btn:not([disabled]):active{-webkit-transform:translate(3px,3px);transform:translate(3px,3px);box-shadow:none}
+html.lk body.th-poster .btn[disabled]{box-shadow:none}
+html.lk body.th-poster .mt-btn:not(.go):not(.x2):not(.ac),html.lk body.th-poster .cb-btn{border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);background:var(--card);border-radius:14px}
+html.lk body.th-poster .mt-btn.go{border:2px solid var(--ink);background:var(--good);box-shadow:2px 2px 0 var(--ink)}
+html.lk body.th-poster .mt-btn.ac{border:2px solid var(--ink);background:var(--accent);box-shadow:2px 2px 0 var(--ink)}
+html.lk body.th-poster .mt-btn.x2,html.lk body.th-poster .mt-x2b{border:2px solid var(--ink);background:#f2c14e;color:var(--ink);box-shadow:2px 2px 0 var(--ink)}
+html.lk body.th-poster .set,html.lk body.th-poster .sw{border:2px solid var(--line2)}
+html.lk body.th-poster .back{border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink)}
+html.lk body.th-poster .bz-gd button.on{border-color:var(--ink);background:#fdf0d2}
+/* меню */
+html.lk body.th-poster #nav{border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+html.lk body.th-poster #nav button.on svg{background:#f2c14e;box-shadow:inset 0 0 0 2px var(--ink)}
+html.lk body.th-poster #nav button.on{font-weight:700}
+html.lk body.th-poster #nav button{font-size:14px;letter-spacing:-.2px}
+/* окна */
+html.lk body.th-poster #mcard{border:2px solid var(--ink);border-bottom:0;background:var(--card);box-shadow:0 -6px 0 rgba(42,33,27,.12)}
+html.lk body.th-poster .chero .cbig{font-weight:700;font-size:46px}
+html.lk body.th-poster .clist div{border-bottom:2px dotted var(--line2)}
+html.lk body.th-poster .mx{border:2px solid var(--ink)}
+/* графики и карта */
+html.lk body.th-poster .lk-area{opacity:.18}
+html.lk body.th-poster .bz-bars rect{stroke:#2a211b;stroke-width:2px;vector-effect:non-scaling-stroke}
+html.lk body.th-poster .mapc{border:2px solid var(--ink);box-shadow:var(--sh)}
+/* значки-стикеры: заливка цвета вида и тёмный контур */
+html.lk body.th-poster .lk-s .f{fill:var(--c);stroke:#2a211b;stroke-width:1.5}html.lk body.th-poster .lk-s .k{fill:var(--c2);stroke:#2a211b;stroke-width:1.5}html.lk body.th-poster .lk-s .d{stroke:#2a211b;stroke-width:1.5}
+html.lk body.th-poster lk-i.bd{background:var(--ct);border:2px solid #2a211b;box-shadow:2px 2px 0 #2a211b;border-radius:14px;box-sizing:border-box}
+html.lk body.th-poster lk-i.bd .f{fill:var(--c)}html.lk body.th-poster lk-i.bd .k{fill:var(--c2)}html.lk body.th-poster lk-i.bd .d{stroke:#2a211b}
+html.lk body.th-poster lk-i.bd svg{width:66%;height:66%}
+html.lk body.th-poster .qs>i lk-i.bd{border-radius:8px;box-shadow:none;border-width:1.5px}
+/* Rubik шире системного: крупные суммы и подписи меню — плотнее, чтобы «8,37 млрд ₽» и «Финансы» не обрезались */
+html.lk body.th-poster .f-kpi .kv{font-size:21px;letter-spacing:-.02em}
+html.lk body.th-poster .tile b{letter-spacing:-.02em}
+/* появление: «шлёп» наклейки */
+@-webkit-keyframes thPop{0%{opacity:0;-webkit-transform:scale(.96) rotate(-.6deg)}70%{opacity:1;-webkit-transform:scale(1.01)}100%{-webkit-transform:none}}
+@keyframes thPop{0%{opacity:0;-webkit-transform:scale(.96) rotate(-.6deg);transform:scale(.96) rotate(-.6deg)}70%{opacity:1;-webkit-transform:scale(1.01);transform:scale(1.01)}100%{-webkit-transform:none;transform:none}}
+html.lk-a body.th-poster.lk-anim:not(.calm) .screen.on>.card,html.lk-a body.th-poster.lk-anim:not(.calm) .screen.on .f-card,html.lk-a body.th-poster.lk-anim:not(.calm) .screen.on .mt-card{-webkit-animation-name:thPop;animation-name:thPop;-webkit-animation-duration:.3s;animation-duration:.3s}
+
+/* ================= «Ночной город» (th-night, за 15 роликов) — тёмно-синий, огни окон, неоновая бирюза ================= */
+body.th-night{
+  --bg:#0b1020;--card:#151c33;--card2:#19213b;--ink:#eaf0ff;--ink2:#c8d3f0;--muted:#97a3c4;--line:#252f50;--line2:#36426a;
+  --accent:#3dd6ff;--accent-d:#18b4e0;--accent-t:#14304a;--on-accent:#04121c;--blue:#3dd6ff;
+  --good:#4ade80;--good-t:#123326;--bad:#ff6b8b;--bad-t:#3a1626;--warn:#ffcc4d;--warn-t:#2e2712;--gold:#ffcc4d;
+  --soft:#1b2440;--soft2:#19213b;--track:#252f50;--barfill:#3dd6ff;
+  --sh:0 10px 26px -10px rgba(0,0,0,.7);--sh2:0 30px 80px rgba(0,0,0,.6);--btnsh:0 8px 20px -8px rgba(61,214,255,.6);--dim:rgba(0,0,0,.6);--page:#060912;
+  --hd-bg:#10172c;--hd-ink:#eaf0ff;--hd-mut:#97a3c4;--hd-btn:#1b2440;--hdcash:#ffcc4d;--hdneg:#ff6b8b;--hd-line:#252f50;
+  --nav-bg:#10172c;--nav-ink:#8390b4;--nav-on:#3dd6ff;--nav-onbg:#1b2440;
+  --cr1:#9d7cff;--cr2:#7c5cf0;--cr-sh:none;--icbg:#1b2440;--icln:#c8d3f0;
+  --map-bg:#10172c;--map-land:#18213d;--map-landln:#36426a;--map-ridge:#36426a;--rail:#ffcc4d;--rail-arc:#ffcc4d;
+  --tag-bg:#10172c;--tag-ln:#36426a;--tag-ink:#c8d3f0;--city:#97a3c4;--rgn-ink:#eaf0ff;--mk-fill:#10172c;--mk-ln:#3dd6ff;--mk-sel:#ff4fa3;
+  --badge-bg:#ff4fa3;--badge-ink:#fff;--aucb:#3dd6ff;
+  --sc-sky1:#121a33;--sc-sky2:#0b1020;--sc-sun:#ffe9a8;--sc-h1:#1b2440;--sc-h2:#151c33;--sc-p1:#3a3550;--sc-p2:#2e2a44;--sc-p3:#242036;
+  --sc-pl1:#2a3556;--sc-pl2:#36426a;--sc-acc:#3dd6ff;--sc-smoke:#36426a;--sc-tree:#24504a;
+  --hl:#3dd6ff;--hl2:rgba(61,214,255,.25);--adv-bg:#151c33;--adv-ln:#252f50;--say-bg:#19213b;--tip-bg:#19213b;--tip-ln:#3dd6ff;
+  --toast-bg:rgba(234,240,255,.95);--toast-ink:#0b1020;--chart-rev:#3dd6ff;--chart-debt:#ff6b8b;--tip-up:#4ade80;--tip-dn:#ff6b8b;
+  --lk-cr:linear-gradient(160deg,#b39bff,#7c5cf0);--lk-crsh:0 6px 16px -6px rgba(157,124,255,.7);--lk-acc:linear-gradient(180deg,#6ae3ff,#18b4e0);
+  --lk-app:linear-gradient(180deg,#0b1020 0,#141033 100%);--lk-bar:linear-gradient(90deg,#ff4fa3,#3dd6ff)}
+/* огни города в шапке: силуэт домов с окнами (SVG в CSS, 1 КБ) */
+html.lk body.th-night #hdr{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='40' viewBox='0 0 240 40' opacity='.55'%3E%3Cpath fill='%23151f3d' d='M0 40V22h14V12h12v10h10V4h16v18h8V16h14v24h10V10h12V2h8v8h10v30h8V18h18v22h6V8h14v32h10V20h12v20h8V14h14v26z'/%3E%3Cg fill='%23ffcc4d' opacity='.75'%3E%3Crect x='17' y='15' width='2' height='3'/%3E%3Crect x='41' y='8' width='2' height='3'/%3E%3Crect x='46' y='14' width='2' height='3'/%3E%3Crect x='99' y='14' width='2' height='3'/%3E%3Crect x='111' y='6' width='2' height='3'/%3E%3Crect x='141' y='22' width='2' height='3'/%3E%3Crect x='171' y='12' width='2' height='3'/%3E%3Crect x='176' y='20' width='2' height='3'/%3E%3Crect x='218' y='18' width='2' height='3'/%3E%3C/g%3E%3Cg fill='%233dd6ff' opacity='.6'%3E%3Crect x='70' y='22' width='2' height='3'/%3E%3Crect x='117' y='16' width='2' height='3'/%3E%3Crect x='200' y='26' width='2' height='3'/%3E%3C/g%3E%3C/svg%3E") repeat-x 0 100%,var(--hd-bg);background-size:240px 26px,auto}
+html.lk body.th-night #hName{text-shadow:0 0 8px rgba(61,214,255,.55)}
+
+/* ================= «Вечерний» (th-evening, за 💎) — тёплый тёмный, мало синего: глазам легче перед сном ================= */
+body.th-evening{
+  --bg:#17130f;--card:#231d17;--card2:#28211a;--ink:#f3e9dc;--ink2:#dccbb6;--muted:#ab9a85;--line:#352c22;--line2:#4a3d2f;
+  --accent:#ff9f5a;--accent-d:#e8823a;--accent-t:#3a2617;--on-accent:#1f1206;--blue:#ff9f5a;
+  --good:#9bd47a;--good-t:#1f2e17;--bad:#ff7a6b;--bad-t:#3a1d18;--warn:#ffc46b;--warn-t:#33261a;--gold:#ffc46b;
+  --soft:#2b231b;--soft2:#28211a;--track:#352c22;--barfill:#ff9f5a;
+  --sh:0 10px 26px -10px rgba(0,0,0,.7);--sh2:0 30px 80px rgba(0,0,0,.6);--btnsh:0 8px 20px -8px rgba(255,159,90,.55);--dim:rgba(0,0,0,.6);--page:#0d0a08;
+  --hd-bg:#1d1813;--hd-ink:#f3e9dc;--hd-mut:#ab9a85;--hd-btn:#2b231b;--hdcash:#ffc46b;--hdneg:#ff7a6b;--hd-line:#352c22;
+  --nav-bg:#1d1813;--nav-ink:#9c8b77;--nav-on:#ff9f5a;--nav-onbg:#2b231b;
+  --cr1:#b59cff;--cr2:#8c70e6;--cr-sh:none;--icbg:#2b231b;--icln:#dccbb6;
+  --map-bg:#1d1813;--map-land:#2a221a;--map-landln:#4a3d2f;--map-ridge:#4a3d2f;--rail:#ffc46b;--rail-arc:#ffc46b;
+  --tag-bg:#1d1813;--tag-ln:#4a3d2f;--tag-ink:#dccbb6;--city:#ab9a85;--rgn-ink:#f3e9dc;--mk-fill:#1d1813;--mk-ln:#ffc46b;--mk-sel:#ff9f5a;
+  --badge-bg:#ff9f5a;--badge-ink:#1f1206;--aucb:#ff9f5a;
+  --sc-sky1:#251d16;--sc-sky2:#17130f;--sc-sun:#ff9f5a;--sc-h1:#2b231b;--sc-h2:#231d17;--sc-p1:#4a3a28;--sc-p2:#3b2e20;--sc-p3:#2e2419;
+  --sc-pl1:#3b3128;--sc-pl2:#4a3d2f;--sc-acc:#ff9f5a;--sc-smoke:#4a3d2f;--sc-tree:#3d5230;
+  --hl:#ff9f5a;--hl2:rgba(255,159,90,.25);--adv-bg:#231d17;--adv-ln:#352c22;--say-bg:#28211a;--tip-bg:#28211a;--tip-ln:#ff9f5a;
+  --toast-bg:rgba(243,233,220,.95);--toast-ink:#17130f;--chart-rev:#ff9f5a;--chart-debt:#ff7a6b;--tip-up:#9bd47a;--tip-dn:#ff7a6b;
+  --lk-cr:linear-gradient(160deg,#c7b3ff,#8c70e6);--lk-crsh:0 6px 16px -6px rgba(181,156,255,.55);--lk-acc:linear-gradient(180deg,#ffb37a,#e8823a);
+  --lk-app:linear-gradient(180deg,#17130f 0,#1f1712 100%);--lk-bar:linear-gradient(90deg,#ffc46b,#ff9f5a)}
+
+/* ================= «Дача» (th-dacha, за набор «Дачник») — зелень, подсолнух, тёплое дерево ================= */
+body.th-dacha{
+  --bg:#eef3e3;--page:#e2ead2;--card:#fffdf6;--card2:#f8f9ef;--ink:#1f2b19;--ink2:#3a4a31;--muted:#5e6d52;--line:#e3e9d4;--line2:#c9d4b3;
+  --accent:#3f7d2a;--accent-d:#2f6420;--accent-t:#e5f1dc;--on-accent:#fff;--blue:#3f7d2a;--good:#2f8f3a;--good-t:#e6f5e2;--bad:#c4472c;--bad-t:#fbe8e2;
+  --warn:#9a6a00;--warn-t:#fdf2d5;--gold:#d99a1e;--soft:#eef2e2;--soft2:#f5f7ec;--track:#dde5ca;--barfill:#3f7d2a;--icbg:#eef2e2;
+  --hd-bg:#fffdf6;--hd-btn:#eef2e2;--nav-bg:#fffdf6;--nav-on:#3f7d2a;--map-bg:#fffdf6;--map-land:#e4ecd0;--map-landln:#d2ddb8;--map-ridge:#bccaa0;
+  --mk-sel:#3f7d2a;--aucb:#3f7d2a;--hl:#3f7d2a;--hl2:rgba(63,125,42,.22);--tip-ln:#d99a1e;--chart-rev:#3f7d2a;--sc-acc:#3f7d2a;--sc-sun:#ffd34d;--sc-tree:#4f8f3a;
+  --btnsh:0 8px 18px -6px rgba(63,125,42,.5),inset 0 1px 0 rgba(255,255,255,.3);--lk-shc:40,60,25;
+  --lkc:linear-gradient(180deg,#fffef9,#fffcf0);--lkb:linear-gradient(180deg,#fffef9,#eef2e2);
+  --lk-app:linear-gradient(180deg,#eef3e3 0,#f6f1de 100%);--lk-acc:linear-gradient(180deg,#5c9a3f,#3f7d2a 60%,#356d23);
+  --lk-pos:linear-gradient(160deg,#eef8e8,#dcefd3);--lk-neg:linear-gradient(160deg,#fdf1ec,#f8e0d6);--lk-bar:linear-gradient(90deg,#ffd34d,#d99a1e)}
+/* штакетник под шапкой */
+html.lk body.th-dacha #hdr{background:repeating-linear-gradient(90deg,transparent 0,transparent 10px,rgba(141,90,43,.10) 10px,rgba(141,90,43,.10) 14px) 0 100%/100% 10px no-repeat,var(--hd-bg)}
+
+/* ================= «Золото магната» (th-gold, за звание «Магнат») — сливки, золото, изумруд ================= */
+body.th-gold{
+  --bg:#f5f0e3;--page:#ebe3cf;--card:#fffdf8;--card2:#fbf7ec;--ink:#1d1a12;--ink2:#3d3524;--muted:#6b6250;--line:#ece4d0;--line2:#d8cba8;
+  --accent:#a87a12;--accent-d:#8a6208;--accent-t:#f6ecd2;--on-accent:#fff;--blue:#0f5e45;--good:#0f6e4b;--good-t:#e2f2ea;--bad:#b3362b;--bad-t:#f9e5e1;
+  --warn:#8a5a00;--warn-t:#fbefd2;--gold:#b8891a;--soft:#f3ecdb;--soft2:#f8f3e6;--track:#e6dcc4;--barfill:#a87a12;--icbg:#f3ecdb;
+  --hd-bg:#0f3d2e;--hd-ink:#fdf6e3;--hd-mut:#cfe0d6;--hd-btn:#1a5040;--hdcash:#f3cf6b;--hdneg:#ff9a8a;--hd-line:#0f3d2e;
+  --nav-bg:#fffdf8;--nav-on:#0f5e45;--nav-onbg:#f6ecd2;--map-bg:#fffdf8;--map-land:#efe6cf;--map-landln:#e0d3b0;--map-ridge:#cbbb91;
+  --mk-sel:#a87a12;--aucb:#a87a12;--hl:#a87a12;--hl2:rgba(168,122,18,.22);--tip-ln:#b8891a;--chart-rev:#0f6e4b;--sc-acc:#a87a12;
+  --btnsh:0 8px 18px -6px rgba(168,122,18,.55),inset 0 1px 0 rgba(255,255,255,.4);--lk-shc:60,45,10;
+  --lkc:linear-gradient(180deg,#fffefb,#fffaf0);--lkb:linear-gradient(180deg,#fffefb,#f3ecdb);
+  --lk-app:linear-gradient(180deg,#f5f0e3 0,#f1ead8 100%);--lk-acc:linear-gradient(180deg,#e6c25a 0,#c39a2e 50%,#a87a12 100%);
+  --lk-go:linear-gradient(180deg,#1f8a61,#0f6e4b);--lk-bar:linear-gradient(90deg,#f3cf6b,#c39a2e)}
+html.lk body.th-gold #hdr{box-shadow:0 2px 0 #c39a2e,0 8px 24px -12px rgba(60,45,10,.4)}
+html.lk body.th-gold #hName{color:#f3cf6b}
+html.lk body.th-gold .hbtn{box-shadow:inset 0 0 0 1px rgba(243,207,107,.35)}
+
+/* ================= «Новогодний» (th-winter, сезон: декабрь–январь) — снег, ёлочная зелень, красный ================= */
+body.th-winter{
+  --bg:#eaf2fb;--page:#dde8f5;--card:#fff;--card2:#f6f9fd;--ink:#10223a;--ink2:#2c3e57;--muted:#566a85;--line:#e2eaf4;--line2:#c9d6e6;
+  --accent:#c62f3a;--accent-d:#a5232d;--accent-t:#fbe7e9;--on-accent:#fff;--blue:#1f5f99;--good:#1f7a4a;--good-t:#e3f4ea;--bad:#c62828;--bad-t:#fde9e9;
+  --gold:#d4a017;--soft:#edf3fa;--soft2:#f4f8fc;--track:#dde6f1;--barfill:#c62f3a;--icbg:#edf3fa;
+  --hd-bg:#fff;--hd-btn:#edf3fa;--nav-bg:#fff;--nav-on:#c62f3a;--map-land:#e3edf8;--map-landln:#d2dff0;--map-ridge:#bfd0e6;
+  --mk-sel:#c62f3a;--aucb:#c62f3a;--hl:#c62f3a;--hl2:rgba(198,47,58,.22);--tip-ln:#1f7a4a;--chart-rev:#1f5f99;--sc-acc:#c62f3a;
+  --btnsh:0 8px 18px -6px rgba(198,47,58,.5),inset 0 1px 0 rgba(255,255,255,.3);--lk-shc:20,40,70;
+  --lkc:linear-gradient(180deg,#fff,#fbfdff);--lkb:linear-gradient(180deg,#fff,#edf3fa);
+  --lk-app:linear-gradient(180deg,#eaf2fb 0,#f3f7fc 100%);--lk-acc:linear-gradient(180deg,#e2525c,#c62f3a 60%,#b02631);
+  --lk-bar:repeating-linear-gradient(-45deg,#c62f3a 0,#c62f3a 6px,#fff 6px,#fff 10px)}
+/* снежинки на фоне шапки */
+html.lk body.th-winter #hdr{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cg fill='%23c9d6e6'%3E%3Ccircle cx='10' cy='12' r='2'/%3E%3Ccircle cx='44' cy='40' r='1.5'/%3E%3Ccircle cx='70' cy='8' r='2.4'/%3E%3Ccircle cx='96' cy='30' r='1.6'/%3E%3Ccircle cx='112' cy='52' r='2'/%3E%3Ccircle cx='28' cy='54' r='1.4'/%3E%3C/g%3E%3C/svg%3E") 0 0/120px 60px,var(--hd-bg)}
+
+/* ================= «Морской бриз» (th-sea, за 💎) — бирюза, песок, коралл ================= */
+body.th-sea{
+  --bg:#e7f4f5;--page:#d8ecee;--card:#fff;--card2:#f5fbfb;--ink:#0c2a33;--ink2:#25454f;--muted:#4f6d76;--line:#dcecee;--line2:#bfd9dd;
+  --accent:#0f7c8c;--accent-d:#0a6170;--accent-t:#dff3f5;--on-accent:#fff;--blue:#0f7c8c;--good:#138a5a;--good-t:#e2f5ec;--bad:#d9534f;--bad-t:#fdeceb;
+  --gold:#d9952a;--soft:#e9f5f6;--soft2:#f3fafa;--track:#d3e8eb;--barfill:#0f7c8c;--icbg:#e9f5f6;
+  --hd-bg:#fff;--hd-btn:#e9f5f6;--nav-bg:#fff;--nav-on:#0f7c8c;--map-land:#e0f0ec;--map-landln:#cbe4df;--map-ridge:#b3d4cf;
+  --mk-sel:#ff7a59;--aucb:#0f7c8c;--hl:#0f7c8c;--hl2:rgba(15,124,140,.22);--tip-ln:#ff7a59;--chart-rev:#0f7c8c;--sc-acc:#0f7c8c;
+  --btnsh:0 8px 18px -6px rgba(15,124,140,.5),inset 0 1px 0 rgba(255,255,255,.3);--lk-shc:10,60,70;
+  --lkc:linear-gradient(180deg,#fff,#fbfefe);--lkb:linear-gradient(180deg,#fff,#e9f5f6);
+  --lk-app:linear-gradient(180deg,#e7f4f5 0,#f4efe2 100%);--lk-acc:linear-gradient(180deg,#2aa0b0,#0f7c8c 60%,#0b6a78);
+  --lk-bar:linear-gradient(90deg,#ff7a59,#0f7c8c)}
+html.lk body.th-sea #hdr{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='10'%3E%3Cpath d='M0 6q10-6 20 0t20 0 20 0 20 0' fill='none' stroke='%23bfe3e7' stroke-width='2'/%3E%3C/svg%3E") repeat-x 0 100%/80px 10px,var(--hd-bg)}
+
+/* ================= окно «Оформление» (js/themes.js THEME.open) ================= */
+.thg{display:-webkit-box;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin:0 -6px}
+.thc{width:-webkit-calc(50% - 12px);width:calc(50% - 12px);margin:6px;border-radius:18px;background:var(--card2);border:2px solid var(--line);padding:8px;display:-webkit-box;display:flex;-webkit-box-orient:vertical;-webkit-flex-direction:column;flex-direction:column;position:relative}
+.thc.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-t)}
+.thc .thn{font-weight:700;font-size:16px;line-height:1.2;margin:8px 2px 2px}
+.thc .thh{font-size:14px;color:var(--muted);line-height:1.25;margin:2px 2px 6px;-webkit-box-flex:1;-webkit-flex:1;flex:1}
+.thc .btn{width:100%;min-height:46px;margin:0;font-size:15px;padding:6px 8px;line-height:1.15}
+.thc .thok{display:block;text-align:center;font-weight:700;color:var(--good);min-height:46px;line-height:46px}
+.thpv{position:relative;height:96px;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.thpv i,.thpv b,.thpv s,.thpv u{position:absolute;display:block}
+.thpv i{left:0;right:0;top:0;height:22px}
+.thpv b{left:8px;right:8px;top:30px;height:38px;border-radius:9px;box-shadow:0 3px 8px -3px rgba(0,0,0,.25)}
+.thpv b:before,.thpv b:after{content:"";position:absolute;left:8px;height:5px;border-radius:3px;background:currentColor;opacity:.75}
+.thpv b:before{top:9px;width:56%}.thpv b:after{top:21px;width:36%;opacity:.4}
+.thpv s{left:8px;bottom:8px;width:46%;height:16px;border-radius:7px}
+.thpv u{right:8px;bottom:8px;width:30%;height:16px;border-radius:7px}
+.thpv em{position:absolute;left:9px;top:5px;font-style:normal;font-size:12px;font-weight:800;line-height:12px}
+.thc.lock .thpv{opacity:.92}
+.thc .thlk{position:absolute;right:12px;top:12px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.92);display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.thbar{height:8px;border-radius:5px;background:var(--track);overflow:hidden;margin:0 2px 8px}
+.thbar i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.thc .btn+.btn{margin-top:6px}
+@media (max-width:340px){.thc{width:-webkit-calc(100% - 12px);width:calc(100% - 12px)}.thpv{height:80px}}
+/* «Кабинет»: моноширинные цифры шире — в шапке деньги округлым шрифтом, чтобы «3,1 млн ₽» не обрезалось */
+html.lk body.th-office .hcash b{font-family:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:-.02em}
+/* плакат: 5 вкладок («Недра») — подписи плотнее, Rubik шире системного */
+html.lk body.th-poster #nav button:first-child:nth-last-child(n+5),html.lk body.th-poster #nav button:first-child:nth-last-child(n+5)~button{font-size:12.5px;letter-spacing:-.5px}

@@ -86,7 +86,7 @@ function lvGain(W,b){const x=lvNext(W,b);if(!x)return null;const f0=E.bizForecas
 /* ---------------- маркетинг ---------------- */
 // sc: pt — одна точка, city — все точки города; c — цена (cf — доля вложений точки для вывески), dur — дней, e — +покупателей, pr — цена ×, min — точек в городе
 const MK={fly:{ico:'📄',c:5000,dur:14,e:.15,sc:'pt'},bogo:{ico:'🎁',c:0,dur:10,e:.35,pr:.8,sc:'pt'},blog:{ico:'🤳',c:40000,dur:20,e:.25,sc:'pt',rnd:1},
-  sign:{ico:'🪧',cf:.06,cmin:25000,e:.06,sc:'pt',once:1},soc:{ico:'📱',c:15000,e:.05,sc:'city',sub:1},
+  sign:{ico:'🔖',cf:.06,cmin:25000,e:.06,sc:'pt',once:1},soc:{ico:'📱',c:15000,e:.05,sc:'city',sub:1},
   radio:{ico:'📻',c:60000,dur:20,e:.12,sc:'city',min:3},out:{ico:'🏙',c:90000,dur:30,e:.1,sc:'city',min:3}};
 const MK_CAP=.45;
 function mkSens(W,t){const T=TR[t];return (T?T.mk:.5)*(ed(W,'mkt')?1.25:1);}
@@ -251,7 +251,13 @@ function evNew(W){const O=ow(W),ps=pts(W),mid=W.st==='mid',D=mid?EV3:EV2,KL=mid?
   const a={};if(k==='rent')a.inc=rnd0(B.rent*C.rent*.2/1000)*1000;if(k==='raise')a.inc=10000;if(k==='sale')a.pr=rnd0(E.BIZ.kiosk.cap*.6);
   if(k==='opt3'){const v=tyVc(W,b.t);a.fee=Math.max(30e3,rnd0(v*.1/1000)*1000);a.sv=rnd0(v*.08*3/1000)*1000;}
   if(k==='city2'){const cs=city2(W);a.c=cs[Math.floor(R(W)*cs.length)];a.pr=E.EV3_CITY;}
-  if(k==='mall'){(O.mallC||(O.mallC={}))[b.c]=W.m;a.inc=rnd0(B.rent*C.rent*.6/1000)*1000;const f0=E.bizForecast(W,b,b.k).prof,f1=E.bizForecast(W,Object.assign({},b,{spot:(b.spot||0)+.25,rx:(b.rx||0)+a.inc}),b.k).prof;a.g=rnd0((f1-f0)/100)*100;}
+  // M21 (по просьбе главного): суммы событий «Сети» — от размера дела (минимум — как было): премия управляющему — 20 % прибыли точки, переезд в ТЦ — 15 % выручки точки,
+  // тендер — на все точки вида в городе, документы 4 % их выручки; налоговая — аудитор 0,4 %, доначисление 0,8–1,6 % месячной выручки компании
+  const k1=x=>Math.round(x/1000)*1000,pf=Math.max(0,b.pm&&b.pm.length?b.pm[b.pm.length-1]:0);
+  if(k==='poach')a.c=Math.max(20e3,k1(pf*.2));
+  if(k==='tender'){const tp=W.biz.filter(x=>x.t===b.t&&x.c===b.c&&x.st==='w');a.n=tp.length;a.fee=Math.max(15e3,k1(tp.reduce((q,x)=>q+(x.lr||0),0)*.04));}
+  if(k==='audit3'){const r=W.reps&&W.reps.length?W.reps[W.reps.length-1].pl.rev:0;a.c=Math.max(40e3,k1(r*.004));a.f1=Math.max(60e3,k1(r*.008));a.f2=Math.max(120e3,k1(r*.016));}
+  if(k==='mall'){a.mv=Math.max(80e3,k1((b.lr||0)*.15));(O.mallC||(O.mallC={}))[b.c]=W.m;a.inc=rnd0(B.rent*C.rent*.6/1000)*1000;const f0=E.bizForecast(W,b,b.k).prof,f1=E.bizForecast(W,Object.assign({},b,{spot:(b.spot||0)+.25,rx:(b.rx||0)+a.inc}),b.k).prof;a.g=rnd0((f1-f0)/100)*100;}
   O.ev={k,id:b.id,bt:b.t,exp:W.t+10,def:evDef(k).def,a,m:W.m};O.evM=W.m;}
 // ответ: i — номер варианта; auto — прошло 10 дней
 function evAns(W,i,auto){const O=ow(W),v=O.ev;if(!v)return 'no';const b=W.biz.find(x=>x.id===v.id);O.ev=null;if(!b)return 'gone';const B=E.BIZ[b.t],k=v.k,a=v.a||{};let res='ok';
@@ -269,10 +275,10 @@ function evAns(W,i,auto){const O=ow(W),v=O.ev;if(!v)return 'no';const b=W.biz.fi
   // глава 3
   else if(k==='opt3'){if(i===0&&W.cash>=a.fee){cost(W,a.fee,'adm','adm',B.seg);O.neg[b.t]=[W.m+3,Math.max(.08,O.neg[b.t]&&O.neg[b.t][0]>W.m?O.neg[b.t][1]:0)];}}
   else if(k==='city2'){if(i===0){if(W.cities.indexOf(a.c)>=0)res='gone';else if(W.cash<a.pr)res='cash';else{cost(W,a.pr,'adm','adm',null);W.cities.push(a.c);res='city';}}}
-  else if(k==='poach'){if(i===0){if(W.cash>=20e3)cost(W,20e3,'fix','fix',B.seg);else{b.hon=1+Math.floor(R(W)*5);b.th=0;b.ev.poach=[W.m+2,.85];}}else{b.hon=1+Math.floor(R(W)*5);b.th=0;b.ev.poach=[W.m+2,.85];}}
-  else if(k==='mall'){if(i===0){if(W.cash<80e3)res='cash';else{cost(W,80e3,'oth','oth',B.seg);b.down=Math.max(b.down||0,5);b.mall=1;b.spot=(b.spot||0)+.25;b.rx=(b.rx||0)+a.inc;}}}
-  else if(k==='tender'){if(i===0){cost(W,15e3,'adm','adm',B.seg);if(R(W)<.6){b.ev.tender=[W.m+3,1.25];res='won';}else res='lost';}}
-  else if(k==='audit3'){if(i===0)cost(W,40e3,'adm','adm',null);else if(R(W)<.5){const f=rnd0(RR(W,60e3,120e3)/1000)*1000;cost(W,f,'oth','oth',null);res='tax';v.fine=f;}}
+  else if(k==='poach'){const pc=a.c||20e3;if(i===0){if(W.cash>=pc)cost(W,pc,'fix','fix',B.seg);else{b.hon=1+Math.floor(R(W)*5);b.th=0;b.ev.poach=[W.m+2,.85];}}else{b.hon=1+Math.floor(R(W)*5);b.th=0;b.ev.poach=[W.m+2,.85];}}
+  else if(k==='mall'){const mv=a.mv||80e3;if(i===0){if(W.cash<mv)res='cash';else{cost(W,mv,'oth','oth',B.seg);b.down=Math.max(b.down||0,5);b.mall=1;b.spot=(b.spot||0)+.25;b.rx=(b.rx||0)+a.inc;}}}
+  else if(k==='tender'){if(i===0){cost(W,a.fee||15e3,'adm','adm',B.seg);if(R(W)<.6){const tp=a.n?W.biz.filter(x=>x.t===b.t&&x.c===b.c&&x.st==='w'):[b];for(const x of tp)x.ev.tender=[W.m+3,1.25];res='won';}else res='lost';}}
+  else if(k==='audit3'){if(i===0)cost(W,a.c||40e3,'adm','adm',null);else if(R(W)<.5){const f=rnd0(RR(W,a.f1||60e3,a.f2||120e3)/1000)*1000;cost(W,f,'oth','oth',null);res='tax';v.fine=f;}}
   O.lastEv={k,i,res,bt:b.t,m:W.m,auto:!!auto,fine:v.fine||0,a};return res;}
 
 /* ---------------- подсказки: пассив, налог, «до Сети», прогноз новой точки ---------------- */

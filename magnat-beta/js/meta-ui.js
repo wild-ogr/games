@@ -248,7 +248,7 @@ function close(){hideModal();refresh();try{window.uiRefresh&&window.uiRefresh();
 function bindModal(){}
 
 /* ---------- покупки: стартовый набор (магазин + один раз в окне главы «Своё дело») ---------- */
-function starterOk(){try{return typeof PAY!=='undefined'&&PAY.on&&!!PAY.item('starter')&&!PAY.own('starter');}catch(e){return false;}}
+function starterOk(){try{return typeof PAY!=='undefined'&&PAY.on&&!!PAY.item('starter')&&!PAY.own('starter')&&(typeof starterOn!=='function'||starterOn());}catch(e){return false;}}   // M28: только первые 10 дней
 function starterBody(){const pr=PAY.item('starter');return `<div class="mt-row"><span class="mt-f1">🎁 <b>${T('Стартовый набор председателя','Chairman’s starter pack')}</b><br><span class="mt-mut">${T('150 💎 и эмблема «Золотой молот» 🔨 перед названием. Один раз, только для удобства и красоты.','150 💎 and the “Golden hammer” 🔨 emblem before your name. One time, just for convenience and looks.')}</span></span><button class="mt-btn ac noenter" data-mt-buy="starter">${PAY.price(pr)}</button></div>`;}
 // для окна главы «Своё дело» (biz-ui): html предложения или '' (показывается один раз: S.ask.starter)
 function starterHtml(){if(!starterOk()||S.ask&&S.ask.starter)return '';if(!S.ask)S.ask={};S.ask.starter=Date.now();try{save();}catch(e){}css();return `<div class="mt-card">${starterBody()}</div>`;}

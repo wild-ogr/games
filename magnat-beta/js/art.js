@@ -8,6 +8,7 @@
                  o: {ghost:1 — серый силуэт пустого места, hero:{…} — каким был герой в тот момент, y — лет встречи};
      lux(id, o) — значок вещи 48×48 (ECON.LUX id), o.ghost — «мечта» (серый силуэт), o.sil — «позже» (тёмный силуэт);
      gram(ico, o) — грамота (бумага, рамка, медальон с эмодзи вехи) 64×80; cup(kind, tier) — кубок 48×56: w (1 бронза, 2 серебро, 3 золото), 11b, plan, ud (медаль), patron.
+   M27 (вид A): у вещей — свет и тень на круге (VOL), у фото — мягкий свет сверху и тень снизу (SCV); градиенты с уникальными id.
    Без внешних файлов, фильтров, масок и шрифтов; тексты в рисунке — L('рус','Eng'). */
 (function(root){
 'use strict';
@@ -192,7 +193,7 @@ function meet(o,cup){const y=o&&o.y||15,ban=cup?T('Кубок 11 «Б»','Class 
 function scene(k,o){o=o||{};let b;const y=/^(?:ph_meet|cup_11b)_(\d+)/.exec(k||'');
   if(y){o.y=+y[1];b=meet(o,k.indexOf('cup_11b')===0);}else b=SC[k]?SC[k](o):sky('#eef1f6')+tx(80,58,'📷','#9aa1ab',20);
   if(o.ghost)b=mono(b,'ghost')+c(80,50,14,'#ffffff')+'<circle cx="80" cy="50" r="14" fill="none" stroke="#9aa3b0" stroke-width="1.4" stroke-dasharray="3 2"/>'+tx(80,57,'?','#6b7482',20);
-  return svg('0 0 160 100',b);}
+  return svg('0 0 160 100',b+(o.ghost?'':SCV()));}
 
 /* ---------- вещи героя: значки 48×48 на мягком круге ---------- */
 const BG='<circle cx="24" cy="24" r="24" style="fill:var(--lxbg,#edf1fb)"/>';
@@ -247,7 +248,11 @@ const LX={
   gift_l:()=>r(10,20,28,22,'#e04f4f',1.6)+r(8,15,32,7,'#f06060',1.4)+r(22,15,4,27,'#f0b43c')+p('M24 15q-8-8-10-2 2 3 10 2zM24 15q8-8 10-2-2 3-10 2z','#f0b43c'),
   gym11:()=>p('M5 20L24 9l19 11z','#b35a3a')+r(8,20,32,21,'#e8ecf3')+r(8,20,32,4,'#f0b43c')+tx(24,23.4,'11','#7a3f05',4.2)+r(20,30,8,11,'#8a6a4f')+r(11,28,6,5,'#9fc0e8')+r(31,28,6,5,'#9fc0e8')+c(38,41,3,'#e0643a'),
   hockey:()=>p('M15 11l6-3.4h6l6 3.4 7 8-5 3.6-2.6-3V41H15.6V19.6L13 22.6 8 19z',ACC)+p('M21 7.6q3 3 6 0z','#1f44c8')+r(15.6,33,16.8,2.6,'#ffffff')+r(8.6,18.6,4,1.8,'#ffffff')+r(35.4,18.6,4,1.8,'#ffffff')+tx(24,29.4,'7','#ffffff',11)+el(38,41.4,5.4,2.2,'#20242c')};
-function lux(id,o){o=o||{};const f=LX[id];const b=f?f():'';const out=svg('0 0 48 48',(o.ghost||o.sil?'<circle cx="24" cy="24" r="24" fill="#eef1f5"/>':BG)+b);return o.sil?mono(out,'sil'):o.ghost?mono(out,'ghost'):out;}
+// M27 вид A «Мягкий объём»: круг под вещью — с мягким светом сверху и тенью снизу, под вещью — тень на «полу» (градиенты, без фильтров)
+let GN=0;
+const VOL=()=>{const i='lxv'+(++GN);return '<defs><radialGradient id="'+i+'" cx="38%" cy="28%" r="78%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#1c274c" stop-opacity=".16"/></radialGradient></defs><circle cx="24" cy="24" r="24" fill="url(#'+i+')"/><ellipse cx="24" cy="41" rx="13" ry="2.6" fill="rgba(28,39,76,.13)"/>';};
+const SCV=()=>{const i='scv'+(++GN);return '<defs><linearGradient id="'+i+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#1c274c" stop-opacity=".14"/></linearGradient></defs><rect width="160" height="100" fill="url(#'+i+')"/>';};
+function lux(id,o){o=o||{};const f=LX[id];const b=f?f():'';const out=svg('0 0 48 48',(o.ghost||o.sil?'<circle cx="24" cy="24" r="24" fill="#eef1f5"/>':BG+VOL())+b);return o.sil?mono(out,'sil'):o.ghost?mono(out,'ghost'):out;}
 const has=id=>!!LX[id];
 
 /* ---------- грамота: бумага, двойная рамка, медальон с эмодзи вехи, печать ---------- */
