@@ -69,12 +69,12 @@ canvas{display:block;touch-action:none}
 .gcard canvas{width:100%;height:84px;display:block}
 .gcard b{display:block;margin-top:4px}
 .gcard small{color:#57606f;font-weight:600;font-size:14px}
-.gcard.lock{opacity:.55}
+.gcard.lock{background:#efeadb;box-shadow:0 4px 0 #d3ccb8}.gcard.lock b{color:#57606f}.gcard.next{background:#fff3d6;box-shadow:0 4px 0 #e6c98a}
 .gcard.own{cursor:pointer}
 .sws{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:10px 0 4px}
 .sw{width:44px;height:44px;border-radius:50%;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.3);font-weight:900;font-size:20px;color:#fff;text-shadow:0 1px 3px #000}
 .sw.on{box-shadow:0 0 0 3px #fff,0 0 0 6px #2d3436}
-.gcard.lock canvas{filter:brightness(0) opacity(.25)}
+.gcard.lock canvas{filter:grayscale(1) brightness(1.08) opacity(.42)}.gcard.next canvas{filter:grayscale(.7) opacity(.75)}
 /* modal & ad */
 .modal,.ad{position:absolute;top:0;right:0;bottom:0;left:0;display:none;align-items:center;justify-content:center;background:rgba(20,30,40,.5);z-index:10;padding:20px}
 .modal{overflow-y:auto;overscroll-behavior:contain}
@@ -136,7 +136,7 @@ body.calm .trip i{animation:none;left:calc(100% - 32px)}
 .logo .lsub{text-shadow:none}
 .lg{display:inline-flex;border-radius:999px;overflow:hidden;background:#dcd6c8}.lg u{text-decoration:none;font-weight:800;padding:3px 10px;color:#57606f}.lg u.on{background:#2b8a3e;color:#fff}
 .hdr-r .pill{white-space:nowrap}
-@media (max-width:340px){.logo{font-size:15px!important}.hdr-r .pill{padding:5px 6px!important;font-size:13px!important}.hdr-r{gap:4px!important}.hdr-r .icon{width:40px;height:40px}} /* 320 px: 💰 не вылезает за край */
+@media (max-width:340px){.btn.x2p{font-size:13.5px;padding:7px 6px}.logo{font-size:15px!important}.hdr-r .pill{padding:5px 6px!important;font-size:13px!important}.hdr-r{gap:4px!important}.hdr-r .icon{width:40px;height:40px}} /* 320 px: 💰 не вылезает за край */
 @media (max-width:400px){.mh{padding-left:12px;padding-right:12px}.logo{font-size:17px}.logo .lc{display:none}.hdr-r{gap:5px}.hdr-r .pill{padding:5px 8px;font-size:14px}}
 @media (max-height:520px){.tip{font-size:14px;padding:6px 10px;top:4px}.gh{padding-top:4px;padding-bottom:0}.gh .icon{width:44px;height:44px;font-size:18px}.gt>div:first-child{font-size:15px}.gf{padding-top:4px;padding-bottom:6px}.gf .btn{padding-top:4px;padding-bottom:4px}.btn.bst{flex-direction:row;gap:6px;justify-content:center}}
 @media (min-width:900px) and (min-height:600px){#app{max-width:640px;box-shadow:0 0 50px rgba(0,0,0,.18)}}
@@ -148,7 +148,7 @@ body.calm .trip i{animation:none;left:calc(100% - 32px)}
   #scr-game .gt{flex:1 1 90px}
   #scr-game .gt{flex:1 1 120px}
   #scr-game .gh-r{order:3;flex:1 1 auto;flex-direction:row;justify-content:space-between;align-items:center}
-  #scr-game #gSet{order:4}
+  #scr-game #gSet,#scr-game #zIn{order:4}
   #scr-game .stage{grid-column:2;grid-row:1/3}
   #scr-game .gf{grid-column:1;grid-row:2;flex-direction:column;justify-content:flex-end;padding:8px 8px 12px 12px}
   #scr-game .gf .btn,#scr-game .gf .btn.sq{flex:0 0 auto;width:100%}
@@ -175,7 +175,7 @@ body.calm .trip i{animation:none;left:calc(100% - 32px)}
 .sd{background:#f1ede2;border-radius:12px;padding:6px 2px;font-weight:800;font-size:15px;line-height:1.2;position:relative;color:#57606f}
 .sd small{display:block;font-size:13px;font-weight:700}
 .sd.done{background:#c8efcf;color:#2b7a3f}
-.sd.done::after{content:"✓";position:absolute;top:2px;right:6px;font-size:13px}
+.sd.done::after{content:"✓";position:absolute;top:1px;right:3px;font-size:12px}
 .sd.today{background:linear-gradient(#ffd36e,#ff9f43);color:#3a2206;box-shadow:0 3px 0 #c8741d;animation:pulse 1.2s infinite}
 .sd.d7{grid-column:span 2;background:#ffe9b8}
 .sd.d7.today{background:linear-gradient(#ffd36e,#ff7a45)}
@@ -200,6 +200,113 @@ body.calm .node.cur,body.calm .sd.today,body.calm .card{animation:none}
 .mh,.mnav{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
 .gh,.gf{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
 @supports not (inset:0){.mnav>*+*,.gf>*+*,.gh>*+*,.hdr-r>*+*,.chest>*+*{margin-left:10px}.sws>*{margin:5px}.row>*+*{margin-top:10px}.node-row>*+*{margin-left:12px}.node-row.r>*+*{margin-left:0;margin-right:12px}.gh-r>*+*{margin-top:3px}.lbr>*+*{margin-left:10px}}
+/* ===== boost: карта — регионы с пейзажами, дорога, машинка игрока; фон для компьютера ===== */
+.reg{position:relative;border-radius:22px;margin:8px -8px 12px;padding:2px 8px 8px}
+.reg0{background:linear-gradient(rgba(214,240,170,.62),rgba(150,205,120,.62))}
+.reg1{background:linear-gradient(rgba(196,228,222,.7),rgba(126,178,160,.66))}
+.reg2{background:linear-gradient(rgba(178,222,246,.72),rgba(116,178,220,.66))}
+.reg3{background:linear-gradient(rgba(255,232,176,.74),rgba(244,190,126,.68))}
+.reg4{background:linear-gradient(rgba(214,202,244,.72),rgba(160,150,214,.66))}
+.reg .region{margin-top:8px}
+#mapReg{text-align:center;font-weight:900;font-size:14.5px;color:#2d5b77;padding:0 12px 5px;min-height:27px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#mapReg span{background:rgba(255,255,255,.9);padding:4px 14px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.node-row .sc{position:absolute;bottom:8px;width:21%;max-width:96px;height:66px;pointer-events:none;opacity:.92}
+.node-row .sc svg{display:block;width:100%;height:100%}
+.node-row.l .sc{left:0}.node-row.r .sc{right:0}
+.node-row:not(:last-child)::after{border-left:0;width:13px;height:50px;top:60px;border-radius:7px;background-color:#77818c;background-image:repeating-linear-gradient(rgba(255,255,255,.95) 0,rgba(255,255,255,.95) 7px,rgba(255,255,255,0) 7px,rgba(255,255,255,0) 13px);background-size:3px 100%;background-position:center;background-repeat:no-repeat;box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.node-row.l::after{left:calc(22% + 24px)}.node-row.r::after{right:calc(22% + 24px)}
+.node .mycar{position:absolute;left:50%;top:-25px;width:58px;height:34px;margin-left:-29px;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.chest.pop{animation:bump .45s}
+#bg{display:none;position:fixed;left:0;right:0;bottom:0;height:260px;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='260' viewBox='0 0 640 260'%3E%3Crect x='14' y='110' width='150' height='150' fill='rgb(31,59,87)' fill-opacity='.30'/%3E%3Crect x='11' y='105' width='156' height='6' fill='rgb(31,59,87)' fill-opacity='.38'/%3E%3Crect x='23' y='122' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='41' y='122' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='59' y='122' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='77' y='122' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='95' y='122' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='113' y='122' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='131' y='122' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='23' y='148' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='41' y='148' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='59' y='148' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='77' y='148' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='95' y='148' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='113' y='148' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='131' y='148' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='23' y='173' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='41' y='173' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='59' y='173' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='77' y='173' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='95' y='173' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='113' y='173' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='131' y='173' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='23' y='199' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='41' y='199' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='59' y='199' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='77' y='199' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='95' y='199' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='113' y='199' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='131' y='199' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='23' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='41' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='59' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='77' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='95' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='113' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='131' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='190' y='50' width='118' height='210' fill='rgb(31,59,87)' fill-opacity='.30'/%3E%3Crect x='187' y='45' width='124' height='6' fill='rgb(31,59,87)' fill-opacity='.38'/%3E%3Crect x='199' y='62' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='217' y='62' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='235' y='62' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='253' y='62' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='271' y='62' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='289' y='62' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='199' y='89' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='217' y='89' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='235' y='89' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='253' y='89' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='271' y='89' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='289' y='89' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='199' y='116' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='217' y='116' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='235' y='116' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='253' y='116' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='271' y='116' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='289' y='116' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='199' y='143' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='217' y='143' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='235' y='143' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='253' y='143' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='271' y='143' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='289' y='143' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='199' y='169' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='217' y='169' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='235' y='169' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='253' y='169' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='271' y='169' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='289' y='169' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='199' y='196' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='217' y='196' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='235' y='196' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='253' y='196' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='271' y='196' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='289' y='196' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='199' y='223' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='217' y='223' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='235' y='223' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='253' y='223' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='271' y='223' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='289' y='223' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='330' y='128' width='170' height='132' fill='rgb(31,59,87)' fill-opacity='.30'/%3E%3Crect x='327' y='123' width='176' height='6' fill='rgb(31,59,87)' fill-opacity='.38'/%3E%3Crect x='339' y='140' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='357' y='140' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='375' y='140' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='393' y='140' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='411' y='140' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='429' y='140' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='447' y='140' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='465' y='140' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='339' y='168' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='357' y='168' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='375' y='168' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='393' y='168' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='411' y='168' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='429' y='168' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='447' y='168' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='465' y='168' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='339' y='195' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='357' y='195' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='375' y='195' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='393' y='195' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='411' y='195' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='429' y='195' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='447' y='195' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='465' y='195' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='339' y='222' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='357' y='222' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='375' y='222' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='393' y='222' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='411' y='222' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='429' y='222' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='447' y='222' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='465' y='222' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='520' y='80' width='104' height='180' fill='rgb(31,59,87)' fill-opacity='.30'/%3E%3Crect x='517' y='75' width='110' height='6' fill='rgb(31,59,87)' fill-opacity='.38'/%3E%3Crect x='529' y='92' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='547' y='92' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='565' y='92' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='583' y='92' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='601' y='92' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='529' y='118' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='547' y='118' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='565' y='118' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='583' y='118' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='601' y='118' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='529' y='145' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='547' y='145' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='565' y='145' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='583' y='145' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='601' y='145' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='529' y='171' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='547' y='171' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='565' y='171' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='583' y='171' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='601' y='171' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='529' y='197' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='547' y='197' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='565' y='197' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='583' y='197' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='601' y='197' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='529' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='547' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='565' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='583' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.55'/%3E%3Crect x='601' y='224' width='10' height='12' fill='rgb(255,255,255)' fill-opacity='.22'/%3E%3Crect x='173' y='236' width='6' height='24' fill='rgb(40,70,40)' fill-opacity='.4'/%3E%3Ccircle cx='176' cy='228' r='20' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='164' cy='236' r='14' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='188' cy='235' r='14' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Crect x='315' y='231' width='6' height='29' fill='rgb(40,70,40)' fill-opacity='.4'/%3E%3Ccircle cx='318' cy='222' r='24' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='304' cy='231' r='17' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='332' cy='230' r='17' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Crect x='505' y='238' width='6' height='22' fill='rgb(40,70,40)' fill-opacity='.4'/%3E%3Ccircle cx='508' cy='231' r='18' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='497' cy='238' r='13' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='519' cy='238' r='13' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Crect x='627' y='234' width='6' height='26' fill='rgb(40,70,40)' fill-opacity='.4'/%3E%3Ccircle cx='630' cy='225' r='22' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='617' cy='234' r='15' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='643' cy='232' r='16' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Crect x='1' y='241' width='6' height='19' fill='rgb(40,70,40)' fill-opacity='.4'/%3E%3Ccircle cx='4' cy='234' r='16' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='-6' cy='241' r='11' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Ccircle cx='14' cy='240' r='12' fill='rgb(46,125,50)' fill-opacity='.42'/%3E%3Crect x='0' y='252' width='640' height='8' fill='rgb(46,125,50)' fill-opacity='.45'/%3E%3C/svg%3E") repeat-x left bottom}
+@media (min-width:760px){#bg{display:block}#app{z-index:1}}
+@media (min-width:900px) and (min-height:900px){#app{max-width:720px}}
+.gside{display:none}
+@media (max-width:400px){.gh{gap:6px}.gh .icon{width:40px;height:40px;font-size:19px}.gt>div:first-child{font-size:16px;white-space:nowrap}}
+@media (max-width:340px){.gh{padding-left:8px;padding-right:8px}.gt>div:first-child{font-size:15px}}
+#zIn.icon{display:none}#zIn.icon.on{display:block}
+.how p.hw{display:flex;align-items:center;gap:10px}.how p.hw canvas{flex:none;width:46px;height:46px;background:#5a636e;border-radius:10px}.how p.hw span{flex:1}
+@supports not (inset:0){.how p.hw>*+*{margin-left:10px}}
+/* ===== компьютер, широкое окно (заход 2): двор во всю высоту справа, панели — колонкой слева; карта — меню слева, дорога справа; гараж — в 4 столбца.
+   Низкое альбомное окно (≤640 px по высоте) — своё правило выше, оно не меняется ===== */
+@media (min-width:860px) and (min-height:641px) and (min-aspect-ratio:1/1){
+  #app{max-width:1100px;max-width:min(1280px,calc(88vh + 320px));box-shadow:0 0 50px rgba(0,0,0,.18)}
+  #scr-game.on{display:grid;grid-template-columns:310px 1fr;grid-template-rows:auto 1fr auto}
+  #scr-game .gh{grid-column:1;grid-row:1;flex-wrap:wrap;align-content:flex-start;padding:14px 8px 6px 14px}
+  #scr-game .gt{flex:1 1 200px}
+  #scr-game .gt>div:first-child{font-size:21px}
+  #scr-game .gh-r{order:5;flex:1 1 auto;flex-direction:row;justify-content:flex-start;gap:12px;align-items:center;margin-top:6px}
+  #scr-game #zIn,#scr-game #gSet{order:6;margin-top:6px}
+  #scr-game .gh-r .hearts{font-size:26px}
+  #scr-game .gh-r .pill.sm{font-size:17px;padding:6px 14px}
+  #scr-game .gside{display:block;grid-column:1;grid-row:2;padding:6px 8px 6px 14px;overflow:hidden;align-self:start}
+  #scr-game .stage{grid-column:2;grid-row:1/4}
+  #scr-game .gf{grid-column:1;grid-row:3;flex-direction:column;justify-content:flex-end;padding:8px 8px 16px 14px}
+  #scr-game .gf .btn,#scr-game .gf .btn.sq{flex:0 0 auto;width:100%}
+  #scr-game .gf .btn.sq{flex-direction:row;justify-content:center;gap:8px;padding:12px 0}
+  #scr-game .gf .btn.sq small{font-size:16px}
+  #scr-game .btn.bst{padding:12px 6px;font-size:17px}
+  #scr-game .btn.bst small{font-size:15px}
+  .gside .shura{margin:4px 0 8px}.gside .goal,.gside .tmr{font-size:14.5px;background:rgba(255,255,255,.88);border-radius:12px;padding:8px 10px;margin:8px 0 0!important;text-align:left}
+  .gside .keys{font-size:13px;color:#2d5b77;font-weight:700;margin:10px 2px 0;line-height:1.5}#scr-game.dark .gside .keys{color:#e3ebff}
+  #scr-map.on{display:grid;grid-template-columns:300px 1fr;grid-template-rows:auto auto auto 1fr}
+  #scr-map .mh{grid-column:1;grid-row:1;flex-wrap:wrap;padding:16px 10px 8px 16px}
+  #scr-map .mh .logo{flex:1 1 100%;font-size:24px;margin-bottom:10px}#scr-map .logo .lc{display:inline}
+  #scr-map .hdr-r{flex:1;justify-content:space-between}
+  #scr-map #mToday{grid-column:1;grid-row:2;margin:6px 10px 6px 16px;align-self:start}
+  #scr-map .mnav{grid-column:1;grid-row:3;flex-direction:column;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:6px 10px 10px 16px;align-self:start}
+  #scr-map .mnav .btn,#scr-map .mnav .btn.sq{flex:0 0 auto;width:100%;min-height:56px;font-size:17px;padding:12px 10px}
+  #scr-map .mnav .btn.sq{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px}#scr-map .mnav .btn.sq small{font-size:17px}
+  #scr-map .mnav .btn.locked small{display:inline;margin-left:6px}
+  #scr-map .gside{display:block;grid-column:1;grid-row:4;padding:4px 10px 10px 16px;align-self:start}
+  #scr-map #mapReg{grid-column:2;grid-row:1;align-self:end;padding-top:16px;font-size:16px}
+  #scr-map .map-scroll{grid-column:2;grid-row:2/5;padding:6px 24px 24px}
+  #scr-map .route,#scr-map .soon{max-width:600px;margin-left:auto;margin-right:auto}
+  .gar-grid{grid-template-columns:repeat(4,1fr);padding:14px 24px 28px;gap:14px}
+  .gcard canvas{height:96px}
+  @supports not (inset:0){#scr-game .gf>*+*,#scr-map .mnav>*+*{margin-left:0;margin-top:10px}}
+}
+/* ===== boost: гараж — вкладки, наборы, «Уют двора» ===== */
+.gtabs,.gsets,.gnote{grid-column:1/-1}
+.gtabs{display:flex;gap:10px}.gtabs .btn{flex:1;padding:10px 6px;font-size:15.5px;position:relative;min-width:0}
+.gtabs .btn.on{outline:none;background:linear-gradient(#ffe9a8,#ffd36e);box-shadow:0 4px 0 #c8741d,0 6px 14px rgba(0,0,0,.12)}
+.gtabs .dot,.mnav .btn .dot{position:absolute;top:4px;right:6px;width:10px;height:10px;border-radius:50%;background:#ff4757;box-shadow:0 0 0 2px #fff}
+.mnav .btn{position:relative}
+.gnote{margin:0}
+.gsets h3{margin:6px 0 2px;font-size:17px;color:#1f3b57;text-shadow:0 1px 0 rgba(255,255,255,.7)}
+.gset{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:14px;padding:8px 12px;margin-top:8px;box-shadow:0 3px 0 #d9d2bf;text-align:left;min-height:52px}
+.gset span{flex:1;min-width:0;font-weight:700}.gset small{display:block;color:#57606f;font-weight:600;font-size:13.5px}
+.gset>i{font-style:normal;font-weight:800;color:#57606f;white-space:nowrap;font-size:14.5px}.gset.got{opacity:.7}.gset.got>i{color:#2b8a3e;font-size:20px}
+.gset .btn{padding:8px 10px;font-size:14.5px;flex:none;max-width:56%}
+.gcard.dec canvas{height:74px}.gcard .pr{display:block;margin-top:4px;font-weight:800;color:#a4410a}.gcard .pr.ok{color:#2b8a3e}
+.gbar{display:block;height:8px;border-radius:4px;background:#e0d6bd;margin:5px 8px 0;overflow:hidden}.gbar u{display:block;height:100%;background:#f0a500;border-radius:4px}
+#scr-garage .gh .pill{flex:none}
+@supports not (inset:0){.gtabs>*+*,.gset>*+*{margin-left:10px}}
+/* ===== boost (02.10): баба Шура, «Завтра», гостинцы, календарь задания дня, летящие монеты ===== */
+.shura{display:flex;align-items:center;gap:10px;text-align:left;margin:8px 0}
+.shura .pf{flex:none;width:52px;height:52px;border-radius:50%;box-shadow:0 2px 0 #d9c7a3;overflow:hidden;background:#ffe9c9}
+.shura .pf svg{display:block;width:100%;height:100%}
+.shura .sb{flex:1;min-width:0;margin:0!important;background:#fff;border:2px solid #eadfc8;border-radius:14px;padding:7px 10px;font-size:14.5px;line-height:1.3;color:#2d3436!important;font-weight:600}
+.shura .nm{display:block;font-size:12.5px;color:#b0306a;font-weight:800}
+.tmr{background:#eaf4fb;border-radius:12px;padding:7px 10px;font-size:14.5px;margin:8px 0 2px!important;color:#1f3b57!important;font-weight:700;line-height:1.3}
+.tmr b{color:#0b5cab}
+.newcar.tmrc{background:#eaf4fb}.newcar.tmrc p{color:#1f3b57;font-size:14.5px}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:10px 0 4px}
+.wk div{background:#f1ede2;border-radius:10px;padding:5px 0 3px;font-size:12.5px;font-weight:800;color:#57606f;line-height:1.2}
+.wk i{display:block;font-style:normal;font-size:16px;height:21px;line-height:21px}
+.wk .ok{background:#c8efcf;color:#2b7a3f}.wk .now{box-shadow:inset 0 0 0 2px #ff9f43;background:#fff3d6;color:#3a2206}.wk .ok.now{background:#c8efcf;color:#2b7a3f}.wk .fut{opacity:.6}
+.wkb{font-size:13.5px!important;margin:4px 0!important}.wkb span{white-space:nowrap;display:inline-block;margin:0 4px}.wkb .got{color:#2b7a3f;font-weight:800}
+.tday{display:flex;align-items:center;gap:8px;margin:0 12px 8px;padding:8px 12px;min-height:46px;border-radius:14px;background:rgba(255,255,255,.93);font-weight:700;font-size:14.5px;line-height:1.25;text-align:left;box-shadow:0 3px 0 rgba(0,0,0,.12);color:#1f3b57}
+.tday span{flex:1;min-width:0}.tday>i{font-style:normal;font-size:22px;font-weight:900;opacity:.5}
+.tday.hot{background:linear-gradient(#fff0b8,#ffd36e);color:#3a2206;box-shadow:0 3px 0 #c8741d}
+.swd{display:inline-block;width:20px;height:20px;border-radius:50%;box-shadow:0 0 0 2px #fff,0 1px 4px rgba(0,0,0,.35);vertical-align:-3px}
+.fire{white-space:nowrap}
+.mnav .btn.sq .fl{position:absolute;top:-9px;left:-6px;background:#ff7a45;color:#fff;border-radius:999px;font-size:12px;font-weight:900;padding:2px 6px;box-shadow:0 0 0 2px #fff;line-height:1.2}
+.btn.coinb{background:#fff;color:#a4410a;border:2px solid #e0763f;box-shadow:0 4px 0 #c7c1b0}
+.card.tight{padding-top:14px}.card.tight h2{font-size:21px}.card.tight .big-stars{font-size:34px;margin:2px 0}.card.tight .row{margin-top:8px;gap:8px}.card.tight p{margin:4px 0}.card.tight .goal,.card.tight .tmr{font-size:13.5px;margin:5px 0 0!important}.card.tight .coins-won{font-size:24px}.card.tight .btn{padding-top:9px;padding-bottom:9px}.card.tight .shura{margin:4px 0}
+.fc{position:absolute;z-index:30;left:0;top:0;font-style:normal;font-size:22px;line-height:1;pointer-events:none}
+.pill.bump{animation:bump .35s}
+@keyframes bump{40%{transform:scale(1.18)}}
+body.calm .pill.bump{animation:none}
+@supports not (inset:0){.shura>*+*,.tday>*+*{margin-left:10px}}
 </style>
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
@@ -209,21 +316,26 @@ if(a&&!document.hidden)a.play().catch(function(){});}
 document.addEventListener('visibilitychange',function(){if(!a)return;if(document.hidden)a.pause();else a.play().catch(function(){});});})();</script>
 </head>
 <body>
+<div id="bg"></div>
 <div id="app">
   <section id="scr-map" class="screen on">
     <header class="mh"><div class="logo"><span class="lc">🚗 </span><span data-en="Yard Escape&lt;small class=&quot;lsub&quot;&gt;Parking Jam&lt;/small&gt;">Выезд со двора</span></div><div class="hdr-r"><button class="icon snd" id="btnSet" aria-label="Настройки" data-en-aria="Settings">⚙️</button><div class="pill">⭐ <span id="totStars">0</span></div><button class="pill" id="mCoins">💰 <span id="coinCnt">0</span></button></div></header>
-    <div class="map-scroll"><div class="route" id="mapList"></div><div class="soon"><span data-en="Keep going — the yards never end!">Проходи дальше — дворы не кончаются!</span></div></div>
+    <div id="mapReg"></div>
+    <div class="map-scroll" id="mapScroll"><div class="route" id="mapList"></div><div class="soon"><span data-en="Keep going — the yards never end!">Проходи дальше — дворы не кончаются!</span></div></div>
+    <button id="mToday" class="tday noenter" style="display:none"></button>
+    <div class="gside" id="mapSide"></div>
     <nav class="mnav"><button id="btnDaily" class="btn accent">📅 Задание дня</button><button id="btnGarage" class="btn">🅿️ <span data-en="Garage">Гараж</span> <span id="garCnt"></span></button><button id="btnStreak" class="btn sq" aria-label="Серия дней" data-en-aria="Daily streak">🎁<small>Подарок</small></button><button id="btnMore" class="btn sq noenter" style="display:none" aria-label="Ещё игры во дворе" data-en-aria="More yard games">🎲<small data-en="Games">Игры</small></button></nav>
   </section>
 
   <section id="scr-game" class="screen">
-    <header class="gh"><button class="icon" id="gBack" aria-label="На карту" data-en-aria="To the map">←</button><div class="gt"><div id="gLevel">Уровень 1</div><div id="gCity" class="sub">Калининград</div></div><div class="gh-r"><div id="gHearts" class="hearts"></div><button class="pill sm" id="gCoins">💰 0</button></div><button class="icon snd" id="gSet" aria-label="Настройки" data-en-aria="Settings">⚙️</button></header>
-    <div class="stage" id="stage"><canvas id="cv"></canvas><div id="tip" class="tip"></div><button id="zReset" class="zbtn" data-en="🔍 Whole yard">🔍 Весь двор</button><button id="zIn" class="zbtn" data-en="🔍 Zoom in">🔍 Приблизить</button></div>
+    <header class="gh"><button class="icon" id="gBack" aria-label="На карту" data-en-aria="To the map">←</button><div class="gt"><div id="gLevel">Уровень 1</div><div id="gCity" class="sub">Калининград</div></div><div class="gh-r"><div id="gHearts" class="hearts"></div><button class="pill sm" id="gCoins">💰 0</button></div><button class="icon" id="zIn" aria-label="Приблизить двор" data-en-aria="Zoom in">🔍</button><button class="icon snd" id="gSet" aria-label="Настройки" data-en-aria="Settings">⚙️</button></header>
+    <div class="gside" id="gSide"></div>
+    <div class="stage" id="stage"><canvas id="cv"></canvas><div id="tip" class="tip"></div><button id="zReset" class="zbtn" data-en="🔍 Whole yard">🔍 Весь двор</button></div>
     <footer class="gf"><button class="btn sq" id="gRestart" aria-label="Заново" data-en-aria="Restart">↻<small data-en="Restart">Заново</small></button><button class="btn accent bst" id="gHint"><b data-en="💡 Hint">💡 Подсказка</b><small id="hintPr">40 💰</small></button><button class="btn accent bst" id="gTow"><b data-en="🚚 Tow truck">🚚 Эвакуатор</b><small id="towPr">100 💰</small></button></footer>
   </section>
 
   <section id="scr-garage" class="screen">
-    <header class="gh"><button class="icon" id="garBack" aria-label="Назад" data-en-aria="Back">←</button><div class="gt"><div data-en="Garage">Гараж</div><div class="sub" data-en="Tap a car: paint it, park it in the yards">Нажми на машину: цвет и двор</div></div></header>
+    <header class="gh"><button class="icon" id="garBack" aria-label="Назад" data-en-aria="Back">←</button><div class="gt"><div data-en="Garage">Гараж</div><div class="sub" data-en="Tap a car: paint it, park it in the yards">Нажми на машину: цвет и двор</div></div><button class="pill" id="garCoins">💰 0</button></header>
     <div class="gar-grid" id="garGrid"></div>
   </section>
 
@@ -300,7 +412,7 @@ const CAR_AT=[3,6,9,15,21,27,36,45,54,72];
 const MODELS=[
   // en — английское название (советские машины — транслитерацией, это колорит) и подпись; kind — для кода (не сравниваем по названию)
   {name:'Копейка',len:2,color:'#e74c3c',about:'Классика двора',en:{name:'Kopeyka',about:'The yard classic'}},
-  {name:'Девятка',len:2,color:'#0984e3',about:'Мокрый асфальт',en:{name:'Devyatka',about:'Tinted windows, loud stereo'}},
+  {name:'Девятка',len:2,color:'#0984e3',about:'Тонировка и музыка',en:{name:'Devyatka',about:'Tinted windows, loud stereo'}},
   {name:'Нива',len:2,color:'#27ae60',about:'Проедет везде',en:{name:'Niva',about:'Goes anywhere'}},
   {name:'Волга',len:2,color:'#2d3436',about:'Для начальства',en:{name:'Volga',about:'Fit for the boss'}},
   {name:'Такси',len:2,color:'#fdcb6e',about:'Шашечки есть',en:{name:'Taxi',about:'Checkers on the roof'},kind:'taxi'},
@@ -310,7 +422,7 @@ const MODELS=[
   {name:'ПАЗик',len:4,color:'#f9ca24',about:'Школьный автобус',en:{name:'PAZik',about:'The school bus'}},
   {name:'Икарус-гармошка',len:5,color:'#ff7f50',about:'Гнётся на поворотах',en:{name:'Ikarus bendy bus',about:'Bends round corners'}},
   // только за серию дней (7 дней подряд)
-  {name:'Запорожец',len:2,color:'#fd79a8',about:'Ушастый. За 7 дней подряд',en:{name:'Zaporozhets',about:'Big ears. 7 days in a row'},streak:true},
+  {name:'Запорожец',len:2,color:'#fd79a8',about:'Ушастый. Гостинец 7-го дня',en:{name:'Zaporozhets',about:'Big ears. The day-7 gift'},streak:true},
   {name:'Мороженое',len:3,color:'#81ecec',about:'Пломбир всему двору!',en:{name:'Ice-cream van',about:'Ice cream for the whole yard!'},streak:true},
 ];
 /* время суток: в каждом регионе (10 дворов) проходят сутки — 0–1 утро, 2–5 день, 6–7 вечер, 8–9 ночь (босс ночью) */
@@ -318,7 +430,7 @@ const TOD={
   morning:{icon:'🌅',sky:['#f6a57f','#ffe2c2'],cloud:'rgba(255,236,228,.9)',mul:'#fff0e2',lit:.18,lights:0,birds:2,bg:'linear-gradient(#f8b891,#f6e0c4 32%,#9fcf7c)'},
   day:{icon:'☀️',sky:['#7cc6f0','#d3f0ff'],cloud:'rgba(255,255,255,.92)',mul:null,lit:.1,lights:0,birds:2,bg:''},
   evening:{icon:'🌇',sky:['#6c5b9e','#ffa46b'],cloud:'rgba(255,196,170,.8)',mul:'#f7c3a2',lit:.5,lights:.75,birds:1,dark:true,bg:'linear-gradient(#6f5ea6,#e39a82 32%,#7f9460)'},
-  night:{icon:'🌙',sky:['#0b1433','#2a3c72'],cloud:'rgba(120,130,170,.3)',mul:'#7d8cc6',lit:.5,lights:1,birds:0,dark:true,stars:true,bg:'linear-gradient(#0e1838,#223463 32%,#34503a)'},
+  night:{icon:'🌙',sky:['#0b1433','#2a3c72'],cloud:'rgba(120,130,170,.3)',mul:'#939fd6',rim:true,lit:.5,lights:1,birds:0,dark:true,stars:true,bg:'linear-gradient(#0e1838,#223463 32%,#34503a)'},
 };
 let todForce=null; // ?tod=night — для проверки и скриншотов
 function todOf(idx,daily){if(todForce&&TOD[todForce])return todForce;
@@ -333,7 +445,8 @@ let S={unlocked:1,stars:{},garage:[],daily:{},levelsDone:0};
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 // защита от сохранений неожиданной формы (ручная правка, старая версия): не даём им сломать игру и слияние
-function fixSave(){if(!isObj(S.stars))S.stars={};if(!isObj(S.daily))S.daily={};if(!Array.isArray(S.garage))S.garage=[];if(!isObj(S.chest))S.chest={};if(!isObj(S.paint))S.paint={};if(!isObj(S.yard))S.yard={};
+function fixSave(){if(!isObj(S.stars))S.stars={};if(!isObj(S.daily))S.daily={};if(!Array.isArray(S.garage))S.garage=[];if(!isObj(S.chest))S.chest={};if(!isObj(S.paint))S.paint={};if(!isObj(S.yard))S.yard={};for(const f of ['gp','dw','dec','sets'])if(!isObj(S[f]))S[f]={}; // boost: подарочные краски, недели заданий дня, уют двора, наборы
+  
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(typeof S.levelsDone!=='number')S.levelsDone=0;if(typeof S.adW!=='number'||!isFinite(S.adW))S.adW=0;if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
   if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
 fixSave();
@@ -383,15 +496,15 @@ const YG={
 function mergeSave(d,ref){if(!isObj(d))return;
   const dt=typeof d.ts==='number'?d.ts:0,rt=ref==null?BOOT_TS:ref,newer=dt>rt;
   if(typeof d.unlocked==='number')S.unlocked=Math.max(S.unlocked,d.unlocked);if(typeof d.levelsDone==='number')S.levelsDone=Math.max(S.levelsDone||0,d.levelsDone);
-  for(const f of ['stars','daily','chest','yard'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
+  for(const f of ['stars','daily','chest','yard','gp','dw','dec','sets'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(Array.isArray(d.garage))for(const i of d.garage)if(typeof i==='number'&&!S.garage.includes(i))S.garage.push(i);
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(k!=='soc'&&(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|chest|yard|garage|coins|streak|buy|buyB|payT|payV|soc)$/.test(k)))S[k]=d[k]; // флажки (звук, подсказки)
+  for(const k in d)if(k!=='soc'&&(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|chest|yard|gp|dw|dec|sets|garage|coins|streak|buy|buyB|payT|payV|soc)$/.test(k)))S[k]=d[k]; // флажки (звук, подсказки)
   payMerge(d); // покупки — объединение
   if(isObj(d.soc))SOC.merge(d.soc); // «Друзья и игры»: сливаем в тот же объект S.soc (модуль держит на него ссылку)
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
-    if(!a||(b.last||0)>(a.last||0))S.streak=b;
-    else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last,cyc:Math.max(a.cyc||0,b.cyc||0)};}}
+    if(!isObj(a))S.streak={day:b.day||0,last:b.last||0,cyc:b.cyc||0};
+    else{const m=giftCnt(b)>giftCnt(a)?b:a;S.streak={day:m.day||0,last:Math.max(a.last||0,b.last||0),cyc:m.cyc||0};}}}
 // ответ площадки с ограничением по времени: не ответила — считаем сбоем (облако повторим позже, cloudBusy снимется в finally)
 function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
@@ -410,16 +523,16 @@ var SOC=(function(){
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
   var GAMES=[
     {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p'},
-    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p',off:'web'},
+    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p'},
     {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s'},
     {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s'},
     {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',off:'all'},
-    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c',off:'web'},
+    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c'},
     {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c'},
     {id:54792011,t:'Паук на даче',a:0,i:7,g:'c'},
     {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c'},
     {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all'},
-    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p',off:'web'},
+    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p'},
     {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r'},
     {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p'}
   ];
@@ -785,6 +898,7 @@ function drawVehicle(ctx,v,s,toPx,cs,fx){
   const seg=[];for(let i=0;i<L;i++)seg.push(toPx(trackPt(tr,(L-1-i)+s)));
   const dirAt=i=>{if(i===0){const [dx,dy]=DIRS[v.dir];return Math.atan2(dy,dx);}const a=seg[i-1],b=seg[i];return Math.atan2(a[1]-b[1],a[0]-b[0]);};
   if(fx&&fx.glow)strokePath(ctx,pts,0,top/2,`rgba(255,226,64,${fx.glow})`,bw+cs*.36);
+  const rim=!!(fx&&fx.rim); // ночью — светлый контур вокруг кузова: машина не сливается с асфальтом
   // мягкая тень
   strokePath(ctx,pts,cs*.09,cs*.18,'rgba(0,0,0,.12)',bw+cs*.2);
   strokePath(ctx,pts,cs*.05,cs*.11,'rgba(0,0,0,.24)',bw+cs*.02);
@@ -792,8 +906,9 @@ function drawVehicle(ctx,v,s,toPx,cs,fx){
   const wf=[s+L-1-.3,s+.3];for(let i=2;i<L-1;i+=2)wf.push(s+i);
   for(const f of wf)wheelAt(ctx,tr,f,toPx,cs,bw);
   // кузов: борт, верх, блик
+  if(rim)strokePath(ctx,pts,0,top/2,'rgba(232,240,255,.95)',bw+cs*.15);
   strokePath(ctx,pts,0,0,v.side,bw);
-  if(L>=3&&!v.kind)strokePath(ctx,pts,0,top,v.edge,bw+cs*.07);
+  if(L>=3&&!v.kind&&!rim)strokePath(ctx,pts,0,top,v.edge,bw+cs*.07);
   strokePath(ctx,pts,0,top,v.color,bw);
   if(v.kind==='amb'||v.kind==='pol'){strokePath(ctx,pts,0,top,v.kind==='amb'?'#e84118':'#1e3799',bw);strokePath(ctx,pts,0,top,v.color,bw*.72);}
   strokePath(ctx,pts,-cs*.035,top-cs*.05,'rgba(255,255,255,.2)',bw*.52);
@@ -849,7 +964,8 @@ function modelMarks(ctx,v,seg,dirAt,mid,anm,cs,bw,y0){const [fx0,fy0]=seg[0],af=
   else if(v.mdl===10){ // Запорожец: «уши» — воздухозаборники по бокам сзади
     for(const sd of [-1,1])B(-cs*.02,sd*bw*.52,cs*.26,cs*.11,v.side,cs*.04);}}
 function arrowAt(ctx,v,s,toPx,cs,y0,glow){const f=v.L===2?s+.5:s+v.L-1-.62,p=toPx(trackPt(v.track,f)),[dx,dy]=DIRS[v.dir];
-  ctx.save();ctx.translate(p[0],p[1]+y0-cs*.02);ctx.rotate(Math.atan2(dy,dx));ctx.beginPath();ctx.moveTo(-cs*.1,-cs*.16);ctx.lineTo(cs*.09,0);ctx.lineTo(-cs*.1,cs*.16);ctx.lineCap='round';ctx.lineJoin='round';
+  const ak=Math.max(1,Math.min(1.4,42/cs)); // на мелкой клетке (большие дворы на телефоне) стрелка крупнее
+  ctx.save();ctx.translate(p[0],p[1]+y0-cs*.02);ctx.rotate(Math.atan2(dy,dx));ctx.scale(ak,ak);ctx.beginPath();ctx.moveTo(-cs*.1,-cs*.16);ctx.lineTo(cs*.09,0);ctx.lineTo(-cs*.1,cs*.16);ctx.lineCap='round';ctx.lineJoin='round';
   if(glow){ctx.lineWidth=cs*.12;ctx.strokeStyle=glow;ctx.stroke();ctx.restore();return;}
   ctx.lineWidth=cs*.1;ctx.strokeStyle=v.light?'rgba(255,255,255,.7)':'rgba(0,0,0,.3)';ctx.stroke();ctx.translate(0,-cs*.012);ctx.strokeStyle=v.light?'#2d3436':'#fff';ctx.lineWidth=cs*.07;ctx.stroke();ctx.restore();}
 function makeVehicle(cells,dir,color,w,h,kind){
@@ -860,6 +976,8 @@ function makeVehicle(cells,dir,color,w,h,kind){
 // перекраска (машины игрока: покраска из гаража, своя машина во дворе): светлый кузов — тёмная стрелка
 function recolor(v,c){const x=parseInt(c.slice(1),16),light=.299*(x>>16)+.587*(x>>8&255)+.114*(x&255)>170;
   return Object.assign(v,{color:c,light,side:shade(c,light?-.3:-.4),roof:shade(c,light?-.05:.16),edge:shade(c,light?-.55:-.6)});}
+const lum=c=>{const x=parseInt(c.slice(1),16);return .299*(x>>16)+.587*(x>>8&255)+.114*(x&255);};
+function lighten(c,p){const x=parseInt(c.slice(1),16),m=v=>Math.round(v+(255-v)*p);return '#'+((1<<24)|(m(x>>16)<<16)|(m(x>>8&255)<<8)|m(x&255)).toString(16).slice(1);}
 function modelVehicle(m,col){const cells=[];for(let i=m.len-1;i>=0;i--)cells.push([i,0]);
   const v=makeVehicle(cells,1,m.color,m.len,1,m.kind||'');v.mdl=MODELS.indexOf(m);return col&&col!==m.color?recolor(v,col):v;}
 function drawModel(canvas,m,col){if(!canvas)return;const dpr=Math.min(2,window.devicePixelRatio||1),r=canvas.getBoundingClientRect(),W=r.width||150,H=r.height||80;
@@ -870,7 +988,7 @@ function drawModel(canvas,m,col){if(!canvas)return;const dpr=Math.min(2,window.d
 /* ================= игра ================= */
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d'),stage=$('stage');
-let G=null,W=0,H=0,cs=40,ox=0,oy=0,dpr=1,ground=null,lights=null,groundQ=1,groundV=0,lastT=0,modalOn=false;
+let smK=.46,G=null,W=0,H=0,cs=40,ox=0,oy=0,dpr=1,ground=null,lights=null,groundQ=1,groundV=0,lastT=0,modalOn=false;
 // «спокойный режим»: без тряски, мигалок и пульсаций — настройка или системное «уменьшить движение»
 const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const calm=()=>S.calm===true||RM;
@@ -896,6 +1014,7 @@ function startLevel(idx,daily){
   const vs=lv.vehicles.map((v,i)=>{const amb=lv.amb&&lv.amb.id===i,pol=lv.police===i;
     const veh=makeVehicle(v.cells,v.dir,amb?'#ffffff':pol?'#f5f6fa':cols[i],p.w,p.h,amb?'amb':pol?'pol':'');
     Object.assign(veh,{id:i,s:0,state:'idle',t:0,ap:0,apT:0,apD:base[i].apD});return veh;});
+  if(TOD[todOf(idx,daily)].rim)for(const v of vs)if(!v.kind&&lum(v.color)<95)recolor(v,lighten(v.color,.3)); // ночью тёмно-синие и чёрные кузова осветляем
   // босс: у одной легковушки нет стрелки — направление видно по фарам (раскладка та же)
   // первый босс (10-й) — со стрелками и лишними ходами для скорой: новичку хватит и большого двора
   if(p.boss&&!daily&&idx>=19){const c=vs.filter(v=>v.L===2&&!v.kind);if(c.length)c[seed%c.length].noArrow=true;}
@@ -916,7 +1035,7 @@ function startLevel(idx,daily){
   vs.forEach(v=>v.cells.forEach(([x,y])=>G.occ[y*p.w+x]=v.id));
   G.obst.forEach(([x,y])=>G.occ[y*p.w+x]=-2);
   if(!daily&&idx===0){const f=vs.find(v=>canExit(v,G.occ,p.w,p.h,v.id).free);if(f)G.tutorId=f.id;}
-  $('gLevel').textContent=levelTitle();
+  $('gLevel').textContent=levelTitle();sideUpd();
   updHud();
   const tip=$('tip'),tt=tipFor(idx,daily);
   if(tt){tip.textContent=tt;tip.style.display='block';}else tip.style.display='none';
@@ -924,9 +1043,15 @@ function startLevel(idx,daily){
   tipAutoHide();
   renderHearts();show('scr-game');hideModal();requestAnimationFrame(()=>{layout();birdsInit();
     if(G&&G.yardCar>=0&&Math.random()<.5){const g=G;setTimeout(()=>{if(G===g&&!g.over)sayQuiet(pick('mine').replace('{n}',MODELS[g.yardCar].name),'win');},2600);}
-    if(G&&G.p.w>=8&&G.p.h>=11&&!S.zoomTip&&!window.__demo){S.zoomTip=1;save();G.pinchT=FINE?0:3;toast(FINE?L('Двор большой — покрути колёсико мыши или нажми «🔍 Приблизить»','Big yard — scroll the mouse wheel or press “🔍 Zoom in”'):L('Двор большой — раздвинь пальцы или нажми «🔍 Приблизить»','Big yard — spread two fingers or press “🔍 Zoom in”'),3500);}});YG.start();kick();
+    if(G&&G.p.w>=8&&G.p.h>=11&&!S.zoomTip&&!window.__demo){S.zoomTip=1;save();G.pinchT=FINE?0:3;toast(FINE?L('Двор большой — покрути колёсико мыши или нажми 🔍 вверху','Big yard — scroll the mouse wheel or press 🔍 at the top'):L('Двор большой — раздвинь пальцы или нажми 🔍 вверху','Big yard — spread two fingers or press 🔍 at the top'),3500);}});YG.start();kick();
 }
-function levelTitle(){return G.daily?L('Задание дня','Daily challenge'):L('Уровень ','Level ')+(G.idx+1)+(isBoss(G.idx)?' 🔥':'');}
+// панель слева от двора (только широкое окно компьютера): цель, «завтра», клавиши
+function sideUpd(){const e=$('gSide');if(!e||!G)return;if(window.__demo){e.innerHTML='';return;}
+  const goal=G.daily?`<p class="goal">📅 ${L('Задание дня: +','Daily challenge: +')}${DAILY_REWARD} 💰 · ${L('на этой неделе','this week')} ${dailyWeek().n}/7</p>`:winGoal(G.idx);
+  e.innerHTML=goal+(S.freeHint&&!G.daily?`<p class="goal">🎁 ${L('Подсказка в этом дворе — бесплатно','Your hint in this yard is free')}</p>`:'')+tmrHtml()
+    +`<p class="keys">${L('H — подсказка · R — заново<br>колёсико — приблизить · Esc — карта','H — hint · R — restart<br>mouse wheel — zoom · Esc — map')}</p>`;}
+function levelTitle(){const tiny=window.innerWidth<350&&G.p.w>=8; // узкий телефон + кнопка 🔍 в шапке — короткий заголовок
+  return G.daily?(tiny?L('Задание','Daily'):L('Задание дня','Daily challenge')):(tiny?L('Двор ','Yard '):L('Уровень ','Level '))+(G.idx+1)+(isBoss(G.idx)?' 🔥':'');}
 // плашка-подсказка дворов обучения (текст — по языку; при смене языка перерисовывается)
 function tipFor(idx,daily){if(daily)return '';
   if(idx===0)return L('Нажми на машину — она поедет туда, куда смотрит стрелка. Не врежься!','Tap a car — it drives where its arrow points. Don’t crash!');
@@ -983,8 +1108,9 @@ function layout(){
   cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';
   if(!G)return;
   if(W<40||H<40){ground=null;return;} // поле ещё не получило размер (скрытая вкладка, старый WebView) — нарисуем по resize, а не упадём
-  const {w,h}=G.p;cs=Math.min(W/(w+1.2),(H-10)/(h+2.6));ox=(W-w*cs)/2;
-  const free=H-h*cs;oy=Math.max(cs*.9,Math.min(free-cs*.9,free*.62));
+  const {w,h}=G.p;smK=w>=8?.34:.46; // большие дворы: тротуар уже — клетка крупнее (аудит 18 п.5)
+  cs=Math.min(100,W/(w+(w>=8?.76:1.2)),(H-10)/(h+2.6));ox=(W-w*cs)/2;
+  const free=H-h*cs;oy=Math.max(cs*.9,Math.min(free-cs*1.25,free-Math.min(96,free*.46))); // под двором — полоса для жильцов и украшений (до 96 px)
   cam.tw=null;
   if(keep){cam.z=keep.z;cam.x=W/2-keep.fx*W*cam.z;cam.y=H/2-keep.fy*H*cam.z;camClamp();}else{cam.z=1;cam.x=cam.y=0;}
   updZoomBtn();buildGround(1);if(keep)hiResSoon();
@@ -1025,6 +1151,13 @@ function drawHouse(g,R,hx,hBot,hw,hh){
     g.fillStyle='#fbfbf7';g.fillRect(wx+ww/2-cs*.015,wy,cs*.03,wh);g.fillRect(wx,wy+wh*.38,ww,cs*.025);
     g.fillStyle='#cdbf9f';g.fillRect(wx-cs*.05,wy+wh+cs*.03,ww+cs*.1,cs*.04);
     if(r===rows-1)G.anc.wins.push([wx+ww/2,wy+wh*.6]);
+    if(r===rows-1&&(c*7+G.idx*3)%3===0){const fx=wx+ww*(c%2?.3:.7),fy=wy+wh*.62,fr=Math.min(ww,wh)*.3; // жилец смотрит во двор
+      g.save();g.beginPath();g.rect(wx,wy,ww,wh);g.clip();
+      g.fillStyle=['#6c5ce7','#00897b','#c0392b'][c%3];g.beginPath();g.ellipse(fx,fy+fr*1.9,fr*1.5,fr*1.2,0,0,7);g.fill();
+      g.fillStyle='#f3c9a3';g.beginPath();g.arc(fx,fy,fr,0,7);g.fill();
+      g.fillStyle=c%2?'#6d4c41':'#bdbdbd';g.beginPath();g.arc(fx,fy-fr*.25,fr*1.02,Math.PI*1.05,Math.PI*1.95);g.fill();
+      g.fillStyle='#2d3436';g.beginPath();g.arc(fx-fr*.35,fy+fr*.05,fr*.12,0,7);g.arc(fx+fr*.35,fy+fr*.05,fr*.12,0,7);g.fill();g.restore();
+      g.fillStyle='#fbfbf7';g.fillRect(wx+ww/2-cs*.015,wy,cs*.03,wh);g.fillRect(wx,wy+wh*.38,ww,cs*.025);}
     if(r<rows-1&&c%3===1&&R()<.7){const bx0=wx-gw*.08,by0=wy+wh+cs*.07,bwd=ww+gw*.16,bh0=cs*.17;
       g.fillStyle='rgba(0,0,0,.12)';g.fillRect(bx0+cs*.05,by0+cs*.05,bwd,bh0);g.fillStyle='#d8ccb3';g.fillRect(bx0,by0,bwd,bh0);g.fillStyle='#eee4cf';g.fillRect(bx0,by0,bwd,cs*.035);
       g.strokeStyle='rgba(90,75,55,.35)';for(let k=1;k<6;k++){g.beginPath();g.moveTo(bx0+bwd*k/6,by0+cs*.04);g.lineTo(bx0+bwd*k/6,by0+bh0);g.stroke();}}
@@ -1050,7 +1183,7 @@ function buildGround(q){q=q||1;groundQ=q;groundV++;
   const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#a8d86c');gr.addColorStop(1,'#6aa83c');g.fillStyle=gr;g.fillRect(0,0,W,H);
   g.lineWidth=1;for(let i=0;i<W*H/220;i++){const x=R()*W,y=R()*H;g.strokeStyle=R()<.5?'rgba(255,255,255,.13)':'rgba(30,80,10,.16)';g.beginPath();g.moveTo(x,y);g.lineTo(x+(R()-.5)*3,y-2-R()*4);g.stroke();}
   for(let i=0;i<W*H/7000;i++){g.fillStyle=['#fff','#ffe066','#ff8fab','#b8e0ff'][i%4];g.beginPath();g.arc(R()*W,R()*H,1.2+R()*1.4,0,7);g.fill();}
-  const sm=cs*.46,bx=ox-sm,by=oy-sm,bw=w*cs+sm*2,bh=h*cs+sm*2,hTop=by-cs*.1;
+  const sm=cs*smK,bx=ox-sm,by=oy-sm,bw=w*cs+sm*2,bh=h*cs+sm*2,hTop=by-cs*.1;
   if(hTop>cs*1.1)drawHouse(g,R,bx+cs*.1,hTop,bw-cs*.2,Math.min(hTop-cs*.05,cs*3.4));
   // тротуар из плитки с бордюром
   rrect(g,bx,by+cs*.14,bw,bh,cs*.3);g.fillStyle='#78858b';g.fill();
@@ -1083,12 +1216,17 @@ function buildGround(q){q=q||1;groundQ=q;groundV++;
   const gy=by+bh;
   for(let i=0;i<5;i++)bush(g,bx+bw*(.18+i*.16)+R()*cs*.2,gy+cs*(.75+R()*.3),cs*(.2+R()*.08));
   tree(g,bx+cs*.1,gy+cs*.55,cs*.42);tree(g,bx+bw-cs*.1,gy+cs*.6,cs*.46);
-  for(const p of [.08,.9]){const x0=bx+bw*p;
-    g.fillStyle='rgba(0,0,0,.15)';g.fillRect(x0-cs*.28,gy+cs*.24,cs*.62,cs*.06);
-    g.fillStyle='#5d4037';g.fillRect(x0-cs*.26,gy+cs*.12,cs*.05,cs*.14);g.fillRect(x0+cs*.21,gy+cs*.12,cs*.05,cs*.14);
-    g.fillStyle='#8d6e63';rrect(g,x0-cs*.32,gy+cs*.02,cs*.64,cs*.07,cs*.02);g.fill();
-    g.fillStyle='#a1887f';rrect(g,x0-cs*.32,gy+cs*.1,cs*.64,cs*.07,cs*.02);g.fill();
-    babka(g,x0,gy+cs*.14,cs*.27,p<.5?'#e84393':'#0984e3');G.anc.bench.push([x0,gy-cs*.14]);}
+  // полоса под двором: жильцы и украшения — настолько крупные, насколько позволяет её высота zb (заход 2)
+  const dec=window.__demo?{}:S.dec,zb=Math.max(10,H-gy),fs=Math.max(10,Math.min(30,(zb+sm*.5)/2.25)),bs=fs/.34,yb=gy-sm*.5+fs*1.31,ds=Math.max(cs*.7,Math.min(74,zb*.95));
+  G.anc.bulbs=[];
+  if(dec.flowers){const dl=G.anc.lamps.filter(l=>!l[3]);for(const l of dl)for(const sd of [-1,1])DECO.flowers(g,l[0]+sd*cs*.62,by+cs*.2,Math.max(cs*.62,22));
+    for(const q of [.43,.57])DECO.flowers(g,bx+bw*q,gy+zb*.7,ds*.62);}
+  if(dec.swan)DECO.swan(g,bx+bw*.31,gy+zb*.62,ds*.78);
+  if(dec.swing)DECO.swing(g,bx+bw*.7,gy+zb*.74,ds*.8);
+  if(dec.feeder)DECO.feeder(g,bx+bw-cs*.1-ds*.3,gy+zb*.4,ds*.7);
+  for(const p of [.13,.87]){const x0=Math.max(bs*.36+2,Math.min(W-bs*.36-2,bx+bw*p));benchAt(g,x0,yb,bs,!!dec.bench);
+    if(p<.5)shuraFig(g,x0,yb+bs*.14,fs);else dedFig(g,x0,yb+bs*.14,fs);G.anc.bench.push([x0,yb-fs*1.6]);}
+  if(dec.garland)DECO.garland(g,[[bx+cs*.1,gy+cs*.12],[bx+bw*.5,gy-cs*.3],[bx+bw-cs*.1,gy+cs*.14]],Math.max(cs,30),G.anc.bulbs);
   {const lx=bx+bw*.5,ly=gy+cs*.2;g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(lx+cs*.1,ly+cs*.05,cs*.14,cs*.05,0,0,7);g.fill();
     g.fillStyle='#37474f';g.fillRect(lx-cs*.025,ly-cs*.95,cs*.05,cs*.95);g.fillRect(lx-cs*.1,ly-cs*1,cs*.2,cs*.06);
     const lg=g.createRadialGradient(lx,ly-cs*.92,0,lx,ly-cs*.92,cs*.5);lg.addColorStop(0,'rgba(255,240,170,.55)');lg.addColorStop(1,'rgba(255,240,170,0)');g.fillStyle=lg;g.beginPath();g.arc(lx,ly-cs*.92,cs*.5,0,7);g.fill();
@@ -1107,15 +1245,39 @@ function buildLights(q,R){const T=TOD[G.tod];lights=null;if(!T.lights)return;
     g.fillStyle='rgba(255,246,210,.8)';g.beginPath();g.arc(mx,my,mr,0,7);g.fill();g.fillStyle='rgba(255,250,230,.35)';for(const [cx2,cy2,cr] of [[-.3,-.2,.3],[.25,.25,.22],[.3,-.35,.15]]){g.beginPath();g.arc(mx+cx2*mr,my+cy2*mr,cr*mr,0,7);g.fill();}}
   for(const [x,y,w2,h2,tv] of G.anc.lit){const c=tv?'120,170,255':'255,190,95';glow(x+w2/2,y+h2/2,cs*.55,c,.28);g.fillStyle=`rgba(${c},.85)`;g.fillRect(x,y,w2,h2);
     g.fillStyle='rgba(255,255,255,.25)';g.fillRect(x+w2/2-cs*.015,y,cs*.03,h2);}
+  for(const [x,y,c] of G.anc.bulbs||[]){const n=parseInt(c.slice(1),16);glow(x,y,cs*.26,(n>>16)+','+(n>>8&255)+','+(n&255),.95);}
   for(const [x,y,r,street] of G.anc.lamps){glow(x,y,r*.55,'255,236,160',.8);
     if(street){g.save();g.translate(x,y+cs*.9);g.scale(1,.5);glow(0,0,r*1.6,'255,226,150',.32);g.restore();}}
 }
-function babka(g,x,y,s,scarf){
-  g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(x+s*.1,y+s*.35,s*.6,s*.2,0,0,7);g.fill();
-  g.fillStyle='#5d4037';g.beginPath();g.moveTo(x-s*.5,y+s*.3);g.lineTo(x-s*.32,y-s*.9);g.lineTo(x+s*.32,y-s*.9);g.lineTo(x+s*.5,y+s*.3);g.closePath();g.fill();
-  g.fillStyle='#f5cba7';g.beginPath();g.arc(x,y-s*1.2,s*.34,0,7);g.fill();
-  g.fillStyle=scarf;g.beginPath();g.arc(x,y-s*1.22,s*.42,Math.PI,0);g.lineTo(x+s*.3,y-s*.92);g.lineTo(x,y-s*.8);g.lineTo(x-s*.3,y-s*.92);g.closePath();g.fill();
-  g.fillStyle='#2d3436';g.beginPath();g.arc(x-s*.12,y-s*1.12,s*.045,0,7);g.arc(x+s*.12,y-s*1.12,s*.045,0,7);g.fill();}
+// лавочка: обычная или «новая» (украшение за монеты) — яркая, со спинкой
+function benchAt(g,x0,gy,s,fresh){
+  g.fillStyle='rgba(0,0,0,.15)';g.fillRect(x0-s*.28,gy+s*.24,s*.62,s*.06);
+  g.fillStyle=fresh?'#f2c230':'#5d4037';g.fillRect(x0-s*.26,gy+s*.12,s*.05,s*.14);g.fillRect(x0+s*.21,gy+s*.12,s*.05,s*.14);
+  if(fresh){g.fillRect(x0-s*.3,gy-s*.12,s*.05,s*.2);g.fillRect(x0+s*.25,gy-s*.12,s*.05,s*.2);g.fillStyle='#2e86de';rrect(g,x0-s*.34,gy-s*.14,s*.68,s*.08,s*.02);g.fill();}
+  g.fillStyle=fresh?'#2e86de':'#8d6e63';rrect(g,x0-s*.32,gy+s*.02,s*.64,s*.07,s*.02);g.fill();
+  g.fillStyle=fresh?'#54a0ff':'#a1887f';rrect(g,x0-s*.32,gy+s*.1,s*.64,s*.07,s*.02);g.fill();}
+// баба Шура на лавочке (как на портрете: розовый платок в горошек, очки) и дед в кепке с газетой — «жильцы с лицами» (UX 18 п.6)
+function shuraFig(g,x,y,s){
+  g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(x+s*.1,y+s*.35,s*.62,s*.2,0,0,7);g.fill();
+  g.fillStyle='#7a5c4a';g.beginPath();g.moveTo(x-s*.55,y+s*.3);g.lineTo(x-s*.36,y-s*.85);g.lineTo(x+s*.36,y-s*.85);g.lineTo(x+s*.55,y+s*.3);g.closePath();g.fill();
+  g.fillStyle='#e84393';g.beginPath();g.arc(x,y-s*1.22,s*.5,0,7);g.fill();g.beginPath();g.moveTo(x-s*.42,y-s*1.05);g.lineTo(x,y-s*.62);g.lineTo(x+s*.42,y-s*1.05);g.closePath();g.fill();
+  g.fillStyle='#fff';for(const [dx,dy] of [[-.3,-1.5],[0,-1.62],[.3,-1.5],[-.42,-1.25],[.42,-1.25]]){g.beginPath();g.arc(x+dx*s,y+dy*s,s*.045,0,7);g.fill();}
+  g.fillStyle='#f7d3b0';g.beginPath();g.ellipse(x,y-s*1.14,s*.33,s*.35,0,0,7);g.fill();
+  g.fillStyle='#e3e3e3';g.beginPath();g.ellipse(x,y-s*1.4,s*.26,s*.09,0,0,7);g.fill();
+  g.fillStyle='rgba(242,154,154,.6)';g.beginPath();g.arc(x-s*.2,y-s*1.03,s*.07,0,7);g.arc(x+s*.2,y-s*1.03,s*.07,0,7);g.fill();
+  g.strokeStyle='#5d4037';g.lineWidth=Math.max(1,s*.05);g.fillStyle='rgba(255,255,255,.45)';for(const sd of [-1,1]){g.beginPath();g.arc(x+sd*s*.14,y-s*1.18,s*.11,0,7);g.fill();g.stroke();}
+  g.fillStyle='#2d3436';g.beginPath();g.arc(x-s*.14,y-s*1.17,s*.04,0,7);g.arc(x+s*.14,y-s*1.17,s*.04,0,7);g.fill();
+  g.strokeStyle='#8a3b2e';g.lineWidth=Math.max(1,s*.05);g.lineCap='round';g.beginPath();g.arc(x,y-s*1.02,s*.11,.25,Math.PI-.25);g.stroke();
+  g.fillStyle='#d63384';g.beginPath();g.moveTo(x-s*.12,y-s*.74);g.lineTo(x,y-s*.64);g.lineTo(x+s*.12,y-s*.74);g.lineTo(x+s*.16,y-s*.5);g.lineTo(x-s*.16,y-s*.5);g.closePath();g.fill();}
+function dedFig(g,x,y,s){
+  g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(x+s*.1,y+s*.35,s*.62,s*.2,0,0,7);g.fill();
+  g.fillStyle='#4b6584';g.beginPath();g.moveTo(x-s*.52,y+s*.3);g.lineTo(x-s*.36,y-s*.85);g.lineTo(x+s*.36,y-s*.85);g.lineTo(x+s*.52,y+s*.3);g.closePath();g.fill();
+  g.fillStyle='#f3c9a3';g.beginPath();g.ellipse(x,y-s*1.14,s*.34,s*.36,0,0,7);g.fill();
+  g.fillStyle='#596275';g.beginPath();g.ellipse(x,y-s*1.42,s*.4,s*.17,0,Math.PI,0);g.fill();g.fillRect(x-s*.4,y-s*1.44,s*.8,s*.07);g.beginPath();g.ellipse(x+s*.14,y-s*1.38,s*.36,s*.07,0,0,7);g.fill();
+  g.fillStyle='#2d3436';g.beginPath();g.arc(x-s*.13,y-s*1.2,s*.04,0,7);g.arc(x+s*.13,y-s*1.2,s*.04,0,7);g.fill();
+  g.fillStyle='#dfe4ea';g.beginPath();g.ellipse(x,y-s*1.0,s*.19,s*.07,0,0,7);g.fill();
+  g.fillStyle='#fdfdfd';rrect(g,x-s*.36,y-s*.72,s*.72,s*.5,s*.03);g.fill();g.strokeStyle='rgba(0,0,0,.25)';g.lineWidth=Math.max(1,s*.03);g.beginPath();g.moveTo(x,y-s*.72);g.lineTo(x,y-s*.22);
+  for(const k of [-.6,-.48,-.36])for(const sd of [-1,1]){g.moveTo(x+sd*s*.06,y+k*s);g.lineTo(x+sd*s*.3,y+k*s);}g.stroke();}
 function drawObstacles(g){
   for(const [x,y,t] of G.obst){const cx=ox+(x+.5)*cs,cy=oy+(y+.5)*cs,hg=cs*.14;
     g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.ellipse(cx+cs*.05,cy+cs*.12,cs*.4,cs*.34,0,0,7);g.fill();
@@ -1186,7 +1348,7 @@ function tow(v){const {w}=G.p;G.helps++;v.cells.forEach(([x,y])=>G.occ[y*w+x]=-1
 // голуби клюют на свободных клетках и тротуаре; машина рядом, авария или тап — вспархивают
 function birdSpot(){const {w,h}=G.p,free=[];for(let i=0;i<w*h;i++)if(G.occ[i]===-1)free.push(i);
   if(free.length&&Math.random()<.6){const i=free[Math.floor(Math.random()*free.length)];return toPx([i%w,Math.floor(i/w)]);}
-  const sm=cs*.46,side=Math.random();
+  const sm=cs*smK,side=Math.random();
   if(side<.6)return[ox+rnd(.1,.9)*w*cs,oy+h*cs+sm*.8];
   return[side<.8?ox-sm*.5:ox+w*cs+sm*.5,oy+rnd(.3,.95)*h*cs];}
 function spawnFlock(fromSky){const [x,y]=birdSpot(),n=3+Math.floor(Math.random()*3),from=Math.random()<.5?-1:1;
@@ -1343,7 +1505,7 @@ const PH={
   ambLate:['Скорая опоздала! Больной ушёл пешком.','Скорую пропустите, ироды!'],
   police:['Граждане, освобождаем двор!','Всем разъехаться! Проверка документов!'],
   tow:['Эвакуатор приехал!','Ой, увезли голубчика!','Штрафстоянка ждёт, голубчик!'],
-  lose:['Жильцы вызвали ГИБДД.','Бабушки на лавочке всё видели.','Двор встал намертво.'],
+  lose:['Ох, помяли! Ничего, с кем не бывает. Попробуем ещё?','Я с лавочки всё видела. Давай ещё разок — аккуратненько.','Двор встал намертво. Попробуем по-другому?','Не беда, милок: машины железные, починят. Ещё разок?'],
   catSit:['Барсик опять на капоте греется','Кот на машине — к деньгам!','Мурзик, слезь с машины!','Ишь, разлёгся, как барин','Капот тёплый — кот довольный'],
   catFlee:['Кота не задавите!','Мурзик, беги!','Барсик, домой!','Кот-то тут при чём?!','Васька, живо слезай!','Ой, котейку напугали!'],
   birds:['Голубей распугали!','Кыш, кыш, пернатые!','Опять голубей гоняют','Я их с утра кормила!'],
@@ -1363,7 +1525,7 @@ const PH_EN={
   ambLate:['Ambulance late! The patient walked to hospital.','Let the ambulance through, you rascals!'],
   police:['Citizens, clear the yard!','Everybody move! Papers, please!'],
   tow:['The tow truck is here!','Oh, off he goes, the poor thing!','Impound lot, here you come!'],
-  lose:['The residents called the traffic police.','The babushkas on the bench saw everything.','The yard is jammed solid.'],
+  lose:['Oh dear, a few dents! Happens to the best of us. Try again?','I saw it all from my bench. One more go — nice and gentle.','The yard is jammed solid. Shall we try another way?','No harm done, dearie: cars are made of iron. One more try?'],
   catSit:['Whiskers is warming up on the hood again','Cat on the hood — lucky day!','Tom, get off that car!','Look at him, lounging like a lord','Warm hood, happy cat'],
   catFlee:['Mind the cat!','Run, Tom!','Whiskers, go home!','What did the cat ever do to you?!','Felix, off you get!','Oh, you scared the kitty!'],
   birds:['You scared the pigeons!','Shoo, shoo, feathered folk!','Chasing pigeons again','I fed them this morning!'],
@@ -1409,7 +1571,7 @@ function isStatic(v){return v.state==='idle'&&v.ap>=1&&!(v.flash>0)&&v.kind!=='a
 function buildCars(){if(!carsCv)carsCv=document.createElement('canvas');
   if(carsCv.width!==ground.width||carsCv.height!==ground.height){carsCv.width=ground.width;carsCv.height=ground.height;}
   const g=carsCv.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,carsCv.width,carsCv.height);g.setTransform(dpr*groundQ,0,0,dpr*groundQ,0,0);
-  for(const v of G.vs.filter(isStatic).sort((a,b)=>a.cells[0][1]-b.cells[0][1]))drawVehicle(g,v,v.s,toPx,cs,null);}
+  const fx=TOD[G.tod].rim?{rim:1}:null;for(const v of G.vs.filter(isStatic).sort((a,b)=>a.cells[0][1]-b.cells[0][1]))drawVehicle(g,v,v.s,toPx,cs,fx);}
 function render(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
   if(!G||!ground)return;
@@ -1423,11 +1585,11 @@ function render(){
   ctx.drawImage(carsCv,0,0,W,H);
   const order=G.vs.filter(v=>v.state!=='gone'&&!isStatic(v)).sort((a,b)=>(a.state==='exit')-(b.state==='exit')||(a.cells[0][1]-b.cells[0][1]));
   const t=performance.now()/1000;
-  for(const v of order){const fx={};if(G.hint===v.id&&G.hintT>0)fx.glow=.45+.35*Math.sin(t*8);
+  for(const v of order){const fx={};if(T.rim)fx.rim=1;if(G.hint===v.id&&G.hintT>0)fx.glow=.45+.35*Math.sin(t*8);
     else if(v.id===G.tutorId&&G.moves===0&&v.state==='idle')fx.glow=.3+.3*Math.sin(t*5);if(v.flash>0)fx.flash=v.flash*.6;
     if(v.state==='tow'){const q=Math.min(1,v.t/.8),lift=q*q*cs*3,mid=toPx(v.cells[Math.floor(v.L/2)]);
       ctx.save();ctx.globalAlpha=1-q*.85;ctx.strokeStyle='#2d3436';ctx.lineWidth=cs*.05;ctx.beginPath();ctx.moveTo(mid[0],mid[1]-lift-cs*.2);ctx.lineTo(mid[0],-10);ctx.stroke();
-      drawVehicle(ctx,v,0,pp=>{const a=toPx(pp);return[a[0],a[1]-lift];},cs,{noArrow:true});ctx.restore();continue;}
+      drawVehicle(ctx,v,0,pp=>{const a=toPx(pp);return[a[0],a[1]-lift];},cs,{noArrow:true,rim:T.rim});ctx.restore();continue;}
     if(v.state==='exit'&&v.s>.2){const tp=toPx(trackPt(v.track,v.s)),tq=toPx(trackPt(v.track,v.s+.3)),dx=tp[0]-tq[0],dy=tp[1]-tq[1],d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
       ctx.save();ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineCap='round';ctx.lineWidth=cs*.05;for(const o of [-.25,0,.25]){const px=tp[0]-uy*o*cs,py=tp[1]+ux*o*cs-cs*.1;ctx.beginPath();ctx.moveTo(px+ux*cs*.15,py+uy*cs*.15);ctx.lineTo(px+ux*cs*(.5+Math.abs(o)),py+uy*cs*(.5+Math.abs(o)));ctx.stroke();}ctx.restore();}
     if(v.ap<1){if(v.ap<=0)continue;const x=v.ap-1,e=1+2.7*x*x*x+1.7*x*x,lift=(1-e)*cs*1.6;ctx.save();ctx.globalAlpha=Math.min(1,v.ap*2.5);drawVehicle(ctx,v,v.s,pp=>{const a=toPx(pp);return[a[0],a[1]-lift];},cs,fx);ctx.restore();continue;}
@@ -1512,7 +1674,8 @@ let lastAdT=Date.now(),AD_GAP=180000;const AD_FROM=11;
 // за награду — по желанию игрока; пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
 let adBusy=false;
 function showRewarded(cb0,onFail0){
-  if(adBusy){onFail0&&onFail0();return;} // ролик уже идёт — кнопка не должна остаться серой навсегдаadBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
+  if(adBusy){onFail0&&onFail0();return;} // ролик уже идёт — кнопка не должна остаться серой навсегда
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
   const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL){toast(AD_FAIL_());onFail();}else stubAd(cb);return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
@@ -1573,7 +1736,7 @@ function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(
   if((n=num('price_hint',20,120))!==null)PRICE.hint=n;if((n=num('price_life',30,200))!==null)PRICE.life=n;if((n=num('price_tow',40,300))!==null)PRICE.tow=n;
   if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;
   if((n=num('price_paint',50,600))!==null)PRICE.paint=n;if((n=num('price_yard',50,800))!==null)PRICE.yard=n;if(f.x2==='0'||f.x2==='off')X2_ON=false;if((n=num('win_streak',3,10))!==null)WSTREAK=n;updCoins();}
-function updCoins(){const a=$('gCoins'),b=$('coinCnt');if(a)a.textContent='💰 '+S.coins;if(b)b.textContent=S.coins;
+function updCoins(){const a=$('gCoins'),b=$('coinCnt'),c=$('garCoins');if(a)a.textContent='💰 '+S.coins;if(b)b.textContent=S.coins;if(c)c.textContent='💰 '+S.coins;
   // монет не хватает — на кнопке сразу видно, что можно за рекламу
   // (во дворах обучения 1–3 и там, где ролик не показать, — просто цена; подпись короткая, чтобы кнопка не росла в три строки)
   const adLbl=adOk()&&!(G&&!G.daily&&G.idx<3);
@@ -1589,7 +1752,7 @@ const coinsWhere=()=>L('Монеты дают за каждый двор, бол
 function openShop(){
   // покупки за деньги — только в спокойном месте (карта/гараж), не поверх двора; нет платежей — раздела нет совсем
   const buy=PAY.on&&!inYard();
-  modal(`<h2>${L('Монеты','Coins')} 💰</h2><p>${L(`У тебя ${coinsTxt(S.coins)}. Монеты дают за каждый двор, больше — за три звезды, сложные дворы и сундуки за звёзды на карте.`,`You have ${coinsTxt(S.coins)}. You earn coins for every yard, and more for three stars, tough yards and the star chests on the map.`)}</p>${buy?payHtml():''}<div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} ${L('за рекламу','for watching an ad')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+  modal(`<h2>${L('Монеты','Coins')} 💰</h2><p>${L(`У тебя ${coinsTxt(S.coins)}. Монеты — за дворы, звёзды, сундуки и гостинцы бабы Шуры.`,`You have ${coinsTxt(S.coins)}. Coins come from yards, stars, chests and Granny Shura’s gifts.`)}</p>${buy?payHtml():''}<div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} ${L('за рекламу','for watching an ad')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   modalRe=openShop;if(buy){PAY.bind($('mcard'));PAY.re=openShop;}
   if($('mAdCoins'))$('mAdCoins').onclick=()=>{hideModal();showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');});};$('mCancel').onclick=hideModal;}
 function inYard(){return !!(G&&!G.over&&$('scr-game').classList.contains('on'));}
@@ -1769,18 +1932,23 @@ function hideModal(){$('modal').classList.remove('on');modalOn=false;modalRe=nul
 // modalRe — чем перерисовать открытое окно при смене языка (задаётся окнами настроек, «Как играть», «Об игре», монет)
 let modalRe=null;
 function modal(html){PAY.re=null;modalRe=null;const k=html.slice(0,160);if(!(modalOn&&modal.k===k))$('modal').scrollTop=0;modal.k=k; // перерисовка того же окна (после покупки) — прокрутку не сбрасываем
-  $('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;if(inYard())YG.stop();} // окно поверх двора — игра на паузе и для GameplayAPI
+  $('mcard').className='card';$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;if(inYard())YG.stop();} // окно поверх двора — игра на паузе и для GameplayAPI
 // пустая звезда — контуром ☆ (отличается не только цветом)
 function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="e">☆</span>';return s;}
 function win(){
   G.over=true;YG.stop();SND.win();const st=Math.max(1,G.hearts);let newModel=null,wsGift=false;
   const again=G.daily&&(S.daily[todayKey()]||0)>0; // задание дня уже пройдено сегодня — повтор без награды (иначе бесконечные монеты)
+  const gift1=streakAuto(); // гостинец 1-го дня — молча, ещё до окна: в окне сразу честная строка «Завтра»
   if(G.daily){S.daily[todayKey()]=Math.max(S.daily[todayKey()]||0,st);}
   else{const i=G.idx;const first=!S.stars[i];S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);
     const mi=CAR_AT.indexOf(i+1);if(first&&mi>=0&&MODELS[mi]&&!S.garage.includes(mi)){S.garage.push(mi);newModel=MODELS[mi];}S.levelsDone++;S.adW=(S.adW||0)+1;
     // серия побед подряд (без окна «Машины помяты»): каждые WSTREAK — бесплатная подсказка (не копится больше одной)
     if(!S.freeHint){S.ws=(S.ws||0)+1;if(S.ws>=WSTREAK){S.freeHint=1;S.ws=0;wsGift=true;}}}
   const reward=again?0:(G.daily?DAILY_REWARD:(4+2*st)*(isBoss(G.idx)?2:1))+G.bonus;S.coins+=reward;
+  // неделя заданий дня: 3, 5 и 7 выполненных за неделю (Пн–Вс) — премия; выдаётся сама, один раз (S.dw[понедельник] — сколько ступеней выдано)
+  let wb=0,wbN=0;
+  if(G.daily&&!again){const w=dailyWeek();let got=S.dw[w.key]||0;while(got<DWEEK.length&&w.n>=DWEEK[got][0]){wb+=DWEEK[got][1];wbN=DWEEK[got][0];got++;}if(wb){S.dw[w.key]=got;S.coins+=wb;}}
+  const meet=!S.meet&&!G.daily;if(meet)S.meet=1; // знакомство с бабой Шурой — в окне первой победы
   const tip=G.daily?'':winTip();
   save();updCoins();if(reward)setTimeout(()=>SND.coin(),500);
   const hasNext=!G.daily;
@@ -1794,23 +1962,33 @@ function win(){
   // одна главная (зелёная) кнопка; вторая — ссылкой под ней (UX 18 п.3)
   const bNext=hasNext&&!regionDone?`<button class="btn${toMap?' link':' green'}" id="mNext">${L('Дальше →','Next →')}</button>`:'';
   const bMap=`<button class="btn${toMap||!bNext?' green':' link'}" id="mMap">${regionDone?L('🗺 Дальше — на карту','🗺 On to the map'):toMap?L('🗺 На карту','🗺 To the map'):L('На карту','To the map')}</button>`;
+  // «Завтра»: со 2-го двора — строкой; если завтра краска или машина — карточкой с картинкой (не влезает — fitWin заменит строкой)
+  const tm=!meet?tmrInfo():null,tmLine=tm?tmrHtml(tm):'',tmCard=tm&&!G.daily&&!newModel&&S.garage.length&&(tm.r.paint||tm.r.car>=0)&&win.tmD!==dayKey(0);if(tmCard)win.tmD=dayKey(0); // карточка с картинкой — раз в день, дальше строкой
+  const run=G.daily?dailyRun():0;
   modal(`<h2>${regionDone?L('Регион пройден! 🏆','Region complete! 🏆'):L('Двор свободен! 🎉','Yard cleared! 🎉')}</h2><div class="big-stars">${starsHtml(st)}</div>
-    <p>${G.daily?L('Задание дня выполнено! Завтра будет новое.','Daily challenge done! A new one tomorrow.'):levelName(G.idx)+L(': двор пройден за ',': cleared in ')+G.moves+' '+pl(G.moves,'ход','хода','ходов','move','moves')}</p>
-    ${!G.daily&&G.idx===2&&streakState().day===1?`<p class="goal">📅 ${L('Заходи завтра — день 2: +','Come back tomorrow — day 2: +')}${STREAK[1]} 💰</p>`:''}
-    ${!G.daily&&G.idx===2?`<p><b>${L('С 4-го двора каждая авария отнимает ❤️ — их три на двор','From yard 4 on, every crash takes a ❤️ — three per yard')}</b></p>`:''}
-    ${clean?`<p class="clean">${L('✨ Чисто! Без аварий и подсказок','✨ Flawless! No crashes, no hints')}</p>`:''}
-    ${again?`<p class="goal">${L('Сегодня награда уже получена — новое задание завтра.','Today’s reward is already collected — a new challenge tomorrow.')}</p>`:`<p class="coins-won" id="mWon">+${reward} 💰${G.bonus?` <small>${L('(скорая успела!)','(ambulance made it!)')}</small>`:''}</p>`}
+    <p data-fit="1">${G.daily?L('Задание дня выполнено!','Daily challenge done!'):levelName(G.idx)+L(': двор пройден за ',': cleared in ')+G.moves+' '+pl(G.moves,'ход','хода','ходов','move','moves')}</p>
+    ${meet?shura(gift1?L('Я баба Шура, старшая по двору. Ловко ты! Держи гостинец — '+gift1+' 💰. И завтра заходи: будет ещё.','I’m Granny Shura, I keep an eye on this yard. Nicely done! Here’s a little gift — '+gift1+' 💰. Come back tomorrow for more.'):L('Я баба Шура, старшая по двору. Ловко ты! Заходи каждый день — у меня для тебя гостинцы.','I’m Granny Shura, I keep an eye on this yard. Nicely done! Drop by every day — I’ve got gifts for you.')):''}
+    ${!G.daily&&G.idx===2?`<p data-fit="3"><b>${L('С 4-го двора каждая авария отнимает ❤️ — их три на двор','From yard 4 on, every crash takes a ❤️ — three per yard')}</b></p>`:''}
+    ${clean?`<p class="clean" data-fit="2">${L('✨ Чисто! Без аварий и подсказок','✨ Flawless! No crashes, no hints')}</p>`:''}
+    ${again?`<p class="goal">${L('Сегодня награда уже получена — новое задание завтра.','Today’s reward is already collected — a new challenge tomorrow.')}</p>`:`<p class="coins-won" id="mWon">+${reward+wb} 💰${G.bonus?` <small>${L('(скорая успела!)','(ambulance made it!)')}</small>`:''}</p>`}
+    ${gift1&&!meet?`<p class="goal gift">🎁 ${L('Гостинец дня от бабы Шуры: +','Today’s gift from Granny Shura: +')}${gift1} 💰</p>`:''}
+    ${wb?`<p class="goal gift">📅 ${L(wbN+' '+plural(wbN,'задание','задания','заданий')+' за неделю — премия +'+wb+' 💰',wbN+' dailies this week — bonus +'+wb+' 💰')}</p>`:''}
     ${newModel?`<div class="newcar"><p>${L('Новая машина в гараже:','New car in the garage:')} <b>${newModel.name}</b></p><canvas id="ncv"></canvas></div>`:''}
     ${wsGift?`<p class="goal gift">🔥 ${L(`${WSTREAK} ${plural(WSTREAK,'победа','победы','побед')} подряд — подсказка в следующем дворе бесплатно!`,`${WSTREAK} wins in a row — your next hint is free!`)}</p>`:''}
+    ${G.daily?weekHtml()+`<p class="goal" data-fit="4">${L('Всего выполнено дней:','Days completed:')} <b>${LB.days()}</b>${run>1?` · <span class="fire">🔥 ${run} ${L('подряд','in a row')}</span>`:''}</p>`:''}
     ${G.daily||newModel?'':winGoal(G.idx)}${tip?`<p class="goal tipl">${tip}</p>`:''}
+    ${tmCard?`<div class="newcar sm tmrc" id="tmrC"><p><b>${L('Завтра','Tomorrow')}</b> ${tm.r.paint?L('баба Шура подарит краску «'+PAINT[tm.r.paint][1]+'» — и ещё '+tm.r.coins+' 💰','Granny Shura will give you the “'+PAINT[tm.r.paint][1]+'” paint — plus '+tm.r.coins+' 💰'):L('баба Шура подарит машину: '+MODELS[tm.r.car].name+' — и ещё '+tm.r.coins+' 💰','Granny Shura will give you a car: the '+MODELS[tm.r.car].name+' — plus '+tm.r.coins+' 💰')}</p><canvas id="tcv"></canvas></div>`:tmLine}
     <div class="row">${x2?`<button class="btn x2 x2p noenter" id="mX2">${L('📺 Удвоить за рекламу: +','📺 Double for an ad: +')}${reward}&nbsp;💰</button>`:''}${toMap?bMap+bNext:bNext+bMap}${G.daily&&LB.ok()?`<button class="btn accent noenter" id="mLb">🏆 ${L('Рейтинг','Leaderboard')}</button>`:''}</div>`);
+  fitWin(tmLine);
   if(G.daily){LB.submit();const b=$('mLb');if(b)b.onclick=LB.show;}
   // награда — только после досмотренного ролика; второй раз за двор не даём
   const g=G,bx=$('mX2');if(bx)bx.onclick=()=>{if(g.x2)return;bx.disabled=true;
     showRewarded(()=>{if(g.x2)return;g.x2=true;setCoins(S.coins+reward);SND.coin();toast('+'+reward+L(' 💰 — удвоено!',' 💰 — doubled!'));
-      const w=$('mWon');if(w&&G===g)w.innerHTML='+'+reward*2+' 💰 <small>(×2)</small>';if(bx.parentNode)bx.parentNode.removeChild(bx);},
+      const w=$('mWon');if(w&&G===g){w.innerHTML='+'+(reward*2+wb)+' 💰 <small>(×2)</small>';coinFx(reward,w);}if(bx.parentNode)bx.parentNode.removeChild(bx);},
       ()=>{bx.disabled=false;});};
   if(newModel)requestAnimationFrame(()=>drawModel($('ncv'),newModel));
+  if($('tcv'))requestAnimationFrame(()=>{const c=$('tcv');if(!c)return;if(tm.r.paint){const mi=S.garage.length?S.garage[0]:0;drawModel(c,MODELS[mi],PAINT[tm.r.paint][0]);}else drawModel(c,MODELS[tm.r.car]);});
+  coinFx(reward+wb,$('mWon'));
   if(!G.daily)setTimeout(streakAfterWin,1500);setTimeout(offerReturn,2200);
   // реклама раз в AD_EVERY побед (долг не сгорает), не после босса/новой машины, не раньше 180 с после любой рекламы; перед показом — предупреждение
   // после «Дальше» кнопки окна гаснут (иначе «На карту» успевает нажаться до межэкранной); переход — только если двор тот же
@@ -1818,20 +1996,39 @@ function win(){
     if(adNext&&adReady()){toast(L('Реклама через секунду…','Ad in a second…'),1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
   $('mMap').onclick=()=>{const k=regionDone?Math.floor(g.idx/10):-1;hideModal();openMap();if(k>=0)regionParty(k);};
 }
+// окно не влезает в экран — убираем второстепенные строки по очереди (data-fit: меньше — раньше), карточку «Завтра» меняем на строку
+function fitWin(alt){const mo=$('modal'),c=$('mcard'),tall=()=>mo.scrollHeight>mo.clientHeight+1;if(!tall())return;
+  const tc=$('tmrC');if(tc&&alt){tc.insertAdjacentHTML('afterend',alt);tc.remove();}
+  for(const e of [...c.querySelectorAll('[data-fit]')].sort((a,b)=>a.dataset.fit-b.dataset.fit)){if(!tall())break;e.remove();}
+  if(tall())c.querySelectorAll('.newcar').forEach(e=>e.classList.add('sm'));
+  if(tall())c.classList.add('tight');}
+/* ---- монеты «летят» из окна в счётчик (UX 18 п.2); в спокойном режиме и в старых браузерах без element.animate — просто цифра ---- */
+function coinFx(n,src){if(!n||!src||calm()||!src.animate||window.__demo)return;
+  const app=$('app'),inG=!$('scr-map').classList.contains('on'),dst=$('scr-game').classList.contains('on')?$('gCoins'):inG?$('garCoins'):$('mCoins');if(!dst)return;
+  const ar=app.getBoundingClientRect(),a=src.getBoundingClientRect(),b=dst.getBoundingClientRect();if(!a.width||!b.width)return;
+  const k=Math.max(3,Math.min(8,Math.round(n/4))),x0=a.left+a.width/2-ar.left-11,y0=a.top+a.height/2-ar.top-11,dx=b.left+b.width/2-ar.left-11-x0,dy=b.top+b.height/2-ar.top-11-y0;
+  let shown=Math.max(0,S.coins-n);const put=v=>{if(inG)dst.textContent='💰 '+v;else $('coinCnt').textContent=v;};put(shown);
+  for(let i=0;i<k;i++){const e=document.createElement('i');e.className='fc';e.textContent='💰';e.style.left=x0+(Math.random()-.5)*40+'px';e.style.top=y0+'px';app.appendChild(e);
+    const an=e.animate([{transform:'translate(0,0) scale(.5)',opacity:0},{transform:'translate('+dx*.2+'px,'+(dy*.2-34)+'px) scale(1.25)',opacity:1,offset:.3},{transform:'translate('+dx+'px,'+dy+'px) scale(.7)',opacity:1}],{duration:620,delay:300+i*80,easing:'ease-in',fill:'both'});
+    an.onfinish=()=>{if(e.parentNode)e.parentNode.removeChild(e);shown=Math.min(S.coins,shown+Math.ceil(n/k));put(i===k-1?S.coins:shown);
+      if(i===k-1){dst.classList.remove('bump');void dst.offsetWidth;dst.classList.add('bump');}else if(i%2===0)tone('triangle',1320,1760,.07,.03);};}
+  setTimeout(()=>{document.querySelectorAll('.fc').forEach(e=>e.parentNode&&e.parentNode.removeChild(e));updCoins();},300+k*80+1000);}
 /* ---- окно победы: «сколько до следующей награды» и одно напоминание о том, что ждёт на карте (аудит 14) ---- */
 function bar(done,all){const n=Math.min(10,all),k=Math.max(0,Math.min(n,Math.round(done/all*n)));return '<span class="bar" aria-hidden="true">'+'<b class="on"></b>'.repeat(k)+'<b></b>'.repeat(n-k)+'</span>';}
 function winGoal(idx){const done=S.unlocked-1; // пройдено дворов подряд
   const k=MODELS.findIndex((m,i)=>!m.streak&&!S.garage.includes(i)&&CAR_AT[i]>done);
   if(k>=0){const prev=k>0?CAR_AT[k-1]:0,left=CAR_AT[k]-done;
-    return `<p class="goal">🚗 ${L('До новой машины:','Next car:')} ${bar(done-prev,CAR_AT[k]-prev)} <span class="nw">${L('ещё','in')} ${left} ${pl(left,'двор','двора','дворов','yard','yards')}</span></p>`;}
+    return `<p class="goal" data-fit="4">🚗 ${MODELS[k].name}: ${bar(done-prev,CAR_AT[k]-prev)} <span class="nw">${L('ещё','in')} ${left} ${pl(left,'двор','двора','дворов','yard','yards')}</span></p>`;}
   const t=Math.floor(idx/10),nx=CHEST[S.chest[t]||0]; // машины кончились — сундук этого десятка
-  if(nx){const n=chestStars(t);if(n<nx[0])return `<p class="goal">🎁 ${L('До сундука:','Chest:')} ${bar(n,nx[0])} ${n}/${nx[0]} ⭐</p>`;}
+  if(nx){const n=chestStars(t);if(n<nx[0])return `<p class="goal" data-fit="4">🎁 ${L('До сундука:','Chest:')} ${bar(n,nx[0])} ${n}/${nx[0]} ⭐</p>`;}
   return '';}
 function winTip(){
   for(let k=0;k*10<S.unlocked-1;k++){const nx=CHEST[S.chest[k]||0];if(nx&&chestStars(k)>=nx[0])return L('🎁 Сундук за звёзды готов — забери на карте!','🎁 A star chest is ready — collect it on the map!');}
+  {const s=SETS.find(x=>setReady(x)&&!winTip.seen[x.id]);if(s){winTip.seen[s.id]=1;return L('🏆 Набор «'+s.name+'» собран — награда ждёт в гараже!','🏆 Set “'+s.name+'” complete — the reward is waiting in the garage!');}}
   if(!S.tipD&&!dailyLocked()){S.tipD=1;return L('📅 Открылось задание дня — оно на карте!','📅 The daily challenge is unlocked — find it on the map!');}
   if(!S.tipP&&S.coins>=PRICE.paint&&S.garage.length&&!Object.keys(S.paint).length){S.tipP=1;return L('🎨 Монет хватает на покраску машины в гараже!','🎨 You have enough coins to paint a car in the garage!');}
   return '';}
+winTip.seen={};
 // праздник региона: после босса карта прокручивается к новому региону, «машинка переезжает», сундук рядом
 function regionParty(k){const from=k*10,next=(k+1)*10,reg=REGIONS.find(r=>r.from===next),old=REGIONS.slice().reverse().find(r=>r.from<=from);
   let n=0;for(let i=from;i<next;i++)n+=S.stars[i]||0;
@@ -1848,8 +2045,8 @@ function lose(){
   if(!G)return;YG.stop();if(!G.daily&&S.ws){S.ws=0;save();} // серия побед подряд обрывается
   const canPay=S.coins>=PRICE.life;
   // не хватает монет — кнопку «за монеты» не показываем (серая выглядела поломкой), остаётся «за рекламу»
-  modal(`<h2>${L('Машины помяты 💥','Cars dented 💥')}</h2><p>${pick('lose')} ${L('Попробуем ещё?','Try again?')}</p>
-    <div class="row">${canPay?`<button class="btn accent noenter" id="mLife">❤️ ${L('+1 жизнь','+1 life')} — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':`<button class="btn accent noenter" id="mRev">${L('📺 +1 жизнь за рекламу','📺 +1 life for an ad')}</button>`}<button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn" id="mMap2">${L('На карту','To the map')}</button></div>`);
+  modal(`<h2>${L('Машины помяты 💥','Cars dented 💥')}</h2>${shura(pick('lose'),'sad')}
+    <div class="row">${G.usedRevive||!adOk()?'':`<button class="btn accent noenter" id="mRev">${L('📺 +1 жизнь за рекламу','📺 +1 life for an ad')}</button>`}${canPay?`<button class="btn coinb noenter" id="mLife">❤️ ${L('+1 жизнь','+1 life')} — ${PRICE.life} 💰</button>`:''}<button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn" id="mMap2">${L('На карту','To the map')}</button></div>`);
   const revive=()=>{G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();};
   if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);SND.coin();revive();};
   const r=$('mRev');if(r)r.onclick=()=>{hideModal();showRewarded(()=>{G.usedRevive=true;revive();},lose);};
@@ -1859,21 +2056,58 @@ function lose(){
 function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<12||h>14)?b:c;}
 const coinsTxt=n=>n+' '+pl(n,'монета','монеты','монет','coin','coins');
 
+/* пейзажи карты (boost): маленькие рисунки на свободной стороне строки — по региону; у «Вокруг света» — по городу */
+const SC_G='#3f9b46',SC_D='#2e7d32';
+const SCN={
+  birch:`<path d="M30 60V26" stroke="#f5f5f5" stroke-width="6"/><path d="M27 34h6M27 44h5M28 52h5" stroke="#444" stroke-width="2"/><circle cx="30" cy="20" r="15" fill="${SC_G}"/><circle cx="19" cy="29" r="10" fill="#57b85a"/><circle cx="42" cy="28" r="11" fill="${SC_D}"/>`,
+  tower:`<path d="M22 60V30h20v30z" fill="#c0503a"/><path d="M19 30h26l-4-6H23z" fill="#a8402e"/><path d="M24 24L32 6l8 18z" fill="#2e8b57"/><path d="M32 6V1" stroke="#e8b923" stroke-width="2"/><path d="M32 0l1.2 2.4 2.6.3-1.9 1.8.5 2.6L32 5.9l-2.4 1.2.5-2.6-1.9-1.8 2.6-.3z" fill="#e8b923"/><rect x="29" y="44" width="6" height="16" fill="#5d2e22"/><rect x="26" y="34" width="4" height="5" fill="#ffe9a8"/><rect x="34" y="34" width="4" height="5" fill="#ffe9a8"/>`,
+  izba:`<path d="M12 60V40h34v20z" fill="#b9834f"/><path d="M12 45h34M12 50h34M12 55h34" stroke="#96663a" stroke-width="1.5"/><path d="M8 41L29 22l21 19z" fill="#8a4b2b"/><rect x="24" y="45" width="10" height="9" fill="#cfe9ff" stroke="#fff" stroke-width="2"/><rect x="40" y="26" width="5" height="10" fill="#7a6252"/><circle cx="56" cy="50" r="7" fill="${SC_G}"/><path d="M56 60v-8" stroke="#6d4c41" stroke-width="2.5"/>`,
+  mount:`<path d="M2 60L24 18l14 22 8-12 16 32z" fill="#7d8fa3"/><path d="M24 18l-7 13 5-3 3 4 3-5 3 2z" fill="#fff"/><path d="M46 28l-4 8 4-2 3 3 2-4z" fill="#fff"/>`,
+  firs:`<path d="M18 60V50" stroke="#6d4c41" stroke-width="4"/><path d="M18 8l11 18h-6l9 14h-7l8 12H3l8-12H4l9-14H7z" fill="#2e7d5b"/><path d="M48 60v-7" stroke="#6d4c41" stroke-width="3"/><path d="M48 24l8 13h-4l7 10h-5l6 8H36l6-8h-5l7-10h-4z" fill="#3f9b74"/>`,
+  rig:`<path d="M20 60L30 14h4l10 46" fill="none" stroke="#5d6d7e" stroke-width="3"/><path d="M24 44h16M26 32h12M22 54h20" stroke="#5d6d7e" stroke-width="2.5"/><rect x="28" y="8" width="8" height="7" fill="#e67e22"/><path d="M4 60h56" stroke="#8d9aa6" stroke-width="3"/><path d="M48 60V44h8v16z" fill="#8d9aa6"/>`,
+  ship:`<path d="M2 50q6-5 12 0t12 0 12 0 12 0 12 0v10H2z" fill="#4a90c2"/><path d="M12 44h40l-6 10H18z" fill="#fff"/><path d="M12 44h40l-1.5 2.5h-37z" fill="#e74c3c"/><rect x="24" y="33" width="14" height="11" fill="#eceff1"/><rect x="30" y="24" width="5" height="9" fill="#e74c3c"/><circle cx="28" cy="38" r="1.6" fill="#4a90c2"/><circle cx="34" cy="38" r="1.6" fill="#4a90c2"/>`,
+  sopka:`<path d="M4 60L26 20h10l24 40z" fill="#7b8c7a"/><path d="M26 20h10l5 9-5-3-5 4-4-4-5 3z" fill="#fff"/><path d="M31 18q-5-6 1-9t3-8" fill="none" stroke="#ecf0f1" stroke-width="3" stroke-linecap="round"/>`,
+  light:`<path d="M26 60l3-34h8l3 34z" fill="#fff"/><path d="M27.5 44h11l.6 7H27z" fill="#e74c3c"/><path d="M28.6 30h8.8l.5 6h-9.8z" fill="#e74c3c"/><rect x="27" y="18" width="12" height="8" fill="#ffe082" stroke="#37474f" stroke-width="2"/><path d="M26 18l7-7 7 7z" fill="#37474f"/><path d="M2 60q6-5 12 0t12 0M40 60q6-5 12 0t12 0" fill="none" stroke="#4a90c2" stroke-width="3"/>`,
+  palm:`<path d="M30 60q2-22 6-34" fill="none" stroke="#8d6e63" stroke-width="5" stroke-linecap="round"/><path d="M36 26q-16-10-26 0M36 26q-6-18-22-14M36 26q8-16 24-8M36 26q16-4 22 8M36 26q-2 14-14 18" fill="none" stroke="${SC_D}" stroke-width="5" stroke-linecap="round"/><path d="M6 60h52" stroke="#e8c98a" stroke-width="5" stroke-linecap="round"/>`,
+  pyramid:`<path d="M4 60L30 18l26 42z" fill="#e2b866"/><path d="M30 18l26 42H38z" fill="#c9983f"/><path d="M40 60l12-18 10 18z" fill="#d6aa55"/><circle cx="52" cy="14" r="7" fill="#ffd54f"/>`,
+  eiffel:`<path d="M32 4l5 26 9 30h-7l-3-10h-8l-3 10h-7l9-30z" fill="#6d7b8a"/><path d="M24 30h16M21 42h22" stroke="#fff" stroke-width="2"/><path d="M28 50q4-6 8 0" fill="none" stroke="#fff" stroke-width="2"/>`,
+  pagoda:`<rect x="24" y="48" width="16" height="12" fill="#c0392b"/><path d="M14 48h36l-6-7H20z" fill="#2d3436"/><rect x="26" y="33" width="12" height="8" fill="#c0392b"/><path d="M18 33h28l-5-6H23z" fill="#2d3436"/><rect x="28" y="20" width="8" height="7" fill="#c0392b"/><path d="M22 20h20l-10-11z" fill="#2d3436"/><path d="M32 9V3" stroke="#e8b923" stroke-width="2"/>`,
+  city:`<rect x="6" y="30" width="12" height="30" fill="#7d8fa3"/><rect x="20" y="12" width="13" height="48" fill="#5d6d7e"/><rect x="35" y="24" width="11" height="36" fill="#8d9aa6"/><rect x="48" y="36" width="11" height="24" fill="#6c7a89"/><path d="M26 12V3" stroke="#5d6d7e" stroke-width="2"/><path d="M9 35h6M9 42h6M9 49h6M23 18h7M23 26h7M23 34h7M23 42h7M23 50h7M38 30h5M38 38h5M38 46h5M51 42h5M51 50h5" stroke="#ffe9a8" stroke-width="2.5"/>`,
+  clock:`<rect x="24" y="18" width="16" height="42" fill="#b08d57"/><path d="M22 18h20l-10-16z" fill="#6d5a3a"/><circle cx="32" cy="28" r="6" fill="#fff" stroke="#3e3223" stroke-width="1.5"/><path d="M32 28v-4M32 28h3" stroke="#3e3223" stroke-width="1.5"/><path d="M28 40h8M28 46h8M28 52h8" stroke="#8a6c3d" stroke-width="2"/>`,
+  block:`<rect x="6" y="22" width="52" height="38" fill="#e6dcc6"/><rect x="4" y="18" width="56" height="5" fill="#8d7b64"/><path d="M12 28h6v7h-6zM24 28h6v7h-6zM36 28h6v7h-6zM48 28h6v7h-6zM12 40h6v7h-6zM24 40h6v7h-6zM36 40h6v7h-6zM48 40h6v7h-6z" fill="#6fa3cf"/><path d="M24 40h6v7h-6zM48 28h6v7h-6z" fill="#ffd866"/><rect x="29" y="51" width="7" height="9" fill="#6d4c41"/>`,
+  garage:`<rect x="8" y="34" width="48" height="26" fill="#9aa5ad"/><path d="M5 35l27-13 27 13z" fill="#6c7a89"/><rect x="18" y="42" width="28" height="18" fill="#546e7a"/><path d="M18 47h28M18 52h28M18 57h28" stroke="#455a64" stroke-width="1.5"/>`,
+  colos:`<path d="M6 60V34q0-14 26-14t26 14v26z" fill="#d9c3a0"/><path d="M6 34q0-14 26-14t26 14" fill="none" stroke="#b79b72" stroke-width="3"/><path d="M12 60v-9q0-4 4-4t4 4v9zM24 60v-9q0-4 4-4t4 4v9zM36 60v-9q0-4 4-4t4 4v9zM48 60v-9q0-4 4-4t4 4v9zM14 42v-5q0-3 3-3t3 3v5zM26 42v-5q0-3 3-3t3 3v5zM38 42v-5q0-3 3-3t3 3v5zM50 40v-4q0-2 2-2t2 2v4z" fill="#8a6f4d"/>`,
+  tree:`<path d="M32 60V38" stroke="#6d4c41" stroke-width="6"/><circle cx="32" cy="26" r="17" fill="${SC_G}"/><circle cx="20" cy="34" r="11" fill="#57b85a"/><circle cx="45" cy="33" r="12" fill="${SC_D}"/>`};
+const SC_REG=[['birch','tower','izba'],['firs','mount','rig'],['sopka','ship','light'],['city','mount','palm'],['block','tree','garage']];
+// «Вокруг света» (дворы 31–50): у городов свои приметы — горы, нефтяная вышка Баку, пагоды, пирамиды, Колизей, башня в Париже, часы в Лондоне
+const SC_CITY={30:'city',31:'mount',32:'palm',33:'mount',34:'mount',35:'mount',36:'rig',37:'city',38:'city',39:'palm',40:'pagoda',41:'pagoda',42:'pagoda',43:'pagoda',44:'pyramid',45:'colos',46:'eiffel',47:'city',48:'clock',49:'city'};
+function scHtml(i){const k=i<30?Math.floor(i/10):i<50?3:4,id=SC_CITY[i]||SC_REG[k][i%3];return '<i class="sc"><svg viewBox="0 0 64 64" aria-hidden="true">'+SCN[id]+'</svg></i>';}
 function openMap(){
-  if(G)YG.stop();G=null;resetGest();document.body.style.background='';const list=$('mapList');list.innerHTML='';let tot=0;
+  if(G)YG.stop();G=null;resetGest();document.body.style.background='';const list=$('mapList');list.innerHTML='';let tot=0,sec=list,curNode=null;
   const N=Math.max(30,S.unlocked+2);
   for(let i=0;i<N;i++){const c=levelName(i),un=i<S.unlocked,st=S.stars[i]||0;tot+=st;const cur=un&&!st;
-    const reg=REGIONS.find(r=>r.from===i);if(reg){const d=document.createElement('div');d.className='region';d.innerHTML='<span>🗺 '+reg.name+'</span>';list.appendChild(d);}
+    const reg=REGIONS.find(r=>r.from===i);if(reg){sec=document.createElement('div');sec.className='reg reg'+REGIONS.indexOf(reg);list.appendChild(sec);
+      const d=document.createElement('div');d.className='region';d.innerHTML='<span>🗺 '+reg.name+'</span>';sec.appendChild(d);}
     const row=document.createElement('div');row.className='node-row '+(i%2?'r':'l');
-    row.innerHTML=`<button class="node ${un?'':'locked'} ${st?'done':''} ${cur?'cur':''} ${isBoss(i)?'boss':''}" ${un?'':'disabled'}>${un?i+1:'🔒'}${isBoss(i)?'<span class="fire">🔥</span>':''}</button><div class="nlabel"><b>${c}</b><span class="st">${un?starsHtml(st).replace(/<span class="e">☆<\/span>/g,'☆'):''}</span></div>`;
-    if(un)row.querySelector('button').onclick=()=>startLevel(i);list.appendChild(row);
-    if(isBoss(i)&&S.unlocked>i-9)list.appendChild(chestRow(Math.floor(i/10)));}
-  $('totStars').textContent=tot;updCoins();$('garCnt').textContent=S.garage.length+'/'+MODELS.length;
+    row.innerHTML=scHtml(i)+`<button class="node ${un?'':'locked'} ${st?'done':''} ${cur?'cur':''} ${isBoss(i)?'boss':''}" ${un?'':'disabled'}>${un?i+1:'🔒'}${isBoss(i)?'<span class="fire">🔥</span>':''}</button><div class="nlabel"><b>${c}</b><span class="st">${un?starsHtml(st).replace(/<span class="e">☆<\/span>/g,'☆'):''}</span></div>`;
+    if(un)row.querySelector('button').onclick=()=>startLevel(i);sec.appendChild(row);if(i===S.unlocked-1)curNode=row.querySelector('button');
+    if(isBoss(i)&&S.unlocked>i-9)sec.appendChild(chestRow(Math.floor(i/10)));}
+  $('totStars').textContent=tot;updCoins();$('garCnt').innerHTML=S.garage.length+'/'+MODELS.length+(setsReady()?'<span class="dot"></span>':'');
   const dd=S.daily[todayKey()],bd=$('btnDaily'),dl=dailyLocked();bd.classList.toggle('locked',dl);
-  const dn=L('Задание дня','Daily challenge');bd.innerHTML=dl?'🔒 '+dn+`<small>${L('после 6-го двора','after yard 6')}</small>`:dd?'📅 '+dn+' '+'★'.repeat(dd):'📅 '+dn;
+  const dn=L('Задание дня','Daily challenge');bd.innerHTML=dl?'🔒 '+L('Задание','Daily')+`<small>${L('с 6-го двора','after yard 6')}</small>`:dd?'📅 '+dn+' '+'★'.repeat(dd):'📅 '+dn;updToday();
   if(window.__sdkDone&&!window.__demo)setTimeout(maybeStreak,400);
-  updStreakDot();show('scr-map');const c=list.querySelector('.cur');if(c)c.scrollIntoView({block:'center'});
+  updStreakDot();show('scr-map');mapRegUpd();
+  // машинка игрока стоит на дворе, до которого он доехал (своя из «во дворах», иначе последняя из гаража)
+  if(curNode&&S.garage.length&&!window.__demo){const yc=yardCars(),mi=yc.length?yc[0]:S.garage[S.garage.length-1],cv2=document.createElement('canvas');cv2.className='mycar';curNode.appendChild(cv2);
+    if(MODELS[mi]&&MODELS[mi].len<=3)requestAnimationFrame(()=>drawModel(cv2,MODELS[mi],carColor(mi)));else requestAnimationFrame(()=>drawModel(cv2,MODELS[0],MODELS[0].color));}
+  const c=list.querySelector('.cur')||curNode;if(c)c.scrollIntoView({block:'center'});mapRegUpd();
 }
+// какой регион сейчас вверху карты — в строке под шапкой (раньше «липкая» плашка закрывала подпись верхнего двора)
+function mapRegUpd(){const sc=$('mapScroll'),e=$('mapReg');if(!sc||!e)return;let nm='';
+  sc.querySelectorAll('.reg').forEach(r=>{if(r.offsetTop<=sc.scrollTop+60){const s=r.querySelector('.region span');if(s)nm=s.textContent;}});
+  if(!nm){const s=sc.querySelector('.region span');if(s)nm=s.textContent;}
+  if(e.dataset.n!==nm){e.dataset.n=nm;e.innerHTML=nm?'<span>'+nm+'</span>':'';}}
+$('mapScroll').addEventListener('scroll',mapRegUpd,{passive:true});
 /* ---- сундуки за звёзды: у каждого десятка дворов 25★ → +40, все 30★ → ещё +60 (цель и после гаража, повод перепройти на 3★) ---- */
 const CHEST=[[25,40],[30,60]];
 function chestStars(k){let n=0;for(let i=k*10;i<k*10+10;i++)n+=S.stars[i]||0;return n;}
@@ -1884,26 +2118,128 @@ function chestRow(k){const n=chestStars(k),got=S.chest[k]||0,d=document.createEl
   d.innerHTML=html;const g0=got;
   // ×2 — только за досмотренный ролик и только если сундук ещё не открыт (второй раз не даём)
   const open=m=>{const g=S.chest[k]||0,nx=CHEST[g];if(g!==g0||!nx||chestStars(k)<nx[0])return;S.chest[k]=g+1;S.coins+=nx[1]*m;save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);
-    toast(L('🎁 Сундук открыт: +','🎁 Chest opened: +')+coinsTxt(nx[1]*m)+(m>1?' (×2)':''));if(d.parentNode)d.replaceWith(chestRow(k));};
+    toast(L('🎁 Сундук открыт: +','🎁 Chest opened: +')+coinsTxt(nx[1]*m)+(m>1?' (×2)':''));coinFx(nx[1]*m,d);
+    if(d.parentNode){const nr=chestRow(k);nr.classList.add('pop');d.parentNode.replaceChild(nr,d);}};
   d.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.m==='2'){d.querySelectorAll('button').forEach(x=>x.disabled=true);
     showRewarded(()=>open(2),()=>d.querySelectorAll('button').forEach(x=>x.disabled=false));}else open(1);});
   return d;}
-function openGarage(){
-  const g=$('garGrid');g.innerHTML='';
-  MODELS.forEach((m,i)=>{const has=S.garage.includes(i);const d=document.createElement('div');d.className='gcard'+(has?' own':' lock');
-    d.innerHTML=`<canvas></canvas><b>${has?m.name:'???'}</b><small>${has?(S.yard[i]&&yardOk(i)?L('🏠 во дворах','🏠 in the yards'):m.about):m.streak?L('7 дней подряд 🔥','7 days in a row 🔥'):L('Двор ','Yard ')+CAR_AT[i]+(CAR_AT[i]<=50?' · '+levelName(CAR_AT[i]-1):'')}</small>`;
-    if(has)d.onclick=()=>openCar(i);g.appendChild(d);});
-  resetGest();show('scr-garage');requestAnimationFrame(()=>g.querySelectorAll('canvas').forEach((c,i)=>drawModel(c,MODELS[i],S.garage.includes(i)?carColor(i):null)));
+/* ---- гараж (boost): вкладки «Машины» и «Двор»; закрытые машины — приглушённым рисунком с именем и «ещё N дворов»; наборы с наградами ---- */
+// наборы: m — машины гаража; paint — «покрась 3 машины»; cosy — все украшения двора. Награда — монеты или подарочная краска; забирает игрок (S.sets)
+const SETS=[
+  {id:'cars',tab:'cars',name:'Легковушки',about:'Копейка, Девятка, Нива, Волга, Такси',en:{name:'Passenger cars',about:'Kopeyka, Devyatka, Niva, Volga, Taxi'},m:[0,1,2,3,4],coins:50},
+  {id:'work',tab:'cars',name:'Трудяги',about:'Буханка, Газель, Скорая',en:{name:'Workhorses',about:'Bukhanka, Gazelle, Ambulance'},m:[5,6,7],coins:70},
+  {id:'bus',tab:'cars',name:'Автобусный парк',about:'ПАЗик и Икарус-гармошка',en:{name:'Bus depot',about:'PAZik and Ikarus bendy bus'},m:[8,9],coins:100},
+  {id:'gift',tab:'cars',name:'Подарки бабы Шуры',about:'Запорожец и Мороженое',en:{name:'Granny Shura’s gifts',about:'Zaporozhets and Ice-cream van'},m:[10,11],coins:80},
+  {id:'paint',tab:'cars',name:'Маляр',about:'Покрась три свои машины',en:{name:'Painter',about:'Paint three of your cars'},coins:40},
+  {id:'cosy',tab:'yard',name:'Уютный двор',about:'Собери все украшения',en:{name:'Cosy yard',about:'Collect every decoration'},paint:15}]; // 15 = SET_PAINT («сирень»; константа объявлена ниже, вместе с красками)
+// «Уют двора» — долгая цель для монет: украшения стоят во ВСЕХ дворах (низ двора и тротуар; на раскладку и ходы не влияют)
+const DECOR=[
+  {id:'feeder',name:'Кормушка',about:'Синицы скажут спасибо',price:80,en:{name:'Bird feeder',about:'The birds will thank you'}},
+  {id:'flowers',name:'Цветы у подъезда',about:'Петунии от бабы Шуры',price:150,en:{name:'Flowers by the door',about:'Granny Shura’s petunias'}},
+  {id:'bench',name:'Новые лавочки',about:'Свежая краска, не садиться!',price:200,en:{name:'New benches',about:'Wet paint — don’t sit!'}},
+  {id:'swan',name:'Лебедь из покрышки',about:'Гордость двора',price:250,en:{name:'Tyre swan',about:'The pride of the yard'}},
+  {id:'garland',name:'Гирлянда',about:'Вечером светится',price:350,en:{name:'String lights',about:'Glows in the evening'}},
+  {id:'swing',name:'Качели',about:'Скрипят, но радуют',price:400,en:{name:'Swing',about:'Squeaky but fun'}}];
+function setProg(s){if(s.m)return[s.m.filter(i=>S.garage.includes(i)).length,s.m.length];
+  if(s.id==='paint')return[Math.min(3,S.garage.filter(i=>S.paint[i]).length),3];
+  return[DECOR.filter(d=>S.dec[d.id]).length,DECOR.length];}
+const setReady=s=>!S.sets[s.id]&&setProg(s)[0]>=setProg(s)[1];
+const setsReady=tab=>SETS.some(s=>(!tab||s.tab===tab)&&setReady(s));
+const setRw=s=>s.paint?L('краска «'+PAINT[s.paint][1]+'»','“'+PAINT[s.paint][1]+'” paint'):'+'+s.coins+' 💰';
+function setRow(s){const p=setProg(s),got=!!S.sets[s.id];
+  return `<div class="gset${got?' got':''}"><span><b>${s.name}</b> ${Math.min(p[0],p[1])}/${p[1]}<small>${s.about}</small></span>${got?'<i>✓</i>':p[0]>=p[1]?`<button class="btn green noenter" data-set="${s.id}">${L('Забрать','Collect')} ${setRw(s)}</button>`:`<i>${setRw(s)}</i>`}</div>`;}
+function claimSet(id,el){const s=SETS.find(x=>x.id===id);if(!s||!setReady(s))return;S.sets[id]=1;if(s.coins)S.coins+=s.coins;if(s.paint)S.gp[s.paint]=1;save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);
+  toast(L('🏆 Набор «'+s.name+'» собран: ','🏆 Set “'+s.name+'” complete: ')+setRw(s));if(s.coins)coinFx(s.coins,el);setTimeout(()=>{if($('scr-garage').classList.contains('on'))openGarage();},s.coins&&!calm()?900:0);}
+let garTab='cars';
+function openGarage(tab){if(tab==='cars'||tab==='yard')garTab=tab;
+  const g=$('garGrid');g.innerHTML='';const done=S.unlocked-1,nDec=DECOR.filter(d=>S.dec[d.id]).length,dot='<span class="dot"></span>';
+  const nextK=MODELS.findIndex((m,i)=>!m.streak&&!S.garage.includes(i)&&CAR_AT[i]>done);
+  const tabs=document.createElement('div');tabs.className='gtabs';
+  tabs.innerHTML=`<button class="btn${garTab==='cars'?' on':''}" data-t="cars">🚗 ${L('Машины','Cars')} ${S.garage.length}/${MODELS.length}${setsReady('cars')?dot:''}</button><button class="btn${garTab==='yard'?' on':''}" data-t="yard">🏡 ${L('Двор','Yard')} ${nDec}/${DECOR.length}${setsReady('yard')?dot:''}</button>`;
+  tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{SND.tap();openGarage(b.dataset.t);});g.appendChild(tabs);
+  const sets=tab=>{const d=document.createElement('div');d.className='gsets';d.innerHTML=`<h3>🏆 ${L('Наборы','Sets')}</h3>`+SETS.filter(s=>s.tab===tab).map(setRow).join('');
+    d.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{b.disabled=true;claimSet(b.dataset.set,b);});g.appendChild(d);};
+  const draws=[];
+  if(garTab==='cars'){
+    MODELS.forEach((m,i)=>{const has=S.garage.includes(i),nx=i===nextK,d=document.createElement('div');d.className='gcard'+(has?' own':' lock')+(nx?' next':'');
+      let sub;if(has)sub=S.yard[i]&&yardOk(i)?L('🏠 во дворах','🏠 in the yards'):m.about;
+      else if(m.streak)sub=L('🎁 гостинец 7-го дня','🎁 day-7 gift');
+      else if(nx){const prev=nextK>0?CAR_AT[nextK-1]:0,left=CAR_AT[i]-done;sub=`<span class="nw">${L('ещё','in')} ${left} ${pl(left,'двор','двора','дворов','yard','yards')}</span><span class="gbar"><u style="width:${Math.round(Math.max(0,done-prev)/(CAR_AT[i]-prev)*100)}%"></u></span>`;}
+      else sub=L('Двор ','Yard ')+CAR_AT[i]+(CAR_AT[i]<=50?' · '+levelName(CAR_AT[i]-1):'');
+      d.innerHTML=`<canvas></canvas><b>${has?'':'🔒 '}${m.name}</b><small>${sub}</small>`;
+      if(has)d.onclick=()=>openCar(i);else d.onclick=()=>toast(m.streak?L('«'+m.name+'» — гостинец бабы Шуры на 7-й день захода','The '+m.name+' is Granny Shura’s day-7 gift'):L('«'+m.name+'» приедет в гараж после двора '+CAR_AT[i],'The '+m.name+' arrives after yard '+CAR_AT[i]),2600);
+      g.appendChild(d);draws.push([d.querySelector('canvas'),()=>drawModel(d.querySelector('canvas'),m,has?carColor(i):null)]);});
+    sets('cars');
+  }else{
+    const n=document.createElement('div');n.className='gnote';n.innerHTML=shura(L('Двор у нас общий — давай украсим! Что купишь, будет стоять в каждом дворе.','It’s our shared yard — let’s make it cosy! Whatever you buy will stand in every yard.'));g.appendChild(n);
+    DECOR.forEach(dc=>{const has=!!S.dec[dc.id],d=document.createElement('div');d.className='gcard dec own';
+      d.innerHTML=`<canvas></canvas><b>${dc.name}</b><small>${dc.about}</small><span class="pr${has?' ok':''}">${has?L('✓ стоит во дворе','✓ in the yard'):dc.price+' 💰'}</span>`;
+      d.onclick=()=>openDecor(dc.id);g.appendChild(d);draws.push([d.querySelector('canvas'),()=>decorIcon(d.querySelector('canvas'),dc.id)]);});
+    sets('yard');
+  }
+  resetGest();show('scr-garage');updCoins();requestAnimationFrame(()=>draws.forEach(x=>x[1]()));
 }
+function openDecor(id){const dc=DECOR.find(d=>d.id===id);if(!dc)return;const has=!!S.dec[id];
+  modal(`<h2>${dc.name}</h2><div class="newcar"><canvas id="ncv" style="height:110px"></canvas></div><p>${dc.about}</p>
+    <p><small>${has?L('Уже стоит в каждом дворе.','Already standing in every yard.'):L('Украшение появится во всех дворах. На ходы и машины не влияет — просто красиво.','The decoration appears in every yard. It doesn’t affect the cars or your moves — it just looks nice.')}</small></p>
+    <div class="row">${has?'':`<button class="btn green buy" id="dBuy">${L('Купить','Buy')} — ${dc.price} 💰</button>`}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+  requestAnimationFrame(()=>decorIcon($('ncv'),id));$('mCancel').onclick=hideModal;
+  const b=$('dBuy');if(b)b.onclick=()=>buyCoins(dc.price,()=>{S.dec[id]=1;save();hideModal();openGarage('yard');toast(L('🏡 '+dc.name+' — теперь в каждом дворе!','🏡 '+dc.name+' — now in every yard!'));},()=>openDecor(id));}
+/* рисунки украшений: (g, x, y, s) — центр основания и размер клетки; те же функции рисуют и двор, и значки в гараже */
+const DECO={
+  feeder(g,x,y,s){g.fillStyle='#8d6e63';g.fillRect(x-s*.17,y-s*.02,s*.34,s*.05);
+    g.fillStyle='#e0b985';rrect(g,x-s*.13,y-s*.22,s*.26,s*.2,s*.03);g.fill();
+    g.fillStyle='#b5523b';g.beginPath();g.moveTo(x-s*.2,y-s*.2);g.lineTo(x,y-s*.38);g.lineTo(x+s*.2,y-s*.2);g.closePath();g.fill();
+    g.fillStyle='#4e342e';g.beginPath();g.arc(x,y-s*.12,s*.05,0,7);g.fill();
+    g.fillStyle='#f6d743';g.beginPath();g.ellipse(x+s*.2,y-s*.07,s*.07,s*.055,0,0,7);g.fill();g.fillStyle='#2d3436';g.beginPath();g.arc(x+s*.25,y-s*.11,s*.04,0,7);g.fill();
+    g.fillStyle='#e67e22';g.beginPath();g.moveTo(x+s*.29,y-s*.11);g.lineTo(x+s*.34,y-s*.1);g.lineTo(x+s*.29,y-s*.09);g.fill();},
+  flowers(g,x,y,s){g.fillStyle='rgba(0,0,0,.15)';g.beginPath();g.ellipse(x+s*.03,y+s*.05,s*.36,s*.12,0,0,7);g.fill();
+    g.fillStyle='#8d6e63';g.beginPath();g.ellipse(x,y+s*.02,s*.36,s*.13,0,0,7);g.fill();g.fillStyle='#43a047';g.beginPath();g.ellipse(x,y-s*.02,s*.32,s*.11,0,0,7);g.fill();
+    const c=['#ff6b81','#feca57','#ffffff','#ff9ff3','#ff7a45','#b388ff','#ffffff'];for(let i=0;i<7;i++){const a=i/7*6.283+.3;g.fillStyle=c[i];g.beginPath();g.arc(x+Math.cos(a)*s*.2,y-s*.03+Math.sin(a)*s*.06,s*.055,0,7);g.fill();
+      g.fillStyle='#f39c12';g.beginPath();g.arc(x+Math.cos(a)*s*.2,y-s*.03+Math.sin(a)*s*.06,s*.02,0,7);g.fill();}
+    g.fillStyle='#ff6b81';g.beginPath();g.arc(x,y-s*.05,s*.06,0,7);g.fill();g.fillStyle='#f39c12';g.beginPath();g.arc(x,y-s*.05,s*.022,0,7);g.fill();},
+  bench(g,x,y,s){benchAt(g,x,y-s*.1,s,true);},
+  swan(g,x,y,s){g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(x+s*.04,y+s*.06,s*.32,s*.12,0,0,7);g.fill();
+    g.fillStyle='#22262b';g.beginPath();g.ellipse(x,y,s*.3,s*.14,0,0,7);g.fill();g.fillStyle='#3d9a45';g.beginPath();g.ellipse(x,y-s*.03,s*.2,s*.075,0,0,7);g.fill();
+    for(const [dx,c] of [[-.08,'#ff9ff3'],[.02,'#feca57'],[.11,'#ffffff']]){g.fillStyle=c;g.beginPath();g.arc(x+dx*s,y-s*.05,s*.035,0,7);g.fill();}
+    g.strokeStyle='#fff';g.lineCap='round';g.lineWidth=s*.09;g.beginPath();g.moveTo(x-s*.24,y-s*.02);g.quadraticCurveTo(x-s*.42,y-s*.3,x-s*.24,y-s*.4);g.stroke();
+    g.fillStyle='#fff';g.beginPath();g.arc(x-s*.22,y-s*.41,s*.07,0,7);g.fill();g.fillStyle='#e74c3c';g.beginPath();g.moveTo(x-s*.17,y-s*.44);g.lineTo(x-s*.07,y-s*.39);g.lineTo(x-s*.17,y-s*.37);g.fill();
+    g.fillStyle='#2d3436';g.beginPath();g.arc(x-s*.21,y-s*.43,s*.016,0,7);g.fill();
+    g.strokeStyle='#fff';g.lineWidth=s*.07;g.beginPath();g.moveTo(x+s*.26,y-s*.02);g.quadraticCurveTo(x+s*.4,y-s*.16,x+s*.3,y-s*.24);g.stroke();},
+  swing(g,x,y,s){g.fillStyle='rgba(0,0,0,.15)';g.beginPath();g.ellipse(x+s*.04,y+s*.08,s*.34,s*.08,0,0,7);g.fill();
+    g.lineCap='round';g.strokeStyle='#c0392b';g.lineWidth=s*.055;g.beginPath();g.moveTo(x-s*.34,y+s*.06);g.lineTo(x-s*.22,y-s*.52);g.moveTo(x-s*.1,y+s*.06);g.lineTo(x-s*.22,y-s*.52);g.moveTo(x+s*.34,y+s*.06);g.lineTo(x+s*.22,y-s*.52);g.moveTo(x+s*.1,y+s*.06);g.lineTo(x+s*.22,y-s*.52);g.stroke();
+    g.strokeStyle='#2e86de';g.beginPath();g.moveTo(x-s*.26,y-s*.52);g.lineTo(x+s*.26,y-s*.52);g.stroke();
+    g.strokeStyle='#636e72';g.lineWidth=s*.022;g.beginPath();g.moveTo(x-s*.07,y-s*.5);g.lineTo(x-s*.03,y-s*.12);g.moveTo(x+s*.11,y-s*.5);g.lineTo(x+s*.15,y-s*.12);g.stroke();
+    g.fillStyle='#f1c40f';rrect(g,x-s*.07,y-s*.14,s*.26,s*.06,s*.02);g.fill();},
+  // гирлянда: точки подвеса pts=[[x,y],…]; out — куда сложить лампочки для слоя огней
+  garland(g,pts,s,out){const cols=['#ff5252','#ffd740','#69f0ae','#40c4ff','#ff80ab'];let n=0;
+    for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],mx=(a[0]+b[0])/2,my=Math.max(a[1],b[1])+s*.22;
+      g.strokeStyle='#37474f';g.lineWidth=Math.max(1,s*.022);g.beginPath();g.moveTo(a[0],a[1]);g.quadraticCurveTo(mx,my,b[0],b[1]);g.stroke();
+      const k=Math.max(3,Math.round(Math.abs(b[0]-a[0])/(s*.42)));
+      for(let j=1;j<k;j++){const q=j/k,x=(1-q)*(1-q)*a[0]+2*q*(1-q)*mx+q*q*b[0],y=(1-q)*(1-q)*a[1]+2*q*(1-q)*my+q*q*b[1]+s*.04,c=cols[n++%cols.length];
+        g.fillStyle=c;g.beginPath();g.arc(x,y,s*.05,0,7);g.fill();g.fillStyle='rgba(255,255,255,.6)';g.beginPath();g.arc(x-s*.015,y-s*.015,s*.018,0,7);g.fill();if(out)out.push([x,y,c]);}}}
+};
+function decorIcon(c,id){if(!c)return;const dpr=Math.min(2,window.devicePixelRatio||1),r=c.getBoundingClientRect(),W=r.width||130,H=r.height||74;c.width=W*dpr;c.height=H*dpr;
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);const s=Math.min(H*1.25,W*.8),x=W/2,y=H*.72;
+  g.fillStyle='#a8d86c';rrect(g,W*.06,H*.1,W*.88,H*.86,12);g.fill();
+  if(id==='garland'){g.fillStyle='#37474f';g.fillRect(W*.14,H*.2,3,H*.62);g.fillRect(W*.86-3,H*.2,3,H*.62);DECO.garland(g,[[W*.14,H*.26],[W*.5,H*.3],[W*.86,H*.26]],s*.62);}
+  else if(id==='feeder'){g.fillStyle='#6d4c41';g.fillRect(x-s*.025,y-s*.02,s*.05,s*.26);DECO.feeder(g,x,y,s*.95);}
+  else if(id==='bench')DECO.bench(g,x,y+s*.02,s*.9);
+  else if(id==='flowers')DECO.flowers(g,x,y-s*.08,s*.95);
+  else if(id==='swan')DECO.swan(g,x+s*.05,y-s*.02,s*.85);
+  else DECO.swing(g,x,y+s*.06,s*.8);}
 /* ---- покраска и «своя машина во дворе» — за монеты (не за рекламу: это цель, куда копить) ---- */
 // третий элемент — покупка, которая открывает краску (Яндекс): «Золото» — «Набор водителя», остальные — «Особые краски». Их наносить бесплатно
 const PAINT=[null,['#1e272e','чёрный'],['#0652dd','синий'],['#009432','зелёный'],['#ffc312','жёлтый'],['#833471','вишнёвый'],['#b2bec3','серебристый'],
-  ['#d4a52a','золото','starter'],['#efe7d8','перламутр','paints'],['#7f95a8','хром','paints'],['#b0132e','красная вишня','paints'],['#4a545e','мокрый асфальт','paints']];
+  ['#d4a52a','золото','starter'],['#efe7d8','перламутр','paints'],['#7f95a8','хром','paints'],['#b0132e','красная вишня','paints'],['#4a545e','мокрый асфальт','paints'],
+  // boost: краски-подарки (не продаются ни за монеты, ни за деньги): гостинцы бабы Шуры и награды за наборы; у кого есть — S.gp[k]
+  ['#12b5a6','морская волна','gift'],['#ff8a3d','апельсин','gift'],['#ff6fa3','фламинго','gift'],['#8e6bd8','сирень','gift']];
+const GIFT_D2=12,GIFT_D7=[13,14],SET_PAINT=15; // 2-й день гостинцев; 7-й день (когда машины за серию кончились); награда за набор «Уютный двор»
 // английские названия красок (индексы как в PAINT); подставляются в PAINT при смене языка
-const PAINT_EN=[null,'black','blue','green','yellow','cherry','silver','gold','pearl','chrome','cherry red','wet asphalt'];
-const paintOwn=k=>!k||!!PAINT[k]&&(!PAINT[k][2]||PAY.own(PAINT[k][2]));
+const PAINT_EN=[null,'black','blue','green','yellow','cherry','silver','gold','pearl','chrome','cherry red','wet asphalt','sea wave','orange','flamingo','lilac'];
+const paintOwn=k=>!k||!!PAINT[k]&&(PAINT[k][2]==='gift'?!!(S.gp&&S.gp[k]):!PAINT[k][2]||PAY.own(PAINT[k][2]));
 // особая краска видна, если куплена или её можно купить (есть в каталоге); иначе её нет вовсе
-const paintShow=k=>!k||!!PAINT[k]&&(!PAINT[k][2]||PAY.own(PAINT[k][2])||!!(PAY.on&&PAY.item(PAINT[k][2])));
+const paintShow=k=>!k||!!PAINT[k]&&(PAINT[k][2]==='gift'||!PAINT[k][2]||PAY.own(PAINT[k][2])||!!(PAY.on&&PAY.item(PAINT[k][2]))); // подарочные видны всегда (с 🎁) — это цель
 function carColor(i){const k=S.paint[i];return k&&PAINT[k]&&paintOwn(k)?PAINT[k][0]:MODELS[i].color;}
 function yardOk(i){return !!MODELS[i]&&MODELS[i].kind!=='amb';} // скорая во дворе спутается с настоящей
 function yardCars(){return S.garage.filter(i=>S.yard[i]&&yardOk(i)).sort((a,b)=>a-b);}
@@ -1912,18 +2248,20 @@ function buyCoins(pr,then,back){if(S.coins>=pr){setCoins(S.coins-pr);SND.coin();
   $('mShop').onclick=()=>{hideModal();openShop();};$('mCancel').onclick=back;}
 function openCar(i,sel){const m=MODELS[i];if(!m||!S.garage.includes(i))return;const cur=S.paint[i]||0;if(sel==null)sel=cur;
   if(sel&&!paintShow(sel))sel=0;const col=k=>k?PAINT[k][0]:m.color,inY=!!S.yard[i],lock=!!sel&&!paintOwn(sel),pk=lock?PAINT[sel][2]:'',spec=!!sel&&!!PAINT[sel][2];
-  const sw=PAINT.map((p,k)=>paintShow(k)?`<button class="sw${k===sel?' on':''}" data-k="${k}" style="background:${col(k)}" aria-label="${k?p[1]:L('родной цвет','original colour')}">${k===cur?'✓':!paintOwn(k)?'🔒':''}</button>`:'').join('');
+  const gift=pk==='gift';
+  const sw=PAINT.map((p,k)=>paintShow(k)?`<button class="sw${k===sel?' on':''}" data-k="${k}" style="background:${col(k)}" aria-label="${k?p[1]:L('родной цвет','original colour')}">${k===cur?'✓':!paintOwn(k)?(p[2]==='gift'?'🎁':'🔒'):''}</button>`:'').join('');
   modal(`<h2>${m.name}</h2><div class="newcar"><canvas id="ncv"></canvas></div>
-    <p><small>${L('Цвет:','Colour:')} ${sel?PAINT[sel][1]:L('родной','original')}${sel===cur?' ✓':''}</small></p><div class="sws">${sw}</div>
-    ${lock?`<p><small>${L(`Эта краска — в покупке «${PAY_ITEMS[pk].name}».`,`This paint comes with “${PAY_ITEMS[pk].name}”.`)}</small></p>`+payHtml([pk]):''}
+    <div class="sws">${sw}</div><p><b>${sel?PAINT[sel][1]:L('родной цвет','original colour')}</b> — ${sel===cur?L('уже на машине ✓','already on the car ✓'):lock?(gift?L('подарок 🎁','a gift 🎁'):L('в покупке 🔒','in a purchase 🔒')):!sel||spec?L('бесплатно','free'):PRICE.paint+' 💰'}</p>
+    ${gift?`<p><small>${paintHow(sel)}</small></p>`:lock?`<p><small>${L(`Эта краска — в покупке «${PAY_ITEMS[pk].name}».`,`This paint comes with “${PAY_ITEMS[pk].name}”.`)}</small></p>`+payHtml([pk]):''}
     <div class="row">${sel!==cur&&!lock?`<button class="btn accent buy" id="cPaint">${sel?L('🎨 Покрасить — ','🎨 Paint — ')+(spec?L('бесплатно','free'):PRICE.paint+' 💰'):L('🎨 Вернуть родной цвет','🎨 Back to the original colour')}</button>`:''}
     ${!yardOk(i)?`<p><small>${L('Скорая во дворах не стоит — она на вызовах 🙂','The ambulance doesn’t park in yards — it’s out on calls 🙂')}</small></p>`:inY?`<p>${L('🏠 Стоит во дворах: в каждом дворе одна из твоих машин.','🏠 Parked in the yards: every yard has one of your cars.')}</p>`:`<p><small>${L('Твоя машина будет стоять во дворах среди других — и её тоже надо выпустить!','Your car will be parked in the yards among the others — and you’ll have to get it out too!')}</small></p><button class="btn green buy" id="cYard">${L('🏠 Во дворы','🏠 Park in the yards')} — ${PRICE.yard} 💰</button>`}
     <button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+  fitWin();
   $('mcard').querySelectorAll('.sw').forEach(b=>b.onclick=()=>openCar(i,+b.dataset.k));
   requestAnimationFrame(()=>drawModel($('ncv'),m,col(sel)));
   const pb=$('cPaint');if(pb)pb.onclick=()=>{const done=()=>{if(sel)S.paint[i]=sel;else delete S.paint[i];save();openGarage();toast('🎨 '+m.name+': '+(sel?PAINT[sel][1]:L('родной цвет','original colour')));openCar(i);};
     if(!sel||spec){done();return;}buyCoins(PRICE.paint,done,()=>openCar(i,sel));};
-  if(lock){PAY.bind($('mcard'));PAY.re=()=>openCar(i,sel);}
+  if(lock&&!gift){PAY.bind($('mcard'));PAY.re=()=>openCar(i,sel);}
   const yb=$('cYard');if(yb)yb.onclick=()=>buyCoins(PRICE.yard,()=>{S.yard[i]=1;save();openGarage();toast(L('🏠 '+m.name+' теперь стоит во дворах!','🏠 The '+m.name+' is now parked in the yards!'));openCar(i);},()=>openCar(i,sel));
   $('mCancel').onclick=hideModal;}
 
@@ -1933,7 +2271,7 @@ function zoomMax(){return Math.max(1.8,Math.min(3.5,76/cs));}
 function camClamp(){cam.z=Math.max(1,Math.min(zoomMax(),cam.z));cam.x=Math.min(0,Math.max(W-W*cam.z,cam.x));cam.y=Math.min(0,Math.max(H-H*cam.z,cam.y));}
 // «🔍 Весь двор» — когда приближено; «🔍 Приблизить» — на широких дворах (от 8 клеток), чтобы о зуме знали не только по щипку
 function updZoomBtn(){if(cam.z>1.02&&!(G&&G.towMode)){const t=$('tip');if(t.style.display==='block'&&!(G&&!G.daily&&G.idx===0))t.style.display='none';}
-  const zin=cam.z>1.02||!!(cam.tw&&cam.tw.z1>1.02);$('zReset').classList.toggle('on',zin);$('zIn').classList.toggle('on',!zin&&!!G&&G.p.w>=8);}
+  const zin=cam.z>1.02||!!(cam.tw&&cam.tw.z1>1.02);$('zReset').classList.toggle('on',zin);$('zIn').classList.toggle('on',!!G&&G.p.w>=8);}
 function zoomAt(sx,sy,z){const wx=(sx-cam.x)/cam.z,wy=(sy-cam.y)/cam.z;cam.tw=null;cam.z=Math.max(1,Math.min(zoomMax(),z));cam.x=sx-wx*cam.z;cam.y=sy-wy*cam.z;camClamp();updZoomBtn();hiResSoon();}
 function camTo(z,x,y){if(Math.abs(cam.z-z)<.001&&Math.abs(cam.x-x)<.5&&Math.abs(cam.y-y)<.5)return;cam.tw={t:0,z0:cam.z,x0:cam.x,y0:cam.y,z1:z,x1:x,y1:y};updZoomBtn();}
 // после приближения перерисовываем землю детальнее (с ограничением по памяти)
@@ -1959,53 +2297,119 @@ function ptrEnd(e){if(!ptrs.has(e.pointerId))return;const p=cvPos(e);ptrs.delete
 cv.addEventListener('pointerup',ptrEnd);cv.addEventListener('pointercancel',ptrEnd);
 cv.addEventListener('wheel',e=>{if(!G)return;e.preventDefault();const p=cvPos(e),dy=e.deltaMode===1?e.deltaY*16:e.deltaY;zoomAt(p.x,p.y,cam.z*Math.exp(-dy*(e.ctrlKey?.01:.0018)));},{passive:false});
 $('zReset').onclick=()=>camTo(1,0,0);
-$('zIn').onclick=()=>{const z=Math.min(zoomMax(),2);camTo(z,W/2-W/2*z,H/2-H/2*z);};
-/* ---- серия дней: 7 дней подряд, награда растёт; пропуск — всё заново ---- */
+$('zIn').onclick=()=>{if(!G)return;if(cam.z>1.02||(cam.tw&&cam.tw.z1>1.02)){camTo(1,0,0);return;}const z=Math.min(zoomMax(),2);camTo(z,W/2-W/2*z,H/2-H/2*z);};
+/* ---- гостинцы бабы Шуры (решение владельца 03.10): считаются ДНИ ЗАХОДА, ничего не сгорает. Пропустил день — следующий заход даёт следующий по счёту гостинец.
+   S.streak={day:1..7 (место в недельной лесенке), last:день последнего гостинца, cyc:сколько недель пройдено}; всего взято — giftN() ---- */
 const STREAK=[10,10,15,15,20,25,40];
 function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
-function streakState(){const s=S.streak||{day:0,last:0,cyc:0},t=dayKey(0);
-  if(s.last===t)return{claimed:true,day:s.day};
-  const cont=s.last===dayKey(-1)&&s.day>0;return{claimed:false,day:cont?s.day%7+1:1,broken:!cont&&s.day>0&&s.day<7};}
-// мягкий старт: до первого пройденного двора окно не показываем; 1-й день — тихо тостом; пропуск — восстановить за рекламу
+const giftCnt=s=>s?(s.cyc||0)*7+((s.day||0)%7):0; // сколько гостинцев взято (7-й день уже учтён в cyc)
+const giftN=()=>giftCnt(S.streak);
+function streakState(){const s=S.streak||{day:0,last:0,cyc:0},d=Math.max(0,Math.min(7,s.day||0));
+  if(s.last===dayKey(0)&&d>0)return{claimed:true,day:d};
+  return{claimed:false,day:d%7+1};}
+// мягкий старт: до первого пройденного двора окно не показываем; самый первый гостинец — тихо тостом
 function maybeStreak(){if(G||window.__demo||$('modal').classList.contains('on')||$('ad').classList.contains('on'))return;
   const st=streakState();if(st.claimed||(S.levelsDone||0)<1)return;
-  const s=S.streak||{};if(st.broken&&s.day>=2&&adOk())return streakRestore(); // вернуть серию можно только роликом — нет рекламы, нет и окна
-  if(st.day===1)claimStreak(1,true);else showStreak();}
-function streakRestore(){const s=S.streak;
-  modal(`<h2>${L('Серия прервалась 😿','Streak broken 😿')}</h2><p>${L(`Серия дошла до ${s.day}-го дня, но денёк пропущен. Бабушки на лавочке заметили… но могут и забыть.`,`Your streak reached day ${s.day}, but you missed a day. The babushkas on the bench noticed… but they might forget.`)}</p>
-    <div class="row"><button class="btn accent noenter" id="sRes">${L('📺 Вернуть серию за рекламу','📺 Restore the streak for an ad')}</button><button class="btn noenter" id="sNew">${L('Начать заново','Start over')}</button></div>`);
-  $('sRes').onclick=()=>{hideModal();showRewarded(()=>{S.streak.last=dayKey(-1);save();showStreak();},()=>streakRestore());};
-  $('sNew').onclick=()=>{hideModal();S.streak={day:0,last:0,cyc:s.cyc||0};save();maybeStreak();};}
+  if(st.day===1&&!giftN())claimStreak(1,true);else showStreak();}
 function streakCar(){return MODELS.findIndex((m,i)=>m.streak&&!S.garage.includes(i));}
-function showStreak(){const st=streakState(),car=streakCar();let cells='';
-  for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day;
-    const ic=d===7?(car>=0?'🚗':'🎁'):'💰',val=d===7?(car>=0?MODELS[car].name:'+'+(STREAK[6]*2)):'+'+STREAK[d-1];
-    cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>${L('День','Day')} ${d}</small><span class="ic">${ic}</span>${val}${d===7&&car>=0?'<small>'+L('и +','and +')+STREAK[6]+' 💰</small>':''}</div>`;}
-  const r=st.claimed?0:streakReward(st.day);
-  modal(`<h2>${L('Серия дней 🔥','Daily streak 🔥')}</h2><p>${st.claimed?L('Сегодняшняя награда уже твоя. Заходи завтра — день '+(st.day%7+1)+'!','Today’s reward is yours. Come back tomorrow for day '+(st.day%7+1)+'!'):st.broken?L('Эх, серия прервалась — начинаем заново. Заходи каждый день!','Oh no, the streak is broken — starting over. Come back every day!'):L('Заходи каждый день — награда растёт, на 7-й день подарок!','Come back every day — the reward grows, and day 7 brings a gift!')}</p>
+// что дают в день day: монеты всегда; на 2-й день — краска «морская волна» (один раз); на 7-й — машина, потом подарочные краски, потом двойные монеты
+function streakReward(day){const car=day===7?streakCar():-1;let paint=0;
+  if(day===2&&!S.gp[GIFT_D2])paint=GIFT_D2;else if(day===7&&car<0)paint=GIFT_D7.find(k=>!S.gp[k])||0;
+  return{coins:day===7&&car<0&&!paint?STREAK[6]*2:STREAK[day-1],car,paint};}
+function giftTxt(r){let s='+'+r.coins+' 💰';
+  if(r.paint)s+=L(' и краска «'+PAINT[r.paint][1]+'»',' and the “'+PAINT[r.paint][1]+'” paint');
+  if(r.car>=0)s+=L(' и машина «'+MODELS[r.car].name+'»',' and a car: the '+MODELS[r.car].name);return s;}
+// как получить подарочную краску (подпись в окне машины)
+function paintHow(k){const n=PAINT[k][1];
+  if(k===GIFT_D2)return L(`Краска «${n}» — гостинец бабы Шуры за 2-й день захода (кнопка «Подарок» на карте).`,`The “${n}” paint is Granny Shura’s gift for day 2 (the “Gift” button on the map).`);
+  if(k===SET_PAINT)return L(`Краска «${n}» — награда за набор «Уютный двор» (гараж → «Двор»).`,`The “${n}” paint is the reward for the “Cosy yard” set (garage → “Yard”).`);
+  return L(`Краска «${n}» — гостинец бабы Шуры за 7-й день захода.`,`The “${n}” paint is Granny Shura’s day-7 gift.`);}
+// «Завтра»: что ждёт игрока на следующий день (когда сегодняшний гостинец уже взят)
+function tmrInfo(){if(window.__demo||(S.levelsDone||0)<1)return null;const st=streakState();if(!st.claimed)return null;const nd=st.day%7+1;return{day:nd,r:streakReward(nd)};}
+function tmrHtml(tm){tm=tm||tmrInfo();if(!tm)return '';
+  return `<p class="tmr"><b>${L('Завтра:','Tomorrow:')}</b> 🎁 ${giftTxt(tm.r)}${dailyLocked()?'':' · '+L('📅 новое задание дня','📅 a new daily challenge')}</p>`;}
+function showStreak(){const st=streakState(),car=streakCar(),n=giftN();let cells='';
+  for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day,q=streakReward(d),big=q.car>=0||q.paint;
+    const ic=q.car>=0?'🚗':q.paint?`<b class="swd" style="background:${PAINT[q.paint][0]}"></b>`:d===7?'🎁':'💰',val=q.car>=0?MODELS[q.car].name:q.paint?PAINT[q.paint][1]:'+'+q.coins;
+    cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>${L('День','Day')} ${d}</small><span class="ic">${ic}</span>${val}${big?'<small>'+L('и +','and +')+q.coins+' 💰</small>':''}</div>`;}
+  const r=st.claimed?null:streakReward(st.day),nx=st.claimed?streakReward(st.day%7+1):null;
+  modal(`<h2>${L('Гостинцы бабы Шуры 🎁','Granny Shura’s gifts 🎁')}</h2>${shura(st.claimed?L('Сегодняшний гостинец уже у тебя. Завтра приходи — будет ','Today’s gift is already yours. Come back tomorrow for ')+giftTxt(nx)+'.':L('Заглянешь — с меня гостинец. Пропустишь денёк — ничего не сгорит.','Drop by and there’s a gift. Miss a day — nothing is lost.'))}
+    ${n>0?`<p class="goal" data-fit="1">${L('Гостинцев получено:','Gifts collected:')} <b>${n}</b></p>`:''}
     <div class="streak">${cells}</div>
-    ${car>=0&&!(st.day===7&&st.claimed)?`<div class="newcar sm"><p><small>${L('На 7-й день — машина в гараж:','Day 7 — a new car for the garage:')} <b>${MODELS[car].name}</b></small></p><canvas id="scv"></canvas></div>`:''}
-    <div class="row">${st.claimed?`<button class="btn" id="sClose">${L('Закрыть','Close')}</button>`:`${adOk()?`<button class="btn accent noenter" id="sX2">${L('📺 ×2 за рекламу','📺 ×2 for an ad')} (+${r.coins*2} 💰)</button>`:''}<button class="btn green" id="sGet">${L('Забрать','Collect')} +${r.coins} 💰${r.car>=0?L(' и машину',' and the car'):''}</button>`}</div>`);
-  if($('scv'))requestAnimationFrame(()=>drawModel($('scv'),MODELS[car]));
+    <div class="row">${st.claimed?`<button class="btn" id="sClose">${L('Закрыть','Close')}</button>`:`${adOk()?`<button class="btn x2p noenter" id="sX2">${L('📺 Удвоить монеты за рекламу: +','📺 Double the coins for an ad: +')}${r.coins}&nbsp;💰</button>`:''}<button class="btn green" id="sGet">${L('Забрать','Collect')} ${giftTxt(r)}</button>`}</div>`);
+  fitWin();
   if(st.claimed){$('sClose').onclick=hideModal;return;}
   $('sGet').onclick=()=>claimStreak(1);
   if($('sX2'))$('sX2').onclick=()=>{hideModal();showRewarded(()=>claimStreak(2),()=>showStreak());};}
-function streakReward(day){const car=day===7?streakCar():-1;return{coins:day===7&&car<0?STREAK[6]*2:STREAK[day-1],car};}
-function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal();return;}
-  const r=streakReward(st.day),s=S.streak||{cyc:0};S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
-  if(r.car>=0)S.garage.push(r.car);S.coins+=r.coins*mult;save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);updStreakDot();
-  if(!G)$('garCnt').textContent=S.garage.length+'/'+MODELS.length;
-  if(quiet){if(quiet!=='silent')toast(L('📅 Серия дней: день 1, +'+r.coins+' 💰. Заходи завтра!','📅 Daily streak: day 1, +'+r.coins+' 💰. See you tomorrow!'),3500);return;}
-  modal(`<h2>${st.day===7?L('Неделя подряд! 🏆','A whole week! 🏆'):L('День ','Day ')+st.day+' ✓'}</h2><p class="coins-won">+${r.coins*mult} 💰${mult>1?' <small>(×2)</small>':''}</p>
+function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal();return 0;}
+  const r=streakReward(st.day),s=S.streak||{cyc:0};
+  S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
+  if(r.car>=0)S.garage.push(r.car);if(r.paint)S.gp[r.paint]=1;S.coins+=r.coins*mult;save();updCoins();updStreakDot();
+  if(quiet!=='silent'){SND.coin();setTimeout(()=>SND.win(),200);}
+  if(!G){$('garCnt').textContent=S.garage.length+'/'+MODELS.length;updToday();}
+  if(quiet){if(quiet!=='silent')toast(L('🎁 Гостинец от бабы Шуры: +'+r.coins+' 💰. Заходи завтра — будет ещё!','🎁 A gift from Granny Shura: +'+r.coins+' 💰. Come back tomorrow for more!'),3500);return r.coins*mult;}
+  const mi=S.garage.length?S.garage[0]:-1,nx=streakReward(st.day%7+1);
+  modal(`<h2>${st.day===7?L('Седьмой гостинец! 🏆','Gift number seven! 🏆'):L('День ','Day ')+st.day+' ✓'}</h2><p class="coins-won" id="mWon">+${r.coins*mult} 💰${mult>1?' <small>(×2)</small>':''}</p>
     ${r.car>=0?`<div class="newcar"><p>${L('Новая машина в гараже:','New car in the garage:')} <b>${MODELS[r.car].name}</b></p><canvas id="ncv"></canvas></div>`:''}
-    <p>${st.day<7?L('Завтра — день ','Tomorrow is day ')+(st.day+1)+': +'+STREAK[st.day]+' 💰'+(st.day===6?L(' и подарок!',' and a gift!'):''):L('Серия начнётся заново — и снова с подарками!','The streak starts over — with gifts again!')}</p>
-    <div class="row"><button class="btn green" id="sOk">${L('Отлично!','Great!')}</button></div>`);
-  if(r.car>=0)requestAnimationFrame(()=>drawModel($('ncv'),MODELS[r.car]));$('sOk').onclick=hideModal;}
+    ${r.paint?`<div class="newcar"><p>${L('Новая краска:','New paint:')} <b>${PAINT[r.paint][1]}</b><br><small>${L('Нанести можно в гараже — бесплатно, на любую машину','Apply it in the garage — free, on any car')}</small></p><canvas id="ncv"></canvas></div>`:''}
+    <p class="tmr"><b>${L('Завтра:','Tomorrow:')}</b> 🎁 ${giftTxt(nx)}${st.day===7?L(' — гостинцы пойдут по новому кругу',' — the gifts start a new round'):''}</p>
+    <div class="row">${r.paint&&mi>=0?`<button class="btn green" id="sPaint">${L('🎨 В гараж — покрасить','🎨 To the garage — paint a car')}</button><button class="btn link" id="sOk">${L('Потом','Later')}</button>`:`<button class="btn green" id="sOk">${L('Отлично!','Great!')}</button>`}</div>`);
+  if(r.car>=0)requestAnimationFrame(()=>drawModel($('ncv'),MODELS[r.car]));
+  else if(r.paint)requestAnimationFrame(()=>drawModel($('ncv'),MODELS[mi>=0?mi:0],PAINT[r.paint][0]));
+  coinFx(r.coins*mult,$('mWon'));
+  $('sOk').onclick=hideModal;if($('sPaint'))$('sPaint').onclick=()=>{hideModal();openGarage();openCar(mi,r.paint);};
+  return r.coins*mult;}
+// гостинец 1-го дня выдаётся сам (в окне победы — строкой): его не надо «забирать», за ним не надо идти на карту
+function streakAuto(){if(window.__demo)return 0;const st=streakState();if(st.claimed||st.day!==1)return 0;
+  return claimStreak(1,'silent');}
 function updStreakDot(){const b=$('btnStreak');b.innerHTML='🎁<small>'+L('Подарок','Gift')+'</small>'+(streakState().claimed?'':'<span class="dot"></span>');}
-// после победы: награда 1-го дня серии — сразу тостом (раньше её видели, только вернувшись на карту); остальные дни ждут на карте
+// после победы: гостинец 2-го и следующих дней ждёт на карте (1-й день выдаётся сам — streakAuto)
 function streakAfterWin(){if(window.__demo||(S.levelsDone||0)<1)return;const st=streakState();if(st.claimed)return;
-  const s=S.streak||{},early=G&&!G.daily&&G.idx<3; // дворы 1–3: без тоста поверх поля (про завтра — строкой в окне 3-го двора)
-  if(st.day===1&&!(st.broken&&s.day>=2&&adOk()))claimStreak(1,early?'silent':true);else if(early)return;else toast(L('🎁 Награда за серию дней ждёт на карте','🎁 Your daily streak reward is waiting on the map'),3000);}
+  if(G&&!G.daily&&G.idx<3)return; // дворы 1–3: без тоста поверх поля
+  toast(L('🎁 Гостинец дня ждёт на карте','🎁 Today’s gift is waiting on the map'),3000);}
+/* ---- баба Шура — «голос» двора: старшая по двору с лавочки. Портрет рисуется кодом (SVG), настроение: ok | sad ---- */
+function shuraSvg(mood){const mouth=mood==='sad'?'<path d="M25 42q5-3 10 0" stroke="#8a3b2e" stroke-width="2.2" fill="none" stroke-linecap="round"/>':'<path d="M24 39q6 6 12 0" stroke="#8a3b2e" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
+  return '<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M6 62q2-17 24-17t24 17z" fill="#7a5c4a"/>'
+    +'<path d="M30 6C16 6 9 16 10 30c1 9 5 15 11 19l9 4 9-4c6-4 10-10 11-19C51 16 44 6 30 6z" fill="#e84393"/>'
+    +'<circle cx="19" cy="14" r="1.6" fill="#fff"/><circle cx="30" cy="10" r="1.6" fill="#fff"/><circle cx="41" cy="14" r="1.6" fill="#fff"/><circle cx="14" cy="24" r="1.6" fill="#fff"/><circle cx="46" cy="24" r="1.6" fill="#fff"/><circle cx="16" cy="38" r="1.6" fill="#fff"/><circle cx="44" cy="38" r="1.6" fill="#fff"/>'
+    +'<ellipse cx="30" cy="33" rx="12.5" ry="13.5" fill="#f7d3b0"/><path d="M19 25q11-8 22 0-11-4-22 0z" fill="#e3e3e3"/>'
+    +'<circle cx="22.5" cy="36.5" r="3" fill="#f29a9a" opacity=".55"/><circle cx="37.5" cy="36.5" r="3" fill="#f29a9a" opacity=".55"/>'
+    +'<circle cx="24.5" cy="32" r="4.6" fill="#fff" fill-opacity=".35" stroke="#5d4037" stroke-width="1.5"/><circle cx="35.5" cy="32" r="4.6" fill="#fff" fill-opacity=".35" stroke="#5d4037" stroke-width="1.5"/><path d="M29.1 32h1.8" stroke="#5d4037" stroke-width="1.5"/>'
+    +'<circle cx="24.5" cy="32.3" r="1.5" fill="#2d3436"/><circle cx="35.5" cy="32.3" r="1.5" fill="#2d3436"/>'+(mood==='sad'?'<path d="M21 26.5l6 1.5M39 26.5l-6 1.5" stroke="#8d8d8d" stroke-width="1.6" stroke-linecap="round"/>':'')
+    +mouth+'<path d="M24 49l6 4 6-4 2 9H22z" fill="#d63384"/></svg>';}
+function shura(text,mood){return `<div class="shura"><span class="pf">${shuraSvg(mood)}</span><p class="sb"><b class="nm">${L('Баба Шура','Granny Shura')}</b>${text}</p></div>`;}
+/* ---- задание дня: окно с календарём недели (Пн–Вс), счётчиком дней и премией за 3/5/7 заданий за неделю ---- */
+const DWEEK=[[3,15],[5,25],[7,40]]; // 80 💰 за полную неделю; суммы — по модели tools/econ-sim.py (boost)
+function dailyWeek(){const wd=(new Date(nowMs()).getDay()+6)%7,keys=[];let n=0;
+  for(let i=0;i<7;i++){const k=dayKey(i-wd);keys.push(k);if((S.daily[String(k)]||0)>0)n++;}
+  return{key:String(keys[0]),keys,wd,n};}
+// сколько дней подряд выполнено задание дня (считая сегодня, а если сегодня ещё нет — до вчера)
+function dailyRun(){const o=(S.daily[String(dayKey(0))]||0)>0?0:-1;let n=0;while(n<400&&(S.daily[String(dayKey(o-n))]||0)>0)n++;return n;}
+function weekHtml(){const w=dailyWeek(),nm=L('Пн Вт Ср Чт Пт Сб Вс','Mo Tu We Th Fr Sa Su').split(' '),got=S.dw[w.key]||0;
+  return '<div class="wk">'+w.keys.map((k,i)=>{const s=(S.daily[String(k)]||0)>0;return `<div class="${s?'ok':''}${i===w.wd?' now':''}${i>w.wd?' fut':''}">${nm[i]}<i>${s?'✓':i===w.wd?'📅':'·'}</i></div>`;}).join('')+'</div>'
+    +`<p class="wkb" data-fit="3">${L('За неделю:','This week:')} `+DWEEK.map((d,i)=>`<span class="${i<got?'got':''}">${i<got?'✓ ':''}${d[0]} ${pl(d[0],'день','дня','дней','day','days')} → +${d[1]} 💰</span>`).join(' ')+'</p>';}
+function untilTomorrow(){const d=new Date(nowMs()),n=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1),m=Math.max(1,Math.round((n-d)/60000)),h=Math.floor(m/60);
+  return h>0?h+L(' ч ',' h ')+(m%60)+L(' мин',' min'):m+L(' мин',' min');}
+function openDaily(){const cl=`<button class="btn" id="mCancel">${L('Закрыть','Close')}</button>`;
+  if(dailyLocked()){const left=Math.max(1,7-(S.unlocked||1));
+    modal(`<h2>🔒 ${L('Задание дня','Daily challenge')}</h2>${shura(L('Каждый день — новый двор, один на всех соседей. За него '+DAILY_REWARD+' 💰 и отметка в календаре. Откроется после 6-го двора — осталось пройти '+left+' '+plural(left,'двор','двора','дворов')+'.','Every day brings a new yard, the same for everyone. It pays '+DAILY_REWARD+' 💰 and a tick in the calendar. It unlocks after yard 6 — '+left+' more '+(left===1?'yard':'yards')+' to go.'))}
+      <div class="row"><button class="btn green" id="mCancel">${L('Понятно','Got it')}</button></div>`);$('mCancel').onclick=hideModal;return;}
+  const done=(S.daily[todayKey()]||0)>0,run=dailyRun();
+  modal(`<h2>📅 ${L('Задание дня','Daily challenge')}</h2>${shura(done?L('Сегодняшний двор свободен, умница! Новый будет завтра — через '+untilTomorrow()+'.','Today’s yard is clear, well done! A new one comes tomorrow — in '+untilTomorrow()+'.'):L('Сегодня во дворе опять всё заставили. Выручай — с меня '+DAILY_REWARD+' 💰!','They’ve jammed the yard again today. Help me out — '+DAILY_REWARD+' 💰 from me!'))}
+    ${weekHtml()}<p class="goal">${L('Всего выполнено дней:','Days completed:')} <b>${LB.days()}</b>${run>1?` · <span class="fire">🔥 ${run} ${L('подряд','in a row')}</span>`:''}</p>
+    <div class="row">${done?cl+`<button class="btn link noenter" id="dPlay">${L('Сыграть ещё раз (без награды)','Play again (no reward)')}</button>`:`<button class="btn green" id="dPlay">${L('▶ Играть: +','▶ Play: +')}${DAILY_REWARD} 💰</button>`}${LB.ok()?`<button class="btn noenter" id="mLb">🏆 ${L('Рейтинг','Leaderboard')}</button>`:''}${done?'':cl}</div>`);
+  modalRe=openDaily;$('dPlay').onclick=()=>startLevel(0,true);$('mCancel').onclick=hideModal;if($('mLb'))$('mLb').onclick=LB.show;}
+/* ---- карта: одна строка «что сейчас / что завтра» над кнопками — гостинец не забран → задание дня не сыграно → «Завтра: …» ---- */
+function updToday(){const e=$('mToday');if(!e)return;const st=streakState(),lv=(S.levelsDone||0)>=1;let h='',hot=false,act=showStreak;
+  if(window.__demo||!lv)h='';
+  else if(!st.claimed){h=`🎁 <span><b>${L('Гостинец, день','Gift, day')} ${st.day}:</b> ${giftTxt(streakReward(st.day))} — ${L('забрать','collect')}</span>`;hot=true;
+}
+  else if(!dailyLocked()&&!((S.daily[todayKey()]||0)>0)){h=`📅 <span><b>${L('Задание дня:','Daily challenge:')}</b> +${DAILY_REWARD} 💰 · ${L('на этой неделе','this week')} ${dailyWeek().n}/7</span>`;hot=true;act=openDaily;}
+  else{const tm=tmrInfo();if(tm)h=`🌙 <span><b>${L('Завтра:','Tomorrow:')}</b> 🎁 ${giftTxt(tm.r)}${dailyLocked()?'':' · '+L('📅 новое задание','📅 new daily')}</span>`;}
+  e.style.display=h?'':'none';e.className='tday noenter'+(hot?' hot':'');e.innerHTML=h+'<i>›</i>';e.onclick=act;
+  // панель карты на компьютере: баба Шура и короткая сводка
+  const ms=$('mapSide');if(ms){const done=Math.max(0,(S.unlocked||1)-1);let st=0;for(const k in S.stars)st+=S.stars[k]||0;
+    ms.innerHTML=window.__demo?'':shura(done?L('Дворов свободно: '+done+', звёзд: '+st+'. Машин в гараже: '+S.garage.length+' из '+MODELS.length+'. Так держать!','Yards cleared: '+done+', stars: '+st+'. Cars in the garage: '+S.garage.length+' of '+MODELS.length+'. Keep it up!'):L('Добро пожаловать во двор! Выбирай двор на карте — и вперёд.','Welcome to the yard! Pick a yard on the map and off you go.'));}}
 $('btnStreak').onclick=showStreak;
 $('btnMore').onclick=()=>SOC.showMore();
 // кнопка «🎲 Игры» — только VK с мостом (SOC.ok)
@@ -2015,13 +2419,12 @@ function openSocial(){modal(`<h2>${L('👥 Друзья и игры','👥 Frien
   modalRe=openSocial;$('socBack').onclick=openSettings;SOC.bind($('mcard'),openSocial);}
 $('gBack').onclick=openMap;$('garBack').onclick=openMap;$('btnGarage').onclick=openGarage;
 function dailyLocked(){return (S.unlocked||1)<7;}
-$('btnDaily').onclick=()=>{if(dailyLocked()){toast(L('Задание дня откроется после 6-го двора','The daily challenge unlocks after yard 6'),2200);return;}
-  if((S.daily[todayKey()]||0)>0)toast(L('Задание дня уже выполнено — это повтор, награда завтра','Daily challenge already done — this is a replay, the reward comes tomorrow'),2600);startLevel(0,true);};
+$('btnDaily').onclick=()=>openDaily();
 $('gRestart').onclick=()=>G&&(G.daily?startLevel(0,true):startLevel(G.idx));
 $('gHint').onclick=hint;
 $('gTow').onclick=()=>{if(!G||G.over)return;G.towMode=!G.towMode;$('gTow').classList.toggle('on',G.towMode);const tip=$('tip');
   if(G.towMode){tip.textContent=towTip();tip.style.display='block';}else tip.style.display='none';};
-$('mCoins').onclick=openShop;$('gCoins').onclick=openShop;
+$('mCoins').onclick=openShop;$('gCoins').onclick=openShop;$('garCoins').onclick=openShop;
 /* ---- настройки: звук, вибрация, спокойный режим; доступны и на карте, и во дворе ---- */
 function openSettings(){const on=v=>v?`<i>${L('вкл','on')}</i>`:`<i class="off">${L('выкл','off')}</i>`;
   if(G&&!G.over)YG.stop();
@@ -2029,7 +2432,7 @@ function openSettings(){const on=v=>v?`<i>${L('вкл','on')}</i>`:`<i class="of
   modal(`<h2>${L('Настройки','Settings')}</h2>
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
-    <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('без тряски, мигалок и пульсации','no shaking, flashing or pulsing')}</small></span>${on(calm())}</button>
+    <button class="set" id="stCalm"><span>🌿 ${L('Меньше движения','Less motion')}<br><small>${L('без тряски, мигалок и пульсации','no shaking, flashing or pulsing')}</small></span>${on(calm())}</button>
     ${IS_VK?'':`<button class="set" id="stLang" aria-label="${L('Язык: русский. Переключить на английский','Language: English. Switch to Russian')}"><span>🌐 ${L('Язык','Language')}</span><b class="lg"><u class="${LANG==='ru'?'on':''}">RU</u><u class="${LANG==='en'?'on':''}">EN</u></b></button>`}
     ${PAY.on&&!inYard()?payHtml(['no_ads'],false)+`<button class="set" id="stShop"><span>🛒 ${L('Все покупки','All purchases')}<br><small>${L('монеты, наборы, краски','coins, packs, paints')}</small></span><i class="go">›</i></button>`:''}
     ${SOC.ok()?`<button class="set" id="stSoc"><span>👥 ${L('Друзья и игры','Friends & games')}</span><i class="go">›</i></button>`:''}
@@ -2045,23 +2448,33 @@ function openSettings(){const on=v=>v?`<i>${L('вкл','on')}</i>`:`<i class="of
 // памятка «Как играть» — правила, которые в игре показываются один раз на несколько секунд
 function openHow(){
   modal(LANG==='en'?`<h2>How to play</h2><div class="how">
-    <p>👆 <b>Tap a car</b> — it drives where its arrow points. Get every car out of the yard.</p>
+    <p class="hw"><canvas data-i="car"></canvas><span><b>Tap a car</b> — it drives where its arrow points. Get every car out of the yard.</span></p>
     <p>💥 Something in the way — it’s a crash and you lose a ❤️ (from yard 4 on). Three crashes — start the yard over.</p>
-    <p>🐍 Long vehicles move <b>like a snake</b>: the body follows the cab.</p>
-    <p>🚑 <b>Ambulance</b>: get it out before the counter runs out of moves.</p>
-    <p>🚓 <b>Police</b>: when it leaves, every car with a clear path drives off by itself.</p>
-    <p>🔦 In tough yards one car has no arrow — check its lights: <b>white at the front, red at the back</b>.</p>
-    <p>💡 A hint shows which car to move, 🚚 the tow truck removes any car. ${WSTREAK} wins in a row — a free hint.</p></div>
+    <p class="hw"><canvas data-i="snake"></canvas><span>Long vehicles move <b>like a snake</b>: the body follows the cab.</span></p>
+    <p class="hw"><canvas data-i="amb"></canvas><span><b>Ambulance</b>: get it out before the counter runs out of moves.</span></p>
+    <p class="hw"><canvas data-i="pol"></canvas><span><b>Police</b>: when it leaves, every car with a clear path drives off by itself.</span></p>
+    <p class="hw"><canvas data-i="lights"></canvas><span>In tough yards one car has no arrow — check its lights: <b>white at the front, red at the back</b>.</span></p>
+    <p>💡 A hint shows which car to move, 🚚 the tow truck removes any car. ${WSTREAK} wins in a row — a free hint.</p>
+    <p>🎁 <b>Granny Shura’s gifts</b>: every day you drop by — coins, special paints and a car on day 7. Miss a day and nothing is lost. 📅 The daily challenge is new every day.</p>
+    <p>🏡 Spend coins in the garage: paint your cars, park them in the yards and decorate the yard.</p></div>
     <div class="row"><button class="btn" id="hBack">← Back</button></div>`:`<h2>Как играть</h2><div class="how">
-    <p>👆 <b>Нажми на машину</b> — она едет туда, куда смотрит стрелка. Выпусти со двора всех.</p>
+    <p class="hw"><canvas data-i="car"></canvas><span><b>Нажми на машину</b> — она едет туда, куда смотрит стрелка. Выпусти со двора всех.</span></p>
     <p>💥 Впереди кто-то стоит — авария, минус ❤️ (с 4-го двора). Три аварии — двор заново.</p>
-    <p>🐍 Длинные машины едут <b>змейкой</b>: корпус повторяет путь кабины.</p>
-    <p>🚑 <b>Скорая</b>: выпусти её, пока не кончились ходы на счётчике.</p>
-    <p>🚓 <b>Полиция</b>: когда она уезжает, все, у кого путь свободен, уезжают сами.</p>
-    <p>🔦 В сложных дворах у одной машины нет стрелки — смотри на фары: <b>белые спереди, красные сзади</b>.</p>
-    <p>💡 Подсказка подсвечивает, кем ехать, 🚚 эвакуатор увозит любую машину. ${WSTREAK} побед подряд — подсказка бесплатно.</p></div>
+    <p class="hw"><canvas data-i="snake"></canvas><span>Длинные машины едут <b>змейкой</b>: корпус повторяет путь кабины.</span></p>
+    <p class="hw"><canvas data-i="amb"></canvas><span><b>Скорая</b>: выпусти её, пока не кончились ходы на счётчике.</span></p>
+    <p class="hw"><canvas data-i="pol"></canvas><span><b>Полиция</b>: когда она уезжает, все, у кого путь свободен, уезжают сами.</span></p>
+    <p class="hw"><canvas data-i="lights"></canvas><span>В сложных дворах у одной машины нет стрелки — смотри на фары: <b>белые спереди, красные сзади</b>.</span></p>
+    <p>💡 Подсказка подсвечивает, кем ехать, 🚚 эвакуатор увозит любую машину. ${WSTREAK} побед подряд — подсказка бесплатно.</p>
+    <p>🎁 <b>Гостинцы бабы Шуры</b>: за каждый день захода — монеты, особые краски, а на 7-й день машина. Пропустил день — ничего не сгорает. 📅 Задание дня — каждый день новое.</p>
+    <p>🏡 Монеты тратятся в гараже: покраска, «своя машина во дворах» и украшения двора.</p></div>
     <div class="row"><button class="btn" id="hBack">← Назад</button></div>`);
-  modalRe=openHow;$('hBack').onclick=openSettings;}
+  modalRe=openHow;$('hBack').onclick=openSettings;requestAnimationFrame(()=>$('mcard').querySelectorAll('canvas[data-i]').forEach(c=>howIcon(c,c.dataset.i)));}
+// картинки памятки рисуются теми же машинами, что во дворе
+function howIcon(c,kind){const d=Math.min(2,window.devicePixelRatio||1),S0=46;c.width=c.height=S0*d;const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);
+  const spec={car:[[[1,0],[0,0]],'#e74c3c',''],lights:[[[1,0],[0,0]],'#3498db',''],snake:[[[1,0],[0,0],[0,1]],'#f9ca24',''],amb:[[[2,0],[1,0],[0,0]],'#ffffff','amb'],pol:[[[1,0],[0,0]],'#f5f6fa','pol']}[kind];if(!spec)return;
+  const cells=spec[0],w=Math.max(...cells.map(q=>q[0]))+1,h=Math.max(...cells.map(q=>q[1]))+1,k=S0/(Math.max(w,h)+.5),x0=(S0-w*k)/2,y0=(S0-h*k)/2+k*.08;
+  const v=makeVehicle(cells,1,spec[1],w,h,spec[2]);if(kind==='lights')v.noArrow=true;
+  drawVehicle(g,v,0,q=>[x0+(q[0]+.5)*k,y0+(q[1]+.5)*k],k,null);}
 function openAbout(){
   modal(`<h2>${L('Об игре','About')}</h2><p class="about">${L('«Выезд со двора» — головоломка про тесный двор: выпусти все машины по стрелкам и не устрой аварию. Машины, дворы, кот и голуби нарисованы прямо в игре, звуки тоже собраны кодом.','“Yard Escape: Parking Jam” is a puzzle about a crowded Russian courtyard: get every car out along its arrow without a crash. The cars, yards, cat and pigeons are all drawn by the game itself, and the sounds are made in code too.')}</p>
     ${PLAT==='vk'?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
@@ -2071,7 +2484,7 @@ function openAbout(){
   if($('abPay'))$('abPay').onclick=()=>PAY.again();
   $('abBack').onclick=openSettings;}
 /* ---- смена языка: вёрстка (data-en), данные (en-поля), товары, перерисовка того, что на экране ---- */
-const I18N_DATA=[MODELS,REGIONS,Object.values(PAY_ITEMS)];
+const I18N_DATA=[MODELS,REGIONS,Object.values(PAY_ITEMS),SETS,DECOR];
 function applyLang(){document.documentElement.lang=LANG;document.title=L('Выезд со двора','Yard Escape: Parking Jam');
   document.querySelectorAll('[data-en]').forEach(e=>{if(e.dataset.ru==null)e.dataset.ru=e.innerHTML;e.innerHTML=LANG==='en'?e.dataset.en:e.dataset.ru;});
   document.querySelectorAll('[data-en-aria]').forEach(e=>{if(e.dataset.ruAria==null)e.dataset.ruAria=e.getAttribute('aria-label')||'';e.setAttribute('aria-label',LANG==='en'?e.dataset.enAria:e.dataset.ruAria);});
@@ -2080,7 +2493,7 @@ function applyLang(){document.documentElement.lang=LANG;document.title=L('Вые
   if(!PAINT.ru)PAINT.ru=PAINT.map(p=>p&&p[1]);PAINT.forEach((p,k)=>{if(p)p[1]=LANG==='en'?PAINT_EN[k]:PAINT.ru[k];});}
 function setLang(l){l=normLang(l);if(IS_VK)l='ru';if(l===LANG)return;LANG=l;applyLang();
   $('toast').classList.remove('on');
-  if(G){G.bubbles=[];$('gLevel').textContent=levelTitle();updHud();const t=$('tip');
+  if(G){G.bubbles=[];$('gLevel').textContent=levelTitle();sideUpd();updHud();const t=$('tip');
     if(t.style.display==='block'){const tt=G.towMode?towTip():tipFor(G.idx,G.daily);if(tt)t.textContent=tt;else t.style.display='none';}}
   updCoins();updStreakDot();
   if($('scr-map').classList.contains('on'))openMap();else if($('scr-garage').classList.contains('on'))openGarage();
@@ -2137,7 +2550,7 @@ if(!/[?&]demo=/.test(location.search)&&!(S.levelsDone>0)&&S.unlocked===1&&!Objec
 (()=>{const d=new URLSearchParams(location.search).get('demo');if(!d)return;window.__demo=true;
   todForce=new URLSearchParams(location.search).get('tod');
   if(d==='garage'){S.garage=MODELS.map((_,i)=>i);openGarage();}
-  else if(d==='streak'){S.streak={day:3,last:dayKey(-1),cyc:0};openMap();showStreak();}
+  else if(d==='streak'){S.streak={day:3,last:dayKey(-1),cyc:0};S.gp={};openMap();showStreak();}
   else if(d==='map2'){S.unlocked=12;S.stars={0:3,1:3,2:2,3:3,4:1,5:3,6:2,7:3,8:3,9:2,10:3};S.garage=[0,1,2];openMap();}
   else if(d==='map'){S.unlocked=6;S.stars={0:3,1:3,2:2,3:3,4:1};S.garage=[0,1,2,3,4];openMap();}
   else startLevel(Math.max(0,Math.min(199,(+d||1)-1)));

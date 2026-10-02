@@ -96,6 +96,21 @@ const BOSS_SAY={
   tugar:['Щит горит — я не горю!','Тугарин идёт — всё горит!','Жарко вам? Мне — нормально.'],
   liho:['Гляну — уснёте!','Лихо не будите — оно само проснётся.','Одним глазом всё вижу!']
 };
+// карточка-представление босса (boost 02.10): что делать игроку — одной строкой под именем
+const BOSS_TIP={
+  solo:'Свист глушит только заставы рядом — расставь их вдоль всей дороги.',
+  yaga:'Летит рывками и зовёт быстрых котов — держи заставы и у самых ворот.',
+  gory:'Жжёт по одной заставе — не клади все монеты в одну, улучшай несколько.',
+  kosh:'Когда появится яйцо — жми на него пальцем!',
+  karach:'Мороз вдвое замедляет заставы рядом — бей издалека и Громом Перуна.',
+  morcar:'Прилив лечит нечисть рядом — добивай быстро, не давай зажить.',
+  tugar:'Пока горит щит — он неуязвим. Береги Гром Перуна до конца щита.',
+  liho:'Усыпляет самую дорогую заставу — сильных застав должно быть несколько.',
+  lead:'Бей всеми заставами сразу — и Громом Перуна, когда подойдёт ближе.'
+};
+// ориентиры на поле (boost 02.10): 2 крупных объекта на карту из набора главы — чтобы карты были «местом», а не ровной россыпью
+const LMARK=[['b_vil','dc_well','d_pond'],['d_pond','b_herb','d_dead'],['b_fair','dc_well','b_barn'],['d_grave','d_crystal','d_dead'],
+  ['d_icerock','d_iceshard','d_snowpine'],['d_coral','d_shell','d_pond'],['d_lava','d_firerock','dc_fire'],['d_crystal','dc_fire','d_grave']];
 // что кричит нечисть
 const SAY_SPAWN=['Мы только спросить!','За пирожками идём!','Где тут город?','Ура-а-а!','Нас много!','А нас за что?','Не стреляйте, мы мирные! Почти.','Сегодня наш день!','Кто последний — тот мухомор!','Эй, там, на заставе!'];
 const SAY_LEAK=['Прорвались!','Ура, город!','Где тут пирожки?','Я первый!','Хе-хе!'];
@@ -201,7 +216,8 @@ const GOLD_MUL=HP_MUL.map(h=>+(1.8*Math.pow(h,.8)).toFixed(2));
 const START_COINS=[240,300,380,460,540,620,700,780];
 const LEVEL_WAVES=[6,7,8,9,10,11];
 // точечная поправка здоровья нечисти на «стенах» (аудит сложности 26.09): составы волн и зёрна те же
-const LEVEL_FIX={'2-3':.9,'3-3':.85,'4-5':.9,'5-2':.8};
+// 1-3 ×0,85 (boost 02.10): «стена» 9-й минуты для невнимательного новичка — лешие с заживлением; умелым и так ★3
+const LEVEL_FIX={'0-2':.85,'2-3':.9,'3-3':.85,'4-5':.9,'5-2':.8};
 // пауза между волнами: на первых двух уровнях короче — новичку не скучно
 function wavePause(ci,li,wave){return ci===0&&li<=1?10:wave<=2?18:14;}
 
@@ -247,6 +263,12 @@ function siegeGold(waves){return 10*waves+Math.round(waves*waves*.3);}
 function giftGold(){return 40+30*chaptersDone();}
 // подмога после поражений: +15% стартовых монет за каждое поражение подряд на этом уровне (до +45%), сбрасывается победой
 function pityCoins(c,l){const n=Math.min(3,(S.lose&&S.lose[c+'-'+l])||0);return Math.round(START_COINS[c]*.15*n);}
+/* мягкий старт (boost 02.10, диагностика hobby-analytics/release-d): только главы 1–2 кампании, не «Богатырская», не испытания.
+   Самый первый бой (ещё ни одной победы) — нечисть слабее (NOV.first): три заставы «как сказал воевода» должны побеждать.
+   «Боевой дух»: каждое поражение подряд на уровне — нечисть в следующей попытке слабее на NOV.step (до NOV.max), победа сбрасывает (S.lose).
+   Менять — только с прогоном моделей новичка (release-d/oborona-tests/t_noob.py) и campaign(). */
+const NOV={first:.7,step:.1,max:.3,ch:2};
+function novK(c,l){if(c>=NOV.ch)return 1;const n=(S.lose&&S.lose[c+'-'+l])||0;let k=1-Math.min(NOV.max,NOV.step*n);if(c===0&&l===0&&!S.wins)k=Math.min(k,NOV.first);return k;}
 // казна «полна» для точки и тоста: от ёмкости (у новичка казна вмещает всего 32)
 function afkReadyAt(){return Math.min(50,Math.round(afkRate()*afkCapH()*.6));}
 /* ---------- облики застав и украшения деревни: только внешний вид, силы не дают (решение владельца 27.09, hobby-analytics/12 п. 3).
@@ -264,6 +286,31 @@ const DECO=[
   {id:'swing',n:'Качели',cost:3000},
   {id:'carousel',n:'Карусель',cost:4000},
   {id:'fire',n:'Купальский костёр',cost:4500}];
+/* ---------- знамёна дружины (заход 2, 03.10): долгая цель за золото с первой главы. Только вид и слава: выбранное знамя реет над воротами
+   в каждом бою. Знамя главы открывается, когда глава освобождена. Всего 11 400 золотых. Наборы (3, 5, 8 знамён) — ускорение, не золото и не сила.
+   em — эмблема: звезда с n лучами (r — глубина луча), n=0 — круг. Куплено — S.bns[id], поднято — S.bn, наборы выданы — S.bnSet. ---------- */
+const BANNERS=[
+  {id:'les',n:'Знамя Дремучего леса',cost:250,c1:'#2f8a4a',c2:'#ffd84a',em:[3,.45]},
+  {id:'bolo',n:'Знамя Гиблого болота',cost:450,c1:'#2f6f6a',c2:'#c8e87a',em:[0,1]},
+  {id:'pole',n:'Знамя Дикого поля',cost:700,c1:'#d89a2a',c2:'#7a2a12',em:[8,.55]},
+  {id:'kosh',n:'Знамя Кощеева царства',cost:1000,c1:'#4a3378',c2:'#5cff9a',em:[4,.35]},
+  {id:'gory',n:'Знамя Студёных гор',cost:1400,c1:'#3a7ab8',c2:'#ffffff',em:[6,.45]},
+  {id:'more',n:'Знамя Морского царства',cost:1900,c1:'#1f5a8a',c2:'#f4d0b8',em:[10,.7]},
+  {id:'ogon',n:'Знамя Огненной земли',cost:2500,c1:'#b82a1e',c2:'#ffb03a',em:[5,.45]},
+  {id:'trid',n:'Стяг Тридевятого царства',cost:3200,c1:'#8a1616',c2:'#ffd84a',em:[12,.75]}];
+const BN_SETS=[[3,600],[5,1200],[8,1800]];   // сколько знамён → секунд ускорения
+function bnOpen(i){return chaptersDone()>i;}
+function bnOwn(i){return !!(S.bns&&S.bns[BANNERS[i].id]);}
+function bnCount(){let n=0;for(let i=0;i<BANNERS.length;i++)if(bnOwn(i))n++;return n;}
+function bnNow(){const i=BANNERS.findIndex(b=>b.id===S.bn);return i>=0&&bnOwn(i)?BANNERS[i]:null;}
+// знамя: древко от (x,y) вверх на h, полотнище с «ласточкиным хвостом»; ph — фаза колыхания
+function drawBanner(g,x,y,h,b,ph){const w=h*.62,fh=h*.44,ty=y-h,k=Math.sin(ph||0)*h*.03;
+  g.lineCap='round';g.lineJoin='round';g.strokeStyle='#5a3a1a';g.lineWidth=Math.max(1.4,h*.06);g.beginPath();g.moveTo(x,y);g.lineTo(x,ty-h*.06);g.stroke();
+  g.fillStyle='#ffd84a';g.beginPath();g.arc(x,ty-h*.08,h*.055,0,Math.PI*2);g.fill();
+  g.beginPath();g.moveTo(x,ty);g.lineTo(x+w,ty+k);g.lineTo(x+w*.8,ty+fh/2+k);g.lineTo(x+w,ty+fh+k);g.lineTo(x,ty+fh);g.closePath();g.fillStyle=b.c1;g.fill();g.strokeStyle=b.c2;g.lineWidth=Math.max(1,h*.05);g.stroke();
+  const cx=x+w*.4,cy=ty+fh/2+k*.4,R=fh*.3,n=b.em[0];g.fillStyle=b.c2;g.beginPath();
+  if(!n)g.arc(cx,cy,R*.8,0,Math.PI*2);else for(let i=0;i<n*2;i++){const a=-Math.PI/2+i*Math.PI/n,r=i%2?R*b.em[1]:R;g.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}
+  g.closePath();g.fill();}
 function vilDone(){return BLD.every(b=>(S.village[b.id]||0)>=b.cost.length);}
 // облик «Жар-птица» — покупка Яндекса skins_firebird (js/pay.js): на все роды застав сразу, без отстроенной деревни
 const SKIN_FB={id:'firebird',n:'Жар-птица',about:'огненные перья'};
@@ -273,7 +320,8 @@ function skinName(id){return id==='firebird'?SKIN_FB.n:(SKINS.find(k=>k.id===id)
 // сколько золота ещё можно потратить (постройки + облики + украшения)
 function goldSink(){let n=0;for(const b of BLD)for(let l=S.village[b.id]||0;l<b.cost.length;l++)n+=b.cost[l];
   for(const t of TW_ORDER)for(const k of SKINS)if(!(S.skins&&S.skins[t+'.'+k.id]))n+=k.cost;
-  for(const d of DECO)if(!(S.deco&&S.deco[d.id]))n+=d.cost;return n;}
+  for(const d of DECO)if(!(S.deco&&S.deco[d.id]))n+=d.cost;
+  for(let i=0;i<BANNERS.length;i++)if(!bnOwn(i))n+=BANNERS[i].cost;return n;}
 // реклама за золото («Удвоить», «Казна ×2», «+2 часа», «Гостинец») нужна, только пока золоту есть куда идти
 function goldWanted(){return S.gold<goldSink();}
 // род босса: «повержен / повержена / повержено»

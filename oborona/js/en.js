@@ -63,6 +63,16 @@ langReg(EN,{
   liho:{n:'Likho One-Eye',about:'One look at an outpost — and it falls asleep. Don’t look Likho in the eye!'},
   egg:{n:'Egg with the Needle',about:'Inside is a needle. At the needle’s tip — Koschei’s death.'}
 });
+langReg(BOSS_TIP,{
+  solo:'His whistle only deafens outposts nearby — spread them along the whole road.',
+  yaga:'She flies in dashes and calls fast cats — keep outposts right by the gate too.',
+  gory:'He burns one outpost at a time — don’t put all your coins into one, upgrade several.',
+  kosh:'When the egg appears — tap it with your finger!',
+  karach:'His frost halves the speed of outposts nearby — hit him from afar and with Perun’s Thunder.',
+  morcar:'The tide heals monsters nearby — finish them off fast, don’t let them recover.',
+  tugar:'While the shield burns he is invulnerable. Save Perun’s Thunder until it drops.',
+  liho:'It puts your most expensive outpost to sleep — keep several strong ones.',
+  lead:'Hit him with every outpost at once — and with Perun’s Thunder when he gets closer.'});
 langReg(BOSS_SAY,{
   solo:['Wheee-oo! Mind your ears!','One whistle and you’re all deaf!','Your money or your life!'],
   yaga:['Fee-fi-fo, I smell a hero!','Sister dear, whose side are you on?!','Kitties, charge!'],
@@ -172,6 +182,7 @@ langReg(BLD,{
   wall:{name:'Palisade',about:'+1 life in every battle'}});
 langReg(SKINS,{spring:{n:'Spring',about:'flowers on the roofs'},fair:{n:'Fairground',about:'a garland of bunting'},
   winter:{n:'Winter',about:'snow caps and icicles'},gold:{n:'Gilded',about:'gilding and sparkles'}});
+langReg(BANNERS,{les:{n:'Banner of the Deep Forest'},bolo:{n:'Banner of the Dismal Swamp'},pole:{n:'Banner of the Wild Field'},kosh:{n:'Banner of Koschei’s Realm'},gory:{n:'Banner of the Frozen Mountains'},more:{n:'Banner of the Sea Kingdom'},ogon:{n:'Banner of the Fire Land'},trid:{n:'Standard of the Thrice-Nine Kingdom'}});
 langReg(DECO,{well:{n:'Sweep Well'},flags:{n:'Fair Bunting'},kot:{n:'Bayun on the Fence'},swing:{n:'Swing'},carousel:{n:'Carousel'},fire:{n:'Midsummer Bonfire'}});
 langReg(SKIN_FB,{n:'Firebird',about:'fiery feathers'});
 langReg(QUESTS,{win:{n:'Win battles'},star3:{n:'Clear levels with three stars'},build:{n:'Build outposts'},kills:{n:'Defeat monsters'},

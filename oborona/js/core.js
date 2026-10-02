@@ -32,9 +32,9 @@ const SKEY='oborona-v1';
 const SHOT=/[?&]shot/.test(location.search);
 function freshSave(){return {v:1,ts:0,gold:0,stars:{},forge:{},village:{},afkT:0,afkBoost:null,sound:1,music:1,shake:REDUCED?0:1,
   boost:900,boostDay:'',endBest:0,endRuns:0,runs:0,wins:0,kills:0,seen:{},introSeen:{},tut:0,lastCh:0,gift:0,lose:{},
-  dq:null,login:null,ret:{},diff:1,crown:{},bk:{},ach:{},wk:null,dch:null,dchN:0,skins:{},skin:{},deco:{}};}
+  dq:null,login:null,ret:{},diff:1,crown:{},bk:{},ach:{},wk:null,dch:null,dchN:0,skins:{},skin:{},deco:{},bns:{},bn:'',bnSet:0,goal:''};}
 // поля-объекты могли прийти битыми (ручная правка, старая версия) — чиним
-function fixSave(){for(const k of['stars','forge','village','seen','introSeen','lose','ret','crown','bk','ach','skins','skin','deco'])if(!S[k]||typeof S[k]!=='object'||Array.isArray(S[k]))S[k]={};
+function fixSave(){for(const k of['stars','forge','village','seen','introSeen','lose','ret','crown','bk','ach','skins','skin','deco','bns'])if(!S[k]||typeof S[k]!=='object'||Array.isArray(S[k]))S[k]={};
   if(!S.afkT)S.afkT=Date.now();if(S.boost==null||isNaN(S.boost))S.boost=900;if(S.shake==null)S.shake=REDUCED?0:1;
   if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];}
 let S=freshSave();
@@ -63,6 +63,7 @@ function mergeProgress(d,L,newer){const base=newer?d:L,other=newer?L:d;const o=O
   o.crown=obj(o.crown);mx(o.crown,obj(other.crown));o.bk=obj(o.bk);mx(o.bk,obj(other.bk));
   // облики и украшения: купленное — объединение; надетый облик — из основы, недостающее — из другого
   o.skins=obj(o.skins);mx(o.skins,obj(other.skins));o.deco=obj(o.deco);mx(o.deco,obj(other.deco));o.skin=Object.assign({},obj(other.skin),obj(o.skin));
+  o.bns=obj(o.bns);mx(o.bns,obj(other.bns));o.bnSet=Math.max(+o.bnSet||0,+other.bnSet||0);if(!o.bn)o.bn=other.bn||'';   // знамёна: купленное — объединение
   // кузница: берём целиком ту сторону, где её меняли позже (S.forgeT) — иначе сброс на одном устройстве откатывался бы облаком;
   // у старых сохранений без отметки — объединение, как раньше
   const fa=+o.forgeT||0,fb=+other.forgeT||0;
@@ -120,16 +121,16 @@ var SOC=(function(){
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
   var GAMES=[
     {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p'},
-    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p',off:'web'},
+    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p'},
     {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s'},
     {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s'},
     {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',off:'all'},
-    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c',off:'web'},
+    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c'},
     {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c'},
     {id:54792011,t:'Паук на даче',a:0,i:7,g:'c'},
     {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c'},
     {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all'},
-    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p',off:'web'},
+    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p'},
     {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r'},
     {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p'}
   ];

@@ -5,7 +5,7 @@ let curTab='Map',mapSel=0;
 const VOEV=()=>Lg('Воевода Потап','Commander Potap');
 const lvLbl=n=>Lg(n+' ур.','lv '+n);
 const BREF=()=>Lg('⏩ Ускорение: возвращено ','⏩ Speed-up refunded: ');
-function showModal(html){if(typeof PAY!=='undefined')PAY.re=null;$('mBody').innerHTML=html;$('modal').classList.add('on');}
+function showModal(html){if(typeof PAY!=='undefined')PAY.re=null;$('mBody').innerHTML=html;$('modal').classList.add('on');$('mBody').scrollTop=0;}
 function hideModal(){$('modal').classList.remove('on');}
 function on(id,fn){const el=$(id);if(el)el.onclick=e=>{SND.click();fn(e);};}
 function ic(key,px){return iconURL(key,px||96);}
@@ -39,11 +39,11 @@ const mapCache={};
 function artCanvas(key,px){const id=key+'@'+px;return mapCache[id]||(mapCache[id]=drawArt(key,px));}
 function renderMap(){const el=$('tabMap');
   let first=0;for(let c=0;c<CH.length;c++)if(chOpen(c))first=c;if(mapSel==null||!chOpen(mapSel))mapSel=first;
-  el.innerHTML='<canvas id="mapCv"></canvas><div id="chCard"></div><div id="dqBox"></div>';drawMap();renderChCard();renderQuests();
+  el.innerHTML='<div id="tdBox"></div><div id="glBox"></div><div class="mapcols"><canvas id="mapCv"></canvas><div class="mapside"><div id="chCard"></div><div id="dqBox"></div></div></div>';renderToday();renderGoal();drawMap();renderChCard();renderQuests();
   $('mapCv').onclick=e=>{const r=e.target.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
     let best=-1,bd=.012;MAPPOS.forEach((p,i)=>{const d=(p[0]-x)**2+((p[1]-y)*1.3)**2;if(d<bd){bd=d;best=i;}});
     if(best>=0){SND.click();if(!chOpen(best)){toast(Lg('Сначала освободи «'+CH[best-1].name+'»','First free “'+CH[best-1].name+'”'));return;}mapSel=best;S.lastCh=best;drawMap();renderChCard();}};}
-function drawMap(cvm,W,d){cvm=cvm||$('mapCv');if(!cvm)return;const fixed=!!W;W=W||cvm.clientWidth||340;const H=Math.round(fixed?W*1.2:Math.min(W*1.2,Math.max(300,innerHeight*.5)));d=d||Math.min(2.5,window.devicePixelRatio||1);cvm.width=W*d;cvm.height=H*d;cvm.style.height=H+'px';
+function drawMap(cvm,W,d){cvm=cvm||$('mapCv');if(!cvm)return;const fixed=!!W;W=W||cvm.clientWidth||340;const H=Math.round(fixed?W*1.2:innerWidth>=880?Math.max(300,Math.min(W*1.2,innerHeight-190)):Math.min(W*1.2,Math.max(250,innerHeight*.44)));d=d||Math.min(2.5,window.devicePixelRatio||1);cvm.width=W*d;cvm.height=H*d;cvm.style.height=H+'px';
   const g=cvm.getContext('2d');g.setTransform(d,0,0,d,0,0);
   const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#d8c090');bg.addColorStop(1,'#ecdcae');g.fillStyle=bg;g.fillRect(0,0,W,H);
   const R0=mulberry(42);
@@ -73,11 +73,60 @@ function renderChCard(){const c=mapSel,ch=CH[c];let nl=0;for(let l=0;l<6;l++)if(
     '<button class="btn" id="playNext">'+swordImg()+(S.stars[lvKey(c,nl)]?Lg('Ещё','Again'):Lg('Играть','Play'))+'</button></div><div class="lvls">';
   let nextSet=false;
   for(let l=0;l<6;l++){const open=lvOpen(c,l),st=S.stars[lvKey(c,l)]||0,next=open&&!st&&!nextSet;if(next)nextSet=true;
-    h+='<button class="lvl'+(l===5?' boss':'')+(open?'':' lock')+(next?' next':'')+'" data-l="'+l+'">'+(S.crown[lvKey(c,l)]?'<i class="cr">👑</i>':'')+'<span class="n">'+(l===5?'☠':l+1)+'</span><span>'+ch.levels[l]+'</span><span class="st3">'+
+    h+='<button class="lvl th'+(l===5?' boss':'')+(open?'':' lock')+(next?' next':'')+'" data-l="'+l+'" style="background-image:url('+lvThumb(c,l)+')">'+(S.crown[lvKey(c,l)]?'<i class="cr">👑</i>':'')+'<span class="n">'+(l===5?'☠':l+1)+'</span><span>'+ch.levels[l]+'</span><span class="st3">'+
       [0,1,2].map(i=>'<img src="'+ic(i<st?'star':'star0',40)+'">').join('')+'</span></button>';}
   h+='</div></div>';$('chCard').innerHTML=h;
   on('playNext',()=>openIntro(c,nl));
   for(const b of document.querySelectorAll('.lvl'))b.onclick=()=>{SND.click();const l=+b.dataset.l;if(!lvOpen(c,l)){toast(Lg('Сначала пройди предыдущий уровень','Beat the previous level first'));return;}openIntro(c,l);};}
+
+// миниатюра уровня (boost): настоящая карта уровня — дорога, река, места — фоном плитки; у босса — его портрет. Рисуется один раз
+function lvThumb(c,l){const id='th'+c+'-'+l;if(mapCache[id])return mapCache[id];const W=150,H=110,cvs=document.createElement('canvas');cvs.width=W;cvs.height=H;
+  try{const g=cvs.getContext('2d'),m=levelMap(c,l),th=CH[c],k=W/WW,oy=-(WH*k-H)/2;g.fillStyle=th.ground.base;g.fillRect(0,0,W,H);g.setTransform(k,0,0,k,0,oy);g.lineJoin='round';g.lineCap='round';
+    if(m.river>=0){g.fillStyle='#3a8ac0';g.fillRect(0,m.river*CELL,WW,CELL);}
+    for(const [w,col] of[[40,th.road.edge],[30,th.road.fill]])for(const P of m.paths){g.beginPath();g.moveTo(P.xs[0],P.ys[0]);for(let i=4;i<P.xs.length;i+=4)g.lineTo(P.xs[i],P.ys[i]);g.lineWidth=w;g.strokeStyle=col;g.stroke();}
+    for(const sp of m.spots){g.beginPath();g.arc(sp.x,sp.y,11,0,TAU);g.fillStyle='rgba(60,36,14,.55)';g.fill();}
+    g.setTransform(1,0,0,1,0,0);if(l===5)g.drawImage(artCanvas(th.boss,128),W-84,H-92,96,96);
+    const q=g.createLinearGradient(0,0,0,H);q.addColorStop(0,'rgba(14,16,34,.5)');q.addColorStop(1,'rgba(14,16,34,.74)');g.fillStyle=q;g.fillRect(0,0,W,H);
+    return mapCache[id]=cvs.toDataURL('image/jpeg',.82);}catch(e){return mapCache[id]='';}}
+/* ---------- boost: «Сегодня» — что ждёт игрока (вход, задания, казна, испытание дня, Босс недели); золотым — где есть что забрать ---------- */
+function renderToday(){const box=$('tdBox');if(!box)return;if(!S.wins){box.innerHTML='';return;}const a=[];
+  const L=S.login,x=loginAvail(),day=x?x.idx+1:L&&L.n?((L.n-1)%7)+1:1;
+  a.push({id:'login',hot:!!x,t:Lg('📅 День '+day+' из 7','📅 Day '+day+' of 7')});
+  const D=dqToday(),dn=D.list.filter(q=>q.got).length;a.push({id:'dq',hot:dqClaimable(),t:Lg('🎁 Задания ','🎁 Quests ')+dn+'/3'});
+  const g=afkGold();a.push({id:'afk',hot:g>=afkReadyAt(),t:Lg('💰 Казна ','💰 Treasury ')+fmtNum(g)});
+  if(S.stars['0-5']){const d=dchToday();if(d&&!d.tried&&!d.res)a.push({id:'dch',hot:1,t:Lg('⚔ Испытание дня','⚔ Daily challenge')});
+    const m=wkMine();if(!m.got)a.push({id:'wk',hot:!m.runs,t:Lg('👑 Босс недели','👑 Boss of the Week')});}
+  else a.push({id:'lock',hot:0,t:Lg('🔒 Испытания — после босса главы','🔒 Trials — after the chapter boss')});
+  box.innerHTML='<div class="chips">'+a.map(c=>'<button class="chip'+(c.hot?' hot':'')+'" data-td="'+c.id+'">'+c.t+'</button>').join('')+'</div>';
+  for(const b of box.querySelectorAll('[data-td]'))b.onclick=()=>{SND.click();const k=b.dataset.td;
+    if(k==='login'){if(!loginOffer())toast(Lg('Сегодня награда взята. Завтра за вход: +','Today’s reward is taken. Tomorrow’s login reward: +')+fmtGold(loginTomorrow()));}
+    else if(k==='dq'){const q=$('dqBox');if(q)q.scrollIntoView({block:'center'});}
+    else if(k==='afk')openTab('Village');else if(k==='dch'||k==='wk')openTab('Siege');
+    else toast(Lg('Победи Соловья-Разбойника (уровень 6) — откроются осада, испытание дня и Босс недели','Defeat Nightingale the Robber (level 6) to unlock the siege, the daily challenge and the Boss of the Week'));};}
+
+/* ---------- заход 2: долгая цель — полоса «Копим на…» на карте. Цель: выбранное игроком знамя (S.goal), иначе самое дешёвое из некупленного ---------- */
+function bannerURL(i,px){px=px||96;const id='bn'+i+'@'+px;if(mapCache[id])return mapCache[id];const c=document.createElement('canvas');c.width=c.height=px;const g=c.getContext('2d');drawBanner(g,px*.26,px*.94,px*.8,BANNERS[i],0);return mapCache[id]=c.toDataURL();}
+function goalList(){const a=[];for(const b of BLD){const l=S.village[b.id]||0;if(l<b.cost.length)a.push({id:'v:'+b.id,n:b.name+(l?' · '+lvLbl(l+1):''),c:b.cost[l],img:ic(b.ic,64)});}
+  BANNERS.forEach((b,i)=>{if(bnOpen(i)&&!bnOwn(i))a.push({id:'b:'+b.id,n:b.n,c:b.cost,img:bannerURL(i,64)});});return a;}
+function goalNow(){const a=goalList();if(!a.length)return null;return a.find(x=>x.id===S.goal)||a.sort((x,y)=>x.c-y.c)[0];}
+function renderGoal(){const box=$('glBox');if(!box)return;const t=S.wins?goalNow():null;if(!t){box.innerHTML='';return;}const ok=S.gold>=t.c,p=Math.min(100,Math.round(S.gold/t.c*100));
+  box.innerHTML='<button class="glbar'+(ok?' hot':'')+'" id="glGo"><img src="'+t.img+'" alt=""><span class="t"><b>'+(ok?Lg('Хватает на: ','You can afford: '):Lg('Копим на: ','Saving for: '))+t.n+'</b><span class="bar"><i style="width:'+p+'%"></i></span></span><em>'+(ok?Lg('Купить ›','Buy ›'):fmtNum(S.gold)+' / '+fmtNum(t.c))+'</em></button>';
+  on('glGo',()=>{openTab('Village');const e=t.id[0]==='b'?$('bnBox'):document.querySelector('[data-b="'+t.id.slice(2)+'"]');if(e){if(t.id[0]==='v')e.classList.add('hl');e.scrollIntoView({block:'center'});}});}
+// знамёна дружины в деревне: купить, поднять, выбрать целью; наборы 3/5/8 — ускорение
+function bannersHTML(){const n=bnCount(),nx=BN_SETS.find(q=>q[0]>n);
+  let h='<h2 id="bnBox">'+Lg('Знамёна дружины','Banners of the host')+'</h2><p class="sub">'+Lg('Знамя реет над воротами в каждом бою — только для красоты и славы. Знамя главы открывается, когда глава освобождена. Собрано '+n+' из '+BANNERS.length+'.','A banner flies over the gate in every battle — just for beauty and glory. A chapter’s banner unlocks when the chapter is freed. Collected '+n+' of '+BANNERS.length+'.')+(nx?' '+Lg('За '+nx[0]+' '+plw(nx[0],'знамя','знамени','знамён')+' воевода даст +'+fmtBoost(nx[1])+' ⏩.','For '+nx[0]+' banners the commander gives +'+fmtBoost(nx[1])+' ⏩.'):'')+'</p><div class="blds">';
+  BANNERS.forEach((b,i)=>{const own=bnOwn(i),open=bnOpen(i),up=S.bn===b.id&&own;
+    h+='<div class="card bld'+(own?' has':'')+(open?' pv':'')+'"><img src="'+bannerURL(i,112)+'" alt=""><b>'+b.n+'</b>'+
+      (own?(up?'<span class="tag ok">'+Lg('Реет над воротами','Flying over the gate')+'</span>':'<button class="btn" data-bu="'+i+'">'+Lg('Поднять','Raise')+'</button>')
+        :!open?'<span class="note">'+Lg('🔒 Освободи «'+CH[i].name+'»','🔒 Free “'+CH[i].name+'”')+'</span>'
+        :'<button class="btn gold" data-bb="'+i+'" '+(S.gold<b.cost?'disabled':'')+'><img src="'+ic('ingot',40)+'">'+fmtNum(b.cost)+'</button>'+(S.gold<b.cost?(S.goal==='b:'+b.id?'<span class="tag ok">'+Lg('🎯 Копим на него','🎯 Saving for it')+'</span>':'<button class="btn ghost" data-bg="'+i+'">'+Lg('🎯 Копить на него','🎯 Save for it')+'</button>'):''))+'</div>';});
+  return h+'</div>';}
+function bannersBind(el){
+  for(const b of el.querySelectorAll('[data-bu]'))b.onclick=()=>{SND.click();S.bn=BANNERS[+b.dataset.bu].id;save();renderVillage();};
+  for(const b of el.querySelectorAll('[data-bg]'))b.onclick=()=>{SND.click();S.goal='b:'+BANNERS[+b.dataset.bg].id;save();toast(Lg('Цель на карте: ','Goal on the map: ')+BANNERS[+b.dataset.bg].n);renderVillage();};
+  for(const b of el.querySelectorAll('[data-bb]'))b.onclick=()=>{const i=+b.dataset.bb,d=BANNERS[i];if(bnOwn(i)||!bnOpen(i)||S.gold<d.cost)return;S.gold-=d.cost;S.bns[d.id]=1;S.bn=d.id;if(S.goal==='b:'+d.id)S.goal='';
+    let add=0;const n=bnCount();BN_SETS.forEach((q,k)=>{if(n>=q[0]&&(S.bnSet||0)<=k){S.bnSet=k+1;add+=q[1];}});if(add)boostAdd(add);save();SND.up();
+    toast(d.n+Lg(' — реет над воротами!',' — flying over the gate!')+(add?Lg(' Набор из '+n+': +',' Set of '+n+': +')+fmtBoost(add)+' ⏩':''));renderVillage();setPills();};}
 
 /* ---------- окно перед боем ---------- */
 function levelEnemies(c,l){const set=new Set();for(const w of mkWaves(c,l))for(const g of w.g)set.add(g.t);return [...set];}
@@ -120,7 +169,7 @@ function hudTick(force){if(!G)return;if(force)for(const k in HUDC)delete HUDC[k]
   if(HUDC.lv!==G.lives){if(HUDC.lv!=null&&G.lives<HUDC.lv){const e=$('hLives');e.classList.remove('warn');void e.offsetWidth;e.classList.add('warn');}HUDC.lv=G.lives;}
   const wb=$('waveBtn');let lbl,dis=false,go=false;
   if(!G.started){lbl=swordImg()+Lg(' В бой!',' To battle!')+(G.tut?'':'<small>'+nextIcons()+'</small>');go=true;}
-  else if(G.nextT>0){const b=Math.round(G.nextT*(1+G.ci*.15)*(G.endless?1.5:1));lbl=Lg('🔔 Волна раньше','🔔 Wave early')+'<small>'+nextIcons()+'+'+coinsTxt(b)+' · '+Math.ceil(G.nextT)+Lg(' с',' s')+'</small>';go=!G.endless&&G.ci===0&&G.li<=1;}
+  else if(G.nextT>0){const b=Math.round(G.nextT*(1+G.ci*.15)*(G.endless?1.5:1));lbl=Lg('🔔 Волна раньше','🔔 Wave early')+'<small>'+nextIcons()+(b>=5?'+'+coinsTxt(b)+' · ':'')+Math.ceil(G.nextT)+Lg(' с',' s')+'</small>';go=!G.endless&&G.ci===0&&G.li<=1;}
   else if(G.wave>=waveCount()){lbl=Lg('Последняя волна!','Final wave!');dis=true;}
   else{lbl=Lg('Волна идёт…','Wave incoming…');dis=true;}
   setTxt('waveBtn',lbl);if(HUDC.wbd!==dis){HUDC.wbd=dis;wb.disabled=dis;}if(HUDC.wbg!==go){HUDC.wbg=go;wb.classList.toggle('go',go);}
@@ -131,10 +180,18 @@ function hudTick(force){if(!G)return;if(force)for(const k in HUDC)delete HUDC[k]
   const hot=S.boost<60;if(HUDC.hot!==hot){HUDC.hot=hot;$('boostBtn').classList.toggle('hot',hot);}
   // запас ускорения на первых двух уровнях не показываем (лишнее понятие новичку), если он не кончается
   const bh=!G.endless&&G.ci===0&&G.li<2&&!hot;if(HUDC.bh!==bh){HUDC.bh=bh;$('boostBtn').style.display=bh?'none':'';}
-  if(G.tut===2&&!HUDC.tut2){HUDC.tut2=1;voice(Lg((G.started?'Отлично! Ставь ещё заставы у дороги — монеты за нечисть.':'Отлично! Поставь ещё заставу-другую и жми «В бой!» внизу справа.')+' Теперь так: нажми на значок заставы, потом ещё раз — построить.',(G.started?'Great! Keep building outposts by the road — monsters pay coins.':'Great! Build another outpost or two and press “To battle!” at the bottom right.')+' From now on: tap an outpost icon, then tap it again to build.'),VOEV(),'voevoda',10);}
+  if(G.tut===2&&!HUDC.tut2){HUDC.tut2=1;voice(Lg((G.started?'Отлично! Ставь ещё заставы у дороги — монеты за нечисть.':'Отлично! Потрать все монеты: поставь ещё две заставы у дороги и жми «В бой!» внизу справа.')+' Теперь так: нажми на значок заставы, потом ещё раз — построить.',(G.started?'Great! Keep building outposts by the road — monsters pay coins.':'Great! Spend all your coins: build two more outposts by the road and press “To battle!” at the bottom right.')+' From now on: tap an outpost icon, then tap it again to build.'),VOEV(),'voevoda',10);}
   if(G.tut===3&&!HUDC.tut3){HUDC.tut3=1;G.tut=4;voice(Lg('Нечисть идёт! За каждую — монеты. Нажми на готовую заставу, чтобы её улучшить.','Here they come! Every monster pays coins. Tap a built outpost to upgrade it.'),VOEV(),'voevoda',9);}
+  // советчик новичка (advTick в game.js): первые советы боя и советы «нечисть прорывается» — словами воеводы, дальше — только кольцо со стрелкой
+  if(G.autoSay){G.autoSay=0;if(!$('modal').classList.contains('on'))voice(Lg('Нечисть прорывается! Дружина сама поставила заставу на твои монеты. Монеты не копи — ставь заставы и улучшай их!','Monsters are breaking through! The men built an outpost with your coins themselves. Don’t hoard coins — build outposts and upgrade them!'),VOEV(),'voevoda',7);}
+  if(G.adv&&HUDC.advO!==G.adv){HUDC.advO=G.adv;const a=G.adv;if((a.n<=3||a.hot)&&!(G.tut===2&&!G.started)&&!$('modal').classList.contains('on')){const pre=a.hot?Lg('Нечисть прорывается! ','Monsters are breaking through! '):'';
+    voice(pre+(a.k==='build'?Lg('Монет хватает на новую заставу — нажми на место со стрелкой. Чем больше застав, тем крепче оборона!','You have enough coins for a new outpost — tap the spot with the arrow. More outposts, stronger defense!'):Lg('Монет хватает на улучшение — нажми на заставу со стрелкой и сделай её сильнее!','You have enough coins for an upgrade — tap the outpost with the arrow and make it stronger!')),VOEV(),'voevoda',6);}}
   if(ringI>=0)ringRefresh();
 }
+
+// сочность: куда летят монеты (значок монет на HUD, в координатах поля) и «подпрыгивание» счётчика
+function coinTarget(){const r=$('icCoin').getBoundingClientRect();return toWorld(r.left+r.width/2,r.top+r.height/2);}
+let bumpT=0;function coinBump(){const n=Date.now();if(n-bumpT<140||REDUCED)return;bumpT=n;const e=$('hCoins');e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump');}
 
 /* ---------- кто идёт следующей волной (аудит 14): значки на кнопке «Волна раньше», подробно — по касанию черепа у входа ---------- */
 function nextIcons(){const L=waveWho(peekWave());if(!L.length)return '';
@@ -155,9 +212,9 @@ function ringItems(){const t=G.tw[ringI],items=[];
     const open=TW_ORDER.filter(towerUnlocked),next=TW_ORDER.find(x=>!towerUnlocked(x)&&!towerBanned(x)),list=open.concat(next?[next]:[]),n=list.length;
     list.forEach((ty,k)=>{const a=n<=3?-Math.PI/2+(k-(n-1)/2)*1.15:-Math.PI/2+k*TAU/n,lock=!towerUnlocked(ty),c=buildCost(ty);
       items.push({id:'b_'+ty,a,img:'t_'+ty+'_1',price:lock?(TW_UNLOCK[ty][0]===G.ci?Lg('ур. ','lv ')+(TW_UNLOCK[ty][1]+1):Lg('гл. ','ch ')+(TW_UNLOCK[ty][0]+1)):c,no:!lock&&G.coins<c,lock,nm:lock?Lg('скоро','soon'):null});});}
-  else{if(t.lvl<3){const c=upCost(t);items.push({id:'up',a:-Math.PI/2,img:'t_'+t.type+'_'+(t.lvl+1),price:c,no:G.coins<c});}
+  else{if(t.lvl<3){const c=upCost(t);items.push({id:'up',a:-Math.PI/2,img:'t_'+t.type+'_'+(t.lvl+1),price:c,no:G.coins<c,nm:'▲ '+lvLbl(t.lvl+1)});}
     else if(t.lvl===3){const lock=!branchUnlocked();for(const br of[1,2]){const c=upCost(t,br);items.push({id:'br'+br,a:-Math.PI/2+(br===1?-.7:.7),img:'t_'+t.type+'_4'+(br===1?'a':'b'),price:lock?'🔒':c,no:!lock&&G.coins<c,lock,nm:TW[t.type].br[br-1].sh});}}
-    items.push({id:'sell',a:Math.PI/2,txt:'💰',price:'+'+Math.round(t.inv*.7),sell:1});
+    items.push({id:'sell',a:Math.PI/2,txt:'💰',price:Lg('продать +','sell +')+Math.round(t.inv*.7),sell:1});
     if(AIM_BY[t.type])items.push({id:'aim',a:Math.PI*5/6,txt:'🎯',price:null,nm:AIMS[t.aim||'first'].s,aim:1});}
   return items;}
 function ringBuild(){const s=G.map.spots[ringI],p=toScreen(s.x,s.y),el=$('ring'),R=Math.max(58,Math.min(70,VIEW.s*52));
@@ -191,15 +248,16 @@ function ringTap(id){const t=G.tw[ringI],s=G.map.spots[ringI];SND.click();
   else if(id.startsWith('br')){ok=tryUpgrade(ringI,+id[2]);if(!ok)toast(Lg('Не хватает монет','Not enough coins'));}
   else if(id==='sell'){ok=sellTower(ringI);}
   if(ok)closeRing();}
-function statLine(ty,st){const a=[];const sp=v=>dnum((1/v).toFixed(1)),dm=Lg('Урон ','Damage ');
-  if(ty==='arch')a.push(dm+Math.round(st.dmg)+(st.multi>1?' × '+st.multi+Lg(' цели',' targets'):''),Lg('выстр./с ','shots/s ')+sp(st.cd));
-  if(ty==='pushka')a.push(dm+Math.round(st.dmg)+Lg(' по площади',' splash'),Lg('раз в ','every ')+dnum(st.cd.toFixed(1))+Lg(' с',' s'));
-  if(ty==='izba')a.push(Lg('Яд ','Poison ')+Math.round(st.dps)+Lg('/с','/s'),Lg('замедл. ','slow ')+Math.round(st.slow*100)+'%');
-  if(ty==='mag')a.push(dm+Math.round(st.dmg)+Lg(' магией',' magic'),(st.chain?Lg('цепь на ','chain of ')+(st.chain+1):Lg('одна цель','one target')));
-  if(ty==='dub')a.push(dm+Math.round(st.dmg)+Lg(' вокруг',' around'),Lg('оглуш. ','stun ')+dnum(st.stun.toFixed(1))+Lg(' с',' s'));
-  a.push(Lg('дальн. ','range ')+Math.round(st.rng));a.push(st.air?Lg('✈ бьёт летучих','✈ hits flyers'):Lg('только наземных','ground only'));return a.join(' · ');}
+function statLine(ty,st,pv){const a=[];const sp=v=>dnum((1/v).toFixed(1)),dm=Lg('Урон ','Damage '),
+  ar=f=>{const n=f(st);if(!pv)return n;const o=f(pv);return String(o)===String(n)?n:o+' → <b class="up">'+n+'</b>';};   // pv — свойства до улучшения: «было → стало»
+  if(ty==='arch')a.push(dm+ar(q=>Math.round(q.dmg))+(st.multi>1?' × '+st.multi+Lg(' цели',' targets'):''),Lg('выстр./с ','shots/s ')+ar(q=>sp(q.cd)));
+  if(ty==='pushka')a.push(dm+ar(q=>Math.round(q.dmg))+Lg(' по площади',' splash'),Lg('раз в ','every ')+ar(q=>dnum(q.cd.toFixed(1)))+Lg(' с',' s'));
+  if(ty==='izba')a.push(Lg('Яд ','Poison ')+ar(q=>Math.round(q.dps))+Lg('/с','/s'),Lg('замедл. ','slow ')+ar(q=>Math.round(q.slow*100))+'%');
+  if(ty==='mag')a.push(dm+ar(q=>Math.round(q.dmg))+Lg(' магией',' magic'),(st.chain?Lg('цепь на ','chain of ')+ar(q=>q.chain+1):Lg('одна цель','one target')));
+  if(ty==='dub')a.push(dm+ar(q=>Math.round(q.dmg))+Lg(' вокруг',' around'),Lg('оглуш. ','stun ')+ar(q=>dnum(q.stun.toFixed(1)))+Lg(' с',' s'));
+  a.push(Lg('дальн. ','range ')+ar(q=>Math.round(q.rng)));a.push(st.air?Lg('✈ бьёт летучих','✈ hits flyers'):Lg('только наземных','ground only'));return a.join(' · ');}
 function showInfoType(ty,lvl,br,cost,cur){const d=TW[ty],b=lvl===4?d.br[br-1]:null,st=tstat(ty,lvl,br);
-  showInfo('<b>'+(b?b.n:d.n)+(lvl<4?' · '+lvLbl(lvl):'')+'</b><p>'+(b?b.about:d.about)+'</p><div class="st">'+statLine(ty,st)+'</div><div class="hint">'+(G.coins>=cost?Lg('Нажми ещё раз — '+(cur?'улучшить':'построить')+' за '+cost,'Tap again to '+(cur?'upgrade':'build')+' for '+cost):Lg('🔒 Нужно '+coinsTxt(cost)+' (есть '+G.coins+')','🔒 Need '+coinsTxt(cost)+' (you have '+G.coins+')'))+'</div>');}
+  showInfo('<b>'+(b?b.n:d.n)+(lvl<4?' · '+lvLbl(lvl):'')+'</b><p>'+(b?b.about:d.about)+'</p><div class="st">'+statLine(ty,st,cur?cur.st:null)+'</div><div class="hint">'+(G.coins>=cost?Lg('Нажми ещё раз — '+(cur?'улучшить':'построить')+' за '+cost,'Tap again to '+(cur?'upgrade':'build')+' for '+cost):Lg('🔒 Нужно '+coinsTxt(cost)+' (есть '+G.coins+')','🔒 Need '+coinsTxt(cost)+' (you have '+G.coins+')'))+'</div>');}
 function showInfoTower(t){const d=TW[t.type],b=t.lvl===4?d.br[t.br-1]:null,A=AIM_BY[t.type]?AIMS[t.aim||'first']:null;
   showInfo('<b>'+(b?b.n:d.n)+(t.lvl<4?' · '+lvLbl(t.lvl):'')+'</b><div class="st">'+statLine(t.type,t.st)+'</div><p>'+Lg('Одолела нечисти: ','Monsters defeated: ')+t.kills+Lg(' · урон ',' · damage ')+fmtNum(t.dmgd||0)+'</p>'+
     (A?'<p>'+Lg('🎯 Бьёт <b class="aimb">'+A.n.toLowerCase()+'</b> — '+A.d+'. Нажми 🎯, чтобы сменить.','🎯 Targets <b class="aimb">'+A.n.toLowerCase()+'</b> — '+A.d+'. Tap 🎯 to change.')+'</p>':''));}
@@ -273,8 +331,8 @@ function bestTwHTML(){if(!G)return '';const L=G.tw.filter(Boolean).concat(G.gone
   const by={};for(const t of L){const o=by[t.type]||(by[t.type]={d:0,k:0,n:0});o.d+=t.dmgd;o.k+=t.kills;o.n++;}
   const rows=TW_ORDER.filter(k=>by[k]).sort((a,b)=>by[b].d-by[a].d).map(k=>{const o=by[k],p=Math.round(o.d/tot*100);
     return '<div class="twrow"><img src="'+ic('ti_'+k+'_3',64)+'" alt=""><div class="t"><b>'+TW[k].n+(o.n>1?' ×'+o.n:'')+'</b><div class="bar"><i style="width:'+p+'%"></i></div></div><span>'+p+'%<small>'+Lg('одолели ','defeated ')+o.k+'</small></span></div>';}).join('');
-  return '<div class="card besttw"><div class="row"><img class="ic" src="'+ic(towerKey(best).replace('t_','ti_'),112)+'" alt=""><div class="t"><b>'+Lg('🏅 Лучшая застава','🏅 Best outpost')+'</b><span>'+nm(best)+': '+Math.round(best.dmgd/tot*100)+Lg('% урона, одолела ','% of damage, defeated ')+best.kills+'</span></div></div>'+
-    (Object.keys(by).length>1?'<details><summary>'+Lg('Кто сколько сделал','Who did what')+'</summary>'+rows+'</details>':'')+'</div>';}
+  const head='<img src="'+ic(towerKey(best).replace('t_','ti_'),64)+'" alt=""><span>'+Lg('🏅 Лучшая застава: ','🏅 Best outpost: ')+'<b>'+nm(best)+'</b> — '+Math.round(best.dmgd/tot*100)+Lg('% урона','% of damage')+'</span>';
+  return Object.keys(by).length>1?'<details class="besttw"><summary>'+head+'</summary>'+rows+'</details>':'<div class="besttw one">'+head+'</div>';}
 function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('on');
   // бой может кончиться дважды («ещё попытка» после поражения) — счётчики и задания пополняем только приростом
   const P=G.paid||(G.paid={kills:0,kt:{},built:0,ups:0,spells:0,n:0,best0:S.endBest||0,gold:0,waves:0,x2:0}),dK=G.kills-P.kills;
@@ -308,18 +366,19 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
     const lines=Lg(['Отбились! Нечисть бежит, роняя тапки.','Победа! Воевода доволен и даже улыбнулся.','Застава устояла! Тётушка Яга печёт пироги.','Славно! Про нас сложат былину. Короткую.'],
       ['We held them off! The monsters flee, losing their slippers.','Victory! The commander is pleased and even smiled.','The outpost stands! Auntie Yaga is baking pies.','Glorious! They’ll write an epic about us. A short one.']);
     const next=l<5?[c,l+1]:c<CH.length-1?[c+1,0]:null;
-    // после первой победы — один ясный шаг: Частокол в деревне
+    // после первой победы — один ясный шаг: Частокол в деревне (строкой и кнопкой во втором ряду; главная кнопка одна — «Дальше»)
     const hintWall=S.wins===1&&!S.village.wall&&S.gold>=BLD.find(b=>b.id==='wall').cost[0];
+    const x2b=goldWanted()&&adOk()&&!(c===0&&l<3);   // первые три уровня — без рекламных кнопок (решение владельца 03.10)
     showModal('<h3>'+(l===5?Lg('Глава освобождена!','Chapter liberated!'):Lg('Победа!','Victory!'))+'</h3><div class="bigstars">'+[0,1,2].map(i=>'<img src="'+ic(i<st?'star':'star0',128)+'">').join('')+'</div>'+
-      '<p class="sub">'+(st===3?(G.leaks?Lg('Ни одна нечисть не прошла (ну, почти)!','Not a single monster got through (well, almost)!'):Lg('Ни одна нечисть не прошла!','Not a single monster got through!')):st===2?Lg('Кое-кто просочился. Для трёх звёзд — не больше двух.','A few slipped through. For three stars — no more than two.'):Lg('Еле устояли! Для трёх звёзд в город должно пройти не больше двух.','That was close! For three stars, no more than two may reach the city.'))+'</p>'+
-      '<div class="say"><img src="'+ic('voevoda')+'"><div>'+(hintWall?Lg('Золото есть! Купи в деревне <b>Частокол</b> — каждый бой начнёшь с лишней жизнью.','You have gold! Buy the <b>Palisade</b> in the village — you’ll start every battle with an extra life.'):l===5?Lg('Босс повержен! '+CH[c].name+' '+({m:'свободен',n:'свободно',f:'свободна',p:'свободны'})[CH[c].g]+'. '+(c<CH.length-1?'Дальше — '+CH[c+1].name+'!':'Тридевятое царство спасено! Ура!'),'Boss defeated! '+CH[c].name+' is free. '+(c<CH.length-1?'Next up — '+CH[c+1].name+'!':'The Thrice-Nine Kingdom is saved! Hooray!')):pick(lines))+'</div></div>'+
+      '<p class="sub">'+(l===5?Lg('Босс повержен! '+CH[c].name+' '+({m:'свободен',n:'свободно',f:'свободна',p:'свободны'})[CH[c].g]+'. '+(c<CH.length-1?'':'Тридевятое царство спасено! Ура!'),'Boss defeated! '+CH[c].name+' is free. '+(c<CH.length-1?'':'The Thrice-Nine Kingdom is saved! Hooray!')):st===3?pick(lines):st===2?Lg('Кое-кто просочился. Для трёх звёзд — не больше двух.','A few slipped through. For three stars — no more than two.'):Lg('Еле устояли! Для трёх звёзд в город должно пройти не больше двух.','That was close! For three stars, no more than two may reach the city.'))+'</p>'+
       (crownNew?'<p class="sub" style="color:#ffe7a0;font-weight:800">'+Lg('👑 Корона «Богатырской» — теперь она на этом уровне навсегда!','👑 The “Heroic” crown — it stays on this level forever!')+'</p>':'')+
-      '<div class="stats"><div><b>'+G.kills+'</b>'+Lg('одолели','defeated')+'</div><div><b>'+G.leaks+'</b>'+Lg('прорвалось','got through')+'</div><div><b>'+fmtTime(G.t)+'</b>'+Lg('время','time')+'</div></div>'+bestTwHTML()+
-      '<div class="card treasury" style="text-align:center"><b>+'+fmtGold(reward)+''+(first?Lg(' (первая победа ×2)',' (first victory ×2)'):'')+' <span style="white-space:nowrap">· ⏩ +'+fmtBoost(bst)+'</span></b>'+(bref>=1?'<br><span style="font-size:13px">'+BREF()+fmtBoost(bref)+'</span>':'')+(S.wins<=3?'<br><span class="note">'+Lg('Звёзды — в кузницу, золото — в деревню','Stars go to the forge, gold goes to the village')+'</span>'+'<br><span class="note">🎁 '+(lg?Lg('За вход: +'+lg+' сегодня, завтра +'+loginTomorrow(),'Daily bonus: +'+lg+' today, +'+loginTomorrow()+' tomorrow'):Lg('Завтра за вход: +','Come back tomorrow: +')+fmtGold(loginTomorrow()))+'</span>':lg?'<br><span class="note">'+Lg('🎁 За вход: +'+lg+' сегодня','🎁 Daily bonus: +'+lg+' today')+'</span>':'')+'</div>'+dqNote(dq0)+
-      '<div class="btns stick">'+(hintWall?'<button class="btn gold big" id="rWall">'+Lg('🏠 В деревню: купить Частокол','🏠 To the village: buy the Palisade')+'</button>':'')+
-      (next?'<button class="btn big" id="rNext">'+Lg('Дальше: ','Next: ')+CH[next[0]].levels[next[1]]+' ▸</button>':'')+
-      (goldWanted()&&adOk()?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить золото за рекламу: ещё +','🎬 Double the gold for an ad: +')+fmtNum(reward)+(needB(reward)?Lg(' — хватит на «'+needB(reward)+'»',' — enough for “'+needB(reward)+'”'):'')+'</button>':'')+
-      '<div class="btns h" style="margin-top:0"><button class="btn ghost" id="rAgain">'+Lg('Ещё раз','Play again')+'</button><button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button></div></div>');
+      '<div class="card treasury rew" style="text-align:center"><b>+'+fmtGold(reward)+''+(first?Lg(' (первая победа ×2)',' (first victory ×2)'):'')+' <span style="white-space:nowrap">· ⏩ +'+fmtBoost(bst)+'</span></b>'+(bref>=1?'<br><span style="font-size:13px">'+BREF()+fmtBoost(bref)+'</span>':'')+(lg?'<br><span class="note">'+Lg('🎁 За вход: +'+lg+' сегодня','🎁 Daily bonus: +'+lg+' today')+'</span>':'')+'</div>'+
+      goalHTML(next,c,hintWall)+tomorrowHTML()+(hintWall?'<div class="goal">'+Lg('🏠 Золота хватает на <b>Частокол</b> в деревне: +1 жизнь в каждом бою.','🏠 You have enough gold for the <b>Palisade</b> in the village: +1 life in every battle.')+'</div>':'')+
+      '<div class="stats"><div><b>'+G.kills+'</b>'+Lg('одолели','defeated')+'</div><div><b>'+G.leaks+'</b>'+Lg('прорвалось','got through')+'</div><div><b>'+fmtTime(G.t)+'</b>'+Lg('время','time')+'</div></div>'+bestTwHTML()+dqNote(dq0)+
+      '<div class="btns stick">'+
+      (next?'<button class="btn big" id="rNext">'+Lg('Дальше: ','Next: ')+CH[next[0]].levels[next[1]]+' ▸</button>':'<button class="btn big" id="rMap">'+Lg('На карту','To the map')+'</button>')+
+      (x2b?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить золото за рекламу: ещё +','🎬 Double the gold for an ad: +')+fmtNum(reward)+(needB(reward)?Lg(' — хватит на «'+needB(reward)+'»',' — enough for “'+needB(reward)+'”'):'')+'</button>':'')+
+      '<div class="btns h" style="margin-top:0">'+(hintWall?'<button class="btn ghost" id="rWall">'+Lg('🏠 В деревню','🏠 To the village')+'</button>':'<button class="btn ghost" id="rAgain">'+Lg('Ещё раз','Play again')+'</button>')+(next?'<button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button>':'')+'</div></div>');
     on('rX2',()=>showRewarded(()=>{S.gold+=reward;save();toast('+'+fmtGold(reward)+'');const b=$('rX2');if(b)b.remove();}));
     // межэкранная — только тут, при уходе с экрана победы, и со 2-й главы (после Соловья)
     const ia=c>=1;
@@ -331,20 +390,54 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
       $('mBody').appendChild(d);const b=$('mSoc');b.onclick=()=>{b.disabled=true;o.run();};}}catch(e){}}
     if(l===5&&c===CH.length-1)setTimeout(()=>toast(Lg('Тридевятое царство спасено! Осада и Босс недели ждут.','The Thrice-Nine Kingdom is saved! The Siege and the Boss of the Week await.')),800);
   }else{const cons=loseGold(c,G.wave);S.gold+=cons;S.lose=S.lose||{};S.lose[key]=(S.lose[key]||0)+1;const pity=pityCoins(c,l);const bref=boostRefund(.5);save();
-    const lines=Lg(['Нечисть прорвалась в город и съела все пирожки. Все!','Ворота не выдержали. Воевода ищет виноватых (это ты).','Прорвались, окаянные! Надо строить хитрее — или прокачаться в кузнице.'],
-      ['The monsters broke into the city and ate all the pies. ALL of them!','The gates gave way. The commander is looking for someone to blame (it’s you).','They got through, the rascals! Build smarter — or level up in the forge.']);
+    const lines=Lg(['Нечисть прорвалась в город и съела все пирожки. Все!','Ворота не выдержали. Воевода чешет бороду: «Строить надо больше!»','Прорвались, окаянные! Ничего — отстроимся и всыплем им.'],
+      ['The monsters broke into the city and ate all the pies. ALL of them!','The gates gave way. The commander scratches his beard: “We need to build more!”','They got through, the rascals! Never mind — we’ll rebuild and give them what for.']);
+    const nw=G.waves.length,held=Math.max(0,G.wave-1),soft=Math.round((1-novK(c,l))*100),lb=G.leakedBoss;
+    // новичку (первые три уровня) главная кнопка — «Начать заново», ролик — второй строкой; дальше — как было
+    const early=c===0&&l<3,cont=!early&&!G.contUsed&&G.wave>=2&&adOk(),contB=cont?'<button class="btn ad'+(early?'':' big')+'" id="rCont">'+Lg('🎬 Ещё попытка за рекламу (+10 ❤','🎬 One more try for an ad (+10 ❤')+(G.boss&&G.boss.boss&&!G.boss.dead||lb?Lg(', босс назад',', boss pushed back'):'')+')</button>':'',
+      againB='<button class="btn big" id="rAgain">'+Lg('Начать заново','Restart')+(pity?Lg(' (подмога +'+coinsTxt(pity)+')',' (aid +'+coinsTxt(pity)+')'):'')+'</button>';
     showModal('<h3>'+Lg('Город в опасности!','The city is in danger!')+'</h3><p class="sub">'+pick(lines)+'</p>'+
-      (bref>=1?'<p class="sub">'+BREF()+fmtBoost(bref)+Lg(' (половина потраченного на ×2)',' (half of what you spent on ×2)')+'</p>':'')+'<div class="stats"><div><b>'+(G.wave)+'/'+G.waves.length+'</b>'+Lg('волна','wave')+'</div><div><b>'+G.kills+'</b>'+Lg('одолели','defeated')+'</div><div><b>+'+cons+'</b>'+plw(cons,'золотой','золотых','золотых','gold','gold')+'</div></div>'+bestTwHTML()+
-      dqNote(dq0)+'<div class="btns stick">'+(!G.contUsed&&G.wave>=2&&adOk()?'<button class="btn ad big" id="rCont">'+Lg('🎬 Ещё попытка за рекламу (+10 ❤','🎬 One more try for an ad (+10 ❤')+(G.boss&&G.boss.boss&&!G.boss.dead||G.leakedBoss?Lg(', босс назад',', boss pushed back'):'')+')</button>':'')+
-      '<button class="btn big" id="rAgain">'+Lg('Начать заново','Restart')+(pity?Lg(' (подмога +'+coinsTxt(pity)+')',' (aid +'+coinsTxt(pity)+')'):'')+'</button>'+
+      '<div class="prog"><div class="bar"><i style="width:'+Math.round(held/nw*100)+'%"></i></div><span>'+Lg('Отбито волн: '+held+' из '+nw,'Waves held: '+held+' of '+nw)+(lb?Lg(' · боссу оставалось '+Math.ceil(lb.hp/lb.max*100)+'% здоровья',' · the boss had '+Math.ceil(lb.hp/lb.max*100)+'% health left'):nw-held===1?Lg(' — оставалась последняя!',' — just one to go!'):'')+'</span></div>'+
+      '<div class="say"><img src="'+ic('voevoda')+'" alt=""><div><b class="who">'+Lg('Совет воеводы','Commander’s tip')+'</b>'+loseWhy()+'</div></div>'+
+      (pity||soft?'<div class="goal">'+Lg('💪 В следующей попытке: ','💪 On your next try: ')+[pity?Lg('подмога +'+coinsTxt(pity),'aid +'+coinsTxt(pity)):'',soft?Lg('нечисть слабее на '+soft+'%','monsters are '+soft+'% weaker'):''].filter(Boolean).join(' · ')+'</div>':'')+
+      (bref>=1?'<p class="sub">'+BREF()+fmtBoost(bref)+Lg(' (половина потраченного на ×2)',' (half of what you spent on ×2)')+'</p>':'')+'<div class="stats"><div><b>'+(G.wave)+'/'+nw+'</b>'+Lg('волна','wave')+'</div><div><b>'+G.kills+'</b>'+Lg('одолели','defeated')+'</div><div><b>+'+cons+'</b>'+plw(cons,'золотой','золотых','золотых','gold','gold')+'</div></div>'+bestTwHTML()+
+      dqNote(dq0)+'<div class="btns stick">'+(early?againB+contB:contB+againB)+
       // два поражения подряд — ненавязчиво предложить полегче (звёзды те же)
-      (S.lose[key]>=2&&G.diff>0?'<button class="btn ghost" id="rEasy">'+Lg('Полегче: сыграть на «'+DIFF[G.diff-1].p+'»','Easier: play on “'+DIFF[G.diff-1].p+'”')+'</button>':'')+'<button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button></div>'+
-      '<p class="sub" style="margin-top:10px">'+Lg('Совет: ','Tip: ')+pick(TIPS)+'</p>');
+      (S.lose[key]>=2&&G.diff>0?'<button class="btn ghost" id="rEasy">'+Lg('Полегче: сыграть на «'+DIFF[G.diff-1].p+'»','Easier: play on “'+DIFF[G.diff-1].p+'”')+'</button>':'')+'<button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button></div>');
     on('rCont',()=>showRewarded(()=>{hideModal();continueBattle();voice(Lg('Второе дыхание! Кот Баюн усыпил нечисть — строй скорее!','Second wind! Bayun the Cat put the monsters to sleep — build, quick!'),VOEV(),'voevoda',5);}));
     on('rAgain',()=>startLevel(c,l));on('rMap',()=>toMenu('Map'));
     on('rEasy',()=>{S.diff=G.diff-1;save();startLevel(c,l);toast(Lg('Сложность: «'+DIFF[S.diff].n+'». Поменять — в окне перед боем','Difficulty: “'+DIFF[S.diff].n+'”. Change it in the window before a battle'));});}
   achAfter();
 }
+/* ---------- boost 02.10: «Дальше» и «Завтра» в итогах, причина поражения ---------- */
+// что нового на уровне: застава, чары, мастера, вожак, босс
+function unlockAt(c,l){const a=[];for(const t in TW_UNLOCK){const u=TW_UNLOCK[t];if(u[0]===c&&u[1]===l)a.push(Lg('новая застава — ','new outpost — ')+TW[t].n);}
+  for(const k in SPELL_UNLOCK){const u=SPELL_UNLOCK[k];if(u[0]===c&&u[1]===l)a.push(Lg('новые чары — ','new spell — ')+SPELLS[k].n);}
+  if(BRANCH_UNLOCK[0]===c&&BRANCH_UNLOCK[1]===l)a.push(Lg('мастера — две ветки у застав 3-го уровня','masters — two branches for level 3 outposts'));
+  if(LEAD.at[c+'-'+l])a.push(Lg('вожак — ','a leader — ')+LEAD.n[LEAD.at[c+'-'+l]]);
+  if(l===5)a.push(Lg('босс главы — ','the chapter boss — ')+EN[CH[c].boss].n);return a;}
+function goalHTML(next,c,noForge){let t;
+  if(!next)t=Lg('Осада на Калиновом мосту и Босс недели — на вкладке «Испытания».','The Siege at Kalinov Bridge and the Boss of the Week — in the “Trials” tab.');
+  else{const u=unlockAt(next[0],next[1]),left=5-next[1],nm=CH[next[0]].levels[next[1]];
+    t=Lg('«'+nm+'»','“'+nm+'”')+(next[0]!==c?Lg(' — новая глава «'+CH[next[0]].name+'»',' — a new chapter, “'+CH[next[0]].name+'”'):'')+
+      (u.length?': '+u.join(', '):Lg(' · до босса ('+EN[CH[next[0]].boss].n+') — ',' · to the boss ('+EN[CH[next[0]].boss].n+') — ')+left+' '+plw(left,'уровень','уровня','уровней','level','levels'));}
+  if(canForge()&&!noForge)t+='<br>'+Lg('⭐ Кузница: свободных звёзд — ','⭐ Forge: free stars — ')+starsFree();
+  return '<div class="goal"><b>'+Lg('🎯 Дальше:','🎯 Next:')+'</b> '+t+'</div>';}
+function loginTomorrowDay(){const L=S.login,x=loginAvail();const n=L&&L.day===dayKey()?L.n:x&&x.cont?(L.n||0)+1:1;return n%7+1;}
+function tomorrowHTML(){const a=[];
+  if(S.login){const d=loginTomorrowDay();a.push(Lg('день '+d+' из 7 за вход: +'+fmtGold(loginTomorrow()),'login day '+d+' of 7: +'+fmtGold(loginTomorrow()))+(d===7?Lg(' и +10 мин ⏩',' and +10 min ⏩'):''));}
+  a.push(Lg('казна накопит до '+fmtGold(afkRate()*afkCapH()),'the treasury piles up to '+fmtGold(afkRate()*afkCapH())));
+  a.push(Lg('новые задания дня','new daily quests'));if(S.stars['0-5'])a.push(Lg('новое испытание дня','a new daily challenge'));
+  return '<div class="goal tmr"><b>'+Lg('📅 Завтра:','📅 Tomorrow:')+'</b> '+a.join(' · ')+'</div>';}
+// почему проиграл — по тому, что осталось на поле (диагностика: новичок проигрывает с непотраченными монетами и не знает почему)
+function loseWhy(){const tws=G.tw.filter(Boolean),empty=G.map.spots.length-tws.length;let cheap=1e9;for(const t of TW_ORDER)if(towerUnlocked(t))cheap=Math.min(cheap,buildCost(t));
+  const n=Math.min(empty,Math.floor(G.coins/cheap)),canUp=tws.some(t=>t.lvl<3&&G.coins>=upCost(t)),air=tws.filter(t=>t.st.air).length;
+  if(n>=1&&tws.length<=4)return Lg('В кошельке осталось '+coinsTxt(G.coins)+' — хватило бы ещё на '+n+' '+plw(n,'заставу','заставы','застав')+'. Монеты за нечисть для того и нужны: ставь заставы прямо во время боя!','You had '+coinsTxt(G.coins)+' left — enough for '+n+' more '+(n===1?'outpost':'outposts')+'. That’s what monster coins are for: build outposts right in the middle of the battle!');
+  if(n>=1||canUp)return Lg('В кошельке осталось '+coinsTxt(G.coins)+'. Трать сразу: новая застава на свободном месте или улучшение — над заставой горит стрелка ▲.','You had '+coinsTxt(G.coins)+' left. Spend them right away: a new outpost on a free spot or an upgrade — look for the ▲ arrow above an outpost.');
+  if((G.leakFly||0)>=G.leaks*.4&&G.leaks>0&&air<3)return Lg('Прорвались летучие. Пушка, изба и дуб их не достают — летучих бьют только стрельцы и колдун. Поставь их побольше.','The flyers got through. The cannon, the hut and the oak can’t reach them — only archers and the sorcerer hit flyers. Build more of those.');
+  if(G.leakedBoss)return Lg('Босс дошёл до ворот. Ставь заставы вдоль всей дороги, улучшай их и бей по боссу Громом Перуна.','The boss reached the gate. Line the whole road with outposts, upgrade them and strike the boss with Perun’s Thunder.');
+  if(tws.length>=4&&tws.every(t=>t.lvl===1))return Lg('Все заставы 1-го уровня. Улучшай: нажми на заставу со стрелкой ▲ — второй уровень бьёт почти вдвое сильнее.','All your outposts are level 1. Upgrade them: tap an outpost with the ▲ arrow — level 2 hits almost twice as hard.');
+  return pick(TIPS);}
 /* ---------- итог Босса недели ---------- */
 function weekEnd(dq0){const w=G.wk.w,b=CH[G.ci].boss,kill=!!G.wkKill;let pct=G.wkPct||0;
   if(!kill){const e=G.en.find(x=>!x.dead&&x.type===b);if(e)pct=Math.max(pct,1-e.hp/e.max);}
@@ -377,23 +470,40 @@ function dchEnd(win,dq0){const D=S.dch||{},R=DCH_RULES.find(r=>r.k===G.rule)||DC
 
 /* ================= КУЗНИЦА ================= */
 function renderForge(){const el=$('tabForge'),free=starsFree();
-  let h='<h2>'+Lg('Кузница','Forge')+'</h2><p class="sub">'+Lg('Звёзды за бои тратятся на вечные улучшения застав. Есть звёзд: <b style="color:var(--gold)">'+free+'</b> из '+starsTotal()+'. Сбросить можно бесплатно.','Stars from battles buy permanent outpost upgrades. Stars available: <b style="color:var(--gold)">'+free+'</b> of '+starsTotal()+'. You can reset for free.')+'</p>';
+  let h='<h2>'+Lg('Кузница','Forge')+'</h2><p class="sub">'+Lg('Звёзды за бои тратятся на вечные улучшения застав. Есть звёзд: <b style="color:var(--gold)">'+free+'</b> из '+starsTotal()+'. Нажми на ступень, чтобы купить — в любом порядке. Сбросить можно бесплатно.','Stars from battles buy permanent outpost upgrades. Stars available: <b style="color:var(--gold)">'+free+'</b> of '+starsTotal()+'. Tap a step to buy it — in any order. You can reset for free.')+'</p>'+powerHTML();
+  h+='<div class="g2">';
   for(const t of TW_ORDER){const d=TW[t],u=TW_UNLOCK[t],open=chOpen(u[0])&&(u[0]>0||lvOpen(0,u[1]));const own=FORGE_ORDER[t].filter(([k])=>fHas(t,k)).length;
-    h+='<div class="card"><div class="row"><img class="ic" src="'+ic('ti_'+t+'_3',112)+'"'+(open?'':' style="filter:brightness(0) opacity(.4)"')+'><div class="t"><b>'+d.n+'</b><span>'+(own<5?Lg('Выковано '+own+' из 5. Нажми на ступень, чтобы купить — в любом порядке.','Forged '+own+' of 5. Tap a step to buy it — in any order.'):Lg('Всё выковано!','All forged!'))+'</span></div></div>'+
+    h+='<div class="card"><div class="row"><img class="ic" src="'+ic('ti_'+t+'_3',112)+'"'+(open?'':' style="filter:brightness(0) opacity(.4)"')+'><div class="t"><b>'+d.n+'</b><span>'+(own<5?Lg('Выковано '+own+' из 5','Forged '+own+' of 5'):Lg('Всё выковано!','All forged!'))+' · '+statLine(t,tstat(t,1,0)).split(' · ').slice(0,2).join(' · ')+'</span></div></div>'+
       '<div class="tiers">'+FORGE_ORDER[t].map(([k,c])=>{const f=k==='sp'?FORGE_SP[t]:FORGE_T[k],has=fHas(t,k),can=forgeCan(t,k);
-        return '<button class="'+(has?'on':can&&c<=free?'can':'')+'" data-t="'+t+'" data-k="'+k+'"><b>'+f.n+'</b><i>'+(has?'✓':(can?'★'+c:'🔒'))+'</i></button>';}).join('')+'</div></div>';}
-  h+='<h2>'+Lg('Чары и запасы','Spells and supplies')+'</h2>';
+        return '<button class="'+(has?'on':can&&c<=free?'can':'')+'" data-t="'+t+'" data-k="'+k+'"><b>'+f.n+'</b><small>'+forgeShort(t,k)+'</small><i>'+(has?'✓':(can?'★'+c:'🔒'))+'</i></button>';}).join('')+'</div></div>';}
+  h+='</div><h2>'+Lg('Чары и запасы','Spells and supplies')+'</h2><div class="g2">';
   for(const x of FORGE_EXTRA){const n=forgeN(x.k),max=x.cost.length;
     h+='<div class="card"><div class="row"><img class="ic" src="'+ic(x.ic)+'"><div class="t"><b>'+x.n+'</b><span>'+(n<max?Lg('Дальше: ','Next: ')+x.d[n]:Lg('Всё выковано!','All forged!'))+'</span><div class="pips">'+x.cost.map((_,i)=>'<i class="'+(i<n?'on':'')+'"></i>').join('')+'</div></div>'+
       (n<max?'<button class="btn gold" data-f="'+x.k+'" '+(free<x.cost[n]?'disabled':'')+'><img src="'+ic('star',40)+'">'+x.cost[n]+'</button>':'<span class="tag ok">'+Lg('Готово','Done')+'</span>')+'</div></div>';}
-  h+='<button class="btn ghost big" id="fReset" style="margin-top:6px">'+Lg('Сбросить кузницу','Reset the forge')+'</button>';
+  h+='</div><button class="btn ghost big" id="fReset" style="margin-top:6px">'+Lg('Сбросить кузницу','Reset the forge')+'</button>';
   el.innerHTML=h;
   for(const b of el.querySelectorAll('[data-k]'))b.onclick=()=>{const t=b.dataset.t,k=b.dataset.k,f=k==='sp'?FORGE_SP[t]:FORGE_T[k],c=FORGE_ORDER[t].find(q=>q[0]===k)[1];
     if(fHas(t,k)){toast(f.n+': '+f.d);return;}if(!forgeCan(t,k)){toast(Lg('Сначала «'+FORGE_T[FORGE_T[k].need].n+'»','First “'+FORGE_T[FORGE_T[k].need].n+'”'));return;}
-    if(starsFree()<c){toast(f.n+' ('+f.d+Lg(') — нужно звёзд: ',') — stars needed: ')+c);return;}fT(t)[k]=1;S.forgeT=nowMs();save();SND.up();toast(f.n+': '+f.d);renderForge();setPills();};
+    if(starsFree()<c){toast(f.n+' ('+f.d+Lg(') — нужно звёзд: ',') — stars needed: ')+c);return;}const p0=powerNow(),d0=forgeSnap(t);fT(t)[k]=1;S.forgeT=nowMs();save();SND.up();toast(TW[t].n+': '+forgeDiff(t,d0,f.d)+powerToast(p0));renderForge();setPills();};
   for(const b of el.querySelectorAll('[data-f]'))b.onclick=()=>{const k=b.dataset.f,n=forgeN(k);const x=FORGE_EXTRA.find(q=>q.k===k);const cost=x.cost[n];
-    if(starsFree()<cost)return;S.forge[k]=n+1;S.forgeT=nowMs();save();SND.up();toast(Lg('Выковано!','Forged!'));renderForge();setPills();};
+    if(starsFree()<cost)return;const p0=powerNow();S.forge[k]=n+1;S.forgeT=nowMs();save();SND.up();toast(x.n+': '+x.d[n]+powerToast(p0));renderForge();setPills();};
   on('fReset',()=>{if(!starsSpent())return;S.forge={};S.forgeT=nowMs();save();toast(Lg('Кузница сброшена — звёзды вернулись','Forge reset — your stars are back'));renderForge();setPills();});}
+
+/* ---------- boost: видимый рост силы — «было → стало» в кузнице и деревне, число «Сила застав» ---------- */
+function forgeShort(t,k){return k==='dmg1'?Lg('урон +10%','damage +10%'):k==='dmg2'?Lg('урон +15%','damage +15%'):k==='rng'?Lg('дальность +10%','range +10%'):k==='cheap'?Lg('цена −10%','cost −10%'):
+  ({arch:Lg('крит 15%','crit 15%'),pushka:Lg('взрыв +25%','blast +25%'),izba:Lg('лужа +1,5 с','pool +1.5 s'),mag:Lg('+1 цель','+1 target'),dub:Lg('оглуш. +0,3 с','stun +0.3 s')})[t];}
+// «Сила застав» — одно число, растёт с каждой покупкой в кузнице и деревне (только для наглядности, на бой не влияет)
+function powerNow(){let n=100+3*starsSpent();for(const b of BLD)n+=4*(S.village[b.id]||0);return n;}
+function powerHTML(){return '<div class="power"><span>'+Lg('⚔ Сила застав','⚔ Outpost power')+'</span><b>'+powerNow()+'</b></div>';}
+function powerToast(p0){const p=powerNow();return p>p0?Lg(' · ⚔ сила ',' · ⚔ power ')+p0+' → '+p:'';}
+function forgeSnap(t){const q=tstat(t,1,0);return {dmg:q.dmg!=null?q.dmg:q.dps,rng:q.rng,cost:buildCost(t)};}
+function forgeDiff(t,a,def){const b=forgeSnap(t),f=v=>dnum(String(Math.round(v*10)/10));
+  if(b.dmg!==a.dmg)return Lg('урон ','damage ')+f(a.dmg)+' → '+f(b.dmg);if(b.rng!==a.rng)return Lg('дальность ','range ')+f(a.rng)+' → '+f(b.rng);if(b.cost!==a.cost)return Lg('цена ','cost ')+a.cost+' → '+b.cost;return def;}
+// что даст следующий уровень постройки: [подпись, сейчас, будет]
+function bldDelta(id,l){const p=n=>n+'%';
+  return ({wall:[Lg('жизней в бою','lives per battle'),20+l+3*forgeN('lives'),21+l+3*forgeN('lives')],fair:[Lg('монет на старте','starting coins'),'+'+25*l,'+'+25*(l+1)],
+    range:[Lg('урон застав','outpost damage'),'+'+p(4*l),'+'+p(4*l+4)],smith:[Lg('цены застав','outpost prices'),'−'+p(4*l),'−'+p(4*l+4)],herb:[Lg('перезарядка чар','spell cooldown'),'−'+p(8*l),'−'+p(8*l+8)],
+    mint:[Lg('казна в час','treasury per hour'),afkRate(),afkRate()+10],barn:[Lg('казна вмещает, ч','treasury holds, h'),afkCapH(),afkCapH()+2]})[id];}
 
 /* ================= ДЕРЕВНЯ ================= */
 function giftReady(){return S.runs>0&&nowMs()-(S.gift||0)>4*3600e3;}
@@ -402,16 +512,17 @@ function nextBld(){let best=null;for(const b of BLD){const l=S.village[b.id]||0;
 function needV(){const b=nextBld();return b&&b.c>S.gold?{n:b.n,d:b.c-S.gold}:null;}
 function needB(extra){const b=nextBld();return b&&b.c>S.gold&&b.c<=S.gold+extra?b.n:'';}
 function renderVillage(){const el=$('tabVillage');const giftAmt=giftGold();
-  let h='<h2>'+Lg('Деревня','Village')+'</h2><p class="sub">'+Lg('Золото из боёв тратим тут: постройки усиливают заставу во всех боях.','Spend battle gold here: buildings make your outposts stronger in every battle.')+'</p><canvas id="vilCv" class="vilcv" aria-label="'+Lg('Твоя деревня','Your village')+'"></canvas>';
+  let h='<h2>'+Lg('Деревня','Village')+'</h2><p class="sub">'+Lg('Золото из боёв тратим тут: постройки усиливают заставу во всех боях.','Spend battle gold here: buildings make your outposts stronger in every battle.')+'</p>'+powerHTML()+'<canvas id="vilCv" class="vilcv" aria-label="'+Lg('Твоя деревня','Your village')+'"></canvas>';
   {const g=afkGold(),cap=afkCapH(),h2=Math.max(0,Math.min(cap,(nowMs()-S.afkT)/3600e3));
     h+='<div class="card treasury"><div class="row"><img class="ic" src="'+ic('ingot')+'"><div class="t"><b>'+Lg('Казна: ','Treasury: ')+fmtGold(g)+'</b><span>'+Lg('Копится, пока тебя нет: '+afkRate()+' в час, вмещает '+cap+' ч','Fills up while you’re away: '+afkRate()+' per hour, holds '+cap+' h')+'</span><div class="bar"><i style="width:'+Math.round(h2/cap*100)+'%"></i></div></div>'+
       (g>=10?'<button class="btn gold" id="afkTake">'+Lg('Забрать','Collect')+'</button>':'')+'</div></div>';}
   h+='<div class="blds">';
   for(const b of BLD){const l=S.village[b.id]||0,max=b.cost.length,cost=b.cost[l];
-    h+='<div class="card bld'+(l?' has':'')+'"><img src="'+ic(b.ic,112)+'"><b>'+b.name+'</b><span>'+b.about+'</span>'+
+    const dl=l<max?bldDelta(b.id,l):null;h+='<div class="card bld'+(l?' has':'')+'"><img src="'+ic(b.ic,112)+'"><b>'+b.name+'</b><span>'+b.about+'</span>'+(dl?'<em class="delta">'+dl[0]+': '+dl[1]+' → <b>'+dl[2]+'</b></em>':'')+
       '<div class="pips">'+Array.from({length:max},(_,i)=>'<i class="'+(i<l?'on':'')+'"></i>').join('')+'</div>'+
       (l>=max?'<span class="tag ok">'+Lg('Готово','Done')+'</span>':'<button class="btn gold" data-b="'+b.id+'" '+(S.gold<cost?'disabled':'')+'><img src="'+ic('ingot',40)+'">'+fmtNum(cost)+'</button>')+'</div>';}
   h+='</div>';
+  h+=bannersHTML();
   h+=cosmeticsHTML();
   // все предложения за рекламу — одной карточкой ниже построек; за золото — только пока золоту есть куда идти (goldWanted)
   const g=afkGold(),bst=S.afkBoost&&S.afkBoost.day===dayKey()?S.afkBoost.n:0,offers=[],gw=goldWanted()&&adOk();
@@ -424,14 +535,15 @@ function renderVillage(){const el=$('tabVillage');const giftAmt=giftGold();
     (needV()?Lg('До «'+needV().n+'» не хватает '+fmtGold(needV().d)+'. ','You need '+fmtGold(needV().d)+' more for “'+needV().n+'”. '):'')+(!gw?Lg('Всё куплено — золото пусть копится на новые затеи.','Everything is bought — let the gold pile up for new ideas.'):S.runs>0&&!giftReady()?Lg('Тётушка печёт пироги: гостинец через '+Math.ceil((4*3600e3-(nowMs()-S.gift))/3600e3)+' ч','Auntie is baking pies: next treat in '+Math.ceil((4*3600e3-(nowMs()-S.gift))/3600e3)+' h'):Lg('Реклама не обязательна — всё можно заработать в боях.','Ads are optional — you can earn everything in battle.'))+'</span></div></div><div class="btns" style="margin-top:0">'+offers.join('')+'</div></div>';
   el.innerHTML=h;
   {const c=$('vilCv');if(c)drawVillage(c,c.clientWidth||Math.min(520,el.clientWidth||340),Math.round(Math.min(170,Math.max(120,(c.clientWidth||340)*.36))));}
-  cosmeticsBind();
+  cosmeticsBind();bannersBind(el);
   const takeAfk=m=>{const g=afkGold();if(g<=0)return;S.gold+=g*m;S.afkT=nowMs();save();SND.coin();toast('+'+fmtGold(g*m)+Lg(' из казны',' from the treasury'));renderVillage();setPills();};
   on('vBoost',()=>openBoostOffer());
   on('afkTake',()=>takeAfk(1));on('afkX2',()=>showRewarded(()=>takeAfk(2)));
   on('afkBoost',()=>showRewarded(()=>{const bst=S.afkBoost&&S.afkBoost.day===dayKey()?S.afkBoost.n:0;const amt=afkRate()*2;S.afkBoost={day:dayKey(),n:bst+1};S.gold+=amt;save();SND.coin();toast('+'+fmtGold(amt));renderVillage();setPills();}));
   on('giftBtn',()=>showRewarded(()=>{S.gold+=giftAmt;S.gift=nowMs();save();SND.up();toast(Lg('Тётушка Яга: «Кушай, воевода!» +','Auntie Yaga: “Eat up, commander!” +')+fmtGold(giftAmt));renderVillage();setPills();}));
   for(const b of el.querySelectorAll('[data-b]'))b.onclick=()=>{const bd=BLD.find(x=>x.id===b.dataset.b),l=S.village[bd.id]||0,cost=bd.cost[l];if(S.gold<cost)return;
-    S.gold-=cost;S.village[bd.id]=l+1;save();SND.build();renderVillage();setPills();vilAnim(bd.id,bd.name+(l?': '+lvLbl(l+1):Lg(' построен'+({wall:'',herb:'а',range:'о',smith:'а',fair:'а'}[bd.id]||'')+'!',' built!')));};}
+    const dl=bldDelta(bd.id,l),p0=powerNow();S.gold-=cost;S.village[bd.id]=l+1;save();SND.build();renderVillage();setPills();vilAnim(bd.id,bd.name+(l?': '+lvLbl(l+1):Lg(' построен'+({wall:'',herb:'а',range:'о',smith:'а',fair:'а'}[bd.id]||'')+'!',' built!')));
+    toast(bd.name+' — '+dl[0]+': '+dl[1]+' → '+dl[2]+powerToast(p0));};}
 // купил постройку — она «вырастает» на картинке деревни с искрами (вместо сухого тоста); картинка — сверху вкладки
 function vilAnim(id,txt){const c=$('vilCv');if(!c){toast(txt);return;}const W=c.clientWidth,H=parseFloat(c.style.height)||c.clientHeight,t0=performance.now();
   if(c.getBoundingClientRect().bottom<60)c.scrollIntoView({block:'nearest'});
@@ -496,20 +608,20 @@ function renderSiege(){const el=$('tabSiege'),open=!!S.stars['0-5'];
   // Босс недели
   const w=weekNo(),wc=weekCh(w),wb=CH[wc].boss,m=wkMine(),lh=weekLeftH(),left=lh>=24?Math.floor(lh/24)+Lg(' дн. ','d ')+(lh%24)+Lg(' ч','h'):lh+Lg(' ч','h');
   const lockBtn='<button class="btn big" disabled>'+Lg('🔒 Освободи ','🔒 Free the ')+CH[0].name+'</button>';
-  let h='<h2>'+Lg('Босс недели','Boss of the Week')+'</h2><div class="card"><div class="row"><img class="ic" src="'+ic(wb)+'" alt=""><div class="t"><b>'+EN[wb].n+'</b><span>'+CH[wc].name+Lg('. 9 волн, в последней — сам босс, в 2,5 раза крепче обычного. Одолей быстрее всех — или сними побольше здоровья. Новый босс через ','. 9 waves, the last one brings the boss himself, 2.5 times tougher than usual. Win the fastest — or take off as much health as you can. New boss in ')+left+'.</span></div></div>'+
+  let h='<div class="g2"><div><h2>'+Lg('Босс недели','Boss of the Week')+'</h2><div class="card"><div class="row"><img class="ic" src="'+ic(wb)+'" alt=""><div class="t"><b>'+EN[wb].n+'</b><span>'+CH[wc].name+Lg('. 9 волн, в последней — сам босс, в 2,5 раза крепче обычного. Одолей быстрее всех — или сними побольше здоровья. Новый босс через ','. 9 waves, the last one brings the boss himself, 2.5 times tougher than usual. Win the fastest — or take off as much health as you can. New boss in ')+left+'.</span></div></div>'+
     '<div class="stats"><div><b>'+(m.best?fmtWeek(m.best).replace(/^(победа за|урон|won in|damage) /,''):'—')+'</b>'+(m.best>=10000?Lg('победа за','won in'):Lg('лучшее','best'))+'</div><div><b>'+m.runs+'</b>'+plw(m.runs,'попытка','попытки','попыток','try','tries')+'</div><div><b>'+(m.got?'✓':'+'+fmtNum(weekReward()))+'</b>'+(m.got?Lg('награда взята','reward taken'):Lg('за победу','for a win'))+'</div></div>'+
     '<div class="btns" style="margin-top:0">'+(open?'<button class="btn big" id="wkGo">'+swordImg()+Lg(' Сразиться',' Fight')+'</button>':lockBtn)+'</div></div>';
   // испытание дня
   const D=open?dchToday():null;
   if(D){const R=DCH_RULES.find(r=>r.k===D.rule)||DCH_RULES[0],ch=CH[D.c],en=levelEnemies(D.c,D.l);
-    h+='<h2>'+Lg('Испытание дня','Daily challenge')+'</h2><div class="card"><div class="row"><img class="ic" src="'+ic(EN[en[en.length-1]].art||en[en.length-1])+'" alt=""><div class="t"><b>'+Lg('«'+R.n+'»','“'+R.n+'”')+' · '+ch.levels[D.l]+'</b><span>'+R.d+Lg(' Глава '+(D.c+1)+', уровень '+(D.l+1)+'.',' Chapter '+(D.c+1)+', level '+(D.l+1)+'.')+'</span></div></div>'+
+    h+='</div><div><h2>'+Lg('Испытание дня','Daily challenge')+'</h2><div class="card"><div class="row"><img class="ic" src="'+ic(EN[en[en.length-1]].art||en[en.length-1])+'" alt=""><div class="t"><b>'+Lg('«'+R.n+'»','“'+R.n+'”')+' · '+ch.levels[D.l]+'</b><span>'+R.d+Lg(' Глава '+(D.c+1)+', уровень '+(D.l+1)+'.',' Chapter '+(D.c+1)+', level '+(D.l+1)+'.')+'</span></div></div>'+
       '<p class="sub" style="margin:8px 2px 0">'+(D.res===1?Lg('✅ Пройдено! Новое испытание — завтра.','✅ Complete! A new challenge comes tomorrow.'):D.tried?Lg('Награда была за первую попытку — завтра новое испытание. Сыграть можно для себя.','The reward was for the first try — a new challenge comes tomorrow. You can still play for fun.'):Lg('Награда за победу с первой попытки: +'+fmtGold(dchGold())+' и +5 мин ⏩','Reward for winning on the first try: +'+fmtGold(dchGold())+' and +5 min ⏩'))+'</p>'+
       '<div class="btns">'+(D.tried?'<button class="btn ghost big" id="dchGo">'+Lg('Сыграть для себя','Play for fun')+'</button>':'<button class="btn big" id="dchGo">'+swordImg()+Lg(' Принять вызов',' Accept the challenge')+'</button>')+'</div></div>';}
-  h+='<h2>'+Lg('Бесконечная осада','Endless siege')+'</h2><p class="sub">'+Lg('Калинов мост. Нечисть идёт без конца, с каждой волной злее, каждые 10 волн — босс. Сколько продержишься?','Kalinov Bridge. Monsters keep coming, each wave nastier, a boss every 10 waves. How long can you hold?')+'</p>';
+  h+='</div><div><h2>'+Lg('Бесконечная осада','Endless siege')+'</h2><p class="sub">'+Lg('Калинов мост. Нечисть идёт без конца, с каждой волной злее, каждые 10 волн — босс. Сколько продержишься?','Kalinov Bridge. Monsters keep coming, each wave nastier, a boss every 10 waves. How long can you hold?')+'</p>';
   h+='<div class="card"><div class="row"><img class="ic" src="'+ic('b_siege')+'" alt=""><div class="t"><b>'+Lg('Рекорд: ','Record: ')+(S.endBest||0)+' '+plw(S.endBest||0,'волна','волны','волн','wave','waves')+'</b><span>'+Lg('Золото за каждую волну. Жизни, кузница и деревня работают и тут.','Gold for every wave. Lives, the forge and the village work here too.')+'</span></div></div>'+
     '<div class="btns">'+(open?'<button class="btn big" id="endGo">'+swordImg()+Lg(' На Калинов мост',' To Kalinov Bridge')+'</button>':lockBtn)+'</div></div>';
   const crowns=Object.keys(S.crown||{}).length;
-  h+='<h2>'+Lg('Летопись','Chronicle')+'</h2><div class="stats"><div><b>'+starsTotal()+'</b>'+Lg('звёзд','stars')+'</div><div><b>'+fmtNum(S.kills)+'</b>'+Lg('нечисти','monsters')+'</div><div><b>'+S.wins+'</b>'+Lg('побед','wins')+'</div>'+(crowns?'<div><b>👑 '+crowns+'</b>'+Lg('корон','crowns')+'</div>':'')+(S.dchN?'<div><b>'+S.dchN+'</b>'+Lg(plural(S.dchN,'испытание','испытания','испытаний')+' дня',S.dchN===1?'daily challenge':'daily challenges')+'</div>':'')+'</div>'+chronicleBtns();
+  h+='</div><div><h2>'+Lg('Летопись','Chronicle')+'</h2><div class="stats"><div><b>'+starsTotal()+'</b>'+Lg('звёзд','stars')+'</div><div><b>'+fmtNum(S.kills)+'</b>'+Lg('нечисти','monsters')+'</div><div><b>'+S.wins+'</b>'+Lg('побед','wins')+'</div>'+(crowns?'<div><b>👑 '+crowns+'</b>'+Lg('корон','crowns')+'</div>':'')+(S.dchN?'<div><b>'+S.dchN+'</b>'+Lg(plural(S.dchN,'испытание','испытания','испытаний')+' дня',S.dchN===1?'daily challenge':'daily challenges')+'</div>':'')+'</div>'+chronicleBtns()+'</div></div>';
   if(PLAT==='vk'&&LB.vkOk()){h+='<h2>Рекорды друзей</h2><div class="card"><p class="sub" style="margin:0 0 8px">Кто из друзей дольше держит Калинов мост?</p><button class="btn ghost big" id="vkLb">🏆 Таблица друзей</button></div>';}
   if(PLAT!=='vk'){h+='<h2>'+Lg('Рекорды Руси','Records of Rus')+'</h2>'+(LB.ok()?'<div class="seg"><button data-lb="weekly" class="'+(lbSeg==='weekly'?'on':'')+'">'+Lg('Босс недели','Boss of the Week')+'</button><button data-lb="endless" class="'+(lbSeg==='endless'?'on':'')+'">'+Lg('Осада','Siege')+'</button></div>':'')+
     '<div class="card" id="lbBox"><p class="sub" style="margin:0">'+(LB.ok()?Lg('Загружаем…','Loading…'):Lg('Общая таблица рекордов работает в Яндекс Играх.','The shared leaderboard works on Yandex Games.'))+'</p></div>';}

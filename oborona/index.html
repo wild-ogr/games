@@ -150,7 +150,7 @@ button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertic
 .panel h3{margin:0 0 4px;font-size:22px;font-weight:900;text-align:center}
 .panel .sub{text-align:center}
 .btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-.btns.h{flex-direction:row}.btns.h>*{flex:1}
+.btns.h{flex-direction:row}.btns.h>*{flex:1;min-width:0}.btns.h>.btn{white-space:normal;line-height:1.15}
 /* кнопки окна прижаты к низу панели, когда она прокручивается (низкое окно VK на ноутбуке 911×560–700, телефоны) */
 .panel .btns.stick{position:-webkit-sticky;position:sticky;bottom:-18px;z-index:2;margin:12px -18px -18px;padding:14px 18px 18px;background:linear-gradient(180deg,rgba(26,33,64,0),#1a2140 14px)}
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
@@ -181,7 +181,14 @@ button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertic
 /* выбор сложности и таблиц, сводка по заставам, корона, цель заставы */
 .seg{display:flex;gap:6px;margin:8px 0}.seg button{flex:1;min-width:0;min-height:44px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid var(--line);font-weight:800;font-size:14px;color:#dfe3f2;padding:4px 2px;line-height:1.1}
 .seg button.on{background:linear-gradient(180deg,#ffd84a,#f0a020);color:#3a2206;border-color:rgba(255,216,74,.8)}
-.besttw{margin:10px 0}.besttw .row .t b{font-size:15px}
+.besttw{margin:8px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 10px}.besttw summary,.besttw.one{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:#e2e5f3;line-height:1.25;padding:4px 0;min-height:40px;list-style:none}.besttw summary::-webkit-details-marker{display:none}
+.besttw summary::after{content:'▾';margin-left:auto;color:#ffe7a0;font-size:16px}.besttw[open] summary::after{content:'▴'}.besttw summary img,.besttw.one img{width:34px;height:34px;flex:none}.besttw b{color:#ffe7a0}
+/* boost: «Дальше» / «Завтра» / боевой дух в итогах; полоса «отбито волн» */
+.goal{margin:8px 0;padding:7px 10px;border-radius:10px;background:rgba(255,201,74,.12);border-left:3px solid var(--gold);font-size:14px;line-height:1.32;text-align:left;color:#f1ecdc}.goal b{color:#ffe7a0}
+.goal.tmr{background:rgba(138,200,255,.1);border-left-color:#8ac8ff}.goal.tmr b{color:#bfe2ff}
+.prog{margin:4px 0 8px;text-align:center;font-size:14px;font-weight:800;color:#ffe7a0}.prog .bar{height:10px;border-radius:5px;margin:0 0 5px}
+.rew b{font-size:17px}
+@media (max-height:700px){.bigstars img{width:50px;height:50px}.bigstars img:nth-child(2){margin-top:-10px}.bigstars{margin:2px 0}.panel .sub{margin-bottom:8px}.goal{margin:6px 0;font-size:13.5px}.rew{padding:9px;margin-bottom:6px}}
 .twrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line)}.twrow img{width:34px;height:34px;flex:none}.twrow .t{flex:1;min-width:0}.twrow .t b{display:block;font-size:13px}.twrow .bar{margin-top:3px;height:6px}
 .twrow>span{font-weight:900;font-size:15px;text-align:right;min-width:64px}.twrow small{display:block;font-size:12px;color:var(--mut);font-weight:700}
 details summary{cursor:pointer;font-weight:800;font-size:14px;color:#ffe7a0;padding:10px 2px 4px;min-height:36px}
@@ -194,6 +201,64 @@ details summary{cursor:pointer;font-weight:800;font-size:14px;color:#ffe7a0;padd
 .bcell.lock img{filter:brightness(0) opacity(.35)}.bcell.lock b{color:var(--mut)}
 .beast{text-align:center}.beast img{width:150px;height:150px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.4))}.beast.lock img{filter:brightness(0) opacity(.4)}
 .ach{padding:10px 12px;margin-bottom:8px}.ach .t b{display:block;font-size:15px}.ach .t span{display:block;font-size:13px;color:var(--mut);margin-top:2px}.ach.got{opacity:.62}
+.lvl.th{background-size:cover;background-position:center;text-shadow:0 1px 3px #000,0 0 6px rgba(0,0,0,.8);color:#fff}
+.hp.bump{animation:bump .22s ease-out}@keyframes bump{40%{transform:scale(1.16);background:rgba(120,90,10,.9)}}
+/* заход 2: полоса «Копим на…» на карте */
+.glbar{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin:0 0 8px;padding:6px 12px 6px 8px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(230,184,90,.35);text-align:left;color:var(--txt)}
+.glbar img{width:34px;height:34px;flex:none}.glbar .t{flex:1;min-width:0;display:block}.glbar .t b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.glbar .bar{display:block;margin-top:4px}
+.glbar em{font-style:normal;font-weight:900;font-size:13.5px;color:var(--gold);white-space:nowrap}.glbar.hot{border-color:var(--gold);box-shadow:0 0 12px rgba(255,201,74,.3)}
+.bld .btn.ghost{padding:6px 10px;font-size:12.5px;white-space:normal;line-height:1.15}
+@supports not (inset:0){.glbar>*+*{margin-left:10px}}
+/* boost: «Сегодня» на карте, «было → стало», сила застав */
+.chips{display:flex;gap:6px;overflow-x:auto;margin:0 0 8px;padding-bottom:2px;-webkit-overflow-scrolling:touch}.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:44px;border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:800;white-space:nowrap;background:rgba(255,255,255,.08);border:1px solid var(--line);color:#dfe3f2}
+.chip.hot{border-color:var(--gold);color:#ffe7a0;background:rgba(255,201,74,.16);box-shadow:0 0 12px rgba(255,201,74,.3)}
+#info .st b.up{font-size:inherit}#info .st b.up,.delta b{color:#8af0a0}.delta{font-style:normal;font-size:12.5px;font-weight:800;color:#bfe2ff;line-height:1.2}
+.tiers button small{font-size:11px;font-weight:700;color:#bfe2ff;line-height:1.05}.tiers button{min-height:62px}
+.power{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;padding:7px 12px;border-radius:12px;background:linear-gradient(90deg,rgba(179,38,30,.35),rgba(179,38,30,.08));border:1px solid rgba(230,184,90,.4);font-weight:800;font-size:14px;color:#ffe9b0}.power b{font-size:19px;color:#fff3d0}
+@supports not (inset:0){.chips>*+*{margin-left:6px}}
+/* ---------- boost: раскладка для компьютера (от 880 px: ПК, окно VK 911 px, планшет в альбоме). На телефоне всё как было ---------- */
+@media (min-width:880px){
+  #menu>.topbar,#menu>.tabs,#menu>nav{max-width:1120px}
+  #menu>.tabs{border-left:2px solid rgba(217,164,65,.55);border-right:2px solid rgba(217,164,65,.55);background:rgba(10,12,28,.25)}
+  .tab{padding-left:22px;padding-right:22px}
+  .mapcols{display:flex;align-items:flex-start}.mapcols #mapCv{flex:0 0 50%;width:50%;margin:0 18px 0 0}.mapside{flex:1;min-width:0}
+  .g2{display:grid;grid-template-columns:1fr 1fr;grid-gap:0 16px;align-items:start}
+  .blds{grid-template-columns:repeat(4,1fr)}.vilcv{height:190px}
+  .bgrid{grid-template-columns:repeat(6,1fr)}
+  .panel{max-width:480px}
+  nav button{flex-direction:row;justify-content:center;gap:8px;font-size:15px;padding:8px 2px}
+}
+/* бой на широком мониторе: панели у самого поля (ширина --hw считается в layout) */
+body.wide #hud,body.wide #hudB{left:50%;right:auto;width:var(--hw,100%);transform:translateX(-50%)}
+body.wide #info{right:calc(50% - var(--hw,100vw)/2 + 16px)}body.wide #voice{left:calc(50% - var(--hw,100vw)/2 + 16px);width:280px}
+/* заход 2: низкий телефон (320×568) — окно итогов плотнее, «Завтра» видно без прокрутки и при кнопке рекламы */
+@media (max-height:600px){#modal{padding:6px}.panel{padding:18px 12px 12px}.panel>h3{font-size:18px;padding:5px 22px;margin-bottom:5px}.bigstars img{width:38px;height:38px}.bigstars img:nth-child(2){margin-top:-8px}.bigstars{margin:0}
+  .panel .sub{font-size:13px;margin:0 2px 5px}.rew{padding:6px 8px;margin-bottom:4px;border-radius:12px}.rew b{font-size:15px}.goal{margin:4px 0;padding:5px 8px;font-size:13px;line-height:1.25}
+  .panel .btns.stick{bottom:-12px;margin:8px -12px -12px;padding:10px 12px 12px}.panel .btns{gap:6px}.panel .big{padding:10px;font-size:15px}.panel .btns .btn.ad{padding:6px 10px;font-size:14px}}
+/* ---------- boost: единый «сказочный» стиль, как в «Богатыре»: вышитый рушник (узор --orn), красная лента заголовка, золотая кайма, заголовки с засечками.
+   Только оформление (CSS), без файлов шрифтов и внешних ссылок ---------- */
+:root{--ft:Georgia,"Times New Roman","Noto Serif",serif;--orn:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='14' viewBox='0 0 28 14'%3E%3Crect width='28' height='14' fill='%23a3211c'/%3E%3Cpath d='M14 2.4l4.6 4.6-4.6 4.6L9.4 7z' fill='none' stroke='%23ffe9b0' stroke-width='1.5'/%3E%3Cpath d='M14 5.3l1.7 1.7-1.7 1.7L12.3 7zM0 4.2l2.8 2.8L0 9.8-2.8 7zM28 4.2l2.8 2.8L28 9.8 25.2 7z' fill='%23ffe9b0'/%3E%3Cpath d='M0 .8h28M0 13.2h28' stroke='%23ffcf5a' stroke-width='1.6'/%3E%3C/svg%3E")}
+.panel{position:relative;background:linear-gradient(180deg,#2a2c58,#191c3c);border:2px solid #d9a441;border-radius:20px;padding:24px 18px 18px;box-shadow:0 0 0 3px #4a1f12,0 0 0 4px rgba(230,184,90,.5),0 20px 60px rgba(0,0,0,.55)}
+.panel::before{content:'';position:absolute;left:20px;right:20px;top:0;height:10px;background:var(--orn) center top/auto 10px repeat-x;border-radius:0 0 5px 5px}
+.panel>h3{font-family:var(--ft);font-size:21px;line-height:1.15;letter-spacing:.2px;color:#fff3d0;text-align:center;text-shadow:0 2px 0 rgba(70,14,8,.9);margin:0 0 10px;padding:8px 26px;background:linear-gradient(180deg,#b3261e,#84160f);border:1px solid #e6b85a;border-radius:8px;box-shadow:inset 0 0 0 2px rgba(80,14,8,.55),0 3px 0 rgba(0,0,0,.28);position:relative}
+.panel>h3::before,.panel>h3::after{content:'';position:absolute;top:50%;width:8px;height:8px;margin-top:-4px;background:#ffe9b0;transform:rotate(45deg)}
+.panel>h3::before{left:10px}.panel>h3::after{right:10px}
+.panel .btns.stick{background:linear-gradient(180deg,rgba(25,28,60,0),#191c3c 16px)}
+#menu h2{font-family:var(--ft);font-size:21px;color:#fff3d0;letter-spacing:.2px}
+#menu h2::after{content:'';display:block;width:84px;height:5px;margin-top:5px;border-radius:3px;background:var(--orn) left center/auto 5px repeat-x}
+.title{font-family:var(--ft);font-size:19px;color:#ffe9b0;text-shadow:0 2px 0 rgba(70,14,8,.8)}.title small{font-family:var(--f);text-shadow:none}
+.tabs::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;z-index:3;pointer-events:none;background:var(--orn) center/auto 5px repeat-x}
+.tab{padding-top:11px}
+nav{border-top:2px solid #d9a441}
+.card{border-color:rgba(230,184,90,.22)}
+.btn:not(.ghost){border-bottom:3px solid rgba(0,0,0,.26);text-shadow:0 1px 0 rgba(0,0,0,.28)}.btn.gold{text-shadow:0 1px 0 rgba(255,255,255,.35)}
+#toast{border-color:rgba(230,184,90,.6)}#info{border-color:rgba(230,184,90,.6)}
+#voice div{border:2px solid #d9a441;box-shadow:0 0 0 2px #4a1f12,0 6px 20px rgba(0,0,0,.4)}
+#loading{font-family:var(--ft);color:#ffe9b0}#loading small{font-family:var(--f)}
+@media (max-width:430px){.title{font-size:15px}}
+@media (max-width:400px){.title small{display:none}}
+@media (max-width:340px){.title{font-size:15px}.panel>h3{font-size:19px;padding:7px 22px}#modal{padding:8px}.panel{padding:22px 12px 14px}.panel .btns.stick{bottom:-14px;margin:12px -12px -14px;padding:12px 12px 14px}}
 /* старые браузеры без gap во flex (Chrome < 84, Safari < 14.1 — примерно те же, что без inset) */
 @supports not (inset:0){
   #hud>*+*,#hudB>*+*,.spells>*+*,nav>*+*,.btns.h>*+*,.topbar>*+*,.row>*+*,.qrow>*+*,.pill>*+*,.hp>*+*,.ens>div,.enl>*+*,.say>*+*{margin-left:8px}
