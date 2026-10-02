@@ -241,6 +241,7 @@ function cal(){const w=W();if(!w)return [];const now=w.m*30+w.d,a=[];
     if(o.up)add(now+(o.up.left||0),`Модернизация готова: ${on[0].toLowerCase()}`,`Upgrade done: ${on[1].toLowerCase()}`,'mih',false,'u'+o.id,['obj']);}
   for(const b of w.biz||[])if(b.st==='b'){const n=bizNR(b.t);add(now+(b.left||0),`Открытие: ${n[0].toLowerCase()}`,`Opening: ${n[1].toLowerCase()}`,'mih',true,'z'+b.id,['biz',b.id]);}
   if(w.me&&Array.isArray(w.me.gigs))for(const g of w.me.gigs){const G=E.GIGS&&E.GIGS[g.t];if(!G)continue;add(now+(g.left||0),`Заказ готов: ${G.n.toLowerCase()}`,`Job done: ${G.en.toLowerCase()}`,'lud',false,null,['gigs']);}
+  if(window.CASHUI&&CASHUI.calDates)try{for(const x of CASHUI.calDates(w))add(now+x.d-1,x.ru,x.en,x.w,x.imp,x.key,['cash']);}catch(e){}   // M30: крупные поступления и платежи, день разрыва (js/cash-ui.js)
   for(const x of w.auc||[]){const gn=E.GOODS&&E.GOODS[x.g],rn=regNR(x.r);add(now+Math.max(0,x.end-w.t),`Конец торгов: ${gn?gn.n.toLowerCase():''}, ${rn[0]}`,`Auction ends: ${gn?gn.en.toLowerCase():''}, ${rn[1]}`,'lud',x.you||x.finder==='you','a'+x.id,['map']);}
   for(const x of w.opi||[])if(x.st==='auc'&&x.end!=null)add(now+Math.max(0,x.end-w.t),'Конец торгов за карьер','Quarry auction ends','bars',true,'o'+x.id,['biz']);
   for(const c of w.cons||[]){const gn=E.GOODS&&E.GOODS[c.g];if(c.done>=c.q)continue;add(now+Math.max(0,c.end-w.t),`Срок контракта: ${gn?gn.n.toLowerCase():''}`,`Contract due: ${gn?gn.en.toLowerCase():''}`,'lud',true,'c'+c.id,['con']);}
@@ -374,14 +375,17 @@ function vApp(a){const w=W();if(!w)return {t:'',h:''};
   if(a==='cal')return {t:T('Календарь','Calendar'),h:appCal(w)};
   return {t:T('Новости','News'),h:appNews(w)};}
 function appOrders(w){let h='';
-  if(early()&&w.me){const G=E.GIGS||{},bd=(w.me.board||[]).slice().sort((a,b)=>(b.pay||0)-(a.pay||0)).slice(0,3);let fr=null;try{fr=E.hands(w);}catch(e){}
+  // M30: тот же отбор, что «Взять лучший» — без недоступных (нет снаряжения/рейтинга), сначала те, что можно взять сейчас; у временно недоступных — серая кнопка с причиной
+  if(early()&&w.me){const G=E.GIGS||{},ck=g=>{try{return E.gigCanTake(w,g);}catch(e){return 'ok';}},all=(w.me.board||[]).map(g=>({g,r:ck(g)})),nReq=all.filter(x=>x.r==='req').length;
+    const bd=all.filter(x=>x.r!=='req'&&x.r!=='no').sort((a,b)=>(a.r==='ok'?0:1)-(b.r==='ok'?0:1)||(b.g.pay||0)-(a.g.pay||0)).slice(0,3);let fr=null;try{fr=E.hands(w);}catch(e){}
     h+=`<p class="ph-note">${T('Лучшие заказы с доски','Top jobs on the board')}${fr?` · ✋ ${T('свободно','free')} ${fr.free} ${T('из','of')} ${fr.tot}`:''} · ⚡ ${Math.round(w.me.en)}</p>`;
     if(!bd.length)h+=`<div class="ph-empty">${T('Заказов пока нет — новые появятся завтра.','No jobs yet — new ones appear tomorrow.')}</div>`;
-    for(const g of bd){const d=G[g.t]||{ico:'•',n:g.t,en:g.t,who:['','']};
+    for(const x of bd){const g=x.g;const d=G[g.t]||{ico:'•',n:g.t,en:g.t,who:['','']};
       const pay=g.t==='resale'?T(`вложить ${money(g.inv)}`,`invest ${money(g.inv)}`):'+'+money(g.pay);
       h+=`<div class="ph-job"><div class="ph-jt"><span class="ph-ji">${d.ico}</span><span><b>${esc(en()?d.en:d.n)}</b><small>${esc(d.who?(en()?d.who[1]:d.who[0]):'')}</small></span><b class="good">${pay}</b></div>
         <div class="ph-pills"><span>⏱ ${pln(g.days,'день','дня','дней','day','days')}</span><span>⚡ ${g.e}</span>${g.prem?`<span>★ ${T('премия','bonus')}</span>`:''}</div>
-        <button class="btn w blue noenter" data-p="take" data-g="${esc(g.id)}">${T('Взять','Take')}</button></div>`;}
+        ${x.r==='ok'?`<button class="btn w blue noenter" data-p="take" data-g="${esc(g.id)}">${T('Взять','Take')}</button>`:`<button class="btn w noenter" disabled>${esc(T(TAKE[x.r]?TAKE[x.r][0]:'Пока нельзя',TAKE[x.r]?TAKE[x.r][1]:'Not now'))}</button>`}</div>`;}
+    if(nReq)h+=`<p class="ph-note">${T(`Ещё ${nReq} — нужно снаряжение или рейтинг: смотрите на доске «Заказы».`,`${nReq} more need equipment or a rating: see the Orders board.`)}</p>`;
     h+=`<button class="btn w noenter ph-mt" data-p="act" data-k="gigs" data-m="all">${T('Все заказы','All jobs')}</button>`;}
   else{const of=(w.offers||[]).slice(0,3);h+=`<p class="ph-note">${T('Предложения контрактов','Contract offers')}</p>`;
     if(!of.length)h+=`<div class="ph-empty">${T('Новых предложений нет. Покупатели пишут, когда есть своя продукция.','No new offers. Buyers get in touch once you have your own output.')}</div>`;
@@ -427,6 +431,7 @@ function openBiz(id){const B=window.BIZUI;try{if(B){if(typeof B.openBiz==='funct
 function goFin(tab){try{UI.go('fin');const el=$e('scr-fin');if(el&&window.FIN)FIN.renderFin(el,tab);}catch(e){console.error(e);}}
 function doAct(k,m){const leave=()=>{if(!wide()&&isOn)close();};
   if(k==='bank'){leave();goFin('bank');}
+  else if(k==='cash'){leave();if(window.CASHUI)CASHUI.open();}
   else if(k==='gigs'){if(openGigs())leave();else if(m!=='all')go('app','orders');else tst(T('Доска заказов откроется в следующем обновлении','The job board opens in the next update'));}
   else if(k==='report'){try{if(window.FIN&&FIN.openReport)FIN.openReport(+m);}catch(e){console.error(e);}}
   else if(k==='obj'){leave();try{UI.go('obj');}catch(e){}}

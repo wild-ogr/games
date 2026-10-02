@@ -94,7 +94,8 @@ const SC={
   bars2:{m:'calm',t:a=>T(`${a.pl?G('Помнишь, ты сказал сохранить мой проект? Вот он. ','Помнишь, ты сказала сохранить мой проект? Вот он. '):''}«Сосновый лог» выставляют на торги. Я знаю каждый уступ. Пойдём вместе? Мой вклад — знания и проект, твой — ${money(a.a)}. У тебя ${pct(a.sh||.6)}.`,`${a.pl?'Remember you told me to keep my design? Here it is. ':''}Pine Hollow is going up for auction. I know every bench of it. Shall we go in together? I bring the know-how and the design, you bring ${money(a.a)}. You get ${pct(a.sh||.6)}.`),
     o:{a:a=>[T('Идём вместе','Let’s go together'),T(`вклад ${money(a.a)}, ваша доля ${pct(a.sh||.6)}`,`invest ${money(a.a)}, your share ${pct(a.sh||.6)}`)],b:()=>[T(G('Пойду один','Пойду одна'),'I’ll go alone'),T('Пётр подаст заявку с Борисом — честные торги','Pyotr will bid with Boris — a fair auction')],c:()=>[T('Возьму другой участок','I’ll take another plot'),'']},
     r:{a:()=>T('Отлично. Проект уже в столе — завтра покажу.','Great. The design is in my drawer — I’ll show you tomorrow.'),b:()=>T('Честно. Тогда увидимся на торгах — пусть победит лучший расчёт.','Fair. See you at the auction then — may the best numbers win.'),c:()=>T('Разумно. Места под Кемеровом хватит всем.','Sensible. There’s room for everyone around Kemerovo.')}},
-  ned1:{m:'wow',big:1,t:()=>T('Письмо Роснедр пришло вам — и почти в тот же день Соне, Борису и Пете. Соня нашла инвестора и открывает «Сова Инвест», Борис уже купил костюм. «Ну что, в большую лигу?»','A letter from the subsoil agency reached you — and, almost the same day, Sonya, Boris and Pyotr. Sonya found an investor and opens Owl Invest, Boris has already bought a suit. “Well then, the big league?”'),
+  // M30: Соня — партнёр (если выбрали её фонд) и соперник на торгах; письмо не должно говорить, что «Сова Инвест» только открывается
+  ned1:{m:'wow',big:1,t:()=>partner().id==='owl'?T('Письмо Роснедр пришло вам — и почти в тот же день Соне, Борису и Пете. Соня вложилась в вас через «Сова Инвест», но и сама пойдёт на торги: «Дружба дружбой, а участки врозь!» Борис уже купил костюм. «Ну что, в большую лигу?»','A letter from the subsoil agency reached you — and, almost the same day, Sonya, Boris and Pyotr. Sonya invested in you through Owl Invest, but she’ll bid for plots herself too: “Friends are friends, but plots are separate!” Boris has already bought a suit. “Well then, the big league?”'):T('Письмо Роснедр пришло вам — и почти в тот же день Соне, Борису и Пете. Соня нашла инвестора и открывает «Сова Инвест», Борис уже купил костюм. «Ну что, в большую лигу?»','A letter from the subsoil agency reached you — and, almost the same day, Sonya, Boris and Pyotr. Sonya found an investor and opens Owl Invest, Boris has already bought a suit. “Well then, the big league?”'),
     o:{a:()=>[T('В большую лигу!','To the big league!'),'']},r:{a:()=>T('Встретимся на торгах. Честно и по-дружески!','See you at the auctions. Fair and friendly!')}},
   bear1:{m:'worry',big:1,t:a=>T(`Беда, ${hv()}. Топтыгин из «Медведь Капитала» купил долю в «ВитТрансе» и давит на меня. Выкупить её обратно — ${money(a.a)}. Поможешь? Верну за два года, а возить тебе буду со скидкой.`,`Trouble, ${hv()}. Toptygin of Bear Capital bought a stake in VitTrans and is leaning on me. Buying it back costs ${money(a.a)}. Will you help? I’ll repay in two years and haul your freight at a discount.`),
     o:{a:a=>[T(`Помогу: займ ${money(a.a)} на 2 года`,`Help: lend ${money(a.a)} for 2 years`),T('возврат через 24 месяца; «ВитТранс» возит вам на 15 % дешевле всегда','repaid in 24 months; VitTrans hauls for you 15% cheaper for good')],b:()=>[T('Не буду вмешиваться','I’ll stay out of it'),'']},
@@ -734,22 +735,25 @@ function ipoBear(F){if(F.tp.anchor===1)return T('Топтыгин кивает �
   if(F.tp.anchor===2)return T('Топтыгин прислал открытку: «Уважаю».','Toptygin sent a card: “Respect.”');
   if(F.tp.end)return T('Топтыгин жмёт руку: «Вы первый, кто трижды мне отказал».','Toptygin shakes your hand: “You’re the first to turn me down three times.”');
   return '';}
-function openIpoScene(qid){const w=W();const q=w&&w.fr&&w.fr.q.find(x=>x.id===qid);if(!q)return false;const F=w.fr,a=q.a||{};let f=0;
-  const nextB=`<div class="row"><button class="btn w accent" data-nx="1">${T('Дальше','Next')}</button></div>`;
-  function draw(){let h='';
-    if(f===0)h=`<h2>☀️ ${T('Утро перед звонком','The morning of the bell')}</h2><div class="st-hd">${pic('lud','happy',72)}<div><b>${esc(nm('lud'))}</b><small>${esc(who('lud').sub)}</small></div></div><p class="st-say">${esc(ipoMorning(F,a))}</p>`+nextB;
-    else if(f===1){h=`<h2>🔔 ${T('Колокол биржи','The exchange bell')}</h2><p class="st-sub">${T('Звонок! Друзья в зале — и каждый говорит своё:','The bell rings! Your friends are in the hall — and each has something to say:')}</p>`
-        +FRS.map(id=>`<div class="st-row st-line">${pic(id,(F[id]&&F[id].tr>=41)?'happy':'calm',44)}<p class="st-say st-f"><b>${esc(nk(id))}:</b> ${esc(ipoLine(F,id))}</p></div>`).join('');
-      const b=ipoBear(F);if(b)h+=`<div class="st-row st-line">${pic('bear','calm',36)}<p class="st-hint st-f">${esc(b)}</p></div>`;
-      if(F.tp.anchor===1&&!F.tp.paid)h+=`<p class="st-toast">+10 💎 ${T('премия за размещение','listing bonus')}</p>`;h+=nextB;}
-    else{const near=FRS.filter(id=>SY.hearts(F[id]&&F[id].tr)>=3),far=FRS.filter(id=>near.indexOf(id)<0);
-      const path=a.st&&(a.h0||1)===1?T(`Мы начинали с 5 000 ₽ и комнаты в общежитии. Сегодня компания стоит ${money(a.eq||0)}.`,`We started with 5,000 ₽ and a dorm room. Today the company is worth ${money(a.eq||0)}.`)
-        :T(`Холдинг №${a.h0||1} — на бирже: ${money(a.eq||0)}. Новый холдинг — новая дорога.`,`Holding No. ${a.h0||1} is listed: ${money(a.eq||0)}. A new holding — a new road.`);
-      h=`<h2>📷 ${T('Фото на память','A photo to remember')}</h2><div class="st-photo">${pic('you','happy',50)}${pic('lud','happy',50)}${near.map(id=>pic(id,'happy',50)).join('')}</div>`
-        +(far.length?`<p class="st-hint" style="text-align:center">💐 ${esc(far.map(nk).join(', '))} ${T(far.length>1?'прислали цветы':FEM[far[0]]?'прислала цветы':'прислал цветы','sent flowers')}</p>`:'')
-        +`<p class="st-say"><b>${esc(path)}</b></p><p class="st-hint" style="text-align:center">${T('Фото — в «Зале славы». Людмила Санна не скрывает слёз.','The photo goes to the Hall of Fame. Lyudmila Sanna doesn’t hide her tears.')}</p>`
-        +(typeof socBragHtml==='function'?socBragHtml('ipo'):'')+`<div class="row"><button class="btn w accent noenter" data-ok="1">${T('Спасибо всем!','Thank you all!')}</button></div>`;}
-    open(h,draw);bind('[data-nx]',()=>{snd('tap');f++;draw();});
+function openIpoScene(qid){const w=W();const q=w&&w.fr&&w.fr.q.find(x=>x.id===qid);if(!q)return false;const F=w.fr,a=q.a||{};let picked='';
+  // M30 (решение владельца 02.10): после IPO — одно понятное окно вместо пяти: фото и путь, что сказали друзья (под «▼»), выбор «Доли основателя»
+  function draw(){const near=FRS.filter(id=>SY.hearts(F[id]&&F[id].tr)>=3),far=FRS.filter(id=>near.indexOf(id)<0);
+    const path=a.st&&(a.h0||1)===1?T(`Мы начинали с 5 000 ₽ и комнаты в общежитии. Сегодня компания стоит ${money(a.eq||0)}.`,`We started with 5,000 ₽ and a dorm room. Today the company is worth ${money(a.eq||0)}.`)
+      :T(`Холдинг №${a.h0||1} — на бирже: ${money(a.eq||0)}. Новый холдинг — новая дорога.`,`Holding No. ${a.h0||1} is listed: ${money(a.eq||0)}. A new holding — a new road.`);
+    const b=ipoBear(F),pk=window.META&&META.perkBtns?META.perkBtns():'';
+    let h=`<h2>🔔 ${T('Холдинг на бирже!','The holding is public!')}</h2><div class="st-photo">${pic('you','happy',50)}${pic('lud','happy',50)}${near.map(id=>pic(id,'happy',50)).join('')}</div>`
+      +(far.length?`<p class="st-hint" style="text-align:center">💐 ${esc(far.map(nk).join(', '))} ${T(far.length>1?'прислали цветы':FEM[far[0]]?'прислала цветы':'прислал цветы','sent flowers')}</p>`:'')
+      +`<p class="st-say"><b>${esc(path)}</b></p>`
+      +`<details class="st-hint"><summary>${T('Что сказали в зале','What people said in the hall')}</summary><p class="st-say">${esc(ipoMorning(F,a))}</p>`
+      +FRS.map(id=>`<div class="st-row st-line">${pic(id,(F[id]&&F[id].tr>=41)?'happy':'calm',36)}<p class="st-say st-f"><b>${esc(nk(id))}:</b> ${esc(ipoLine(F,id))}</p></div>`).join('')
+      +(b?`<div class="st-row st-line">${pic('bear','calm',36)}<p class="st-hint st-f">${esc(b)}</p></div>`:'')+`</details>`
+      +(F.tp.anchor===1&&!F.tp.paid?`<p class="st-toast">+10 💎 ${T('премия за размещение','listing bonus')}</p>`:'')
+      +(pk?`<h3 style="margin:12px 0 4px">⭐ ${T('Доля основателя','Founder’s share')}</h3><p class="st-hint">${T('Опыт остаётся с вами: выберите одно улучшение — оно будет работать во всех следующих холдингах.','The experience stays with you: choose one upgrade — it works in all your future holdings.')}</p>${pk}`
+        :picked?`<p class="st-hint" style="text-align:center">⭐ ${T('Улучшение выбрано','Upgrade chosen')}: <b>${esc(picked)}</b></p>`:'')
+      +`<p class="st-hint" style="text-align:center">${T('Фото — в «Зале славы». Людмила Санна не скрывает слёз.','The photo goes to the Hall of Fame. Lyudmila Sanna doesn’t hide her tears.')}</p>`
+      +(typeof socBragHtml==='function'?socBragHtml('ipo'):'')+`<div class="row"><button class="btn w accent noenter" data-ok="1">${T('Спасибо всем!','Thank you all!')}</button></div>`;
+    open(h,draw);
+    bind('[data-pk]',el=>{const k=el.dataset.pk;if(GAME.perkPick(k)==='ok'){snd('coin');picked=window.META&&META.pkName?META.pkName(k):k;try{toast('⭐ '+picked);}catch(e){}draw();}});
     bind('[data-ok]',()=>{if(F.tp.anchor===1&&!F.tp.paid){F.tp.paid=1;try{GAME.addCr(10,'anchor');}catch(e){}}answer(q,'a');});}
   draw();return true;}
 

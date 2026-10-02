@@ -118,7 +118,7 @@ const GAME={get DAY_MS(){const b=dayBase();return spd()===2?b/2:b;},get DAY_BASE
       const a0=typeof a[0]==='string'&&a[0].length<24?a[0]:'',t0=E.tg?E.tg('a.'+name+(a0?'.'+a0:'')):'';
       if(a0&&/sell|Sell/.test(name)&&E.dtName){const b=(W.biz||[]).find(x=>x.id===a0)||W.obj.find(x=>x.id===a0)||(Array.isArray(W.re)?W.re:[]).find(x=>x.id===a0);if(b)E.dtName(W,b.id,(b.t||b.cls)+'.'+(b.c||b.r||''));}
       try{r=E[name](W,...a);}finally{if(E.tg)E.tg(t0);}}
-    checkAch();persist(true);emit('change',name,r);return r;},
+    checkAch();persist(true);emit('change',name,r,a);return r;},
   cr(){return S.cr||0;},
   addCr(n,why){S.cr=(S.cr||0)+n;persist(true);emit('cr',n,why);emit('change');},
   spend(n,k){if((S.cr||0)<n)return false;S.cr-=n;persist(true);emit('cr',-n,'spend');if(typeof STAT!=='undefined')STAT.ev('spend',{k:k||'?',c:n});return true;}, // k — на что (для статистики)

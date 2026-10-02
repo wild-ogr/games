@@ -120,6 +120,33 @@ function mkRun(W,k,tg){const r=mkOk(W,k,tg);if(r!=='ok')return r;const m=MK[k],O
     else{cost(W,m.c,'adm','adm','retail');O.mon.sp+=m.c;const e=mkEff(W,k,c);O.cc=O.cc.filter(x=>x.u>W.t);O.cc.push({k,c,u:W.t+m.dur,e});O.fat[k+':'+c]=fatK(W,k+':'+c)+.5;}}
   return res;}
 function mkStop(W,k,c){const O=ow(W);c=c||W.home||'kuz';if(k==='soc'&&O.soc[c]){delete O.soc[c];return 'ok';}return 'no';}
+// M30: выгодно ли запустить сейчас (та же оценка, что в карточке точки / «Бизнесе»): g — прибыль за срок кампании, c — цена
+function mkWorth(W,k,tg){const m=MK[k];if(!m||m.once||m.sub)return {g:0,c:0,ok:false};
+  if(m.sc==='pt'){const b=W.biz.find(x=>x.id===tg);if(!b||b.st!=='w')return {g:0,c:0,ok:false};const f=E.bizForecast(W,b,b.k),cm=Math.max(0,f.rev-f.vc),c=mkCost(W,k,b),e=mkEff(W,k,b.id);
+    const g=(k==='bogo'?(f.rev*(1+e)*(m.pr||1)-f.vc*(1+e))-(f.rev-f.vc):cm*e)*m.dur/30;return {g,c,ok:g>c};}
+  const c=tg||W.home||'kuz';let cs=0;for(const b of W.biz)if(b.st==='w'&&b.c===c&&E.SMALL.indexOf(b.t)>=0){const f=E.bizForecast(W,b,b.k);cs+=Math.max(0,f.rev-f.vc)*mkSens(W,b.t);}
+  const g=cs*mkEff(W,k,c)/(ed(W,'mkt')?1.25:1)*m.dur/30;return {g,c:m.c,ok:g>m.c};}
+// M30: автоповтор рекламы и дел хозяина (решение владельца 02.10 — бесплатно для всех; у владельца было 281 нажатие рекламы и 51 дело за главу 2).
+// b.mkA = {fly:1,bogo:1,blog:1} — реклама точки; O.ccA = {'город:radio':1} — реклама города; O.ja = {'check:z12':1} — дела хозяина.
+// Повтор — когда прошлая кончилась, реклама окупается (усталость покупателей прошла) и после оплаты остаётся запас (не меньше 30 тыс. и ¼ обязательств месяца); при долге банку — пауза.
+const MK_AUTO=['fly','bogo','blog'],MKC_AUTO=['radio','out'],JOB_AUTO=['check','stand','fly','neg'];
+let dutyC=null;   // обязательства месяца — один раз за день (ownAuto)
+function autoSafe(W,c){if(W.odM>0||W.loans.some(l=>l.k==='od'))return false;if(!dutyC||dutyC.t!==W.t||dutyC.w!==W)dutyC={t:W.t,w:W,d:E.bizDuty(W)};return W.cash-c>=Math.max(30e3,dutyC.d*.25);}
+function mkAutoSet(W,k,tg,on){const O=ow(W),m=MK[k];if(!m)return 'no';if(m.sc==='pt'){if(MK_AUTO.indexOf(k)<0)return 'no';const b=W.biz.find(x=>x.id===tg);if(!b||E.SMALL.indexOf(b.t)<0)return 'no';
+    if(!b.mkA)b.mkA={};if(on)b.mkA[k]=1;else delete b.mkA[k];if(!Object.keys(b.mkA).length)delete b.mkA;return 'ok';}
+  if(MKC_AUTO.indexOf(k)<0)return 'no';const key=(tg||W.home||'kuz')+':'+k;if(!O.ccA)O.ccA={};if(on)O.ccA[key]=1;else delete O.ccA[key];return 'ok';}
+function mkAutoOn(W,k,tg){const m=MK[k];if(!m)return false;if(m.sc==='pt'){const b=W.biz.find(x=>x.id===tg);return !!(b&&b.mkA&&b.mkA[k]);}const O=W.ow;return !!(O&&O.ccA&&O.ccA[(tg||W.home||'kuz')+':'+k]);}
+// листовки сами у всех точек, где они окупаются (одна кнопка вместо десятков)
+function mkAutoAll(W,k,on){let n=0;for(const b of W.biz)if(b.st==='w'&&E.SMALL.indexOf(b.t)>=0&&(!on||mkWorth(W,k,b.id).ok||mkAutoOn(W,k,b.id))){if(mkAutoSet(W,k,b.id,on)==='ok')n++;}return n;}
+function jobAutoSet(W,k,a,on){if(JOB_AUTO.indexOf(k)<0)return 'no';const O=ow(W);if(!O.ja)O.ja={};const key=k+':'+a;if(on)O.ja[key]=1;else delete O.ja[key];return 'ok';}
+function jobAutoOn(W,k,a){const O=W.ow;return !!(O&&O.ja&&O.ja[k+':'+a]);}
+function ownAuto(W){const O=ow(W);if(!W.ip||W.ned)return;let n=0;
+  for(const b of W.biz){if(!b.mkA)continue;if(b.st!=='w'&&b.st!=='b'){delete b.mkA;continue;}if(b.st!=='w')continue;
+    for(const k in b.mkA){if(mkOk(W,k,b.id)!=='ok')continue;const x=mkWorth(W,k,b.id);if(!x.ok||!autoSafe(W,x.c))continue;mkRun(W,k,b.id);n++;}}
+  for(const key in O.ccA||{}){const i=key.lastIndexOf(':'),c=key.slice(0,i),k=key.slice(i+1);if(mkOk(W,k,c)!=='ok')continue;const x=mkWorth(W,k,c);if(!x.ok||!autoSafe(W,x.c))continue;mkRun(W,k,c);n++;}
+  for(const key in O.ja||{}){const i=key.indexOf(':'),k=key.slice(0,i),a=key.slice(i+1),r=jobOk(W,k,a);if(r==='no'||r==='stage'){delete O.ja[key];continue;}
+    if(r!=='ok')continue;if(JOBS[k].c&&!autoSafe(W,JOBS[k].c))continue;if(k==='fly'&&!mkWorth(W,'fly',a).ok)continue;jobStart(W,k,a);n++;}
+  if(n)O.mon.an=(O.mon.an|0)+n;}
 
 /* ---------------- курсы ---------------- */
 // курсы героя: c — цена, d — дней (1 рука, 5 ⚡ в день), need — нужен курс, st — с какой главы (1 — «Своё дело»)
@@ -201,9 +228,10 @@ function enBonus(W){return REG_STEP*rg(W)+luxEn(W);}
 function ownDay(W,off,out){const O=ow(W),M=W.me;if(!M||W.ned)return;
   for(const j of O.j.slice()){if(j.e&&M.en>0)M.en=Math.max(0,M.en-j.e);if(--j.left<=0){O.j=O.j.filter(x=>x!==j);jobDone(W,j,out);}}
   for(const b of W.biz){if(b.trn&&b.trn<=W.t&&b.trk){if(b.trk==='sell')b.tr=1;else{b.ms=1;b.rt=Math.min(5,(b.rt||3.5)+.4);}b.trk='';out.push({k:'own',w:'staff',a:b.id});}}
-  if(O.ev&&O.ev.exp<=W.t)evAns(W,O.ev.def,true);}
+  if(O.ev&&O.ev.exp<=W.t){const v=O.ev;evAns(W,v.def,true);out.push({k:'own',w:'evauto',a:v.id,ev:v.k,i:v.def,x:v.a||{}});}   // M30: игроку — «Людмила решила за вас»
+  ownAuto(W);}
 function ownClose(W,M,off){const O=ow(W);if(W.ned)return;
-  O.last={m:W.m,sp:rnd0(O.mon.sp),rev:rnd0(O.mon.rev),pr:rnd0(O.mon.pr)};O.mon={sp:0,rev:0,pr:0};
+  O.last={m:W.m,sp:rnd0(O.mon.sp),rev:rnd0(O.mon.rev),pr:rnd0(O.mon.pr),an:O.mon.an|0};O.mon={sp:0,rev:0,pr:0};
   // соцсети — подписка на месяц
   for(const c in O.soc)if(O.soc[c]){if(W.cash>=MK.soc.c){cost(W,MK.soc.c,'adm','adm','retail');O.last.sp+=MK.soc.c;}else delete O.soc[c];}
   // усталость от рекламы проходит
@@ -216,7 +244,7 @@ function ownClose(W,M,off){const O=ow(W);if(W.ned)return;
   if(!O.ev&&!off&&(W.st==='small'||W.st==='mid')&&W.m-O.evM>=1&&pts(W).length&&R(W)<.5)evNew(W);}
 
 /* ---------------- события с выбором (главы «Своё дело» и «Сеть») ----------------
-   o — варианты (id); def — что будет, если не ответить за 10 дней (обычно «ничего не делать»). Тексты — в интерфейсе (js/owner-ui.js). */
+   o — варианты (id); def — что будет, если не ответить за EV_DAYS (20) дней (обычно «ничего не делать»). Тексты — в интерфейсе (js/owner-ui.js). */
 const FOOD={shaw:1,bakery:1,canteen:1,truckf:1,coffee:1,kiosk:1};
 const EV2={
   rent:{o:['ok','move'],def:0,f:b=>E.BIZ[b.t].rent>0},
@@ -243,6 +271,8 @@ const EV3={
 E.EV3_CITY=5e5;
 const EV2_L=Object.keys(EV2),EV3_L=Object.keys(EV3);
 const evDef=k=>EV2[k]||EV3[k];
+// M30: срок ответа 10 → 20 дней (10 дней = 75 с на ×2 — владелец ответил сам на 3 события из ~15); за 3 дня — окно-напоминание (owner-ui)
+const EV_DAYS=20;
 function evNew(W){const O=ow(W),ps=pts(W),mid=W.st==='mid',D=mid?EV3:EV2,KL=mid?EV3_L:EV2_L;const c=[];
   for(const k of KL){if(k==='city2'||k==='audit3'){if(ps.length&&D[k].f(ps[0],W))c.push([k,ps[0]]);continue;}for(const b of ps)if(D[k].f(b,W))c.push([k,b]);}if(!c.length)return;
   // в «Сети» каждый вид — с равным шансом (иначе 15 точек одного вида заслоняют редкие события)
@@ -258,8 +288,8 @@ function evNew(W){const O=ow(W),ps=pts(W),mid=W.st==='mid',D=mid?EV3:EV2,KL=mid?
   if(k==='tender'){const tp=W.biz.filter(x=>x.t===b.t&&x.c===b.c&&x.st==='w');a.n=tp.length;a.fee=Math.max(15e3,k1(tp.reduce((q,x)=>q+(x.lr||0),0)*.04));}
   if(k==='audit3'){const r=W.reps&&W.reps.length?W.reps[W.reps.length-1].pl.rev:0;a.c=Math.max(40e3,k1(r*.004));a.f1=Math.max(60e3,k1(r*.008));a.f2=Math.max(120e3,k1(r*.016));}
   if(k==='mall'){a.mv=Math.max(80e3,k1((b.lr||0)*.15));(O.mallC||(O.mallC={}))[b.c]=W.m;a.inc=rnd0(B.rent*C.rent*.6/1000)*1000;const f0=E.bizForecast(W,b,b.k).prof,f1=E.bizForecast(W,Object.assign({},b,{spot:(b.spot||0)+.25,rx:(b.rx||0)+a.inc}),b.k).prof;a.g=rnd0((f1-f0)/100)*100;}
-  O.ev={k,id:b.id,bt:b.t,exp:W.t+10,def:evDef(k).def,a,m:W.m};O.evM=W.m;}
-// ответ: i — номер варианта; auto — прошло 10 дней
+  O.ev={k,id:b.id,bt:b.t,exp:W.t+EV_DAYS,def:evDef(k).def,a,m:W.m};O.evM=W.m;}
+// ответ: i — номер варианта; auto — прошёл срок (EV_DAYS)
 function evAns(W,i,auto){const O=ow(W),v=O.ev;if(!v)return 'no';const b=W.biz.find(x=>x.id===v.id);O.ev=null;if(!b)return 'gone';const B=E.BIZ[b.t],k=v.k,a=v.a||{};let res='ok';
   if(k==='rent'){if(i===0)b.rx=(b.rx||0)+a.inc;else{if(W.cash<60e3)b.rx=(b.rx||0)+a.inc;else{cost(W,60e3,'oth','oth',B.seg);b.down=Math.max(b.down||0,5);}}}
   else if(k==='raise'){if(i===0){b.sx=(b.sx||0)+a.inc;b.rt=Math.min(5,(b.rt||3.5)+.2);}else b.ev.quit=[W.m+2,.9];}
@@ -287,7 +317,7 @@ function passive(W){let inc=0;for(const b of W.biz){const B=E.BIZ[b.t];if(!B||b.
   const need=(E.LIFE[W.st]||45e3)+(W.ip&&!W.ooo?4750:0)+(W.ooo?90e3:0);return {inc,need,pct:need>0?Math.max(0,inc/need):0};}
 // совет по налогу для портфеля (прогноз 12 мес.): если точек нет — по первому делу (автомат)
 function taxAdv(W,types){let rev=0,costs=0;const add=f=>{rev+=f.rev*12;costs+=(f.vc+f.f+f.risk)*12;};
-  const ps=W.biz.filter(b=>E.SMALL.indexOf(b.t)>=0);for(const b of ps)add(E.bizForecast(W,b,b.k));
+  const ps=W.biz.filter(b=>E.SMALL.indexOf(b.t)>=0||(E.MID.indexOf(b.t)>=0&&b.st==='w'));   // M30: склад, стройбаза, самосвалы — тоже (склад с оборотом 12–23 млн/мес меняет выбор 6 % / 15 %)for(const b of ps)add(E.bizForecast(W,b,b.k));
   for(const t of types||(ps.length?[]:['vend']))add(E.bizForecast(W,t));
   const fee=4750*12,u6=Math.max(0,rev*.06-fee),u15=Math.max(.15*Math.max(0,rev-costs-fee),.01*rev);return {u6:rnd0(u6),u15:rnd0(u15),best:u15<u6?'usn15':'usn6',rev:rnd0(rev),prof:rnd0(rev-costs)};}
 // до «Сети»: что осталось и примерный срок (мес.)
@@ -328,7 +358,7 @@ function ownMig(W,fx){if(!W.ow||typeof W.ow!=='object'){W.ow=owNew();if(fx&&W.bi
   if(W.ip&&typeof W.taxM!=='number')W.taxM=W.m-12;
   if(W.pk&&typeof W.pk==='object'&&W.pk.reg!=null&&typeof W.pk.reg!=='number')W.pk.reg=0;}
 
-Object.assign(E,{OWN_TR:TR,satOf,LV,LV_MAX,lvEff,lvNext,ptUpOk,ptUp,lvGain,MK,MK_CAP,mkSens,mkBoost,mkCost,mkOk,mkEff,mkRun,mkStop,ED,edOk,edStart,ST,stCost,stOk,stTrain,
+Object.assign(E,{OWN_TR:TR,satOf,LV,LV_MAX,lvEff,lvNext,ptUpOk,ptUp,lvGain,MK,MK_CAP,mkSens,mkBoost,mkCost,mkOk,mkEff,mkRun,mkStop,mkWorth,mkAutoSet,mkAutoOn,mkAutoAll,jobAutoSet,jobAutoOn,ownAuto,MK_AUTO,MKC_AUTO,JOB_AUTO,ED,edOk,edStart,ST,stCost,stOk,stTrain,
   JOBS,FRIENDS,jobOk,jobStart,jobStop,ownHands,ptMod,ptRk,ownTh,ownPtDay,ownOpen,ownMgrSh,mgrN,ownLoanK,REG_CR,REG_STEP,rg,luxEn,enBonus,
-  ownAdvise,ownDay,ownClose,EV2,EV3,evNew,evAns,passive,taxAdv,oooEta,marginal,charOf,ownMig,ownEd:ed});
+  ownAdvise,ownDay,ownClose,EV2,EV3,EV_DAYS,evNew,evAns,passive,taxAdv,oooEta,marginal,charOf,ownMig,ownEd:ed});
 })(typeof window!=='undefined'?window:this);

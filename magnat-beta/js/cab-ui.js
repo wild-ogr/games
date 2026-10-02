@@ -174,7 +174,9 @@ const REP={phone2:['lud','Наконец-то. Я читала ваши сооб
   hockey:['vit','Проиграли 2:7, зато болельщики довольны! Беру абонемент.','We lost 2–7, but the fans are happy! I’m buying a season ticket.']};
 const SET_N=k=>{const c=GAME.COL[k];return c?c.ico+' '+T(c.ru,c.en):'';};
 const SET_B={dacha:['эмблема 🌻, +10 💎','🌻 emblem, +10 💎'],solid:['раз в день можно заменить поручение Планёрки','once a day you can swap a Briefing task'],auto:['номер «777» на все машины бесплатно','free “777” plates on all cars'],hobby:['эмблема ⚓, +10 💎','⚓ emblem, +10 💎'],patron:['грамота «Почётный гражданин», +10 💎','“Honorary citizen” certificate, +10 💎']};
-function rkName(i){const r=GAME.RK[i];if(!r)return '';if(typeof LANG!=='undefined'&&LANG==='en')return r.en;return fem()&&GAME.RK_F[i]?GAME.RK_F[i]:r.ru;}
+// M30: во втором и следующих холдингах карьера нет — звание «Человек с карьером» там звучит странно, показываем «Человек с размахом»
+const RK_H2={8:['Человек с размахом','Женщина с размахом','A person of scope']};
+function rkName(i){const r=GAME.RK[i];if(!r)return '';const w=W(),h2=w&&w.hold>=2&&RK_H2[i];if(typeof LANG!=='undefined'&&LANG==='en')return h2?h2[2]:r.en;if(h2)return fem()?h2[1]:h2[0];return fem()&&GAME.RK_F[i]?GAME.RK_F[i]:r.ru;}
 function cosTxt(id){const c=GAME.COS.find(x=>x.id===id);if(!c)return '';const n=T('«','“')+T(c.ru,c.en)+T('»','”');
   if(c.k==='fr')return n+T(' для портрета Людмилы',' for Lyudmila’s portrait');if(c.k==='wf')return T('рамка стены ','wall frame ')+n;
   return (c.k==='emb'?T('эмблема ','emblem ')+c.ic+' ':T('цвет вывесок ','sign colour '))+n;}
@@ -363,6 +365,7 @@ function saleNow(){const w=W();if(!w)return false;const seen=S.lxSeen||{};return
 function greet(){const h=new Date().getHours(),w=W(),rk=S.rk|0;const hi=h<5?T('Доброй ночи','Good night'):h<12?T('Доброе утро','Good morning'):h<17?T('Добрый день','Good afternoon'):T('Добрый вечер','Good evening');
   const nm=rkName(rk);let tail='';try{const car=E.luxCur(w,'car'),home=E.luxCur(w,'home'),d=new Date().getDate()%4;
     if(d===0&&car.id!=='c0')tail=T(' Машина у подъезда.',' The car is outside.');else if(d===1&&home.id!=='h0')tail=T(' Как спалось на новом месте?',' How did you sleep in the new place?');
+    else if(w.ned){}   // M30: в «Недрах» и во втором холдинге — без автобуса и проездного
     else if(d===2&&car.id==='c0'&&GAME.stN()<=2)tail=T(' Проездной не забыли?',' Got your bus pass?');
     else if(d===2&&car.id==='c0')tail=T(' Может, пора пересесть с автобуса? Загляните в Кабинет.',' Maybe it’s time to get off the bus? Take a look in the Office.');}catch(e){}
   return `${hi}, ${esc(nm.charAt(0).toLowerCase()+nm.slice(1))}!${tail}`;}
@@ -370,7 +373,8 @@ function cardHtml(){const w=W();if(!w)return '';css();const rk=S.rk|0,n=GAME.sta
   let h=`<div class="cb-card">${ART()?'<span class="cb-hface">'+ART().face()+'</span>':''}<div class="cb-say">${T('Людмила Санна','Lyudmila Sanna')}: ${QL()}${greet()}${QR()}</div><h4>🏛 ${T('Кабинет','Office')} · ★ ${rk+1} ${QL()}${esc(rkName(rk))}${QR()}</h4>`;
   if(nx)h+=bar((n-GAME.RK[rk].s)/(nx.s-GAME.RK[rk].s))+`<p class="cb-mut" style="margin:2px 0">${T('до звания','to the rank of')} ${QL()}${esc(rkName(rk+1))}${QR()}: ${n} ${T('из','of')} ${nx.s} ★${GAME.rkLockTxt?esc(GAME.rkLockTxt(rk+1)):''}</p>`;
   // одна вещь: в продаже (купить можно) → мечта с ближайшим сроком
-  const all=lxList().filter(x=>x.ch<=E.luxCh(w));let pick=all.find(x=>{const s=st(x.id);return s.st==='sale'&&!s.why;})||all.find(x=>st(x.id).st==='sale');let line='';
+  let all=lxList().filter(x=>x.ch<=E.luxCh(w));if(w.ned){const lc=E.luxCh(w),nn=all.filter(x=>x.ch>=lc-1);if(nn.length)all=nn;}   // M30: в «Недрах» не предлагаем кровать за 9 000 ₽ — только вещи последних глав
+  let pick=all.find(x=>{const s=st(x.id);return s.st==='sale'&&!s.why;})||all.find(x=>st(x.id).st==='sale');let line='';
   if(pick){line=`🛍 ${T('В продаже','For sale')}: <span class="cb-ii">${lxIco(pick)}</span>${esc(lxName(pick))} — <b>${M(pick.p)}</b>`;}
   else{const d=all.filter(x=>st(x.id).st==='dream').sort((a,b)=>{const na=st(a.id).nd,nb=st(b.id).nd;const fa=na.k==='eq'?na.cur/na.need:.5,fb=nb.k==='eq'?nb.cur/nb.need:.5;return fb-fa;})[0];
     if(d){const s=st(d.id),e=etaTxt(s.nd);line=`💭 ${T('Мечта','Dream')}: <span class="cb-ii">${lxIco(d,'dream')}</span>${esc(lxName(d))} — ${esc(needTxt(d,s.nd))}${e?' ('+e+')':''}`;}}
@@ -424,13 +428,14 @@ function flush(){let p=pend();if(!p.length)return;let rkSoc=false;const q=a=>T('
   if(!parts.length)return;const k=parts.length>1?'multi':parts[0];if(k==='multi'){title=T('Сегодня у вас','Today you’ve got');ico='🎉';}
   if(!calmMode())try{UI.salute(true);}catch(e){}snd('win');
   show({k,ico,title,cr:sum,lines,soc:rkSoc?'rank':''});badge();}
-function tick(){if(!GAME.W)return;if(typeof modalOn!=='undefined'&&modalOn){busyT=Date.now();return;}
+let ipoT=0;   // M30: после IPO окно звания — не сразу (через 3 минуты), чтобы не было стопки окон
+function tick(){if(!GAME.W)return;if(typeof modalOn!=='undefined'&&modalOn){busyT=Date.now();return;}if(ipoT&&Date.now()-ipoT<180000)return;
   if(!pend().length||Date.now()-busyT<1500||Date.now()-lastRw<90000||!quiet())return;flush();}
 setInterval(tick,1500);
 
 /* ---------- события ---------- */
 function hook(){if(!GAME.on){setTimeout(hook,200);return;}css();
-  GAME.on('change',badge);GAME.on('reset',badge);GAME.on('cos',()=>{try{const b=$c('cbBody');if(b)b.style.setProperty('--wf',(GAME.cosCur('wf')||{c:'#8d5a2b'}).c);}catch(e){}});
+  GAME.on('change',badge);GAME.on('reset',badge);GAME.on('ipo',()=>{ipoT=Date.now();});GAME.on('cos',()=>{try{const b=$c('cbBody');if(b)b.style.setProperty('--wf',(GAME.cosCur('wf')||{c:'#8d5a2b'}).c);}catch(e){}});
   // новое на стене: фото — тост (редко), грамоты — только точка на ★ (о них уже сказали тостом за 💎 / веху)
   // друзья узнают о новом звании — короткое сообщение в телефон (без баннера)
   GAME.on('rank',i=>{if(i<2||!window.PHONE||!PHONE.say)return;const nm=rkName(i),who=['beav','vit','owl','bars'][i%4],ln=nm.charAt(0).toLowerCase()+nm.slice(1);

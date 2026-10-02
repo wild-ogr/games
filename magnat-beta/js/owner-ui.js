@@ -27,6 +27,8 @@ const pos=x=>(x>0?'+':'')+Mr(x);
 const CSS=`
 .ow-tip{margin:10px 0 4px;background:var(--soft2,#f4f1ea);border-radius:14px;padding:10px 12px}.ow-tip p{margin:0 0 8px;font-size:16px;line-height:1.4}
 .ow-tip .btn{min-height:44px}
+#owEvBar.ow-evbar{display:flex!important;flex-direction:row;align-items:center;width:calc(100% - 32px);box-sizing:border-box;text-align:left;margin:10px 16px 0;padding:10px 14px;min-height:64px;border:2px solid var(--accent);background:var(--card);color:var(--ink)}#owEvBar .bz-ic{flex:none}#owEvBar .chev{flex:none;font-size:22px;color:var(--muted)}#owEvBar .f1{flex:1;min-width:0;margin:0 10px}#owEvBar b{display:block;font-size:17px;line-height:1.25}#owEvBar small{display:block;color:var(--muted);font-size:15px;line-height:1.3}#owEvBar.hot{border-color:var(--bad)}
+.ow-aut{margin:0 0 8px;min-height:52px;font-size:16px}.ow-aut small{font-size:14px;line-height:1.3}
 .ow-row{display:flex;align-items:center;padding:10px 0;border-top:1px solid var(--line);min-height:60px}.ow-row:first-child{border-top:0}
 .ow-row .f1{flex:1;min-width:0;margin:0 10px}.ow-row .f1 b{display:block;font-size:17px;font-weight:600;line-height:1.25}.ow-row .f1 small{display:block;color:var(--muted);font-size:15px;line-height:1.3}
 .ow-row .btn.sm{flex:none;min-width:96px;min-height:48px;padding:8px 12px;white-space:normal;line-height:1.2}
@@ -55,7 +57,9 @@ const TIP={
   job:()=>L('Когда точки работают без вас, руки свободны для дел хозяина: переговоры, проверки, поиск места. Сил они берут меньше, чем заказы, а двигают бизнес.','When outlets run without you, your hands are free for owner’s tasks: negotiations, inspections, scouting. They take less energy than side jobs and move the business forward.'),
   ed:()=>L('Учёба — вложение в себя: курс идёт несколько дней и занимает руку, зато навсегда.','Study is an investment in yourself: a course takes a few days and a hand, but it lasts for good.'),
   ev:()=>L('В бизнесе всё время что-то случается. Решайте сами, а не успеете за 10 дней — выберу осторожный вариант.','Things keep happening in business. Decide yourself — if you don’t within 10 days, I’ll pick the cautious option.')};
-function tip(k){if(!S.o2t||typeof S.o2t!=='object')S.o2t={};if(S.o2t[k]||!TIP[k])return '';
+// M30: на карточке точки — не больше одной подсказки Людмилы за раз (было до 5 «Понятно» сразу); tipCap — сколько ещё можно показать в этой перерисовке
+let tipCap=null;
+function tip(k){if(!S.o2t||typeof S.o2t!=='object')S.o2t={};if(S.o2t[k]||!TIP[k])return '';if(tipCap!==null){if(tipCap<=0)return '';tipCap--;}
   return `<div class="say ow-tip">${face('calm')}<div><p>${esc(TIP[k]())}</p><button class="btn sm noenter" data-ow="tip" data-k="${k}">${L('Понятно','Got it')}</button></div></div>`;}
 
 /* ---------------- тексты ---------------- */
@@ -79,7 +83,7 @@ const JN={neg:['Переговоры с поставщиком','Negotiate with 
   check:['Проверка точки','Inspect an outlet'],fly:['Листовки своими руками','Hand out flyers yourself'],visit:['В гости к другу','Visit a friend'],edu:['Учёба','Study']};
 const EVN={
   rent:[a=>L(`Арендодатель поднимает аренду на ${M(a.inc)} в месяц`,`The landlord raises the rent by ${M(a.inc)} a month`),()=>L('«Всё дорожает». Можно согласиться — или переехать в соседнее помещение: 60 000 ₽ и 5 дней точка закрыта.','“Everything’s getting dearer.” Agree — or move next door: 60,000 ₽ and 5 days closed.'),a=>[L('Согласиться: +'+M(a.inc)+' в месяц','Agree: +'+M(a.inc)+' a month'),L('Переехать: 60 000 ₽, 5 дней закрыто','Move: 60,000 ₽, 5 days closed')]],
-  raise:[()=>L('Продавец просит прибавку 10 000 ₽','A seller asks for a 10,000 ₽ raise'),()=>L('Работает хорошо, покупатели его знают. Откажете — может уйти: два месяца покупателей будет на 10 % меньше.','He works well and customers know him. Say no — he may leave: 10% fewer customers for two months.'),()=>[L('Дать прибавку: ⭐ +0,2','Give the raise: ⭐ +0.2'),L('Отказать','Say no')]],
+  raise:[()=>L('Продавец просит прибавку 10 000 ₽','A seller asks for a 10,000 ₽ raise'),()=>L('Работает хорошо, покупатели его знают. Откажете — может уйти: два месяца покупателей будет на 10 % меньше.','He works well and customers know him. Say no — he may leave: 10% fewer customers for two months.'),()=>[L('Дать прибавку +10 000 ₽ в месяц · ⭐ +0,2','Give a raise +10,000 ₽ a month · ⭐ +0.2'),L('Отказать','Say no')]],
   fair:[()=>L('Городская ярмарка в выходные','A city fair at the weekend'),()=>L('Место на ярмарке — 20 000 ₽. Неделю покупателей на 30 % больше.','A stall costs 20,000 ₽. A week with 30% more customers.'),()=>[L('Участвовать — 20 000 ₽','Take part — 20,000 ₽'),L('Пропустить','Skip it')]],
   sale:[a=>L('Сосед продаёт ларёк за 60 % цены','A neighbour sells his kiosk for 60% of the price'),a=>L(`Уезжает к детям, ларёк рабочий: ${M(a.pr)} — и через 3 дня он ваш.`,`He’s moving to his children; the kiosk works: ${M(a.pr)} — and it’s yours in 3 days.`),a=>[L('Купить за '+M(a.pr),'Buy for '+M(a.pr)),L('Не надо','No, thanks')]],
   bulk:[()=>L('Оптовик предлагает договор','A wholesaler offers a contract'),(a,t)=>L(`Для «${bn(t)}»: 25 000 ₽ за вход — и 3 месяца закупка на 6 % дешевле для всех таких точек.`,`For “${bn(t)}”: 25,000 ₽ up front — and 3 months of 6% cheaper stock for all such outlets.`),()=>[L('Подписать — 25 000 ₽','Sign — 25,000 ₽'),L('Не надо','No, thanks')]],
@@ -124,6 +128,8 @@ function effTxt(e){const a=[];if(e.d)a.push(L('покупателей ','custome
   if(e.th)a.push(L('недостача ','shortfalls ')+Math.round(e.th*100)+' %');if(e.sat)a.push(L('доставка: рынок шире','delivery: a wider market'));if(e.sea)a.push(L('сезон ровнее','a smoother season'));
   if(e.f)a.push(L('расходы +','costs +')+M(e.f)+L('/мес','/mo'));return a.join(', ').replace(/(\d) %/g,'$1 %');}
 // M19: длинные блоки карточки точки — главное сверху, остальное под «Ещё…» (раскрытие помним до перезагрузки)
+// M30: переключатель «🔁 Повторять автоматически» (реклама точки/города, дела хозяина) — строкой-настройкой, как в ⚙
+function autoRow(on,attrs,sub){return `<button class="set ow-aut noenter" ${attrs} aria-pressed="${on?'true':'false'}"><span>🔁 ${L('Повторять автоматически','Repeat automatically')}${sub?`<br><small>${esc(sub)}</small>`:''}</span><i${on?'':' class="off"'}>${on?L('вкл','on'):L('выкл','off')}</i></button>`;}
 const MORE={};
 function moreBtn(key,open,txt){return `<button class="btn sm w noenter ow-more" data-ow="more" data-k="${esc(key)}" aria-expanded="${open?'true':'false'}">${open?'▲ '+L('Свернуть','Collapse'):'▼ '+txt}</button>`;}
 function lvCard(W,b){const a=E.LV[b.t];if(!a||b.st!=='w')return '';const l=b.lv||1,g=E.lvGain(W,b);let rows='',rest='',nd=0,nl=0;const mk=b.id+':lv',open=!!MORE[mk];
@@ -139,13 +145,15 @@ return `<p class="ow-sat">🏙 ${L(`В городе ${s.n} ${pl(s.n,'такая 
 function mkPtRows(W,b,promo){const B=E.BIZ[b.t];if(E.SMALL.indexOf(b.t)<0||b.st!=='w')return '';const f=E.bizForecast(W,b,b.k),cm=Math.max(0,f.rev-f.vc);let rows='';const all=[];
   const act0=[];if(b.sign)act0.push(L('вывеска','a sign'));const O=W.ow||{};if(O.soc&&O.soc[b.c])act0.push(L('соцсети','social media'));
   for(const x of b.mc||[])if(x.u>W.t)act0.push(T(MKN[x.k]||MKN.fly)+' '+L('ещё ','for ')+days(x.u-W.t));
-  for(const k of ['fly','bogo','blog','sign']){const r=E.mkOk(W,k,b.id);if(r==='once'||r==='on')continue;const c=E.mkCost(W,k,b),e=E.mkEff(W,k,b.id),m=E.MK[k];
+  for(const k of ['fly','bogo','blog','sign']){const r=E.mkOk(W,k,b.id),au=!!(E.mkAutoOn&&E.mkAutoOn(W,k,b.id));if(r==='once'||r==='on'&&!au)continue;const c=E.mkCost(W,k,b),e=E.mkEff(W,k,b.id),m=E.MK[k];
     const g=k==='sign'?cm*e:k==='bogo'?(f.rev*(1+e)*.8-f.vc*(1+e))-(f.rev-f.vc):cm*e;const per=m.dur?g*m.dur/30:g;const ok=k==='sign'?(g>0&&c/g<=12):per>c;
     const pc=Math.round(e*100),what=k==='sign'?L(`+${pc} % покупателей навсегда`,`+${pc}% customers for good`):k==='bogo'?L(`+${pc} % покупателей, цена −20 %, ${days(m.dur)}`,`+${pc}% customers, prices −20%, ${days(m.dur)}`):k==='blog'?L(`повезёт — +${pc} % на ${days(m.dur)}`,`with luck +${pc}% for ${days(m.dur)}`):L(`+${pc} % покупателей на ${days(m.dur)}`,`+${pc}% customers for ${days(m.dur)}`);
     const est=k==='sign'?(g>0?L(`≈ +${Mr(g)} в месяц`,`≈ +${Mr(g)} a month`):''):per>0?L(`≈ +${Mr(per)} прибыли`,`≈ +${Mr(per)} profit`):L('не окупится','won’t pay off');
-    all.push({ok:ok&&r==='ok',v:k==='sign'?g*3:per-c,h:`<div class="ow-row"><span class="ow-ic">${m.ico}</span><span class="f1"><b>${esc(T(MKN[k]))} · ${c?M(c):'0 ₽'}</b><small>${esc(what.replace(/(\d) %/g,'$1\u00a0%'))}</small><small class="${ok?'':'bad'}">${esc(est)}${ok?'':' · '+L('не советую','not advised')}</small></span><button class="btn sm noenter${ok?' green':''}" data-ow="mk" data-k="${k}" data-id="${b.id}"${r!=='ok'?' disabled':''}>${L('Запустить','Run')}</button></div>`});}
+    const cur=(b.mc||[]).find(x=>x.k===k&&x.u>W.t),aSub=!au?(E.MK_AUTO&&E.MK_AUTO.indexOf(k)>=0?L('сама запустится снова, когда кончится и если окупается','restarts by itself when it ends, if it pays off'):''):cur?L(`идёт ещё ${days(cur.u-W.t)} — потом повторится сама`,`${days(cur.u-W.t)} left — then it repeats by itself`):ok?L('запустится сама в ближайший день','will start by itself in a day'):L('ждёт: сейчас не окупится (покупатели привыкли) — повторится, когда снова выгодно','waiting: it would not pay off now (customers got used to it) — repeats once it pays again');
+    const tg=E.MK_AUTO&&E.MK_AUTO.indexOf(k)>=0?autoRow(au,`data-ow="mka" data-k="${k}" data-id="${b.id}"`,aSub):'';
+    all.push({ok:ok&&r==='ok'||au,v:(au?1e12:0)+(k==='sign'?g*3:per-c),h:`<div class="ow-row"><span class="ow-ic">${m.ico}</span><span class="f1"><b>${esc(T(MKN[k]))} · ${c?M(c):'0 ₽'}</b><small>${esc(what.replace(/(\d) %/g,'$1\u00a0%'))}</small><small class="${ok?'':'bad'}">${esc(est)}${ok?'':' · '+L('не советую','not advised')}</small></span><button class="btn sm noenter${ok&&!cur?' green':''}" data-ow="mk" data-k="${k}" data-id="${b.id}"${r!=='ok'?' disabled':''}>${cur?L('Идёт','On'):L('Запустить','Run')}</button></div>${tg}`});}
   const mk=b.id+':mk',open=!!MORE[mk];let bi=-1;all.forEach((x,i)=>{if(x.ok&&(bi<0||x.v>all[bi].v))bi=i;});if(bi<0&&all.length)bi=0;
-  let rest='';all.forEach((x,i)=>{if(i===bi)rows+=x.h;else rest+=x.h;});
+  let rest='';all.forEach((x,i)=>{if(i===bi||x.v>=1e12)rows+=x.h;else rest+=x.h;});
   {const r=E.jobOk(W,'fly',b.id);if(r==='ok'||r==='hand'||r==='en')rest+=`<div class="ow-row"><span class="ow-ic">✋</span><span class="f1"><b>${esc(T(JN.fly))} · 1 000 ₽</b><small>${L('те же листовки: 1 рука на 2 дня, 15 ⚡ в день','the same flyers: 1 hand for 2 days, 15 ⚡ a day')}</small></span><button class="btn sm noenter" data-ow="job" data-k="fly" data-a="${b.id}"${r!=='ok'?' disabled':''}>${L('Раздать','Go')}</button></div>`;}
   const nr=(rest.match(/class="ow-row"/g)||[]).length;if(rest)rows+=(open?rest:'')+moreBtn(mk,open,L('Ещё способы рекламы','More ways to advertise')+' ('+nr+')');
   return `<div class="card"><b>📣 ${L('Маркетинг точки','Outlet marketing')}</b><p class="bz-note">${L('Отклик этого дела на рекламу: ','This business’s response to ads: ')}<b>${[L('слабый','weak'),L('средний','medium'),L('сильный','strong')][E.mkSens(W,b.t)>=.95?2:E.mkSens(W,b.t)>=.55?1:0]}</b>${act0.length?' · '+L('сейчас: ','now: ')+esc(act0.join(', ')):''}</p>${tip('mk')}${promo||''}<div>${rows}</div></div>`;}
@@ -155,12 +163,18 @@ function staffRow(W,b){const B=E.BIZ[b.t];if(!B.hand||b.st!=='w')return '';const
   if(r==='busy')return `<div class="ow-row"><span class="ow-ic">${E.ST[k].ico}</span><span class="f1"><b>${nm}</b><small>${L('идёт учёба: ещё ','training in progress: ')+days(Math.max(1,b.trn-W.t))}</small></span></div>`;
   return `<div class="ow-row"><span class="ow-ic">${E.ST[k].ico}</span><span class="f1"><b>${nm} · ${M(E.stCost(W,b,k))}</b><small>${ds}${L(`; ${E.ST[k].d} дней точка работает на 80 %`,`; for ${E.ST[k].d} days the outlet runs at 80%`)}</small></span><button class="btn sm noenter" data-ow="st" data-k="${k}" data-id="${b.id}"${r!=='ok'?' disabled':''}>${L('Обучить','Train')}</button></div>`;}
 function seaLine(W,b){const ch=E.charOf(W,b.t,b.k);if(ch.seaK<.25&&!ch.sv.length)return '';return `<p class="bz-note">🗓 ${ch.sv.length?L('При этом выборе: ','With this choice: '):''}${ch.seaK<.25||!ch.peak.length?L('спрос ровный круглый год','steady demand all year'):L('пик спроса — ','peak demand: ')+ch.peak.map(i=>T(MONF[i])).join(', ')}${ch.low.length&&ch.seaK>=.25?L('; тише всего — ','; quietest: ')+ch.low.map(i=>T(MONF[i])).join(', '):''}.</p>`;}
-function ptCards(W,b,promo){if(W.ned||E.SMALL.indexOf(b.t)<0)return promo?`<div class="card">${promo}</div>`:'';const sl=b.st==='w'?seaLine(W,b):'',st=satLine(W,b);let h=(window.MECHUI?MECHUI.card(W,b):'')+(st||sl?`<div class="card">${sl}${st}</div>`:'');h+=lvCard(W,b)+mkPtRows(W,b,promo);const s=staffRow(W,b);if(s)h+=`<div class="card"><b>🎓 ${L('Обучить персонал','Train the staff')}</b><div>${s}</div></div>`;return h;}   // M21: своя механика дела (js/mech-ui.js) — первой
+function ptCards(W,b,promo){if(W.ned||E.SMALL.indexOf(b.t)<0)return promo?`<div class="card">${promo}</div>`:'';
+  // M30: главное сверху (своя механика, улучшения, маркетинг), справка о сезоне/рынке и обучение персонала — под «▼ Ещё о точке»; одна подсказка за раз
+  const mc=window.MECHUI?MECHUI.card(W,b):'';tipCap=/ow-tip|mx-tip|data-mx="tip"|data-k="mx_/.test(mc)?0:1;
+  try{const sl=b.st==='w'?seaLine(W,b):'',st=satLine(W,b);let h=mc+lvCard(W,b)+mkPtRows(W,b,promo);const s=staffRow(W,b);
+    let more=(st||sl?`<div class="card">${sl}${st}</div>`:'')+(s?`<div class="card"><b>🎓 ${L('Обучить персонал','Train the staff')}</b><div>${s}</div></div>`:'');
+    if(more){const mk=b.id+':pmore',open=!!MORE[mk];h+=open?more+moreBtn(mk,true,''):moreBtn(mk,false,L('Ещё о точке: сезон, рынок, персонал','More: season, market, staff'));}
+    return h;}finally{tipCap=null;}}   // M21: своя механика дела (js/mech-ui.js) — первой
 // строки в «управлении» точки: дела хозяина по этой точке
 function ptRows(W,b){if(W.ned||E.SMALL.indexOf(b.t)<0||b.st!=='w')return '';let r='';
   for(const k of ['check','stand']){const ok=E.jobOk(W,k,b.id);if(ok==='no')continue;const J=E.JOBS[k];const on=ok==='on';
     const ds=k==='check'?L('видна недостача; 3 месяца кражи −70 %, поломки вдвое реже','reveals shortfalls; 3 months of −70% theft and half the breakdowns'):L('5 дней: +12 % выручки, управляющий остаётся','5 days: +12% revenue, the manager stays');
-    r+=`<div class="bz-li"><span class="bz-ic">${J.ico}</span><span class="f1"><b>${esc(T(JN[k]))}</b><small>${esc(ds)} · ✋ 1 · ${days(J.d)} · ⚡ ${J.e}${L(' в день',' a day')}${ok==='cd'?' · '+L('недавно было','done recently'):''}</small></span><button class="btn sm noenter" data-ow="job" data-k="${k}" data-a="${b.id}"${ok!=='ok'?' disabled':''}>${on?L('Идёт','On'):L('Начать','Start')}</button></div>`;}
+    r+=`<div class="bz-li"><span class="bz-ic">${J.ico}</span><span class="f1"><b>${esc(T(JN[k]))}</b><small>${esc(ds)} · ✋ 1 · ${days(J.d)} · ⚡ ${J.e}${L(' в день',' a day')}${ok==='cd'?' · '+L('недавно было','done recently'):''}</small></span><button class="btn sm noenter" data-ow="job" data-k="${k}" data-a="${b.id}"${ok!=='ok'?' disabled':''}>${on?L('Идёт','On'):L('Начать','Start')}</button></div>`;const au=E.jobAutoOn&&E.jobAutoOn(W,k,b.id);r+=autoRow(au,`data-ow="ja" data-k="${k}" data-a="${b.id}"`,au?L('начнётся снова сама, когда будет свободная рука и силы','restarts by itself when a hand and energy are free'):'');}
   return r;}
 
 /* ---------------- «Бизнес»: маркетинг города и итог рекламы ---------------- */
@@ -169,7 +183,11 @@ function bizCards(W){if(W.ned||!W.ip||!W.biz.some(b=>b.st==='w'&&E.SMALL.indexOf
   for(const k of ['soc','radio','out']){const m=E.MK[k],r=E.mkOk(W,k,c),e=E.mkEff(W,k,c)/(E.ownEd(W,'mkt')?1.25:1)*(E.ownEd(W,'mkt')?1.25:1);const g=cmSum*e*(m.dur?m.dur/30:1);
     const on=r==='on';const est=g>0?(m.sub?L(`≈ +${Mr(g)} прибыли в месяц`,`≈ +${Mr(g)} profit a month`):L(`≈ +${Mr(g)} прибыли за ${days(m.dur)}`,`≈ +${Mr(g)} profit over ${days(m.dur)}`)):'';
     rows+=`<div class="ow-row"><span class="ow-ic">${m.ico}</span><span class="f1"><b>${esc(T(MKN[k]))} · ${M(m.c)}${m.sub?L('/мес','/mo'):''}</b><small>${esc(MKD[k]())}${est?' · '+esc(est):''}${g<m.c&&!on?' · '+L('пока не окупится','won’t pay yet'):''}${r==='min'?' · '+L('нужно 3 точки в городе','needs 3 outlets in the city'):''}</small></span>`+
-      (k==='soc'&&on?`<button class="btn sm noenter" data-ow="mkstop" data-k="soc">${L('Отключить','Stop')}</button>`:`<button class="btn sm noenter${g>m.c*1.2?' green':''}" data-ow="mk" data-k="${k}" data-id="${c}"${r!=='ok'?' disabled':''}>${on?L('Идёт','On'):L('Запустить','Run')}</button>`)+`</div>`;}
+      (k==='soc'&&on?`<button class="btn sm noenter" data-ow="mkstop" data-k="soc">${L('Отключить','Stop')}</button>`:`<button class="btn sm noenter${g>m.c*1.2?' green':''}" data-ow="mk" data-k="${k}" data-id="${c}"${r!=='ok'?' disabled':''}>${on?L('Идёт','On'):L('Запустить','Run')}</button>`)+`</div>`;
+    if(E.MKC_AUTO&&E.MKC_AUTO.indexOf(k)>=0&&r!=='min'){const au=E.mkAutoOn(W,k,c);rows+=autoRow(au,`data-ow="mka" data-k="${k}" data-id="${c}"`,au?(on?L('идёт — потом повторится сама, если окупается','running — then repeats by itself if it pays off'):g>m.c?L('запустится сама в ближайший день','will start by itself in a day'):L('ждёт, пока снова окупится','waiting until it pays off again')):'');}}
+  // M30: одна кнопка вместо десятков щелчков — листовки сами у всех точек, где окупаются
+  {let nA=0,nW=0;for(const b of W.biz)if(b.st==='w'&&E.SMALL.indexOf(b.t)>=0){if(E.mkAutoOn(W,'fly',b.id))nA++;else if(E.mkWorth(W,'fly',b.id).ok)nW++;}
+    if(nA||nW)rows+=`<div class="ow-row"><span class="ow-ic">📄</span><span class="f1"><b>${L('Листовки у всех точек — сами','Flyers at every outlet — automatically')}</b><small>${nA?L(`повторяются сами у ${nA} ${pl(nA,'точки','точек','точек','outlet','outlets')}`,`repeating at ${nA} ${nA===1?'outlet':'outlets'}`)+(nW?' · ':''):''}${nW?L(`ещё ${nW} — где окупятся`,`${nW} more where they pay off`):''}</small></span><button class="btn sm noenter${nW?' green':''}" data-ow="mkall" data-k="fly" data-on="${nW?1:0}">${nW?L('Включить','Turn on'):L('Выключить','Turn off')}</button></div>`;}
   const ls=O.last;const res=ls&&(ls.sp||ls.rev)?`<div class="ow-res">📊 ${L(`В прошлом месяце реклама: потрачено ${M(ls.sp)}, дала +${Mr(ls.rev)} выручки ≈ ${pos(ls.pr-ls.sp)} прибыли.`,`Last month’s ads: spent ${M(ls.sp)}, brought +${Mr(ls.rev)} revenue ≈ ${pos(ls.pr-ls.sp)} profit.`)}</div>`:'';
   return `<div class="bz-sec">📣 ${L('Маркетинг','Marketing')}</div><div class="card">${res}<p class="bz-note" style="margin-top:0">${L('Для всех точек города. Листовки, «1+1», блогер и вывеска — в карточке каждой точки.','For all outlets in the city. Flyers, “1+1”, a blogger and a sign are on each outlet’s card.')}</p>${tip('mk')}<div>${rows}</div></div>`;}
 
@@ -178,16 +196,35 @@ function evCard(W){const O=W.ow;if(W.ned||!O||!O.ev)return '';const v=O.ev,b=W.b
   const left=Math.max(1,v.exp-W.t);
   return `<div class="card ow-ev" id="owEv"><div class="bz-lab">📰 ${L('Случилось','Something came up')}${b&&v.k!=='city2'&&v.k!=='audit3'?' · '+bico(b.t)+' '+esc(bn(b.t)):''}</div><b style="display:block;font-size:19px;margin:4px 0">${esc(x[0](a))}</b><p class="bz-note" style="color:var(--ink2);font-size:16px">${esc(x[1](a,v.bt))}</p>${tip('ev')}
     <div class="row"><button class="btn green noenter" data-ow="ev" data-i="0">${esc(op[0])}</button><button class="btn noenter" data-ow="ev" data-i="1">${esc(op[1])}</button></div><p class="bz-note">${L('Решить нужно за ','Decide within ')+days(left)}${L(' — иначе Людмила выберет «',' — otherwise Lyudmila picks “')}${esc(op[v.def])}${L('»','”')}</p></div>`;}
+// M30: события с выбором не проходят мимо — плашка «📰 Нужно ваше решение» вверху любой вкладки (кроме «Сегодня», где сама карточка),
+// а за 3 дня до срока — окно-напоминание с теми же кнопками (раз на событие), чтобы Людмила не решала молча
+function evBar(W,cur){let el=$$('owEvBar');const O=W&&W.ow,v=O&&O.ev;const show=!!(v&&!W.ned&&EVN[v.k]&&cur!=='today');
+  if(!show){if(el)el.remove();return;}const m=$$('main');if(!m)return;
+  if(!el){el=document.createElement('button');el.id='owEvBar';el.className='card tap ow-evbar noenter';el.setAttribute('data-ow','evgo');m.insertBefore(el,m.firstChild);}
+  else if(el.parentNode!==m||m.firstChild!==el)m.insertBefore(el,m.firstChild);
+  const b=W.biz.find(x=>x.id===v.id),left=Math.max(1,v.exp-W.t),hot=left<=3;el.classList.toggle('hot',hot);
+  const h=`<span class="bz-ic">📰</span><span class="f1"><b>${L('Нужно ваше решение','Your decision is needed')}${b?' · '+bico(b.t)+' '+esc(bn(b.t)):''}</b><small>${esc(EVN[v.k][0](v.a||{}))} · ${L('ещё ','')}${days(left)}${L('',' left')}</small></span><span class="chev">›</span>`;
+  if(el.innerHTML!==h)el.innerHTML=h;}
+function evRemind(W){const O=W&&W.ow,v=O&&O.ev;if(!v||W.ned||v.rem||!EVN[v.k])return;const left=v.exp-W.t;if(left>3||left<1)return;
+  if(typeof modalOn!=='undefined'&&modalOn)return;if(typeof paused!=='undefined'&&paused)return;v.rem=1;
+  const x=EVN[v.k],a=v.a||{},op=x[2](a),b=W.biz.find(y=>y.id===v.id);snd('alert');
+  modal(`<h2>📰 ${L('Нужно ваше решение','Your decision is needed')}</h2><div class="say">${face('worry')}<div><p>${L(`Осталось ${days(left)}. Если не ответите, я выберу «${esc(op[v.def])}».`,`${days(left)} left. If you don’t answer, I’ll pick “${esc(op[v.def])}”.`)}</p></div></div>
+    <div class="card ow-ev">${b?`<div class="bz-lab">${bico(b.t)} ${esc(bn(b.t))}</div>`:''}<b style="display:block;font-size:19px;margin:4px 0">${esc(x[0](a))}</b><p class="bz-note" style="color:var(--ink2);font-size:16px">${esc(x[1](a,v.bt))}</p></div>
+    <div class="row"><button class="btn green noenter" data-ow="ev" data-i="0">${esc(op[0])}</button><button class="btn noenter" data-ow="ev" data-i="1">${esc(op[1])}</button></div>
+    <div class="row"><button class="btn" id="owEvLater" data-esc>${L('Решу позже','I’ll decide later')}</button></div>`);
+  try{modalRe=null;}catch(e){}const l=$$('owEvLater');if(l)l.onclick=()=>{snd('tap');hideModal();};}
 function jobName(W,j){const a=j.a;if(j.k==='edu')return T(EDN[a]);let t=T(JN[j.k]);if(j.k==='neg'||j.k==='spot')t+=' · '+bn(a);else if(j.k==='visit')t+=' · '+T(FRN[a]);else{const b=W.biz.find(x=>x.id===a);if(b)t+=' · '+bn(b.t);}return t;}
 function ownCard(W){if(W.ned||!W.me||!W.ip||stI()<1)return '';const O=W.ow||{},H=E.hands(W);let rows='';
-  for(const j of O.j||[])rows+=`<div class="ow-row"><span class="ow-ic">${j.k==='edu'?E.ED[j.a].ico:E.JOBS[j.k].ico}</span><span class="f1"><b>${esc(jobName(W,j))}</b><small>${L('ещё ','')}${days(j.left)}${L('',' left')}${j.e?' · ⚡ '+j.e+L(' в день',' a day'):''}</small>${prog(1-j.left/Math.max(1,j.d))}</span>${j.k!=='edu'?`<button class="btn sm noenter" data-ow="jstop" data-id="${j.id}">${L('Прервать','Stop')}</button>`:''}</div>`;
+  for(const j of O.j||[]){rows+=`<div class="ow-row"><span class="ow-ic">${j.k==='edu'?E.ED[j.a].ico:E.JOBS[j.k].ico}</span><span class="f1"><b>${esc(jobName(W,j))}</b><small>${L('ещё ','')}${days(j.left)}${L('',' left')}${j.e?' · ⚡ '+j.e+L(' в день',' a day'):''}</small>${prog(1-j.left/Math.max(1,j.d))}</span>${j.k!=='edu'?`<button class="btn sm noenter" data-ow="jstop" data-id="${j.id}">${L('Прервать','Stop')}</button>`:''}</div>`;if(E.JOB_AUTO&&E.JOB_AUTO.indexOf(j.k)>=0){const au=E.jobAutoOn(W,j.k,j.a);rows+=autoRow(au,`data-ow="ja" data-k="${j.k}" data-a="${j.a}"`,'');}}
+  {const ja=Object.keys(O.ja||{}).filter(key=>{const i=key.indexOf(':');return !(O.j||[]).some(j=>j.k===key.slice(0,i)&&j.a===key.slice(i+1));});
+    if(ja.length)rows+=`<div class="ow-row"><span class="ow-ic">🔁</span><span class="f1"><b>${L('Повторяются сами','Repeating by themselves')}</b><small>${esc(ja.map(key=>{const i=key.indexOf(':');return jobName(W,{k:key.slice(0,i),a:key.slice(i+1)});}).join('; '))}${L(' — начнутся, когда будет свободная рука и силы',' — they start when a hand and energy are free')}</small></span><button class="btn sm noenter" data-ow="jaoff">${L('Выключить','Turn off')}</button></div>`;}
   const btn=H.free>0?`<button class="btn accent w noenter" data-ow="jobs" style="margin-top:10px">✋ ${L('Чем занять руку?','What should the hand do?')} <small>(${L('свободно ','free: ')}${H.free})</small></button>`:`<p class="bz-note">${L('Все руки заняты.','All hands are busy.')}</p>`;
   return `<div class="bz-sec">✋ ${L('Дела хозяина','Owner’s tasks')}</div><div class="card">${tip('job')}${rows?`<div>${rows}</div>`:`<p class="bz-note" style="margin-top:0">${L('Переговоры, проверки, поиск места, листовки, гости — дела, которые двигают бизнес.','Negotiations, inspections, scouting, flyers, visits — tasks that move the business.')}</p>`}${btn}</div>`;}
 function eduCard(W){if(W.ned||!W.me||!W.ip)return '';const O=W.ow||{},n=Object.keys(E.ED).filter(k=>O.ed&&O.ed[k]).length,N=Object.keys(E.ED).length;const cur=(O.j||[]).find(j=>j.k==='edu');
   return `<button class="card tap bz-li noenter" data-ow="edu" style="padding:14px 18px"><span class="bz-ic">🎓</span><span class="f1"><b>${L('Учёба: курсы','Study: courses')} · ${n}${L(' из ',' of ')}${N}</b><small>${cur?L('идёт курс «','course in progress: “')+esc(T(EDN[cur.a]))+L('» — ещё ','” — ')+days(cur.left)+L('',' left'):L('бухучёт, переговоры, управление, маркетинг','bookkeeping, negotiation, management, marketing')}</small></span><span class="chev">›</span></button>`;}
 // «Этот месяц»: строка «живу на пассиве»
 function pasRow(W){if(W.ned||!W.biz.length)return '';const p=E.passive(W);const v=Math.min(1,p.pct);
-  return `<div class="mr"><span class="bz-ic">🌿</span><span class="f1"><b>${L('Живу на пассиве: ','Living off passive income: ')}${Math.round(p.pct*100)} %</b><small>${L('точки без вас покрывают жизнь и взносы','outlets that run without you cover living costs and fees')}</small>${prog(v)}</span></div>`;}
+  return `<div class="mr"><span class="bz-ic">🌿</span><span class="f1"><b>${p.pct>=1?L('✓ Живу на пассиве','✓ Living off passive income'):L('Живу на пассиве: ','Living off passive income: ')+Math.round(p.pct*100)+' %'}</b><small>${p.pct>=1?(p.pct>=1.95?L(`точки без вас покрывают жизнь и взносы в ${String(Math.floor(p.pct*10)/10).replace('.',',')} раза`,`outlets that run without you cover living costs and fees ${Math.floor(p.pct*10)/10} times over`):L('точки без вас покрывают жизнь и взносы','outlets that run without you cover living costs and fees')):L('точки без вас покрывают жизнь и взносы','outlets that run without you cover living costs and fees')}</small>${prog(v)}</span></div>`;}
 
 /* ---------------- окна: дела хозяина, курсы, ИП ---------------- */
 function jobOptions(W){const o=[],O=W.ow||{};const add=(k,a,val,ds)=>{const r=E.jobOk(W,k,a);if(r==='no'||r==='stage')return;o.push({k,a,val,ds,r});};
@@ -215,8 +252,13 @@ function openEdu(){const W=w();if(!W)return;const O=W.ow||{};let h=`<h2>🎓 ${L
   modal(h);try{modalRe=openEdu;}catch(e){}$$('owEC').onclick=()=>{snd('tap');hideModal();};}
 // окно ИП: выбор налога с советом Людмилы на числах (для первого дела — автомат)
 function openIP(){const W=w();if(!W||W.ip)return;const a=E.taxAdv(W),kz=E.taxAdv(Object.assign({},W,{biz:[]}),['kiosk']);const best=a.best;
-  const say=L(`Посчитала на вашем первом деле (кофейный автомат, за год): 6 % с выручки — ${M(a.u6)}, 15 % с прибыли — ${M(a.u15)}. Выгоднее «${best==='usn6'?'6 %':'15 %'}». Для ларька с маленькой наценкой разница больше: ${M(kz.u6)} против ${M(kz.u15)}. Сменить можно раз в 12 месяцев — как в жизни, раз в год.`,
-    `I ran the numbers on your first business (a coffee machine, per year): 6% of revenue — ${M(a.u6)}, 15% of profit — ${M(a.u15)}. “${best==='usn6'?'6%':'15%'}” is cheaper. For a low-mark-up kiosk the gap is bigger: ${M(kz.u6)} vs ${M(kz.u15)}. You can switch once every 12 months — like in real life, once a year.`);
+  // M30: «6 % — 0 ₽» объясняем (взносы ИП 57 000 ₽ в год вычитаются из налога 6 %), про ларёк — какой режим дешевле
+  const fee=4750*12,t6=Math.round(a.rev*.06),z6=a.u6<=0;
+  const w6=z6?L(`6 % с выручки — 0 ₽: 6 % от ${M(a.rev)} — это ${M(t6)}, а взносы ИП ${M(fee)} в год из этого налога вычитаются — платить почти нечего.`,`6% of revenue — 0 ₽: 6% of ${M(a.rev)} is ${M(t6)}, and the ${M(fee)} a year of contributions is deducted from this tax — almost nothing to pay.`)
+    :L(`6 % с выручки — ${M(a.u6)} (6 % от выручки минус взносы ИП ${M(fee)} в год).`,`6% of revenue — ${M(a.u6)} (6% of revenue minus ${M(fee)} a year of contributions).`);
+  const kb=kz.u15<kz.u6;
+  const say=L(`Посчитала на вашем первом деле (кофейный автомат, за год). ${w6} 15 % с прибыли — ${M(a.u15)}. Сейчас выгоднее «${best==='usn6'?'6 %':'15 %'}». А вот для ларька с маленькой наценкой дешевле ${kb?'15 %':'6 %'}: ${M(kb?kz.u15:kz.u6)} против ${M(kb?kz.u6:kz.u15)} в год. Сменить режим можно раз в 12 месяцев — как в жизни.`,
+    `I ran the numbers on your first business (a coffee machine, per year). ${w6} 15% of profit — ${M(a.u15)}. Right now “${best==='usn6'?'6%':'15%'}” is cheaper. But for a low-mark-up kiosk ${kb?'15%':'6%'} is cheaper: ${M(kb?kz.u15:kz.u6)} vs ${M(kb?kz.u6:kz.u15)} a year. You can switch once every 12 months — like in real life.`);
   const opt=(m,t,d)=>`<button class="btn ${m===best?'green':''} noenter" data-ow="ip" data-v="${m}" style="flex:1 1 45%;white-space:normal;line-height:1.25;min-height:64px"><b>${t}</b><br><small>${d}</small></button>`;
   modal(`<h2>📄 ${L('Своё ИП и налог','Sole trader and tax')}</h2><div class="say">${face('happy')}<div><p>${L('Для своей точки нужно ИП: самозанятым перепродавать товар нельзя. Оформим бесплатно, за 3 дня. Взносы — 4 750 ₽ в месяц. Осталось выбрать налог.','A business needs sole-trader status: the self-employed can’t resell goods. It’s free and takes 3 days. Contributions are 4,750 ₽ a month. Now pick the tax.')}</p><p>${esc(say)}</p></div></div>
     ${W.reg?`<div class="tip">📄 ${L('Уже оформляется: ещё ','Already in progress: ')+days(Math.max(1,W.reg.t-W.t))}</div><div class="row"><button class="btn" id="owIpN" data-esc>${L('Закрыть','Close')}</button></div>`:
@@ -229,7 +271,7 @@ function closeLines(rep){const W=w();if(!W||W.ned)return '';let h='';const O=W.o
     if(!Q.ch)parts.push(L('история ','credit history ')+Math.floor(W.ch||0)+'/50');if(!Q.mgr)parts.push(L('нужен управляющий','a manager is needed'));
     const eta=q.m>0?L(' · ≈ '+mons(q.m),' · ≈ '+mons(q.m)):'';
     h+=`<div class="lbl">🏢 ${L('До главы «Сеть»','To the “Network” chapter')}</div><p class="about" style="margin:4px 0 8px">${parts.length?esc(parts.join(' · '))+eta:L('всё готово — можно оформлять ООО!','all set — you can register the LLC!')}</p>`;}
-  if(W.biz.length){const p=E.passive(W);h+=`<div class="lbl">🌿 ${L('Живу на пассиве','Living off passive income')}: ${Math.round(p.pct*100)} %</div>${prog(Math.min(1,p.pct))}<p class="about" style="margin:2px 0 8px">${L(`точки без вас принесли ${M(Math.max(0,p.inc))} при тратах жизни ${M(p.need)}`,`outlets that run without you brought ${M(Math.max(0,p.inc))} against living costs of ${M(p.need)}`)}</p>`;}
+  if(W.biz.length&&!W.ned){const p=E.passive(W);h+=`<div class="lbl">🌿 ${p.pct>=1?L('✓ Живу на пассиве: точки покрывают жизнь','✓ Living off passive income: outlets cover living costs')+(p.pct>=1.95?L(` в ${String(Math.floor(p.pct*10)/10).replace('.',',')} раза`,` ${Math.floor(p.pct*10)/10} times over`):''):L('Живу на пассиве','Living off passive income')+': '+Math.round(p.pct*100)+' %'}</div>${prog(Math.min(1,p.pct))}<p class="about" style="margin:2px 0 8px">${L(`точки без вас принесли ${M(Math.max(0,p.inc))} при тратах жизни ${M(p.need)}`,`outlets that run without you brought ${M(Math.max(0,p.inc))} against living costs of ${M(p.need)}`)}</p>`;}
   const ls=O.last;if(ls&&ls.m===rep.m&&(ls.sp||ls.rev))h+=`<div class="ow-res">📣 ${L(`Маркетинг: потрачено ${M(ls.sp)}, дал +${Mr(ls.rev)} выручки ≈ ${pos(ls.pr-ls.sp)} прибыли`,`Marketing: spent ${M(ls.sp)}, brought +${Mr(ls.rev)} revenue ≈ ${pos(ls.pr-ls.sp)} profit`)}</div>`;
   const le=O.lastEv;if(le&&le.m===rep.m&&le.auto&&EVN[le.k])h+=`<p class="about">📰 ${L('Людмила решила за вас: ','Lyudmila decided for you: ')}«${esc(EVN[le.k][2](Object.assign({inc:0,pr:0,fee:0},le.a||{}))[le.i])}».</p>`;
   return h;}
@@ -241,6 +283,14 @@ function onClick(e){const b=e.target.closest('[data-ow]');if(!b||b.disabled)retu
     case 'tip':{if(!S.o2t)S.o2t={};S.o2t[b.dataset.k]=1;save();snd('tap');GAME.emit('change');if(modalOn&&modalRe)modalRe();break;}
     case 'up':{const r=act('ptUp',b.dataset.id);if(r==='ok'){const bb=W.biz.find(x=>x.id===b.dataset.id);snd('build');try{UI.salute(true);}catch(x){}toast('🔧 '+L('Улучшено: уровень ','Upgraded: level ')+(bb?bb.lv:''),2200);stat('lvl',{t:bb?bb.t:'',n:bb?bb.lv:0});}else if(r==='cash'){snd('no');toast(MSG.cash());}break;}
     case 'mk':{const r=act('mkRun',b.dataset.k,b.dataset.id);if(r==='ok'||r==='hit'||r==='meh'||r==='flop'){snd('coin');toast('📣 '+T(MKN[b.dataset.k])+': '+(r==='hit'?L('обзор зашёл!','the review went down well!'):r==='meh'?L('обзор вышел, толку немного','the review is out, not much effect'):r==='flop'?L('обзор никто не заметил','nobody noticed the review'):L('запущено','running')),2600);stat('mk',{m:b.dataset.k,r});}else if(r==='cash'){snd('no');toast(MSG.cash());}break;}
+    case 'mka':{const kk=b.dataset.k,id=b.dataset.id,on=!E.mkAutoOn(W,kk,id);if(act('mkAutoSet',kk,id,on)==='ok'){snd('tap');stat('mka',{m:kk,on:on?1:0});
+        if(on&&E.mkOk(W,kk,id)==='ok'&&E.mkWorth(W,kk,id).ok&&W.cash-E.mkWorth(W,kk,id).c>=30e3)act('mkRun',kk,id);
+        toast('🔁 '+T(MKN[kk])+': '+(on?L('будет повторяться сама, пока окупается','will repeat by itself while it pays off'):L('автоповтор выключен','auto-repeat off')),2600);GAME.emit('change');}break;}
+    case 'mkall':{const on=b.dataset.on==='1',n=act('mkAutoAll',b.dataset.k,on);snd('tap');stat('mka',{m:'all',on:on?1:0});if(on)try{act('ownAuto');}catch(x){}
+        toast('🔁 '+(on?L(`Листовки сами: ${n} ${pl(n,'точка','точки','точек','outlet','outlets')}`,`Auto flyers: ${n} ${n===1?'outlet':'outlets'}`):L('Листовки: автоповтор выключен','Flyers: auto-repeat off')),2600);GAME.emit('change');break;}
+    case 'ja':{const kk=b.dataset.k,a=b.dataset.a,on=!E.jobAutoOn(W,kk,a);if(act('jobAutoSet',kk,a,on)==='ok'){snd('tap');stat('ja',{j:kk,on:on?1:0});if(on&&E.jobOk(W,kk,a)==='ok')act('jobStart',kk,a);
+        toast('🔁 '+T(JN[kk])+': '+(on?L('будет повторяться само','will repeat by itself'):L('автоповтор выключен','auto-repeat off')),2400);GAME.emit('change');}break;}
+    case 'jaoff':{const O=W.ow||{};for(const key in O.ja||{}){const i=key.indexOf(':');if(!(O.j||[]).some(j=>j.k===key.slice(0,i)&&j.a===key.slice(i+1)))act('jobAutoSet',key.slice(0,i),key.slice(i+1),false);}snd('tap');GAME.emit('change');break;}
     case 'mkstop':{if(act('mkStop',b.dataset.k)==='ok'){snd('tap');toast(L('Соцсети отключены','Social media stopped'));}break;}
     case 'st':{const r=act('stTrain',b.dataset.id,b.dataset.k);if(r==='ok'){snd('coin');toast('🎓 '+L('Персонал учится','The staff are training'));stat('st',{w:b.dataset.k});}else if(r==='cash'){snd('no');toast(MSG.cash());}break;}
     case 'more':{MORE[b.dataset.k]=!MORE[b.dataset.k];snd('tap');GAME.emit('change');break;}
@@ -249,12 +299,16 @@ function onClick(e){const b=e.target.closest('[data-ow]');if(!b||b.disabled)retu
     case 'job':{const r=act('jobStart',b.dataset.k,b.dataset.a);if(r==='ok'){snd('coin');toast('✋ '+T(JN[b.dataset.k])+' — '+days(E.JOBS[b.dataset.k].d),2200);stat('job',{j:b.dataset.k});if(modalOn){hideModal();}}else if(MSG[r]){snd('no');toast(MSG[r]());}break;}
     case 'jstop':{if(act('jobStop',b.dataset.id)==='ok')snd('tap');break;}
     case 'ed':{const r=act('edStart',b.dataset.k);if(r==='ok'){snd('coin');toast('🎓 '+T(EDN[b.dataset.k])+' — '+days(E.ED[b.dataset.k].d),2400);stat('edu',{c:b.dataset.k});hideModal();}else if(MSG[r]){snd('no');toast(MSG[r]());}break;}
-    case 'ev':{const v=W.ow&&W.ow.ev;const r=act('evAns',+b.dataset.i);if(r){snd('tap');toast('📰 '+((EVR[r]||EVR.ok)()),2400);stat('ev',{e:v?v.k:'',i:+b.dataset.i,r});}break;}
+    case 'ev':{const v=W.ow&&W.ow.ev;const r=act('evAns',+b.dataset.i);if(r){snd('tap');if(modalOn&&b.closest('#modal'))hideModal();toast('📰 '+((EVR[r]||EVR.ok)()),2400);stat('ev',{e:v?v.k:'',i:+b.dataset.i,r,rem:v&&v.rem?1:0});}break;}
+    case 'evgo':{snd('tap');UI.go('today');setTimeout(()=>{const c=$$('owEv');if(c&&c.scrollIntoView)c.scrollIntoView({block:'start',behavior:'smooth'});},120);break;}
     case 'ip':{hideModal();const r=act('regIP',b.dataset.v);if(r==='ok'){snd('coin');toast(L('Документы поданы: ИП будет через 3 дня','Papers filed: registration in 3 days'));stat('tax',{m:b.dataset.v,w:'ip'});}break;}}}
 function init(){css();document.addEventListener('click',e=>{if(e.target.closest('#main,#modal,#adv')&&e.target.closest('[data-ow]'))onClick(e);},true);
   GAME.on('change',(n,r)=>{if(n==='taxSet'&&r==='ok')stat('tax',{m:w().taxm,w:'set'});});
+  GAME.on('day',()=>{try{evRemind(w());}catch(e){console.error(e);}});
   // итог дела хозяина — коротким сообщением (без окон)
   GAME.on('own',e=>{const W=w();if(!W||!e)return;let t='';const b=W.biz.find(x=>x.id===e.a);
+    if(e.w==='evauto'){const x=EVN[e.ev];if(x)t='📰 '+L('Людмила решила за вас: «','Lyudmila decided for you: “')+x[2](e.x||{})[e.i]+L('»','”')+(b?' · '+bn(b.t):'');if(t)try{toast(t,4200);}catch(z){}return;}
+    if(E.jobAutoOn&&E.jobAutoOn(W,e.w,e.a)&&!(e.w==='check'&&e.th>=1000))return;   // M30: автоповтор — без тоста на каждый круг (недостачу — показываем)
     if(e.w==='edu')t='🎓 '+L('Курс пройден: ','Course completed: ')+T(EDN[e.a]);
     else if(e.w==='check')t='🔍 '+(b?bn(b.t)+': ':'')+(e.th>=1000?L(`недостача ${M(e.th)} — управляющий нечист на руку, смените его в карточке точки`,`a shortfall of ${M(e.th)} — the manager is dishonest; replace him on the outlet card`):L('всё чисто, 3 месяца краж и поломок меньше','all clean; 3 months of less theft and fewer breakdowns'));
     else if(e.w==='neg')t='🤝 '+L(`Договорились: «${bn(e.a)}» — закупка дешевле на 3 месяца`,`Deal done: “${bn(e.a)}” — cheaper stock for 3 months`);
@@ -264,6 +318,6 @@ function init(){css();document.addEventListener('click',e=>{if(e.target.closest(
     else if(e.w==='staff')t='🎓 '+(b?bn(b.t)+': ':'')+L('персонал обучен','the staff are trained');
     else if(e.w==='stand')t='🧍 '+L('Смена за прилавком закончилась','Your counter shift is over');
     if(t)try{toast(t,3200);}catch(x){}});}
-window.OWNUI={init,evCard,ownCard,eduCard,pasRow,ptCards,ptRows,bizCards,catLine,passport,openIP,openJobs,openEdu,closeLines,tip,MSG};
+window.OWNUI={init,evBar,evRemind,evCard,ownCard,eduCard,pasRow,ptCards,ptRows,bizCards,catLine,passport,openIP,openJobs,openEdu,closeLines,tip,MSG};
 if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
 })();

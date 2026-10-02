@@ -327,25 +327,35 @@ function rivSpec(n){const w=Wd();const N=Math.max(1,Math.min(n||72,Math.max(w.hi
   return {u,title:L('Стоимость компаний','Company values'),sub:FMT.uName(u)+' '+L('на конец месяца','at month end'),kind:'line',lbl,si:ser.length-1,ser};}
 
 /* ================= РЫНОК ================= */
-function stockHtml(w,r,g){const tot=stockAll(w,g),here=w.inv[r][g].q;return tot>=1?`${L('На складах','In stock')}: <b>${FMT.qty(tot,g)}</b>, ${regIn(r)}: <b>${FMT.qty(here,g)}</b>`:`<span class="f-mut">${L('На складах нет','None in stock')}</span>`;}
+function stockHtml(w,r,g){const tot=stockAll(w,g),here=w.inv[r][g].q;return tot>=1?`${L('На складах','In stock')}: <b>${FMT.qty(tot,g)}</b>, ${regIn(r)}: <b>${FMT.qty(here,g)}</b>`:'';}   // M30: без «На складах нет» у каждой строки
 function stockAll(w,g){let s=0;for(const r of E.REG)s+=w.inv[r][g].q;return s;}
 function chgOf(w,g){const M=w.mk[g],ph=M.ph;if(!ph.length)return null;return M.i/ph[ph.length-1]-1;}
 function chgHtml(d){if(d==null)return '';const p=Math.abs(d)<.0005?0:d;const cls=p>0?'f-up':p<0?'f-dn':'f-eq',ar=p>0?'▲':p<0?'▼':'•';
   return `<span class="f-ch ${cls}">${ar} ${FMT.pct(Math.abs(p),Math.abs(p)<.1?1:0)}</span>`;}
 function mkPrices(w){const r=st.r;let h=tabs(E.REG.map(x=>[x,NM.reg(x)]),r,'r');
   h+=`<p class="f-note">${L('Цена за единицу','Price per unit')} ${regIn(r)}. ${L('Стрелка — изменение за месяц. Ведите пальцем по графику — цена по месяцам; нажмите — крупно.','The arrow is the change over a month. Slide along a chart for monthly prices; tap it to enlarge.')}</p>`;
-  for(const g of E.GL){const pr=E.price(w,r,g),tot=stockAll(w,g),here=w.inv[r][g].q,res=E.reserve(w,r,g),on=!!w.auto[r][g];
+  // M30: сначала «ваши» товары — что производите, держите на складе, везёте, покупаете для заводов или продаёте по контракту; остальные — под «▼ Все товары»
+  const mine=g=>stockAll(w,g)>=1||w.obj.some(o=>{const O=E.OBJ[o.t];return O&&(O.out===g||(O.in&&O.in[g]));})||w.cons.some(c=>c.g===g)||w.tr.some(x=>x.g===g);
+  let my=E.GL.filter(mine);if(!my.length)my=E.GL.filter(g=>E.REGS[r].p[g]);const rest=E.GL.filter(g=>my.indexOf(g)<0);
+  const list=st.mAll?my.concat(rest):my;
+  for(const g of list){const pr=E.price(w,r,g),tot=stockAll(w,g),here=w.inv[r][g].q,res=E.reserve(w,r,g),on=!!w.auto[r][g];
     h+=`<div class="f-card f-good"><div class="f-gh">${icon(g)}<div class="f-gn"><b>${NM.good(g)}</b><span class="f-pr" data-gp="${g}">${num(pr)} ₽/${NM.unit(g)}</span> <span data-gc="${g}">${chgHtml(chgOf(w,g))}</span></div>${chartBox('px:'+g,(n,big)=>priceSpec(g,r,n,!big),24,112,48,{spark:true})}</div>
       <div class="f-gs" data-gs="${g}">${stockHtml(w,r,g)}</div>
       ${res>=1?`<div class="f-mut">${L('Держим для заводов и маршрутов','Kept for plants and routes')}: ${FMT.qty(res,g)}</div>`:''}
       <button class="f-sw" data-a="auto" data-g="${g}"><span>${L('Автопродажа','Auto-sell')} ${regIn(r)}</span><i class="${on?'':'off'}">${on?L('вкл','on'):L('выкл','off')}</i></button>
       <div class="${INPUTS[g]?'f-b2':'f-b1'}"><button class="btn noenter" data-a="sell" data-g="${g}"${here<1?' disabled':''}>${L('Продать…','Sell…')}</button>${INPUTS[g]?`<button class="btn noenter" data-a="buy" data-g="${g}">${L('Купить…','Buy…')}</button>`:''}</div></div>`;}
+  if(rest.length)h+=`<button class="btn w noenter" data-a="mall" style="margin:8px 0">${st.mAll?'▲ '+L('Только ваши товары','Only your goods'):'▼ '+L(`Все товары (${E.GL.length})`,`All goods (${E.GL.length})`)}</button>`;
   h+=`<p class="f-note">${L('Автопродажа продаёт всё, что сверх нужд заводов и маршрутов, по цене дня. Выключите — товар будет копиться на складе (например, под контракт или рост цены).','Auto-sell sells everything above what your plants and routes need, at the day’s price. Turn it off to keep goods in stock (e.g. for a contract or a price rise).')}</p>`;
   return h;}
 function spotOf(w,g){return E.GOODS[g].p*w.mk[g].i;}
-function ownQ(w,g){try{if(E.ownQ)return E.ownQ(w,g);if(w.own)return w.own[g]||0;}catch(e){}return null;}
+function ownQ(w,g){try{const s=stockAll(w,g);if(E.ownQ)return Math.min(s,E.ownQ(w,g));if(w.own)return Math.min(s,w.own[g]||0);}catch(e){}return null;}   // M30: своей продукции не больше, чем лежит на складах (заводы её тратят)
 // цена товара по регионам; mine — товар у игрока там есть или производится
 function regPx(w,g){return E.REG.map(r=>({r,p:E.price(w,r,g),mine:(w.inv[r][g]&&w.inv[r][g].q>=1)||w.obj.some(o=>o.r===r&&o.st==='w'&&E.OBJ[o.t].out===g)}));}
+// M30: «потянем ли контракт»: свой выпуск за срок + своя продукция на складах − то, что ещё должны по другим контрактам
+function conFit(w,o){let cap=0;for(const x of w.obj)if(x.st==='w'&&!x.off&&E.OBJ[x.t].out===o.g)cap+=E.objCap(x);const own=ownQ(w,o.g)||0;let owe=0;for(const c of w.cons)if(c.g===o.g)owe+=Math.max(0,c.q-c.done);
+  const can=Math.max(0,own+cap*o.days/E.DAYS-owe),short=Math.max(0,o.q-can),ok=short<1;
+  return `<div class="${ok?'f-tip':'f-warn'}" style="margin:6px 0">${cap>0?L(`Ваш выпуск ≈ ${FMT.qty(cap,o.g)} в месяц → за ${o.days} ${pl(o.days,'день','дня','дней','day','days')} ≈ ${FMT.qty(cap*o.days/E.DAYS,o.g)}`,`Your output ≈ ${FMT.qty(cap,o.g)} a month → in ${o.days} days ≈ ${FMT.qty(cap*o.days/E.DAYS,o.g)}`):L('Своего выпуска этого товара нет','You don’t produce this good')}${own>=1?L(`, на складах своей ${FMT.qty(own,o.g)}`,`, own stock ${FMT.qty(own,o.g)}`):''}${owe>=1?L(`, другим покупателям ещё должны ${FMT.qty(owe,o.g)}`,`, still owed to other buyers ${FMT.qty(owe,o.g)}`):''}: <b>${ok?L('✅ хватит','✅ enough'):L(`⚠ не хватит ≈ ${FMT.qty(short,o.g)} — штраф ≈ ${FMT.money(short*o.p*o.pen)}`,`⚠ short by ≈ ${FMT.qty(short,o.g)} — penalty ≈ ${FMT.money(short*o.p*o.pen)}`)}</b>
+    <br><span class="f-mut">💰 ${L('Деньги приходят каждый день, по мере отгрузки. Штраф — при закрытии месяца, если к сроку не довезли. Автопродажу выключать не нужно: контракт забирает товар первым.','Money comes in daily as goods ship. A penalty is charged at month end if the deadline is missed. No need to turn off auto-sell: the contract takes goods first.')}</span></div>`;}
 function mkCons(w){let h='';const cr=GAME.cr(),uOk=!E.urgentOk||E.urgentOk(w),uLeft=Math.max(1,(w.urgM|0)+3-w.m);
   h+=`<p class="f-note">${L('Контракт — продажа по твёрдой цене: товар уходит сам с любых складов (сверх нужд заводов). Не успели в срок — штраф 20 % от стоимости недопоставки.','A contract is a sale at a fixed price: goods ship by themselves from any warehouse (above what plants need). Miss the deadline — a 20% penalty on the undelivered part.')}</p>`;
   h+=`<h3>${L('Предложения','Offers')}</h3>`;
@@ -361,6 +371,7 @@ function mkCons(w){let h='';const cr=GAME.cr(),uOk=!E.urgentOk||E.urgentOk(w),uL
       <span>${L('Штраф за недопоставку','Shortfall penalty')}</span><b>${FMT.pct(o.pen)}</b>
       <span>${L('У вас на складах','In your stock')}</span><b>${FMT.qty(stk,o.g)}</b>${own!=null?`<span>${L('Из них своей продукции','Of which your own output')}</span><b>${FMT.qty(own,o.g)}</b>`:''}</div>
       <div class="f-rp">${rp.map(x=>`<span${x.mine?' class="me"':''}>${NM.reg(x.r)}: ${num(x.p)} ₽ <i class="${o.p>=x.p?'f-up':'f-dn'}">(${o.p>=x.p?'+':'−'}${FMT.pct(Math.abs(o.p/x.p-1))})</i></span>`).join('')}</div>
+      ${conFit(w,o)}
       <p class="f-note" style="margin:4px 0 8px">${L('Сравниваем с ценой на месте: контракт забирает товар с вашего склада. Жирным — регионы, где товар есть у вас. В зачёт идёт только ваша продукция — купленный товар по контракту не отгружается.','Compared with local prices: the buyer collects from your warehouse. Bold — regions where you have the goods. Only your own output counts — bought goods are not shipped under a contract.')}</p>
       <button class="btn green noenter" data-a="sign" data-id="${o.id}">✍ ${L('Подписать','Sign')}</button></div>`;}
   h+=`<div class="f-card"><b>⚡ ${L('Срочный покупатель','Urgent buyer')}</b><p class="f-mut" style="margin:4px 0 8px">${L('Найдём покупателя на вашу продукцию: цена на 6–9 % выше средней по стране (к цене на вашем складе бывает и больше), объём — не больше половины месячного выпуска, срок — месяц. Не чаще раза в 3 месяца. Покупной товар не подходит — только своё.','We’ll find a buyer for your own output: 6–9% above the national average (vs your local price it can be more), up to half a month’s production, one month to deliver. Once every 3 months at most. Bought goods don’t count — only your own.')}</p>
@@ -385,6 +396,7 @@ function renderMarket(el,tab){if(!el)return;css();lastM=el;if(tab)st.mt=tab;cons
   el.onclick=e=>{const b=e.target.closest('[data-a]');if(!b||!el.contains(b)||b.disabled)return;const a=b.dataset.a,g=b.dataset.g;snd('tap');
     if(a==='tab'){st[b.dataset.k]=b.dataset.v;renderMarket(el);}
     else if(a==='auto'){GAME.act('setAuto',st.r,g,!Wd().auto[st.r][g]);renderMarket(el);}
+    else if(a==='mall'){st.mAll=!st.mAll;renderMarket(el);}
     else if(a==='sell')openSell(st.r,g);
     else if(a==='buy')openBuy(st.r,g);
     else if(a==='sign'){const r=GAME.act('acceptOffer',b.dataset.id);if(r==='ok'){snd('coin');toastS(L('Контракт подписан — товар пойдёт покупателю сам','Contract signed — goods will ship by themselves'));}renderMarket(el);}
@@ -462,7 +474,7 @@ function curRep(w){const b=E.bal(w),M=w.mon;return {m:w.m,cur:true,pl:Object.ass
 function repList(w){const a=w.reps.slice();a.push(curRep(w));return a;}
 const mLbl=r=>r.cur?L('Сейчас · ','Now · ')+FMT.date(r.m):FMT.date(r.m);
 const plSum=list=>{const s={rev:0,cogs:0,fix:0,log:0,adm:0,expl:0,dep:0,oth:0,int:0,tax:0};for(const x of list)for(const k in s)s[k]+=x.pl[k]||0;return s;};
-const CF_LBL={sales:['Поступления от продаж','Receipts from sales'],supp:['Закупка сырья','Raw material purchases'],prod:['Затраты на производство','Production costs'],
+const CF_LBL={sales:['Поступления от продаж','Receipts from sales'],supp:['Закупка сырья и товара','Purchases of materials and goods'],prod:['Затраты на производство','Production costs'],
   fix:['Постоянные расходы','Fixed costs'],log:['Логистика (ж/д, вагоны)','Logistics (rail, wagons)'],adm:['Офис и управление','Office & management'],expl:['Геологоразведка','Exploration'],
   oth:['Прочие (штрафы, аварии, возмещения)','Other (penalties, accidents, refunds)'],int:['Проценты по кредитам *','Interest on loans *'],tax:['Налог на прибыль','Income tax'],
   capex:['Стройка и модернизация','Construction & upgrades'],lic:['Лицензии','Licences'],wag:['Вагоны','Wagons'],asale:['Продажа активов','Asset sales'],jvin:['Вклады в совместные дела (и продажа доли)','Joint ventures: investment & exit'],div:['Дивиденды от совместных дел','Dividends from joint ventures'],lend:['Займы друзьям: выдача и возврат','Loans to friends: issued & repaid'],
@@ -607,6 +619,7 @@ function finSum(w,el){const wide=isWide(el),r=w.reps[w.reps.length-1],p=w.reps[w
   const early=!w.ned&&w.st==='gig';const o=E.loanOffer(w);let pay=0;for(const l of w.loans)pay+=Math.round(l.a*l.r/12)+Math.min(l.a,Math.round(E.loanPay(l)));
   const rv=[{v:GAME.value(),me:1}].concat(w.bots.map(b=>({v:E.botValue(w,b)}))).sort((a,b)=>b.v-a.v),pos=rv.findIndex(x=>x.me)+1;
   const lst=`<div class="f-card f-lst">
+    ${window.CASHUI?`<button data-a="go" data-v="cash"><span class="lic">📅</span><div class="li"><b>${L('Деньги на 30 дней','Money for 30 days')}</b><span>${CASHUI.finSub(w)}</span></div><span class="chev">›</span></button>`:''}
     <button data-a="go" data-v="reps"><span class="lic">${LIC.doc}</span><div class="li"><b>${L('Полные отчёты','Full reports')}</b><span>${L('БДР, ДДС, баланс, показатели, история','P&L, cash flow, balance, ratios, history')}</span></div><span class="chev">›</span></button>
     ${early?`<div class="f-lock" style="padding:12px 14px;color:var(--muted);font-size:16px">🔒 ${L('Банк и соперники откроются со своим делом — в главе 2. Пока копим и берём заказы.','Bank and rivals open with your own business — in chapter 2. For now we save and take jobs.')}</div>`:''}
     ${early?'':`<button data-a="go" data-v="bank"><span class="lic">${LIC.bank}</span><div class="li"><b>${L('Банк и кредиты','Bank & loans')}</b><span>${w.loans.length?`${L('Долг','Debt')} ${FMT.money(debtOfW(w))} · ${L('платёж','payment')} ${FMT.money(pay)} ${L('в конце месяца','at month end')}`:`${L('Долгов нет · банк даст до','No debt · the bank lends up to')} ${FMT.money(o.max)}`}</span></div><span class="chev">›</span></button>`}
@@ -672,16 +685,26 @@ function loanAfter(a,n,k,rate,g){const i=rate/12,m=n-grOf(n,g);if(k==='eq')retur
 function loanOver(a,n,k,rate,g){const i=rate/12;g=grOf(n,g);const m=n-g;return a*i*g+(k==='eq'?a*i*(m+1)/2:a*i/(1-Math.pow(1+i,-m))*m-a);}
 // шаг суммы кредита — от лимита: до 3 млн — 10 тыс., до 30 млн — 100 тыс., дальше — 1 млн (не мельче шага банка ECON.loanUnit)
 function loanStep(w,max){const lu=E.loanUnit?E.loanUnit(w):1e6;return Math.max(lu,max<3e6?1e4:max<3e7?1e5:1e6);}
+function loanCard(w,l){const i=Math.round(l.a*l.r/12),b=Math.min(l.a,Math.round(E.loanPay(l)));
+    const nm=l.k==='mort'?L('Ипотека','Mortgage'):l.k==='fr'?L('Займ друга, без процентов','Loan from a friend, interest-free'):l.k==='od'?L('Овердрафт','Overdraft'):l.san?L('Кредит санации','Restructured loan'):l.k==='eq'?L('Кредит, равными долями','Loan, equal principal'):L('Кредит, аннуитет','Loan, annuity');
+    return `<div class="f-card"><b>${nm}</b><div class="f-kv"><span>${L('Остаток долга','Outstanding')}</span><b>${FMT.money(l.a)}</b><span>${L('Ставка','Rate')}</span><b>${FMT.pct(l.r,1)}</b>
+      <span>${L('Осталось','Remaining')}</span><b>${l.n} ${pl(l.n,'месяц','месяца','месяцев','month','months')}</b>
+      <span>${L('Платёж в конце месяца','Payment at month end')}</span><b>${FMT.money(i+b)}</b><span class="f-mut">${L('проценты + долг','interest + principal')}</span><b class="f-mut">${FMT.money(i)} + ${FMT.money(b)}</b></div>
+      ${l.gr>0?`<div class="f-mut">${L('Отсрочка долга ещё','Principal grace for')} ${l.gr} ${pl(l.gr,'месяц','месяца','месяцев','month','months')} — ${L('платим только проценты.','interest only.')}</div>`:''}
+      ${l.k==='od'?`<div class="f-mut">${L('Овердрафт гасится целиком в конце месяца.','An overdraft is repaid in full at month end.')}</div>`:''}
+      <button class="btn noenter" data-a="repay" data-id="${l.id}"${w.cash<=0?' disabled':''}>${L('Погасить досрочно…','Repay early…')}</button></div>`;}
 function finBank(w){let h='';const o=E.loanOffer(w);let dB=0;for(const l of w.loans)if(l.k!=='mort'&&l.k!=='fr')dB+=l.a;const lim=dB+o.max;
   // полоса «взято X из лимита Y» и кредитная история (главы 1–4: нужна 50 для ООО, с кредитом растёт вдвое быстрее)
-  const limBar=lim>0?`<div class="f-mut" style="margin-top:10px">${L('Лимит банка','Bank limit')}: ${L('взято','used')} <b>${FMT.money(dB)}</b> ${L('из','of')} <b>${FMT.money(lim)}</b></div><div class="f-bar"><i style="width:${Math.max(dB>0?1.5:0,Math.min(100,dB/lim*100)).toFixed(1)}%"></i></div>`:'';
+  // M30: один «лимит» вместо двух чисел рядом; отсрочка 6 мес. по умолчанию, если идёт стройка (кредит берут на неё)
+  const bld=w.ned&&w.obj.some(o=>o.st==='b'||o.up);if(!st.lgU){st.lg=bld?6:0;if(bld&&!st.lnU)st.ln=36;}
+  const limBar=lim>0?`<div class="f-mut" style="margin-top:10px">${L('Лимит банка','Bank limit')} <b>${FMT.money(lim)}</b>: ${L('взято','used')} <b>${FMT.money(dB)}</b>, ${L('можно ещё','available')} <b>${FMT.money(o.max)}</b></div><div class="f-bar"><i style="width:${Math.max(dB>0?1.5:0,Math.min(100,dB/lim*100)).toFixed(1)}%"></i></div>`:'';
   let chH='';if(!w.ned&&E.chInfo){try{const c=E.chInfo(w),n=Math.floor(c.ch);
     chH=`<div class="f-mut" style="margin-top:8px">${L('Кредитная история','Credit history')} <b>${n}</b> ${L('из','of')} <b>${c.need}</b>${c.ok?' ✓':''}</div><div class="f-bar"><i style="width:${Math.min(100,c.ch/c.need*100).toFixed(1)}%;background:var(--good,#12a150)"></i></div>`
       +`<div class="f-mut" style="font-size:15px">${c.per<0?L('Минус на счёте в конце месяца (овердрафт) — история падает на 25.','A negative balance at month end (overdraft) cuts the history by 25.'):c.loan?L('Кредит есть — история растёт на 3 в месяц; погасите кредит досрочно — ещё +10.','You have a loan — the history grows by 3 a month; repay it early for +10 more.'):L('Без кредита история растёт на 1,5 в месяц, с кредитом — вдвое быстрее (3 в месяц).','Without a loan the history grows by 1.5 a month, with a loan twice as fast (3 a month).')}`
       +` ${L('Чем она выше, тем больше лимит и ниже ставка; 50 нужно, чтобы открыть ООО.','The higher it is, the bigger the limit and the lower the rate; 50 is needed to open an LLC.')}${!c.ok&&c.eta>0?' '+L('Дойдёт до 50 примерно через','It will reach 50 in about')+' '+c.eta+' '+pl(c.eta,'месяц','месяца','месяцев','month','months')+'.':''}</div>`;}catch(e){}}
   h+=`<div class="f-card"><div class="f-kv"><span>${L('Ключевая ставка ЦБ','Central bank key rate')}</span><b>${FMT.pct(w.key,2)}</b>
-    ${o.max>0||w.ned?`<span>${L('Банк даст до','Bank will lend up to')}</span><b>${FMT.money(o.max)}</b><span>${L('Под','At')}</span><b>${FMT.pct(o.rate,1)} ${L('годовых','a year')}</b>`:''}</div>${o.max>0||w.ned?'':`<p class="f-mut">${L('Пока банк кредит не даст: нужен доход от своего дела и кредитная история.','The bank won’t lend yet: it needs income from your own business and a credit history.')}</p>`}
-    ${w.ned?`<div class="f-mut">${L('Лимит: большее из 300 млн ₽ и 3,5 годовой EBITDA (средняя за 3 месяца × 12), плюс 70 % оставшейся стройки, но не больше 1,5 собственного капитала — минус текущий долг. Ставка = ключевая + 3 %; чем больше долг к EBITDA, тем выше ставка.','Limit: the larger of 300m ₽ and 3.5× annual EBITDA (3-month average × 12), plus 70% of remaining construction, but no more than 1.5× equity — minus current debt. Rate = key + 3%; the higher debt to EBITDA, the higher the rate.')}</div>`:''}${limBar}${chH}</div>`;
+    ${o.max>0||w.ned?`${limBar?'':`<span>${L('Банк даст до','Bank will lend up to')}</span><b>${FMT.money(o.max)}</b>`}<span>${L('Под','At')}</span><b>${FMT.pct(o.rate,1)} ${L('годовых','a year')}</b>`:''}</div>${o.max>0||w.ned?'':`<p class="f-mut">${L('Пока банк кредит не даст: нужен доход от своего дела и кредитная история.','The bank won’t lend yet: it needs income from your own business and a credit history.')}</p>`}
+    ${w.ned?`<details class="f-mut"><summary>${L('Как банк считает лимит','How the bank sets the limit')}</summary>${L('Лимит: большее из 300 млн ₽ и 3,5 годовой EBITDA (средняя за 3 месяца × 12), плюс 70 % оставшейся стройки, но не больше 1,5 собственного капитала — минус текущий долг. Ставка = ключевая + 3 %; чем больше долг к EBITDA, тем выше ставка.','Limit: the larger of 300m ₽ and 3.5× annual EBITDA (3-month average × 12), plus 70% of remaining construction, but no more than 1.5× equity — minus current debt. Rate = key + 3%; the higher debt to EBITDA, the higher the rate.')}</details>`:''}${limBar}${chH}</div>`;
   const lu=loanStep(w,o.max);
   if(o.max>0){if(st.la==null||st.la>o.max)st.la=Math.min(o.max,Math.max(lu,Math.round(o.max/2/lu)*lu));
     const a=st.la,gr=grOf(st.ln,st.lg),f=loanFirst(a,st.ln,st.lk,o.rate,gr),ov=loanOver(a,st.ln,st.lk,o.rate,gr);
@@ -700,14 +723,11 @@ function finBank(w){let h='';const o=E.loanOffer(w);let dB=0;for(const l of w.lo
   else if(dB>0)h+=`<div class="f-warn">${L('Сейчас банк новых денег не даст: лимит исчерпан. Лимит растёт вместе с EBITDA и капиталом.','The bank won’t lend more right now: the limit is used up. It grows with EBITDA and equity.')}</div>`;
   h+=`<h3>${L('Ваши кредиты','Your loans')}</h3>`;
   if(!w.loans.length)h+=`<div class="f-card f-mut">${L('Долгов нет — спим спокойно.','No debt — sleeping soundly.')}</div>`;
-  for(const l of w.loans){const i=Math.round(l.a*l.r/12),b=Math.min(l.a,Math.round(E.loanPay(l)));
-    const nm=l.k==='mort'?L('Ипотека','Mortgage'):l.k==='fr'?L('Займ друга, без процентов','Loan from a friend, interest-free'):l.k==='od'?L('Овердрафт','Overdraft'):l.san?L('Кредит санации','Restructured loan'):l.k==='eq'?L('Кредит, равными долями','Loan, equal principal'):L('Кредит, аннуитет','Loan, annuity');
-    h+=`<div class="f-card"><b>${nm}</b><div class="f-kv"><span>${L('Остаток долга','Outstanding')}</span><b>${FMT.money(l.a)}</b><span>${L('Ставка','Rate')}</span><b>${FMT.pct(l.r,1)}</b>
-      <span>${L('Осталось','Remaining')}</span><b>${l.n} ${pl(l.n,'месяц','месяца','месяцев','month','months')}</b>
-      <span>${L('Платёж в конце месяца','Payment at month end')}</span><b>${FMT.money(i+b)}</b><span class="f-mut">${L('проценты + долг','interest + principal')}</span><b class="f-mut">${FMT.money(i)} + ${FMT.money(b)}</b></div>
-      ${l.gr>0?`<div class="f-mut">${L('Отсрочка долга ещё','Principal grace for')} ${l.gr} ${pl(l.gr,'месяц','месяца','месяцев','month','months')} — ${L('платим только проценты.','interest only.')}</div>`:''}
-      ${l.k==='od'?`<div class="f-mut">${L('Овердрафт гасится целиком в конце месяца.','An overdraft is repaid in full at month end.')}</div>`:''}
-      <button class="btn noenter" data-a="repay" data-id="${l.id}"${w.cash<=0?' disabled':''}>${L('Погасить досрочно…','Repay early…')}</button></div>`;}
+  // M30: больше трёх кредитов — крупные и овердрафт сверху, мелкие старые свёрнуты в одну строку
+  let lsh=w.loans;if(w.loans.length>3&&!st.lAll){const so=w.loans.slice().sort((x,y)=>((y.k==='od')-(x.k==='od'))||y.a-x.a);lsh=so.slice(0,2);const rest=so.slice(2);let ra=0,rp=0;for(const l of rest){ra+=l.a;rp+=Math.round(l.a*l.r/12)+Math.min(l.a,Math.round(E.loanPay(l)));}
+    h+=lsh.map(l=>loanCard(w,l)).join('')+`<button class="f-card f-rr noenter" data-a="lall" style="width:100%;text-align:left;font-size:17px">${L(`Ещё ${rest.length} ${pl(rest.length,'кредит','кредита','кредитов','loan','loans')} · ${FMT.money(ra)} · платёж ${FMT.money(rp)} в месяц`,`${rest.length} more ${rest.length===1?'loan':'loans'} · ${FMT.money(ra)} · payment ${FMT.money(rp)} a month`)} ▾</button>`;lsh=[];}
+  else if(w.loans.length>3)h+=`<button class="f-chip" data-a="lall" style="margin-bottom:8px">▴ ${L('Свернуть мелкие','Collapse small ones')}</button>`;
+  for(const l of lsh)h+=loanCard(w,l);
   h+=`<div class="${w.odM>0?'f-warn':'f-tip'}">☂ ${L('Если при закрытии месяца денег не хватит, банк сам даст овердрафт на месяц (ключевая + 8 %). Санация — только если овердрафт нужен третий месяц подряд, долг больше 4 годовых EBITDA (или EBITDA не больше нуля) и больше четверти капитала: тогда банк продаст часть активов за 60 % цены и сведёт долги в один кредит на 5 лет. Игра продолжится.','If cash runs short at month end, the bank gives an automatic one-month overdraft (key rate + 8%). Restructuring happens only if an overdraft is needed for the third month in a row, debt exceeds 4× annual EBITDA (or EBITDA is zero or less) and is over a quarter of equity: then the bank sells some assets at 60% and rolls debts into one 5-year loan. The game goes on.')}</div>`;
   return h;}
 const BOT_CH={cautious:['Осторожный семейный бизнес: без долгов и резких движений.','A cautious family business: no debt, no sudden moves.'],
@@ -730,12 +750,12 @@ function finRiv(w,el){let h=topBar('sum',L('Соперники и рейтинг
     :'<div class="f-card">'+fame.map(f=>`<div class="f-riv"><span class="dot" style="background:var(--gold,#c8773a)"></span><div><b>${L('Холдинг №','Holding #')}${f.hold}</b><small>IPO — ${FMT.date(f.m)}${f.fs?' · '+L('доля основателя','founder shares')+': '+f.fs:''}</small></div><div class="v">${FMT.money(f.eq)}</div></div>`).join('')+'</div>');
   if(wide)return h+`<div class="f-cols"><div class="col">${tbl}${lb}</div><div class="col">${ch}${fm}</div></div>`;
   return h+tbl+ch+lb+fm;}
-const VIEWS={sum:'sum',rep:'reps',reps:'reps',rep1:'rep',bank:'bank',riv:'riv',profit:'profit'};
+const VIEWS={sum:'sum',rep:'reps',reps:'reps',rep1:'rep',bank:'bank',riv:'riv',profit:'profit',cash:'cash'};
 function scrollTop0(el){let p=el;while(p&&p!==document.body){const oy=getComputedStyle(p).overflowY;if(p.scrollHeight>p.clientHeight&&(oy==='auto'||oy==='scroll')){p.scrollTop=0;break;}p=p.parentElement;}try{if(document.scrollingElement)document.scrollingElement.scrollTop=0;}catch(e){}}
 function go(el,v){const was=st.fv;st.fv=v;renderFin(el);if(was!==v)scrollTop0(el);}
 function renderFin(el,tab){if(!el)return;css();lastF=el;if(tab)st.fv=VIEWS[tab]||tab;const w=Wd();if(!w){el.innerHTML='';return;}
   let v=st.fv||'sum';if(v==='rep'&&isWide(el))v='reps';if(v==='reps'&&!isWide(el)&&st.fv==='rep')v='rep';
-  const body=v==='profit'?finProfit(w,el):v==='reps'?finReps(w,el):v==='rep'?finRep1(w,el):v==='bank'?topBar('sum',L('Банк и кредиты','Bank & loans'),L('ставки, лимит и ваши кредиты','rates, limit and your loans'))+finBank(w):v==='riv'?finRiv(w,el):finSum(w,el);
+  const body=v==='cash'&&window.CASHUI?topBar('sum','📅 '+L('Деньги на 30 дней','Money for 30 days'),L('что придёт и что уйдёт — по дням','what comes in and goes out — day by day'))+CASHUI.finHtml(w):v==='profit'?finProfit(w,el):v==='reps'?finReps(w,el):v==='rep'?finRep1(w,el):v==='bank'?topBar('sum',L('Банк и кредиты','Bank & loans'),L('ставки, лимит и ваши кредиты','rates, limit and your loans'))+finBank(w):v==='riv'?finRiv(w,el):finSum(w,el);
   el.innerHTML=`<div class="fin${isWide(el)?' f-wide':''}">${body}</div>`;
   el.onclick=e=>{const b=e.target.closest('[data-a]');if(!b||!el.contains(b)||b.disabled)return;const a=b.dataset.a;if(a==='nop')return;snd('tap');
     if(a==='go'){go(el,b.dataset.v);}
@@ -747,9 +767,10 @@ function renderFin(el,tab){if(!el)return;css();lastF=el;if(tab)st.fv=VIEWS[tab]|
     else if(a==='mx'){st.mx=st.mx===b.dataset.v?null:b.dataset.v;renderFin(el);}
     else if(a==='lb'){try{LB.show();}catch(x){}}
     else if(a==='la'){st.la=+b.dataset.v;renderFin(el);}
-    else if(a==='ln'){st.ln=+b.dataset.v;st.lg=grOf(st.ln,st.lg);renderFin(el);}
+    else if(a==='ln'){st.ln=+b.dataset.v;st.lnU=1;st.lg=grOf(st.ln,st.lg);st.lgU=1;renderFin(el);}
     else if(a==='lk'){st.lk=b.dataset.v;renderFin(el);}
-    else if(a==='lg'){st.lg=+b.dataset.v;renderFin(el);}
+    else if(a==='lg'){st.lg=+b.dataset.v;st.lgU=1;renderFin(el);}
+    else if(a==='lall'){st.lAll=!st.lAll;renderFin(el);}
     else if(a==='take'){const r=GAME.act('takeLoan',st.la,st.ln,st.lk,grOf(st.ln,st.lg));if(r==='ok'){snd('coin');toastS(L('Деньги на счёте: ','Money in the account: ')+FMT.money(st.la));st.la=null;}else{snd('no');toastS(L('Банк отказал: лимит исчерпан','The bank declined: limit reached'));}renderFin(el);}
     else if(a==='repay')openRepay(b.dataset.id);};
   el.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.f-rr[data-a]')){e.preventDefault();e.target.click();}};
@@ -793,7 +814,8 @@ function dayUpd(){if(!vis(lastM))return;const w=Wd();if(!w)return;if(st.mt==='co
 try{GAME.on('day',dayUpd);}catch(e){}
 function refresh(){if(vis(lastM))renderMarket(lastM);if(vis(lastF))renderFin(lastF);}
 let rsT=0;window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(()=>{if(vis(lastF))renderFin(lastF);},250);});
-window.FIN={renderMarket,renderFin,openReport,refresh,openSell,openBuy,icon,newOffers,
+window.FIN={bankFor(a){st.fv='bank';if(a>0)st.la=a;},   // M30: «Кредит на оборотку» из карточки склада — открыть «Банк» с суммой
+  renderMarket,renderFin,openReport,refresh,openSell,openBuy,icon,newOffers,
   chart:{box:chartBox,open:openChart,hide:hideTip,price:priceSpec,rev:revSpec,cash:cashSpec,riv:rivSpec,CV},
   get state(){return st;}};
 
@@ -802,7 +824,7 @@ const P=(ru,e)=>({ru,en:e});
 const A={
   san:a=>[P('Банк провёл санацию: часть имущества продана, долги сведены в один кредит. Ничего, выдохнем и начнём аккуратнее — главное, мы в деле.','The bank restructured us: some assets sold, debts rolled into one loan. Deep breath, we start again more carefully — we’re still in business.'),
     P('Санация — не конец, а урок. Долг теперь один и на пять лет. Больше не рискуем последними деньгами, договорились?','Restructuring isn’t the end, it’s a lesson. One loan now, over five years. No more gambling our last money, deal?')],
-  od:a=>[P('Мы в овердрафте. Если так три месяца подряд при большом долге — банк начнёт продавать наше имущество. Продадим запасы или притормозим стройку?','We’re on an overdraft. Three months in a row with heavy debt and the bank will start selling our assets. Sell stock or pause construction?'),
+  od:a=>[P('Мы в овердрафте — это самый дорогой кредит (ключевая + 8 %). Если идёт стройка, возьмём проектный кредит с отсрочкой на полгода: он дешевле, а овердрафт вернём в конце месяца. Три месяца подряд в минусе при большом долге — и банк начнёт продавать имущество.','We’re on an overdraft — the most expensive loan (key rate + 8%). If we’re building, let’s take a project loan with a six-month grace period: it’s cheaper, and the overdraft is repaid at month end. Three months in the red with heavy debt and the bank starts selling assets.'),
     P('Счёт в минусе, банк выручил овердрафтом. Его доброта не бесконечна — давайте поправим деньги, пока не поздно.','The account is negative; the bank covered us with an overdraft. Its kindness has limits — let’s fix cash while we can.')],
   cash:a=>a.n<1?[P('Деньги на исходе: до конца месяца может не хватить. Продайте запасы или возьмите кредит, пока не поздно.','Cash is running out: it may not last the month. Sell stock or take a loan while there’s time.'),
       P('Касса почти пустая, а платежи впереди. Я уже пью валерьянку — давайте что-нибудь продадим.','The till is nearly empty and payments are ahead. I’m reaching for the valerian — let’s sell something.')]
@@ -814,12 +836,12 @@ const A={
     P(`Завод без сырья — как борщ без свёклы. ${NM.obj(a.t)} ${regIn(a.r)} ждёт ${gAcc(a.g)}.`,`A plant without raw materials is like borscht without beetroot. The ${NM.obj(a.t).toLowerCase()} ${regIn(a.r)} is waiting for ${gAcc(a.g)}.`)],
   depleted:a=>[P(`${NM.obj(a.t)} ${regIn(a.r)} выработан до дна. Законсервируйте его, чтобы не платить лишнего, и ищите новый участок.`,`The ${NM.obj(a.t).toLowerCase()} ${regIn(a.r)} is exhausted. Mothball it to save costs and look for a new plot.`),
     P(`Недра ${regIn(a.r)} своё отдали: ${oLow(a.t)} пуст. Спасибо ему — и в консервацию.`,`The ground ${regIn(a.r)} has given all it had: the ${NM.obj(a.t).toLowerCase()} is empty. Thank it — and mothball it.`)],
-  halt:a=>[P(`Стройка встала (${oLow(a.t)}, ${NM.reg(a.r)}) — не хватает денег. Продолжится сама, как только деньги появятся.`,`Construction has stopped (${NM.obj(a.t).toLowerCase()}, ${NM.reg(a.r)}) — not enough cash. It resumes as soon as money comes in.`),
+  halt:a=>[P(`Стройка встала (${oLow(a.t)}, ${NM.reg(a.r)}) — не хватает денег. Проектный кредит с отсрочкой на полгода её сдвинет: кнопка — в «Объектах».`,`Construction has stopped (${NM.obj(a.t).toLowerCase()}, ${NM.reg(a.r)}) — not enough cash. A project loan with a six-month grace period gets it moving: the button is in Assets.`),
     P(`Строители курят у забора: ${oLow(a.t)} ${regIn(a.r)} ждёт денег.`,`The builders are idling by the fence: the ${NM.obj(a.t).toLowerCase()} ${regIn(a.r)} is waiting for cash.`)],
   lev:a=>a.x>=99?[P('EBITDA пока нет, а долг есть — долг/EBITDA не считается. Сначала запустим добычу, новые кредиты подождут.','No EBITDA yet, but there is debt — debt/EBITDA can’t be calculated. Let’s get production going first; new loans can wait.')]:[P(`Долг уже ${num(a.x,1)} годовых EBITDA. Банки нервничают, я тоже — давайте гасить.`,`Debt is already ${num(a.x,1)}× annual EBITDA. Banks are nervous, and so am I — let’s repay.`),
     P(`Долг/EBITDA — ${num(a.x,1)}. Выше 3,5 я плохо сплю. Новые кредиты пока не берём.`,`Debt/EBITDA is ${num(a.x,1)}. Above 3.5 I sleep badly. No new loans for now.`)],
   cons:a=>[P(`Контракт на ${gAcc(a.g)} под угрозой: поставили мало, а срок близко. Штраф — 20 % недопоставки.`,`The ${gAcc(a.g)} contract is at risk: little delivered and the deadline is near. Penalty — 20% of the shortfall.`),
-    P(`Покупатель ${gGen(a.g)} уже звонил. Выключите автопродажу — пусть товар идёт по контракту.`,`The ${gAcc(a.g)} buyer has called already. Turn off auto-sell so goods go to the contract.`)],
+    P(`Покупатель ${gGen(a.g)} уже звонил. Своего выпуска не хватает — можно попросить отсрочку или докупить мощность: модернизация даёт +50 %.`,`The ${gAcc(a.g)} buyer has called already. Our output falls short — ask for more time or add capacity: an upgrade gives +50%.`)],
   route:a=>[P(`Возить ${gAcc(a.g)} ${REG_FROM[a.from]||''} ${REG_TO[a.to]||''} дороже, чем продать на месте и купить там. Уберите маршрут или купите свои вагоны.`,`Shipping ${gAcc(a.g)} from ${rIn(a.from,1).slice(3)} to ${rIn(a.to,1).slice(3)} costs more than selling locally and buying there. Drop the route or buy your own wagons.`),
     P(`Считала-пересчитала: ${gAcc(a.g)} выгоднее продать ${regIn(a.from)} и купить ${regIn(a.to)}, чем катать поездом. Железная дорога нам не родня.`,`I ran the numbers twice: it’s cheaper to sell ${gAcc(a.g)} ${rIn(a.from,1)} and buy it ${rIn(a.to,1)} than to ship it by rail. The railway isn’t family.`)],
   auc:a=>[P('Идут торги за участок — загляните, вдруг выгодно.','A plot auction is on — take a look, it might be a bargain.'),
@@ -887,10 +909,10 @@ const ADV={
   news(n){if(!n)return '';const a=n.a||{},d=FMT.mon(n.m)+' · ';let s='';
     const R=r=>r?regIn(r):'',G=g=>g?NM.good(g):'',O=t=>t?NM.obj(t):'';
     switch(n.k){
-      case 'start':s=L(`Холдинг основан. Уставный капитал — ${FMT.money(a.c)}.`,`Holding founded. Share capital — ${FMT.money(a.c)}.`);break;
+      case 'start':s=a.pa?L(`Партнёр вложил ${FMT.money(a.c)} — холдинг выходит в недра.`,`The partner invested ${FMT.money(a.c)} — the holding goes into mining.`):L(`Холдинг основан. Уставный капитал — ${FMT.money(a.c)}.`,`Holding founded. Share capital — ${FMT.money(a.c)}.`);break;
       case 'empty':s=L(`Разведка ${R(a.r)}: пусто. Бывает.`,`Survey ${R(a.r)}: nothing. It happens.`);break;
       case 'found':s=a.leg?L(`Наследство репутации: участок ${R(a.r)} (${G(a.g).toLowerCase()}) — лицензия без торгов.`,`Reputation legacy: a plot ${R(a.r)} (${G(a.g).toLowerCase()}) — licence without an auction.`):L(`Разведка ${R(a.r)} нашла: ${G(a.g).toLowerCase()}!`,`Survey ${R(a.r)} found ${G(a.g).toLowerCase()}!`);break;
-      case 'boost':s=L('Людмила Санна договорилась с покупателями: +10 % к цене продаж на 3 месяца.','Lyudmila Sanna struck a deal with buyers: +10% on sale prices for 3 months.');break;
+      case 'boost':{const n=Math.max(1,Math.round((a.d||90)/30));s=L(`Людмила Санна договорилась с покупателями: +10 % к цене продаж на ${n} ${plural(n,'месяц','месяца','месяцев')}.`,`Lyudmila Sanna struck a deal with buyers: +10% on sale prices for ${n} ${n===1?'month':'months'}.`);break;}
       case 'qgoal':s=a.ok?L(`Цель квартала выполнена — совет директоров доволен (+${a.cr} 💎).`,`Quarter goal achieved — the board is pleased (+${a.cr} 💎).`):L('Цель квартала не выполнена. Совет директоров ждёт новую.','The quarter goal was missed. The board awaits a new one.');break;
       case 'auction':s=L(`Торги за участок: ${G(a.g).toLowerCase()}, ${NM.reg(a.r)}.`,`Plot auction: ${G(a.g).toLowerCase()}, ${NM.reg(a.r)}.`);break;
       case 'won':s=L(`Лицензия наша: ${G(a.g).toLowerCase()}, ${NM.reg(a.r)}, за ${FMT.money(a.pr)}.`,`The licence is ours: ${G(a.g).toLowerCase()}, ${NM.reg(a.r)}, for ${FMT.money(a.pr)}.`);break;

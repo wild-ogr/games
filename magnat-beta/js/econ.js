@@ -123,8 +123,9 @@ function initNedra(W,o){o=o||{};W.ned=true;W.st='nedra';freshMk(W);W.bots=[];W.a
   // рынок: доля ботов в начале — «норма», цена = 1
   const sup=botFlows(W);for(const g of GL){W.mk[g].p0=sup.s[g]/W.mk[g].V-sup.d[g]/W.mk[g].V;W.mk[g].s30=sup.s[g]-sup.d[g];}
   W.bs=sup.s;W.bd=sup.d;
+  W.n5=1;W.n5m=W.m;   // M30: новая экономика главы 5 (участки по ходу главы, события с выбором, контракты по сроку); старые эталонные миры без флага не меняются
   const c=rnd0(o.cap||0);if(c>0){W.cap+=c;recv(W,c,'eqin');}
-  news(W,'start',{c});
+  news(W,'start',o.pa?{c,pa:1}:{c});   // pa — это взнос партнёра при входе в «Недра» (не уставный капитал нового холдинга)
   return W;}
 /* ---------------- престиж: «Доля основателя» (улучшения навсегда, W.pk — копия S.pk игрока на момент создания мира) ----------------
    geo — разведка −15 % цены и −10 % срока за уровень; bank — ставка −1 п. (недра); logi — ж/д тариф −10 %; brig — стройка −10 % срока;
@@ -147,7 +148,9 @@ function ipoEq(W){const r=W&&typeof W.rep==='number'?W.rep:0;return IPO_BAR[Math
 const BOOST_K=.1,BOOST_D=90,BOOST_GAP=90;
 function boostOn(W){return !!W&&W.ned&&(W.bst||0)>W.t;}
 function boostOk(W){return !!W&&W.ned&&!boostOn(W)&&W.t>=(W.bstN||0);}
-function boost(W){if(!boostOk(W))return 'no';W.bst=W.t+BOOST_D;W.bstN=W.bst+BOOST_GAP;news(W,'boost',{d:BOOST_D});return 'ok';}
+// M30: в мирах с новой главой 5 (W.n5) событий и участков больше — буст за рекламу короче (2 месяца вместо 3), чтобы реклама не давала больше +5 % к капиталу
+function boostD(W){return W&&W.n5?60:BOOST_D;}
+function boost(W){if(!boostOk(W))return 'no';const d=boostD(W);W.bst=W.t+d;W.bstN=W.bst+BOOST_GAP;news(W,'boost',{d});return 'ok';}
 /* ---------------- миграция сохранений ----------------
    ПРАВИЛО: любой новый товар, объект, регион или поле мира — только вместе с шагом миграции здесь (и тестом в check.py).
    FMT_V — версия формата мира; migrate(W) доводит старый мир до текущего и возвращает список исправлений. */
@@ -180,10 +183,13 @@ function migrate(W){const fx=[];if(!W||typeof W!=='object')throw new Error('ми
   if(W.me===undefined)W.me=null;if(W.partner===undefined)W.partner=null;if(typeof W.home!=='string')W.home='kuz';
   if(typeof W.taxm!=='string')W.taxm=W.ned?'osno':'npd';num(W,'ch',W.ned?60:0);
   // этап 4 (28.09): улучшения «Доли основателя», буст продаж, цель квартала — у старых миров их нет (экономика не меняется)
+  // M30: флаг новой экономики главы 5 — всем мирам «из ларька» (живые игроки); мир до этой версии без «ларька» (эталон v3) — как был
+  if(W.n5===undefined&&W.fr&&W.fr.rags){W.n5=1;if(typeof W.n5m!=='number')W.n5m=W.partner&&typeof W.partner.m==='number'?W.partner.m:W.m;}
   if(!W.pk||typeof W.pk!=='object'||Array.isArray(W.pk))W.pk={};num(W,'bst',0);num(W,'bstN',0);if(W.qg===undefined||(W.qg!==null&&typeof W.qg!=='object'))W.qg=null;
   if(root.ECON&&root.ECON.storyMigrate)root.ECON.storyMigrate(W,fx);
   if(root.ECON&&root.ECON.bizMigrate)root.ECON.bizMigrate(W,fx);
   if(root.ECON&&root.ECON.reMigrate)root.ECON.reMigrate(W,fx);
+  if(root.ECON&&root.ECON.nedMig)root.ECON.nedMig(W,fx);
   if((W.fv||1)<FMT_V)fx.push('v'+(W.fv||1)+'→'+FMT_V);W.fv=FMT_V;
   return fx;}
 function botAsset(W,t,r,plot,build){const O=OBJ[t];return {t,r,plot:plot?plot.id:null,vc:plot&&plot.dep?plot.dep.vc:(O.vc||0),
@@ -294,7 +300,7 @@ function explDone(W,p){p.left=0;if(!p.dep){p.st='empty';news(W,'empty',{p:p.id,r
   if(p.tut&&!W.ach.lic){p.direct=rnd0(depVal(W,p.r,p.dep)*.1/1e6)*1e6;return;}
   auction(W,p,'you');}
 function auction(W,p,finder){const V=depVal(W,p.r,p.dep),a={id:'a'+(W.nid++),p:p.id,r:p.r,g:p.dep.g,V,st:rnd0(V*.1/1e6)*1e6||1e6,
-    step:Math.max(1e6,rnd0(V*.04/1e6)*1e6),end:W.t+AUC_DAYS,finder,bots:[],pr:0,lead:null,you:false,done:false};
+    step:Math.max(1e6,rnd0(V*.04/1e6)*1e6),end:W.t+(W.n5?15:AUC_DAYS),finder,bots:[],pr:0,lead:null,you:false,done:false};
   a.pr=a.st;
   for(const b of W.bots){const d=BOTS.find(x=>x.id===b.id),cnt=b.as.length;if(cnt>=d.max+Math.floor(W.m/24))continue;
     let f=d.f*(d.like.indexOf(p.dep.g)>=0?1:.45)*(d.reg.indexOf(p.r)>=0?1:.7)*RR(W,.8,1.2);
@@ -356,6 +362,27 @@ function buildDay(W,j,o,off){const need=Math.max(0,Math.min(j.cost-j.paid,rnd0((
   if(need>W.cash-duty(W)*(off?2:1)){j.halt=1;return false;}j.halt=0;const t0=tg(o.id);j.paid+=pay(W,need,'capex');tg(t0);j.left--;return true;}
 // сколько денег нужно на обязательства ближайшего закрытия месяца: постоянные, офис, проценты и тело кредитов (стройка их не трогает)
 function duty(W){let s=ADM0;for(const o of W.obj)if(o.st==='w'){s+=objFix(o)+ADM_OBJ;}for(const l of W.loans)s+=l.a*l.r/12+loanPay(l);const lr=W.reps[W.reps.length-1];if(lr)s+=lr.pl.tax;return s*1.2+10e6;}
+/* M30: стройка без денег — общий план для глав 4–5 (решение владельца 02.10: Людмила не даёт начать то, на что не хватит, и предлагает проектный кредит).
+   buildRest — неоплаченная стройка всех идущих объектов (недра W.obj и upgrade, карьеры/точки W.biz); buildFlow — свободные деньги в месяц ≈ (операционный поток
+   за 3 закрытия − тело кредитов сейчас); buildPlan — хватит ли на эту стройку вместе с идущими; projLoan — проектный кредит (36 мес., тело — после стройки). */
+function buildRest(W){let s=0;for(const o of W.obj||[]){if(o.st==='b')s+=Math.max(0,o.cost-o.paid);if(o.up)s+=Math.max(0,o.up.cost-o.up.paid);}
+  for(const b of W.biz||[]){if(b.st==='b'&&b.tot&&b.cost>b.paid)s+=b.cost-b.paid;if(b.xu)s+=Math.max(0,b.xu.cost-b.xu.paid);}return rnd0(s);}
+function buildRes(W){return W.ned||!root.ECON.bizDuty?duty(W):root.ECON.bizDuty(W);}
+function buildFlow(W){const h=(W.reps||[]).slice(-3);if(!h.length)return 0;let o=0;for(const r of h)o+=sumCF(r.cf,'o')+(r.cf.drw||0);o/=h.length;let b=0;for(const l of W.loans)if(l.k!=='od')b+=loanPay(l);return rnd0(o-b);}
+function buildLoanMax(W,cost){W._pjX=cost||0;let m=0;try{m=loanOffer(W).max;}finally{delete W._pjX;}return m;}
+function buildPlan(W,cost,days){cost=rnd0(cost);days=Math.max(1,days|0);const mo=days/DAYS,rest=buildRest(W),res=rnd0(buildRes(W)),flow=buildFlow(W);
+  const inflow=rnd0(Math.max(0,flow)*mo*.7),have=rnd0(W.cash-res+inflow),need=cost+rest,short=Math.max(0,need-have),up=rnd0(cost*.2);
+  const loan=buildLoanMax(W,cost),ok=short<=0&&W.cash>=up;
+  return {cost,days,mo,up,perDay:rnd0(cost/days),rest,need,cash:W.cash,res,flow,inflow,have,short:Math.max(short,ok?0:up-W.cash),loan,ok,kind:ok?'ok':loan>=Math.max(short,up-W.cash)?'loan':'no'};}
+// сколько не хватает, чтобы достроить всё начатое (для карточки «стройка стоит»): null — ничего не стоит
+function buildHalt(W){let h=0,left=0;for(const o of W.obj||[]){const j=o.st==='b'?o:o.up;if(j&&j.halt){h++;left=Math.max(left,j.left);}}
+  for(const b of W.biz||[]){if(b.st==='b'&&b.halt){h++;left=Math.max(left,b.left);}if(b.xu&&b.xu.halt){h++;left=Math.max(left,b.xu.left);}}if(!h)return null;
+  const rest=buildRest(W),res=rnd0(buildRes(W)),flow=buildFlow(W),have=rnd0(W.cash-res),short=Math.max(0,rest-Math.max(0,have));
+  return {n:h,rest,res,have,flow,short,left,mo:flow>0?Math.ceil(short/flow):null,loan:loanOffer(W).max};}
+// сумма проектного кредита под нехватку: +10 % запаса, вверх до 1 млн (недра) / 100 тыс. (малый бизнес), не больше лимита банка
+function projLoanAmt(W,short,cost){const u=W.ned?1e6:1e5,m=cost?buildLoanMax(W,cost):loanOffer(W).max;return Math.min(Math.floor(m/loanUnit(W))*loanUnit(W),Math.ceil(short*1.1/u)*u);}
+// проектный кредит: 36 мес., тело не платится стройку + 3 мес. (не больше 12); cost — под какую стройку (лимит банка учитывает 70 % её цены)
+function projLoan(W,a,days,cost){if(cost)W._pjX=cost;let r;try{r=takeLoan(W,a,36,'ann',Math.min(12,Math.ceil((days||DAYS)/DAYS)+3));}finally{delete W._pjX;}if(r==='ok')W.loans[W.loans.length-1].pj=1;return r;}
 function objCap(o){return OBJ[o.t].cap*(1+UP_CAP*o.lv);}
 function objFix(o){return OBJ[o.t].fix*(1+UP_FIX*o.lv)*(o.off?.3:1)*(o.fk||1);}
 function autoBuy(W,oid,on){const o=W.obj.find(x=>x.id===oid);if(o&&OBJ[o.t].in)o.ab=!!on;}
@@ -379,7 +406,7 @@ function buyWagons(W,n){const c=n*WAG_COST;if(W.cash<c)return 'cash';const t0=tg
 
 /* ---------------- кредиты ---------------- */
 function ebitda3(W){const h=W.reps.slice(-3);if(!h.length)return 0;let s=0;for(const x of h)s+=ebitdaOf(x.pl);return s/h.length;}
-function loanLimit(W){if(!W.ned&&root.ECON.bizLoanLimit)return root.ECON.bizLoanLimit(W);const e=Math.max(0,ebitda3(W))*12,eq=Math.max(0,equity(W));let pj=0;for(const o of W.obj){if(o.st==='b')pj+=o.cost-o.paid;if(o.up)pj+=o.up.cost-o.up.paid;}
+function loanLimit(W){if(!W.ned&&root.ECON.bizLoanLimit)return root.ECON.bizLoanLimit(W);const e=Math.max(0,ebitda3(W))*12,eq=Math.max(0,equity(W));let pj=0;for(const o of W.obj){if(o.st==='b')pj+=o.cost-o.paid;if(o.up)pj+=o.up.cost-o.up.paid;}pj+=W._pjX||0;
   return Math.max(0,Math.min(Math.max(300e6,3.5*e)+.7*pj,1.5*eq));}
 function loanRate(W){if(!W.ned&&root.ECON.bizLoanRate)return root.ECON.bizLoanRate(W);const e=Math.max(1,ebitda3(W)*12),lev=debtOf(W)/e;return clamp(W.key+.03+.01*Math.max(0,Math.min(5,lev-1))-.005*W.rep-.01*pkL(W,'bank'),.04,.4);}
 function loanUnit(W){return W.ned?1e6:1e4;}
@@ -425,6 +452,7 @@ function tick(W,off){const out=[];W.t++;W.d++;TG='';TS='';mkDay(W);
   if(root.ECON.bizDay&&(!W.ned||W.biz.length))root.ECON.bizDay(W,off,out);
   TG='fr';if(root.ECON.storyDay)root.ECON.storyDay(W,off,out);
   TG='re';if(root.ECON.reDay)root.ECON.reDay(W,off,out);TG='';
+  if(W.n5&&root.ECON.nedDay)root.ECON.nedDay(W,off,out);   // M30: глава 5 — события с выбором, доплаты (js/nedra.js)
   // автозакупка сырья для заводов (включается на заводе): держим запас на 3 дня, пока денег больше 20 млн
   for(const o of W.obj){const O=OBJ[o.t];if(!o.ab||!O.in||o.st!=='w'||o.off)continue;const d=objCap(o)/DAYS;
     for(const g in O.in){const need=d*O.in[g]*3-W.inv[o.r][g].q-inbound(W,o.r,g);if(need>d*O.in[g]*.5&&W.cash-buyPrice(W,o.r,g,need)*need>20e6)buy(W,o.r,g,need);}}
@@ -444,10 +472,11 @@ function tick(W,off){const out=[];W.t++;W.d++;TG='';TS='';mkDay(W);
     W.mon.prod[O.out]=(W.mon.prod[O.out]||0)+q;W.own[O.out]=(W.own[O.out]||0)+q;}
   // маршруты (каждый день — 1/30 месячного объёма; не хватает на складе — сколько есть)
   for(const z of W.routes){z.acc+=z.q/DAYS;const have=W.inv[z.from][z.g].q;const q=Math.min(z.acc,have);if(q>=Math.min(WAG_T,z.q/DAYS*.99)){const s=ship(W,z.g,z.from,z.to,q);z.acc-=s;}if(z.acc>z.q/3)z.acc=z.q/3;}
-  // контракты: отгрузка из любых складов (сверх резерва заводов)
-  for(const c of W.cons){if(c.done>=c.q)continue;for(const r of REG){const av=W.inv[r][c.g].q-reserve(W,r,c.g);if(av<=0)continue;
+  // контракты: отгрузка из любых складов (сверх резерва заводов); M30 (W.n5): после срока не отгружаем, выполненный снимаем сразу
+  for(const c of W.cons){if(c.done>=c.q)continue;if(W.n5&&W.t>=c.end)continue;for(const r of REG){const av=W.inv[r][c.g].q-reserve(W,r,c.g);if(av<=0)continue;
     const need=c.q-c.done;const q=Math.min(av,need,W.own[c.g]||0,Math.max(c.q/Math.max(1,c.days)*3,need/Math.max(1,c.end-W.t)));
     if(q>0){sell(W,r,c.g,q,c.p);c.done+=q;}}}
+  if(W.n5)for(const c of W.cons.slice())if(c.done>=c.q-1){news(W,'cdone',{g:c.g,q:c.q});W.cons=W.cons.filter(x=>x!==c);}
   // автопродажа (офлайн — всё сверх резерва)
   for(const r of REG)for(const g of GL){if(!(off||W.auto[r][g]))continue;const s=W.inv[r][g].q;if(s<=0)continue;
     const q=s-reserve(W,r,g);if(q>1)sell(W,r,g,q);}
@@ -480,8 +509,8 @@ function botMonth(W){for(const b of W.bots){const d=BOTS.find(x=>x.id===b.id);le
     // лицензия без рудника — строить
     for(const r of REG)for(const p of W.plots[r])if(p.own===b.id&&p.st==='lic'&&!b.as.some(a=>a.plot===p.id)&&p.dep){const t=MINE_OF[p.dep.g],c=OBJ[t].capex*p.dep.cm;
       if(room>c*.5){const a=botAsset(W,t,r,p,1);a.b=OBJ[t].mo;b.as.push(a);news(W,'botbuild',{b:b.id,t,r});}}
-    if(n<cap&&room>150e6&&R(W)<d.ex&&b.ex.length<1){const rs=d.reg.filter(r=>W.plots[r].some(p=>p.st==='hid'));if(rs.length){const r=rs[Math.floor(R(W)*rs.length)];
-        const cand=W.plots[r].filter(p=>p.st==='hid');const p=cand[Math.floor(R(W)*cand.length)];p.st='bex';b.cash-=REGS[r].ex;b.ex.push({p:p.id,left:1});}}
+    if(n<cap&&room>150e6&&R(W)<d.ex&&b.ex.length<1){const rs=d.reg.filter(r=>W.plots[r].some(p=>p.st==='hid'&&!p.n5));if(rs.length){const r=rs[Math.floor(R(W)*rs.length)];   // M30: участки, открытые по ходу главы (n5), — подсказка геологов игроку, боты их не разведывают
+        const cand=W.plots[r].filter(p=>p.st==='hid'&&!p.n5);const p=cand[Math.floor(R(W)*cand.length)];p.st='bex';b.cash-=REGS[r].ex;b.ex.push({p:p.id,left:1});}}
     // заводы: смелые и расчётливые — металлургия на Урале, Бобров — лесопилка в Карелии
     if(n<cap&&W.m>=6&&R(W)<(d.ch==='bold'?.18:d.ch==='calc'?.12:d.ch==='wood'?.1:.04)){
       const chain=d.ch==='wood'?['sawmill']:['furnace','steel','rolling'];const have=t=>b.as.filter(a=>a.t===t).length;
@@ -548,7 +577,8 @@ function close(W,off){const M=W.mon;TG='';TS='';const bz=!!root.ECON.bizClose&&(
   if(tax>0){pay(W,tax,'tax');pl(W,'tax',tax);}
   TG='od';
   // нет денег — овердрафт до следующего месяца (ключевая + 8 %)
-  if(W.cash<0){const a=rnd0(-W.cash+(W.ned?5e6:Math.min(5e6,Math.max(1e4,-W.cash*.1))));W.loans.push({id:'l'+(W.nid++),a,a0:a,r:W.key+.08,n:1,n0:1,k:'od'});recv(W,a,'loan');W.odM++;news(W,'od',{a});}else W.odM=0;
+  const odGive=()=>{const a=rnd0(-W.cash+(W.ned?5e6:Math.min(5e6,Math.max(1e4,-W.cash*.1))));W.loans.push({id:'l'+(W.nid++),a,a0:a,r:W.key+.08,n:1,n0:1,k:'od'});recv(W,a,'loan');news(W,'od',{a});};
+  let odNow=false;if(W.cash<0){odGive();W.odM++;odNow=true;}else W.odM=0;
   TG='ev';
   // рынок и мир
   if(W.ned)botMonth(W);
@@ -556,6 +586,9 @@ function close(W,off){const M=W.mon;TG='';TS='';const bz=!!root.ECON.bizClose&&(
   W.key=clamp(W.key+(R(W)<.15?(R(W)<.5?-.0025:.0025):0),.08,.24);
   W.ev=W.ev.filter(e=>e.until>W.m+1);
   const ev=W.ned?event(W,off):null;
+  if(W.n5&&W.ned&&root.ECON.nedClose)root.ECON.nedClose(W,M,off);   // M30: новые участки, банкротство соперников, события с выбором (js/nedra.js)
+  // M30: событие недр (авария и т. п.) списывается уже после овердрафта — не хватило, банк докладывает овердрафт (было: месяц закрывался с минусом на счёте)
+  if(W.cash<0){TG='od';odGive();if(!odNow)W.odM++;TG='ev';}
   // предложения контрактов
   TG='';const gs=GL.filter(g=>(M.prod[g]||0)>=500);for(const g of gs)if(W.offers.length<3&&R(W)<.45)mkOffer(W,g,false);
   // отчёт
@@ -611,7 +644,7 @@ function advise(W){if(!W.ned)return root.ECON.bizAdvise?root.ECON.bizAdvise(W):[
   if(burn>0&&W.cash<burn*2)o.push({k:'cash',pri:90,a:{n:Math.max(0,Math.floor(W.cash/Math.max(1,burn)))}});
   for(const rg of REG){const s=stockR(W,rg),c=storR(W,rg);if(s>c*.9)o.push({k:'full',pri:80,a:{r:rg}});}
   for(const ob of W.obj)if(ob.st==='w'&&ob.why&&ob.why.indexOf('in:')===0)o.push({k:'input',pri:75,a:{t:ob.t,r:ob.r,g:ob.why.slice(3)}});
-  for(const ob of W.obj)if(ob.st==='w'&&ob.why==='empty')o.push({k:'depleted',pri:70,a:{t:ob.t,r:ob.r}});
+  for(const ob of W.obj)if(ob.st==='w'&&!ob.off&&ob.why==='empty')o.push({k:'depleted',pri:70,a:{t:ob.t,r:ob.r}});
   for(const ob of W.obj)if((ob.st==='b'&&ob.halt)||(ob.up&&ob.up.halt))o.push({k:'halt',pri:72,a:{t:ob.t,r:ob.r}});
   for(const z of W.routes){const c=price(W,z.from,z.g)+tariff(W,z.from,z.to)+(wagFree(W)>0?0:rentRate(W));if(c>buyPrice(W,z.to,z.g,z.q)){o.push({k:'route',pri:68,a:{g:z.g,from:z.from,to:z.to}});break;}}
   if(mt&&mt.de>3.5&&debtOf(W)>0)o.push({k:'lev',pri:65,a:{x:mt.de}});
@@ -642,13 +675,13 @@ function offline(W,days){const s0=snap(W),prod={},sold={},ev=[],built=[],sg={};l
   // предложения, торги за время отсутствия: торги решились без игрока (это видно в новостях)
   const s1=snap(W);rev=s1.sold-s0.sold;np=s1.eq-s0.eq;return {days,months:closes,prod,sold,rev,np,ev,built,sg,gigs,gigNet,cash0:s0.cash,cash1:s1.cash,eq0:s0.eq,eq1:s1.eq,debt0:s0.debt,debt1:s1.debt,auc:W.news.filter(n=>n.t>s0.t&&(n.k==='lost'||n.k==='won'||n.k==='nobid'))};}
 
-root.ECON={FMT_V,migrate,initNedra,segsOf,SEG_G,loanUnit,ownQ:(W,g)=>W.own[g]||0,SEGS,DAYS,TAX,REGS,REG,GOODS,GL,OBJ,MINE_OF,BOTS,KM,WAG_T,WAG_COST,STOR0,UP_MAX,IPO_EQ,CFG,EVENTS,
+root.ECON={FMT_V,buildRes,buildRest,buildFlow,buildPlan,buildHalt,projLoanAmt,projLoan,migrate,initNedra,segsOf,SEG_G,loanUnit,ownQ:(W,g)=>W.own[g]||0,SEGS,DAYS,TAX,REGS,REG,GOODS,GL,OBJ,MINE_OF,BOTS,KM,WAG_T,WAG_COST,STOR0,UP_MAX,IPO_EQ,CFG,EVENTS,
   newWorld,tick,close,bal,check,equity,debtOf,price,sellPrice,buyPrice,sell,buy,explore,explCost,explDays,depVal,plotById,
   aucById,bidRaise,bidPass,buyDirect,passDirect,build,canBuild,capexOf,upgrade,upCost,speed,speedExpl,mothball,autoBuy,inbound,objCap,objFix,
   km,transitDays,tariff,rentRate,wagFree,freightCost,ship,addRoute,delRoute,buyWagons,
   loanOffer,loanLimit,loanRate,takeLoan,repay,loanPay,ebitda3,duty,acceptOffer,urgent,urgentOk,reserve,stockR,storR,
   netOf,ebitdaOf,sumCF,metrics,advise,botValue,ipoReady,offline,snap,R,
-  PERKS,pkL,legacy,applyPerks,IPO_BAR,ipoEq,BOOST_K,BOOST_D,BOOST_GAP,boostOn,boostOk,boost,
+  PERKS,pkL,legacy,applyPerks,IPO_BAR,ipoEq,BOOST_K,BOOST_D,BOOST_GAP,boostOn,boostOk,boost,boostD,
   tg,ts,dtMove,balDt,dtName,DT_KEEP,dtOf:W=>W.mon.dt||dtNew(W.mon),
   _:{pay,recv,pl,news,R,RR,RN,pick,rnd0,clamp,invAdd,invTake,emptyMon,objFix,ebitda3}};
 // E.IPO_EQ — планка текущего мира (интерфейс берёт её как число); без игры (симулятор) — базовая 2,2 млрд

@@ -160,7 +160,7 @@ function planCard(){const p=GAME.plan(),ts=p.t||[],done=ts.filter(t=>t.ok==='got
 function ladRow(){const x=GAME.lad?GAME.lad():null;if(!ad()||!x||!x.on)return '';
   return `<div class="mt-row"><span class="mt-f1">📺 ${T('Ролики дня','Daily videos')}: <b>${x.n} ${T('из','of')} ${x.max}</b> · ${T('следующий','next')} <b>+${cr(x.next)}</b></span><button class="mt-btn x2 noenter" data-mt="lad">${x.wait>0?T('Через ','In ')+Math.floor(Math.ceil(x.wait/1000)/60)+':'+String(Math.ceil(x.wait/1000)%60).padStart(2,'0'):T('Смотреть','Watch')}</button></div>`;}
 function milesCard(){const a=GAME.miles();if(!a.length)return '';const left=a.filter(m=>!m.done),nx=left[0];const n=a.length-left.length;
-  let h=`<div class="mt-card"><h4>🎯 ${T('Вехи главы','Chapter milestones')}: ${n} ${T('из','of')} ${a.length}</h4>`;
+  let h=`<div class="mt-card"><h4>🏅 ${T('Вехи главы — награды','Chapter milestones — rewards')}: ${n} ${T('из','of')} ${a.length}</h4>`;
   if(nx){const f=nx.f==='r'?(nx.cur-4)/(nx.need-4):nx.cur/nx.need;h+=`<div class="mt-row"><span class="mt-f1">${esc(mileTxt(nx))} — <b>${mileProg(nx)}</b> · +${cr(nx.cr)}${nx.cos?' + '+T('украшение','decoration'):''}</span></div>${bar(f)}`;}
   else h+=`<p>${T('Все вехи главы пройдены — молодец!','All chapter milestones done — well done!')}</p>`;
   return h+`<div class="mt-row"><button class="mt-btn noenter" data-mt="miles">${T('Все вехи','All milestones')}</button></div></div>`;}
@@ -172,7 +172,8 @@ function qgCard(){const W=GAME.W;if(!W||!W.ned)return '';const g=W.qg;let h='';
 function boostCard(){const W=GAME.W;if(!W||!W.ned)return '';
   if(GAME.boostOn())return `<div class="mt-card"><p>🤝 ${T('Людмила договорилась с покупателями: цены продаж +10 % до','Lyudmila struck a deal with buyers: sale prices +10% until')} <b>${FMT.date(Math.floor((W.bst-1)/30))}</b></p></div>`;
   if(!ad()||!GAME.boostOk()||GAME.adLeft('bst')<=0)return '';
-  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">🤝 ${T('Людмила может договориться с покупателями: +10 % к цене продаж на 3 месяца','Lyudmila can strike a deal with buyers: +10% on sale prices for 3 months')}</span><button class="mt-btn noenter" data-mt="boost">📺 ${T('+10 % за рекламу','+10% for an ad')}</button></div></div>`;}
+  const bn=Math.max(1,Math.round((E.boostD?E.boostD(W):90)/30));
+  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">🤝 ${T(`Людмила может договориться с покупателями: +10 % к цене продаж на ${bn} ${bn===1?'месяц':bn<5?'месяца':'месяцев'}`,`Lyudmila can strike a deal with buyers: +10% on sale prices for ${bn} ${bn===1?'month':'months'}`)}</span><button class="mt-btn noenter" data-mt="boost">📺 ${T('+10 % за рекламу','+10% for an ad')}</button></div></div>`;}
 function perkCard(){if(!Array.isArray(S.pkP)||!S.pkP.length)return '';
   return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">⭐ <b>${T('Доля основателя','Founder’s share')}</b>: ${T('выберите улучшение навсегда','choose a permanent upgrade')}</span><button class="mt-btn ac noenter" data-mt="perks">${T('Выбрать','Choose')}</button></div></div>`;}
 // запасной вариант, если окно главы не показало предложение (META.starterHtml): один раз — карточка на «Сегодня» до конца этого захода
@@ -181,7 +182,11 @@ function starterCard(){const W=GAME.W;if(!W||W.st!=='small'||!starterOk()||S.ask
   if(!(W.me&&W.biz.length>=2))return '';if(!S.ask)S.ask={};if(S.ask.starter&&!starterSess)return '';
   if(!S.ask.starter){S.ask.starter=Date.now();starterSess=true;try{save();}catch(e){}}
   return `<div class="mt-card">${starterBody()}<div class="mt-row"><button class="mt-btn noenter" data-mt="starterNo">${T('Не сейчас','Not now')}</button></div></div>`;}
-function html(){return perkCard()+passCard()+planCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard();}
+// M30: первые 10 заказов главы 1 — Планёрка одной строкой (подарок или поручения), без вех, Кабинета и путёвки (решение владельца 02.10)
+function early(){try{return !!(window.BIZUI&&BIZUI.early&&BIZUI.early());}catch(e){return false;}}
+function planMini(){const p=GAME.plan(),ts=p.t||[],done=ts.filter(t=>t.ok==='got').length;const n=!p.got?GAME.CAL[p.cal]:0;
+  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">📋 <b>${T('Планёрка','Morning meeting')}</b>: ${!p.got?T('подарок дня','daily gift')+(n?' +'+cr(n):''):T('поручения','tasks')+' '+done+' '+T('из','of')+' '+ts.length}</span>${!p.got?`<button class="mt-btn go noenter" data-mt="gift">${T('Забрать','Take')}</button>`:`<button class="mt-btn noenter" data-mt="plan">${T('Открыть','Open')}</button>`}</div></div>`;}
+function html(){if(early())return planMini();return perkCard()+passCard()+planCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard();}
 function cabCard(){try{return window.CAB&&CAB.card?CAB.card():'';}catch(e){console.error(e);return '';}}   // Кабинет (js/cab-ui.js): звание, мечта/вещь в продаже
 // el — отдельный слот (например, #metaSlot на «Сегодня»): перерисовываем его целиком; через morphHTML (ui.js) — кнопки не пересоздаются под пальцем
 function card(el){if(!el||!window.GAME||!GAME.W)return;css();applyCos();let h='';try{h=html();}catch(e){console.error(e);}
@@ -232,6 +237,7 @@ function openCos(){snd('tap');const kinds=[['emb',T('Эмблема (перед 
       if(GAME.cosBuy(id)==='ok'){snd('coin');toast(T('Готово: ','Done: ')+cosName(c));}}
     else{GAME.cosSel(k,id||'');snd('tap');}applyCos();openCos();});
   $m('mtClose').onclick=close;}
+function perkBtns(){if(!Array.isArray(S.pkP)||!S.pkP.length)return '';return S.pkP.map(k=>{const l=(S.pk&&S.pk[k])||0;return `<button class="mt-btn mt-opt noenter" data-pk="${k}">${esc(pkName(k))}${l?` · ${T('ур.','lvl')} ${l+1}`:''}<small>${esc(pkDesc(k))}</small></button>`;}).join('');}
 function openPerks(){if(!Array.isArray(S.pkP)||!S.pkP.length){openPrestige();return;}snd('win');
   let h=`<h2>⭐ ${T('Доля основателя','Founder’s share')}</h2><p class="about">${T('Холдинг на бирже — а опыт остаётся с вами. Выберите одно улучшение: оно будет работать во всех следующих холдингах.','The holding is public — and the experience stays with you. Choose one upgrade: it will work in all your future holdings.')}</p>`;
   for(const k of S.pkP){const l=(S.pk&&S.pk[k])||0;h+=`<button class="mt-btn mt-opt noenter" data-pk="${k}">${esc(pkName(k))}${l?` · ${T('ур.','lvl')} ${l+1}`:''}<small>${esc(pkDesc(k))}</small></button>`;}
@@ -302,7 +308,9 @@ document.addEventListener('click',e=>{if(!ipoQ.wait)return;const t=e.target&&e.t
   if(t&&mc&&mc.contains(t)&&mc.querySelector('.st-photo'))ipoQ.arm=1;},true);
 document.addEventListener('click',()=>{if(!ipoQ.arm)return;ipoQ.arm=0;const mc=$m('mcard');
   if(!modalOn||!mc||mc.querySelector('.st-photo'))return; // ответ не принят — окно сцены осталось
-  ipoQ.wait=0;if(ipoQ.perks||!Array.isArray(S.pkP)||!S.pkP.length)return;
+  ipoQ.wait=0;
+  // M30: одно окно после IPO — ответ Бориса всегда позже (не стопкой), «Доля основателя» отдельно — только если не выбрали в окне сцены
+  if(ipoQ.perks||!Array.isArray(S.pkP)||!S.pkP.length){ipoQ.boris=mc.innerHTML;ipoQ.borisT=Date.now()+120000;hideModal();return;}
   // не стопкой: окно ответа Бориса прячем, после короткой паузы (0,8 с) — «Доля основателя»; сам ответ Бориса — не раньше чем через 2 минуты
   ipoQ.boris=mc.innerHTML;ipoQ.perks=1;ipoQ.borisT=Date.now()+120000;hideModal();
   const go=()=>{if(modalOn){setTimeout(go,600);return;}openPerks();};setTimeout(go,800);},false);
@@ -312,5 +320,5 @@ function borisLater(){if(!ipoQ.boris||Date.now()<ipoQ.borisT||!calmNow())return;
   const c=$m('mcard');c&&c.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{snd('tap');close();});}
 hook();
 window.addEventListener('load',applyCos);
-window.META={card,refresh,openPlan,openMiles,openCos,openPerks,openPrestige,starterHtml,ipoHtml,applyCos,passQ,passClaim,passX2};
+window.META={card,refresh,openPlan,openMiles,openCos,openPerks,perkBtns,pkName:k=>pkName(k),openPrestige,starterHtml,ipoHtml,applyCos,passQ,passClaim,passX2};
 })();

@@ -21,8 +21,23 @@ GAME.on('change',chap);GAME.on('day',chap);
 GAME.on('reset',()=>{STAT.ev('reset',{s:GAME.stage()});});
 GAME.on('cr',(n,why)=>{if(n>0&&why&&why!=='ad'&&why!=='mile'&&why!=='rew')STAT.ev('ach',{k:String(why),c:n});}); // rew — окна наград (событие rw в js/cab-ui.js)
 GAME.on('mile',m=>{if(m)STAT.ev('mile',{k:String(m.k||''),c:m.cr||0});});
-GAME.on('close',rep=>{if(!rep)return;let p=0;try{const n=ECON.netOf(rep.pl);p=n>0?1:n<0?-1:0;}catch(e){}
-  STAT.ev('mc',{m:rep.m,s:GAME.stage(),p,san:rep.san?1:0});});
+// M30: в mc — деньги на конец, долг покупателей, минимум денег за месяц (млн ₽, до 0,1), был ли овердрафт
+let mnC=null;const mln=x=>Math.round((x||0)/1e5)/10;
+GAME.on('day',()=>{const w=W();if(w&&(mnC==null||w.cash<mnC))mnC=w.cash;});
+GAME.on('close',rep=>{if(!rep)return;let p=0;try{const n=ECON.netOf(rep.pl);p=n>0?1:n<0?-1:0;}catch(e){}const w=W();let rc=0;try{for(const x of w.rec||[])rc+=x.a;}catch(e){}
+  STAT.ev('mc',{m:rep.m,s:GAME.stage(),p,san:rep.san?1:0,c:mln(w?w.cash:0),rc:mln(rc),mn:mln(mnC==null?(w?w.cash:0):mnC),od:w&&w.odM>0?1:0});mnC=null;});
+// M30: действия главы 3 «Сеть» — открытие точки (bopen: t, k — отсрочка склада), ручки (knob: t, k, v), факторинг (factor: a — млн, p — часть), кредит (loan: a — млн, n, k),
+// подряды и покупатель сети (pc / fs: r — take|no). Через GAME.act → emit('change', имя, итог, аргументы).
+GAME.on('change',(n,r,a)=>{if(!n||r!=='ok'||!Array.isArray(a))return;const w=W();const s=GAME.stage();try{
+  if(n==='bizOpen'){const o=a[1]||{};STAT.ev('bopen',{t:String(a[0]||''),s,k:o.k&&o.k.def?String(o.k.def):''});}
+  else if(n==='bizKnob'){const b=w&&w.biz.find(x=>x.id===a[0]);STAT.ev('knob',{t:b?b.t:'',k:String(a[1]||'').slice(0,8),v:String(a[2]).slice(0,10),s});}
+  else if(n==='factor')STAT.ev('factor',{p:String(a[0]||'all').slice(0,6),s});
+  else if(n==='takeLoan')STAT.ev('loan',{a:mln(a[0]),n:a[1]|0,k:String(a[2]||'').slice(0,6),s});
+  else if(n==='pcTake'||n==='pcNo')STAT.ev('pc',{r:n==='pcTake'?'take':'no',s});
+  else if(n==='fsTake'||n==='fsNo')STAT.ev('fs',{r:n==='fsTake'?'take':'no',s});}catch(e){}});
+// M30: событие главы 2/3, которое Людмила решила сама (игрок пропустил): ev2/ev3 с auto:1
+let evSeen='';GAME.on('day',()=>{try{const w=W(),e=w&&w.ow&&w.ow.lastEv;if(!e||!e.auto)return;const id=e.k+'_'+e.m+'_'+e.i;if(id===evSeen)return;const first=!evSeen;evSeen=id;if(first&&e.m<w.m-1)return;
+  STAT.ev(GAME.stage()==='small'?'ev2':'ev3',{e:String(e.k).slice(0,12),i:e.i|0,r:String(e.res||'').slice(0,10),auto:1});}catch(x){}});
 GAME.on('gig',e=>{if(!e||gigN>=30)return;gigN++;const o={t:String(e.t||''),ok:e.ok?1:0};if(!e.ok&&e.why)o.w=String(e.why);STAT.ev('gig',o);});
 GAME.on('nedra',()=>{const w=W();STAT.ev('nedra',{t:w?w.t|0:0});});
 GAME.on('ipo',rec=>{if(!rec)return;STAT.ev('ipo',{h:rec.hold||1,m:rec.m|0,eq:Math.round((rec.eq||0)/1e6)});STAT.end('win',{m:'ipo'});STAT.lvl(stI('nedra'),'nedra');});
@@ -32,7 +47,7 @@ GAME.on('built',oid=>{try{const o=W().obj.find(x=>x.id===oid);STAT.ev('built',{t
 GAME.on('auc',(a,res)=>{STAT.ev('auc',{r:String(res||'')});});
 // M17 (js/owner-ui.js → GAME.emit('o2')): налог (tax: m — режим, w — ip|set), уровень точки (pup: t, n; до M19 — lvl, совпадал с «уровнем» STAT), маркетинг (mk: m — инструмент, r — итог),
 // курс героя (edu: c), обучение персонала (stf: w — sell|mast), дело хозяина (job: j), «Режим дня» (reg: n — ступень), ответ на событие главы 2 (ev2: e, i, r); s — глава
-GAME.on('o2',o=>{if(!o||!o.k)return;const s=GAME.stage(),x=Object.assign({},o);const k=x.k;delete x.k;x.s=s;const map={lvl:'pup',mk:'mk',edu:'edu',st:'stf',job:'job',reg:'reg',ev:'ev2',tax:'tax',mx:'mx'};
+GAME.on('o2',o=>{if(!o||!o.k)return;const s=GAME.stage(),x=Object.assign({},o);const k=x.k;delete x.k;x.s=s;const map={lvl:'pup',mk:'mk',edu:'edu',st:'stf',job:'job',reg:'reg',ev:s==='small'?'ev2':'ev3',tax:'tax',mx:'mx'};   // M30: события «Сети» — ev3
   for(const q in x)if(typeof x[q]==='string')x[q]=x[q].slice(0,16);if(map[k])STAT.ev(map[k],x);});
 // M18: друзья — fr {k: rel|help|ask|ans|visit|offer|pari|lend|jv|minus, w — друг, d/l — изменение и уровень, p/r/o/t — что именно}; очередь W.fr.sx (js/story.js), не больше 40 за сеанс, мелкие ±1–2 не шлём
 let frN=0;
