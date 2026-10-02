@@ -8,7 +8,7 @@ const exCount=()=>((S.ex||'').match(/1/g)||[]).length;
 /* ================= облики ================= */
 let shopTab='zina';
 // облик из покупки (it.pay) — только если куплен; обычные — бесплатные или за монеты
-const owned=(kind,it)=>it.pay?typeof PAY!=='undefined'&&PAY.own(it.pay):!it.p||!!(S.own||{})[kind+':'+it.id];
+const owned=(kind,it)=>it.pay?typeof PAY!=='undefined'&&PAY.own(it.pay):it.gift?!!(S.own||{})[kind+':'+it.id]:!it.p||!!(S.own||{})[kind+':'+it.id];
 const payShow=it=>!it.pay||owned('o',it)||typeof PAY!=='undefined'&&PAY.on&&!!PAY.item(it.pay);
 function openShop(){
   show('shopS');updCoins();
@@ -20,6 +20,7 @@ function openShop(){
       :`<div class="mini" id="pv_${it.id}" style="width:112px;height:112px;--lc:${it.lc}"><div class="plate"></div></div>`;
     h+=`<div class="item${sel?' sel':''}"><div class="pv">${pv}</div><b>${it.n}</b><small>${it.d}</small>
       ${sel?`<div class="ok">✓ ${isZ?'Надето':'На столе'}</div>`:own?`<button class="btn blue" data-id="${it.id}">Выбрать</button>`
+        :it.gift?`<div class="ok" style="color:var(--ink2)">🎁 Седьмой гостинец<br>(${Math.min(lgN(),LOGIN.length)} из ${LOGIN.length})</div>`
         :it.pay?`<small>В покупке «${PAY_ITEMS[it.pay].name}»</small><button class="btn pbuy" data-pid="${it.pay}">🎁 ${PAY.price(PAY.item(it.pay))}</button>`
         :`<button class="btn${S.coins<it.p?' ghost':''}" data-id="${it.id}" data-p="${it.p}">${it.p} <span class="coin"></span></button>`}</div>`;}
   // покупки за деньги (js/pay.js) — внизу магазина, только если платежи площадки доступны; «чай» — только в «Благодарностях»
@@ -226,22 +227,19 @@ const ASK_CAN={};let askShown=false;
 async function askProbe(){
   try{if(ysdk){if(ysdk.shortcut&&ysdk.shortcut.canShowPrompt){const r=await ysdk.shortcut.canShowPrompt();ASK_CAN.shortcut=!!(r&&r.canShow);}
       if(ysdk.feedback&&ysdk.feedback.canReview){const r=await ysdk.feedback.canReview();ASK_CAN.review=!!(r&&r.value);}}
-    else if(VK){ASK_CAN.fav=true;ASK_CAN.invite=true;
-      const r=await vkSend('VKWebAppAddToHomeScreenInfo',{},4000).catch(()=>null);ASK_CAN.home=!!(r&&r.is_feature_supported&&!r.is_added_to_home_screen);}}catch(e){}}
+    }catch(e){}}
 const ASKS=[
   {k:'shortcut',can:()=>ASK_CAN.shortcut,wins:3,t:'📌 Ярлык игры на рабочий стол',ok:'Ярлык на месте — заходи в гости!',
     run:()=>ysdk.shortcut.showPrompt().then(r=>r&&r.outcome==='accepted')},
-  {k:'fav',can:()=>ASK_CAN.fav,wins:3,t:'⭐ Добавить игру в избранное',ok:'Добавила в избранное. Не потеряешь!',
-    run:()=>vkSend('VKWebAppAddToFavorites',{},60000).then(r=>!!(r&&r.result))},
-  {k:'home',can:()=>ASK_CAN.home,wins:6,t:'📱 Значок игры на экран телефона',ok:'Значок на экране — теперь я всегда под рукой!',
-    run:()=>vkSend('VKWebAppAddToHomeScreen',{},60000).then(r=>!!(r&&r.result))},
   {k:'review',can:()=>ASK_CAN.review,wins:10,t:'⭐ Поставить оценку игре',ok:'Спасибо! Баба Зина ставит тебе пять.',
-    run:()=>ysdk.feedback.requestReview().then(r=>{ASK_CAN.review=false;return !!(r&&r.feedbackSent);})},
-  {k:'invite',can:()=>ASK_CAN.invite,wins:15,t:'👋 Позвать друзей в игру',ok:'Приглашения ушли. Будем соревноваться!',
-    run:()=>vkSend('VKWebAppShowInviteBox',{},60000).then(r=>!!(r&&r.success!==false))}
+    run:()=>ysdk.feedback.requestReview().then(r=>{ASK_CAN.review=false;return !!(r&&r.feedbackSent);})}
 ];
 function pickAsk(){
   if(askShown||SHOT||Date.now()-T0<120000)return null;
+  if(PLAT==='vk'){ // VK: одно предложение за сессию из общего модуля SOC (правила п. 2.6.3)
+    const o=SOC.offer(S.wins||0,Date.now()-lastRew<60000||adBusy||paused||(typeof interDue==='function'&&interDue()));
+    if(!o)return null;askShown=true;
+    return {t:o.b,ok:'Готово!',soc:o.t,run:()=>Promise.resolve(o.run()).then(r=>r!==false)};}
   const now=Date.now(),a=ASKS.find(x=>{const st=S.ask[x.k]||{};return x.can()&&(S.wins||0)>=x.wins&&!st.done&&(st.n||0)<3&&now-(st.t||0)>3*864e5;});
   if(!a)return null;askShown=true;const st=S.ask[a.k]=S.ask[a.k]||{};st.n=(st.n||0)+1;st.t=now;save();
   return {t:a.t,ok:a.ok,run:()=>a.run().then(ok=>{if(ok){S.ask[a.k].done=1;save();}return ok;})};

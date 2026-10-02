@@ -42,7 +42,8 @@ function freshSave(){return {v:1,ts:0,gold:0,forge:{},village:{},armory:{},done:
 let S=freshSave();
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 function fixSave(){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v);
-  for(const k of['forge','village','armory','done','best','rank','bought','stats','bossKill','evoSeen','skins','skin','ach','meet','bk','ask'])if(!ob(S[k]))S[k]={};
+  for(const k of['forge','village','armory','done','best','rank','bought','stats','bossKill','evoSeen','skins','skin','ach','meet','bk','ask','stars'])if(!ob(S[k]))S[k]={};
+  for(const i in S.done)if(S.done[i])S.stars[i+'w']=1; // звёзды глав (boost 2): пройденной главе — первая звезда
   if(typeof S.gold!=='number'||!isFinite(S.gold))S.gold=0;if(!S.afkT)S.afkT=nowMs();
   for(const k of['payT','payV'])if(S[k]!=null&&!Array.isArray(S[k]))S[k]=[];if(S.buy!=null&&!ob(S.buy))S.buy={};if(S.buyB!=null&&!ob(S.buyB))S.buyB={};} // покупки (js/pay.js)
 fixSave();
@@ -61,8 +62,8 @@ function cloudFlush(){if(cloudReady&&!cloudPending)cloudSave(true);} // свор
 function mergeProgress(d,loc,useCloud){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},o=Object.assign(freshSave(),JSON.parse(JSON.stringify(loc)));
   const mx=k=>{const a=Object.assign({},ob(o[k])),b=ob(d[k]);for(const i in b)if(typeof b[i]==='number')a[i]=Math.max(+a[i]||0,b[i]);o[k]=a;};
   for(const k of['forge','village','armory','rank','best','bk','stats'])mx(k);
-  for(const k of['done','bought','bossKill','evoSeen','skins','ach','meet','ask'])o[k]=Object.assign({},ob(d[k]),ob(o[k]));
-  for(const k of['endBest','runs','kills','bosses','curseMax','eco','gift','tut'])o[k]=Math.max(+o[k]||0,+d[k]||0);
+  for(const k of['done','bought','bossKill','evoSeen','skins','ach','meet','ask','stars'])o[k]=Object.assign({},ob(d[k]),ob(o[k]));
+  for(const k of['endBest','runs','kills','bosses','curseMax','eco','gift','tut','nb'])o[k]=Math.max(+o[k]||0,+d[k]||0);
   for(const k in d)if(/^seen\d+$/.test(k)&&d[k])o[k]=1;
   o.afkT=BOOT.fresh?(+d.afkT||o.afkT):Math.max(+o.afkT||0,+d.afkT||0);
   o.gold=Math.max(0,Math.round((+d.gold||0)+((+loc.gold||0)-cloudBase)));
@@ -306,10 +307,10 @@ async function initSDK(){
 }
 let sdkDone=false;
 /* Реклама (решение владельца 27.09): за награду — по желанию игрока; межэкранная — мягко, только между походами (interAfterRun).
-   Межэкранная: после экрана итогов, с 4-го похода за всё время, не после первого похода захода, не чаще раза в 4 мин от ЛЮБОЙ рекламы,
+   Межэкранная: после экрана итогов, со 2-го похода за всё время (решение 02.10; было с 4-го), не после первого похода захода, не чаще раза в 4 мин от ЛЮБОЙ рекламы,
    поход не короче 45 с; под флагами Яндекса (ADV). Никогда — посреди похода, при запуске, в первом походе. */
 const VK_REAL=/[?&]vk_app_id=/.test(location.search);
-const ADV={on:true,gap:4,from:4,sess:0,last:0};
+const ADV={on:true,gap:4,from:2,sess:0,last:0}; // from: решение владельца 02.10 — со 2-го похода за всё время (было 4)
 try{ADV.last=+localStorage.getItem('bogatyr-ad')||0;}catch(e){}
 // флаги: inter = 0/off — выключить; inter_gap — минут между рекламой (2–30); inter_from — с какого похода (2–30). Чужие значения не берём
 function applyFlags(f){if(!f||typeof f!=='object')return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;

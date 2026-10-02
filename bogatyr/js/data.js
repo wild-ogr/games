@@ -140,13 +140,13 @@ const FINDS=[
    hp/dmg — множители нечисти, gold — множитель золота, map — место на карте (0..1) */
 const CH=[
   {name:'Дремучий лес',sub:'Где леший бродит, а волки воют',boss:'solo',en:['muh','bat','wolf','lesh'],hp:1,dmg:1,gold:1,
-    ground:{base:'#6cb451',hi:'#80c563',lo:'#5a9f45',grass:'#4a8c3a',flow:['#ffffff','#ffd84a','#f47aa0','#8ad0ff']},decor:['d_pine','d_oak','d_bush','d_stump','d_shroom'],tint:null,map:[.24,.9],mc:'#4f9e44'},
+    ground:{base:'#6cb451',hi:'#80c563',lo:'#5a9f45',grass:'#4a8c3a',flow:['#ffffff','#ffd84a','#f47aa0','#8ad0ff']},decor:['d_pine','d_oak','d_bush','d_stump','d_shroom'],tint:null,map:[.24,.87],mc:'#4f9e44'},
   {name:'Гиблое болото',sub:'Кикиморы хихикают, водяной булькает',boss:'yaga',en:['piy','kik','ogon','vod'],hp:1.4,dmg:1.25,gold:1.6,
     ground:{base:'#4f7f5c',hi:'#5f9068',lo:'#436f55',grass:'#3a6a48',flow:['#e8f4c8','#c8e87a']},decor:['d_reeds','d_pond','d_dead','d_stump','d_bush'],tint:'rgba(40,90,90,.10)',map:[.68,.81],mc:'#3f7f6a'},
   {name:'Дикое поле',sub:'Вороньё кружит над курганами',boss:'gory',en:['voron','skel','upyr','idol'],hp:2.1,dmg:1.5,gold:2.3,
     ground:{base:'#cbb56b',hi:'#dac67f',lo:'#b59f59',grass:'#9e8b4a',flow:['#f0e0a0','#e89a3a']},decor:['d_dry','d_stone','d_bones','d_dry','d_bush'],tint:'rgba(255,170,60,.06)',map:[.3,.68],mc:'#d8c47c'},
   {name:'Царство Кощея',sub:'Над златом чахнут, во тьме светятся',boss:'kosh',en:['prizr','skel','koldun','rycar'],hp:3,dmg:1.65,gold:3.2,
-    ground:{base:'#3d3656',hi:'#4a4266',lo:'#312b47',grass:'#5a4f7a',flow:['#b86bff','#5cff9a']},decor:['d_dead','d_crystal','d_grave','d_bones','d_stone'],tint:'rgba(30,10,60,.22)',map:[.72,.57],mc:'#4a3a6a'},
+    ground:{base:'#3d3656',hi:'#4a4266',lo:'#312b47',grass:'#5a4f7a',flow:['#b86bff','#5cff9a']},decor:['d_dead','d_crystal','d_grave','d_bones','d_stone'],tint:'rgba(30,10,60,.22)',dark:1,map:[.72,.57],mc:'#4a3a6a'},
   {name:'Студёные горы',sub:'Снеговики кидаются, шатуны не спят',boss:'karach',en:['wolf_i','ledyan','snow','shatun'],hp:4.4,dmg:2.1,gold:4.2,
     ground:{base:'#dfeaf4',hi:'#f4f8ff',lo:'#c8d8e8',grass:'#a8bcd0',flow:['#ffffff','#bfe6ff']},decor:['d_snowpine','d_icerock','d_snowpine','d_stone','d_iceshard'],tint:'rgba(120,170,255,.06)',bright:1,map:[.28,.45],mc:'#bfe6ff'},
   {name:'Морское царство',sub:'Раки пятятся, русалки поют',boss:'morcar',en:['ryba','rak','rusalka','vod_s'],hp:5.2,dmg:2.4,gold:5.3,
@@ -154,9 +154,16 @@ const CH=[
   {name:'Огненная земля',sub:'Черти пляшут, земля горит',boss:'tugar',en:['chert','ognev','skel_f','idol_f'],hp:7,dmg:2.7,gold:6.5,
     ground:{base:'#5a2a22',hi:'#6e3428',lo:'#48201a',grass:'#8a3a22',flow:['#ff9a3a','#ffd84a']},decor:['d_lava','d_firerock','d_bones','d_dead','d_firerock'],tint:'rgba(255,80,20,.08)',map:[.3,.2],mc:'#c0402a'},
   {name:'Тридевятое царство',sub:'Лихо не спит — одним глазом глядит',boss:'liho',en:['chert','prizr','koldun','shatun'],hp:9.6,dmg:3.2,gold:8,
-    ground:{base:'#2a2440',hi:'#352d52',lo:'#221d36',grass:'#4a3a6a',flow:['#ffd84a','#b86bff','#5cff9a']},decor:['d_crystal','d_dead','d_grave','d_firerock','d_crystal'],tint:'rgba(60,20,90,.2)',map:[.66,.09],mc:'#6a3a9a'}
+    ground:{base:'#2a2440',hi:'#352d52',lo:'#221d36',grass:'#4a3a6a',flow:['#ffd84a','#b86bff','#5cff9a']},decor:['d_crystal','d_dead','d_grave','d_firerock','d_crystal'],tint:'rgba(60,20,90,.2)',dark:1,map:[.66,.115],mc:'#6a3a9a'}
 ];
 const RUN_BOSS_T=300; // босс на 5-й минуте
+const PITY_STEP=.1,PITY_MAX=3,PITY_MIGHT=.08; // «боевой дух»: −10% урона нечисти за каждое поражение подряд в главе, не больше −30% (boost)
+const CH2_SOFT={dmg:.8,bossDmg:.75,hp:.85,cd:1.6,shot:.6,shotSpd:.85,w:.6}; // глава 2 мягче: урон/здоровье нечисти, стрелок: реже (cd), слабее (shot), медленнее снаряд (shotSpd), его самого меньше (w)
+/* звёзды глав (boost 2): w — победа, d — победа без единого падения (ни «Подняться», ни знахарка), t — победа быстрее STAR_T секунд. Хранятся как S.stars['<глава><буква>']=1. Только коллекция, наград нет */
+const STAR_T=330,STAR_K=['w','d','t'];
+function chStars(i){let n=0;for(const k of STAR_K)if(S.stars&&S.stars[i+k])n++;return n;}
+function starsTotal(){let n=0;for(let i=0;i<CH.length;i++)n+=chStars(i);return n;}
+const NOV_GIFT=150; // «подъёмные от старосты» — один раз, после первого проигранного похода (boost)
 
 /* ================= Кузница (навсегда) =================
    27.09 (аудит 12): Здоровье и Сила — до 15 ур. («мастерская ковка», 11–15 ур. стоят 7,5–52 тыс., всего +245 тыс.) —

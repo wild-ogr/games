@@ -1,6 +1,7 @@
 'use strict';
 /* ================= Игровой забег ================= */
 let G=null,cv,ctx,lastT=0;
+const FT='Georgia,"Times New Roman","Noto Serif",serif'; // «сказочный» шрифт заголовков (системный, с засечками) — как --ft в index.html
 const VIEW={B:1,cx:0,cy:0,W:0,H:0,dpr:1,zoom:1,ww:200,wh:200,R:300};
 let groundTiles={},SPR_OK=0,rDirty=true,vigCache=null;
 const CALM=()=>!!S.calm; // «спокойный режим»: без тряски и красных вспышек (включается сам при prefers-reduced-motion)
@@ -60,14 +61,20 @@ function newRun(chi,heroId,endless,wk,dr){
     weapons:[{id:WM.only||hero.weapon,lvl:1,t:.3,a:0}],pas:{},kills:0,gold:0,goldMul:1,spawnAcc:0,pid:1,lvlQ:0,boss:null,bossDone:false,
     ev:mkEvents(0),
     rerolls:(S.village.altar||0),revives:(S.village.hut?1:0),adRevive:true,quipT:6,gift:null,banner:null,cards:S.village.tavern?4:3};
-  G.first=!S.runs&&!endless&&!dr;G.ev=mkEvents(0);G.emD=1;G.daily=dr||null;G.rng=dr?mulberry(dr.seed):null;
+  G.first=!S.runs&&!endless&&!dr;G.ev=mkEvents(0);
+  // «оберег новичка» (boost): самый первый поход — нечисть бьёт на 25% слабее и один раз выручает каравай; главы 1–2, пока не пройдены (первые 8 походов) — на 15% слабее
+  G.nov=G.first&&chi===0?2:!endless&&!dr&&!wk&&chi<=1&&!S.done[chi]&&S.runs<8?1:0;G.novHeal=G.nov===2?1:0;
+  // глава 2 мягче (решение владельца 02.10): только в самой главе «Гиблое болото» (не сеча, не поход дня, не неделя) — числа CH2_SOFT в data.js
+  G.soft=!endless&&!dr&&!wk&&chi===1?CH2_SOFT:null;
+  // «боевой дух»: после поражения в главе следующая попытка В ЭТОЙ ЖЕ главе чуть легче — нечисть бьёт на 10% слабее за каждое поражение подряд (не больше 30%); победа сбрасывает. Только главы (не сеча, не поход дня, не неделя)
+  G.pity=!endless&&!dr&&!wk&&S.pity&&S.pity.c===chi?clamp(S.pity.n|0,0,PITY_MAX):0;G.emD=Math.max(.6,(G.nov===2?.75:G.nov===1?.85:1)*(1-PITY_STEP*G.pity));G.daily=dr||null;G.rng=dr?mulberry(dr.seed):null;
   G.hkey=skinKey(hero.id);G.curse=endless||dr?0:Math.min(S.curse||0,S.curseMax||0);G.hits=0;
   G.weekly=!!wk;G.wk=WM;G.kt={};G.meet={};if(WM.oneLife){G.revives=0;G.adRevive=false;}
   G.st=null;computeStats();G.hero.hp=G.st.maxHp;G.darT=darCd()*.5;G.q={chests:0,evos:0,dars:0};G.wolfT=0;G.swordT=0;G.dashT=0;
   G.hpLock=G.hero.hp;
   // v13: изгнать/закрепить (окно уровня), находки на поле, замирание кадра, серия убийств, сон-трава
   G.haz=[];G.fogT=0;G.stone=null;G.stoneMod=null;G.richT=0;G.loot=0;G.ban={};G.banN=2;G.pin=null;G.propT=G.first?50:28;G.prop=null;G.hs=0;G.kb=null;G.combo=null;G.sleepT=0;
-  if(G.daily)banner(L('Поход дня','Daily Run'),G.daily.rule.name);else if(G.weekly)banner(L('Испытание недели','Weekly Trial'),weekly().name);else if(G.endless)banner(L('Бесконечная сеча','Endless Battle'),L('Круг 1: ','Round 1: ')+G.ch.name);else banner(G.ch.name,G.ch.sub);
+  if(G.daily)banner(L('Поход дня','Daily Run'),G.daily.rule.name);else if(G.weekly)banner(L('Испытание недели','Weekly Trial'),weekly().name);else if(G.endless)banner(L('Бесконечная сеча','Endless Battle'),L('Круг 1: ','Round 1: ')+G.ch.name);else banner(G.ch.name,G.pity?L('💪 Боевой дух: ты сильнее на '+Math.round(PITY_MIGHT*G.pity*100)+'%, нечисть слабее на '+Math.round(PITY_STEP*G.pity*100)+'%','💪 Fighting spirit: you hit '+Math.round(PITY_MIGHT*G.pity*100)+'% harder, monsters '+Math.round(PITY_STEP*G.pity*100)+'% weaker'):G.ch.sub);
   G.tut=null;if((S.tut===-1||!S.tut&&!S.runs)&&!G.endless)tutStart();
   later(3.4,()=>heroSay(pick(PH.start)));
   // спрайты главы — заранее, чтобы не дёргалось при первом появлении
@@ -79,6 +86,7 @@ function tutTick(dt){const T=G.tut;if(!T)return;T.t+=dt;
   if(T.q){T.qt-=dt;if(T.qt<=0){T.q=null;if(TUT[T.i])tipShow(TUT[T.i].t);else tipHide();}}
   const st=TUT[T.i];if(st&&st.ev==='wait'&&T.t>=st.sec)tutNext();
   if(st&&st.ev==='moved'&&G.hero.moving){T.d+=G.st.spd*dt;if(T.d>260)tutNext();}
+  if(!T.xOff&&(!st||G.t>75)){T.xOff=1;$('tipX').classList.remove('on');}
   if(!st&&!T.q&&G.t>160)G.tut=null;}
 function tutNext(){const T=G.tut;T.i++;T.t=0;if(T.i>=TUT.length){S.tut=1;save();tutEvent('end');}else if(!T.q)tipShow(TUT[T.i].t);}
 function tutEvent(e){const T=G&&G.tut;if(!T)return;const st=TUT[T.i];if(st&&st.ev===e)tutNext();
@@ -86,19 +94,30 @@ function tutEvent(e){const T=G&&G.tut;if(!T)return;const st=TUT[T.i];if(st&&st.e
 function tutSkip(){S.tut=1;save();if(G)G.tut=null;tipHide();}
 function heroDef(id){return HERO_BY[id]||HEROES[0];}
 function heroMod(id){const m=heroDef(id).mod,r=(S.rank||{})[id]||0,o={};for(const k in m)o[k]=m[k]>0?m[k]*(1+.25*r):m[k];return o;}
-function computeStats(){const hm=heroMod(G.heroId),f=S.forge,p=G.pas,v=S.village;
+// чистый расчёт: богатырь + кузница + деревня + обереги (pas) + правило недели (wm) + камень (sm); fo — «кузница, как если бы» (для показа «было → стало»)
+function calcStats(heroId,pas,wm,sm,fo){const hm=heroMod(heroId),f=fo||S.forge,p=pas||{},v=S.village;
   const st={maxHp:100*(1+(hm.hp||0)+.1*(f.hp||0)+.15*(p.apple||0)),spd:118*(1+(hm.spd||0)+.04*(f.spd||0)+.08*(p.boots||0)),
     armor:(hm.armor||0)+(f.armor||0)+(p.mail||0),regen:.3*(p.livew||0)+.3*(v.well||0),might:(1+(hm.might||0)+.06*(f.might||0)+.1*(p.ring||0)),
     area:1+(hm.area||0)+.1*(p.comb||0),cd:(1-(hm.cd||0))*(1-.04*(f.cd||0))*(1-.07*(p.amulet||0)),magnet:72*(1+.2*(f.magnet||0)+.25*(p.ball||0)),
     xp:1+.1*(p.cloth||0)+.1*(v.tower||0)+.06*(f.xp||0)+(hm.xp||0),luck:1+.15*(f.luck||0)+(hm.luck||0),gold:1+.1*(f.gold||0)+.15*(v.barn||0)+(hm.gold||0),amount:p.quiver||0};
-  const wm=G.wk||{};if(wm.hp)st.maxHp*=wm.hp;if(wm.might)st.might*=wm.might;if(wm.armor)st.armor+=wm.armor;if(wm.cd)st.cd*=wm.cd;if(wm.amount)st.amount+=wm.amount;if(wm.noHeal)st.regen=0;
-  const sm=G.stoneMod;if(sm){if(sm.spd)st.spd*=sm.spd;if(sm.might)st.might*=sm.might;} // «Камень на распутье»
+  wm=wm||{};if(wm.hp)st.maxHp*=wm.hp;if(wm.might)st.might*=wm.might;if(wm.armor)st.armor+=wm.armor;if(wm.cd)st.cd*=wm.cd;if(wm.amount)st.amount+=wm.amount;if(wm.noHeal)st.regen=0;
+  if(sm){if(sm.spd)st.spd*=sm.spd;if(sm.might)st.might*=sm.might;} // «Камень на распутье»
+  return st;}
+function computeStats(){const st=calcStats(G.heroId,G.pas,G.wk,G.stoneMod);if(G.pity)st.might*=1+PITY_MIGHT*G.pity; // «боевой дух»: и бьём чуть сильнее
   const old=G.st;G.st=st;if(old&&st.maxHp>old.maxHp)G.hero.hp+=st.maxHp-old.maxHp;G.hero.hp=Math.min(G.hero.hp,st.maxHp);}
+/* «Сила богатыря» — одно число для меню: растёт от любой боевой покупки (кузница, оружейная, деревня, звание). 100 — Добрыня без прокачки.
+   fo/ar/vo — «как если бы» (кузница/оружейная/деревня) для показа прироста до покупки */
+function powerScore(heroId,fo,ar,vo){const h=heroDef(heroId||S.hero),v0=S.village;let st;if(vo){S.village=vo;}try{st=calcStats(h.id,null,null,null,fo);}finally{S.village=v0;}
+  const v=vo||v0,a=(ar||S.armory||{})[h.weapon]||0,rk=(S.rank||{})[h.id]||0;
+  const p=100*(st.maxHp/100)*st.might/st.cd*(1+.07*st.armor)*(1+.1*a+(a>=3?.03:0)+(a>=5?.03:0))*(1+.5*(st.spd/118-1))*(1+.25*(st.xp-1))*(1+.04*(st.magnet/72-1))*(1+.1*(st.luck-1))
+    *(1+.25*st.regen)*(1+.12*(v.hut||0))*(1+.04*(v.tavern||0))*(1+.015*(v.altar||0))*(1+.03*rk);
+  return Math.round(p/1.1);} // 1,1 — «+10% урона» Добрыни: у него без прокачки ровно 100
 
 /* ---------- существа ---------- */
 function mkEnemy(type,x,y,o){const d=EN[type],ch=G.ch,lt=LT(),tm=1+lt/60*.34;
   const e={type,x,y,r:d.r,hp:(d.boss||type==='egg'?d.hp:d.hp*(1+(ch.hp-1)*clamp(lt/120,.3,1))*tm)*G.em,spd:d.spd*(d.boss?1:rand(.9,1.1)),dmg:d.dmg*ch.dmg*(G.emD||1),xp:d.xp||0,
     fly:d.fly,ranged:d.ranged,kx:0,ky:0,flash:0,hk:{},dead:false,ph:Math.random()*TAU,face:1,slow:0,shootT:rand(1.5,3),sc:1};
+  if(G.soft){e.dmg*=d.boss?G.soft.bossDmg:G.soft.dmg;if(!d.boss&&type!=='egg'&&!d.prop)e.hp*=G.soft.hp;if(e.ranged)e.shootT*=G.soft.cd;}
   if(o&&o.elite){e.elite=1;e.sc=1.55;e.r*=1.55;e.hp*=14;e.dmg*=1.4;e.spd*=.85;}
   if(d.boss){e.boss=1;e.at=3;e.at2=8;e.at3=10;e.state='';e.st=0;e.phase=0;}
   if(G.curse){const cm=curseMul(G.curse);e.hp*=cm.hp;e.dmg*=cm.dmg;}
@@ -106,21 +125,27 @@ function mkEnemy(type,x,y,o){const d=EN[type],ch=G.ch,lt=LT(),tm=1+lt/60*.34;
   e.max=e.hp;G.en.push(e);return e;}
 function spawnPos(far){const H=G.hero;let a=rand(0,TAU);if(H.moving&&Math.random()<.5)a=Math.atan2(H.fy,H.fx)+rand(-1,1);
   const d=(far||VIEW.R)+rand(0,40);return [H.x+Math.cos(a)*d,H.y+Math.sin(a)*d];}
-function pickType(){const t=LT(),en=G.ch.en,unl=[0,35,95,165];let tot=0;const w=en.map((id,i)=>{if(t<unl[i])return 0;let v=i===3?.3:1;if(i>0&&t-unl[i]<60)v*=1.6;if(i===0&&t>150)v*=.6;tot+=v;return v;});
+function pickType(){const t=LT(),en=G.ch.en,unl=[0,35,95,165];let tot=0;const w=en.map((id,i)=>{if(t<unl[i])return 0;let v=i===3?.3:1;if(i>0&&t-unl[i]<60)v*=1.6;if(G.soft&&EN[id].ranged)v*=G.soft.w;if(i===0&&t>150)v*=.6;tot+=v;return v;});
   let r=Math.random()*tot;for(let i=0;i<en.length;i++){r-=w[i];if(r<=0)return en[i];}return en[0];}
 function spawnTick(dt){const t=LT();let rate=(1.15+t/60*1.2)*(G.wk.spawn||1);const cap=(48+t/60*56)*(G.wk.cap||1)*(qLow()?.8:1);
   if(G.boss&&!G.boss.dead)rate*=.35;if(G.richT>0)rate*=1.6;if(G.win)return;if(G.sleepT>0)rate=0; // сон-трава: пока нечисть спит, новая не лезет
   G.spawnAcc+=rate*dt;while(G.spawnAcc>=1){G.spawnAcc-=1;if(G.en.length>=cap)break;const p=spawnPos();mkEnemy(pickType(),p[0],p[1]);}
   while(G.ev.length&&G.t>=G.ev[0].t){const ev=G.ev.shift(),H=G.hero;
     if(ev.k==='elite'){const p=spawnPos();const e=mkEnemy(G.ch.en[Math.min(3,Math.floor(t/80))],p[0],p[1],{elite:1});say(e,L('Я тут главный!','I\'m the boss here!'));tutEvent('elite');}
-    if(ev.k==='ring'){const n=30,R=VIEW.R-20;for(let i=0;i<n;i++){const a=i/n*TAU;mkEnemy(G.ch.en[0],H.x+Math.cos(a)*R,H.y+Math.sin(a)*R);}banner(L('Окружили!','Surrounded!'),L('Прорывайся!','Break through!'));tutEvent('ring');}
+    if(ev.k==='ring'){const n=30,R=VIEW.R-20;for(let i=0;i<n;i++){const a=i/n*TAU;mkEnemy(G.ch.en[0],H.x+Math.cos(a)*R,H.y+Math.sin(a)*R);}banner(L('Окружили!','Surrounded!'),L('Прорывайся!','Break through!'),2);tutEvent('ring');}
     if(ev.k==='swarm'){const a=rand(0,TAU),bx=H.x+Math.cos(a)*VIEW.R,by=H.y+Math.sin(a)*VIEW.R;for(let i=0;i<24;i++){const e=mkEnemy(G.ch.en[1],bx+rand(-60,60),by+rand(-60,60));e.spd*=1.25;}banner(L('Стая!','Swarm!'),L('Со всех ног!','Run for it!'));}
     if(ev.k==='bird'){spawnGift();tutEvent('bird');}
     if(ev.k==='chev')chapterEvent();
     if(ev.k==='stone')spawnStone();
     if(ev.k==='boss')spawnBoss();}}
 function spawnBoss(){const type=G.ch.boss,H=G.hero,a=rand(0,TAU);const e=mkEnemy(type,H.x+Math.cos(a)*VIEW.R*.7,H.y+Math.sin(a)*VIEW.R*.7);
-  G.boss=e;banner(EN[type].n,'«'+PH.boss[type].intro+'»');say(e,PH.boss[type].intro,3);SND.boss();G.shake=10;vib(60,1);musicPlay('boss');}
+  // выход босса — событие (boost): 1,4 с он стоит и грозит, края экрана темнеют, плашка с именем и прозвищем; реплика — в облачке
+  G.boss=e;e.intro=1.4;G.bossIn=1.4;banner(EN[type].n,BOSS_TITLE[type]?BOSS_TITLE[type]():'«'+PH.boss[type].intro+'»',5);say(e,PH.boss[type].intro,3.2);SND.boss();G.shake=12;vib(60,1);musicPlay('boss');
+  G.fx.push({k:'wave',x:e.x,y:e.y,t:0,dur:.9,r1:240,col:'#ff5a3a'});burst(e.x,e.y,EN[type].col,24,220);}
+// прозвища боссов для плашки выхода
+const BOSS_TITLE={solo:()=>L('Свистун дремучего леса','Whistler of the Deep Forest'),yaga:()=>L('Хозяйка гиблого болота','Mistress of the Mire'),gory:()=>L('Трёхглавый хозяин Дикого поля','Three-headed lord of the Wild Field'),
+  kosh:()=>L('Царь над златом и тьмой','King of gold and gloom'),karach:()=>L('Повелитель стужи','Lord of the Frost'),morcar:()=>L('Владыка морских глубин','Ruler of the deep sea'),
+  tugar:()=>L('Огненный змей','The Fire Serpent'),liho:()=>L('Беда о одном глазе','One-eyed Woe')};
 /* ---------- свои события глав (v17, аудит 14): по силе — как прежняя «Стая» (20–25 нечисти), у каждой главы своё ---------- */
 const CH_EV=['wolves','fog','barrows','shadows','avalanche','tide','firerain','night'];
 function chapterEvent(){const H=G.hero,en=G.ch.en,k=CH_EV[G.chi]||'wolves',R=VIEW.R;
@@ -158,21 +183,22 @@ function spawnStone(){const H=G.hero,a=H.moving?Math.atan2(H.fy,H.fx)+rand(-.5,.
   later(.8,()=>{if(G&&G.stone)heroSay(L('Налево пойдёшь… направо пойдёшь… Хм!','Go left… go right… Hmm!'));});}
 function stoneChoose(k){const s=G.stone,H=G.hero;if(!s||s.done)return;s.done=1;G.stone=null;G.stoneK=k;SND.chest();vib(40);burst(s.x,s.y,'#c8c0b0',14,160);
   G.stoneMod=G.stoneMod||{};
-  if(k==='horse'){G.stoneMod.spd=.85;computeStats();for(let i=0;i<2;i++){H.lvl++;H.need=xpNeed(H.lvl);G.lvlQ++;}banner(L('Коня потерял…','Horse lost…'),L('…зато силы прибыло: +2 уровня','…but you feel stronger: +2 levels'));}
-  if(k==='self'){G.stoneMod.might=1.25;computeStats();H.hp=Math.min(H.hp,Math.max(1,G.st.maxHp*.34));G.hpLock=H.hp;banner(L('Себя не жалеешь!','No mercy for yourself!'),L('Урон +25% до конца похода','+25% damage for the rest of the run'));}
-  if(k==='rich'){drop('chest',s.x,s.y);G.picks[G.picks.length-1].mag=true;G.richT=45;banner(L('Богатство нашёл!','Riches found!'),L('Нечисть сбегается на звон — держись!','Monsters come running at the jingle — hold on!'));}}
+  if(k==='horse'){G.stoneMod.spd=.85;computeStats();for(let i=0;i<2;i++){H.lvl++;H.need=xpNeed(H.lvl);G.lvlQ++;}banner(L('Коня потерял…','Horse lost…'),L('…зато силы прибыло: +2 уровня','…but you feel stronger: +2 levels'),2);}
+  if(k==='self'){G.stoneMod.might=1.25;computeStats();H.hp=Math.min(H.hp,Math.max(1,G.st.maxHp*.34));G.hpLock=H.hp;banner(L('Себя не жалеешь!','No mercy for yourself!'),L('Урон +25% до конца похода','+25% damage for the rest of the run'),2);}
+  if(k==='rich'){drop('chest',s.x,s.y);G.picks[G.picks.length-1].mag=true;G.richT=45;banner(L('Богатство нашёл!','Riches found!'),L('Нечисть сбегается на звон — держись!','Monsters come running at the jingle — hold on!'),2);}}
 function spawnGift(){const H=G.hero,s=Math.random()<.5?1:-1;G.gift={x:H.x-s*(VIEW.ww+30),y:H.y+rand(-VIEW.wh*.4,VIEW.wh*.2),vx:s*44,t:0,ph:0};}
 
 /* ---------- урон ---------- */
 // цифры урона: не больше 30 (эффекты «мало» — 12); крит вытесняет самую старую цифру; lbl — надпись «КРИТ!»
-function addNum(x,y,v,col,cr){const cap=qLow()?12:30;if(G.nums.length>=cap){if(!cr)return;G.nums.shift();}G.nums.push({x,y,v:typeof v==='number'?Math.round(v):v,t:0,col,cr:cr?1:0});}
+function addNum(x,y,v,col,cr){const cap=qLow()?10:16;if(G.nums.length>=cap){if(!cr)return null;G.nums.shift();}const n={x,y,v:typeof v==='number'?Math.round(v):v,t:0,col,cr:cr?1:0,b:G.t};G.nums.push(n);return n;}
 /* удар «с отдачей» (v13): крит 5% × удача — урон ×2, крупная жёлтая цифра с «!» (надпись «КРИТ!» — не чаще раза в 0,7 с);
    крит по вожаку/боссу — вибрация, по боссу — ещё замирание кадра 45 мс (не чаще раза в 1,2 с, иначе похоже на тормоза) */
 function hitEnemy(e,d,kx,ky){if(e.dead)return;if(e.prop){propHit(e);return;}if(e.invul){e.flash=.06;return;}
   const cr=Math.random()<.05*G.st.luck;if(cr)d*=2;
   e.hp-=d;e.flash=e.boss?.06:.1;const m=e.boss||e.elite?.08:1;e.kx+=(kx||0)*m;e.ky+=(ky||0)*m;
-  addNum(e.x+rand(-6,6),e.y-e.r*1.2,d,cr?'#ffe14a':d>=40?'#ffd84a':null,cr);
-  if(cr){SND.crit();if(G.t-(G.critL||-9)>.7){G.critL=G.t;addNum(e.x,e.y-e.r*1.2-16,L('КРИТ!','CRIT!'),'#ffe14a',1);}
+  // цифры по одному врагу за 0,25 с складываются в одну (раньше — три ряда «33 33 33» поверх героя); крит — своя цифра; слово «КРИТ!» — только по вожаку и боссу
+  {const m0=e.num;if(!cr&&m0&&m0.t<.25&&G.t-m0.b<.6&&!m0.cr&&typeof m0.v==='number'){m0.v+=Math.round(d);if(m0.v>=40)m0.col='#ffd84a';m0.t=Math.min(m0.t,.12);}else{const n=addNum(e.x+rand(-6,6),e.y-e.r*1.2,d,cr?'#ffe14a':d>=40?'#ffd84a':null,cr);if(!cr)e.num=n;}}
+  if(cr){SND.crit();if((e.boss||e.elite)&&G.t-(G.critL||-9)>.7){G.critL=G.t;addNum(e.x,e.y-e.r*1.2-16,L('КРИТ!','CRIT!'),'#ffe14a',1);}
     if(e.boss||e.elite){vib(20);if(e.boss&&G.t-(G.hsT||-9)>1.2)hitStop(.045);}}else SND.hit();
   if(e.hp<=0){if(e.type==='kosh'&&e.phase===0){kosheyEgg(e);return;}killEnemy(e);}}
 // замирание кадра: игра стоит s секунд (кадр не перерисовывается — на слабом телефоне это даже отдых). В спокойном режиме — нет
@@ -191,8 +217,12 @@ function killEnemy(e){e.dead=true;G.kills++;G.kt[e.type]=(G.kt[e.type]||0)+1;SND
   if(Math.random()<.0025*lk)drop('yarn',e.x,e.y);
   if(e.elite)drop('chest',e.x,e.y);}
 function bossDie(e){G.shake=16;SND.win();S.bossKill[e.type]=1;musicPlay(G.endless?'run':null);hitStop(.14);vib(90,1);
-  if(G.endless){banner(defeated(e.type),L('Дальше — сильнее!','It only gets harder!'));G.bossesKilled=(G.bossesKilled||0)+1;later(3.5,nextCycle);}
-  else{G.win=true;G.winT=3.2;banner(PH.win[0],defeated(e.type));}
+  // гибель босса — событие (boost): взрыв, две волны, сноп искр, короткое замедление (в спокойном режиме — без замедления), золото само летит к богатырю
+  G.fx.push({k:'boom',x:e.x,y:e.y,t:0,dur:.7,r:170});G.fx.push({k:'wave',x:e.x,y:e.y,t:0,dur:.8,r1:300,col:'#ffe07a'});G.fx.push({k:'wave',x:e.x,y:e.y,t:-.18,dur:.9,r1:380,col:'#ffffff'});
+  spark(e.x,e.y,'#fff3b0',30);burst(e.x,e.y,'#ffd84a',26,320);if(!CALM())G.slowT=.9;
+  later(.8,()=>{if(G)for(const p of G.picks)if(p.k==='coin')p.mag=true;});
+  if(G.endless){banner(defeated(e.type),L('Дальше — сильнее!','It only gets harder!'),5);G.bossesKilled=(G.bossesKilled||0)+1;later(3.5,nextCycle);}
+  else{G.win=true;G.winT=3.7;banner(PH.win[0],defeated(e.type),5);}
   for(let i=0;i<16;i++)drop('coin',e.x+rand(-60,60),e.y+rand(-60,60),Math.round(8*G.ch.gold));
   // с босса — золотой сундук (3 или 5 наград); в сече сам летит к богатырю. В главе поход через 3 с кончается — умения уже не нужны:
   // вместо рулетки «Добыча богатыря» — то же золото, что лежало в сундуке (экономика та же), строкой в итогах (аудит 14)
@@ -212,8 +242,9 @@ function nextCycle(){if(!G||G.over)return;G.cyc++;const LAP=Math.floor(G.cyc/CH.
   G.t0=G.t;G.ev=mkEvents(G.t);G.egg=null;banner(L('Круг ','Round ')+(G.cyc+1)+': '+G.ch.name,G.ch.sub);SND.boss();}
 function hurtHero(d,src){const H=G.hero;if(H.inv>0||G.over||G.win)return;if(src)G.lastBy=src;G.hits++;d=Math.max(1,d-G.st.armor);H.hp-=d;H.inv=.5;H.hurtT=.22;SND.hurt();G.shake=Math.max(G.shake,4);
   addNum(H.x,H.y-30,d,'#ff5a5a');if(H.hp<H.max*.3&&H.sayT<=0){heroSay(pick(PH.low));}
+  if(G.novHeal&&H.hp>0&&H.hp<G.st.maxHp*.35){G.novHeal=0;drop('loaf',H.x+rand(-30,30),H.y-46);const lf=G.picks[G.picks.length-1];lf.find=1;lf.t=.3;} // первый поход: каравай сам прилетит (+50% здоровья)
   if(H.hp<=0){H.hp=0;heroDown();}}
-function heroDown(){const H=G.hero;if(G.revives>0){G.revives--;revive(L('Знахаркин отвар!','Wise woman\'s brew!'));return;}G.paused=true;IN.on=false;YG.stop();openDeath();}
+function heroDown(){const H=G.hero;G.falls=(G.falls||0)+1;if(G.revives>0){G.revives--;revive(L('Знахаркин отвар!','Wise woman\'s brew!'));return;}G.paused=true;IN.on=false;YG.stop();openDeath();}
 function revive(msg){const H=G.hero;H.hp=G.st.maxHp*.6;G.hpLock=H.hp;H.inv=2.5;G.paused=false;G.fx.push({k:'wave',x:H.x,y:H.y,t:0,dur:.6,r1:260,col:'#ffe07a',own:1});
   for(const e of G.en){if(e.dead||e.boss)continue;const dx=e.x-H.x,dy=e.y-H.y,d=Math.hypot(dx,dy)||1;if(d<260){e.kx+=dx/d*600;e.ky+=dy/d*600;hitEnemy(e,60);}}
   heroSay(msg||L('Врёшь, не возьмёшь!','Not today, monsters!'));SND.level();YG.start();}
@@ -238,8 +269,14 @@ function razryv(){G.fx.push({k:'wave',own:1,t:0,dur:.6,r1:VIEW.R,col:'#9aff6a'})
 function sleepAll(){G.sleepT=5;for(const e of G.en){if(e.dead||e.prop)continue;e.stun=Math.max(e.stun||0,e.boss?1.5:5);}G.eproj.length=0;G.fx.push({k:'pulse',own:1,t:0,dur:.9,r1:VIEW.R,evo:1});SND.heal();vib(40);}
 function addXp(v){const H=G.hero;H.xp+=v*G.st.xp;while(H.xp>=H.need){H.xp-=H.need;H.lvl++;H.need=xpNeed(H.lvl);G.lvlQ++;}}
 function heroSay(s){const H=G.hero;H.sayT=6;compact(G.bub,b=>b.e!==H);G.bub.push({e:H,s,t:0,dur:2.5+s.length*.05});}
-function say(e,s,dur){compact(G.bub,b=>b.e!==e);if(G.bub.length>3)G.bub.shift();G.bub.push({e,s,t:0,dur:Math.max(dur||0,2.5+s.length*.05)});}
-function banner(title,sub){if(G)G.banner={title,sub,t:0};}
+function say(e,s,dur){const H=G.hero;compact(G.bub,b=>b.e!==e&&(b.e===H||b.e.boss||e.boss));G.bub.push({e,s,t:0,dur:Math.max(dur||0,2.5+s.length*.05)});}
+/* баннеры (boost): один за раз, остальные ждут в очереди (не больше 3) по важности pri: 5 — босс, 4 — эволюция, 3 — событие/начало (по умолчанию), 2 — «Окружили!» и подсказки, 1 — находки.
+   Важный (≥4) сразу сменяет менее важный; пока очередь не пуста, баннер висит 1,5 с вместо 3,2 с */
+function banner(title,sub,pri){if(!G)return;const b={title,sub,t:0,pri:pri||3};
+  if(!G.banner){G.banner=b;return;}if(!G.bq)G.bq=[];
+  if(b.pri>=4&&b.pri>G.banner.pri){if(G.banner.t<1&&G.banner.pri>=3)G.bq.unshift(Object.assign(G.banner,{t:0}));G.banner=b;return;}
+  let i=0;while(i<G.bq.length&&G.bq[i].pri>=b.pri)i++;G.bq.splice(i,0,b);if(G.bq.length>3)G.bq.length=3;}
+function bannerDur(){return G.bq&&G.bq.length?1.5:3.2;}
 
 /* ---------- частицы и эффекты ---------- */
 // эффекты «мало»: частиц вдвое меньше и не больше 200 на экране
@@ -346,7 +383,7 @@ function updProj(dt){const H=G.hero;
   for(const p of G.eproj){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.life<=0)p.dead=true;
     else if((p.x-H.x)**2+(p.y-H.y)**2<(p.r+10)**2){p.dead=true;hurtHero(p.dmg,p.src);if(p.ice)H.slowT=1.5;}}
   compact(G.eproj,p=>!p.dead);}
-function eShoot(e,a,sp,col,r,dmg,ice){G.eproj.push({src:e.type,x:e.x,y:e.y-e.r*.3,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:r||6,col,dmg:dmg||e.dmg,life:4,ice});}
+function eShoot(e,a,sp,col,r,dmg,ice){if(!S.tipR&&G&&!G.tipR&&!e.boss){G.tipR=1;S.tipR=1;save();tipShow(L(EN[e.type].n+' стреляет издалека! Уходи от снарядов в сторону.',EN[e.type].n+' shoots from afar! Step aside from the shots.'),true);later(7,()=>{if(G&&!(G.tut&&(G.tut.q||TUT[G.tut.i])))tipHide();});}G.eproj.push({src:e.type,x:e.x,y:e.y-e.r*.3,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:r||6,col,dmg:dmg||e.dmg,life:4,ice});}
 
 /* ---------- боссы ---------- */
 function bossAI(e,dt){const H=G.hero,dx=H.x-e.x,dy=H.y-e.y,d=Math.hypot(dx,dy)||1;let sp=e.spd,mx=dx/d,my=dy/d;
@@ -399,10 +436,11 @@ function bossAI(e,dt){const H=G.hero,dx=H.x-e.x,dy=H.y-e.y,d=Math.hypot(dx,dy)||
     break;}
   e.x+=(mx*sp+e.kx)*dt;e.y+=(my*sp+e.ky)*dt;e.kx*=Math.pow(.01,dt);e.ky*=Math.pow(.01,dt);e.face=dx<0?-1:1;}
 function kosheyEgg(e){e.hp=1;e.invul=true;e.phase=1;const H=G.hero,a=rand(0,TAU);const egg=mkEnemy('egg',H.x+Math.cos(a)*300,H.y+Math.sin(a)*300);G.egg=egg;
-  say(e,PH.boss.kosh.egg,4);banner(L('Кощей бессмертен!','Koschei is deathless!'),L('Найди яйцо и разбей его','Find the egg and smash it'));G.shake=8;}
+  say(e,PH.boss.kosh.egg,4);banner(L('Кощей бессмертен!','Koschei is deathless!'),L('Найди яйцо и разбей его','Find the egg and smash it'),5);G.shake=8;}
 
 /* ---------- обновление ---------- */
 function update(dt){
+  if(G.slowT>0){G.slowT-=dt;dt*=.4;}if(G.bossIn>0)G.bossIn-=dt;
   const H=G.hero,st=G.st;G.t+=dt;
   for(const l of G.later)l.t-=dt;const due=G.later.filter(l=>l.t<=0);compact(G.later,l=>l.t>0);for(const l of due)l.fn();
   // герой
@@ -420,13 +458,13 @@ function update(dt){
   gridBuild();
   // враги
   for(const e of G.en){if(e.dead)continue;e.flash-=dt;e.slow-=dt;
-    if(e.boss){if(e.stun>0){e.stun-=dt;}else bossAI(e,dt);}
+    if(e.boss){if(e.intro>0)e.intro-=dt;else if(e.stun>0){e.stun-=dt;}else bossAI(e,dt);}
     else if(e.type==='egg'){e.y+=Math.sin(G.t*3)*dt*6;}
     else if(e.prop){continue;}
     else if(e.stun>0){e.stun-=dt;e.x+=e.kx*dt;e.y+=e.ky*dt;e.kx*=Math.pow(.004,dt);e.ky*=Math.pow(.004,dt);continue;}
     else{const dx=H.x-e.x,dy=H.y-e.y,d=Math.hypot(dx,dy)||1;let sp=e.spd*(e.slow>0?.55:1),mx=dx/d,my=dy/d;
       if(e.ranged){if(d<160){mx=-mx*.6;my=-my*.6;}else if(d<240){const t=mx;mx=-my*.5;my=t*.5;}
-        e.shootT-=dt;if(e.shootT<=0&&d<340){e.shootT=rand(2.4,3.4);eShoot(e,Math.atan2(dy,dx),150,EN[e.type].col,6);}}
+        e.shootT-=dt;if(e.shootT<=0&&d<340){const sf=G.soft;e.shootT=rand(2.4,3.4)*(sf?sf.cd:1);eShoot(e,Math.atan2(dy,dx),150*(sf?sf.shotSpd:1),EN[e.type].col,6,sf?e.dmg*sf.shot:0);}}
       if(e.fly)my+=Math.sin(G.t*4+e.ph)*.35;
       e.x+=(mx*sp+e.kx)*dt;e.y+=(my*sp+e.ky)*dt;e.kx*=Math.pow(.004,dt);e.ky*=Math.pow(.004,dt);e.face=dx<0?-1:1;
       if(d>VIEW.R*1.7&&!e.elite){const p=spawnPos();e.x=p[0];e.y=p[1];}}
@@ -462,7 +500,7 @@ function update(dt){
   for(const p of G.pt){p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.pow(.1,dt);p.vy*=Math.pow(.1,dt);}compact(G.pt,p=>p.t<p.dur);
   for(const n of G.nums)n.t+=dt;compact(G.nums,n=>n.t<.8);
   for(const b of G.bub)b.t+=dt;compact(G.bub,b=>b.t<b.dur&&(!b.e.dead||b.e===H));
-  if(G.banner){G.banner.t+=dt;if(G.banner.t>3.2)G.banner=null;}
+  if(G.banner){G.banner.t+=dt;if(G.banner.t>bannerDur())G.banner=null;}if(!G.banner&&G.bq&&G.bq.length)G.banner=G.bq.shift();
   if(G.combo){G.combo.t+=dt;if(G.combo.t>1.6)G.combo=null;}
   G.shake=Math.max(0,G.shake-dt*30);
   if(G.wk.noHeal){if(H.hp>G.hpLock)H.hp=G.hpLock;else G.hpLock=H.hp;} // «Голодная неделя»: здоровье только убывает
@@ -474,13 +512,13 @@ function pickup(p){const H=G.hero;
   if(p.k==='coin'){G.gold+=p.v*ECO.coin;SND.coin();}
   if(p.k==='pie'){H.hp=Math.min(G.st.maxHp,H.hp+30);SND.heal();heroSay(pick(PH.pie));addNum(H.x,H.y-30,30,'#6aff8a');}
   if(p.k==='yarn'){for(const g of G.gems)g.mag=true;SND.heal();}
-  if(p.find){const f=FINDS.find(q=>q.k===p.k);if(f)banner(f.n,f.s);G.q.finds=(G.q.finds||0)+1;
+  if(p.find){const f=FINDS.find(q=>q.k===p.k);if(f)banner(f.n,f.s,1);G.q.finds=(G.q.finds||0)+1;
     if(p.k==='f_rtr')razryv();
     if(p.k==='f_str')sleepAll();
     if(p.k==='loaf'){const h=G.st.maxHp*.5;H.hp=Math.min(G.st.maxHp,H.hp+h);G.hpLock=Math.max(G.hpLock||0,H.hp);SND.heal();addNum(H.x,H.y-30,h,'#6aff8a');heroSay(L('Каравай — всему голова!','A loaf a day keeps monsters away!'));}
     if(p.k==='pot'){const v=Math.max(1,Math.round(3*G.ch.gold));for(let i=0;i<12;i++){drop('coin',p.x+rand(-50,50),p.y+rand(-50,50),v);G.picks[G.picks.length-1].mag=true;}SND.chest();vib(30);}}
   if(p.k==='chest'){tutEvent('chest');G.q.chests++;G.paused=true;IN.on=false;SND.chest();heroSay(pick(PH.chest));openChest(p.v>=2);}}
-function endRun(win){if(G.over)return;G.over=true;G.paused=true;IN.on=false;YG.stop();musicPlay(null);tipHide();
+function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dead?clamp(G.boss.hp/G.boss.max,0,1):null;G.paused=true;IN.on=false;YG.stop();musicPlay(null);tipHide();
   G.bestNew=[];for(const t in G.meet){if(!S.meet[t]&&EN[t]){S.meet[t]=1;G.bestNew.push(t);}}for(const t in G.kt)S.bk[t]=(S.bk[t]||0)+G.kt[t];
   // награда: монеты из похода + за нечисть (1 за 40) + за время (3×глава за минуту) + за босса; множители — глава (ECO.chk), жадность, проклятие, испытание
   const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*(ECO.chk[G.chi]||.65),parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold],['time',G.t/60*ECO.time*(G.chi+1)*G.st.gold],['boss',win?100*G.ch.gold:0],['loot',(G.loot||0)*G.goldMul*G.st.gold]];
@@ -492,9 +530,12 @@ function endRun(win){if(G.over)return;G.over=true;G.paused=true;IN.on=false;YG.s
     G.newRec=sec>S.wk.best;S.wk.best=Math.max(S.wk.best,sec);if(!S.wk.got&&sec>=60){S.wk.got=1;G.wkReward=weeklyReward();S.gold+=G.wkReward;S.stats.weeks=(S.stats.weeks||0)+1;}
     LB.set('weekly',w*WEEK_SCORE+S.wk.best);}
   else if(G.endless){G.newRec=Math.floor(G.t)>(S.endBest||0);S.endBest=Math.max(S.endBest||0,Math.floor(G.t));}
-  else{if(win)S.done[G.chi]=1;S.best[G.chi]=Math.max(S.best[G.chi]||0,Math.floor(G.t));}if(G.t>=30)S.runs++; // поход, брошенный в первые 30 с, не считается (задания, достижения)
+  else{G.prevBest=S.best[G.chi]||0;if(win){if(S.pity&&S.pity.c===G.chi)S.pity=null;
+      // звёзды главы: что взято в этом походе и что из этого новое
+      const got={w:1,d:!G.falls?1:0,t:G.t<=STAR_T?1:0};G.starGot=got;G.starNew=0;for(const k of STAR_K)if(got[k]&&!S.stars[G.chi+k]){S.stars[G.chi+k]=1;G.starNew++;}}else if(G.t>=30)S.pity={c:G.chi,n:Math.min(PITY_MAX,(S.pity&&S.pity.c===G.chi?S.pity.n|0:0)+1)};if(win)S.done[G.chi]=1;S.best[G.chi]=Math.max(S.best[G.chi]||0,Math.floor(G.t));}if(G.t>=30)S.runs++; // поход, брошенный в первые 30 с, не считается (задания, достижения)
   S.kills+=G.kills;G.bossN=G.endless?(G.bossesKilled||0):(win?1:0);S.bosses=(S.bosses||0)+G.bossN;G.questDone=questsFromRun(win);runStats(win);
   if(G.endless&&!G.weekly)LB.set('endless',S.endBest);LB.set('kills',S.kills);
+  if(!win&&!G.endless&&!G.daily&&!S.nb&&!S.village.forge&&G.t>=30){S.nb=1;G.nbGold=NOV_GIFT;S.gold+=NOV_GIFT;} // подъёмные от старосты: один раз, новичку после первого поражения
   S.gold+=G.reward; // золото похода — сразу в кошелёк и в сохранение (openResult → save), ×2/×3 за рекламу доплачивает разницу
   win?SND.win():SND.lose();openResult(win);}
 
@@ -560,6 +601,8 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
       if(G.wolfT>0){drawSpr('wolf',H.x,H.y-bob,H.flip*1.45,1.45,H.hurtT>0,0,ha);continue;}
       drawSpr('h_'+G.hkey+'_'+fr,H.x,H.y-bob,H.flip,1+(H.moving?0:Math.sin(G.t*3)*.015),H.hurtT>0,0,ha);continue;}
     const bob=Math.sin(G.t*9+e.ph),fl=e.fly?Math.sin(G.t*5+e.ph)*4:0;
+    // тёмные главы (Кощей, Тридевятое): светлая подсветка под нечистью — фиолетовые колдуны не сливаются с фиолетовой землёй (boost)
+    if(G.ch.dark&&!e.boss&&!e.prop){worldT();c.globalAlpha=e.shade?.12:.36;glowDot(e.x,e.y+fl-2,e.r*2.3*(e.sc||1),'#d6ccff');c.globalAlpha=1;}
     if(e.elite||e.boss){c.globalCompositeOperation='lighter';worldT();const R=e.r*1.7;c.drawImage(glowSpr(e.boss?'aura_b':'aura_e'),e.x-R,e.y-R,R*2,R*2);c.globalCompositeOperation='source-over';}
     if(e.type==='yaga'&&e.state==='aim'){worldT();c.strokeStyle='rgba(255,60,60,'+(.35+Math.sin(G.t*30)*.2)+')';c.lineWidth=e.r*1.2;c.lineCap='round';c.beginPath();c.moveTo(e.x,e.y);c.lineTo(e.x+e.dx*420,e.y+e.dy*420);c.stroke();}
     if(e.type==='liho'&&(e.state==='aim'||e.state==='beam')){worldT();const ex=e.x,ey=e.y-28,x2=ex+Math.cos(e.ba)*480,y2=ey+Math.sin(e.ba)*480;c.lineCap='round';
@@ -596,7 +639,7 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
     else if(f.k==='bolt'){const al=(1-q)*(calm?.5:1);c.lineJoin='round';c.strokeStyle='rgba(120,200,255,'+.5*al+')';c.lineWidth=9;c.beginPath();c.moveTo(f.pts[0],f.pts[1]);for(let i=2;i<f.pts.length;i+=2)c.lineTo(f.pts[i],f.pts[i+1]);c.stroke();
       c.strokeStyle='rgba(255,255,255,'+al+')';c.lineWidth=2.5;c.stroke();glowDot(fx,fy,40*(1-q*.5),'#8ad8ff');}
     else if(f.k==='pulse'){c.strokeStyle='rgba(255,216,74,'+.6*(1-q)+')';c.lineWidth=4*(1-q)+1;c.beginPath();c.arc(fx,fy,f.r1*q,0,TAU);c.stroke();}
-    else if(f.k==='wave'){c.strokeStyle=rgba(f.col,.8*(1-q));c.lineWidth=14*(1-q)+2;c.beginPath();c.arc(fx,fy,f.r1*q,0,TAU);c.stroke();}
+    else if(f.k==='wave'){if(q<=0)continue;c.strokeStyle=rgba(f.col,.8*(1-q));c.lineWidth=14*(1-q)+2;c.beginPath();c.arc(fx,fy,f.r1*q,0,TAU);c.stroke();}
     else if(f.k==='plow'){c.save();c.translate(fx,fy);c.rotate(f.a);const al=1-q;const gr=c.createLinearGradient(0,0,f.L,0);gr.addColorStop(0,'rgba(255,220,120,'+.7*al+')');gr.addColorStop(1,'rgba(160,100,40,0)');c.fillStyle=gr;c.fillRect(0,-f.W*(1-q*.5),f.L*Math.min(1,q*3),f.W*2*(1-q*.5));c.restore();}
     else if(f.k==='zone'){if(!f.done){const p2=f.t/f.arm;c.fillStyle=rgba(f.col,.12+p2*.18);c.beginPath();c.arc(fx,fy,f.r,0,TAU);c.fill();c.strokeStyle=rgba(f.col,.8);c.lineWidth=2;c.beginPath();c.arc(fx,fy,f.r*p2,0,TAU);c.stroke();}
       else{const p3=(f.t-f.arm)/(f.dur-f.arm);glowDot(fx,fy,f.r*1.2*(1-p3*.5),'#dff4ff');}}
@@ -623,6 +666,7 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
   c.setTransform(1,0,0,1,0,0);const V=vignette();c.drawImage(V.dark,0,0,cv.width,cv.height);
   const low=H.hp>0&&H.hp<G.st.maxHp*.3,hurt=!calm&&H.hurtT>0?Math.min(.6,H.hurtT*2.5):0,ra=Math.max(hurt,low?(calm?.32:.32+Math.sin(G.t*6)*.12):0);
   if(ra>0){c.globalAlpha=ra;c.drawImage(V.red,0,0,cv.width,cv.height);c.globalAlpha=1;}
+  if(G.bossIn>0){c.globalAlpha=clamp(Math.min(G.bossIn/.4,(1.4-G.bossIn)/.2),0,1);c.drawImage(V.dark,0,0,cv.width,cv.height);c.drawImage(V.dark,0,0,cv.width,cv.height);c.globalAlpha=1;}
   drawHUD();}
 // свечение: градиент рисуется один раз на цвет (64×64), дальше — только drawImage (раньше — новый градиент на каждую частицу)
 const GLOW={};
@@ -643,9 +687,11 @@ function wrapText(c,t,maxW){const w=t.split(' '),lines=[];let cur='';for(const x
 function drawBubble(b){const c=ctx,e=b.e,x=e.x,y=e.y-(e.r||16)*(e.sc||1)-(e===G.hero?40:18);const q=b.t/b.dur,a=q<.1?q/.1:q>.85?(1-q)/.15:1;
   const fs=Math.round(Math.max(14,13.5/VIEW.zoom));worldT();c.globalAlpha=a;c.font='700 '+fs+'px system-ui,-apple-system,sans-serif';
   if(!b.lines||b.fs!==fs){b.fs=fs;b.lines=wrapText(c,b.s,fs*12);b.w=Math.max.apply(null,b.lines.map(l=>c.measureText(l).width))+18;}
-  const lh=fs*1.2,h=b.lines.length*lh+8,w=b.w;
-  c.fillStyle='rgba(255,255,255,.95)';rr(c,x-w/2,y-h,w,h,10);c.fill();c.beginPath();c.moveTo(x-5,y-1);c.lineTo(x+5,y-1);c.lineTo(x,y+6);c.fill();
-  c.fillStyle='#2a2238';c.textAlign='center';c.textBaseline='middle';b.lines.forEach((l,i)=>c.fillText(l,x,y-h+4+lh*(i+.5)));c.globalAlpha=1;}
+  const lh=fs*1.2,h=b.lines.length*lh+8,w=b.w,pad=6/VIEW.zoom,topY=VIEW.cy-VIEW.wh+((window.__safeTop||0)+(G.boss&&!G.boss.dead?136:92))/VIEW.zoom;
+  // boost: облачко не вылезает за края экрана и не лезет на верхнюю панель (хвостик — у говорящего, если он на экране)
+  const vis=e===G.hero||onScreen(e,0),bx=vis?clamp(x,VIEW.cx-VIEW.ww+w/2+pad,Math.max(VIEW.cx-VIEW.ww+w/2+pad,VIEW.cx+VIEW.ww-w/2-pad)):x,by=vis?Math.max(y,topY+h):y,tx=clamp(x,bx-w/2+10,bx+w/2-10); // говорящий за краем экрана — облачко не подтягиваем (иначе кажется, что это сказал богатырь)
+  c.fillStyle='rgba(255,255,255,.95)';rr(c,bx-w/2,by-h,w,h,10);c.fill();if(by===y&&Math.abs(tx-x)<1){c.beginPath();c.moveTo(tx-5,by-1);c.lineTo(tx+5,by-1);c.lineTo(tx,by+6);c.fill();}
+  c.fillStyle='#2a2238';c.textAlign='center';c.textBaseline='middle';b.lines.forEach((l,i)=>c.fillText(l,bx,by-h+4+lh*(i+.5)));c.globalAlpha=1;}
 function drawHUD(){const c=ctx,d=VIEW.dpr,W=VIEW.W,H=G.hero;c.setTransform(d,0,0,d,0,0);const top=(window.__safeTop||0)+8;
   // полоса опыта
   const bx=12,bw=W-24,bh=16;c.fillStyle='rgba(10,14,30,.6)';rr(c,bx,top,bw,bh,6);c.fill();
@@ -654,6 +700,10 @@ function drawHUD(){const c=ctx,d=VIEW.dpr,W=VIEW.W,H=G.hero;c.setTransform(d,0,0
   // таймер
   c.font='900 22px system-ui,-apple-system,sans-serif';c.lineWidth=4;c.strokeStyle='rgba(10,14,30,.55)';const tt=G.boss&&!G.boss.dead?L('БОСС','BOSS'):fmtTime(G.t);
   c.strokeText(tt,W/2,top+36);c.fillStyle=LT()>=RUN_BOSS_T-10&&!G.win&&LT()<RUN_BOSS_T?'#ff6a5a':'#fff';c.fillText(tt,W/2,top+36);
+  // до босса: полоска под таймером с мордой босса на конце — ясная цель похода (boost)
+  if(!(G.boss&&!G.boss.dead)&&!G.win&&LT()<RUN_BOSS_T){const bw2=Math.min(110,W*.28),x=W/2-bw2/2,y=top+50,q=clamp(LT()/RUN_BOSS_T,0,1),bs=spr(G.ch.boss);
+    c.fillStyle='rgba(10,14,30,.6)';rr(c,x,y,bw2,7,3.5);c.fill();c.fillStyle=q>.9?'#ff6a5a':'#ffc94a';rr(c,x+1,y+1,(bw2-2)*q,5,2.5);c.fill();
+    if(bs)c.drawImage(bs.c,x+bw2-4,y-9,24,24);}
   // убийства и золото
   c.font='800 14px system-ui,-apple-system,sans-serif';c.textAlign='left';c.lineWidth=4;c.strokeText('⚔ '+G.kills,14,top+34);c.fillStyle='#fff';c.fillText('⚔ '+G.kills,14,top+34);
   const cs=spr('coin');if(cs){c.drawImage(cs.c,14,top+46,16,16);}c.strokeText(fmtNum(Math.floor(G.gold)),34,top+55);c.fillStyle='#ffd84a';c.fillText(fmtNum(Math.floor(G.gold)),34,top+55);
@@ -672,7 +722,7 @@ function drawHUD(){const c=ctx,d=VIEW.dpr,W=VIEW.W,H=G.hero;c.setTransform(d,0,0
   // стрелки к важному за краем экрана
   const marks=[];if(G.egg&&!G.egg.dead)marks.push([G.egg,'#ffd84a']);if(G.gift)marks.push([G.gift,'#ff9a2a']);if(G.stone)marks.push([G.stone,'#e8e0d0']);for(const p of G.picks)if(p.k==='chest')marks.push([p,'#ffd84a']);if(G.prop&&!G.prop.dead)marks.push([G.prop,'#9aff6a']);if(G.boss&&!G.boss.dead)marks.push([G.boss,'#ff4a4a']);
   for(const [o,col] of marks){const sx=(o.x-VIEW.cx)*VIEW.zoom+W/2,sy=(o.y-VIEW.cy)*VIEW.zoom+VIEW.H/2;if(sx>0&&sx<W&&sy>0&&sy<VIEW.H)continue;
-    const big=o===G.boss,a=Math.atan2(sy-VIEW.H/2,sx-W/2),m=big?40:28,ex=clamp(sx,m,W-m),ey=clamp(sy,m+top+92,VIEW.H-m);c.save();c.translate(ex,ey);c.rotate(a);if(big)c.scale(1.7+Math.sin(G.t*8)*.15,1.7+Math.sin(G.t*8)*.15);c.fillStyle=col;c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=2;
+    const big=o===G.boss,a=Math.atan2(sy-VIEW.H/2,sx-W/2),m=big?40:28,ex=clamp(sx,m,W-m),ey=clamp(sy,m+top+(G.boss&&!G.boss.dead?130:92),VIEW.H-m);c.save();c.translate(ex,ey);c.rotate(a);if(big)c.scale(1.7+Math.sin(G.t*8)*.15,1.7+Math.sin(G.t*8)*.15);c.fillStyle=col;c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=2;
     c.beginPath();c.moveTo(14,0);c.lineTo(-6,-9);c.lineTo(-2,0);c.lineTo(-6,9);c.closePath();c.stroke();c.fill();c.restore();
     if(big){const tx=ex-Math.cos(a)*34,ty=ey-Math.sin(a)*30;c.font='900 12px system-ui,-apple-system,sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineWidth=3;c.strokeStyle='rgba(10,10,30,.8)';c.strokeText(L('БОСС','BOSS'),tx,ty);c.fillStyle='#ff8a7a';c.fillText(L('БОСС','BOSS'),tx,ty);}}
   // туман/тьма (события глав): видно только вокруг богатыря
@@ -682,12 +732,18 @@ function drawHUD(){const c=ctx,d=VIEW.dpr,W=VIEW.W,H=G.hero;c.setTransform(d,0,0
   if(G.stone){c.textAlign='center';c.textBaseline='middle';for(let i=0;i<3;i++){const p=G.stone.p[i],q=STONE[i],sx=(p.x-VIEW.cx)*VIEW.zoom+W/2,sy=(p.y-VIEW.cy)*VIEW.zoom+VIEW.H/2;
       c.font='20px system-ui,sans-serif';c.fillStyle='#fff';c.fillText(q.ic,sx,sy);c.font='900 12px system-ui,-apple-system,sans-serif';c.lineWidth=4;c.strokeStyle='rgba(10,10,30,.8)';
       const lx=clamp(sx,74,W-74);c.strokeText(q.t,lx,sy+30);c.fillStyle='#fff3c8';c.fillText(q.t,lx,sy+30);c.font='700 11px system-ui,-apple-system,sans-serif';c.strokeText(q.s,lx,sy+44);c.fillStyle='#e8e4f4';c.fillText(q.s,lx,sy+44);}c.textBaseline='alphabetic';}
-  // баннер
-  if(G.banner){const b=G.banner,q=b.t,a=q<.3?q/.3:q>2.6?Math.max(0,(3.2-q)/.6):1,y=VIEW.H*.3;c.globalAlpha=a;c.textAlign='center';
+  // баннер: плашка-лента (boost, единый сказочный стиль): босс — красная, эволюция — золотая, остальное — тёмно-синяя; заголовок — с засечками
+  if(G.banner){const b=G.banner,q=b.t,D=bannerDur(),a=q<.25?q/.25:q>D-.4?Math.max(0,(D-q)/.4):1,y=VIEW.H*.3,SF='system-ui,-apple-system,sans-serif';c.globalAlpha=a;c.textAlign='center';c.textBaseline='middle';
     // по ширине экрана: шрифт меньше, пока надпись не влезет (заголовок не мельче 18 px, подпись — 11 px)
-    const fit=(txt,px,min,w)=>{let f=px;for(;f>min;f-=2){c.font=w+' '+f+'px system-ui,-apple-system,sans-serif';if(c.measureText(txt).width<=W-24)break;}c.font=w+' '+f+'px system-ui,-apple-system,sans-serif';};
-    fit(b.title,30,18,900);c.lineWidth=6;c.strokeStyle='rgba(10,10,30,.6)';c.strokeText(b.title,W/2,y);c.fillStyle='#fff3c8';c.fillText(b.title,W/2,y);
-    if(b.sub){fit(b.sub,15,11,700);c.lineWidth=4;c.strokeText(b.sub,W/2,y+30);c.fillStyle='#fff';c.fillText(b.sub,W/2,y+30);}c.globalAlpha=1;}
+    let f1=28;for(;f1>18;f1-=2){c.font='900 '+f1+'px '+FT;if(c.measureText(b.title).width<=W-60)break;}c.font='900 '+f1+'px '+FT;const w1=c.measureText(b.title).width;
+    let f2=15,w2=0;if(b.sub){for(;f2>11;f2--){c.font='700 '+f2+'px '+SF;if(c.measureText(b.sub).width<=W-44)break;}c.font='700 '+f2+'px '+SF;w2=c.measureText(b.sub).width;}
+    const pw=Math.min(W-8,Math.max(w1,w2)+56),ph=b.sub?f1+f2+22:f1+16,px=W/2-pw/2,py=y-f1/2-8,n=9,k=b.pri>=5?0:b.pri===4?1:2;
+    const path=o=>{c.beginPath();c.moveTo(px+o,py+o);c.lineTo(px+pw-o,py+o);c.lineTo(px+pw-n-o,py+ph/2);c.lineTo(px+pw-o,py+ph-o);c.lineTo(px+o,py+ph-o);c.lineTo(px+n+o,py+ph/2);c.closePath();};
+    const g3=c.createLinearGradient(0,py,0,py+ph);g3.addColorStop(0,['rgba(178,38,30,.94)','rgba(190,128,20,.95)','rgba(34,40,78,.9)'][k]);g3.addColorStop(1,['rgba(110,18,15,.94)','rgba(122,74,6,.95)','rgba(16,20,44,.9)'][k]);
+    path(0);c.fillStyle=g3;c.fill();c.lineWidth=2;c.strokeStyle='#e6b85a';c.stroke();path(4);c.lineWidth=1;c.strokeStyle='rgba(255,233,176,.35)';c.stroke();
+    c.fillStyle='#ffe9b0';for(const sx of[px+n+11,px+pw-n-11]){c.beginPath();c.moveTo(sx,py+ph/2-5);c.lineTo(sx+5,py+ph/2);c.lineTo(sx,py+ph/2+5);c.lineTo(sx-5,py+ph/2);c.closePath();c.fill();}
+    c.font='900 '+f1+'px '+FT;c.lineWidth=4;c.strokeStyle='rgba(40,10,6,.7)';c.strokeText(b.title,W/2,py+8+f1/2);c.fillStyle='#fff3c8';c.fillText(b.title,W/2,py+8+f1/2);
+    if(b.sub){c.font='700 '+f2+'px '+SF;c.lineWidth=3;c.strokeText(b.sub,W/2,py+12+f1+f2/2);c.fillStyle='#fff';c.fillText(b.sub,W/2,py+12+f1+f2/2);}c.globalAlpha=1;}
   // дар богатыря: портрет и кольцо перезарядки
   {const cx=36,cy=VIEW.H-44-(window.__safeBot||0),R=24,q=1-clamp(G.darT/darCd(),0,1),sp=spr('hp_'+G.hkey);
     c.fillStyle='rgba(10,14,30,.6)';c.beginPath();c.arc(cx,cy,R,0,TAU);c.fill();if(sp)c.drawImage(sp.c,cx-R*.85,cy-R*.85,R*1.7,R*1.7);

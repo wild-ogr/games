@@ -118,7 +118,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 #grid{position:relative}
 .cell{position:absolute;border-radius:22%;background:rgba(255,255,255,.85);border:2px solid #c9d6ea;display:flex;align-items:center;justify-content:center;
   font-weight:900;color:var(--blue);text-transform:uppercase;transition:background .2s}
-.cell.open{background:#fff;border-color:#9fb9e3;box-shadow:0 3px 0 #bcd0ee}
+.cell.open{background:#fff;border-color:#9fb9e3;box-shadow:0 3px 0 #bcd0ee;cursor:pointer}
 .cell.pop{animation:pop .35s ease-out}
 .cell.hint,.cell.gift{color:var(--btnor)}
 .cell.flash{animation:flash .6s}
@@ -137,8 +137,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 #preview .w.old{background:#6b7280;box-shadow:0 3px 0 #4b5160}
 #preview .w:empty{display:none}
 /* ввод нажатиями: ✕ слева, ✔ справа от слова */
-.pvb{display:none;width:44px;height:44px;border-radius:12px;margin:0 8px;font-size:22px;font-weight:900;background:#fff;color:var(--ink2);box-shadow:0 2px 0 #d5d9e3;align-items:center;justify-content:center;flex:none}
-.pvb.ok{background:var(--green2);color:#fff;box-shadow:0 3px 0 #185a2a}
+.pvb{display:none;width:44px;height:44px;border-radius:12px;margin:0 8px;font-size:22px;font-weight:900;background:#fff;color:var(--ink);border:2px solid #9fb0c9;box-shadow:0 2px 0 #9fb0c9;align-items:center;justify-content:center;flex:none}
+.pvb.ok{background:var(--green2);color:#fff;border-color:#185a2a;box-shadow:0 3px 0 #185a2a}
 #pvX{order:-1}
 #preview.tap .pvb{display:flex}
 #preview.tap .w{cursor:pointer}
@@ -153,7 +153,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .let{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--lc,var(--blue));text-transform:uppercase;
   transition:transform .12s,background .12s,color .12s;z-index:2}
 .let::before{content:"";position:absolute;top:6%;right:6%;bottom:6%;left:6%;border-radius:50%;background:var(--lb,rgba(29,79,163,.06));z-index:-1}
-.let.on{background:var(--lon,var(--blue));color:var(--lonc,#fff);transform:scale(1.08)}
+.let.on{background:var(--lon,var(--blue));color:var(--lonc,#fff);transform:scale(1.08)}.let.on::before{display:none}
 .side{position:absolute;display:flex;flex-direction:column;gap:26px;z-index:3}
 .side.l{left:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 34px)}
 .side.r{right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 34px)}
@@ -165,7 +165,15 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .chk input{width:20px;height:20px;accent-color:var(--blue2)}
 .money{font-size:14px;color:var(--ink2);margin:0 0 4px}
 .goal{background:#fff;border-radius:12px;padding:8px 10px;margin:8px 0 0;font-size:14px;color:var(--ink2);box-shadow:0 2px 0 #e3e7ee}
-.goal b{color:var(--ink)}
+.goal b{color:var(--ink)}.goal .lnk{color:var(--blue2);white-space:nowrap}.goal.can{cursor:pointer;box-shadow:0 0 0 2px var(--gold),0 2px 0 #e3e7ee;color:var(--ink)}
+.mgoal{margin:0;font-size:17px;line-height:1.3;padding:7px 10px;text-align:center}
+.reward.big{font-size:38px;margin:8px 0 4px}.reward.big .coin{width:34px;height:34px}
+.btn.gold{display:block;text-align:center;min-height:52px;background:linear-gradient(#ffd45a,#f5b72d);color:#4a2f00;text-shadow:none;font-size:17px;line-height:1.25;box-shadow:0 4px 0 #b9860f,0 6px 14px rgba(185,134,15,.35)}
+.nw{white-space:nowrap}
+@media (max-height:600px) and (max-width:859px){.mgoal{display:none!important}}
+@media (max-height:600px){.reward.big{font-size:32px;margin:2px 0}}
+.btn.gold:active{box-shadow:0 1px 0 #b9860f}.btn.gold[disabled]{opacity:.8}
+.coinfly{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe58a,#f5b72d 55%,#d98f0f);box-shadow:0 2px 4px rgba(0,0,0,.3);transition:transform .55s cubic-bezier(.5,0,.6,1)}
 /* банка: золотое кольцо — сколько слов до приза (S.jar из JAR_SIZE); цифра — то же число, при 0 не видна (аудит 18, UX п. 10: красный «0» пугал) */
 .jar .ring{position:absolute;top:-4px;left:-4px;width:calc(100% + 8px);height:calc(100% + 8px);transform:rotate(-90deg);pointer-events:none;overflow:visible}
 .jar .ring circle{fill:none;stroke:#efe3bf;stroke-width:3}
@@ -309,6 +317,7 @@ body.big #preview .w{font-size:28px}
 .setrow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 14px;margin:10px 0;border-radius:14px;background:#fff;box-shadow:0 3px 0 #d5d9e3;font:inherit;font-size:18px;font-weight:700;color:var(--ink);cursor:pointer}
 .setrow b{min-width:64px;padding:4px 10px;border-radius:999px;background:#2b7a3f;color:#fff;font-size:15px}
 .setrow.off b{background:#e3e7ee;color:#27324a}
+.soc-o{font-size:14px;color:var(--ink2);text-align:center;line-height:1.3}.soc-o .btn{margin-top:8px;width:100%}
 .setrow:active{transform:translateY(2px);box-shadow:0 1px 0 #d5d9e3}
 .pay{margin:14px 0 6px;text-align:left}.pay h3{font-size:17px;margin:0 0 2px;color:var(--ink)}
 .prow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 14px;margin:8px 0;border-radius:14px;background:#fff;box-shadow:0 3px 0 #d5d9e3;font:inherit;font-size:16px;font-weight:700;color:var(--ink);text-align:left;min-height:52px}
@@ -327,11 +336,65 @@ button.prow{cursor:pointer}button.prow:active{transform:translateY(2px);box-shad
 /* VK web на компьютере (модерация VK 29.09): окно игры ниже 640 px — реплика меню не сжимается, всё чуть плотнее;
    окна на широком низком экране — шире, чтобы текст лёг в меньше строк (на телефонах не действует: ширина < 700) */
 .mbubble{flex:none}
+#heroArt{min-height:110px}
+@media (max-height:700px){.hero{flex:0 0 auto;flex-direction:row;width:100%;max-width:340px;gap:6px}
+  #heroArt{order:-1;flex:none;width:150px;height:128px;min-height:0;max-height:none;aspect-ratio:auto}
+  .mbubble{flex:1 1 auto;margin:0;max-width:none;font-size:14.5px;padding:9px 11px;min-height:0}
+  .mbubble::after{left:-9px;top:50%;bottom:auto;margin:-9px 0 0;border:9px solid transparent;border-left:0;border-right-color:#fff}
+  .logo .rank{display:none}}
+@media (max-height:600px){#heroArt{width:118px;height:100px}.defcard .tag{font-size:12px;letter-spacing:0;white-space:nowrap;overflow:hidden}}
 @media (max-height:600px){.logo h1{font-size:36px}.logo p.sub{font-size:17px;margin-top:2px}.mbubble{padding:8px 14px;font-size:15px;min-height:0}
   .mbtns{gap:9px}#btnPlay{padding:12px!important}.mbtns .row .btn{padding:8px}.hero{gap:6px}}
 @media (min-width:700px) and (max-height:640px){.mcard{max-width:470px}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .lv.cur{animation:none}.confetti{display:none}}
+/* ===== компьютер (boost 02.10): окно шире 860 px — две колонки. Меню: слева логотип и крупная Зина, справа кнопки.
+   Уровень: слева Зина во весь рост колонки с репликой под ней, справа кроссворд и круг. Высоту считает game.js (WIDE()). ===== */
+@media (min-width:860px){
+  #app{max-width:1040px}
+  .screen:not(#menu):not(#game){left:50%;right:auto;width:720px;margin-left:-360px}
+  .shopg{grid-template-columns:repeat(3,1fr)}.lvls{max-width:560px;margin:0 auto}
+  #menu.on{display:grid;grid-template-columns:1fr 380px;grid-template-rows:auto auto 1fr;grid-column-gap:36px;align-items:center;justify-items:center;padding:18px 40px 26px}
+  #menu .mtop{grid-column:1/3;grid-row:1}
+  #menu .logo{grid-column:1;grid-row:2;margin-top:0}.logo h1{font-size:58px}.logo p.sub{font-size:27px}.logo .rank{display:inline-block}
+  #menu .hero{grid-column:1;grid-row:3;flex:none;flex-direction:column;width:100%;max-width:500px;height:100%;min-height:0;gap:10px;align-self:stretch}
+  #menu .hero{justify-content:center}
+  #heroArt{order:0;flex:0 1 auto;width:100%;height:auto;min-height:120px;max-height:min(54vh,460px);aspect-ratio:1.35}
+  .mbubble{flex:none;margin:0 0 6px;max-width:420px;font-size:18px;padding:12px 18px}
+  .mbubble::after{left:50%;top:auto;bottom:-9px;margin:0 0 0 -9px;border:9px solid transparent;border-bottom:0;border-top-color:#fff;border-right-color:transparent}
+  #menu .mbtns{grid-column:2;grid-row:2/4;max-width:380px;align-self:center}
+  #game{padding-left:310px}
+  .ghdr{margin-left:-310px}.ghdr .t{padding-left:0}
+  .zina{position:absolute;left:0;right:auto;top:calc(env(safe-area-inset-top) + 76px);bottom:10px;width:310px;min-height:0;padding:0 6px 0 22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;z-index:6;pointer-events:none}
+  .zina .av{position:static;width:230px;height:230px;border-radius:0;background:none;box-shadow:none;overflow:visible;pointer-events:auto;flex:none}
+  .zina .say{position:relative;left:auto;right:auto;top:auto;flex:none;width:100%;margin:16px 0 0;font-size:17px;line-height:1.35;padding:12px 14px;min-height:0;pointer-events:auto;box-shadow:var(--shadow)}
+  .zina .say:not(.on){pointer-events:none}
+  .zina .say::before{left:50%;top:-9px;margin-left:-9px;border:9px solid transparent;border-top:0;border-bottom-color:#fff;border-right-color:transparent}
+  body.big .zina .say{font-size:19px}
+  .wheelwrap{width:100%;max-width:600px;margin:0 auto}
+}
+@media (min-width:860px) and (max-height:640px){.zina .av{width:160px;height:160px}.zina .say{font-size:15.5px;margin-top:10px;padding:9px 12px}.logo h1{font-size:44px}.logo p.sub{font-size:21px}.mbubble{font-size:16px;padding:9px 14px}}
+@media (min-width:1300px) and (min-height:860px){#app{max-width:1260px}#menu.on{grid-template-columns:1fr 420px;padding:26px 60px 40px}.logo h1{font-size:70px}.logo p.sub{font-size:32px}
+  #game{padding-left:420px}.ghdr{margin-left:-420px}.zina{width:420px;padding-left:30px}.zina .av{width:320px;height:320px}.zina .say{font-size:19px;padding:14px 18px}.mbubble{font-size:20px}}
+/* boost 02.10: знакомство и «живое» окно победы (части появляются по очереди; при «меньше движения» — сразу) */
+.intro .iart{width:230px;max-width:70%;height:170px;margin:0 auto 4px}.intro .iart svg{width:100%;height:100%}
+@media (max-height:600px){.intro .iart{height:120px}}
+.tmr{font-size:14px!important;color:var(--ink2);margin:6px 0 0!important;line-height:1.35}.tmr b{color:var(--ink)}.tmr:empty{display:none}
+.mtmr{text-align:center;background:rgba(255,255,255,.75);border-radius:12px;padding:6px 8px;margin:0!important}
+.dly{background:#fff4c9;border-radius:12px;padding:7px 10px!important;color:var(--ink)!important;font-size:14.5px!important}
+.fire{position:absolute;top:-7px;left:-5px;background:#fff;color:#c2410c;border-radius:999px;padding:1px 6px;font-size:13px;font-weight:900;font-style:normal;box-shadow:0 2px 0 #d5d9e3;text-shadow:none}
+.week.lg{background:none;box-shadow:none;padding:0;margin:6px 0 0}.week.lg .wc{max-width:44px;height:46px}.week.lg .wc b{font-size:15px;font-style:normal;color:#8a5a00;line-height:1.3}
+.week.lg .wc.got{background:#eef7f0;border-color:#a8dab5}.week.lg .wc.got b{color:var(--green2)}.week.lg .wc.now{background:#fff4c9;border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.mbtns #btnGift{display:block;text-align:center;line-height:1.3}.mbtns #btnGift.gold{font-size:16px;min-height:48px;padding:10px 8px}
+.win>*{animation:winin .4s cubic-bezier(.2,1.3,.5,1) both}
+.win>h2{animation-name:wintitle;animation-duration:.45s}
+.win>.defcard{animation-delay:.18s}.win>.stamp{animation:stamp .45s cubic-bezier(.2,1.6,.5,1) .45s both}
+.win>.reward{animation-name:winpop;animation-delay:.34s}.win>.money,.win>.goal,.win>.week,.win>p{animation-delay:.42s}.win>.btns{animation-delay:.55s}
+.win>.defcard.new::after{animation:newtag .5s cubic-bezier(.2,1.8,.5,1) .6s both}
+@keyframes winin{from{opacity:0;transform:translateY(22px)}}
+@keyframes wintitle{from{opacity:0;transform:scale(.7)}}
+@keyframes winpop{0%{opacity:0;transform:scale(.3)}70%{transform:scale(1.18)}}
+@keyframes newtag{from{opacity:0;transform:rotate(4deg) scale(2.4)}}
 .confetti{position:fixed;z-index:29;width:10px;height:14px;pointer-events:none;border-radius:2px}
 </style>
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
@@ -357,16 +420,19 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   </div>
   <div class="mbtns">
     <button class="btn" id="btnPlay" style="font-size:22px;padding:16px">▶ Играть <span id="playLv" style="opacity:.85;font-weight:700;font-size:17px"></span></button>
+    <div class="goal mgoal" id="mGoal" style="display:none"></div>
     <div class="row">
       <button class="btn blue" id="btnChap"><b>🗺️</b>Главы</button>
-      <button class="btn blue" id="btnDaily" style="position:relative"><b>📅</b>Задание дня<i class="dot" id="dailyDot"></i></button>
+      <button class="btn blue" id="btnDaily" style="position:relative"><b>📅</b>Задание дня<i class="dot" id="dailyDot"></i><i class="fire" id="dailyFire" style="display:none"></i></button>
       <button class="btn blue" id="btnDict"><b>📖</b>Словарь</button>
     </div>
     <div class="row2">
       <button class="btn ghost" id="btnShop">👗 Облики</button>
       <button class="btn ghost" id="btnRate">🏆 Рейтинг</button>
+      <button class="btn ghost" id="btnMore" style="display:none" aria-label="Ещё игры">🎲 Игры</button>
     </div>
     <button class="btn ghost" id="btnGift" style="display:none;font-size:16px;padding:10px 8px"></button>
+    <div class="tmr mtmr" id="mTmr" style="display:none"></div>
   </div>
 </section>
 
@@ -441,6 +507,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/pay.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/zina.js" defer></script>
+<script src="js/gloss.js" defer></script>
 <script src="js/dict.js" defer></script>
 </body>
 </html>

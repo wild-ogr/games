@@ -27,14 +27,14 @@ const chapOf=i=>CHAPTERS[Math.floor(i/CH_LEN)%CHAPTERS.length];
 
 /* ================= реплики бабы Зины ================= */
 const PH={
-  hello:['Здравствуй, внучок! Поиграем в слова?','Заходи, чайник уже поставила!','А я тебя жду! Пирожки остывают.','Ну что, разомнём голову? Спина-то не гнётся, а голова ещё ого-го.','Кроссворд сам себя не разгадает!','Опять с телефоном? Ну хоть в слова играешь, молодец.','Сорок лет русский язык преподавала — проверим, чему ты научился.','Кот Ять уже сел рядом. Он тоже хочет поиграть.','Ой, пришёл! А я как раз пирожки достала.','Садись. Поел? Не ври, по глазам вижу — не поел.','Ну что, внучок, сыграем, пока дед спит?','Соседка вчера три уровня прошла. Мы её обгоним?'],
+  hello:['Здравствуй, внучок! Поиграем в слова?','Заходи, чайник уже поставила!','А я тебя жду! Пирожки остывают.','Ну что, разомнём голову? Спина-то не гнётся, а голова ещё ого-го.','Кроссворд сам себя не разгадает!','Опять с телефоном? Ну хоть в слова играешь, молодец.','Тетрадку открыла, ручку расписала. Проверим, чему ты научился?','Кот Ять уже сел рядом. Он тоже хочет поиграть.','Ой, пришёл! А я как раз пирожки достала.','Садись. Поел? Не ври, по глазам вижу — не поел.','Ну что, внучок, сыграем, пока дед спит?','Соседка вчера три уровня прошла. Мы её обгоним?'],
   word:['Молодец!','Садись, пять!','Вот это я понимаю!','Умница, вся в бабушку!','Правильно!','Пятёрка!','Ай да внучок!','Ну голова!','Грамотей!','Так держать!','Ишь какой!','Верно-верно!','Хорошее слово, доброе.','Вот! А говорят, молодёжь не читает.','Горжусь!','Ставлю пять с плюсом!','В тетрадку тебе звёздочку!','Хорошо! Иди поешь.','Ну ты голова! В деда. Нет, в меня.','Молодец! Завтра расскажу соседке.','Ишь, грамотный какой!','Я бы тебе медаль дала. Или пирожок. Пирожок есть.','Отлично! Кот Ять одобрительно зевнул.','Пять! Иди обниму.'],
   wordLong:['Какое длинное! Дай обниму!','Ух! Даже я бы не сразу нашла.','Вот это слово! Прямо академик!','Длинное слово — как длинный пирог: всем хватит.','Ну всё, иду хвастаться соседке.','Такое слово! Даже кот проснулся.','Длиннющее! Как очередь в поликлинике.','Вот это да! Запишу в тетрадку, покажу деду.'],
   bonus:['Такого в кроссворде нет, но слово хорошее — в банку!','Лишнее слово как лишний пирожок — не помешает. В банку!','О, бонус! Кладу в банку, как варенье.','И это слово знаешь? В копилку!','Не туда, но молодец. Сохраню.','Запасливый! Как я на зиму.','Этого слова тут нет, но я его в банку закатаю. Как огурцы.','Хозяйственный! Всё в дом, всё в банку.','Ох, какое слово нашёл! Не пропадать же добру.'],
   old:['Было уже! Склероз — это у меня, а у тебя рано.','Это слово уже нашли. Второй раз не считается.','Повторение — мать учения, но не в кроссворде.','Уже есть! Я слежу.','Ты его уже находил. Меня, учительницу, не проведёшь.','Второй раз одно и то же? Это как дед со своими анекдотами.','Было! Я всё помню. Ну, почти всё.'],
   // «не знаю такого» — только когда слова правда нет ни в словаре, ни в списке настоящих слов (js/zina.js). Без «я бы знала»: вдруг есть
   // мягко: слово может оказаться настоящим, просто его нет в тетради (аудит 14: никаких «это не слово» на «лгун», «текила»)
-  bad:['Такого в моей тетради нет…','Красиво, но нет.','Эх, мимо!','Нет-нет-нет. Думай ещё.','Похоже на слово, но в тетради такого нет.',
+  bad:['Такого в моей тетради нет…','Красиво, но нет. Попробуй перемешать буквы.','Эх, мимо! Начни с короткого слова.','Нет-нет-нет. Думай ещё.','Похоже на слово, но в тетради такого нет.',
     'Звучит красиво, как название лекарства. Но в тетради такого нет.','Я такого даже в журнальном кроссворде не встречала.',
     'Не знаю такого. Попробуй ещё, не стесняйся.','Такого в тетрадке нет. Может, буквы местами поменять?','Мимо, внучок. Ищи слово попроще.'],
   // шутки — только на явную бессмыслицу (нет гласных, четыре согласные подряд…): gibberish() в game.js
@@ -85,13 +85,21 @@ function say(k){const last=sayLast[k]||(sayLast[k]=[]);
 
 /* ================= облики: наряды бабы Зины ================= */
 // c1/c2 — кофта (градиент), f — складки, beads — бусы, scarf — косынка, shawl — шаль, zip — олимпийка, brooch — брошь
+// boost 02.10 (сток монет): apron — фартук, hat — берет/соломенная шляпа/меховая шапка/кокошник, neck — шарфик, lapel — пиджак, fur — опушка.
+// Порядок — по цене; id не менять (лежат в сохранениях: S.own, S.outfit)
 const OUTFITS=[
   {id:'lilac',n:'Выходная кофта',p:0,d:'Лиловая, с жемчугом. В ней и в театр, и в очередь за молоком.',c1:'#9a64b8',c2:'#6f3f8c',f:'#5c3375',beads:'pearl'},
+  {id:'apron',n:'Фартук в горошек',p:90,d:'Для пирожков. Мука на носу в комплект не входит — она сама.',c1:'#e9a23b',c2:'#c77d1c',f:'#9a5f10',beads:'none',apron:{c:'#fffdf8',dot:'#e2463b'}},
   {id:'garden',n:'Дачная',p:200,d:'Кофта цвета «ботва» и косынка в горошек. Кабачки уважают.',c1:'#7cbf63',c2:'#468a3a',f:'#2e5e27',beads:'none',scarf:{c:'#e2463b',dot:'#fff'}},
   {id:'clinic',n:'В поликлинику',p:250,d:'Бежевая, солидная, с янтарём. Врач сразу видит: пациент серьёзный.',c1:'#b98b5e',c2:'#8a6440',f:'#7a5a3a',beads:'amber'},
   {id:'sport',n:'Для зарядки',p:300,d:'Олимпийка с полосками. Три приседания — и можно пить чай.',c1:'#3f7fe0',c2:'#1d4fa3',f:'#fff',beads:'none',zip:1},
+  {id:'beret',n:'Берет и шарфик',p:400,d:'Как у артистки из телевизора. Соседка Галя третий день молчит.',c1:'#5b6b8c',c2:'#3d4a66',f:'#2b3550',beads:'none',hat:{t:'beret',c:'#b3202a',c2:'#8c141d'},neck:'#e9c46a'},
   {id:'shawl',n:'Шаль с розами',p:550,d:'Бабушкина гордость. Надевается на праздник, в гости и «просто так, чтоб знали».',c1:'#4b4f6b',c2:'#33364d',f:'#262839',beads:'coral',shawl:{c:'#b3202a',c2:'#8c141d',fl:'#f5b72d',lf:'#2f7d3a'}},
+  {id:'straw',n:'Шляпа от солнца',p:700,d:'Соломенная, с лентой. На даче в ней — как на курорте, только с тяпкой.',c1:'#f2a7b3',c2:'#d9788a',f:'#b85a6c',beads:'pearl',hat:{t:'straw',c:'#f0d27a',c2:'#cfa646',band:'#2f6fd6'}},
   {id:'jubilee',n:'Юбилейный наряд',p:800,d:'Бархат, брошь, свежая укладка. 75 лет — это вам не шутки!',c1:'#b0294a',c2:'#7c1733',f:'#5e0f25',beads:'pearl',brooch:1},
+  {id:'teacher',n:'Первое сентября',p:1000,d:'Строгий костюм. В нём я ставила двойки. Пятёрки, впрочем, тоже.',c1:'#3a4768',c2:'#232c47',f:'#141a2e',beads:'none',lapel:'#182038',brooch:1},
+  {id:'snow',n:'Снегурочка на пенсии',p:1200,d:'Шубка с опушкой. Дед Мороз — это наш дед, только в бороде.',c1:'#4aa3e8',c2:'#2a6fc0',f:'#1b4f94',beads:'none',hat:{t:'fur',c:'#4aa3e8',c2:'#2a6fc0'},fur:1},
+  {id:'tsar',n:'Царица слов',p:1500,d:'Кокошник с жемчугом. Надевается, когда все слова найдены, а скромность — нет.',c1:'#c62828',c2:'#8e1616',f:'#6a0f0f',beads:'pearl',hat:{t:'koko',c:'#c62828',c2:'#8e1616'},brooch:1},
   // только в покупке «Гостинец от Зины» (js/pay.js, Яндекс); без покупки её в магазине не видно
   {id:'fest',n:'Праздничный платок',pay:'starter',d:'Красный платок в жёлтый цветочек и брошь. Надевается на Масленицу и на юбилей соседки.',c1:'#2b3a67',c2:'#1c2748',f:'#141c36',beads:'coral',scarf:{c:'#c62828',dot:'#ffd54a'},brooch:1}
 ];
@@ -102,10 +110,17 @@ const BEADS={pearl:['#fff8e6','#e8d9b0'],coral:['#e2463b','#a52a21'],amber:['#f5
 // lc — цвет букв, lb — подложка буквы, on/onc — выбранная буква, line — линия свайпа, sh — тень блюдца
 const SKINS=[
   {id:'gzhel',n:'Гжель',p:0,d:'Бабушкино любимое. Синее с белым — как у всех приличных людей.',lc:'#1d4fa3',lb:'rgba(29,79,163,.06)',on:'#1d4fa3',onc:'#fff',line:'#2f6fd6',sh:'#c5d2ea'},
+  {id:'dots',n:'В красный горошек',p:60,d:'Весёленькое. С такого даже манная каша идёт на ура.',lc:'#8a1f1a',lb:'rgba(255,255,255,.8)',on:'#e2463b',onc:'#fff',line:'#e2463b',sh:'#e7c9c6'},
   {id:'stol',n:'Общепит',p:150,d:'Небьющаяся, с каёмочкой. Котлета с пюре в комплект не входит.',lc:'#3d4a44',lb:'rgba(61,74,68,.06)',on:'#4d7a64',onc:'#fff',line:'#5f9479',sh:'#cfd6d2'},
+  {id:'blin',n:'Блин со сметаной',p:350,d:'Первый блин — комом, а этот — блюдцем. Буквы не слипаются, проверено.',lc:'#5a2d0c',lb:'rgba(255,250,232,.7)',on:'#8a4b12',onc:'#fff6dc',line:'#8a4b12',sh:'#c9cdd6'},
   {id:'hohloma',n:'Хохлома',p:400,d:'Золото, ягоды и лак. Суп из такой вкуснее — проверено дедом.',lc:'#7a160f',lb:'rgba(255,238,190,.55)',on:'#c8261b',onc:'#fff3cf',line:'#c8261b',sh:'#3a1a10'},
   {id:'zhost',n:'Жостово',p:450,d:'Поднос с розами. Раньше на нём носили самовар, теперь — буквы.',lc:'#2b2b2b',lb:'#fbf1d8',on:'#d4a232',onc:'#1a1a1a',line:'#e9c25a',sh:'#111'},
-  {id:'madonna',n:'Сервиз из серванта',p:650,d:'С золотой каймой. Доставали раз в год, на Новый год. Сегодня — можно!',lc:'#7a4a1a',lb:'rgba(255,255,255,.5)',on:'#c9962e',onc:'#fff',line:'#c9962e',sh:'#e2c9b8'}
+  {id:'pie',n:'Пирог с вишней',p:600,d:'С решёточкой. Пока слова ищешь — не остынет. Но и не убавится.',lc:'#5a1220',lb:'rgba(255,244,214,.92)',on:'#8e1b2c',onc:'#fff',line:'#8e1b2c',sh:'#8a5a1c'},
+  {id:'madonna',n:'Сервиз из серванта',p:650,d:'С золотой каймой. Доставали раз в год, на Новый год. Сегодня — можно!',lc:'#7a4a1a',lb:'rgba(255,255,255,.5)',on:'#c9962e',onc:'#fff',line:'#c9962e',sh:'#e2c9b8'},
+  {id:'bagel',n:'Поднос с баранками',p:900,d:'Баранки по кругу, чай посередине. Угощайся, но сначала — слово.',lc:'#4a2a10',lb:'rgba(255,255,255,.82)',on:'#b0702a',onc:'#fff',line:'#b0702a',sh:'#55320f'},
+  {id:'vinyl',n:'Пластинка',p:1100,d:'Крутится, шипит, поёт про ландыши. Буквы подпевают.',lc:'#fff3cf',lb:'rgba(255,255,255,.1)',on:'#e2463b',onc:'#fff',line:'#f5b72d',sh:'#000'},
+  // подарок за 7-й «гостинец» (LOGIN, game.js): за монеты не продаётся
+  {id:'guest',n:'С голубой каёмочкой',gift:'lg',d:'Для дорогих гостей. Достаётся тем, кто заходит к бабе Зине семь дней.',lc:'#1f5f8b',lb:'rgba(120,190,230,.16)',on:'#2a86c2',onc:'#fff',line:'#2a86c2',sh:'#bcd9ea'}
 ];
 const skinOf=id=>SKINS.find(k=>k.id===id)||SKINS[0];
 // рисунок блюдца (у гжели — CSS, как было)
@@ -128,6 +143,33 @@ function plateSVG(id){
     ${P(36,47.8,(x,y)=>`<circle cx="${x}" cy="${y}" r=".75" fill="#e2b64a"/>`)}
     ${leaf(50,50,-150,13,'#2f6b3a')}${leaf(50,50,-30,12,'#3a7d45')}${leaf(50,50,95,12,'#2f6b3a')}${leaf(50,50,160,9,'#4a8d52')}
     ${flower(45,47,6,'#d63a3a','#8c1a1a')}${flower(56,51,5,'#f4f0e6','#e2b64a')}${flower(47,57,4,'#f0a0a8','#c8546a')}${flower(55,42,3.4,'#6d8fe0','#f5d36a')}`;
+  else if(id==='dots')b=`<defs><radialGradient id="pdt${q}"><stop offset=".7" stop-color="#fff"/><stop offset="1" stop-color="#f7efee"/></radialGradient></defs>
+    <circle cx="50" cy="50" r="49.5" fill="url(#pdt${q})"/><circle cx="50" cy="50" r="47.4" fill="none" stroke="#e2463b" stroke-width="1.8"/>
+    ${P(20,43,(x,y)=>`<circle cx="${x}" cy="${y}" r="2" fill="#e2463b"/>`)}<circle cx="50" cy="50" r="38" fill="none" stroke="#f3dcd9" stroke-width=".8"/>
+    ${P(6,7.5,(x,y)=>`<circle cx="${x}" cy="${y}" r="1.7" fill="#e2463b"/>`)}<circle cx="50" cy="50" r="1.7" fill="#e2463b"/>`;
+  else if(id==='blin')b=`<defs><radialGradient id="pbl${q}" cx=".45" cy=".4"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".72" stop-color="#f3c25e"/><stop offset="1" stop-color="#c98a2b"/></radialGradient></defs>
+    <circle cx="50" cy="50" r="49.5" fill="#fff"/><circle cx="50" cy="50" r="49" fill="none" stroke="#dfe3ea" stroke-width="1"/>
+    <path d="M50 4.5 C64 3 80 9 88 22 C97 34 97 52 92 66 C87 82 70 96 50 95.5 C32 96 14 84 8 68 C2 54 3 34 12 22 C20 10 36 5 50 4.5Z" fill="url(#pbl${q})"/>
+    <g fill="#b9772a" opacity=".45">${P(9,36,(x,y,a,i)=>`<circle cx="${x}" cy="${y}" r="${2+i%3}"/>`)}${P(5,20,(x,y,a,i)=>`<circle cx="${x+3}" cy="${y-2}" r="${1.5+i%2}"/>`)}</g>
+    <path d="M40 46 q4 -9 13 -5 q10 -3 11 6 q7 6 -2 12 q-4 8 -13 4 q-10 3 -11 -6 q-5 -6 2 -11z" fill="#fffdf6" stroke="#eadfc6" stroke-width=".7"/><path d="M46 49 q5 -3 9 0" stroke="#eadfc6" stroke-width=".8" fill="none"/>`;
+  else if(id==='pie')b=`<defs><clipPath id="ppc${q}"><circle cx="50" cy="50" r="42.5"/></clipPath></defs>
+    <circle cx="50" cy="50" r="49.5" fill="#c98a2b"/>${P(22,46,(x,y)=>`<circle cx="${x}" cy="${y}" r="3.6" fill="#e6b45e"/>`)}
+    <circle cx="50" cy="50" r="42.5" fill="#8e1b2c"/><g clip-path="url(#ppc${q})">${P(14,30,(x,y,a,i)=>`<circle cx="${x+(i%2?4:-3)}" cy="${y+(i%3?3:-4)}" r="3" fill="#b02a3e"/>`)}
+    <g fill="#f0c56e" stroke="#d9a548" stroke-width=".5">${[-26,-13,0,13,26].map(d=>`<rect x="${50+d-2.4}" y="4" width="4.8" height="92" transform="rotate(45 50 50)"/><rect x="${50+d-2.4}" y="4" width="4.8" height="92" transform="rotate(-45 50 50)"/>`).join('')}</g></g>
+    <circle cx="50" cy="50" r="42.5" fill="none" stroke="#b97a22" stroke-width="1.2"/>`;
+  else if(id==='bagel')b=`<circle cx="50" cy="50" r="49.5" fill="#6b3f17"/><circle cx="50" cy="50" r="45.5" fill="#f7ecd6"/><circle cx="50" cy="50" r="45.5" fill="none" stroke="#e2463b" stroke-width=".8" stroke-dasharray="2 2"/>
+    ${P(10,38.5,(x,y)=>`<circle cx="${x}" cy="${y}" r="5.6" fill="none" stroke="#d39a45" stroke-width="3.6"/><circle cx="${x}" cy="${y}" r="5.6" fill="none" stroke="#f0c987" stroke-width="1" stroke-dasharray="3 8"/>`)}
+    <circle cx="50" cy="50" r="12" fill="#fff" stroke="#c9d6ea" stroke-width="1"/><circle cx="50" cy="50" r="8.6" fill="#b5651d"/><circle cx="47.5" cy="47.5" r="2.6" fill="#d58a3c" opacity=".8"/><path d="M61.5 46 q7 4 0 8" stroke="#c9d6ea" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  else if(id==='vinyl')b=`<circle cx="50" cy="50" r="49.5" fill="#161616"/>${[46.5,43,39.5,36,32.5,29,25.5,22,18.5].map(r=>`<circle cx="50" cy="50" r="${r}" fill="none" stroke="#2e2e2e" stroke-width=".6"/>`).join('')}
+    <path d="M50 50 L20 8 A52 52 0 0 1 44 0.5Z M50 50 L80 92 A52 52 0 0 1 56 99.5Z" fill="#fff" opacity=".07"/>
+    <circle cx="50" cy="50" r="14" fill="#c62828"/><circle cx="50" cy="50" r="13" fill="none" stroke="#f5b72d" stroke-width=".6"/>
+    <text x="50" y="45.5" text-anchor="middle" font-size="4.4" font-weight="700" fill="#ffe9a8" font-family="Arial" letter-spacing=".5">ВАЛЬС</text><text x="50" y="58.5" text-anchor="middle" font-size="2.8" fill="#ffd1a8" font-family="Arial">сторона 1</text>
+    <circle cx="50" cy="50" r="1.8" fill="#fbf7ec"/>`;
+  else if(id==='guest')b=`<defs><radialGradient id="pgs${q}" cx=".45" cy=".4"><stop offset="0" stop-color="#fff"/><stop offset=".72" stop-color="#f6fbff"/><stop offset="1" stop-color="#dcedf8"/></radialGradient></defs>
+    <circle cx="50" cy="50" r="49.5" fill="url(#pgs${q})"/><circle cx="50" cy="50" r="46.5" fill="none" stroke="#3d9ad6" stroke-width="3.2"/><circle cx="50" cy="50" r="42.6" fill="none" stroke="#d4a54a" stroke-width=".9"/>
+    ${P(18,46.5,(x,y)=>`<circle cx="${x}" cy="${y}" r=".9" fill="#fff"/>`)}
+    ${P(6,38,(x,y,a)=>leaf(x,y,a+90,5,'#8cc8ea'))}
+    <circle cx="50" cy="50" r="8.5" fill="none" stroke="#bfe0f3" stroke-width=".8"/>${flower(50,50,4.6,'#7fc0ea','#f5d36a')}`;
   else if(id==='madonna')b=`<defs><radialGradient id="pmd${q}" cx=".42" cy=".38"><stop offset="0" stop-color="#fffaf4"/><stop offset=".65" stop-color="#f7e3e0"/><stop offset="1" stop-color="#e9c8c8"/></radialGradient></defs>
     <circle cx="50" cy="50" r="49.5" fill="url(#pmd${q})"/><circle cx="50" cy="50" r="48" fill="none" stroke="#c9962e" stroke-width="2.2"/><circle cx="50" cy="50" r="45" fill="none" stroke="#c9962e" stroke-width=".6"/>
     ${P(24,46.5,(x,y,a)=>`<path d="M${x} ${y} l.9 .9 l-.9 .9 l-.9 -.9z" fill="#d4a54a" transform="rotate(${a+45} ${x} ${y})"/>`)}
@@ -143,6 +185,21 @@ function applySkin(wheelEl,id){const k=skinOf(id),pl=wheelEl.querySelector('.pla
 // косынка: от уха до уха через макушку, спереди — линия надо лбом
 const ZK='M44 104 C36 40 68 4 100 4 C132 4 164 40 156 104 Q152 70 128 60 Q100 50 72 60 Q48 70 44 104Z';
 let zinaN=0;
+// головные уборы (boost 02.10): берет, соломенная шляпа, меховая шапочка, кокошник
+function hatSVG(h){
+  if(h.t==='beret')return `<ellipse cx="98" cy="42" rx="53" ry="25" transform="rotate(-10 98 42)" fill="${h.c}"/><ellipse cx="90" cy="34" rx="32" ry="11" transform="rotate(-10 90 34)" fill="#fff" opacity=".13"/>
+    <path d="M50 60 q48 -20 100 -8" stroke="${h.c2}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M106 18 q1 -9 8 -9" stroke="${h.c2}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  if(h.t==='straw')return `<ellipse cx="100" cy="58" rx="84" ry="15" fill="${h.c}"/><ellipse cx="100" cy="58" rx="84" ry="15" fill="none" stroke="${h.c2}" stroke-width="2"/>
+    <path d="M60 58 q0 -46 40 -46 q40 0 40 46 q-40 12 -80 0z" fill="${h.c}"/><path d="M68 34 q32 -12 64 0 M63 22 q0 0 0 0" stroke="${h.c2}" stroke-width="1.6" fill="none" opacity=".7"/><path d="M74 22 q26 -9 52 0" stroke="${h.c2}" stroke-width="1.6" fill="none" opacity=".7"/>
+    <path d="M60 46 q40 12 80 0 v12 q-40 12 -80 0z" fill="${h.band}"/><path d="M136 50 l14 -6 l-3 12 l12 6 l-22 2z" fill="${h.band}"/>`;
+  if(h.t==='fur')return `<path d="M52 60 q0 -50 48 -50 q48 0 48 50z" fill="${h.c}"/><path d="M60 40 q40 -16 80 0" stroke="${h.c2}" stroke-width="3" fill="none" opacity=".6"/><circle cx="100" cy="12" r="10" fill="#fff"/>
+    <rect x="44" y="46" width="112" height="22" rx="11" fill="#fff"/><g fill="#fff">${[50,66,83,100,117,134,150].map(x=>`<circle cx="${x}" cy="58" r="9"/>`).join('')}</g><path d="M52 66 q48 8 96 0" stroke="#dbe6f3" stroke-width="2" fill="none"/>`;
+  return `<path d="M40 98 C22 34 60 3 100 3 C140 3 178 34 160 98 Q152 68 128 59 Q100 50 72 59 Q48 68 40 98Z" fill="${h.c}" stroke="#f5b72d" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M52 62 C56 30 78 14 100 14 C122 14 144 30 148 62" stroke="#f5b72d" stroke-width="2" fill="none" opacity=".85"/>
+    <g fill="#fff8e6" stroke="#e8d9b0" stroke-width=".8">${[[50,76],[61,64],[78,57],[100,53.5],[122,57],[139,64],[150,76]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.4"/>`).join('')}</g>
+    <circle cx="100" cy="30" r="8" fill="#f5b72d" stroke="#b9860f" stroke-width="1.2"/><circle cx="100" cy="30" r="4" fill="#2f6fd6"/><circle cx="98.6" cy="28.6" r="1.2" fill="#fff" opacity=".8"/>
+    <g fill="#f5b72d">${[[74,36],[126,36],[60,52],[140,52],[86,24],[114,24]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.8"/>`).join('')}</g>`;
+}
 function zinaSVG(mood,oid){
   mood=mood||'norm';const O=outfitOf(oid||(typeof S!=='undefined'&&S.outfit)),u=O.id+'_'+(++zinaN);// id градиентов — свои у каждого рисунка (иначе на скрытом экране лицо пропадает)
   const eyes=mood==='happy'
@@ -172,11 +229,16 @@ function zinaSVG(mood,oid){
     :'<path d="M84 146 l16 22 l16 -22z" fill="#fff"/><path d="M84 146 l-8 12 l14 8z M116 146 l8 12 l-14 8z" fill="#f4f1fa"/>'}
   ${O.shawl?`<path d="M26 200 q0 -38 36 -56 q38 30 76 0 q36 18 36 56z" fill="${O.shawl.c}"/><path d="M62 144 q38 30 76 0" stroke="${O.shawl.c2}" stroke-width="4" fill="none"/>
     ${[[48,176,7],[100,186,8],[152,176,7],[72,162,5],[128,162,5],[36,196,5],[164,196,5]].map(([x,y,r])=>`<g transform="translate(${x} ${y})"><ellipse cx="${-r}" cy="${r*.3}" rx="${r*.7}" ry="${r*.35}" fill="${O.shawl.lf}" transform="rotate(-25)"/><ellipse cx="${r}" cy="${r*.3}" rx="${r*.7}" ry="${r*.35}" fill="${O.shawl.lf}" transform="rotate(25)"/>${[0,72,144,216,288].map(a=>`<circle cx="0" cy="${-r*.5}" r="${r*.45}" fill="#e8475a" transform="rotate(${a})"/>`).join('')}<circle r="${r*.35}" fill="${O.shawl.fl}"/></g>`).join('')}`:''}
+  ${O.apron?`<path d="M74 160 L88 146 M126 160 L112 146" stroke="${O.apron.c}" stroke-width="5" stroke-linecap="round"/><path d="M70 160 h60 l10 40 h-80z" fill="${O.apron.c}"/>
+    <g fill="${O.apron.dot}">${[[82,171],[100,168],[118,171],[76,185],[92,183],[108,183],[124,185],[84,197],[100,195],[116,197]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.7"/>`).join('')}</g><path d="M70 160 h60" stroke="${O.apron.dot}" stroke-width="3" stroke-linecap="round"/>`:''}
+  ${O.lapel?`<path d="M84 146 L64 174 L90 182 L100 170z M116 146 L136 174 L110 182 L100 170z" fill="${O.lapel}"/><path d="M100 170 V200" stroke="${O.lapel}" stroke-width="2.5"/><circle cx="106" cy="186" r="2.6" fill="#f5b72d"/><circle cx="106" cy="197" r="2.6" fill="#f5b72d"/>`:''}
+  ${O.fur?`<rect x="93" y="166" width="14" height="34" fill="#fff"/><path d="M58 152 q42 30 84 0 q9 5 10 14 q-52 32 -104 0 q1 -9 10 -14z" fill="#fff"/><g fill="#fff">${[[56,164],[70,172],[85,177],[100,179],[115,177],[130,172],[144,164]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="7.5"/>`).join('')}</g><path d="M62 170 q38 22 76 0" stroke="#dbe6f3" stroke-width="2" fill="none"/>`:''}
   ${O.beads!=='none'?`<g fill="${BEADS[O.beads][0]}" stroke="${BEADS[O.beads][1]}" stroke-width="1">${[0,1,2,3,4,5,6,7,8].map(i=>{const a=Math.PI*(.15+.7*i/8);return `<circle cx="${100-Math.cos(a)*30}" cy="${150+Math.sin(a)*14}" r="4.2"/>`;}).join('')}</g>`:''}
   ${O.zip?'':`<path d="M40 188 q10 -20 26 -26 M160 188 q-10 -20 -26 -26" stroke="${O.f}" stroke-width="3" fill="none" opacity=".5"/>`}
   ${O.brooch?'<g transform="translate(128 176)"><circle r="7" fill="#f5b72d" stroke="#b9860f" stroke-width="1.5"/><circle r="3.6" fill="#2f6fd6"/><circle cx="-1" cy="-1" r="1.1" fill="#fff" opacity=".8"/></g>':''}
   <rect x="88" y="128" width="24" height="22" rx="8" fill="#eab28f"/>
-  <circle cx="100" cy="30" r="22" fill="url(#zh_${u})"/><path d="M84 26 q16 -12 32 0" stroke="#a8afbf" stroke-width="2.5" fill="none"/>
+  ${O.neck?`<path d="M76 141 q24 15 48 0 l4 13 q-28 15 -56 0z" fill="${O.neck}"/><path d="M110 153 l12 27 l-13 -5 l-7 9z" fill="${O.neck}"/><path d="M80 148 q20 10 40 0" stroke="rgba(0,0,0,.12)" stroke-width="2" fill="none"/>`:''}
+  ${O.hat?'':`<circle cx="100" cy="30" r="22" fill="url(#zh_${u})"/><path d="M84 26 q16 -12 32 0" stroke="#a8afbf" stroke-width="2.5" fill="none"/>`}
   <ellipse cx="100" cy="98" rx="47" ry="50" fill="url(#zf_${u})"/>
   <path d="M52 92 q-4 -46 48 -50 q52 4 48 50 q-6 -26 -22 -32 q-10 14 -52 12 q-16 4 -22 20z" fill="url(#zh_${u})"/>
   <path d="M60 70 q10 -14 24 -16 M140 70 q-10 -14 -24 -16 M76 56 q12 -8 26 -6" stroke="#a8afbf" stroke-width="2.5" fill="none" stroke-linecap="round"/>
@@ -185,6 +247,7 @@ function zinaSVG(mood,oid){
   ${O.scarf?`<path d="M148 92 q14 10 22 30 l-9 -3 l2 10 q-10 -16 -20 -26z" fill="${O.scarf.c}"/><path d="${ZK}" fill="${O.scarf.c}"/>
     <g clip-path="url(#zk_${u})" fill="${O.scarf.dot}">${[[70,24],[100,14],[130,24],[58,48],[86,38],[114,38],[142,48],[72,62],[100,54],[128,62],[52,74],[148,74],[46,96],[154,96]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.4"/>`).join('')}</g>
     <path d="M48 98 Q52 68 72 60 Q100 50 128 60 Q148 68 152 98" stroke="rgba(0,0,0,.15)" stroke-width="2.5" fill="none"/>`:''}
+  ${O.hat?hatSVG(O.hat):''}
   <ellipse cx="70" cy="114" rx="10" ry="6.5" fill="#f58f8f" opacity=".45"/><ellipse cx="130" cy="114" rx="10" ry="6.5" fill="#f58f8f" opacity=".45"/>
   ${brows}${eyes}
   <g fill="rgba(200,225,255,.28)" stroke="#6d4b3d" stroke-width="3"><circle cx="83" cy="96" r="14"/><circle cx="117" cy="96" r="14"/></g>

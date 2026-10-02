@@ -58,9 +58,16 @@ const HERO_ART={
   mar:{body:'#8a1a2a',cloak:'#c0392b',skin:'#f8d4b4',beard:null,hair:'#2a1a14',braid:1,hat:'crownhelm',helm:'#c2ccd8',rim:'#e6b53a',kok:'#e6b53a',belt:'#e6b53a',boots:'#3a2a2a'},
   iva:{body:'#d83a2a',cloak:null,skin:'#f6cfaa',beard:null,hair:'#d8963a',messy:1,freckles:1,belt:'#3a6a2a',boots:'#6a4a2a'}
 };
+/* снаряжение от кузницы на рисунке богатыря (boost 2): щит за спиной — «Здоровье», наплечники и пластины — «Броня», золотые наручи — «Сила».
+   Ступени 0–2 (GEAR) считает gearRefresh() по S.forge; общая «анатомия» у всех 9 богатырей и обликов одна, поэтому слои ложатся одинаково */
+const GEAR={h:0,a:0,m:0};
+function gearRefresh(){const f=(typeof S!=='undefined'&&S.forge)||{},t=(v,a,b)=>v>=b?2:v>=a?1:0,h=t(f.hp||0,3,8),a=t(f.armor||0,2,5),m=t(f.might||0,3,8);
+  if(h===GEAR.h&&a===GEAR.a&&m===GEAR.m)return false;GEAR.h=h;GEAR.a=a;GEAR.m=m;
+  for(const k in SPR)if(/^hp?_/.test(k))delete SPR[k];for(const k in ICONS)if(/^hp_/.test(k))delete ICONS[k];return true;}
 function drawHero(g,h,f){
   if(h.big)g.scale(1.12,1.12);
-  const st=f?3.5:-3.5;
+  const st=f?3.5:-3.5,ST='#c2ccd8',GD='#e6b53a';
+  if(GEAR.h){const R=GEAR.h>1?10.5:9;ell(g,-12.5,7,R,R,GEAR.h>1?'#c8392f':'#a8562e',{hl:.3});g.beginPath();g.arc(-12.5,7,R-1.6,0,TAU);g.lineWidth=GEAR.h>1?1.8:1.1;g.strokeStyle=GEAR.h>1?GD:'#d8c08a';g.stroke();ell(g,-12.5,7,2.4,2.4,GEAR.h>1?GD:ST,{hl:.6});}
   if(h.cloak)shp(g,h.cloak,{},[-16,-6,14,22],()=>{g.moveTo(-9,-4);g.quadraticCurveTo(-18,8,-17,21);g.quadraticCurveTo(-4,24,8,20);g.lineTo(6,-4);g.closePath();});
   if(h.braid){for(let i=0;i<4;i++)ell(g,-9-i*.6,-2+i*5.5,3.6-i*.3,3.3,h.hair);ell(g,-11,20,2.6,1.6,h.kok||'#d33');}
   ell(g,-5+st,22,6,3.6,h.boots);ell(g,5-st,22,6,3.6,h.boots);
@@ -70,7 +77,10 @@ function drawHero(g,h,f){
     g.save();g.beginPath();g.ellipse(0,9,12,11.5,0,0,TAU);g.clip();g.strokeStyle='rgba(255,255,255,.14)';g.lineWidth=.9;
     for(let y=0;y<22;y+=3.4)for(let x=-14;x<14;x+=3.4){g.beginPath();g.arc(x+(y%6.8?1.7:0),y,1.5,0,Math.PI);g.stroke();}g.restore();
     rrect(g,-12,10,24,4,1.5);g.fillStyle=h.belt;g.fill();rrect(g,-2,9.5,4,5,1);g.fillStyle='#f0c24a';g.fill();}
+  if(GEAR.a){const rim=GEAR.a>1?GD:ST;for(const sx of[-10.5,11]){ell(g,sx,2.5,4.8,3.6,ST,{hl:.6,olc:rim});if(GEAR.a>1){g.beginPath();g.ellipse(sx,2.5,3.2,2.1,0,0,TAU);g.lineWidth=.9;g.strokeStyle=GD;g.stroke();}}
+    if(GEAR.a>1&&!h.braid)for(const px of[-8,-2.5,3]){rrect(g,px,14.6,5,4.6,1.2);g.fillStyle=grad(g,px+2.5,16.5,4,ST,.5);g.fill();outline(g,ST,.6);}}
   ell(g,12,10,4.6,4.6,h.skin);ell(g,-12,11,4.4,4.4,h.skin);
+  if(GEAR.m)for(const [hx,hy] of[[12,10],[-12,11]]){g.save();g.beginPath();g.arc(hx,hy,4.7,0,TAU);g.clip();g.fillStyle=grad(g,hx,hy-1,5,GD,.5);g.fillRect(hx-6,hy-4.9,12,GEAR.m>1?4.4:3.2);g.restore();g.beginPath();g.arc(hx,hy,4.6,0,TAU);g.lineWidth=.8;g.strokeStyle=shade(GD,-.5);g.stroke();}
   ell(g,1,-9,12,11.5,h.skin);
   if(h.messy){for(const [x,y,rx,ry] of[[-9,-12,5.5,5],[-4,-17,6,5],[3,-18,6.5,5],[9,-14,4.5,4.2],[-11,-6,3.5,4.5]])ell(g,x,y,rx,ry,h.hair,{hl:.35});
     ln(g,[2,-22,5,-27],'#d8b050',1.2);ln(g,[5,-27,7,-24],'#d8b050',1);}

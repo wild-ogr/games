@@ -127,7 +127,7 @@ body.run #tipX.on{display:block}
 .beast{display:flex;justify-content:center;margin:-4px 0 4px}.beast img{width:150px;height:150px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.45))}
 .wkcard{margin-top:10px;background:linear-gradient(135deg,rgba(255,201,74,.2),rgba(90,58,224,.22));border:1px solid rgba(255,201,74,.4)}
 /* ---------- v7: удобство ---------- */
-.gobar{position:sticky;bottom:0;margin:0 -14px -20px;padding:10px 14px calc(12px);background:linear-gradient(180deg,rgba(20,26,46,0),rgba(20,26,46,.92) 35%);z-index:2}
+.gobar{position:sticky;bottom:0;margin:0 -14px -20px;padding:14px 14px calc(12px);background:linear-gradient(180deg,rgba(20,26,46,0),rgba(20,26,46,.96) 22px);z-index:2}
 .wkhead{font-size:12px!important;font-weight:800;color:#ffd98a!important;text-transform:uppercase;letter-spacing:.4px}
 .row .t b.wkname{font-size:19px;margin:2px 0}
 .clamp2{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -162,7 +162,67 @@ body.run #tipX.on{display:block}
 @keyframes fin{from{opacity:.2}to{opacity:1}}
 /* старые браузеры (Chrome < 84, Safari < 14.1) не знают gap во flex — там отступы полями; признак — нет свойства inset */
 @supports not (inset:0){.btns>*+*{margin-top:8px}.cards>*+*{margin-top:8px}nav>*+*,.topbar>*+*,.seg>*+*{margin-left:6px}.row>*+*{margin-left:12px}.pill>*+*{margin-left:6px}.btn>*+*{margin-left:6px}.inv>*,.invmini>*{margin:2px}.btns[style*="row"]>*+*{margin-top:0;margin-left:8px}.lvtools>*{margin:3px}.reel>*+*{margin-left:5px}}
+/* ---------- boost: цель в итогах, «было → стало», сила ---------- */
+.goalbox{background:rgba(255,216,74,.1);border:1px solid rgba(255,216,74,.38);border-radius:14px;padding:8px 10px;margin:8px 0;font-size:13.5px;line-height:1.35;color:#eef0f8;text-align:left}.goalbox div+div{margin-top:5px;padding-top:5px;border-top:1px dashed rgba(255,216,74,.25)}.goalbox b{color:#ffe08a}
+.prog{margin:8px 0;font-size:13.5px;line-height:1.35;color:#eef0f8;text-align:center}.prog .bar{height:12px;border-radius:6px;margin:0 0 6px}.prog span{display:block}.prog .spirit{margin-top:5px;color:#ffd98a;font-weight:800}
+.btns .btn{white-space:normal;line-height:1.15}
+@media (max-width:340px){.card.gift .btn{white-space:normal;line-height:1.15;padding:8px;font-size:13px;max-width:46%}.wkcard .btns .btn{font-size:13px;padding:9px 5px}.vol span{width:74px;font-size:13px}.vol{gap:6px}.vol b{width:36px}}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.chips i{font-style:normal;font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.25);color:#d8dcec;white-space:nowrap}.chips i.hot{background:rgba(255,201,74,.22);color:#ffe08a;box-shadow:0 0 0 1px rgba(255,201,74,.45) inset}
+.power{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(255,201,74,.2),rgba(255,106,61,.14));border:1px solid rgba(255,201,74,.4);border-radius:14px;padding:6px 12px 6px 6px;margin:4px 0 10px;font-weight:800;font-size:14px}.power img{width:36px;height:36px;flex:none}.power span{flex:1;color:#f4e9c8}.power b{font-size:19px;color:var(--gold);white-space:nowrap}
+.upc span.delta{color:#8af0a0;font-weight:800;font-size:13px;margin-top:1px}.upc span.delta i{font-style:normal;white-space:nowrap}
+@media (max-width:380px){.today-row .row{flex-wrap:wrap}.today-row .row img.ic{width:38px;height:38px}.today-row .row .t{flex:1 1 60%}.today-row .row .btn{flex:1 1 100%;margin-left:0}}
+.row .t span.delta{color:#8af0a0;font-weight:800;font-size:13.5px}.row .t b em.rec{font-style:normal;font-size:11.5px;font-weight:900;padding:2px 7px;border-radius:999px;background:linear-gradient(90deg,#ffd84a,#ff9a3a);color:#3a2206;margin-left:4px;white-space:nowrap}
 #loading{position:fixed;top:0;right:0;bottom:0;left:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px}
+/* ---------- boost: единый «сказочный» стиль — вышитый рушник (узор --orn), красная лента заголовка, золотая кайма, заголовки с засечками ---------- */
+:root{--ft:Georgia,"Times New Roman","Noto Serif",serif;--orn:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='14' viewBox='0 0 28 14'%3E%3Crect width='28' height='14' fill='%23a3211c'/%3E%3Cpath d='M14 2.4l4.6 4.6-4.6 4.6L9.4 7z' fill='none' stroke='%23ffe9b0' stroke-width='1.5'/%3E%3Cpath d='M14 5.3l1.7 1.7-1.7 1.7L12.3 7zM0 4.2l2.8 2.8L0 9.8-2.8 7zM28 4.2l2.8 2.8L28 9.8 25.2 7z' fill='%23ffe9b0'/%3E%3Cpath d='M0 .8h28M0 13.2h28' stroke='%23ffcf5a' stroke-width='1.6'/%3E%3C/svg%3E")}
+.panel{background:linear-gradient(180deg,#2a2c58,#191c3c);border:2px solid #d9a441;border-radius:20px;padding:24px 18px 18px;box-shadow:0 0 0 3px #4a1f12,0 0 0 4px rgba(230,184,90,.5),0 20px 60px rgba(0,0,0,.55)}
+.panel::before{content:'';position:absolute;left:20px;right:20px;top:0;height:10px;background:var(--orn) center top/auto 10px repeat-x;border-radius:0 0 5px 5px}
+.panel>h3,.panel>h2{font-family:var(--ft);font-size:21px;line-height:1.15;letter-spacing:.2px;color:#fff3d0;text-align:center;text-shadow:0 2px 0 rgba(70,14,8,.9);margin:0 0 10px;padding:8px 26px;background:linear-gradient(180deg,#b3261e,#84160f);border:1px solid #e6b85a;border-radius:8px;box-shadow:inset 0 0 0 2px rgba(80,14,8,.55),0 3px 0 rgba(0,0,0,.28);position:relative}
+.panel>h3::before,.panel>h3::after,.panel>h2::before,.panel>h2::after{content:'';position:absolute;top:50%;width:8px;height:8px;margin-top:-4px;background:#ffe9b0;transform:rotate(45deg)}
+.panel>h3::before,.panel>h2::before{left:10px}.panel>h3::after,.panel>h2::after{right:10px}
+.btns.stick{background:linear-gradient(180deg,rgba(25,28,60,0),#191c3c 16px)}
+.confetti{border-radius:18px}
+#menu h2{font-family:var(--ft);font-size:21px;color:#fff3d0;letter-spacing:.2px}
+#menu h2::after{content:'';display:block;width:84px;height:5px;margin-top:5px;border-radius:3px;background:var(--orn) left center/auto 5px repeat-x}
+.title{font-family:var(--ft);font-size:20px;color:#ffe9b0;text-shadow:0 2px 0 rgba(70,14,8,.8)}.title small{font-family:var(--f);text-shadow:none}
+.tabs::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;z-index:3;pointer-events:none;background:var(--orn) center/auto 5px repeat-x}
+.tab{padding-top:11px}
+nav{border-top:2px solid #d9a441}
+.card{border-color:rgba(230,184,90,.2)}.upc{border-color:rgba(230,184,90,.3)}
+.btn:not(.ghost){border-bottom:3px solid rgba(0,0,0,.26);text-shadow:0 1px 0 rgba(0,0,0,.28)}.btn.gold{text-shadow:0 1px 0 rgba(255,255,255,.35)}
+#tip{border-color:rgba(230,184,90,.75)}#toast{border-color:rgba(230,184,90,.6)}
+#loading{font-family:var(--ft);color:#ffe9b0}
+@media (max-width:340px){.title{font-size:17px}.panel>h3,.panel>h2{font-size:19px;padding:7px 22px}#modal{padding:8px}.panel{padding:22px 12px 14px}.btns.stick{bottom:-14px;margin:12px -12px -14px;padding:12px 12px 14px}
+  .upc{padding:8px 10px;gap:9px}.upc img{width:42px;height:42px}.upc b{font-size:15px}.upc span{font-size:13px}.upc span.delta{font-size:12px}.cards{gap:6px;margin:8px 0}.lvtools{margin-top:8px}}
+.upc em{white-space:nowrap;display:inline-block}.vol input{min-width:0;width:100%}
+/* ---------- boost: сундук — крупнее и с сиянием; эволюция — золотой карточкой; Жар-птица — дары за рекламу компактнее ---------- */
+.reel{position:relative;padding:10px 0}.reel::before{content:'';position:absolute;left:50%;top:50%;width:230px;height:120px;margin:-60px 0 0 -115px;background:radial-gradient(closest-side,rgba(255,216,74,.34),rgba(255,216,74,0));pointer-events:none;opacity:.55;transition:opacity .4s}
+.reel.done::before{opacity:1}.reel .slot{position:relative}
+.reel.few .slot{width:68px;height:68px;border-radius:16px}.reel.few .slot img{width:56px;height:56px}
+.slot.got{box-shadow:0 0 0 1px rgba(255,201,74,.6),0 0 16px rgba(255,201,74,.55)}
+.upc.evoc{border-color:#ffd84a;background:linear-gradient(135deg,rgba(255,216,74,.26),rgba(255,106,61,.18));box-shadow:0 0 0 1px rgba(255,216,74,.55) inset,0 0 18px rgba(255,201,74,.3)}
+.giftc .upc{padding:7px 10px}.giftc .upc img{width:40px;height:40px}.giftc .upc b{font-size:15px}.giftc .upc span{font-size:13px}
+/* ---------- boost 2: выбранная глава над кнопкой «Выступить», звёзды глав, сжатые итоги на низких экранах ---------- */
+.chsel{display:flex;align-items:center;gap:10px;background:#20264a;border:1px solid rgba(230,184,90,.45);border-radius:14px;padding:6px 10px;margin-bottom:8px;cursor:pointer}
+.chsel img{width:44px;height:44px;flex:none}.chsel .t{flex:1;min-width:0}.chsel b{display:block;font-size:15.5px;line-height:1.2}.chsel span{display:block;font-size:13px;color:var(--mut);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chsel em{font-style:normal;color:#ffb0a0;font-weight:800}
+.chsel .stars{font-size:14px;margin-left:4px;white-space:nowrap}
+.starrows div{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:14px;padding:9px 12px;margin:6px 0;font-size:14.5px;font-weight:700;color:var(--mut)}
+.starrows i{font-style:normal;font-size:22px;color:rgba(255,255,255,.2)}.starrows .on{color:#fff;border-color:rgba(255,216,74,.5)}.starrows .on i{color:#ffd84a}.starrows span{flex:1}.starrows em{font-style:normal;font-size:12px;font-weight:900;color:#3a2206;background:#ffd84a;border-radius:999px;padding:2px 8px}
+.qdone.starl{color:#ffe9a0}.qdone.starl .stars{font-size:15px}
+@media (max-height:700px){.stats.s4{grid-template-columns:repeat(4,1fr);gap:5px;margin:8px 0}.stats.s4 div{padding:6px 2px;font-size:11px;border-radius:10px}.stats.s4 b{font-size:16px}
+  .panel .sub{margin-bottom:8px}.prog{margin:6px 0}.prog .bar{height:9px;margin-bottom:4px}.goalbox{padding:7px 9px;margin:6px 0;font-size:13px}.killer{margin:6px 0;padding:6px 10px}.panel>h3,.panel>h2{margin-bottom:8px}}
+/* ---------- boost 2: широкий экран (ПК 1920×1080, окно VK 911 px): меню во всю ширину до 1180 px, карточки в две колонки, карта слева ---------- */
+@media (min-width:880px){
+  #menu{max-width:1180px;box-shadow:0 0 0 2px #d9a441,0 0 0 5px #4a1f12,0 0 90px rgba(0,0,0,.65)}
+  .topbar{padding-left:22px;padding-right:22px}.tab{padding-left:22px;padding-right:22px}
+  .tab.on{display:grid;grid-template-columns:1fr 1fr;grid-column-gap:14px;column-gap:14px;align-content:start;align-items:start}
+  .tab>*{grid-column:1/-1;min-width:0}.tab>.card{grid-column:auto}.tab>#lbBox,.tab>.card.treasury.full{grid-column:1/-1}
+  #village{height:300px}.stats{grid-template-columns:repeat(4,1fr)}.bgrid{grid-template-columns:repeat(6,1fr)}
+  .mapwrap{display:flex;align-items:flex-start}.mapL{flex:1 1 54%;min-width:0;position:-webkit-sticky;position:sticky;top:0;margin-right:16px}.mapR{flex:1 1 46%;min-width:0}
+  .mapL #mapCv{margin:0}.mapR{display:flex;flex-direction:column}.mapR>*{flex:none}.mapR .today{order:-2;margin-top:0}.mapR .gobar{order:-1;position:static;background:none;margin:0 0 10px;padding:0}
+  nav{justify-content:center}nav button{max-width:180px}
+  .panel{max-width:460px}
+}
 </style>
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
