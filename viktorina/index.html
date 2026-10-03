@@ -797,7 +797,7 @@ async function initVK(){
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
       else if(t==='VKWebAppViewRestore')setPause('hide',false);});
     await cloudLoad();
-    vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
+    adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
   }catch(e){VK=null;}
   PAY.init();updCoins();sdkDone();}
 async function initSDK(){
@@ -849,20 +849,54 @@ const AD_FAIL=L('Реклама сейчас недоступна — загля
 // межэкранная: только между лестницами (по кнопке в окне итогов), не раньше AD_GAP после ЛЮБОЙ рекламы и после запуска,
 // с 4-й лестницы (S.games ≥ 3), «долг» S.adW — лестниц с прошлого показа, не после двух неудач подряд
 let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=2,AD_COINS=25;
+/* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще всего на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
+   1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе, нажать ничего нельзя);
+   2) снова нет → не ошибка, а «Ролик будет через несколько секунд…»; кнопки «за рекламу» (AD_BTN_SEL) гаснут, игра в фоне раз в AD_POLL_MS спрашивает VK (Check);
+      VK ответил «готов» (но не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS.
+      Нажатие по погасшей кнопке VK не дёргает и окно не закрывает (adHold) — только «ещё загружается».
+   3) заранее: Check при запуске и после каждого показа; если VK сказал «не готов» — переспрашиваем в фоне (до 6 раз).
+   Ответу Check «не готов» как запрету не верим (бывает ложным) — кнопку из-за него не гасим. Автоповтор — только на «ролика нет», не на закрытый ролик.
+   Награда — по-прежнему только за досмотр (result:true / onRewarded) и один раз (paid). Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора.
+   Отличия от образца (Богатырь): «готов» — adVidReady() (adReady() здесь занято межэкранной); окна с кнопкой «за рекламу» при «ролика нет» остаются/возвращаются
+   (onFail получает 'wait'), т.к. кнопки викторины сначала закрывают своё окно. Журнал: hobby-analytics/release-f/ads-fail.md («ОБРАЗЕЦ»), ads-viktorina.md. */
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAdCoins,#s2Ad,#lAd,#dX2';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
+function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
+function adStill(){return L('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds');}
+// нажатие по погасшей кнопке: только объяснить (окно с кнопкой остаётся на месте)
+function adHold(){if(Date.now()<adCoolT&&!adBusy){toast(adStill());return true;}return false;}
+// подгрузка ролика заранее; «не готов» — переспросить n раз (каждые AD_POLL_MS); «готов» во время паузы кнопок — зажечь их
+function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(r&&r.result)adVidReady();else again();},again);}
+function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adWait(on){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
+  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:rgba(0,0,0,.74);color:#fff;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
+  w.textContent=L('Ролик загружается…','Loading the video…');w.style.display='flex';}
+// кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду и при каждом открытии окна, см. modal)
+function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)q[i].style.opacity=off?'.45':'';}catch(e){}if(off)adDimT=setTimeout(adDim,1000);}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
+// пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду). onFail0('wait') — «ролика пока нет, кнопка погашена»: окно с кнопкой вернуть
 let adBusy=false;
 function showRewarded(cb0,onFail0){
-  if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
-  const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
+  if(adBusy)return;
+  if(Date.now()<adCoolT){toast(adStill());if(onFail0)onFail0('wait');adDim();return;}
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},135000);
+  let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();cb0();},onFail=w=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0(w);};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL);onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
-      .then(r=>{adClose();if(r&&r.result){STAT.ad('rew','ok');cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL);onFail();}})
-      .catch(e=>{adClose();STAT.ad('rew','err',e&&e.error_data&&e.error_data.error_code);toast(AD_FAIL);onFail();})
-      .finally(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
+  if(VK){
+    let tries=0;
+    const go=()=>{adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000).then(r=>{adClose();
+        if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'');adPreload();cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL);adPreload();onFail();}
+      },e=>{
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
+        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));toast(adSoon());adCool();onFail('wait');adDim();}else{STAT.ad('rew','err',adErrCode(e));toast(AD_FAIL);adPreload();onFail();}});};
+    go();return;}
   if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
-    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);onFail();}}});
+    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);adCool();onFail();adDim();}}});
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
 function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
@@ -893,7 +927,7 @@ function openCoins(back){STAT.screen('coins');
   const buy=PAY.on&&!inGame();
   modal(`<h2>${L('Монеты','Coins')} 💰</h2><p>${L('У тебя','You have')} ${coinsTxt(S.coins)}. ${L('Монеты дают за ступени лестницы, викторину дня и дуэли. Тратятся на повторные подсказки и вторую попытку.','Coins come from ladder steps, the daily quiz and duels. Spend them on extra hints and second tries.')}</p>${buy?PAY.html():''}<div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} ${L('за рекламу','for an ad')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   if(buy){PAY.bind($('mcard'));PAY.re=()=>openCoins(back);}
-  if($('mAdCoins'))STAT.offer('coins');if($('mAdCoins'))$('mAdCoins').onclick=()=>{hideModal();STAT.place('coins');showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+coinsTxt(AD_COINS));if(back)back();},()=>{if(back)back();});};
+  if($('mAdCoins'))STAT.offer('coins');if($('mAdCoins'))$('mAdCoins').onclick=()=>{if(adHold())return;hideModal();STAT.place('coins');showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+coinsTxt(AD_COINS));if(back)back();},w=>{if(w==='wait')openCoins(back);else if(back)back();});};
   $('mCancel').onclick=()=>{hideModal();if(back)back();};}
 
 /* ---- товары викторины (каталог — hobby-analytics/13-purchases-catalog.md; VK — hobby-pay/catalog.json). Ответы, подсказки в викторине дня и дуэли, очки рейтинга не продаём ---- */
@@ -1063,7 +1097,7 @@ function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.to
 function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
   const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 function hideModal(){$('modal').classList.remove('on');$('mcard').classList.remove('wide2');modalOn=false;}
-function modal(html){PAY.re=null;if(!/Медали тем|Topic medals/.test(html))$('mcard').classList.remove('wide2');$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;}
+function modal(html){PAY.re=null;if(!/Медали тем|Topic medals/.test(html))$('mcard').classList.remove('wide2');$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;if(adCoolT)adDim();}
 function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
 function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
 const speed=()=>S.speed==='test'?0:calm()?.5:1; // test — только для автопрогона
@@ -1251,7 +1285,7 @@ function secondOffer(){const can=S.coins>=COST.second;
     <button class="btn buy noenter" id="s2Coin" ${can?'':'disabled'}>${L('Вторая попытка за ','Second try for ')}${coinsTxt(COST.second)}${can?'':'<small>'+L('у тебя ','you have ')+coinsTxt(S.coins)+'</small>'}</button>
     <button class="btn" id="s2No">${L('Показать ответ','Show the answer')}</button></div>`);
   const use=()=>{G.second=1;G.say={who:'mihalych',t:L('Ладно, ещё разок! Этот вариант убрал.','Fine, one more try!')};renderQ();};
-  if($('s2Ad'))STAT.offer('second');if($('s2Ad'))$('s2Ad').onclick=()=>{hideModal();STAT.place('second');showRewarded(use,()=>secondOffer());};
+  if($('s2Ad'))STAT.offer('second');if($('s2Ad'))$('s2Ad').onclick=()=>{if(adHold())return;hideModal();STAT.place('second');showRewarded(use,()=>secondOffer());};
   $('s2Coin').onclick=()=>{if(S.coins<COST.second)return;hideModal();setCoins(S.coins-COST.second);STAT.ev('spend',{k:'second',c:COST.second});SND.coin();use();};
   $('s2No').onclick=()=>{hideModal();endQ();};}
 function next(){if(!G||G.st!=='done'||G.over)return;SND.tap();
@@ -1273,7 +1307,7 @@ function useLife(k,fn){if(!G||G.st!=='ask'||G.over)return;
     <button class="btn buy noenter" id="lCoin" ${can?'':'disabled'}>${L('за ','for ')}${coinsTxt(c)}${can?'':'<small>'+L('у тебя ','you have ')+coinsTxt(S.coins)+'</small>'}</button>
     ${!can&&PAY.on?`<button class="lnk noenter" id="lShop">${L('купить монеты','buy coins')}</button>`:''}
     <button class="btn" id="mCancel">${L('Отмена','Cancel')}</button></div>`);
-  if($('lAd'))STAT.offer('hint');if($('lAd'))$('lAd').onclick=()=>{hideModal();STAT.place('hint');showRewarded(()=>{if(G&&G.st==='ask'){STAT.use('hint');fn(false);}},()=>renderQ());};
+  if($('lAd'))STAT.offer('hint');if($('lAd'))$('lAd').onclick=()=>{if(adHold())return;hideModal();STAT.place('hint');showRewarded(()=>{if(G&&G.st==='ask'){STAT.use('hint');fn(false);}},w=>{renderQ();if(w==='wait')useLife(k,fn);});};
   $('lCoin').onclick=()=>{if(S.coins<c)return;hideModal();setCoins(S.coins-c);STAT.ev('spend',{k:k,c:c});STAT.use('hint');fn(false);};
   if($('lShop'))$('lShop').onclick=()=>openCoins(renderQ);
   $('mCancel').onclick=hideModal;}
@@ -1374,16 +1408,17 @@ function finishDay(){if(!G||G.over)return;G.over=true;YG.stop();
   const st=streakState(),bonus=STREAK[st.day-1],coins=good*3+bonus,s=S.streak||{cyc:0};
   S.daily[k]=good;delete S.dprog;S.streak={day:st.day,last:k,cyc:(s.cyc||0)+(st.day===7?1:0)};S.coins+=coins;S.adW=(S.adW||0)+1;const gift=claimGift();save();updCoins();LB.submit();
   if(good>=7){SND.win();confetti();}else SND.coin();
-  modal(`<div class="av">${portrait('mihalych',good>=5?'happy':'norm')}</div><h2>${L('Викторина дня','Daily quiz')}</h2>
+  // окно итогов — функцией: при «ролика пока нет» (adfix, 'wait') возвращаем его же с погашенной кнопкой, а не уходим в меню
+  const card=()=>{modal(`<div class="av">${portrait('mihalych',good>=5?'happy':'norm')}</div><h2>${L('Викторина дня','Daily quiz')}</h2>
     <p class="score">${good}/10</p><p class="dots">${G.res.map(x=>x?'✅':'❌').join('')}</p>
     <p class="coins-won">+${coinsTxt(coins)} <small>(${good}×3 + ${L('серия','streak')} ${bonus})</small></p>
     <p>🔥 ${L('Серия: ','Streak: ')}${st.day} ${pl(st.day,'день','дня','дней','day','days')}${st.day===7?' 🎁':''}</p>${gift?'<p class="goal tipl">🎁 '+L('Гостинец дня от Михалыча: +','Daily gift: +')+coinsTxt(gift)+'</p>':''}<p class="goal tmr">${tmrTxt()}</p>
     <div class="row" id="mWon">${adBtnOk()?`<button class="btn accent noenter" id="dX2">📺 ${L('Ещё +','Another +')}${coinsTxt(coins)} ${L('за рекламу','for an ad')}</button>`:''}
     ${LB.ok()?`<button class="btn noenter" id="dLb">🏆 ${L('Рейтинг','Leaderboard')}</button>`:''}
     <button class="btn green" id="dOk">${L('В меню','Menu')}</button></div>`);
-  if($('dX2'))STAT.offer('x2');if($('dX2'))$('dX2').onclick=()=>{hideModal();STAT.place('x2');showRewarded(()=>{setCoins(S.coins+coins);SND.coin();toast('+'+coinsTxt(coins));openMenu();},()=>openMenu());};
+  if($('dX2'))STAT.offer('x2');if($('dX2'))$('dX2').onclick=()=>{if(adHold())return;hideModal();STAT.place('x2');showRewarded(()=>{setCoins(S.coins+coins);SND.coin();toast('+'+coinsTxt(coins));openMenu();},w=>{if(w==='wait')card();else openMenu();});};
   if($('dLb'))$('dLb').onclick=()=>LB.show(()=>{hideModal();openMenu();});
-  fitCard();$('dOk').onclick=()=>{hideModal();between(openMenu);};}
+  fitCard();$('dOk').onclick=()=>{hideModal();between(openMenu);};};card();}
 function dayDone(){const k=dayKey(0),st=streakState();
   modal(`<h2>📅 ${L('Викторина дня','Daily quiz')}</h2><p>${L('Сегодня уже сыграно: ','Played today: ')}<b>${S.daily[k]}/10</b>. ${L('Новые вопросы — завтра.','New questions tomorrow.')}</p>
     <p>🔥 ${L('Серия: ','Streak: ')}${st.day||0} ${pl(st.day||0,'день','дня','дней','day','days')} · ${L('всего верных: ','total correct: ')}${dsum()}</p><p class="goal tmr">${tmrTxt()}</p>

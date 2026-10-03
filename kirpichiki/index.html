@@ -67,6 +67,15 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .rks{text-align:left;margin-top:8px}.rk{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:12px;margin-bottom:4px;background:#f1ede2;font-size:16px;color:#57606f}
 .rk span{font-weight:700;font-size:15px;white-space:nowrap;margin-left:8px}.rk.done{color:#1f5e2c}.rk.cur{background:linear-gradient(#fff1c9,#ffe08a);color:#3a2206}
 .pan{display:flex;align-items:center;text-align:left;background:#f1ede2;border-radius:14px;padding:8px 10px;margin-top:8px}.pan img{width:42px;height:42px;flex:none;margin-right:10px}.pan>div{flex:1;min-width:0}.pan b{font-size:17px}.pan small{font-weight:700;color:#1f5e2c;font-size:15px}.pan i{font-style:normal;color:#f0a500;font-size:16px;margin-left:6px;white-space:nowrap}.pan .chbar{margin:4px 0 0;height:24px}.pan .chbar span{line-height:24px;font-size:13.5px}
+/*K2: календарь месяца, поручения, «Двор мечты» — только раскладка на общих классах (.wd .pan .trow .chbar); вид — K1 */
+.mcal{display:flex;flex-wrap:wrap;margin:8px 0 6px}.mcal .wd{flex:0 0 14.2857%;margin:0 0 4px;border:0;font:inherit;font-weight:800;font-size:16px;color:#57606f;box-shadow:none;padding:3px 0;min-height:48px;background:#f1ede2;border-left:2px solid #fff}
+.mcal .wd.hd{min-height:0;background:none;font-size:15px}.mcal .wd.emp{background:none}.mcal .wd.fut{opacity:.55}.mcal .wd.done{background:#c8efcf;color:#1f5e2c}.mcal .wd.today{box-shadow:inset 0 0 0 2px #f0a500}
+.mcal .wd.miss{background:#fff1c9;color:#8a5a00;cursor:pointer}.mcal .wd b{min-height:18px;font-size:16px}
+@media (max-width:380px){.mcal{margin-left:-11px;margin-right:-11px}.mcal .wd{border-left-width:1px}}
+.qav{width:46px;height:46px;flex:none;margin-right:10px;border-radius:50%;overflow:hidden;background:#fff}.qav svg{display:block;width:100%;height:100%}
+.dreamv{width:100%;height:0;padding-bottom:62%;border-radius:14px;background-color:#9fd3ee;background-repeat:no-repeat;background-size:100% auto;background-position:50% 100%;margin:4px 0 6px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
+.dzs{text-align:left;margin-top:6px}.dzs .trow small{font-size:15px;color:#57606f}.dzs .pan .btn{padding:8px 10px;min-height:48px;font-size:16px}
+/*/K2*/
 /* карта уровней */
 .gh{display:flex;align-items:center;gap:8px;padding:8px 10px 6px;padding-top:max(8px,env(safe-area-inset-top));background:rgba(30,40,60,.55);color:#fff;z-index:3}
 .gt{flex:1;min-width:0;line-height:1.15}
@@ -204,6 +213,7 @@ body.calm .pulse,body.calm .lvb.cur,body.calm .card{animation:none}
 @media (min-width:600px) and (max-height:640px){.card{max-width:640px}.card .av{width:52px;height:52px}.card h2{font-size:20px}.big-stars{font-size:28px}.btn{min-height:44px;padding:10px 14px}}
 @supports not (inset:0){.awards>*{margin:0 3px 6px}.gh>*+*{margin-left:8px}.hdr-r>*+*,.nrow .btn+.btn,.gh>*+*,.row2>*+*,.helpers>*+*,.tabs2>*+*,.boost>*+*,.hud>*+*,.big>*+*{margin-left:8px}.row>*+*{margin-top:10px}.goals>*{margin:0 6px 4px 0}.lbr>*+*{margin-left:10px}}
 </style>
+<!--K1: новый вид и темы (css/look.css, js/look-icons.js — до отрисовки)--><link rel="stylesheet" href="css/look.css"><script src="js/look-icons.js"></script><!--/K1-->
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
@@ -254,6 +264,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   <div id="toast" class="toast"></div>
 </div>
 
+<!--K1: вид и темы (js/th-*.js — наборы рисования тем)--><script src="js/look.js"></script><script src="js/th-a.js"></script><script src="js/th-d.js"></script><script src="js/th-e.js"></script><script src="js/th-b.js"></script><script src="js/th-retro.js"></script><script src="js/look-dream.js"></script><!--/K1-->
 <script>
 'use strict';
 /*LOGIC*/
@@ -303,10 +314,20 @@ function bitsOf(b){let lo=0,hi=0;for(let k=0;k<NN;k++)if(b[k]){if(k<32)lo|=1<<k;
 function fitsAny(lo,hi,vi){for(const p of VARS[vi].pos)if(!(lo&p.lo)&&!(hi&p.hi))return true;return false;}
 function nFits(lo,hi,vi){let n=0;for(const p of VARS[vi].pos)if(!(lo&p.lo)&&!(hi&p.hi))n++;return n;}
 // можно ли поставить ВСЕ фигуры набора в каком-нибудь порядке (с исчезновением рядов по пути)
-function canAll(lo,hi,vs){if(!vs.length)return true;const seen={};
+/*K2: sp — маски особых клеток глав 11–12 (лёд, ящик), чтобы проверка «встанет ли набор» была точной и там; без них sp=null, всё как раньше */
+function canAll(lo,hi,vs,sp){if(!vs.length)return true;const seen={};
   for(let i=0;i<vs.length;i++){const vi=vs[i];if(seen[vi])continue;seen[vi]=1;const rest=vs.slice(0,i).concat(vs.slice(i+1));
-    for(const p of VARS[vi].pos){if((lo&p.lo)||(hi&p.hi))continue;let a=lo|p.lo,b=hi|p.hi;const m=clrMask(a,b);if(m[2]){a&=~m[0];b&=~m[1];}if(canAll(a,b,rest))return true;}}
+    for(const p of VARS[vi].pos){if((lo&p.lo)||(hi&p.hi))continue;let a=lo|p.lo,b=hi|p.hi,s2=sp;const m=clrMask(a,b);if(m[2]){if(sp){const r=clrSp(a,b,sp,m);a=r[0];b=r[1];s2=r[2];}else{a&=~m[0];b&=~m[1];}}if(canAll(a,b,rest,s2))return true;}}
   return false;}
+/*K2: особые клетки (st.old): 1 — старый кирпич, 2 — «лёд» (собрать в ряд дважды: первый раз трескается и остаётся старым кирпичом), 3 — «ящик» (ломается, когда собран ряд через него или рядом с ним; внутри бывает предмет).
+  nbMask — соседи клеток маски (вверх/вниз/влево/вправо); clrSp — поле после сбора рядов с учётом льда и ящиков (как clearLines, только на битах) */
+function nbMask(a,b){return [((a<<1)&~0x01010101)|((a>>>1)&~0x80808080)|(a<<8)|(a>>>8)|(b<<24),((b<<1)&~0x01010101)|((b>>>1)&~0x80808080)|(b<<8)|(a>>>24)|(b>>>8)];}
+function clrSp(a,b,sp,m){const ka=sp.i[0]&m[0],kb=sp.i[1]&m[1],nb=nbMask(m[0],m[1]),xa=sp.x[0]&(m[0]|nb[0]),xb=sp.x[1]&(m[1]|nb[1]);
+  return [((a&~m[0])|ka)&~xa,((b&~m[1])|kb)&~xb,{i:[sp.i[0]&~ka,sp.i[1]&~kb],x:[sp.x[0]&~xa,sp.x[1]&~xb]},popc(xa&~m[0])+popc(xb&~m[1])];}
+function spOf(st){if(!st.cfg.ice&&!st.cfg.box)return null;let i0=0,i1=0,x0=0,x1=0,n=0;
+  for(let k=0;k<NN;k++){const o=st.old[k];if(o<2)continue;const q=bit(k);n++;if(o===2){i0|=q[0];i1|=q[1];}else{x0|=q[0];x1|=q[1];}}
+  return n?{i:[i0,i1],x:[x0,x1]}:null;}
+/*/K2*/
 const popc=x=>{x=x-((x>>>1)&0x55555555);x=(x&0x33333333)+((x>>>2)&0x33333333);return(((x+(x>>>4))&0x0F0F0F0F)*0x01010101)>>>24;};
 
 /* ---------------- очки ----------------
@@ -325,13 +346,38 @@ const CHAPTERS=[
   {id:'market',n:'Рынок',en:'Market',host:'valya',ik:[1,3]},
   {id:'build',n:'Стройка',en:'Building site',host:'mihalych',ik:[4,3]},
   {id:'park',n:'Парк',en:'Park',host:'mityai',ik:[2,4]},
-  {id:'fest',n:'Праздник двора',en:'Yard party',host:'kolya',ik:[1,2,3]}
+  {id:'fest',n:'Праздник двора',en:'Yard party',host:'kolya',ik:[1,2,3]},
+  /*K2: главы после 100-го — по 20 уровней, новые клетки: «Улица Мира» — лёд, «Вокзал» — ящики (и лёд)*/
+  {id:'mira',n:'Улица Мира',en:'Peace Street',host:'mityai',ik:[2,4],cell:'ice'},
+  {id:'vokzal',n:'Вокзал',en:'Railway station',host:'valya',ik:[1,3],cell:'box'}
 ];
-const NLV=CHAPTERS.length*10;
+const CH_N=CHAPTERS.map((C,j)=>j<10?10:20),CH_A=[];{let a=1;for(const n of CH_N){CH_A.push(a);a+=n;}} // уровней в главе, первый уровень главы
+const NLV=CH_N.reduce((a,n)=>a+n,0);
+function chOf(i){for(let c=CH_N.length-1;c>0;c--)if(i>=CH_A[c])return c;return 0;}
+const isBoss=i=>i===CH_A[chOf(i)]+CH_N[chOf(i)]-1;
+/* главы 11–12: вид цели по номеру уровня в главе (0…19); лёд/ящики — во всех уровнях, первые два — знакомство с клеткой */
+const LV_T20=['clear','items','score','clear','items','mix','clear','items','score','mix','clear','items','score','clear','items','mix','clear','items','mix','boss'];
+/* сгладить «стены» (поток K2, модель среднего игрока < 30 %): завал и крупность фигур чуть ниже соседних уровней */
+const LV_FIX={70:{fill:-.02,d:.03},76:{fill:-.01,d:.06},96:{fill:-.03},98:{fill:-.01}};
+/* поправка сложности уровня 101…140 (−8…+6; + — труднее): подобрана замером tools/k2-tune.js под ровную кривую среднего игрока */
+const LV20_ADJ=[-5,3,-1,-2,5,-4,-6,4,-1,0,-3,0,-4,-1,0,-4,0,-1,-5,-4,1,4,0,0,4,1,4,3,-2,1,-4,5,-3,1,2,-2,0,0,-3,0];
+function levelCfg20(i){const ch=chOf(i),k=i-CH_A[ch],q=k/(CH_N[ch]-1),C=CHAPTERS[ch],t=LV_T20[k],box=C.cell==='box',a=LV20_ADJ[i-101]||0;
+  const cfg={i,ch,k,t,seed:i*7919+13,d:Math.max(.08,.26+.1*q+(t==='boss'?.04:0)+a*.025),need:{},fill:Math.max(.04,(.14+.05*q)*(1+a*.1)),old:true,itemsPre:0,pIt:.4,boss:t==='boss',
+    ice:Math.max(0,(box?.15*q:.22+.08*q)*(1+a*.08)),box:box?.3+.1*q:0};
+  if(k<2){cfg.d=Math.max(.08,.2+a*.025);cfg.fill=Math.max(.04,.12*(1+a*.1));}
+  const kinds=C.ik,itemsNeed=n=>{const o={},a=Math.ceil(n/kinds.length);kinds.forEach((x,j)=>o[x]=j===0?n-a*(kinds.length-1):a);return o;};
+  if(t==='score'){cfg.need.score=Math.round((600+200*q)*(1+a*.07)/10)*10;}
+  else if(t==='items'){const n=Math.round(9+4*q);cfg.need.items=itemsNeed(n);cfg.itemsPre=Math.round(n*.4);}
+  else if(t==='clear'){cfg.need.clear=1;}
+  else if(t==='mix'){const n=Math.round(6+3*q);cfg.need.items=itemsNeed(n);cfg.need.clear=1;cfg.itemsPre=Math.round(n*.4);}
+  else {const n=10;cfg.need.items=itemsNeed(n);cfg.need.clear=1;cfg.itemsPre=4;}
+  return cfg;}
+/*/K2*/
 // вид цели по номеру уровня в главе (0…9); 9 — «субботник» (главный уровень главы)
 const LV_T=['score','items','clear','items','score','clear','items','mix','items','boss'];
 function levelCfg(i){ // i — 1…NLV
-  const ch=Math.floor((i-1)/10),k=(i-1)%10,p=(i-1)/(NLV-1),C=CHAPTERS[ch],R=mkR(i*7919+13);
+  if(i>100)return levelCfg20(i); /*K2*/
+  const ch=Math.floor((i-1)/10),k=(i-1)%10,p=(i-1)/99,C=CHAPTERS[ch],R=mkR(i*7919+13); /*K2: p — по 100 уровням, как было (после 100-го — свои главы)*/
   let t=LV_T[k];if(i===2)t='score';if(i===3)t='items';
   /* мягкий старт (boost 03.10): в «Дворе» и «Подъезде» поле свободнее, цели короче, фигуры мельче — новичок проходит главу 1 почти всегда (модель новичка, журнал release-e/kirpichiki-boost.md) */
   const soft=i<=10?.6:i<=20?.82:1;
@@ -345,11 +391,17 @@ function levelCfg(i){ // i — 1…NLV
   else {const n=Math.round((6+8*p)*(soft<1?soft+.15:1));cfg.need.items=itemsNeed(n);cfg.need.clear=1;cfg.old=true;cfg.fill=(.15+.13*p)*soft*soft;cfg.itemsPre=Math.round(n*.4);}
   if(i===1){cfg.t='clear';cfg.tut=1;cfg.need={clear:1};cfg.old=true;cfg.fill=0;cfg.d=.05;}
   if(i>80){cfg.d=Math.min(cfg.d,.5);cfg.fill=Math.max(0,cfg.fill-.04);if(cfg.need.score)cfg.need.score=Math.round(cfg.need.score*.85/10)*10;} /* аудит release-f №8: «Парк» и «Праздник двора» не стена для 45+ */
+  const fx=LV_FIX[i];if(fx){cfg.fill=Math.max(0,cfg.fill+(fx.fill||0));cfg.d=Math.max(.05,cfg.d+(fx.d||0));} /*K2*/
   R();return cfg;}
-// задание дня: одно на всех в этот день (зерно — дата), средняя сложность; два вида предметов и немного завала
-function dailyCfg(day){const R=mkR(day*131+7),a=1+Math.floor(R()*4);let b=1+Math.floor(R()*4);if(b===a)b=a%4+1;
+// задание дня: одно на всех в этот день (зерно — дата).
+/*K2: обычное — по силам новичку (≈ глава 3–4): через день «разбери завал» или «2 вида предметов по 5 + завал», фигуры мельче;
+  hard — «💪 Трудное» (прежнее задание: 2 вида 7+6 и завал 20 %), монеты ×2. Раздача та же честная, зерно — дата*/
+function dailyCfg(day,hard){const R=mkR(day*131+7),a=1+Math.floor(R()*4);let b=1+Math.floor(R()*4);if(b===a)b=a%4+1;
   const o={};o[a]=7;o[b]=6;
-  return {i:0,daily:day,t:'mix',seed:day*131+7,d:.4,need:{items:o,clear:1},old:true,fill:.2,itemsPre:5,pIt:.4,ch:day%CHAPTERS.length};}
+  if(hard)return {i:0,daily:day,hard:1,t:'mix',seed:day*131+7,d:.4,need:{items:o,clear:1},old:true,fill:.2,itemsPre:5,pIt:.4,ch:day%10};
+  const v=R()<.5,o2={};o2[a]=5;o2[b]=5;
+  return v?{i:0,daily:day,t:'clear',seed:day*131+7,d:.28,need:{clear:1},old:true,fill:.13,itemsPre:0,pIt:0,ch:day%10}
+    :{i:0,daily:day,t:'mix',seed:day*131+7,d:.28,need:{items:o2,clear:1},old:true,fill:.13,itemsPre:4,pIt:.4,ch:day%10};}
 function endlessCfg(){return {i:0,endless:1,t:'endless',seed:0,d:.15,need:{},fill:0,pIt:0};}
 
 /* ---------------- партия ---------------- */
@@ -359,7 +411,7 @@ function newGame(cfg,seed){
     deals:0,redeals:0,life:0,d:cfg.d||.1};
   if(cfg.tut){for(let c=0;c<N;c++)if(c!==3&&c!==4){st.b[7*N+c]=20;st.old[7*N+c]=1;}for(let c=0;c<N;c++)if(c<2||c>5){st.b[6*N+c]=20;st.old[6*N+c]=1;}}
   else if(cfg.fill>0)prefill(st);
-  st.oldLeft=st.old.reduce((a,x)=>a+x,0);
+  st.oldLeft=st.old.reduce((a,x)=>a+(x?1:0),0); /*K2: лёд и ящик — тоже одна клетка завала*/
   if(cfg.tut)st.tray=[{v:VBY[keyC(normC(cellsOf(['##'])))].i,it:-1,ik:0},{v:VBY[keyC(normC(cellsOf(['####'])))].i,it:-1,ik:0},{v:VBY[keyC(normC(cellsOf(['##','##'])))].i,it:-1,ik:0}];
   else deal(st);
   checkEnd(st);return st;}
@@ -369,19 +421,21 @@ function prefill(st){const cfg=st.cfg,R=mkR(cfg.seed),want=Math.round(cfg.fill*N
     const [lo,hi]=bitsOf(st.b);if((lo&p.lo)||(hi&p.hi))continue;if(clrMask(lo|p.lo,hi|p.hi)[2])continue;
     if(n+v.n>want+2)continue;
     for(const x of v.cs){const k=(p.r+x[0])*N+p.c+x[1];st.b[k]=cfg.old?20:v.b+1;if(cfg.old)st.old[k]=1;}n+=v.n;}
+  /*K2: часть старых кирпичей — лёд и ящики (свой генератор: раскладка старых уровней не меняется)*/
+  const box=[];if(cfg.ice||cfg.box){const R2=mkR(cfg.seed+99);for(let k=0;k<NN;k++)if(st.old[k]===1){const x=R2();if(x<(cfg.box||0)){st.old[k]=3;box.push(k);}else if(x<(cfg.box||0)+(cfg.ice||0))st.old[k]=2;}}
   // предметы в части кирпичиков завала
-  if(cfg.itemsPre&&cfg.need.items){const cells=[];for(let k=0;k<NN;k++)if(st.b[k])cells.push(k);
+  if(cfg.itemsPre&&cfg.need.items){const cells=[];for(let k=0;k<NN;k++)if(st.b[k]&&st.old[k]!==3)cells.push(k);
     const kinds=[];for(const q in cfg.need.items)for(let j=0;j<cfg.need.items[q];j++)kinds.push(+q);
-    for(let j=0;j<cfg.itemsPre&&cells.length&&j<kinds.length;j++){const x=Math.floor(R()*cells.length),k=cells.splice(x,1)[0];st.it[k]=kinds[(j*7)%kinds.length];}}}
+    for(let j=0;j<cfg.itemsPre&&(cells.length||box.length)&&j<kinds.length;j++){const a=box.length?box:cells,x=Math.floor(R()*a.length),k=a.splice(x,1)[0];st.it[k]=kinds[(j*7)%kinds.length];}}}
 // вес фигур: на лёгком — мелкие, на трудном — крупные
 function pickBase(st){const d=st.d;let tot=0;const w=BASES.map(B=>{const x=B.e*(1-d)+B.h*d;tot+=x;return x;});let r=st.R()*tot;
   for(let i=0;i<w.length;i++){r-=w[i];if(r<=0)return i;}return w.length-1;}
 function randPiece(st,bases){const bi=bases?bases[Math.floor(st.R()*bases.length)]:pickBase(st),vs=BASES[bi].v;return {v:vs[Math.floor(st.R()*vs.length)],it:-1,ik:0};}
 /* ЧЕСТНАЯ РАЗДАЧА: три случайные фигуры по весам уровня. Если все три никак не поставить (в любом порядке) — пересдаём,
    до 3 раз; не вышло — берём набор, где встаёт больше всего фигур. Подсовывать «невозможные» наборы нарочно игра не умеет. */
-function deal(st){const [lo,hi]=bitsOf(st.b);let best=null,bestN=-1;
+function deal(st){const [lo,hi]=bitsOf(st.b),sp=spOf(st);let best=null,bestN=-1;
   for(let t=0;t<4;t++){const tr=[randPiece(st),randPiece(st),randPiece(st)],vs=tr.map(p=>p.v);
-    if(canAll(lo,hi,vs)){best=tr;break;}
+    if(canAll(lo,hi,vs,sp)){best=tr;break;}
     const n=vs.filter(v=>fitsAny(lo,hi,v)).length;if(n>bestN){bestN=n;best=tr;}st.redeals++;}
   addItems(st,best);st.tray=best;st.deals++;}
 // предметы в новых фигурах — пока их на поле и в лотке меньше, чем ещё нужно собрать (+2 запасом)
@@ -402,11 +456,14 @@ function clearLines(st){const rows=[],cols=[];
   for(let r=0;r<N;r++){let f=1;for(let c=0;c<N;c++)if(!st.b[r*N+c]){f=0;break;}if(f)rows.push(r);}
   for(let c=0;c<N;c++){let f=1;for(let r=0;r<N;r++)if(!st.b[r*N+c]){f=0;break;}if(f)cols.push(c);}
   const set={};rows.forEach(r=>{for(let c=0;c<N;c++)set[r*N+c]=1;});cols.forEach(c=>{for(let r=0;r<N;r++)set[r*N+c]=1;});
-  const clr=[],items={};let olds=0;
-  for(const ks in set){const k=+ks;clr.push({k,col:st.b[k],it:st.it[k],old:st.old[k]});
+  const clr=[],items={};let olds=0;const crk=[],brk=[];
+  /*K2: ящик рядом с собранным рядом тоже ломается; лёд в собранном ряду трескается и остаётся (старым кирпичом)*/
+  if((st.cfg.ice||st.cfg.box)&&(rows.length||cols.length)){for(let k=0;k<NN;k++)if(st.old[k]===3&&!set[k]){const r=k>>3,c=k&7;
+      if((r>0&&set[k-8])||(r<7&&set[k+8])||(c>0&&set[k-1])||(c<7&&set[k+1])){set[k]=1;brk.push(k);}}}
+  for(const ks in set){const k=+ks;if(st.old[k]===2){st.old[k]=1;crk.push(k);continue;}clr.push({k,col:st.b[k],it:st.it[k],old:st.old[k]});
     if(st.it[k]){items[st.it[k]]=(items[st.it[k]]||0)+1;st.got[st.it[k]]=(st.got[st.it[k]]||0)+1;}
     if(st.old[k]){olds++;st.oldLeft--;}st.b[k]=0;st.it[k]=0;st.old[k]=0;}
-  return {n:rows.length+cols.length,rows,cols,clr,items,olds};}
+  return {n:rows.length+cols.length,rows,cols,clr,items,olds,crk,brk};}
 function place(st,ti,r,c){if(st.over||!canPlace(st,ti,r,c))return null;const p=st.tray[ti],v=VARS[p.v],cells=[];
   v.cs.forEach((x,j)=>{const k=(r+x[0])*N+c+x[1];st.b[k]=v.b+1;st.it[k]=j===p.it?p.ik:0;st.old[k]=0;cells.push(k);});
   st.tray[ti]=null;st.moves++;
@@ -434,8 +491,8 @@ function redeal(st){const keep=st.tray.filter(p=>p&&p.ik).map(p=>({ik:p.ik}));de
   st.over=st.lost=false;checkEnd(st);}
 function rotatePiece(st,ti){const p=st.tray[ti];if(!p)return;p.v=rotVar(p.v);if(p.it>=0){/* предмет остаётся в той же клетке фигуры */const v0=VARS[p.v];p.it=Math.min(p.it,v0.n-1);}}
 // «вторая жизнь»: три мелкие фигуры, которые точно встают (по возможности — с собранным рядом)
-function rescue(st){const [lo,hi]=bitsOf(st.b);let best=null,bv=-1;
-  for(let t=0;t<80;t++){const tr=[randPiece(st,SMALL),randPiece(st,SMALL),randPiece(st,SMALL)];if(!canAll(lo,hi,tr.map(p=>p.v)))continue;
+function rescue(st){const [lo,hi]=bitsOf(st.b),sp=spOf(st);let best=null,bv=-1;
+  for(let t=0;t<80;t++){const tr=[randPiece(st,SMALL),randPiece(st,SMALL),randPiece(st,SMALL)];if(!canAll(lo,hi,tr.map(p=>p.v),sp))continue;
     let v=0;for(const p of tr)for(const q of VARS[p.v].pos){if((lo&q.lo)||(hi&q.hi))continue;if(clrMask(lo|q.lo,hi|q.hi)[2]){v++;break;}}
     v+=st.R()*.5;if(v>bv){bv=v;best=tr;}}
   if(!best){const d=VBY['0,0'].i;best=[{v:d,it:-1,ik:0},{v:d,it:-1,ik:0},{v:d,it:-1,ik:0}];}
@@ -452,19 +509,19 @@ function evalBits(lo,hi){let e=0,iso=0,tr=0;const f=k=>k<32?(lo>>>k)&1:(hi>>>(k-
   return e*.6-iso*6-tr*.9+big;}
 const k1=(r,c)=>r*N+c;
 let O3=0,I5H=0,I5V=0;{O3=VBY[keyC(normC(cellsOf(['###','###','###'])))].i;I5H=VBY[keyC(normC(cellsOf(['#####'])))].i;I5V=rotVar(I5H);}
-function botMoves(st){const [lo,hi]=bitsOf(st.b),out=[],n=st.cfg.need||{},wantIt=n.items?itemsLeft(st):{};
+function botMoves(st){const [lo,hi]=bitsOf(st.b),out=[],n=st.cfg.need||{},wantIt=n.items?itemsLeft(st):{},sp=spOf(st);
   for(let ti=0;ti<3;ti++){const p=st.tray[ti];if(!p)continue;const v=VARS[p.v];
     if(st.tray.slice(0,ti).some(q=>q&&q.v===p.v&&!q.ik&&!p.ik))continue;
-    for(const q of v.pos){if((lo&q.lo)||(hi&q.hi))continue;let a=lo|q.lo,b=hi|q.hi;const m=clrMask(a,b);let g=0;
-      if(m[2]){a&=~m[0];b&=~m[1];
+    for(const q of v.pos){if((lo&q.lo)||(hi&q.hi))continue;let a=lo|q.lo,b=hi|q.hi,s2=sp;const m=clrMask(a,b);let g=0;
+      if(m[2]){if(sp){const r=clrSp(a,b,sp,m);a=r[0];b=r[1];s2=r[2];g+=5*r[3];}else{a&=~m[0];b&=~m[1];} /*K2: лёд и ящики*/
         for(let k=0;k<NN;k++){const inM=k<32?(m[0]>>>k)&1:(m[1]>>>(k-32))&1;if(!inM)continue;
-          if(st.it[k]&&wantIt[st.it[k]])g+=14;if(st.old[k])g+=5;}
+          if(st.it[k]&&wantIt[st.it[k]]&&st.old[k]!==2)g+=14;if(st.old[k])g+=st.old[k]===2?3:5;}
         if(p.ik&&wantIt[p.ik]){const j=p.it,k=(q.r+v.cs[j][0])*N+q.c+v.cs[j][1];if(k<32?(m[0]>>>k)&1:(m[1]>>>(k-32))&1)g+=14;}}
       const val=m[2]*9+(m[2]>1?m[2]*6:0)+g+evalBits(a,b)+v.n*.3;
-      out.push({ti,r:q.r,c:q.c,val,a,b});}}
+      out.push({ti,r:q.r,c:q.c,val,a,b,sp:s2});}}
   out.sort((x,y)=>y.val-x.val);return out;}
 function botMove(st){const mv=botMoves(st);if(!mv.length)return null;
-  for(let j=0;j<Math.min(mv.length,14);j++){const m=mv[j],rest=st.tray.filter((p,i)=>p&&i!==m.ti).map(p=>p.v);if(canAll(m.a,m.b,rest))return m;}
+  for(let j=0;j<Math.min(mv.length,14);j++){const m=mv[j],rest=st.tray.filter((p,i)=>p&&i!==m.ti).map(p=>p.v);if(canAll(m.a,m.b,rest,m.sp))return m;}
   return mv[0];}
 // сыграть партию ботом до конца (для проверок и «нормы» звёзд уровня); life — сколько раз можно взять «вторую жизнь»
 function botPlay(cfg,seed,opt){opt=opt||{};const st=newGame(cfg,seed),cap=opt.cap||1500;let lives=opt.life||0;
@@ -530,6 +587,17 @@ function drawBrick(g,x,y,s,col,th){const p=s*.045,w=s-2*p,old=col===20;
   if(th.st==='gold'){g.fillStyle='rgba(255,255,255,.9)';g.beginPath();g.arc(x+s*.72,y+s*.3,s*.045,0,7);g.fill();}
   if(th.st==='ice'){g.fillStyle='#fff';g.beginPath();g.moveTo(x+p,y+p+s*.22);g.quadraticCurveTo(x+p,y+p,x+p+s*.16,y+p);g.lineTo(x+s-p-s*.16,y+p);g.quadraticCurveTo(x+s-p,y+p,x+s-p,y+p+s*.2);
     g.quadraticCurveTo(x+s*.7,y+s*.3,x+s*.56,y+s*.22);g.quadraticCurveTo(x+s*.4,y+s*.34,x+p,y+p+s*.22);g.fill();}}
+/*K2: особые клетки поверх кирпичика (заглушка вида — K1 перерисует): o=2 лёд (голубая корка с бликом), o=3 ящик (доски крест-накрест) */
+function drawSpec(g,x,y,s,o,th){if(o<2)return;const lcd=th.st==='lcd';
+  if(o===2){if(lcd){g.strokeStyle=th.ink;g.lineWidth=Math.max(1,s*.06);g.strokeRect(x+s*.12,y+s*.12,s*.76,s*.76);return;}
+    g.fillStyle='rgba(190,232,255,.72)';rr(g,x+s*.06,y+s*.06,s*.88,s*.88,s*.16);g.fill();g.strokeStyle='rgba(255,255,255,.95)';g.lineWidth=Math.max(1.2,s*.07);
+    g.beginPath();g.moveTo(x+s*.22,y+s*.62);g.lineTo(x+s*.5,y+s*.22);g.moveTo(x+s*.42,y+s*.72);g.lineTo(x+s*.66,y+s*.38);g.stroke();
+    g.strokeStyle='rgba(60,140,200,.75)';g.lineWidth=Math.max(1,s*.04);rr(g,x+s*.06,y+s*.06,s*.88,s*.88,s*.16);g.stroke();return;}
+  if(lcd){g.fillStyle=th.ink;g.fillRect(x+s*.08,y+s*.08,s*.84,s*.84);g.fillStyle=th.bg;g.fillRect(x+s*.2,y+s*.2,s*.6,s*.6);g.fillStyle=th.ink;g.fillRect(x+s*.44,y+s*.2,s*.12,s*.6);return;}
+  g.fillStyle='#b07a3c';rr(g,x+s*.05,y+s*.05,s*.9,s*.9,s*.1);g.fill();g.fillStyle='#c98f4c';rr(g,x+s*.05,y+s*.05,s*.9,s*.84,s*.1);g.fill();
+  g.strokeStyle='#7a4f22';g.lineWidth=Math.max(1.5,s*.08);rr(g,x+s*.12,y+s*.12,s*.76,s*.7,s*.06);g.stroke();
+  g.beginPath();g.moveTo(x+s*.16,y+s*.16);g.lineTo(x+s*.84,y+s*.78);g.moveTo(x+s*.84,y+s*.16);g.lineTo(x+s*.16,y+s*.78);g.stroke();}
+/*/K2*/
 /* предметы в кирпичиках: 1 яблоко, 2 банка варенья, 3 звезда-пятёрка, 4 гайка */
 const ITEM_SVG={
   1:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><path d="M20 12c-3-3-12-3-13 6-1 8 5 17 9.5 17 1.5 0 2.2-1 3.5-1s2 1 3.5 1c4.5 0 10.5-9 9.5-17-1-9-10-9-13-6z" fill="#e03131"/><path d="M12.5 17c-1 3-1 6 .3 8.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity=".6" fill="none"/><path d="M20 12.5c0-4 1-6 3-8.5" stroke="#6b3e26" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M22 8.5c4-4.5 9.5-3.5 10.5-1.5-4 3.5-8.5 3.5-10.5 1.5z" fill="#40c057"/></svg>',
@@ -660,13 +728,14 @@ const PH={
     win:['Отлично! В дневник — пятёрку!','Умница! Не зря я тебя учила.'],lose:['Ничего, ошибки — лучшие учителя.','Повторим пройденное?'],record:['Рекорд! Запишу в журнал!'],life:['Даю ещё попытку. Только не списывать!']}
 };
 const CH_BG=['linear-gradient(#6fbf73,#3f8f46)','linear-gradient(#7d8fb3,#51607f)','linear-gradient(#e67a7a,#b54848)','linear-gradient(#8a96a3,#56616d)','linear-gradient(#5b9bd5,#2f6aa3)',
-  'linear-gradient(#8cc45a,#5a8f2e)','linear-gradient(#e0a24a,#b0701f)','linear-gradient(#c9a26b,#8f6a3a)','linear-gradient(#52b788,#2d6a4f)','linear-gradient(#b67ad6,#7b43a1)'];
+  'linear-gradient(#8cc45a,#5a8f2e)','linear-gradient(#e0a24a,#b0701f)','linear-gradient(#c9a26b,#8f6a3a)','linear-gradient(#52b788,#2d6a4f)','linear-gradient(#b67ad6,#7b43a1)',
+  'linear-gradient(#74c0fc,#3b7fc4)','linear-gradient(#c0956a,#7c5733)']; /*K2: «Улица Мира», «Вокзал»*/
 const IT_N={1:['яблоки','apples'],2:['варенье','jam'],3:['пятёрки','A-grades'],4:['гайки','nuts']};
 
 /* ================= сохранение ================= */
 const SKEY='kirpichiki-v1',RKEY='kirpichiki-run';
 /* boost 03.10: звания по звёздам (награда один раз), сундуки глав за звёзды, «Кладовка» — сколько предметов собрано за всё время, неделя задания дня */
-const RANKS=[[0,'Новичок двора','Yard newbie',0],[10,'Подсобник','Helper',20],[25,'Каменщик','Bricklayer',30],[50,'Бригадир','Foreman',50],[90,'Прораб','Site boss',70],[140,'Мастер кладки','Master mason',100],[200,'Главный архитектор','Chief architect',150],[270,'Легенда двора','Yard legend',200]];
+const RANKS=[[0,'Новичок двора','Yard newbie',0],[10,'Подсобник','Helper',20],[25,'Каменщик','Bricklayer',30],[50,'Бригадир','Foreman',50],[90,'Прораб','Site boss',70],[140,'Мастер кладки','Master mason',100],[200,'Главный архитектор','Chief architect',150],[270,'Легенда двора','Yard legend',200],[330,'Почётный житель','Honorary resident',250],[390,'Хозяин улицы','Master of the street',300]]; /*K2: два звания за главы 11–12*/
 const CHEST=[[20,20,'hint'],[30,30,'bomb']]; // звёзд в главе → монет и бесплатный помощник
 const PANTRY=[20,60,150,300],PANTRY_C=[10,20,40,60]; // предметов одного вида за всё время → монет
 const WEEKB=[[3,20],[5,30],[7,50]]; // дней задания дня за неделю (пн–вс) → монет
@@ -675,16 +744,19 @@ function rankOf(n){let r=0;for(let i=0;i<RANKS.length;i++)if(n>=RANKS[i][0])r=i;
 let S={unlocked:1,lv:{},coins:100,best:0,games:0,wins:0,done:0,daily:{},own:{},tips:{},free:{hint:2,rot:1,new:1,bomb:1},theme:'yard',adW:0,lossRow:0,chest:{},items:{},itT:{}};
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
-const NUMOBJ=['lv','daily','own','tips','chest','items','itT'];
+const NUMOBJ=['lv','daily','own','tips','chest','items','itT','yd','yb','dh','dl','cup','thU']; /*K2: двор мечты (yd, yb), трудное задание (dh), догнанные дни (dl), кубки месяца (cup); K1: thU — открытые темы (объединение)*/
 function fixSave(){for(const f of NUMOBJ)if(!isObj(S[f]))S[f]={};if(!isObj(S.free))S.free={};
   for(const k of ['hint','rot','new','bomb'])if(typeof S.free[k]!=='number'||!(S.free[k]>=0))S.free[k]=0;
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(S.unlocked>NLV)S.unlocked=NLV;
   for(const f of ['best','games','wins','done','adW','lossRow','adN','rsT','lrN','lrI'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;
   if(typeof S.rk!=='number'||!isFinite(S.rk))S.rk=rankOf(starsTot()); /* старое сохранение: звание по уже набранным звёздам, без награды задним числом */
   if(S.dwk!=null&&!isObj(S.dwk))delete S.dwk;
+  /*K2*/if(S.q!=null&&!(isObj(S.q)&&Array.isArray(S.q.l)&&Array.isArray(S.q.p)))delete S.q;if(S.dlc!=null&&!isObj(S.dlc))delete S.dlc;if(typeof S.ydd!=='number'||!isFinite(S.ydd))S.ydd=0;
+  if(S.lv[100]&&S.unlocked<101)S.unlocked=101; /*K2: прошёл 100 уровней в старой версии — открыта «Улица Мира»*/
   if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=100;if(typeof S.theme!=='string'||!THB[S.theme])S.theme='yard';
   if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.adc!=null&&!isObj(S.adc))delete S.adc;
-  if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
+  if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};
+  /*K1*/if(window.LK)LK.init();/*/K1*/}
 fixSave();
 // «точка отсчёта» с облаком (как в «Выезде»): монеты, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным
 let BOOT_TS=S.ts||0,BOOT_COINS=S.coins,BOOT_FREE=Object.assign({},S.free);
@@ -867,7 +939,7 @@ function mergeSave(d,ref){if(!isObj(d))return;
   for(const f of ['unlocked','best','games','wins','done'])if(typeof d[f]==='number')S[f]=Math.max(S[f]||0,d[f]);
   for(const f of NUMOBJ)if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|best|games|wins|done|lv|daily|own|tips|chest|items|itT|rk|dwk|coins|streak|buy|buyB|payT|payV|soc|free|adc|rsT|stc)$/.test(k))S[k]=d[k]; // флажки, настройки
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|best|games|wins|done|lv|daily|own|tips|chest|items|itT|rk|dwk|coins|streak|buy|buyB|payT|payV|soc|free|adc|rsT|stc|yd|yb|ydd|dh|dl|dlc|cup|q|thU|adTot)$/.test(k))S[k]=d[k]; // флажки, настройки
   payMerge(d);
   STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
   SOC.merge(d.soc); // соц-предложения VK: сессии — максимум, «сделано» — навсегда
@@ -877,7 +949,14 @@ function mergeSave(d,ref){if(!isObj(d))return;
   // «+30 за рекламу» за день: тот же день — больше из двух, иначе — более поздний день
   if(isObj(d.adc)){const a=S.adc,b=d.adc;if(!isObj(a)||String(b.d)>String(a.d))S.adc={d:b.d,n:+b.n||0};else if(b.d===a.d)S.adc={d:a.d,n:Math.max(+a.n||0,+b.n||0)};}
   if(typeof d.rsT==='number')S.rsT=Math.max(S.rsT||0,d.rsT);
+  /*K1*/if(typeof d.adTot==='number')S.adTot=Math.max(S.adTot||0,d.adTot);/*/K1*/
   if(typeof d.rk==='number')S.rk=Math.max(S.rk||0,d.rk);
+  /*K2: день постановки вещи двора — позже из двух; догнанные дни за сегодня и поручения — как «+30 за день»: тот же день — больше, иначе более поздний*/
+  if(typeof d.ydd==='number')S.ydd=Math.max(S.ydd||0,d.ydd);
+  if(isObj(d.dlc)){const a=S.dlc,b=d.dlc;if(!isObj(a)||String(b.d)>String(a.d))S.dlc={d:b.d,n:+b.n||0};else if(b.d===a.d)S.dlc={d:a.d,n:Math.max(+a.n||0,+b.n||0)};}
+  if(isObj(d.q)&&Array.isArray(d.q.l)&&Array.isArray(d.q.p)){const a=S.q,b=d.q;if(!isObj(a)||String(b.d)>String(a.d))S.q=JSON.parse(JSON.stringify(b));
+    else if(String(b.d)===String(a.d)){for(let i=0;i<3;i++){a.p[i]=Math.max(+a.p[i]||0,+b.p[i]||0);if(Array.isArray(b.g)){a.g=a.g||[];a.g[i]=Math.max(+a.g[i]||0,+b.g[i]||0);}}a.b=Math.max(+a.b||0,+b.b||0);}}
+  /*/K2*/
   if(isObj(d.dwk)){const a=S.dwk,b=d.dwk;if(!isObj(a)||String(b.k)>String(a.k))S.dwk={k:b.k,g:+b.g||0};else if(b.k===a.k)S.dwk={k:a.k,g:Math.max(+a.g||0,+b.g||0)};}
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
     if(!a||(b.last||0)>(a.last||0))S.streak=b;
@@ -1074,7 +1153,7 @@ async function initVK(){
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
       else if(t==='VKWebAppViewRestore')setPause('hide',false);});
     await cloudLoad();
-    vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
+    adPreload(); /* adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне */
   }catch(e){VK=null;}
   PAY.init();updCoins();
   window.__sdkDone=true;if(!G&&!window.__demo&&!modalOn&&$('scr-menu').classList.contains('on')){renderMenu();maybeStreak();}
@@ -1132,20 +1211,50 @@ function adClose(){setPause('ad',false);if(G&&!G.st.over&&!modalOn&&$('scr-game'
 const AD_FAIL=L('Реклама сейчас недоступна — загляни чуть позже','Ads are unavailable right now — try later'),VK_REAL=/[?&]vk_app_id=/.test(location.search);
 // межэкранная: не раньше AD_GAP после ЛЮБОЙ рекламы и после запуска; «долг» S.adW — пройденных уровней/партий с прошлого показа
 let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=3,AD_COINS=30;
+/* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще всего на компьютере: ролик ещё не подгрузился, готов бывает через 10–60 с.
+   1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе, экран закрыт, клавиши молчат);
+   2) снова нет → не ошибка, а «Ролик будет через несколько секунд…»; кнопки «за рекламу» (AD_BTN_SEL) гаснут, игра раз в AD_POLL_MS спрашивает VK (Check);
+      VK ответил «готов» (но не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS.
+      Нажатие по погасшей кнопке VK не дёргает — только «ещё загружается» (и окно, которое кнопка закрыла, открывается снова — onFail0).
+   3) заранее: Check при запуске и после каждого показа; «не готов» — переспрашиваем в фоне (до 6 раз). Ответу «не готов» как запрету не верим — кнопку из-за него не гасим.
+   Автоповтор — только на «ролика нет», не на закрытый ролик. Награда и счётчик S.adTot — только за досмотр и один раз (paid).
+   Статистика: ok c='retry' — спас автоповтор; none c=20 — ролика не было и после повтора; err c=код/причина. Яндекс: только фраза и пауза кнопок.
+   adReady() здесь занято (срок межэкранной) — «VK сказал: готов» называется adVidReady(). Журнал: hobby-analytics/release-f/ads-fail.md («ОБРАЗЕЦ»), ads-kirpichiki.md. */
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAdCoins,#bAd,#wX2,#lAd,#eAd,#sX2,#dAd,#ssX2,#k3AdC,[data-k3try],.adb';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} /* код VK, иначе причина словами — в статистику */
+function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
+function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
+/* подгрузка ролика заранее; «не готов» — переспросить n раз (каждые AD_POLL_MS); «готов» во время паузы кнопок — зажечь их */
+function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(r&&r.result)adVidReady();else again();},again);}
+function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+/* надпись ожидания на весь экран: подложка — как у .ad (цвет темы --dim), плашка — цветами темы (--card/--ink) */
+function adWait(on){let w=$('adWait');if(!on){if(w)w.style.display='none';return;}
+  if(!w){w=document.createElement('div');w.id='adWait';w.className='ad';w.style.zIndex='30';w.innerHTML='<div style="background:var(--card);color:var(--ink);border-radius:16px;padding:18px 22px;max-width:320px;font-size:20px;line-height:1.35;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.3)"></div>';$('ad').parentNode.appendChild(w);}
+  w.firstChild.textContent='📺 '+L('Ролик загружается…','Loading the video…');w.style.display='flex';}
+function adWaiting(){const w=$('adWait');return !!w&&w.style.display==='flex';}
+/* кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду); остаются нажимаемыми — нажатие объясняет */
+function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)q[i].style.opacity=off?'.45':'';}catch(e){}if(off)adDimT=setTimeout(adDim,1000);}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
 let adBusy=false;
 function showRewarded(cb0,onFail0){
-  if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
-  const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
+  if(adBusy)return;
+  if(Date.now()<adCoolT){if(onFail0)onFail0();toast(L('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds'));adDim();return;} /* пауза кнопок: площадку не дёргаем, срок межэкранной не трогаем */
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},135000);
+  let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();/*K1*/S.adTot=(S.adTot|0)+1;/*/K1*/cb0();/*K1*/if(window.THEME)THEME.check();/*/K1*/},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL);onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
-      .then(r=>{adClose();if(r&&r.result){STAT.ad('rew','ok');cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL);onFail();}})
-      .catch(e=>{adClose();STAT.ad('rew','err',e&&e.error_data&&e.error_data.error_code);toast(AD_FAIL);onFail();})
-      .finally(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
+  if(VK){let tries=0;
+    const go=()=>{adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000).then(r=>{adClose();
+        if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'');adPreload();cb();}else{STAT.ad('rew','fail','noresult');adPreload();onFail();toast(AD_FAIL);}
+      },e=>{
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него) */
+        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));onFail();toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e));adPreload();onFail();toast(AD_FAIL);}});};
+    go();return;}
   if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
-    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);onFail();}}});
+    onError:()=>{adClose();STAT.ad('rew','err');onFail();toast(AD_FAIL);adCool();}}});
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
 function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
@@ -1171,7 +1280,7 @@ function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(
 // экономика: уровень 10 + 3 за звезду (первый раз; «Субботник» ×2, повтор +3), задание дня 30, бесконечная — до 30 за партию,
 // серия дней 10…60. Тратятся на помощников (15/20/30/40) и оформления (200/300/400). Помощников в бесконечной игре нет (рейтинг).
 const coinsTxt=n=>n+' 💰';
-function updCoins(){for(const id of ['gCoins','shCoins','mapCoins'])if($(id))$(id).textContent='💰 '+S.coins;if($('coinCnt'))$('coinCnt').textContent=S.coins;if(G)updBoost();}
+function updCoins(){for(const id of ['gCoins','shCoins','mapCoins'])if($(id))$(id).textContent='💰 '+S.coins;if($('coinCnt'))$('coinCnt').textContent=S.coins;/*сведение: 5-значные монеты — на узком экране логотип без значка (иначе вплотную к ⚙)*/document.documentElement.classList.toggle('c5',S.coins>=10000);if(G)updBoost();}
 function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
 function adCoinsLeft(){const t=todayKey();if(!isObj(S.adc)||S.adc.d!==t)S.adc={d:t,n:0};return 5-S.adc.n;}
 function openCoins(){STAT.screen('coins');if(inGame())YG.stop();
@@ -1191,14 +1300,21 @@ const PAY_ITEMS={
   no_ads:{perm:1,bonus:150,vk:14,ic:'🚫',name:L('Без рекламы между уровнями','No ads between levels'),desc:L('Навсегда, и сразу +150 💰. Ролики за награду остаются — по желанию','Forever, plus 150 💰. Rewarded videos stay optional')},
   coins_s:{n:300,vk:5,ic:'💰',name:L('Горсть монет: 300 💰','Handful: 300 💰'),desc:L('На помощников и оформление','For helpers and looks'),done:L('+300 💰 — спасибо!','+300 💰 — thank you!')},
   coins_l:{n:1000,vk:14,ic:'💰',name:L('Копилка: 1000 💰','Piggy bank: 1000 💰'),desc:L('Выгоднее горсти','Better value'),done:L('+1000 💰 — спасибо!','+1000 💰 — thank you!')},
-  themes:{perm:1,vk:7,ic:'🎨',name:L('Оформления «Праздник»','Holiday looks'),desc:L('Золото, хохлома и новогодний лёд — три вида кирпичиков','Gold, Khokhloma and New Year ice — three brick looks')}
+  themes:{perm:1,vk:7,ic:'🎨',name:L('Оформления «Праздник»','Holiday looks'),desc:L('Золото, хохлома и новогодний лёд — три вида кирпичиков','Gold, Khokhloma and New Year ice — three brick looks')},
+  /*K1*/look_glossy:{perm:1,vk:11,ic:'🎨',name:L('Тема «Глянцевый двор»','“Glossy yard” theme'),desc:L('Кирпичики-леденцы на ореховом столе, двор с классиками — навсегда','Candy bricks on a walnut table — forever')}/*/K1*/,
+  /*K3: товары буста (03.10) — строки catalog.json и инапы Яндекса: hobby-analytics/release-f/kirp-K3.md */
+  starter:{perm:1,bonus:300,vk:5,ic:'🏠',name:L('Набор новосёла','Newcomer pack'),desc:L('300 💰 и по 2 каждого помощника. Один раз, только в первые дни','300 💰 and 2 of each helper. Once, only in the first days'),done:L('Набор новосёла ваш: +300 💰 и по 2 помощника!','The Newcomer pack is yours: +300 💰 and 2 of each helper!'),give(){k3Starter();}},
+  season:{vk:14,ic:'📖',name:L('Сезон двора: платная дорожка','Yard season: paid track'),desc:L('Вид, украшение и монеты на каждой странице. 4 недели, без автопродления','A look, a decoration and coins on every page. 4 weeks, no auto-renewal'),done:L('Платная дорожка сезона открыта!','The paid season track is open!'),give(){k3SsnPay();}},
+  yard:{perm:1,vk:7,ic:'🏡',name:L('Двор мечты: особые украшения','Dream yard: special decorations'),desc:L('Лебеди из шин, виноград на беседке, автомат газировки, колокольчики и фонарики — навсегда','Tyre swans, a grapevine, a soda machine, wind chimes and lanterns — forever'),done:L('Украшения уже во дворе!','The decorations are in the yard!'),give(){/*сведение: 5 особых вещей K2*/if(typeof yardGiveSet==='function')yardGiveSet();}},
+  pie:{n:100,vk:3,ic:'🥧',name:L('Пирожок тёте Вале','A pie for Aunt Valya'),desc:L('Спасибо разработчику. Тётя Валя ответит, и +100 💰','Thank the developer. Aunt Valya replies, plus 100 💰'),done:L('Тётя Валя благодарит! +100 💰','Aunt Valya says thank you! +100 💰'),give(){k3Pie();}}
+  /*/K3*/
 };
-const PAY_TEST={no_ads:99,coins_s:39,coins_l:99,themes:49}; // цены только для ?paytest=1; настоящие — в консоли
+const PAY_TEST={no_ads:99,coins_s:39,coins_l:99,themes:49,/*K1*/look_glossy:79,/*/K1*/ /*K3*/starter:39,season:99,yard:49,pie:19/*/K3*/}; // цены только для ?paytest=1; настоящие — в консоли
 function payAdd(n){S.coins+=n;}
 function payFlush(){cloudFlush();}
 function payPause(on){setPause('pay',on);}
 let payOk=null; // STAT: id покупки, которую PAY только что выдал (payAfter(id) зовёт общий модуль после успеха)
-function payAfter(id){if(id)payOk=id;updCoins();if(modalOn&&PAY.re)PAY.re();else if($('scr-shop').classList.contains('on'))openShop();else if($('scr-menu').classList.contains('on')&&!modalOn)renderMenu();}
+function payAfter(id){if(id)payOk=id;/*K1*/if(id&&window.THEME)THEME.bought(id);/*/K1*/updCoins();if(modalOn&&PAY.re)PAY.re();else if($('scr-shop').classList.contains('on'))openShop();else if($('scr-menu').classList.contains('on')&&!modalOn)renderMenu();}
 /* ================= покупки за деньги: Яндекс Игры (ysdk.payments) и VK Игры (VKWebAppShowOrderBox) — общий модуль (одинаковый в 5 играх) =================
    Товары игры — PAY_ITEMS (выше), id совпадают с id в консоли Яндекса («Инап-покупки») и в hobby-pay/catalog.json (VK).
    Кнопок покупок НЕТ совсем, если платежи недоступны: нет SDK/моста (мак), каталог Яндекса пуст, VK не поддерживает оплату (iOS).
@@ -1328,10 +1444,10 @@ const LB={
   async entries(name){const o={includeUser:true,quantityAround:2,quantityTop:10};
     try{if(ysdk.leaderboards&&ysdk.leaderboards.getEntries)return await ysdk.leaderboards.getEntries(name,o);
       const lb=await ysdk.getLeaderboards();return await lb.getLeaderboardEntries(name,o);}catch(e){return null;}},
-  async show(tab){tab=tab||'best';
+  async show(tab){tab=tab||'best';/*K3*/if(tab==='day'&&PLAT!=='vk')return k3TourShow();/*/K3*/
     if(PLAT==='vk'){if(!VK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:S.best||0},60000).catch(()=>toast(L('Таблица друзей сейчас недоступна','Friends table is unavailable')));return;}
     const back=()=>{hideModal();if(G&&G.st.over)leaveGame();else if(!G)renderMenu();};
-    const tabs=`<div class="tabs2"><button id="lbB" class="${tab==='best'?'on':''}">♾ ${L('Рекорд','Best score')}</button><button id="lbD" class="${tab==='daily'?'on':''}">📅 ${L('Задание дня','Daily')}</button></div>`;
+    const tabs=`<div class="tabs2"><button id="lbB" class="${tab==='best'?'on':''}">♾ ${L('Рекорд','Best score')}</button><button id="lbD" class="${tab==='daily'?'on':''}">📅 ${L('Задание дня','Daily')}</button><button id="lbT">🏆 ${L('Турнир дня','Daily cup')}</button></div>`;
     modal(`<h2>🏆 ${L('Рейтинг','Rating')}</h2>${tabs}<p>${L('Загружаем…','Loading…')}</p>`);
     const r=await LB.entries(tab);const list=(r&&r.entries)||[];
     const me=r&&typeof r.userRank==='number'?r.userRank:0,authed=!!(YP&&YP.getMode&&YP.getMode()!=='lite');
@@ -1341,7 +1457,7 @@ const LB={
       <div class="lb">${rows||'<p>'+L('Пока пусто — будь первым!','Empty so far — be the first!')+'</p>'}</div>
       ${authed?'':'<p><small>'+L('Чтобы попасть в рейтинг, войди в аккаунт Яндекса.','Log in to your Yandex account to get into the rating.')+'</small></p>'}
       <div class="row">${authed||!(ysdk&&ysdk.auth)?'':'<button class="btn accent noenter" id="lbAuth">'+L('Войти','Log in')+'</button>'}<button class="btn" id="lbClose">${L('Закрыть','Close')}</button></div>`);
-    $('lbClose').onclick=back;$('lbB').onclick=()=>LB.show('best');$('lbD').onclick=()=>LB.show('daily');
+    $('lbClose').onclick=back;$('lbB').onclick=()=>LB.show('best');$('lbD').onclick=()=>LB.show('daily');/*K3*/$('lbT').onclick=()=>k3TourShow();/*/K3*/
     const a=$('lbAuth');if(a)a.onclick=async()=>{try{await ysdk.auth.openAuthDialog();YP=await ysdk.getPlayer({scopes:false});
       clearTimeout(cloudT);cloudT=0;cloudReady=false;cloudTry=0;await cloudLoad(true);updCoins();await LB.submit();}catch(e){}LB.show(tab);};}
 };
@@ -1357,7 +1473,7 @@ function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');cl
   const ing=$('scr-game').classList.contains('on');e.style.bottom=ing?'auto':'';e.style.top=ing?Math.round($('scr-game').querySelector('.gh').offsetHeight+6)+'px':'';
   const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 function hideModal(){$('modal').classList.remove('on');modalOn=false;}
-function modal(html){PAY.re=null;$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;}
+function modal(html){PAY.re=null;/*K1*/$('mcard').className='card'+(/^\s*<div class="av">/.test(html)?' hasav':'')+(/big-stars|id="dCoins"|class="rec"/.test(html)?' win':'');/*/K1*/$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;}
 function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="e">☆</span>';return s;}
 function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
 function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
@@ -1365,16 +1481,16 @@ function todayKey(){return String(dayKey(0));}
 
 /* ================= оформление ================= */
 function ownsTheme(t){return !!t&&(t.free||!!S.own['t:'+t.id]||(t.pay?PAY.own(t.pay):false));}
-function theme(){const t=THB[S.theme];return ownsTheme(t)?t:THB.yard;}
-function themeShow(t){return !t.pay||PAY.own(t.pay)||!!(PAY.on&&PAY.item(t.pay));}
+function theme(){/*K3*/if(G&&G.tryTh&&THB[G.tryTh])return THB[G.tryTh];/*/K3*/const t=THB[S.theme];return ownsTheme(t)?t:THB.yard;}
+function themeShow(t){/*K1: «Ретро-экран» в новом виде — тема «Карманная 90-х», не кирпичики*/if(t.id==='retro'&&window.LK&&LK.on())return false;/*/K1*/return !t.pay||PAY.own(t.pay)||!!(PAY.on&&PAY.item(t.pay));}
 
 /* ================= меню ================= */
 const nextLevel=()=>Math.min(NLV,S.unlocked);
 const chName=ch=>L(CHAPTERS[ch].n,CHAPTERS[ch].en);
 const hostName=id=>L(HOSTS[id].n,HOSTS[id].en);
 function phr(host,cat){if(LANG==='en')return '';const a=(PH[host]||PH.zina)[cat]||[];return a.length?a[Math.floor(Math.random()*a.length)]:'';}
-function drawHero(){const cv=$('heroCv');if(!cv)return;const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);drawDevice(g,15,8,390);}
-function renderMenu(){updCoins();const i=nextLevel(),ch=Math.floor((i-1)/10),host=CHAPTERS[ch].host,all=!!S.lv[NLV];
+function drawHero(){const cv=$('heroCv');if(!cv)return;/*K1*/if(LK.on()){LK.hero(cv);return;}if(cv.width!==420){cv.width=420;cv.height=500;}/*/K1*/const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);drawDevice(g,15,8,390);}
+function renderMenu(){updCoins();const i=nextLevel(),ch=chOf(i),/*K2*/host=CHAPTERS[ch].host,all=!!S.lv[NLV];
   $('heroFace').innerHTML=portrait(host,'happy');
   const line=(S.wins||0)===0?L('Заходи, поиграем в кирпичики!','Come play some bricks!'):phr(host,'start')||L('Поиграем?','Shall we play?');
   $('heroSay').innerHTML='<b>'+hostName(host)+'</b>'+line;
@@ -1382,7 +1498,9 @@ function renderMenu(){updCoins();const i=nextLevel(),ch=Math.floor((i-1)/10),hos
   const run=loadRun();
   $('bEndT').innerHTML=(run?L('Продолжить игру','Continue game'):L('Бесконечная игра','Endless game'))+'<small>'+(run?L('Счёт: ','Score: ')+run.score+' · ':'')+L('Рекорд: ','Best: ')+(S.best||0)+'</small>';
   const dd=!!S.daily[todayKey()];
-  $('bDailyT').innerHTML=L('Задание дня','Daily task')+'<small>'+(dd?L('✓ Выполнено — завтра новое','✓ Done — new one tomorrow'):L('Одно на всех, каждый день новое','Same for everyone, new every day'))+'</small>';
+  $('bDailyT').innerHTML=L('Задание дня','Daily task')+'<small>'+(dd?(S.dh[todayKey()]?L('✓ Выполнено — завтра новое','✓ Done — new one tomorrow'):L('✓ Выполнено · 💪 есть трудное','✓ Done · 💪 try the hard one')):L('Одно на всех · кубок месяца','Same for all · monthly cup'))+'</small>'; /*K2*/
+  if(S.unlocked>100&&!S.lv[101]){$('heroSay').innerHTML='<b>'+hostName('mityai')+'</b>'+L('Новые главы: «Улица Мира» и «Вокзал»!','New chapters: Peace Street and the Station!')/*сведение: короче — пузырь не закрывает кнопку*/;} /*K2*/
+  if(S.ydT&&S.yd[S.ydT]){const d=DRB[S.ydT];if(d)$('heroSay').innerHTML='<b>'+hostName(DZONE[d.z].h)+'</b>'+L('Спасибо за обновку во дворе!','Thanks for the new thing in the yard!')/*сведение: короче*/;delete S.ydT;} /*K2: сосед благодарит за вещь двора*/
   $('bDaily').classList.toggle('pulse',!dd&&(S.wins||0)>=3);$('bPlay').classList.toggle('pulse',!all);
   $('bRank').style.display=LB.ok()?'':'none';updStreakDot();drawHero();todayCard();}
 // «Что сегодня» (boost): подарок, задание дня, звание, кладовка — строки-кнопки; первая игра — не показываем
@@ -1391,9 +1509,18 @@ function todayCard(){const e=$('mToday');if(!e)return;if(!(S.wins>0)){e.innerHTM
   const gd=g.claimed?g.day%7+1:g.day;
   e.innerHTML='<h3>'+L('Что сегодня','Today')+'</h3>'+
     row('tGift','🎁',g.claimed?L('Подарок получен · завтра +','Gift taken · tomorrow +')+coinsTxt(STREAK[gd-1]):L('Подарок ждёт: +','Gift waiting: +')+coinsTxt(STREAK[gd-1]),!g.claimed)+
-    row('tDaily','📅',dd?L('Задание дня выполнено ✓ · завтра новое','Daily task done ✓ · new tomorrow'):L('Задание дня ждёт: +30 💰','Daily task waiting: +30 💰'),!dd)+
-    row('tRank','🎖',rankLine().slice(3),false);
-  $('tGift').onclick=()=>{SND.tap();showStreak();};$('tDaily').onclick=()=>$('bDaily').click();$('tRank').onclick=()=>{SND.tap();openRanks();};}
+    row('tDaily','📅',(dd?L('Задание дня ✓','Daily task ✓')+(S.dh[todayKey()]?'':L(' · 💪 трудное +60 💰',' · 💪 hard +60 💰')):L('Задание дня ждёт: +30 💰','Daily task waiting: +30 💰'))+' · 🏆 '+monthCnt()+'/'+((CUPS[S.cup[monthInfo().ym]||0]||CUPS[2])[0]),!dd)+
+    /*K2: поручения соседей, «Двор мечты», завтра*/(()=>{const Q=qToday(),n=Q.g.filter(x=>x).length;return row('tQuest','📋',Q.b?L('Поручения соседей выполнены ✓ · завтра новые','Errands done ✓ · new ones tomorrow'):L('Поручения соседей: ','Neighbours’ errands: ')+n+'/3 · 📦 +'+coinsTxt(qBox()),!Q.b);})()+
+    (()=>{const b=dreamBusy(),nx=dreamNext(),c=dreamCnt();let t,hot=false;
+      if(c>=DR_N)t=L('Двор мечты обустроен ✓','Dream yard complete ✓');
+      else if(b)t=L('Михалыч строит «','Building “')+drName(b)+L('»','”');
+      else if(dreamUsed())t=L('Двор мечты: ','Dream yard: ')+c+'/'+DR_N+L(' · завтра — новая вещь',' · next thing tomorrow');
+      else if(nx&&S.coins>=nx.p){t=L('Двор мечты: «','Dream yard: “')+drName(nx)+L('» — можно ставить!','” — ready to set up!');hot=true;}
+      else t=nx?L('Двор мечты: до «','Dream yard: to “')+drName(nx)+L('» ещё ','” need ')+coinsTxt(nx.p-S.coins):L('Двор мечты: пройди главу — откроется место','Dream yard: finish a chapter to open a place');
+      return row('tDream','🏡',t,hot);})()+
+    row('tRank','🎖',rankLine().slice(3),false)+(()=>{const x=tmrwHook();return x?'<div class="trow"><span class="ic">🌅</span><span>'+L('Завтра: ','Tomorrow: ')+(t=>/^(Можно|До|You|To)\s/.test(t)&&!/^Mikh/.test(t)?t.charAt(0).toLowerCase()+t.slice(1):t)(x.replace(/^\S+ /,''))+'</span></div>':'';})();
+  $('tGift').onclick=()=>{SND.tap();showStreak();};$('tDaily').onclick=()=>$('bDaily').click();$('tRank').onclick=()=>{SND.tap();openRanks();};
+  $('tQuest').onclick=()=>{SND.tap();openQuests();};$('tDream').onclick=()=>{SND.tap();openDream();};}
 function openRanks(){STAT.screen('ranks');const n=starsTot(),r=rankOf(n);let h='';
   RANKS.forEach((x,i)=>{h+='<div class="rk'+(i===r?' cur':i<r?' done':'')+'"><b>'+(i<=r?'🎖':'🔒')+' '+L(x[1],x[2])+'</b><span>'+x[0]+'★'+(x[3]?' · +'+coinsTxt(x[3]):'')+'</span></div>';});
   modal('<h2>🎖 '+L('Звания','Ranks')+'</h2><p>'+L('Звёзд за уровни: ','Level stars: ')+'<b>'+n+'</b> '+L('из ','of ')+NLV*3+'. '+L('Новое звание — награда монетами.','Each new rank gives coins.')+'</p><div class="rks">'+h+'</div><div class="row"><button class="btn green" id="mCancel">'+L('Понятно','OK')+'</button></div>');
@@ -1401,26 +1528,28 @@ function openRanks(){STAT.screen('ranks');const n=starsTot(),r=rankOf(n);let h='
 function openPantry(back){STAT.screen('pantry');let h='';
   for(const q of [1,2,3,4]){const n=S.items[q]||0,t=S.itT[q]||0,nx=PANTRY[t],pv=t?PANTRY[t-1]:0;
     h+='<div class="pan"><img src="'+itemUri(q)+'" alt=""><div><b>'+L(IT_N[q][0],IT_N[q][1])+': '+n+'</b>'+(nx?'<div class="chbar"><i style="width:'+Math.round(100*(n-pv)/(nx-pv))+'%"></i><span>'+L('до ','to ')+nx+' · +'+coinsTxt(PANTRY_C[t])+'</span></div>':'<small>'+L('Полная полка!','Full shelf!')+' ✓</small>')+'</div><i>'+'★'.repeat(t)+'</i></div>';}
-  modal('<h2>🧺 '+L('Кладовка','Pantry')+'</h2><p>'+L('Всё, что собрано в уровнях и заданиях дня. Полка заполнилась — награда.','Everything collected in levels and daily tasks. A full shelf gives a reward.')+'</p>'+h+'<div class="row"><button class="btn green" id="mCancel">'+L('Понятно','OK')+'</button></div>');
+  modal('<h2>🧺 '+L('Кладовка','Pantry')+'</h2><p>'+L('Всё, что собрано в уровнях и заданиях дня. Полка заполнилась — награда.','Everything collected in levels and daily tasks. A full shelf gives a reward.')+'</p>'+h+cardsHtml()+'<div class="row"><button class="btn green" id="mCancel">'+L('Понятно','OK')+'</button></div>');
   $('mCancel').onclick=hideModal;}
 function openMenu(){STAT.once('ready',{ms:Math.round(performance.now())});STAT.once('menu');STAT.screen('menu');if(S.wins>0&&!S.tips.stm){S.tips.stm=1;STAT.ev('tut',{s:30});}
-  G=null;stopLoop();show('scr-menu');hideModal();renderMenu();YG.stop();}
+  G=null;stopLoop();show('scr-menu');hideModal();if(dreamTick().length)dreamBg();renderMenu();YG.stop();qToast();} /*K2*/
 $('bPlay').onclick=()=>startLevel(nextLevel());
 $('bEnd').onclick=()=>startEndless(true);
-$('bDaily').onclick=()=>{if(S.daily[todayKey()]){modal(`<h2>📅 ${L('Задание дня','Daily task')}</h2><p>${L('Сегодняшнее задание уже выполнено. Завтра будет новое!','Today’s task is done. A new one comes tomorrow!')}</p><p>${L('Выполнено дней: ','Days done: ')}<b>${LB.days()}</b></p>${weekHtml()}<div class="row">${LB.ok()&&PLAT!=='vk'?'<button class="btn blue noenter" id="dLb">🏆 '+L('Рейтинг','Rating')+'</button>':''}<button class="btn" id="dAgain">↻ ${L('Сыграть ещё раз','Play again')}</button><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+$('bDaily').onclick=()=>{if(S.daily[todayKey()]){SND.tap();openDailyCal();return; /*K2: календарь месяца, трудное, догнать день*/modal(`<h2>📅 ${L('Задание дня','Daily task')}</h2><p>${L('Сегодняшнее задание уже выполнено. Завтра будет новое!','Today’s task is done. A new one comes tomorrow!')}</p><p>${L('Выполнено дней: ','Days done: ')}<b>${LB.days()}</b></p>${weekHtml()}<div class="row">${LB.ok()&&PLAT!=='vk'?'<button class="btn blue noenter" id="dLb">🏆 '+L('Рейтинг','Rating')+'</button>':''}<button class="btn" id="dAgain">↻ ${L('Сыграть ещё раз','Play again')}</button><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   if($('dLb'))$('dLb').onclick=()=>LB.show('daily');$('dAgain').onclick=()=>{hideModal();startDaily();};$('mCancel').onclick=hideModal;return;}startDaily();};
-$('bMap').onclick=()=>openMap();$('bShop').onclick=()=>openShop();$('bStreak').onclick=()=>showStreak();$('bRank').onclick=()=>{STAT.screen('rating');LB.show('best');};$('bMore').onclick=()=>{SND.tap();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();socStat();};
+$('bMap').onclick=()=>openMap();$('bShop').onclick=()=>/*K1*/LK.on()?THEME.open():/*/K1*/openShop();$('bStreak').onclick=()=>showStreak();$('bRank').onclick=()=>{STAT.screen('rating');LB.show('best');};$('bMore').onclick=()=>{SND.tap();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();socStat();};
 function updMore(){const b=$('bMore'),on=SOC.ok();if(b){b.style.display=on?'':'none';b.parentNode.classList.toggle('m5',on);}}
 $('mCoins').onclick=openCoins;$('gCoins').onclick=openCoins;$('mapCoins').onclick=openCoins;$('shCoins').onclick=openCoins;
 
 /* ================= карта уровней: 10 мест двора по 10 уровней ================= */
-function openMap(){STAT.screen('map');G=null;stopLoop();show('scr-map');updCoins();let h='',tot=0;
-  for(let ch=0;ch<CHAPTERS.length;ch++){const C=CHAPTERS[ch],a=ch*10+1,lock=a>S.unlocked;let st=0,btn='';
-    for(let i=a;i<a+10;i++){const s=S.lv[i]||0;st+=s;const cur=i===nextLevel()&&!S.lv[i],lk=i>S.unlocked;
-      btn+=`<button class="lvb${cur?' cur':''}${lk?' lock':''}${i%10===0?' boss':''}" data-i="${i}" ${lk?'aria-disabled="true"':''}>${lk?'🔒':i}<small>${lk?'':s?starsHtml(s):i%10===0?'🔥':''}</small></button>`;}
-    tot+=st;const cg=S.chest[ch]||0,cs=cg<CHEST.length?'🧰 '+st+'/'+CHEST[cg][0]+'★':'🧰 ✓';
-    h+=`<div class="chap${lock?' lock':''}" style="background:${CH_BG[ch]}"><h3><span class="av">${portrait(C.host,'norm')}</span><span>${ch+1}. ${chName(ch)}<small>${hostName(C.host)} · ${C.ik.map(k=>'<img src="'+itemUri(k)+'" alt="" style="width:18px;height:18px;vertical-align:-3px">').join('')}</small></span><i>${cs}</i></h3><div class="lvg">${btn}</div></div>`;}
-  $('mapList').innerHTML=h;$('mapSub').textContent=L('Звёзд: ','Stars: ')+tot+' / '+NLV*3+' · '+rankName(rankOf(tot));
+function openMap(){STAT.screen('map');G=null;stopLoop();show('scr-map');updCoins();/*K1*/if(LK.on()){LK.openMap();return;}$('mapList').onclick=null;/*/K1*/let h='',tot=0;
+  for(let ch=0;ch<CHAPTERS.length;ch++){const C=CHAPTERS[ch],a=CH_A[ch],lock=a>S.unlocked;let st=0,btn=''; /*K2: главы разной длины (CH_A/CH_N)*/
+    for(let i=a;i<a+CH_N[ch];i++){const s=S.lv[i]||0;st+=s;const cur=i===nextLevel()&&!S.lv[i],lk=i>S.unlocked;
+      btn+=`<button class="lvb${cur?' cur':''}${lk?' lock':''}${isBoss(i)?' boss':''}" data-i="${i}" ${lk?'aria-disabled="true"':''}>${lk?'🔒':i}<small>${lk?'':s?starsHtml(s):isBoss(i)?'🔥':''}</small></button>`;}
+    tot+=st;const cg=S.chest[ch]||0,cs=cg<CHEST.length?'🧰 '+st+'/'+chestNeed(ch,cg)+'★':'🧰 ✓';
+    const cell=C.cell==='ice'?' · ❄ '+L('лёд','ice'):C.cell==='box'?' · 📦 '+L('ящики','crates'):'';
+    h+=`<div class="chap${lock?' lock':''}" style="background:${CH_BG[ch]}"><h3><span class="av">${portrait(C.host,'norm')}</span><span>${ch+1}. ${chName(ch)}<small>${hostName(C.host)} · ${C.ik.map(k=>'<img src="'+itemUri(k)+'" alt="" style="width:18px;height:18px;vertical-align:-3px">').join('')}${cell}</small></span><i>${cs}</i></h3><div class="lvg">${btn}</div></div>`;}
+  if(S.wins>0)h='<button class="trow" id="mapDream"><span class="ic">🏡</span><span>'+L('Двор мечты: ','Dream yard: ')+dreamCnt()+'/'+DR_N+'</span><i>›</i></button>'+h; /*K2: вход в «Двор мечты» с карты*/
+  $('mapList').innerHTML=h;if($('mapDream'))$('mapDream').onclick=()=>{SND.tap();openDream();};$('mapSub').textContent=L('Звёзд: ','Stars: ')+tot+' / '+NLV*3+' · '+rankName(rankOf(tot));
   $('mapList').querySelectorAll('.lvb').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i>S.unlocked){SND.no();toast(L('Сначала пройди предыдущие уровни','Finish the previous levels first'));return;}SND.tap();startLevel(i);});
   const cur=$('mapList').querySelector('.lvb.cur');if(cur)setTimeout(()=>cur.scrollIntoView({block:'center'}),30);}
 $('mapBack').onclick=openMenu;$('mapPan').onclick=()=>{SND.tap();openPantry();};
@@ -1430,14 +1559,14 @@ function themePreview(t,w,h){const c=document.createElement('canvas');c.width=w;
   g.fillStyle=t.fr[0];rr(g,x0-8,y0-8,s*6+16,s*4+16,12);g.fill();g.fillStyle=t.bg;g.fillRect(x0-2,y0-2,s*6+4,s*4+4);
   const P=['##..#.','#.###.','..#.##','20##..'];for(let r=0;r<4;r++)for(let q=0;q<6;q++){const ch=P[r][q],x=x0+q*s,y=y0+r*s;if(ch==='#')drawBrick(g,x,y,s,1+((r*3+q)%13),t);else if(ch==='2')drawBrick(g,x,y,s,20,t);else if(ch==='0'){drawBrick(g,x,y,s,7,t);drawItem(g,1,x,y,s);}else drawEmpty(g,x,y,s,t);}
   return c;}
-function openShop(){STAT.screen('shop');show('scr-shop');updCoins();const grid=$('shGrid');grid.innerHTML='';
+function openShop(){STAT.screen('shop');show('scr-shop');updCoins();/*K1*/{const h=$('scr-shop').querySelector('.gt>div');if(h)h.textContent=LK.on()?L('Кирпичики','Bricks'):L('Оформление','Looks');}/*/K1*/const grid=$('shGrid');grid.innerHTML='';
   if(PAY.on&&!inGame()&&PAY.item('themes')&&!PAY.own('themes')){const d=document.createElement('div');d.className='shop-pay';d.innerHTML=payHtml(['themes']);grid.appendChild(d);PAY.bind(d);PAY.re=null;}
   for(const t of THEMES){if(!themeShow(t))continue;const own=ownsTheme(t),on=theme().id===t.id,el=document.createElement('div');el.className='it'+(on?' on':'');
-    el.appendChild(themePreview(t,300,190));
+    el.appendChild(/*K1*/LK.on()&&t.id==='yard'?THEME.previewCanvas(THEME.cur(),300,190):/*/K1*/themePreview(t,300,190));
     const btn=on?`<button class="btn" disabled>✓ ${L('Выбрано','Selected')}</button>`:own?`<button class="btn green" data-a="sel">${L('Выбрать','Select')}</button>`:t.price?`<button class="btn accent buy noenter" data-a="buy">${coinsTxt(t.price)}</button>`:`<button class="btn" disabled>${L('В наборе «Праздник»','In the Holiday pack')}</button>`;
-    el.insertAdjacentHTML('beforeend',`<b>${L(t.n,t.en)}</b><small>${L(t.d,t.de)}</small>${btn}`);
+    el.insertAdjacentHTML('beforeend',/*K1*/LK.on()&&t.id==='yard'?`<b>${L('Как в теме','Theme bricks')}</b><small>${L('Кирпичики выбранной темы','Bricks of the chosen theme')}</small>${btn}`:/*/K1*/`<b>${L(t.n,t.en)}</b><small>${L(t.d,t.de)}</small>${btn}`);
     const b=el.querySelector('[data-a]');if(b)b.onclick=()=>{if(b.dataset.a==='sel'){S.theme=t.id;save();SND.tap();openShop();return;}
-      if(S.coins<t.price){SND.no();toast(L('Не хватает монет: нужно ','Not enough coins: need ')+coinsTxt(t.price));return;}
+      if(S.coins<t.price){SND.no();/*K3*/k3Short(t.price-S.coins,openShop);/*/K3*/return;}
       S.coins-=t.price;STAT.ev('spend',{k:'t:'+t.id,c:t.price});S.own['t:'+t.id]=1;S.theme=t.id;save();updCoins();SND.coin();toast(L('Новое оформление: ','New look: ')+L(t.n,t.en));openShop();};
     grid.appendChild(el);}}
 $('shBack').onclick=()=>{if(G&&!G.st.over){show('scr-game');layout();render();kick();YG.start();}else openMenu();};
@@ -1447,7 +1576,7 @@ let LY=null,raf=0;
 const cv=$('cv');
 function hostOf(mode,cfg){return mode==='endless'?'zina':CHAPTERS[(cfg.ch||0)%CHAPTERS.length].host;}
 function startLevel(i){i=Math.max(1,Math.min(NLV,i));if(i>S.unlocked)return;begin('level',levelCfg(i));}
-function startDaily(){const d=dayKey(0);begin('daily',dailyCfg(d),null,d);}
+function startDaily(day,o){const d=day||dayKey(0),cfg=dailyCfg(d,o&&o.hard);if(o&&o.late)cfg.late=1;begin('daily',cfg,null,d);} /*K2: трудное, догнать день*/
 function startEndless(resume){let st=null;const o=resume&&loadRun();
   if(o){st=newGame(endlessCfg(),1);st.b=o.b.map(x=>+x||0);st.it=(o.it||[]).length===64?o.it.map(x=>+x||0):new Array(64).fill(0);st.old=new Array(64).fill(0);
     st.tray=[0,1,2].map(j=>{const p=o.tray[j];return p&&VARS[p.v]?{v:p.v,it:-1,ik:0}:null;});if(st.tray.every(p=>!p))deal(st);
@@ -1455,11 +1584,12 @@ function startEndless(resume){let st=null;const o=resume&&loadRun();
     if(st.over){clearRun();st=null;}}
   begin('endless',endlessCfg(),st);if(st&&G){G.lifeAd=!!o.la;G.rec=!!o.rec;G.cGiven=+o.cg||0;G.counted=!!o.cnt;}}
 function begin(mode,cfg,st,day){hideModal();STAT.once('ready',{ms:Math.round(performance.now())});
-  STAT.lvl(mode==='level'?cfg.i:0,mode+(st?'-r':''));STAT.screen('game'); /* l — номер уровня (задание дня и бесконечная — 0), m — режим; -r — продолжение сохранённой */
+  STAT.lvl(mode==='level'?cfg.i:0,(mode==='daily'&&cfg.hard?'dailyH':mode==='daily'&&cfg.late?'dailyL':mode)+(st?'-r':'')); /*K2: dailyH — трудное, dailyL — догнанный день*/STAT.screen('game'); /* l — номер уровня (задание дня и бесконечная — 0), m — режим; -r — продолжение сохранённой */
   G={mode,cfg,st:st||newGame(cfg,mode==='daily'?cfg.seed*7+1:undefined),day,drag:null,sel:-1,tool:null,hint:null,parts:[],pops:[],flashes:[],placed:null,back:null,curtain:null,shake:0,
     busy:false,host:hostOf(mode,cfg),par:0,lifeAd:false,x2:false,rec:false,dealT:performance.now(),tight:0,paid:{},cGiven:0,counted:false,bu:{}};
   show('scr-game');
-  $('gTitle').textContent=mode==='endless'?L('Бесконечная игра','Endless game'):mode==='daily'?L('Задание дня','Daily task'):(cfg.boss?'🔥 ':'')+L('Уровень ','Level ')+cfg.i;
+  $('gTitle').textContent=mode==='endless'?L('Бесконечная игра','Endless game'):mode==='daily'?(cfg.hard?'💪 '+L('Трудное задание','Hard task'):cfg.late?'↺ '+L('Задание ','Task of ')+(day%100)+' '+monG(Math.floor(day/100)%100-1):L('Задание дня','Daily task')):(cfg.boss?'🔥 ':'')+L('Уровень ','Level ')+cfg.i;
+  /* узкий экран (320 px): «Уровень 104» не помещается рядом с монетами — короткая подпись вместо «Уровен…» */if(mode==='level'){const gt=$('gTitle'),sh=(cfg.boss?'🔥 ':'')+L('Ур. ','Lv ')+cfg.i,fit=()=>{if(G&&G.cfg===cfg&&gt.clientWidth&&gt.scrollWidth>gt.clientWidth+1)gt.textContent=sh;};fit();setTimeout(fit,300);}
   $('gSub').textContent=mode==='endless'?L('Рекорд: ','Best: ')+(S.best||0)+' · '+L('без помощников','no helpers'):mode==='daily'?L('Одно на всех · ','Same for all · ')+new Date(nowMs()).toLocaleDateString(LANG==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long'}):chName(cfg.ch)+(cfg.boss?' · '+L('субботник','big clean-up'):'')+' · '+hostName(G.host);
   $('hAv').innerHTML=portrait(G.host,'norm');$('bub').classList.remove('on');$('tip').classList.remove('on');
   setHud();updBoost();layout();render();kick();YG.start(); /* сначала HUD и помощники, потом размер поля (аудит release-f №1: лоток уходил под помощников); kick — аудит 36 */
@@ -1475,7 +1605,7 @@ try{if(window.ResizeObserver)new ResizeObserver(()=>{if(G&&$('scr-game').classLi
 function goalBanner(){const e=$('goalBan');if(!e||!G||!LY)return;const n=G.st.cfg.need,a=[];
   if(n.score)a.push('<span>⭐ '+L('Набери ','Score ')+n.score+L(' очков',' points')+'</span>');
   if(n.items)for(const q in n.items)a.push('<span><img src="'+itemUri(q)+'" alt="">'+L('Собери: ','Collect: ')+L(IT_N[q][0],IT_N[q][1])+' × '+n.items[q]+'</span>');
-  if(n.clear)a.push('<span>🧱 '+L('Разбери старые кирпичи','Clear the old bricks')+'</span>');
+  if(n.clear)a.push('<span>🧱 '+(G.st.cfg.box?L('Разбери кирпичи и ящики','Clear bricks and crates'):G.st.cfg.ice?L('Разбери кирпичи и лёд','Clear bricks and ice'):L('Разбери старые кирпичи','Clear the old bricks'))+'</span>'); /*K2*/
   if(!a.length)return;
   e.innerHTML='<b>'+(G.cfg.boss?'🔥 '+L('Субботник! ','Big clean-up! '):'🎯 ')+L('Цель','Goal')+'</b>'+a.join('');
   e.style.left=Math.round(LY.bx+LY.B/2)+'px';e.style.top=Math.round(LY.by+LY.B/2)+'px';e.classList.add('on');
@@ -1498,8 +1628,8 @@ function setHud(){if(!G)return;const st=G.st,n=st.cfg.need;let h='';
     if(n.clear){const ok=st.oldLeft<=0;h+=`<span class="chip${ok?' ok':''}" id="chip-old"><span class="e">🧱</span>${ok?'✓':L('ещё ','left ')+st.oldLeft}</span>`;}}
   $('goals').innerHTML=h;
   let m='';if(G.mode==='level')m=L('Фигур: ','Pieces: ')+st.moves+(G.par?' · ★★★ '+L('до ','within ')+G.par:'');else if(G.mode==='daily')m=L('Фигур: ','Pieces: ')+st.moves;
-  if(st.combo>1)m+=(m?' · ':'')+'🔥 '+L('серия ×','streak ×')+st.combo;
-  $('movesL').textContent=m;}
+  if(st.combo>1&&!LK.on()/*K1: в новом виде серия — огонёк на углу поля*/)m+=(m?' · ':'')+'🔥 '+L('серия ×','streak ×')+st.combo;
+  $('movesL').textContent=m;/*K1*/LK.hud();/*/K1*/}
 function say(t,mood,ms){if(!G||!t)return;const b=$('bub');b.textContent=t;b.classList.add('on');$('hAv').innerHTML=portrait(G.host,mood||'happy');
   clearTimeout(say._t);say._t=setTimeout(()=>{b.classList.remove('on');if(G)$('hAv').innerHTML=portrait(G.host,'norm');},ms||2800);}
 // обучение 1-го уровня: после каждого хода — новая подсветка и слово соседа (boost)
@@ -1516,6 +1646,10 @@ setInterval(()=>{if(!G||G.mode!=='level'||G.st.over||G.busy||G.drag||G.hint||G.t
 function tip(t,ms){const e=$('tip');e.textContent=t;e.classList.add('on');clearTimeout(tip._t);tip._t=setTimeout(()=>e.classList.remove('on'),ms||5000);}
 function tipOnce(k,t,ms){if(S.tips[k])return false;S.tips[k]=1;save();tip(t,ms);return true;}
 function firstTips(){const c=G.cfg,my=G;setTimeout(()=>{if(G!==my)return;
+  /*K2: новые клетки — объяснение один раз*/
+  if(c.ice&&!S.tips.ice){/*сведение: после плашки цели (2,4 с), иначе на узком экране закрывает её*/setTimeout(()=>{if(G===my)tipOnce('ice',L('Новое — лёд! Ледяной кирпич надо собрать в ряд дважды: сначала треснет, потом исчезнет.','New — ice! An ice brick must be cleared twice: first it cracks, then it goes.'),8000);},2100);return;}
+  if(c.box&&!S.tips.box){/*сведение: после плашки цели (2,4 с), иначе на узком экране закрывает её*/setTimeout(()=>{if(G===my)tipOnce('box',L('Новое — ящики! Ящик ломается, если рядом с ним (или через него) собран ряд. Внутри бывает предмет.','New — crates! A crate breaks when a line is cleared next to it (or through it). Some hold an item.'),8000);},2100);return;}
+  if(c.hard&&!S.tips.hard){/*сведение: после плашки цели (2,4 с), иначе на узком экране закрывает её*/setTimeout(()=>{if(G===my)tipOnce('hard',L('Трудное задание: больше завала и крупнее фигуры. Монеты ×2!','Hard task: more rubble, bigger pieces. Coins ×2!'),6000);},2100);return;}
   if(c.tut){G.hint={ti:0,r:7,c:3};G.tut=1;say(L('Перетащи фигуру пальцем на светящееся место внизу. Ряд соберётся — и исчезнет!','Drag the piece onto the glowing spot below. A full row disappears!'),'happy',9000);kick();}
   else if(G.mode==='endless')tipOnce('end',L('Здесь без помощников: ставь фигуры, собирай ряды и столбцы. Ходов нет — конец игры. Рекорд идёт в рейтинг!','No helpers here: fill rows and columns. No moves — game over. Your best score goes to the rating!'),7000);
   else if(G.mode==='daily')tipOnce('daily',L('Задание дня одно на всех. Выполни его — и день засчитается в рейтинг!','The daily task is the same for everyone. Finish it to count the day in the rating!'),6000);
@@ -1528,10 +1662,10 @@ function layout(){const f=$('field'),app=$('app');const land=app.clientWidth>app
   const W=f.clientWidth,H=f.clientHeight;if(!W||!H)return;const dpr=Math.min(2,window.devicePixelRatio||1);
   cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';
   const pad=8;let B,cs,fr,bx,by,slots;
-  if(!land){B=Math.min(W-2*pad-18,(H-2*pad-30)/1.37);cs=Math.floor(B/8);B=cs*8;fr=Math.max(7,Math.round(cs*.24));
+  if(!land){B=Math.min(W-2*pad-18,(H-2*pad-30)/1.37);cs=Math.floor(B/8);B=cs*8;fr=Math.max(7,Math.round(cs*(LK.on()?LK.frK():.24)));
     const avail=H-2*pad-2*fr-B-12,th=Math.max(cs*1.8,Math.min(avail,cs*3.4));bx=Math.round((W-B)/2);by=pad+fr+Math.max(0,Math.round((avail-th)*.42));
     const ty=by+B+fr+12,tw=Math.min(W-2*pad,B+2*fr+40),tx=(W-tw)/2;slots=[0,1,2].map(i=>({x:tx+i*tw/3,y:ty,w:tw/3,h:th}));}
-  else{B=Math.min(H-2*pad-22,(W-2*pad-30)/1.36);cs=Math.floor(B/8);B=cs*8;fr=Math.max(7,Math.round(cs*.24));
+  else{B=Math.min(H-2*pad-22,(W-2*pad-30)/1.36);cs=Math.floor(B/8);B=cs*8;fr=Math.max(7,Math.round(cs*(LK.on()?LK.frK():.24)));
     bx=pad+fr+Math.max(0,Math.round((W-2*pad-2*fr-B-Math.round(B*.4)-12)*.3));by=Math.round((H-B)/2);
     const tx=bx+B+fr+12,tw=Math.max(cs*2.2,Math.min(W-tx-pad,B*.4)),th=(B+2*fr)/3;slots=[0,1,2].map(i=>({x:tx,y:by-fr+i*th,w:tw,h:th}));}
   LY={W,H,dpr,land,cs,B,bx,by,fr,slots};}
@@ -1549,7 +1683,7 @@ function stopLoop(){if(raf){cancelAnimationFrame(raf);raf=0;}}
 function frame(){raf=0;if(!G||!$('scr-game').classList.contains('on'))return;const now=performance.now();render(now);if(needLoop(now))kick();}
 function needLoop(now){return !!(G&&(G.drag||G.back||G.flashes.length||G.parts.length||G.pops.length||G.curtain||G.hint||G.sel>=0||G.tool||G.shake||G.flash||G.zoom||(G.kc&&G.sel>=0)||now-G.dealT<600||(G.placed&&now-G.placed.t0<200)));}
 function piecePath(g,v,x,y,s,col,th,alpha,ik,it){g.globalAlpha=alpha;v.cs.forEach((q,j)=>{drawBrick(g,x+q[1]*s,y+q[0]*s,s,col,th);if(ik&&j===it)drawItem(g,ik,x+q[1]*s,y+q[0]*s,s);});g.globalAlpha=1;}
-function render(now){if(!G||!LY)return;now=now||performance.now();const g=cv.getContext('2d'),T=theme(),st=G.st,{cs,B,bx,by,fr}=LY;
+function render(now){if(!G||!LY)return;now=now||performance.now();/*K1*/if(LK.on()){LK.render(now);return;}/*/K1*/const g=cv.getContext('2d'),T=theme(),st=G.st,{cs,B,bx,by,fr}=LY;
   g.setTransform(LY.dpr,0,0,LY.dpr,0,0);g.clearRect(0,0,LY.W,LY.H);
   if(G.shake){const e=(now-G.shake)/260;if(e>=1)G.shake=0;else g.translate(Math.sin(now*.09)*5*(1-e),Math.cos(now*.07)*3*(1-e));}
   if(G.zoom){const e=(now-G.zoom)/240;if(e>=1)G.zoom=0;else{const z=1+.04*Math.sin(e*Math.PI),cx=bx+B/2,cy=by+B/2;g.translate(cx,cy);g.scale(z,z);g.translate(-cx,-cy);}}
@@ -1565,7 +1699,7 @@ function render(now){if(!G||!LY)return;now=now||performance.now();const g=cv.get
   const pl=G.placed&&now-G.placed.t0<180?G.placed:null;
   for(let k=0;k<NN;k++){const r=k>>3,c=k&7,x=bx+c*cs,y=by+r*cs;
     if(st.b[k]){if(pl&&pl.ks.indexOf(k)>=0){const e=(now-pl.t0)/180,sc=1+.14*Math.sin(e*Math.PI);g.save();g.translate(x+cs/2,y+cs/2);g.scale(sc,sc);drawBrick(g,-cs/2,-cs/2,cs,st.b[k],T);if(st.it[k])drawItem(g,st.it[k],-cs/2,-cs/2,cs);g.restore();}
-      else{drawBrick(g,x,y,cs,st.b[k],T);if(st.it[k])drawItem(g,st.it[k],x,y,cs);}}
+      else{drawBrick(g,x,y,cs,st.b[k],T);if(st.old[k]>1)drawSpec(g,x,y,cs,st.old[k],T);if(st.it[k])drawItem(g,st.it[k],x,y,cs);}} /*K2: лёд, ящик*/
     else drawEmpty(g,x,y,cs,T);}
   if(G.flash){const e=(now-G.flash)/300;if(e>=1)G.flash=0;else{g.fillStyle='rgba(255,255,255,'+(.5*(1-e)).toFixed(3)+')';rr(g,bx-2,by-2,B+4,B+4,fr*.5);g.fill();}}
   // клавиатура (ПК): рамка клетки-курсора и «тень» выбранной фигуры
@@ -1603,11 +1737,11 @@ function render(now){if(!G||!LY)return;now=now||performance.now();const g=cv.get
   for(let i=G.pops.length-1;i>=0;i--){const p=G.pops[i],e=(now-p.t0)/p.dur;if(e<0)continue;if(e>=1){G.pops.splice(i,1);continue;}
     const sc=p.big?Math.min(1,.5+e*4):1;g.save();g.globalAlpha=e<.7?1:(1-e)/.3;g.translate(p.x,p.y-e*(p.big?18:44));g.scale(sc,sc);
     g.font='900 '+p.size+'px -apple-system,Segoe UI,Roboto,sans-serif';g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';g.lineWidth=p.size*.2;g.strokeStyle=p.stroke||'rgba(40,30,20,.85)';g.strokeText(p.t,0,0);g.fillStyle=p.c||'#fff';g.fillText(p.t,0,0);g.restore();}}
-function pop(t,x,y,o){o=o||{};G.pops.push({t,x,y,t0:performance.now()+(o.delay||0),dur:o.dur||900,size:o.size||Math.round(LY.cs*.55),c:o.c,stroke:o.stroke,big:o.big});}
-function burst(cells,t0){if(calm())return;const T=theme();for(const x of cells){const col=x.col===20?'#958a7c':T.st==='lcd'?T.ink:PAL[(x.col-1)%PAL.length],cx=LY.bx+((x.k&7)+.5)*LY.cs,cy=LY.by+((x.k>>3)+.5)*LY.cs;
+function pop(t,x,y,o){o=o||{};G.pops.push({t,x,y,t0:performance.now()+(o.delay||0),dur:o.dur||900,size:o.size||Math.round(LY.cs*.55),c:o.c,stroke:o.stroke,big:o.big,kind:o.kind/*K1*/});}
+function burst(cells,t0){if(calm())return;/*K1*/if(LK.on())return LK.burst(cells,t0);/*/K1*/const T=theme();for(const x of cells){const col=x.col===20?'#958a7c':T.st==='lcd'?T.ink:PAL[(x.col-1)%PAL.length],cx=LY.bx+((x.k&7)+.5)*LY.cs,cy=LY.by+((x.k>>3)+.5)*LY.cs;
   for(let i=0;i<4;i++){const a=Math.random()*6.283,sp=60+Math.random()*170;G.parts.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-130,s:LY.cs*(.13+Math.random()*.13),c:col,t0:t0+(x.dl||0),life:.55+Math.random()*.3});}}
   if(G.parts.length>420)G.parts.splice(0,G.parts.length-420);}
-function confetti(){if(calm()||!G)return;const now=performance.now();for(let i=0;i<70;i++){G.parts.push({x:Math.random()*LY.W,y:-10,vx:(Math.random()-.5)*80,vy:40+Math.random()*120,gr:160,s:6+Math.random()*6,c:PAL[i%PAL.length],t0:now+Math.random()*500,life:2.2});}kick();}
+function confetti(){if(calm()||!G)return;/*K1*/if(LK.on())return LK.confetti();/*/K1*/const now=performance.now();for(let i=0;i<70;i++){G.parts.push({x:Math.random()*LY.W,y:-10,vx:(Math.random()-.5)*80,vy:40+Math.random()*120,gr:160,s:6+Math.random()*6,c:PAL[i%PAL.length],t0:now+Math.random()*500,life:2.2});}kick();}
 // улетающий в счёт предмет (картинка поверх всего)
 function flyItem(k,kind,delay){const chip=$('chip-it-'+kind);if(!chip||calm())return;const app=$('app').getBoundingClientRect(),cr=cv.getBoundingClientRect(),tr=chip.getBoundingClientRect();
   const x0=cr.left-app.left+LY.bx+((k&7)+.5)*LY.cs-15,y0=cr.top-app.top+LY.by+((k>>3)+.5)*LY.cs-15,x1=tr.left-app.left+2,y1=tr.top-app.top+(tr.height-30)/2;
@@ -1648,6 +1782,7 @@ function tapPlace(r,c){const ti=G.sel;if(!G.st.tray[ti])return;const best=tapSpo
 const PRAISE=()=>['',L('Хорошо!','Good!'),L('Отлично!','Great!'),L('Здорово!','Awesome!'),L('Великолепно!','Superb!'),L('Невероятно!','Incredible!')];
 function doPlace(ti,r,c){const st=G.st,p=st.tray[ti];if(!p)return;const v=VARS[p.v],now=performance.now();
   const res=place(st,ti,r,c);if(!res){SND.no();return;}
+  qPlace(res);if(res.crk&&res.crk.length)burst(res.crk.map(k=>({k,col:20})),now); /*K2: поручения; лёд треснул*/
   G.sel=-1;G.hint=null;G.idleT=now;if(G.tool==='rot')G.tool=null;updBoost();$('tip').classList.remove('on');
   G.placed={ks:res.cells.filter(k=>st.b[k]),t0:now};SND.place();buzz(12);
   const cx=LY.bx+(c+v.w/2)*LY.cs,cy=LY.by+(r+v.h/2)*LY.cs;
@@ -1664,7 +1799,7 @@ function doPlace(ti,r,c){const st=G.st,p=st.tray[ti];if(!p)return;const v=VARS[p
     if(!G.tut&&st.moves-(G.sayM||-9)>=3){const t=res.allClear?['clean','wow']:res.n>=3?['big','wow']:res.combo>=3&&res.combo%2===1?['combo','happy']:null;if(t){G.sayM=st.moves;say(phr(G.host,t[0]),t[1],1700);}}}
   pop('+'+res.pts,cx,cy,{size:Math.round(LY.cs*(res.pts>=50?.62:.5))});
   if(res.dealt){G.dealT=now+120;setTimeout(()=>SND.deal(),140);}
-  if(G.mode==='endless'&&(S.best||0)>0&&st.score>S.best&&!G.rec){G.rec=true;SND.record();pop(L('Новый рекорд!','New best!'),LY.bx+LY.B/2,LY.by+LY.B*.25,{size:Math.round(LY.cs*.8),c:'#ffd43b',big:1,dur:1600,delay:300});say(phr(G.host,'record'),'wow');}
+  if(G.mode==='endless'&&(S.best||0)>0&&st.score>S.best&&!G.rec){G.rec=true;SND.record();pop(L('Новый рекорд!','New best!'),LY.bx+LY.B/2,LY.by+LY.B*.25,{size:Math.round(LY.cs*.8),c:'#ffd43b',big:1,dur:1600,delay:300,kind:'rec'/*K1*/});say(phr(G.host,'record'),'wow');}
   const fill=st.b.filter(x=>x).length;if(fill>=42&&!st.over&&now-G.tight>25000&&Math.random()<.5){G.tight=now;say(phr(G.host,'tight'),'wow');}
   setHud();if(G.mode==='endless')saveRun();
   if(G.tut)tutStep(res);
@@ -1705,6 +1840,7 @@ function useBoost(k){const st=G.st;updBoost();G.bu[k]=(G.bu[k]||0)+1;if(k==='hin
   if(k==='bomb'){G.tool='bomb';G.busy=false;hideModal();tip(L('Коснись поля: бомба уберёт кирпичики 3×3','Tap the board: the bomb clears 3×3'),3500);updBoost();kick();}}
 function rotateTray(i){const st=G.st;rotatePiece(st,i);SND.rot();delete G.paid.rot;G.hint=null;if(st.lost&&!noMoves(st)){st.lost=st.over=false;G.busy=false;}updBoost();curSave();kick();}
 function useBomb(r,c){const st=G.st,now=performance.now();delete G.paid.bomb;G.tool=null;G.hint=null;const res=bomb(st,r,c);
+  {let o=0;res.clr.forEach(x=>{if(x.it)qEv('it',1,x.it);if(x.old)o++;});if(o)qEv('old',o);} /*K2: поручения*/
   SND.bomb();buzz(60);if(!calm())G.shake=now;res.clr.forEach(x=>{x.dl=Math.hypot((x.k>>3)-r,(x.k&7)-c)*40;G.flashes.push({k:x.k,col:x.col,it:x.it,t0:now+x.dl});if(x.it)flyItem(x.k,x.it,x.dl);});burst(res.clr,now);
   if(!res.clr.length)toast(L('Там было пусто…','It was empty there…'));G.busy=false;updBoost();setHud();afterMove();curSave();kick();}
 
@@ -1716,14 +1852,16 @@ function giftChip(){const st=streakState();if(st.claimed||window.__demo||(S.wins
   S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};if(st.day===7)S.free.bomb=(S.free.bomb||0)+1;S.coins+=c;
   return chip('🎁 '+L('Подарок за вход','Daily gift')+' +'+coinsTxt(c)+(st.day===7?' + 💣':''));}
 function tmrwTxt(){const st=streakState(),d=st.claimed?st.day%7+1:st.day,g=STREAK[d-1];
-  return '🎁 '+L('Завтра: подарок +','Tomorrow: gift +')+coinsTxt(g)+(d===7?L(' и бомба',' and a bomb'):'')+L(' и новое задание дня',' and a new daily task');}
+  const x=tmrwHook(); /*K2: конкретный повод зайти завтра*/
+  return '🎁 '+L('Завтра: подарок +','Tomorrow: gift +')+coinsTxt(g)+(d===7?L(' и бомба',' and a bomb'):'')+L(', новые поручения соседей и задание дня',', new neighbours’ errands and a daily task')+(x?'<br>'+x:'');}
 const rankName=r=>L(RANKS[r][1],RANKS[r][2]);
-function rankLine(){const n=starsTot(),r=rankOf(n),nx=RANKS[r+1];return '🎖 '+rankName(r)+(nx?' · '+L('ещё ','')+(nx[0]-n)+'★ '+L('до «','to “')+L(nx[1],nx[2])+L('»','”'):'');}
+function rankLine(){const n=starsTot(),r=rankOf(n),nx=RANKS[r+1];return '🎖 '+rankName(r)+(nx?' · '+L('ещё ','need ')+(nx[0]-n)+'★ '+L('до «','to “')+L(nx[1],nx[2])+L('»','”'):'');}
 function rankChip(){const r=rankOf(starsTot());if(r<=(S.rk||0))return '';let c=0;for(let i=(S.rk||0)+1;i<=r;i++)c+=RANKS[i][3];S.rk=r;S.coins+=c;
   return chip('🎖 '+L('Новое звание «','New rank “')+rankName(r)+L('»','”')+' +'+coinsTxt(c));}
-function chStars(ch){let n=0;for(let i=ch*10+1;i<=ch*10+10;i++)n+=S.lv[i]||0;return n;}
+function chStars(ch){let n=0;for(let i=CH_A[ch];i<CH_A[ch]+CH_N[ch];i++)n+=S.lv[i]||0;return n;}
+const chestNeed=(ch,j)=>CHEST[j][0]*CH_N[ch]/10; /*K2: в главах по 20 уровней — звёзд на сундук вдвое больше*/
 function chestChip(ch){const st=chStars(ch),got=S.chest[ch]||0;let out='';
-  for(let j=got;j<CHEST.length;j++)if(st>=CHEST[j][0]){const b=CHEST[j][2];S.chest[ch]=j+1;S.coins+=CHEST[j][1];S.free[b]=(S.free[b]||0)+1;
+  for(let j=got;j<CHEST.length;j++)if(st>=chestNeed(ch,j)){const b=CHEST[j][2];S.chest[ch]=j+1;S.coins+=CHEST[j][1];S.free[b]=(S.free[b]||0)+1;
     out+=chip('🧰 '+L('Сундук «','Chest “')+chName(ch)+L('»','”')+' +'+coinsTxt(CHEST[j][1])+' + '+BOOST[b].ic);}
   return out;}
 function pantryChip(got){let out='';for(const q in got){if(!IT_N[q])continue;S.items[q]=(S.items[q]||0)+got[q];const t=S.itT[q]||0;let nt=t;while(nt<PANTRY.length&&S.items[q]>=PANTRY[nt])nt++;
@@ -1737,8 +1875,8 @@ function weekHtml(){const ks=weekDays(),t=todayKey(),D=LANG==='en'?['Mo','Tu','W
   return '<div class="week">'+h+'</div><p class="goal">'+L('За неделю: ','Per week: ')+WEEKB.map(x=>pl(x[0],'день','дня','дней','day','days')+' +'+x[1]).join(' · ')+' 💰</p>';}
 // сочная победа (аудит 36): звёзды по одной со звоном, монеты «накручиваются» и летят в счётчик, полоска главы; в спокойном режиме — сразу
 function starsPop(n){let s='';for(let i=0;i<3;i++)s+=i<n?'<span class="st" style="animation-delay:'+(.25+i*.3)+'s">★</span>':'<span class="e">☆</span>';return s;}
-function chapterBar(cfg){if(!cfg||!cfg.i)return '';const ch=cfg.ch,a=ch*10+1;let d=0;for(let i=a;i<a+10;i++)if(S.lv[i])d++;
-  return '<div class="chbar"><i style="width:'+(d*10)+'%"></i><span>'+chName(ch)+': '+d+'/10</span></div>';}
+function chapterBar(cfg){if(!cfg||!cfg.i)return '';const ch=cfg.ch,a=CH_A[ch],n=CH_N[ch];let d=0;for(let i=a;i<a+n;i++)if(S.lv[i])d++;
+  return '<div class="chbar"><i style="width:'+Math.round(d*100/n)+'%"></i><span>'+chName(ch)+': '+d+'/'+n+'</span></div>';}
 function winJuice(stars,coins,el){const my=G,w=$(el||'wCoins'),gc=$('gCoins');if(!w)return;
   if(calm()){w.textContent='+'+coinsTxt(coins);updCoins();return;}
   if(gc)gc.textContent='💰 '+(S.coins-coins);
@@ -1754,27 +1892,30 @@ function levelWon(){const st=G.st,cfg=G.cfg,i=cfg.i;YG.stop();curClear();
   if(G.mode==='daily')return dailyWon();
   const par=G.par||levelPar(cfg),stars=starsFor(st.moves,par),first=!S.lv[i];let coins=first?10+3*stars:3;if(cfg.boss&&first)coins*=2;
   S.lv[i]=Math.max(S.lv[i]||0,stars);S.unlocked=Math.max(S.unlocked,Math.min(NLV,i+1));S.wins++;S.done++;S.adW++;S.lossRow=0;S.lrN=0;S.coins+=coins;
-  const aw=giftChip()+rankChip()+chestChip(cfg.ch)+pantryChip(st.got);
+  qEv('lv',1);const aw=giftChip()+rankChip()+chestChip(cfg.ch)+pantryChip(st.got)+qChips(); /*K2: поручения*/
   if(S.free.hint<1&&i%5===0)S.free.hint=1; // раз в 5 уровней — бесплатная подсказка, если кончились
   save();SND.win();confetti();G.coins=coins;STAT.end('win',statF({st:stars,c:coins,f:first?1:0}));if(first&&i<=3&&S.wins<=3)STAT.ev('tut',{s:20+i}); /* tut 21–23: первые победы уровней 1–3 */
   const next=adDue()&&adReady(),x2=adBtnOk()&&i>=4&&!next&&first; /* ×2 — только за первое прохождение (на повторе +3 — ролик того не стоит) */
   const newCh=cfg.boss&&first&&i<NLV?`<p class="goal tipl">🎉 ${L('Открыто новое место: ','New place opened: ')}«${chName(cfg.ch+1)}»!</p>`:'';
-  const left=10-(i-1)%10-1,goal=first&&!cfg.boss&&left>0?`<p class="goal">${L('До субботника главы: ','To the chapter clean-up: ')}${pl(left,'уровень','уровня','уровней','level','levels')}</p>`:'';
+  const left=CH_A[cfg.ch]+CH_N[cfg.ch]-1-i,goal=first&&!cfg.boss&&left>0?`<p class="goal">${L('До субботника главы: ','To the chapter clean-up: ')}${pl(left,'уровень','уровня','уровней','level','levels')}</p>`:'';
   const q=phr(G.host,'win');
   modal(`<div class="av">${portrait(G.host,'happy')}</div><h2>${cfg.boss?L('Субботник окончен!','Clean-up done!'):L('Уровень ','Level ')+i+L(' пройден!',' complete!')}</h2>
     <div class="big-stars">${starsPop(stars)}</div><p>${L('Фигур: ','Pieces: ')}${st.moves} · ★★★ — ${L('до ','within ')}${par}</p><p class="coins-won" id="wCoins">+0 💰</p>${aw?'<div class="awards">'+aw+'</div>':q?'<p class="quote">'+q+'</p>':''}${newCh}${chapterBar(cfg)}${aw&&newCh?'':goal}<p class="goal tmrw">${tmrwTxt()}</p>
     <div class="row">${x2?`<button class="btn accent x2 noenter" id="wX2">📺 ×2 ${L('монеты за рекламу','coins for an ad')}</button>`:''}<button class="btn green" id="wNext">▶ ${i<NLV?L('Дальше','Next'):L('К уровням','To levels')}</button><button class="btn" id="wMap">🗺 ${L('Уровни','Levels')}</button></div>`);
-  winJuice(stars,coins);
+  winJuice(stars,coins);/*K1*/THEME.check();/*/K1*/
   if($('wX2'))STAT.offer('x2');if($('wX2'))$('wX2').onclick=()=>{const my=G;STAT.place('x2');showRewarded(()=>{if(G!==my||G.x2)return;G.x2=true;clearInterval(winJuice._c);setCoins(S.coins+coins);SND.coin();const w=$('wCoins');if(w)w.textContent='+'+coinsTxt(coins*2)+' (×2)';const b=$('wX2');if(b)b.remove();});};
   $('wNext').onclick=()=>{hideModal();goNext(()=>{if(i<NLV)startLevel(i+1);else openMap();});};
   $('wMap').onclick=()=>{hideModal();goNext(openMap);};
   offerReturn();}
-function dailyWon(){curClear();const d=String(G.day),first=!S.daily[d],coins=first?30:0;if(first){S.daily[d]=1;S.coins+=coins;}S.done++;S.adW++;S.lossRow=0;S.lrN=0;
-  const aw=giftChip()+(first?weekChip():'')+pantryChip(G.st.got);save();SND.win();confetti();LB.submit();STAT.end('win',statF({f:first?1:0}));
+function dailyWon(){curClear();const d=String(G.day),hard=!!G.cfg.hard,late=!!G.cfg.late; /*K2: трудное (×2, S.dh), догнанный день (+15, S.dl, в кубок, не в рейтинг)*/
+  const first=hard?!S.dh[d]:late?!dDone(d):!S.daily[d],coins=first?(hard?60:late?15:30):0;
+  if(first){if(hard)S.dh[d]=1;else if(late){S.dl[d]=1;const t=todayKey();S.dlc={d:t,n:(isObj(S.dlc)&&S.dlc.d===t?+S.dlc.n||0:0)+1};}else S.daily[d]=1;S.coins+=coins;}S.done++;S.adW++;S.lossRow=0;S.lrN=0;
+  qEv('dy',1);const aw=giftChip()+(first&&!hard&&!late?weekChip():'')+(first&&!hard?cupChip():'')+pantryChip(G.st.got)+qChips();save();SND.win();confetti();LB.submit();STAT.end('win',statF({f:first?1:0}));
   const q=phr(G.host,'win');
-  modal(`<div class="av">${portrait(G.host,'happy')}</div><h2>${L('Задание дня выполнено!','Daily task done!')}</h2>${coins?'<p class="coins-won" id="dCoins">+0 💰</p>':''}<p>${L('Фигур: ','Pieces: ')}${G.st.moves} · ${L('выполнено дней: ','days done: ')}<b>${LB.days()}</b></p>${q?'<p class="quote">'+q+'</p>':''}
-    ${aw?'<div class="awards">'+aw+'</div>':''}${weekHtml()}<p class="goal tmrw">${tmrwTxt()}</p>
-    <div class="row">${LB.ok()&&PLAT!=='vk'?'<button class="btn blue noenter" id="dLb">🏆 '+L('Рейтинг','Rating')+'</button>':''}<button class="btn green" id="dMenu">${L('В меню','Menu')}</button></div>`);
+  modal(`<div class="av">${portrait(G.host,'happy')}</div><h2>${hard?'💪 '+L('Трудное задание выполнено!','Hard task done!'):late?'↺ '+(+d%100)+' '+monG(+String(d).slice(4,6)-1)+L(' — засчитано!',' — counted!'):L('Задание дня выполнено!','Daily task done!')}</h2>${coins?'<p class="coins-won" id="dCoins">+0 💰</p>':''}<p>${L('Фигур: ','Pieces: ')}${G.st.moves} · ${L('выполнено дней: ','days done: ')}<b>${LB.days()}</b></p>${q?'<p class="quote">'+q+'</p>':''}
+    ${aw?'<div class="awards">'+aw+'</div>':''}${cupLine()}${weekHtml()}<p class="goal tmrw">${tmrwTxt()}</p>
+    <div class="row">${!hard&&!late&&!S.dh[d]?'<button class="btn accent" id="dHard2">💪 '+L('Трудное задание · +60 💰','Hard task · +60 💰')+'</button>':''}${LB.ok()&&PLAT!=='vk'?'<button class="btn blue noenter" id="dLb">🏆 '+L('Рейтинг','Rating')+'</button>':''}<button class="btn green" id="dMenu">${L('В меню','Menu')}</button></div>`);
+  if($('dHard2'))$('dHard2').onclick=()=>{hideModal();goNext(()=>startDaily(0,{hard:1}));}; /*K2*/
   if(coins)winJuice(0,coins,'dCoins');else updCoins();
   if($('dLb'))$('dLb').onclick=()=>LB.show('daily');$('dMenu').onclick=()=>{hideModal();goNext(leaveGame);};offerReturn();}
 function helpBtns(){if(!boostOn())return '';const st=G.st,out=[];
@@ -1805,7 +1946,7 @@ function endlessOver(){const st=G.st,prev=S.best||0,rec=st.score>prev,c=Math.min
   if(rec&&prev>0)confetti();
   const canAd=adBtnOk()&&!G.lifeAd,adFit=rec||st.moves>=40; /* межэкранная после «ходов нет» — только если партия была долгой или с рекордом */
   modal(`<div class="av">${portrait(G.host,rec?'wow':'sad')}</div><h2>${rec?L('Новый рекорд!','New best!'):L('Ходов нет','No moves left')}</h2><div class="bigsc">${st.score}</div>
-    <p>${rec?'<span class="rec">🏆 '+L('рекорд','best')+'</span>':L('Рекорд: ','Best: ')+S.best}</p>${c?'<p class="coins-won">+'+coinsTxt(c)+'</p>':''}
+    <p>${rec?'<span class="rec">🏆 '+L('рекорд','best')+'</span>':L('Рекорд: ','Best: ')+S.best}</p>${c?'<p class="coins-won">+'+coinsTxt(c)+'</p>':''}${(()=>{const q=qChips();return q?'<div class="awards">'+q+'</div>':'';})()}<p class="goal tmrw">${tmrwTxt()}</p>
     <div class="row">${canAd?`<button class="btn accent noenter" id="eAd">📺 ${L('Продолжить за рекламу','Continue for an ad')}</button>`:''}<button class="btn green" id="eAgain">↻ ${L('Ещё раз','Play again')}</button>${LB.ok()?'<button class="btn blue noenter" id="eLb">🏆 '+L('Рейтинг','Rating')+'</button>':''}<button class="btn" id="eMenu">${L('В меню','Menu')}</button></div>`);
   if($('eAd'))STAT.offer('cont');
   if($('eAd'))$('eAd').onclick=()=>{hideModal();const my=G;STAT.place('cont');showRewarded(()=>{if(G!==my)return;rescue(G.st);G.lifeAd=true;G.busy=false;G.dealT=performance.now();SND.deal();saveRun();say(phr(G.host,'life'),'happy');YG.start();kick();},()=>{if(G===my)endlessOver();});};
@@ -1820,13 +1961,13 @@ function curSave(){if(!G||G.mode==='endless'||window.__demo)return;const st=G.st
   try{if(st.over){localStorage.removeItem(CKEY);return;}
     localStorage.setItem(CKEY,JSON.stringify({v:1,mode:G.mode,i:G.cfg.i||0,day:G.day||0,t:Date.now(),b:st.b,it:st.it,old:st.old,tray:st.tray.map(p=>p&&{v:p.v,it:p.it,ik:p.ik}),
       score:st.score,combo:st.combo,since:st.since,moves:st.moves,lines:st.lines,got:st.got,oldLeft:st.oldLeft,deals:st.deals,redeals:st.redeals,life:st.life,d:st.d,rs:st.R.st(),
-      la:G.lifeAd?1:0,paid:G.paid,hi:G.hi?1:0}));}catch(e){}}
+      la:G.lifeAd?1:0,paid:G.paid,hi:G.hi?1:0,h:G.cfg.hard?1:0,lt:G.cfg.late?1:0}));}catch(e){}} /*K2: h — трудное, lt — догнанный день*/
 function curClear(){try{localStorage.removeItem(CKEY);}catch(e){}}
 function curLoad(){try{const o=JSON.parse(localStorage.getItem(CKEY)||'null');
   if(!o||o.v!==1||!Array.isArray(o.b)||o.b.length!==64||!Array.isArray(o.tray)||o.tray.length!==3||Date.now()-o.t>7*864e5)return null;
-  if(o.mode==='level'&&!(o.i>=1&&o.i<=S.unlocked))return null;if(o.mode==='daily'&&o.day!==dayKey(0))return null;if(o.mode!=='level'&&o.mode!=='daily')return null;
+  if(o.mode==='level'&&!(o.i>=1&&o.i<=S.unlocked))return null;if(o.mode==='daily'&&o.day!==dayKey(0)&&!(o.lt&&String(o.day).slice(0,6)===todayKey().slice(0,6)))return null;if(o.mode!=='level'&&o.mode!=='daily')return null;
   if(o.tray.some(p=>p&&!VARS[p.v]))return null;return o;}catch(e){return null;}}
-function curResume(o){try{const cfg=o.mode==='daily'?dailyCfg(o.day):levelCfg(o.i),st=newGame(cfg,1);
+function curResume(o){try{const cfg=o.mode==='daily'?dailyCfg(o.day,o.h):levelCfg(o.i),st=newGame(cfg,1);if(o.lt)cfg.late=1;
   const arr=(a,f)=>Array.isArray(a)&&a.length===64?a.map(x=>+x||0):f;st.b=arr(o.b,st.b);st.it=arr(o.it,st.it);st.old=arr(o.old,st.old);
   st.tray=o.tray.map(p=>p?{v:p.v,it:+p.it,ik:+p.ik||0}:null);st.got=isObj(o.got)?o.got:{};
   for(const f of ['score','combo','since','moves','lines','oldLeft','deals','redeals','life'])st[f]=+o[f]||0;st.d=+o.d||st.d;st.R=mkR(+o.rs||1);
@@ -1869,23 +2010,234 @@ function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal
 function updStreakDot(){const b=$('bStreak');b.innerHTML='🎁<small>'+L('Подарок','Gift')+'</small>'+(streakState().claimed||(S.wins||0)<1?'':'<span class="dot"></span>');}
 
 /* ================= настройки ================= */
+/*K2: ГЛУБИНА И ЦЕЛИ (поток K2, 03.10): «Двор мечты», поручения соседей, календарь задания дня с кубком месяца, «зачем зайти завтра».
+  Поля сохранения: S.yd {id:1} — вещи двора стоят; S.yb {id:день готовности ГГГГММДД} — строится; S.ydd — день последней постановки (число);
+  S.dh {день:1} — трудное задание; S.dl {день:1} — догнан пропущенный день месяца; S.dlc {d,n} — сколько дней догнано сегодня;
+  S.cup {'ГГГГММ':1…3} — кубок месяца (бронза/серебро/золото); S.q {d,l:[{k,n,q,h}],p:[…],g:[…],b} — поручения дня.
+  Вид (окна, рисунок двора) — заглушки на общих классах (.trow .pan .chbar .aw .btn); K1 заменит. API — в release-f/kirp-K2.md */
+
+/* ---- «Двор мечты»: 10 мест × 5 вещей за монеты; место открывается главой; Михалыч ставит одну вещь в день, от 100 💰 — строит 2 дня ---- */
+const DZONE=[{n:'У подъезда',en:'By the entrance',h:'mityai'},{n:'Детская площадка',en:'Playground',h:'mihalych'},{n:'Клумбы',en:'Flower beds',h:'zina'},
+  {n:'Гаражи',en:'Garages',h:'kolya'},{n:'Спортплощадка',en:'Sports ground',h:'zina'},{n:'Огород',en:'Kitchen garden',h:'zina'},{n:'Голубятня',en:'Dovecote',h:'mityai'},
+  {n:'Стол доминошников',en:'Domino table',h:'kolya'},{n:'Сквер',en:'Little square',h:'mihalych'},{n:'Праздник во дворе',en:'Yard party',h:'valya'}];
+// [id, место, рус, англ, цена, значок (эмодзи ≤ 11) или #фигура-заглушка, x, y (низ, в координатах фона 400×700), размер, цвет, сколько раз, шаг]
+const DREAM=[
+  ['bench',0,'Лавочка у подъезда','Bench by the door',40,'#bench',96,598,40,'#8d5a2b'],['urn',0,'Урна','Litter bin',30,'🗑',62,602,14],
+  ['lamp',0,'Фонарь','Street lamp',60,'#lamp',142,604,64,'#495057'],['cat',0,'Кот Барсик на лавочке','Barsik the cat',50,'🐈',102,584,15],
+  ['balc',0,'Цветы на балконах','Balcony flowers',70,'🌺',170,452,12,0,3,30],
+  ['sand',1,'Песочница','Sandpit',60,'#box',110,668,40,'#e9c46a'],['swing',1,'Качели','Swing',80,'#swing',58,652,38,'#e8590c'],
+  ['slide',1,'Горка','Slide',90,'#slide',160,672,34,'#1c7ed6'],['carou',1,'Карусель','Merry-go-round',100,'🎠',66,696,28],
+  ['rocket',1,'Лазалка-ракета','Rocket climber',110,'🚀',128,632,30],
+  ['daisy',2,'Клумба с ромашками','Daisy bed',50,'🌼',240,574,12,0,3,16],['tulip',2,'Тюльпаны','Tulips',60,'🌷',150,576,12,0,2,16],
+  ['rose',2,'Розы','Roses',70,'🌹',296,576,12,0,2,16],['fence',2,'Палисадник','Little front fence',80,'#fence',236,584,76,'#f1f3f5'],
+  ['sunfl',2,'Подсолнухи','Sunflowers',90,'🌻',336,566,18,0,2,18],
+  ['garage',3,'Гараж-ракушка','Shell garage',120,'#garage',322,692,58,'#868e96'],['car',3,'«Москвич» у гаража','Old car',150,'🚗',262,696,30],
+  ['tools',3,'Верстак с инструментом','Workbench',70,'🔧',352,642,15],['tyres',3,'Клумба из покрышек','Tyre planters',50,'#tyres',302,642,26,'#343a40'],
+  ['moto',3,'Мотоцикл с коляской','Motorbike',130,'🏍',228,662,26],
+  ['hbar',4,'Турник','Pull-up bar',60,'#hbar',186,640,40,'#495057'],['goal',4,'Футбольные ворота','Football goal',90,'🥅',212,698,28],
+  ['pong',4,'Теннисный стол','Table tennis',110,'🏓',250,628,22],['hock',4,'Хоккейная коробка','Ice rink',150,'🏒',150,698,24],
+  ['hoop',4,'Баскетбольное кольцо','Basketball hoop',70,'🏀',352,604,18],
+  ['beds',5,'Грядки','Vegetable beds',70,'#beds',300,610,50,'#7a5230'],['green',5,'Теплица','Greenhouse',130,'#green',346,612,40,'#a5d8ff'],
+  ['apple',5,'Яблоки на яблоне','Apples on the tree',110,'🍎',322,514,11,0,3,13],['pumpk',5,'Тыквы','Pumpkins',60,'🎃',272,614,14,0,2,16],
+  ['well',5,'Колодец','Well',120,'#well',48,614,30,'#868e96'],
+  ['dovec',6,'Голубятня','Dovecote',160,'#dove',332,282,46,'#74c0fc'],['doves',6,'Голуби','Pigeons',60,'🕊',290,232,14,0,3,22],
+  ['birdh',6,'Скворечник','Birdhouse',40,'🐦',72,472,14],['feed',6,'Кормушка','Bird feeder',40,'🌾',48,524,12],
+  ['vane',6,'Флюгер-петушок','Weathervane',70,'🐓',80,300,16],
+  ['dtab',7,'Стол для домино','Domino table',90,'#table',206,632,40,'#8d5a2b'],['samov',7,'Самовар','Samovar',70,'☕',192,614,12],
+  ['gazeb',7,'Беседка','Gazebo',160,'#gazebo',122,560,50,'#e67700'],['chess',7,'Шахматы','Chess',60,'♟',222,614,12],
+  ['radio',7,'Радиола','Radiogram',120,'📻',206,600,12],
+  ['fount',8,'Фонтан','Fountain',180,'⛲',200,700,40],['linden',8,'Аллея лип','Linden alley',100,'🌳',110,556,30,0,2,180],
+  ['icecr',8,'Киоск «Мороженое»','Ice-cream stand',120,'🍦',262,600,16],['clock',8,'Часы на столбе','Street clock',90,'🕰',172,560,14],
+  ['pbench',8,'Скамейки сквера','Park benches',80,'#bench',266,668,36,'#2b8a3e'],
+  ['garl',9,'Гирлянды','Garlands',80,'#garland',200,330,330,'#ffd43b'],['xtree',9,'Ёлка','Fir tree',150,'🎄',300,560,40],
+  ['stage',9,'Сцена','Stage',180,'#stage',200,556,70,'#c92a2a'],['ballo',9,'Шарики','Balloons',60,'🎈',118,520,16,0,3,14],
+  ['salut',9,'Салют','Fireworks',200,'🎆',200,190,40,0,3,90],
+  /* особые украшения (место 10): не за монеты — платный набор «Двор мечты» (K3 выдаёт yardGiveSet()) */
+  ['swan',10,'Лебеди из шин','Tyre swans',0,'🦢',150,690,18,0,2,26],['grape',10,'Виноград на беседке','Grapevine',0,'🍇',122,522,14,0,3,16],
+  ['soda',10,'Автомат газировки','Soda machine',0,'🥤',60,560,18],['chime',10,'Колокольчики на балконе','Wind chimes',0,'🎐',250,452,14,0,2,40],
+  ['lantn',10,'Фонарики над двором','String lanterns',0,'🏮',300,470,14,0,3,22]
+].map(a=>({id:a[0],z:a[1],n:a[2],en:a[3],p:a[4],ic:a[5],x:a[6],y:a[7],s:a[8],col:a[9]||'#888',k:a[10]||1,dx:a[11]||0,pay:a[1]===10}));
+const DRB={};DREAM.forEach(d=>DRB[d.id]=d);
+const DR_N=DREAM.filter(d=>!d.pay).length,YARD_PAY=DREAM.filter(d=>d.pay).map(d=>d.id); // 50 вещей за монеты; особые — для K3
+/* для K3 (платный набор «Двор мечты»): выдать вещь без монет и без «одна в день»; true — выдана */
+function yardGive(id){const d=DRB[id];if(!d)return false;S.yd[id]=1;delete S.yb[id];STAT.ev('dream',{a:'give',k:id});save();dreamBg();return true;}
+function yardGiveSet(){YARD_PAY.forEach(id=>{S.yd[id]=1;});STAT.ev('dream',{a:'set'});save();dreamBg();return YARD_PAY.slice();}
+const DR_BIG=100,DR_DAYS=2; // вещь от 100 💰 Михалыч строит 2 дня
+const drName=d=>L(d.n,d.en),dzName=z=>L(DZONE[z].n,DZONE[z].en);
+const dzOpen=z=>S.unlocked>=CH_A[z]; // место z открывается главой z (1-я — сразу)
+function dreamTick(){const t=dayKey(0),out=[];for(const id in S.yb){if(!DRB[id]||S.yd[id]){delete S.yb[id];continue;}if(t>=S.yb[id]){S.yd[id]=1;delete S.yb[id];out.push(id);STAT.ev('dream',{a:'done',k:id});}}return out;}
+function dreamBusy(){for(const id in S.yb)if(DRB[id]&&!S.yd[id])return DRB[id];return null;}
+const dreamUsed=()=>(S.ydd||0)===dayKey(0); // сегодня Михалыч уже ставил
+const dreamCnt=()=>DREAM.filter(d=>!d.pay&&S.yd[d.id]).length;
+function dreamNext(){let b=null;for(const d of DREAM)if(!d.pay&&!S.yd[d.id]&&!S.yb[d.id]&&dzOpen(d.z)&&(!b||d.p<b.p))b=d;return b;}
+function dreamBuy(id){const d=DRB[id];if(!d||d.pay||S.yd[id]||S.yb[id]||!dzOpen(d.z)||dreamBusy()||dreamUsed()||S.coins<d.p)return false;
+  S.coins-=d.p;STAT.ev('spend',{k:'y:'+id,c:d.p});if(d.p>=DR_BIG)S.yb[id]=dayKey(DR_DAYS);else S.yd[id]=1;S.ydd=dayKey(0);S.ydT=id;save();updCoins();dreamBg();return true;}
+function dreamAd(){const b=dreamBusy();if(b){S.yd[b.id]=1;delete S.yb[b.id];STAT.ev('dream',{a:'adfin',k:b.id});}else{S.ydd=0;STAT.ev('dream',{a:'admore'});}save();dreamBg();}
+// заглушка рисунка (K1 заменит): вещи на прозрачном холсте в координатах фона 400×700; строится — 🚧
+const EMJ='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+function drShape(g,sh,x,y,s,c){g.fillStyle=c;g.strokeStyle=c;const R=(a,b,w,h)=>{g.fillRect(x+a*s,y-b*s,w*s,h*s);};
+  if(sh==='bench'){R(-.5,.42,1,.14);R(-.5,.66,1,.12);g.fillStyle='#444';R(-.42,.28,.08,.28);R(.34,.28,.08,.28);}
+  else if(sh==='lamp'){R(-.04,1,.08,1);g.fillStyle='#ffe066';g.beginPath();g.arc(x,y-s,s*.12,0,7);g.fill();}
+  else if(sh==='box'){g.fillStyle='#8d5a2b';R(-.5,.3,1,.3);g.fillStyle=c;R(-.44,.26,.88,.18);}
+  else if(sh==='swing'){g.lineWidth=s*.06;g.beginPath();g.moveTo(x-s*.5,y);g.lineTo(x-s*.3,y-s);g.lineTo(x+s*.3,y-s);g.lineTo(x+s*.5,y);g.stroke();g.lineWidth=s*.02;g.beginPath();g.moveTo(x-s*.1,y-s);g.lineTo(x-s*.1,y-s*.3);g.moveTo(x+s*.1,y-s);g.lineTo(x+s*.1,y-s*.3);g.stroke();R(-.16,.32,.32,.06);}
+  else if(sh==='slide'){g.beginPath();g.moveTo(x-s*.5,y);g.lineTo(x-s*.3,y-s*.8);g.lineTo(x-s*.2,y-s*.8);g.lineTo(x+s*.5,y);g.closePath();g.fill();}
+  else if(sh==='fence'){for(let i=0;i<9;i++)R(-.5+i*.12,.3,.06,.3);R(-.5,.22,1,.04);}
+  else if(sh==='garage'){g.beginPath();g.moveTo(x-s*.5,y);g.lineTo(x-s*.5,y-s*.45);g.quadraticCurveTo(x,y-s*.75,x+s*.5,y-s*.45);g.lineTo(x+s*.5,y);g.fill();g.fillStyle='#5c636a';R(-.3,.4,.6,.4);}
+  else if(sh==='tyres'){for(const [a,b] of [[-.25,.2],[.25,.2],[0,.5]]){g.beginPath();g.arc(x+a*s,y-b*s,s*.2,0,7);g.fill();}g.fillStyle='#51cf66';g.beginPath();g.arc(x,y-s*.62,s*.12,0,7);g.fill();}
+  else if(sh==='hbar'){R(-.5,1,.06,1);R(.44,1,.06,1);R(-.5,1,1,.05);}
+  else if(sh==='beds'){for(let i=0;i<3;i++){R(-.5,.14+i*.0,1,.1);}g.fillStyle='#51cf66';for(let i=0;i<6;i++)R(-.45+i*.17,.24,.06,.1);}
+  else if(sh==='green'){R(-.5,.6,1,.6);g.fillStyle='rgba(255,255,255,.6)';R(-.42,.52,.36,.44);R(.06,.52,.36,.44);}
+  else if(sh==='well'){R(-.4,.5,.8,.5);g.fillStyle='#7a5230';R(-.5,1.1,1,.12);R(-.45,1.1,.06,.6);R(.39,1.1,.06,.6);}
+  else if(sh==='dove'){R(-.3,1,.6,.6);g.fillStyle='#7a5230';R(-.04,.4,.08,.4);g.beginPath();g.moveTo(x-s*.4,y-s);g.lineTo(x,y-s*1.3);g.lineTo(x+s*.4,y-s);g.fill();}
+  else if(sh==='table'){R(-.5,.5,1,.1);g.fillStyle='#5c3a1c';R(-.4,.4,.08,.4);R(.32,.4,.08,.4);}
+  else if(sh==='gazebo'){g.beginPath();g.moveTo(x-s*.55,y-s*.75);g.lineTo(x,y-s*1.1);g.lineTo(x+s*.55,y-s*.75);g.fill();g.fillStyle='#8d5a2b';R(-.45,.75,.06,.75);R(.39,.75,.06,.75);R(-.45,.25,.9,.06);}
+  else if(sh==='garland'){g.lineWidth=2;g.strokeStyle='#333';g.beginPath();g.moveTo(x-s*.5,y);g.quadraticCurveTo(x,y+s*.12,x+s*.5,y);g.stroke();for(let i=0;i<=12;i++){const t=i/12,px=x-s*.5+s*t,py=y+s*.24*t*(1-t);g.fillStyle=['#ff6b6b','#ffd43b','#51cf66','#4dabf7'][i%4];g.beginPath();g.arc(px,py+4,4,0,7);g.fill();}}
+  else if(sh==='stage'){R(-.5,.3,1,.3);g.fillStyle='#ffd43b';R(-.5,.34,1,.04);g.fillStyle='#862e2e';R(-.5,.9,.12,.6);R(.38,.9,.12,.6);}}
+function dreamDraw(g,W,H){const k=W/400,list=DREAM.filter(d=>S.yd[d.id]||S.yb[d.id]).sort((a,b)=>a.y-b.y);
+  for(const d of list){const x=d.x*k,y=d.y*k,s=d.s*k;
+    if(!S.yd[d.id]){g.font=Math.round(34*k)+'px '+EMJ;g.textAlign='center';g.textBaseline='bottom';g.fillText('🚧',x,y);continue;}
+    g.fillStyle='rgba(0,0,0,.16)';g.beginPath();g.ellipse(x,y-2*k,Math.min(s*.55,40*k),4*k,0,0,7);g.fill();
+    if(d.ic[0]==='#'){drShape(g,d.ic.slice(1),x,y,s,d.col);continue;}
+    g.font=Math.round(s*1.6)+'px '+EMJ;g.textAlign='center';g.textBaseline='bottom';for(let i=0;i<d.k;i++)g.fillText(d.ic,x+(i-(d.k-1)/2)*(d.dx?d.dx*k:s*1.7),y);}}
+let YARD_URI='';
+function dreamBg(){/*K1*/if(window.LK&&LK.on()){LK.yard(true);return;}/*/K1*/if(!YARD_URI)YARD_URI='url("data:image/svg+xml;charset=utf-8,'+encodeURIComponent(yardSvg())+'")';let u='';
+  if(DREAM.some(d=>S.yd[d.id]||S.yb[d.id])){try{const c=document.createElement('canvas');c.width=800;c.height=1400;dreamDraw(c.getContext('2d'),800,1400);u='url("'+c.toDataURL('image/png')+'"),';}catch(e){}}
+  $('app').style.backgroundImage=u+YARD_URI;}
+function openDream(zo){STAT.screen('dream');if(dreamTick().length)dreamBg();if(!(S.wins>0)){toast(L('Сначала пройди первый уровень','Finish the first level first'));return;}
+  const b=dreamBusy(),used=dreamUsed(),n=dreamCnt(),ad=adBtnOk();let st='';
+  if(b)st='🚧 '+L('Михалыч строит «','Mikhalych is building “')+drName(b)+L('» — готово ','” — ready ')+(S.yb[b.id]<=dayKey(1)?L('завтра','tomorrow'):L('через 2 дня','in 2 days'));
+  else if(used)st='✓ '+L('Сегодня Михалыч уже поставил вещь. Следующую — завтра.','Mikhalych has set up one thing today. The next one — tomorrow.');
+  else st='🧰 '+L('Михалыч свободен — выбирай, что поставить во дворе!','Mikhalych is free — choose what to set up!');
+  let cur=zo;if(cur==null){cur=0;for(let z=0;z<DZONE.length;z++)if(dzOpen(z)&&DREAM.some(d=>d.z===z&&!S.yd[d.id])){cur=z;break;}}
+  let h='';for(let z=0;z<DZONE.length;z++){const its=DREAM.filter(d=>d.z===z),c=its.filter(d=>S.yd[d.id]).length,op=dzOpen(z);
+    h+='<button class="trow'+(z===cur?' hot':'')+'" data-dz="'+z+'"><span class="ic">'+(op?(c===5?'✅':'🏡'):'🔒')+'</span><span>'+(z+1)+'. '+dzName(z)+' · '+c+'/5'+(op?'':'<small style="display:block;font-weight:700">'+L('откроется с главой «','opens with chapter “')+chName(z)+L('»','”')+'</small>')+'</span><i>'+(z===cur?'▾':'›')+'</i></button>';
+    if(z===cur&&op)for(const d of its){const own=S.yd[d.id],bd=S.yb[d.id];
+      h+='<div class="pan"><span style="font-size:30px;width:42px;flex:none;text-align:center">'+(bd?'🚧':/*сведение: в новом виде — рисунок вещи K1 вместо системного эмодзи*/(u=>u?'<img src="'+u+'" alt="" style="width:42px;height:42px;display:block;background:#bfe3c8;border-radius:12px">':d.ic[0]==='#'?'🏗':d.ic)(window.LK&&LK.on()&&LK.dreamIcon?LK.dreamIcon(d.id):''))+'</span><div><b>'+drName(d)+'</b><small style="display:block;color:#57606f">'+(own?L('стоит во дворе ✓','in the yard ✓'):bd?L('строится','being built'):d.p>=DR_BIG?L('строится 2 дня','takes 2 days'):L('ставится сразу','set up at once'))+'</small></div>'+
+        (own||bd?'':'<button class="btn green buy noenter" data-dy="'+d.id+'" style="flex:none;min-width:84px">'+coinsTxt(d.p)+'</button>')+'</div>';}}
+  modal('<h2>🏡 '+L('Двор мечты','Dream yard')+'</h2><p>'+L('Обустраивай двор за монеты — всё, что поставишь, видно на экране игры. Вещей: ','Furnish the yard with coins — everything you set up shows in the game. Things: ')+'<b>'+n+'/'+DR_N+'</b></p>'+
+    '<div class="dreamv" style="background-image:'+$('app').style.backgroundImage.replace(/"/g,"'")+'"></div><p class="goal tmrw">'+st+'</p>'+
+    ((b||used)&&ad?'<div class="row"><button class="btn accent noenter" id="dAd">📺 '+(b?L('Помочь Михалычу — готово сейчас','Help Mikhalych — ready now'):L('Ещё одну вещь сегодня','One more thing today'))+'</button></div>':'')+
+    '<div class="dzs">'+h+(()=>{const ps=DREAM.filter(d=>d.pay),c=ps.filter(d=>S.yd[d.id]).length;
+      return '<div class="trow"><span class="ic">⭐</span><span>'+L('Особые украшения · ','Special decorations · ')+c+'/'+ps.length+(c<ps.length?'<small style="display:block;font-weight:700">'+L('в наборе «Двор мечты» (магазин)','in the “Dream yard” pack (shop)')+'</small>':'')+'</span></div>';})()+'</div><div class="row"><button class="btn green" id="mCancel">'+L('Готово','Done')+'</button></div>');
+  if($('dAd')){STAT.offer('yard');$('dAd').onclick=()=>{hideModal();STAT.place('yard');showRewarded(()=>{dreamAd();SND.win();openDream(zo);},()=>openDream(zo));};}
+  $('mcard').querySelectorAll('[data-dz]').forEach(x=>x.onclick=()=>{SND.tap();const z=+x.dataset.dz;openDream(z===cur?-1:z);});
+  $('mcard').querySelectorAll('[data-dy]').forEach(x=>x.onclick=()=>{const d=DRB[x.dataset.dy];
+    if(dreamBusy()){SND.no();toast(L('Михалыч занят стройкой — новая вещь после неё','Mikhalych is busy building — next one after that'));return;}
+    if(dreamUsed()){SND.no();toast(L('Сегодня уже поставили вещь — следующая завтра','One thing a day — the next one tomorrow'));return;}
+    if(S.coins<d.p){SND.no();toast(L('Не хватает: ещё ','Not enough: need ')+coinsTxt(d.p-S.coins));return;}
+    SND.tap();modal('<h2>🏡 '+drName(d)+'</h2><p>'+(d.p>=DR_BIG?L('Михалыч построит за 2 дня. ','Mikhalych will build it in 2 days. '):L('Михалыч поставит сразу. ','Mikhalych will set it up at once. '))+L('Одна вещь в день.','One thing a day.')+'</p><div class="row"><button class="btn green buy noenter" id="dYes">'+L('Поставить за ','Set up for ')+coinsTxt(d.p)+'</button><button class="btn" id="dNo">'+L('Отмена','Cancel')+'</button></div>');
+    $('dNo').onclick=()=>openDream(cur);$('dYes').onclick=()=>{if(!dreamBuy(d.id)){SND.no();openDream(cur);return;}SND.coin();setTimeout(()=>SND.win(),180);
+      toast(d.p>=DR_BIG?L('🚧 Михалыч начал строить: ','🚧 Mikhalych started building: ')+drName(d):L('🏡 Во дворе появилось: ','🏡 New in the yard: ')+drName(d),3000);openDream(cur);};});
+  $('mCancel').onclick=()=>{hideModal();if(!G)renderMenu();};}
+
+/* ---- поручения соседей: 3 в день (зерно — дата), разные цели; награда растёт с прогрессом, за все три — «ящик соседей» ---- */
+const QT={pc:3,ln:3,cb:2,big:2,it:3,old:2,lv:2,dy:2,sc:1}; // вес вида
+function qStage(){return Math.min(1,(Math.min(S.unlocked,NLV)-1)/(NLV-1));}
+const qRew=()=>Math.round(5+5*qStage()),qBox=()=>Math.round(10+10*qStage());
+function qMake(day){const R=mkR(day*977+3),s=qStage(),hs=Object.keys(HOSTS),out=[],dd=!!S.daily[String(day)];
+  while(out.length<3){const ks=Object.keys(QT).filter(k=>!out.some(o=>o.k===k)&&!(k==='dy'&&dd)&&!(k==='lv'&&S.unlocked<3));let tot=0;ks.forEach(k=>tot+=QT[k]);let r=R()*tot,k=ks[0];
+    for(const x of ks){r-=QT[x];if(r<=0){k=x;break;}}
+    const o={k,h:hs.splice(Math.floor(R()*hs.length),1)[0]};
+    o.n=k==='pc'?Math.round((50+50*s)/5)*5:k==='ln'?Math.round(15+20*s):k==='cb'?(s<.5?3:4):k==='big'?Math.round(3+3*s):k==='it'?Math.round(8+12*s):k==='old'?Math.round(12+18*s):k==='lv'?2:k==='dy'?1:Math.round((300+700*s)/50)*50;
+    if(k==='it'){const ik=CHAPTERS[chOf(nextLevel())].ik;o.q=ik[Math.floor(R()*ik.length)];}
+    out.push(o);}
+  return out;}
+function qToday(){const t=todayKey();if(!isObj(S.q)||String(S.q.d)!==t)S.q={d:t,l:qMake(+t),p:[0,0,0],g:[0,0,0],b:0};return S.q;}
+function qTxt(o){const n=o.n;if(o.k==='it')return L('Собери: ','Collect: ')+L(IT_N[o.q][0],IT_N[o.q][1])+' × '+n;return {pc:L('Поставь ','Place ')+pl(n,'фигуру','фигуры','фигур','piece','pieces'),ln:L('Собери ','Clear ')+pl(n,'ряд','ряда','рядов','line','lines'),
+  cb:L('Сделай серию ×','Make a streak ×')+n,big:L('Собери 2 ряда разом — ','Clear 2+ lines at once — ')+pl(n,'раз','раза','раз','time','times'),
+  old:L('Разбери ','Clear ')+pl(n,'старый кирпич','старых кирпича','старых кирпичей','old brick','old bricks'),
+  lv:L('Пройди ','Win ')+pl(n,'уровень','уровня','уровней','level','levels'),dy:L('Выполни задание дня','Finish the daily task'),
+  sc:L('Набери ','Score ')+n+L(' очков в бесконечной игре',' in an endless game')}[o.k];}
+let QAW=[]; // награды за поручения — чипсами в окно итога
+function qEv(k,v,q){if(!(S.wins>0)||window.__demo)return;const Q=qToday();let ch=false;
+  Q.l.forEach((o,i)=>{if(o.k!==k||Q.g[i])return;if(k==='it'&&o.q!==q)return;
+    if(k==='cb'||k==='sc')Q.p[i]=Math.max(Q.p[i]||0,v);else Q.p[i]=(Q.p[i]||0)+v;
+    if(Q.p[i]>=o.n){Q.g[i]=1;const c=qRew();S.coins+=c;ch=true;STAT.ev('quest',{k:o.k,i:i});QAW.push('📋 '+hostName(o.h)+L(': спасибо!',': thanks!')+' +'+coinsTxt(c));}});
+  if(ch&&!Q.b&&Q.g.every(x=>x)){Q.b=1;const c=qBox(),hs=['hint','rot','new','bomb'],b=hs[Math.floor(Math.random()*4)];S.coins+=c;S.free[b]=(S.free[b]||0)+1;STAT.ev('qbox',{c});
+    QAW.push('📦 '+L('Ящик соседей','Neighbours’ box')+' +'+coinsTxt(c)+' + '+BOOST[b].ic);}
+  if(ch){save();updCoins();if(!inGame()&&!modalOn)qToast();}}
+function qChips(){const h=QAW.map(chip).join('');QAW=[];return h;}
+function qToast(){if(!QAW.length)return;toast(QAW.join(' · ').replace(/<[^>]+>/g,''),3500);QAW=[];}
+function qPlace(res){if(!res)return;qEv('pc',1);if(res.n){qEv('ln',res.n);if(res.n>=2)qEv('big',1);qEv('cb',res.combo);}if(res.olds)qEv('old',res.olds);
+  if(res.items)for(const q in res.items)qEv('it',res.items[q],+q);if(G&&G.mode==='endless')qEv('sc',G.st.score);}
+function openQuests(){STAT.screen('quests');const Q=qToday();let h='';
+  Q.l.forEach((o,i)=>{const n=o.n,p=Math.min(n,Q.p[i]||0),ok=!!Q.g[i];
+    h+='<div class="pan"><span class="qav">'+portrait(o.h,ok?'happy':'norm')+'</span><div><b>'+hostName(o.h)+'</b><small style="display:block;font-weight:700;font-size:16px;color:#2d3436">'+qTxt(o)+'</small>'+
+      (ok?'<small>'+L('Выполнено ✓','Done ✓')+'</small>':'<div class="chbar"><i style="width:'+Math.round(100*p/n)+'%"></i><span>'+p+'/'+n+' · +'+coinsTxt(qRew())+'</span></div>')+'</div><i>'+(ok?'✓':'')+'</i></div>';});
+  modal('<h2>📋 '+L('Поручения соседей','Neighbours’ errands')+'</h2><p>'+L('Три поручения на сегодня — в уровнях, задании дня и бесконечной. Выполни все — «ящик соседей»: ','Three errands for today — in levels, the daily task and endless. Do all three — the neighbours’ box: ')+'+'+coinsTxt(qBox())+L(' и помощник.',' and a helper.')+'</p>'+h+
+    '<p class="goal">'+(Q.b?'📦 '+L('Ящик соседей получен ✓ · завтра — новые поручения','Box received ✓ · new errands tomorrow'):'📦 '+L('Ящик соседей: ','Neighbours’ box: ')+Q.g.filter(x=>x).length+'/3')+'</p><div class="row"><button class="btn green" id="mCancel">'+L('Понятно','OK')+'</button></div>');
+  $('mCancel').onclick=()=>{hideModal();if(!G)renderMenu();};}
+
+/* ---- календарь задания дня: месяц, кубок (10/15/20 дней), открытка месяца за золото; пропуски не сгорают — можно догнать до 3 дней в день ---- */
+const CUPS=[[10,50,'🥉',L('Бронзовый','Bronze')],[15,75,'🥈',L('Серебряный','Silver')],[20,100,'🥇',L('Золотой','Gold')]];
+const MON_G=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'],MON_E=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MON_N=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const monG=m=>L(MON_G[m],MON_E[m]);
+const CARDS=[['zina','С Новым годом! Пусть во дворе будет светло и тепло.','Happy New Year! May the yard be bright and warm.'],['mihalych','Февраль метёт — а мы двор чистим. Спасибо, что заходишь!','February snow — we keep the yard clean. Thanks for coming!'],
+  ['valya','С весной! Мимозу — самым верным соседям.','Happy spring! Mimosa for the most loyal neighbours.'],['mityai','Апрель — пора скворечники вешать. Молодец, каждый день с нами!','April — time for birdhouses. Well done, every day with us!'],
+  ['kolya','Майские! Шашлыки, гармошка и ты — лучший сосед.','May holidays! You are the best neighbour.'],['zina','Июнь, каникулы! А ты как отличник — каждый день на месте.','June, holidays! And you are like a top pupil — here every day.'],
+  ['valya','Июль — варенье варим. Тебе первую банку!','July — jam time. The first jar is yours!'],['mityai','Август — яблоки посыпались. Набери полную корзину!','August — apples falling. Fill a whole basket!'],
+  ['zina','С первым сентября! Пятёрка тебе за старание.','Happy school start! An A for your effort.'],['mihalych','Октябрь — листья мету, а ты кирпичики кладёшь. Порядок!','October — I sweep leaves, you lay bricks. Order!'],
+  ['kolya','Ноябрь — гараж утепляю. Заходи греться!','November — warming up the garage. Come over!'],['valya','Декабрь — ёлку в гастроном привезли! Ждём тебя на праздник.','December — the fir tree arrived! See you at the party.']];
+const pad2=n=>(n<10?'0':'')+n;
+function monthInfo(){const d=new Date(nowMs()),y=d.getFullYear(),m=d.getMonth(),n=new Date(y,m+1,0).getDate(),first=(new Date(y,m,1).getDay()+6)%7,ym=String(y*100+m+1);
+  const ks=[];for(let i=1;i<=n;i++)ks.push(ym+pad2(i));return {y,m,n,first,ym,ks,today:d.getDate()};}
+const dDone=k=>!!(S.daily[k]||S.dl[k]);
+function monthCnt(){return monthInfo().ks.filter(dDone).length;}
+const cupOf=n=>n>=20?3:n>=15?2:n>=10?1:0;
+function dlLeft(){const t=todayKey();if(!isObj(S.dlc)||S.dlc.d!==t)return 3;return Math.max(0,3-(+S.dlc.n||0));}
+function cupLine(){const M=monthInfo(),c=monthCnt(),got=S.cup[M.ym]||0,nx=CUPS[got];
+  return '<div class="chbar"><i style="width:'+Math.min(100,Math.round(c*5))+'%"></i><span>🏆 '+L('Кубок ','Cup of ')+monG(M.m)+': '+c+'/20'+(nx?' · '+nx[2]+' '+L('ещё ','in ')+(nx[0]-c):' · 🥇 ✓')+'</span></div>';}
+function cupChip(){const M=monthInfo(),c=monthCnt(),got=S.cup[M.ym]||0,lv=cupOf(c);if(lv<=got)return '';let out='';
+  for(let j=got;j<lv;j++){S.coins+=CUPS[j][1];out+=chip(CUPS[j][2]+' '+CUPS[j][3]+L(' кубок ',' cup of ')+monG(M.m)+' +'+coinsTxt(CUPS[j][1])+(j===2?' + 💌 '+L('открытка','postcard'):''));}
+  S.cup[M.ym]=lv;STAT.ev('cup',{l:lv});return out;}
+function monthHtml(){const M=monthInfo(),t=todayKey(),D=LANG==='en'?['Mo','Tu','We','Th','Fr','Sa','Su']:['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],can=dlLeft()>0;
+  let h=D.map(x=>'<span class="wd hd">'+x+'</span>').join('');for(let i=0;i<M.first;i++)h+='<span class="wd emp"></span>';
+  M.ks.forEach((k,i)=>{const done=dDone(k),past=k<t,miss=past&&!done;h+=(miss&&can?'<button class="wd miss" data-dl="'+k+'">':'<span class="wd'+(done?' done':'')+(k===t?' today':'')+(k>t?' fut':'')+'">')+(i+1)+'<b>'+(done?'✓':miss?'↺':k===t?'•':'')+'</b>'+(miss&&can?'</button>':'</span>');});
+  return '<div class="mcal">'+h+'</div>'+cupLine()+'<p class="goal">'+CUPS.map(c=>c[2]+' '+pl(c[0],'день','дня','дней','day','days')+' +'+c[1]).join(' · ')+' 💰 · 🥇 + 💌</p>';}
+function openDailyCal(){STAT.screen('dailycal');const t=todayKey(),dd=!!S.daily[t],hd=!!S.dh[t];
+  modal('<h2>📅 '+L('Задание дня','Daily task')+'</h2><p>'+(dd?L('Сегодняшнее выполнено ✓','Today’s is done ✓')+(hd?'':' · '+L('есть 💪 трудное: ×2 монеты','try 💪 hard: ×2 coins')):L('Одно на всех, каждый день новое.','Same for everyone, new every day.'))+'</p>'+monthHtml()+
+    (dlLeft()>0&&monthInfo().ks.some(k=>k<t&&!dDone(k))?'<p class="goal">↺ '+L('Пропустил день? Нажми на него — догонишь (до 3 в день, +15 💰, в кубок, но не в рейтинг).','Missed a day? Tap it to catch up (up to 3 a day, +15 💰, counts for the cup, not the rating).')+'</p>':'')+
+    '<div class="row">'+(dd?'':'<button class="btn green" id="dGo">▶ '+L('Задание дня · +30 💰','Daily task · +30 💰')+'</button>')+(dd&&!hd?'<button class="btn accent" id="dHard">💪 '+L('Трудное задание · +60 💰','Hard task · +60 💰')+'</button>':'')+
+    (dd?'<button class="btn" id="dAgain">↻ '+L('Сыграть ещё раз','Play again')+'</button>':'')+(LB.ok()&&PLAT!=='vk'?'<button class="btn blue noenter" id="dLb">🏆 '+L('Рейтинг','Rating')+'</button>':'')+'<button class="btn" id="mCancel">'+L('Закрыть','Close')+'</button></div>');
+  if($('dGo'))$('dGo').onclick=()=>{hideModal();startDaily();};if($('dHard'))$('dHard').onclick=()=>{hideModal();startDaily(0,{hard:1});};
+  if($('dAgain'))$('dAgain').onclick=()=>{hideModal();startDaily();};if($('dLb'))$('dLb').onclick=()=>LB.show('daily');
+  $('mcard').querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{SND.tap();const k=b.dataset.dl,dt=+k%100;
+    modal('<h2>↺ '+dt+' '+monG(monthInfo().m)+'</h2><p>'+L('Сыграть задание того дня? Победа: +15 💰 и день в кубок месяца (в рейтинг не идёт).','Play that day’s task? A win: +15 💰 and the day counts for the month cup (not the rating).')+'</p><div class="row"><button class="btn green" id="dlGo">▶ '+L('Играть','Play')+'</button><button class="btn" id="dlNo">'+L('Отмена','Cancel')+'</button></div>');
+    $('dlGo').onclick=()=>{hideModal();startDaily(+k,{late:1});};$('dlNo').onclick=openDailyCal;});
+  $('mCancel').onclick=()=>{hideModal();if(!G)renderMenu();};}
+function cardsHtml(){const ks=Object.keys(S.cup).filter(k=>/^\d{6}$/.test(k)&&S.cup[k]>0).sort().reverse();if(!ks.length)return '';
+  return '<h3 style="margin:12px 0 4px">🏆 '+L('Кубки и открытки','Cups and postcards')+'</h3>'+ks.map(k=>{const m=+k.slice(4)-1,lv=S.cup[k],c=CARDS[m];
+    return '<div class="pan"><span style="font-size:30px;width:42px;flex:none;text-align:center">'+CUPS[lv-1][2]+'</span><div><b>'+L(MON_N[m],MON_E[m])+' '+k.slice(0,4)+'</b>'+(lv>=3?'<small style="display:block;color:#57606f;font-weight:700">💌 '+hostName(c[0])+': «'+L(c[1],c[2])+'»</small>':'')+'</div></div>';}).join('');}
+
+/* ---- «зачем зайти завтра»: конкретный повод — стройка двора, следующая вещь, кубок ---- */
+function tmrwHook(){const b=dreamBusy(),nx=dreamNext(),t1=dayKey(1);
+  if(b&&S.yb[b.id]<=t1)return '🏡 '+L('Михалыч достроит «','Mikhalych will finish “')+drName(b)+L('»','”');
+  if(nx&&!b&&dreamUsed()&&S.coins>=nx.p)return '🏡 '+L('«','“')+drName(nx)+L('» — можно ставить','” — ready to set up');
+  if(nx&&!b&&S.coins<nx.p&&nx.p-S.coins<=150)return '🏡 '+L('До «','To “')+drName(nx)+L('» ещё ','” need ')+coinsTxt(nx.p-S.coins);
+  const c=monthCnt(),got=S.cup[monthInfo().ym]||0,x=CUPS[got];if(x&&x[0]-c<=5)return '🏆 '+L('До кубка: ещё ','To the cup: ')+pl(x[0]-c,'день','дня','дней','day','days');
+  return '';}
+/*/K2*/
 function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="off">'+L('выкл','off')+'</i>';
   if(G&&!G.st.over)YG.stop();
   modal(`<h2>${L('Настройки','Settings')}</h2><div class="sets">
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
-    <button class="set" id="stRetro"><span>🕹 ${L('Ретро-экран','Retro screen')}<br><small>${L('серо-зелёный экран и пиксельные кирпичики, как в 90-е','grey-green screen and pixel bricks, like in the 90s')}</small></span>${on(theme().id==='retro')}</button>
+    ${/*K1*/LK.on()?`<button class="set" id="stRetro"><span>🕹 ${L('Карманная 90-х','90s handheld')}<br><small>${L('жёлтая карманная игра и ЖК-экран, как в 90-е','yellow handheld with an LCD, like in the 90s')}</small></span>${on(THEME.cur()==='retro')}</button>`:/*/K1*/`<button class="set" id="stRetro"><span>🕹 ${L('Ретро-экран','Retro screen')}<br><small>${L('серо-зелёный экран и пиксельные кирпичики, как в 90-е','grey-green screen and pixel bricks, like in the 90s')}</small></span>${on(theme().id==='retro')}</button>`}
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('без тряски, осколков и конфетти','no shaking, debris or confetti')}</small></span>${on(calm())}</button>
     ${STAT.available()?'<button class="set" id="stStat"><span>'+STAT.label().replace(/: [^:]*$/,'')+'<br><small>'+STAT.note()+'</small></span>'+on(STAT.enabled())+'</button>':''}
-    <button class="set" id="stLook"><span>🎨 ${L('Оформление','Looks')}<br><small>${L('кирпичная стена, дачные ящики, ночной двор…','brick wall, crates, night yard…')}</small></span><i class="go">›</i></button></div>
+    ${/*K1*/LK.on()?`<button class="set" id="stLook"><span>🎨 ${L('Оформление','Looks')}<br><small>${L('сейчас: ','now: ')}«${L(THEME.get(THEME.cur()).ru,THEME.get(THEME.cur()).en)}»</small></span><i class="go">›</i></button>`:/*/K1*/`<button class="set" id="stLook"><span>🎨 ${L('Оформление','Looks')}<br><small>${L('кирпичная стена, дачные ящики, ночной двор…','brick wall, crates, night yard…')}</small></span><i class="go">›</i></button>`}
+    ${/*K1*/THEME.oldLeft()>0?`<button class="set" id="stOld"><span>↩ ${L('Прежний вид','Classic look')}<br><small>${L('как было до обновления · ещё ','as before the update · ')+pl(Math.ceil(THEME.oldLeft()/864e5),'день','дня','дней','day','days')}</small></span>${on(THEME.cur()==='classic')}</button>`:''/*/K1*/}</div>
     ${PAY.on&&!inGame()?payHtml(['no_ads'],false):''}
     ${SOC.ok()?'<button class="set" id="stSoc"><span>👥 Друзья и игры<br><small>позвать, поделиться, ещё игры</small></span><i class="go">›</i></button>':''}
     <div class="row"><button class="btn noenter" id="stHow">❓ ${L('Как играть','How to play')}</button><button class="btn noenter" id="stAbout">ℹ️ ${L('Об игре','About')}</button><button class="btn green" id="stClose">${L('Готово','Done')}</button></div>`);
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
+  /*K1*/const back0=()=>S.th0g&&THEME.owned(S.th0g)&&S.th0g!=='retro'&&S.th0g!=='classic'?S.th0g:'g';const so=$('stOld');if(so)so.onclick=()=>{SND.tap();if(THEME.cur()==='classic')THEME.set(S.thPrev&&S.thPrev!=='classic'&&THEME.owned(S.thPrev)?S.thPrev:back0());else{S.thPrev=THEME.cur();THEME.set('classic');}openSettings();};
+  if(LK.on())$('stRetro').onclick=()=>{SND.tap();THEME.set(THEME.cur()==='retro'?back0():'retro');openSettings();};else/*/K1*/
   $('stRetro').onclick=()=>{if(theme().id==='retro'){S.theme=S.th0&&THB[S.th0]&&S.th0!=='retro'?S.th0:'yard';}else{S.th0=theme().id;S.theme='retro';}save();SND.tap();if(G)render();openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Turned on in the phone settings (reduce motion)'));return;}S.calm=!S.calm;save();applyCalm();openSettings();};
-  $('stLook').onclick=()=>{hideModal();openShop();};
+  $('stLook').onclick=()=>{/*K1*/if(LK.on()){THEME.open(openSettings);return;}/*/K1*/hideModal();openShop();};
   if(PAY.on&&!inGame()){PAY.bind($('mcard'));PAY.re=openSettings;}
   const sc=$('stSoc');if(sc)sc.onclick=openSocial;const sst=$('stStat');if(sst)sst.onclick=()=>{STAT.toggle();SND.tap();openSettings();};
   $('stAbout').onclick=openAbout;$('stHow').onclick=openHow;$('stClose').onclick=()=>{hideModal();if(G&&!G.st.over&&$('scr-game').classList.contains('on'))YG.start();};}
@@ -1902,6 +2254,8 @@ function openHow(){STAT.screen('rules');
     <p>🔄 ${L('Фигуры не поворачиваются — только помощником «Поворот».','Pieces do not rotate — only with the Rotate helper.')}</p>
     <p>🏁 ${L('Все три поставил — придут новые. Ни одна не влезает — ходов нет.','Placed all three — new ones come. None fits — no moves left.')}</p>
     <p>🎯 ${L('В «Приключении» у уровня цель: набрать очки, собрать яблоки, варенье, пятёрки или гайки (убери ряд с предметом) или разобрать старые кирпичи.','Adventure levels have goals: points, items (clear their row) or old bricks to remove.')}</p>
+    <p>❄ ${L('После 100-го уровня — новые главы: лёд (собери ряд с ним дважды) и ящики (ломаются, когда рядом собран ряд).','After level 100 — new chapters: ice (clear it twice) and crates (break when a line is cleared next to them).')}</p>
+    <p>🏡 ${L('Монеты — на «Двор мечты»: лавочки, качели, голубятня… Михалыч ставит одну вещь в день. Ещё — поручения соседей (3 в день) и кубок месяца за задание дня.','Spend coins on the Dream yard: benches, swings, a dovecote… Mikhalych sets up one thing a day. Plus neighbours’ errands (3 a day) and the monthly cup for daily tasks.')}</p><!--K2-->
     <p>🎁 ${L('Заходите каждый день — подарок за вход; пропустили день — подарки не сгорают. За звёзды — звания и сундуки глав, за собранные предметы — полки «Кладовки».','Visit every day for a gift; a missed day does not burn it. Stars give ranks and chapter chests, collected items fill the Pantry shelves.')}</p>
     <p>🤝 ${L('Раздача честная: фигуры случайные, но игра не подсовывает наборы, которые никак не поставить на поле.','Fair deals: pieces are random, but the game never deals a set that cannot be placed at all.')}</p></div>
     <div class="row"><button class="btn" id="hBack">← ${L('Назад','Back')}</button></div>`);
@@ -1911,6 +2265,7 @@ function openAbout(){STAT.screen('about');
     <p class="about"><b>${L('Честная раздача.','Fair deals.')}</b> ${L('Фигуры выпадают случайно. Если три фигуры набора никак не поставить на поле, игра пересдаёт их (до трёх раз) — нарочно «подлых» наборов не бывает. Когда ходов нет, игра говорит об этом сразу.','Pieces are random. If a set cannot be placed at all, it is re-dealt (up to three times). When there are no moves, the game says so right away.')}</p>
     <p class="about">${L('Персонажи — герои игры, а не живые игроки. В бесконечной игре помощников нет, поэтому рекорды у всех честные; монетами рекорд не купить.','Characters are game characters, not real players. Endless mode has no helpers, so records are fair.')}</p>
     ${PLAT==='vk'?'<p class="about"><b>'+L('Благодарности.','Credits.')+'</b> VK Bridge — © V Kontakte, LLC, '+L('лицензия MIT.','MIT license.')+'</p>':''}
+    <p class="about">${/*K1*/L('Шрифты Rubik и Manrope — лицензия SIL Open Font License 1.1.','Fonts Rubik and Manrope — SIL Open Font License 1.1.')/*/K1*/}</p>
     <p class="about">${L('На ПК: Esc — назад, Enter — главная кнопка окна, 1–3 — выбрать фигуру, стрелки — куда, Enter — поставить, H — подсказка.','On PC: Esc — back, Enter — main button, 1–3 — pick a piece, arrows — where, Enter — place, H — hint.')}</p>
     <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ '+L('Восстановить покупки','Restore purchases')+'</button>':''}<button class="btn" id="abBack">← ${L('Назад','Back')}</button></div>`);
   if($('abPay'))$('abPay').onclick=()=>PAY.again();
@@ -1918,7 +2273,7 @@ function openAbout(){STAT.screen('about');
 function applyCalm(){document.body.classList.toggle('calm',calm());}
 $('btnSet').onclick=openSettings;
 /* ---- клавиатура на ПК ---- */
-document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on'))return;
+document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on')||adWaiting())return;
   if(modalOn){
     if(k==='Escape'){const b=['mCancel','lbClose','sClose','stClose','abBack','sOk','hBack','qStay','dMenu','wMap','lMenu','eMenu','socClose','socBack'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
@@ -1953,8 +2308,279 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hide',true);cloudFlush();if(G){saveRun();curSave();}}else setPause('hide',false);});
 if(document.hidden)setPause('hide',true);
+/*K3:money*/
+/* ===== K3 «Деньги и онлайн» (03.10, ветка kboost3; журнал hobby-analytics/release-f/kirp-K3.md) =====
+   Магазин по разделам (Особое · Оформление · Монеты и помощники), «Набор новосёла», «Сезон двора» (книжка 4 недели: бесплатная и платная дорожки,
+   ничего не сгорает), «Двор мечты» (покупка, вещи — K2), «Пирожок тёте Вале», предложение в нужный момент (строкой, не чаще раза в день),
+   ролики «📺 примерить вид на партию» и «📺 посылки ×2», турнир дня (Яндекс — лидерборд day; VK — свой результат за неделю), «вызов соседу» ссылкой #ch=,
+   картинка в историю VK. Чужие функции не правим — обёртки (begin, levelWon, dailyWon, endlessOver, showLose, openShop, todayCard, openAbout, mergeSave, openMenu, leaveGame).
+   Поля сохранения: S.tmx (самое позднее время — защита от перевода часов), S.t0 (первый запуск), S.ssn (сезон), S.tn (турнир сегодня), S.tnH (история турнира),
+   S.k3d (дневные отметки), S.pie (пирожков), S.k3g (выдано разово). Слияние с облаком — k3Merge. */
+const K3={try:null,go:null,last:null,story:null,app:+((/[?&]vk_app_id=(\d+)/.exec(location.search)||[])[1])||54792676,chl:null};
+const K3F=['tmx','t0','ssn','tn','tnH','k3d','pie','k3g'];
+const k3Esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+// время с защитой от перевода часов назад: не меньше самого позднего виденного («будущее» дальше 40 дней — сбой часов, ему не верим)
+function k3Now(){const n=nowMs();let m=+S.tmx||0;if(!(m>0)||m>n+40*864e5)m=n;if(n>m)m=n;S.tmx=m;return m;}
+// номер дня от 01.01.2026 (по местной дате)
+function k3Day(t){const d=new Date(t==null?k3Now():t);return Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(2026,0,1))/864e5);}
+function k3DnKey(key){key=+key;return Math.round((Date.UTC(Math.floor(key/10000),Math.floor(key/100)%100-1,key%100)-Date.UTC(2026,0,1))/864e5);}
+function k3KeyDn(dn){const d=new Date(Date.UTC(2026,0,1)+dn*864e5);return d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate();}
+function k3D(){if(!isObj(S.k3d))S.k3d={};return S.k3d;}
+// раз в день: true — можно (и отмечаем)
+function k3Once(k){const d=k3D(),t=todayKey();if(d[k]===t)return false;d[k]=t;save();return true;}
+// счётчик за день: сколько уже (k3Cnt(k)), +1 (k3Cnt(k,1))
+function k3Cnt(k,inc){const d=k3D(),t=todayKey(),v=String(d[k]||''),n=v.slice(0,8)===t?+v.slice(9)||0:0;if(inc){d[k]=t+':'+(n+inc);save();return n+inc;}return n;}
+const k3Stat=(a,o)=>STAT.ev('mod',Object.assign({m:'k3',a},o||{}));
+function k3Price(id){const p=PAY.item(id);return p?PAY.price(p):'';}
+function k3Fix(){if(!(+S.t0>0))S.t0=k3Now();if(S.ssn!=null&&!isObj(S.ssn))delete S.ssn;if(S.tn!=null&&!isObj(S.tn))delete S.tn;if(!isObj(S.tnH))S.tnH={};
+  if(S.k3d!=null&&!isObj(S.k3d))S.k3d={};if(S.k3g!=null&&!isObj(S.k3g))S.k3g={};if(typeof S.pie!=='number'||!isFinite(S.pie))S.pie=0;}
+k3Fix();
+// облако: время и счётчики — максимум, первый запуск — раньше, разовые выдачи — объединение, сезон — тот же сезон по максимуму, иначе более поздний
+function k3Merge(L,d){const mx=(a,b)=>Math.max(+a||0,+b||0);
+  S.tmx=mx(L.tmx,d.tmx);S.t0=Math.min(+L.t0||Infinity,+d.t0||Infinity);if(!isFinite(S.t0))S.t0=k3Now();S.pie=mx(L.pie,d.pie);
+  S.k3g=Object.assign({},isObj(d.k3g)?d.k3g:{},isObj(L.k3g)?L.k3g:{});
+  const h=Object.assign({},isObj(L.tnH)?L.tnH:{});if(isObj(d.tnH))for(const k in d.tnH)h[k]=Math.max(+h[k]||0,+d.tnH[k]||0);S.tnH=h;
+  const a=isObj(L.tn)?L.tn:null,b=isObj(d.tn)?d.tn:null;S.tn=!a?b:!b?a:a.d!==b.d?(a.d>b.d?a:b):{d:a.d,a:mx(a.a,b.a),r:mx(a.r,b.r),m:a.r>=b.r?a.m:b.m,x:a.x||b.x?1:0};if(!S.tn)delete S.tn;
+  const p=isObj(L.ssn)?L.ssn:null,q=isObj(d.ssn)?d.ssn:null;
+  S.ssn=!p?q:!q?p:p.i!==q.i?(p.i>q.i?p:q):{i:p.i,pt:mx(p.pt,q.pt),f:mx(p.f,q.f),p:mx(p.p,q.p),pay:mx(p.pay,q.pay),dd:p.dd>q.dd?p.dd:q.dd,dn:p.dd===q.dd?mx(p.dn,q.dn):(p.dd>q.dd?p.dn:q.dn)};if(!S.ssn)delete S.ssn;
+  const kd=Object.assign({},isObj(d.k3d)?d.k3d:{});if(isObj(L.k3d))for(const k in L.k3d)if(!kd[k]||String(L.k3d[k])>String(kd[k]))kd[k]=L.k3d[k];S.k3d=kd;
+  k3Fix();}
+{const m0=mergeSave;mergeSave=function(d,ref){const keep={};for(const k of K3F)keep[k]=S[k];m0(d,ref);if(isObj(d))k3Merge(keep,d);};}
+
+/* ---------- Сезон двора: книжка на 4 недели (по календарю: 28.09.2026 + 28·n дней), 20 страниц по 20 очков ----------
+   Очки: новая ★ — 1, любой пройденный уровень — 1, задание дня — 6, бесконечная от 300 очков — 2 (до 3 партий в день); не больше 30 в день.
+   Ничего не сгорает: в конце сезона всё заработанное и не забранное выдаётся само. Платная дорожка — покупка season (без автопродления, на этот сезон). */
+const SSN_E=270,SSN_L=28,SSN_N=20,SSN_P=20,SSN_CAP=30;
+const SSN_NM=[['Зимние горки','Winter slides'],['Масленица','Pancake week'],['Капель','Spring drops'],['Весенний субботник','Spring clean-up'],['Сирень','Lilac'],['Тополиный пух','Poplar fluff'],
+  ['Дачный июль','Dacha July'],['Яблочный Спас','Apple feast'],['Бабье лето','Indian summer'],['Листопад','Falling leaves'],['Первый снег','First snow'],['Ёлка во дворе','New Year yard']];
+// награды страниц: c — монеты, p — посылка (монеты, «📺 ×2»), b — помощник, t — вид сезона (K1; нет — первый не открытый вид за монеты), d — украшение двора (K2; нет — монеты)
+const SSN_F=[['c',20],['b','hint',1],['c',20],['b','rot',1],['p',50],['c',20],['b','new',1],['c',20],['b','bomb',1],['p',60],['c',20],['b','hint',1],['c',20],['b','new',1],['p',70],['c',20],['b','bomb',1],['c',20],['b','rot',1],['p',100]];
+const SSN_PD=[['d'],['c',40],['b','hint',2],['c',40],['b','bomb',1],['c',60],['b','new',2],['c',40],['b','rot',2],['t'],['c',40],['b','hint',2],['c',60],['b','bomb',2],['c',40],['b','new',2],['c',60],['b','rot',2],['c',80],['c',150]];
+const SSN_TH={},SSN_DECO={}; // номер сезона → id вида (K1) / украшения двора (K2); пусто — запасные награды
+function ssnCur(){return Math.max(0,Math.floor((k3Day()-SSN_E)/SSN_L));}
+function ssnInfo(i){const a=SSN_E+i*SSN_L,mid=new Date(2026,0,1+a+14),nm=SSN_NM[mid.getMonth()];return {i,n:L(nm[0],nm[1]),left:Math.max(1,a+SSN_L-k3Day())};}
+function ssnNew(i){return {i,pt:0,f:0,p:0,pay:0,dd:'',dn:0};}
+function ssn(){const cur=ssnCur();if(!isObj(S.ssn))S.ssn=ssnNew(cur);else if(S.ssn.i<cur)ssnEnd(cur);else if(S.ssn.i>cur+1)S.ssn=ssnNew(cur);return S.ssn;}
+function ssnPages(s){return Math.min(SSN_N,Math.floor((+s.pt||0)/SSN_P));}
+function ssnTxt(r,i){if(r[0]==='c')return r[1]+' 💰';if(r[0]==='p')return '📦 '+r[1]+' 💰';if(r[0]==='b')return BOOST[r[1]].ic+'×'+r[2];
+  if(r[0]==='t'){const id=SSN_TH[i];return '🎨 '+(id&&THB[id]?L(THB[id].n,THB[id].en):L('вид кирпичиков','brick look'));}return '🏡 '+L('украшение','decoration');}
+function ssnGive(r,i,mult){mult=mult||1;
+  if(r[0]==='c'||r[0]==='p'){S.coins+=r[1]*mult;return (r[0]==='p'?'📦 ':'')+'+'+coinsTxt(r[1]*mult)+(mult>1?' (×2)':'');}
+  if(r[0]==='b'){S.free[r[1]]=(S.free[r[1]]||0)+r[2];return BOOST[r[1]].ic+' '+L(BOOST[r[1]].n,BOOST[r[1]].en)+' ×'+r[2];}
+  if(r[0]==='t'){let t=THB[SSN_TH[i]];if(!t||ownsTheme(t))t=THEMES.find(x=>x.price&&!ownsTheme(x));
+    if(t){S.own['t:'+t.id]=1;return '🎨 '+L('Вид «','Look “')+L(t.n,t.en)+L('»','”');}S.coins+=300;return '+'+coinsTxt(300);}
+  try{const id=SSN_DECO[i];if(id&&typeof yardGive==='function'&&yardGive(id))return '🏡 '+L('Украшение двора','Yard decoration');}catch(e){}
+  S.coins+=100;return '+'+coinsTxt(100);}
+// забрать всё дошедшее (paidOnly — только платную дорожку; x2 — посылки вдвое)
+function ssnClaim(paidOnly,x2){const s=ssn(),n=ssnPages(s),out=[];
+  if(!paidOnly){for(let j=s.f;j<n;j++)out.push(ssnGive(SSN_F[j],s.i,x2&&SSN_F[j][0]==='p'?2:1));s.f=n;}
+  if(s.pay){for(let j=s.p;j<n;j++)out.push(ssnGive(SSN_PD[j],s.i));s.p=n;}
+  if(out.length){save();updCoins();}return out;}
+function ssnLeft(s){const n=ssnPages(s);return Math.max(0,n-s.f)+(s.pay?Math.max(0,n-s.p):0);}
+function ssnParcel(s){const n=ssnPages(s);for(let j=s.f;j<n;j++)if(SSN_F[j][0]==='p')return true;return false;}
+// сезон кончился: всё заработанное — само, без окна (тост); дальше — новая книжка
+function ssnEnd(cur){const s=S.ssn,n=ssnPages(s),out=[];for(let j=s.f;j<n;j++)out.push(ssnGive(SSN_F[j],s.i));if(s.pay)for(let j=s.p;j<n;j++)out.push(ssnGive(SSN_PD[j],s.i));
+  S.ssn=ssnNew(cur);save();if(out.length)setTimeout(()=>toast(L('📖 Сезон «','📖 Season “')+ssnInfo(s.i).n+L('» закончился — всё заработанное ваше: ','” is over — all you earned is yours: ')+out.join(', '),6000),1200);}
+// очки сезона; возвращает, сколько начислено
+function k3Pts(n){if(!(n>0))return 0;const s=ssn(),t=todayKey();if(s.dd!==t){s.dd=t;s.dn=0;}const g=Math.max(0,Math.min(n,SSN_CAP-s.dn));if(!g)return 0;s.dn+=g;s.pt+=g;save();return g;}
+function k3PtsChip(g,before){if(!g)return '';const s=ssn(),up=ssnPages(s)>before;return chip('📖 '+L('Сезон двора: +','Yard season: +')+g+(up?L(' · новая страница!',' · new page!'):''));}
+function k3SsnPay(){const s=ssn();s.pay=1;K3.paidGot=ssnClaim(true);}
+function openSeason(back){STAT.screen('season');const s=ssn(),inf=ssnInfo(s.i),n=ssnPages(s),left=ssnLeft(s),pc=ssnParcel(s);
+  const nx=n<SSN_N?(n+1)*SSN_P:0,bar=nx?'<div class="chbar"><i style="width:'+Math.round(100*((s.pt||0)-n*SSN_P)/SSN_P)+'%"></i><span>'+L('до страницы ','to page ')+(n+1)+': '+(s.pt||0)+' / '+nx+'</span></div>':'<p class="goal tipl">✓ '+L('Все 20 страниц пройдены!','All 20 pages done!')+'</p>';
+  let rows='';for(let j=0;j<SSN_N;j++){const got=j<n,fc=j<s.f,pp=j<s.p;
+    rows+='<div class="lbr'+(j===n?' me':'')+'"><b>'+(j+1)+'</b><span>'+(fc?'✓ ':got?'🎁 ':'')+ssnTxt(SSN_F[j],s.i)+'</span><i>'+(s.pay?(pp?'✓ ':got?'🎁 ':''):'🔒 ')+ssnTxt(SSN_PD[j],s.i)+'</i></div>';}
+  const ad=pc&&adBtnOk(),buy=PAY.on&&!s.pay&&PAY.item('season');if(ad)STAT.offer('parcel');
+  modal('<h2>📖 '+L('Сезон двора «','Yard season “')+inf.n+L('»','”')+'</h2><p>'+L('Осталось ','Left: ')+pl(inf.left,'день','дня','дней','day','days')+' · '+L('страниц: ','pages: ')+n+L(' из ',' of ')+SSN_N+'</p>'+bar+
+    '<p class="goal">'+L('Очки сезона: новая ★ и пройденный уровень — по 1, задание дня — 6, бесконечная от 300 очков — 2. До 30 в день. Ничего не сгорает: что не забрали — отдадим в конце сезона.','Season points: a new ★ or a won level — 1 each, daily task — 6, endless game over 300 — 2. Up to 30 a day. Nothing burns: unclaimed rewards are given at the end.')+'</p>'+
+    (left?'<div class="helpers">'+(ad?'<button class="btn accent noenter" id="ssX2">📺 '+L('Забрать, посылки ×2','Take, parcels ×2')+'</button>':'')+'<button class="btn green" id="ssGet">🎁 '+L('Забрать','Take')+' ('+left+')</button></div>':'')+
+    (buy?'<div class="pay"><h3>'+L('Платная дорожка','Paid track')+'</h3>'+PAY.row(PAY.item('season'))+'<p class="goal">'+L('Платите один раз за этот сезон, сами ничего не списывается. Уже заработанное на платной дорожке — сразу.','One payment for this season, nothing renews itself. What you already earned on the paid track is given at once.')+'</p></div>':'')+
+    '<div class="lb"><div class="lbr"><b>№</b><span>'+L('Бесплатно','Free')+'</span><i>'+(s.pay?'✓ ':'')+L('Платная','Paid')+'</i></div>'+rows+'</div>'+
+    '<div class="row"><button class="btn" id="mCancel">'+L('Закрыть','Close')+'</button></div>');
+  if(buy){PAY.bind($('mcard'));PAY.re=()=>{openSeason(back);if(K3.paidGot&&K3.paidGot.length){toast('📖 '+K3.paidGot.join(', '),5000);K3.paidGot=null;}};}
+  const got=out=>{if(!out.length)return;SND.coin();toast('🎁 '+out.join(', '),4500);openSeason(back);};
+  if($('ssGet'))$('ssGet').onclick=()=>{k3Stat('ssn_get');got(ssnClaim());};
+  if($('ssX2'))$('ssX2').onclick=()=>{hideModal();STAT.place('parcel');showRewarded(()=>{k3Stat('ssn_x2');got(ssnClaim(false,true));},()=>openSeason(back));};
+  $('mCancel').onclick=()=>{hideModal();if(back)back();};}
+
+/* ---------- товары: выдача ---------- */
+function k3StarterOk(){return !PAY.own('starter')&&k3Now()-(+S.t0||k3Now())<7*864e5;}
+function k3Starter(){if(!isObj(S.k3g))S.k3g={};if(S.k3g.st)return;S.k3g.st=1;for(const k of ['hint','rot','new','bomb'])S.free[k]=(S.free[k]||0)+2;}
+function k3Pie(){S.pie=(S.pie||0)+1;setTimeout(()=>{if(G&&!G.st.over)return;
+  modal('<div class="av">'+portrait('valya','happy')+'</div><h2>'+L('Спасибо, золотой!','Thank you, dear!')+'</h2><p class="quote">'+L('Ой, пирожок! С капустой, мой любимый. Двор тебе кланяется — заходи почаще!','Oh, a pie! Cabbage, my favourite. The whole yard thanks you — come by often!')+'</p><p class="coins-won">+'+coinsTxt(100)+'</p>'+
+    (S.pie>1?'<p>'+L('Угостили тётю Валю: ','Pies for Aunt Valya: ')+S.pie+'</p>':'')+'<div class="row"><button class="btn green" id="mCancel">'+L('На здоровье!','Enjoy!')+'</button></div>');$('mCancel').onclick=hideModal;},700);}
+
+/* ---------- магазин: Особое · Оформление · Монеты и помощники ---------- */
+function k3Row(id,ic,t,sub,go){return '<button class="set" id="'+id+'"><span>'+ic+' '+t+(sub?'<br><small>'+sub+'</small>':'')+'</span><i class="go">'+(go||'›')+'</i></button>';}
+function openStore(){if(inGame())return openCoins();STAT.screen('store');const p=id=>PAY.on&&PAY.item(id)?PAY.row(PAY.item(id)):'';
+  const s=ssn(),inf=ssnInfo(s.i),sl=ssnLeft(s);
+  let sp=(k3StarterOk()?p('starter'):'')+k3Row('k3Ssn','📖',L('Сезон двора «','Yard season “')+inf.n+L('»','”'),L('страница ','page ')+ssnPages(s)+L(' из ',' of ')+SSN_N+' · '+L('осталось ','left: ')+pl(inf.left,'день','дня','дней','day','days')+(sl?' · 🎁 '+sl:''),sl?'🎁':'›');
+  if(!s.pay)sp+=p('season');if(typeof yardGive==='function'||PAY.test)sp+=p('yard');sp+=p('no_ads')+p('pie');
+  const th=THEMES.filter(t=>t.pay).map(t=>t.pay).concat(window.THEME&&THEME.list?THEME.list().filter(t=>t.unlock&&t.unlock.t==='pay').map(t=>t.unlock.pay):[]).filter(x=>PAY_ITEMS[x]).filter((x,i,a)=>a.indexOf(x)===i).map(p).join('');
+  const adc=adBtnOk()&&adCoinsLeft()>0;
+  const hb=['hint','rot','new','bomb'].map(k=>'<button class="btn buy noenter" data-k3h="'+k+'">'+BOOST[k].ic+'<small>'+coinsTxt(BOOST[k].p)+'</small></button>').join('');
+  modal('<h2>🛍 '+L('Магазин','Shop')+'</h2><p>'+L('У тебя ','You have ')+'<b>'+coinsTxt(S.coins)+'</b></p>'+
+    '<div class="pay"><h3>⭐ '+L('Особое','Special')+'</h3>'+sp+'</div>'+
+    '<div class="pay"><h3>🎨 '+L('Оформление','Looks')+'</h3>'+th+k3Row('k3Looks','🎨',L('Все виды кирпичиков','All brick looks'),L('за монеты, за ролики, за звания — и примерить на партию','for coins, videos, ranks — or try one for a game'))+'</div>'+
+    '<div class="pay"><h3>💰 '+L('Монеты и помощники','Coins and helpers')+'</h3>'+p('coins_s')+p('coins_l')+
+      (adc?'<button class="set" id="k3AdC"><span>📺 +'+coinsTxt(AD_COINS)+' '+L('за рекламу','for an ad')+'<br><small>'+L('осталось сегодня: ','left today: ')+adCoinsLeft()+'</small></span><i class="go">›</i></button>':'')+
+      '<p class="goal">'+L('Помощники за монеты — в запас (у вас: ','Helpers for coins — kept in stock (you have: ')+['hint','rot','new','bomb'].map(k=>BOOST[k].ic+(S.free[k]||0)).join(' ')+')</p><div class="helpers">'+hb+'</div></div>'+
+    '<div class="row"><button class="btn" id="mCancel">'+L('Закрыть','Close')+'</button></div>');
+  PAY.bind($('mcard'));PAY.re=openStore;
+  $('k3Ssn').onclick=()=>{SND.tap();openSeason(openStore);};
+  $('k3Looks').onclick=()=>{SND.tap();hideModal();if(window.THEME&&THEME.open)THEME.open(openStore);else(typeof openLooks==='function'?openLooks:openShop)();};
+  if($('k3AdC')){STAT.offer('coins');$('k3AdC').onclick=()=>{hideModal();STAT.place('coins');showRewarded(()=>{adCoinsLeft();S.adc.n++;setCoins(S.coins+AD_COINS);SND.coin();toast('+'+coinsTxt(AD_COINS));openStore();},openStore);};}
+  $('mcard').querySelectorAll('[data-k3h]').forEach(b=>b.onclick=()=>{const k=b.dataset.k3h,c=BOOST[k].p;if(S.coins<c){SND.no();k3Short(c-S.coins,openStore);return;}
+    S.coins-=c;S.free[k]=(S.free[k]||0)+1;STAT.ev('spend',{k:'sh_'+k,c});save();updCoins();SND.coin();toast(BOOST[k].ic+' '+L(BOOST[k].n,BOOST[k].en)+L(' — в запасе: ',' — in stock: ')+S.free[k]);openStore();});
+  $('mCancel').onclick=hideModal;}
+// не хватает монет: мягкое предложение раз в день (сколько дней игры или покупка), иначе — короткий тост
+function k3Short(need,back){const days=Math.max(1,Math.ceil(need/65)),ids=[k3StarterOk()&&PAY.item('starter')?'starter':null,PAY.item('coins_s')?'coins_s':null,PAY.item('coins_l')?'coins_l':null].filter(Boolean);
+  if(!PAY.on||inGame()||!ids.length||!k3Once('short')){toast(L('Не хватает монет: нужно ещё ','Not enough coins: need ')+coinsTxt(need));return;}
+  k3Stat('of_short',{k:ids[0]});
+  modal('<h2>💰 '+L('Не хватает монет','Not enough coins')+'</h2><p>'+L('Нужно ещё ','You need ')+'<b>'+coinsTxt(need)+'</b>. '+L('Монеты дают за уровни, задание дня и подарки — это примерно ','Coins come from levels, daily tasks and gifts — about ')+pl(days,'день','дня','дней','day','days')+L(' игры.',' of play.')+'</p>'+
+    '<div class="pay"><h3>'+L('Или сразу','Or right now')+'</h3>'+ids.map(id=>PAY.row(PAY.item(id))).join('')+'</div><div class="row"><button class="btn green" id="mCancel">'+L('Понятно, накоплю','OK, I will save up')+'</button></div>');
+  PAY.bind($('mcard'));PAY.re=()=>{hideModal();if(back)back();};$('mCancel').onclick=()=>{hideModal();if(back)back();};}
+// после 2-го поражения подряд на уровне (с 4-го, когда есть помощники): строка соседа с набором помощников; не чаще раза в день, не вместе с подарком соседа
+function k3LoseOffer(){if(!G||G.mode!=='level'||!PAY.on||!modalOn||G.cfg.i<4)return;const lv=G.cfg.i,lr=(S.lrI===lv?S.lrN:0)+1;if(lr<2)return;
+  const mc=$('mcard'),row=mc.querySelector('.row');if(!row||mc.querySelector('.goal.tipl'))return;
+  const id=k3StarterOk()&&PAY.item('starter')?'starter':PAY.item('coins_s')?'coins_s':null;if(!id)return;
+  if(K3.ofG!==G){if(!k3Once('lose'))return;K3.ofG=G;k3Stat('of_lose',{k:id});}
+  const d=document.createElement('div');d.className='soc-o';
+  d.innerHTML='<span>'+(id==='starter'?'🏠 '+hostName(G.host)+L(': «Трудный уровень? В „Наборе новосёла“ по 2 каждого помощника и 300 💰»',': “Tough level? The Newcomer pack has 2 of each helper and 300 💰”'):'💰 '+hostName(G.host)+L(': «Горсть монет — 300 💰 на помощников»',': “A handful of coins — 300 💰 for helpers”'))+'</span><button class="btn noenter" id="k3Of" style="min-height:48px">'+k3Price(id)+'</button>';
+  row.parentNode.insertBefore(d,row);$('k3Of').onclick=()=>{PAY.re=()=>{if(G&&G.st.lost)showLose();else hideModal();};PAY.buy(id);};}
+
+/* ---------- «📺 Примерить вид на партию» (до 2 раз в день) ---------- */
+function k3TryHtml(t){if(!t||(t.owned!=null?t.owned:ownsTheme(t))||!adBtnOk()||k3Cnt('try')>=2)return '';STAT.offer('try');return '<button class="btn accent noenter" data-k3try="'+t.id+'">📺 '+L('Примерить на партию','Try for one game')+'</button>';}
+function k3TryBind(root){(root||document).querySelectorAll('[data-k3try]').forEach(b=>b.onclick=()=>{const id=b.dataset.k3try,lk=!!(window.THEME&&THEME.trial&&THEME.get&&THEME.get(id)),t=lk?THEME.get(id):THB[id];if(!t)return;STAT.place('try');
+  showRewarded(()=>{k3Cnt('try',1);k3Stat('try',{k:id});const nm=L('«','“')+(lk?(t.name||L(t.ru,t.en)):L(t.n,t.en))+L('»','”');
+    if(lk){if(G&&!G.st.over){THEME.trial(id);K3.trG=G;}else K3.trK=id;}
+    if(G&&!G.st.over){if(!lk)G.tryTh=id;show('scr-game');layout();render();kick();YG.start();toast(L('Эта партия — в виде ','This game — in the look ')+nm);}
+    else{if(!lk)K3.try=id;openMenu();toast(L('Следующая партия — в виде ','Next game — in the look ')+nm+L('. Выбирайте, во что играть!','. Pick a game!'),4000);}});});}
+{const o0=openShop;openShop=function(){o0.apply(this,arguments);const its=$('shGrid').querySelectorAll('.it'),ts=THEMES.filter(themeShow);
+  its.forEach((el,i)=>{const h=k3TryHtml(ts[i]);if(h)el.insertAdjacentHTML('beforeend',h);});k3TryBind($('shGrid'));};}
+
+/* ---------- турнир дня: первая попытка «Задания дня» без помощников; очки = день×1000 + (999 − фигур) ---------- */
+function k3TnBegin(mode,day,st){if(!G||mode!=='daily'||G.chl||G.cfg.hard||+day!==dayKey(0))return;const dn=k3DnKey(day);
+  if(!isObj(S.tn)||S.tn.d!==dn){S.tn={d:dn,a:1,r:0};G.tn=1;save();}else if(st&&S.tn.a===1&&!S.tn.r&&!S.tn.x)G.tn=1;}
+function k3TnWeek(){const dn=k3DnKey(dayKey(0));let b=0,n=0;for(let i=0;i<7;i++){const r=+S.tnH[dn-i]||0;if(r){n++;b=Math.max(b,r);}}return {n,best:b?999-b:0};}
+async function k3TourShow(){STAT.screen('tour');const dn=k3DnKey(dayKey(0)),me=isObj(S.tn)&&S.tn.d===dn?S.tn:null;
+  const tabs='<div class="tabs2"><button id="lbB">♾ '+L('Рекорд','Best score')+'</button><button id="lbD">📅 '+L('Задание дня','Daily')+'</button><button id="lbT" class="on">🏆 '+L('Турнир дня','Daily cup')+'</button></div>';
+  const my=me&&me.r?L('Ваш результат сегодня: ','Your result today: ')+'<b>'+pl(999-me.r,'фигура','фигуры','фигур','piece','pieces')+'</b>':me?L('Сегодня в зачёт уже не попасть — завтра новый турнир.','No result today — a new cup tomorrow.'):L('В зачёт идёт первая попытка «Задания дня» без помощников. Меньше фигур — выше место.','Your first daily task try without helpers counts. Fewer pieces — higher place.');
+  const head='<h2>🏆 '+L('Турнир дня','Daily cup')+'</h2>'+tabs+'<p>'+my+'</p>';
+  modal(head+'<p>'+L('Загружаем…','Loading…')+'</p>');
+  let r=null;if(ysdk){const o={includeUser:true,quantityAround:3,quantityTop:20};try{r=ysdk.leaderboards&&ysdk.leaderboards.getEntries?await ysdk.leaderboards.getEntries('day',o):await (await ysdk.getLeaderboards()).getLeaderboardEntries('day',o);}catch(e){r=null;}}
+  if(!modalOn||!$('lbT'))return;
+  const list=((r&&r.entries)||[]).filter(e=>Math.floor(e.score/1000)===dn),ur=r&&typeof r.userRank==='number'?r.userRank:0;
+  const rows=list.map(e=>'<div class="lbr'+(e.rank===ur?' me':'')+'"><b>'+e.rank+'</b><span>'+k3Esc(e.player&&e.player.publicName||L('Игрок','Player'))+'</span><i>'+pl(999-e.score%1000,'фигура','фигуры','фигур','piece','pieces')+'</i></div>').join('');
+  const dd=!!S.daily[todayKey()];
+  modal(head+'<div class="lb">'+(rows||'<p>'+L('Сегодня ещё никто не сыграл — будьте первым!','Nobody has played today yet — be the first!')+'</p>')+'</div>'+
+    '<div class="row">'+(dd?'':'<button class="btn green" id="tnPlay">📅 '+L('Играть задание дня','Play the daily task')+'</button>')+'<button class="btn" id="lbClose">'+L('Закрыть','Close')+'</button></div>');
+  $('lbB').onclick=()=>LB.show('best');$('lbD').onclick=()=>LB.show('daily');$('lbT').onclick=()=>k3TourShow();
+  if($('tnPlay'))$('tnPlay').onclick=()=>{hideModal();startDaily();};$('lbClose').onclick=()=>{hideModal();if(G&&G.st.over)leaveGame();else if(!G)renderMenu();};}
+
+/* ---------- «Вызов соседу» (VK): ссылка https://vk.com/app<id>#ch=<e|d><зерно36>-<результат> ---------- */
+function k3ChlOk(){return PLAT==='vk'&&!!VK;}
+function k3ChlSend(k,seed,sc){const link='https://vk.com/app'+K3.app+'#ch='+k+(seed>>>0).toString(36)+'-'+sc;k3Stat('ch_send',{k});
+  vkSend('VKWebAppShare',{link},60000).catch(()=>{});}
+function k3ChlParse(){try{const m=/ch=([ed])([0-9a-z]{1,8})-(\d{1,7})/.exec(decodeURIComponent(location.hash||''));if(!m)return null;
+  const v=parseInt(m[2],36);if(!isFinite(v))return null;return m[1]==='e'?{k:'e',seed:v,sc:+m[3]}:{k:'d',dn:v,sc:+m[3]};}catch(e){return null;}}
+K3.chl=k3ChlParse();
+function k3ChlOffer(){const c=K3.chl;if(!c||window.__demo)return;clearTimeout(K3.chlT);
+  if(G||modalOn||!$('scr-menu').classList.contains('on')||$('ad').classList.contains('on')){K3.chlT=setTimeout(k3ChlOffer,2000);return;} /* ждём меню без окон (подарок за вход и т. п.) */
+  K3.chl=null;k3Stat('ch_open',{k:c.k});
+  const run=c.k==='e'&&loadRun();
+  const txt=c.k==='e'?L('Сосед набрал <b>','Your neighbour scored <b>')+c.sc+L('</b> очков в бесконечной игре. Сыграете ту же раздачу? Первые фигуры будут те же — дальше как сложится.','</b> in the endless game. Play the same deal? The first pieces are the same — then it is up to you.')
+    :L('Сосед прошёл задание дня за <b>','Your neighbour did the daily task in <b>')+pl(c.sc,'фигуру','фигуры','фигур','piece','pieces')+'</b> ('+new Date(Date.UTC(2026,0,1)+c.dn*864e5).toLocaleDateString(LANG==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long',timeZone:'UTC'})+L('). Сыграете то же задание? Меньше фигур — победа.','). Play the same task? Fewer pieces wins.');
+  modal('<div class="av">'+portrait('kolya','happy')+'</div><h2>📨 '+L('Вызов от соседа','A challenge')+'</h2><p>'+txt+'</p>'+(run?'<p class="goal">'+L('Сохранённая бесконечная партия (счёт ','Your saved endless game (score ')+run.score+L(') будет заменена.',') will be replaced.')+'</p>':'')+
+    '<div class="row"><button class="btn green" id="chGo">▶ '+L('Принять вызов','Accept')+'</button><button class="btn" id="mCancel">'+L('Потом','Later')+'</button></div>');
+  $('mCancel').onclick=hideModal;
+  $('chGo').onclick=()=>{hideModal();k3Stat('ch_play',{k:c.k});K3.go=c;K3.last=c;if(c.k==='e'){clearRun();startEndless(false);}else{const key=k3KeyDn(c.dn);if(key===dayKey(0))startDaily();else begin('daily',dailyCfg(key),null,key);}};}
+function k3ChlLine(c,mine,lowWins){const win=lowWins?mine<c.sc:mine>c.sc,eq=mine===c.sc,u=lowWins?pl(c.sc,'фигура','фигуры','фигур','piece','pieces'):c.sc;
+  return '<p class="goal tipl">📨 '+L('Сосед: ','Neighbour: ')+u+' · '+L('вы: ','you: ')+(lowWins?pl(mine,'фигура','фигуры','фигур','piece','pieces'):mine)+' — '+(eq?L('ничья!','a draw!'):win?L('вы выиграли! 🎉','you win! 🎉'):L('сосед пока впереди','the neighbour is ahead'))+'</p>';}
+// задание дня по вызову (не сегодняшнее): без награды и без отметки дня, только сравнение
+function k3ChlDailyWon(){const my=G,c=my.chl,mv=my.st.moves;S.done++;S.adW++;S.lossRow=0;S.lrN=0;save();SND.win();confetti();STAT.end('win',statF({ch:1}));k3Stat('ch_end',{k:'d',w:mv<c.sc?1:0});
+  modal('<div class="av">'+portrait(my.host,'happy')+'</div><h2>'+L('Задание пройдено!','Task done!')+'</h2>'+k3ChlLine(c,mv,true)+'<div class="row"><button class="btn green" id="dMenu">'+L('В меню','Menu')+'</button></div>');
+  k3Block(my,'',[['📤 '+L('Ответить вызовом','Challenge back'),()=>k3ChlSend('d',c.dn,mv),k3ChlOk()]]);
+  $('dMenu').onclick=()=>{hideModal();goNext(leaveGame);};}
+
+/* ---------- картинка в историю VK (только VK с поддержкой VKWebAppShowStoryBox; без наград) ---------- */
+function k3StoryOk(){if(K3.story!=null)return Promise.resolve(K3.story);if(!(PLAT==='vk'&&VK&&VK.supportsAsync))return Promise.resolve(false);
+  return timeLim(VK.supportsAsync('VKWebAppShowStoryBox'),4000).then(v=>K3.story=!!v,()=>false);}
+function k3Img(svg){return new Promise(ok=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>ok(null);i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);});}
+async function k3StoryPic(o){const W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const bg=await k3Img(yardSvg());if(bg){const k=Math.max(W/bg.width,H/bg.height);g.drawImage(bg,(W-bg.width*k)/2,H-bg.height*k,bg.width*k,bg.height*k);}else{g.fillStyle='#7fb3d5';g.fillRect(0,0,W,H);}
+  g.fillStyle='rgba(255,250,238,.95)';rr(g,60,120,960,1600,64);g.fill();g.textAlign='center';
+  g.fillStyle='#7a2e10';g.font='bold 72px sans-serif';g.fillText(L('🧱 Кирпичики во дворе','🧱 Brickies in the yard'),W/2,240);
+  g.fillStyle='#2d3436';g.font='bold 150px sans-serif';g.fillText(o.t1,W/2,420);g.font='bold 58px sans-serif';g.fillStyle='#237032';g.fillText(o.t2,W/2,510);
+  const th=theme(),s=96,x0=(W-s*8)/2,y0=570;g.fillStyle=th.fr[0];rr(g,x0-22,y0-22,s*8+44,s*8+44,30);g.fill();g.fillStyle=th.bg;g.fillRect(x0-4,y0-4,s*8+8,s*8+8);
+  for(let k=0;k<64;k++){const x=x0+(k&7)*s,y=y0+(k>>3)*s,v=o.b&&o.b[k];if(v){drawBrick(g,x,y,s,v,th);if(o.it&&o.it[k])drawItem(g,o.it[k],x,y,s);}else drawEmpty(g,x,y,s,th);}
+  const pv=await k3Img(portrait(o.host||'zina','happy'));if(pv){g.save();g.beginPath();g.arc(240,1530,130,0,Math.PI*2);g.clip();g.fillStyle='#e8f1fb';g.fillRect(110,1400,260,260);g.drawImage(pv,110,1400,260,260);g.restore();}
+  g.textAlign='left';g.fillStyle='#2d3436';g.font='bold 60px sans-serif';g.fillText(o.t3||L('Побьёшь?','Can you beat it?'),400,1520);
+  g.font='44px sans-serif';g.fillStyle='#5a4a2a';g.fillText(L('Играй во ВКонтакте','Play on VK'),400,1590);
+  return c.toDataURL('image/jpeg',.86);}
+async function k3Story(o){k3Stat('story',{k:o.k});try{const blob=await k3StoryPic(o);
+    await vkSend('VKWebAppShowStoryBox',{background_type:'image',blob,attachment:{text:'go_to',type:'url',url:'https://vk.com/app'+K3.app}},120000);}catch(e){}}
+// блок K3 в окне итога — над рядом кнопок: строки + кнопки [[текст, действие, показывать?]], «📸 В историю» — если VK умеет
+function k3Block(my,html,btns,story){const mc=$('mcard'),row=mc&&mc.querySelector('.row');if(!row||!modalOn)return;
+  const bs=(btns||[]).filter(b=>b[2]);if(!html&&!bs.length&&!story)return;const d=document.createElement('div');d.className='k3b';
+  d.innerHTML=html+(bs.length?'<div class="helpers">'+bs.map((b,i)=>'<button class="btn noenter" data-k3b="'+i+'">'+b[0]+'</button>').join('')+'</div>':'');row.parentNode.insertBefore(d,row);
+  d.querySelectorAll('[data-k3b]').forEach(b=>b.onclick=()=>{SND.tap();bs[+b.dataset.k3b][1]();});
+  if(story)k3StoryOk().then(ok=>{if(!ok||!d.isConnected)return;let h=d.querySelector('.helpers');if(!h){h=document.createElement('div');h.className='helpers';d.appendChild(h);}
+    const b=document.createElement('button');b.className='btn noenter';b.textContent='📸 '+L('В историю','To story');b.onclick=()=>{SND.tap();k3Story(story);};h.appendChild(b);});}
+const k3Snap=my=>({b:my.st.b.slice(),it:my.st.it.slice(),host:my.host});
+
+/* ---------- обёртки ---------- */
+{const b0=begin;begin=function(mode,cfg,st,day){if(G&&G.tn&&!G.st.won&&isObj(S.tn)){S.tn.x=1;save();}
+  const r=b0.apply(this,arguments);if(!G)return r;
+  if(mode==='endless'){if(!st){const sd=K3.go&&K3.go.k==='e'?K3.go.seed:Math.floor(Math.random()*2e9);G.st=newGame(cfg,sd);G.seed=sd;try{localStorage.setItem('kirpichiki-k3seed',String(sd));}catch(e){}layout();render();kick();}
+    else{const sd=+localStorage.getItem('kirpichiki-k3seed');if(sd>=0)G.seed=sd;}}
+  if(K3.go){G.chl=K3.go;K3.go=null;}else if(mode==='daily'&&+day!==dayKey(0)&&K3.last&&K3.last.k==='d'&&k3KeyDn(K3.last.dn)===+day)G.chl=K3.last;
+  if(G.chl)G.tn=0;else k3TnBegin(mode,day,st);
+  if(K3.try&&THB[K3.try]){G.tryTh=K3.try;K3.try=null;layout();render();kick();}
+  if(window.THEME&&THEME.trial){if(K3.trK){THEME.trial(K3.trK);K3.trK=null;K3.trG=G;}else if(K3.trG&&K3.trG!==G){THEME.trial(null);K3.trG=null;}}
+  return r;};}
+{const q0=leaveGame;leaveGame=function(){if(G&&G.tn&&!G.st.won&&isObj(S.tn)){S.tn.x=1;save();}if(K3.trG&&window.THEME&&THEME.trial){THEME.trial(null);K3.trG=null;}return q0.apply(this,arguments);};}
+{const w0=levelWon;levelWon=function(){const my=G;if(!my||my.mode!=='level')return w0.apply(this,arguments);const i=my.cfg.i,p0=S.lv[i]||0,pg=ssnPages(ssn());
+  const r=w0.apply(this,arguments);const g=k3Pts(1+Math.max(0,(S.lv[i]||0)-p0));
+  k3Block(my,k3PtsChip(g,pg)?'<div class="awards">'+k3PtsChip(g,pg)+'</div>':'',[],my.cfg.boss&&!p0?{k:'boss',b:my.st.b,it:my.st.it,host:my.host,t1:'★'.repeat(S.lv[i]||1),t2:L('Субботник окончен!','Clean-up done!'),t3:L('Двор чистый!','The yard is clean!')}:null);
+  return r;};}
+{const d0=dailyWon;dailyWon=function(){const my=G;if(my&&my.chl&&my.chl.k==='d'&&+my.day!==dayKey(0))return k3ChlDailyWon();
+  const first=!!my&&!S.daily[String(my.day)],pg=ssnPages(ssn());const r=d0.apply(this,arguments);if(!my)return r;
+  const g=first?k3Pts(6):0;let tn='';const mv=my.st.moves;
+  if(my.tn&&isObj(S.tn)){S.tn.a=2;if(Object.keys(my.bu||{}).length){S.tn.x=1;tn='<p class="goal">🏆 '+L('В турнир дня идёт первая попытка без помощников — сегодня с помощником, не в зачёт. Завтра новый!','The daily cup counts the first try without helpers — this one used a helper. New cup tomorrow!')+'</p>';}
+    else{S.tn.r=Math.max(1,999-mv);S.tn.m=mv;S.tnH[S.tn.d]=S.tn.r;const ks=Object.keys(S.tnH).map(Number).sort((a,b)=>b-a);ks.slice(30).forEach(k=>delete S.tnH[k]);
+      LB.set('day',S.tn.d*1000+S.tn.r);k3Stat('tn',{r:mv});tn='<p class="goal tipl">🏆 '+L('Турнир дня: ваш результат — ','Daily cup: your result — ')+pl(mv,'фигура','фигуры','фигур','piece','pieces')+'</p>';}
+    save();}
+  else if(isObj(S.tn)&&S.tn.d===k3DnKey(my.day)&&S.tn.r)tn='<p class="goal">🏆 '+L('В турнире дня у вас — ','In the daily cup you have ')+pl(999-S.tn.r,'фигура','фигуры','фигур','piece','pieces')+L(' (первая попытка).',' (first try).')+'</p>';
+  if(PLAT==='vk'&&tn){const w=k3TnWeek();if(w.n>1)tn+='<p class="goal">'+L('За неделю: ','This week: ')+pl(w.n,'турнир','турнира','турниров','cup','cups')+L(', лучший — ',', best — ')+pl(w.best,'фигура','фигуры','фигур','piece','pieces')+'</p>';}
+  if(my.chl)tn+=k3ChlLine(my.chl,mv,true);
+  const chip0=k3PtsChip(g,pg);
+  k3Block(my,(chip0?'<div class="awards">'+chip0+'</div>':'')+tn,[
+    ['🏆 '+L('Турнир дня','Daily cup'),()=>k3TourShow(),PLAT!=='vk'&&LB.ok()],
+    ['📤 '+L('Вызов соседу','Challenge a friend'),()=>k3ChlSend('d',k3DnKey(my.day),mv),k3ChlOk()]],
+    {k:'daily',b:my.st.b,it:my.st.it,host:my.host,t1:pl(mv,'фигура','фигуры','фигур','piece','pieces'),t2:L('Задание дня выполнено!','Daily task done!'),t3:L('А ты быстрее?','Can you do it faster?')});
+  return r;};}
+{const e0=endlessOver;endlessOver=function(){const my=G;if(!my)return e0.apply(this,arguments);const first=!my.k3e,prev=S.best||0,pg=ssnPages(ssn());
+  const r=e0.apply(this,arguments);let g=0;
+  if(first){my.k3e=1;my.k3rec=my.st.score>prev&&prev>0;if(my.st.score>=300&&k3Cnt('ed')<3){k3Cnt('ed',1);g=k3Pts(2);}if(my.chl)k3Stat('ch_end',{k:'e',w:my.st.score>my.chl.sc?1:0});}
+  const sc=my.st.score,chip0=k3PtsChip(g,pg);
+  k3Block(my,(chip0?'<div class="awards">'+chip0+'</div>':'')+(my.chl?k3ChlLine(my.chl,sc,false):''),
+    [['📤 '+(my.chl?L('Ответить вызовом','Challenge back'):L('Вызов соседу','Challenge a friend')),()=>k3ChlSend('e',my.seed||0,sc),k3ChlOk()&&sc>0&&my.seed!=null]],
+    my.k3rec||(my.chl&&sc>my.chl.sc)?{k:'rec',b:my.st.b,it:my.st.it,host:my.host,t1:String(sc),t2:my.k3rec?L('Новый рекорд!','New best!'):L('Обыграл соседа!','Beat the neighbour!')}:null);
+  return r;};}
+{const l0=showLose;showLose=function(){const r=l0.apply(this,arguments);try{k3LoseOffer();}catch(e){}return r;};}
+{const a0=openAbout;openAbout=function(){a0.apply(this,arguments);if(!PAY.on||!PAY.item('pie'))return;const row=$('mcard').querySelector('.row');if(!row)return;
+  const d=document.createElement('div');d.className='pay';d.innerHTML='<h3>💛 '+L('Спасибо разработчику','Thank the developer')+'</h3>'+PAY.row(PAY.item('pie'))+(S.pie?'<p class="goal">'+L('Вы угостили тётю Валю: ','Pies for Aunt Valya: ')+S.pie+'</p>':'');
+  row.parentNode.insertBefore(d,row);PAY.bind(d);PAY.re=openAbout;};}
+{const t0=todayCard;todayCard=function(){t0.apply(this,arguments);const e=$('mToday');if(!e||!e.innerHTML)return;const s=ssn(),sl=ssnLeft(s);
+  const row=(id,ic,t,on)=>'<button class="trow'+(on?' hot':'')+'" id="'+id+'"><span class="ic">'+ic+'</span><span>'+t+'</span><i>›</i></button>';
+  e.insertAdjacentHTML('beforeend',row('tSsn','📖',L('Сезон «','Season “')+ssnInfo(s.i).n+L('»: страница ','”: page ')+ssnPages(s)+L(' из ',' of ')+SSN_N+(sl?L(' · награды ждут',' · rewards waiting'):''),sl>0)+
+    (PAY.on&&k3StarterOk()&&PAY.item('starter')?row('tNew','🏠',L('Набор новосёла — для новых жильцов','Newcomer pack — for new residents'),false):''));
+  $('tSsn').onclick=()=>{SND.tap();openSeason();};if($('tNew'))$('tNew').onclick=()=>{SND.tap();openStore();};};}
+{const m0=openMenu;openMenu=function(){const r=m0.apply(this,arguments);if(K3.chl)setTimeout(k3ChlOffer,window.__sdkDone?600:2500);return r;};}
+for(const id of ['mCoins','mapCoins','shCoins'])$(id).onclick=()=>{SND.tap();inGame()?openCoins():openStore();};
+/*/K3*/
 /* ---- запуск ---- */
-$('app').style.backgroundImage='url("data:image/svg+xml;charset=utf-8,'+encodeURIComponent(yardSvg())+'")';
+/*K1*/LK.init();/*/K1*/dreamTick();/*сведение: набор «Двор мечты» куплен на другом устройстве*/try{if(PAY.own('yard')&&YARD_PAY.some(id=>!S.yd[id]))YARD_PAY.forEach(id=>{S.yd[id]=1;});}catch(e){}dreamBg(); /*K2: фон двора + купленные вещи «Двора мечты» (в новом виде dreamBg → LK.yard)*/
 applyLang();applyCalm();updCoins();
 // новичок — сразу в первый уровень (обучение), меню — после первой победы
 const CUR0=/[?&]demo=/.test(location.search)?null:curLoad();
@@ -1968,8 +2594,8 @@ if(CUR0&&curResume(CUR0)){}else if(!/[?&]demo=/.test(location.search)&&!(S.wins>
 SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal()});updMore();
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
-window.__test={openSocial,hideModal,get G(){return G;},get S(){return S;},get LY(){return LY;},startLevel,startDaily,startEndless,doPlace,botMove,render,layout,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,
-  openShop,openMap,openMenu,levelCfg,dailyCfg,boostClick,useBomb,showLose,levelWon,say,phr,pieceTL,wouldClear,adReset(){lastAdT=0;},set VK(v){VK=v;},get VK(){return VK;},PAY,VARS,canPlace};
+window.__test={/*K1*/THEME:window.THEME,LK:window.LK,/*/K1*/openSocial,hideModal,get G(){return G;},get S(){return S;},get LY(){return LY;},startLevel,startDaily,startEndless,doPlace,botMove,render,layout,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,
+  openShop,openMap,openMenu,levelCfg,dailyCfg,/*K2*/openDream,dreamBuy,dreamAd,yardGive,yardGiveSet,YARD_PAY,dreamTick,dreamBg,DREAM,openQuests,qToday,qEv,openDailyCal,monthCnt,cupChip,tmrwTxt,openPantry,boostClick,useBomb,showLose,levelWon,say,phr,pieceTL,wouldClear,adReset(){lastAdT=0;},set VK(v){VK=v;},get VK(){return VK;},PAY,VARS,canPlace};
 </script>
 </body>
 </html>

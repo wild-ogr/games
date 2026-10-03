@@ -428,7 +428,7 @@ async function initSDK(){
         if(t==='VKWebAppViewHide'){paused=true;setMuted(true);cloudFlush();}
         else if(t==='VKWebAppViewRestore'&&!adShowing){paused=false;setMuted(false);}});
       cl=vkCloudInit(2);
-      vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
+      adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
       vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(()=>{});
     }catch(e){VK=null;}
     try{await cl;}catch(e){}
@@ -484,23 +484,52 @@ function adRedraw(){setTimeout(()=>{try{if(typeof langRedraw==='function'&&!$('m
 function adOpen(){adShowing=true;paused=true;setMuted(true);YG.stop();}
 function adClose(){adShowing=false;adMark();paused=document.hidden;setMuted(document.hidden);if(G&&!G.over&&!G.paused&&!G.pauseOpen&&!$('modal').classList.contains('on'))YG.start();} // окно или пауза открыты — start() вызовет их закрытие
 function adFail(){return L('Реклама сейчас недоступна, попробуй позже','Ad unavailable right now, try again later');}
+/* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще всего на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
+   Раньше игрок видел «недоступна» и жал кнопку по 5–10 раз. Теперь:
+   1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе, нажать ничего нельзя);
+   2) снова нет → не ошибка, а «Ролик будет через несколько секунд…»; кнопки «за рекламу» (AD_BTN_SEL) гаснут, игра в фоне раз в AD_POLL_MS спрашивает VK (Check);
+      VK ответил «готов» (но не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS.
+      Нажатие по погасшей кнопке VK не дёргает — только «ещё загружается».
+   3) заранее: Check при запуске и после каждого показа; если VK сказал «не готов» — переспрашиваем в фоне (до 6 раз), чтобы к нажатию ролик уже был.
+   Ответу Check «не готов» как запрету не верим (бывает ложным) — кнопку из-за него не гасим. Автоповтор — только на «ролика нет», не на закрытый ролик.
+   Награда — по-прежнему только за досмотр (result:true / onRewarded) и один раз. Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора.
+   Тот же приём — во всех играх (журнал hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ»). */
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='.btn.ad,[data-g]';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
+function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
+// подгрузка ролика заранее; «не готов» — переспросить n раз (каждые AD_POLL_MS); «готов» во время паузы кнопок — зажечь их
+function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(r&&r.result)adReady();else again();},again);}
+function adReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adWait(on){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
+  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.74);color:#fff;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
+  w.textContent=L('Ролик загружается…','Loading the video…');w.style.display='flex';}
+// кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду)
+function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)q[i].style.opacity=off?'.45':'';}catch(e){}if(off)adDimT=setTimeout(adDim,1000);}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
 // пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
 let adBusy=false;
 function showRewarded(cb0,onFail0){
-  if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
-  const cb=()=>{adBusy=false;cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
+  if(adBusy)return;
+  if(Date.now()<adCoolT){toast(L('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds'));if(onFail0)onFail0();adDim();return;}
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},135000);
+  let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(adFail());onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;} // в VK мост не ответил — не даём награду даром; ?vk=1 на маке — заглушка
   if(VK){
-    adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
-      .then(r=>{adClose();if(r&&r.result){STAT.ad('rew','ok');cb();}else{STAT.ad('rew','fail','noresult');toast(adFail());onFail();}})
-      .catch(e=>{adClose();STAT.ad('rew','err',e&&e.error_data&&e.error_data.error_code);toast(adFail());onFail();})
-      .then(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{})); // не .finally — его нет в старых WebView
-    return;}
+    let tries=0;
+    const go=()=>{adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000).then(r=>{adClose();
+        if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'');adPreload();cb();}else{STAT.ad('rew','fail','noresult');toast(adFail());adPreload();onFail();}
+      },e=>{
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
+        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e));toast(adFail());adPreload();}
+        onFail();adDim();});}; // adDim: колбэк мог заново открыть окно с кнопкой — гасим её сразу
+    go();return;}
   if(!ysdk){if(LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',sdkDone?'nosdk':'loading');toast(sdkDone?adFail():L('Реклама ещё загружается, попробуй через пару секунд','Ads are still loading, try again in a few seconds'));onFail();}return;}
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
-    onError:()=>{adClose();STAT.ad('rew','err');toast(adFail());onFail();}}});
+    onError:()=>{adClose();STAT.ad('rew','err');toast(adFail());adCool();onFail();}}});
 }
 
 /* ================= звук: эффекты — синтез, музыка — записанные треки (ниже) =================

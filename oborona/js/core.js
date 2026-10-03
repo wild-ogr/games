@@ -441,7 +441,8 @@ async function vkInit(tries){
   vkFitInit(); // VK web: подогнать высоту окна под экран (без ожидания)
   VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',1);cloudFlush();}else if(t==='VKWebAppViewRestore')setPause('vk',0);});
   vkCloudInit(3).then(()=>{if(typeof PAY!=='undefined')PAY.init();}); // покупки VK (js/pay.js): после моста и первого чтения облака
-  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});}
+  adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
+  interPre();} // подгрузка межэкранной (как в Богатыре); правила показа не меняются
 // Яндекс: игрок и облако — с тайм-аутом, иначе повисший запрос оставит игру без облака навсегда
 async function ycloud(n){if(!ysdk)return;try{if(!YP)YP=await withTimeout(ysdk.getPlayer({scopes:false}),10000);cloudIn(await withTimeout(YP.getData(),10000));}
   catch(e){if(n>0)setTimeout(()=>ycloud(n-1),10000);}}
@@ -481,20 +482,49 @@ function adClose(){lastAdT=Date.now();setPause('ad',0);if(G&&!G.over&&!G.paused&
 const AD_FAIL='Реклама сейчас недоступна, попробуй позже';
 // пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
 let adBusy=false;
+/* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
+   1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе);
+   2) снова нет → «Ролик будет через несколько секунд…», кнопки «за рекламу» (AD_BTN_SEL) гаснут, в фоне раз в AD_POLL_MS спрашиваем VK (Check);
+      «готов» (не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS. Нажатие по погасшей кнопке VK не дёргает;
+   3) заранее: Check при запуске и после каждого показа, «не готов» — переспрашиваем в фоне (до 6 раз). Ответу «не готов» как запрету не верим.
+   Награда — только за досмотр и один раз. Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора.
+   Один приём во всех играх: hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ». */
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='.btn.ad',AD_BTN_RE=null;let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
+function adSoon(){return Lg('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
+function adBtns(){const o=[];try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++){const b=q[i];if(!AD_BTN_RE||b.hasAttribute('data-adoff')||(AD_BTN_RE.test(b.textContent)&&!/без реклам|no ads/i.test(b.textContent)))o.push(b);}}catch(e){}return o;}
+function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(r&&r.result)adReady();else again();},again);}
+function adReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;if(vis&&!adBusy)toast(Lg('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adWait(on){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
+  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:rgba(0,0,0,.74);color:#fff;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
+  w.textContent=Lg('Ролик загружается…','Loading the video…');w.style.display='flex';}
+// кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду)
+function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT,q=adBtns();for(let i=0;i<q.length;i++){const b=q[i];
+    if(off){b.style.opacity='.45';b.setAttribute('data-adoff','1');}else if(b.hasAttribute('data-adoff')){b.style.opacity='';b.removeAttribute('data-adoff');}}if(off)adDimT=setTimeout(adDim,1000);}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
 function showRewarded(cb0,onFail0){
-  if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
-  const cb=()=>{adBusy=false;cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
+  if(adBusy)return;
+  if(Date.now()<adCoolT){toast(Lg('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds'));if(onFail0)onFail0();adDim();return;}
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},135000);
+  let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
   // в VK мост не ответил — награду даром не даём; заглушка только для ?vk=1 на маке
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL);onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
-      .then(r=>{adClose();if(r&&r.result){STAT.ad('rew','ok');cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL);onFail();}})
-      .catch(e=>{adClose();STAT.ad('rew','err',e&&e.error_data&&e.error_data.error_code);toast(AD_FAIL);onFail();})
-      .finally(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
+  if(VK){
+    let tries=0;
+    const go=()=>{adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000).then(r=>{adClose();
+        if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'');adPreload();cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL);adPreload();onFail();}
+      },e=>{
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
+        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e));toast(AD_FAIL);adPreload();}
+        onFail();adDim();});}; // adDim: колбэк мог заново открыть окно с кнопкой — гасим её сразу
+    go();return;}
   if(!ysdk){if(LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail','nosdk');toast(AD_FAIL);onFail();}return;}
   let got=false;
   try{ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(Lg('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
-    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);onFail();}}});}catch(e){adClose();STAT.ad('rew','err','throw');toast(AD_FAIL);onFail();}
+    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);adCool();onFail();}}});}catch(e){adClose();STAT.ad('rew','err','throw');toast(AD_FAIL);onFail();}
 }
 /* межэкранная. Интервал — флагом Яндекса inter_min (минуты; берём только 5…12, иначе 8), inter=0/off — выключить.
    Заход: с запуска или с возвращения после 30+ минут в фоне — первые 5 минут межэкранной нет. */
@@ -505,11 +535,13 @@ function applyFlags(f){if(!f||typeof f!=='object')return;const n=parseInt(f.inte
 function interReady(){if(!INTER_ON||adBusy||interBusy||typeof PAY!=='undefined'&&PAY.own('no_ads')||/[?&](bot|shot)/.test(location.search))return false;const now=Date.now();
   if(now-sessT<5*60e3||now-lastAdT<INTER_MIN*60e3)return false;
   return adOk();}   // в VK без ответа моста и в Яндексе без SDK — просто пропускаем, без заглушки   // в VK без ответа моста — просто пропускаем, без заглушки
+// подгрузка межэкранной VK: при запуске и после каждого показа/отказа; ответ не используется, на показ не влияет
+function interPre(){if(!VK)return;try{vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).catch(()=>{});}catch(e){}}
 function showInterstitial(cb0){if(interBusy)return;interBusy=true;let done=false;
   const cb=shown=>{if(done)return;done=true;clearTimeout(t);interBusy=false;lastAdT=Date.now();STAT.ad('int',shown===false?'none':'show');cb0();};
   const t=setTimeout(()=>{if(PAUSE.ad)adClose();cb(false);},90000);   // площадка не ответила — не держим игрока
   if(PLAT==='vk'&&!VK){if(VK_REAL)cb(false);else stubAd(cb);return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();cb(!(r&&r.result===false));},()=>{adClose();cb(false);});return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();interPre();cb(!(r&&r.result===false));},()=>{adClose();interPre();cb(false);});return;}
   if(!ysdk){if(LOCAL)stubAd(cb);else cb(false);return;}
   try{ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:s=>{adClose();cb(s!==false);},onError:()=>{adClose();cb(false);},onOffline:()=>cb(false)}});}catch(e){adClose();cb(false);}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){hideT=Date.now();setPause('hidden',1);cloudFlush();}
