@@ -1297,7 +1297,7 @@ async function initVK(){
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
       else if(t==='VKWebAppViewRestore')setPause('hide',false);});
     await cloudLoad();
-    vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
+    adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
   }catch(e){VK=null;}
   PAY.init();updCoins();
   window.__sdkDone=true;if(!G&&!window.__demo&&!modalOn&&$('scr-menu').classList.contains('on')){openMenu();menuPopups();}
@@ -1360,20 +1360,49 @@ let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=2;
 // спички за рекламу (решение владельца 27.09): +AD_M за ролик, не больше AD_M_DAY в день, между роликами — AD_GAP (как у любой рекламы)
 let AD_M=250,AD_M_DAY=5,lastRewT=0;
 let adBusy=false;
-function adPre(){vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});}
+/* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
+   1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе);
+   2) снова нет → «Ролик будет через несколько секунд…», кнопки «за рекламу» (AD_BTN_SEL) гаснут, в фоне раз в AD_POLL_MS спрашиваем VK (Check);
+      «готов» (не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS. Нажатие по погасшей кнопке VK не дёргает;
+   3) заранее: Check при запуске и после каждого показа, «не готов» — переспрашиваем в фоне (до 6 раз). Ответу «не готов» как запрету не верим.
+   Награда — только за досмотр и один раз. Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора.
+   Один приём во всех играх: hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ». Отличие имён: в образце adReady() — здесь adVidReady() (adReady занято межэкранной). */
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAdM,#gX2';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
+function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
+function adBtns(){try{return document.querySelectorAll(AD_BTN_SEL);}catch(e){return [];}}
+// подгрузка ролика заранее; «не готов» — переспросить n раз (каждые AD_POLL_MS); «готов» во время паузы кнопок — зажечь их
+function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(r&&r.result)adVidReady();else again();},again);}
+function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adWait(on){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
+  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:rgba(0,0,0,.74);color:#fff;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
+  w.textContent=L('Ролик загружается…','Loading the video…');w.style.display='flex';}
+// кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду)
+function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT,q=adBtns();for(let i=0;i<q.length;i++){const b=q[i];
+    if(off){b.style.opacity='.45';b.setAttribute('data-adoff','1');}else if(b.hasAttribute('data-adoff')){b.style.opacity='';b.removeAttribute('data-adoff');}}if(off)adDimT=setTimeout(adDim,1000);}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
 function showRewarded(cb0,onFail0){
-  if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
-  const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
+  if(adBusy)return;
+  if(Date.now()<adCoolT){toast(L('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds'));if(onFail0)onFail0();return;}
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},135000);
+  let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL());onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
-      .then(r=>{adClose();if(r&&r.result){STAT.ad('rew','ok');cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL());onFail();}})
-      .catch(e=>{adClose();STAT.ad('rew','err',e&&e.error_data&&e.error_data.error_code);toast(AD_FAIL());onFail();})
-      .then(adPre,adPre);return;} // .then(f,f) вместо .finally — старые WebView (Chrome < 63)
+  if(VK){
+    let tries=0;
+    const go=()=>{adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000).then(r=>{adClose();
+        if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'');adPreload();cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL());adPreload();onFail();}
+      },e=>{
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
+        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e));toast(AD_FAIL());adPreload();}
+        onFail();});};
+    go();return;}
   if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
-    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL());onFail();}}});
+    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL());adCool();onFail();}}});
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
 function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
@@ -1415,8 +1444,8 @@ function openCoins(){STAT.screen('coins');
   if(buy){PAY.bind($('mcard'));PAY.re=openCoins;}
   if($('mRef'))$('mRef').onclick=doRefill;
   if($('mAdM'))STAT.offer('coins');if($('mAdM'))$('mAdM').onclick=()=>{hideModal();STAT.place('coins');showRewarded(()=>{const k=dayKey(0);S.adM[k]=(S.adM[k]||0)+1;
-      lastRewT=Date.now();for(const d in S.adM)if(+d<dayKey(-7))delete S.adM[d];setCoins(S.coins+AD_M);SND.coin();toast('+'+mT(AD_M));if(!G)openMenu();});};
-  $('mCancel').onclick=hideModal;}
+      lastRewT=Date.now();for(const d in S.adM)if(+d<dayKey(-7))delete S.adM[d];setCoins(S.coins+AD_M);SND.coin();toast('+'+mT(AD_M));if(!G)openMenu();},()=>{if(Date.now()<adCoolT&&!inGame())openCoins();});};
+  $('mCancel').onclick=hideModal;adDim();}
 
 /* ---- товары «Покера на спички». Спички НЕ продаются (закон 244-ФЗ, правила Яндекса 2.7/3.7, VK 5.2): только «Без рекламы» и украшения,
    всё видно заранее (без случайностей). vk — цена в голосах (= hobby-pay/catalog.json, ключ «_holdem_pending» до создания игры в VK) ---- */
@@ -2284,7 +2313,7 @@ function showGift(){STAT.screen('gift');const st=streakState();let cells='';
     <div class="row">${st.claimed?`<button class="btn" id="gClose">${L('Закрыть','Close')}</button>`:`<button class="btn green" id="gGet">${L('Забрать','Collect')} +${mH(r)}</button>${adOk()&&!adNew()?`<button class="btn accent noenter" id="gX2">📺 ×2 ${L('за рекламу','for an ad')} (+${fmt(r*2)}${MT})</button>`:''}`}</div>`);
   if(st.claimed){$('gClose').onclick=hideModal;return;}
   $('gGet').onclick=()=>claimGift(1);
-  if($('gX2'))STAT.offer('gift');if($('gX2'))$('gX2').onclick=()=>{hideModal();STAT.place('gift');showRewarded(()=>claimGift(2),()=>showGift());};}
+  if($('gX2'))STAT.offer('gift');if($('gX2'))$('gX2').onclick=()=>{hideModal();STAT.place('gift');showRewarded(()=>claimGift(2),()=>showGift());};adDim();}
 function claimGift(mult){const st=streakState();if(st.claimed){hideModal();return;}
   const r=STREAK[st.day-1],back=st.day===7&&weekBack(),s=S.streak||{cyc:0};S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
   if(back)S.own['b:week']=1;S.coins+=r*mult;STAT.ev('gift',{d:st.day,x:mult});save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);updGiftDot();

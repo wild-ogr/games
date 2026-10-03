@@ -153,6 +153,8 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .ctab td{padding:5px 4px;border-bottom:1px solid #eee8da;font-weight:700}
 .ctab td:last-child{text-align:right;white-space:nowrap;color:#1f6f8b}
 .ctab tr.lost td{color:#8a8f92;font-weight:600}
+/*RC (03.10): добавка к цене («новая +10», «трофей +15») — второй строкой, с переносом; иначе при длинных названиях рыб таблица шире окна*/
+.ctab small.cx{display:block;white-space:normal;font-size:17px;font-weight:600;line-height:1.25;opacity:.85}.ctab small.cx span{white-space:nowrap}
 .ad{background:#111;color:#fff;text-align:center;font-size:22px;font-weight:800}
 .ad small{font-weight:500;opacity:.7;font-size:14px}
 .adt{font-size:54px;margin-top:16px}
@@ -1257,7 +1259,7 @@ async function initVK(){
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
       else if(t==='VKWebAppViewRestore')setPause('hide',false);});
     await cloudLoad();
-    vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});vkIntLoad();
+    adPreload();vkIntLoad(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
   }catch(e){VK=null;}
   PAY.init();updCoins();
   window.__sdkDone=true;if(!G&&!window.__demo&&!modalOn&&$('scr-map').classList.contains('on')){openMap();maybeStreak();}
@@ -1353,20 +1355,54 @@ function adClose(){setPause('ad',false);if(G&&!G.over&&!modalOn&&$('scr-fish').c
 const AD_FAIL=L('Реклама сейчас недоступна — загляни чуть позже','Ads are unavailable right now — try later'),VK_REAL=/[?&]vk_app_id=/.test(location.search);
 // межэкранная: только между рыбалками, по «долгу» S.adW (рыбалок с прошлого показа ≥ AD_EVERY=3), с 4-й рыбалки, не раньше AD_GAP после ЛЮБОЙ рекламы и после запуска
 let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=3,AD_COINS=30,AD_FROM=3,X2_ON=true;
+/* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще всего на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
+   1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе, нажать ничего нельзя);
+   2) снова нет → не ошибка, а «Ролик будет через несколько секунд…»; кнопки «за рекламу» (AD_BTN_SEL) гаснут, игра в фоне раз в AD_POLL_MS спрашивает VK (Check);
+      VK ответил «готов» (но не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS.
+      Нажатие по погасшей кнопке VK не дёргает и окно не закрывает (adHold) — только «ещё загружается».
+   3) заранее: Check при запуске и после каждого показа; «не готов» — переспрашиваем в фоне (до 6 раз). Ответу Check «не готов» как запрету не верим — кнопку из-за него не гасим.
+   Автоповтор — только на «ролика нет», не на закрытый ролик. Награда — только за досмотр (result:true / onRewarded) и один раз (paid).
+   Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора; err — код/причина.
+   Тот же приём — во всех играх (журнал hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ»). Отличие Рыбалки: adReady() занято межэкранной → здесь adVidReady(). */
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAdCoins,#obAd,#eMore,#rX2,#neAd,#dyAd,#sX2,#mlGift2,.btn.accent[data-th^="buy:"]';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} /* код VK, иначе причина словами — в статистику */
+function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
+function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
+function adStill(){return L('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds');}
+/* подгрузка ролика заранее; «не готов» — переспросить n раз (каждые AD_POLL_MS); «готов» во время паузы кнопок — зажечь их */
+function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(r&&r.result)adVidReady();else again();},again);}
+function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adWait(on){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
+  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.74);color:#fff;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
+  w.textContent=L('Ролик загружается…','Loading the video…');w.style.display='flex';}
+/* кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду) */
+function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)q[i].style.opacity=off?'.45':'';}catch(e){}if(off)adDimT=setTimeout(adDim,1000);}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
+/* нажатие по погасшей кнопке: площадку не дёргаем, окно не закрываем — только объясняем (зовётся первым в обработчиках кнопок «за рекламу») */
+function adHold(){if(adBusy||Date.now()>=adCoolT)return false;toast(adStill());return true;}
+/* пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду) */
 let adBusy=false;
 function showRewarded(cb0,onFail0){
-  if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
-  const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
+  if(adBusy)return;
+  if(Date.now()<adCoolT){toast(adStill());if(onFail0)onFail0();adDim();return;}
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},135000);
+  let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL);onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
-      .then(r=>{adClose();if(r&&r.result){STAT.ad('rew','ok');cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL);onFail();}})
-      .catch(e=>{adClose();STAT.ad('rew','err',e&&e.error_data&&e.error_data.error_code);toast(AD_FAIL);onFail();})
-      .finally(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
+  if(VK){
+    let tries=0;
+    const go=()=>{adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000).then(r=>{adClose();
+        if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'');adPreload();cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL);adPreload();onFail();}
+      },e=>{
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него) */
+        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e));toast(AD_FAIL);adPreload();}
+        onFail();adDim();});}; /* adDim после onFail: отказ заново открывает окно — его кнопку гасим сразу */
+    go();return;}
   if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
-    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);onFail();}}});
+    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);adCool();onFail();adDim();}}});
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
 function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
@@ -1408,7 +1444,7 @@ function openCoins(){
   STAT.screen('coins');payScale();const buy=PAY.on&&!inGame(),adc=adOk()&&adCoinsLeft()>0,ac=adCoins();
   modal(`<h2>${L('Монеты 💰','Coins 💰')}</h2><p>${L('У тебя','You have')} ${coinsTxt(S.coins)}. ${L('Монеты дают за улов, задание дня, подарки дня и достижения. Тратятся на снасти, наживку и путёвки на новые места.','Coins come from your catch, daily tasks, the daily gift and achievements. Spend them on tackle, bait and trips.')}</p>${buy?payHtml():''}<div class="row">${adc?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(ac)} ${L('за рекламу','for an ad')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   if(buy){PAY.bind($('mcard'));PAY.re=openCoins;}
-  if($('mAdCoins')){STAT.offer('coins');$('mAdCoins').onclick=()=>{hideModal();STAT.place('coins');showRewarded(()=>{adCoinsLeft();S.adc.n++;setCoins(S.coins+ac);SND.coin();toast('+'+coinsTxt(ac));});};}$('mCancel').onclick=hideModal;}
+  if($('mAdCoins')){STAT.offer('coins');$('mAdCoins').onclick=()=>{if(adHold())return;hideModal();STAT.place('coins');showRewarded(()=>{adCoinsLeft();S.adc.n++;setCoins(S.coins+ac);SND.coin();toast('+'+coinsTxt(ac));});};}$('mCancel').onclick=hideModal;}
 function inGame(){return !!(G&&!G.over&&$('scr-fish').classList.contains('on'));}
 
 /* ---- товары «Бравого рыбака» (каталог — hobby-analytics/13-purchases-catalog.md; VK — hobby-pay/catalog.json).
@@ -1955,7 +1991,7 @@ function offerBack(pk){if(!G||G.over||G.phase!=='lost'){if(G&&!G.over)nextCast()
     <div class="row"><button class="btn accent noenter" id="obAd">📺 ${L('Вернуть рыбу за рекламу','Get it back for an ad')}</button><button class="btn" id="obNo">${L('Ладно, дальше','Never mind')}</button></div>`);
   const im=fishImg(f.id,220,true);im.className='fish';$('obImg').appendChild(im);
   $('obNo').onclick=()=>{hideModal();G.back='no';nextCast();};
-  $('obAd').onclick=()=>{hideModal();STAT.place('back');showRewarded(()=>backGot(pk),()=>{if(G&&!G.over){G.back='no';nextCast();}});};}
+  $('obAd').onclick=()=>{if(adHold())return;hideModal();STAT.place('back');showRewarded(()=>backGot(pk),()=>{if(G&&!G.over){G.back='no';nextCast();}});};}
 function backGot(pk){if(!G||G.over)return;const i=G.catch.map(c=>!!c.lost).lastIndexOf(true);if(i>=0)G.catch.splice(i,1);G.lostN=Math.max(0,G.lostN-1);
   G.back='ok';pk.bk=1;G.pk=pk;G.ft=null;G.fl=null;$('say').classList.remove('on');landed();kick();}
 function landed(){G.phase='land';G.t=0;const ev=G.pk&&G.pk.f?catchEv(G.pk):null;G.landT=ev&&ev.big&&!calm()?1.05:.7;a1Land(ev);if(ev&&ev.big&&!calm())G.flash=.9;const p=G.ft&&!G.ft.junk&&G.fl?fishPos():{x:GEO.W*.5,y:GEO.shY};splash(p.x,p.y,1);SND.splash(1.2);G.fl=null;hint('');}
@@ -2009,7 +2045,7 @@ function endSession(){G.phase='done';hint('');
   modal(`<h2>📞 ${L('Звонит жена','Your wife is calling')}</h2><p class="quote"><b>${L('Жена','Wife')}</b>${esc(L(pick(PH.wife),'Dinner is getting cold! Come home!'))}</p>
     <div class="row">${canExtra?`<button class="btn accent noenter" id="eMore">📺 ${L('Ещё 3 заброса за рекламу','3 more casts for an ad')}</button>`:''}<button class="btn green" id="eHome">🏠 ${L('Иду-иду!','Coming!')}</button></div>`);
   $('eHome').onclick=()=>{hideModal();finish();};if($('eMore'))STAT.offer('more3');
-  if($('eMore'))$('eMore').onclick=()=>{hideModal();STAT.place('more3');showRewarded(()=>{G.extra=3;G.phase='aim';updHud();kick();hint(L('Ещё три заброса! Коснись воды','Three more casts! Tap the water'));},()=>finish());};}
+  if($('eMore'))$('eMore').onclick=()=>{if(adHold())return;hideModal();STAT.place('more3');showRewarded(()=>{G.extra=3;G.phase='aim';updHud();kick();hint(L('Ещё три заброса! Коснись воды','Three more casts! Tap the water'));},()=>finish());};}
 function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;S.adW=(S.adW||0)+1;if(VK&&!vkIntOk)vkIntLoad();
   const fish=G.catch.filter(c=>c.id&&!c.lost),kg=fish.reduce((s,c)=>s+c.w,0),small=fish.filter(c=>c.w<.25&&!fishOf(c.id).leg);
   let catLine='';if(small.length&&!G.tourn){S.cat=(S.cat||0)+1;catLine=L('Мелкую рыбёшку — коту Ваське. Мурлычет 🐈','A small fish for Vaska the cat. He purrs 🐈');}
@@ -2028,7 +2064,7 @@ function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;S.adW=
     bonus=`<p class="quote"><b>${L('Дед Митяй','Grandpa Mityai')}</b>${L('С почином! Держи '+coinsTxt(FIRST_BONUS)+' на новую леску — тонкую крупная рыба рвёт.','Well done! Here are '+coinsTxt(FIRST_BONUS)+' for a stronger line.')}</p>`;}
   save();checkAch();updCoins();
   STAT.end(G.quit?'quit':'win',{n:fish.length,g:g1,c:G.earned,lo:G.catch.filter(c=>c.lost).length,bk:G.back==='ok'?1:0});
-  const rows=G.catch.map(c=>c.miss?'':c.junk?`<tr><td>${JUNK[c.junk].ic} ${esc(nm(JUNK[c.junk]))}</td><td>+${c.c||1}</td></tr>`:c.lost?`<tr class="lost"><td>${esc(nm(fishOf(c.id)))} — ${c.res==='break'?L('оборвал','snapped'):L('сошла','got away')}</td><td>—</td></tr>`:`<tr><td><span class="lkfi" data-f="${c.id}"></span>${fishOf(c.id).leg?'✨ ':''}${esc(nm(fishOf(c.id)))}${c.bk?' <small>📺</small>':''}</td><td>${kgTxt(c.w)} · +${c.p!=null?c.p:c.c}${c.bx?'<small> · '+c.bx+'</small>':''}</td></tr>`).join('');
+  const rows=G.catch.map(c=>c.miss?'':c.junk?`<tr><td>${JUNK[c.junk].ic} ${esc(nm(JUNK[c.junk]))}</td><td>+${c.c||1}</td></tr>`:c.lost?`<tr class="lost"><td>${esc(nm(fishOf(c.id)))} — ${c.res==='break'?L('оборвал','snapped'):L('сошла','got away')}</td><td>—</td></tr>`:`<tr><td><span class="lkfi" data-f="${c.id}"></span>${fishOf(c.id).leg?'✨ ':''}${esc(nm(fishOf(c.id)))}${c.bk?' <small>📺</small>':''}</td><td>${kgTxt(c.w)} · +${c.p!=null?c.p:c.c}${c.bx?'<small class="cx">'+c.bx.split(' · ').map(x=>'<span>'+x+'</span>').join(' · ')+'</small>':''}</td></tr>`).join('');
   const x2=X2_ON&&adOk()&&!G.tourn&&!G.adAsked&&(S.sessions||0)>=3&&G.earned>=10&&!(adDue()&&adReady());
   // плашки под уловом — не больше двух, по важности: подарок Митяя, турнир, «хватает на…», задание выполнено, набор в альбоме, «завтра», «копим на…», задание, кот
   const gN=goalNext(),gOk=gN&&S.coins>=gN.p,dDone=dl.indexOf('tipl')>=0;
@@ -2039,7 +2075,7 @@ function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;S.adW=
     <div class="row">${x2?`<button class="btn accent noenter x2" id="rX2">📺 ×2 ${L('монеты за рекламу','coins for an ad')} (+${coinsTxt(G.earned)})</button>`:''}
     <div class="row2"><button class="btn" id="rMap">🗺 ${L('Карта','Map')}</button><button class="btn green" id="rAgain">🎣 ${L('Ещё раз','Again')}</button></div></div>`);
   const g=G;$('mcard').querySelectorAll('.lkfi').forEach(e=>{try{e.appendChild(fishImg(e.dataset.f,120));}catch(er){}}); //LK: рыбы в итогах — картинками
-  if($('rX2')){STAT.offer('x2');$('rX2').onclick=()=>{if(g.x2)return;const bt=$('rX2');bt.disabled=true;STAT.place('x2');showRewarded(()=>{if(g.x2)return;g.x2=1;setCoins(S.coins+g.earned);SND.coin();toast('+'+coinsTxt(g.earned));
+  if($('rX2')){STAT.offer('x2');$('rX2').onclick=()=>{if(g.x2||adHold())return;const bt=$('rX2');bt.disabled=true;STAT.place('x2');showRewarded(()=>{if(g.x2)return;g.x2=1;setCoins(S.coins+g.earned);SND.coin();toast('+'+coinsTxt(g.earned));
     if(bt.parentNode)bt.parentNode.removeChild(bt);const rc=$('rCoins');if(rc)rc.textContent='+'+coinsTxt(g.earned*2)+' (×2)';},()=>{bt.disabled=false;});};}
   $('rMap').onclick=()=>afterRes(g,'map');$('rAgain').onclick=()=>afterRes(g,'again');if($('rGoal'))$('rGoal').onclick=()=>afterRes(g,'goal');
   countUp($('rCoins'),G.earned,'+','\u00A0💰');if(recS||legS||bonus){SND.record();FX.burst(.5,.25,recS||legS?44:26,bonus&&!recS?'coin':null);}
@@ -2719,7 +2755,7 @@ function placeNew(i,gift){const P=PLACES[i],tod=todOf(hourNow());SND.buy();buzz(
 function notEnough(p){const need=p-S.coins,ad=adOk()&&adCoinsLeft()>0,ac=adCoins();
   modal(`<h2>${L('Не хватает монет','Not enough coins')}</h2><p>${L('Нужно ещё','You need')} ${coinsTxt(need)}. ${L('Улов продаётся — порыбачь ещё немного!','Your catch sells — fish a little more!')}</p>
     <div class="row">${ad?`<button class="btn accent noenter" id="neAd">📺 +${coinsTxt(ac)} ${L('за рекламу','for an ad')}</button>`:''}<button class="btn green" id="mCancel">🎣 ${L('Порыбачить','Go fishing')}</button>${PAY.on&&!inGame()?`<button class="btn noenter" id="neBuy">${L('Купить монеты','Buy coins')}</button>`:''}</div>`);
-  if($('neAd')){STAT.offer('coins');$('neAd').onclick=()=>{hideModal();STAT.place('coins');showRewarded(()=>{adCoinsLeft();S.adc.n++;setCoins(S.coins+ac);SND.coin();toast('+'+coinsTxt(ac));if($('scr-shop').classList.contains('on'))openShop(shopTab);else if(!G)openMap();});};}
+  if($('neAd')){STAT.offer('coins');$('neAd').onclick=()=>{if(adHold())return;hideModal();STAT.place('coins');showRewarded(()=>{adCoinsLeft();S.adc.n++;setCoins(S.coins+ac);SND.coin();toast('+'+coinsTxt(ac));if($('scr-shop').classList.contains('on'))openShop(shopTab);else if(!G)openMap();});};}
   if($('neBuy'))$('neBuy').onclick=openCoins;$('mCancel').onclick=hideModal;}
 
 /* ================= снасти и наживка ================= */
@@ -2907,7 +2943,7 @@ function openWeek(){STAT.screen('week');const pi=weekPlace(),P=PLACES[pi],b=LB.b
     <div class="row"><button class="btn green" id="wGo">🎣 ${L('Участвовать','Take part')}</button>${LB.ok()?`<button class="btn blue noenter" id="wLb">🏆 ${L('Таблица','Leaderboard')}</button>`:''}</div></div><div class="row"><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   $('wGo').onclick=()=>startFish(pi,{tourn:true});if($('wLb'))$('wLb').onclick=()=>LB.show(openWeek);$('mCancel').onclick=hideModal;
   if($('dyGo'))$('dyGo').onclick=()=>dayStart(false);if($('dyLb'))$('dyLb').onclick=()=>LB.show(openWeek,'day');
-  if($('dyAd'))$('dyAd').onclick=()=>{hideModal();STAT.place('day');showRewarded(()=>dayStart(true),()=>openWeek());};}
+  if($('dyAd'))$('dyAd').onclick=()=>{if(adHold())return;hideModal();STAT.place('day');showRewarded(()=>dayStart(true),()=>openWeek());};}
 
 /* ================= звание, достижения ================= */
 const ACH=[
@@ -2962,7 +2998,7 @@ function showStreak(){STAT.screen('gift');const st=streakState();let cells='';
     <div class="row">${st.claimed?'<button class="btn" id="sClose">'+L('Закрыть','Close')+'</button>':`${adOk()?`<button class="btn accent noenter" id="sX2">📺 ×2 ${L('за рекламу','for an ad')} (+${coinsTxt(r*2)})</button>`:''}<button class="btn green" id="sGet">${L('Забрать','Take')} +${coinsTxt(r)}</button>`}</div>`);
   if(st.claimed){$('sClose').onclick=hideModal;return;}
   $('sGet').onclick=()=>claimStreak(1);
-  if($('sX2')){STAT.offer('gift');$('sX2').onclick=()=>{hideModal();STAT.place('gift');showRewarded(()=>claimStreak(2),()=>showStreak());};}}
+  if($('sX2')){STAT.offer('gift');$('sX2').onclick=()=>{if(adHold())return;hideModal();STAT.place('gift');showRewarded(()=>claimStreak(2),()=>showStreak());};}}
 function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal();return;}
   const c=STREAK[st.day-1],s=S.streak||{cyc:0};S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
   if(st.day===7){S.bait.live=(S.bait.live||0)+10;if(!S.ach.streak7){S.ach.streak7=1;S.coins+=50;}}
@@ -3233,7 +3269,7 @@ openCoins=function(){STAT.screen('coins');payScale();const buy=PAY.on&&!inGame()
     ${st?'<p class="goal tipl">🎒 '+L('«Набор рыбака» — самая выгодная покупка для начала','The «Angler\'s kit» is the best value to start')+'</p>'+payHtml(['starter'])+payHtml(ids.filter(x=>x!=='starter')).replace(/<h3>[^<]*<\/h3>/,''):buy?payHtml(ids):''}
     <div class="row">${adc?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(ac)} ${L('за рекламу','for an ad')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   if(buy){PAY.bind($('mcard'));PAY.re=openCoins;}if(buy&&PAY.item('club30'))try{STAT.ev('mod',{m:'club',a:'open'});}catch(e){}
-  if($('mAdCoins')){STAT.offer('coins');$('mAdCoins').onclick=()=>{hideModal();STAT.place('coins');showRewarded(()=>{adCoinsLeft();S.adc.n++;setCoins(S.coins+ac);SND.coin();toast('+'+coinsTxt(ac));});};}$('mCancel').onclick=hideModal;};
+  if($('mAdCoins')){STAT.offer('coins');$('mAdCoins').onclick=()=>{if(adHold())return;hideModal();STAT.place('coins');showRewarded(()=>{adCoinsLeft();S.adc.n++;setCoins(S.coins+ac);SND.coin();toast('+'+coinsTxt(ac));});};}$('mCancel').onclick=hideModal;};
 $('mCoins').onclick=openCoins;$('shCoins').onclick=openCoins;
 // ⚙: строка «Клубная карта»
 {const os=openSettings;openSettings=function(){os();const c=a3Club();if(!(PAY.on&&!inGame()&&PAY.item('club30'))&&!c.n)return;const row=$('mcard').querySelector('.row');if(!row)return;
@@ -3425,7 +3461,7 @@ function openMail(){STAT.screen('mail');const st=streakState(),gw=a3GiftWaits(),
   modal(`<h2>✉ ${L('Почта','Mail')}</h2>${h}${fo?`<p class="goal tmr">🔮 ${L('Завтра','Tomorrow')}: ${a3ForeTxt(fo)}</p>`:''}${rd?`<p class="about">${L('Прочитано писем','Letters read')}: ${rd}</p>`:''}
     <div class="row"><button class="btn noenter" id="mlGoals">📅 ${L('Цели','Goals')} ${a3DoneN()}/3</button><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   if($('mlGift'))$('mlGift').onclick=()=>{a3ClaimGift(1);openMail();};
-  if($('mlGift2')){STAT.offer('gift');$('mlGift2').onclick=()=>{hideModal();STAT.place('gift');showRewarded(()=>{a3ClaimGift(2);openMail();},()=>openMail());};}
+  if($('mlGift2')){STAT.offer('gift');$('mlGift2').onclick=()=>{if(adHold())return;hideModal();STAT.place('gift');showRewarded(()=>{a3ClaimGift(2);openMail();},()=>openMail());};}
   if($('mlCup'))$('mlCup').onclick=()=>{weekClaim();const ok=$('cupOk');if(ok)ok.onclick=openMail;};
   if($('mlPc'))$('mlPc').onclick=()=>{a3TakeParcel();openMail();};
   $('mcard').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{SND.tap();openLetter(b.dataset.l);});
@@ -3583,7 +3619,7 @@ openMail=function(){STAT.screen('mail');const st=streakState(),gw=a3GiftWaits(),
   modal(`<h2>✉ ${L('Почта','Mail')}</h2>${h}<div class="row"><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   if($('mlAll'))$('mlAll').onclick=()=>{SND.tap();fbTakeAll();};
   if($('mlRead'))$('mlRead').onclick=()=>{SND.tap();openLetter(un[0]);};
-  if($('mlGift2')){STAT.offer('gift');$('mlGift2').onclick=()=>{hideModal();STAT.place('gift');showRewarded(()=>{a3ClaimGift(2);openMail();},()=>openMail());};}
+  if($('mlGift2')){STAT.offer('gift');$('mlGift2').onclick=()=>{if(adHold())return;hideModal();STAT.place('gift');showRewarded(()=>{a3ClaimGift(2);openMail();},()=>openMail());};}
   $('mcard').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{SND.tap();openLetter(b.dataset.l);});
   $('mCancel').onclick=()=>{hideModal();updDots();};updDots();};
 
