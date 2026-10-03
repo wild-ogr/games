@@ -79,6 +79,13 @@ function ptUpOk(W,id){const b=W.biz.find(x=>x.id===id);if(!b||b.st!=='w'||W.ned)
 // улучшить точку: деньги — в стоимость точки (ОС), износ — по сроку службы точки
 function ptUp(W,id){const r=ptUpOk(W,id);if(r!=='ok')return r;const b=W.biz.find(x=>x.id===id),x=lvNext(W,b);pay(W,x.c,'capex');b.g+=x.c;b.lv=x.n;
   news(W,'biz',{k:'lvup',bt:b.t,n:x.n});return 'ok';}
+// M32: «⏫ До максимума» — все следующие уровни точки подряд, на какие хватает денег без ухода ниже запаса
+// (запас — больший из bizRes «перед покупкой» и подушки whsPad: обязательные платежи до закрытия минус поступления). plan — только посчитать: {n, c, to, max, res, left}
+function ptUpRes(W){return Math.max(E.bizRes?E.bizRes(W):0,E.whsPad?E.whsPad(W):0);}
+function ptUpMax(W,id,plan){const b=W.biz.find(x=>x.id===id),a=b&&LV[b.t];if(!a||b.st!=='w'||W.ned)return plan?null:'no';
+  let l=b.lv||1,c=0,n=0;const res=ptUpRes(W),free=W.cash-res;while(l<LV_MAX&&c+a[l-1][3]<=free){c+=a[l-1][3];l++;n++;}
+  if(plan)return {n,c,to:l,max:l>=LV_MAX,res,left:LV_MAX-(b.lv||1)};if(!n)return (b.lv||1)>=LV_MAX?'max':'cash';
+  for(let i=0;i<n;i++)if(ptUp(W,id)!=='ok')break;return 'ok';}
 // прибавка прибыли от следующего уровня (прогноз, в среднем за год) и окупаемость
 function lvGain(W,b){const x=lvNext(W,b);if(!x)return null;const f0=E.bizForecast(W,b,b.k).prof,b2=Object.assign({},b,{lv:x.n}),f1=E.bizForecast(W,b2,b.k).prof;
   const g=f1-f0;return {x,g,pay:g>0?x.c/g:999};}
@@ -135,9 +142,14 @@ function autoSafe(W,c){if(W.odM>0||W.loans.some(l=>l.k==='od'))return false;if(!
 function mkAutoSet(W,k,tg,on){const O=ow(W),m=MK[k];if(!m)return 'no';if(m.sc==='pt'){if(MK_AUTO.indexOf(k)<0)return 'no';const b=W.biz.find(x=>x.id===tg);if(!b||E.SMALL.indexOf(b.t)<0)return 'no';
     if(!b.mkA)b.mkA={};if(on)b.mkA[k]=1;else delete b.mkA[k];if(!Object.keys(b.mkA).length)delete b.mkA;return 'ok';}
   if(MKC_AUTO.indexOf(k)<0)return 'no';const key=(tg||W.home||'kuz')+':'+k;if(!O.ccA)O.ccA={};if(on)O.ccA[key]=1;else delete O.ccA[key];return 'ok';}
-function mkAutoOn(W,k,tg){const m=MK[k];if(!m)return false;if(m.sc==='pt'){const b=W.biz.find(x=>x.id===tg);return !!(b&&b.mkA&&b.mkA[k]);}const O=W.ow;return !!(O&&O.ccA&&O.ccA[(tg||W.home||'kuz')+':'+k]);}
+function mkAutoOn(W,k,tg){const m=MK[k];if(!m)return false;if(W.ow&&W.ow.mkAP&&(MK_AUTO.indexOf(k)>=0||MKC_AUTO.indexOf(k)>=0))return true;   // M34: автопилот сети
+  if(m.sc==='pt'){const b=W.biz.find(x=>x.id===tg);return !!(b&&b.mkA&&b.mkA[k]);}const O=W.ow;return !!(O&&O.ccA&&O.ccA[(tg||W.home||'kuz')+':'+k]);}
 // листовки сами у всех точек, где они окупаются (одна кнопка вместо десятков)
 function mkAutoAll(W,k,on){let n=0;for(const b of W.biz)if(b.st==='w'&&E.SMALL.indexOf(b.t)>=0&&(!on||mkWorth(W,k,b.id).ok||mkAutoOn(W,k,b.id))){if(mkAutoSet(W,k,b.id,on)==='ok')n++;}return n;}
+// M34: «📣 Реклама на автопилоте» для всей сети: W.ow.mkAP=1 (пусто = выкл.) — ownAuto повторяет MK_AUTO у всех точек (и новых) и MKC_AUTO во всех городах по правилам fx12:
+// окупается сейчас (mkWorth), после оплаты запас autoSafe, при овердрафте — пауза. Боты симулятора его не включают.
+function mkApSet(W,on){if(W.ned||!W.ip)return 'no';const O=ow(W);if(on)O.mkAP=1;else delete O.mkAP;return 'ok';}
+function mkApOn(W){return !!(W.ow&&W.ow.mkAP);}
 function jobAutoSet(W,k,a,on){if(JOB_AUTO.indexOf(k)<0)return 'no';const O=ow(W);if(!O.ja)O.ja={};const key=k+':'+a;if(on)O.ja[key]=1;else delete O.ja[key];return 'ok';}
 function jobAutoOn(W,k,a){const O=W.ow;return !!(O&&O.ja&&O.ja[k+':'+a]);}
 function ownAuto(W){const O=ow(W);if(!W.ip||W.ned)return;let n=0;
@@ -146,6 +158,8 @@ function ownAuto(W){const O=ow(W);if(!W.ip||W.ned)return;let n=0;
   for(const key in O.ccA||{}){const i=key.lastIndexOf(':'),c=key.slice(0,i),k=key.slice(i+1);if(mkOk(W,k,c)!=='ok')continue;const x=mkWorth(W,k,c);if(!x.ok||!autoSafe(W,x.c))continue;mkRun(W,k,c);n++;}
   for(const key in O.ja||{}){const i=key.indexOf(':'),k=key.slice(0,i),a=key.slice(i+1),r=jobOk(W,k,a);if(r==='no'||r==='stage'){delete O.ja[key];continue;}
     if(r!=='ok')continue;if(JOBS[k].c&&!autoSafe(W,JOBS[k].c))continue;if(k==='fly'&&!mkWorth(W,'fly',a).ok)continue;jobStart(W,k,a);n++;}
+  if(O.mkAP){for(const b of W.biz){if(b.st!=='w'||E.SMALL.indexOf(b.t)<0)continue;for(const k of MK_AUTO){if(mkOk(W,k,b.id)!=='ok')continue;const x=mkWorth(W,k,b.id);if(!x.ok||!autoSafe(W,x.c))continue;mkRun(W,k,b.id);n++;}}   // M34: автопилот рекламы всей сети
+    for(const c of W.cities&&W.cities.length?W.cities:[W.home||'kuz'])for(const k of MKC_AUTO){if(mkOk(W,k,c)!=='ok')continue;const x=mkWorth(W,k,c);if(!x.ok||!autoSafe(W,x.c))continue;mkRun(W,k,c);n++;}}
   if(n)O.mon.an=(O.mon.an|0)+n;}
 
 /* ---------------- курсы ---------------- */
@@ -317,7 +331,8 @@ function passive(W){let inc=0;for(const b of W.biz){const B=E.BIZ[b.t];if(!B||b.
   const need=(E.LIFE[W.st]||45e3)+(W.ip&&!W.ooo?4750:0)+(W.ooo?90e3:0);return {inc,need,pct:need>0?Math.max(0,inc/need):0};}
 // совет по налогу для портфеля (прогноз 12 мес.): если точек нет — по первому делу (автомат)
 function taxAdv(W,types){let rev=0,costs=0;const add=f=>{rev+=f.rev*12;costs+=(f.vc+f.f+f.risk)*12;};
-  const ps=W.biz.filter(b=>E.SMALL.indexOf(b.t)>=0||(E.MID.indexOf(b.t)>=0&&b.st==='w'));   // M30: склад, стройбаза, самосвалы — тоже (склад с оборотом 12–23 млн/мес меняет выбор 6 % / 15 %)for(const b of ps)add(E.bizForecast(W,b,b.k));
+  const ps=W.biz.filter(b=>E.SMALL.indexOf(b.t)>=0||(E.MID.indexOf(b.t)>=0&&b.st==='w'));   // M30: склад, стройбаза, самосвалы — тоже (склад с оборотом 12–23 млн/мес меняет выбор 6 % / 15 %)
+  for(const b of ps)add(E.bizForecast(W,b,b.k));
   for(const t of types||(ps.length?[]:['vend']))add(E.bizForecast(W,t));
   const fee=4750*12,u6=Math.max(0,rev*.06-fee),u15=Math.max(.15*Math.max(0,rev-costs-fee),.01*rev);return {u6:rnd0(u6),u15:rnd0(u15),best:u15<u6?'usn15':'usn6',rev:rnd0(rev),prof:rnd0(rev-costs)};}
 // до «Сети»: что осталось и примерный срок (мес.)
@@ -358,7 +373,7 @@ function ownMig(W,fx){if(!W.ow||typeof W.ow!=='object'){W.ow=owNew();if(fx&&W.bi
   if(W.ip&&typeof W.taxM!=='number')W.taxM=W.m-12;
   if(W.pk&&typeof W.pk==='object'&&W.pk.reg!=null&&typeof W.pk.reg!=='number')W.pk.reg=0;}
 
-Object.assign(E,{OWN_TR:TR,satOf,LV,LV_MAX,lvEff,lvNext,ptUpOk,ptUp,lvGain,MK,MK_CAP,mkSens,mkBoost,mkCost,mkOk,mkEff,mkRun,mkStop,mkWorth,mkAutoSet,mkAutoOn,mkAutoAll,jobAutoSet,jobAutoOn,ownAuto,MK_AUTO,MKC_AUTO,JOB_AUTO,ED,edOk,edStart,ST,stCost,stOk,stTrain,
+Object.assign(E,{OWN_TR:TR,satOf,LV,LV_MAX,lvEff,lvNext,ptUpOk,ptUp,ptUpMax,ptUpRes,lvGain,MK,MK_CAP,mkSens,mkBoost,mkCost,mkOk,mkEff,mkRun,mkStop,mkWorth,mkAutoSet,mkAutoOn,mkAutoAll,mkApSet,mkApOn,jobAutoSet,jobAutoOn,ownAuto,MK_AUTO,MKC_AUTO,JOB_AUTO,ED,edOk,edStart,ST,stCost,stOk,stTrain,
   JOBS,FRIENDS,jobOk,jobStart,jobStop,ownHands,ptMod,ptRk,ownTh,ownPtDay,ownOpen,ownMgrSh,mgrN,ownLoanK,REG_CR,REG_STEP,rg,luxEn,enBonus,
   ownAdvise,ownDay,ownClose,EV2,EV3,EV_DAYS,evNew,evAns,passive,taxAdv,oooEta,marginal,charOf,ownMig,ownEd:ed});
 })(typeof window!=='undefined'?window:this);

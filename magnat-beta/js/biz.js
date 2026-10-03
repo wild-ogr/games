@@ -361,6 +361,11 @@ function econ(W,b,k,m,noEv){const B=BIZ[b.t],t=b.t;k=k||b.k||{};m=m==null?month(
 function ownPit(W,g){return W.biz.find(b=>b.st==='w'&&BIZ[b.t].out===g);}
 function truckBusy(W,b){const bs=working(W,'base').length;if(!bs)return false;const trs=working(W,'truck');let pq=0;if(W.pc)for(const c of W.pc.a)pq+=c.qm;return trs.indexOf(b)<Math.ceil((BASE_Q*1.4*bs+pq)/TRUCK_T);}
 // прогноз для экрана точки и каталога: при заданной ручке, средний месяц (или ближайший)
+// M32: ползунок цены (мойка 'pr') и наценки (ларёк 'mk') — прикидка «прибыль в месяц» (bizForecast, в среднем за год) на 5 вариантов + нынешний и лучший (★, по всем целым значениям)
+function slFore(W,b){const B=BIZ[b.t],K=B&&B.sl;if(!K)return null;const cur=b.k[K.k]!=null?b.k[K.k]:K.def,pf={};let best=K.min;
+  for(let v=K.min;v<=K.max;v++){pf[v]=bizForecast(W,b,Object.assign({},b.k,{[K.k]:v})).prof;if(pf[v]>pf[best]+1)best=v;}
+  const st=Math.ceil((K.max-K.min)/4/5)*5,vs=[];for(let v=K.min;v<K.max;v+=st)vs.push(v);vs.push(K.max);for(const v of [cur,best])if(vs.indexOf(v)<0)vs.push(v);vs.sort((a,c)=>a-c);
+  return {k:K.k,cur,best,o:vs.map(v=>({v,prof:rnd0(pf[v]),best:v===best,on:v===cur}))};}
 function bizForecast(W,b,k){if(typeof b==='string'){const B=BIZ[b];b={t:b,c:W.home||'kuz',rt:3.5,k:defKnob(b),mgr:0,wm:3,ev:{}};}
   const B=BIZ[b.t];let a={rev:0,vc:0,f:0,risk:0,log:0,prof:0};for(let m=0;m<12;m++){const x=econ(W,b,k||b.k,m,true);for(const q in a)a[q]+=(x[q]||0)/12;}
   const now=econ(W,b,k||b.k,null,true);a.dep=B.cap/B.life;a.now=now;a.pay=a.prof>0?B.cap/a.prof:0;return a;}
@@ -412,6 +417,16 @@ function factorPick(W,part){const r=W.rec.slice().sort((a,b)=>a.due-b.due);let s
 function factor(W,part){const p=factorPick(W,part||'all');if(p.a<=0)return 'no';let left=p.a;recv(W,p.a,'sales');cost(W,p.fee,'oth','oth','trade');
   for(const x of W.rec.slice().sort((a,b)=>a.due-b.due)){if(left<=0)break;const u=Math.min(x.a,left);recTax(W,x,u);x.a-=u;left-=u;}
   W.rec=W.rec.filter(x=>x.a>0.5);if(W.me)W.me.fN=(W.me.fN||0)+1;return 'ok';}
+// M32: автофакторинг (галочка в карточке склада и «Покупатели должны»; W.afa — необязательное поле, пусто = выкл.). Раз в день (bizDay, и офлайн):
+// если денег меньше «подушки» whsPad (= прогноз: обязательные платежи до закрытия минус 80 % поступлений, +10 %) или есть овердрафт —
+// продаём банку ближайшие долги покупателей ровно на нехватку (обычная цена 3 %, учёт — как у ручного: тег a.factor). W.afS = {a,fee,n,t,la,lf} — итоги (для тоста и «Пока вас не было»).
+function afacSet(W,on){if(on)W.afa=1;else delete W.afa;return 'ok';}
+function afacNeed(W){if(!W.rec||!W.rec.length)return 0;let need=whsPad(W);for(const l of W.loans)if(l.k==='od')need+=l.a;
+  // (докупка полупустого склада сюда не входит: проверка 03.10 — комиссия 3 % каждый день съедала больше, чем давала полная полка при d14)
+  const short=need-W.cash;if(short<=0)return 0;
+  let tot=0;for(const x of W.rec)tot+=x.a;const a=Math.min(rnd0(tot),Math.ceil(short/.97/1000)*1000);return a>=Math.min(10e3,tot)?a:0;}
+function afacDay(W){if(!W.afa)return;const a=afacNeed(W);if(!a)return;const p=factorPick(W,a),t0=E.tg('a.factor');const r=factor(W,a);E.tg(t0);if(r!=='ok')return;
+  const s=W.afS||(W.afS={a:0,fee:0,n:0});s.a+=p.a;s.fee+=p.fee;s.n++;s.t=W.t;s.la=p.a;s.lf=p.fee;}
 // M30: налог с оплаты (УСН, НПД — кассовый метод, как в жизни): отгрузка в долг идёт в базу налога, когда покупатель заплатил.
 // cs — отгружено в долг за месяц (выручка в БДР есть, в базе налога — нет), cr — пришло за отгрузки в долг (в базу), cb — из них безнадёжные.
 // Пачки без tx (до M30 или на ОСНО) уже в налоге с отгрузки — второй раз не считаем.
@@ -471,6 +486,33 @@ function pitBuild(W,pid,force){   // force — только для провер�
   if(W.cash<B.cap*.2)return 'cash';if(!force&&!E.buildPlan(W,B.cap,B.days).ok)return 'plan';   // M30: Людмила не даёт начать то, на что не хватит (окно плана в biz-ui)
   const b={id:'z'+(W.nid++),t,c:W.home||'kuz',pid,st:'b',left:B.days,tot:B.days,cost:B.cap,paid:0,g:0,dp:0,k:{},rt:4,mgr:0,hon:5,stk:0,m:{r:0,e:0},pm:[],ev:{},wm:0};
   W.biz.push(b);news(W,'biz',{k:'open',bt:t});return 'ok';}
+function lc1(t){return String(t).replace(/^./,c=>c.toLowerCase());}   // M34: «гранитный карьер и ДСК» (было «дск»)
+/* M34 (u4, разбор M33 гл.4): торги не должны съедать деньги идущих строек; «куда вложить»; честная причина совета события.
+   opiFree — свободные деньги для ставки: как buildPlan(W,0,дней до конца строек) — деньги − обязательства месяца + осторожный приток − недоплата строек;
+   opiLim — предел «Торговаться до» = min(четверть оценки, свободные) и кредит под разницу; opiAuto — ставки до предела (то же, что кнопка). */
+function opiBuildDays(W){let mx=0;for(const b of W.biz){if(b.st==='b'&&b.tot&&b.cost>b.paid)mx=Math.max(mx,b.left||0);if(b.xu)mx=Math.max(mx,b.xu.left||0);}return mx;}
+function opiFree(W){const mx=opiBuildDays(W),pl=E.buildPlan(W,0,Math.max(1,mx));return {free:Math.max(0,rnd0(pl.have-pl.rest)),cash:W.cash,rest:pl.rest,res:pl.res,inflow:pl.inflow,days:mx};}
+function opiLim(W,id){const p=W.opi.find(x=>x.id===id);if(!p)return null;const fair=rnd0(p.V*OPI_ADV),F=opiFree(W),free=Math.max(0,F.free-7500),lim=Math.min(fair,free);
+  const need=Math.max(0,fair-free),loan=need>0?E.projLoanAmt(W,need):0;return {fair,free,lim,need,loan:loan>=need?loan:0,F};}
+function opiAuto(W,id,lim){const p=W.opi.find(x=>x.id===id);if(!p||p.st!=='auc')return 'no';let r=null,n=0;
+  while(p.st==='auc'&&p.lead!=='you'&&(p.lead?p.pr+p.step:p.pr)<=lim&&n++<500){r=opiBid(W,id);if(r!=='bot')break;}
+  return p.own==='you'?'won':p.lead==='you'?'lead':r==='cash'?'cash':'lim';}
+// кредит под ставку: проектный (тело — после строек), чтобы ставка не остановила начатое
+function opiLoan(W,a){return E.projLoan(W,a,Math.max(30,opiBuildDays(W)));}
+// «куда вложить»: лицензии без стройки, расширения, улучшение сети — по окупаемости; mo — через сколько месяцев хватит своих (null — не видно)
+function invAdv(W){const o=[],F=opiFree(W),flow=E.buildFlow(W),when=sh=>sh<=0?0:flow>0?Math.ceil(sh/flow):null;
+  for(const p of W.opi)if(p.own==='you'&&p.st==='lic'&&!W.biz.some(b=>b.pid===p.id)){const t=p.g==='sand'?'sandpit':'gravpit',B=BIZ[t],f=pitFore(W,null,t),pl=E.buildPlan(W,B.cap,B.days);
+    o.push({k:'pit',id:p.id,t,nm:p.nm,c:B.cap,g:f.e,pay:f.pay,ok:pl.ok,kind:pl.kind,short:pl.short,mo:when(pl.short)});}
+  for(const b of W.biz)if(PITS.indexOf(b.t)>=0&&b.st==='w'){const u=pitUpInfo(W,b.id);if(u&&u.ok)o.push({k:'pup',id:b.id,t:b.t,pid:b.pid,c:u.cost,g:u.gain,pay:u.pay,ok:u.plan.ok,kind:u.plan.kind,short:u.plan.short,mo:when(u.plan.short)});}
+  if(E.lvGain){const by={};for(const b of W.biz){if(b.st!=='w'||SMALL.indexOf(b.t)<0)continue;let g=null;try{g=E.lvGain(W,b);}catch(e){}if(g&&g.g>0&&g.pay<=PTA_PAY){const x=by[b.t]||(by[b.t]={k:'net',t:b.t,c:0,g:0,n:0});x.c+=g.x.c;x.g+=g.g;x.n++;}}
+    const ts=Object.keys(by);if(ts.length){const x={k:'net',t:ts.sort((a,b)=>by[b].g-by[a].g)[0],ts,c:0,g:0,n:0};for(const t of ts){x.c+=by[t].c;x.g+=by[t].g;x.n+=by[t].n;}   // вся сеть — одной строкой
+      x.c=rnd0(x.c);x.g=rnd0(x.g);x.pay=Math.ceil(x.c/Math.max(1,x.g));const sh=Math.max(0,x.c-F.free);x.ok=sh<=0;x.kind=x.ok?'ok':'no';x.short=sh;x.mo=when(sh);o.push(x);}}
+  o.sort((a,b)=>(a.pay||999)-(b.pay||999));return {o,free:F.free,flow};}
+// почему Людмила советует именно этот вариант события карьера: 'ev' — дешевле/выгоднее по расчёту; 'cash' — на выгодный нет денег сейчас; 'build' — деньги нужны стройке
+function qeWhy(W,e){if(!e||!e.a)return null;let i0=0;e.a.forEach((o,i)=>{if(o.ev<e.a[i0].ev)i0=i;});if(i0===e.r)return {k:'ev',best:i0};
+  const o=e.a[i0],b=W.biz.find(x=>x.id===e.id),duty=bizDuty(W),rest=E.buildRest(W),free=rnd0(W.cash-duty-rest);
+  if(o.c>0&&o.c>W.cash-duty)return {k:'cash',best:i0,need:o.c,free:Math.max(0,rnd0(W.cash-duty))};
+  const need=o.road&&b?rnd0(pitQ(b)*BIZ[b.t].p*2):o.wm==='stock'?rnd0(o.cash*1.3):0;return {k:rest>0?'build':'cash',best:i0,need,free:Math.max(0,free),rest:rnd0(rest),gain:rnd0(o.ev-e.a[e.r].ev)};}
 function pitPlan(W,pid){const p=W.opi.find(x=>x.id===pid);if(!p)return null;const B=BIZ[p.g==='sand'?'sandpit':'gravpit'];return E.buildPlan(W,B.cap,B.days);}
 function nedraReq(W){const eq=E.equity(W),pit=W.biz.some(b=>PITS.indexOf(b.t)>=0&&b.st==='w'&&(b.wm||0)>=6);
   return {eq:eq>=NEDRA_EQ,pit,od:W.m-W.odLast>6,eqv:eq,st:W.st==='quarry'};}
@@ -513,6 +555,7 @@ function bizDay(W,off,out){if(W.d===0)cpReg();const M=W.me;if(!M){if(!W.biz.leng
   // точки
   if(W.qz&&W.qz.e)qeDay(W,off);   // M30: событие карьера — без ответа 10 дней (или офлайн) решает Людмила
   if(W.pc)pcDay(W);   // M22: подряды стройбазы — до карьеров (их тонны уходят в подряд, а не на рынок); начатые до «Недр» доводятся и там
+  afacDay(W);   // M32: автофакторинг — до закупки склада
   const dm=month(W);
   for(const b of W.biz){const B=BIZ[b.t];if(!B)continue;E.tg(b.id);   // M25: всё, что точка заработала и потратила за день, — под её тегом
     if(b.st==='b'){
@@ -743,6 +786,25 @@ function ptUpAll(W,t,plan){if(!E.lvGain||!E.ptUp)return plan?{n:0,c:0,g:0}:'no';
   L.sort((a,c)=>a.g.pay-c.g.pay);let n=0,c=0,g=0,cash=W.cash-bizDuty(W);
   for(const x of L){if(x.g.x.c>cash)continue;cash-=x.g.x.c;n++;c+=x.g.x.c;g+=x.g.g;if(!plan)E.ptUp(W,x.b.id);}
   if(plan)return {n,c:rnd0(c),g:rnd0(g),all:L.length,min:L.length?rnd0(Math.min.apply(null,L.map(x=>x.g.x.c))):0};return n?'ok':(L.length?'cash':'no');}
+// M34: «⏫ Все точки до выгодного максимума» — уровни подряд всем точкам всех видов (от самых быстрых по окупаемости), пока уровень окупается ≤ PTA_PAY мес.
+// и хватает денег сверх запаса ptUpRes (как «⏫ До максимума» M32). plan → {n уровней, p точек, c, g, nx — ближайший невыгодный {t,pay,id}, lack — выгодных, на которые не хватило}
+function ptUpAllMax(W,plan){const no={n:0,p:0,c:0,g:0,nx:null,lack:0};if(!E.lvGain||!E.ptUp||W.ned)return plan?no:'no';
+  const res=E.ptUpRes?E.ptUpRes(W):bizDuty(W),ps=W.biz.filter(b=>b.st==='w'&&SMALL.indexOf(b.t)>=0),G=new Map(),sv=[],ids={};let free=W.cash-res,n=0,c=0,g=0,nx=null,lack=0;
+  for(const b of ps)G.set(b,E.lvGain(W,b));
+  for(let k=0;k<400;k++){let best=null;nx=null;lack=0;
+    for(const b of ps){const x=G.get(b);if(!x||!(x.g>0))continue;if(x.pay>PTA_PAY){if(!nx||x.pay<nx.pay)nx={t:b.t,pay:x.pay,id:b.id};continue;}if(x.x.c>free){lack++;continue;}if(!best||x.pay<best.x.pay)best={b,x};}
+    if(!best)break;free-=best.x.x.c;n++;c+=best.x.x.c;g+=best.x.g;ids[best.b.id]=1;
+    if(plan){sv.push([best.b,best.b.lv||1]);best.b.lv=best.x.x.n;}else E.ptUp(W,best.b.id);G.set(best.b,E.lvGain(W,best.b));}
+  for(let i=sv.length-1;i>=0;i--)sv[i][0].lv=sv[i][1];
+  if(plan)return {n,p:Object.keys(ids).length,c:rnd0(c),g:rnd0(g),nx,lack};return n?'ok':(lack?'cash':'no');}
+// M34: советы Людмилы в «Сети» — только заметные: порог thr = max(15 тыс., 1,5 % средней прибыли компании за 3 месяца).
+// Мелкое улучшение одной точки (z_up) → один совет «все точки до максимума» (z_upall); убыток вида меньше порога или сезонный (за год точка в плюсе) — молчим.
+function advSig(W,o){const h=W.reps.slice(-3);let pr=0;for(const r of h)pr+=E.netOf(r.pl);pr=h.length?Math.max(0,pr/h.length):0;const thr=Math.max(15e3,pr*.015);
+  const drop=x=>{const a=x.a||{};if(x.k==='z_up'||x.k==='z_upall')return true;
+    if(x.k==='z_loss'){let l=0;for(const b of W.biz)if(b.t===a.bt&&b.st==='w'&&b.pm.length){const p=b.pm[b.pm.length-1];if(p<0)l-=p;}const b=W.biz.find(y=>y.id===a.id);return l<thr||!!(b&&bizForecast(W,b,b.k).prof>0);}
+    if(x.k==='z_mgrloss')return (a.self||0)-(a.mgr||0)<thr;if(x.k==='z_mx')return a.g!=null&&a.g<thr;return false;};
+  for(let i=o.length-1;i>=0;i--)if(drop(o[i]))o.splice(i,1);
+  const u=ptUpAllMax(W,true);if(u.n&&u.g>=thr)o.push({k:'z_upall',pri:47,a:{n:u.n,p:u.p,c:u.c,g:u.g}});}
 /* ---------------- закрытие месяца ---------------- */
 function bizClose(W,M,off){const Me=W.me;
   if(!off&&!W.ned){pcNew(W);fsNew(W);}   // M22: подряд стройбазы, покупатель сети
@@ -863,7 +925,7 @@ function bizAdvise(W){const o=[];const M=W.me;if(!M)return o;const h=hands(W);
   if(E.ownAdvise)E.ownAdvise(W,o);   // M17: событие, налог, улучшение, насыщение, свободная рука
   // M30 (баг: было W.cash<0 — днём так не бывает, совет не появлялся никогда): долг покупателей есть, а денег меньше «подушки», склад полупустой или был овердрафт
   if(whS||W.rec.length){const s=whS||{rec:W.rec.reduce((a,x)=>a+x.a,0),rs:W.rec.map(x=>({a:x.a,in:Math.max(0,x.due-W.t)})).sort((a,b)=>a.in-b.in),fill:1,pad:whsPad(W)},nr=s.rs[0];
-    if(s.rec>0&&(W.cash<s.pad||s.fill<.5||W.odM>0))o.push({k:'z_factor',pri:75,a:{rec:rnd0(s.rec),near:nr?rnd0(nr.a):0,in:nr?nr.in:0,fill:s.fill,stk:s.stk||0,norm:s.norm||0,id:wh?wh.id:''}});
+    if(s.rec>0&&(W.cash<s.pad||s.fill<.5||W.odM>0)&&!W.afa){o.push({k:'z_factor',pri:75,a:{rec:rnd0(s.rec),near:nr?rnd0(nr.a):0,in:nr?nr.in:0,fill:s.fill,stk:s.stk||0,norm:s.norm||0,id:wh?wh.id:'',af:1}});}   // M32: af — совет предлагает галочку автофакторинга; включена — вместо него z_whs (полка)
     else if(whS&&whS.fill<.5&&whS.lack)o.push({k:'z_whs',pri:74,a:{stk:whS.stk,norm:whS.norm,pad:whS.pad,cash:rnd0(W.cash),id:wh.id,dd:opt(BIZ.whs,'knob',wh.k.def).dd||0}});}
   // M30: декабрь на УСН 15 % — итог года: налог не меньше 1 % оплаченных доходов за год (может прийти разом)
   if(W.taxm==='usn15'&&cashTax(W)&&W.m%12===11&&!W.ned){const t=taxEst(W);if(t>Math.max(100e3,W.cash*.3))o.push({k:'z_taxy',pri:72,a:{t,cash:rnd0(W.cash)}});}
@@ -873,6 +935,7 @@ function bizAdvise(W){const o=[];const M=W.me;if(!M)return o;const h=hands(W);
   if(!W.ned&&W.st==='quarry'){const h=E.buildHalt(W);if(h)o.push({k:'z_halt',pri:88,a:{short:h.short,loan:h.loan,mo:h.mo,flow:h.flow}});
     else{const b=W.biz.find(x=>PITS.indexOf(x.t)>=0&&x.st==='w'&&(x.wm||0)>=3);if(b){const u=pitUpInfo(W,b.id);if(u&&u.ok&&u.plan.ok&&u.pay&&u.pay<=26)o.push({k:'z_pup',pri:58,a:{id:b.id,t:b.t,c:u.cost,g:u.gain,pay:u.pay}});}}}
   if(W.pc&&W.pc.s&&!W.ned){const x=W.pc.s;o.push({k:'z_fs',pri:x.k>=20?61:45,a:{t:x.t,n:x.n,pr:x.pr,k:x.k,pm:x.pm}});}   // M22: покупатель сети
+  if(W.st==='mid')advSig(W,o);   // M34: в «Сети» — только заметное
   o.push({k:'ok',pri:1});o.sort((a,b)=>b.pri-a.pri);return o;}
 
 /* ---------------- вехи глав (этап 4): 4–6 промежуточных целей на главу, видимый прогресс, награда 💎 (последняя — ещё украшение).
@@ -912,7 +975,7 @@ function bizSpeed(W,id){if(!bizSpeedOk(W,id))return 'no';const b=W.biz.find(x=>x
 function breathOk(W){return !!W.me&&!W.ned&&!(W.me.brT>W.t-7);}
 function breath(W){if(!breathOk(W))return 'no';W.me.en=Math.min(enMax(W),W.me.en+50);W.me.brT=W.t;return 'ok';}
 /* ---------------- награды за рекламу (спецификация 5.7; кнопки «📺 … за рекламу» — только при adOk(), награда — в колбэке досмотра) ----------------
-   Здесь — только модель и лимиты в игровом времени (раз в месяц, раз на точку/заказ/объект). Лимиты в реальный день — GAME.adLeft (S.adD).
+   Здесь — только модель и лимиты в игровом времени (раз в месяц, раз на точку/заказ/объект). Паузы мест в реальных минутах — GAME.adWait (S.adT, M31).
    Всё умеренно: рейтинг недели рекламой не покупается (критерий net_ad в tools/sim-rags.js: ≤ +15 % капитала, недра не раньше чем на 6 мес.). */
 const PROMO_K=.2,PROMO_D=15,AD_SPD=5;
 // «📺 ×2 за этот заказ»: заказчик доплачивает столько же, сколько заказ даёт на руки — сразу (раз в игровой месяц; не перепродажа, не «постоянный клиент»)
@@ -1070,16 +1133,19 @@ const CP_SRC=[
 Object.assign(E,{CP_SRC,taxEst,EVS,MGR_SH,MGR_MIN,mgrCut,mgrSh,TAX_GAP,taxNext,bizCost:cost,bizInc:inc,bizPlc:plc,bizSg:sgAdd,bizOpt:opt,hol,OPI_ADV,bizDuty,bizRes,bizObl,CR_BIZ,urgentGigOk,urgentGig,bizSpeedOk,bizSpeed,breathOk,breath,PROMO_K,PROMO_D,AD_SPD,gigX2Ok,gigX2,dealChkOk,dealChk,bizPromoOk,bizPromo,bizAdSpeedOk,bizAdSpeed,objAdSpeedOk,objAdSpeed,expressOk,express,conExtOk,conExt,mgrProf,chInfo,CH_OOO,lessons,lessonDone,GIGS,GL2,EQ,BIZ,BL,SMALL,MID,PITS,STAGES,LIFE,CITY,AGG,RIVALS,BIZ_ACH,NEDRA_EQ,NEDRA_CAP,PARTNER_MAX,JOB_PAY,AUDIT,OPD_WAGE,VEND_SELF,VEND_OP,VEND_SAT,vendOps,vendSpot,OOO_EQ,QUARRY_EQ,DE_MAX,
   bizInit,bizMigrate,bizDay,bizClose,bizTax,bizBal,bizLoanLimit,bizLoanRate,bizAdvise,
   hands,lvl,lvlNext,LV_N,LV_MAX,payAt,autoK,autoPay,gigSeason,gigHi,gigOpt,HAND_CR,EN_CR,EN_STEP,hx,ex,enMax,gigOk,gigCanTake,gigTake,gigRest,gigAuto,autoOk,eqBuy,jobQuit,jobBack,jobBackOk,regIP,regOOO,oooReq,taxSet,taxOk,taxCmp,
-  bizEcon:econ,bizForecast,whsPad,whsNeed,whsState,factorPick,cashTax,defKnob,bizNeed,bizCan,bizOpen,bizKnob,bizMgr,bizAudit,bizFire,bizSell,bizSellPrice,bizBook,opdHire,cityOpen,factor,chainN,chainDisc,
+  bizEcon:econ,bizForecast,whsPad,whsNeed,whsState,factorPick,cashTax,defKnob,bizNeed,bizCan,bizOpen,bizKnob,bizMgr,bizAudit,bizFire,bizSell,bizSellPrice,bizBook,opdHire,cityOpen,factor,slFore,afacSet,afacNeed,afacDay,chainN,chainDisc,
   MILES,bizMiles,LUX,LUXS,LUX0,LUX_SET,luxOf,luxMig,luxNeed,luxCh,luxCush,luxState,luxBuy,luxUse,luxCur,
-  PTA_PAY,ptUpAll,FS_EQ,FS_NC,fsOf,fsNew,fsTake,fsNo,NS_K,netOffer,netSell,netCloseLoss,PC_PEN,PC_MAX,pcOf,pcFore,pcNew,pcTake,pcNo,pcBuyP,pcTrSpare,pcPitSpare,TRUCK_T,OWN_T,HIRE_T,
-  SEA,microLoan,cardLimit,cardTake,chWord,ipMonths,opiBid,opiPass,pitBuild,pitPlan,pitFore,pitUp,pitUpInfo,pitQ,pitFix,pitSea,qzOf,qeAns,qeNew,qeOpts,QE_K,PIT_UP,PIT_STOR,pitVal,opiSpread,opiFeed,pcPitOpp,nedraReq,nedraOk,bizGoNedra,goal,stI:stI,season});
+  PTA_PAY,ptUpAll,ptUpAllMax,advSig,FS_EQ,FS_NC,fsOf,fsNew,fsTake,fsNo,NS_K,netOffer,netSell,netCloseLoss,PC_PEN,PC_MAX,pcOf,pcFore,pcNew,pcTake,pcNo,pcBuyP,pcTrSpare,pcPitSpare,TRUCK_T,OWN_T,HIRE_T,
+  SEA,opiFree,opiLim,opiAuto,opiLoan,opiBuildDays,invAdv,qeWhy,microLoan,cardLimit,cardTake,chWord,ipMonths,opiBid,opiPass,pitBuild,pitPlan,pitFore,pitUp,pitUpInfo,pitQ,pitFix,pitSea,qzOf,qeAns,qeNew,qeOpts,QE_K,PIT_UP,PIT_STOR,pitVal,opiSpread,opiFeed,pcPitOpp,nedraReq,nedraOk,bizGoNedra,goal,stI:stI,season});
 /* M30 cpSrc (контракт ветки cash, CLAUDE.md «Календарь денег»): ECON.cpSrc — массив fn(W, days, P). Тень (та же модель) уже видит стройку и
    расширение карьеров (ДДС capex под тегом карьера), события карьера (oth) и хранение запаса (fix) — здесь только называем их по-человечески. */
 // js/cash.js грузится после biz.js и ставит свой реестр — регистрируемся ещё и при миграции мира и в первый день
 function cpReg(){if(Array.isArray(E.cpSrc)&&E.cpSrc.indexOf(cpQuarry)<0)E.cpSrc.unshift(cpQuarry);}
 function cpQuarry(W,days,P){if(!P||!P.take)return [];const pits={};for(const b of W.biz||[])if(PITS.indexOf(b.t)>=0)pits[b.id]=b;if(!Object.keys(pits).length)return [];
   return P.take(f=>pits[f.tag]&&(f.cf==='capex'||f.cf==='oth')).map(f=>{const b=pits[f.tag],B=BIZ[b.t],ux=f.cf==='capex'&&b.st==='w';
-    return f.cf==='capex'?P.item(f,'build',(ux?'Расширение: ':'Стройка: ')+B.n.toLowerCase(),(ux?'Expansion: ':'Construction: ')+B.en.toLowerCase(),'quarry'):P.item(f,'oth','Карьер: '+B.n.toLowerCase(),'Quarry: '+B.en.toLowerCase(),'quarry');});}
+    return f.cf==='capex'?P.item(f,'build',(ux?'Расширение: ':'Стройка: ')+lc1(B.n),(ux?'Expansion: ':'Construction: ')+lc1(B.en),'quarry'):P.item(f,'oth','Карьер: '+lc1(B.n),'Quarry: '+lc1(B.en),'quarry');});}
 E.cpQuarry=cpQuarry;cpReg();
+// M32: «Пока вас не было» — сколько продали банку автофакторингом за время офлайна (s.af = {a, fee, n})
+if(E.offline&&!E.offline.__af){const off0=E.offline;E.offline=function(W){const a0=W.afS?{a:W.afS.a,fee:W.afS.fee,n:W.afS.n}:{a:0,fee:0,n:0};const s=off0.apply(this,arguments);
+  const a1=W.afS;if(a1&&a1.n>a0.n)s.af={a:a1.a-a0.a,fee:a1.fee-a0.fee,n:a1.n-a0.n};return s;};E.offline.__af=1;}
 })(typeof window!=='undefined'?window:this);

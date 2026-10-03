@@ -115,6 +115,8 @@ SRC.push(function nedra(W,days,P){const o=[];
 SRC.push(function misc(W,days,P){const o=[];
   for(const f of P.take(f=>f.tag==='fr'))o.push(P.item(f,'fr','Друзья и совместные дела','Friends & joint ventures','fr'));
   for(const f of P.take(f=>f.tag==='re'||/^h\d+$/.test(f.tag)))o.push(P.item(f,'re','Недвижимость','Property',f.tag));
+  // M32: в тени ручных действий нет — a.factor там только от автофакторинга (W.afa)
+  for(const f of P.take(f=>f.tag==='a.factor'))o.push(f.a>0?P.item(f,'rec','Автофакторинг: банк платит за долги покупателей','Auto-factoring: the bank pays what buyers owe','afac'):P.item(f,'rec','Комиссия банка за факторинг, 3 %','Bank factoring fee, 3%','afac'));
   for(const f of P.take(f=>/^a\./.test(f.tag)))o.push(P.item(f,'act','Ваше действие','Your action',f.tag));
   for(const f of P.take(f=>f.tag==='ev'||f.tag==='san'))o.push(P.item(f,'oth',f.tag==='san'?'Санация':'Событие','Event',f.tag));
   return o;});
@@ -220,7 +222,7 @@ function cpAdv(W,o){const p=cashPlan(W,35);const g=p.gaps[0];if(!g||g.d>40)retur
   // без двойных советов: про овердрафт «сейчас» говорит z_od, про склад — z_whs / z_factor (fx3) — z_cash тогда не добавляем
   const has=k=>o.some(x=>x.k===k),dup=g.d===0&&has('z_od')||g.why==='whs'&&(has('z_whs')||has('z_factor'));
   if(!dup&&!has('z_cash'))o.push({k:'z_cash',pri:g.k==='od'&&g.d<=15?88:g.k==='halt'?84:72,a:{d:g.d,a:g.a,why:g.why,k:g.k,id:g.id}});
-  if(recSum(W)>0&&g.k!=='halt'&&!o.some(x=>x.k==='z_factor'))o.push({k:'z_factor',pri:74,a:{rec:recSum(W),fee:rnd0(recSum(W)*.03),d:g.d}});
+  if(recSum(W)>0&&g.k!=='halt'&&!W.afa&&!o.some(x=>x.k==='z_factor'))o.push({k:'z_factor',pri:74,a:{rec:recSum(W),fee:rnd0(recSum(W)*.03),d:g.d,af:1}});
   o.sort((a,b)=>b.pri-a.pri);}
 advWrap('bizAdvise');advWrap('advise');
 

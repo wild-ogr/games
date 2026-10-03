@@ -154,11 +154,12 @@ function planCard(){const p=GAME.plan(),ts=p.t||[],done=ts.filter(t=>t.ok==='got
   if(!p.got){const n=GAME.CAL[p.cal];h+=`<div class="mt-row"><span class="mt-f1">🎁 ${T('Подарок дня','Daily gift')} — ${T('день','day')} ${p.cal+1} ${T('из 7','of 7')}: <b>${n?cr(n):T('украшение','a decoration')}</b></span><button class="mt-btn go noenter" data-mt="gift">${T('Забрать','Take')}${n?' +'+cr(n):''}</button></div>`;
     if(ad())h+=`<div class="mt-x2r"><button class="mt-btn x2 noenter" data-mt="giftx2">${n?x2Lbl(n,n+giftE(p)):'📺 '+T('Украшение','Decoration')+' + '+cr(giftE(p))+' '+T('за рекламу','for an ad')}</button></div>`;}
   else if(ad()&&GAME.planX2Ok())h+=`<div class="mt-row"><span class="mt-f1 mt-mut">🎁 ${T('Подарок получен','Gift received')}${p.gv?': +'+cr(p.gv):''}</span><button class="mt-btn x2 noenter" data-mt="x2">${p.gv?x2Lbl(p.gv,p.gv+giftE(p)):'📺 +'+cr(giftE(p))+' '+T('за рекламу','for an ad')}</button></div>`;
+  {const c=claimable();if(c.k>=2)h+=`<div class="mt-row"><span class="mt-f1">✨ ${T('Можно забрать','Ready to take')}: <b>${cr(c.n)}</b></span>${allBtn(c)}</div>`;}   // M34
   h+=`<div class="mt-row"><span class="mt-f1">✅ ${T('Поручения','Tasks')}: <b>${done} ${T('из','of')} ${ts.length}</b>${ready?` · <b style="color:var(--good,#2e7d32)">${T('можно забрать','ready to claim')}: ${ready}</b>`:''}${p.str>1?` · 🔥 ${pl(p.str,'день','дня','дней','day','days')} ${T('подряд','in a row')}`:''}</span><button class="mt-btn noenter" data-mt="plan">${T('Открыть','Open')}</button></div>${ladRow()}</div>`;
   return h;}
 // «Ролики дня» (лесенка, game.js/QUEST): строка в карточке Планёрки — сколько пройдено и сколько даст следующий
 function ladRow(){const x=GAME.lad?GAME.lad():null;if(!ad()||!x||!x.on)return '';
-  return `<div class="mt-row"><span class="mt-f1">📺 ${T('Ролики дня','Daily videos')}: <b>${x.n} ${T('из','of')} ${x.max}</b> · ${T('следующий','next')} <b>+${cr(x.next)}</b></span><button class="mt-btn x2 noenter" data-mt="lad">${x.wait>0?T('Через ','In ')+Math.floor(Math.ceil(x.wait/1000)/60)+':'+String(Math.ceil(x.wait/1000)%60).padStart(2,'0'):T('Смотреть','Watch')}</button></div>`;}
+  return `<div class="mt-row"><span class="mt-f1">📺 ${x.flat?T('Бонус-ролик','Bonus video')+(x.fn?': <b>'+x.fn+'</b> '+T('сегодня','today'):'')+' · '+T('раз в ','every ')+Math.round(GAME.LAD_FLAT_GAP/60)+T(' мин',' min'):T('Ролики дня','Daily videos')+': <b>'+x.n+' '+T('из','of')+' '+x.max+'</b>'} · ${T('следующий','next')} <b>+${cr(x.next)}</b></span><button class="mt-btn x2 noenter" data-mt="lad">${x.wait>0&&x.flat?T('Через ','In ')+Math.max(1,Math.ceil(x.wait/6e4))+T(' мин',' min'):x.wait>0?T('Через ','In ')+Math.floor(Math.ceil(x.wait/1000)/60)+':'+String(Math.ceil(x.wait/1000)%60).padStart(2,'0'):T('Смотреть','Watch')}</button></div>`;}
 function milesCard(){const a=GAME.miles();if(!a.length)return '';const left=a.filter(m=>!m.done),nx=left[0];const n=a.length-left.length;
   let h=`<div class="mt-card"><h4>🏅 ${T('Вехи главы — награды','Chapter milestones — rewards')}: ${n} ${T('из','of')} ${a.length}</h4>`;
   if(nx){const f=nx.f==='r'?(nx.cur-4)/(nx.need-4):nx.cur/nx.need;h+=`<div class="mt-row"><span class="mt-f1">${esc(mileTxt(nx))} — <b>${mileProg(nx)}</b> · +${cr(nx.cr)}${nx.cos?' + '+T('украшение','decoration'):''}</span></div>${bar(f)}`;}
@@ -171,9 +172,9 @@ function qgCard(){const W=GAME.W;if(!W||!W.ned)return '';const g=W.qg;let h='';
   return h;}
 function boostCard(){const W=GAME.W;if(!W||!W.ned)return '';
   if(GAME.boostOn())return `<div class="mt-card"><p>🤝 ${T('Людмила договорилась с покупателями: цены продаж +10 % до','Lyudmila struck a deal with buyers: sale prices +10% until')} <b>${FMT.date(Math.floor((W.bst-1)/30))}</b></p></div>`;
-  if(!ad()||!GAME.boostOk()||GAME.adLeft('bst')<=0)return '';
+  if(!ad()||!GAME.boostOk())return '';const wt=GAME.adWait&&GAME.adWait('bst')>0;   // M31: пауза места вместо 1 в день
   const bn=Math.max(1,Math.round((E.boostD?E.boostD(W):90)/30));
-  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">🤝 ${T(`Людмила может договориться с покупателями: +10 % к цене продаж на ${bn} ${bn===1?'месяц':bn<5?'месяца':'месяцев'}`,`Lyudmila can strike a deal with buyers: +10% on sale prices for ${bn} ${bn===1?'month':'months'}`)}</span><button class="mt-btn noenter" data-mt="boost">📺 ${T('+10 % за рекламу','+10% for an ad')}</button></div></div>`;}
+  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">🤝 ${T(`Людмила может договориться с покупателями: +10 % к цене продаж на ${bn} ${bn===1?'месяц':bn<5?'месяца':'месяцев'}`,`Lyudmila can strike a deal with buyers: +10% on sale prices for ${bn} ${bn===1?'month':'months'}`)}${wt?'<br><small>📺 '+GAME.adTxt('bst')+'</small>':''}</span><button class="mt-btn noenter" data-mt="boost"${wt?' disabled':''}>📺 ${T('+10 % за рекламу','+10% for an ad')}</button></div></div>`;}
 function perkCard(){if(!Array.isArray(S.pkP)||!S.pkP.length)return '';
   return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">⭐ <b>${T('Доля основателя','Founder’s share')}</b>: ${T('выберите улучшение навсегда','choose a permanent upgrade')}</span><button class="mt-btn ac noenter" data-mt="perks">${T('Выбрать','Choose')}</button></div></div>`;}
 // запасной вариант, если окно главы не показало предложение (META.starterHtml): один раз — карточка на «Сегодня» до конца этого захода
@@ -186,13 +187,22 @@ function starterCard(){const W=GAME.W;if(!W||W.st!=='small'||!starterOk()||S.ask
 function early(){try{return !!(window.BIZUI&&BIZUI.early&&BIZUI.early());}catch(e){return false;}}
 function planMini(){const p=GAME.plan(),ts=p.t||[],done=ts.filter(t=>t.ok==='got').length;const n=!p.got?GAME.CAL[p.cal]:0;
   return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">📋 <b>${T('Планёрка','Morning meeting')}</b>: ${!p.got?T('подарок дня','daily gift')+(n?' +'+cr(n):''):T('поручения','tasks')+' '+done+' '+T('из','of')+' '+ts.length}</span>${!p.got?`<button class="mt-btn go noenter" data-mt="gift">${T('Забрать','Take')}</button>`:`<button class="mt-btn noenter" data-mt="plan">${T('Открыть','Open')}</button>`}</div></div>`;}
-function html(){if(early())return planMini();return perkCard()+passCard()+planCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard();}
+// M34: «Забрать всё» — подарок дня, готовые поручения (с бонусом за все три) и посылки путёвки одной кнопкой (было 5–6 нажатий)
+function claimable(){const p=GAME.plan(),ts=p.t||[];let n=0,k=0;if(!p.got){n+=GAME.CAL[p.cal]||0;k++;}const rd=ts.filter(t=>t.ok!=='got'&&GAME.taskDone(t));for(const t of rd){n+=t.cr;k++;}
+  if(rd.length&&!p.all&&ts.every(t=>t.ok==='got'||GAME.taskDone(t)))n+=TASK_ALL();const P=passQ();if(P.av){n+=P.av*PASS_CR;k++;}return {n,k};}
+function claimAll(){const p=GAME.plan();let n=0,dec='';if(!p.got){n+=GAME.planGift()||0;const q=GAME.plan();if(q.gi){const c=GAME.COS.find(x=>x.id===q.gi);if(c)dec=cosName(c);applyCos();}}
+  (GAME.plan().t||[]).forEach((t,i)=>{n+=GAME.planClaim(i)||0;});n+=passClaim()||0;return {n,dec};}
+function allBtn(c,cls){return `<button class="mt-btn go noenter${cls||''}" data-mt="all">${T('Забрать всё','Take all')}${c.n?' +'+cr(c.n):''}</button>`;}
+function planLine(){const p=GAME.plan(),ts=p.t||[],done=ts.filter(t=>t.ok==='got').length,c=claimable();
+  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">📋 <b>${T('Планёрка','Morning meeting')}</b>: ${c.k?`<b>${c.n?cr(c.n):'🎁'}</b> ${T('ждут','waiting')} · `:''}${T('поручения','tasks')} ${done} ${T('из','of')} ${ts.length}</span>${c.k?allBtn(c):`<button class="mt-btn noenter" data-mt="plan">${T('Открыть','Open')}</button>`}</div>${p.got&&ad()&&GAME.planX2Ok()?`<div class="mt-row"><span class="mt-f1 mt-mut">🎁 ${T('Подарок получен','Gift received')}${p.gv?': +'+cr(p.gv):''}</span><button class="mt-btn x2 noenter" data-mt="x2">${p.gv?x2Lbl(p.gv,p.gv+giftE(p)):'📺 +'+cr(giftE(p))+' '+T('за рекламу','for an ad')}</button></div>`:''}</div>`;}
+function html(m){if(early())return planMini();if(m==='mini')return planLine();if(m==='rest')return perkCard()+passCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard();return perkCard()+passCard()+planCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard();}
 function cabCard(){try{return window.CAB&&CAB.card?CAB.card():'';}catch(e){console.error(e);return '';}}   // Кабинет (js/cab-ui.js): звание, мечта/вещь в продаже
 // el — отдельный слот (например, #metaSlot на «Сегодня»): перерисовываем его целиком; через morphHTML (ui.js) — кнопки не пересоздаются под пальцем
-function card(el){if(!el||!window.GAME||!GAME.W)return;css();applyCos();let h='';try{h=html();}catch(e){console.error(e);}
+function card(el){if(!el||!window.GAME||!GAME.W)return;css();applyCos();let h='';try{h=html(el.dataset&&el.dataset.mtm);}catch(e){console.error(e);}
   el.classList.add('mt-wrap');
-  if(typeof window.morphHTML==='function'){try{window.morphHTML(el,h);}catch(e){el.innerHTML=h;}}else el.innerHTML=h;lastEl=el;}
-function refresh(){if(lastEl&&document.body.contains(lastEl))card(lastEl);}
+  if(typeof window.morphHTML==='function'){try{window.morphHTML(el,h);}catch(e){el.innerHTML=h;}}else el.innerHTML=h;lastEl=el;if(els.indexOf(el)<0)els.push(el);}
+const els=[];   // M34: на «Сегодня» главы 3 два слота (Планёрка строкой и остальное под «Ещё»)
+function refresh(){for(let i=els.length-1;i>=0;i--){if(document.body.contains(els[i]))card(els[i]);else els.splice(i,1);}}
 
 /* ---------- окна ---------- */
 function openPlan(){const p=GAME.plan(),ts=p.t||[];snd('tap');
@@ -204,13 +214,14 @@ function openPlan(){const p=GAME.plan(),ts=p.t||[];snd('tap');
   modal(`<h2>📋 ${T('Планёрка','Morning meeting')}</h2>
     <p class="about">${T('Каждый день — подарок по календарю и три коротких поручения. Пропустили день — календарь отступит на шаг, а не сгорит.','Every day — a calendar gift and three short tasks. Miss a day and the calendar steps back one, it doesn’t burn.')}${p.str>1?` 🔥 ${T('Серия','Streak')}: <b>${pl(p.str,'день','дня','дней','day','days')}</b>.`:''}${p.miss?' '+T('(вчера пропустили — шаг назад)','(missed yesterday — one step back)'):''}</p>
     ${cal}
+    ${(c=>c.k>=2?`<div class="row"><button class="btn green noenter" id="mtAll">✨ ${T('Забрать всё','Take all')} +${cr(c.n)}</button></div>`:'')(claimable())}
     <div class="row">${!p.got?(()=>{const n=GAME.CAL[p.cal];return `<button class="btn green noenter" id="mtGift">🎁 ${T('Забрать','Take')} ${n?'+'+cr(n):T('украшение','the decoration')}</button>${ad()?`<button class="btn noenter mt-x2b" id="mtGX2">${n?x2Lbl(n,n+giftE(p)):'📺 '+T('Украшение','Decoration')+' + '+cr(giftE(p))+' '+T('за рекламу','for an ad')}</button>`:''}`;})():ad()&&GAME.planX2Ok()?`<button class="btn noenter mt-x2b" id="mtX2">${p.gv?x2Lbl(p.gv,p.gv+giftE(p)):'📺 +'+cr(giftE(p))+' '+T('за рекламу','for an ad')}</button>`:''}</div>
     <h3>✅ ${T('Поручения на сегодня — до полуночи, по настоящему времени','Tasks for today — until midnight, real time')}</h3>${tk}${ladRow()?'<div class="mt-card" style="margin-top:10px">'+ladRow()+'</div>':''}
     <p class="mt-mut">${all?T('Все три выполнены — бонус получен. Завтра будут новые.','All three done — bonus received. New ones tomorrow.'):T(`Все три поручения — ещё +${TASK_ALL()} 💎.`,`All three tasks — another +${TASK_ALL()} 💎.`)}</p>
     <div class="row"><button class="btn noenter" id="mtCos">🎨 ${T('Украшения','Decorations')}</button>${S.fs||S.pk&&Object.keys(S.pk).length?`<button class="btn noenter" id="mtPres">⭐ ${T('Доля основателя','Founder’s share')}</button>`:''}<button class="btn" id="mtClose" data-esc="1">${T('Закрыть','Close')}</button></div>${typeof adDayHtml==='function'?adDayHtml():''}`);
   modalRe=openPlan;bindModal();
   const mc=$m('mcard');mc.querySelectorAll('[data-mt]').forEach(b=>b.onclick=()=>act(b.dataset.mt,true,b));
-  if($m('mtGift'))$m('mtGift').onclick=()=>act('gift',true,$m('mtGift'));if($m('mtX2'))$m('mtX2').onclick=()=>act('x2',true,$m('mtX2'));if($m('mtGX2'))$m('mtGX2').onclick=()=>act('giftx2',true,$m('mtGX2'));
+  if($m('mtAll'))$m('mtAll').onclick=()=>act('all',true,$m('mtAll'));if($m('mtGift'))$m('mtGift').onclick=()=>act('gift',true,$m('mtGift'));if($m('mtX2'))$m('mtX2').onclick=()=>act('x2',true,$m('mtX2'));if($m('mtGX2'))$m('mtGX2').onclick=()=>act('giftx2',true,$m('mtGX2'));
   $m('mtCos').onclick=openCos;if($m('mtPres'))$m('mtPres').onclick=openPrestige;$m('mtClose').onclick=close;}
 const TASK_ALL=()=>3;
 function openMiles(){const W=GAME.W,st=W&&W.st;snd('tap');const a=GAME.miles();
@@ -272,12 +283,13 @@ function act(a,inModal,btn){const re=()=>{if(inModal&&modalOn&&modalRe===openPla
   else if(a==='passgx2'){if(!ad()||!passQ().av)return;STAT.place('passx2');showRewarded(()=>{const n=passClaim(),m=n?passX2():0;if(n){snd('coin');toast('📦 +'+cr(n+m));flyCr(btn,n+m);}refresh();},()=>{});}
   else if(a==='pass'){const n=passClaim();if(n){snd('coin');toast('📦 +'+cr(n));flyCr(btn,n);}refresh();}
   else if(a==='passx2'){if(!ad()||!passQ().x2)return;STAT.place('passx2');showRewarded(()=>{const n=passX2();if(n){snd('coin');toast('📺 +'+cr(n));flyCr(btn,n);}refresh();},()=>{});}
+  else if(a==='all'){const r=claimAll();snd('coin');if(r.n){toast('✅ +'+cr(r.n)+(r.dec?' + '+r.dec:''));flyCr(btn,r.n);if(r.n>5)salute(true);}else if(r.dec)toast('🎁 '+r.dec);re();}   // M34
   else if(a==='plan')openPlan();
   else if(a==='lad'){if(inModal)hideModal();GAME.ladWatch();}
   else if(a==='miles')openMiles();
   else if(a==='perks')openPerks();
-  else if(a==='boost'){if(!ad()||!GAME.boostOk())return;STAT.place('boost');showRewarded(()=>{const r=GAME.adAct('bst','boost');
-      if(r==='ok'){snd('coin');toast(T('Цены продаж +10 % на 3 месяца','Sale prices +10% for 3 months'));}else if(r==='day')toast(T('На сегодня этот бонус закончился — загляните завтра','That bonus is used up for today — come back tomorrow'));refresh();},()=>{});}
+  else if(a==='boost'){if(!ad()||!GAME.boostOk()||GAME.adWait('bst')>0)return;STAT.place('boost');showRewarded(()=>{const r=GAME.adAct('bst','boost');
+      if(r==='ok'){snd('coin');toast(T('Цены продаж +10 % на 3 месяца','Sale prices +10% for 3 months'));}else if(r==='wait')toast('📺 '+GAME.adTxt('bst'));refresh();},()=>{});}
   else if(a==='starterNo'){if(!S.ask)S.ask={};S.ask.starterC=1;try{save();}catch(e){}refresh();}
   else if(a.indexOf('claim:')===0){const n=GAME.planClaim(+a.slice(6));if(n){snd('coin');toast('✅ +'+cr(n));flyCr(btn,n);if(n>2)salute(true);}re();}
   else if(a.indexOf('rr:')===0){if(GAME.planReroll(+a.slice(3))){snd('tap');toast('🎩 '+T('Поручение заменено — это бонус набора «Солидный»','Task swapped — a “Respectable” set bonus'));}re();}

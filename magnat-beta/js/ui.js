@@ -396,13 +396,15 @@ function objStatus(o){if(o.st==='b')return o.halt?L('стройка стоит �
   const O=E.OBJ[o.t];if(o.t==='store')return L('+30 тыс. мест на складе','+30k storage');return L('работает: ','working: ')+FMT.qty(E.objCap(o),O.out)+L(' в месяц',' a month');}
 
 /* ---- ускорение за 💎 (стройка/модернизация −15 дней, раз на объект) ---- */
-// + «📺 на 5 дней раньше за рекламу» — раз на стройку/модернизацию, отдельно от 💎 (E.objAdSpeed), лимит в день — GAME.adLeft('build')
-function adL(k){try{return adOk()&&GAME.adLeft(k)>0;}catch(e){return false;}}
-function adRun(k,name,args,ok){STAT.place(k);showRewarded(()=>{let r=null;try{r=GAME.adAct(k,name,...args);}catch(e){console.error(e);}
-  if(r==='day'){tst(L('На сегодня этот бонус закончился — загляните завтра','That bonus is used up for today — come back tomorrow'));return;}
+// + «📺 на 5 дней раньше за рекламу» — раз на стройку/модернизацию, пока она идёт, отдельно от 💎 (E.objAdSpeed); M31: пауза места — GAME.adWait('build'), дневного лимита нет
+function adL(k){try{return adOk()&&!!GAME.adWait;}catch(e){return false;}}
+function adW(k){try{return GAME.adWait(k)>0;}catch(e){return false;}}
+const adD=k=>adW(k)?' disabled':'',adS=k=>adW(k)?'<small>'+GAME.adTxt(k)+'</small>':'';
+function adRun(k,name,args,ok){if(adW(k)){tst('📺 '+GAME.adTxt(k).replace(/^./,c=>c.toUpperCase()));return;}STAT.place(k);showRewarded(()=>{let r=null;try{r=GAME.adAct(k,name,...args);}catch(e){console.error(e);}
+  if(r==='wait'){tst('📺 '+GAME.adTxt(k).replace(/^./,c=>c.toUpperCase()));return;}
   if(r&&r!=='no'&&r!=='cash')ok(r);setTimeout(nextQ,60);},()=>setTimeout(nextQ,60));}
 function spdBtn(o){const j=o.st==='b'?o:o.up;if(!j)return '';const W=w(),ad=adL('build')&&E.objAdSpeedOk&&E.objAdSpeedOk(W,o.id);
-  const adB=ad?`<button class="btn w noenter" data-a="spdAd" data-id="${o.id}" style="margin-top:6px">📺 ${L('на 5 дней раньше — за рекламу','5 days sooner — for an ad')}</button>`:'';
+  const adB=ad?`<button class="btn w noenter" data-a="spdAd" data-id="${o.id}" style="margin-top:6px"${adD('build')}>📺 ${L('на 5 дней раньше — за рекламу','5 days sooner — for an ad')}${adS('build')}</button>`:'';
   if(o.sp)return `<p class="mut" style="font-size:15px;margin:6px 0 0">⚡ ${L('уже ускорено','already sped up')}</p>`+adB;
   return `<button class="btn cr w noenter" data-a="spd" data-id="${o.id}">💎 ${GAME.CR.speed} — ${L('ускорить','speed up')}<small>${L('готово на 15 дней раньше','done 15 days sooner')}</small></button>`+adB;}
 function crAsk(n,what,fn){const c=GAME.cr();if(c<n)return crNo();
@@ -540,7 +542,7 @@ function rLogi(){const W=w(),el=$$('scr-logi'),free=E.wagFree(W);let h='';
   for(const x of tr)h+=`<div class="rt">${gIco(x.g)}<div class="f1"><b>${FMT.qty(x.q,x.g)} ${low(NM.good(x.g))}</b><span>${NM.reg(x.from)} → ${NM.reg(x.to)} · ${L('прибудет через','arrives in')} ${days(Math.max(1,x.arr-W.t))}</span></div></div>`;
   if(W.tr.length>12)h+=`<p class="mut">${L('и ещё','and')} ${W.tr.length-12}…</p>`;
   // «📺 Экспресс»: все грузы в пути — вдвое быстрее, раз в игровой месяц
-  if(E.expressOk&&E.expressOk(W)&&adL('exp'))h+=`<button class="btn w noenter" data-a="expr" style="margin-top:10px">📺 ${L('Экспресс: всё в пути — вдвое быстрее, за рекламу','Express: all in transit twice as fast, for an ad')}<small>${L('раз в месяц','once a month')}</small></button>`;
+  if(E.expressOk&&E.expressOk(W)&&adL('exp'))h+=`<button class="btn w noenter" data-a="expr" style="margin-top:10px"${adD('exp')}>📺 ${L('Экспресс: всё в пути — вдвое быстрее, за рекламу','Express: all in transit twice as fast, for an ad')}<small>${adW('exp')?GAME.adTxt('exp'):L('раз в месяц','once a month')}</small></button>`;
   h+='</div>';
   // расстояния
   h+=`<h3>${L('Железная дорога','Railway')}</h3><div class="card">`;
@@ -620,7 +622,7 @@ function openClose(rep){if(BZ()&&BZ().openClose&&BZ().openClose(rep))return;cons
   const pr0=W.reps.find(x=>x.m===rep.m-1),dn=pr0?net-E.netOf(pr0.pl):null;
   const st=tutStep();
   if(st){const d=document.createElement('div');d.innerHTML=TUT[st]().html;say=d.textContent;}
-  else{const its=advRel(W);let pick=its.slice(0,its[1]&&its[1].pri>=40&&its[0].pri<70?2:1),t=pick.map(advText).filter((x,i,a)=>x&&a.indexOf(x)===i).join(' ');
+  else{let its=advRel(W);if(BZ()&&BZ().advFresh)its=BZ().advFresh(W,its);let pick=its.slice(0,its[1]&&its[1].pri>=40&&its[0].pri<70?2:1),t=pick.map(advText).filter((x,i,a)=>x&&a.indexOf(x)===i).join(' ');
     if(t&&t===S.lastSay&&its.length>pick.length)t=its.slice(pick.length).map(advText).filter(Boolean)[0]||t;say=t;}
   S.lastSay=say;
   const inv=-((rep.cf.capex||0)+(rep.cf.lic||0)+(rep.cf.wag||0));
@@ -657,7 +659,7 @@ function advRel(W){const has=W.obj.some(o=>o.st==='w'&&E.OBJ[o.t].out),busy=E.RE
 function afterClose(rep){const W=w();if(tutOn()){// M30: «два месяца с прибылью» — только месяцы этой главы (с входа в недра), два последних подряд
     const m0=W.partner&&typeof W.partner.m==='number'?W.partner.m:-1,hh=W.hist.filter(h=>h.m>=m0),good=hh.length>=2&&hh[hh.length-1].np>0&&hh[hh.length-2].np>0?2:0;
     if(good>=2&&!S.tut.ideas){tutOnce('ideas',L('Два месяца с прибылью — вы в деле! Идеи на вырост: разведать ещё участок (уголь в Кузбассе, руда на Урале), лесозаготовка в Карелии — дёшево и быстро, или кредит на завод — вкладка «Финансы» → банк.','Two profitable months — you’re in business! Ideas: explore another plot (coal in Kuzbass, ore in the Urals), logging in Karelia — cheap and quick, or a loan for a plant — Finance → bank.'),'happy');return;}}
-  const it=advRel(W)[0];if(it&&it.pri>=70&&!tutActive())advShow({html:esc(advText(it)),mood:it.k==='san'?'strict':'worry',go:WHY_GO[it.k]?()=>WHY_GO[it.k](it):null});}
+  const it=advRel(W)[0];if(it&&it.pri>=70&&!tutActive()&&!(S.lastSay&&String(S.lastSay).indexOf(advText(it))>=0))advShow(   /* M34: уже сказано в окне месяца — не повторяем пузырём */{html:esc(advText(it)),mood:it.k==='san'?'strict':'worry',go:WHY_GO[it.k]?()=>WHY_GO[it.k](it):null});}
 
 /* ================= окно: пока вас не было ================= */
 function openOffline(s){if(BZ()&&BZ().offline(s))return;const W=w(),mo=s.months||0;snd('close');

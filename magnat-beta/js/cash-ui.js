@@ -75,6 +75,12 @@ function warnHtml(w,p,full){const g=p.gaps[0];if(!g||g.d>45)return '';let h=`<di
   else if(g.why==='whs'||g.k==='zero')h+=`<p class="cp-mut">${esc(T('Кредит здесь не спасёт: склад докупит товар и на эти деньги.','A loan won’t help here: the warehouse would spend it on stock too.'))}</p>`;
   return h+'</div>';}
 
+// M34 (u4): «стройка встанет через N дней» — отдельной карточкой наверху вкладки «Карьер» (та же модель и те же кнопки-решения)
+function haltSoon(w){w=w||W();if(!w)return '';const p=plan(w);const g=p&&p.gaps[0];if(!g||g.k!=='halt'||g.now||g.d>30)return '';return `<div class="card cp-today" id="cpHaltSoon">${warnHtml(w,p)}${(g.fix||[]).length?'':`<p class="cp-mut" style="padding:0 16px 12px;font-size:16px">${esc(T('Банк больше не даёт. Что можно: продать часть сети или лишние самосвалы, не начинать новое — стройка продолжится, когда придут деньги.','The bank won’t lend more. Options: sell part of the network or spare trucks, start nothing new — construction resumes once money comes in.'))}</p>`}</div>`;}
+// M34: календарь — стройки отдельной строкой над лентой: сколько в день, сколько за период, последний платёж
+function buildSum(w,p,n){const by={};for(const x of p.items)if(x.d<=n&&x.k==='build'){const k=x.src+'|'+x.ru;const o=by[k]||(by[k]={ru:x.ru,en:x.en,a:0,d1:x.d,d2:x.d,n:0});o.a+=x.a;o.d2=Math.max(o.d2,x.d);o.d1=Math.min(o.d1,x.d);o.n++;}
+  const ks=Object.keys(by);if(!ks.length)return '';return `<div class="card"><div class="bz-lab">🏗 ${esc(T('Идёт стройка','Construction in progress'))}</div>`+ks.map(k=>{const o=by[k],dd=Math.max(1,o.d2-o.d1+1);
+    return `<p class="cp-bs" style="font-size:17px;margin:6px 0">${esc(nb(T(`${o.ru}: ≈ ${M(rk(o.a/dd))} в день, за ${n} дн. ${M(o.a)}`,`${o.en}: ≈ ${M(rk(o.a/dd))} a day, ${M(o.a)} over ${n} days`)+(o.d2<n?T(`, последний платёж ${dLab(w,o.d2,true)}`,`, last payment ${dLab(w,o.d2,true)}`):'')))}</p>`;}).join('')+`</div>`;}
 /* ---------------- «Сегодня» / карта: одна строка + предупреждение ---------------- */
 const LUMP=k=>!DK[k];
 function nearest(w,p){// ближайшее крупное: не каждодневное, заметное на фоне оборота месяца
@@ -134,14 +140,16 @@ function dayBlocks(w,p,n){const by={};for(const x of p.items)if(x.d<=n)(by[x.d]|
     run=null;out.push({d1:d,d2:d,its,lumps,own:bd?bd.own:0,cl:bd&&bd.cl});}
   return out;}
 function ribbon(w,p,n){let h='';RID=0;
-  for(const b of dayBlocks(w,p,n)){const lk={};for(const x of b.lumps||[])lk[x.k]=1;const daily=b.its.filter(x=>DK[x.k]&&!lk[x.k]);let dn=0;for(const x of daily)dn+=x.a;
+  for(const b of dayBlocks(w,p,n)){const lk={};for(const x of b.lumps||[])lk[x.k]=1;const bld=b.its.filter(x=>x.k==='build'&&!lk[x.k]),daily=b.its.filter(x=>DK[x.k]&&!lk[x.k]&&x.k!=='build');let dn=0;for(const x of daily)dn+=x.a;   // M34: стройка — своей строкой
     const ttl=b.d1===b.d2?dLab(w,b.d1,true)+(b.cl?T(' · закрытие месяца',' · month close'):''):T(`${dLab(w,b.d1,true)} — ${dLab(w,b.d2,true)}`,`${dLab(w,b.d1,true)} – ${dLab(w,b.d2,true)}`);
     h+=`<div class="cp-day${b.own<0?' neg':''}"><div class="cp-dh"><b>${esc(ttl)}</b><span>${esc(T('остаток ','balance '))}<b class="${b.own>=0?'':'cp-neg'}">${esc(nb(M(b.own)))}</b></span></div>`;
     if(b.lumps){const g={};for(const x of b.lumps)(g[x.k]||(g[x.k]=[])).push(x);
       for(const k of Object.keys(g).sort((a,c)=>Math.abs(g[c].reduce((s,x)=>s+x.a,0))-Math.abs(g[a].reduce((s,x)=>s+x.a,0)))){const s=g[k].reduce((q,x)=>q+x.a,0);if(!s)continue;h+=rowHtml(k,s,srcList(g[k]),kN(k)+(k==='tax'?T(' (оценка по модели)',' (model estimate)'):''));}}
-    if(daily.length&&dn){const days=b.d2-b.d1+1;const kk={};for(const x of daily)kk[x.k]=(kk[x.k]||0)+Math.abs(x.a);const ks=Object.keys(kk).sort((a,c)=>kk[c]-kk[a]).slice(0,3).map(k=>lc(kN(k))).join(', ');
+    // M34: приходы и расходы каждого дня — двумя строками (раньше «−476 тыс.: закупка склада, выручка точек» выглядело как убыток сети)
+    for(const sg of [1,-1]){const part=daily.filter(x=>x.a*sg>0);let dn=0;for(const x of part)dn+=x.a;if(!part.length||!dn)continue;const days=b.d2-b.d1+1;const kk={};for(const x of part)kk[x.k]=(kk[x.k]||0)+Math.abs(x.a);const ks=Object.keys(kk).sort((a,c)=>kk[c]-kk[a]).slice(0,3).map(k=>lc(kN(k))).join(', ');
       const lbl=b.lumps?T('За день: ','For the day: ')+ks:T(`Каждый день ≈ ${S1(rk(dn/days))}: `,`Every day ≈ ${S1(rk(dn/days))}: `)+ks;
-      h+=rowHtml(dn>=0?'sale':'supp',dn,srcList(daily,true),lbl);}
+      h+=rowHtml(dn>=0?'sale':'supp',dn,srcList(part,true),lbl);}
+    if(bld.length){const bs=bld.reduce((q,x)=>q+x.a,0),dd=b.d2-b.d1+1;if(bs)h+=rowHtml('build',bs,srcList(bld),dd>1?T(`Стройка: каждый день ≈ ${S1(rk(bs/dd))}`,`Construction: every day ≈ ${S1(rk(bs/dd))}`):kN('build'));}
     h+='</div>';}
   return h;}
 function finHtml(w){w=w||W();if(!w)return '';const p=plan(w,60);if(!p)return '';const n=Math.min(H,p.days);const e=p.eom,last=p.byDay[n-1];
@@ -155,6 +163,7 @@ function finHtml(w){w=w||W();if(!w)return '';const p=plan(w,60);if(!p)return '';
     <div class="cp-leg"><span><i class="in"></i>${esc(T('приход','in'))}</span><span><i class="out"></i>${esc(T('расход','out'))}</span><span><i class="bal"></i>${esc(T('остаток (свои деньги)','balance (own money)'))}</span></div>
     <p class="cp-mut">${esc(T('Прогноз — если ничего не менять: новые точки, заказы и покупки не учтены. Налог — оценка по нынешней прибыли.','Forecast if nothing changes: new outlets, gigs and purchases aren’t included. Tax is estimated from the current profit.'))}</p></div>`;
   if(p.rec.length)h+=`<div class="card">${recLine(w,1)}</div>`;
+  h+=buildSum(w,p,n);   // M34
   h+=`<div class="card cp-rib"><div class="bz-lab">${esc(T('По дням: что придёт и что уйдёт','Day by day: what comes in and goes out'))}</div>${ribbon(w,p,n)}</div>`;
   return h+'</div>';}
 
@@ -240,5 +249,5 @@ body.th-dark .cp-warn,body.th-dark .cp-od{background:rgba(224,70,75,.16)}body.th
 try{const s=document.createElement('style');s.id='cpCss';s.textContent=css;document.head.appendChild(s);}catch(e){}
 
 function finSub(w){const p=plan(w);if(!p||!p.eom)return '';const g=p.gaps[0];return esc(nb(T('к 30-му ≈ ','by the 30th ≈ ')+M(p.eom.own)+(g&&g.d<=45?(g.k==='halt'?T(' · ⚠ стройка встанет',' · ⚠ construction stops'):T(' · ⚠ не хватит ',' · ⚠ short by ')+M(g.a)):'')));}
-window.CASHUI={buyWarn,finSub,K,todayLine,monthTail,monthRows,mapCard,finHtml,recLine,calDates,closeOd,advTxt,factorTxt,odWhy,open,plan,rerender};
+window.CASHUI={haltSoon,buyWarn,finSub,K,todayLine,monthTail,monthRows,mapCard,finHtml,recLine,calDates,closeOd,advTxt,factorTxt,odWhy,open,plan,rerender};
 })();

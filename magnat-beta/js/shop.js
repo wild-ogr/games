@@ -165,13 +165,14 @@ const ADP=[['x2','💰',['×2 за заказ','×2 for an order'],['подра�
   ['bst','📈',['+10 % к цене продаж','+10% to sale prices'],['«Сегодня»','Today'],'ned'],
   ['rw','🎁',['×2 к награде за звание и неделю','×2 to rank and week rewards'],['окно награды','reward window'],'all']];
 function secAds(){if(!adOn())return `<p class="shop-p">${T('Здесь ролики сейчас недоступны.','Videos aren’t available here right now.')}</p>`;
-  const w=W();let h=`<p class="shop-p">${T('Ролик смотрите только по своей кнопке «📺». У каждого места — свой предел в день, завтра всё снова.','Watch a video only with its own “📺” button. Each place has its own daily limit; tomorrow everything resets.')}</p>`;
+  const w=W();let h=`<p class="shop-p">${T('Ролик смотрите только по своей кнопке «📺». Дневного предела нет: после ролика у места короткая пауза — потом снова можно.','Watch a video only with its own “📺” button. There’s no daily limit: after a video each place takes a short pause — then it’s available again.')}</p>`;
   h+=`<h4>💎 ${T('Ролики дня','Daily videos')}</h4>`;
-  try{const x=GAME.lad();h+=infoRow('📶',T('Лесенка: 2 → 3 → 3 → 4 → 6 💎','Ladder: 2 → 3 → 3 → 4 → 6 💎'),T('каждый следующий щедрее','each one more generous'),`<span${x.n>=x.max?' class="no"':''}>${x.n} ${T('из','of')} ${x.max}</span>`);}catch(e){}
+  try{const x=GAME.lad();h+=infoRow('📶',T('Лесенка: 2 → 3 → 3 → 4 → 6 💎','Ladder: 2 → 3 → 3 → 4 → 6 💎'),T('каждый следующий щедрее','each one more generous'),`<span${x.n>=x.max?' class="no"':''}>${x.n} ${T('из','of')} ${x.max}</span>`);
+    h+=infoRow('🔁',T('Потом — бонус-ролики','Then — bonus videos'),'+'+cr(GAME.LAD_FLAT)+' '+T('раз в ','every ')+Math.round(GAME.LAD_FLAT_GAP/60)+T(' мин',' min'),x.flat&&x.wait>0?`<span class="no">${T('через ','in ')+Math.max(1,Math.ceil(x.wait/6e4))+T(' мин',' min')}</span>`:x.flat?T('можно','ready'):'—');}catch(e){}
   const lb=ladBtn();if(lb)h+=`<div class="shop-more">${lb}</div>`;
   const has=g=>g==='all'||(g==='gig'?!!(w&&w.me&&!w.ned):g==='biz'?!!(w&&!w.ned&&Array.isArray(w.biz)&&w.biz.length):!!(w&&w.ned));
-  const rows=ADP.filter(p=>has(p[4])&&GAME.AD_DAY&&GAME.AD_DAY[p[0]]!=null).map(p=>{const max=GAME.AD_DAY[p[0]],left=GAME.adLeft?GAME.adLeft(p[0]):max;
-    return infoRow(p[1],T(p[2][0],p[2][1]),T(p[3][0],p[3][1]),left>0?T('осталось ','left ')+left+T(' из ',' of ')+max:`<span class="no">${T('завтра','tomorrow')}</span>`);}).join('');
+  const rows=ADP.filter(p=>has(p[4])&&GAME.AD_GAP&&GAME.AD_GAP[p[0]]!=null).map(p=>{const wt=GAME.adWait?GAME.adWait(p[0]):0;   // M31: пауза места вместо дневного предела
+    return infoRow(p[1],T(p[2][0],p[2][1]),T(p[3][0],p[3][1])+' · '+T('пауза ','pause ')+GAME.AD_GAP[p[0]]+T(' мин',' min'),wt>0?`<span class="no">${T('через ','in ')+GAME.adMin(p[0])+T(' мин',' min')}</span>`:T('можно','ready'));}).join('');
   if(rows)h+=`<h4>🎯 ${T('В делах','In your business')}</h4>`+rows;
   h+=`<h4>☕ ${T('Планёрка','Briefing')}</h4>`+infoRow('🎁',T('Удвоить подарок дня и поручения','Double the daily gift and tasks'),T('раз в день · «Сегодня» → Планёрка','once a day · Today → Briefing'),'×2');
   return h;}

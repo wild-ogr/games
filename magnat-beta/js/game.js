@@ -40,10 +40,12 @@ const NM={good:g=>E.GOODS[g]?(en()?E.GOODS[g].en:E.GOODS[g].n):gx(g,0),unit:g=>E
 // «Спокойный день» (решение владельца 28.09): в ранних главах время идёт медленнее — день главы 1 «Карьера» 20 с (месяц 10 мин — первый отчёт и урок Людмилы к 10-й минуте), главы 2 «Своё дело» 15 с; дальше 10 с. Ускорить — кнопкой ×2
 const DAY_MS0=10000,DAY_ST={gig:20000,small:15000},OFF_DAY_MS=120000,SHIFT=6*3600e3,SHIFT_MGR=8*3600e3;
 const CR={speed:10,expl:4,urgent:6},AD_CR=3,AD_CR_MAX=5;
-// награды за рекламу — сколько раз в реальный день (по nowMs(); игровые лимиты — в модели, js/biz.js): ×2 за заказ, реклама точки, проверка сделки,
-// второе дыхание, ускорить открытие точки/карьера, срочный заказ, ревизия, ускорить стройку (недра), экспресс-поезд, отсрочка по контракту
+// награды за рекламу (M31, 02.10, «сами рубим доход»): дневных лимитов мест нет — пауза между роликами одного места в РЕАЛЬНЫХ минутах (по nowMs())
+// + игровые ограничения действием в модели (js/biz.js, econ.js: раз в игровой месяц/неделю, раз на точку/заказ/объект/контракт, «пока стройка идёт»).
+// Места: ×2 за заказ, реклама точки, проверка сделки, второе дыхание, ускорить открытие точки/карьера, срочный заказ, ревизия, ускорить стройку (недра),
+// экспресс-поезд, отсрочка по контракту, rw — ×2 в окне награды (M8), bst — +10 % к цене продаж. Цифры — tools/sim-rags.js (net_ad, net4_ad, net4_all), tools/sim.js (smart_ad, smart_bst)
 const GIFT=2;
-const AD_DAY={x2:5,promo:3,chk:5,breath:5,open:3,urg:3,audit:3,build:3,exp:3,con:3,rw:2};   // лимиты мест (общего предела нет с 01.10, shell.js AD_REW_DAY=0); rw — ×2 в окне награды (M8)
+const AD_GAP={x2:8,promo:15,chk:5,breath:8,open:10,urg:10,audit:5,build:2,exp:5,con:3,rw:3,bst:120};   // минуты; bst 120 — как прежний «1 в реальный день» в sim.js (буст уже был на пределе +5 %)
 // 💎 за первые шаги (один раз на игрока)
 // 💎 за главы «из грязи в князи» — ECON.BIZ_ACH (js/biz.js)
 const ACH={expl:3,lic:3,b_coalpit:3,b_orepit:3,b_limepit:3,b_logging:3,b_sawmill:5,b_furnace:8,b_steel:8,b_rolling:10,b_store:2,profit:3,year:5};
@@ -125,15 +127,19 @@ const GAME={get DAY_MS(){const b=dayBase();return spd()===2?b/2:b;},get DAY_BASE
   speedBuild(oid){const o=W.obj.find(x=>x.id===oid);if(!o||o.sp||!(o.st==='b'||o.up))return 'no';if(!GAME.spend(CR.speed,'speed'))return 'cr';E.speed(W,oid);persist(true);emit('change');return 'ok';},
   instantExpl(pid){const p=E.plotById(W,pid);if(!p||p.st!=='exp')return 'no';if(!GAME.spend(CR.expl,'expl'))return 'cr';E.speedExpl(W,pid);persist(true);emit('found',pid);emit('change');return 'ok';},
   urgent(){if((S.cr||0)<CR.urgent)return 'cr';const o=E.urgent(W);if(!o)return null;GAME.spend(CR.urgent,'urgent');persist(true);emit('change');return o;},
-  AD_DAY,GIFT,
+  AD_GAP,GIFT,
   // «🎁 Подарок дня» (раз в реальный день по nowMs()): +2 💎 кнопкой или +4 💎 — «📺 удвоить за рекламу» (зовётся из колбэка досмотра)
   // подарок дня — клетка календаря «Планёрки» (см. ниже, planGift); x2 — сразу удвоить (зовётся из колбэка досмотра)
   giftOk(){return !!W&&!PL().got;},
   gift(x2){const n=planGift();if(n&&x2)planX2();return n*(x2?2:1);},
-  adLeft(k){const d=todayKey();if(!S.adD||typeof S.adD!=='object'||S.adD.d!==d||!S.adD.n)S.adD={d,n:{}};return Math.max(0,(AD_DAY[k]||3)-(S.adD.n[k]||0));},
-  // награда за рекламу: зовётся ТОЛЬКО из колбэка досмотра showRewarded; действие модели + счётчик дня. Нет лимита — 'day'
-  adUse(k){GAME.adLeft(k);S.adD.n[k]=(S.adD.n[k]||0)+1;persist(true);},   // засчитать ролик места k (окна наград ×2 — 'rw')
-  adAct(k,name,...a){if(!W||GAME.adLeft(k)<=0)return 'day';const r=GAME.act(name,...a);if(r&&r!=='no'&&r!=='cash'){S.adD.n[k]=(S.adD.n[k]||0)+1;persist(true);}return r;},
+  // M31: S.adT = {место: мс последнего ролика}; adWait — мс до следующего (часы назад — не дольше самой паузы), adLeft — 1/0 (старый смысл «можно сейчас»)
+  adWait(k){if(!S.adT||typeof S.adT!=='object')S.adT={};const g=(AD_GAP[k]||3)*6e4,t=+S.adT[k]||0;return t?Math.max(0,Math.min(g,t+g-nowMs())):0;},
+  adLeft(k){return GAME.adWait(k)>0?0:1;},
+  adMin(k){return Math.max(1,Math.ceil(GAME.adWait(k)/6e4));},
+  adTxt(k){const n=GAME.adMin(k);return L('следующий через ','next in ')+n+L(' мин',' min');},   // «следующий через 4 мин»
+  // награда за рекламу: зовётся ТОЛЬКО из колбэка досмотра showRewarded; действие модели + пауза места. Пауза не прошла — 'wait' (кнопки до показа проверяют adWait)
+  adUse(k){GAME.adWait(k);S.adT[k]=nowMs();S.adN=(S.adN|0)+1;persist(true);},   // засчитать ролик места k (окна наград ×2 — 'rw')
+  adAct(k,name,...a){if(!W||GAME.adWait(k)>0)return 'wait';const r=GAME.act(name,...a);if(r&&r!=='no'&&r!=='cash')GAME.adUse(k);return r;},
   freeExplOk(){return S.freeM!==W.m+'_'+W.hold;},
   freeExplore(pid){if(!GAME.freeExplOk())return 'no';const r=E.explore(W,pid,0,true);if(r==='ok')S.freeM=W.m+'_'+W.hold;persist(true);emit('change');return r;},
   offMore(){return S.offMore||0;},
@@ -278,7 +284,6 @@ function eta(need,cur){if(!W)return null;const h=W.hist.slice(-7);if(h.length<3)
   if(cur>=need)return 0;if(!(sl>0))return null;return Math.ceil((need-cur)/sl);}
 function etaTxt(n){if(n==null)return '';if(n<=1)return L('меньше месяца','under a month');if(n<=6)return '≈ '+pl(n,'месяц','месяца','месяцев','month','months');
   if(n<=9)return L('≈ полгода','≈ half a year');if(n<=15)return L('≈ год','≈ a year');const y=Math.round(n/12);return '≈ '+pl(y,'год','года','лет','year','years');}
-AD_DAY.bst=1; // буст продаж: 1 ролик в реальный день (симулятор: +≈5 % капитала за 5 лет — предел)
 // GAME.GIFT — сколько 💎 даст сегодняшняя клетка календаря (старая карточка «Подарок дня» в biz-ui/ui показывает верную сумму)
 Object.defineProperty(GAME,'GIFT',{get(){if(!W)return GIFT;const p=PL();const c=p.got?p.gc:p.cal;return CAL[c]||(CAL7.some(x=>!cosHas(x))?X2_ITEM:CAL7_CR);},configurable:true});
 /* покупки за 💎 навсегда (28.09, владелец: «руки 4 и 5 за кристаллы», «энергии больше 100»): 4-я и 5-я рука ✋ (E.HAND_CR 60/150 💎), запас сил ⚡ +20 ступенями до 160 (E.EN_CR 40/80/140 💎).
@@ -404,6 +409,8 @@ Object.assign(GAME,{wkClose,plDay,PH,PH_ST,RK,RK_F,COL,LXC,stars,rankOf,rkLock,r
    ok/adOk = adOk() shell.js (общего предела роликов нет с 01.10). Цепочку QUEST не включаем — её роль играет Планёрка.
    «Договор со спонсором» удваивает ступеньку. Состояние — S.quest (облако: QUEST.merge в mergeSave). STAT: place('ladder') перед роликом, lad {n} после. */
 const LAD=[2,3,3,4,6],LAD_GAP=120;
+// M31: после 5 ступеней — «бонус-ролик» +LAD_FLAT 💎 (со спонсором ×2) раз в LAD_FLAT_GAP с, весь день без предела; S.adF = {d:день, n:сколько, t:мс последнего}
+const LAD_FLAT=1,LAD_FLAT_GAP=1200;   // M31: подбор симулятором (2 💎 / 15 мин и паузы мест вдвое короче давали net_ad +18 % — выше предела 15 %)
 const sponsorOn=()=>payOwn('sponsor');
 function questInit(){if(typeof QUEST==='undefined')return;
   QUEST.init(S,{save:()=>{try{save();}catch(e){}},toast:t=>toast(t),now:()=>nowMs(),ok:()=>typeof adOk==='function'&&adOk(),adOk:()=>typeof adOk==='function'&&adOk(),
@@ -411,17 +418,30 @@ function questInit(){if(typeof QUEST==='undefined')return;
     grant:r=>{const n=typeof r==='number'?r:(r&&r.c)||0,x=n*(sponsorOn()?2:1);let i=0;try{i=QUEST._dbg().q.n;}catch(e){}
       GAME.addCr(x,'ad');try{STAT.ev('lad',{n:i});}catch(e){}try{SND.coin();}catch(e){}toast('📺 +'+x+'\u00a0💎'+(i<LAD.length?' · '+L('следующий ролик — ','next video — ')+'+'+LAD[i]*(sponsorOn()?2:1)+'\u00a0💎':''),3000);emit('lad',i);},
     cur:n=>n*(sponsorOn()?2:1)+'\u00a0💎',cls:'btn noenter',chainOn:false,ladder:{r:LAD,gap:LAD_GAP},
-    modal:h=>{if(!document.getElementById('ladCss')){const st=document.createElement('style');st.id='ladCss';st.textContent='#mcard.lad-card .qhint{font-size:16px;opacity:.85}#mcard.lad-card .qlad div{font-size:16px}#mcard.lad-card .qlad div b{font-size:19px}';document.head.appendChild(st);}h=h.replace(/^<h2>[^]*?<\/h2>/,'').replace('<h3>','<h2>').replace('</h3>','</h2>');modal(h.replace('<div class="row">',(typeof adDayHtml==='function'?adDayHtml():'')+'<div class="row">'));const c=document.getElementById('mcard');if(c)c.classList.add('lad-card');return c;},
+    modal:h=>{if(!document.getElementById('ladCss')){const st=document.createElement('style');st.id='ladCss';st.textContent='#mcard.lad-card .qhint{font-size:16px;opacity:.85}#mcard.lad-card .qlad div{font-size:16px}#mcard.lad-card .qlad div b{font-size:19px}';document.head.appendChild(st);}h=h.replace(/^<h2>[^]*?<\/h2>/,'').replace('<h3>','<h2>').replace('</h3>','</h2>');const fh=flatHtml();if(fh!==null)h=h.replace(/<div class="qhint">[^<]*<\/div>/,fh).replace(/<div class="qhint opt">[^<]*<\/div>/,'');   // M31: «На сегодня всё» → бонус-ролики
+      modal(h.replace('<div class="row">',(typeof adDayHtml==='function'?adDayHtml():'')+'<div class="row">'));const c=document.getElementById('mcard');if(c){c.classList.add('lad-card');const fb=document.getElementById('ladFlat');if(fb)fb.onclick=()=>{fb.disabled=true;flatWatch();};}return c;},
     close:()=>hideModal(),onChange:()=>emit('change')});}
 // состояние лесенки для кнопок: on — можно смотреть сейчас или после паузы; n — пройдено ступенек; next — сколько даст следующая (со спонсором); wait — мс до следующей
+function adF(){const d=todayKey();if(!S.adF||typeof S.adF!=='object'||S.adF.d!==d)S.adF={d,n:0,t:0};return S.adF;}
+function flatWait(q){const f=adF(),t0=Math.max(+f.t||0,+q.t||0),g=(f.t&&f.t>=(q.t||0)?LAD_FLAT_GAP:LAD_GAP)*1000;return t0?Math.max(0,Math.min(g,t0+g-nowMs())):0;}
 function lad(){if(typeof QUEST==='undefined'||!QUEST.ok())return {on:false,n:0,max:LAD.length,next:0,wait:0};let d;try{d=QUEST._dbg();}catch(e){return {on:false,n:0,max:LAD.length,next:0,wait:0};}
-  const n=d.q.n|0;return {on:n<LAD.length,n,max:LAD.length,next:n<LAD.length?LAD[n]*(sponsorOn()?2:1):0,wait:d.wait|0};}
+  const n=d.q.n|0,sp=sponsorOn()?2:1;if(n>=LAD.length)return {on:typeof adOk==='function'&&adOk(),flat:true,n,max:LAD.length,next:LAD_FLAT*sp,wait:flatWait(d.q),fn:adF().n|0};
+  return {on:true,n,max:LAD.length,next:LAD[n]*sp,wait:d.wait|0};}
+// бонус-ролик после лесенки: только по кнопке игрока, награда названа на кнопке; пауза не прошла — ничего не показываем
+function flatWatch(){const x=lad();if(!x.on||!x.flat||x.wait>0)return false;try{STAT.place('ladder');}catch(e){}
+  showRewarded(()=>{const f=adF(),x2=lad();if(!x2.flat||x2.wait>0)return;f.n=(f.n|0)+1;f.t=nowMs();GAME.addCr(x2.next,'ad');try{STAT.ev('lad',{n:LAD.length+f.n});}catch(e){}try{SND.coin();}catch(e){}
+    toast('📺 +'+x2.next+'\u00a0💎 · '+L('следующий бонус-ролик — через ','next bonus video in ')+Math.round(LAD_FLAT_GAP/60)+L(' мин',' min'),3000);emit('lad',LAD.length+f.n);try{if(document.getElementById('ladFlat')||document.getElementById('ladFlatW'))QUEST.open();}catch(e){}},()=>{});return true;}
+// окно лесенки после 5 ступеней: вместо «На сегодня всё» — бонус-ролик (кнопка или «следующий через N мин»)
+function flatHtml(){const x=lad();if(!x.flat||!x.on)return null;
+  return '<div class="qhint" style="opacity:1;font-size:16px">'+L('Лесенка на сегодня пройдена. Дальше — бонус-ролики: +','Ladder done for today. Now — bonus videos: +')+x.next+'\u00a0💎 '+L('раз в ','every ')+Math.round(LAD_FLAT_GAP/60)+L(' мин',' min')+'</div>'+
+    (x.wait>0?'<div class="qhint" id="ladFlatW">'+L('Следующий через ','Next in ')+Math.max(1,Math.ceil(x.wait/6e4))+L(' мин',' min')+'</div>':'<div class="row"><button class="btn noenter" id="ladFlat">📺 '+L('Бонус-ролик','Bonus video')+' +'+x.next+'\u00a0💎</button></div>');}
 // кнопка ролика: пауза — открыть окно лесенки (там обратный отсчёт), иначе — сразу ролик
-function ladWatch(){const x=lad();if(!x.on)return false;if(x.wait>0)QUEST.open();else QUEST.watch();return true;}
+function ladWatch(){const x=lad();if(!x.on)return false;if(x.wait>0)QUEST.open();else if(x.flat)flatWatch();else QUEST.watch();return true;}
 const mmss=ms=>{const s=Math.ceil(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
-// подпись кнопки: «📺 +3 💎 · ролик 2 из 5» или «📺 Ролики дня · через 1:45»
-function ladLabel(){const x=lad();if(!x.on)return '';return x.wait>0?'📺 '+L('Ролики дня','Daily videos')+' · '+L('через ','in ')+mmss(x.wait):'📺 +'+x.next+'\u00a0💎 · '+L('ролик ','video ')+(x.n+1)+L(' из ',' of ')+x.max;}
-Object.assign(GAME,{LAD,lad,ladWatch,ladLabel,ladOpen:b=>{if(typeof QUEST!=='undefined')QUEST.open(b);},
+// подпись кнопки: «📺 +3 💎 · ролик 2 из 5» или «📺 Ролики дня · через 1:45»; после лесенки — «📺 +2 💎 · бонус-ролик» / «📺 Бонус-ролик · через 12 мин»
+function ladLabel(){const x=lad();if(!x.on)return '';if(x.flat)return x.wait>0?'📺 '+L('Бонус-ролик','Bonus video')+' · '+L('через ','in ')+Math.max(1,Math.ceil(x.wait/6e4))+L(' мин',' min'):'📺 +'+x.next+'\u00a0💎 · '+L('бонус-ролик','bonus video');
+  return x.wait>0?'📺 '+L('Ролики дня','Daily videos')+' · '+L('через ','in ')+mmss(x.wait):'📺 +'+x.next+'\u00a0💎 · '+L('ролик ','video ')+(x.n+1)+L(' из ',' of ')+x.max;}
+Object.assign(GAME,{LAD,LAD_FLAT,LAD_FLAT_GAP,lad,ladWatch,flatWatch,ladLabel,ladOpen:b=>{if(typeof QUEST!=='undefined')QUEST.open(b);},
   adCrLeft:()=>{const x=lad();return x.on&&!x.wait?1:0;},adCrN:()=>lad().next||LAD[0]});
 questInit();
 window.GAME=GAME;window.FMT=FMT;window.NM=NM;

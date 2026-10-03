@@ -35,7 +35,7 @@ let S={w:null,cr:20,crE:{},adW:0,ask:{},tut:{},fame:[]};
 function wIn(o){if(isObj(o)&&isObj(o.w)&&o.w.$pk===1){try{o.w=PACK.unpack(o.w);}catch(e){try{localStorage.setItem('magnat-backup-'+Date.now(),JSON.stringify(o));}catch(x){}o.w=null;}}return o;}
 function sOut(){return isObj(S.w)&&typeof PACK!=='undefined'?Object.assign({},S,{w:PACK.packSafe(S.w)}):S;}
 try{const r=localStorage.getItem(SKEY);if(r){let o=null;try{o=wIn(JSON.parse(r));}catch(e){}if(isObj(o))S=Object.assign(S,o);else try{localStorage.setItem('magnat-backup-'+Date.now(),r);}catch(e){}}}catch(e){}   // сейв не читается — кладём копию рядом, а не теряем молча (игра начнётся заново, облако может вернуть мир)
-const OBJF=['crE','ask','tut','cos','pk','psG','psT','wall','lxE','lxc','col','colG','thU'];   // M27: thU — открытые темы оформления (js/themes.js), объединение
+const OBJF=['crE','ask','tut','cos','pk','psG','psT','wall','lxE','lxc','col','colG','thU','adT'];   // M31: adT — пауза мест рекламы (мс последнего ролика), берём позднее   // M27: thU — открытые темы оформления (js/themes.js), объединение
    // M8: стена почёта, вещи, украшения вещей, наборы — объединение // cos — украшения за 💎, pk — улучшения «Доли основателя» (объединение, берём больший уровень); psG/psT — «Путёвка председателя» (день начала / сколько взято по ключу покупки)
 // защита от сохранений неожиданной формы (ручная правка, старая версия)
 function fixSave(){for(const f of OBJF)if(!isObj(S[f]))S[f]={};
@@ -223,7 +223,7 @@ const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':
 // бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta3' (бета-1 — 'beta1', бета-2 — 'beta2'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta4':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta5':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
   if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
@@ -250,6 +250,7 @@ function mergeSave(d,ref){if(!isObj(d))return;wIn(d);
   if(isObj(d.adCr)&&(!isObj(S.adCr)||String(d.adCr.d)>String(S.adCr.d)))S.adCr=d.adCr;
   else if(isObj(d.adCr)&&isObj(S.adCr)&&d.adCr.d===S.adCr.d)S.adCr.n=Math.max(S.adCr.n||0,d.adCr.n||0);
   if(isObj(d.adR)&&(!isObj(S.adR)||(d.adR.d|0)>(S.adR.d|0)))S.adR=d.adR;else if(isObj(d.adR)&&isObj(S.adR)&&d.adR.d===S.adR.d)S.adR.n=Math.max(S.adR.n|0,d.adR.n|0);   // общий предел роликов: берём больший счёт дня
+  if(isObj(d.adF)&&(!isObj(S.adF)||(d.adF.d|0)>(S.adF.d|0)))S.adF=d.adF;else if(isObj(d.adF)&&isObj(S.adF)&&d.adF.d===S.adF.d){S.adF.n=Math.max(S.adF.n|0,d.adF.n|0);S.adF.t=Math.max(+S.adF.t||0,+d.adF.t||0);}   // M31: бонус-ролики после лесенки
   if(typeof d.maxT==='number')S.maxT=Math.max(S.maxT||0,d.maxT);
   if(typeof d.st0==='number'&&d.st0>0)S.st0=S.st0>0?Math.min(S.st0,d.st0):d.st0;   // M28: первый запуск — самый ранний с любого устройства
   if(typeof d.rst==='number')S.rst=Math.max(S.rst||0,d.rst);
@@ -257,7 +258,7 @@ function mergeSave(d,ref){if(!isObj(d))return;wIn(d);
   if(typeof d.adW==='number')S.adW=Math.max(S.adW||0,d.adW);
   if(typeof d.lbB==='number')S.lbB=Math.max(S.lbB||0,d.lbB);
   if(typeof QUEST!=='undefined'&&isObj(d.quest)){if(!isObj(S.quest))S.quest=d.quest;else QUEST.merge(d.quest);}   // «Ролики дня»: тот же день — максимумы
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|w|cr|crE|ask|tut|fame|adCr|adR|maxT|st0|adW|lbB|wk|lastT|offMore|freeM|buy|buyB|payT|payV|soc|stc|quest|rk|rkG|udN|adTot|thU|wall|lxE|lxc|col|colG)$/.test(k))S[k]=d[k]; // флажки и настройки
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|w|cr|crE|ask|tut|fame|adCr|adR|adT|adF|maxT|st0|adW|lbB|wk|lastT|offMore|freeM|buy|buyB|payT|payV|soc|stc|quest|rk|rkG|udN|adTot|thU|wall|lxE|lxc|col|colG)$/.test(k))S[k]=d[k]; // флажки и настройки
   SOC.merge(d.soc);STAT.merge(d.stc); // соц-предложения VK (модуль держит ссылку на S.soc) и отметки статистики — сливаем, а не заменяем
   payMerge(d);}
 function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
@@ -542,7 +543,7 @@ function showRewarded(cb0,onFail0){
     onError:()=>{adClose();STAT.ad('rew','err');toast(adFail());onFail();}}});
 }
 function adPlat(){return !(PLAT==='vk'&&!VK&&VK_REAL)&&!(PLAT==='apk'&&APK_REAL&&!apkAds());}   // площадка умеет рекламу (мост/SDK)
-// общий дневной предел роликов за награду: 0 — нет предела (решение владельца 01.10: убрали 20 в день; баланс держат лимиты мест GAME.adLeft, adCrLeft и лесенка). S.adR — счёт роликов дня (для STAT)
+// общий дневной предел роликов за награду: 0 — нет предела (решение владельца 01.10: убрали 20 в день). M31: и у мест дневных лимитов нет — паузы мест GAME.adWait (game.js AD_GAP), лесенка + бонус-ролики. S.adR — счёт роликов дня (для STAT)
 const AD_REW_DAY=0;
 function adRewLeft(){const d=payDay();if(!S.adR||typeof S.adR!=='object'||S.adR.d!==d)S.adR={d:d,n:0};return AD_REW_DAY?Math.max(0,AD_REW_DAY-(S.adR.n|0)):999;}
 function adOk(){return adPlat()&&adRewLeft()>0;}   // кнопки «📺 … за рекламу» — только при adOk(): кончился предел — кнопки прячутся
@@ -583,8 +584,8 @@ const PAY_ITEMS={
     en:{name:'No ads',desc:'No ads between months forever, plus 30 💎 right away. Rewarded videos stay optional'}},
   // 29.09 (утвердил владелец, hobby-analytics/29): спонсор (99 ₽ / 14, навсегда; в магазине только при adOk()), путёвка (149 ₽ / 21, расходуемая),
   // сейф (299 ₽ / 42), «Лихие 90-е» (79 ₽ / 11, навсегда, только вид). Удвоение 💎 за ролики и посылки — js/meta-ui.js
-  sponsor:{perm:1,vk:14,ic:'🤝',name:'Договор со спонсором',desc:'Навсегда: кристаллы за ролики ×2 — +6 💎 вместо +3. Сколько роликов в день — столько же',
-    en:{name:'Sponsor deal',desc:'Forever: crystals for videos ×2 — +6 💎 instead of +3. The daily number of videos stays the same'}},
+  sponsor:{perm:1,vk:14,ic:'🤝',name:'Договор со спонсором',desc:'Навсегда: кристаллы за ролики ×2 — вдвое больше 💎 за каждый ролик «Ролики дня» и бонус-ролик',
+    en:{name:'Sponsor deal',desc:'Forever: crystals for videos ×2 — double 💎 for every daily video and bonus video'}},
   manager:{perm:1,vk:21,ic:'👔',name:'Управляющий',desc:'Пока вас нет, управляющий ведёт дела 8 часов вместо 6 (8 игровых месяцев)',
     en:{name:'Manager',desc:'While you’re away, the manager runs things for 8 hours instead of 6 (8 game months)'}},
   cr_s:{n:60,vk:7,ic:'💎',name:'Горсть кристаллов: 60 💎',desc:'Ускорить стройку, разведку, срочный контракт',done:'+60 💎 — спасибо!',
