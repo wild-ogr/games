@@ -37,12 +37,22 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .wrap{max-width:520px;margin:0 auto}
 .rankb{text-align:center;margin:2px 0 8px}.rankb button{background:rgba(255,255,255,.85);border-radius:999px;padding:6px 14px;font-weight:800;font-size:15px;box-shadow:0 3px 0 rgba(0,0,0,.1);min-height:40px}
 .tiles{display:flex;gap:10px}
+.rbar{display:block;height:6px;border-radius:3px;background:rgba(0,0,0,.12);margin:4px 2px 0;overflow:hidden}.rbar i{display:block;height:100%;background:#e67e22;border-radius:3px}
+.rbar.big{height:12px;border-radius:6px;margin:4px 0 6px}
 .tile{flex:1;border-radius:18px;padding:10px 10px 12px;color:#fff;text-align:left;box-shadow:0 4px 0 rgba(0,0,0,.18);position:relative;min-height:96px}
 .tile b{display:block;font-size:17px;line-height:1.15}.tile small{display:block;font-size:13.5px;font-weight:700;opacity:.95;margin-top:3px;line-height:1.25}
 .tile .ic{font-size:26px;display:block;margin-bottom:2px}
 .tile.dl{background:linear-gradient(#e0775f,#b3452f)}.tile.wk{background:linear-gradient(#3d6fa8,#284f7e)}
 .tile.done{filter:saturate(.55)}.tile .dot{position:absolute;top:8px;right:10px;width:12px;height:12px;border-radius:50%;background:#ffd23f;box-shadow:0 0 0 2px #fff}
+.dcal{display:flex;margin-top:5px}.dcal i{flex:1;font-style:normal;text-align:center;font-size:12.5px;font-weight:900;line-height:20px;border-radius:6px;background:rgba(0,0,0,.18);margin-right:2px;min-width:0}
+.dcal i:last-child{margin-right:0}.dcal i.p{background:rgba(255,255,255,.55);color:#7a3020}.dcal i.w{background:#ffd23f;color:#5a3a00}.dcal i.t{box-shadow:inset 0 0 0 2px #fff}
+.goal .dcal{max-width:260px;margin:4px auto 2px}.goal .dcal i{background:#e9e4d8;color:#8a7a5a;font-size:14px;line-height:24px}.goal .dcal i.p{background:#cfe9d3;color:#1f5e2c}.goal .dcal i.w{background:#ffd23f;color:#5a3a00}.goal .dcal i.t{box-shadow:inset 0 0 0 2px #e67e22}
 .tile.lock{filter:saturate(.3) brightness(.95)}
+.fs{background:rgba(255,255,255,.94);border-radius:18px;padding:10px 12px;margin:0 0 10px;box-shadow:0 4px 0 rgba(0,0,0,.15)}
+.fs>b{display:block;font-size:17px;margin-bottom:4px;color:#2d3436}
+.fsr{display:flex;align-items:center;min-height:44px;font-weight:700;font-size:15.5px;color:#2d3436;border-top:1px solid #eee}
+.fsr .fi{flex:0 0 30px;font-size:20px}.fsr .ft{flex:1;line-height:1.2;padding:4px 6px 4px 0}.fsr i{font-style:normal;font-weight:900;color:#8a7a5a;white-space:nowrap}
+.fsr.got{opacity:.6}.fsr .btn{flex:none;width:auto;min-height:44px;padding:6px 12px;font-size:16px;margin:3px 0}
 .sec{margin:16px 2px 4px;font-weight:900;font-size:16px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
 .place{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border-radius:18px;padding:10px;margin-top:10px;box-shadow:0 4px 0 rgba(0,0,0,.18);color:#fff;min-height:76px;position:relative}
 .place.lock{filter:saturate(.3) brightness(.92)}
@@ -148,12 +158,17 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .say span{display:inline-block;background:rgba(0,0,0,.68);color:#fff;font-weight:800;font-size:15px;border-radius:12px;padding:6px 12px;line-height:1.25}
 .say span:empty{display:none}
 .tip{position:absolute;left:10px;right:10px;background:rgba(255,255,255,.97);border-radius:14px;padding:9px 12px;font-weight:700;font-size:15px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.3);display:none;z-index:9;line-height:1.3}
-.tip.on{display:block}.tip small{display:block;color:#57606f;font-size:13px;margin-top:3px}
+.tip.on{display:block;cursor:pointer}.tip small{display:block;color:#57606f;font-size:13px;margin-top:3px}
 /* панель ходов */
 .acts{position:relative;z-index:6;padding:8px 10px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:rgba(0,0,0,.45);min-height:68px}
 .arow{display:flex;gap:8px;max-width:520px;margin:0 auto}
 .arow .btn{flex:1;padding:8px 4px;font-size:16.5px;line-height:1.15;min-height:52px}
 .arow .btn small{display:block;font-size:13px;font-weight:800}
+.adv{max-width:520px;margin:0 auto 6px;background:#fff8dc;color:#3d3420;border-radius:12px;padding:6px 10px;font-weight:700;font-size:15.5px;line-height:1.25;text-align:center}
+.adv b{color:#b9770e}
+@media (max-height:450px){.adv{font-size:14px;padding:3px 8px;margin-bottom:4px}}
+.arow .btn.sug{box-shadow:0 0 0 3px #ffd23f,0 3px 0 rgba(0,0,0,.25);position:relative}
+body.calm .arow .btn.sug{box-shadow:0 0 0 3px #ffd23f}
 .wait{color:#fff;text-align:center;font-weight:800;font-size:16px;padding:14px 4px;max-width:520px;margin:0 auto}
 .rz{max-width:520px;margin:0 auto 8px;background:rgba(255,255,255,.96);border-radius:16px;padding:8px 10px}
 .rz .pre{display:flex;gap:6px}.rz .pre button{flex:1;background:#f1ede2;border-radius:10px;padding:8px 2px;font-weight:800;font-size:14px;min-height:42px}
@@ -185,10 +200,16 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .row{display:flex;flex-direction:column;gap:10px;margin-top:12px}
 .row2{display:flex;gap:8px}.row2>*{flex:1}
 .big-stars{font-size:42px;color:#ffc312;letter-spacing:4px;margin:4px 0;text-shadow:0 3px 0 #d68910}
+.card.fin>.row:last-child{position:sticky;bottom:-16px;background:var(--card);margin:8px -16px -16px;padding:10px 16px 14px;border-radius:0 0 24px 24px;box-shadow:0 -8px 12px -10px rgba(0,0,0,.35);z-index:2}
+@media (max-height:700px){.card.fin{padding-top:12px}.card.fin h2{font-size:21px;margin-bottom:2px}.card.fin .big-stars{font-size:30px;margin:0}.card.fin p{margin:4px 0}
+  .card.fin .places{margin:6px 0 2px}.card.fin .places div{padding:2px 8px}.card.fin .coach{padding:6px 8px;margin:6px 0}.card.fin .coach .av{flex-basis:40px;width:40px;height:40px}}
 .big-stars .e{color:#8a939c;text-shadow:none}
 .won{font-size:22px;font-weight:900;color:#b86e00!important}
 .quote{background:#fff3d6;border-radius:14px;padding:8px 12px;font-style:italic;color:#5a4a2a!important}
 .goal{font-size:15px!important;margin:8px 0 2px!important;color:#2d3436!important;font-weight:700}
+.coach{display:flex;align-items:center;background:#fff3d6;border-radius:14px;padding:8px 10px;margin:8px 0;text-align:left}
+.coach .av{flex:0 0 52px;width:52px;height:52px;margin-right:10px}.coach p{margin:0!important;color:#5a4a2a!important;font-size:15.5px;line-height:1.3}
+.ins{font-size:19px!important}.box{margin:2px 0!important;font-size:15px}
 .goal.tipl{background:#e6f6e9;border-radius:12px;padding:8px 10px;color:#1f5e2c!important}
 .age{font-size:64px;font-weight:900;color:#c0392b;line-height:1;margin:4px 0}
 .ad{background:#111;color:#fff;text-align:center;font-size:22px;font-weight:800}
@@ -414,22 +435,38 @@ const BOT_P={
   vitek:  {tight:.38,aggr:.78,bluff:.16,sticky:.28,skill:.42}, // агрессивный
   vovan:  {tight:.50,aggr:.70,bluff:.18,sticky:.18,skill:.72}, // агрессивный и крепкий
   galina: {tight:.52,aggr:.66,bluff:.16,sticky:.14,skill:.86}, // строгая, сильная
-  edik:   {tight:.55,aggr:.55,bluff:.14,sticky:.08,skill:1}    // «Профессор» — сильнейший
+  edik:   {tight:.50,aggr:.85,bluff:.10,sticky:.08,skill:1}    // «Профессор» — сильнейший (считает шансы против «рук» соперников)
 };
+const clamp01=x=>x<0?0:x>1?1:x;
 // сила двух карт до флопа (формула Чена): −1…20
 function chen(c){const a=Math.max(CR(c[0]),CR(c[1])),b=Math.min(CR(c[0]),CR(c[1])),hp=r=>r===14?10:r===13?8:r===12?7:r===11?6:r/2;
   let v=hp(a);if(a===b)return Math.max(5,v*2);if(CS(c[0])===CS(c[1]))v+=2;const g=a-b-1;v-=g<=0?0:g===1?1:g===2?2:g===3?4:5;
   if(g<=1&&a<12)v+=1;return Math.ceil(v);}
-// шанс выиграть против nOpp случайных рук (Монте-Карло): карты, которых бот не видит, раздаются наугад
-function mcEquity(my,board,nOpp,rnd,iters){const used=[];for(const c of my)used[c]=1;for(const c of board)used[c]=1;
+// шанс выиграть против nOpp рук (Монте-Карло): карты, которых бот не видит, раздаются наугад.
+// thr (необязательно) — для каждого соперника «нижняя граница силы» его двух карт по Чену: кто поднимал до флопа, у того
+// карты обычно сильнее — опытный бот (skill) это учитывает (руки ниже границы перевыбираются из колоды, до 6 попыток)
+function mcEquity(my,board,nOpp,rnd,iters,thr){const used=[];for(const c of my)used[c]=1;for(const c of board)used[c]=1;
   const pool=[];for(let c=0;c<52;c++)if(!used[c])pool.push(c);const need=5-board.length,P=pool.length,k=need+2*nOpp;let win=0;
+  const rng=!!(thr&&thr.some(x=>x>0));
   for(let it=0;it<iters;it++){for(let i=0;i<k;i++){const j=i+Math.floor(rnd()*(P-i)),t=pool[i];pool[i]=pool[j];pool[j]=t;}
+    if(rng)for(let o=0;o<nOpp;o++){const t0=thr[o]||0;if(t0<=0)continue;const a=need+2*o;
+      for(let tr=0;tr<6&&chen([pool[a],pool[a+1]])<t0;tr++){const j=k+Math.floor(rnd()*(P-k)),q=a+(tr&1),t=pool[q];pool[q]=pool[j];pool[j]=t;}}
     const bd=board.concat(pool.slice(0,need)),me=evalHand(my.concat(bd));let best=true,ties=1;
     for(let o=0;o<nOpp;o++){const v=evalHand([pool[need+2*o],pool[need+2*o+1]].concat(bd));if(v>me){best=false;break;}if(v===me)ties++;}
     if(best)win+=1/ties;}
   return win/iters;}
+// «мягкий» стол (новичку на первых турнирах): меньше напора, блефа и точности. mod.soft 0…1 — открытый параметр стола, не тайное знание
+function botP(pid,mod){const P=BOT_P[pid]||BOT_P.tolik,s=mod&&mod.soft>0?Math.min(1,mod.soft):0;if(!s)return P;
+  return {tight:P.tight,aggr:P.aggr*(1-.6*s),bluff:P.bluff*(1-.8*s),sticky:Math.min(1,P.sticky+.1*s),skill:P.skill*(1-.6*s),sz:1-.45*s};}
+// кто из соперников поднимал/уравнивал подъём до флопа (по истории раздачи в view) → граница силы его рук для mcEquity
+function oppRanges(v,me,k){const out=[];if(k<=0)return out;
+  v.seats.forEach((q,j)=>{if(j===me||!inHand(q))return;let r=0,c=0,seenR=false;
+    for(const x of v.log){if(x.e!=='act'||x.street!==0)continue;if(x.seat===j){if(x.t==='raise')r=1;else if(x.t==='call'&&seenR)c=1;}if(x.t==='raise')seenR=true;}
+    const post=v.log.some(x=>x.e==='act'&&x.seat===j&&x.street>0&&x.t==='raise');
+    out.push(Math.round(((r?9:c?6:0)+(post?2:0))*k));});
+  return out;}
 // решение бота по view. Возвращает ход {seat,no,t,to}
-function botDecide(v,pid,rnd){const P=BOT_P[pid]||BOT_P.tolik,L=legal(v);if(!L)return null;
+function botDecide(v,pid,rnd,mod){const P=botP(pid,mod),L=legal(v);if(!L)return null;
   const me=v.me,p=v.seats[me],n=v.seats.length,bb=v.bb,sb=Math.max(1,v.sb);
   const pot=v.seats.reduce((a,q)=>a+q.tot,0),opp=v.seats.filter((q,i)=>i!==me&&inHand(q)).length;
   const raises=v.log.filter(x=>x.e==='act'&&x.t==='raise'&&x.street===v.street).length;
@@ -443,6 +480,11 @@ function botDecide(v,pid,rnd){const P=BOT_P[pid]||BOT_P.tolik,L=legal(v);if(!L)r
   if(v.street===0){
     const ch=chen(p.c)+noise(6);
     const thr=4+P.tight*6-(late?1:0)+(opp>=4?.5:0);
+    // опытный (skill ≥ .8) против подъёма считает шанс против «рук поднявшего» (по Чену ≥ 9), а не против случайных
+    if(P.skill>=.8&&raises>0&&L.call>0){const rk=clamp01((P.skill-.3)/.7),th=oppRanges(v,me,rk);
+      const eqP=mcEquity(p.c,[],Math.max(1,opp),rnd,110,th)+noise(.1),odds=L.call/(pot+L.call);
+      if(eqP>.62&&raises<3&&L.raise)return eqP>.72||stackBB<=12?allin():rz(v.cb*2.6+pot*.2);
+      return eqP>=odds+.03-(late?.02:0)?cal:fold;}
     if(stackBB<=10){ // мало спичек: всё или ничего
       if(ch>=thr+1.5-P.aggr*2)return allin();return L.check?chk:(L.call<=bb/2&&ch>=thr-1?cal:fold);}
     if(raises===0){
@@ -457,19 +499,60 @@ function botDecide(v,pid,rnd){const P=BOT_P[pid]||BOT_P.tolik,L=legal(v);if(!L)r
     if(raises<2&&rnd()<P.bluff*.12)return rz(v.cb*2.6);
     return fold;}
   // после флопа — шанс выиграть и шансы банка
-  let eq=mcEquity(p.c,v.board,Math.max(1,opp),rnd,Math.round(90+P.skill*190));
+  const rk=clamp01((P.skill-.3)/.7),thr=rk>0?oppRanges(v,me,rk):null;
+  let eq=mcEquity(p.c,v.board,Math.max(1,opp),rnd,Math.round(90+P.skill*190),thr);
   const bp=L.call>0?L.call/Math.max(1,pot):0;
   eq=eq*(1-(.12+.14*(1-P.skill))*Math.min(1,bp))+noise(.3);
-  const odds=L.call>0?L.call/(pot+L.call):0,size=f=>v.cb+pot*f;
+  const SZ=P.sz||1,odds=L.call>0?L.call/(pot+L.call):0,size=f=>v.cb+pot*f*SZ;
   if(L.check){
     if(eq>.64-P.aggr*.16-P.skill*.08-(opp===1?.08:0))return rz(size(.45+.3*P.aggr+rnd()*.15));
     if(rnd()<P.bluff*(v.street===3?.7:.45)/Math.max(1,opp-.5))return rz(size(.5+rnd()*.25));
     return chk;}
-  if(raises<3&&eq>.82-P.aggr*.1-P.skill*.06&&rnd()<.35+P.aggr*.5)return eq>.9&&rnd()<.5?allin():rz(v.cb*2+pot*.5);
+  if(raises<3&&eq>.82-P.aggr*.1-P.skill*.06&&rnd()<.35+P.aggr*.5)return eq>.9&&rnd()<.5*SZ?allin():rz(v.cb*2+pot*.5*SZ);
   if(eq+P.sticky*.2>=odds+.03*(1-P.sticky))return cal;
   if(raises<2&&v.street<3&&rnd()<P.bluff*.1)return rz(v.cb*2+pot*.5);
   return fold;}
 /* ================= BOTS-END ================= */
+/* ================= СОВЕТ НОВИЧКУ (ADVICE-BEGIN) =================
+   Чистая функция, как у ботов: видит только view своего места (свои карты, общие, ставки, историю) и rnd. Чужих карт и колоды нет.
+   advise(v,rnd) → {k:'fold'|'check'|'call'|'raise'|'allin', why:['рус','eng'], eq, act:{ход}} — что разумно сделать и почему, простыми словами.
+   Совет честный и осторожный (для новичка): со слабыми картами — сбросить, с сильными — ставить, в середине — по шансам банка. */
+function advise(v,rnd){const L=legal(v);if(!L||L.seat!==v.me)return null;
+  const me=v.me,p=v.seats[me],bb=v.bb,pot=v.seats.reduce((a,q)=>a+q.tot,0),opp=v.seats.filter((q,i)=>i!==me&&inHand(q)).length;
+  const stackBB=(p.st+p.bet)/bb,odds=L.call>0?L.call/(pot+L.call):0,rnd2=rnd||Math.random;
+  const raises=v.log.filter(x=>x.e==='act'&&x.t==='raise'&&x.street===v.street).length;
+  const mk=(k,ru,en,to,eq)=>{let a;if(k==='fold')a={seat:me,no:v.no,t:L.check?'check':'fold'};else if(k==='check')a={seat:me,no:v.no,t:'check'};
+    else if(k==='call')a={seat:me,no:v.no,t:L.check?'check':'call'};
+    else{if(!L.raise){k=L.check?'check':'call';a={seat:me,no:v.no,t:L.check?'check':'call'};}
+      else{let t=k==='allin'?L.maxTo:Math.round(to/Math.max(1,v.sb))*Math.max(1,v.sb);t=Math.max(L.minTo,Math.min(L.maxTo,t));if(t>=L.maxTo*.75)t=L.maxTo;
+        if(t>=L.maxTo)k='allin';a={seat:me,no:v.no,t:'raise',to:t};}}
+    if(k==='fold'&&L.check)k='check';
+    return {k,why:[ru,en],eq:eq==null?-1:eq,act:a};};
+  if(v.street===0){const ch=chen(p.c),pair=CR(p.c[0])===CR(p.c[1]);
+    if(stackBB<=10){
+      if(ch>=9||pair)return mk('allin','Спичек мало, а карты хорошие — ва-банк','Few matches left and good cards — go all-in',L.maxTo);
+      if(L.check)return mk('check','Пропустите — это бесплатно','Check — it\'s free');
+      return mk('fold','Спичек мало — дождитесь карт получше','Few matches left — wait for better cards');}
+    if(ch>=11){
+      if(raises===0)return mk('raise','Сильные карты — поднимите ставку','Strong cards — raise',v.cb+bb*3);
+      if(ch>=13&&raises<2)return mk('raise','Очень сильные карты — поднимите ещё','Very strong cards — raise again',v.cb*2.5+pot*.2);
+      return mk('call','Сильные карты — уравняйте','Strong cards — call');}
+    if(ch>=8){
+      if(L.check)return mk('check','Неплохие карты — пропустите и посмотрите флоп','Decent cards — check and see the flop');
+      if(L.call<=bb*3||L.call<=(p.st+p.bet)*.06)return mk('call','Неплохие карты, ставка небольшая — уравняйте','Decent cards and a small bet — call');
+      return mk('fold','Ставка большая для этих карт — лучше сбросить','The bet is too big for these cards — better fold');}
+    if(L.check)return mk('check','Пропустите — посмотреть флоп бесплатно','Check — seeing the flop is free');
+    if(L.call<=bb/2+.01)return mk('call','Доплатить совсем немного — можно посмотреть флоп','Only a little more to pay — you can see the flop');
+    return mk('fold','Слабые карты — сбросьте, это не стыдно','Weak cards — fold, there\'s no shame in it');}
+  const eq=mcEquity(p.c,v.board,Math.max(1,opp),rnd2,400,oppRanges(v,me,.6)),cat=handCat(evalHand(p.c.concat(v.board)));
+  const pc=Math.round(eq*100);
+  if(eq>=.7&&L.raise)return mk('raise',(L.check?'Сильная рука — сделайте ставку':'Сильная рука — поднимите ставку')+' (шанс '+pc+' %)',(L.check?'Strong hand — make a bet':'Strong hand — raise')+' ('+pc+'% to win)',v.cb+pot*.6,eq);
+  if(L.check){if(eq>=.55&&L.raise&&opp<=2)return mk('raise','Хорошие шансы ('+pc+' %) — можно поставить','Good chances ('+pc+'%) — you can bet',pot*.5,eq);
+    return mk('check',cat>=1?'Пропустите — посмотрим следующую карту бесплатно':'Пропустите — это бесплатно','Check — '+(cat>=1?'see the next card for free':'it\'s free'),0,eq);}
+  const op=Math.round(odds*100);
+  if(eq>=odds+.08||(L.call<=bb&&eq>=odds))return mk('call','Шанс '+pc+' % — больше цены ставки ('+op+' %), уравняйте','Your chance '+pc+'% beats the price ('+op+'%) — call',0,eq);
+  return mk('fold','Шанс '+pc+' % — мало для такой ставки (нужно '+op+' %), сбросьте','Your chance '+pc+'% is too low for this bet (need '+op+'%) — fold',0,eq);}
+/* ================= ADVICE-END ================= */
 
 /* ================= язык =================
    ПРАВИЛО: любой текст игроку — сразу на обоих языках: L('русский','English'), числа — pl(n,…), спички — mT/mH.
@@ -750,6 +833,7 @@ function portrait(id,m){m=m||'norm';const k=id+m;if(PVC[k])return PVC[k];return 
 function meSvg(look,m){const k='me:'+look+':'+(m||'norm');if(PVC[k])return PVC[k];
   const h=HATS[look]||HATS.cap;return PVC[k]=headSvg({bg:'#fff5e0',body:'#e67e22',bodyX:'<path d="M84 146 l16 16 l16 -16" fill="#fdebd0"/>',hat:look==='hair'?'':h,hair:look==='hair'?HATS.hair:'',brow:'#6b4a33'},m);}
 
+/* ================= ЛЕСЕНКА СТОЛОВ (LADDER-BEGIN) — чистые данные: их же читают модели (release-e/holdem-tests) ================= */
 /* столы (места) — по возрастанию силы и блайндов. bi — вход (спички со своего коробка), столько же у каждого соперника */
 const PLACES=[
   {id:'garage',n:['Гараж Толика','Tolik\'s garage'],ic:'🔧',bi:500,o:['tolik','egorych','lyuda'],t:'bench',bg:'linear-gradient(#7c8794,#525c67)',about:['Верстак, лампочка и радио','Workbench, a light bulb and the radio']},
@@ -759,6 +843,9 @@ const PLACES=[
   {id:'club',n:['Шахматный клуб','Chess club'],ic:'♟️',bi:8000,o:['edik','galina','vovan','lyuda','semyon'],t:'chess',bg:'linear-gradient(#7a5a9a,#4e3670)',about:['Финал: здесь собираются лучшие','The final: the best gather here']}
 ];
 const TOUR_H=15,LV=[1,2,3,4,6],LV_EVERY=3; // раздач в турнире; блайнды растут каждые 3 раздачи
+// «мягкий» стол для новичка: в Гараже Толика соперники полегче всегда, а в первых 3 турнирах игрока — совсем мягкие (botP, BOTS)
+function botMod(pi,tours){const soft=pi===0?((tours||0)<3?1:.5):0;return soft?{soft}:undefined;}
+/* ================= LADDER-END ================= */
 const WEEK_OPP=['galina','semyon','vitek','lyuda','vovan'],DAILY_OPP=['egorych','semyon','galina'];
 // украшения: need() — открыто ли; pay — покупка; всё видно заранее, случайностей нет
 const TABLES=[{id:'green',n:['Зелёное сукно','Green felt'],free:1},{id:'bench',n:['Гаражный верстак','Garage workbench'],place:0},{id:'tarp',n:['Лодочный брезент','Boat tarp'],place:1},
@@ -772,18 +859,27 @@ const LOOKS=[{id:'cap',n:['Кепка','Cap'],free:1},{id:'beret',n:['Берет
   {id:'ushanka',n:['Ушанка','Ushanka'],pay:'looks'},{id:'captain',n:['Капитанка','Captain\'s cap'],pay:'looks'},{id:'bowler',n:['Котелок','Bowler hat'],pay:'looks'}];
 // звания в шутку — по числу побед в турнирах
 const RANKS=[[0,['Новичок','Newcomer']],[1,['Любитель','Amateur']],[3,['Завсегдатай гаража','Garage regular']],[6,['Гроза лодочной','Terror of the pier']],[10,['Дачный мастер','Dacha master']],[16,['Король автобазы','King of the depot']],[25,['Гроссмейстер спичек','Matchstick grandmaster']]];
-function rankOf(w){let r=RANKS[0];for(const x of RANKS)if(w>=x[0])r=x;return T2(r[1]);}
+// опыт (boost 03.10): звание растёт и от сыгранного, не только от побед. Опыт = раздачи + 10 за турнир + 25 за победу.
+// Звание — лучшее из «по победам» и «по опыту» (старые игроки ничего не теряют)
+const RANK_XP=[0,80,250,600,1100,1800,2800];
+const xpNow=()=>(S.hands||0)+10*(S.tours||0)+25*(S.wins||0);
+function rankIdx(){let a=0,b=0;RANKS.forEach((x,i)=>{if((S.wins||0)>=x[0])a=i;});RANK_XP.forEach((x,i)=>{if(xpNow()>=x)b=i;});return Math.max(a,b);}
+function rankOf(){return T2(RANKS[rankIdx()][1]);}
+// до следующего звания: доля 0…1 и текст «ещё N опыта или M побед»
+function rankNext(){const i=rankIdx();if(i>=RANKS.length-1)return null;const x0=RANK_XP[i],x1=RANK_XP[i+1],xp=xpNow(),wl=RANKS[i+1][0]-(S.wins||0);
+  return {n:T2(RANKS[i+1][1]),f:Math.max(0,Math.min(1,(xp-x0)/(x1-x0))),xp:x1-xp,w:wl};}
 
 /* ================= сохранение ================= */
 const SKEY='holdem-v1',LKEY='holdem-live',START_M=1000,REFILL_TO=1000;
 let S={coins:START_M,unlocked:1,best:{},tours:0,wins:0,hands:0,pots:0,bestHand:0,daily:{},wkN:{},wkB:{},wkBest:0,own:{},tips:{},adM:{},sel:{t:'auto',b:'auto',l:'cap'},adW:0};
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
-const NUMOBJ=['best','daily','wkN','wkB','own','tips','adM'],NUMS=['unlocked','tours','wins','hands','pots','bestHand','wkBest','age'];
+const NUMOBJ=['best','daily','wkN','wkB','own','tips','adM','fsG','dwk','rec'],NUMS=['unlocked','tours','wins','hands','pots','bestHand','wkBest','age','fin','insN'];
 // защита от сохранений неожиданной формы (ручная правка, старая версия)
 function fixSave(){for(const f of NUMOBJ)if(!isObj(S[f]))S[f]={};if(!isObj(S.sel))S.sel={t:'auto',b:'auto',l:'cap'};
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;S.unlocked=Math.min(S.unlocked,PLACES.length);
-  for(const f of ['tours','wins','hands','pots','bestHand','wkBest','adW','age'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;
+  if(S.fin==null&&S.wins>0)S.fin=S.wins; // старое сохранение: победа = доиграл турнир (для «Первых шагов»)
+  for(const f of ['tours','wins','hands','pots','bestHand','wkBest','adW','age','fin','insN'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;
   if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=START_M;S.coins=Math.max(0,Math.round(S.coins));
   if(S.streak!=null&&!isObj(S.streak))delete S.streak;
   if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
@@ -826,7 +922,7 @@ function mergeSave(d,ref){if(!isObj(d))return;
   for(const f of NUMS)if(typeof d[f]==='number')S[f]=Math.max(S[f]||0,d[f]);
   for(const f of NUMOBJ)if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|coins|streak|buy|buyB|payT|payV|unlocked|tours|wins|hands|pots|bestHand|wkBest|age|best|daily|wkN|wkB|own|tips|adM|soc)$/.test(k))S[k]=d[k]; // флажки и настройки
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|coins|streak|buy|buyB|payT|payV|unlocked|tours|wins|hands|pots|bestHand|wkBest|age|best|daily|wkN|wkB|own|tips|adM|soc|fsG|dwk|rec|fin|insN)$/.test(k))S[k]=d[k]; // флажки и настройки
   payMerge(d);if(d.soc)SOC.merge(d.soc);
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
     if(!a||(b.last||0)>(a.last||0))S.streak=b;
@@ -1101,7 +1197,9 @@ function showRewarded(cb0,onFail0){
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
 function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
-function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.tours||0)>=2;}
+const AD_NEW=3; // первые 3 турнира — без рекламы вовсе (ни межэкранной, ни кнопок «за рекламу»)
+function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.tours||0)>=AD_NEW;}
+const adNew=()=>(S.tours||0)<AD_NEW;
 function showInterstitial(cb0){
   const cb=shown=>{lastAdT=Date.now();if(shown!==false){S.adW=0;save();}cb0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(cb);return;}
@@ -1127,7 +1225,7 @@ function doRefill(){const add=REFILL_TO-S.coins;if(add<=0)return;setCoins(REFILL
   $('rfOk').onclick=()=>{hideModal();openMenu();};}
 function openCoins(){
   const left=adMLeft(),wait=lastRewT?Math.max(0,AD_GAP-(Date.now()-lastRewT)):0,free=needRefill();
-  const adBtn=adOk()&&!inGame()&&left>0?(wait>0?`<button class="btn noenter" disabled>📺 ${L('Спички за рекламу — через','Matches for an ad — in')} ${Math.ceil(wait/60000)} ${L('мин','min')}</button>`
+  const adBtn=adOk()&&!inGame()&&left>0&&!adNew()?(wait>0?`<button class="btn noenter" disabled>📺 ${L('Спички за рекламу — через','Matches for an ad — in')} ${Math.ceil(wait/60000)} ${L('мин','min')}</button>`
     :`<button class="btn accent noenter" id="mAdM">📺 +${mT(AD_M)} ${L('за рекламу','for an ad')}<br><small>${L('сегодня осталось','left today')}: ${left} ${L('из','of')} ${AD_M_DAY}</small></button>`):'';
   const buy=PAY.on&&!inGame();
   modal(`<h2>${L('Твои спички','Your matches')}</h2><p class="won">${mH(S.coins)}</p>
@@ -1317,7 +1415,7 @@ function toast(t,ms){if(LANG==='en'&&TOAST_EN[t])t=TOAST_EN[t];const e=$('toast'
   const gy=inGame()&&G&&G.L?$('tbl').offsetTop+G.L.seats[0].y-62:0;e.style.bottom=gy?'auto':'';e.style.top=gy?gy+'px':'';
   const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 function hideModal(){$('modal').classList.remove('on');modalOn=false;}
-function modal(html){PAY.re=null;$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;}
+function modal(html){PAY.re=null;$('mcard').className='card';$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;}
 function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="e">☆</span>';return s;}
 function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
 function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
@@ -1429,7 +1527,7 @@ function render(){if(!G)return;const Y=layout();if(!Y)return;const s=G.s,D=G.dis
   h+=`<div class="hand-lbl" id="handLbl" style="top:${(Y.H-24).toFixed(0)}px${Y.dense?';display:none':''}">${G.hintHtml||''}</div>`;
   h+=`<div class="say" style="top:${(by+bw*1.4+10).toFixed(0)}px"><span>${Y.land&&G.say||''}</span></div>`;
   h+=`<div class="tip${G.tip?' on':''}" id="tipEl" style="top:${(Y.cy-Y.ry*.62).toFixed(0)}px">${G.tip||''}</div>`;
-  const tb=$('tbl');tb.classList.toggle('pl',!!Y.pl);tb.innerHTML=h;G.fx={};placeBubs();}
+  const tb=$('tbl');tb.classList.toggle('pl',!!Y.pl);tb.innerHTML=h;G.fx={};placeBubs();const te=$('tipEl');if(te&&G.tip)te.onclick=tipNext;}
 // реплики соперников: снизу/сверху/сбоку от аватара — где не закрывают карты стола, свои карты, банк, других игроков и другие реплики;
 // места нет (узкий экран) — реплику не показываем
 function placeBubs(){const tb=$('tbl'),bs=tb.querySelectorAll('.bub.on');if(!bs.length)return;
@@ -1491,11 +1589,15 @@ function renderActs0(){const box=$('acts');if(!G){box.innerHTML='';return;}const
   const callAll=Lg.call>=me.st;
   const callTxt=Lg.check?L('Чек','Check'):(callAll?L('Ва-банк','All-in'):L('Колл','Call'))+`<small>${mH(Lg.call)}</small>`;
   let rTxt='';if(Lg.raise){if(G.rz!=null){const v=G.rz;rTxt=(v>=Lg.maxTo?L('Ва-банк','All-in'):bet0?L('Ставка','Bet'):L('Рейз до','Raise to'))+`<small>${mH(v)}</small>`;}else rTxt=(bet0?L('Ставка','Bet'):L('Рейз','Raise'))+'<small>…</small>';}
-  box.innerHTML=rz+`<div class="arow">${Lg.check&&G.rz==null?'':`<button class="btn gray" id="aFold">${G.rz!=null?L('Отмена','Cancel'):L('Фолд','Fold')}</button>`}
+  const ad=G.rz==null?advNow():null,sg=ad?(ad.k==='fold'?(Lg.check?'aCall':'aFold'):ad.k==='raise'||ad.k==='allin'?'aRaise':'aCall'):'';
+  const advH=ad?`<div class="adv" id="advEl">💡 <b>${L('Совет','Tip')}:</b> ${esc(T2(ad.why))}</div>`:'';
+  box.innerHTML=rz+advH+`<div class="arow">${Lg.check&&G.rz==null?'':`<button class="btn gray" id="aFold">${G.rz!=null?L('Отмена','Cancel'):L('Фолд','Fold')}</button>`}
     ${G.rz!=null?'':`<button class="btn ${Lg.check?'blue':'green'}" id="aCall">${callTxt}</button>`}${Lg.raise?`<button class="btn accent" id="aRaise">${rTxt}</button>`:''}</div>`;
+  if(sg&&$(sg))$(sg).classList.add('sug');
   const f=$('aFold');if(f)f.onclick=()=>{if(G.rz!=null){G.rz=null;renderActs();return;}humanAct('fold');};
   const c=$('aCall');if(c)c.onclick=()=>humanAct(Lg.check?'check':'call');
-  const r=$('aRaise');if(r)r.onclick=()=>{if(G.rz==null){const o=raiseOpts();G.rz=s.cb===0?o[1].v:o[0].v;SND.tap();renderActs();}else humanAct('raise',G.rz);};
+  const r=$('aRaise');if(r)r.onclick=()=>{if(G.rz==null){const o=raiseOpts(),a0=G.adv&&G.advNo===s.no&&G.adv.act&&G.adv.act.t==='raise'?G.adv.act.to:0;
+    G.rz=a0>=Lg.minTo&&a0<=Lg.maxTo?a0:s.cb===0?o[1].v:o[0].v;SND.tap();renderActs();}else humanAct('raise',G.rz);};
   if(G.rz!=null){box.querySelectorAll('.pre button').forEach(b=>b.onclick=()=>{G.rz=+b.dataset.v;SND.tap();renderActs();});
     const R=$('rzR'),set=v=>{G.rz=clamp(Math.round(v/s.sb)*s.sb,Lg.minTo,Lg.maxTo);if(v>=Lg.maxTo)G.rz=Lg.maxTo;$('rzV').innerHTML=mH(G.rz);R.value=G.rz;
       const rb=$('aRaise');if(rb)rb.innerHTML=(G.rz>=Lg.maxTo?L('Ва-банк','All-in'):bet0?L('Ставка','Bet'):L('Рейз до','Raise to'))+`<small>${mH(G.rz)}</small>`;
@@ -1503,14 +1605,26 @@ function renderActs0(){const box=$('acts');if(!G){box.innerHTML='';return;}const
     R.oninput=()=>set(+R.value);$('rzM').onclick=()=>set(G.rz-Math.max(s.sb,s.bb));$('rzP').onclick=()=>set(G.rz+Math.max(s.sb,s.bb));}}
 function humanAct(t,to){if(!G||!G.waitHuman)return;const s=G.s,Lg=legal(s);if(!Lg||Lg.seat!==0)return;
   const a={seat:0,no:Lg.no,t:t};if(t==='raise')a.to=to;
+  if(G.adv&&G.advNo===Lg.no&&G.adv.act&&G.dev){const k=G.adv.act.t,d=G.dev;d.n++;
+    if(k===t||(k!=='fold'&&k!=='check'&&t!=='fold'&&t!=='check'))d.ok++;
+    else if(k==='fold'&&(t==='call'||t==='raise'))d.bad++;
+    else if((k==='call'||k==='raise')&&t==='fold')d.tight++;}
   const ok=G.waitHuman;G.waitHuman=null;G.rz=null;ok(a);}
+
+// совет «что сделать» (блок ADVICE): первые ADV_TOURS турниров сам, потом — по настройке; не в турнире недели
+const ADV_TOURS=15;
+function advOn(){return !!G&&G.mode!=='week'&&(S.adv===true||(S.adv!==false&&(S.tours||0)<ADV_TOURS));}
+function advSet(){return S.adv===true||(S.adv!==false&&(S.tours||0)<ADV_TOURS);}
+function advNow(){if(!advOn()||!G.waitHuman)return null;const s=G.s;
+  if(G.advNo!==s.no){G.advNo=s.no;try{G.adv=advise(viewFor(s,0),mkRng(hash32(s.seed^0x2545F491,s.no)));}catch(e){G.adv=null;}}
+  return G.adv;}
 
 /* ================= места за столом =================
    kind: 'human' — этот игрок (ход — кнопками), 'bot' — персонаж (BOT_P), 'remote' — человек по сети (заготовка на будущее).
    Столу и рисованию всё равно, кто сидит: у места берётся только имя и облик. Ход — SEAT_CTL[kind].decide(view, место) → Promise хода. */
 const SEAT_CTL={
   human:{decide(){return new Promise(ok=>{G.waitHuman=ok;G.rz=null;updHint();renderActs();render();SND.turn();buzz(15);tipOnTurn();});}},
-  bot:{async decide(v,seat,tok){await sleepG(thinkMs(v),tok);return botDecide(v,seat.id,mkRng(hash32(G.s.seed^0x5bd1e995,v.no*16+v.me)));}},
+  bot:{async decide(v,seat,tok){await sleepG(thinkMs(v),tok);return botDecide(v,seat.id,mkRng(hash32(G.s.seed^0x5bd1e995,v.no*16+v.me)),G.mode==='tour'?botMod(G.pi,G.tn):undefined);}},
   // онлайн (после MVP): ход придёт с сервера — seat.net.resolve(ход); пока связи нет, движок сам даст авто-ход по таймеру (timeoutAct)
   remote:{decide(v,seat,tok){return new Promise(ok=>{seat.net={resolve:ok};
     const t=setInterval(()=>{if(!G||G.tok!==tok){clearInterval(t);return;}const a=timeoutAct(G.s,Date.now());if(a){clearInterval(t);ok(a);}},500);});}}
@@ -1530,16 +1644,16 @@ let TOK=0;
 function newGame(mode,o){const opp=o.opp,n=opp.length+1,stack=o.stack;
   const seats=[{kind:'human',id:'me'}].concat(opp.map(id=>({kind:'bot',id})));
   const s=newTable({seed:o.seed>>>0,stacks:seats.map(()=>stack),sb:o.sb,bb:o.bb,btn:o.btn!=null?o.btn:Math.floor(Math.random()*n)});
-  G={mode,pi:o.pi==null?-1:o.pi,seats,s,H:o.H||TOUR_H,sb0:o.sb,bb0:o.bb,stack0:stack,tok:++TOK,busted:[],mood:{},tag:{},bub:{},disp:null,fx:{},key:o.key||0,t0:Date.now()};
+  G={mode,pi:o.pi==null?-1:o.pi,seats,s,H:o.H||TOUR_H,sb0:o.sb,bb0:o.bb,stack0:stack,tok:++TOK,busted:[],mood:{},tag:{},bub:{},disp:null,fx:{},key:o.key||0,t0:Date.now(),tn:o.tn||0,dev:{bad:0,tight:0,n:0,ok:0}};
   initDisp();return G;}
 function initDisp(){const s=G.s;G.disp={st:s.seats.map(p=>p.st),bet:s.seats.map(p=>p.bet),pot:s.seats.reduce((a,p)=>a+p.tot-p.bet,0),board:s.board.length,show:s.phase==='end'&&s.res&&s.res.sd,won:null,hi:null};G.logN=s.log.length;}
 function enterGame(){show('scr-game');hideModal();updHead();applyCalm();render();renderActs();YG.start();
   const tok=G.tok;setTimeout(()=>{if(alive(tok))loop(tok);},calm()?150:450);}
 // незаконченная игра — в localStorage (движок — простой JSON): перезагрузка страницы не съедает вход
-function saveLive(){if(!G||window.__demo)return;try{localStorage.setItem(LKEY,JSON.stringify({mode:G.mode,pi:G.pi,seats:G.seats.map(x=>({kind:x.kind,id:x.id})),s:G.s,H:G.H,sb0:G.sb0,bb0:G.bb0,stack0:G.stack0,busted:G.busted,key:G.key}));}catch(e){}}
+function saveLive(){if(!G||window.__demo)return;try{localStorage.setItem(LKEY,JSON.stringify({mode:G.mode,pi:G.pi,seats:G.seats.map(x=>({kind:x.kind,id:x.id})),s:G.s,H:G.H,sb0:G.sb0,bb0:G.bb0,stack0:G.stack0,busted:G.busted,key:G.key,tn:G.tn,dev:G.dev}));}catch(e){}}
 function liveGet(){try{const o=JSON.parse(localStorage.getItem(LKEY)||'null');return o&&o.s&&Array.isArray(o.seats)&&o.s.seats&&o.s.seats.length===o.seats.length?o:null;}catch(e){return null;}}
 function liveClear(){try{localStorage.removeItem(LKEY);}catch(e){}}
-function resumeLive(o){G={mode:o.mode,pi:o.pi,seats:o.seats,s:o.s,H:o.H,sb0:o.sb0,bb0:o.bb0,stack0:o.stack0,tok:++TOK,busted:o.busted||[],mood:{},tag:{},bub:{},fx:{},key:o.key||0,t0:Date.now()};initDisp();enterGame();}
+function resumeLive(o){G={mode:o.mode,pi:o.pi,seats:o.seats,s:o.s,H:o.H,sb0:o.sb0,bb0:o.bb0,stack0:o.stack0,tok:++TOK,busted:o.busted||[],mood:{},tag:{},bub:{},fx:{},key:o.key||0,t0:Date.now(),tn:o.tn||0,dev:isObj(o.dev)?o.dev:{bad:0,tight:0,n:0,ok:0}};initDisp();enterGame();}
 // главный цикл стола
 async function loop(tok){
   while(alive(tok)){
@@ -1607,7 +1721,7 @@ async function handEnd(tok){const s=G.s,D=G.disp,r=s.res;if(!r)return;
   for(const i of winners)if(i>0){G.mood[i]='happy';if(r.sd||Math.random()<.4)sayLine(i,'win',r.sd);break;}
   if(r.sd){const loser=s.seats.map((p,i)=>i).find(i=>i>0&&s.seats[i].show&&!winners.includes(i));if(loser!=null){G.mood[loser]='sad';setTimeout(()=>sayLine(loser,'lose',true),900);}}
   // статистика игрока
-  S.hands++;if(won[0]>0)S.pots++;if(r.sd&&r.score[0]!=null&&r.score[0]>S.bestHand)S.bestHand=r.score[0];
+  S.hands++;if(won[0]>0){S.pots++;if(!isObj(S.rec))S.rec={};if(won[0]>(S.rec.pot||0)){if(S.rec.pot&&G.mode!=='daily')G.potRec=won[0];S.rec.pot=won[0];}}if(r.sd&&r.score[0]!=null&&r.score[0]>S.bestHand)S.bestHand=r.score[0];
   // выбывшие
   s.seats.forEach((p,i)=>{if(p.out&&G.busted.indexOf(i)<0&&p.c.length){G.busted.push(i);if(i>0)setTimeout(()=>sayLine(i,'bust',true),1500);}});
   if(G.mode!=='daily')save();
@@ -1619,25 +1733,37 @@ function tourOver(){const s=G.s;return s.seats[0].out||liveSeats(s)<2||s.hand>=G
 function standings(){const s=G.s,alive=s.seats.map((p,i)=>i).filter(i=>!s.seats[i].out).sort((a,b)=>s.seats[b].st-s.seats[a].st);
   const out=G.busted.slice().reverse().filter(i=>s.seats[i].out);return alive.concat(out);}
 function placeOf(i){const s=G.s,ord=standings(),p=s.seats[i];if(p.out)return ord.indexOf(i)+1;return 1+ord.filter(j=>!s.seats[j].out&&s.seats[j].st>p.st).length;}
-function sayLine(i,kind,force){if(!G||i<=0||i>=G.seats.length||G.seats[i].kind!=='bot')return;const id=G.seats[i].id,Ls=LINES[id]&&LINES[id][kind];if(!Ls)return;
+function sayLine(i,kind,force){if(!G||G.over||i<=0||i>=G.seats.length||G.seats[i].kind!=='bot')return;const id=G.seats[i].id,Ls=LINES[id]&&LINES[id][kind];if(!Ls)return;
   const now=Date.now();if(!force&&(now-(G.lastSay||0)<2600||Math.random()<.55))return;G.lastSay=now;const arr=LANG==='en'?Ls[1]:Ls[0];
   const t=arr[Math.floor(Math.random()*arr.length)];G.bub[i]={t,until:now+Math.max(2300,1000+55*t.length)};
   if(kind==='win'||kind==='hi')G.mood[i]='happy';else if(kind==='lose'||kind==='bust'||kind==='fold')G.mood[i]=kind==='fold'?'norm':'sad';else if(kind==='allin')G.mood[i]='wow';
   render();clearTimeout(G.bub[i]._t);const tok=G.tok;setTimeout(()=>{if(alive(tok))render();},Math.max(2300,1000+55*t.length)+30);}
 
 /* ---- подсказки новичку: первый турнир, по одной ---- */
-function tip(key,text){if(!G||(S.tips||{})[key]||(S.tours||0)>=2||window.__demo)return;S.tips[key]=1;save();G.tip=text;render();
-  clearTimeout(tip._t);const tok=G.tok;tip._t=setTimeout(()=>{if(alive(tok)&&G.tip===text){G.tip='';render();}},8000);}
-function tipOff(){if(G&&G.tip){G.tip='';render();}}
+// очередь: подсказки не перекрывают друг друга — каждая висит не меньше TIP_MIN, потом следующая (нажатие закрывает);
+// pri — важная (ваш ход): встаёт первой в очередь
+const TIP_MIN=3500,TIP_MAX=8000;
+function tip(key,text,pri){if(!G||(S.tips||{})[key]||(S.tours||0)>=2||window.__demo)return;S.tips[key]=1;save();
+  if(!G.tipQ)G.tipQ=[];if(!G.tip){tipShow(text);return;}
+  if(pri)G.tipQ.unshift(text);else G.tipQ.push(text);
+  if(G.tipQ.length>3)G.tipQ.length=3;
+  const tok=G.tok,wait=Math.max(0,TIP_MIN-(Date.now()-(G.tipT||0)));
+  if(pri){clearTimeout(tip._t);tip._t=setTimeout(()=>{if(alive(tok))tipNext();},wait);}}
+function tipShow(text){G.tip=text;G.tipT=Date.now();render();clearTimeout(tip._t);const tok=G.tok;
+  tip._t=setTimeout(()=>{if(alive(tok)&&G.tip===text)tipNext();},(G.tipQ&&G.tipQ.length?TIP_MIN+1500:TIP_MAX));}
+function tipNext(){if(!G)return;clearTimeout(tip._t);G.tip='';render();const n=G.tipQ&&G.tipQ.shift();
+  if(n){const tok=G.tok;tip._t=setTimeout(()=>{if(alive(tok)&&!G.tip)tipShow(n);},350);}}
+function tipOff(){if(G&&G.tip){G.tipQ=[];tipNext();}}
 function tipsOnDeal(){if(G.s.hand===1)setTimeout(()=>tip('cards',L('Это ваши две карты. Вместе с пятью общими картами на столе соберите лучшую комбинацию из пяти.','These are your two cards. Together with five shared cards on the table, make the best five-card hand.')+'<small>'+L('Таблица комбинаций — кнопка 📖 вверху','Hand rankings — the 📖 button at the top')+'</small>'),900);
   else if(G.s.hand===2)setTimeout(()=>tip('blinds',L('Малый и большой блайнд — обязательные ставки двух игроков слева от кнопки D. Кнопка ходит по кругу.','Small and big blinds are forced bets of the two players left of the D button. The button moves around the table.')),900);}
-function tipOnTurn(){if(!S.tips.act)tip('act',L('Ваш ход. Фолд — сбросить карты, Чек — пропустить, Колл — уравнять ставку, Рейз — поднять.','Your turn. Fold — give up the hand, Check — pass, Call — match the bet, Raise — bet more.'));
+function tipOnTurn(){if(!S.tips.act){tip('act',L('Ваш ход. Фолд — сбросить карты, Чек — пропустить, Колл — уравнять ставку, Рейз — поднять.','Your turn. Fold — give up the hand, Check — pass, Call — match the bet, Raise — bet more.'),1);
+    if(advOn())tip('adv',L('💡 Совет над кнопками подсказывает разумный ход, а нужная кнопка обведена жёлтым. Решаете всё равно вы.','💡 The tip above the buttons suggests a sensible move, and that button has a yellow ring. The choice is still yours.'));}
   else if(G.s.street>=1&&!S.tips.hint&&S.hint!==false)tip('hint',L('Внизу подсказка: ваша комбинация и примерный шанс выиграть против оставшихся соперников.','Below is a hint: your hand and a rough chance to win against the remaining opponents.'));}
 function tipsOnBoard(){if(G.s.street===1&&G.disp.board===3)tip('flop',L('Флоп — первые три общие карты. Потом будут тёрн (4-я) и ривер (5-я), и после каждой — круг ставок.','The flop — the first three shared cards. Then come the turn (4th) and the river (5th), each followed by a betting round.'));}
 function tipsOnShow(r){if(r.sd)tip('show',L('Вскрытие: у кого комбинация старше, тот забирает банк. Кто пошёл ва-банк, претендует только на свою долю — остальное в побочном банке.','Showdown: the best hand takes the pot. An all-in player can only win their share — the rest goes to a side pot.'));}
 
 /* ---- конец турнира / раздачи дня ---- */
-function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear();$('toast').classList.remove('on');
+function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear();$('toast').classList.remove('on');G.tipQ=[];G.tip='';G.bub={};G.say='';G.over=true;G.barMsg='';clearTimeout(tip._t);clearTimeout(toast._t);render();renderActs();
   const place=placeOf(0),n=G.seats.length,end=me.st;let html='',stars=0;
   const list=standings().map((i,k)=>{const p=s.seats[i],nm=i===0?L('Вы','You'):T2(CHARS[G.seats[i].id].n),av=i===0?meSvg(curLook()):portrait(G.seats[i].id,p.out?'sad':'norm');
     return `<div class="${i===0?'me':''}"><b>${k+1}</b><span class="av">${av}</span><span>${nm}</span><i>${p.out?L('выбыл','out'):mH(p.st)}</i></div>`;}).join('');
@@ -1646,20 +1772,27 @@ function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear(
   if(mode==='tour'){const pi=G.pi;stars=place===1?3:place===2?2:place===3&&n>=5?1:0;
     const was=S.best[pi]||0;if(stars>was)S.best[pi]=stars;
     let opened='';if(stars>=2&&pi+1<PLACES.length&&S.unlocked<pi+2){S.unlocked=pi+2;opened=T2(PLACES[pi+1].n);}
-    S.coins+=end;S.tours++;if(place===1)S.wins++;S.adW=(S.adW||0)+1;save();updCoins();
-    const diff=end-G.stack0;
-    html=`<h2 id="${place===1?'rWon':'rEnd'}">${me.out?L('Спички кончились','Out of matches'):place===1?L('Победа! 1-е место','Victory! 1st place'):L(place+'-е место',ordEn(place)+' place')}</h2>
+    const rk0=rankIdx(),ins=me.out&&(S.insN||0)<INS_N&&(S.tours||0)<INS_N,back=ins?G.stack0:0;if(ins)S.insN=(S.insN||0)+1;
+    S.coins+=end+back;S.tours++;if(place===1)S.wins++;if(!me.out)S.fin=(S.fin||0)+1;S.adW=(S.adW||0)+1;const recs=recUpd(end);save();updCoins();
+    const diff=end-G.stack0,coach=(S.tours<=10||me.out)?coachLine(me.out,place,G.dev):'';
+    html=`<h2 id="${place===1?'rWon':'rEnd'}">${me.out?L('Вы выбыли','You\'re out')+' · '+L(place+'-е место',ordEn(place)+' place'):place===1?L('Победа! 1-е место','Victory! 1st place'):L(place+'-е место',ordEn(place)+' place')}</h2>
       <div class="big-stars">${starsHtml(stars)}</div>
-      <p>${L('Вы уносите','You take home')} <b>${mH(end)}</b> ${diff>0?'<span class="nw">(+'+fmt(diff)+')</span>':''}</p>
-      <div class="places">${list}</div>${quote(q)}
+      ${ins?`<p class="won ins">🤝 ${L('Страховка новичка: вход вернули','Beginner\'s cover: buy-in returned')} +${mH(back)}</p><p class="goal">${L('Первые '+INS_N+' турнира вылет не стоит спичек','Your first '+INS_N+' tournaments, busting costs no matches')}${INS_N-S.insN>0?' · '+L('осталось','left')+': '+(INS_N-S.insN):''}</p>`
+        :`<p>${L('Вы уносите','You take home')} <b>${mH(end)}</b> ${diff>0?'<span class="nw">(+'+fmt(diff)+')</span>':''}</p>`}
+      <p class="box">${L('В коробке','In your box')}: <b>${mH(S.coins)}</b></p>
+      <div class="places">${list}</div>${coach?coachHtml(coach):quote(q)}${recs}${rankIdx()>rk0?`<p class="goal tipl">🏅 ${L('Новое звание','New rank')}: <b>${rankOf()}</b></p>`:''}
       ${opened?`<p class="goal tipl">🔓 ${L('Открылся новый стол','A new table is open')}: <b>${opened}</b></p>`:stars<2&&pi+1<PLACES.length&&S.unlocked<pi+2?`<p class="goal">${L('Займите 1-е или 2-е место — откроется следующий стол.','Finish 1st or 2nd to open the next table.')}</p>`:''}
+      ${fsLine()}${tmrwLine()}
       <div class="row"><div class="row2"><button class="btn" id="rMenu">${L('В меню','Menu')}</button><button class="btn green" id="rAgain">${L('Ещё раз','Again')}</button></div></div>`;
-    if(place===1){SND.win();confetti();}else if(me.out)SND.lose();}
+    if(place===1){SND.win();confetti();}else if(me.out&&!ins)SND.lose();else if(ins)SND.coin();}
   else if(mode==='daily'){const k=G.key,profit=end-G.stack0,won=profit>0,bonus=won?DAILY_BONUS:0;
-    S.daily[k]=Math.max(S.daily[k]||0,won?2:1);if(bonus)S.coins+=bonus;for(const d in S.daily)if(+d<dayKey(-40))delete S.daily[d];save();updCoins();
+    S.daily[k]=Math.max(S.daily[k]||0,won?2:1);if(bonus)S.coins+=bonus;for(const d in S.daily)if(+d<dayKey(-40))delete S.daily[d];
+    const wk=weekKey(),wn=dWeekN(),wkB=wn>=DAILY_WK&&!S.dwk[wk];if(wkB){S.dwk[wk]=1;S.coins+=DAILY_WK_BONUS;}for(const w in S.dwk)if(+w<wk-8)delete S.dwk[w];
+    save();updCoins();
     html=`<h2 id="${won?'rWon':'rEnd'}">${won?L('Раздача дня выиграна!','Hand of the day won!'):profit===0?L('Раздача дня: при своих','Hand of the day: broke even'):L('Раздача дня сыграна','Hand of the day played')}</h2>
       <p>${profit>0?L('Вы забрали банк','You won the pot')+': <b>+'+fmt(profit)+MT+'</b>':profit<0?L('Банк ушёл сопернику','The pot went to an opponent')+': '+fmt(profit)+MT:L('Спички остались при вас.','You kept your matches.')}</p>
       ${bonus?`<p class="won">+${mH(bonus)} ${L('в коробок','to your box')}</p>`:''}
+      <p class="goal">${L('На этой неделе','This week')}: ${dCal()}<br>${wkB?'<span class="won">+'+mH(DAILY_WK_BONUS)+'</span> '+L('за '+DAILY_WK+' раздач дня за неделю!','for '+DAILY_WK+' hands of the day this week!'):S.dwk[wk]?L('Премия недели уже ваша ✓','This week\'s bonus is yours ✓'):L('Сыграйте '+DAILY_WK+' раздач за неделю — премия','Play '+DAILY_WK+' hands this week — bonus')+' +'+mH(DAILY_WK_BONUS)+' ('+wn+' '+L('из','of')+' '+DAILY_WK+')'}</p>
       <p class="goal">${L('Раздача у всех сегодня одинаковая. Новая — завтра.','Everyone gets the same hand today. A new one tomorrow.')}</p>${quote(q)}
       <div class="row"><button class="btn green" id="rMenu">${L('В меню','Menu')}</button></div>`;
     if(won){SND.win();confetti();}}
@@ -1672,7 +1805,7 @@ function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear(
       <div class="places">${list}</div>${quote(q)}
       <div class="row">${LB.ok()?`<button class="btn blue noenter" id="rRank">🏆 ${L('Рейтинг','Leaderboard')}</button>`:''}<div class="row2"><button class="btn" id="rMenu">${L('В меню','Menu')}</button>${left>0?`<button class="btn green" id="rAgain">${L('Ещё попытка','Try again')}</button>`:''}</div></div>`;
     if(place===1){SND.win();confetti();}}
-  modal(html);G.over=true;
+  modal(html);$('mcard').classList.add('fin');G.over=true;
   const next=f=>()=>{hideModal();const go=()=>{G=null;f();};
     if(mode!=='daily'&&!me.out&&adDue()&&adReady()&&adOk())showInterstitial(go);else go();};
   $('rMenu').onclick=next(()=>{openMenu();menuPopups();});
@@ -1680,11 +1813,38 @@ function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear(
   if($('rAgain'))$('rAgain').onclick=next(()=>mode==='week'?startWeek():startTour(G0pi));
   if($('rRank'))$('rRank').onclick=()=>LB.show(()=>finishShowAgain(html,mode,G0pi));
   setTimeout(offerReturn,1200);}
-function finishShowAgain(html,mode,pi){modal(html);const next=f=>()=>{hideModal();G=null;f();};$('rMenu').onclick=next(()=>{openMenu();menuPopups();});
+function finishShowAgain(html,mode,pi){modal(html);$('mcard').classList.add('fin');const next=f=>()=>{hideModal();G=null;f();};$('rMenu').onclick=next(()=>{openMenu();menuPopups();});
   if($('rAgain'))$('rAgain').onclick=next(()=>mode==='week'?startWeek():startTour(pi));if($('rRank'))$('rRank').onclick=()=>LB.show(()=>finishShowAgain(html,mode,pi));}
 const quote=q=>q||'';
+const INS_N=3; // страховка новичка: в первых 3 турнирах вылет возвращает вход
+// слова Толика после турнира: по тому, слушался ли игрок совета (G.dev), и по итогу
+function coachLine(out,place,dev){dev=dev||{};
+  if(place===1&&!out)return L('Вот это игра! Пора за стол посерьёзнее.','Now that\'s a game! Time for a tougher table.');
+  if(dev.bad>=2&&dev.bad>=dev.tight)return L('Ты не раз уравнивал, когда совет звал сбросить. Слабые карты не жалей — сбрасывай, спички целее будут.','You called several times when the tip said fold. Don\'t cling to weak cards — fold them and keep your matches.');
+  if(dev.tight>=2)return L('Ты сбрасывал карты, с которыми стоило играть. Смелее: зовёт совет уравнять — уравнивай.','You folded hands worth playing. Be bolder: when the tip says call — call.');
+  if(out)return L('Не беда, все так начинали! Смотри на совет над кнопками и не иди ва-банк со слабыми картами.','No worries, everyone starts like this! Watch the tip above the buttons and don\'t go all-in with weak cards.');
+  if(place===1)return L('Вот это игра! Пора за стол посерьёзнее.','Now that\'s a game! Time for a tougher table.');
+  if(place===2)return L('Неплохо! Ещё чуть-чуть — и первое место твоё.','Not bad! A bit more and first place is yours.');
+  return L('Доиграл до конца — уже хорошо. Слабые карты сбрасывай, с сильными — ставь.','You made it to the end — that\'s good already. Fold weak cards, bet with strong ones.');}
+const coachHtml=t=>`<div class="coach"><span class="av">${portrait('tolik','happy')}</span><p><b>${L('Толик','Tolik')}:</b> ${t}</p></div>`;
+// что ждёт завтра (повод вернуться)
+function tmrwLine(){const st=streakState();
+  if(!st.claimed&&(S.tours||0)>=1)return `<p class="goal tmrw">🎁 ${L('В меню ждёт подарок дня','A daily gift is waiting in the menu')}: <b>+${mH(STREAK[st.day-1])}</b></p>`;
+  const nd=st.claimed?st.day%7+1:st.day;
+  return `<p class="goal tmrw">📅 ${L('Завтра','Tomorrow')}: ${L('подарок','gift')} <b>+${mH(STREAK[nd-1])}</b> ${L('и новая раздача дня','and a new hand of the day')}</p>`;}
+// личные рекорды: самый большой банк (в handEnd), больше всего спичек в коробке, лучший итог турнира
+function recUpd(end){if(!isObj(S.rec))S.rec={};const R0=S.rec,out=[],G0=G&&G.potRec;if(G)G.potRec=0;
+  if(end>(R0.end||0)){if(R0.end)out.push(L('лучший итог турнира','best tournament result')+' — '+mH(end));R0.end=end;}
+  if(S.coins>(R0.box||0)){if(R0.box&&S.coins>=R0.box+100)out.push(L('больше всего спичек в коробке','most matches in the box')+' — '+mH(S.coins));R0.box=S.coins;}
+  if(G0)out.push(L('самый большой банк','biggest pot')+' — '+mH(G0));
+  return out.length&&(S.tours||0)>=4?`<p class="goal tipl">🏅 ${L('Новый рекорд','New record')}: ${out.join(', ')}</p>`:'';}
 const ordEn=n=>n+(n===1?'st':n===2?'nd':n===3?'rd':'th');
-const DAILY_BONUS=150,WEEK_TRIES=3;
+const DAILY_BONUS=150,WEEK_TRIES=3,DAILY_WK=5,DAILY_WK_BONUS=500;
+// дни этой недели (пн…вс) для календаря раздачи дня
+function weekDays(){const d=new Date(nowMs()),dow=(d.getDay()+6)%7,o=[];for(let i=0;i<7;i++)o.push(dayKey(i-dow));return o;}
+function dWeekN(){return weekDays().filter(k=>S.daily[k]).length;}
+function dCal(){const t=dayKey(0),nm=LANG==='en'?['M','T','W','T','F','S','S']:['П','В','С','Ч','П','С','В'];
+  return '<span class="dcal">'+weekDays().map((k,i)=>`<i class="${S.daily[k]===2?'w':S.daily[k]?'p':''}${k===t?' t':''}">${S.daily[k]?'✓':nm[i]}</i>`).join('')+'</span>';}
 function confetti(){if(calm())return;const app=$('app'),W=app.clientWidth,cols=['#ffd23f','#e74c3c','#2ecc71','#3498db','#9b59b6','#e67e22'];
   for(let i=0;i<40;i++){const d=document.createElement('div');d.className='conf';d.style.background=cols[i%cols.length];const x=Math.random()*W;d.style.transform=`translate(${x}px,-20px)`;app.appendChild(d);
     const dx=x+(Math.random()-.5)*120,dy=app.clientHeight*(.6+Math.random()*.5),rot=Math.random()*720;
@@ -1708,7 +1868,7 @@ function randSeed(){try{const a=new Uint32Array(1);crypto.getRandomValues(a);ret
 function startTour(pi){const P=PLACES[pi];if(!P||S.unlocked<pi+1)return;
   if(S.coins<P.bi){noMatches(P.bi);return;}
   S.coins-=P.bi;save();updCoins();
-  newGame('tour',{pi,opp:P.o,stack:P.bi,sb:P.bi/100,bb:P.bi/50,seed:randSeed()});enterGame();}
+  newGame('tour',{pi,opp:P.o,stack:P.bi,sb:P.bi/100,bb:P.bi/50,seed:randSeed(),tn:S.tours||0});enterGame();}
 function noMatches(need){const free=needRefill(),left=adMLeft();
   modal(`<h2>${L('Не хватает спичек','Not enough matches')}</h2><p>${L('Чтобы сесть за этот стол, нужно','To sit at this table you need')} <b>${mH(need)}</b>, ${L('у вас','you have')} <b>${mH(S.coins)}</b>.</p>
     <p>${L('Выиграйте за столом попроще, заберите подарок дня или спички за рекламу.','Win at an easier table, collect the daily gift or matches for an ad.')}</p>
@@ -1724,11 +1884,29 @@ function startWeek(){const k=weekKey(),n=S.wkN[k]||0;if(n>=WEEK_TRIES){toast(L('
   S.wkN[k]=n+1;save();
   newGame('week',{opp:WEEK_OPP,stack:1000,sb:10,bb:20,seed:hash32(k,4242),btn:WEEK_OPP.length,key:k});enterGame();}
 
+/* ---- «Первые шаги»: 5 простых заданий, награда — спички (бесплатно, как подарок дня) ---- */
+const FSTEPS=[
+  {k:'t1',ic:'🃏',n:['Сыграть первый турнир','Play your first tournament'],r:200,ok:()=>(S.tours||0)>=1},
+  {k:'pots',ic:'🔥',n:['Выиграть 5 банков','Win 5 pots'],r:200,ok:()=>(S.pots||0)>=5,pr:()=>Math.min(5,S.pots||0)+'/5'},
+  {k:'fin',ic:'🏁',n:['Доиграть турнир до конца, не выбыв','Finish a tournament without busting'],r:300,ok:()=>(S.fin||0)>=1},
+  {k:'daily',ic:'🎯',n:['Сыграть раздачу дня','Play the hand of the day'],r:200,ok:()=>Object.keys(S.daily||{}).length>0},
+  {k:'top2',ic:'🔓',n:['Занять 1-е или 2-е место — открыть новый стол','Finish 1st or 2nd — open a new table'],r:400,ok:()=>(S.unlocked||1)>=2}];
+const fsLeft=()=>FSTEPS.filter(x=>!S.fsG[x.k]);
+function fsLine(){const l=fsLeft();if(!l.length)return '';const ready=l.filter(x=>x.ok()).length,done=FSTEPS.length-l.length+ready;
+  return `<p class="goal">🌱 ${L('Первые шаги','First steps')}: ${done} ${L('из','of')} ${FSTEPS.length}${ready?' · <span class="nw">'+L('награда ждёт в меню','a reward is waiting in the menu')+'</span>':''}</p>`;}
+function fsCard(){const l=fsLeft();if(!l.length)return '';const done=FSTEPS.filter(x=>S.fsG[x.k]||x.ok()).length;
+  return `<div class="fs"><b>🌱 ${L('Первые шаги','First steps')} · ${done} ${L('из','of')} ${FSTEPS.length}</b>${FSTEPS.map(x=>{const g=!!S.fsG[x.k],ok=x.ok();
+    return `<div class="fsr${g?' got':''}"><span class="fi">${g?'✅':x.ic}</span><span class="ft">${T2(x.n)}${!ok&&x.pr?' · '+x.pr():''}</span>${g?`<i>+${fmt(x.r)}</i>`:ok?`<button class="btn green fsb" data-k="${x.k}">+${mH(x.r)}</button>`:`<i>+${fmt(x.r)}${MT}</i>`}</div>`;}).join('')}</div>`;}
+function fsClaim(k){const x=FSTEPS.find(q=>q.k===k);if(!x||S.fsG[k]||!x.ok())return;S.fsG[k]=1;setCoins(S.coins+x.r);SND.coin();toast('+'+mT(x.r));
+  if(!fsLeft().length)setTimeout(()=>{SND.win();toast(L('Все первые шаги пройдены!','All first steps done!'));},700);openMenu();}
+
 /* ================= меню ================= */
 function openMenu(){G=G&&G.over?null:G;show('scr-menu');YG.stop();updCoins();applyStaticLang();
   const dk=dayKey(0),dd=S.daily[dk]||0,wk=weekKey(),wn=S.wkN[wk]||0,wOpen=(S.tours||0)>=1,dOpen=(S.tours||0)>=1||(S.hands||0)>=10;
-  let h=`<div class="rankb"><button id="rankBtn">🏅 ${rankOf(S.wins||0)} · ${L('побед','wins')}: ${S.wins||0}</button></div>`;
-  h+=`<div class="tiles"><button class="tile dl${dd?' done':''}${dOpen?'':' lock'}" id="tDaily"><span class="ic">🎯</span><b>${L('Раздача дня','Hand of the day')}</b><small>${!dOpen?L('Откроется после первого турнира','Opens after your first tournament'):dd===2?L('Выиграна ✓ Новая — завтра','Won ✓ New one tomorrow'):dd?L('Сыграна. Новая — завтра','Played. New one tomorrow'):L('Одна раздача — у всех одинаковая. Выиграй банк:','One hand — the same for everyone. Win the pot:')+' <span class="nw">+'+DAILY_BONUS+MT+'</span>'}</small>${dOpen&&!dd?'<span class="dot"></span>':''}</button>
+  const rn=rankNext();
+  let h=`<div class="rankb"><button id="rankBtn">🏅 ${rankOf()} · ${L('побед','wins')}: ${S.wins||0}${rn?`<span class="rbar"><i style="width:${Math.round(rn.f*100)}%"></i></span>`:''}</button></div>`;
+  h+=fsCard();
+  h+=`<div class="tiles"><button class="tile dl${dd?' done':''}${dOpen?'':' lock'}" id="tDaily"><span class="ic">🎯</span><b>${L('Раздача дня','Hand of the day')}</b><small>${!dOpen?L('Откроется после первого турнира','Opens after your first tournament'):(dd===2?L('Выиграна ✓ Новая — завтра','Won ✓ New one tomorrow'):dd?L('Сыграна. Новая — завтра','Played. New one tomorrow'):L('Выиграй банк:','Win the pot:')+' <span class="nw">+'+DAILY_BONUS+MT+'</span>')+dCal()}</small>${dOpen&&!dd?'<span class="dot"></span>':''}</button>
     <button class="tile wk${wOpen?'':' lock'}" id="tWeek"><span class="ic">🏆</span><b>${L('Турнир недели','Weekly tournament')}</b><small>${!wOpen?L('Откроется после первого турнира','Opens after your first tournament'):L('Лучший','Best')+': '+mH(S.wkB[wk]||0)+'<br>'+L('Попыток','Tries')+': '+(WEEK_TRIES-wn)+' '+L('из','of')+' '+WEEK_TRIES}</small></button></div>`;
   h+=`<div class="sec">${L('Столы','Tables')}</div>`;
   PLACES.forEach((P,i)=>{const open=S.unlocked>=i+1,st=S.best[i]||0,cur=open&&(i===S.unlocked-1)&&st<2;
@@ -1739,6 +1917,7 @@ function openMenu(){G=G&&G.over?null:G;show('scr-menu');YG.stop();updCoins();app
   h+=`<p style="text-align:center;color:#fff;font-weight:700;font-size:13.5px;opacity:.9;margin:14px 6px 0;text-shadow:0 1px 2px rgba(0,0,0,.5)">${L('18+ · Игра без реальных денег: спички нельзя купить, продать или вывести. Соперники — персонажи игры, они не видят ваших карт.','18+ · No real money: matches can\'t be bought, sold or cashed out. Opponents are game characters and can\'t see your cards.')}</p>`;
   $('menuBody').innerHTML=h;
   $('rankBtn').onclick=openStats;
+  $('menuBody').querySelectorAll('.fsb').forEach(b=>b.onclick=()=>fsClaim(b.dataset.k));
   $('tDaily').onclick=()=>{if(!dOpen){toast(L('Сначала сыграйте первый турнир','Play your first tournament first'));return;}startDaily();};
   $('tWeek').onclick=()=>{if(!wOpen){toast(L('Сначала сыграйте первый турнир','Play your first tournament first'));return;}openWeek();};
   $('menuBody').querySelectorAll('.place').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(S.unlocked<i+1){SND.no();toast(L('Займите 1-е или 2-е место за предыдущим столом','Finish 1st or 2nd at the previous table'));return;}openPlace(i);});
@@ -1746,6 +1925,7 @@ function openMenu(){G=G&&G.over?null:G;show('scr-menu');YG.stop();updCoins();app
 function openPlace(i){const P=PLACES[i];
   modal(`<h2>${P.ic} ${T2(P.n)}</h2><p>${T2(P.about)}</p>
     <div class="places">${P.o.map(id=>`<div><span class="av">${portrait(id)}</span><span><b>${T2(CHARS[id].full)}</b><br><small>${T2(CHARS[id].about)}</small></span><i>${T2(CHARS[id].st)}</i></div>`).join('')}</div>
+    ${botMod(i,S.tours||0)?`<p class="goal tipl">🌱 ${(S.tours||0)<3?L('Ваши первые турниры: соперники здесь играют совсем мягко.','Your first tournaments: the opponents here play very softly.'):L('Стол для разминки: соперники здесь играют мягче.','A warm-up table: the opponents here play softer.')}</p>`:''}
     <p>${L('Вход','Buy-in')}: <b>${mH(P.bi)}</b> · ${L('у каждого соперника столько же','each opponent has the same')}.<br>${TOUR_H} ${L('раздач, блайнды растут каждые','hands, blinds go up every')} ${LV_EVERY}. ${L('Что останется — ваше.','Whatever you have left is yours.')}</p>
     <div class="row"><button class="btn green" id="pGo">${L('Сесть за стол','Take a seat')} · ${mH(P.bi)}</button><button class="btn" id="pBack">${L('Назад','Back')}</button></div>`);
   $('pGo').onclick=()=>{hideModal();startTour(i);};$('pBack').onclick=hideModal;}
@@ -1756,14 +1936,17 @@ function openWeek(){const k=weekKey(),n=S.wkN[k]||0;
     <p>${L('Лучший на этой неделе','Best this week')}: <b>${mH(S.wkB[k]||0)}</b> · ${L('рекорд','record')}: <b>${mH(S.wkBest||0)}</b><br>${L('Попыток осталось','Tries left')}: <b>${WEEK_TRIES-n}</b> ${L('из','of')} ${WEEK_TRIES}</p>
     <div class="row">${n<WEEK_TRIES?`<button class="btn green" id="wGo">${L('Играть','Play')}</button>`:`<p class="goal">${L('Новые попытки — в понедельник.','New tries on Monday.')}</p>`}${LB.ok()?`<button class="btn blue noenter" id="wRank">🏆 ${L('Рейтинг','Leaderboard')}</button>`:''}<button class="btn" id="wBack">${L('Назад','Back')}</button></div>`);
   if($('wGo'))$('wGo').onclick=()=>{hideModal();startWeek();};if($('wRank'))$('wRank').onclick=()=>LB.show(openWeek);$('wBack').onclick=hideModal;}
-function openStats(){const bh=S.bestHand?handName(S.bestHand):'—';
-  modal(`<h2>🏅 ${rankOf(S.wins||0)}</h2><div class="how">
+function openStats(){const bh=S.bestHand?handName(S.bestHand):'—',rn=rankNext(),R0=isObj(S.rec)?S.rec:{};
+  modal(`<h2>🏅 ${rankOf()}</h2>${rn?`<p>${L('До звания','Next rank')} ${L('«'+rn.n+'»','"'+rn.n+'"')}: ${L('ещё ','')}<b>${rn.xp}</b> ${L('опыта','XP to go')} ${L('или','or')} <b>${rn.w}</b> ${pl(rn.w,'победа','победы','побед','win','wins')}</p><div class="rbar big"><i style="width:${Math.round(rn.f*100)}%"></i></div>
+    <p style="font-size:14px;color:#57606f">${L('Опыт','XP')}: ${xpNow()} — ${L('раздача +1, турнир +10, победа +25','hand +1, tournament +10, win +25')}</p>`:''}<div class="how">
     <p>🏆 ${L('Побед в турнирах','Tournament wins')}: <b>${S.wins||0}</b> ${L('из','of')} ${S.tours||0}</p>
     <p>🃏 ${L('Раздач сыграно','Hands played')}: <b>${S.hands||0}</b>, ${L('банков выиграно','pots won')}: <b>${S.pots||0}</b></p>
     <p>💎 ${L('Лучшая комбинация','Best hand')}: <b>${esc(bh)}</b></p>
     <p>🎯 ${L('Раздач дня выиграно','Hands of the day won')}: <b>${Object.keys(S.daily).filter(k=>S.daily[k]>=2).length}</b></p>
     <p>📈 ${L('Рекорд турнира недели','Weekly tournament record')}: <b>${mH(S.wkBest||0)}</b></p>
-    <p>${RANKS.map(r=>`<span class="nw" style="${(S.wins||0)>=r[0]?'font-weight:900':'opacity:.55'}">${T2(r[1])} (${r[0]})</span>`).join(' · ')}</p></div>
+    <p>💰 ${L('Самый большой банк','Biggest pot')}: <b>${mH(R0.pot||0)}</b> · ${L('лучший итог турнира','best tournament result')}: <b>${mH(R0.end||0)}</b></p>
+    <p>📦 ${L('Больше всего спичек в коробке','Most matches in the box')}: <b>${mH(Math.max(R0.box||0,S.coins))}</b></p>
+    <p>${RANKS.map((r,i)=>`<span class="nw" style="${rankIdx()>=i?'font-weight:900':'opacity:.55'}">${T2(r[1])}</span>`).join(' · ')}</p></div>
     <div class="row"><button class="btn" id="stOk">${L('Закрыть','Close')}</button></div>`);$('stOk').onclick=hideModal;}
 // окна при входе в меню: возрастное ограничение, незаконченная игра, пустой коробок, подарок дня
 function menuPopups(){if(G||window.__demo||modalOn||$('ad').classList.contains('on'))return;
@@ -1795,7 +1978,7 @@ function openShop(){show('scr-shop');applyStaticLang();const box=$('shGrid'),k=s
   let h='';
   for(const it of list){if(!itemShow(k,it))continue;const own=owns(k,it),on=(cur===it.id)||(k!=='l'&&cur==='auto'&&it.free)||(k==='l'&&!cur&&it.id==='cap');
     const pv=k==='t'?`<div class="pv tb-${it.id}"></div>`:k==='b'?`<div class="pv" style="background:#2f6b45">${cardPrev(it.id)}</div>`:`<div class="pv" style="background:#fff5e0;display:flex;justify-content:center"><div class="av" style="width:90px;height:90px;margin-top:3px">${meSvg(it.id)}</div></div>`;
-    let how='';if(!own){if(it.place!=null)how=L('Откроется','Opens')+': '+T2(PLACES[it.place].n);else if(it.champ)how=L('За 3 звезды в шахматном клубе','For 3 stars at the chess club');else if(it.streak)how=L('За 7 дней подряд','For 7 days in a row');else if(it.pay)how=L('Набор','Pack')+' «'+PAY_ITEMS[it.pay].name+'»';}
+    let how='';if(!own){if(it.place!=null)how=L('Откроется','Opens')+': '+T2(PLACES[it.place].n);else if(it.champ)how=L('За 3 звезды в шахматном клубе','For 3 stars at the chess club');else if(it.streak)how=L('За 7 подарков дня','For 7 daily gifts');else if(it.pay)how=L('Набор','Pack')+' «'+PAY_ITEMS[it.pay].name+'»';}
     h+=`<div class="it${on?' on':''}">${pv}<b>${T2(it.n)}</b><small>${own?(on?L('выбрано','selected'):'&nbsp;'):how}</small>
       ${own?(on?'':`<button class="btn green" data-id="${it.id}">${L('Выбрать','Select')}</button>`):it.pay&&PAY.on&&PAY.item(it.pay)?`<button class="btn blue noenter buy" data-pay="${it.pay}">${L('Купить набор','Buy the pack')}</button>`:''}</div>`;}
   box.innerHTML=h+`<p style="width:100%;text-align:center;color:#fff;font-weight:700;font-size:13.5px;opacity:.9">${L('Украшения меняют только вид. Силу соперников и удачу раздачи купить нельзя.','Decorations only change the look. You can\'t buy stronger luck or weaker opponents.')}</p>`;
@@ -1805,26 +1988,26 @@ function openShop(){show('scr-shop');applyStaticLang();const box=$('shGrid'),k=s
 function cardPrev(bk){return `<div class="cd" style="left:28%;top:10%;width:44%;height:80%;font-size:60px"><div class="b bk-${bk}"></div></div>`;}
 document.querySelectorAll('#shTabs button').forEach(b=>b.onclick=()=>{shopTab=b.dataset.k;SND.tap();openShop();});
 
-/* ---- подарок дня: серия 7 дней, спички растут; на 7-й — рубашка «Неделя подряд». ×2 — за рекламу ---- */
+/* ---- подарок дня: 7 шагов, спички растут с каждым днём захода (пропуск НЕ сбрасывает — boost 03.10); на 7-й — рубашка «Неделя подряд». ×2 — за рекламу ---- */
 const STREAK=[100,150,200,250,300,400,600];
 function streakState(){const s=S.streak||{day:0,last:0,cyc:0},t=dayKey(0);
   if(s.last===t)return{claimed:true,day:s.day};
-  const cont=s.last===dayKey(-1)&&s.day>0;return{claimed:false,day:cont?s.day%7+1:1,broken:!cont&&s.day>0&&s.day<7};}
+  return{claimed:false,day:s.day>0?s.day%7+1:1};}
 const weekBack=()=>!S.own['b:week'];
 function showGift(){const st=streakState();let cells='';
   for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day;
     cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>${L('День','Day')} ${d}</small>${d===7?'🎁':''}+${fmt(STREAK[d-1])}${MT}${d===7&&weekBack()?'<small>'+L('и рубашка','+ card back')+'</small>':''}</div>`;}
   const r=st.claimed?0:STREAK[st.day-1];
-  modal(`<h2>🎁 ${L('Подарок дня','Daily gift')}</h2><p>${st.claimed?L('Сегодняшний подарок уже ваш. Заходите завтра!','Today\'s gift is yours. Come back tomorrow!'):st.broken?L('Серия прервалась — начинаем заново. Заходите каждый день!','The streak was broken — starting over. Come every day!'):L('Заходите каждый день — подарок растёт, на 7-й день ещё и рубашка!','Come every day — the gift grows, and on day 7 there\'s a card back too!')}</p>
+  modal(`<h2>🎁 ${L('Подарок дня','Daily gift')}</h2><p>${st.claimed?L('Сегодняшний подарок уже ваш. Заходите завтра!','Today\'s gift is yours. Come back tomorrow!'):L('С каждым днём, когда вы заходите, подарок растёт, на 7-й — ещё и рубашка! Пропустили день — не страшно, ничего не сгорает.','Each day you visit, the gift grows, and on day 7 there\'s a card back too! Missed a day? No problem, nothing is lost.')}</p>
     <div class="streak">${cells}</div>
-    <div class="row">${st.claimed?`<button class="btn" id="gClose">${L('Закрыть','Close')}</button>`:`${adOk()?`<button class="btn accent noenter" id="gX2">📺 ×2 ${L('за рекламу','for an ad')} (+${fmt(r*2)}${MT})</button>`:''}<button class="btn green" id="gGet">${L('Забрать','Collect')} +${mH(r)}</button>`}</div>`);
+    <div class="row">${st.claimed?`<button class="btn" id="gClose">${L('Закрыть','Close')}</button>`:`${adOk()&&!adNew()?`<button class="btn accent noenter" id="gX2">📺 ×2 ${L('за рекламу','for an ad')} (+${fmt(r*2)}${MT})</button>`:''}<button class="btn green" id="gGet">${L('Забрать','Collect')} +${mH(r)}</button>`}</div>`);
   if(st.claimed){$('gClose').onclick=hideModal;return;}
   $('gGet').onclick=()=>claimGift(1);
   if($('gX2'))$('gX2').onclick=()=>{hideModal();showRewarded(()=>claimGift(2),()=>showGift());};}
 function claimGift(mult){const st=streakState();if(st.claimed){hideModal();return;}
   const r=STREAK[st.day-1],back=st.day===7&&weekBack(),s=S.streak||{cyc:0};S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
   if(back)S.own['b:week']=1;S.coins+=r*mult;save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);updGiftDot();
-  modal(`<h2>${st.day===7?L('Неделя подряд!','Seven days in a row!'):L('День','Day')+' '+st.day+' ✓'}</h2><p class="won">+${mH(r*mult)}${mult>1?' <small>(×2)</small>':''}</p>
+  modal(`<h2>${st.day===7?L('Седьмой подарок!','The seventh gift!'):L('День','Day')+' '+st.day+' ✓'}</h2><p class="won">+${mH(r*mult)}${mult>1?' <small>(×2)</small>':''}</p>
     ${back?'<p class="goal tipl">'+L('Новая рубашка «Неделя подряд» — в «🎨 Украшениях»','New card back "Seven days" — in "🎨 Decorations"')+'</p>':''}
     <p>${st.day<7?L('Завтра','Tomorrow')+': +'+fmt(STREAK[st.day])+MT:L('Серия начнётся заново — и снова с подарками!','The streak starts over — with gifts again!')}</p>
     <div class="row"><button class="btn green" id="gOk">${L('Отлично!','Great!')}</button></div>`);$('gOk').onclick=()=>{hideModal();if(!G)openMenu();};}
@@ -1863,6 +2046,7 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stHint"><span>💡 ${L('Подсказка силы руки','Hand strength hint')}<br><small>${L('шанс выиграть — кроме турнира недели','chance to win — except the weekly tournament')}</small></span>${on(S.hint!==false)}</button>
+    <button class="set" id="stAdv"><span>👍 ${L('Совет: что лучше сделать','Tip: what to do')}<br><small>${L('строка над кнопками и подсвеченная кнопка — кроме турнира недели','a line above the buttons and a highlighted button — except the weekly tournament')}</small></span>${on(advSet())}</button>
     <button class="set" id="stFour"><span>🎨 ${L('Четыре цвета мастей','Four-colour suits')}<br><small>${L('бубны синие, трефы зелёные','diamonds blue, clubs green')}</small></span>${on(!!S.four)}</button>
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('без конфетти и лишнего движения','no confetti or extra motion')}</small></span>${on(calm())}</button>
     <p style="margin-top:10px">${L('Скорость соперников','Opponents\' speed')}</p><div class="opt3" id="stSp"><button data-v="slow" class="${sp==='slow'?'on':''}">${L('Не спеша','Slow')}</button><button data-v="norm" class="${sp==='norm'?'on':''}">${L('Обычно','Normal')}</button><button data-v="fast" class="${sp==='fast'?'on':''}">${L('Быстро','Fast')}</button></div>
@@ -1875,6 +2059,7 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stHint').onclick=()=>{S.hint=S.hint===false;save();updHint();openSettings();};
+  $('stAdv').onclick=()=>{S.adv=!advSet();save();if(G)renderActs();openSettings();};
   $('stFour').onclick=()=>tg('four',applyLook);
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Enabled in your device settings ("reduce motion")'));return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   $('stSp').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.speed=b.dataset.v;save();openSettings();});
