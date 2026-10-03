@@ -1,0 +1,68 @@
+/* Рыбалка с Петровичем — ТЕМЫ ОФОРМЛЕНИЯ (реестр — js/themes.js). Тема = блок переменных на body.<класс> (список — в начале css/look.css)
+   + немного своих правил формы. Основной вид «Стекло и свет» — css/look.css (без класса). */
+
+/* ===== Б «Тёплая иллюстрация» (покупка th_warm): кремовая бумага, тёмный текст, коралл, двухцветные значки, латунная лупа, без размытия ===== */
+@font-face{font-family:"RubikW";font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/rubik-cyrillic.woff2) format("woff2");unicode-range:U+0400-045F,U+0490-0491}
+@font-face{font-family:"RubikW";font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/rubik-latin.woff2) format("woff2");unicode-range:U+0020-002F,U+003A-007E,U+00A0-00FF,U+2013-2014,U+2018-201E,U+2022,U+2026,U+2039-203A,U+2116,U+2212}
+html.lk body.th-warm{
+ --font:"RubikW","LkGolos",-apple-system,Roboto,sans-serif;--app:#f6e7cf;--scrim:linear-gradient(180deg,rgba(255,246,230,.05),rgba(250,236,212,.5) 45%,rgba(246,231,207,.88));
+ --pn:#fffaf1;--pn2:#fffaf1;--pnS:#fffaf1;--pnS2:#fffaf1;--pnB:rgba(120,80,30,.12);--pnH:rgba(255,255,255,.9);--sh:0 10px 24px rgba(90,60,20,.14);--blur:none;--r:22px;
+ --tx:#2d2620;--tx2:#5b4f45;--tx3:#85776a;--txSh:none;--in:#fbf1e1;--inB:rgba(120,80,30,.12);
+ --acc1:#ff9a6a;--acc2:#ec5a33;--accT:#fff;--accSh:0 6px 16px rgba(236,90,51,.32);--sec:#fff4e4;--secB:rgba(120,80,30,.22);--secT:#2d2620;
+ --ok:#2f8a4f;--okBg:#e3f3e5;--okB:rgba(47,138,79,.4);--warn:#b0570a;--warnBg:#fff0d6;--warnB:rgba(226,160,40,.7);--bad:#c8402a;--gold:#c98a12;--bite:#1f7f74;--link:#1f6f8b;--dot:#ec5a33;
+ --tabOn:#1f8a7e;--tabOnT:#fff;--toast:#2d2620;--toastT:#fff;--modal:rgba(60,40,20,.35);--say:#fffaf1;--sayT:#2d2620;--sayN:#c2410c;--scr2:rgba(246,231,207,.5);
+ --icf:rgba(255,147,101,.25);--icw:2;
+ --cv-pn:rgba(255,250,241,.94);--cv-pnb:rgba(120,80,30,.16);--cv-tx:#2d2620;--cv-tx2:#5b4f45;--cv-track:#f1e3cc;--cv-ok:#4f9d55;--cv-warn:#f2b134;--cv-bad:#e5533d;--cv-mark:#2d2620;--cv-glow:rgba(255,200,120,.6);--cv-ring:brass;--cv-font:RubikW}
+html.lk body.th-warm .btn{border-radius:18px}
+html.lk body.th-warm .btn.green{background:linear-gradient(180deg,var(--acc1),var(--acc2));box-shadow:0 6px 14px rgba(236,90,51,.3),inset 0 2px 0 rgba(255,255,255,.35)}
+html.lk body.th-warm .btn.accent{background:#fff0d6;border:1px solid rgba(226,160,40,.6)}
+html.lk body.th-warm .btn.blue{background:#e4f2f7;border-color:rgba(31,111,139,.3)}
+html.lk body.th-warm lk-i.i-fish .ic .d{fill:rgba(31,127,116,.22)}html.lk body.th-warm lk-i.i-star .ic .d{fill:#f2b134}
+html.lk body.th-warm lk-i.i-gift,html.lk body.th-warm lk-i.i-cal{color:#ec5a33}html.lk body.th-warm lk-i.i-book,html.lk body.th-warm lk-i.i-frame{color:#9a5bb5}html.lk body.th-warm lk-i.i-mail{color:#4b8fd1}
+html.lk body.th-warm lk-i.i-rod,html.lk body.th-warm lk-i.i-bag{color:#1f8a7e}html.lk body.th-warm lk-i.i-leaf{color:#4f9d55}
+html.lk body.th-warm .scr2 .gt{background:#fffaf1;border-radius:16px;padding:8px 14px;flex:0 1 auto;margin-right:auto;box-shadow:var(--sh)}
+/* лавка Петровича: полосатый навес над магазином */
+html.lk body.th-warm #scr-shop .gh{background:repeating-linear-gradient(90deg,#ec5a33 0 30px,#fff4e4 30px 60px);padding-bottom:22px;position:relative;box-shadow:0 6px 12px rgba(90,60,20,.12)}
+html.lk body.th-warm #scr-shop .gh::after{content:"";position:absolute;left:0;right:0;bottom:-12px;height:14px;background:radial-gradient(circle at 15px 0,#ec5a33 14px,transparent 15px) 0 0/60px 14px repeat-x,radial-gradient(circle at 45px 0,#fff4e4 14px,transparent 15px) 0 0/60px 14px repeat-x}
+html.lk body.th-warm #scr-shop .tabs{margin-top:16px}
+html.lk body.th-warm .ti .ic.lkart,html.lk body.th-warm .pay .set .lkpa{background:#fbe9d3}
+html.lk body.th-warm .ti.lkbt:nth-child(6n+2) .ic.lkart{background:#e4f2ef}html.lk body.th-warm .ti.lkbt:nth-child(6n+3) .ic.lkart{background:#fdf0cf}html.lk body.th-warm .ti.lkbt:nth-child(6n+4) .ic.lkart{background:#f1e4f6}html.lk body.th-warm .ti.lkbt:nth-child(6n+5) .ic.lkart{background:#e5eefb}
+html.lk body.th-warm .lkbar .now{background:#1f8a7e}
+html.lk body.th-warm .tcard.a3club{background:linear-gradient(135deg,#fff0d6,#fffaf1);border-color:rgba(226,160,40,.6)}
+html.lk body.th-warm #catch.big{box-shadow:0 0 0 3px #f2b134,0 12px 40px rgba(90,60,20,.3)}
+html.lk body.th-warm .logo lk-i.i-rod{color:#fff}
+html.lk body.th-warm .a3g .ai{background:#fbe9d3}
+html.lk body.th-warm .fbfore{background:linear-gradient(90deg,#e4f2f7,#fffaf1)}
+
+/* ===== В «Природный минимализм» (за 15 роликов): песок и белое, хвоя — единственный цвет действия, тонкие линии, шкала «мягко · туго · порвёт» ===== */
+html.lk body.th-nature{
+ --app:#f3f1ea;--scrim:linear-gradient(180deg,rgba(243,241,234,0),rgba(243,241,234,.62) 42%,rgba(243,241,234,.96) 78%);
+ --pn:rgba(255,255,255,.86);--pn2:#ffffff;--pnS:#ffffff;--pnS2:#ffffff;--pnB:#e2ddd0;--pnH:rgba(255,255,255,0);--sh:0 1px 3px rgba(23,38,31,.07);--blur:saturate(140%) blur(14px);--r:18px;
+ --tx:#17261f;--tx2:#4a5a51;--tx3:#78847d;--txSh:none;--in:#f6f4ee;--inB:#e2ddd0;
+ --acc1:#1e6a53;--acc2:#1e6a53;--accT:#fff;--accSh:none;--sec:#efece3;--secB:#e2ddd0;--secT:#17261f;
+ --ok:#1e6a53;--okBg:#e4f0ea;--okB:rgba(30,106,83,.35);--warn:#ad5a1c;--warnBg:#fbeee2;--warnB:rgba(224,135,79,.55);--bad:#c0452f;--gold:#b5850f;--bite:#2f6f8e;--link:#2f6f8e;--dot:#e0874f;
+ --tabOn:#1e6a53;--tabOnT:#fff;--toast:#17261f;--toastT:#fff;--modal:rgba(23,38,31,.28);--say:#ffffff;--sayT:#17261f;--sayN:#1e6a53;--scr2:rgba(243,241,234,.72);
+ --icf:none;--icw:1.6;--icc:#1e6a53;
+ --cv-pn:rgba(255,255,255,.9);--cv-pnb:#e2ddd0;--cv-tx:#17261f;--cv-tx2:#4a5a51;--cv-track:#e9e5da;--cv-ok:#3c9a76;--cv-warn:#e0b04f;--cv-bad:#d2553d;--cv-mark:#1e6a53;--cv-glow:rgba(30,106,83,.35);--cv-ring:finder;--cv-ringc:#ffffff;--cv-ringc2:rgba(30,106,83,.55);--cv-lbl:1}
+html.lk body.th-nature .btn{border-radius:26px;font-weight:500}
+html.lk body.th-nature .btn.green{font-weight:600}
+html.lk body.th-nature .btn.accent{background:#fbeee2;border:1px solid rgba(224,135,79,.45)}
+html.lk body.th-nature .btn.blue{background:#e7f0f4;border:1px solid rgba(47,111,142,.3)}
+html.lk body.th-nature .plc b,html.lk body.th-nature .card h2,html.lk body.th-nature .sect{font-weight:500}
+html.lk body.th-nature .coins-won{font-size:28px}
+html.lk body.th-nature .ti .ic.lkart,html.lk body.th-nature .pay .set .lkpa{background:#f3f1ea}
+html.lk body.th-nature lk-i.i-star,html.lk body.th-nature lk-i.i-trophy,html.lk body.th-nature lk-i.i-medal{color:#b5850f}
+html.lk body.th-nature .logo lk-i.i-rod{color:#fff}
+html.lk body.th-nature .lkbar .now{background:#1e6a53}
+html.lk body.th-nature .tcard.a3club{background:#fbf6ea;border-color:#e6d6ac}
+html.lk body.th-nature .fbfore{background:#eef4f6}
+html.lk body.th-nature .gbar i{background:#e0874f}html.lk body.th-nature .goalb.ok .gbar i,html.lk body.th-nature .gbar.g i{background:#1e6a53}
+
+/* ===== «Зимняя рыбалка» (сезон 1 декабря — 28 февраля; зашёл в сезон — навсегда): тот же вид А, иней и лёд ===== */
+html.lk body.th-winter{
+ --app:#2b4a63;--scrim:linear-gradient(180deg,rgba(220,238,255,.18),rgba(20,40,64,.5) 45%,rgba(14,30,50,.85));
+ --pn:rgba(22,44,70,.44);--pn2:rgba(20,40,64,.72);--pnS:rgba(22,44,70,.88);--pnS2:rgba(20,40,64,.95);--pnB:rgba(220,240,255,.32);--pnH:rgba(255,255,255,.16);
+ --acc1:#f2fbff;--acc2:#8fd0ff;--accT:#0d2a44;--accSh:0 6px 18px rgba(143,208,255,.4);--gold:#ffe08a;--bite:#bfe6ff;--dot:#7cc4f5;
+ --warnBg:rgba(191,230,255,.14);--warnB:rgba(191,230,255,.5);--tabOnT:#0d2a44;--scr2:linear-gradient(180deg,rgba(14,30,50,.2),rgba(14,30,50,.6));
+ --cv-pn:rgba(20,40,64,.55);--cv-ok:#9fe0ff;--cv-warn:#fff0a0;--cv-ringc:#f2fbff;--cv-ringc2:rgba(191,230,255,.4)}
+html.lk body.th-winter #app{background:radial-gradient(circle at 20% 12%,rgba(255,255,255,.5) 0 1.5px,transparent 2.5px) 0 0/90px 110px,radial-gradient(circle at 70% 60%,rgba(255,255,255,.4) 0 1.2px,transparent 2px) 0 0/130px 90px,var(--scrim),var(--bgimg,linear-gradient(#8fb5cf,#2f5163)) center/cover no-repeat,var(--app)}

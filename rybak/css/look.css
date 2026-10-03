@@ -1,0 +1,294 @@
+/* Рыбалка с Петровичем — ВИД «Стекло и свет» (основной для всех, rlook 03.10). Макет: hobby-analytics/release-f/rybak-look/a-glass.html.
+   Всё — через CSS-переменные на html.lk; тема (css/themes.css) переопределяет их на body.th-<id>. Правила — с префиксом html.lk (сильнее встроенного CSS).
+   Сцена (холст), рыбы, Петрович, лупа — не трогаются; рамка лупы и шкала натяжения рисуются по --cv-* (js/look.js).
+   Запасной вид без размытия: старые WebView без backdrop-filter (@supports) и слабые телефоны (body.nb) — те же панели плотнее.
+   Старые WebView: без inset, без gap у flex без запасного (margin), шрифт — свой woff2 офлайн, если не загрузился — системный. */
+@font-face{font-family:"LkGolos";font-style:normal;font-weight:400 600;font-display:swap;src:url(fonts/golos-text.woff2) format("woff2")}
+html.lk{
+ --font:"LkGolos",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+ --app:#2a4152;--scrim:linear-gradient(180deg,rgba(14,24,34,.18),rgba(14,24,34,.5) 45%,rgba(14,24,34,.8));
+ --pn:rgba(16,26,36,.42);--pn2:rgba(16,26,36,.66);--pnS:rgba(20,32,44,.86);--pnS2:rgba(20,32,44,.94);--pnB:rgba(255,255,255,.2);--pnH:rgba(255,255,255,.1);
+ --sh:0 8px 28px rgba(0,0,0,.18);--blur:saturate(160%) blur(18px);--r:20px;
+ --tx:#fff;--tx2:rgba(255,255,255,.84);--tx3:rgba(255,255,255,.66);--txSh:0 1px 3px rgba(0,0,0,.55);
+ --in:rgba(255,255,255,.08);--inB:rgba(255,255,255,.14);
+ --acc1:#ffcf7a;--acc2:#ff8f4f;--accT:#3b1c00;--accSh:0 6px 18px rgba(255,140,70,.35);
+ --sec:rgba(255,255,255,.14);--secB:rgba(255,255,255,.28);--secT:#fff;
+ --ok:#6be3b0;--okBg:rgba(107,227,176,.16);--okB:rgba(107,227,176,.5);--warn:#ffd36b;--warnBg:rgba(255,207,122,.15);--warnB:rgba(255,207,122,.5);
+ --bad:#ff9a8b;--gold:#ffd27a;--bite:#8fdcff;--link:#a9e3ff;--dot:#ff8f4f;
+ --tabOn:rgba(255,255,255,.92);--tabOnT:#16232e;--toast:rgba(16,26,36,.88);--modal:rgba(8,14,20,.5);
+ --say:rgba(16,26,36,.72);--toastT:#fff;--scr2:linear-gradient(180deg,rgba(12,22,32,.2),rgba(12,22,32,.55));--sayT:#fff;--sayN:#ffd27a;
+ --icf:none;--icw:1.8;--icc:currentColor;
+ --ink:var(--tx);--muted:var(--tx2);--card:var(--pn2);
+ /* холст (js/look.js): шкала натяжения и рамка лупы */
+ --cv-pn:rgba(16,26,36,.52);--cv-pnb:rgba(255,255,255,.22);--cv-tx:#fff;--cv-tx2:rgba(255,255,255,.8);--cv-track:rgba(255,255,255,.16);--cv-ok:#6be3b0;--cv-warn:#ffd36b;--cv-bad:#ff7b6b;
+ --cv-mark:#fff;--cv-glow:rgba(255,255,255,.85);--cv-ring:glass;--cv-ringc:#ffffff;--cv-ringc2:rgba(255,255,255,.28);--cv-lbl:0;--cv-font:LkGolos}
+html.lk body,html.lk button{font-family:var(--font)}
+html.lk body{-webkit-font-smoothing:antialiased;background:#1a2833}
+html.lk #app{background:var(--scrim),var(--bgimg,linear-gradient(#6f9db3,#2f5163)) center/cover no-repeat,var(--app)}
+
+/* ---- значки (js/look.js): своя линия вместо эмодзи; эмодзи — скрытым текстом ---- */
+lk-i{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.22em;line-height:1;position:relative;flex:none}
+lk-nw{white-space:nowrap}/*BL1: число + монета + знак — одной строкой*/
+lk-i>svg{width:100%;height:100%;display:block;overflow:visible}
+lk-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+html.lk .ic{fill:none;stroke:var(--icc);stroke-width:var(--icw);stroke-linecap:round;stroke-linejoin:round}
+html.lk .ic .d{fill:var(--icf)}
+lk-i.i-fish{color:var(--bite)}lk-i.i-fish .ic .d{fill:rgba(143,220,255,.3)}
+lk-i.i-star,lk-i.i-trophy,lk-i.i-medal,lk-i.i-spark,lk-i.i-card,lk-i.i-cup,lk-i.i-leaf,lk-i.i-sun,lk-i.i-gift,lk-i.i-fore{color:var(--gold)}
+lk-i.i-star .ic .d{fill:var(--gold)}
+lk-i.i-warn{color:var(--warn)}lk-i.i-ad{color:var(--gold)}lk-i.i-coin{width:1.2em;height:1.2em;vertical-align:-.25em}
+lk-i.i-art{width:1.6em;height:1.6em;vertical-align:-.45em}lk-i.i-av{width:100%;height:100%;border-radius:50%;overflow:hidden;vertical-align:0}
+html.lk .coin{width:22px;height:22px}
+
+/* ---- стекло: одна формула на всё ---- */
+html.lk .logo,html.lk .icon,html.lk .pill,html.lk .goalb,html.lk .plc,html.lk .mnav,html.lk .rankb button,html.lk .b1ch,html.lk .b1sea,html.lk .a3m,html.lk .fbfore,html.lk .a2card,
+html.lk .tabs,html.lk .ti,html.lk .fc2,html.lk .card,html.lk #catch,html.lk .toast,html.lk #baitBtn,html.lk #fCasts,html.lk #scr-fish .gt,html.lk #hint,html.lk .fbzb,html.lk .pay .set,html.lk #say{
+ background:var(--pn);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--pnB);box-shadow:var(--sh),inset 0 1px 0 var(--pnH);color:var(--tx)}
+html.lk .card,html.lk #catch{background:var(--pn2)}
+html.lk .toast{background:var(--toast)}html.lk #say{background:var(--say)}
+/* старые WebView без размытия и слабые телефоны: плотнее, без размытия */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+ html.lk .logo,html.lk .icon,html.lk .pill,html.lk .goalb,html.lk .plc,html.lk .mnav,html.lk .rankb button,html.lk .b1ch,html.lk .b1sea,html.lk .a3m,html.lk .fbfore,html.lk .a2card,
+ html.lk .tabs,html.lk .ti,html.lk .fc2,html.lk .toast,html.lk #baitBtn,html.lk #fCasts,html.lk #scr-fish .gt,html.lk #hint,html.lk .fbzb,html.lk .pay .set,html.lk #say{background:var(--pnS)}
+ html.lk .card,html.lk #catch{background:var(--pnS2)}}
+html.lk body.nb .logo,html.lk body.nb .icon,html.lk body.nb .pill,html.lk body.nb .goalb,html.lk body.nb .plc,html.lk body.nb .mnav,html.lk body.nb .rankb button,html.lk body.nb .b1ch,html.lk body.nb .b1sea,html.lk body.nb .a3m,html.lk body.nb .fbfore,html.lk body.nb .a2card,
+html.lk body.nb .tabs,html.lk body.nb .ti,html.lk body.nb .fc2,html.lk body.nb .toast,html.lk body.nb #baitBtn,html.lk body.nb #fCasts,html.lk body.nb #scr-fish .gt,html.lk body.nb #hint,html.lk body.nb .fbzb,html.lk body.nb .pay .set,html.lk body.nb #say{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--pnS)}
+html.lk body.nb .card,html.lk body.nb #catch{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--pnS2)}
+
+/* ---- кнопки: главная — «рассвет», остальные — прозрачные светлые; никаких «кирпичей» ---- */
+html.lk .btn{background:var(--sec);border:1px solid var(--secB);color:var(--secT);box-shadow:none;border-radius:16px;font-weight:600;text-shadow:none;transition:transform .08s,filter .08s}
+html.lk .btn:active{transform:scale(.97);box-shadow:none}
+html.lk .btn.green,html.lk .btn.buy.green{background:linear-gradient(140deg,var(--acc1),var(--acc2));color:var(--accT);border:0;box-shadow:var(--accSh),inset 0 1px 0 rgba(255,255,255,.45);text-shadow:none}
+html.lk .btn.green:active{box-shadow:none}
+html.lk .btn.green,html.lk .pbuy b,html.lk .sd.today,html.lk .rib,html.lk .plc .pr,html.lk .tabs>button.on,html.lk .a3tabs button.on{--icc:currentColor}
+html.lk .btn.accent{background:var(--warnBg);border:1px dashed var(--warnB);color:var(--tx);box-shadow:none;text-shadow:none}
+html.lk .btn.blue{background:rgba(143,220,255,.14);border:1px solid rgba(143,220,255,.4);color:var(--tx);box-shadow:none;text-shadow:none}
+html.lk .btn.accent lk-i.i-ad,html.lk .btn.accent lk-i.i-cal{color:var(--gold)}
+html.lk .btn[disabled]{opacity:.45}
+html.lk .icon{border-radius:16px;font-weight:600;color:var(--tx)}
+html.lk .pill{border-radius:24px;font-weight:600;color:var(--tx)}
+html.lk .dot{background:var(--dot);box-shadow:0 0 0 2px rgba(16,26,36,.7)}
+
+/* ---- карта ---- */
+html.lk .mh{background:none}
+html.lk .logo{flex:0 1 auto;margin-right:auto;border-radius:18px;padding:6px 14px 6px 8px;font-weight:600;font-size:18px;line-height:1.1;text-shadow:none;display:flex;align-items:center;min-height:52px}
+html.lk .logo lk-i.i-rod{width:38px;height:38px;border-radius:13px;background:linear-gradient(140deg,var(--acc1),var(--acc2));color:var(--accT);padding:7px;margin-right:10px;vertical-align:middle}
+html.lk .hdr-r .icon,html.lk .gh .icon{width:52px;height:52px}
+html.lk .hdr-r .pill{min-height:52px;padding:0 14px 0 10px;font-size:19px}
+html.lk .goalb{border-radius:var(--r);font-weight:500;color:var(--tx)}
+html.lk .goalb .gr{color:var(--gold);font-weight:600}html.lk .goalb.ok{background:var(--pn);border-color:var(--okB)}html.lk .goalb.ok .gr{color:var(--ok)}
+html.lk .gbar{background:var(--in);height:8px}html.lk .gbar i{background:linear-gradient(90deg,var(--acc1),var(--acc2))}
+html.lk .goalb.ok .gbar i,html.lk .gbar.g i{background:linear-gradient(90deg,var(--ok),#b8f5d8)}
+html.lk .rankb button{color:var(--tx);font-weight:600}
+html.lk .b1ch{font-weight:600;color:var(--tx);border-radius:16px}html.lk .b1ch.au{border-color:var(--warnB)}html.lk .b1ch.cl{border-color:var(--gold)}
+html.lk .b1sea{border-radius:14px;padding:8px 12px;color:var(--tx2);font-weight:500}
+html.lk .a3m{border-radius:18px;color:var(--tx);font-weight:500}html.lk .a3m b{font-weight:600}html.lk .a3m small{color:var(--tx2);font-weight:500}
+html.lk .a3m.au{border-color:var(--warnB)}html.lk .a3m.cl{border-color:var(--gold);box-shadow:var(--sh),0 0 0 1px var(--gold) inset}html.lk .a3m.off{opacity:.75}
+html.lk .fbfore{border-radius:18px;color:var(--tx);background:linear-gradient(90deg,rgba(143,220,255,.14),transparent),var(--pn)}html.lk .fbfore b{font-weight:600}html.lk .fbfore small{color:var(--link);font-weight:500}
+html.lk .plc{border-radius:var(--r);min-height:104px}
+html.lk .plc canvas{width:108px}
+html.lk .plc b{font-weight:600;font-size:19px;color:var(--tx)}
+html.lk .plc small{color:var(--tx2);font-weight:500}
+html.lk .plc .fc{color:var(--bite);font-weight:500}html.lk .plc small.wr{color:var(--warn);font-weight:600}html.lk .plc small.a3d{color:var(--gold);font-weight:600}
+html.lk .plc .pr{background:linear-gradient(140deg,var(--acc1),var(--acc2));color:var(--accT);font-weight:600}
+html.lk .plc .pr.no{background:var(--sec);color:var(--tx2)}
+html.lk .plc.lock{background:var(--pn)}html.lk .plc.lock canvas{filter:grayscale(.6) brightness(.7)}
+html.lk .plc.new::after{background:var(--dot)}
+html.lk .mnav{margin:0 10px 10px;margin-bottom:max(10px,env(safe-area-inset-bottom,0px));border-radius:26px;padding:8px}
+html.lk .nrow .btn{font-weight:600}
+html.lk .nrow .btn.sq{background:transparent;border:0;color:var(--tx);font-size:24px}
+html.lk .nrow .btn.sq small{font-size:16px;font-weight:500;color:var(--tx2)}
+html.lk .nrow .btn.sq:active{background:var(--sec)}
+html.lk .btn.sq.fbspb{color:var(--gold)}html.lk .btn.sq.fbspb small{color:var(--gold)}
+html.lk .wtxt{color:var(--tx2)}
+html.lk .a2card{border-radius:18px}html.lk .a2l{color:var(--tx);font-weight:500}html.lk .a2sec{color:var(--tx);font-weight:600}html.lk .a2n{color:var(--tx2)!important}
+html.lk .a2bars i{background:rgba(143,220,255,.4)}html.lk .a2bars i.now{background:var(--bite)}html.lk .a2ml span{color:var(--tx3)}html.lk .a2ml span.now{color:var(--bite)}
+html.lk .a2t{color:var(--link)!important}html.lk .a2q{color:var(--tx3)}html.lk .a2qm{background:var(--sec);border:1px solid var(--secB)}
+html.lk .a2s,html.lk .fc2 .st{color:var(--gold)}html.lk .a2s em,html.lk .fc2 .st em{color:var(--tx3);opacity:.6}
+
+/* ---- рыбалка: сцена открыта, панели маленькие ---- */
+html.lk #scr-fish .gh{background:none}
+html.lk #scr-fish .gt{flex:0 1 auto;margin-right:auto;border-radius:18px;padding:6px 14px;text-shadow:none;font-weight:600;min-height:52px;display:flex;flex-direction:column;justify-content:center}
+html.lk .gt .sub{font-weight:500;color:var(--tx2)}
+html.lk #baitBtn{border-radius:20px;padding:6px 12px 6px 8px;font-weight:600;color:var(--tx);min-height:56px}
+html.lk #baitBtn small{color:var(--tx2);font-weight:500}
+html.lk #baitBtn lk-i.i-art{width:34px;height:34px;margin-right:4px;vertical-align:middle}
+html.lk #hint{border-radius:20px;padding:8px 10px;font-weight:500;text-shadow:none;min-height:56px;display:flex;align-items:center;justify-content:center}
+html.lk #hint:empty{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.lk #hint.big{color:var(--gold);font-weight:600}
+html.lk #fCasts{border-radius:20px;font-weight:600;min-height:56px;display:flex;align-items:center}
+html.lk .fbzb{border-radius:16px;font-weight:600;color:var(--tx)}
+html.lk #say{border-radius:18px;color:var(--sayT);font-weight:500;padding:9px 12px}
+html.lk #say b{color:var(--sayN);font-weight:600}
+html.lk #say::after{border-top-color:var(--say)}
+html.lk #catch{border-radius:26px}
+html.lk #catch h3{font-weight:600}html.lk #catch .w{color:var(--bite);font-weight:600}
+html.lk #catch p{color:var(--tx2);font-weight:500}
+html.lk #catch .tags span{background:var(--warnBg);color:var(--gold);font-weight:600;border:1px solid var(--warnB)}
+html.lk #catch .tags span.g{background:var(--okBg);color:var(--ok);border-color:var(--okB)}
+html.lk #catch.big{box-shadow:0 0 0 2px var(--gold),0 12px 40px rgba(0,0,0,.4)}
+html.lk .rib{background:linear-gradient(140deg,var(--acc1),var(--acc2));color:var(--accT);box-shadow:var(--accSh);font-weight:600;letter-spacing:.6px}
+html.lk .rib.nw2{background:linear-gradient(140deg,#b8f5d8,var(--ok));color:#063321;box-shadow:0 6px 18px rgba(107,227,176,.35)}
+
+/* ---- магазин, альбом: экран без белого листа, карточки стекла ---- */
+html.lk .scr2{background:var(--scr2)}
+html.lk .scr2 .gh{background:none}html.lk .scr2 .gt{color:var(--tx);text-shadow:var(--txSh);font-weight:600;font-size:20px}
+html.lk .tabs{margin:4px 12px 8px;padding:5px;border-radius:20px}
+html.lk .tabs>button{background:transparent;border-radius:15px;color:var(--tx2);font-weight:500}
+html.lk .tabs>button.on{background:var(--tabOn);color:var(--tabOnT);font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+html.lk #shTabs .fbsp{color:var(--gold)}html.lk #shTabs .fbsp{position:relative;overflow:visible}html.lk #shTabs .fbsp::after{content:"₽";position:absolute;top:-4px;right:2px;font-size:12px;font-weight:700;line-height:18px;padding:0 6px;border-radius:9px;background:var(--acc2);color:#fff;vertical-align:2px}
+html.lk #shTabs .fbsp.on{background:var(--tabOn);color:var(--tabOnT)}
+html.lk .list{background:transparent;margin:0 12px 12px;padding:2px 0 16px;border-radius:0}
+html.lk .ti{border-radius:var(--r);padding:12px;margin-bottom:10px;border-bottom:1px solid var(--pnB)}
+html.lk .ti:last-child{border-bottom:1px solid var(--pnB)}
+html.lk .ti .tx b{font-weight:600;font-size:18px}
+html.lk .ti .ds{color:var(--tx2);font-weight:500}html.lk .ti .ds b{color:var(--tx);font-weight:600}
+html.lk .ti .have{color:var(--ok);font-weight:600}
+html.lk .ti.hl{animation:lkhl 1.1s ease-in-out 3}
+@keyframes lkhl{50%{box-shadow:0 0 0 3px var(--acc1),var(--sh)}}
+html.lk .lvl i{background:var(--in);width:24px;height:6px}html.lk .lvl i.on{background:var(--ok)}html.lk .lvl i.nx{background:var(--okBg);box-shadow:0 0 0 1px var(--ok) inset}
+html.lk .sect{color:var(--tx);font-weight:600;font-size:19px;text-shadow:var(--txSh);margin:16px 4px 8px}
+html.lk .sect:first-child{margin-top:4px}
+html.lk .about,html.lk p.about{color:var(--tx2)!important;font-weight:500!important}
+/* снасть: рисунок, ступень, «было → станет» */
+html.lk .ti.lktk{align-items:flex-start}
+html.lk .ti .ic.lkart{width:92px;height:92px;margin-right:12px;border-radius:20px;background:radial-gradient(circle at 40% 35%,rgba(255,255,255,.3),rgba(255,255,255,.04) 70%);display:flex;align-items:center;justify-content:center;font-size:40px}
+html.lk .ti .ic.lkart svg{width:82px;height:82px}
+html.lk .ti.lkdk .ic.lkart{width:72px;height:72px}html.lk .ti.lkdk .ic.lkart svg{width:64px;height:64px}
+.lkk{display:block;font-size:15px;color:var(--tx3,#5a6770);font-weight:500}
+.lkcmp{margin-top:8px}.lkcmp-h{display:flex;justify-content:space-between;font-size:16px;color:var(--tx2,#5a6770);margin-bottom:6px}.lkcmp-h b{color:var(--tx,#26343b);font-weight:600}
+.lkbar{position:relative;height:10px;border-radius:5px;background:var(--in,#e4e0d2)}.lkbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+.lkbar .now{background:var(--tx,#2b8a3e)}.lkbar .nx{background:repeating-linear-gradient(135deg,var(--ok,#40c057) 0 5px,var(--okBg,#b2f2bb) 5px 10px)}
+.lklack{color:var(--warn,#a8480a);font-weight:600;white-space:nowrap}
+html.lk .ti.lktk .btn{align-self:center}
+/* наживка — плитки 2 в ряд */
+html.lk .lkbg{display:flex;flex-wrap:wrap;margin:0 -5px}
+html.lk .ti.lkbt{width:calc(50% - 10px);margin:0 5px 10px;flex-direction:column;align-items:flex-start;padding:10px}
+html.lk .ti.lkbt .ic.lkart{width:100%;height:76px;margin:0 0 6px}html.lk .ti.lkbt .ic.lkart svg{width:70px;height:70px}
+html.lk .ti.lkbt .tx{margin:0;width:100%}html.lk .ti.lkbt .ds{order:3;margin:2px 0 8px;font-size:16px;line-height:1.3;flex-basis:auto}
+html.lk .ti.lkbt .btn,html.lk .ti.lkbt .have{order:4;width:100%;margin-top:auto;text-align:center;min-height:48px;display:flex;align-items:center;justify-content:center}
+html.lk .ti.lkbt.free{border-color:var(--okB)}
+@media (min-width:700px){html.lk .ti.lkbt{width:calc(33.33% - 10px)}}
+/* покупки за деньги: рисунок товара, цена — кнопкой */
+html.lk .pay{margin-top:12px}
+html.lk .pay h3{color:var(--tx);font-size:19px;font-weight:600;text-shadow:var(--txSh);margin:0 4px 8px}
+html.lk .pay .set{border-radius:var(--r);padding:10px 12px 10px 10px;margin-top:10px;font-weight:500;color:var(--tx);min-height:88px}
+html.lk .pay .set span{font-weight:600}html.lk .pay .set small{color:var(--tx2);font-weight:500;font-size:16px}
+html.lk .pay .set .lkpa{flex:none;width:72px;height:72px;margin-right:12px;padding:0;border-radius:18px;background:radial-gradient(circle at 40% 35%,rgba(255,255,255,.3),rgba(255,255,255,.04) 70%);display:flex;align-items:center;justify-content:center}
+html.lk .pay .set .lkpa svg{width:64px;height:64px}
+html.lk .pay .set>span:not(.lkpa){flex:1;min-width:0}
+html.lk .pbuy b{flex:none;min-width:84px;min-height:48px;padding:0 12px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(140deg,var(--acc1),var(--acc2));color:var(--accT);font-weight:600;font-size:18px;box-shadow:var(--accSh)}
+html.lk .pown i{color:var(--ok)!important;font-weight:600}
+html.lk .tcard{background:var(--in);border:1px solid var(--inB);border-radius:var(--r);color:var(--tx)}
+html.lk .tcard h3{font-weight:600}
+html.lk .tcard.a3club{background:linear-gradient(135deg,rgba(255,207,122,.22),rgba(31,79,99,.4));border-color:var(--warnB)}
+html.lk .a3club .a3li{color:var(--tx)!important;font-weight:500}
+/* альбом */
+html.lk .fc2{border-radius:18px}html.lk .fc2 b{font-weight:600;color:var(--tx)}html.lk .fc2 small{color:var(--tx2);font-weight:500}
+html.lk .fc2.no b{color:var(--tx3)}html.lk .fc2.leg{border-color:var(--gold)}
+html.lk .fc2.gd{background:linear-gradient(160deg,rgba(255,210,122,.35),var(--pn));box-shadow:0 0 0 2px var(--gold) inset}
+html.lk .setr{background:var(--in);border:1px solid var(--inB);color:var(--tx);font-weight:500}html.lk .setr.rdy{background:var(--warnBg);border-color:var(--warnB)}html.lk .setr.done{background:var(--okBg);color:var(--ok)}
+html.lk .cup{background:var(--in);border:1px solid var(--inB);color:var(--gold)}
+
+/* ---- окна ---- */
+html.lk .modal{background:var(--modal)}
+html.lk .card{border-radius:26px;color:var(--tx)}
+html.lk .card h2{font-weight:600;color:var(--tx)}
+html.lk .card p{color:var(--tx2);font-weight:500}
+html.lk .card p b{color:var(--tx)}
+html.lk .mx{background:var(--sec);color:var(--tx);border:1px solid var(--secB);font-weight:400}
+html.lk .coins-won{color:var(--gold)!important;font-weight:600}
+html.lk .quote{background:var(--in);border:1px solid var(--inB);color:var(--tx)!important}
+html.lk .quote b{color:var(--gold);font-weight:600}
+html.lk .goal{color:var(--tx)!important;font-weight:500}
+html.lk .goal.tipl{background:var(--okBg);border:1px solid var(--okB);color:var(--tx)!important}
+html.lk .goal.wrn{color:var(--warn)!important;font-weight:600}
+html.lk .tmr{background:rgba(143,220,255,.12);border:1px solid rgba(143,220,255,.3);color:var(--tx)!important}
+html.lk .ctab td{border-bottom:1px solid var(--inB);color:var(--tx);font-weight:500}
+html.lk .ctab td:last-child{color:var(--bite)}
+html.lk .ctab tr.lost td{color:var(--tx3)}
+html.lk .ctab .lkfi canvas{width:64px;height:auto;vertical-align:middle;margin-right:8px}
+html.lk .set{background:var(--in);border:1px solid var(--inB);color:var(--tx);font-weight:500;border-radius:16px}
+html.lk .set small{color:var(--tx2);font-weight:500}
+html.lk .set i{background:var(--ok);color:#063321;font-weight:600}
+html.lk .set i.off{background:var(--sec);color:var(--tx2)}
+html.lk .set i.go{background:none;color:var(--tx2)}
+html.lk .how p{color:var(--tx)}
+html.lk .sd{background:var(--in);border:1px solid var(--inB);color:var(--tx2);font-weight:600}
+html.lk .sd.done{background:var(--okBg);color:var(--ok)}
+html.lk .sd.today{background:linear-gradient(140deg,var(--acc1),var(--acc2));color:var(--accT);box-shadow:var(--accSh);border:0}
+html.lk .sd.d7{background:var(--warnBg)}
+html.lk .lbr:nth-child(odd){background:var(--in)}html.lk .lbr.me{background:var(--warnBg)}
+html.lk .ach{background:var(--in);border:1px solid var(--inB)}html.lk .ach.done{background:var(--okBg)}html.lk .ach small{color:var(--tx2)}
+html.lk .bait{background:var(--in);border:1px solid var(--inB);color:var(--tx);font-weight:500}
+html.lk .bait.on{background:var(--okBg);box-shadow:0 0 0 2px var(--ok) inset}
+html.lk .bait small{color:var(--tx2);font-weight:500}html.lk .bait i{color:var(--bite)}html.lk .bait .ok{color:var(--ok)}
+html.lk .bait .ic{width:40px}html.lk .bait lk-i.i-art{width:40px;height:40px;vertical-align:middle}
+html.lk .wkp i{background:var(--in);color:var(--tx3)}html.lk .wkp i.on{background:var(--ok);color:#063321}html.lk .wkp i.gf{box-shadow:0 0 0 2px var(--gold) inset}
+html.lk .a3tabs button{background:var(--in);color:var(--tx2);font-weight:500}html.lk .a3tabs button.on{background:var(--tabOn);color:var(--tabOnT);font-weight:600}
+html.lk .a3g{background:var(--in);border:1px solid var(--inB);color:var(--tx);font-weight:500}
+html.lk .a3g small{color:var(--tx2);font-weight:500}html.lk .a3g.done{background:var(--okBg);color:var(--tx)}html.lk .a3g.rdy{background:var(--warnBg);border-color:var(--warnB)}
+html.lk .a3g.fbpe{background:var(--in)}html.lk .a3g.fbpe small{color:var(--tx2)}html.lk .a3g.fbl i{color:var(--link)}
+html.lk .a3g .ai{width:44px;height:44px;border-radius:50%;background:var(--sec);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
+html.lk .fbhead,html.lk #mcard p.fbhead{color:var(--tx);font-weight:600}
+html.lk .a1cr{background:var(--in);color:var(--tx)}
+html.lk .a3fc td:last-child{color:var(--tx)}html.lk .a3fc tr.fbtd td{background:var(--warnBg)}
+html.lk .mnt{background:linear-gradient(#7a5530,#4e3218);border-color:#3a2410}
+html.lk .newit .lkpic svg{width:150px;height:150px}html.lk .newit .lkpic{display:flex;justify-content:center}
+html.lk .toast{border-radius:16px;font-weight:500;color:var(--toastT)}
+html.lk .ad{background:#0e1820}
+
+/* ---- окно «🎨 Оформление» ---- */
+.thg{text-align:left}
+.thc{display:flex;align-items:flex-start;background:var(--in,#eef0e8);border:1px solid var(--inB,#ddd);border-radius:20px;padding:10px;margin-top:10px}
+.thc.on{box-shadow:0 0 0 2px var(--acc1,#2b8a3e) inset}
+.thp{position:relative;flex:none;width:76px;height:96px;border-radius:14px;overflow:hidden;margin-right:12px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.thp i{position:absolute;display:block}
+.thp-h{left:6px;right:6px;top:6px;height:12px;border-radius:6px}
+.thp-c{left:6px;right:6px;top:24px;height:38px;border-radius:9px;padding:7px 6px}
+.thp-c b{display:block;height:5px;border-radius:3px;margin-bottom:6px;opacity:.85}
+.thp-b{left:12px;right:12px;bottom:8px;height:20px;border-radius:10px}
+.thc-b{flex:1;min-width:0}.thc-b b{font-size:18px;font-weight:600}.thc-b>small{display:block;font-size:16px;color:var(--tx2,#5a6770);line-height:1.3;margin:2px 0 6px}
+.thc-f{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}.thc-f .btn{min-height:48px;padding:8px 14px;font-size:17px}
+.th-how{font-size:15px;color:var(--tx3,#5a6770);margin-right:8px}.th-on{color:var(--ok,#237032);font-weight:600}.th-lk{font-size:16px;color:var(--tx2,#5a6770)}
+.thc .gbar{margin:0 0 8px}
+
+/* ---- компьютер VK 911×800 и широкие ---- */
+@media (min-aspect-ratio:1/1) and (min-width:700px){html.lk .mnav{max-width:760px;margin-left:auto;margin-right:auto;width:calc(100% - 20px)}
+ html.lk .tabs{max-width:760px;width:calc(100% - 24px);margin-left:auto;margin-right:auto}}
+/* ---- спокойный режим и «меньше движения» ---- */
+html.lk body.calm .btn,html.lk body.calm .ti.hl{transition:none;animation:none}
+@media (prefers-reduced-motion:reduce){html.lk .btn{transition:none}html.lk .ti.hl{animation:none}}
+/* снасть: рисунок и описание сверху, «Дальше — …» и кнопка с ценой — одной строкой снизу */
+html.lk .ti.lktk .tx{flex:1 1 0;margin-right:0}
+html.lk .ti.lktk .btn,html.lk .ti.lktk .have{order:3;margin-left:auto;margin-top:10px;align-self:center}
+html.lk .ti.lktk .ds{order:2;flex:1 1 55%;min-width:0;margin-top:10px;align-self:center}
+html.lk .ti.lktk .tx{flex:1 1 calc(100% - 110px)}
+html.lk .tcard .pay .set{flex-wrap:wrap}html.lk .tcard .pay .set>span:not(.lkpa){flex:1 1 calc(100% - 90px)}html.lk .tcard .pbuy b{margin-left:auto;margin-top:8px}
+.lkcmp-h>span:last-child{white-space:nowrap;margin-left:8px}
+@media (max-width:370px){html.lk .ti .ic.lkart{width:72px;height:72px;margin-right:10px}html.lk .ti .ic.lkart svg{width:64px;height:64px}html.lk .ti.lktk .tx{flex-basis:calc(100% - 86px)}}
+html.lk .logo lk-i,html.lk .btn.green lk-i{--icc:currentColor}
+html.lk .card .pay .set .lkpa{width:56px;height:56px;margin-right:10px}html.lk .card .pay .set .lkpa svg{width:50px;height:50px}
+html.lk .card .pay .set{flex-wrap:wrap}html.lk .card .pay .set>span:not(.lkpa){flex:1 1 calc(100% - 70px)}html.lk .card .pbuy b{margin-left:auto;margin-top:6px}
+html.lk body.nb .modal,html.lk .modal{-webkit-backdrop-filter:none;backdrop-filter:none}
+html.lk body .toast,html.lk body.nb .toast{background:var(--toast)}html.lk body #say,html.lk body.nb #say{background:var(--say)}
+html.lk .a3let lk-i.i-av{width:72px;height:72px;display:inline-block}
+html.lk #btnDaily{border-style:solid}
+/* узкие телефоны (320–370): шапка и вкладки плотнее, названия не обрезаются */
+@media (max-width:370px){
+ html.lk .hdr-r .icon,html.lk .gh .icon{width:48px;height:48px;border-radius:14px}
+ html.lk .hdr-r .pill,html.lk .gh .pill{min-height:48px;padding:0 10px 0 8px;font-size:17px}
+ html.lk .logo{font-size:16px;padding:5px 10px 5px 6px;min-height:48px}html.lk .logo lk-i.i-rod{width:30px;height:30px;padding:5px;margin-right:7px;border-radius:10px}
+ html.lk #scr-fish .gt{padding:5px 10px;min-height:48px;font-size:17px;min-width:0}
+ html.lk .tabs{margin-left:8px;margin-right:8px;padding:4px}html.lk .tabs>button{padding-left:2px;padding-right:2px;font-size:16px;letter-spacing:-.3px}
+ html.lk .mh,html.lk .gh{padding-left:8px;padding-right:8px}}
+@media (max-width:370px){html.lk #shTabs>button{flex:1 1 auto}}
+/*BL1 (бэклог перед заливкой, 03.10): второстепенные подписи 15–16 → 17 px — карта, магазин, альбом, шапка, настройки, почта*/
+html.lk .nrow .btn.sq small,html.lk .nrow .btn small.wl,html.lk .fbfore small,html.lk .b1sea,html.lk .a3m small,html.lk .b1ch{font-size:17px}
+.lkk,.lkcmp-h{font-size:17px}html.lk .ti .ds,html.lk .ti.lkbt .ds,html.lk .bait small,html.lk .bait .ok{font-size:17px}
+html.lk .about{font-size:17px!important}html.lk .set,html.lk .set small,html.lk .pay .set small,html.lk .pay h3,html.lk .ach small,html.lk .sd small,html.lk .a3g small{font-size:17px}
+html.lk #baitBtn small,html.lk #say b,html.lk .quote b,html.lk .mnt,html.lk .mnt small,html.lk .cup{font-size:17px}
+@media (max-width:370px){html.lk .logo{font-size:17px;letter-spacing:-.2px}html.lk .tabs>button,html.lk #shTabs>button{font-size:17px;letter-spacing:-.5px}html.lk .b1ch{letter-spacing:-.2px}}
+@media (max-height:640px) and (max-width:370px){html.lk .mnav .nrow .btn{padding-left:4px;padding-right:4px;letter-spacing:-.4px}html.lk .mnav #btnDaily{flex:1.3 1 0;min-width:0}html.lk .mnav #btnWeek{flex:1 1 0;min-width:0}}
+html.lk #shTabs>button,html.lk #shTabs button{font-size:17px}
+html.lk .goal{font-size:17px!important}html.lk .card .goalb{font-size:17px}
