@@ -407,16 +407,16 @@ function spdBtn(o){const j=o.st==='b'?o:o.up;if(!j)return '';const W=w(),ad=adL(
   const adB=ad?`<button class="btn w noenter" data-a="spdAd" data-id="${o.id}" style="margin-top:6px"${adD('build')}>📺 ${L('на 5 дней раньше — за рекламу','5 days sooner — for an ad')}${adS('build')}</button>`:'';
   if(o.sp)return `<p class="mut" style="font-size:15px;margin:6px 0 0">⚡ ${L('уже ускорено','already sped up')}</p>`+adB;
   return `<button class="btn cr w noenter" data-a="spd" data-id="${o.id}">💎 ${GAME.CR.speed} — ${L('ускорить','speed up')}<small>${L('готово на 15 дней раньше','done 15 days sooner')}</small></button>`+adB;}
-function crAsk(n,what,fn){const c=GAME.cr();if(c<n)return crNo();
+function crAsk(n,what,fn){const c=GAME.cr();if(c<n)return crNo(n);
   modal(`<h2>💎 ${L('Потратить кристаллы?','Spend crystals?')}</h2><p style="text-align:center">${what}</p><p style="text-align:center;font-size:20px">${L('Потратить','Spend')} <b>${n} 💎</b>? ${L('Останется','Left')}: <b>${c-n} 💎</b></p>
     <div class="row"><button class="btn cr noenter" id="caYes">💎 ${L('Да, потратить','Yes, spend')} ${n}</button><button class="btn" id="caNo" data-esc>${L('Нет','No')}</button></div>`);
   $$('caYes').onclick=()=>{hideModal();fn();setTimeout(nextQ,60);};$$('caNo').onclick=()=>{snd('tap');closeM();};}
-function crNo(){snd('no');const lb=adOk()&&GAME.ladLabel?GAME.ladLabel():'',ad=!!lb;
+function crNo(need){snd('no');const lb=adOk()&&GAME.ladLabel?GAME.ladLabel():'',ad=!!lb;
   modal(`<h2>💎 ${L('Не хватает кристаллов','Not enough crystals')}</h2><p>${L(`У вас ${GAME.cr()} 💎. Кристаллы даются за первые шаги, каждый игровой год, в Планёрке, за «Ролики дня» (2, 3, 3, 4 и 6 💎 — каждый следующий щедрее) и в магазине.`,`You have ${GAME.cr()} 💎. Crystals come for first steps, every game year, in the Briefing, for daily videos (2, 3, 3, 4 and 6 💎 — each one more generous) and in the shop.`)}</p>
     <div class="row">${ad?`<button class="btn accent noenter" id="crAd">${lb}</button>`:''}<button class="btn noenter" id="crShop">🛒 ${L('Магазин','Shop')}</button><button class="btn" id="crClose" data-esc>${L('Закрыть','Close')}</button></div>${typeof adDayHtml==='function'?adDayHtml():''}`);
-  try{modalRe=crNo;}catch(e){}
+  try{modalRe=()=>crNo(need);}catch(e){}
   if($$('crAd'))$$('crAd').onclick=()=>{hideModal();GAME.ladWatch();setTimeout(nextQ,60);};
-  $$('crShop').onclick=()=>{snd('tap');try{openShop();}catch(e){}};
+  $$('crShop').onclick=()=>{snd('tap');try{openShop('cr',{from:'crno',need});}catch(e){}};
   $$('crClose').onclick=()=>{snd('tap');closeM();};}
 
 /* ---- подтверждение крупной траты (>30 % денег или уводит в минус) ---- */
@@ -677,13 +677,18 @@ function openOffline(s){if(BZ()&&BZ().offline(s))return;const W=w(),mo=s.months|
   if(s.built&&s.built.length)h+=`<p style="font-size:16px">🏗 ${L('Достроено','Completed')}: ${s.built.map(id=>{const o=W.obj.find(x=>x.id===id);return o?NM.obj(o.t):'';}).filter(Boolean).join(', ')}</p>`;
   const more=GAME.offMore(),canPay=typeof PAY!=='undefined'&&PAY.on&&!PAY.own('manager');
   h+=`<p class="mut" style="font-size:16px">${L(`Смена управляющего — ${GAME.shiftH()} ч`,`The manager’s shift is ${GAME.shiftH()} h`)}${canPay?L(', с «Управляющим» — '+GAME.SHIFT_MGR_H+' ч',', with the “Manager” — 8 h'):''}.</p>`;
-  h+=`${window.STORYUI&&STORYUI.awayHtml?STORYUI.awayHtml():''}<div class="row">${more>0&&adOk()?`<button class="btn accent noenter" id="oExt">📺 ${L('Продлить смену за рекламу','Extend the shift for an ad')}<small>+${days(more)}</small></button>`:''}
+  h+=`${window.STORYUI&&STORYUI.awayHtml?STORYUI.awayHtml():''}<div class="row">${more>0&&mgrOwn()?`<button class="btn accent noenter" id="oExtM">⏱ ${L('Продлить смену','Extend the shift')}<small>+${days(more)} · ${L('управляющий','manager')}</small></button>`:more>0&&adOk()?`<button class="btn accent noenter" id="oExt">📺 ${L('Продлить смену за рекламу','Extend the shift for an ad')}<small>+${days(more)}</small></button>`:''}
     <button class="btn green" id="oOk">${L('К делам','Back to work')}</button>${canPay?`<button class="btn noenter" id="oShop">🛒 ${L('Управляющий на '+GAME.SHIFT_MGR_H+' ч',GAME.SHIFT_MGR_H+'-hour manager')}</button>`:''}</div>`;
   modal(h);try{modalRe=()=>openOffline(s);}catch(e){}
   $$('oOk').onclick=()=>{snd('tap');closeM();if(!s.ext&&BZ()&&BZ().offAd)BZ().offAd();};
-  if($$('oExt'))$$('oExt').onclick=()=>{hideModal();STAT.place('shift');showRewarded(()=>{const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);},()=>setTimeout(nextQ,60));};
-  if($$('oShop'))$$('oShop').onclick=()=>{snd('tap');try{openShop('pack');}catch(e){}};}
+  if($$('oExt'))$$('oExt').onclick=()=>{hideModal();STAT.place('shift');showRewarded(()=>{shiftStat('ad');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);},()=>setTimeout(nextQ,60));};
+  if($$('oExtM'))$$('oExtM').onclick=()=>{snd('tap');hideModal();shiftStat('mgr');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);};   // M36: с «Управляющим» — без ролика
+  if($$('oShop'))$$('oShop').onclick=()=>{snd('tap');try{openShop('pack',{from:'off',hl:'manager'});}catch(e){}};}
 
+// M36: «Управляющий» куплен — смену продлевают без ролика; STAT shift {ad|mgr}, S.shAd — сколько раз продлили роликом (подсказка Людмилы, meta-ui.js)
+function mgrOwn(){try{return typeof PAY!=='undefined'&&PAY.own('manager');}catch(e){return false;}}
+function shiftStat(k){if(k==='ad')S.shAd=(S.shAd|0)+1;try{STAT.ev('shift',k==='ad'?{ad:1}:{mgr:1});}catch(e){}}
+window.mgrOwn=mgrOwn;window.shiftStat=shiftStat;
 /* ================= окно: торги ================= */
 function openAuc(aid){const W=w(),a=E.aucById(W,aid);if(!a||a.done){tst(L('Торги уже закончились','The auction is over'));return;}
   const p=E.plotById(W,a.p),left=Math.max(0,a.end-W.t),lim=a.V*.6,next=a.lead?a.pr+a.step:a.pr;
@@ -742,7 +747,7 @@ function openIpo(){const W=w();if(!GAME.ipoReady())return;const v=GAME.value(),h
     <div class="say">${face('wow')}<div><p>${L(`Холдинг №${W.hold} готов к IPO! Стоимость компании — <b>${M(v)}</b>, прибыль за год — <b>${M(np)}</b>. ${ragsW()&&W.hold===1?'Мы начинали с 5 000 ₽ и комнаты в общежитии. Помните листовки у метро?':`Мы начинали с ${M(W.cap)} уставного капитала.`}`,`Holding No. ${W.hold} is ready for an IPO! Company value: <b>${M(v)}</b>, profit over the year: <b>${M(np)}</b>. ${ragsW()&&W.hold===1?'We started with 5,000 ₽ and a dorm room. Remember the flyers by the metro?':`We started with ${M(W.cap)} of share capital.`}`)}</p></div></div>
     <p>${L(`После IPO вы основаете новый холдинг с репутацией ${W.rep+1}: кредиты дешевле, разведка быстрее и дешевле, стартовый капитал — ${M(800e6+200e6*(W.rep+1))}.`,`After the IPO you found a new holding with reputation ${W.rep+1}: cheaper loans, faster and cheaper exploration, starting capital ${M(800e6+200e6*(W.rep+1))}.`)}</p>
     ${ipoList(W)}
-    ${window.META&&META.ipoHtml?META.ipoHtml():''}
+    ${window.META&&META.ipoHtml?META.ipoHtml():''}${window.SHOP&&SHOP.offerHtml?SHOP.offerHtml('ipo_pack','ipo'):''}
     <div class="row"><button class="btn green noenter" id="iGo">🔔 ${L('Позвонить в колокол — основать новый холдинг','Ring the bell — found a new holding')}</button><button class="btn" id="iLater" data-esc>${L('Позже','Later')}</button></div>`);
   $$('iLater').onclick=()=>{snd('tap');closeM();};
   $$('iGo').onclick=()=>{const rec=GAME.doIpo();if(!rec){closeM();return;}snd('win');salute();
@@ -1046,7 +1051,7 @@ function onKey(e){if(e.ctrlKey||e.metaKey||e.altKey||e.repeat||modalOn||adOn())r
 function init(){
   if(window.BIZUI)try{BIZUI.init();}catch(e){console.error(e);}
   buildNav();
-  $$('crBtn').onclick=()=>{snd('tap');try{if(window.BIZUI&&BIZUI.early&&BIZUI.early()){toast(L('💎 копятся. Магазин откроется после 10 заказов — сначала заработаем на своё дело.','💎 are adding up. The shop opens after 10 orders — first let’s earn for a business.'),3200);return;}openShop();crCh1();}catch(e){}};   // M30: магазин — не в первые минуты
+  $$('crBtn').onclick=()=>{snd('tap');try{if(window.BIZUI&&BIZUI.early&&BIZUI.early()){toast(L('💎 копятся. Магазин откроется после 10 заказов — сначала заработаем на своё дело.','💎 are adding up. The shop opens after 10 orders — first let’s earn for a business.'),3200);return;}openShop('',{from:'hdr'});crCh1();}catch(e){}};   // M30: магазин — не в первые минуты
   $$('btnSet').onclick=()=>{snd('tap');try{openSettings();}catch(e){}};
   $$('main').addEventListener('click',onClick);applyBig();modalWatch();
   const hn=document.querySelector('.hname');if(hn){hn.style.cursor='pointer';hn.onclick=()=>{if(BZ()&&BZ().hname(w()))return;snd('tap');openRename();};}

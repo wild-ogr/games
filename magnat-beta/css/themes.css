@@ -182,6 +182,22 @@ html.lk body.th-gold #hdr{box-shadow:0 2px 0 #c39a2e,0 8px 24px -12px rgba(60,45
 html.lk body.th-gold #hName{color:#f3cf6b}
 html.lk body.th-gold .hbtn{box-shadow:inset 0 0 0 1px rgba(243,207,107,.35)}
 
+/* ================= «Биржа» (th-birzha, M36: набор «Колокол биржи» ipo_pack) — тёмно-синяя шапка, зелёный рост, золото колокола ================= */
+body.th-birzha{
+  --bg:#eef2f0;--page:#e2e9e5;--card:#fff;--card2:#f6f9f7;--ink:#0d1b24;--ink2:#26394a;--muted:#55687a;--line:#e0e7e3;--line2:#c6d3cc;
+  --accent:#1d6f42;--accent-d:#155733;--accent-t:#e1f1e7;--on-accent:#fff;--blue:#0b4f7a;--good:#1d6f42;--good-t:#e1f1e7;--bad:#b3362b;--bad-t:#f9e5e1;
+  --warn:#8a5a00;--warn-t:#fbefd2;--gold:#b8891a;--soft:#e9efeb;--soft2:#f3f7f4;--track:#d9e3dd;--barfill:#1d6f42;--icbg:#e9efeb;
+  --hd-bg:#0b2a3d;--hd-ink:#f2f7fb;--hd-mut:#b9cad8;--hd-btn:#123b55;--hdcash:#7fe0a6;--hdneg:#ff9a8a;--hd-line:#0b2a3d;
+  --nav-bg:#fff;--nav-on:#1d6f42;--nav-onbg:#e1f1e7;--map-bg:#fff;--map-land:#e3ebe6;--map-landln:#d0ddd5;--map-ridge:#b7c9be;
+  --mk-sel:#1d6f42;--aucb:#1d6f42;--hl:#1d6f42;--hl2:rgba(29,111,66,.22);--tip-ln:#c9a227;--chart-rev:#1d6f42;--sc-acc:#1d6f42;
+  --btnsh:0 8px 18px -6px rgba(29,111,66,.5),inset 0 1px 0 rgba(255,255,255,.3);--lk-shc:10,40,30;
+  --lkc:linear-gradient(180deg,#fff,#fbfdfc);--lkb:linear-gradient(180deg,#fff,#e9efeb);
+  --lk-app:linear-gradient(180deg,#eef2f0 0,#f4f7f5 100%);--lk-acc:linear-gradient(180deg,#2f8f5a,#1d6f42 60%,#155733);
+  --lk-go:linear-gradient(180deg,#2f8f5a,#1d6f42);--lk-bar:linear-gradient(90deg,#7fe0a6,#1d6f42)}
+html.lk body.th-birzha #hdr{box-shadow:0 2px 0 #c9a227,0 8px 24px -12px rgba(10,40,60,.45)}
+html.lk body.th-birzha #hName{color:#f3d77a}
+html.lk body.th-birzha .hbtn{box-shadow:inset 0 0 0 1px rgba(201,162,39,.4)}
+
 /* ================= «Новогодний» (th-winter, сезон: декабрь–январь) — снег, ёлочная зелень, красный ================= */
 body.th-winter{
   --bg:#eaf2fb;--page:#dde8f5;--card:#fff;--card2:#f6f9fd;--ink:#10223a;--ink2:#2c3e57;--muted:#566a85;--line:#e2eaf4;--line2:#c9d6e6;

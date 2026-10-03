@@ -180,13 +180,16 @@ function crAsk(n,what,fn,own,k){if(GAME.cr()<n){crNo(n);return;}
   modal(`<h2>💎 ${esc(what)}</h2><p style="text-align:center">${L('Потратить','Spend')} <b>${n} 💎</b>? ${L('У вас','You have')} ${GAME.cr()} 💎.</p>
     <div class="row"><button class="btn cr noenter" id="bzCrY">${L('Да, потратить','Yes, spend')} ${n} 💎</button><button class="btn" id="bzCrN" data-esc>${L('Отмена','Cancel')}</button></div>`);
   $$('bzCrN').onclick=()=>{snd('tap');hideModal();};$$('bzCrY').onclick=()=>{hideModal();if(own){fn();return;}if(GAME.spend(n,k||'biz')){fn();}};}  // own — fn спишет 💎 сам (GAME.buyHand/buyEn)
+// M36 (П2): «Рабочий набор» строкой в окне «Не хватает кристаллов» (главы 1–2, пока нет руки) — открывает магазин на нём
+function kitOffer(){try{return window.SHOP&&SHOP.offerHtml?SHOP.offerHtml('kit1','crno'):'';}catch(e){return '';}}
+const mgrOk=()=>typeof window.mgrOwn==='function'&&window.mgrOwn(),shSt=k=>{try{window.shiftStat&&window.shiftStat(k);}catch(e){}};
 // окно «Не хватает кристаллов» (как crNo в ui.js): 📺 +3 💎 за рекламу (adOk и дневной лимит), магазин, закрыть
 function crNo(need){snd('no');let lb='';try{lb=adOk()&&GAME.ladLabel?GAME.ladLabel():'';}catch(e){}const ad=!!lb,c=GAME.cr();
-  modal(`<h2>💎 ${L('Не хватает кристаллов','Not enough crystals')}</h2><p>${need?L(`Нужно ${need} 💎, а у вас ${c} 💎.`,`You need ${need} 💎 and you have ${c} 💎.`)+' ':''}${L(`Кристаллы даются за первые шаги, в Планёрке, за «Ролики дня» (2, 3, 3, 4 и 6 💎 — каждый следующий щедрее) и в магазине.`,`Crystals come for first steps, in the Briefing, for daily videos (2, 3, 3, 4 and 6 💎 — each one more generous) and in the shop.`)}</p>
+  modal(`<h2>💎 ${L('Не хватает кристаллов','Not enough crystals')}</h2><p>${need?L(`Нужно ${need} 💎, а у вас ${c} 💎.`,`You need ${need} 💎 and you have ${c} 💎.`)+' ':''}${L(`Кристаллы даются за первые шаги, в Планёрке, за «Ролики дня» (2, 3, 3, 4 и 6 💎 — каждый следующий щедрее) и в магазине.`,`Crystals come for first steps, in the Briefing, for daily videos (2, 3, 3, 4 and 6 💎 — each one more generous) and in the shop.`)}</p>${kitOffer()}
     <div class="row">${ad?`<button class="btn accent noenter" id="bzCnAd">${lb}</button>`:''}${typeof openShop==='function'?`<button class="btn noenter" id="bzCnShop">🛒 ${L('Магазин','Shop')}</button>`:''}<button class="btn" id="bzCnX" data-esc>${L('Закрыть','Close')}</button></div>${typeof adDayHtml==='function'?adDayHtml():''}`);
   try{modalRe=()=>crNo(need);}catch(e){}
   if($$('bzCnAd'))$$('bzCnAd').onclick=()=>{hideModal();GAME.ladWatch();};
-  if($$('bzCnShop'))$$('bzCnShop').onclick=()=>{snd('tap');try{openShop();}catch(e){}};
+  if($$('bzCnShop'))$$('bzCnShop').onclick=()=>{snd('tap');try{openShop('cr',{from:'crno',need});}catch(e){}};
   $$('bzCnX').onclick=()=>{snd('tap');hideModal();};}
 // награды за рекламу: кнопка только при adOk(); награда — только в колбэке досмотра (GAME.adAct).
 // M31: дневных лимитов нет — у места пауза в реальных минутах: кнопка видна, но выключена с подписью «· следующий через N мин» (adD/adS)
@@ -1206,7 +1209,9 @@ function ch1Sum(){try{const W=w(),M0=W&&W.me;if(!W||!M0)return '';let rev=(W.mon
   return `<div class="bz-note" style="margin:8px 0 2px"><b>${L('Итог главы 1','Chapter 1 recap')}:</b> ${L(`${d} ${pl(d,'день','дня','дней','day','days')}`,`${d} ${pl(d,'день','дня','дней','day','days')}`)} · ${n} ${pl(n,'заказ','заказа','заказов','order','orders')} · ${L('заработано','earned')} ${M(rev)} · ${L('ИП оформлено','sole-trader status done')} · ${L('первый кофейный автомат','your first coffee machine')}</div>`;}catch(e){return '';}}
 function openChapter(st,stH){const c=CHAP[st];if(!c)return;if(stH===undefined){snd(st==='gig'?'tap':'win');if(st!=='gig'){try{UI.salute();}catch(x){}}
     // предложение «Стартового набора» (META, один раз — S.ask.starter): считаем до modal и храним для перерисовки при смене языка
-    stH='';try{if(st==='small'&&window.META&&META.starterHtml)stH=META.starterHtml()||'';}catch(x){}}
+    stH='';try{if(st==='small'&&window.META&&META.starterHtml)stH=META.starterHtml()||'';}catch(x){}
+    // M36 (П2): «⭐ Набор главы» одной строкой — «Сеть» → «Набор сетевика», «Карьер» → «Набор недропользователя» (открывает магазин, без таймеров)
+    try{const k={mid:'net_pack',quarry:'nedra_pack'}[st];if(k&&window.SHOP&&SHOP.offerHtml)stH+=SHOP.offerHtml(k,'ch_'+st)||'';}catch(x){}}
   modal(`<div class="bz-ch"><div class="n">${L('Глава ','Chapter ')+c.n}</div><h2>${T(c.t)}</h2><ul>${c.li.map(x=>`<li>${esc(T(typeof x==='function'?x():x))}</li>`).join('')}</ul>${st==='small'?ch1Sum():''}</div>
     <div class="say">${UI.face('happy')}<div><p>${T(c.sayFn?c.sayFn()||c.say:c.say)}</p></div></div>${stH||''}${window.CAB&&CAB.chLine?CAB.chLine(st):''}${typeof socBragHtml==='function'?socBragHtml(st):''}<div class="row"><button class="btn green" id="bzChGo">${T(c.btn)}</button></div>`);
   try{modalRe=()=>openChapter(st,stH);}catch(e){}
@@ -1263,10 +1268,11 @@ function offline(s){const W=w();if(!W||W.ned)return false;const mo=s.months||0;s
     ${segs?`<div class="lbl">${L('Прибыль по направлениям','Profit by segment')}</div><div class="clist">${segs}${rest?`<div><span>${L('Налоги, неполные месяцы и прочее','Taxes, partial months and other')}</span><b class="${rest>=0?'':'dn'}">${money0(rest)}</b></div>`:''}</div>`:''}
     ${offQuarry(W,s)}${s.af&&s.af.a>0?`<div class="clist"><div><span>🧾 ${esc(afTxt(s.af.a,s.af.fee))}${s.af.n>1?L(` (${s.af.n} ${pl(s.af.n,'раз','раза','раз','time','times')})`,` (${s.af.n} times)`):''}</span></div></div>`:''}${live?`<p class="mut bz-live">💡 ${live}</p>`:''}`;
   const more=GAME.offMore();
-  h+=`${window.STORYUI&&STORYUI.awayHtml?STORYUI.awayHtml():''}<div class="row">${more>0&&adOk()?`<button class="btn accent noenter" id="bzOx">📺 ${L('Продлить смену за рекламу','Extend the shift for an ad')}<small> +${days(more)}</small></button>`:''}<button class="btn green" id="bzOk">${L('К делам','Back to work')}</button></div>`;
+  h+=`${window.STORYUI&&STORYUI.awayHtml?STORYUI.awayHtml():''}<div class="row">${more>0&&mgrOk()?`<button class="btn accent noenter" id="bzOxM">⏱ ${L('Продлить смену','Extend the shift')}<small> +${days(more)} · ${L('управляющий','manager')}</small></button>`:more>0&&adOk()?`<button class="btn accent noenter" id="bzOx">📺 ${L('Продлить смену за рекламу','Extend the shift for an ad')}<small> +${days(more)}</small></button>`:''}<button class="btn green" id="bzOk">${L('К делам','Back to work')}</button></div>`;
   modal(h);try{modalRe=()=>offline(s);}catch(e){}
   $$('bzOk').onclick=()=>{snd('tap');hideModal();if(!s.ext)offAd();};
-  if($$('bzOx'))$$('bzOx').onclick=()=>{hideModal();STAT.place('shift');showRewarded(()=>{GAME.extendShift();},()=>{});};
+  if($$('bzOx'))$$('bzOx').onclick=()=>{hideModal();STAT.place('shift');showRewarded(()=>{shSt('ad');GAME.extendShift();},()=>{});};
+  if($$('bzOxM'))$$('bzOxM').onclick=()=>{snd('tap');hideModal();shSt('mgr');GAME.extendShift();};   // M36: «Управляющий» — без ролика
   return true;}
 // M30: «Пока вас не было» — честно про торги (они ждали), стройку и решения Людмилы на карьере
 function offQuarry(W,s){if(!W||W.ned||!(W.opi&&W.opi.length||W.biz.some(b=>isPit(b.t))))return '';const t0=W.t-(s.days||0),x=[];

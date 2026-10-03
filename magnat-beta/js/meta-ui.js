@@ -145,7 +145,11 @@ function wrapSponsor(){if(GAME.__sp)return;GAME.__sp=1;
 const COS_ADD=[{id:'em_pass',k:'emb',ic:'🎖',ru:'Путёвка',en:'Voucher',cr:0},{id:'fr_sana',k:'fr',c:'#3f8f8a',ru:'Санаторная рамка',en:'Sanatorium frame',cr:0},
   {id:'em_pager',k:'emb',ic:'📟',ru:'Пейджер',en:'Pager',cr:0,buy:'set90'},{id:'em_case',k:'emb',ic:'💼',ru:'Дипломат',en:'Briefcase',cr:0,buy:'set90'},
   {id:'em_tape',k:'emb',ic:'📼',ru:'Кассета',en:'Cassette',cr:0,buy:'set90'},{id:'sg_raspb',k:'sign',c:'#b0174f',ru:'Малиновый пиджак',en:'Raspberry blazer',cr:0,buy:'set90'},
-  {id:'fr_leather',k:'fr',c:'#5b3a29',ru:'Кожаная рамка',en:'Leather frame',cr:0,buy:'set90'}];
+  {id:'fr_leather',k:'fr',c:'#5b3a29',ru:'Кожаная рамка',en:'Leather frame',cr:0,buy:'set90'},
+  // M36: подарок за первую покупку (shell.js payFirst → S.cos.fr_mecen), «Набор сетевика» (net_pack), «Колокол биржи» (ipo_pack)
+  {id:'fr_mecen',k:'fr',c:'#7b3fa0',ru:'Рамка «Меценат»',en:'“Patron” frame',cr:0},
+  {id:'em_net',k:'emb',ic:'🏬',ru:'Универмаг',en:'Department store',cr:0,buy:'net_pack'},{id:'sg_firm',k:'sign',c:'#0e6f8f',ru:'Фирменный',en:'Signature',cr:0,buy:'net_pack'},
+  {id:'em_bell',k:'emb',ic:'🔔',ru:'Колокол',en:'Bell',cr:0,buy:'ipo_pack'},{id:'fr_exch',k:'fr',c:'#1d6f42',ru:'Биржевая рамка',en:'Exchange frame',cr:0,buy:'ipo_pack'}];
 function addCos(){if(!Array.isArray(GAME.COS))return;for(const c of COS_ADD)if(!GAME.COS.some(x=>x.id===c.id))GAME.COS.push(c);}
 
 /* ---------- карточки для «Сегодня»/карты ---------- */
@@ -179,7 +183,7 @@ function perkCard(){if(!Array.isArray(S.pkP)||!S.pkP.length)return '';
   return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">⭐ <b>${T('Доля основателя','Founder’s share')}</b>: ${T('выберите улучшение навсегда','choose a permanent upgrade')}</span><button class="mt-btn ac noenter" data-mt="perks">${T('Выбрать','Choose')}</button></div></div>`;}
 // запасной вариант, если окно главы не показало предложение (META.starterHtml): один раз — карточка на «Сегодня» до конца этого захода
 let starterSess=false;
-function starterCard(){const W=GAME.W;if(!W||W.st!=='small'||!starterOk()||S.ask&&S.ask.starterC)return '';
+function starterCard(){const W=GAME.W;if(!W||W.st!=='small'||!starterOk()||S.ask&&S.ask.starterC||shopOn())return '';
   if(!(W.me&&W.biz.length>=2))return '';if(!S.ask)S.ask={};if(S.ask.starter&&!starterSess)return '';
   if(!S.ask.starter){S.ask.starter=Date.now();starterSess=true;try{save();}catch(e){}}
   return `<div class="mt-card">${starterBody()}<div class="mt-row"><button class="mt-btn noenter" data-mt="starterNo">${T('Не сейчас','Not now')}</button></div></div>`;}
@@ -195,7 +199,44 @@ function claimAll(){const p=GAME.plan();let n=0,dec='';if(!p.got){n+=GAME.planGi
 function allBtn(c,cls){return `<button class="mt-btn go noenter${cls||''}" data-mt="all">${T('Забрать всё','Take all')}${c.n?' +'+cr(c.n):''}</button>`;}
 function planLine(){const p=GAME.plan(),ts=p.t||[],done=ts.filter(t=>t.ok==='got').length,c=claimable();
   return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">📋 <b>${T('Планёрка','Morning meeting')}</b>: ${c.k?`<b>${c.n?cr(c.n):'🎁'}</b> ${T('ждут','waiting')} · `:''}${T('поручения','tasks')} ${done} ${T('из','of')} ${ts.length}</span>${c.k?allBtn(c):`<button class="mt-btn noenter" data-mt="plan">${T('Открыть','Open')}</button>`}</div>${p.got&&ad()&&GAME.planX2Ok()?`<div class="mt-row"><span class="mt-f1 mt-mut">🎁 ${T('Подарок получен','Gift received')}${p.gv?': +'+cr(p.gv):''}</span><button class="mt-btn x2 noenter" data-mt="x2">${p.gv?x2Lbl(p.gv,p.gv+giftE(p)):'📺 +'+cr(giftE(p))+' '+T('за рекламу','for an ad')}</button></div>`:''}</div>`;}
-function html(m){if(early())return planMini();if(m==='mini')return planLine();if(m==='rest')return perkCard()+passCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard();return perkCard()+passCard()+planCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard();}
+function html(m){if(early())return planMini();if(m==='mini')return planLine()+hintCard();if(m==='rest')return perkCard()+passCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard()+shopCard();const x=shopCard()+hintCard();return perkCard()+passCard()+planCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard()+x;}
+/* ---------- M36: магазин открылся (П1) и мягкие подсказки Людмилы/друзей (П2) — карточки на «Сегодня», не окна ---------- */
+const ask=()=>{if(!S.ask||typeof S.ask!=='object')S.ask={};return S.ask;};
+const payOn=()=>{try{return typeof PAY!=='undefined'&&PAY.on;}catch(e){return false;}};
+const once={};function shown(k,w){if(once[k])return;once[k]=1;try{STAT.ev('offer',{k,w,a:'show'});}catch(e){}}
+// плохой месяц (убыток, овердрафт, санация) — никаких предложений (как межэкранная в shell.js adDue)
+function badMonth(){const W=GAME.W,r=W&&Array.isArray(W.reps)&&W.reps.length?W.reps[W.reps.length-1]:null;try{return !!(r&&(r.san||r.pl&&E.netOf(r.pl)<0))||!!(W&&W.odM>0);}catch(e){return false;}}
+// «🛒 Магазин открыт» — один раз после 10 заказов главы 1, пока стартовый набор в продаже: честный остаток дней (shell.js starterLeft)
+function shopOn(){const W=GAME.W;if(!W||W.ned||(W.st!=='gig'&&W.st!=='small')||!payOn()||!starterOk()||ask().shopC)return 0;const n=typeof starterLeft==='function'?starterLeft():0;return n;}
+function shopCard(){const n=shopOn();if(!n)return '';shown('shop_open','today');
+  return `<div class="mt-card"><h4>🛒 ${T('Магазин открыт','The shop is open')}</h4><p>🎁 ${T('Стартовый набор председателя (150 💎 и эмблема «Золотой молот») — в магазине ещё <b>'+n+' '+pl(n,'день','дня','дней','day','days')+'</b>. Потом его не будет.','The chairman’s starter pack (150 💎 and the “Golden hammer” emblem) stays in the shop for <b>'+n+' more '+pl(n,'день','дня','дней','day','days')+'</b>. After that it’s gone.')}</p>
+    <div class="mt-row"><button class="mt-btn ac noenter" data-mt="shopGo">🛒 ${T('Открыть магазин','Open the shop')}</button><button class="mt-btn noenter" data-mt="shopNo">${T('Понятно','Got it')}</button></div></div>`;}
+// подсказка — не чаще раза за главу (S.ask.hint[глава]), не в первые 2 игровых месяца главы, никогда после плохого месяца
+function stNum(){try{return GAME.stN();}catch(e){return 1;}}
+function hintPick(){const W=GAME.W;if(!W||!payOn()||badMonth())return null;const a=ask(),s=stNum();if(!a.hint||typeof a.hint!=='object')a.hint={};if(a.hint[s])return null;
+  if(!a.hintT||typeof a.hintT!=='object')a.hintT={};if(a.hintT[s]==null){a.hintT[s]=W.t|0;return null;}if((W.t|0)-a.hintT[s]<60)return null;
+  // Людмила: трижды продлевали смену роликом, а «Управляющего» нет (с ним — без рекламы)
+  if((S.shAd|0)>=3&&!PAY.own('manager')&&PAY.item('manager'))return {k:'mgr',who:'lud',go:'manager',
+    t:T('Вы уже '+(S.shAd|0)+' раза продлевали смену за ролик. Можно нанять управляющего: 8 часов вместо 6, и продлевать — без рекламы. Решать вам, я и так справляюсь.','You’ve extended the shift for a video '+(S.shAd|0)+' times. You could hire a manager: 8 hours instead of 6, and extensions without ads. Your call — I manage either way.')};
+  // друг: набор этой главы (виден в магазине и ещё не куплен)
+  const k={3:'net_pack',4:'nedra_pack',5:'ipo_pack'}[s];if(k&&window.SHOP&&SHOP.visible&&SHOP.visible(k)&&!PAY.own(k)){const it=PAY_ITEMS[k];
+    return {k,who:'mar',go:k,t:T('Марина: «Видела в магазине «'+it.name+'» — '+it.ic+' прямо под вашу главу. Не обязательно, но красиво.»','Marina: “I saw “'+it.name+'” in the shop — '+it.ic+' just right for this chapter. Not a must, but it looks nice.”')};}
+  return null;}
+let hintNow=null;
+function hintCard(){if(badMonth())return praiseCard();const h=hintNow&&hintNow.s===stNum()?hintNow:(hintNow=hintPick());if(!h)return praiseCard();if(!h.s){h.s=stNum();ask().hint[h.s]=1;try{save();}catch(e){}}shown('hint_'+h.k,'today');
+  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">💬 ${esc(h.t)}</span></div><div class="mt-row"><button class="mt-btn noenter" data-mt="hintGo">${T('Посмотреть','Have a look')}</button><button class="mt-btn noenter" data-mt="hintNo">${T('Не надо','No, thanks')}</button></div></div>`;}
+function hintDone(){if(!hintNow)return;ask().hint[hintNow.s||stNum()]=1;try{save();}catch(e){}}
+// друзья замечают купленное оформление (не продают): один раз на покупку; что было куплено до этой версии — без реплики
+const LOOKS={set90:['Марина: «Ого, малиновый пиджак на вывеске! Прямо как в девяностые.»','Marina: “Wow, a raspberry blazer on the sign! Just like the nineties.”'],
+  office:['Борис: «Кабинет — как у министра. Я бы тут и чай пил.»','Boris: “An office fit for a minister. I’d drink my tea here.”'],
+  th_poster:['Марина: «Тёплые цвета, как на старом плакате. Уютно!»','Marina: “Warm colours, like an old poster. Cosy!”'],
+  livery:['Серёга: «Новые вывески видно с другого конца улицы!»','Seryoga: “The new signs are visible from the other end of the street!”'],
+  net_pack:['Серёга: «Фирменные вывески — сразу видно, что сеть!»','Seryoga: “Signature signs — you can tell it’s a chain right away!”'],
+  ipo_pack:['Борис: «Колокол уже висит? Солидно. Я надену галстук.»','Boris: “The bell is up already? Impressive. I’ll wear a tie.”']};
+function praiseInit(){try{const a=ask();if(a.praised&&typeof a.praised==='object')return false;a.praised={};for(const k of Object.keys(LOOKS))if(PAY.own(k))a.praised[k]=1;return true;}catch(e){return false;}}
+function praiseCard(){if(!payOn()||badMonth()||praiseInit())return '';const a=ask(),own=Object.keys(LOOKS).filter(k=>PAY.own(k));
+  const k=own.find(x=>!a.praised[x]);if(!k)return '';
+  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">💬 ${esc(T(LOOKS[k][0],LOOKS[k][1]))}</span><button class="mt-btn noenter" data-mt="praise:${k}">${T('Спасибо!','Thanks!')}</button></div></div>`;}
 function cabCard(){try{return window.CAB&&CAB.card?CAB.card():'';}catch(e){console.error(e);return '';}}   // Кабинет (js/cab-ui.js): звание, мечта/вещь в продаже
 // el — отдельный слот (например, #metaSlot на «Сегодня»): перерисовываем его целиком; через morphHTML (ui.js) — кнопки не пересоздаются под пальцем
 function card(el){if(!el||!window.GAME||!GAME.W)return;css();applyCos();let h='';try{h=html(el.dataset&&el.dataset.mtm);}catch(e){console.error(e);}
@@ -290,6 +331,11 @@ function act(a,inModal,btn){const re=()=>{if(inModal&&modalOn&&modalRe===openPla
   else if(a==='perks')openPerks();
   else if(a==='boost'){if(!ad()||!GAME.boostOk()||GAME.adWait('bst')>0)return;STAT.place('boost');showRewarded(()=>{const r=GAME.adAct('bst','boost');
       if(r==='ok'){snd('coin');toast(T('Цены продаж +10 % на 3 месяца','Sale prices +10% for 3 months'));}else if(r==='wait')toast('📺 '+GAME.adTxt('bst'));refresh();},()=>{});}
+  else if(a==='shopGo'){ask().shopC=1;try{save();STAT.ev('offer',{k:'shop_open',w:'today',a:'tap'});}catch(e){}refresh();openShop('pack',{from:'start',hl:'starter'});}
+  else if(a==='shopNo'){ask().shopC=1;try{save();STAT.ev('offer',{k:'shop_open',w:'today',a:'close'});}catch(e){}refresh();}
+  else if(a==='hintGo'){const h=hintNow;hintDone();hintNow=null;try{STAT.ev('offer',{k:'hint_'+(h&&h.k),w:'today',a:'tap'});}catch(e){}refresh();if(h)openShop('pack',{from:'hint',hl:h.go});}
+  else if(a==='hintNo'){const h=hintNow;hintDone();hintNow=null;try{STAT.ev('offer',{k:'hint_'+(h&&h.k),w:'today',a:'close'});}catch(e){}refresh();}
+  else if(a.indexOf('praise:')===0){ask().praised[a.slice(7)]=1;try{save();}catch(e){}refresh();}
   else if(a==='starterNo'){if(!S.ask)S.ask={};S.ask.starterC=1;try{save();}catch(e){}refresh();}
   else if(a.indexOf('claim:')===0){const n=GAME.planClaim(+a.slice(6));if(n){snd('coin');toast('✅ +'+cr(n));flyCr(btn,n);if(n>2)salute(true);}re();}
   else if(a.indexOf('rr:')===0){if(GAME.planReroll(+a.slice(3))){snd('tap');toast('🎩 '+T('Поручение заменено — это бонус набора «Солидный»','Task swapped — a “Respectable” set bonus'));}re();}
@@ -302,7 +348,7 @@ document.addEventListener('click',e=>{const t=e.target&&e.target.closest?e.targe
 
 /* ---------- события игры ---------- */
 function hook(){if(!window.GAME||!GAME.on){setTimeout(hook,200);return;}
-  addCos();wrapSponsor();
+  addCos();wrapSponsor();praiseInit();
   GAME.on('mile',m=>{snd('win');salute(true);const c=m.cos&&GAME.COS.find(x=>x.id===m.cos);toast('🎯 '+T('Веха','Milestone')+': '+mileTxt(m)+' · +'+cr(m.cr)+(c?' + '+cosName(c):''),3500);applyCos();});
   GAME.on('qgoal',g=>{const x=g.o[g.p];if(g.st==='ok'){salute(true);}if(g.st==='ok')toast('🏛 '+T('Цель квартала выполнена','Quarter goal achieved')+' · +'+cr(x.cr),3500);});
   GAME.on('cos',applyCos);GAME.on('reset',applyCos);GAME.on('lad',()=>setTimeout(refresh,50));

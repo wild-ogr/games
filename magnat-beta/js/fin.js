@@ -411,7 +411,7 @@ function urgentAsk(el){if(GAME.cr()<GAME.CR.urgent){urgent(el);return;}
   setRe(()=>urgentAsk(el));
   document.getElementById('mCancel').onclick=hideModal;document.getElementById('fdGo').onclick=()=>{hideModal();urgent(el);};}
 function urgent(el){const r=GAME.urgent();
-  if(r==='cr'){toastS(L('💎 не хватает','Not enough 💎'));if(typeof openShop==='function')openShop();return;}
+  if(r==='cr'){toastS(L('💎 не хватает','Not enough 💎'));if(typeof openShop==='function')openShop('cr',{from:'fin'});return;}
   if(!r&&E.urgentOk&&!E.urgentOk(Wd())){snd('no');toastS(L('Срочного покупателя можно искать раз в 3 месяца. Кристаллы не списаны.','You can look for an urgent buyer once every 3 months. No crystals spent.'));return;}
   if(!r){snd('no');toastS(L('Нечего предложить покупателю: нужно хотя бы 500 единиц своей продукции (на складах или в выпуске месяца). Кристаллы не списаны.','Nothing to offer: you need at least 500 units of your own output (in stock or this month). No crystals spent.'));return;}
   snd('coin');toastS(L('Покупатель найден: ','Buyer found: ')+NM.good(r.g)+', '+FMT.qty(r.q,r.g));st.mt='con';renderMarket(el||lastM);}

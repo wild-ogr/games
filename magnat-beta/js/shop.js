@@ -26,12 +26,16 @@ const SECS=[
   {id:'ach',ic:'🏆',tab:['Награды','Awards'],h:['За достижения','For achievements']}];
 // раздел каждого товара за деньги (порядок — порядок в разделе); товара нет здесь — он в «Наборах»
 const SEC={cr_xs:'cr',cr_s:'cr',cr_l:'cr',cr_xl:'cr',tea:'cr',
-  starter:'pack',nedra_pack:'pack',bundle:'pack',pass:'pack',no_ads:'pack',sponsor:'pack',manager:'pack',
+  kit1:'pack',starter:'pack',net_pack:'pack',nedra_pack:'pack',ipo_pack:'pack',bundle:'pack',magnat:'pack',pass:'pack',no_ads:'pack',sponsor:'pack',manager:'pack',
   th_poster:'look',office:'look',set90:'look',livery:'look',look_all:'look'};
-const ONCE={starter:1,nedra_pack:1};                     // «один раз на игрока» (постоянные с бонусом, второй раз не купить)
+const ONCE={starter:1,nedra_pack:1,kit1:1,net_pack:1,ipo_pack:1};                     // «один раз на игрока» (постоянные с бонусом, второй раз не купить)
 const DAYS={pass:30};                                    // «на N дней»
 // когда товар показывать: «спонсор» — только где есть ролики; стартовый — первые 10 дней (shell.js starterOn); набор недропользователя — с главы «Карьер»
-const SHOW={sponsor:()=>typeof adPlat==='function'&&adPlat(),starter:()=>typeof starterOn!=='function'||starterOn(),nedra_pack:()=>{const w=W();return !!w&&(w.ned||w.st==='quarry'||w.st==='nedra');}};
+// M36: «Рабочий набор» — главы 1–2, пока первая ступень сил не куплена (купленный виден всегда); «Набор сетевика» и «Магнат навсегда» — с «Сети»; «Колокол биржи» — с «Недр»
+const stI=()=>{const w=W();if(!w)return 0;if(w.ned)return 4;try{return ECON.stI(w);}catch(e){return 0;}};
+const SHOW={sponsor:()=>typeof adPlat==='function'&&adPlat(),starter:()=>typeof starterOn!=='function'||starterOn(),nedra_pack:()=>{const w=W();return !!w&&(w.ned||w.st==='quarry'||w.st==='nedra');},
+  kit1:()=>{if(own('kit1'))return true;const w=W();return !!(w&&w.me&&!w.ned&&stI()<=1&&GAME.enLv&&GAME.enLv()<1);},
+  net_pack:()=>own('net_pack')||stI()>=2,magnat:()=>own('magnat')||stI()>=2,ipo_pack:()=>own('ipo_pack')||stI()>=4};
 function kindOf(id){const it=PAY_ITEMS[id];if(!it)return '';if(DAYS[id])return 'days';if(ONCE[id])return 'once';return it.perm?'perm':'cons';}
 function kindTxt(k,id){switch(k){
   case 'perm':return T('Навсегда','Forever');
@@ -62,6 +66,10 @@ function css(){if(cssOn)return;cssOn=true;const s=document.createElement('style'
 .shop-k{display:inline-block;margin-top:6px;font-style:normal;font-size:15px;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--soft);color:var(--ink2)}
 .shop-k.k-perm{background:var(--good-t,#ecfdf3);color:var(--good)}.shop-k.k-once{background:var(--warn-t,#fff4e5);color:var(--warn,#b54708)}
 .shop-k.k-days{background:var(--accent-t,#eef2ff);color:var(--accent)}
+.shop-k.k-best{background:var(--warn-t,#fff4e5);color:var(--warn,#b54708);margin-left:6px}.shop-k.k-hl{background:var(--good);color:#fff;margin-left:6px}
+.shop-it.shop-hl{border:3px solid var(--good)!important;box-shadow:0 0 0 3px var(--good-t,#e3f4ea)}
+.shop-first{background:var(--good-t,#e3f4ea);color:var(--ink);border-radius:14px;padding:10px 14px;margin:4px 0 10px;font-size:17px;line-height:1.35;font-weight:600}
+.shop-need{background:var(--soft2);border-radius:14px;padding:10px 14px;margin:4px 0 8px;font-size:17px}
 .shop-pr{flex:none;align-self:flex-end;margin:8px 0 0 auto;max-width:100%;font-size:18px;font-weight:700;color:var(--accent);white-space:nowrap;background:var(--card);border:2px solid var(--accent);border-radius:14px;padding:8px 12px;min-width:76px;text-align:center}
 .shop-pr img.pcur{height:18px;width:18px;vertical-align:-3px;margin-left:3px}
 .shop-it.pown i{margin:8px 0 0 auto}
@@ -82,10 +90,25 @@ function css(){if(cssOn)return;cssOn=true;const s=document.createElement('style'
 `;document.head.appendChild(s);}
 
 /* ---- строки товаров за деньги ---- */
+// M36: цена товара числом для сравнения «💎 за рубль» (Яндекс — priceValue каталога, VK — голоса; на одной площадке шкала одна)
+function priceNum(id){try{const pr=PAY.item(id);if(PAY.v)return PAY_ITEMS[id].vk||0;const v=parseFloat(String(pr&&pr.priceValue||'').replace(',','.'));return v>0?v:0;}catch(e){return 0;}}
+// бейдж витрины (не больше одного на строке): «Хватит» (не хватает 💎), «Выгодно» (сейф, путёвка), «+N % к Горсти» (пакеты 💎 крупнее горсти)
+const BEST={cr_xl:1,pass:1};
+function badge(id){if(ctx.hl===id&&ctx.miss)return `<em class="shop-k k-hl">✓ ${T('Хватит','Enough')}</em>`;const it=PAY_ITEMS[id];
+  let pc='';if(it.n&&SEC[id]==='cr'&&id!=='tea'&&id!=='cr_s'&&PAY_ITEMS.cr_s){const a=priceNum(id),b=priceNum('cr_s');if(a&&b){const x=Math.round((it.n/a)/(PAY_ITEMS.cr_s.n/b)*100-100);if(x>=5)pc='+'+x+T(' % к Горсти','% vs Handful');}}
+  if(BEST[id])return `<em class="shop-k k-best">★ ${T('Выгодно','Best value')}${pc?' · '+pc:''}</em>`;
+  return pc?`<em class="shop-k k-best">${pc}</em>`:'';}
 function itemRow(id){const it=PAY_ITEMS[id],k=kindOf(id),mine=it.perm&&own(id);
-  const body=`<span><b class="shop-nm">${it.ic} ${esc(it.name)}</b><small>${esc(it.desc)}</small></span><em class="shop-k k-${k}">${esc(kindTxt(k,id))}</em>`;
+  let sub=esc(it.desc);if(id==='starter'&&!mine&&typeof starterLeft==='function'){const n=starterLeft();if(n)sub+='<br><b>'+T('В магазине ещё '+n+' '+pl(n,'день','дня','дней','day','days'),'In the shop for '+n+' more '+pl(n,'день','дня','дней','day','days'))+'</b>';}
+  const body=`<span><b class="shop-nm">${it.ic} ${esc(it.name)}</b><small>${sub}</small></span><em class="shop-k k-${k}">${esc(kindTxt(k,id))}</em>${mine?'':badge(id)}`;
   return mine?`<div class="set pown shop-it" data-pid="${esc(id)}">${body}<i>✓ ${T('Ваше','Yours')}</i></div>`
-    :`<button class="set pbuy shop-it noenter" data-pid="${esc(id)}">${body}<b class="shop-pr">${priceOf(id)}</b></button>`;}
+    :`<button class="set pbuy shop-it noenter${ctx.hl===id?' shop-hl':''}" data-pid="${esc(id)}">${body}<b class="shop-pr">${priceOf(id)}</b></button>`;}
+// M36 (П1): подарок за первую покупку — строка вверху «Кристаллов» и «Наборов», пока игрок ничего не покупал (shell.js payPaid/payFirst)
+function firstHtml(){try{if(!payOn()||typeof payPaid!=='function'||payPaid())return '';}catch(e){return '';}
+  return `<div class="shop-first">🎁 ${T('Первая покупка — с подарком: +'+(typeof FIRST_CR!=='undefined'?FIRST_CR:50)+' 💎 и рамка «Меценат». Любая, даже самая маленькая.','Your first purchase comes with a gift: +'+(typeof FIRST_CR!=='undefined'?FIRST_CR:50)+' 💎 and the “Patron” frame. Any purchase, even the smallest.')}</div>`;}
+// M36: самый маленький пакет 💎, которого хватит на недостающее (окно «Не хватает кристаллов» → магазин)
+function hlFor(miss){if(!(miss>0))return '';const a=['cr_xs','cr_s','cr_l','cr_xl'].filter(id=>PAY_ITEMS[id]&&visible(id)).sort((x,y)=>PAY_ITEMS[x].n-PAY_ITEMS[y].n);
+  const f=a.find(id=>PAY_ITEMS[id].n>=miss);return f||a[a.length-1]||'';}
 function rowsOf(sec,skip){return Object.keys(PAY_ITEMS).filter(id=>secOf(id)===sec&&visible(id)&&!(skip&&skip[id])).sort((a,b)=>ord(a)-ord(b)).map(itemRow).join('');}
 const ORD=Object.keys(SEC);const ord=id=>{const i=ORD.indexOf(id);return i<0?99:i;};
 function restoreHtml(){return payOn()?`<div class="shop-more"><button class="btn w noenter" id="shRest">↻ ${T('Восстановить покупки','Restore purchases')}</button>
@@ -97,15 +120,16 @@ function ladBtn(){let lb='';try{lb=adOn()&&GAME.ladLabel?GAME.ladLabel():'';}cat
 
 /* ---- разделы ---- */
 function secCr(){let h=`<p class="shop-p">${T('Кристаллы ускоряют стройку и разведку, покупают руки, силы и украшения. Рубли в игре не продаются, место в рейтинге — тоже.','Crystals speed up construction and exploration and buy hands, energy and decorations. In-game rubles are not for sale, nor is a place in the leaderboard.')}</p>`;
-  const r=rowsOf('cr');h+=r;
+  if(ctx.miss>0)h+=`<p class="shop-need">💎 ${T('Не хватает '+ctx.miss+' 💎'+(ctx.hl?' — подойдёт пакет, отмеченный «Хватит»':''),'You’re '+ctx.miss+' 💎 short'+(ctx.hl?' — the pack marked “Enough” will do':''))}</p>`;
+  h+=firstHtml();const r=rowsOf('cr');h+=r;
   if(!r)h+=`<p class="shop-p">${T('Кристаллы даются за достижения, звания, Планёрку'+(adOn()?' и ролики':'')+' — загляните в соседние разделы.','Crystals come for achievements, ranks, the Briefing'+(adOn()?' and videos':'')+' — see the other sections.')}</p>`;
   const lb=ladBtn();if(lb)h+=`<div class="shop-more">${lb}</div>`;
   return h+restoreHtml();}
-function secPack(){return `<p class="shop-p">${T('Наборы выгоднее, чем по одному. «Навсегда» — платите один раз, и это ваше навсегда, без продлений.','Bundles are better value than single items. “Forever” means you pay once and it’s yours for good — no renewals.')}</p>`+rowsOf('pack')+restoreHtml();}
+function secPack(){return firstHtml()+`<p class="shop-p">${T('Наборы выгоднее, чем по одному. «Навсегда» — платите один раз, и это ваше навсегда, без продлений.','Bundles are better value than single items. “Forever” means you pay once and it’s yours for good — no renewals.')}</p>`+rowsOf('pack')+restoreHtml();}
 
 // темы оформления — js/themes.js: THEME.list() → [{id,name,prev:{bg,hd,card,ink,acc,acc2},unlock,owned,cur,progress:{have,need,txt},how}]
 // тема внутри коллекции (k90 ← set90) продаётся строкой коллекции ниже — одна кнопка на товар
-const COLL={set90:['Входит в коллекцию «Лихие 90-е» — ниже','Part of “The Wild 90s” collection — see below']};
+const COLL={set90:['Входит в коллекцию «Лихие 90-е» — ниже','Part of “The Wild 90s” collection — see below'],ipo_pack:['Входит в набор «Колокол биржи» — раздел «Наборы»','Part of the “Exchange bell” pack — see Bundles']};
 function themes(){if(window.THEME&&typeof THEME.list==='function'){try{const a=THEME.list();if(Array.isArray(a))return a;}catch(e){console.error(e);}}return [];}
 function swatch(p){if(!p||typeof p!=='object')return '<i class="shop-sw"></i>';
   return `<i class="shop-sw" style="background:linear-gradient(135deg,${esc(p.hd||p.bg)} 0,${esc(p.bg)} 34%,${esc(p.card)} 34%,${esc(p.card)} 66%,${esc(p.acc)} 66%,${esc(p.acc)} 83%,${esc(p.acc2||p.acc)} 83%)"></i>`;}
@@ -200,6 +224,12 @@ function secAch(){const w=W();let h=`<p class="shop-p">${T('Это не поку
 const BODY={cr:secCr,pack:secPack,look:secLook,boost:secBoost,ads:secAds,ach:secAch};
 function secs(){return SECS.filter(s=>s.id==='pack'?payOn():s.id==='ads'?adOn():true).map(s=>s.id);}
 let cur='cr';   // открытый раздел (без раздела — «💎 Кристаллы»)
+// M36: ctx — с чем открыли магазин снаружи: miss (не хватает 💎), hl — подсвеченный товар; живёт до следующего открытия снаружи
+let ctx={};
+function openFrom(sec,o){o=o&&typeof o==='object'?o:{};const miss=Math.max(0,(o.need|0)-(S.cr|0));ctx={miss,hl:o.hl||(miss?hlFor(miss):'')};
+  try{let s=1;try{s=GAME.stN();}catch(e){}STAT.ev('shop',{from:String(o.from||'x'),s,sec:typeof sec==='string'&&sec?sec:'cr'});}catch(e){}
+  open(sec);
+  try{const h=document.querySelector('#mcard .shop-hl');if(h&&h.scrollIntoView)setTimeout(()=>{try{h.scrollIntoView({block:'center'});}catch(e){}},60);}catch(e){}}
 function open(sec){css();const ok=secs();cur=typeof sec==='string'&&sec?sec:'cr';if(ok.indexOf(cur)<0)cur=ok[0];const S0=SECS.find(s=>s.id===cur);
   let body='';try{body=BODY[cur]();}catch(e){console.error(e);}
   const tabs=ok.map(id=>{const s=SECS.find(x=>x.id===id);return `<button class="shop-tab noenter${id===cur?' on':''}" data-sec="${id}" role="tab" aria-selected="${id===cur}"><b>${s.ic}</b>${T(s.tab[0],s.tab[1])}</button>`;}).join('');
@@ -239,7 +269,15 @@ function items(){return Object.keys(PAY_ITEMS).map(id=>({id,sec:secOf(id),kind:k
 // эмблема «Золотая кирка» из «Набора недропользователя» (nedra_pack, shell.js)
 try{if(window.GAME&&Array.isArray(GAME.COS)&&!GAME.COS.some(c=>c.id==='em_gpick'))
   GAME.COS.push({id:'em_gpick',k:'emb',ic:'⛏',ru:'Золотая кирка',en:'Golden pickaxe',cr:0,buy:'nedra_pack'});}catch(e){}
-window.SHOP={open,buy,items,secs,SEC};
+// M36 (П2): строка «⭐ Набор главы» в окнах глав/IPO — открывает магазин на этом товаре (сама ничего не покупает); '' — если не продаётся или уже куплен
+const OFFER_TXT={kit1:['Силы навсегда и 30 💎','Energy for good and 30 💎'],net_pack:['Набор главы','Chapter pack'],nedra_pack:['Набор главы','Chapter pack'],ipo_pack:['К выходу на биржу','For going public']};
+function offerHtml(id,where){if(!PAY_ITEMS[id]||!visible(id)||own(id))return '';const it=PAY_ITEMS[id],t=OFFER_TXT[id]||['Предложение','Offer'];
+  try{STAT.ev('offer',{k:id,w:String(where||'x'),a:'show'});}catch(e){}
+  return `<button class="set noenter shop-offer" data-shop-offer="${esc(id)}" data-w="${esc(where||'x')}" style="margin:10px 0 0;min-height:52px;text-align:left"><span>⭐ ${T(t[0],t[1])}: ${it.ic} <b>${esc(it.name)}</b><br><small>${T('посмотреть в магазине','see it in the shop')}</small></span><b class="shop-pr" style="margin:0 0 0 8px;align-self:center">${priceOf(id)}</b></button>`;}
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest?e.target.closest('[data-shop-offer]'):null;if(!t)return;e.preventDefault();e.stopPropagation();snd('tap');
+  const id=t.dataset.shopOffer;try{STAT.ev('offer',{k:id,w:t.dataset.w||'x',a:'tap'});}catch(x){}openFrom(secOf(id),{from:'offer',hl:id});},true);
+window.SHOP={open,openFrom,buy,items,secs,SEC,offerHtml,visible};
 // старая точка входа: openShop() из шапки, ⚙, «Не хватает 💎», «Пока вас не было» → сюда (onclick=openShop передаёт событие — не раздел)
-window.openShop=function(sec){open(typeof sec==='string'?sec:'');};
+// M36: второй аргумент — {from, need, hl} (откуда открыли, сколько 💎 нужно, какой товар подсветить)
+window.openShop=function(sec,o){openFrom(typeof sec==='string'?sec:'',o);};
 })();

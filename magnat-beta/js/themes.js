@@ -18,6 +18,7 @@ var THEMES=[
  {id:'poster',ru:'Тёплый плакат',en:'Warm poster',cls:'th-poster',prev:{bg:'#f4ecdf',hd:'#f4ecdf',card:'#fffaf2',ink:'#2a211b',acc:'#b5431d',acc2:'#f2c14e',line:'#2a211b'},unlock:{t:'pay',pay:'th_poster',rub:79,vk:11}},
  {id:'office',ru:'Кабинет председателя',en:'Chairman’s office',cls:'th-office',dark:1,prev:{bg:'#0c1117',hd:'#0f151d',card:'#141b24',ink:'#e9eff6',acc:'#f5b23d',acc2:'#35d49a'},unlock:{t:'pay',pay:'office',rub:79,vk:11}},
  {id:'k90',ru:'Ларёк 90-х',en:'90s kiosk',cls:'th-90s',prev:{bg:'#f8efe4',hd:'#241528',card:'#fffdf9',ink:'#2a1a22',acc:'#b0174f',acc2:'#8dffc0'},unlock:{t:'pay',pay:'set90',rub:79,vk:11}},
+ {id:'birzha',ru:'Биржа',en:'Exchange',cls:'th-birzha',prev:{bg:'#eef2f0',hd:'#0b2a3d',card:'#ffffff',ink:'#0d1b24',acc:'#1d6f42',acc2:'#c9a227'},unlock:{t:'pay',pay:'ipo_pack',rub:149,vk:21}},   // M36: из «Колокола биржи»
  {id:'night',ru:'Ночной город',en:'City at night',cls:'th-night',dark:1,prev:{bg:'#0b1020',hd:'#10172c',card:'#151c33',ink:'#eaf0ff',acc:'#3dd6ff',acc2:'#ff4fa3'},unlock:{t:'ads',n:15}},
  {id:'dacha',ru:'Дача',en:'Dacha',cls:'th-dacha',prev:{bg:'#eef3e3',hd:'#fffdf6',card:'#fffdf6',ink:'#1f2b19',acc:'#3f7d2a',acc2:'#ffd34d'},unlock:{t:'ach',ach:'col:dacha'}},
  {id:'gold',ru:'Золото магната',en:'Tycoon’s gold',cls:'th-gold',prev:{bg:'#f5f0e3',hd:'#0f3d2e',card:'#fffdf8',ink:'#1d1a12',acc:'#c39a2e',acc2:'#0f6e4b'},unlock:{t:'ach',ach:'rk:12'}},

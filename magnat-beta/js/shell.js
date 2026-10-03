@@ -223,7 +223,7 @@ const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':
 // бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta3' (бета-1 — 'beta1', бета-2 — 'beta2'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta5':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta6':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
   if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
@@ -586,14 +586,16 @@ const PAY_ITEMS={
   // сейф (299 ₽ / 42), «Лихие 90-е» (79 ₽ / 11, навсегда, только вид). Удвоение 💎 за ролики и посылки — js/meta-ui.js
   sponsor:{perm:1,vk:14,ic:'🤝',name:'Договор со спонсором',desc:'Навсегда: кристаллы за ролики ×2 — вдвое больше 💎 за каждый ролик «Ролики дня» и бонус-ролик',
     en:{name:'Sponsor deal',desc:'Forever: crystals for videos ×2 — double 💎 for every daily video and bonus video'}},
-  manager:{perm:1,vk:21,ic:'👔',name:'Управляющий',desc:'Пока вас нет, управляющий ведёт дела 8 часов вместо 6 (8 игровых месяцев)',
-    en:{name:'Manager',desc:'While you’re away, the manager runs things for 8 hours instead of 6 (8 game months)'}},
+  // M36 (П1, решение владельца 03.10): + «Продлить смену» без ролика (окна «Пока вас не было» — ui.js, biz-ui.js)
+  manager:{perm:1,vk:21,ic:'👔',name:'Управляющий',desc:'Пока вас нет, управляющий ведёт дела 8 часов вместо 6 (8 игровых месяцев), а продлить смену можно без рекламы',
+    en:{name:'Manager',desc:'While you’re away, the manager runs things for 8 hours instead of 6 (8 game months), and you can extend the shift without an ad'}},
   cr_s:{n:60,vk:7,ic:'💎',name:'Горсть кристаллов: 60 💎',desc:'Ускорить стройку, разведку, срочный контракт',done:'+60 💎 — спасибо!',
     en:{name:'Handful of crystals: 60 💎',desc:'Speed up construction, exploration, an urgent contract',done:'+60 💎 — thank you!'}},
   cr_l:{n:200,vk:18,ic:'💎',name:'Шкатулка кристаллов: 200 💎',desc:'Выгоднее горсти',done:'+200 💎 — спасибо!',
     en:{name:'Crystal casket: 200 💎',desc:'Better value than a handful',done:'+200 💎 — thank you!'}},
-  cr_xl:{n:600,vk:42,ic:'💰',name:'Сейф кристаллов: 600 💎',desc:'Самый большой и самый выгодный запас кристаллов',done:'+600 💎 — спасибо!',
-    en:{name:'Crystal safe: 600 💎',desc:'The biggest and best-value crystal stock',done:'+600 💎 — thank you!'}},
+  // M36 (П1): сейф 600 → 800 💎 за те же 299 ₽ / 42 (лестница 💎 за рубль: путёвка больше не выгоднее сейфа)
+  cr_xl:{n:800,vk:42,ic:'💰',name:'Сейф кристаллов: 800 💎',desc:'Самый большой и самый выгодный запас кристаллов',done:'+800 💎 — спасибо!',
+    en:{name:'Crystal safe: 800 💎',desc:'The biggest and best-value crystal stock',done:'+800 💎 — thank you!'}},
   pass:{n:60,vk:21,ic:'🎫',name:'Путёвка председателя',desc:'Сразу +60 💎 и 30 посылок по 15 💎 — по одной в день, пропуски не сгорают. При первой покупке — эмблема и рамка',done:'+60 💎! Посылки ждут на «Планёрке»',
     en:{name:'Chairman’s voucher',desc:'60 💎 right away and 30 parcels of 15 💎 — one a day, missed days don’t burn. The first purchase adds an emblem and a frame',done:'+60 💎! Parcels are waiting at the Morning meeting'},
     give(){passGive();}},
@@ -626,7 +628,20 @@ const PAY_ITEMS={
     give(){if(!payObj(S.cos))S.cos={};S.cos.em_gpick=1;}},
   look_all:{perm:1,vk:28,ic:'🎨',name:'Вся красота',desc:'Темы «Кабинет председателя», «Тёплый плакат», коллекция «Лихие 90-е» и «Вывески и цвета сети». Что уже куплено — заменим на +40 💎 за каждое',
     en:{name:'All the looks',desc:'The “Chairman’s office” and “Warm poster” themes, “The Wild 90s” collection and “Chain signs and colours”. Anything you already own is swapped for +40 💎 each'},
-    give(){payLookAll();}}
+    give(){payLookAll();}},
+  // M36 (П2, решение владельца 03.10): «Рабочий набор» 49 ₽ / 7 (гл. 1–2, пока не куплены силы), наборы глав: «Набор сетевика» 99 ₽ / 14 (с «Сети»),
+  // «Колокол биржи» 149 ₽ / 21 (с «Недр», строка — в окне IPO), якорь «Магнат навсегда» 499 ₽ / 71 (с «Сети»). Где видно — js/shop.js SHOW
+  // M36: содержимое подобрано симулятором (hobby-analytics/release-b/M36-mon.md): рука + силы давали +18 % капитала в sim-friends (порог 10 %) → силы + 30 💎
+  kit1:{perm:1,bonus:30,vk:7,ic:'🛠',name:'Рабочий набор',desc:'Навсегда: ⚡ +20 к запасу сил — больше работы без отдыха, и сразу +30 💎. Если силы уже куплены — вернём кристаллами. Один раз',
+    en:{name:'Work kit',desc:'Forever: ⚡ +20 to your energy reserve — more work without rest, plus 30 💎 right away. If you already bought the energy, it’s refunded in crystals. One time only'},
+    give(){payKit();}},
+  net_pack:{perm:1,bonus:250,vk:14,ic:'🏬',name:'Набор сетевика',desc:'250 💎, эмблема «Универмаг» 🏬 и цвет вывесок «Фирменный» — для своей сети. Один раз',
+    en:{name:'Chain owner’s pack',desc:'250 💎, the “Department store” 🏬 emblem and the “Signature” sign colour — for your chain. One time only'}},
+  ipo_pack:{perm:1,bonus:300,vk:21,ic:'🔔',name:'Колокол биржи',desc:'300 💎, тема оформления «Биржа», эмблема «Колокол» 🔔 и рамка «Биржевая» — к выходу на биржу. Один раз',
+    en:{name:'Exchange bell',desc:'300 💎, the “Exchange” theme, the “Bell” 🔔 emblem and the “Exchange” frame — for going public. One time only'}},
+  magnat:{perm:1,bonus:300,vk:71,ic:'👑',name:'Магнат навсегда',desc:'Всё навсегда: без рекламы между месяцами, «Договор со спонсором», «Управляющий», «Вся красота» (4 темы и коллекции) и 300 💎. Что уже куплено — заменим на +40 💎 за каждое',
+    en:{name:'Tycoon forever',desc:'Everything forever: no ads between months, the Sponsor deal, the Manager, All the looks (4 themes and collections) and 300 💎. Anything you already own is swapped for +40 💎 each'},
+    give(){payMagnat();}}
 };
 // «Путёвка председателя»: каждая покупка — свой ключ в S.psG (= номер дня покупки), взятые посылки — S.psT[ключ]. Облако сливает оба
 // объекта по ключам (max) — посылки не размножаются. Эмблема «Путёвка» и рамка «Санаторная» — в S.cos. Посылки забирают в META (meta-ui.js)
@@ -636,6 +651,8 @@ function passGive(){if(!isObj(S.psG))S.psG={};let k;do k='p'+nowMs().toString(36
 // «Стартовый набор» (решение владельца 01.10): в продаже только первые 10 реальных дней с первого запуска (S.st0, облако — самый ранний); купленный виден всегда
 const STARTER_DAYS=10;
 function starterOn(){return PAY.own('starter')||nowMs()-(S.st0||nowMs())<STARTER_DAYS*864e5;}
+// M36: сколько реальных дней стартовый набор ещё в продаже (честный остаток от S.st0; 0 — уже нет)
+function starterLeft(){if(PAY.own('starter'))return 0;const ms=STARTER_DAYS*864e5-(nowMs()-(S.st0||nowMs()));return ms>0?Math.max(1,Math.ceil(ms/864e5)):0;}
 // «Всё и сразу»: включает no_ads, manager, office; что уже было куплено — +60 💎 за каждое (один раз: S.buyB.bundle_c)
 function payBundle(){if(!payObj(S.buy))S.buy={};if(!payObj(S.buyB))S.buyB={};let c=0;
   for(const id of ['no_ads','manager','office']){if(S.buy[id])c++;else S.buy[id]=1;}
@@ -643,11 +660,24 @@ function payBundle(){if(!payObj(S.buy))S.buy={};if(!payObj(S.buyB))S.buyB={};let
 // английский для общего модуля PAY (сам модуль не трогаем): надписи его разметки и тосты переводит обёртка
 function payHtml(ids,owned){const h=PAY.html(ids,owned);return LANG==='en'?h.replace('<h3>Покупки</h3>','<h3>Purchases</h3>').replace(/<i>куплено<\/i>/g,'<i>owned</i>'):h;}
 const TOAST_EN={'Покупка зачислена':'Purchase added','Готово! Спасибо за покупку':'Done! Thanks for your purchase','Покупка не состоялась':'The purchase didn’t go through','Покупки проверены — всё на месте':'Purchases checked — everything is in place'};
-const PAY_TEST={no_ads:99,sponsor:99,manager:149,cr_s:49,cr_l:129,cr_xl:299,pass:149,office:79,starter:79,bundle:299,tea:49,livery:79,set90:79,th_poster:79,cr_xs:29,nedra_pack:149,look_all:199}; // цены только для ?paytest=1; настоящие — в консоли
+const PAY_TEST={no_ads:99,sponsor:99,manager:149,cr_s:49,cr_l:129,cr_xl:299,pass:149,office:79,starter:79,bundle:299,tea:49,livery:79,set90:79,th_poster:79,cr_xs:29,nedra_pack:149,look_all:199,kit1:49,net_pack:99,ipo_pack:149,magnat:499}; // цены только для ?paytest=1; настоящие — в консоли
 // «Вся красота»: включает office, set90, th_poster, livery; что уже было — +40 💎 за каждое (один раз: S.buyB.look_all_c)
 function payLookAll(){if(!payObj(S.buy))S.buy={};if(!payObj(S.buyB))S.buyB={};let c=0;
   for(const id of ['office','set90','th_poster','livery']){if(S.buy[id])c++;else S.buy[id]=1;}
   if(c&&!S.buyB.look_all_c){S.buyB.look_all_c=1;payAdd(40*c);}}
+// M36 «Магнат навсегда»: no_ads, sponsor, manager и «Вся красота» (office, th_poster, set90, livery); что уже было — +40 💎 за каждое (один раз: S.buyB.magnat_c)
+function payMagnat(){if(!payObj(S.buy))S.buy={};if(!payObj(S.buyB))S.buyB={};let c=0;
+  for(const id of ['no_ads','sponsor','manager','office','th_poster','set90','livery']){if(S.buy[id])c++;else{S.buy[id]=1;if(id==='set90')S.th90=true;}}
+  if(c&&!S.buyB.magnat_c){S.buyB.magnat_c=1;payAdd(40*c);}}
+// M36 «Рабочий набор»: первая ступень запаса сил (⚡ +20, 40 💎) навсегда — в S.pk (как покупка за 💎, game.js pkSync); уже купленная → её цена в 💎 (один раз: S.buyB.kit1_c)
+function payKit(){try{if(window.GAME&&GAME.pkSync)GAME.pkSync();}catch(e){}if(!isObj(S.pk))S.pk={};let c=0;
+  if((S.pk.enx|0)>=1)c+=40;else S.pk.enx=1;
+  if(c){if(!payObj(S.buyB))S.buyB={};if(!S.buyB.kit1_c){S.buyB.kit1_c=1;payAdd(c);}}
+  try{if(window.GAME&&GAME.pkSync)GAME.pkSync();}catch(e){}}
+// M36 (П1): подарок за первую покупку — +50 💎 и рамка «Меценат», один раз на игрока (S.buyB.first; облако — объединение buyB). Кто уже покупал раньше — не новичок
+const FIRST_CR=50;
+function payPaid(){return !!(payObj(S.buyB)&&S.buyB.first)||payObj(S.buy)&&Object.keys(S.buy).some(k=>S.buy[k])||Array.isArray(S.payT)&&S.payT.length>0||Array.isArray(S.payV)&&S.payV.length>0||(S.teaN|0)>0||isObj(S.psG)&&Object.keys(S.psG).length>0;}
+function payFirst(){if(!payObj(S.buyB))S.buyB={};if(S.buyB.first)return false;S.buyB.first=1;payAdd(FIRST_CR);if(!isObj(S.cos))S.cos={};S.cos.fr_mecen=1;return true;}
 function payAdd(n){S.cr+=n;}
 function payFlush(){cloudFlush();}
 function payPause(on){setPause('pay',on);}
@@ -885,7 +915,7 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Turned on in your device settings (“reduce motion”)'));return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   if($('stLang'))$('stLang').onclick=()=>{const l=LANG==='en'?'ru':'en';LANG_MAN=l;try{localStorage.setItem(LANG_KEY,l);}catch(e){}setLang(l);};
   if($('stTheme'))$('stTheme').onclick=()=>{SND.tap();THEME.open(openSettings);};
-  if($('stShop'))$('stShop').onclick=()=>{SND.tap();openShop();};
+  if($('stShop'))$('stShop').onclick=()=>{SND.tap();openShop('',{from:'set'});};
   PAY.re=openSettings;if(PAY.on)PAY.bind($('mcard'));
   if($('stTut'))$('stTut').onclick=()=>{hideModal();UI.restartTut();};
   if($('stHero'))$('stHero').onclick=()=>{SND.tap();hideModal();STORYUI.openHero(()=>setTimeout(openSettings,60));};
@@ -992,9 +1022,13 @@ window.__back=goBack;document.addEventListener('backbutton',e=>{e.preventDefault
 // SOC — после загрузки сохранения, до моста VK (считает сессии в S.soc); окна — через modal() игры
 SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal()});
 // покупки → статистика (модуль PAY не трогаем): попытка и итог; «ok» — площадка подтвердила и товар выдан (PAY.give), «no» — отмена или ошибка
+// M36: при «ok» ещё s — глава (1–5), d — реальный день игры, n — какая по счёту покупка, cr — 💎 до покупки; подарок за первую покупку (payFirst) — здесь же
 {let payOk=null;const g0=PAY.give,b0=PAY.buy;PAY.give=function(id){payOk=id;return g0.apply(PAY,arguments);};
-  PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;STAT.ev('buy',{i:id,r:'try'});
-    return Promise.resolve(b0.call(PAY,id)).then(r=>{STAT.ev('buy',{i:id,r:payOk===id?'ok':'no'});return r;});};}
+  PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;const c0=S.cr|0,first=!payPaid();STAT.ev('buy',{i:id,r:'try'});
+    return Promise.resolve(b0.call(PAY,id)).then(r=>{const ok=payOk===id;
+      if(ok){S.payN=(S.payN|0)+1;let s=0,d=0;try{s=GAME.stN();d=GAME.realDay();}catch(e){}STAT.ev('buy',{i:id,r:'ok',s,d,n:S.payN,cr:c0});
+        if(first&&payFirst()){save();payFlush();updCr();setTimeout(()=>{try{SND.coin();}catch(e){}toast('🎁 '+L('Подарок за первую покупку: +'+FIRST_CR+' 💎 и рамка «Меценат». Спасибо!','First purchase gift: +'+FIRST_CR+' 💎 and the “Patron” frame. Thank you!'),4200);try{window.uiRefresh&&window.uiRefresh();}catch(e){}if(modalOn&&PAY.re)PAY.re();},3000);}}
+      else STAT.ev('buy',{i:id,r:'no'});return r;});};}
 if(PLAT==='apk'){setTimeout(()=>{sdkReady();},0);}
 else if(PLAT==='vk')initVK();
 // M15 A8: на github.io и в бете SDK Яндекса нет — не грузим /sdk.js (иначе 404 и ошибка загрузки в STAT), сразу initSDK (без YaGames — заглушка: локальное сохранение, без рекламы площадки)
