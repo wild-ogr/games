@@ -81,17 +81,17 @@ function newRun(chi,heroId,endless,wk,dr){
   for(const k of G.ch.en.concat([G.ch.boss,'h_'+G.hkey+'_0','h_'+G.hkey+'_1','hp_'+G.hkey,'gem1','gem2','gem3','coin','chest','pie','bird']))spr(k);
 }
 /* ---------- обучение первого похода (тексты — TUT и TUT_EV в data.js, плашка — tipShow в ui.js) ---------- */
-function tutStart(){G.tut={i:0,t:0,d:0,ev:{},q:null,qt:0};tipShow(TUT[0].t);}
+function tutStart(){G.tut={i:0,t:0,d:0,ev:{},q:null,qt:0};tipShow(TUT[0].t);STAT.ev('tut',{s:0,k:TUT[0].id||''});}
 function tutTick(dt){const T=G.tut;if(!T)return;T.t+=dt;
   if(T.q){T.qt-=dt;if(T.qt<=0){T.q=null;if(TUT[T.i])tipShow(TUT[T.i].t);else tipHide();}}
   const st=TUT[T.i];if(st&&st.ev==='wait'&&T.t>=st.sec)tutNext();
   if(st&&st.ev==='moved'&&G.hero.moving){T.d+=G.st.spd*dt;if(T.d>260)tutNext();}
   if(!T.xOff&&(!st||G.t>75)){T.xOff=1;$('tipX').classList.remove('on');}
   if(!st&&!T.q&&G.t>160)G.tut=null;}
-function tutNext(){const T=G.tut;T.i++;T.t=0;if(T.i>=TUT.length){S.tut=1;save();tutEvent('end');}else if(!T.q)tipShow(TUT[T.i].t);}
+function tutNext(){const T=G.tut;T.i++;T.t=0;STAT.ev('tut',{s:T.i,k:TUT[T.i]?TUT[T.i].id||'':'end'});if(T.i>=TUT.length){S.tut=1;save();tutEvent('end');}else if(!T.q)tipShow(TUT[T.i].t);}
 function tutEvent(e){const T=G&&G.tut;if(!T)return;const st=TUT[T.i];if(st&&st.ev===e)tutNext();
   if(TUT_EV[e]&&!T.ev[e]){T.ev[e]=1;T.q=e;T.qt=e==='end'?6:7;tipShow(TUT_EV[e],true);}}
-function tutSkip(){S.tut=1;save();if(G)G.tut=null;tipHide();}
+function tutSkip(){if(G&&G.tut)STAT.ev('tut',{s:G.tut.i,k:'skip'});S.tut=1;save();if(G)G.tut=null;tipHide();}
 function heroDef(id){return HERO_BY[id]||HEROES[0];}
 function heroMod(id){const m=heroDef(id).mod,r=(S.rank||{})[id]||0,o={};for(const k in m)o[k]=m[k]>0?m[k]*(1+.25*r):m[k];return o;}
 // чистый расчёт: богатырь + кузница + деревня + обереги (pas) + правило недели (wm) + камень (sm); fo — «кузница, как если бы» (для показа «было → стало»)
@@ -537,6 +537,8 @@ function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dea
   if(G.endless&&!G.weekly)LB.set('endless',S.endBest);LB.set('kills',S.kills);
   if(!win&&!G.endless&&!G.daily&&!S.nb&&!S.village.forge&&G.t>=30){S.nb=1;G.nbGold=NOV_GIFT;S.gold+=NOV_GIFT;} // подъёмные от старосты: один раз, новичку после первого поражения
   S.gold+=G.reward; // золото похода — сразу в кошелёк и в сохранение (openResult → save), ×2/×3 за рекламу доплачивает разницу
+  // статистика: итог похода (выход с привала — quit); t — игровые секунды, k — нечисть, lv — уровень богатыря, hr — богатырь
+  STAT.end(G.quit?'quit':win?'win':'lose',{t:Math.floor(G.t),k:G.kills,lv:G.hero.lvl,hr:G.heroId});
   win?SND.win():SND.lose();openResult(win);}
 
 /* ================= отрисовка ================= */

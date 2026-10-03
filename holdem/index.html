@@ -945,6 +945,149 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 /* ================= площадка: Яндекс Игры или VK (модули — из «Выезда»/«Дурака») ================= */
 const PLAT=IS_VK?'vk':'yandex';
 let ysdk=null,YP=null,VK=null,paused=false;
+/*STAT*/
+/* ===== STAT v1 (29.09.2026; 03.10 — тесты с мака/LAN/webdriver не шлются): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+   Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Проект — hobby-analytics/37-own-analytics.md.
+   Что НЕ отправляем никогда: vk_user_id и любые параметры адреса запуска (кроме vk_platform и vk_ref), имя, IP (сервер его не пишет),
+   постоянный номер устройства/игрока. Единственный «ключ» — случайная строка СЕАНСА (живёт только в памяти, до закрытия игры).
+   На устройстве (localStorage 'stat-<игра>') — только день установки, число сеансов и день последней отметки «зашёл сегодня».
+   Возвраты по дням считаем без номера игрока: раз в календарный день игра шлёт 'day' с dn = дней с установки.
+   Отправка — пачкой: раз в FLUSH секунд (если есть события), при сворачивании (sendBeacon) и когда накопилось MAXQ.
+   text/plain без своих заголовков → «простой» запрос без CORS-предзапроса; ответ не читаем. Не отправилось — лежит до следующего раза.
+   Старый синтаксис: только var/function, без стрелок, optional chaining, nullish, шаблонных строк. */
+var STAT=(function(){
+  var V=1,FLUSH=90,MAXQ=40,MAXB=60,KEEP=4,SESS_GAP=30*60e3,MAXERR=5;
+  var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
+      st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,errSeen={},once={},lastErr='';
+  function nop(){}
+  function ls(k,v){try{if(v===undefined)return window.localStorage.getItem(k);if(v===null)window.localStorage.removeItem(k);else window.localStorage.setItem(k,v);}catch(e){}return null;}
+  function jp(s){try{return s?JSON.parse(s):null;}catch(e){return null;}}
+  function now(){var t=0;try{t=O.now?O.now():0;}catch(e){}return typeof t==='number'&&t>1.6e12?t:Date.now();}
+  function dk(t){var d=new Date(t);return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+  function dms(k){return Date.UTC(Math.floor(k/1e4),Math.floor(k/100)%100-1,k%100);}
+  function ddiff(a,b){return Math.round((dms(b)-dms(a))/864e5);}
+  function rnd(){var s='',i;for(i=0;i<3;i++)s+=('0000'+Math.floor(Math.random()*1679616).toString(36)).slice(-4);return s;}
+  function qp(k){var m=new RegExp('[?&]'+k+'=([^&#]*)').exec(location.search);try{return m?decodeURIComponent(m[1]):'';}catch(e){return '';}}
+  function sec(){return Math.round((Date.now()-t0)/100)/10;}
+  function actSec(){return Math.round((act+(vis?Date.now()-actT:0))/1000);}
+  // чистка: без длинных чисел (вдруг id), без адресов с параметрами, короткие строки, не больше 8 полей
+  function scrub(s,n){s=String(s).replace(/[?&#][\w.\-]+=[^\s&#)'"]*/g,'').replace(/(https?:\/\/[^\s?#)'"]*)[?#][^\s)'"]*/g,'$1').replace(/https?:\/\/[^\/\s)'"]+/g,'').replace(/\d{7,}/g,'#');return s.slice(0,n||40);}
+  function clean(p){var o={},n=0,k,v;if(!p||typeof p!=='object')return o;
+    for(k in p){if(!p.hasOwnProperty(k)||n>=8)continue;v=p[k];
+      if(typeof v==='number'){if(!isFinite(v))continue;v=Math.round(v*100)/100;}
+      else if(typeof v==='boolean')v=v?1:0;else if(typeof v==='string')v=scrub(v);else continue;
+      o[String(k).slice(0,12)]=v;n++;}return o;}
+  function device(){var ua=navigator.userAgent||'',w=Math.round(window.innerWidth||0),h=Math.round(window.innerHeight||0),
+      os=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)?'ios':/Android/.test(ua)?'android':/Windows/.test(ua)?'win':/Mac OS X/.test(ua)?'mac':/Linux|CrOS/.test(ua)?'linux':'other',
+      touch=('ontouchstart' in window)||navigator.maxTouchPoints>0,m=Math.min(w,h);
+    var cv=/Chrome\/(\d+)/.exec(ua),sv=/Version\/(\d+)[.\d]* (Mobile\/\S+ )?Safari/.exec(ua);
+    return {os:os,dv:touch?(m<600?'m':'t'):'d',sw:Math.round(w/20)*20,sh:Math.round(h/20)*20,
+      wv:/; wv\)|VKAndroidApp|com\.vkontakte/.test(ua)||(os==='ios'&&!/Safari\//.test(ua))?1:0,
+      br:cv?'c'+cv[1]:sv?'s'+sv[1]:/Firefox\/(\d+)/.test(ua)?'f'+/Firefox\/(\d+)/.exec(ua)[1]:'?'};}
+  function saveSt(){if(O.S){O.S.stc={c:st.c,n:st.n,d:st.d};}ls('stat-'+G,JSON.stringify(st));}
+
+  /* STAT.init({g:'gastronom', gv:'v16', plat:PLAT, lang:LANG, url:STAT_URL, now:nowMs, S:S, rate:1})
+     g — короткое имя игры (как папка), gv — версия игры, url — адрес приёмника из конфига игры.
+     url ПУСТОЙ → модуль полностью молчит: ни запросов, ни обработчиков, ни журнала (можно встроить заранее, адрес вписать потом).
+       Локально считаются только день установки и число сеансов — чтобы после включения возвраты считались от настоящей установки.
+     dev:true (или ?stat=dev на localhost) без url — журнал в консоль и window.__stat, без отправки (стенд, мак).
+     S — если передать, отметки живут ещё и в сохранении игры (S.stc) → облако, меньше «ложных новичков». */
+  var first=false,hooked=false,cut='';
+  /* A1 (03.10): НАШИ ТЕСТЫ — не в боевую базу. Боевой адрес обнуляется (модуль молчит, как с пустым url), если игра открыта
+     автоматом (navigator.webdriver или HeadlessChrome в User-Agent: CDP-прогоны) или с мака/локальной сети: localhost, 127.*, [::1], *.localhost,
+     *.local, *.test, 192.168.*, 10.*, 172.16–31.*, file://. Адрес на сам localhost/LAN или относительный (?stat=sink, стенд) не трогаем.
+     ?stat=dev на localhost — журнал в консоль, как раньше. Почему молчим — STAT._dbg().cut ('wd'|'local'|'file').
+     Площадка 'yandex' на нашем сайте *.github.io (там нет SDK Яндекса: бета, прямые ссылки) пишется как p:'web'. */
+  function locH(h){return /^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|0\.0\.0\.0|)$|\.localhost$|\.local$|\.test$|^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(String(h||''));}
+  function locU(u){var m=/^https?:\/\/(\[[^\]]*\]|[^\/:?#]+)/i.exec(u);return !!m&&locH(m[1]);}
+  function init(o){O=o||{};O.url=String(O.url||'');G=String(O.g||'game').slice(0,16);t0=Date.now();actT=t0;
+    cut='';if(/^https?:/i.test(O.url)&&!locU(O.url)){var wd=false;try{wd=navigator.webdriver===true||/HeadlessChrome|PhantomJS|Puppeteer|Playwright/.test(navigator.userAgent||'');}catch(e){}
+      cut=wd?'wd':location.protocol==='file:'?'file':locH(location.hostname)?'local':'';if(cut)O.url='';}
+    dev=!O.url&&(O.dev===true||(/[?&]stat=dev/.test(location.search)&&/^(localhost|127\.0\.0\.1|\[::1\])$|\.localhost$|\.test$/.test(location.hostname)));
+    var s=jp(ls('stat-'+G))||{},c=O.S&&O.S.stc||{};
+    st={c:+s.c||+c.c||0,n:Math.max(+s.n||0,+c.n||0),d:Math.max(+s.d||0,+c.d||0)};
+    var today=dk(now());first=!st.c;if(first)st.c=today;st.n++;
+    if(!O.url&&!dev){on=false;saveSt();return;}          // адреса нет — молчим
+    if(!enabled()||Math.random()>=(typeof O.rate==='number'?O.rate:1)){on=false;ls('stat-q-'+G,null);saveSt();return;}
+    start();}
+  function start(){var d=device();on=true;sk=rnd();seq=0;
+    hdr={v:V,g:G,gv:String(O.gv||'').slice(0,12),p:String(O.plat==='yandex'&&/\.github\.io$/.test(location.hostname)?'web':O.plat||'').slice(0,8),l:String(O.lang||'').slice(0,4),
+      vp:scrub(qp('vk_platform'),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
+    pend=jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[];
+    ev('start',{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)});
+    dayMark();saveSt();
+    if(!hooked){hooked=true;
+      window.addEventListener('error',function(e){var x=e&&e.target;if(x&&x!==window&&x.tagName){var u=x.src||x.href||'';if(/\/sdk\.js([?#]|$)/.test(u)&&hdr.p!=='yandex')return;err('load '+String(x.tagName).toLowerCase(),u);return;} // не загрузилась картинка/скрипт: без message; SDK Яндекса вне Яндекса (сайт, VK) — не ошибка (03.10)
+        err(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);},true);
+      window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;err('promise: '+(r&&r.message||r),r&&r.stack?String(r.stack).split('\n')[1]:'');});
+      document.addEventListener('visibilitychange',function(){document.visibilityState==='hidden'?hide():show();});
+      window.addEventListener('pagehide',hide);
+      timer=setInterval(function(){if(on&&vis&&Q.length)flush();},FLUSH*1000);}
+    setTimeout(flush,5000); // старое неотправленное + первые шаги — быстро (воронка первой минуты)
+  }
+  // «зашёл сегодня» — раз в календарный день, dn = дней с установки (по дню устройства/сервера игры)
+  function dayMark(){var t=dk(now());if(st.d===t)return;st.d=t;ev('day',{dn:Math.max(0,ddiff(st.c,t)),sn:st.n});saveSt();}
+  function ev(n,p){if(!on)return;var e=[String(n).slice(0,16),sec(),clean(p)];Q.push(e);
+    if(dev){try{(window.__stat=window.__stat||[]).push(e);if(window.console)console.log('[STAT]',e[0],JSON.stringify(e[2]));}catch(x){}}
+    if(Q.length>=MAXQ)flush();}
+  function onceEv(n,p){if(once[n])return;once[n]=1;ev(n,p);}
+
+  // --- уровни: STAT.lvl(5,'daily') в начале, STAT.use('hint') по ходу, STAT.end('win',{st:3}) в конце ---
+  function lvlStart(l,m){if(lvl)lvlEnd('quit');lvl={l:l,m:m||'',t:Date.now(),h:0,u:0,x:{}};var p={l:l};if(m)p.m=m;ev('lvl',p);}
+  function use(k,n){if(lvl){if(k==='hint')lvl.h+=n||1;else if(k==='undo')lvl.u+=n||1;else lvl.x[k]=(lvl.x[k]||0)+(n||1);}}
+  function lvlEnd(r,p){if(!lvl)return;var o={l:lvl.l,r:r,s:Math.round((Date.now()-lvl.t)/1000)},k;if(lvl.m)o.m=lvl.m;if(lvl.h)o.h=lvl.h;if(lvl.u)o.u=lvl.u;
+    for(k in p||{})if(p.hasOwnProperty(k))o[k]=p[k];lvl=null;ev('end',o);}
+  function screen(n){if(n===scr)return;scr=String(n).slice(0,16);if(!once['s_'+scr]){once['s_'+scr]=1;ev('scr',{n:scr});}}
+
+  // --- реклама: STAT.place('hint') ПЕРЕД showRewarded; внутри showRewarded — STAT.ad('rew','ok'|'skip'|'fail'|'err', код) ---
+  var place='';
+  function setPlace(p){place=String(p||'').slice(0,16);}
+  function ad(f,r,code){var p={f:f,r:r,p:f==='int'?'int':(place||'?')};if(code!==undefined&&code!==null&&code!=='')p.c=scrub(code,24);ev('ad',p);if(f!=='int')place='';}
+  function offer(p){onceEv('of_'+p,{p:p});} // кнопка «за рекламу» ПОКАЗАНА (раз за сеанс на место)
+
+  // --- ошибки JS: не больше MAXERR разных за сеанс, без адресов с параметрами (в них vk_user_id!) ---
+  function err(m,src,ln,col){if(!on||errN>=MAXERR)return;m=scrub(m||'?',120);src=scrub(String(src||'').replace(/[?#].*$/,'').replace(/^.*\//,''),40)+(ln?':'+ln+(col?':'+col:''):'');
+    var k=m+'|'+src;if(errSeen[k])return;errSeen[k]=1;errN++;lastErr=m;ev('err',{m:m,s:src,l:lvl?lvl.l:'',sc:scr});flush();}
+
+  // --- отправка ---
+  function pack(){if(!Q.length)return null;var b={},k;for(k in hdr)b[k]=hdr[k];b.dk=dk(now());b.dn=Math.max(0,ddiff(st.c,b.dk));b.sn=st.n;b.q=++seq;b.e=Q.splice(0,MAXB);return b;}
+  function keep(){while(pend.length>KEEP)pend.shift();ls('stat-q-'+G,pend.length?JSON.stringify(pend):null);}
+  function send(b){var s=JSON.stringify(b);if(dev&&!O.url)return true;
+    if(navigator.onLine===false)return false;
+    try{if(navigator.sendBeacon&&navigator.sendBeacon(O.url,s))return true;}catch(e){}
+    try{if(window.fetch){fetch(O.url,{method:'POST',body:s,keepalive:s.length<60000,mode:'no-cors',headers:{'Content-Type':'text/plain'}})['catch'](function(){pend.push(b);keep();});return true;}}catch(e){}
+    try{var x=new XMLHttpRequest();x.open('POST',O.url,true);x.setRequestHeader('Content-Type','text/plain');x.send(s);return true;}catch(e){}
+    return false;}
+  function flush(){if(!on)return;var b,left=[];while(pend.length){b=pend.shift();if(!send(b)){left.push(b);break;}}pend=left.concat(pend);
+    while(Q.length){b=pack();if(!send(b)){pend.push(b);break;}}keep();}
+  function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();var p={d:actSec()};if(lvl)p.l=lvl.l;if(scr)p.sc=scr;ev('pause',p);flush();}
+  function show(){if(!on||vis)return;vis=true;actT=Date.now();
+    if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
+      if(lvl)lvl=null;once={};errN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();ev('start',{sn:st.n,f:0,r:1});}
+    dayMark();}
+
+  // облако игры: в mergeSave — STAT.merge(d.stc): раньше установлен, больше сеансов
+  function merge(c){if(!c||typeof c!=='object')return;if(+c.c&&(!st.c||+c.c<st.c))st.c=+c.c;if(+c.n>st.n)st.n=+c.n;if(+c.d>st.d)st.d=+c.d;saveSt();}
+  // --- переключатель «Анонимная статистика» для ⚙ (по умолчанию ВКЛ.; выбор — на устройстве, localStorage 'stat-off') ---
+  function tx(ru,en){return typeof LANG!=='undefined'&&LANG==='en'?en:ru;}
+  function enabled(){return ls('stat-off')!=='1';}
+  function available(){return !!(O.url||dev);}          // адреса нет — строку в ⚙ не показываем
+  function setEnabled(v){if(v){ls('stat-off',null);if(!on&&available())start();}
+    else{ls('stat-off','1');Q=[];pend=[];ls('stat-q-'+G,null);on=false;}}
+  function optOut(v){setEnabled(!v);}
+  function label(){return tx('📊 Анонимная статистика: ','📊 Anonymous statistics: ')+(enabled()?tx('вкл','on'):tx('выкл','off'));}
+  function note(){return tx('Уровни, ошибки и нажатия кнопок — без имени, ID и IP. Помогает делать игру лучше.',
+    'Levels, errors and button taps — no name, ID or IP. Helps us improve the game.');}
+  function toggle(){setEnabled(!enabled());return label();}
+  return {init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,place:setPlace,ad:ad,offer:offer,err:err,flush:flush,merge:merge,optOut:optOut,
+    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr};}};
+})();
+/*/STAT*/
+// STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
+// Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
+// Турнир / раздача дня / турнир недели / учебная раздача — «уровень» STAT: lvl в newGame/resumeLive, end в finishGame (win/lose/draw) и leaveGame (quit).
+const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
+STAT.init({g:'holdem',gv:'v1',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
   if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}}
@@ -958,8 +1101,8 @@ function mergeSave(d,ref){if(!isObj(d))return;
   for(const f of NUMS)if(typeof d[f]==='number')S[f]=Math.max(S[f]||0,d[f]);
   for(const f of NUMOBJ)if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|coins|streak|buy|buyB|payT|payV|unlocked|tours|wins|hands|pots|bestHand|wkBest|age|best|daily|wkN|wkB|own|tips|adM|soc|fsG|dwk|rec|tp|fin|insN)$/.test(k))S[k]=d[k]; // флажки и настройки
-  payMerge(d);if(d.soc)SOC.merge(d.soc);
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|coins|streak|buy|buyB|payT|payV|unlocked|tours|wins|hands|pots|bestHand|wkBest|age|best|daily|wkN|wkB|own|tips|adM|soc|fsG|dwk|rec|tp|fin|insN|stc)$/.test(k))S[k]=d[k]; // флажки и настройки
+  payMerge(d);if(d.soc)SOC.merge(d.soc);STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
     if(!a||(b.last||0)>(a.last||0))S.streak=b;
     else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last,cyc:Math.max(a.cyc||0,b.cyc||0)};}}
@@ -1221,16 +1364,16 @@ function adPre(){vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=
 function showRewarded(cb0,onFail0){
   if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
   const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
-  if(PLAT==='vk'&&!VK){if(VK_REAL){toast(AD_FAIL());onFail();}else stubAd(cb);return;}
+  if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL());onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
-      .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL());onFail();}})
-      .catch(()=>{adClose();toast(AD_FAIL());onFail();})
+      .then(r=>{adClose();if(r&&r.result){STAT.ad('rew','ok');cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL());onFail();}})
+      .catch(e=>{adClose();STAT.ad('rew','err',e&&e.error_data&&e.error_data.error_code);toast(AD_FAIL());onFail();})
       .then(adPre,adPre);return;} // .then(f,f) вместо .finally — старые WebView (Chrome < 63)
-  if(!ysdk){stubAd(cb);return;}
+  if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
-    onClose:()=>{adClose();if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
-    onError:()=>{adClose();toast(AD_FAIL());onFail();}}});
+    onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
+    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL());onFail();}}});
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
 function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
@@ -1238,8 +1381,8 @@ const AD_NEW=3; // первые 3 турнира — без рекламы во�
 function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.tours||0)>=AD_NEW;}
 const adNew=()=>(S.tours||0)<AD_NEW;
 function showInterstitial(cb0){
-  const cb=shown=>{lastAdT=Date.now();if(shown!==false){S.adW=0;save();}cb0();};
-  if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(cb);return;}
+  const cb=shown=>{lastAdT=Date.now();STAT.ad('int',shown!==false?'show':'none');if(shown!==false){S.adW=0;save();}cb0();};
+  if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nobridge');cb0();}else stubAd(cb);return;}
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),()=>false).then(ok=>{adClose();cb(ok);});return;}
   if(!ysdk){stubAd(cb);return;}
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
@@ -1260,7 +1403,7 @@ function doRefill(){const add=REFILL_TO-S.coins;if(add<=0)return;setCoins(REFILL
   modal(`<div class="av">${portrait('tolik','happy')}</div><h2>${L('Новый коробок','A new matchbox')}</h2><p>${L('Толик принёс свежий коробок — теперь у тебя','Tolik brought you a fresh matchbox — now you have')} <b>${mH(S.coins)}</b>.</p>
     <p class="goal tipl">${L('Спички всегда бесплатные: подарок каждый день и новый коробок, когда кончатся.','Matches are always free: a gift every day and a new box when you run out.')}</p><div class="row"><button class="btn green" id="rfOk">${L('Спасибо!','Thanks!')}</button></div>`);
   $('rfOk').onclick=()=>{hideModal();openMenu();};}
-function openCoins(){
+function openCoins(){STAT.screen('coins');
   const left=adMLeft(),wait=lastRewT?Math.max(0,AD_GAP-(Date.now()-lastRewT)):0,free=needRefill();
   const adBtn=adOk()&&!inGame()&&left>0&&!adNew()?(wait>0?`<button class="btn noenter" disabled>📺 ${L('Спички за рекламу — через','Matches for an ad — in')} ${Math.ceil(wait/60000)} ${L('мин','min')}</button>`
     :`<button class="btn accent noenter" id="mAdM">📺 +${mT(AD_M)} ${L('за рекламу','for an ad')}<br><small>${L('сегодня осталось','left today')}: ${left} ${L('из','of')} ${AD_M_DAY}</small></button>`):'';
@@ -1271,7 +1414,7 @@ function openCoins(){
     <div class="row">${free?`<button class="btn green" id="mRef">🔥 ${L('Взять новый коробок бесплатно','Take a new box for free')}</button>`:''}${adBtn}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   if(buy){PAY.bind($('mcard'));PAY.re=openCoins;}
   if($('mRef'))$('mRef').onclick=doRefill;
-  if($('mAdM'))$('mAdM').onclick=()=>{hideModal();showRewarded(()=>{const k=dayKey(0);S.adM[k]=(S.adM[k]||0)+1;
+  if($('mAdM'))STAT.offer('coins');if($('mAdM'))$('mAdM').onclick=()=>{hideModal();STAT.place('coins');showRewarded(()=>{const k=dayKey(0);S.adM[k]=(S.adM[k]||0)+1;
       lastRewT=Date.now();for(const d in S.adM)if(+d<dayKey(-7))delete S.adM[d];setCoins(S.coins+AD_M);SND.coin();toast('+'+mT(AD_M));if(!G)openMenu();});};
   $('mCancel').onclick=hideModal;}
 
@@ -1289,7 +1432,8 @@ const PAY_TEST={no_ads:99,tables:59,backs:59,looks:59}; // цены только
 function payAdd(n){} // расходуемых товаров нет: спички не продаём
 function payFlush(){cloudFlush();}
 function payPause(on){setPause('pay',on);}
-function payAfter(){updCoins();if(modalOn&&PAY.re)PAY.re();else if($('scr-shop').classList.contains('on'))openShop();}
+let payOk=null; // STAT: какая покупка прошла (PAY.buy зовёт payAfter(id) только при успехе)
+function payAfter(id){if(id)payOk=id;updCoins();if(modalOn&&PAY.re)PAY.re();else if($('scr-shop').classList.contains('on'))openShop();}
 /* ================= покупки за деньги: Яндекс Игры (ysdk.payments) и VK Игры (VKWebAppShowOrderBox) — общий модуль (одинаковый в 5 играх) =================
    Товары игры — PAY_ITEMS (выше), id совпадают с id в консоли Яндекса («Инап-покупки») и в hobby-pay/catalog.json (VK).
    Кнопок покупок НЕТ совсем, если платежи недоступны: нет SDK/моста (мак), каталог Яндекса пуст, VK не поддерживает оплату (iOS).
@@ -1375,6 +1519,9 @@ const PAY={on:false,p:null,v:null,list:[],busy:false,
     return L.length?'<div class="pay"><h3>Покупки</h3>'+L.map(PAY.row).join('')+'</div>':'';},
   bind(root){(root||document).querySelectorAll('.pbuy').forEach(b=>b.onclick=()=>{try{(SND.tap||SND.click)();}catch(e){}PAY.buy(b.dataset.pid);});}
 };
+// STAT: обёртка снаружи общего модуля PAY (сам PAY не меняем): попытка → ok (payAfter(id) пришёл) | cancel (отказ/ошибка)
+{const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;STAT.ev('buy',{i:id,r:'try'});
+  return Promise.resolve(b0.call(PAY,id)).then(()=>STAT.ev('buy',{i:id,r:payOk===id?'ok':'cancel'}));};}
 function payMark(v){if(!Array.isArray(S.payV))S.payV=[];if(S.payV.indexOf(v)<0)S.payV.push(v);if(S.payV.length>30)S.payV=S.payV.slice(-30);}
 // слияние облака (d) в сохранение T (по умолчанию S): купленное, выданные бонусы, токены и заказы — объединение (покупка не теряется ни с какой стороны)
 function payMerge(d,T){T=T||S;if(!payObj(d)||!payObj(T))return;
@@ -1425,7 +1572,7 @@ const LB={
   async entries(){const o={includeUser:true,quantityAround:2,quantityTop:10};
     try{if(ysdk.leaderboards&&ysdk.leaderboards.getEntries)return await ysdk.leaderboards.getEntries(LB_NAME,o);
       const lb=await ysdk.getLeaderboards();return await lb.getLeaderboardEntries(LB_NAME,o);}catch(e){return null;}},
-  async show(back){back=back||hideModal;
+  async show(back){back=back||hideModal;STAT.screen('rank');
     if(PLAT==='vk'){if(!VK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:LB.score()},60000).catch(()=>toast('Таблица друзей сейчас недоступна'));return;}
     modal(`<h2>🏆 ${L('Рейтинг','Leaderboard')}</h2><p>${L('Загружаем…','Loading…')}</p>`);
     const r=await LB.entries();const list=(r&&r.entries)||[];
@@ -1708,15 +1855,17 @@ function newGame(mode,o){const opp=o.opp,n=opp.length+1,stack=o.stack;LASTH=null
   const seats=[{kind:'human',id:'me'}].concat(opp.map(id=>({kind:'bot',id})));
   const s=newTable({seed:o.seed>>>0,stacks:seats.map(()=>stack),sb:o.sb,bb:o.bb,btn:o.btn!=null?o.btn:Math.floor(Math.random()*n)});
   G={mode,pi:o.pi==null?-1:o.pi,seats,s,H:o.H||TOUR_H,sb0:o.sb,bb0:o.bb,stack0:stack,tok:++TOK,busted:[],mood:{},tag:{},bub:{},disp:null,fx:{},key:o.key||0,t0:Date.now(),tn:o.tn||0,dev:{bad:0,tight:0,n:0,ok:0}};if(o.wt!=null)G.wt=o.wt;if(o.tt!=null)G.tt=o.tt;
-  initDisp();return G;}
+  initDisp();statLvl('');return G;}
+// STAT: уровень = турнир за столом (l = номер стола), раздача дня (0), турнир недели (l = попытка), учебная (0); m = режим (tour-new — первый турнир за столом 2–5)
+function statLvl(sfx){if(!G)return;const m=G.mode;STAT.lvl(m==='tour'?G.pi+1:m==='week'?(G.wt||0)+1:0,(m==='tour'&&G.pi>0&&G.tt===0?'tour-new':m)+sfx);}
 function initDisp(){const s=G.s;G.disp={st:s.seats.map(p=>p.st),bet:s.seats.map(p=>p.bet),pot:s.seats.reduce((a,p)=>a+p.tot-p.bet,0),board:s.board.length,show:s.phase==='end'&&s.res&&s.res.sd,won:null,hi:null};G.logN=s.log.length;}
-function enterGame(){show('scr-game');hideModal();updHead();applyCalm();render();renderActs();YG.start();
+function enterGame(){STAT.screen('game');STAT.once('ready',{ms:Math.round(performance.now())});show('scr-game');hideModal();updHead();applyCalm();render();renderActs();YG.start();
   const tok=G.tok;setTimeout(()=>{if(alive(tok))loop(tok);},calm()?150:450);}
 // незаконченная игра — в localStorage (движок — простой JSON): перезагрузка страницы не съедает вход
 function saveLive(){if(!G||window.__demo||G.mode==='learn')return;try{localStorage.setItem(LKEY,JSON.stringify({mode:G.mode,pi:G.pi,seats:G.seats.map(x=>({kind:x.kind,id:x.id})),s:G.s,H:G.H,sb0:G.sb0,bb0:G.bb0,stack0:G.stack0,busted:G.busted,key:G.key,tn:G.tn,dev:G.dev,wt:G.wt,tt:G.tt}));}catch(e){}}
 function liveGet(){try{const o=JSON.parse(localStorage.getItem(LKEY)||'null');return o&&o.s&&Array.isArray(o.seats)&&o.s.seats&&o.s.seats.length===o.seats.length?o:null;}catch(e){return null;}}
 function liveClear(){try{localStorage.removeItem(LKEY);}catch(e){}}
-function resumeLive(o){LASTH=null;G={mode:o.mode,pi:o.pi,seats:o.seats,s:o.s,H:o.H,sb0:o.sb0,bb0:o.bb0,stack0:o.stack0,tok:++TOK,busted:o.busted||[],mood:{},tag:{},bub:{},fx:{},key:o.key||0,t0:Date.now(),tn:o.tn||0,dev:isObj(o.dev)?o.dev:{bad:0,tight:0,n:0,ok:0}};if(typeof o.wt==='number')G.wt=o.wt;if(typeof o.tt==='number')G.tt=o.tt;initDisp();enterGame();}
+function resumeLive(o){LASTH=null;G={mode:o.mode,pi:o.pi,seats:o.seats,s:o.s,H:o.H,sb0:o.sb0,bb0:o.bb0,stack0:o.stack0,tok:++TOK,busted:o.busted||[],mood:{},tag:{},bub:{},fx:{},key:o.key||0,t0:Date.now(),tn:o.tn||0,dev:isObj(o.dev)?o.dev:{bad:0,tight:0,n:0,ok:0}};if(typeof o.wt==='number')G.wt=o.wt;if(typeof o.tt==='number')G.tt=o.tt;initDisp();statLvl('-r');enterGame();}
 // главный цикл стола
 async function loop(tok){
   while(alive(tok)){
@@ -1808,7 +1957,7 @@ function sayLine(i,kind,force){if(!G||G.over||i<=0||i>=G.seats.length||G.seats[i
 // очередь: подсказки не перекрывают друг друга — каждая висит не меньше TIP_MIN, потом следующая (нажатие закрывает);
 // pri — важная (ваш ход): встаёт первой в очередь
 const TIP_MIN=3500,TIP_MAX=8000;
-function tip(key,text,pri){if(!G||(S.tips||{})[key]||(S.tours||0)>=2||window.__demo)return;S.tips[key]=1;save();
+function tip(key,text,pri){if(!G||(S.tips||{})[key]||(S.tours||0)>=2||window.__demo)return;S.tips[key]=1;STAT.ev('tut',{s:key});save();
   if(!G.tipQ)G.tipQ=[];if(!G.tip){tipShow(text);return;}
   if(pri)G.tipQ.unshift(text);else G.tipQ.push(text);
   if(G.tipQ.length>3)G.tipQ.length=3;
@@ -1877,6 +2026,9 @@ function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear(
       <p class="goal">${L('Это тренировка: спички из коробка не тратятся и не прибавляются. В «Разборе» — кто что ставил и почему банк ушёл.','This is practice: your box is not touched. The replay shows who bet what and why the pot went where it did.')}</p>${REVB()}
       <div class="row"><div class="row2"><button class="btn" id="rMenu">${L('В меню','Menu')}</button><button class="btn green" id="rAgain">${L('Ещё одну','One more')}</button></div></div>`;
     if(profit>0)SND.win();}
+  {const pr=end-G.stack0,dv=G.dev||{},o={pl:place,hd:G.s.hand,d:pr};if(dv.n)o.a=Math.round(100*dv.ok/dv.n); // a — % ходов по совету
+    STAT.end(mode==='daily'||mode==='learn'?(pr>0?'win':pr<0?'lose':'draw'):place===1&&!me.out?'win':'lose',o); // турнир/неделя: 1-е место — win, иначе lose (pl — место)
+    if(mode==='tour'&&S.tours===1)STAT.ev('tut',{s:'t1'});}
   modal(html);$('mcard').classList.add('fin');G.over=true;
   const next=f=>()=>{hideModal();const go=()=>{G=null;f();};
     if(mode!=='daily'&&mode!=='learn'&&!me.out&&adDue()&&adReady()&&adOk())showInterstitial(go);else go();};
@@ -1898,7 +2050,7 @@ function lastSnap(){const s=G.s,r=s.res;if(!r)return;
   LASTH={hand:s.hand,sb:s.sb,bb:s.bb,mode:G.mode,ids:G.seats.map(x=>x.kind==='bot'?x.id:''),board:s.board.slice(),log:s.log.slice(),
     cards:s.seats.map((p,i)=>i===0||p.show||G.mode==='learn'?p.c.slice():null),fold:s.seats.map(p=>!!p.f),won:r.won.slice(),score:Object.assign({},r.score),sd:!!r.sd,
     pots:r.pots.map(p=>({amt:p.amt,win:(p.win||[]).slice()}))};}
-function openReview(back){const R=LASTH;if(!R){if(back)back();return;}
+function openReview(back){STAT.screen('review');const R=LASTH;if(!R){if(back)back();return;}
   const nm=i=>i===0?L('Вы','You'):R.ids[i]&&CHARS[R.ids[i]]?T2(CHARS[R.ids[i]].n):'?';
   const mini=(cs,w)=>`<span class="rvc" style="width:${(cs.length*w*1.08).toFixed(0)}px;height:${(w*1.4).toFixed(0)}px">${cs.map((c,k)=>cardHtml(c,k*w*1.08,0,w,'')).join('')}</span>`;
   const ST=[L('До флопа','Before the flop'),L('Флоп','Flop'),L('Тёрн','Turn'),L('Ривер','River')];
@@ -1929,7 +2081,7 @@ function openReview(back){const R=LASTH;if(!R){if(back)back();return;}
 // учебная раздача: одна раздача против мягких соперников Гаража, их карты открыты, каждый ход объяснён; спички коробка не трогаем
 function learnSeed(){const r=randSeed();for(let t=0;t<80;t++){const seed=hash32(r,t),s=newTable({seed,stacks:[1000,1000,1000,1000],sb:10,bb:20,btn:0});startHand(s,0);
   if(chen(s.seats[0].c)>=8)return seed;}return r;} // свои карты «играбельные» — учебная раздача доходит до флопа
-function startLearn(){newGame('learn',{opp:['tolik','egorych','lyuda'],stack:1000,sb:10,bb:20,seed:learnSeed(),btn:0,H:1});G.lrn=L('Карты соперников открыты. После каждого их хода здесь — почему они так сыграли.','Opponents\' cards are open. After each of their moves you\'ll see why they played it.');enterGame();}
+function startLearn(){STAT.ev('tut',{s:'learn'});newGame('learn',{opp:['tolik','egorych','lyuda'],stack:1000,sb:10,bb:20,seed:learnSeed(),btn:0,H:1});G.lrn=L('Карты соперников открыты. После каждого их хода здесь — почему они так сыграли.','Opponents\' cards are open. After each of their moves you\'ll see why they played it.');enterGame();}
 function learnWhy(i,e){const s=G.s,p=s.seats[i],nm=T2(CHARS[G.seats[i].id].n),bd=s.board.slice(0,G.disp.board);let what,sg;
   const ct=cardTxt(p.c[0])+' '+cardTxt(p.c[1]);
   if(bd.length<3){const ch=chen(p.c);sg=ch>=12?2:ch>=8?1:0;what=ct+' — '+(ch>=12?L('сильные карты','strong cards'):ch>=8?L('неплохие карты','decent cards'):ch>=5?L('средние карты','average cards'):L('слабые карты','weak cards'));}
@@ -1981,7 +2133,7 @@ function askLeave(){if(!G||G.over)return;const s=G.s,me=s.seats[0],inHandNow=s.p
     <div class="row"><button class="btn green" id="lvStay">${L('Остаться','Stay')}</button><button class="btn noenter" id="lvGo">${L('Выйти','Leave')}</button></div>`);
   $('lvStay').onclick=()=>{hideModal();};
   $('lvGo').onclick=()=>{hideModal();leaveGame();};}
-function leaveGame(){if(!G)return;const s=G.s,me=s.seats[0];
+function leaveGame(){if(!G)return;const s=G.s,me=s.seats[0];STAT.end('quit',{hd:s.hand,d:me.st-G.stack0});
   if(G.mode==='tour'){S.coins+=me.st;save();}
   else if(G.mode==='daily'){S.daily[G.key]=Math.max(S.daily[G.key]||0,1);save();}
   G.tok=-1;G=null;liveClear();YG.stop();updCoins();openMenu();}
@@ -1990,11 +2142,11 @@ function leaveGame(){if(!G)return;const s=G.s,me=s.seats[0];
 function randSeed(){try{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0];}catch(e){return Math.floor(Math.random()*4294967296);}}
 function startTour(pi){const P=PLACES[pi];if(!P||S.unlocked<pi+1)return;
   if(S.coins<P.bi){noMatches(P.bi);return;}
-  const tt=tablePlayed(pi);S.tp[pi]=tt+1;S.coins-=P.bi;save();updCoins();
+  const tt=tablePlayed(pi);S.tp[pi]=tt+1;S.coins-=P.bi;STAT.ev('spend',{k:'bi'+(pi+1),c:P.bi});save();updCoins();
   newGame('tour',{pi,opp:P.o,stack:P.bi,sb:P.bi/100,bb:P.bi/50,seed:randSeed(),tn:S.tours||0,tt});enterGame();}
 // сколько турниров игрок начинал за столом pi; у старых сохранений (до S.tp) стол со звёздами считаем сыгранным
 function tablePlayed(pi){const v=S.tp[pi];return typeof v==='number'?v:(S.best[pi]||0)>0?NEW_SOFT.length:0;}
-function noMatches(need){const free=needRefill(),left=adMLeft();
+function noMatches(need){STAT.screen('nomatch');const free=needRefill(),left=adMLeft();
   modal(`<h2>${L('Не хватает спичек','Not enough matches')}</h2><p>${L('Чтобы сесть за этот стол, нужно','To sit at this table you need')} <b>${mH(need)}</b>, ${L('у вас','you have')} <b>${mH(S.coins)}</b>.</p>
     <p>${L('Выиграйте за столом попроще, заберите подарок дня или спички за рекламу.','Win at an easier table, collect the daily gift or matches for an ad.')}</p>
     <div class="row">${free?`<button class="btn green" id="nmRef">🔥 ${L('Взять новый коробок бесплатно','Take a new box for free')}</button>`:''}<button class="btn" id="nmBox">${L('Мои спички','My matches')}</button><button class="btn" id="nmOk">${L('Понятно','OK')}</button></div>`);
@@ -2024,11 +2176,11 @@ function fsLine(){const l=fsLeft();if(!l.length)return '';const ready=l.filter(x
 function fsCard(){const l=fsLeft();if(!l.length)return '';const done=FSTEPS.filter(x=>S.fsG[x.k]||x.ok()).length;
   return `<div class="fs"><b>🌱 ${L('Первые шаги','First steps')} · ${done} ${L('из','of')} ${FSTEPS.length}</b>${FSTEPS.map(x=>{const g=!!S.fsG[x.k],ok=x.ok();
     return `<div class="fsr${g?' got':''}"><span class="fi">${g?'✅':x.ic}</span><span class="ft">${T2(x.n)}${!ok&&x.pr?' · '+x.pr():''}</span>${g?`<i>+${fmt(x.r)}</i>`:ok?`<button class="btn green fsb" data-k="${x.k}">+${mH(x.r)}</button>`:`<i>+${fmt(x.r)}${MT}</i>`}</div>`;}).join('')}</div>`;}
-function fsClaim(k){const x=FSTEPS.find(q=>q.k===k);if(!x||S.fsG[k]||!x.ok())return;S.fsG[k]=1;setCoins(S.coins+x.r);SND.coin();toast('+'+mT(x.r));
+function fsClaim(k){const x=FSTEPS.find(q=>q.k===k);if(!x||S.fsG[k]||!x.ok())return;S.fsG[k]=1;STAT.ev('mod',{m:'quest',a:k});setCoins(S.coins+x.r);SND.coin();toast('+'+mT(x.r));
   if(!fsLeft().length)setTimeout(()=>{SND.win();toast(L('Все первые шаги пройдены!','All first steps done!'));},700);openMenu();}
 
 /* ================= меню ================= */
-function openMenu(){G=G&&G.over?null:G;show('scr-menu');YG.stop();updCoins();applyStaticLang();
+function openMenu(){G=G&&G.over?null:G;STAT.once('menu');STAT.once('ready',{ms:Math.round(performance.now())});STAT.screen('menu');show('scr-menu');YG.stop();updCoins();applyStaticLang();
   const dk=dayKey(0),dd=S.daily[dk]||0,wk=weekKey(),wn=S.wkN[wk]||0,wOpen=(S.tours||0)>=1,dOpen=(S.tours||0)>=1||(S.hands||0)>=10;
   const rn=rankNext();
   let h=`<div class="rankb"><button id="rankBtn">🏅 ${rankOf()} · ${L('побед','wins')}: ${S.wins||0}${rn?`<span class="rbar"><i style="width:${Math.round(rn.f*100)}%"></i></span>`:''}</button></div>`;
@@ -2050,7 +2202,7 @@ function openMenu(){G=G&&G.over?null:G;show('scr-menu');YG.stop();updCoins();app
   $('tWeek').onclick=()=>{if(!wOpen){toast(L('Сначала сыграйте первый турнир','Play your first tournament first'));return;}openWeek();};
   $('menuBody').querySelectorAll('.place').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(S.unlocked<i+1){SND.no();toast(L('Займите 1-е или 2-е место за предыдущим столом','Finish 1st or 2nd at the previous table'));return;}openPlace(i);});
   updGiftDot();}
-function openPlace(i){const P=PLACES[i];
+function openPlace(i){STAT.screen('place');const P=PLACES[i];
   modal(`<h2>${P.ic} ${T2(P.n)}</h2><p>${T2(P.about)}</p>
     <div class="places">${P.o.map(id=>`<div><span class="av">${portrait(id)}</span><span><b>${T2(CHARS[id].full)}</b><br><small>${T2(CHARS[id].about)}</small></span><i>${T2(CHARS[id].st)}</i></div>`).join('')}</div>
     ${i>0&&botMod(i,S.tours||0,tablePlayed(i))?`<p class="goal tipl">🌱 ${tablePlayed(i)===0?L('Ваш первый турнир здесь: соперники играют мягко, а вылет вернёт вход.','Your first tournament here: the opponents play softly, and busting returns your buy-in.'):L('Вы здесь новичок: соперники пока играют мягче.','You\'re new here: the opponents still play softer.')}</p>`:''}
@@ -2058,14 +2210,14 @@ function openPlace(i){const P=PLACES[i];
     <p>${L('Вход','Buy-in')}: <b>${mH(P.bi)}</b> · ${L('у каждого соперника столько же','each opponent has the same')}.<br>${TOUR_H} ${L('раздач, блайнды растут каждые','hands, blinds go up every')} ${LV_EVERY}. ${L('Что останется — ваше.','Whatever you have left is yours.')}</p>
     <div class="row"><button class="btn green" id="pGo">${L('Сесть за стол','Take a seat')} · ${mH(P.bi)}</button><button class="btn" id="pBack">${L('Назад','Back')}</button></div>`);
   $('pGo').onclick=()=>{hideModal();startTour(i);};$('pBack').onclick=hideModal;}
-function openWeek(){const k=weekKey(),n=S.wkN[k]||0;
+function openWeek(){STAT.screen('week');const k=weekKey(),n=S.wkN[k]||0;
   modal(`<h2>🏆 ${L('Турнир недели','Weekly tournament')}</h2><p>${L('Соперники и колоды на этой неделе у всех одинаковые: 3 попытки — 3 разные колоды. 15 раздач, по 1000 спичек у каждого — вход бесплатный, спички из коробка не тратятся.','This week everyone gets the same opponents and decks: 3 tries — 3 different decks. 15 hands, 1000 matches each — free entry, your own matches are not used.')}</p>
     <div class="avs" style="justify-content:center">${WEEK_OPP.map(id=>'<span>'+portrait(id)+'</span>').join('')}</div>
     <p>${L('Очки — сколько спичек останется. Лучший результат идёт в рейтинг.','Score — how many matches you have left. Your best result goes to the leaderboard.')}</p>
     <p>${L('Лучший на этой неделе','Best this week')}: <b>${mH(S.wkB[k]||0)}</b> · ${L('рекорд','record')}: <b>${mH(S.wkBest||0)}</b><br>${L('Попыток осталось','Tries left')}: <b>${WEEK_TRIES-n}</b> ${L('из','of')} ${WEEK_TRIES}</p>
     <div class="row">${n<WEEK_TRIES?`<button class="btn green" id="wGo">${L('Играть','Play')}</button>`:`<p class="goal">${L('Новые попытки — в понедельник.','New tries on Monday.')}</p>`}${LB.ok()?`<button class="btn blue noenter" id="wRank">🏆 ${L('Рейтинг','Leaderboard')}</button>`:''}<button class="btn" id="wBack">${L('Назад','Back')}</button></div>`);
   if($('wGo'))$('wGo').onclick=()=>{hideModal();startWeek();};if($('wRank'))$('wRank').onclick=()=>LB.show(openWeek);$('wBack').onclick=hideModal;}
-function openStats(){const bh=S.bestHand?handName(S.bestHand):'—',rn=rankNext(),R0=isObj(S.rec)?S.rec:{};
+function openStats(){STAT.screen('stats');const bh=S.bestHand?handName(S.bestHand):'—',rn=rankNext(),R0=isObj(S.rec)?S.rec:{};
   modal(`<h2>🏅 ${rankOf()}</h2>${rn?`<p>${L('До звания','Next rank')} ${L('«'+rn.n+'»','"'+rn.n+'"')}: ${L('ещё ','')}<b>${rn.xp}</b> ${L('опыта','XP to go')} ${L('или','or')} <b>${rn.w}</b> ${pl(rn.w,'победа','победы','побед','win','wins')}</p><div class="rbar big"><i style="width:${Math.round(rn.f*100)}%"></i></div>
     <p style="font-size:15px;color:#57606f">${L('Опыт','XP')}: ${xpNow()} — ${L('раздача +1, турнир +10, победа +25','hand +1, tournament +10, win +25')}</p>`:''}<div class="how">
     <p>🏆 ${L('Побед в турнирах','Tournament wins')}: <b>${S.wins||0}</b> ${L('из','of')} ${S.tours||0}</p>
@@ -2083,16 +2235,16 @@ function menuPopups(){if(G||window.__demo||modalOn||$('ad').classList.contains('
   const lv=liveGet();if(lv){askResume(lv);return;}
   if(needRefill()){doRefill();return;}
   const st=streakState();if(!st.claimed&&(S.tours||0)>=1)showGift();}
-function ageGate(){modal(`<div class="age">18+</div><h2>${L('Игра для взрослых','An adult game')}</h2>
+function ageGate(){STAT.screen('age');modal(`<div class="age">18+</div><h2>${L('Игра для взрослых','An adult game')}</h2>
   <p>${L('Это покер на спички: игра без реальных денег и призов. Спички нельзя купить, продать, подарить или вывести — только играть.','This is matchstick poker: no real money or prizes. Matches can\'t be bought, sold, gifted or cashed out — only played with.')}</p>
   <p>${L('Вам есть 18 лет?','Are you 18 or older?')}</p><div class="row"><button class="btn green" id="age1">${L('Да, мне есть 18','Yes, I\'m 18+')}</button><button class="btn noenter" id="age0">${L('Нет','No')}</button></div>`);
-  $('age1').onclick=()=>{S.age=1;save();hideModal();if(!(S.tours>0)&&!(S.hands>0)&&!liveGet())welcome();else menuPopups();};
-  $('age0').onclick=()=>modal(`<h2>${L('Извините','Sorry')}</h2><p>${L('Эта игра только для взрослых. Загляните в наши другие игры!','This game is for adults only. Take a look at our other games!')}</p>`);}
-function welcome(){modal(`<div class="av">${portrait('tolik','happy')}</div><h2>${L('Заходи в гараж!','Come on into the garage!')}</h2>
+  $('age1').onclick=()=>{S.age=1;STAT.ev('tut',{s:'age'});save();hideModal();if(!(S.tours>0)&&!(S.hands>0)&&!liveGet())welcome();else menuPopups();};
+  $('age0').onclick=()=>{STAT.ev('tut',{s:'age0'});modal(`<h2>${L('Извините','Sorry')}</h2><p>${L('Эта игра только для взрослых. Загляните в наши другие игры!','This game is for adults only. Take a look at our other games!')}</p>`);};}
+function welcome(){STAT.ev('tut',{s:'wel'});modal(`<div class="av">${portrait('tolik','happy')}</div><h2>${L('Заходи в гараж!','Come on into the garage!')}</h2>
   <p>${L('Играем в техасский холдем на спички. Вот тебе коробок —','We play Texas Hold\'em for matches. Here\'s a box for you —')} <b>${mH(S.coins)}</b>. ${L('За первым столом подскажу, что к чему.','At the first table I\'ll show you the ropes.')}</p>
   <div class="row"><button class="btn green" id="wcGo">${L('Сесть за стол','Take a seat')}</button><button class="btn noenter" id="wcRules">📖 ${L('Сначала правила','Rules first')}</button></div>`);
-  $('wcGo').onclick=()=>{hideModal();startTour(0);};$('wcRules').onclick=()=>openHow(welcome);}
-function askResume(o){const nm=o.mode==='tour'?T2(PLACES[o.pi].n):o.mode==='week'?L('Турнир недели','Weekly tournament'):L('Раздача дня','Hand of the day');
+  $('wcGo').onclick=()=>{STAT.ev('tut',{s:'go'});hideModal();startTour(0);};$('wcRules').onclick=()=>{STAT.ev('tut',{s:'rules'});openHow(welcome);};}
+function askResume(o){STAT.screen('resume');const nm=o.mode==='tour'?T2(PLACES[o.pi].n):o.mode==='week'?L('Турнир недели','Weekly tournament'):L('Раздача дня','Hand of the day');
   const st=o.s.seats[0].st;
   modal(`<h2>${L('Незаконченная игра','Unfinished game')}</h2><p>${esc(nm)} — ${L('раздача','hand')} ${Math.max(1,o.s.hand)} ${L('из','of')} ${o.H}. ${L('У вас','You have')} ${mH(st)}${o.s.phase==='bet'&&!o.s.seats[0].f?' '+L('и ещё ставка в банке','plus your bet in the pot'):''}.</p>
     <div class="row"><button class="btn green" id="lvGo2">${L('Продолжить','Continue')}</button><button class="btn noenter" id="lvEnd">${o.mode==='tour'?L('Уйти со спичками','Leave with the matches'):L('Закончить','Finish')}</button></div>`);
@@ -2101,7 +2253,7 @@ function askResume(o){const nm=o.mode==='tour'?T2(PLACES[o.pi].n):o.mode==='week
 
 /* ================= украшения ================= */
 let shopTab='t';
-function openShop(){show('scr-shop');applyStaticLang();const box=$('shGrid'),k=shopTab,list=LIST[k];
+function openShop(){STAT.screen('shop');show('scr-shop');applyStaticLang();const box=$('shGrid'),k=shopTab,list=LIST[k];
   document.querySelectorAll('#shTabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
   const cur=k==='t'?S.sel.t:k==='b'?S.sel.b:S.sel.l;
   let h='';
@@ -2123,7 +2275,7 @@ function streakState(){const s=S.streak||{day:0,last:0,cyc:0},t=dayKey(0);
   if(s.last===t)return{claimed:true,day:s.day};
   return{claimed:false,day:s.day>0?s.day%7+1:1};}
 const weekBack=()=>!S.own['b:week'];
-function showGift(){const st=streakState();let cells='';
+function showGift(){STAT.screen('gift');const st=streakState();let cells='';
   for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day;
     cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>${L('День','Day')} ${d}</small>${d===7?'🎁':''}+${fmt(STREAK[d-1])}${MT}${d===7&&weekBack()?'<small>'+L('и рубашка','+ card back')+'</small>':''}</div>`;}
   const r=st.claimed?0:STREAK[st.day-1];
@@ -2132,10 +2284,10 @@ function showGift(){const st=streakState();let cells='';
     <div class="row">${st.claimed?`<button class="btn" id="gClose">${L('Закрыть','Close')}</button>`:`<button class="btn green" id="gGet">${L('Забрать','Collect')} +${mH(r)}</button>${adOk()&&!adNew()?`<button class="btn accent noenter" id="gX2">📺 ×2 ${L('за рекламу','for an ad')} (+${fmt(r*2)}${MT})</button>`:''}`}</div>`);
   if(st.claimed){$('gClose').onclick=hideModal;return;}
   $('gGet').onclick=()=>claimGift(1);
-  if($('gX2'))$('gX2').onclick=()=>{hideModal();showRewarded(()=>claimGift(2),()=>showGift());};}
+  if($('gX2'))STAT.offer('gift');if($('gX2'))$('gX2').onclick=()=>{hideModal();STAT.place('gift');showRewarded(()=>claimGift(2),()=>showGift());};}
 function claimGift(mult){const st=streakState();if(st.claimed){hideModal();return;}
   const r=STREAK[st.day-1],back=st.day===7&&weekBack(),s=S.streak||{cyc:0};S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
-  if(back)S.own['b:week']=1;S.coins+=r*mult;save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);updGiftDot();
+  if(back)S.own['b:week']=1;S.coins+=r*mult;STAT.ev('gift',{d:st.day,x:mult});save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);updGiftDot();
   modal(`<h2>${st.day===7?L('Седьмой подарок!','The seventh gift!'):L('День','Day')+' '+st.day+' ✓'}</h2><p class="won">+${mH(r*mult)}${mult>1?' <small>(×2)</small>':''}</p>
     ${back?'<p class="goal tipl">'+L('Новая рубашка «Неделя подряд» — в «🎨 Украшениях»','New card back "Seven days" — in "🎨 Decorations"')+'</p>':''}
     <p>${st.day<7?L('Завтра','Tomorrow')+': +'+fmt(STREAK[st.day])+MT:L('Серия начнётся заново — и снова с подарками!','The streak starts over — with gifts again!')}</p>
@@ -2147,7 +2299,7 @@ $('btnCombo').onclick=()=>openCombos();$('gCombo').onclick=()=>openCombos();$('m
 /* ================= комбинации, правила, настройки, «Об игре» ================= */
 const COMBO_EX=[[[14,3],[13,3],[12,3],[11,3],[10,3]],[[9,0],[8,0],[7,0],[6,0],[5,0]],[[12,0],[12,1],[12,2],[12,3],[4,2]],[[13,0],[13,1],[13,3],[7,2],[7,0]],[[14,2],[11,2],[8,2],[6,2],[3,2]],
   [[10,1],[9,3],[8,0],[7,2],[6,1]],[[8,0],[8,2],[8,3],[13,1],[4,0]],[[11,3],[11,1],[5,0],[5,2],[14,1]],[[10,0],[10,2],[14,3],[7,1],[3,0]],[[14,0],[12,2],[9,3],[6,1],[3,2]]];
-function openCombos(back){const cur=G&&G.s.seats[0].c.length&&!G.s.seats[0].f?evalHand(G.s.seats[0].c.concat(G.s.board.slice(0,G.disp.board))):-1,cc=cur>=0?handCat(cur):-1;
+function openCombos(back){STAT.screen('combos');const cur=G&&G.s.seats[0].c.length&&!G.s.seats[0].f?evalHand(G.s.seats[0].c.concat(G.s.board.slice(0,G.disp.board))):-1,cc=cur>=0?handCat(cur):-1;
   const names=[[L('Роял-флеш','Royal flush'),L('Стрит-флеш от десятки до туза','Straight flush from ten to ace')],[L('Стрит-флеш','Straight flush'),L('Пять карт подряд одной масти','Five in a row, same suit')],[L('Каре','Four of a kind'),L('Четыре карты одного достоинства','Four cards of the same rank')],
     [L('Фулл-хаус','Full house'),L('Тройка и пара','Three of a kind plus a pair')],[L('Флеш','Flush'),L('Пять карт одной масти','Five cards of the same suit')],[L('Стрит','Straight'),L('Пять карт подряд (туз — и старший, и младший)','Five in a row (an ace can be high or low)')],
     [L('Тройка','Three of a kind'),L('Три карты одного достоинства','Three cards of the same rank')],[L('Две пары','Two pair'),L('Две пары разных достоинств','Two different pairs')],[L('Пара','Pair'),L('Две карты одного достоинства','Two cards of the same rank')],[L('Старшая карта','High card'),L('Ничего не собрано — решает старшая карта','Nothing made — the highest card decides')]];
@@ -2159,7 +2311,7 @@ function openCombos(back){const cur=G&&G.s.seats[0].c.length&&!G.s.seats[0].f?ev
     ${cc>=0?'<p class="goal tipl">'+L('Жёлтым — ваша комбинация сейчас','Yellow — your hand right now')+'</p>':''}
     <div class="row"><button class="btn" id="cbBack">${L('Закрыть','Close')}</button></div>`);
   $('cbBack').onclick=typeof back==='function'?back:hideModal;if($('cbRev'))$('cbRev').onclick=()=>openReview(()=>openCombos(back));}
-function openHow(back){
+function openHow(back){STAT.screen('rules');
   modal(`<h2>${L('Как играть','How to play')}</h2><div class="how">
     <p>🃏 ${L('Каждому — две карты в закрытую. На стол по очереди выкладываются пять общих: флоп (3), тёрн (1), ривер (1).','Everyone gets two face-down cards. Five shared cards come out on the table: the flop (3), the turn (1), the river (1).')}</p>
     <p>💰 ${L('До флопа двое слева от кнопки D ставят блайнды — малый и большой. Потом круг ставок, и после каждой новой карты — ещё круг.','Before the flop the two players left of the D button post the small and big blinds. Then a betting round — and another after each new card.')}</p>
@@ -2169,11 +2321,12 @@ function openHow(back){
     <p>⌨️ ${L('На ПК: F — фолд, C — чек/колл, R — рейз, Enter — подтвердить, Esc — назад.','On PC: F — fold, C — check/call, R — raise, Enter — confirm, Esc — back.')}</p></div>
     <div class="row">${G&&!G.over?'':`<button class="btn green noenter" id="hLearn">🎓 ${L('Учебная раздача','Practice hand')}</button>`}<button class="btn noenter" id="hCombo">📖 ${L('Комбинации','Hand rankings')}</button><button class="btn" id="hBack">← ${L('Назад','Back')}</button></div>`);
   $('hCombo').onclick=()=>openCombos(()=>openHow(back));if($('hLearn'))$('hLearn').onclick=()=>{hideModal();startLearn();};$('hBack').onclick=typeof back==='function'?back:openSettings;}
-function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="off">'+L('выкл','off')+'</i>',sp=S.speed||'norm';
+function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="off">'+L('выкл','off')+'</i>',sp=S.speed||'norm';
   if(G)YG.stop();
   modal(`<h2>${L('Настройки','Settings')}</h2>
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
+    ${STAT.available()?'<button class="set" id="stStat"><span>📊 '+L('Анонимная статистика','Anonymous statistics')+'<br><small>'+STAT.note()+'</small></span>'+on(STAT.enabled())+'</button>':''}
     <button class="set" id="stHint"><span>💡 ${L('Подсказка силы руки','Hand strength hint')}<br><small>${L('шанс выиграть — кроме турнира недели','chance to win — except the weekly tournament')}</small></span>${on(S.hint!==false)}</button>
     <button class="set" id="stAdv"><span>👍 ${L('Совет: что лучше сделать','Tip: what to do')}<br><small>${L('строка над кнопками и подсвеченная кнопка — кроме турнира недели','a line above the buttons and a highlighted button — except the weekly tournament')}</small></span>${on(advSet())}</button>
     <button class="set" id="stFour"><span>🎨 ${L('Четыре цвета мастей','Four-colour suits')}<br><small>${L('бубны синие, трефы зелёные','diamonds blue, clubs green')}</small></span>${on(!!S.four)}</button>
@@ -2187,6 +2340,7 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
   const tg=(k,f)=>{S[k]=!S[k];save();if(f)f();openSettings();};
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
+  const sst=$('stStat');if(sst)sst.onclick=()=>{STAT.setEnabled(!STAT.enabled());SND.tap();openSettings();};
   $('stHint').onclick=()=>{S.hint=S.hint===false;save();updHint();openSettings();};
   $('stAdv').onclick=()=>{S.adv=!advSet();save();if(G)renderActs();openSettings();};
   $('stFour').onclick=()=>tg('four',applyLook);
@@ -2196,7 +2350,7 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
   if($('stShop')){$('stShop').onclick=()=>{hideModal();shopTab='t';openShop();};PAY.bind($('mcard'));PAY.re=openSettings;}
   $('stAbout').onclick=openAbout;$('stHow').onclick=()=>openHow();$('stClose').onclick=()=>{hideModal();if(G)YG.start();};}
 function applyLook(){document.body.classList.toggle('four',!!S.four);if(G)render();}
-function openAbout(){
+function openAbout(){STAT.screen('about');
   modal(`<h2>${L('Об игре','About')}</h2><p class="about">${L('«Покер на спички» — техасский холдем против компании из гаражей и дач: Толика, деда Егорыча, Люды, Семёныча, Витька, Вована, Галины Петровны и Эдика «Профессора». Карты, лица и звуки нарисованы и собраны прямо в игре.','"Matchstick Poker" is Texas Hold\'em against a crowd from the garages and dachas: Tolik, Grandpa Egorych, Lyuda, Semyonych, Vitek, Vovan, Galina Petrovna and Eduard "Professor". Cards, faces and sounds are made right in the game.')}</p>
     <p class="about"><b>${L('Игра 18+ без реальных денег.','18+ game with no real money.')}</b> ${L('Спички — игровые фишки: их нельзя купить, продать, подарить, передать другому игроку или обменять на что-либо. Выигрыша денег или призов нет. Спички бесплатно пополняются каждый день и когда кончатся.','Matches are game chips: they can\'t be bought, sold, gifted, transferred to another player or exchanged for anything. There are no money or prize winnings. Matches refill for free every day and when you run out.')}</p>
     <p class="about"><b>${L('Честная раздача.','Fair dealing.')}</b> ${L('Колода тасуется случайно (у раздачи дня и турнира недели — одинаково для всех). Соперники — персонажи игры, а не живые игроки; они не видят ваших карт и колоды и решают только по тому, что видно за столом. Сила соперника — его манера игры.','The deck is shuffled randomly (the hand of the day and the weekly tournament are the same for everyone). Opponents are game characters, not real players; they don\'t see your cards or the deck and decide only by what is visible at the table. An opponent\'s strength is their style of play.')}</p>
@@ -2245,7 +2399,7 @@ async function offerReturn(){if(askedNow||window.__demo)return;if(Date.now()-BOO
     else if(PLAT==='vk'&&VK&&SOC.ok()){
       const o=SOC.offer(S.wins||0,Date.now()-lastAdT<60000||pauseWhy.size>0||adDue());if(!o)return;askedNow=true;
       const m=$('mcard');if(!m||!G||!G.over)return;const d=document.createElement('div');d.className='socoffer';d.style.cssText='margin-top:12px;text-align:center';
-      d.innerHTML='<p style="margin:0 0 8px">'+o.t+'</p><button class="btn noenter" id="socOf">'+o.b+'</button>';m.appendChild(d);$('socOf').onclick=()=>{o.run();};}
+      d.innerHTML='<p style="margin:0 0 8px">'+o.t+'</p><button class="btn noenter" id="socOf">'+o.b+'</button>';m.appendChild(d);STAT.ev('mod',{m:'soc',a:'of_'+o.k});$('socOf').onclick=()=>{STAT.ev('mod',{m:'soc',a:'ok_'+o.k});o.run();};}
   }catch(e){}}
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('contextmenu',e=>e.preventDefault());
@@ -2254,11 +2408,13 @@ if(document.hidden)setPause('hide',true);
 try{new MutationObserver(()=>{cancelAnimationFrame(modalLong._r);modalLong._r=requestAnimationFrame(modalLong);}).observe($('mcard'),{childList:true,subtree:true});}catch(e){}
 window.addEventListener('resize',()=>{lowFix();modalLong();if(G&&$('scr-game').classList.contains('on')){render();renderActs();}});lowFix();
 applyCalm();updCoins();applyStaticLang();openMenu();
-$('btnMore').onclick=()=>SOC.showMore();
+$('btnMore').onclick=()=>{STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();};
 function updMore(){const b=$('btnMore');if(b){b.style.display=SOC.ok()?'':'none';b.parentNode.classList.toggle('m4',SOC.ok());}}
-function openSocial(){if(!SOC.ok()){openSettings();return;}
+function openSocial(){if(!SOC.ok()){openSettings();return;}STAT.screen('social');
   modal(`<h2>${L('Друзья и игры','Friends and games')}</h2>${SOC.settingsHtml()}<div class="row"><button class="btn" id="socBack">${L('← Назад','← Back')}</button></div>`);
-  SOC.bind($('mcard'),openSocial);$('socBack').onclick=openSettings;}
+  SOC.bind($('mcard'),openSocial);$('socBack').onclick=openSettings;socStat();}
+function socStat(){$('mcard').querySelectorAll('[data-soc],[data-g]').forEach(b=>b.addEventListener('click',()=>{const k=b.getAttribute('data-soc');
+  STAT.ev('mod',{m:'soc',a:k?k:'app'});if(k==='more')setTimeout(socStat,50);}));}
 
 // режим для скриншотов карточки: ?demo=menu|shop|combo|tour<N>|daily|week — без сохранений
 (()=>{const q=new URLSearchParams(location.search),d=q.get('demo');if(!d)return;window.__demo=true;save=()=>{};saveLive=()=>{};

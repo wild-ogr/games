@@ -956,7 +956,7 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
-/* ===== STAT v1 (29.09.2026): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1 (29.09.2026; 03.10 — тесты с мака/LAN/webdriver не шлются): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Проект — hobby-analytics/37-own-analytics.md.
    Что НЕ отправляем никогда: vk_user_id и любые параметры адреса запуска (кроме vk_platform и vk_ref), имя, IP (сервер его не пишет),
    постоянный номер устройства/игрока. Единственный «ключ» — случайная строка СЕАНСА (живёт только в памяти, до закрытия игры).
@@ -1002,8 +1002,17 @@ var STAT=(function(){
        Локально считаются только день установки и число сеансов — чтобы после включения возвраты считались от настоящей установки.
      dev:true (или ?stat=dev на localhost) без url — журнал в консоль и window.__stat, без отправки (стенд, мак).
      S — если передать, отметки живут ещё и в сохранении игры (S.stc) → облако, меньше «ложных новичков». */
-  var first=false,hooked=false;
+  var first=false,hooked=false,cut='';
+  /* A1 (03.10): НАШИ ТЕСТЫ — не в боевую базу. Боевой адрес обнуляется (модуль молчит, как с пустым url), если игра открыта
+     автоматом (navigator.webdriver или HeadlessChrome в User-Agent: CDP-прогоны) или с мака/локальной сети: localhost, 127.*, [::1], *.localhost,
+     *.local, *.test, 192.168.*, 10.*, 172.16–31.*, file://. Адрес на сам localhost/LAN или относительный (?stat=sink, стенд) не трогаем.
+     ?stat=dev на localhost — журнал в консоль, как раньше. Почему молчим — STAT._dbg().cut ('wd'|'local'|'file').
+     Площадка 'yandex' на нашем сайте *.github.io (там нет SDK Яндекса: бета, прямые ссылки) пишется как p:'web'. */
+  function locH(h){return /^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|0\.0\.0\.0|)$|\.localhost$|\.local$|\.test$|^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(String(h||''));}
+  function locU(u){var m=/^https?:\/\/(\[[^\]]*\]|[^\/:?#]+)/i.exec(u);return !!m&&locH(m[1]);}
   function init(o){O=o||{};O.url=String(O.url||'');G=String(O.g||'game').slice(0,16);t0=Date.now();actT=t0;
+    cut='';if(/^https?:/i.test(O.url)&&!locU(O.url)){var wd=false;try{wd=navigator.webdriver===true||/HeadlessChrome|PhantomJS|Puppeteer|Playwright/.test(navigator.userAgent||'');}catch(e){}
+      cut=wd?'wd':location.protocol==='file:'?'file':locH(location.hostname)?'local':'';if(cut)O.url='';}
     dev=!O.url&&(O.dev===true||(/[?&]stat=dev/.test(location.search)&&/^(localhost|127\.0\.0\.1|\[::1\])$|\.localhost$|\.test$/.test(location.hostname)));
     var s=jp(ls('stat-'+G))||{},c=O.S&&O.S.stc||{};
     st={c:+s.c||+c.c||0,n:Math.max(+s.n||0,+c.n||0),d:Math.max(+s.d||0,+c.d||0)};
@@ -1012,13 +1021,14 @@ var STAT=(function(){
     if(!enabled()||Math.random()>=(typeof O.rate==='number'?O.rate:1)){on=false;ls('stat-q-'+G,null);saveSt();return;}
     start();}
   function start(){var d=device();on=true;sk=rnd();seq=0;
-    hdr={v:V,g:G,gv:String(O.gv||'').slice(0,12),p:String(O.plat||'').slice(0,8),l:String(O.lang||'').slice(0,4),
+    hdr={v:V,g:G,gv:String(O.gv||'').slice(0,12),p:String(O.plat==='yandex'&&/\.github\.io$/.test(location.hostname)?'web':O.plat||'').slice(0,8),l:String(O.lang||'').slice(0,4),
       vp:scrub(qp('vk_platform'),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
     pend=jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[];
     ev('start',{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)});
     dayMark();saveSt();
     if(!hooked){hooked=true;
-      window.addEventListener('error',function(e){err(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);},true);
+      window.addEventListener('error',function(e){var x=e&&e.target;if(x&&x!==window&&x.tagName){var u=x.src||x.href||'';if(/\/sdk\.js([?#]|$)/.test(u)&&hdr.p!=='yandex')return;err('load '+String(x.tagName).toLowerCase(),u);return;} // не загрузилась картинка/скрипт: без message; SDK Яндекса вне Яндекса (сайт, VK) — не ошибка (03.10)
+        err(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);},true);
       window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;err('promise: '+(r&&r.message||r),r&&r.stack?String(r.stack).split('\n')[1]:'');});
       document.addEventListener('visibilitychange',function(){document.visibilityState==='hidden'?hide():show();});
       window.addEventListener('pagehide',hide);
@@ -1080,12 +1090,12 @@ var STAT=(function(){
     'Levels, errors and button taps — no name, ID or IP. Helps us improve the game.');}
   function toggle(){setEnabled(!enabled());return label();}
   return {init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,place:setPlace,ad:ad,offer:offer,err:err,flush:flush,merge:merge,optOut:optOut,
-    _dbg:function(){return {on:on,dev:dev,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr};}};
+    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr};}};
 })();
 /*/STAT*/
-// STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
-// (на маке ?stat=dev — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (виден, когда есть адрес)
-const STAT_URL='';
+// STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
+// Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
+const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 STAT.init({g:'durak',gv:'v1',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
@@ -1550,7 +1560,7 @@ const LB={
   async entries(){const o={includeUser:true,quantityAround:2,quantityTop:10};
     try{if(ysdk.leaderboards&&ysdk.leaderboards.getEntries)return await ysdk.leaderboards.getEntries('daily',o);
       const lb=await ysdk.getLeaderboards();return await lb.getLeaderboardEntries('daily',o);}catch(e){return null;}},
-  async show(){
+  async show(){STAT.screen('lb');
     if(PLAT==='vk'){if(!VK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:LB.days()},60000).catch(()=>toast('Таблица друзей сейчас недоступна'));return;}
     const back=()=>{hideModal();if(G&&G.s.over)leaveGame();};
     modal(`<h2>🏆 Рейтинг</h2><p>Загружаем…</p>`);
@@ -1725,7 +1735,7 @@ function placeBub(q,b){const L=LY,st=L&&L.seats[seatOf(q)];if(!st)return;const s
   if(dx){b.style.transform=(side?'':'translateX(-50%) ')+'translateX('+Math.round(dx)+'px)';if(!side)b.style.setProperty('--bx',Math.round(-dx)+'px');}}
 function anyOpp(){const s=G.s,a=[];for(let q=1;q<s.n;q++)if(!s.out[q])a.push(q);return a.length?a[Math.floor(Math.random()*a.length)]:1;}
 let tipQ=[],tipAt=0;
-function tip(key,text){if(!G||(S.tips||{})[key]||G.kind==='puz'&&key!=='puz')return;if(S.pro&&key!=='tr'&&key!=='puz')return;if((S.games||0)>=5&&key!=='tr')return;S.tips[key]=1;save();
+function tip(key,text){if(!G||(S.tips||{})[key]||G.kind==='puz'&&key!=='puz')return;if(S.pro&&key!=='tr'&&key!=='puz')return;if((S.games||0)>=5&&key!=='tr')return;S.tips[key]=1;save();STAT.ev('tut',{s:10,k:key}); // подсказки первых партий (s:10, k — какая)
   const e=$('tip'),left=3500-(Date.now()-tipAt);if(e.classList.contains('on')&&left>0){tipQ.push(text);clearTimeout(tip._q);tip._q=setTimeout(tipNext,left);return;}
   tipShow(text);}
 function tipShow(text){const e=$('tip');e.innerHTML=text;e.style.top=((LY?LY.midT:90)+4)+'px';e.classList.add('on');tipAt=Date.now();clearTimeout(tip._t);tip._t=setTimeout(()=>{e.classList.remove('on');tipNext();},7000);}
@@ -1747,16 +1757,16 @@ function hintText(a){const s=G.s;if(!a)return '';
   if(a.t==='thr')return '💡 Подкиньте '+cardName(a.c);
   return '💡 Подкидывать не стоит — нажмите «'+($('act').textContent||'Бито')+'»';}
 function showHint(auto){if(!G)return;clearTimeout(G.hintT);const a=hintAct();if(!a){if(!auto)toast('Подсказка — когда ваш ход',1600);return;}
-  G.hint=a;render();if(!auto)SND.tap();}
+  G.hint=a;render();if(!auto){SND.tap();STAT.use('hint');}}
 function schedHint(){if(!G)return;clearTimeout(G.hintT);if(!autoHint())return;const g=G,mv=G.s.moves;
   G.hintT=setTimeout(()=>{if(G===g&&G.s.moves===mv&&G.s.cur===0&&!G.busy&&!modalOn)showHint(true);},(S.games||0)===0?2600:5000);}
 $('gHint').onclick=()=>showHint(false);
 // знакомство: самый первый запуск — дед Митяй зовёт за стол (кто знает правила — без обучающих подсказок)
-function openIntro(){S.tips.intro=1;save();
+function openIntro(){S.tips.intro=1;save();STAT.screen('intro');STAT.ev('tut',{s:1});STAT.once('ready',{ms:Math.round(performance.now())}); // tut 1 — знакомство с Митяем показано
   modal(`<div class="av">${portrait('mityai','happy')}</div><h2>Здорово, сосед!</h2><p>Я дед Митяй, с лавочки у подъезда. Сыграем в дурака? Если что — подскажу: подсвечу карту, которой лучше ходить.</p>
     <p class="goal tipl">Обыграешь меня — откроется весь двор: соседи, гостинцы, расклад дня.</p>
     <div class="row"><button class="btn green" id="iGo">Сыграем!</button><button class="btn noenter" id="iPro">Я знаю правила — без подсказок</button></div>`);
-  $('iGo').onclick=()=>{hideModal();startTour(0);};$('iPro').onclick=()=>{S.pro=true;save();hideModal();startTour(0);};}
+  $('iGo').onclick=()=>{STAT.ev('tut',{s:2});hideModal();startTour(0);};$('iPro').onclick=()=>{STAT.ev('tut',{s:2,p:1});S.pro=true;save();hideModal();startTour(0);};} // tut 2 — «Сыграем» (p:1 — «знаю правила»)
 // новый сосед в турнире — знакомство один раз перед первой партией с ним
 function meetFirst(idx){const m=TOUR[idx],nw=m.o.filter(x=>!S.met[x]);if(!nw.length||window.__demo||idx===0)return false;
   const id=nw[0],c=CHARS[id],L=LINES[id];
@@ -1837,7 +1847,7 @@ function startMatch(o){tipOff(true);hideModal();clearTimeout(G&&G.timer);
   buildCards();for(const el of CEL){el._up=null;el._t='';el.classList.add('nt');}
   $('gHint').style.display=hintOk()?'':'none';$('gTitle').textContent=o.title;$('gSub').textContent=o.sub;$('seats').innerHTML='';curSave();
   show('scr-game');applyLook();updCoins();
-  STAT.screen('game');STAT.lvl(o.kind==='tour'?G.idx+1:0,o.kind+(o.train?'-t':'')+(rs?'-r':'')); // партия = «уровень»: номер партии турнира (иначе 0) и режим
+  STAT.once('ready',{ms:Math.round(performance.now())});STAT.screen('game');STAT.lvl(o.kind==='tour'?G.idx+1:0,o.kind+(o.train?'-t':'')+(rs?'-r':'')); // партия = «уровень»: номер партии турнира (иначе 0) и режим
   // раздача: все карты сначала в колоде, потом разлетаются (без анимации в спокойном режиме)
   const hands=s.hands;G.hold=new Set();if(!o.state)for(const h of hands)for(const c of h)G.hold.add(c);
   render();requestAnimationFrame(()=>{for(const el of CEL)el.classList.remove('nt');
@@ -1905,7 +1915,7 @@ function doAct(a){if(!G)return;const s=G.s,p=s.cur;let ev;
   else render();
   if(s.over)wait+=dur(1.5);
   curSave();const g=G;G.timer=setTimeout(()=>{if(G!==g)return;G.busy=false;step();},wait);}
-function humanAct(a){if(!G||G.busy||G.s.cur!==0||G.s.over)return;if(!isLegal(G.s,a)){SND.no();return;}doAct(a);}
+function humanAct(a){if(!G||G.busy||G.s.cur!==0||G.s.over)return;if(!isLegal(G.s,a)){SND.no();return;}if(!(S.games>0)&&!G.mv1){G.mv1=1;STAT.ev('tut',{s:3});}doAct(a);} // tut 3 — первый свой ход в первой партии
 $('act').onclick=()=>{if(!G||G.busy||G.s.cur!==0)return;const s=G.s;if(s.phase==='def')humanAct({t:'take'});else if(s.phase==='throw')humanAct({t:'pass'});};
 /* ---- ввод: нажатие и перетаскивание. Касание засчитывается при отпускании на той же карте; увели палец — отмена ---- */
 function cardActs(c){return G?legal(G.s).filter(a=>a.c===c):[];}
@@ -1964,7 +1974,8 @@ function finish(){if(!G||G.done)return;G.done=true;curClear();YG.stop();tipOff(t
   const sx={n,md:s.rules.mode==='perevod'?'per':'pod',tk:G.took||0};if(G.kind==='tour')sx.st=starsFor(s,win);else sx.tr=G.trN||0;
   STAT.end(draw?'draw':win?'win':'lose',sx); // игроков, режим, сколько раз брал, звёзды (турнир) или переводы; всего ≤8 полей
   const st=starsFor(s,win),kind=G.kind;let reward=0,newAch=[],unlockTxt='',goal='',rankUp='',weekTxt='';
-  const firstWin=win&&!draw&&kind!=='puz'&&!(S.wins>0);clearTimeout(G.hintT);G.hint=null;
+  const firstWin=win&&!draw&&kind!=='puz'&&!(S.wins>0);if(kind!=='puz'&&!(S.games>0))STAT.ev('tut',{s:4,w:win&&!draw?1:0});if(firstWin)STAT.ev('tut',{s:5}); // tut 4 — первая партия доиграна, 5 — первая победа
+  clearTimeout(G.hintT);G.hint=null;
   if(kind!=='puz'){S.games=(S.games||0)+1;S.adW=(S.adW||0)+1;
     if(win&&!draw){S.wins=(S.wins||0)+1;S.lossRow=0;}else if(draw)S.lossRow=0;else S.lossRow=(S.lossRow||0)+1; // ничья — не победа (в звание не идёт) и не поражение
     const ri=RANKS.indexOf(rankOf(S.wins||0));if(ri>(S.rk||0)){S.rk=ri;rankUp=RANKS[ri][1];}
@@ -2043,7 +2054,7 @@ function bindResult(adNext){const g=G,r=G.resR;
   $('rMap').onclick=()=>{hideModal();leaveGame();};
   const lb=$('rLb');if(lb)lb.onclick=LB.show;
   const d=$('rDeck');if(d)d.onclick=()=>showDeck();
-  const bx=$('rX2');if(bx)bx.onclick=()=>{if(g.x2)return;bx.disabled=true;
+  const bx=$('rX2');if(bx)STAT.offer('x2');if(bx)bx.onclick=()=>{if(g.x2)return;bx.disabled=true;
     STAT.place('x2');showRewarded(()=>{if(g.x2)return;g.x2=true;setCoins(S.coins+r.reward);SND.coin();toast('+'+coinsTxt(r.reward)+' — удвоено!');
       const w=$('mWon');if(w&&G===g)w.innerHTML='+'+coinsTxt(r.reward*2)+' <small>(×2)</small>';if(bx.parentNode)bx.parentNode.removeChild(bx);g.resHtml=$('mcard').innerHTML;},()=>{bx.disabled=false;});};}
 // «честная раздача»: как лежала колода — начальные руки и порядок колоды (сверху вниз), козырь — нижняя карта
@@ -2063,7 +2074,7 @@ $('gBack').onclick=()=>{if(!G)return openMap();if(G.s.over||G.s.moves===0){leave
 /* ================= карта турнира ================= */
 function placeStars(pi){let n=0;for(let k=0;k<3;k++)n+=S.tour[pi*3+k]||0;return n;}
 const CHEST=[[6,40],[9,60]]; // сундуки места: 6★ → +40, все 9★ → ещё +60
-function openMap(){STAT.once('menu');STAT.screen('map');G=null;show('scr-map');updCoins();updStreakDot();updToday();const list=$('mapList');let h='';
+function openMap(){STAT.once('ready',{ms:Math.round(performance.now())});STAT.once('menu');STAT.screen('map');G=null;show('scr-map');updCoins();updStreakDot();updToday();const list=$('mapList');let h='';
   PLACES.forEach((pl,pi)=>{const lock=S.unlocked<=pi*3,ps=placeStars(pi);
     h+=`<div class="place${lock?' lock':''}" style="background:${pl.bg}"><h3><span>${pl.ic} ${pl.n}</span><small>★ ${ps}/9</small></h3>`;
     if(lock){const nw=[...new Set(pl.g.reduce((a,x)=>a.concat(x.o),[]))].filter(x=>!S.met[x]);h+=`<div class="chest"><span>🔒 ${pl.about}. Откроется после места «${PLACES[pi-1].n}»${nw.length?' · новые соседи:<span class="lockopp">'+nw.map(x=>'<span>'+portrait(x,'norm')+'</span>').join('')+'</span>':''}</span></div>`;}
@@ -2085,20 +2096,20 @@ function chestRow(pi,ps){let h='';CHEST.forEach(([need,coins],ci)=>{const key=pi
   if(got)return;if(ci===1&&!S.chest[pi+'_0']&&ps<6)return;
   h+=ps>=need?`<div class="chest"><span>🎁 Сундук за ${need}★: +${coins} 💰</span><button class="btn green" data-p="${pi}" data-c="${ci}">Открыть</button></div>`
     :`<div class="chest"><span>🎁 Сундук за ${need}★ — у вас ${ps}★</span></div>`;});return h;}
-function openChest(pi,ci){const [need,coins]=CHEST[ci],key=pi+'_'+ci;if(S.chest[key]||placeStars(pi)<need)return;
+function openChest(pi,ci){const [need,coins]=CHEST[ci],key=pi+'_'+ci;if(S.chest[key]||placeStars(pi)<need)return;STAT.screen('chest');
   const give=m=>{if(S.chest[key])return;S.chest[key]=1;S.coins+=coins*m;save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);hideModal();toast('🎁 +'+coinsTxt(coins*m)+(m>1?' (×2)':''));openMap();};
   modal(`<h2>🎁 Сундук</h2><p>${PLACES[pi].ic} ${PLACES[pi].n}: ${need}★ собрано!</p><p class="coins-won">+${coinsTxt(coins)}</p>
     <div class="row"><button class="btn green" id="cGet">Забрать</button>${adBtnOk()?`<button class="btn accent noenter" id="cX2">📺 ×2 за рекламу (+${coinsTxt(coins*2)})</button>`:''}</div>`);
   $('cGet').onclick=()=>give(1);if($('cX2')){STAT.offer('chest');}if($('cX2'))$('cX2').onclick=()=>{hideModal();STAT.place('chest');showRewarded(()=>give(2),()=>openChest(pi,ci));};}
 function dailyLocked(){return (S.unlocked||1)<=3;}
-$('btnDaily').onclick=()=>{if(dailyLocked()){toast('Расклад дня откроется, когда пройдёте Двор (три партии)',2600);return;}SND.tap();
+$('btnDaily').onclick=()=>{if(dailyLocked()){toast('Расклад дня откроется, когда пройдёте Двор (три партии)',2600);return;}STAT.screen('daily');SND.tap();
   const c=dailyCfg(),dd=S.daily[todayKey()]||0,done=dd>=2;
   modal(`<h2>📅 Расклад дня</h2><div class="av">${portrait(c.opp[0],'happy')}</div><p>Сегодня одна и та же раздача у всех игроков. Соперник — <b>${lc1(CHARS[c.opp[0]].full)}</b>, ${modeName(c.mode).toLowerCase()}.</p>
     <p>${done?'Сегодня уже выиграно ✓ — можно сыграть ещё раз для тренировки, без награды.':dd?'Сегодняшняя попытка уже была — можно сыграть для тренировки, без награды. Завтра — новый расклад.':'Победа: +25 💰 и день в рейтинге. Засчитывается только первая партия дня.'}</p>
     ${weekHtml()}<p class="goal prem">На этой неделе: ${weekWins()} из 7 · ${weekPrem()}</p><p class="goal">Всего выиграно дней: <b>${LB.days()}</b></p>
     <div class="row"><button class="btn green" id="dGo">Играть</button>${LB.ok()?'<button class="btn noenter" id="dLb">🏆 Рейтинг</button>':''}<button class="btn" id="mCancel">Закрыть</button></div>`);
   $('dGo').onclick=startDaily;$('mCancel').onclick=hideModal;if($('dLb'))$('dLb').onclick=LB.show;};
-$('btnPuz').onclick=()=>{if((S.wins||0)<1){toast('Задачка откроется после первой победы');return;}SND.tap();
+$('btnPuz').onclick=()=>{if((S.wins||0)<1){toast('Задачка откроется после первой победы');return;}STAT.screen('puz');SND.tap();
   const done=(S.puz[todayKey()]||0)>=2;
   modal(`<h2>🧩 Задачка дня</h2><div class="av">${portrait('zina','wow')}</div><p>Баба Зина раскладывает конец партии: колода пуста, её карты открыты. Найдите ход, после которого вы точно останетесь без карт первым — Зина отвечает без ошибок.</p>
     <p>${done?'Сегодняшняя решена ✓ Завтра будет новая.':'Решение: +20 💰. Попыток — сколько угодно.'}</p>
@@ -2114,7 +2125,7 @@ function metOpp(){const m=new Set();for(let i=0;i<Math.min(S.unlocked,TOUR.lengt
   if(PAY.own('rivals'))a.push('barsik','petrovich');return a;}
 function quickCfg(){const q=Object.assign({o:['mityai'],m:'podkid',lim:6,f5:0},isObj(S.quick)?S.quick:{}),met=metOpp();
   q.o=(Array.isArray(q.o)?q.o:[]).filter(x=>met.indexOf(x)>=0).slice(0,3);if(!q.o.length)q.o=[met[0]||'mityai'];return q;}
-function openQuick(){const q=quickCfg(),met=metOpp();
+function openQuick(){STAT.screen('quick');const q=quickCfg(),met=metOpp();
   modal(`<h2>🃏 Своя игра</h2><p>Выберите от одного до трёх соперников:</p><div class="pick">${met.map(id=>`<button data-id="${id}" class="${q.o.indexOf(id)>=0?'on':''}"><div class="av">${portrait(id,'norm')}</div>${CHARS[id].n}<br><small>${CHARS[id].lvl}</small></button>`).join('')}</div>
     <p style="margin-top:10px">Правила</p><div class="opt3" id="qM"><button data-v="podkid" class="${q.m==='podkid'?'on':''}">Подкидной</button><button data-v="perevod" class="${q.m==='perevod'?'on':''}">Переводной</button></div>
     <p>Подкидывать за отбой</p><div class="opt3" id="qL"><button data-v="6" class="${q.lim===6?'on':''}">до 6 карт</button><button data-v="0" class="${q.lim===0?'on':''}">сколько карт у отбивающегося</button></div>
@@ -2167,7 +2178,7 @@ function openShop2(){STAT.screen('shop');show('scr-shop');updCoins();$('shTabs')
 $('shTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{shopTab=b.dataset.k;SND.tap();openShop2();});
 $('shBack').onclick=openMap;
 /* ================= погоны и достижения ================= */
-$('mRank').onclick=()=>{const w=S.wins||0,r=rankOf(w),i=RANKS.indexOf(r),nx=RANKS[i+1];
+$('mRank').onclick=()=>{STAT.screen('rank');const w=S.wins||0,r=rankOf(w),i=RANKS.indexOf(r),nx=RANKS[i+1];
   modal(`<h2>🏅 ${r[1]}</h2><p>Побед: <b>${w}</b> из ${S.games||0} партий.${nx?' До звания «'+nx[1]+'» — '+(nx[0]-w)+' '+plural(nx[0]-w,'победа','победы','побед')+'.':''}</p>
     <p class="about">В дураках оставили: ${ALL_OPP.map(id=>CHARS[id].n+' — '+(S.beat[id]||0)).join(', ')}.</p>
     ${ACH.map(a=>`<div class="ach ${S.ach[a.id]?'done':'no'}"><span class="ai">${a.ic}</span><span><b>${a.n}</b><small>${a.d} · +${a.r} 💰${S.ach[a.id]?' ✓':''}</small></span></div>`).join('')}
@@ -2189,7 +2200,7 @@ function streakCells(st){let cells='';
     const ic=d===7?'🎁':'💰',val=d===7?(weekBack()?'рубашка':'+'+(STREAK[6]*2)):'+'+STREAK[d-1];
     cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>${d}-й</small><span class="ic">${ic}</span>${val}${d===7&&weekBack()?'<small>и +'+STREAK[6]+' 💰</small>':''}</div>`;}
   return cells;}
-function showStreak(){const st=streakState();
+function showStreak(){STAT.screen('streak');const st=streakState();
   const r=st.claimed?0:streakReward(st.day),nx=st.claimed?streakReward(st.day%7+1):null;
   modal(`<div class="av">${portrait('mityai','happy')}</div><h2>Гостинцы с лавочки</h2><p>${st.claimed?'Сегодняшний гостинец уже ваш. Завтра — '+(nx.back?'рубашка и монеты':'+'+coinsTxt(nx.coins))+'!':'Дед Митяй: «Заходи каждый день — гостинцы растут. Пропустишь денёк — не беда, ничего не сгорит!»'}</p>
     <div class="streak">${streakCells(st)}</div><p class="goal">Гостинцев получено: ${giftCount()}</p>

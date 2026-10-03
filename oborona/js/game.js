@@ -145,7 +145,11 @@ function newBattle(o){
     kolo:null,koloDone:0,koloAt:rand(35,95)};
   if(!endless)for(const k in G.sp){const u=SPELL_UNLOCK[k];if(ci<u[0]||(ci===u[0]&&o.li<u[1])||rule==='nospell')G.sp[k].locked=1;}
   renderBg();warmBattle();
+  try{STAT.lvl(statLv(),statMode());if(G.tut===1&&!S.wins)STAT.ev('tut',{s:1});}catch(e){} // STAT: старт боя (уровень «1-3», осада, Босс недели)
   return G;}
+// STAT: «уровень» боя — строка «глава-уровень» с 1 (1-1…8-6), осада — 'siege', Босс недели — 'week'; режим — сложность / испытание дня
+function statLv(){return G.wk?'week':G.endless?'siege':(G.ci+1)+'-'+(G.li+1);}
+function statMode(){return G.wk||G.endless?'':G.rule?'dch:'+G.rule:['easy','','hard'][G.diff]||'';}
 // спрайты этого боя рисуем заранее (заставы, снаряды, нечисть уровня и подмога боссов), остальное — при первом показе
 function warmBattle(){const keys=['spot','gate','skull','coin','arrow','ball','ballG','pie','flaskG','flaskP','flaskK','frog','egg'];for(const k in ART)if(/^(t_|bar_)[^~]*$/.test(k)){keys.push(k);const sk=k[0]==='t'?skinOf(k.split('_')[1]):skinOf('pushka')==='gold'?'gold':'';if(sk)keys.push(k+'~'+sk);}
   const ens=new Set(['kot','skel','snowb','rak','chert']);if(G.waves){for(const w of G.waves)for(const g of w.g)ens.add(g.t);}else for(const c of CH){for(const t of c.en)ens.add(t);ens.add(c.boss);}
@@ -172,7 +176,7 @@ function tstat(type,lvl,br){const d=TW[type],b=lvl===4?d.br[br-1]:null,i=lvl-1,F
 function towerKey(t){const k='t_'+t.type+'_'+(t.lvl<4?t.lvl:t.lvl+(t.br===1?'a':'b')),sk=typeof skinOf==='function'?skinOf(t.type):'';return sk?k+'~'+sk:k;}
 function tryBuild(i,type){const c=buildCost(type);if(!G||G.tw[i]||G.coins<c||!towerUnlocked(type))return false;
   const s=G.map.spots[i];G.coins-=c;G.tw[i]={i,type,lvl:1,br:0,x:s.x,y:s.y,cd:.3,inv:c,ang:-Math.PI/2,stunT:0,frostT:0,bounce:0,kills:0,dmgd:0,aim:(G.aimDef&&G.aimDef[type])||'first'};
-  G.spendT=G.t;G.tw[i].st=tstat(type,1,0);G.tw[i].bounce=.35;SND.build();dust(s.x,s.y+6);G.built=(G.built||0)+1;if(G.tut===1){G.tut=2;G.advCd=1.5;}return true;}
+  G.spendT=G.t;G.tw[i].st=tstat(type,1,0);G.tw[i].bounce=.35;SND.build();dust(s.x,s.y+6);G.built=(G.built||0)+1;if(G.tut===1){G.tut=2;G.advCd=1.5;if(!S.wins)STAT.ev('tut',{s:2});}return true;}
 function tryUpgrade(i,br){const t=G&&G.tw[i];if(!t||t.lvl>=4)return false;if(t.lvl===3&&(!br||!branchUnlocked()))return false;
   const c=upCost(t,br);if(G.coins<c)return false;G.coins-=c;G.spendT=G.t;t.inv+=c;t.lvl++;if(t.lvl===4)t.br=br;t.st=tstat(t.type,t.lvl,t.br);t.bounce=.35;SND.up();dust(t.x,t.y+6);G.ups=(G.ups||0)+1;
   sparkle(t.x,t.y-20,'#ffd84a',14);return true;}
@@ -193,7 +197,7 @@ function callWave(){if(!G||G.over)return;if(G.wave>=waveCount())return;
   if(G.dchPrize&&G.wave===1&&S.dch&&!S.dch.tried){S.dch.tried=1;save();} // испытание дня: попытка — с первой волны (выход до неё награду не сжигает)
   for(const g of w.g)G.spawning.push({t:g.t,n:g.n,iv:g.iv,next:g.delay,hpm:g.hpm||w.hpm,lead:g.lead,pi:G.map.paths.length>1?(g.t===w.g[0].t?0:1)%G.map.paths.length:0,alt:G.map.paths.length>1});
   // баннер волны — небольшой, под HUD, 1,8 с (раньше крупно посреди поля на 3 с закрывал заставы — аудит 14)
-  G.banner={title:(G.endless&&!G.wk?Lg('Волна ','Wave ')+G.wave:Lg('Волна '+G.wave+' из '+waveCount(),'Wave '+G.wave+' of '+waveCount())),sub:w.name,t:0,wave:1};SND.wave();if(G.tut===2)G.tut=3;
+  G.banner={title:(G.endless&&!G.wk?Lg('Волна ','Wave ')+G.wave:Lg('Волна '+G.wave+' из '+waveCount(),'Wave '+G.wave+' of '+waveCount())),sub:w.name,t:0,wave:1};SND.wave();if(G.tut===2){G.tut=3;if(!S.wins)STAT.ev('tut',{s:3});};
   if(G.wave===1){YG.start();G.advCd=10;}}
 function spawnTick(dt){
   for(const s of G.spawning){if(s.n<=0)continue;s.next-=dt;while(s.next<=0&&s.n>0){s.n--;s.next+=s.iv;
@@ -439,7 +443,7 @@ function drawKolo(){const k=G.kolo;if(!k)return;const c=ctx,hop=Math.abs(Math.si
   c.fillStyle='rgba(255,110,90,.45)';c.beginPath();c.arc(x+f*2-5,y+1.5,1.8,0,TAU);c.arc(x+f*2+5,y+1.5,1.8,0,TAU);c.fill();c.globalAlpha=1;}
 function victory(){if(G.over)return;G.over=true;G.win=true;YG.stop();later(0,()=>{});SND.win();const g=G;g.endT=setTimeout(()=>{if(G===g){onBattleEnd(true);cloudApply();}},900);}
 function defeat(){if(G.over)return;G.over=true;G.win=false;YG.stop();SND.lose();const g=G;g.endT=setTimeout(()=>{if(G===g){onBattleEnd(false);cloudApply();}},700);}   // облако, пришедшее в бою, сводим уже на экране итогов
-function continueBattle(){G.over=false;G.lives=10;G.maxLives=Math.max(G.maxLives,G.lives);G.contUsed=true;
+function continueBattle(){STAT.lvl(statLv(),'cont');G.over=false;G.lives=10;G.maxLives=Math.max(G.maxLives,G.lives);G.contUsed=true;
   for(const e of G.en){const P=G.map.paths[e.pi];if(e.d>P.len-140&&!e.boss){e.dead=true;burst(e.x,e.y,'#ffffff',8,90);}else if(e.boss)e.d=Math.max(0,e.d-160);}
   G.en=G.en.filter(e=>!e.dead);
   if(G.leakedBoss){const b=G.leakedBoss;G.leakedBoss=null;const e=spawnEnemy(b.type,b.pi,Math.max(0,b.d-420),1);e.max=b.max;e.hp=Math.max(b.hp,b.max*.25);}

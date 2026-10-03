@@ -3,16 +3,21 @@
 let curTab='Village',mapSel=0,forgeSeg='hero';
 // покупки (js/pay.js): общий модуль PAY пишет по-русски — английские подписи подставляем здесь, сам модуль не трогаем
 function payHTML(ids,owned){const h=PAY.html(ids,owned);return LANG==='en'?h.replace('<h3>Покупки</h3>','<h3>Purchases</h3>').replace(/<i>куплено<\/i>/g,'<i>owned</i>').replace(/(\d) тест</g,'$1 test<'):h;} // i18n:ru — замена русского на английский
+// статистика покупок: обёртка снаружи общего модуля PAY (сам модуль не трогаем). Все товары постоянные: куплено = PAY.own(id) после окна оплаты
+{const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on||PAY.own(id))return b0.call(PAY,id);STAT.ev('buy',{i:id,r:'try'});
+  return Promise.resolve(b0.call(PAY,id)).then(()=>{STAT.ev('buy',{i:id,r:PAY.own(id)?'ok':'cancel'});});};}
 function showModal(html){if(typeof PAY!=='undefined')PAY.re=null;$('mBody').innerHTML=html;$('modal').classList.add('on');}
 // защита от случайного касания (аудит 14): окно посреди боя первые 0,35 с не принимает касаний (палец водил богатыря) + мягкое появление
 function guardModal(){const m=$('mBody');m.classList.remove('guard');void m.offsetWidth;m.classList.add('guard');clearTimeout(guardModal.t);guardModal.t=setTimeout(()=>m.classList.remove('guard'),350);}
 function hideModal(){$('modal').classList.remove('on');}
 function on(id,fn){const el=$(id);if(el)el.onclick=e=>{SND.click();fn(e);};}
+// кнопка «за рекламу»: статистика — кнопку видели (STAT.offer) и место ролика (STAT.place перед showRewarded)
+function onAd(id,p,fn){const el=$(id);if(!el)return;STAT.offer(p);el.onclick=e=>{SND.click();STAT.place(p);fn(e);};}
 function setGold(){$('goldTxt').textContent=fmtNum(S.gold);}
 function ic(key,px){return iconURL(key,px||96);}
 
 /* ---------- вкладки ---------- */
-function openTab(t){curTab=t;for(const s of document.querySelectorAll('.tab'))s.classList.toggle('on',s.id==='tab'+t);
+function openTab(t){curTab=t;STAT.once('menu');STAT.screen(t.toLowerCase());for(const s of document.querySelectorAll('.tab'))s.classList.toggle('on',s.id==='tab'+t);
   for(const b of document.querySelectorAll('nav button'))b.classList.toggle('on',b.dataset.tab===t);
   if(t==='Heroes'&&S.heroNew){S.heroNew=0;save();}({Village:renderVillage,Forge:renderForge,Map:renderMap,Heroes:renderHeroes,Quests:renderQuests})[t]();setGold();questBadge();}
 // окна «награда за вход» при каждом возврате больше нет: всё ежедневное — в «Делах на сегодня» (раз за запуск и по кнопке на карте)
@@ -31,20 +36,21 @@ function volBind(){const upd=(id,key)=>{const el=$(id);if(!el)return;el.oninput=
   upd('vM','vm');upd('vS','vs');on('vAll',()=>{S.sound=S.sound?0:1;save();ac();volApply();$('vAll').textContent=sndTxt();sndIcon();});}
 // значок всегда ⚙️ (настройки), выключенный звук — маленький 🔇 в углу
 function sndIcon(){const b=$('sndBtn');b.textContent='⚙️';b.classList.toggle('off',!S.sound);}
-function openSettings(){showModal('<h3>'+L('Настройки','Settings')+'</h3>'+langHTML()+volHTML()+
+function openSettings(){STAT.screen('settings');showModal('<h3>'+L('Настройки','Settings')+'</h3>'+langHTML()+volHTML()+
   '<div class="card" style="margin:10px 0 0"><button class="btn ghost" id="calmBtn" style="width:100%">'+(S.calm?L('🌙 Спокойный режим: вкл','🌙 Calm mode: on'):L('🌙 Спокойный режим: выкл','🌙 Calm mode: off'))+'</button><p class="sub" style="margin:6px 2px 0;text-align:left">'+L('Без тряски экрана, красных вспышек, мигания и замирания кадра при ударе.','No screen shake, red flashes, blinking or hit freeze-frames.')+'</p>'+
     (canVib()?'<button class="btn ghost" id="vibBtn" style="width:100%;margin-top:8px">'+(S.vib!==0?L('📳 Вибрация: вкл','📳 Vibration: on'):L('📳 Вибрация: выкл','📳 Vibration: off'))+'</button>':'')+
-    '<button class="btn ghost" id="fxBtn" style="width:100%;margin-top:8px">'+L('✨ Эффекты: ','✨ Effects: ')+fxName()+'</button><p class="sub" style="margin:6px 2px 0;text-align:left">'+L('«Мало» — меньше искр и цифр, плавнее на слабом телефоне. «Авто» убавит само, если телефон не успевает.','“Low” — fewer sparks and numbers, smoother on weak phones. “Auto” turns them down by itself if the phone lags.')+'</p></div>'+
+    '<button class="btn ghost" id="fxBtn" style="width:100%;margin-top:8px">'+L('✨ Эффекты: ','✨ Effects: ')+fxName()+'</button><p class="sub" style="margin:6px 2px 0;text-align:left">'+L('«Мало» — меньше искр и цифр, плавнее на слабом телефоне. «Авто» убавит само, если телефон не успевает.','“Low” — fewer sparks and numbers, smoother on weak phones. “Auto” turns them down by itself if the phone lags.')+'</p>'+
+    (STAT.available()?'<button class="btn ghost" id="statBtn" style="width:100%;margin-top:8px">'+STAT.label()+'</button><p class="sub" style="margin:6px 2px 0;text-align:left">'+STAT.note()+'</p>':'')+'</div>'+
   '<div class="btns">'+(S.tut===-1?'<span class="tag ok" style="text-align:center;padding:10px">'+L('✓ Обучение покажется в следующем походе','✓ The tutorial will show on your next run')+'</span>':'<button class="btn ghost" id="tutAgain">'+L('Показать обучение снова','Show tutorial again')+'</button>')+(SOC.ok()?'<button class="btn ghost" id="socBtn">'+L('👥 Друзья и игры ›','👥 Friends & games ›')+'</button>':'')+'<button class="btn ghost" id="credBtn">'+L('🎻 Благодарности','🎻 Credits')+'</button><button class="btn big" id="setOk">'+L('Готово','Done')+'</button></div>');
   // покупки Яндекса (js/pay.js) — только в меню; нет платежей — раздела нет
   if(typeof payHere==='function'&&payHere()){const c=document.createElement('div');c.innerHTML=payHTML()+'<button class="btn ghost" id="payRe" style="width:100%;margin-top:4px">'+L('↻ Восстановить покупки','↻ Restore purchases')+'</button>';
     const b=$('mBody').querySelector('.btns');b.parentNode.insertBefore(c,b);PAY.bind(c);PAY.re=openSettings;on('payRe',()=>PAY.again());}
-  volBind();langBind();on('setOk',hideModal);on('credBtn',openCredits);on('socBtn',openSocial);on('calmBtn',()=>{S.calm=S.calm?0:1;save();openSettings();});
+  volBind();langBind();on('setOk',hideModal);on('statBtn',()=>{$('statBtn').textContent=STAT.toggle();});on('credBtn',openCredits);on('socBtn',openSocial);on('calmBtn',()=>{S.calm=S.calm?0:1;save();openSettings();});
   on('vibBtn',()=>{S.vib=S.vib===0?1:0;save();if(S.vib)vib(40,1);openSettings();});on('fxBtn',()=>{QL.mode=(QL.mode+1)%3;if(QL.mode===0)QL.auto=0;qSave();layout();openSettings();});on('tutAgain',()=>{S.tut=-1;save();toast(L('Обучение покажется в следующем походе','The tutorial will show on your next run'));openSettings();});}
 // кнопка 🎲 в шапке меню — только VK с мостом
 function updMore(){const b=$('moreBtn');if(b)b.style.display=SOC.ok()?'':'none';}
 // ⚙ → «Друзья и игры»: кнопки модуля SOC отдельным окном
-function openSocial(){showModal('<h3>'+L('👥 Друзья и игры','👥 Friends & games')+'</h3>'+SOC.settingsHtml()+'<div class="btns"><button class="btn" id="socBack">'+L('← Назад','← Back')+'</button></div>');
+function openSocial(){STAT.screen('social');STAT.ev('mod',{m:'soc',a:'open'});showModal('<h3>'+L('👥 Друзья и игры','👥 Friends & games')+'</h3>'+SOC.settingsHtml()+'<div class="btns"><button class="btn" id="socBack">'+L('← Назад','← Back')+'</button></div>');
   on('socBack',openSettings);SOC.bind($('mBody'),openSocial);}
 // язык (js/i18n.js): переключатель RU/EN в настройках, выбор запоминается; в VK его нет — там всегда русский
 function langHTML(){if(LANG_VK)return '';const b=(l,t)=>'<button data-lang="'+l+'" class="'+(LANG===l?'on':'')+'">'+t+'</button>';
@@ -62,7 +68,7 @@ const CREDITS=[
   {t:'Zombies also love to play the fool',get w(){return L('поход (из альбома «In Russian Style»)','runs (from the album “In Russian Style”)');},a:'Alexandr Zhelanov, soundcloud.com/alexandr-zhelanov',l:'CC-BY 3.0 (creativecommons.org/licenses/by/3.0)',src:'OpenGameArt'},
   {t:'Brave Soldiers',get w(){return L('бой с боссом','boss fights');},a:'Alexandr Zhelanov, soundcloud.com/alexandr-zhelanov',l:'CC-BY 3.0 (creativecommons.org/licenses/by/3.0)',src:'OpenGameArt'}];
 // ссылок нет (правила площадок запрещают внешние ссылки) — только текст: автор, лицензия (адрес — текстом, не ссылкой), источник
-function openCredits(){
+function openCredits(){STAT.screen('credits');
   showModal('<h3>'+L('Благодарности','Credits')+'</h3><p class="sub">'+L('Музыка, под которую богатырь бьёт нечисть. Спасибо авторам!','The music our bogatyr fights to. Thanks to the authors!')+'</p>'+
     CREDITS.map(c=>'<div class="card" style="margin:8px 0;text-align:left;font-size:13px;line-height:1.45"><b style="font-size:15px">'+L('«'+c.t+'»','“'+c.t+'”')+'</b> <span style="opacity:.7">— '+c.w+'</span><br>'+
       L('Автор: ','Author: ')+c.a+'<br>'+L('Лицензия: ','License: ')+c.l+'<br>'+L('Источник: ','Source: ')+c.src+'</div>').join('')+
@@ -74,8 +80,8 @@ function giftAmt(){return ECO.gift[0]+ECO.gift[1]*Object.keys(S.done).length;}
 function giftReady(){return !!S.runs&&nowMs()-(S.gift||0)>4*3600e3;}
 function giftLeftH(){return Math.max(1,Math.ceil((4*3600e3-(nowMs()-(S.gift||0)))/3600e3));}
 function boostLeft(){return S.village.mill?2-(S.afkBoost&&S.afkBoost.day===dayKey()?S.afkBoost.n:0):0;}
-function takeGift(after){showRewarded(()=>{const a=giftAmt();S.gold+=a;S.gift=nowMs();save();SND.chest();toast('+'+fmtNum(a)+L(' золота!',' gold!'));setGold();if(after)after();});}
-function takeBoost(after){showRewarded(()=>{const a=afkRate()*ECO.boostH;S.afkBoost={day:dayKey(),n:3-boostLeft()};S.gold+=a;save();SND.coin();toast('+'+fmtNum(a)+goldW());setGold();if(after)after();});}
+function takeGift(after,p){STAT.place(p||'gift');showRewarded(()=>{const a=giftAmt();S.gold+=a;S.gift=nowMs();save();SND.chest();toast('+'+fmtNum(a)+L(' золота!',' gold!'));setGold();if(after)after();});}
+function takeBoost(after,p){STAT.place(p||'boost');showRewarded(()=>{const a=afkRate()*ECO.boostH;S.afkBoost={day:dayKey(),n:3-boostLeft()};S.gold+=a;save();SND.coin();toast('+'+fmtNum(a)+goldW());setGold();if(after)after();});}
 // что можно купить: постройки, кузница, оружейная для оружия текущего богатыря
 function upList(){if(!S.village.forge)return [{n:BLD[0].name,c:BLD[0].cost[0]}];const UL=[];
   for(const b of BLD){const l=S.village[b.id]||0;if(l<b.cost.length)UL.push({n:b.name,c:b.cost[l]});}
@@ -86,7 +92,7 @@ function cheapestIn(UL,lo,hi){return UL.filter(u=>u.c>lo&&u.c<=hi).sort((a,b)=>a
 // карточка «не хватает N» с подарком/казной за рекламу; list — что лежит на этом экране
 function needCard(UL,rerender){const g=S.gold,ga=giftReady()?giftAmt():0,ba=boostLeft()>0?afkRate()*ECO.boostH:0,best=Math.max(ga,ba);if(!best||!adOk())return '';
   const u=cheapestIn(UL,g,g+best);if(!u)return '';const byGift=ga&&u.c<=g+ga;
-  needCard.fn=()=>(byGift?takeGift:takeBoost)(rerender);
+  needCard.fn=()=>(byGift?takeGift:takeBoost)(rerender,'need');
   return '<div class="card gift"><img src="'+ic(byGift?'bird':'chest',60)+'" width="48" height="48"><div class="t" style="flex:1"><b>'+L('Не хватает '+fmtNum(u.c-g)+' на «'+u.n+'»','Need '+fmtNum(u.c-g)+' more for “'+u.n+'”')+'</b><span style="display:block;font-size:12.5px;color:var(--mut)">'+(byGift?L('Дар Жар-птицы','Firebird’s Gift'):L('Казна сразу, +'+ECO.boostH+' ч','Instant treasury, +'+ECO.boostH+' h'))+': +'+fmtNum(byGift?ga:ba)+goldW()+'</span></div><button class="btn ad" id="needAd">'+L('🎬 За рекламу','🎬 Watch ad')+'</button></div>';}
 
 /* ---------- деревня ---------- */
@@ -112,10 +118,10 @@ function renderVillage(){const el=$('tabVillage');const giftOk=nowMs()-(S.gift||
       (giftOk?'<button class="btn ad" id="giftBtn">'+L('🎬 За рекламу','🎬 Watch ad')+'</button>':'')+'</div>';
     if(mill&&bst<2)h+='<div class="card gift"><img src="'+ic('chest',60)+'" width="48" height="48"><div class="t" style="flex:1"><b>'+L('Казна сразу','Instant treasury')+'</b><span style="display:block;font-size:12.5px;color:var(--mut)">'+L('осталось '+(2-bst)+' из 2 сегодня',(2-bst)+' of 2 left today')+'</span></div><button class="btn ad" id="afkBoost">'+L('🎬 +'+ECO.boostH+' ч за рекламу','🎬 +'+ECO.boostH+' h for an ad')+'</button></div>';}
   el.innerHTML=h;drawVillage();
-  on('afkBoost',()=>takeBoost(renderVillage));
+  if($('afkBoost'))STAT.offer('boost');on('afkBoost',()=>takeBoost(renderVillage));
   // пока идёт ролик ×2 — бесплатная кнопка не срабатывает (иначе ролик впустую)
-  on('afkTake',()=>{if(!adBusy)takeAfk(1,renderVillage);});on('afkX2',()=>showRewarded(()=>takeAfk(2,renderVillage)));
-  on('giftBtn',()=>takeGift(renderVillage));
+  on('afkTake',()=>{if(!adBusy)takeAfk(1,renderVillage);});onAd('afkX2','afk2',()=>showRewarded(()=>takeAfk(2,renderVillage)));
+  if($('giftBtn'))STAT.offer('gift');on('giftBtn',()=>takeGift(renderVillage));
   for(const b of el.querySelectorAll('[data-b]'))b.onclick=()=>build(b.dataset.b);
   $('village').onclick=e=>{const r=e.target.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
     let best=null,bd=.02;for(const id in VPOS){const p=VPOS[id],d=(p[0]-x)**2+((p[1]-y)*.5)**2;if(d<bd){bd=d;best=id;}}
@@ -123,7 +129,7 @@ function renderVillage(){const el=$('tabVillage');const giftOk=nowMs()-(S.gift||
 function takeAfk(m,after){if(PLAT==='yandex'&&!LOCAL&&!sdkDone){toast(L('Сверяем время — попробуй через пару секунд','Checking the time — try again in a few seconds'));return;} // казна по времени сервера (nowMs)
   const g=afkGold();if(g<=0)return;S.gold+=g*m;S.afkT=nowMs();save();SND.coin();toast('+'+fmtNum(g*m)+L(' золота из казны',' gold from the treasury'));setGold();if(after)after();}
 function build(id){const b=BLD.find(q=>q.id===id),l=S.village[id]||0,cost=b.cost[l];if(cost==null||S.gold<cost)return;const pw=powerNow();
-  S.gold-=cost;S.village[id]=l+1;if(id==='mill'&&!l)S.afkT=nowMs();save();SND.chest();achToast();toast(l?L('Улучшено: '+b.name+' (ур. '+(l+1)+')!','Upgraded: '+b.name+' (lv '+(l+1)+')!'):L('Готово: '+b.name+'!','Built: '+b.name+'!'));renderVillage();setGold();
+  S.gold-=cost;STAT.ev('spend',{k:'bld:'+id,c:cost});S.village[id]=l+1;if(id==='mill'&&!l)S.afkT=nowMs();save();SND.chest();achToast();toast(l?L('Улучшено: '+b.name+' (ур. '+(l+1)+')!','Upgraded: '+b.name+' (lv '+(l+1)+')!'):L('Готово: '+b.name+'!','Built: '+b.name+'!'));renderVillage();setGold();
   if(id==='forge'&&!l){openTab('Forge');toast(L('Кузница готова! Выбери первую ковку.','The Forge is ready! Pick your first upgrade.'));}else if(powerNow()>pw)setTimeout(()=>powerToast(pw),1400);}
 function drawVillage(){const c=$('village');if(!c)return;const r=c.getBoundingClientRect(),W=r.width||360,H=r.height||230,d=Math.min(devicePixelRatio||1,2.5);
   c.width=W*d;c.height=H*d;const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);g.lineJoin=g.lineCap='round';
@@ -188,7 +194,7 @@ function renderForge(){const el=$('tabForge');
         (l>=ARMORY_MAX?'<span class="tag ok">'+L('Макс.','Max')+'</span>':'<button class="btn gold" data-a="'+id+'" '+(S.gold<cost?'disabled':'')+'><img src="'+ic('coin',36)+'">'+fmtNum(cost)+'</button>')+'</div>'+
         '<div style="margin-top:8px;font-size:12px;color:var(--mut);line-height:1.5">'+L('Эволюция: 5-й ур. + ','Evolution: lv 5 + ')+'<img src="'+ic(PASSIVES[W.evo.need].icon,48)+'" width="18" height="18" style="vertical-align:-4px"> '+PASSIVES[W.evo.need].name+' → <b style="color:#ffd98a">'+W.evo.name+'</b></div></div>';}
     el.innerHTML=h;on('needAd',()=>needCard.fn());on('fsH',()=>{forgeSeg='hero';renderForge();});
-    for(const b of el.querySelectorAll('[data-a]'))b.onclick=()=>{const id=b.dataset.a,l=S.armory[id]||0,cost=armoryCost(l);if(S.gold<cost||l>=ARMORY_MAX)return;const pw=powerNow();S.gold-=cost;S.armory[id]=l+1;save();SND.level();renderForge();setGold();powerToast(pw);};
+    for(const b of el.querySelectorAll('[data-a]'))b.onclick=()=>{const id=b.dataset.a,l=S.armory[id]||0,cost=armoryCost(l);if(S.gold<cost||l>=ARMORY_MAX)return;const pw=powerNow();S.gold-=cost;STAT.ev('spend',{k:'arm:'+id,c:cost});S.armory[id]=l+1;save();SND.level();renderForge();setGold();powerToast(pw);};
     return;}
   h+=needCard(FORGE.filter(f=>(S.forge[f.id]||0)<f.max).map(f=>({n:f.name+L(', ур. ',', lv ')+((S.forge[f.id]||0)+1),c:forgeCost(S.forge[f.id]||0,f.id)})),renderForge)+'<p class="sub">'+L('Прокачка навсегда — для всех богатырей и всех походов.','Permanent upgrades — for every hero and every run.')+'</p>';
   const tipId=forgeTip();
@@ -196,7 +202,7 @@ function renderForge(){const el=$('tabForge');
     h+='<div class="card'+(f.id===tipId?' next':'')+'"><div class="row"><img class="ic" src="'+ic(f.icon)+'"><div class="t"><b>'+f.name+(f.id===tipId?' <em class="rec">'+L('👍 советуем','👍 good pick')+'</em>':'')+'</b>'+(l<f.max?'<span class="delta">'+forgeDelta(f.id)+'</span>':'')+'<span>'+f.per+L(' за уровень',' per level')+(f.max>10?(l>=10?L(' · мастерская ковка',' · master forging'):L(' · до '+f.max+' ур.',' · up to lv '+f.max)):'')+'</span><div class="pips'+(f.max>10?' long':'')+'">'+Array.from({length:f.max},(_,i)=>'<i class="'+(i<l?'on':'')+(i>=10?' m':'')+'"></i>').join('')+'</div></div>'+
       (l>=f.max?'<span class="tag ok">'+L('Макс.','Max')+'</span>':'<button class="btn gold" data-f="'+f.id+'" '+(S.gold<cost?'disabled':'')+'><img src="'+ic('coin',36)+'">'+fmtNum(cost)+'</button>')+'</div></div>';}
   el.innerHTML=h;on('needAd',()=>needCard.fn());on('fsW',()=>{forgeSeg='arm';renderForge();});for(const b of el.querySelectorAll('[data-f]'))b.onclick=()=>{const f=FORGE.find(q=>q.id===b.dataset.f),l=S.forge[f.id]||0,cost=forgeCost(l,f.id);if(S.gold<cost||l>=f.max)return;
-    const pw=powerNow(),g0=Object.assign({},GEAR);S.gold-=cost;S.forge[f.id]=l+1;save();SND.level();achToast();const gch=gearRefresh();renderForge();setGold();if(gch)gearToast(g0);else powerToast(pw);};}
+    const pw=powerNow(),g0=Object.assign({},GEAR);S.gold-=cost;STAT.ev('spend',{k:'forge:'+f.id,c:cost});S.forge[f.id]=l+1;save();SND.level();achToast();const gch=gearRefresh();renderForge();setGold();if(gch)gearToast(g0);else powerToast(pw);};}
 
 /* ---------- богатыри ---------- */
 function skinRow(hr){const list=SKINS.filter(k=>k.hero===hr.id&&(!k.pay||skinHas(hr.id+'@'+k.id)||typeof payHere==='function'&&payHere()&&!!PAY.item(k.pay)));if(!list.length)return '';const cur=(S.skin||{})[hr.id]||'';
@@ -228,8 +234,8 @@ function renderHeroes(){const el=$('tabHeroes');let h='<h2>'+L('Богатыри
     if(b.dataset.lock&&sk&&sk.price){buySkin(sk);return;}
     if(b.dataset.lock){toast(L('🔒 Как получить: ','🔒 How to get: ')+skinSource(hid+'@'+sid));return;}
     S.skin[hid]=sid;save();SND.click();renderHeroes();};
-  for(const b of el.querySelectorAll('[data-r]'))b.onclick=()=>{const id=b.dataset.r,r=S.rank[id]||0,c=rankCost(r);if(S.gold<c||r>=RANK_MAX)return;const pw=powerScore(id);S.gold-=c;S.rank[id]=r+1;save();SND.chest();achToast();toast(HERO_BY[id].name+' — '+RANKS[r+1]+'! ⚔ '+fmtNum(pw)+' → '+fmtNum(powerScore(id)));renderHeroes();setGold();};
-  for(const b of el.querySelectorAll('[data-buy]'))b.onclick=()=>{const hr=HERO_BY[b.dataset.buy];if(S.gold<hr.price)return;S.gold-=hr.price;S.bought=S.bought||{};S.bought[hr.id]=1;S.hero=hr.id;save();SND.chest();achToast();toast(hr.name+L(' с тобой!',' joins you!'));renderHeroes();setGold();};}
+  for(const b of el.querySelectorAll('[data-r]'))b.onclick=()=>{const id=b.dataset.r,r=S.rank[id]||0,c=rankCost(r);if(S.gold<c||r>=RANK_MAX)return;const pw=powerScore(id);S.gold-=c;STAT.ev('spend',{k:'rank:'+id,c:c});S.rank[id]=r+1;save();SND.chest();achToast();toast(HERO_BY[id].name+' — '+RANKS[r+1]+'! ⚔ '+fmtNum(pw)+' → '+fmtNum(powerScore(id)));renderHeroes();setGold();};
+  for(const b of el.querySelectorAll('[data-buy]'))b.onclick=()=>{const hr=HERO_BY[b.dataset.buy];if(S.gold<hr.price)return;S.gold-=hr.price;STAT.ev('spend',{k:'hero:'+hr.id,c:hr.price});S.bought=S.bought||{};S.bought[hr.id]=1;S.hero=hr.id;save();SND.chest();achToast();toast(hr.name+L(' с тобой!',' joins you!'));renderHeroes();setGold();};}
 
 // праздничный облик — из покупки Яндекса «Праздничные облики» (js/pay.js): окно с превью и кнопкой покупки с ценой из каталога
 function buyFest(sk){const key=sk.hero+'@'+sk.id;if(!(typeof payHere==='function'&&payHere()&&PAY.item(sk.pay)))return;
@@ -242,7 +248,7 @@ function buySkin(sk){const key=sk.hero+'@'+sk.id;if(S.skins[key])return;
   if(S.gold<sk.price){toast(L('Облик «'+sk.name+'»: нужно '+fmtNum(sk.price)+' золота, у тебя '+fmtNum(S.gold),'Outfit “'+sk.name+'”: costs '+fmtNum(sk.price)+' gold, you have '+fmtNum(S.gold)));return;}
   showModal('<h3>'+L('Облик «'+sk.name+'»','Outfit “'+sk.name+'”')+'</h3><img src="'+ic('hp_'+key,160)+'" width="110" height="110" style="display:block;margin:6px auto"><p class="sub">'+L('Только для красоты — силы не прибавляет. '+HERO_BY[sk.hero].name+' будет ходить в нём во всех походах.','Just for looks — no extra power. '+HERO_BY[sk.hero].name+' will wear it on every run.')+'</p>'+
     '<div class="btns"><button class="btn gold big" id="skBuy"><img src="'+ic('coin',36)+'">'+L('Купить за ','Buy for ')+fmtNum(sk.price)+'</button><button class="btn ghost" id="skNo">'+L('Не сейчас','Not now')+'</button></div>');
-  on('skNo',hideModal);on('skBuy',()=>{if(S.gold<sk.price||S.skins[key]){hideModal();return;}S.gold-=sk.price;S.skins[key]=1;S.skin[sk.hero]=sk.id;save();SND.chest();hideModal();achToast();toast(L('Новый облик: ','New outfit: ')+qt(sk.name)+'!');setGold();renderHeroes();});}
+  on('skNo',hideModal);on('skBuy',()=>{if(S.gold<sk.price||S.skins[key]){hideModal();return;}S.gold-=sk.price;STAT.ev('spend',{k:'skin:'+key,c:sk.price});S.skins[key]=1;S.skin[sk.hero]=sk.id;save();SND.chest();hideModal();achToast();toast(L('Новый облик: ','New outfit: ')+qt(sk.name)+'!');setGold();renderHeroes();});}
 
 /* ---------- достижения ---------- */
 function skinName(r){const sk=SKINS.find(k=>k.hero+'@'+k.id===r);return sk?sk.name:r;}
@@ -256,7 +262,7 @@ function achToast(){const n=achCheck();if(n.length){SND.chest();toast('🏆 '+n.
 function loginState(){const LG=S.login||{last:'',n:0},today=dayKey();if(LG.last===today)return {ready:false,n:LG.n};if(LG.last===dayPrev(today))return {ready:true,n:LG.n%7+1};
   return {ready:true,n:1,lost:LG.n&&LG.last===dayPrev(dayPrev(today))?LG.n:0};}
 function loginReward(n){if(n<7)return Math.round(LOGIN_GOLD[n-1]*(1+ECO.login*Object.keys(S.done).length));const sk=LOGIN_SKINS.find(k=>!S.skins[k]);return sk||1000;}
-function openLogin(){if(document.body.classList.contains('run'))return;const ls=loginState();if(!ls.ready)return;const n=ls.n;
+function openLogin(){if(document.body.classList.contains('run'))return;const ls=loginState();if(!ls.ready)return;STAT.screen('login');const n=ls.n;
   let cells='';for(let d=1;d<=7;d++){const r=loginReward(d),isSkin=typeof r==='string';cells+='<div style="flex:1;min-width:0;text-align:center;padding:8px 2px;border-radius:12px;background:'+(d===n?'rgba(255,201,74,.25)':d<n?'rgba(74,222,106,.15)':'rgba(255,255,255,.06)')+';border:1px solid '+(d===n?'var(--gold)':'transparent')+'">'+
     '<div style="font-size:10px;color:var(--mut)">'+L('День ','Day ')+d+'</div>'+(isSkin?'<img src="'+ic('hp_'+r,72)+'" style="width:34px;height:34px">':'<img src="'+ic('coin',48)+'" style="width:22px;height:22px;margin:6px 0">')+
     '<div style="font-size:10px;font-weight:800">'+(isSkin?L('облик','outfit'):fmtNum(r))+'</div>'+(d<n?'<div style="font-size:10px;color:#8af0a0">✓</div>':'')+'</div>';}
@@ -265,8 +271,8 @@ function openLogin(){if(document.body.classList.contains('run'))return;const ls=
     (ls.lost&&adOk()?'<div class="card gift" style="margin:0 0 8px"><div class="t" style="flex:1"><b>'+L('Серия прервалась','Streak broken')+'</b><span style="display:block;font-size:13px;color:var(--mut)">'+L('Было '+ls.lost+' дн. подряд — вернуть и продолжить?','You had '+ls.lost+' '+plu(ls.lost,'','','','day','days')+' in a row — restore and continue?')+'</span></div><button class="btn ad" id="lgRest">'+L('🎬 Вернуть за рекламу','🎬 Restore for an ad')+'</button></div>':'')+
     '<div class="btns"><button class="btn gold big" id="lgTake">'+L('Забрать: ','Collect: ')+rewardText(r)+'</button>'+(typeof r==='number'&&adOk()?'<button class="btn ad" id="lgX2">'+L('🎬 ×2 за рекламу','🎬 ×2 for an ad')+'</button>':'')+'<button class="btn ghost" id="lgBack">'+L('Назад','Back')+'</button></div>');
   const take=m=>{S.login={last:dayKey(),n};if(typeof r==='number')S.gold+=r*m;else S.skins[r]=1;save();SND.chest();hideModal();toast(L('Награда за вход: ','Login reward: ')+(typeof r==='number'?'+'+fmtNum(r*m)+goldW():rewardText(r)));setGold();achToast();if(curTab==='Heroes')renderHeroes();};
-  on('lgTake',()=>{if(!adBusy)take(1);});on('lgX2',()=>showRewarded(()=>take(2)));on('lgBack',openToday);
-  on('lgRest',()=>showRewarded(()=>{S.login={last:dayPrev(dayKey()),n:ls.lost};save();SND.chest();openLogin();}));}
+  on('lgTake',()=>{if(!adBusy)take(1);});onAd('lgX2','login2',()=>showRewarded(()=>take(2)));on('lgBack',openToday);
+  onAd('lgRest','loginrest',()=>showRewarded(()=>{S.login={last:dayPrev(dayKey()),n:ls.lost};save();SND.chest();openLogin();}));}
 
 /* ---------- дела на сегодня: всё ежедневное в одном окне (раз за запуск сам, дальше — кнопкой на карте) ---------- */
 function todayList(){const TL=[],ls=loginState(),dq=dailyEnsure(),qd=dq.list.filter(x=>x.c).length,qr=dq.list.filter(x=>!x.c&&qDone(x)).length;
@@ -278,7 +284,7 @@ function todayList(){const TL=[],ls=loginState(),dq=dailyEnsure(),qd=dq.list.fil
   if(S.done[0]){const m=wkMine();TL.push({k:'wk',ic:'e_perun',t:L('Испытание недели','Weekly Trial'),s:m.got?L('Награда недели получена','Weekly reward collected'):qt(weekly().name)+': +'+fmtNum(weeklyReward())+goldW(),ready:!m.got,b:L('Испытать','Try it')});}
   return S.runs<3?TL.filter(x=>x.k==='login'||x.k==='quests'):TL;} // новичку (первые 3 похода) — только вход и задания, остальное не отвлекает
 let todayShown=false;
-function openToday(auto){if(document.body.classList.contains('run'))return;const TL=todayList();if(auto){if(todayShown||!TL.some(x=>x.ready)||$('modal').classList.contains('on'))return;}todayShown=true;
+function openToday(auto){if(document.body.classList.contains('run'))return;const TL=todayList();if(auto){if(todayShown||!TL.some(x=>x.ready)||$('modal').classList.contains('on'))return;}todayShown=true;STAT.screen('today');
   const ls0=loginState(),dN=ls0.n;
   showModal('<h3>'+L('Дела на сегодня','Today’s to-do')+'</h3><p class="sub">'+(S.runs>1&&dN>1&&!ls0.lost?L('С возвращением! Ты заходишь '+dN+'-й день подряд. ','Welcome back! Day '+dN+' in a row. '):'')+L('Всё ежедневное — здесь. Не успел — не беда, завтра будет снова.','All your dailies in one place. Missed something? No worries — it’s back tomorrow.')+'</p>'+
     TL.map((x,i)=>'<div class="card today-row'+(x.ready?' ready':'')+'"><div class="row"><img class="ic" src="'+ic(x.ic,96)+'"><div class="t"><b>'+x.t+'</b><span>'+x.s+'</span></div>'+
@@ -289,11 +295,11 @@ function openToday(auto){if(document.body.classList.contains('run'))return;const
     if(x.k==='login')openLogin();
     else if(x.k==='quests'){hideModal();qSeg='q';openTab('Quests');}
     else if(x.k==='afk'){takeAfk(1,()=>{openToday();if(curTab==='Village')renderVillage();});}
-    else if(x.k==='gift')takeGift(()=>{openToday();if(curTab==='Village')renderVillage();});
+    else if(x.k==='gift')takeGift(()=>{openToday();if(curTab==='Village')renderVillage();},'today');
     else if(x.k==='wk'){hideModal();startRun(0,true,true);}
     else if(x.k==='dr')openDaily();};}
 // поход дня: правила перед стартом (одно окно, из «Дел на сегодня» и из задания)
-function openDaily(){const d=dailyDef(),m=drMine(),h=HERO_BY[d.hero];
+function openDaily(){STAT.screen('daily');const d=dailyDef(),m=drMine(),h=HERO_BY[d.hero];
   showModal('<h3>'+L('Поход дня','Daily Run')+'</h3><p class="sub">'+L('Сегодня у всех одинаково: глава, богатырь, правило и карточки умений.','Same for everyone today: chapter, hero, rule and skill cards.')+'</p>'+
     '<div class="card"><div class="row"><img class="ic" src="'+ic('hp_'+skinKey(h.id),120)+'"><div class="t"><b>'+h.name+'</b><span>'+CH[d.chi].name+L(' · босс: ',' · boss: ')+EN[CH[d.chi].boss].n+'</span></div></div></div>'+
     '<div class="card" style="font-size:13.5px;line-height:1.45"><b style="font-size:15px">'+qt(d.rule.name)+'</b><br>'+d.rule.about+'<br>'+L('🏆 Очки: одолено нечисти + 500 за босса. В таблицу идёт лучший поход дня.','🏆 Score: monsters defeated + 500 for the boss. Your best run of the day goes on the leaderboard.')+'<br>🎁 '+(m.got?L('Награда за сегодня получена','Today’s reward collected'):L('За участие: +'+fmtNum(drReward())+' золота (продержись хотя бы минуту)','For taking part: +'+fmtNum(drReward())+' gold (survive at least a minute)'))+(m.best?L('<br>Твой лучший сегодня: <b>','<br>Your best today: <b>')+fmtNum(m.best)+'</b>':'')+'</div>'+
@@ -349,9 +355,10 @@ function renderQuests(){if(qSeg==='a')return renderAch();if(qSeg==='b')return re
   el.innerHTML=h;segBind();
   const claim=(i,m)=>{const x=dq.list[i];if(x.c||!qDone(x))return;x.c=1;S.gold+=rw*m;save();SND.coin();toast('+'+fmtNum(rw*m)+goldW());renderQuests();setGold();questBadge();achToast();};
   for(const b of el.querySelectorAll('[data-q]'))b.onclick=()=>{if(!adBusy)claim(+b.dataset.q,1);};
-  for(const b of el.querySelectorAll('[data-qa]'))b.onclick=()=>showRewarded(()=>claim(+b.dataset.qa,2));
+  if(el.querySelector('[data-qa]'))STAT.offer('quest2');
+  for(const b of el.querySelectorAll('[data-qa]'))b.onclick=()=>STAT.place('quest2')||showRewarded(()=>claim(+b.dataset.qa,2));
   on('qBonus',()=>{if(dq.bonus)return;dq.bonus=1;S.streak={last:dayKey(),n:si.n};S.gold+=bonus;save();SND.chest();toast(L('Сундук дня: +','Daily chest: +')+fmtNum(bonus)+L(' золота!',' gold!'));renderQuests();setGold();questBadge();});
-  on('qRest',()=>showRewarded(()=>{S.streak={last:dayPrev(dayKey()),n:si.lost};save();SND.chest();toast(L('Серия возвращена: '+si.lost+' дн.','Streak restored: '+si.lost+' '+plu(si.lost,'','','','day','days')));renderQuests();}));
+  onAd('qRest','streak',()=>showRewarded(()=>{S.streak={last:dayPrev(dayKey()),n:si.lost};save();SND.chest();toast(L('Серия возвращена: '+si.lost+' дн.','Streak restored: '+si.lost+' '+plu(si.lost,'','','','day','days')));renderQuests();}));
   on('lbE',()=>{lbSeg='endless';renderQuests();});on('lbW',()=>{lbSeg='weekly';renderQuests();});on('lbK',()=>{lbSeg='kills';renderQuests();});on('lbD',()=>{lbSeg='daily';renderQuests();});
   loadLB();}
 function segHTML(){const na=ACH.filter(a=>S.ach[a.id]).length;return '<div class="seg" style="margin-top:10px"><button id="sgQ" class="'+(qSeg==='q'?'on':'')+'">'+L('Задания','Quests')+'</button><button id="sgA" class="'+(qSeg==='a'?'on':'')+'">'+L('Достижения ','Awards ')+na+'/'+ACH.length+'</button><button id="sgB" class="'+(qSeg==='b'?'on':'')+'">'+L('📖 Книга нечисти','📖 Bestiary')+'</button></div>';}
@@ -366,7 +373,7 @@ function renderBest(){const el=$('tabQuests'),n=BEST_ORDER.filter(id=>S.meet[id]
     for(const id of list){const k=!!S.meet[id];h+='<button class="bcell'+(k?'':' lock')+'" data-bi="'+id+'"><img src="'+ic(id,120)+'"><b>'+(k?bestName(id):'???')+'</b>'+(k?starsHTML(id):'<small class="where">'+bestWhere(id).replace(/ \(.*/,'')+'</small>')+'</button>';}
     h+='</div>';}
   el.innerHTML=h;segBind();for(const b of el.querySelectorAll('[data-bi]'))b.onclick=()=>{SND.click();openBeast(b.dataset.bi);};}
-function openBeast(id){const d=EN[id],k=!!S.meet[id],n=S.bk[id]||0,boss=d.boss||id==='egg';
+function openBeast(id){STAT.screen('beast');const d=EN[id],k=!!S.meet[id],n=S.bk[id]||0,boss=d.boss||id==='egg';
   const spd=d.spd===0?L('не ходит — лежит','doesn’t move'):d.spd<40?L('медленно','slow'):d.spd<60?L('вразвалочку','waddles'):d.spd<85?L('шустро','quick'):L('очень быстро','very fast');
   const feat=[d.fly?L('летает','flies'):'',d.ranged?L('стреляет издалека','shoots from afar'):'',boss?L('босс главы','chapter boss'):''].filter(Boolean).join(', ');
   const nxt=boss?[1,5,20]:[10,100,1000],goal=nxt.find(x=>n<x);
@@ -414,7 +421,7 @@ function mapFocus(smooth){setTimeout(()=>{const c=$('mapCv'),tab=$('tabMap'),gb=
 function starsHTML3(i){return STAR_K.map(k=>S.stars[i+k]?'★':'<u>★</u>').join('');}
 function starRows(i,got){const T=[['w',L('Победа над боссом','Beat the boss')],['d',L('Победа без единого падения','Win without falling once')],['t',L('Победа быстрее '+fmtTime(STAR_T),'Win faster than '+fmtTime(STAR_T))]];
   return '<div class="starrows">'+T.map(([k,t])=>'<div class="'+(S.stars[i+k]?'on':'')+'"><i>★</i><span>'+t+'</span>'+(got&&got[k]&&got.fresh&&got.fresh[k]?'<em>'+L('новая!','new!')+'</em>':'')+'</div>').join('')+'</div>';}
-function openStars(i){showModal('<h3>'+CH[i].name+'</h3><p class="sub">'+L('Три звезды главы — для тех, кто любит проходить начисто. Всего звёзд: ','Three stars per chapter — for those who like a clean sweep. Stars in total: ')+starsTotal()+' / '+CH.length*3+'</p>'+starRows(i)+'<div class="btns"><button class="btn big" id="stOk">'+L('Понятно','Got it')+'</button></div>');on('stOk',hideModal);}
+function openStars(i){STAT.screen('stars');showModal('<h3>'+CH[i].name+'</h3><p class="sub">'+L('Три звезды главы — для тех, кто любит проходить начисто. Всего звёзд: ','Three stars per chapter — for those who like a clean sweep. Stars in total: ')+starsTotal()+' / '+CH.length*3+'</p>'+starRows(i)+'<div class="btns"><button class="btn big" id="stOk">'+L('Понятно','Got it')+'</button></div>');on('stOk',hideModal);}
 function renderChInfo(){const c=CH[mapSel],hr=HERO_BY[S.hero]||HEROES[0],best=S.best[mapSel];
   // выбранная глава — компактной карточкой в закреплённой панели над «Выступить»: всегда видна целиком (boost 2); звёзды главы — тут же
   const sn=chStars(mapSel),sel=$('chSel');
@@ -442,7 +449,7 @@ function weeklyCard(){const w=weekly(),m=wkMine(),lh=weekLeftH(),left=lh>=24?Mat
     '<div class="wkstats"><div><b>'+(m.best?fmtTime(m.best):'—')+'</b>'+L('рекорд недели','week record')+'</div><div><b>'+(m.got?'✓':'+'+fmtNum(weeklyReward()))+'</b>'+(m.got?L('награда взята','reward taken'):L('за участие','for taking part'))+'</div><div><b>'+left+'</b>'+L('до смены','until reset')+'</div></div>'+
     (open?'<div class="btns" style="flex-direction:row"><button class="btn" id="wkBtn" style="flex:2">'+L('⚔️ Испытать','⚔️ Try it')+'</button><button class="btn ghost" id="wkRules" style="flex:1">'+L('Правила','Rules')+'</button><button class="btn ghost" id="wkLb" style="flex:1">'+L('Таблица','Board')+'</button></div>'
       :'<p class="sub" style="margin:8px 0 0">'+L('🔒 Откроется, когда освободишь ','🔒 Unlocks when you free the ')+CH[0].name+'</p>')+'</div>';}
-function openWkRules(){const w=weekly();showModal('<h3>'+w.name+'</h3><p class="sub" style="font-size:14px;color:#e8e4f4">'+w.about+'</p>'+
+function openWkRules(){STAT.screen('weekly');const w=weekly();showModal('<h3>'+w.name+'</h3><p class="sub" style="font-size:14px;color:#e8e4f4">'+w.about+'</p>'+
   '<div class="card" style="font-size:13px;line-height:1.5">'+L('⚔️ Выживание: главы идут по кругу, каждые 5 минут — босс, с каждым кругом сильнее.<br>🏆 Счёт — сколько продержишься. Лучший результат недели попадает в общую таблицу.<br>🎁 Награда за участие: +'+fmtNum(weeklyReward())+' золота, если продержишься хотя бы минуту (раз в неделю).<br>⏳ Правила меняются каждый понедельник.','⚔️ Survival: chapters loop, a boss every 5 minutes, tougher each round.<br>🏆 Score — how long you last. Your best of the week goes on the leaderboard.<br>🎁 Reward for taking part: +'+fmtNum(weeklyReward())+' gold if you survive at least a minute (once a week).<br>⏳ The rules change every Monday.')+'</div>'+
   '<div class="btns"><button class="btn big" id="wrGo">'+L('⚔️ Испытать','⚔️ Try it')+'</button><button class="btn ghost" id="wrOk">'+L('Понятно','Got it')+'</button></div>');on('wrOk',hideModal);on('wrGo',()=>startRun(0,true,true));}
 function drawMap(){const c=$('mapCv');if(!c)return;const r=c.getBoundingClientRect(),W=r.width||360,tabH=($('tabMap')||{}).clientHeight||0,H=renderMap.wide&&tabH>300?Math.max(360,Math.min(640,W*1.38,tabH-34)):Math.min(600,W*1.38),d=Math.min(devicePixelRatio||1,2.5);c.style.height=H+'px';
@@ -473,7 +480,8 @@ function drawMap(){const c=$('mapCv');if(!c)return;const r=c.getBoundingClientRe
     if(!open){g.font='18px system-ui';g.fillText('🔒',px,py);}});}
 
 /* ---------- забег ---------- */
-function startRun(chi,endless,wk,dr){ac();hideModal();gearRefresh();$('toast').classList.remove('on');document.body.classList.add('run');layout();newRun(chi,HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.hero:'dob',endless,wk,dr);musicPlay('run');YG.start();}
+function startRun(chi,endless,wk,dr){ac();hideModal();gearRefresh();$('toast').classList.remove('on');document.body.classList.add('run');layout();newRun(chi,HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.hero:'dob',endless,wk,dr);musicPlay('run');YG.start();
+  STAT.screen('game');STAT.lvl(G.chi+1,G.daily?'daily':G.weekly?'week':G.endless?'endless':'ch');} // статистика: поход = «уровень» (номер главы, режим)
 function togglePause(){if(!G||G.over)return;if($('modal').classList.contains('on')&&!G.pauseOpen)return;
   if(G.pauseOpen){G.pauseOpen=false;G.paused=false;hideModal();musicDuck(1);YG.start();return;}
   G.paused=true;G.pauseOpen=true;IN.on=false;YG.stop();musicDuck(.35);
@@ -481,7 +489,7 @@ function togglePause(){if(!G||G.over)return;if($('modal').classList.contains('on
   showModal('<h3>'+L('Привал','Rest stop')+'</h3><p class="sub">'+(G.daily?L('Поход дня: ','Daily Run: ')+G.daily.rule.name+' · '+G.ch.name:G.weekly?L('Испытание: ','Trial: ')+weekly().name:G.endless?L('Бесконечная сеча · круг ','Endless Battle · round ')+(G.cyc+1):G.ch.name)+' · '+fmtTime(G.t)+'</p>'+invHTML()+(hints?'<p class="sub" style="text-align:left;margin-top:8px">'+L('Эволюция: оружие 5-го уровня + оберег','Evolution: level 5 weapon + charm')+'<br>'+hints+'</p>':'')+
     volHTML()+'<div class="btns"><button class="btn big" id="pRes">'+L('Продолжить','Continue')+'</button><button class="btn ghost" id="pQuit">'+L('Уйти (золото сохранится)','Leave (gold is kept)')+'</button></div>');
   on('pRes',togglePause);volBind();
-  on('pQuit',()=>{G.pauseOpen=false;musicDuck(1);endRun(false);});}
+  on('pQuit',()=>{G.pauseOpen=false;G.quit=1;musicDuck(1);endRun(false);});}
 function invHTML(){let h='<div class="inv">';for(const w of G.weapons)h+='<div><img src="'+ic(w.lvl>=6?'e_'+w.id:WEAPONS[w.id].icon,76)+'"><i>'+(w.lvl>=6?'★':w.lvl)+'</i></div>';h+='</div><div class="inv">';
   for(const id in G.pas)h+='<div><img src="'+ic(PASSIVES[id].icon,76)+'"><i>'+G.pas[id]+'</i></div>';return h+'</div>';}
 
@@ -566,7 +574,7 @@ function openLevelUp(){YG.stop();SND.level();guardModal();if(Math.random()<.35)h
       if(mode==='pin'){if(!ckey(c)){toast(L('Эту карточку закрепить нельзя','This card can’t be held'));return;}for(const q of cards)delete q.pinned;G.pin={t:c.t,id:c.id,lvl:c.lvl};c.pinned=1;mode='';toast('📌 '+qt(cardInfo(c).name)+L(' подождёт до следующего уровня',' will wait until the next level-up'));draw();return;}
       if(G.pin&&ckey(G.pin)===ckey(c))G.pin=null; // выбрал закреплённую — закреп снят
       applyCard(c);tutEvent('card');if(Math.random()<.3)heroSay(pick(PH.card));close();};
-    on('rr',()=>{G.rerolls--;reroll();});on('rrAd',()=>showRewarded(()=>{adUsed=true;G.rrAd=1;reroll();}));
+    on('rr',()=>{G.rerolls--;reroll();});onAd('rrAd','reroll',()=>showRewarded(()=>{adUsed=true;G.rrAd=1;reroll();}));
     on('lvBan',()=>{mode=mode==='ban'?'':'ban';draw();});on('lvPin',()=>{mode=mode==='pin'?'':'pin';draw();});
     on('lvSkip',()=>{G.gold+=10;SND.coin();toast(L('+10 золота','+10 gold'));close();});};
   // перебор оставляет закреплённую карточку на месте
@@ -591,7 +599,7 @@ function openChest(gold2){YG.stop();const lk=G.st.luck,r=rnd(),n=gold2?(r<.2*lk?
     '<div class="reel'+(gold2?' gold':'')+(got.length<=3?' few':'')+'" id="chReel">'+got.map(()=>'<div class="slot'+(calm?' calm':'')+'"><img src="'+(calm?ic('chest',72):ic(pick(pool),72))+'" alt=""></div>').join('')+'</div>'+
     '<div class="cards" id="chList"></div><div class="btns">'+(adLate()||!gold2||!adOk()?'':'<button class="btn ad" id="chAd" style="display:none">'+L('🎬 Ещё подарок за рекламу','🎬 One more gift for an ad')+'</button>')+'<button class="btn big" id="chOk">'+L('Забрать','Collect')+'</button></div>');
   on('chOk',()=>{openChest.tok++;hideModal();G.paused=false;YG.start();});
-  on('chAd',()=>{if(extraUsed)return;showRewarded(()=>{extraUsed=true;const more=rollCards(1);more.forEach(applyCard);got.push.apply(got,more);if(!more.length){G.gold+=gold;toast('+'+fmtNum(gold)+goldW());} // всё уже взято — ролик не впустую: золото сундука ещё раз
+  onAd('chAd','chest',()=>{if(extraUsed)return;showRewarded(()=>{extraUsed=true;const more=rollCards(1);more.forEach(applyCard);got.push.apply(got,more);if(!more.length){G.gold+=gold;toast('+'+fmtNum(gold)+goldW());} // всё уже взято — ролик не впустую: золото сундука ещё раз
     $('chList').innerHTML=got.map(c=>cardHTML(c,0,null,1)).join('');for(const b of document.querySelectorAll('#chList .upc'))b.style.pointerEvents='none';const a=$('chAd');if(a)a.remove();});});
   if(!got.length){finish();return;}
   const t0=performance.now(),stopAt=i=>(got.length===1?1300:got.length===3?850+i*450:750+i*380);let next=0;
@@ -614,7 +622,7 @@ function openGift(){const H=G.hero;H.inv=Math.max(H.inv,3);G.q.feather=(G.q.feat
     (G.wk.noHeal?'':'<button class="upc" data-g="heal"><img src="'+ic('p_livew',104)+'"><div><b>'+L('Живая вода','Water of Life')+'</b><span>'+L('Полное здоровье и 5 секунд неуязвимости','Full health and 5 seconds of invulnerability')+'</span>'+ad+'</div></button>')+
     '</div>');
   const done=()=>{hideModal();G.paused=false;YG.start();};
-  for(const b of document.querySelectorAll('[data-g]'))b.onclick=()=>{const k=b.dataset.g;showRewarded(()=>{
+  STAT.offer('bird');for(const b of document.querySelectorAll('[data-g]'))b.onclick=()=>{const k=b.dataset.g;STAT.place('bird_'+k);showRewarded(()=>{
     if(k==='chest'){rollCards(2).forEach(applyCard);toast(L('Два умения получены!','Two skills gained!'));}
     if(k==='gold'){G.goldMul=2;toast(L('Золото ×2 до конца похода!','Gold ×2 for the rest of the run!'));}
     if(k==='heal'){G.hero.hp=G.st.maxHp;G.hero.inv=5;toast(L('Как новенький!','Good as new!'));}
@@ -625,7 +633,7 @@ function openDeath(){SND.lose();const k=G.lastBy&&EN[G.lastBy]?G.lastBy:null,fre
     '<p class="sub">'+L('Но ещё не всё потеряно!','But all is not lost!')+'</p><div class="stats"><div><b>'+fmtTime(G.t)+'</b>'+L('время','time')+'</div><div><b>'+G.kills+'</b>'+L('одолено','defeated')+'</div></div><div class="btns">'+
     (free?'<button class="btn big" id="dFree">'+L('💪 Подняться (бесплатно, один раз)','💪 Get up (free, once)')+'</button>':G.adRevive&&adOk()?'<button class="btn ad big" id="dRev">'+L('🎬 Подняться за рекламу','🎬 Get up for an ad')+'</button>':'')+'<button class="btn ghost" id="dEnd">'+L('Завершить поход','End the run')+'</button></div>');
   on('dFree',()=>{G.adRevive=false;hideModal();revive();});
-  on('dRev',()=>showRewarded(()=>{G.adRevive=false;hideModal();revive();}));on('dEnd',()=>{hideModal();endRun(false);});}
+  onAd('dRev','revive',()=>showRewarded(()=>{G.adRevive=false;hideModal();revive();}));on('dEnd',()=>{hideModal();endRun(false);});}
 // совет после поражения — самый полезный из подходящих
 function lossTip(){if(S.village.forge&&G.lastBy&&EN[G.lastBy]&&EN[G.lastBy].ranged)return L('Стрелков видно по летящим огонькам: уходи от снарядов в сторону и не стой на месте.','Shooters give themselves away: step aside from their shots and keep moving.');
   if(!S.village.forge)return L('Построй кузницу в деревне — прокачка остаётся навсегда.','Build the Forge in the village — upgrades stay forever.');
@@ -694,8 +702,8 @@ function openResult(win){const GE=G.endless||!!G.daily; // поход дня: к
       (forgeFirst&&next?'<button class="btn ghost" id="rNext">'+L('Дальше: ','Next: ')+next.name+'</button>':'')+
       (G.daily&&(PLAT==='vk'?!!VK:LB.ok())?'<button class="btn gold" id="rLb">🏆 '+(PLAT==='vk'?'Таблица друзей':L('Рейтинг дня','Daily leaderboard'))+'</button>':'')+'</div>'+ // i18n:ru — только VK (там всегда русский)
       (soc&&!socUsed?'<div class="socof" id="rSocBox"><p>'+soc.t+'</p><button class="btn ghost" id="rSoc">'+soc.b+'</button></div>':''));
-    on('rSoc',()=>{socUsed=true;const b=$('rSocBox');if(b)b.remove();soc.run();});
-    on('rX2',()=>showRewarded(()=>{if(taken||doubled)return;doubled=true;S.gold+=(XM-1)*R;save();SND.chest();draw();}));
+    on('rSoc',()=>{socUsed=true;STAT.ev('mod',{m:'soc',a:'offer'});const b=$('rSocBox');if(b)b.remove();soc.run();});
+    onAd('rX2',XM===3?'x3':'x2',()=>showRewarded(()=>{if(taken||doubled)return;doubled=true;S.gold+=(XM-1)*R;save();SND.chest();draw();}));
     const take=()=>{if(taken||adBusy)return false;taken=true;save();return true;}; // золото похода уже зачислено в endRun
     const after=win&&!GE?askReturn:null;
     // в меню; мягкая межэкранная — сразу после итогов, пока игрок ещё не в новом походе (правила — interReady в core.js)
@@ -719,7 +727,7 @@ function ecoMigrate(){if(S.eco>=2)return;S.eco=2;const v=S.village;if(!v.mill||!
 // облако пришло позже меню и оно добавило прогресс — обновить экран
 function onCloud(){if(G)return;gearRefresh();ecoMigrate();for(const i in S.done)if(CH[i])S.bossKill[CH[i].boss]=1;sndIcon();volApply();
   if(S.runs&&curTab==='Village'&&!firstGo)curTab='Map';openTab(curTab);if(S.runs)openToday(true);}
-function onReady(){$('loading').style.display='none';gearRefresh();ecoMigrate();musicPlay('menu');for(const i in S.done)if(CH[i])S.bossKill[CH[i].boss]=1;openTab(S.runs?'Map':'Village');achCheck();
+function onReady(){$('loading').style.display='none';STAT.once('ready',{ms:Math.round(performance.now())});gearRefresh();ecoMigrate();musicPlay('menu');for(const i in S.done)if(CH[i])S.bossKill[CH[i].boss]=1;openTab(S.runs?'Map':'Village');achCheck();
   if(!S.runs)firstStart();else setTimeout(()=>openToday(true),400);}
 // новичок — сразу в первый поход (без деревни и меню). Облако ждём до 3 с: вдруг прогресс есть на другом устройстве
 let firstGo=false;
@@ -747,7 +755,7 @@ function firstStart(){if(/[?&](bot|promo)\b/.test(location.search))return;const 
   if(QS.has('promo')){const b=document.createElement('script');b.src='tools/promo.js';document.head.appendChild(b);} // картинки для магазина (только локально)
   // «Друзья и игры» (общий модуль SOC в core.js; только VK с мостом): сессии, кнопка 🎲, строка в ⚙
   SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{showModal(h);return $('mBody');},close:()=>hideModal()});
-  $('moreBtn').onclick=()=>{SND.click();SOC.showMore();};updMore();
+  $('moreBtn').onclick=()=>{SND.click();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();};updMore();
   requestAnimationFrame(loop);
   onReady(); // меню — сразу, не дожидаясь SDK и облака (и в Яндексе, и в VK)
   if(PLAT==='vk'){initSDK();return;} // VK: мост грузится внутри initSDK

@@ -66,7 +66,8 @@ function startLevel(idx,daily){
     (lv.o||[]).forEach(k=>{const c=G.cells.get(k);if(c){c.open=true;c.gift=true;}});
     G.words.forEach(wd=>{if(wordCells(wd).every(c=>c.open))wd.found=true;});G.giftN=(lv.o||[]).length;
     S.curs[key]={open:[...G.cells].filter(([k,c])=>c.open).map(([k])=>k),bonus:[],t:Date.now()};trimCurs();save();}
-  show('game');
+  show('game');STAT.once('ready',{ms:Math.round(performance.now())});STAT.lvl(idx+1,daily?'daily':'');
+  if(G.tut)STAT.ev('tut',{s:2}); // обучение: первый уровень начат
   const ch=chapOf(idx);
   $('gTitle').textContent=daily?'Задание дня':'Уровень '+(idx+1);
   const sd=daily?['🔥','Серия: '+(S.streak||0)+' '+plural(S.streak||0,'день','дня','дней'),' '+(S.streak||0)]:isTest(idx)?['⚡',' Испытание ×2',' ×2']:[ch.e,' '+ch.n,''];
@@ -281,7 +282,8 @@ function foundWord(wd,byHint){
   if(!byHint){SND.word(wd.w.length,G.combo);S.found=(S.found||0)+1;G.combo++;G.miss=0;
     const long=wd.w.length>=7;buzz(long?'long':'word');if(long)boardStamp(pick(['Молодец!','Пять с плюсом!','Вот это слово!']));
     const note=defNote(nd);
-    if(G.tut){zina('Молодец! Засчитываю только предметы — «кто? что?», и по одной штуке: «нос», а не «носы».','happy',7);
+    if(G.tut){STAT.ev('tut',{s:3}); // обучение: первое слово
+      zina('Молодец! Засчитываю только предметы — «кто? что?», и по одной штуке: «нос», а не «носы».','happy',7);
       const g=G;setTimeout(()=>{if(G===g&&!g.won)zina('Ищи остальные слова! Сколько осталось — написано сверху.','happy',6);},7000);}
     else if(!left)zina(pick(['Всё! Все слова на месте!','Готово! Кроссворд сдан!','Последнее! Ура!']),'happy',6);
     else if(G.rid===wd)zina(pick(['Загадку отгадал! Ну голова!','Отгадал! Я эту загадку на соседке Гале проверяла — она не смогла.','Правильно! Вот что значит начитанный.']),'wow',4.5);
@@ -302,6 +304,8 @@ function checkWin(){
   checkAutoFound();
   if(G.won||!G.words.every(w=>w.found))return;
   G.won=true;YG.stop();const g=G,res=finishLevel(g);lbSubmit();
+  STAT.end('win',{f:res.first?1:0,ex:g.hinted?0:1,bw:g.bonus.size});
+  if(res.first&&!g.daily&&(g.idx===0||g.idx===2||g.idx===9))STAT.ev('tut',{s:g.idx===0?4:g.idx===2?5:6}); // первые 10 минут: прошёл 1-й, 3-й, 10-й
   setTimeout(()=>{if(G!==g)return;SND.win();buzz('win');confetti();zinaFace('happy');},450);
   setTimeout(()=>{if(G===g)winModal(g,res);},1300);
 }
@@ -332,7 +336,7 @@ function updPrices(){const f=learnFree()||freeLeft();$('prLet').textContent=f?'�
 // окно подсказки: всегда два способа — за монеты и за рекламу (ролик; награда только за досмотренный). В VK без моста — только монеты
 function pay(kind,then){
   const pr=PRICE[kind],g=G,ad=adsOk(),enough=S.coins>=pr,ic=kind==='letter'?'💡':'📜';
-  const doPay=()=>{addCoins(-pr);S.hintsUsed=(S.hintsUsed||0)+1;updPrices();then();};
+  const doPay=()=>{addCoins(-pr);STAT.ev('spend',{k:kind,c:pr});S.hintsUsed=(S.hintsUsed||0)+1;updPrices();then();};
   if(enough&&S.tip.noAsk){doPay();return;}
   modal(`<h2>${kind==='letter'?'💡 Открыть букву?':'📜 Открыть слово?'}</h2><div style="width:96px;height:96px;margin:4px auto">${zinaSVG('norm')}</div>
     <p>${kind==='letter'?'Одну букву':'Самое длинное слово'} — за <b>${pr}</b> ${COIN_I}${ad?' или за рекламу':''}. У тебя ${S.coins}.</p>
@@ -343,7 +347,7 @@ function pay(kind,then){
       <button class="btn ghost" id="mNo">Сам справлюсь</button></div>`);
   $('mYes').onclick=()=>{if(S.coins<pr)return;const na=$('mNoAsk');if(na&&na.checked){S.tip.noAsk=1;save();}hideModal();doPay();};
   $('mNo').onclick=()=>{hideModal();SND.tap();};
-  const b=$('mAd');if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;
+  const b=$('mAd');if(b)STAT.offer(kind);if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place(kind);
     showRewarded(()=>{hideModal();if(G===g&&!g.won){S.hintsUsed=(S.hintsUsed||0)+1;then();}},()=>{b.disabled=false;});};
 }
 function hintLetter(){
@@ -353,7 +357,7 @@ function hintLetter(){
     // первая закрытая буква самого «пустого» слова — полезнее, чем случайная
     const ws=G.words.filter(w=>!w.found).sort((a,b)=>wordCells(a).filter(c=>c.open).length/a.w.length-wordCells(b).filter(c=>c.open).length/b.w.length);
     const c=wordCells(ws[0]).find(c=>!c.open)||closed[0];
-    G.hinted=true;openCell(c,0,'hint');SND.open();zina(msg||say('hint'),'norm',msg?4.5:0);checkAutoFoundAndWin();saveCur();
+    G.hinted=true;STAT.use('hint');openCell(c,0,'hint');SND.open();zina(msg||say('hint'),'norm',msg?4.5:0);checkAutoFoundAndWin();saveCur();
   };
   if(learnFree()){S.hintsUsed=(S.hintsUsed||0)+1;open('На первых уровнях подсказываю даром — учись! Дальше — за монетки, но раз в день кот букву принесёт.');return;}
   // бесплатная буква дня — сразу, без окна и без монет
@@ -364,7 +368,7 @@ function hintLetter(){
 function hintWord(){
   if(!G||G.won)return;poke();
   const ws=G.words.filter(w=>!w.found);if(!ws.length)return;
-  pay('word',()=>{G.hinted=true;const wd=ws.sort((a,b)=>b.w.length-a.w.length)[0];SND.open();const t=wordInfo(wd.w);
+  pay('word',()=>{G.hinted=true;STAT.use('hint');const wd=ws.sort((a,b)=>b.w.length-a.w.length)[0];SND.open();const t=wordInfo(wd.w);
     zina(t&&!DEFS[wd.w]?'Держи слово! '+t:say('hintWord'),'happy',t&&!DEFS[wd.w]?7:0);foundWord(wd,true);});
 }
 function checkAutoFoundAndWin(){checkAutoFound();checkWin();}
@@ -381,7 +385,7 @@ function jarFull(hj){let got=0;
     <button class="btn gold" id="jfX2">🎬 ×2 за рекламу: <span class="nw">+${JAR_PRIZE} → +${JAR_PRIZE*2} ${COIN_I}</span></button></div>`);
   coinBurst($('mcard').querySelector('.reward'),JAR_PRIZE);
   $('jfOk').onclick=()=>{hideModal();SND.tap();};
-  const x=$('jfX2');x.onclick=()=>{if(got||x.disabled)return;x.disabled=true;
+  const x=$('jfX2');STAT.offer('jar');x.onclick=()=>{if(got||x.disabled)return;x.disabled=true;STAT.place('jar');
     showRewarded(()=>{if(got)return;got=1;addCoins(JAR_PRIZE);SND.coin();x.textContent='✅ Получено: +'+JAR_PRIZE*2;coinBurst($('jfX2'),JAR_PRIZE);},()=>{if(!got)x.disabled=false;});};}
 function updJar(){const n=Math.max(0,Math.min(JAR_SIZE,S.jar||0)),c=$('jarCnt'),p=$('jarPg');c.textContent=n;c.classList.toggle('z',!n);
   if(p)p.setAttribute('stroke-dasharray',(n/JAR_SIZE*113.1).toFixed(1)+' 200');$('hJar').title='Банка бонусных слов: '+n+' из '+JAR_SIZE;}

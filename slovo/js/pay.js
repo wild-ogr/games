@@ -15,7 +15,9 @@ function payAdd(n){S.coins=Math.max(0,(+S.coins||0)+n);}
 function payFlush(){cloudSave(true);}
 function payPause(on){setPause('pay',on);}
 // после покупки/восстановления: монеты на экране; перерисовать окно (PAY.re) или магазин, если он открыт
-function payAfter(){updCoins();if($('modal').classList.contains('on')&&PAY.re)PAY.re();else if($('shopS').classList.contains('on'))openShop();}
+// payOk — id последней удачной покупки (для STAT: обёртка PAY.buy в ui.js отличает «ok» от «cancel»)
+var payOk=null;
+function payAfter(id){if(id)payOk=id;updCoins();if($('modal').classList.contains('on')&&PAY.re)PAY.re();else if($('shopS').classList.contains('on'))openShop();}
 /* ================= покупки за деньги: Яндекс Игры (ysdk.payments) и VK Игры (VKWebAppShowOrderBox) — общий модуль (одинаковый в 5 играх) =================
    Товары игры — PAY_ITEMS (выше), id совпадают с id в консоли Яндекса («Инап-покупки») и в hobby-pay/catalog.json (VK).
    Кнопок покупок НЕТ совсем, если платежи недоступны: нет SDK/моста (мак), каталог Яндекса пуст, VK не поддерживает оплату (iOS).

@@ -1,6 +1,6 @@
 'use strict';
 /* ================= экраны и окна ================= */
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
+function show(id){STAT.screen(id);document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
   if(id!=='game'){stopTutorial();YG.stop();}
   if(id==='game')requestAnimationFrame(()=>{layoutGrid();layoutWheel();});}
 // окно поверх уровня — для Яндекса это пауза геймплея (GameplayAPI.stop); закрыли — hideModal снова start, если идёт игра
@@ -9,7 +9,8 @@ function hideModal(){$('modal').classList.remove('on');if(typeof introDone==='fu
 
 /* ---------- меню ---------- */
 function openMenu(){
-  show('menu');updCoins();
+  STAT.end('quit'); // ушли в меню посреди уровня (после победы уровня уже нет — ничего не пишет)
+  show('menu');updCoins();STAT.once('menu');STAT.once('ready',{ms:Math.round(performance.now())});
   // баба Зина в текущем наряде (перерисовываем, только если сменился)
   const ha=$('heroArt');if(ha.dataset.o!==S.outfit){ha.dataset.o=S.outfit;ha.innerHTML=heroSVG();$('heroCat').onclick=()=>{SND.meow();$('mSay').textContent=say('cat');};}
   $('playLv').textContent=S.lv>=LEVELS.length?'':'· уровень '+(S.lv+1);
@@ -54,10 +55,11 @@ function updMenuGoal(){const e=$('mGoal');if(!e)return;const on=S.lv>=1&&S.lv<LE
 const giftTaken=()=>!!(S.gift&&S.gift.d===todayKey());
 function updGift(){const b=$('btnGift'),t=$('mTmr');if(!b)return;const lg=lgDue(),on=lg||S.lv>=3&&ECO.gift>0&&adsOk()&&!giftTaken();
   b.style.display=on?'':'none';b.classList.toggle('gold',lg);b.classList.toggle('ghost',!lg);
+  if(on&&!lg)STAT.offer('gift');
   if(on&&!b.disabled)b.innerHTML=lg?`🎁 Гостинец дня: <span class="nw">+${lgAmt(lgN())} ${COIN_I}</span> — забрать`:`🎁 Подарок дня: +${ECO.gift} ${COIN_I} за рекламу`;
   // когда всё сегодняшнее забрано — строка «Завтра» (просто текст, не кнопка)
   if(t){const h=on?'':tmrHtml();t.innerHTML=h;t.style.display=h?'':'none';}}
-function takeGift(){const b=$('btnGift');if(!b||b.disabled)return;if(lgDue()){SND.tap();openLogin();return;}if(giftTaken())return;SND.tap();b.disabled=true;
+function takeGift(){const b=$('btnGift');if(!b||b.disabled)return;if(lgDue()){SND.tap();openLogin();return;}if(giftTaken())return;SND.tap();b.disabled=true;STAT.place('gift');
   showRewarded(()=>{b.disabled=false;if(giftTaken()){updGift();return;}S.gift={d:todayKey()};addCoins(ECO.gift);SND.coin();updGift();
     $('mSay').textContent=pick(['Держи +'+ECO.gift+'! Из пенсии отложила. Завтра приходи — ещё припасу.','Вот тебе +'+ECO.gift+' на подсказки. Только не на семечки!']);},
     ()=>{b.disabled=false;});}
@@ -219,9 +221,10 @@ function winModal(g,r,again){
     if(lgDue()&&!g.daily){lgAuto=true;openLogin(go);return;}
     go();};
   // кнопку блокируем сразу (двойной тап не даёт двойную награду); если реклама не удалась — возвращаем
-  const x2=$('mX2');if(x2)x2.onclick=()=>{if(r.x2||x2.disabled)return;x2.disabled=true;
+  const x2=$('mX2');if(x2)STAT.offer('x2');if(x2)x2.onclick=()=>{if(r.x2||x2.disabled)return;x2.disabled=true;STAT.place('x2');
     showRewarded(()=>{if(r.x2)return;r.x2=1;addCoins(Math.max(reward,ECO.x2min));SND.coin();x2.textContent='✅ Получено: +'+(reward+Math.max(reward,ECO.x2min));coinBurst(x2,Math.max(reward,ECO.x2min));},()=>{if(!r.x2)x2.disabled=false;});};
-  const ak=$('mAsk');if(ak)ak.onclick=()=>{if(ak.disabled)return;ak.disabled=true;SND.tap();r.ask=null;
+  const ak=$('mAsk');if(ak&&!again)STAT.ev('mod',{m:ask.soc?'soc':'ask',a:'of_'+ask.k});
+  if(ak)ak.onclick=()=>{if(ak.disabled)return;ak.disabled=true;SND.tap();r.ask=null;STAT.ev('mod',{m:ask.soc?'soc':'ask',a:'ok_'+ask.k});
     ask.run().then(ok=>{toast(ok?ask.ok:'Ну и ладно, в другой раз!');}).catch(()=>{toast('Не получилось. Ничего, в другой раз.');});
     ak.textContent='✓ '+ask.t.replace(/^\S+\s/,'');};
 }
@@ -242,7 +245,7 @@ function openChapFinale(g,r,nextI,again){r.chapSeen=1;
       ${adsOk()?(r.chx2?'<button class="btn gold" disabled>✅ Получено: +'+r.chap*2+'</button>':`<button class="btn gold" id="mChX2">🎬 ×2 за рекламу: <span class="nw">+${r.chap} → +${r.chap*2} ${COIN_I}</span></button>`):''}
       <button class="btn ghost small" id="mCard">📤 Открытка «Я прошёл главу»</button></div>`);
   if(!again){SND.win();SND.coin();confetti();buzz('win');coinBurst($('mRew'),r.chap);}
-  const cx=$('mChX2');if(cx)cx.onclick=()=>{if(r.chx2||cx.disabled)return;cx.disabled=true;
+  const cx=$('mChX2');if(cx)STAT.offer('chap');if(cx)cx.onclick=()=>{if(r.chx2||cx.disabled)return;cx.disabled=true;STAT.place('chap');
     showRewarded(()=>{if(r.chx2)return;r.chx2=1;addCoins(r.chap);SND.coin();cx.textContent='✅ Получено: +'+r.chap*2;coinBurst(cx,r.chap);},()=>{if(!r.chx2)cx.disabled=false;});};
   $('mGo').onclick=()=>{hideModal();SND.tap();maybeInterstitial(()=>{if(nextI<0)openMenu();else startLevel(nextI);});};
   $('mCard').onclick=()=>shareChap(c,()=>openChapFinale(g,r,nextI,true));
@@ -256,7 +259,7 @@ function weekHtml(dk){const days=weekDays(dk||todayKey()),n=days.filter(k=>S.dai
 
 /* ---------- задание дня ---------- */
 function openDaily(){
-  SND.tap();
+  SND.tap();STAT.screen('daily');
   if(S.daily[todayKey()]){modal(`<h2>📅 Задание дня</h2><div style="width:110px;height:110px;margin:4px auto">${zinaSVG('happy')}</div>
     <p>Сегодня уже решено! Серия: <b>${S.streak||0} ${plural(S.streak||0,'день','дня','дней')}</b>.</p><p>Приходи завтра — будет новое слово и подарок побольше.</p>${weekHtml()}
     <div class="btns"><button class="btn blue" id="mOk">Хорошо</button></div>`);$('mOk').onclick=hideModal;return;}
@@ -281,7 +284,7 @@ function openStreakFix(){const n=S.streak||0;
   modal(`<h2>🔥 Серия под угрозой</h2><div style="width:100px;height:100px;margin:4px auto">${zinaSVG('wow')}</div>
     <p>Вчера ты не заходил, и серия в <b>${n} ${plural(n,'день','дня','дней')}</b> вот-вот сгорит.</p><p>Посмотри рекламу — скажу, что ты болел, и серия продолжится.</p>
     <div class="btns"><button class="btn green" id="mFix">🎬 Спасти серию за рекламу</button><button class="btn ghost small" id="mNo">Начать заново</button></div>`);
-  const b=$('mFix');b.onclick=()=>{if(b.disabled)return;b.disabled=true;
+  const b=$('mFix');STAT.offer('streak');b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place('streak');
     showRewarded(()=>{S.fix={d:todayKey()};S.lastDaily=dayKey(1);save();hideModal();toast('Серия спасена! Баба Зина прикрыла.');openDaily();},()=>{b.disabled=false;});};
   $('mNo').onclick=()=>{S.fix={d:todayKey()};save();hideModal();openDaily();};}
 // задание дня одно на весь день; новичкам (до 30-го уровня) — из тех, где 6 букв, а не 7
@@ -304,16 +307,19 @@ function onCloud(){const on=document.querySelector('.screen.on');updCoins();
   if(G&&!G.won)updPrices();toast('Прогресс загружен');}
 
 /* ---------- музыка и звуки прямо в игре (те же S.music/S.sound, что кнопки в меню) ---------- */
-function openSettings(){SND.tap();
+function openSettings(){SND.tap();STAT.screen('settings');
   const row=(id,ic,t,on)=>`<button class="setrow${on?'':' off'}" id="${id}"><span>${ic} ${t}</span><b>${on?'● вкл':'○ выкл'}</b></button>`;
   // вибрация — только там, где она бывает (Android, приложение VK); «Крупные буквы» — клетки и круг крупнее (для зрения 45+)
   const vibOk=CAN_VIB&&TOUCH||PLAT==='vk'&&VK_MOBILE;
   const draw=()=>{$('setRows').innerHTML=row('sMus','🎵','Музыка',S.music)+row('sSnd',S.sound?'🔊':'🔇','Звуки',S.sound)+
-      (vibOk?row('sVib','📳','Вибрация',S.vib!==0):'')+row('sBig','🔍','Крупные буквы',!!S.big);
+      (vibOk?row('sVib','📳','Вибрация',S.vib!==0):'')+row('sBig','🔍','Крупные буквы',!!S.big)+
+      (STAT.available()?row('sStat','📊','Анонимная статистика',STAT.enabled())+'<p style="font-size:14px;color:var(--ink2);margin:2px 4px 8px;text-align:left">Уровни, ошибки и нажатия кнопок — без имени, ID и IP. Помогает делать игру лучше.</p>':'');
     $('sMus').onclick=()=>{S.music=S.music?0:1;save();sndIcon();ac();SND.tap();draw();};
     $('sSnd').onclick=()=>{S.sound=S.sound?0:1;save();sndIcon();SND.tap();draw();};
     if(vibOk)$('sVib').onclick=()=>{S.vib=S.vib===0?1:0;save();SND.tap();buzz('word');draw();};
-    $('sBig').onclick=()=>{S.big=S.big?0:1;save();SND.tap();applyBig();draw();};};
+    $('sBig').onclick=()=>{S.big=S.big?0:1;save();SND.tap();applyBig();draw();};
+    // анонимная статистика (hobby-analytics/stat): строка есть, только если модулю есть куда писать (на маке — ?stat=dev); тексты свои — игра только на русском
+    const st=$('sStat');if(st)st.onclick=()=>{STAT.setEnabled(!STAT.enabled());SND.tap();draw();};};
   // покупки — только вне уровня (из меню), ведут в магазин
   const shop=typeof PAY!=='undefined'&&PAY.on&&!$('game').classList.contains('on');
   modal(`<h2>⚙️ Настройки</h2><div id="setRows"></div>${SOC.ok()?'<button class="setrow" id="sSoc"><span>👥 Друзья и игры</span><b>›</b></button>':''}${shop?PAY.html(['no_ads'],false)+'<button class="setrow" id="sShop"><span>🛒 Все покупки</span><b>›</b></button>':''}<div class="btns"><button class="btn green" id="mOk">Продолжить</button></div>`);
@@ -323,7 +329,7 @@ function openSettings(){SND.tap();
 
 function updMore(){const b=$('btnMore');if(b)b.style.display=SOC.ok()?'':'none';}
 // «Друзья и игры» (VK с мостом): позвать, поделиться, избранное, экран, сообщество, плитки других игр
-function openSocial(back){if(!SOC.ok()){openSettings();return;}
+function openSocial(back){if(!SOC.ok()){openSettings();return;}STAT.screen('social');STAT.ev('mod',{m:'soc',a:'open'});
   const bk=typeof back==='function'?back:openSettings;
   modal(`<h2>Друзья и игры</h2>${SOC.settingsHtml()}<div class="btns"><button class="btn ghost" id="socBack">← Назад</button></div>`);
   SOC.bind($('mcard'),()=>openSocial(bk));$('socBack').onclick=()=>{SND.tap();bk();};}
@@ -331,7 +337,7 @@ function applyBig(){document.body.classList.toggle('big',!!S.big);if(G)layoutWhe
 
 /* ---------- благодарности (музыка — чужая, подпись обязательна по лицензии) ---------- */
 // адреса — обычным текстом, без ссылок (ссылки из игры площадки запрещают, а лицензия требует адрес)
-function openCredits(){modal(`<h2>Благодарности</h2><p style="font-weight:800;color:var(--blue)">«Баба Зина: слова из букв»</p><p>Музыка, под которую баба Зина разгадывает кроссворды:</p>
+function openCredits(){STAT.screen('credits');modal(`<h2>Благодарности</h2><p style="font-weight:800;color:var(--blue)">«Баба Зина: слова из букв»</p><p>Музыка, под которую баба Зина разгадывает кроссворды:</p>
   <div class="cred"><b>«Black Tea Rag»</b><br>автор — decimnet<br>opengameart.org/content/black-tea-rag<br>лицензия CC BY 4.0: creativecommons.org/licenses/by/4.0/<br>перекодировано в AAC (моно)</div>
   <div class="cred"><b>Словарь бонусных слов</b><br>Russian-Nouns, А. Сергиенко (Harrix), лицензия MIT</div>
   <div class="cred"><b>VK Bridge</b><br>VK, лицензия MIT</div>
@@ -343,7 +349,7 @@ function openCredits(){modal(`<h2>Благодарности</h2><p style="font-
 
 /* ---------- знакомство (boost 02.10): баба Зина и кот Ять представляются до 1-го уровня — одно окно, одна кнопка ---------- */
 let introOn=false;
-function openIntro(){introOn=true;
+function openIntro(){introOn=true;STAT.ev('tut',{s:1}); // знакомство до 1-го уровня
   modal(`<div class="intro"><div class="iart">${heroSVG()}</div>
     <h2>Здравствуй! Я баба Зина</h2>
     <p>Сорок лет учила детей русскому языку. Теперь на пенсии — учу кота. Кот Ять учёный, но ленивый.</p>
@@ -357,7 +363,7 @@ function bind(){
   applyBig();
   $('btnPlay').onclick=()=>{SND.tap();ac();maybeInterstitial(()=>startLevel(Math.min(S.lv,LEVELS.length-1)));};
   $('btnGift').onclick=takeGift;
-  $('btnMore').onclick=()=>{SND.tap();SOC.showMore();};updMore();
+  $('btnMore').onclick=()=>{SND.tap();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();};updMore();
   $('btnChap').onclick=()=>{SND.tap();openChapters();};
   $('btnDict').onclick=()=>{SND.tap();dictTab='mine';openDict();};
   $('btnDaily').onclick=openDaily;
@@ -368,7 +374,7 @@ function bind(){
   $('btnRate').onclick=()=>{SND.tap();openRating();};
   document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{SND.tap();const t=b.dataset.back;t==='menu'?openMenu():t==='chapters'?openChapters():show(t);});
   $('gSet').onclick=openSettings;
-  $('gBack').onclick=()=>{SND.tap();saveCur();G=null;openMenu();};
+  $('gBack').onclick=()=>{SND.tap();saveCur();G=null;openMenu();}; // openMenu сам пишет STAT.end('quit')
   $('hLet').onclick=hintLetter;$('hWord').onclick=hintWord;$('hShuf').onclick=shuffleLetters;$('hJar').onclick=showJar;
   $('grid').addEventListener('click',cellTap);
   $('pvOk').onclick=tapSubmit;$('pvX').onclick=tapClear;$('preview').firstElementChild.onclick=()=>{if(G&&G.tap)tapSubmit();};
@@ -384,6 +390,9 @@ function bind(){
 }
 function onReady(){
   bind();updCoins();
+  // покупки (STAT): общий модуль PAY не трогаем — оборачиваем снаружи; «ok» — если payAfter получил id этой покупки
+  if(typeof PAY!=='undefined'){const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;STAT.ev('buy',{i:id,r:'try'});
+    return Promise.resolve(b0.call(PAY,id)).then(()=>STAT.ev('buy',{i:id,r:payOk===id?'ok':'cancel'}));};}
   const q=new URLSearchParams(location.search);
   if(q.has('lv'))startLevel(+q.get('lv')-1);
   else if(S.lv===0&&!S.tip.tut&&!SHOT){startLevel(0);if(!S.tip.intro)openIntro();} // новичок — знакомство и сразу первый уровень (обучение), меню — потом

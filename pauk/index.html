@@ -470,6 +470,149 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 // VK передаёт в адрес игры параметры запуска (vk_app_id и др.); ?vk=1 — проверка VK-режима на маке
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 let ysdk=null,YP=null,VK=null,paused=false;
+/*STAT*/
+/* ===== STAT v1 (29.09.2026; 03.10 — тесты с мака/LAN/webdriver не шлются): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+   Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Проект — hobby-analytics/37-own-analytics.md.
+   Что НЕ отправляем никогда: vk_user_id и любые параметры адреса запуска (кроме vk_platform и vk_ref), имя, IP (сервер его не пишет),
+   постоянный номер устройства/игрока. Единственный «ключ» — случайная строка СЕАНСА (живёт только в памяти, до закрытия игры).
+   На устройстве (localStorage 'stat-<игра>') — только день установки, число сеансов и день последней отметки «зашёл сегодня».
+   Возвраты по дням считаем без номера игрока: раз в календарный день игра шлёт 'day' с dn = дней с установки.
+   Отправка — пачкой: раз в FLUSH секунд (если есть события), при сворачивании (sendBeacon) и когда накопилось MAXQ.
+   text/plain без своих заголовков → «простой» запрос без CORS-предзапроса; ответ не читаем. Не отправилось — лежит до следующего раза.
+   Старый синтаксис: только var/function, без стрелок, optional chaining, nullish, шаблонных строк. */
+var STAT=(function(){
+  var V=1,FLUSH=90,MAXQ=40,MAXB=60,KEEP=4,SESS_GAP=30*60e3,MAXERR=5;
+  var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
+      st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,errSeen={},once={},lastErr='';
+  function nop(){}
+  function ls(k,v){try{if(v===undefined)return window.localStorage.getItem(k);if(v===null)window.localStorage.removeItem(k);else window.localStorage.setItem(k,v);}catch(e){}return null;}
+  function jp(s){try{return s?JSON.parse(s):null;}catch(e){return null;}}
+  function now(){var t=0;try{t=O.now?O.now():0;}catch(e){}return typeof t==='number'&&t>1.6e12?t:Date.now();}
+  function dk(t){var d=new Date(t);return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+  function dms(k){return Date.UTC(Math.floor(k/1e4),Math.floor(k/100)%100-1,k%100);}
+  function ddiff(a,b){return Math.round((dms(b)-dms(a))/864e5);}
+  function rnd(){var s='',i;for(i=0;i<3;i++)s+=('0000'+Math.floor(Math.random()*1679616).toString(36)).slice(-4);return s;}
+  function qp(k){var m=new RegExp('[?&]'+k+'=([^&#]*)').exec(location.search);try{return m?decodeURIComponent(m[1]):'';}catch(e){return '';}}
+  function sec(){return Math.round((Date.now()-t0)/100)/10;}
+  function actSec(){return Math.round((act+(vis?Date.now()-actT:0))/1000);}
+  // чистка: без длинных чисел (вдруг id), без адресов с параметрами, короткие строки, не больше 8 полей
+  function scrub(s,n){s=String(s).replace(/[?&#][\w.\-]+=[^\s&#)'"]*/g,'').replace(/(https?:\/\/[^\s?#)'"]*)[?#][^\s)'"]*/g,'$1').replace(/https?:\/\/[^\/\s)'"]+/g,'').replace(/\d{7,}/g,'#');return s.slice(0,n||40);}
+  function clean(p){var o={},n=0,k,v;if(!p||typeof p!=='object')return o;
+    for(k in p){if(!p.hasOwnProperty(k)||n>=8)continue;v=p[k];
+      if(typeof v==='number'){if(!isFinite(v))continue;v=Math.round(v*100)/100;}
+      else if(typeof v==='boolean')v=v?1:0;else if(typeof v==='string')v=scrub(v);else continue;
+      o[String(k).slice(0,12)]=v;n++;}return o;}
+  function device(){var ua=navigator.userAgent||'',w=Math.round(window.innerWidth||0),h=Math.round(window.innerHeight||0),
+      os=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)?'ios':/Android/.test(ua)?'android':/Windows/.test(ua)?'win':/Mac OS X/.test(ua)?'mac':/Linux|CrOS/.test(ua)?'linux':'other',
+      touch=('ontouchstart' in window)||navigator.maxTouchPoints>0,m=Math.min(w,h);
+    var cv=/Chrome\/(\d+)/.exec(ua),sv=/Version\/(\d+)[.\d]* (Mobile\/\S+ )?Safari/.exec(ua);
+    return {os:os,dv:touch?(m<600?'m':'t'):'d',sw:Math.round(w/20)*20,sh:Math.round(h/20)*20,
+      wv:/; wv\)|VKAndroidApp|com\.vkontakte/.test(ua)||(os==='ios'&&!/Safari\//.test(ua))?1:0,
+      br:cv?'c'+cv[1]:sv?'s'+sv[1]:/Firefox\/(\d+)/.test(ua)?'f'+/Firefox\/(\d+)/.exec(ua)[1]:'?'};}
+  function saveSt(){if(O.S){O.S.stc={c:st.c,n:st.n,d:st.d};}ls('stat-'+G,JSON.stringify(st));}
+
+  /* STAT.init({g:'gastronom', gv:'v16', plat:PLAT, lang:LANG, url:STAT_URL, now:nowMs, S:S, rate:1})
+     g — короткое имя игры (как папка), gv — версия игры, url — адрес приёмника из конфига игры.
+     url ПУСТОЙ → модуль полностью молчит: ни запросов, ни обработчиков, ни журнала (можно встроить заранее, адрес вписать потом).
+       Локально считаются только день установки и число сеансов — чтобы после включения возвраты считались от настоящей установки.
+     dev:true (или ?stat=dev на localhost) без url — журнал в консоль и window.__stat, без отправки (стенд, мак).
+     S — если передать, отметки живут ещё и в сохранении игры (S.stc) → облако, меньше «ложных новичков». */
+  var first=false,hooked=false,cut='';
+  /* A1 (03.10): НАШИ ТЕСТЫ — не в боевую базу. Боевой адрес обнуляется (модуль молчит, как с пустым url), если игра открыта
+     автоматом (navigator.webdriver или HeadlessChrome в User-Agent: CDP-прогоны) или с мака/локальной сети: localhost, 127.*, [::1], *.localhost,
+     *.local, *.test, 192.168.*, 10.*, 172.16–31.*, file://. Адрес на сам localhost/LAN или относительный (?stat=sink, стенд) не трогаем.
+     ?stat=dev на localhost — журнал в консоль, как раньше. Почему молчим — STAT._dbg().cut ('wd'|'local'|'file').
+     Площадка 'yandex' на нашем сайте *.github.io (там нет SDK Яндекса: бета, прямые ссылки) пишется как p:'web'. */
+  function locH(h){return /^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|0\.0\.0\.0|)$|\.localhost$|\.local$|\.test$|^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(String(h||''));}
+  function locU(u){var m=/^https?:\/\/(\[[^\]]*\]|[^\/:?#]+)/i.exec(u);return !!m&&locH(m[1]);}
+  function init(o){O=o||{};O.url=String(O.url||'');G=String(O.g||'game').slice(0,16);t0=Date.now();actT=t0;
+    cut='';if(/^https?:/i.test(O.url)&&!locU(O.url)){var wd=false;try{wd=navigator.webdriver===true||/HeadlessChrome|PhantomJS|Puppeteer|Playwright/.test(navigator.userAgent||'');}catch(e){}
+      cut=wd?'wd':location.protocol==='file:'?'file':locH(location.hostname)?'local':'';if(cut)O.url='';}
+    dev=!O.url&&(O.dev===true||(/[?&]stat=dev/.test(location.search)&&/^(localhost|127\.0\.0\.1|\[::1\])$|\.localhost$|\.test$/.test(location.hostname)));
+    var s=jp(ls('stat-'+G))||{},c=O.S&&O.S.stc||{};
+    st={c:+s.c||+c.c||0,n:Math.max(+s.n||0,+c.n||0),d:Math.max(+s.d||0,+c.d||0)};
+    var today=dk(now());first=!st.c;if(first)st.c=today;st.n++;
+    if(!O.url&&!dev){on=false;saveSt();return;}          // адреса нет — молчим
+    if(!enabled()||Math.random()>=(typeof O.rate==='number'?O.rate:1)){on=false;ls('stat-q-'+G,null);saveSt();return;}
+    start();}
+  function start(){var d=device();on=true;sk=rnd();seq=0;
+    hdr={v:V,g:G,gv:String(O.gv||'').slice(0,12),p:String(O.plat==='yandex'&&/\.github\.io$/.test(location.hostname)?'web':O.plat||'').slice(0,8),l:String(O.lang||'').slice(0,4),
+      vp:scrub(qp('vk_platform'),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
+    pend=jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[];
+    ev('start',{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)});
+    dayMark();saveSt();
+    if(!hooked){hooked=true;
+      window.addEventListener('error',function(e){var x=e&&e.target;if(x&&x!==window&&x.tagName){var u=x.src||x.href||'';if(/\/sdk\.js([?#]|$)/.test(u)&&hdr.p!=='yandex')return;err('load '+String(x.tagName).toLowerCase(),u);return;} // не загрузилась картинка/скрипт: без message; SDK Яндекса вне Яндекса (сайт, VK) — не ошибка (03.10)
+        err(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);},true);
+      window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;err('promise: '+(r&&r.message||r),r&&r.stack?String(r.stack).split('\n')[1]:'');});
+      document.addEventListener('visibilitychange',function(){document.visibilityState==='hidden'?hide():show();});
+      window.addEventListener('pagehide',hide);
+      timer=setInterval(function(){if(on&&vis&&Q.length)flush();},FLUSH*1000);}
+    setTimeout(flush,5000); // старое неотправленное + первые шаги — быстро (воронка первой минуты)
+  }
+  // «зашёл сегодня» — раз в календарный день, dn = дней с установки (по дню устройства/сервера игры)
+  function dayMark(){var t=dk(now());if(st.d===t)return;st.d=t;ev('day',{dn:Math.max(0,ddiff(st.c,t)),sn:st.n});saveSt();}
+  function ev(n,p){if(!on)return;var e=[String(n).slice(0,16),sec(),clean(p)];Q.push(e);
+    if(dev){try{(window.__stat=window.__stat||[]).push(e);if(window.console)console.log('[STAT]',e[0],JSON.stringify(e[2]));}catch(x){}}
+    if(Q.length>=MAXQ)flush();}
+  function onceEv(n,p){if(once[n])return;once[n]=1;ev(n,p);}
+
+  // --- уровни: STAT.lvl(5,'daily') в начале, STAT.use('hint') по ходу, STAT.end('win',{st:3}) в конце ---
+  function lvlStart(l,m){if(lvl)lvlEnd('quit');lvl={l:l,m:m||'',t:Date.now(),h:0,u:0,x:{}};var p={l:l};if(m)p.m=m;ev('lvl',p);}
+  function use(k,n){if(lvl){if(k==='hint')lvl.h+=n||1;else if(k==='undo')lvl.u+=n||1;else lvl.x[k]=(lvl.x[k]||0)+(n||1);}}
+  function lvlEnd(r,p){if(!lvl)return;var o={l:lvl.l,r:r,s:Math.round((Date.now()-lvl.t)/1000)},k;if(lvl.m)o.m=lvl.m;if(lvl.h)o.h=lvl.h;if(lvl.u)o.u=lvl.u;
+    for(k in p||{})if(p.hasOwnProperty(k))o[k]=p[k];lvl=null;ev('end',o);}
+  function screen(n){if(n===scr)return;scr=String(n).slice(0,16);if(!once['s_'+scr]){once['s_'+scr]=1;ev('scr',{n:scr});}}
+
+  // --- реклама: STAT.place('hint') ПЕРЕД showRewarded; внутри showRewarded — STAT.ad('rew','ok'|'skip'|'fail'|'err', код) ---
+  var place='';
+  function setPlace(p){place=String(p||'').slice(0,16);}
+  function ad(f,r,code){var p={f:f,r:r,p:f==='int'?'int':(place||'?')};if(code!==undefined&&code!==null&&code!=='')p.c=scrub(code,24);ev('ad',p);if(f!=='int')place='';}
+  function offer(p){onceEv('of_'+p,{p:p});} // кнопка «за рекламу» ПОКАЗАНА (раз за сеанс на место)
+
+  // --- ошибки JS: не больше MAXERR разных за сеанс, без адресов с параметрами (в них vk_user_id!) ---
+  function err(m,src,ln,col){if(!on||errN>=MAXERR)return;m=scrub(m||'?',120);src=scrub(String(src||'').replace(/[?#].*$/,'').replace(/^.*\//,''),40)+(ln?':'+ln+(col?':'+col:''):'');
+    var k=m+'|'+src;if(errSeen[k])return;errSeen[k]=1;errN++;lastErr=m;ev('err',{m:m,s:src,l:lvl?lvl.l:'',sc:scr});flush();}
+
+  // --- отправка ---
+  function pack(){if(!Q.length)return null;var b={},k;for(k in hdr)b[k]=hdr[k];b.dk=dk(now());b.dn=Math.max(0,ddiff(st.c,b.dk));b.sn=st.n;b.q=++seq;b.e=Q.splice(0,MAXB);return b;}
+  function keep(){while(pend.length>KEEP)pend.shift();ls('stat-q-'+G,pend.length?JSON.stringify(pend):null);}
+  function send(b){var s=JSON.stringify(b);if(dev&&!O.url)return true;
+    if(navigator.onLine===false)return false;
+    try{if(navigator.sendBeacon&&navigator.sendBeacon(O.url,s))return true;}catch(e){}
+    try{if(window.fetch){fetch(O.url,{method:'POST',body:s,keepalive:s.length<60000,mode:'no-cors',headers:{'Content-Type':'text/plain'}})['catch'](function(){pend.push(b);keep();});return true;}}catch(e){}
+    try{var x=new XMLHttpRequest();x.open('POST',O.url,true);x.setRequestHeader('Content-Type','text/plain');x.send(s);return true;}catch(e){}
+    return false;}
+  function flush(){if(!on)return;var b,left=[];while(pend.length){b=pend.shift();if(!send(b)){left.push(b);break;}}pend=left.concat(pend);
+    while(Q.length){b=pack();if(!send(b)){pend.push(b);break;}}keep();}
+  function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();var p={d:actSec()};if(lvl)p.l=lvl.l;if(scr)p.sc=scr;ev('pause',p);flush();}
+  function show(){if(!on||vis)return;vis=true;actT=Date.now();
+    if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
+      if(lvl)lvl=null;once={};errN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();ev('start',{sn:st.n,f:0,r:1});}
+    dayMark();}
+
+  // облако игры: в mergeSave — STAT.merge(d.stc): раньше установлен, больше сеансов
+  function merge(c){if(!c||typeof c!=='object')return;if(+c.c&&(!st.c||+c.c<st.c))st.c=+c.c;if(+c.n>st.n)st.n=+c.n;if(+c.d>st.d)st.d=+c.d;saveSt();}
+  // --- переключатель «Анонимная статистика» для ⚙ (по умолчанию ВКЛ.; выбор — на устройстве, localStorage 'stat-off') ---
+  function tx(ru,en){return typeof LANG!=='undefined'&&LANG==='en'?en:ru;}
+  function enabled(){return ls('stat-off')!=='1';}
+  function available(){return !!(O.url||dev);}          // адреса нет — строку в ⚙ не показываем
+  function setEnabled(v){if(v){ls('stat-off',null);if(!on&&available())start();}
+    else{ls('stat-off','1');Q=[];pend=[];ls('stat-q-'+G,null);on=false;}}
+  function optOut(v){setEnabled(!v);}
+  function label(){return tx('📊 Анонимная статистика: ','📊 Anonymous statistics: ')+(enabled()?tx('вкл','on'):tx('выкл','off'));}
+  function note(){return tx('Уровни, ошибки и нажатия кнопок — без имени, ID и IP. Помогает делать игру лучше.',
+    'Levels, errors and button taps — no name, ID or IP. Helps us improve the game.');}
+  function toggle(){setEnabled(!enabled());return label();}
+  return {init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,place:setPlace,ad:ad,offer:offer,err:err,flush:flush,merge:merge,optOut:optOut,
+    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr};}};
+})();
+/*/STAT*/
+// STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
+// Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
+// Имя игры — по сборке (BUILD_GAME → GID): Косынка — kosynka, Паук — pauk, Ячейка — yacheyka. Раздача = «уровень» (STAT.lvl в startDeal/resumeDeal)
+const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
+STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v1',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // причины паузы (реклама, свёрнуто, пауза площадки, окно оплаты): снимаем паузу, только когда ушли все — а не «вслепую» при возврате
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
@@ -491,8 +634,9 @@ function mergeSave(d,ref){if(!isObj(d))return;
     if(typeof a.cs==='number'&&newer)b.cs=a.cs;}
   if(isObj(d.own))for(const f of ['tables','backs','faces'])if(Array.isArray(d.own[f])){if(!Array.isArray(S.own[f]))S.own[f]=[];for(const x of d.own[f])if(typeof x==='string'&&S.own[f].indexOf(x)<0)S.own[f].push(x);}
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(k!=='soc'&&(!(k in S)||newer&&!/^(ts|games|wins|daily|ach|seq|st|own|coins|streak|buy|buyB|payT|payV|soc|rk|dwk|ez|abn|col)$/.test(k)))S[k]=d[k]; // настройки, выбранный стол и т. п.
+  for(const k in d)if(k!=='soc'&&k!=='stc'&&(!(k in S)||newer&&!/^(ts|games|wins|daily|ach|seq|st|own|coins|streak|buy|buyB|payT|payV|soc|stc|rk|dwk|ez|abn|col)$/.test(k)))S[k]=d[k]; // настройки, выбранный стол и т. п.
   payMerge(d); // покупки — объединение
+  STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
   S.rk=Math.max(S.rk||0,typeof d.rk==='number'?d.rk:rankOf(d.wins||0)); // звание: награда выдана — у кого больше
   if(isObj(d.dwk)&&(!isObj(S.dwk)||d.dwk.k>S.dwk.k||d.dwk.k===S.dwk.k&&(d.dwk.g||0)>(S.dwk.g||0)))S.dwk={k:d.dwk.k,g:d.dwk.g||0}; // премии недели
   if(isObj(d.ez)){if(!isObj(S.ez))S.ez={};for(const k in d.ez)if(typeof d.ez[k]==='number')S.ez[k]=Math.max(S.ez[k]||0,d.ez[k]);} // лёгкие раздачи: сколько уже выдано
@@ -1277,7 +1421,7 @@ function afterMove(home,suitDone,fb,stock){const st=G.st,autos=[];
 function undo(){if(!G||G.won||G.busy)return;if(!G.hist.length){toast('Отменять пока нечего');return;}
   // сверх лимита — последний ход можно вернуть бесплатно (один раз после каждого хода; не в раскладе дня, там у всех поровну)
   let free=false;if(undoLeft()<=0){if(G.daily||!G.lastFree){outOf('undo');return;}free=true;G.lastFree=false;if(!S.tipFree){S.tipFree=1;toast('Последний ход вернули бесплатно. Дальше — ещё отмены за рекламу',3200);}}
-  const h=G.hist.pop();G.st=h.st;G.moves=h.moves;if(!free)G.undoUsed++;G.hl=null;setTargets();SND.undo();updButtons();saveCur();}
+  const h=G.hist.pop();G.st=h.st;G.moves=h.moves;if(!free)G.undoUsed++;STAT.use('undo');G.hl=null;setTargets();SND.undo();updButtons();saveCur();}
 // кончились отмены или подсказки: в раскладе дня — поровну у всех; иначе — ещё порция за рекламу
 function outOf(kind){const u=kind==='undo',n=u?UNDO_AD:HINT_AD,word=u?'отмен':'подсказки';
   if(G.daily){toast(u?'В раскладе дня отмен больше нет — у всех поровну':'В раскладе дня подсказок больше нет — у всех поровну',3200);return;}
@@ -1286,7 +1430,7 @@ function outOf(kind){const u=kind==='undo',n=u?UNDO_AD:HINT_AD,word=u?'отме�
   modal(`<h2>${u?'↶ Отмены кончились':'💡 Подсказки кончились'}</h2><p>На эту раздачу было ${u?UNDO_FREE+' отмен':HINT_FREE+' подсказки'}. Посмотри рекламу — и будет ещё ${n} ${word}.</p>
     ${PAY.on&&PAY.item('no_ads')&&!PAY.own('no_ads')?'<p><small>Или купи «Без рекламы» в настройках: отмены и подсказки станут без ограничений.</small></p>':''}
     <div class="row"><button class="btn accent noenter" id="mAd">📺 +${n} ${word} за рекламу</button><button class="btn" id="mCancel">Не надо</button></div>`);
-  $('mAd').onclick=()=>{hideModal();showRewarded(give,()=>{});};$('mCancel').onclick=closeToGame;}
+  STAT.offer(kind);$('mAd').onclick=()=>{hideModal();STAT.place(kind);showRewarded(give,()=>{});};$('mCancel').onclick=closeToGame;}
 /* ---- подсказка: решатель ищет путь к победе от текущей позиции; не успел — первый полезный ход по правилам ----
    Решатель работает в отдельном потоке (Web Worker из того же кода правил), чтобы слабый телефон не «замирал»; нет потока — прямо здесь, с меньшим бюджетом.
    «План»: найденное решение запоминаем (позиция → следующая позиция) — пока игрок идёт по нему, подсказка мгновенная и ведёт к победе */
@@ -1318,7 +1462,7 @@ async function hint(){if(!G||G.won||G.busy||G.thinking)return;if(hintLeft()<=0){
     m=hintFrom(st,res);}
   if(!m){if(!G.daily&&G.hist.length){stuckWin();return;}say('stuck',true);toast('Похоже, эта раздача уже не сойдётся. Отмени несколько ходов или начни новую',4000);return;}
   if(m.s&&GID==='spider'&&!R.canStock(G.st)){toast('Положи карты в пустые столбцы — потом раздавай из колоды');return;}
-  G.hintUsed++;idleReset();G.hl=m.s?{stock:true,t0:now()}:{f:m.f,j:m.j,t:m.t,t0:now()};
+  G.hintUsed++;STAT.use('hint');idleReset();G.hl=m.s?{stock:true,t0:now()}:{f:m.f,j:m.j,t:m.t,t0:now()};
   SND.tap();updButtons();saveCur();kick();}
 /* ---- «Собрать»: всё открыто — карты сами уходят в дом ---- */
 function collectPath(){if(!G||G.won)return null;if(GID==='spider')return spCollect();const s=stClone(G.st);if(GID==='klondike')for(let i=6;i<13;i++)if(s.d[i]>0)return null;
@@ -1387,7 +1531,7 @@ function tutFirst(m){const st=G.st,fc=GID==='freecell';if(!m)return TUT[GID][0];
     GID==='spider'?'Карту кладём на карту на одну старше. Вот: '+a+' — на '+b+'. Я подсветила этот ход — нажми на карту.':
     'Я Галя, медсестра. Все карты открыты — можно думать заранее. Кладите карту на карту на одну старше и другого цвета. Вот: '+a+' — на '+b+'. Я подсветила этот ход — нажмите на карту.';}
 function tutStep(){const g=G;if(!g||!g.tut||g.won||modalOn)return;if(Date.now()-(g.tutT||0)<6000)return;g.tutT=Date.now();const L=TUT[GID],k=g.tut-1;if(k>=L.length){g.tut=0;return;}
-  g.tut++;if(g.tut>L.length){g.tut=0;}if(k===L.length-1){S.tut=Object.assign(isObj(S.tut)?S.tut:{},{[GID]:1});save();}
+  g.tut++;STAT.ev('tut',{s:k+1});if(g.tut>L.length){g.tut=0;}if(k===L.length-1){S.tut=Object.assign(isObj(S.tut)?S.tut:{},{[GID]:1});save();}
   if(k===0){let m=planNext(g.st)||findHint();const onCard=x=>x&&!x.s&&R.kind(x.t)==='tab'&&g.st.p[x.t].length;
     if(!onCard(m))m=R.moves(g.st).find(onCard)||m; // первым показываем ход карта-на-карту, не колоду
     tutSay(tutFirst(m));if(m&&G===g&&!g.hl)g.hl=m.s?{stock:true,t0:now()}:{f:m.f,j:m.j,t:m.t,t0:now()};kick();}
@@ -1407,10 +1551,10 @@ function fcWhy(pi,j){if(GID!=='freecell'||!G)return false;const st=G.st,a=st.p[p
 
 /* ---- «не сходится»: вернуться к развилке — к последней позиции на найденном пути к победе (бесплатно, не в раскладе дня) ---- */
 function forkBack(){if(!G||!G.hist.length)return -1;if(G.plan)for(let i=G.hist.length-1;i>=0;i--)if(G.plan.has(R.key(G.hist[i].st)))return i;return Math.max(0,G.hist.length-8);}
-function stuckWin(){const i=forkBack(),n=i>=0?G.hist.length-i:0;
+function stuckWin(){const i=forkBack(),n=i>=0?G.hist.length-i:0;G.stk=(G.stk||0)+1;
   modal(`<h2>Раздача не сойдётся</h2>${hostBub('Отсюда уже не разложить. Не беда — вернёмся туда, где всё ещё сходилось.')}
     <div class="row">${n?`<button class="btn green" id="mFork">↶ Вернуться к развилке (${n} ${plw(n,'ход','хода','ходов')} назад)</button>`:''}<button class="btn noenter" id="mNew2">🆕 Новая раздача</button><button class="btn" id="mCancel">Продолжить</button></div>`);
-  if($('mFork'))$('mFork').onclick=()=>{hideModal();const h=G.hist[i];G.hist.length=i;G.st=h.st;G.moves=h.moves;G.hl=null;setTargets();SND.undo();updButtons();saveCur();YG.start();toast('Вернулись. Теперь подсказка снова ведёт к победе',3000);};
+  if($('mFork'))$('mFork').onclick=()=>{hideModal();STAT.use('fork');const h=G.hist[i];G.hist.length=i;G.st=h.st;G.moves=h.moves;G.hl=null;setTargets();SND.undo();updButtons();saveCur();YG.start();toast('Вернулись. Теперь подсказка снова ведёт к победе',3000);};
   $('mNew2').onclick=()=>{hideModal();newDeal(G?G.mode:S.mode);};$('mCancel').onclick=closeToGame;}
 
 /* ---- трудный режим: один раз предупредить (две/четыре масти, по три карты) ---- */
@@ -1442,13 +1586,13 @@ function nextSeed(mode){const L=SEEDS[mode];
 function dayNum(){const k=dayKey(0);return Math.round(Date.UTC(Math.floor(k/10000),Math.floor(k/100)%100-1,k%100)/864e5);}
 function dailySeed(){const L=SEEDS[GC.daily];return L[(dayNum()*131)%L.length];}
 function startDeal(daily,mode){mode=daily?GC.daily:mode!=null?mode:S.mode;const seed=daily?dailySeed():nextSeed(mode);
-  const tut=tutDue();G=newG(R.deal(seed,mode),seed,mode,daily?dayKey(0):0);G.tut=tut?1:0;save();openGame();dealFrom();SND.deal();const g=G;setTimeout(()=>{if(G!==g)return;if(g.tut)tutStep();else say('start');},tut?1300:900);saveCur();planAhead();}
+  const tut=tutDue();G=newG(R.deal(seed,mode),seed,mode,daily?dayKey(0):0);G.tut=tut?1:0;STAT.lvl(played()+1,daily?'daily':String(mode));save();openGame();dealFrom();SND.deal();const g=G;setTimeout(()=>{if(G!==g)return;if(g.tut)tutStep();else say('start');},tut?1300:900);saveCur();planAhead();}
 function resumeDeal(o){G=newG(o.st,o.seed,o.mode,o.daily||0);G.moves=o.moves|0;G.time=o.time|0;G.undoUsed=o.uu|0;G.undoCap=o.uc||UNDO_FREE;G.hintUsed=o.hu|0;G.hintCap=o.hc||HINT_FREE;G.counted=!!o.counted;G.maxCells=o.mc|0;
-  G.hist=Array.isArray(o.hist)?o.hist.filter(h=>h&&h.st&&Array.isArray(h.st.p)):[];openGame();setTargets(null,true);planAhead();}
-function openGame(){hideModal();show('scr-game');$('gTitle').textContent=G.daily?'📅 Расклад дня':GID==='freecell'&&innerWidth<420?'Ячейка':GC.name;$('gTitle').style.fontSize=GC.name.length>10&&$('gTitle').textContent!=='Ячейка'?'16px':'';
+  G.hist=Array.isArray(o.hist)?o.hist.filter(h=>h&&h.st&&Array.isArray(h.st.p)):[];STAT.lvl(played()+(G.counted?0:1),(G.daily?'daily':String(G.mode))+'-r');openGame();setTargets(null,true);planAhead();}
+function openGame(){hideModal();show('scr-game');STAT.screen('game');$('gTitle').textContent=G.daily?'📅 Расклад дня':GID==='freecell'&&innerWidth<420?'Ячейка':GC.name;$('gTitle').style.fontSize=GC.name.length>10&&$('gTitle').textContent!=='Ячейка'?'16px':'';
   layout();updButtons();updCoins();YG.start();}
 // бросить раздачу (текущую на экране или сохранённую): серия побед обнуляется; «долг» межэкранной растёт, только если раздачу правда играли
-function abandon(){const c=G&&!G.won?G:loadCur();if(c){if(c.moves>=5&&!c.daily){S.adW=(S.adW||0)+1;S.abn=(S.abn||0)+1;}if(c.counted&&!c.daily){const k=String(c.mode);if(isObj(S.st[k]))S.st[k].cs=0;}}
+function abandon(){const c=G&&!G.won?G:loadCur();if(c)STAT.end(c.stk?'stuck':'quit',{mv:c.moves|0});if(c){if(c.moves>=5&&!c.daily){S.adW=(S.adW||0)+1;S.abn=(S.abn||0)+1;}if(c.counted&&!c.daily){const k=String(c.mode);if(isObj(S.st[k]))S.st[k].cs=0;}}
   G=null;try{localStorage.removeItem(CKEY);}catch(e){}save();}
 function askNew(then){const c=G&&!G.won?G:loadCur();
   if(c&&c.moves>0){modal(`<h2>Новая раздача?</h2><p>${c.daily?'Расклад дня':'Эта раздача'} не разложена — начнём другую? Её уже не вернуть.</p>
@@ -1457,7 +1601,7 @@ function askNew(then){const c=G&&!G.won?G:loadCur();
   if(c)abandon();then();}
 // новая обычная раздача: сначала, если пора, межэкранная (не при запуске, не чаще раза в AD_GAP, с AD_FROM-й раздачи, по «долгу»)
 function newDeal(mode){askNew(()=>{const go=()=>startDeal(0,mode);if(adDue()&&adReady())showInterstitial(go);else go();});}
-function openDaily(){const cur=loadCur();if(G&&G.daily===dayKey(0)&&!G.won){openGame();return;}
+function openDaily(){STAT.screen('daily');const cur=loadCur();if(G&&G.daily===dayKey(0)&&!G.won){openGame();return;}
   if(cur&&cur.daily===dayKey(0)&&!(G&&!G.won)){resumeDeal(cur);return;}
   const done=!!S.daily[dayKey(0)];
   modal(`<h2>📅 Расклад дня</h2><p>Одна и та же раздача сегодня у всех игроков — ${GC.daily===3?'по три карты':modeOf(GC.daily).full||'классика'}. Она точно решаемая.</p>
@@ -1489,7 +1633,7 @@ const ACH=[
 function winLater(wait){const g=G;g.won=true;g.busy=true;YG.stop();winRecord(g);updButtons();setTimeout(()=>winShow(g),wait);}
 function onWin(){if(!G)return;const g=G;winRecord(g);winShow(g);}
 function winShow(g){if(G!==g)return;g.busy=false;SND.win();buzz(30);celebrate(()=>{if(G===g)showWin(g.got,g.firstDaily);});}
-function winRecord(G){if(G.rec)return;G.rec=true;G.won=true;try{localStorage.removeItem(CKEY);}catch(e){}
+function winRecord(G){if(G.rec)return;G.rec=true;G.won=true;STAT.end('win',{mv:G.moves|0,sc:Math.round(G.time/1000)});try{localStorage.removeItem(CKEY);}catch(e){}
   const m=stat(G),sec=Math.max(1,Math.round(G.time/1000));const old=(m.w||0)>=2;G.recT=old&&m.bt>0&&sec<m.bt;G.recM=old&&m.bm>0&&G.moves<m.bm;G.recTs=sec;m.w=(m.w||0)+1;m.cs=(m.cs||0)+1;m.bs=Math.max(m.bs||0,m.cs);m.bt=m.bt>0?Math.min(m.bt,sec):sec;m.bm=m.bm>0?Math.min(m.bm,G.moves):G.moves;
   S.wins=(S.wins||0)+1;S.games=(S.games||0)+1;if(!G.daily)S.adW=(S.adW||0)+1;
   let coins=modeOf(G.mode).coins,firstDaily=false;
@@ -1501,7 +1645,7 @@ function winRecord(G){if(G.rec)return;G.rec=true;G.won=true;try{localStorage.rem
   G.coins=coins;G.got=got;G.firstDaily=firstDaily;S.coins+=coins;save();cloudFlush();if(firstDaily)LB.submit();} // счётчик монет обновит окно победы (coinsRoll) или следующий экран
 // склонение по числу: 1 ход, 2 хода, 5 ходов
 function plw(n,a,b,c){const t=n%100,u=n%10;return t>10&&t<20?c:u===1?a:u>1&&u<5?b:c;}
-function showWin(got,firstDaily){if(!G)return;const gf=streakAfterWin(); // первый подарок — до окна (чипсой в окне, без тоста): строка «Завтра: …» уже про него
+function showWin(got,firstDaily){if(!G)return;STAT.screen('win');const gf=streakAfterWin(); // первый подарок — до окна (чипсой в окне, без тоста): строка «Завтра: …» уже про него
   if(gf)got=got.concat([{ic:'🎁',name:'Подарок за вход',c:gf.c}]);const m=stat(),x2=!window.__demo&&X2_ON&&adBtn()&&S.wins>2&&played()>NOVICE_DEALS&&!(adDue()&&adReady())&&!G.daily;
   modal(`<h2 id="mWon">${G.daily?'Расклад дня разложен! 🎉':'Разложено! 🎉'}</h2>
     <div class="host" style="min-height:0;margin:4px 0"><canvas id="winHost" width="112" height="122" style="width:56px;height:61px;flex:0 0 56px"></canvas><div class="bub" style="margin-bottom:10px;font-size:16px">${pick(G.daily&&firstDaily?HOSTL.daily:HOSTL.win)}</div></div>
@@ -1512,7 +1656,7 @@ function showWin(got,firstDaily){if(!G)return;const gf=streakAfterWin(); // пе
       ${winNext()}<button class="btn green" id="mNext">🆕 Новая раздача</button>${G.daily&&LB.ok()?'<button class="btn noenter" id="mLb">🏆 Рейтинг</button>':''}<button class="btn noenter" id="mMenu">В меню</button></div>`);
   $('mcard').classList.toggle('wmany',got.length>=3); // много наград: без цели и (на низких экранах) без хозяйки — кнопки видны без прокрутки
   drawHost($('winHost'),GC.host);
-  if($('mX2'))$('mX2').onclick=()=>{const g=G;showRewarded(()=>{if(g.x2)return;g.x2=true;S.coins+=g.coins;save();updCoins();SND.coin();$('wCoins')&&($('wCoins').textContent='+'+g.coins*2+' 💰 (×2)');const b=$('mX2');b&&b.remove();},()=>{});};
+  if($('mX2'))STAT.offer('x2');if($('mX2'))$('mX2').onclick=()=>{const g=G;STAT.place('x2');showRewarded(()=>{if(g.x2)return;g.x2=true;S.coins+=g.coins;save();updCoins();SND.coin();$('wCoins')&&($('wCoins').textContent='+'+g.coins*2+' 💰 (×2)');const b=$('mX2');b&&b.remove();},()=>{});};
   $('mNext').onclick=()=>{const md=G&&!G.daily?G.mode:undefined;hideModal();newDeal(md);};$('mMenu').onclick=()=>{hideModal();G=null;openMenu();};if($('mDaily'))$('mDaily').onclick=()=>{hideModal();G=null;openDaily();};if($('mLb'))$('mLb').onclick=()=>LB.show();
   coinsRoll(G);setTimeout(offerReturn,1200);}
 // что дальше (повод вернуться): расклад дня ждёт / завтрашний подарок за вход
@@ -1543,7 +1687,7 @@ function coinsRoll(g){const el=$('wCoins'),pill=$('gCoins');if(!el||calm()||wind
 /* ================= меню ================= */
 function drawMenuBg(){const c=$('mbg'),r=$('scr-menu').getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);
   const g=c.getContext('2d');g.scale(d,d);drawTable(g,r.width,r.height,S.table||'green');g.fillStyle='rgba(0,0,0,'+(tableLight()?.42:.12)+')';g.fillRect(0,0,r.width,r.height);}
-function openMenu(){YG.stop();G&&!G.won&&saveCur();if(G&&G.won)G=null;show('scr-menu');drawMenuBg();drawHost($('hostCv'),GC.host);
+function openMenu(){STAT.once('menu');STAT.once('ready',{ms:Math.round(performance.now())});STAT.screen('menu');YG.stop();G&&!G.won&&saveCur();if(G&&G.won)G=null;show('scr-menu');drawMenuBg();drawHost($('hostCv'),GC.host);
   $('gName').textContent=GC.name;$('gSub').textContent=GC.sub;
   if(!openMenu._said){openMenu._said=1;$('hostSay').textContent=pick(HOSTL.hello);}
   const cur=G&&!G.won?null:loadCur(),has=!!(G&&!G.won)||!!cur;
@@ -1574,11 +1718,11 @@ function nextGoal(){let b=null;for(const k in DECOR)for(const it of DECOR[k].lis
 $('btnPlay').onclick=()=>{if(G&&!G.won){openGame();return;}const cur=loadCur();if(cur){resumeDeal(cur);return;}startDeal(0);};
 $('btnNew').onclick=()=>newDeal(S.mode);
 $('btnDaily').onclick=()=>openDaily();
-$('gBack').onclick=()=>{if(G&&G.fx)endFx();openMenu();};
+$('gBack').onclick=()=>{if(G&&G.fx)endFx();if(G&&!G.won)STAT.end(G.stk?'stuck':'quit',{mv:G.moves|0,k:'menu'});openMenu();}; // раздача сохранена: «Продолжить» — новый lvl с '-r'
 $('bUndo').onclick=undo;$('bHint').onclick=hint;$('bCollect').onclick=collect;$('bNew').onclick=()=>newDeal(G?G.mode:S.mode);
 $('mCoins').onclick=()=>openShop();$('gCoins').onclick=()=>openShop();$('btnSet').onclick=openSettings;$('gSet').onclick=openSettings;
 $('btnStats').onclick=()=>openStats();
-$('btnMore').onclick=()=>{SND.tap();SOC.showMore();};
+$('btnMore').onclick=()=>{SND.tap();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();};
 /* «🎲 Игры» в меню — только VK с мостом (SOC.ok()); с ней строка из 4 кнопок — класс m4 ужимает её */
 function updMore(){const b=$('btnMore'),on=SOC.ok();if(b){b.style.display=on?'':'none';b.parentNode.classList.toggle('m4',on);}}$('btnDecor').onclick=()=>openDecor('tables');$('btnStreak').onclick=showStreak;
 
@@ -1590,7 +1734,7 @@ function hostBub(t){return `<div class="host" style="min-height:0;margin:4px 0">
 function modal(html){PAY.re=null;modalRe=null;$('mcard').classList.remove('wmany');$('say').classList.remove('on','tut');$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;YG.stop();$('mcard').querySelectorAll('canvas.hcv').forEach(c=>drawHost(c,GC.host));}
 function closeToGame(){hideModal();if(inPlay())YG.start();}
 /* ---- успехи: статистика по режимам и достижения ---- */
-function openStats(){const rows=GC.modes.map(md=>{const a=S.st[String(md.id)]||{},p=a.p||0,w=a.w||0;
+function openStats(){STAT.screen('stats');const rows=GC.modes.map(md=>{const a=S.st[String(md.id)]||{},p=a.p||0,w=a.w||0;
     return `${GC.modes.length>1?`<tr><td colspan="2" style="font-weight:800;padding-top:10px">${md.full[0].toUpperCase()+md.full.slice(1)}</td></tr>`:''}
       <tr><td>Сыграно</td><td>${p}</td></tr><tr><td>Разложено</td><td>${w}${p?' ('+Math.round(w/p*100)+'%)':''}</td></tr>
       <tr><td>Лучшее время</td><td>${a.bt?fmtT(a.bt*1000):'—'}</td></tr><tr><td>Меньше всего ходов</td><td>${a.bm||'—'}</td></tr><tr><td>Побед подряд: сейчас / рекорд</td><td>${a.cs||0} / ${a.bs||0}</td></tr>`;}).join('');
@@ -1606,7 +1750,7 @@ function owns(kind,it){return isFree(kind,it)||it.pay&&PAY.own(it.pay)||S.own[DE
 // особое украшение видно, если оно куплено или его можно купить (есть в каталоге площадки); иначе его нет вовсе
 function visible(kind,it){return !it.pay||owns(kind,it)||PAY.on&&!!PAY.item(it.pay);}
 const curOf=kind=>S[DECOR[kind].key]||(kind==='tables'?GC.table:kind==='backs'?'red':'std');
-function openDecor(kind){collCheck();const sets=kind==='sets',D=DECOR[sets?'tables':kind],cur=curOf(sets?'tables':kind),items=sets?[]:D.list.filter(it=>visible(kind,it));
+function openDecor(kind){STAT.screen('decor');collCheck();const sets=kind==='sets',D=DECOR[sets?'tables':kind],cur=curOf(sets?'tables':kind),items=sets?[]:D.list.filter(it=>visible(kind,it));
   modal(`<h2>🎨 Украшения</h2><p>У тебя ${S.coins} 💰 — монеты дают за каждую разложенную раздачу.</p>
     <div class="tabs">${Object.keys(DECOR).map(k=>`<button data-k="${k}" class="${k===kind?'on':''}">${DECOR[k].name}</button>`).join('')}<button data-k="sets" class="${sets?'on':''}">Наборы</button></div>
     <div class="scroll">${sets?'<p style="margin:2px 0 8px"><small>Собери все вещи набора — получишь премию.</small></p>'+setsHtml():''}<div class="grid">${items.map(it=>{const own=owns(kind,it),on=it.id===cur;
@@ -1615,7 +1759,7 @@ function openDecor(kind){collCheck();const sets=kind==='sets',D=DECOR[sets?'tabl
   $('mcard').querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{SND.tap();openDecor(b.dataset.k);});
   $('mcard').querySelectorAll('.it').forEach(b=>b.onclick=()=>decorTap(kind,D.list.find(x=>x.id===b.dataset.id)));
   $('mcard').querySelectorAll('.ci').forEach(b=>b.onclick=()=>{const k=b.dataset.k;decorTap(k,DECOR[k].list.find(x=>x.id===b.dataset.id));});
-  if($('mAdCoins'))$('mAdCoins').onclick=()=>{showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');openDecor(kind);},()=>{});};
+  if($('mAdCoins'))STAT.offer('coins');if($('mAdCoins'))$('mAdCoins').onclick=()=>{STAT.place('coins');showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');openDecor(kind);},()=>{});};
   $('mCancel').onclick=()=>{closeToGame();if($('scr-menu').classList.contains('on'))openMenu();};
   modalRe=()=>openDecor(kind);
   requestAnimationFrame(()=>$('mcard').querySelectorAll('canvas[data-pv]').forEach(c=>previewDecor(kind,c.dataset.pv,c)));}
@@ -1631,10 +1775,10 @@ function decorTap(kind,it){const D=DECOR[kind];if(!it)return;
     PAY.bind($('mcard'));PAY.re=()=>openDecor(kind);$('mBack').onclick=()=>openDecor(kind);return;}
   if(S.coins<it.price){modal(`<h2>Не хватает монет</h2><p>«${it.name}» стоит ${it.price} 💰, а у тебя ${S.coins} 💰. Монеты дают за каждую разложенную раздачу, расклад дня и достижения.</p>
       <div class="row">${adBtn()?`<button class="btn accent noenter" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}${PAY.on?'<button class="btn noenter" id="mShop">💰 Получить монеты</button>':''}<button class="btn" id="mBack">← Назад</button></div>`);
-    if($('mAdCoins'))$('mAdCoins').onclick=()=>showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');openDecor(kind);},()=>{});
+    if($('mAdCoins'))STAT.offer('coins_lack');if($('mAdCoins'))$('mAdCoins').onclick=()=>{STAT.place('coins_lack');showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');openDecor(kind);},()=>{});};
     if($('mShop'))$('mShop').onclick=()=>openShop();$('mBack').onclick=()=>openDecor(kind);return;}
   modal(`<h2>${it.name}</h2><p>Купить за ${it.price} 💰? У тебя ${S.coins} 💰.</p><div class="row"><button class="btn green" id="mBuy">Купить за ${it.price} 💰</button><button class="btn" id="mBack">← Назад</button></div>`);
-  $('mBuy').onclick=()=>{if(S.coins<it.price)return;S.own[D.own].push(it.id);S[D.key]=it.id;setCoins(S.coins-it.price);SND.coin();applyLook();openDecor(kind);};$('mBack').onclick=()=>openDecor(kind);}
+  $('mBuy').onclick=()=>{if(S.coins<it.price)return;S.own[D.own].push(it.id);S[D.key]=it.id;setCoins(S.coins-it.price);STAT.ev('spend',{k:kind+':'+it.id,c:it.price});SND.coin();applyLook();openDecor(kind);};$('mBack').onclick=()=>openDecor(kind);}
 /* ---- наборы (коллекции, boost 03.10): собрал все вещи набора за монеты — премия один раз (S.col[id]=1). Родной стол игры уже твой ---- */
 const COLL=[
   {id:'yard',ic:'🏘',name:'Двор',c:150,it:[['tables','yard'],['tables','asphalt'],['backs','car'],['backs','cat'],['backs','pigeon']]},
@@ -1656,11 +1800,14 @@ function setsHtml(){return COLL.map(cl=>{const h=collHave(cl),done=S.col&&S.col[
 function applyLook(){for(const k in DECOR){const D=DECOR[k],id=S[D.key],it=D.list.find(x=>x.id===id);if(id&&(!it||!owns(k,it)))delete S[D.key];}
   S.table=curOf('tables');S.back=curOf('backs');S.face=curOf('faces');lookChanged();if($('scr-menu').classList.contains('on'))drawMenuBg();}
 /* ---- «Друзья и игры» (VK, модуль SOC): отдельное окно из настроек ---- */
-function openSocial(){if(!SOC.ok()){openSettings();return;}
+function openSocial(){if(!SOC.ok()){openSettings();return;}STAT.screen('social');STAT.ev('mod',{m:'soc',a:'open'});
   modal(`<h2>Друзья и игры</h2>${SOC.settingsHtml()}<div class="row"><button class="btn" id="socBack">← Назад</button></div>`);
-  SOC.bind($('mcard'),openSocial);$('socBack').onclick=openSettings;}
+  SOC.bind($('mcard'),openSocial);$('socBack').onclick=openSettings;socStat();}
+// какие кнопки окна «Друзья и игры» жмут (как в Козле): data-soc — позвать/поделиться/…, data-g — игра серии
+function socStat(){$('mcard').querySelectorAll('[data-soc],[data-g]').forEach(b=>b.addEventListener('click',()=>{const k=b.getAttribute('data-soc');
+  STAT.ev('mod',{m:'soc',a:k?k:'app'});if(k==='more')setTimeout(socStat,50);}));}
 /* ---- настройки ---- */
-function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</i>';
+function openSettings(){STAT.screen('settings');const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</i>';
   modal(`<h2>Настройки</h2><div class="scroll">
     <button class="set" id="stSnd"><span>🔊 Звук</span>${on(S.sound!==false)}</button>
     <button class="set" id="stVib"><span>📳 Вибрация</span>${on(S.vib!==false)}</button>
@@ -1670,6 +1817,7 @@ function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</
     <button class="set" id="stLet"><span>🔤 Буквы на картах</span><i class="go">${S.letters==='en'?'J Q K A':'В Д К Т'}</i></button>
     <button class="set" id="stC4"><span>🎨 Четыре цвета мастей<br><small>бубны синие, трефы зелёные</small></span>${on(!!S.c4)}</button>
     <button class="set" id="stCalm"><span>🌿 Спокойный режим<br><small>без разлёта карт и лишнего движения</small></span>${on(calm())}</button>
+    ${STAT.available()?'<button class="set" id="stStat"><span>📊 Анонимная статистика<br><small>'+STAT.note()+'</small></span>'+on(STAT.enabled())+'</button>':''}
     ${SOC.ok()?'<button class="set" id="stSoc"><span>👥 Друзья и игры<br><small>позвать, поделиться, ещё игры</small></span><i class="go">›</i></button>':''}
     ${PAY.on&&!inPlayWin()?PAY.html(['no_ads'],false)+'<button class="set" id="stShop"><span>🛒 Все покупки<br><small>монеты, особые столы и рубашки</small></span><i class="go">›</i></button>':''}</div>
     <div class="row hz"><button class="btn noenter" id="stHow">❓ Как играть</button><button class="btn noenter" id="stAbout">ℹ️ Об игре</button><button class="btn green" id="stClose">Готово</button></div>`);
@@ -1683,14 +1831,15 @@ function openSettings(){const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</
   $('stCalm').onclick=()=>{if(RM){toast('Включено в настройках телефона («уменьшить движение»)');return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   if($('stShop')){$('stShop').onclick=()=>openShop();PAY.bind($('mcard'));PAY.re=openSettings;}
   if($('stSoc'))$('stSoc').onclick=openSocial;
+  if($('stStat'))$('stStat').onclick=()=>{STAT.setEnabled(!STAT.enabled());SND.tap();openSettings();};
   $('stAbout').onclick=openAbout;$('stHow').onclick=openHow;$('stClose').onclick=()=>{closeToGame();if($('scr-menu').classList.contains('on'))openMenu();};}
 // покупки за деньги — только в меню и между раздачами, не посреди раздачи
 function inPlayWin(){return !!(G&&!G.won&&$('scr-game').classList.contains('on'));}
-function openHow(){modal(`<h2>Как играть</h2><div class="how scroll">${GC.how.map(t=>'<p>'+t+'</p>').join('')}
+function openHow(){STAT.screen('rules');modal(`<h2>Как играть</h2><div class="how scroll">${GC.how.map(t=>'<p>'+t+'</p>').join('')}
     <p>↶ <b>Отмена</b> — вернуть ход, 💡 <b>подсказка</b> — покажет, какой ход сделать. ✨ <b>Собрать</b> — когда всё открыто, карты сами уйдут в дом.</p>
     <p>📅 <b>Расклад дня</b> — одна раздача для всех игроков. 💰 Монеты — на новые столы, рубашки и карты.</p></div>
     <div class="row"><button class="btn" id="hBack">← Назад</button></div>`);$('hBack').onclick=openSettings;}
-function openAbout(){modal(`<h2>Об игре</h2><p class="about">«${GC.title}» — пасьянс «${GC.name}» с крупными картами. Карты, столы и персонажи нарисованы прямо в игре, звуки собраны кодом. ${S.solv!==false&&(GID!=='spider'||S.mode!==4)?'Раздачи в режиме «только решаемые» заранее проверены: каждую можно разложить.':''}</p>
+function openAbout(){STAT.screen('about');modal(`<h2>Об игре</h2><p class="about">«${GC.title}» — пасьянс «${GC.name}» с крупными картами. Карты, столы и персонажи нарисованы прямо в игре, звуки собраны кодом. ${S.solv!==false&&(GID!=='spider'||S.mode!==4)?'Раздачи в режиме «только решаемые» заранее проверены: каждую можно разложить.':''}</p>
     ${PLAT==='vk'?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
     <p class="about">На компьютере: Z — отмена, H — подсказка, ${GID==='freecell'?'':'пробел — колода, '}N — новая раздача, Esc — назад, Enter — главная кнопка окна.</p>
     <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ Восстановить покупки</button>':''}<button class="btn" id="abBack">← Назад</button></div>`);
@@ -1712,16 +1861,16 @@ let adBusy=false;
 function showRewarded(cb0,onFail0){
   if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
   const cb=()=>{adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
-  if(PLAT==='vk'&&!VK){if(VK_REAL){toast(AD_FAIL);onFail();}else stubAd(cb);return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
+  if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL);onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
-      .then(r=>{adClose();if(r&&r.result)cb();else{toast(AD_FAIL);onFail();}})
-      .catch(()=>{adClose();toast(AD_FAIL);onFail();})
+      .then(r=>{adClose();if(r&&r.result){STAT.ad('rew','ok');cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL);onFail();}})
+      .catch(e=>{adClose();STAT.ad('rew','err',e&&e.error_data&&e.error_data.error_code);toast(AD_FAIL);onFail();})
       .then(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;}
-  if(!ysdk){if(AD_LOCAL)stubAd(cb);else{toast(AD_FAIL);onFail();}return;}
+  if(!ysdk){if(AD_LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail','nosdk');toast(AD_FAIL);onFail();}return;}
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
-    onClose:()=>{adClose();if(got)cb();else{toast('Досмотри видео до конца, чтобы получить награду');onFail();}},
-    onError:()=>{adClose();toast(AD_FAIL);onFail();}}});
+    onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast('Досмотри видео до конца, чтобы получить награду');onFail();}},
+    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);onFail();}}});
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
 // кнопки «📺 … за рекламу» есть везде, кроме настоящего VK без моста (там ролик не показать)
@@ -1730,10 +1879,10 @@ function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
 // Если сейчас нельзя (пауза после рекламы) — показ не сгорает, а ждёт следующей раздачи. Обнуляется только после настоящего показа
 function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.games||0)>=AD_FROM;}
 function showInterstitial(cb0){
-  const cb=shown=>{lastAdT=Date.now();if(shown!==false){S.adW=0;save();}cb0();};
-  if(PLAT==='vk'&&!VK){if(VK_REAL)cb0();else stubAd(cb);return;}
+  const cb=shown=>{lastAdT=Date.now();STAT.ad('int',shown!==false?'show':'none');if(shown!==false){S.adW=0;save();}cb0();};
+  if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nobridge');cb0();}else stubAd(cb);return;}
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),()=>false).then(ok=>{adClose();cb(ok);});return;}
-  if(!ysdk){if(AD_LOCAL)stubAd(cb);else cb0();return;}
+  if(!ysdk){if(AD_LOCAL)stubAd(cb);else{STAT.ad('int','none','nosdk');cb0();}return;}
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
 }
 
@@ -1747,13 +1896,13 @@ function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(
   if(f.x2==='0'||f.x2==='off')X2_ON=false;updCoins();}
 function updCoins(){const a=$('gCoins'),b=$('coinCnt');if(a)a.textContent='💰 '+S.coins;if(b)b.textContent=S.coins;}
 function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
-function openShop(){
+function openShop(){STAT.screen('shop');
   // покупки за деньги — только вне раздачи; нет платежей — раздела нет совсем
   const buy=PAY.on&&!inPlayWin();
   modal(`<h2>Монеты 💰</h2><p>У тебя ${S.coins} 💰. Монеты дают за каждую разложенную раздачу, расклад дня, достижения и подарки за серию дней. Тратятся на украшения: столы, рубашки, карты.</p>${buy?PAY.html():''}
     <div class="row">${adBtn()?`<button class="btn noenter" id="mAdCoins">📺 +${AD_COINS} 💰 за рекламу</button>`:''}<button class="btn noenter" id="mDecor">🎨 Украшения</button><button class="btn" id="mCancel">Закрыть</button></div>`);
   if(buy){PAY.bind($('mcard'));PAY.re=openShop;}
-  if($('mAdCoins'))$('mAdCoins').onclick=()=>{hideModal();showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');},()=>{});};
+  if($('mAdCoins'))STAT.offer('coins_shop');if($('mAdCoins'))$('mAdCoins').onclick=()=>{hideModal();STAT.place('coins_shop');showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+AD_COINS+' 💰');},()=>{});};
   $('mDecor').onclick=()=>openDecor('tables');$('mCancel').onclick=closeToGame;modalRe=openShop;}
 
 /* ---- товары пасьянсов (каталог — ~/Brain/hobby/solitaire.md и CLAUDE.md проекта). Силы не продаём: рейтинг считает дни, в раскладе дня у всех поровну отмен и подсказок ----
@@ -1771,7 +1920,8 @@ function payAdd(n){S.coins+=n;}
 function payFlush(){cloudFlush();}
 function payPause(on){setPause('pay',on);}
 // после покупки/восстановления: монеты на экране, выбранное оформление и перерисовать окно, где были кнопки (PAY.re — его функция)
-function payAfter(){updCoins();applyLook();if(G)updButtons();if(modalOn&&PAY.re)PAY.re();}
+let payOk=null; // какая покупка прошла (для STAT: обёртка PAY.buy ниже)
+function payAfter(id){if(id)payOk=id;updCoins();applyLook();if(G)updButtons();if(modalOn&&PAY.re)PAY.re();}
 /* ================= покупки за деньги: Яндекс Игры (ysdk.payments) и VK Игры (VKWebAppShowOrderBox) — общий модуль (одинаковый в 5 играх) =================
    Товары игры — PAY_ITEMS (выше), id совпадают с id в консоли Яндекса («Инап-покупки») и в hobby-pay/catalog.json (VK).
    Кнопок покупок НЕТ совсем, если платежи недоступны: нет SDK/моста (мак), каталог Яндекса пуст, VK не поддерживает оплату (iOS).
@@ -1887,6 +2037,9 @@ function payStubVK(){const K='paytestvk',rd=()=>{try{return JSON.parse(localStor
     clear:k=>{if(window.__payNoClear)return Promise.reject(new Error('fail'));const o=rd();delete o[k];wr(o);return wait();}};}
 
 
+// STAT: покупки — обёртка снаружи общего модуля PAY (сам PAY не меняем): try → ok | cancel (отказ или сбой)
+{const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;STAT.ev('buy',{i:id,r:'try'});
+  return Promise.resolve(b0.call(PAY,id)).then(()=>STAT.ev('buy',{i:id,r:payOk===id?'ok':'cancel'}));};}
 /* ================= рейтинг раскладов дня =================
    Очки — сколько дней разложен расклад дня (у всех игроков одна раздача, отмен и подсказок поровну).
    Яндекс: лидерборд с техническим именем daily (создать в консоли). VK: таблица друзей VKWebAppShowLeaderBoardBox.
@@ -1936,7 +2089,7 @@ const giftTxt=g=>g.back?'рубашка «'+g.back.name+'»':'+'+g.c+' 💰';
 // мягкий старт: до первой разложенной раздачи окно не показываем; первый подарок — тостом
 function maybeStreak(){if(G&&!G.won||window.__demo||modalOn||$('ad').classList.contains('on'))return;
   const st=streakState();if(st.claimed||(S.wins||0)<1)return;if(st.cnt===0)claimStreak(true);else showStreak();}
-function showStreak(){const st=streakState();let cells='';
+function showStreak(){STAT.screen('gift');const st=streakState();let cells='';
   for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day,gf=giftOf(d,st.cyc);
     cells+=`<div class="sd ${done?'done':''} ${today?'today':''}"><small>День ${d}</small><span class="ic">${gf.back?'🎁':'💰'}</span>${gf.back?'рубашка':'+'+gf.c}</div>`;}
   const gf=giftOf(st.day,st.cyc),first=(S.wins||0)<1,nx=st.claimed?giftOf(st.day%7+1,st.cyc+(st.day===7?1:0)):null;
@@ -2007,7 +2160,7 @@ async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(ses
     else if(PLAT==='vk'){const row=document.querySelector('#mcard .row');if(!row)return;
       const o=SOC.offer(S.wins||0,Date.now()-lastAdT<60000||pauseWhy.size>0||(adDue()&&adReady()));if(!o)return;askedNow=true;
       const d=document.createElement('div');d.className='soc-o';d.innerHTML='<span>'+o.t+'</span><button class="btn noenter" id="mSoc">'+o.b+'</button>';
-      row.parentNode.insertBefore(d,row.nextSibling);/* под кнопками: главные не сдвигаются */const b=$('mSoc');b.onclick=()=>{b.disabled=true;o.run();};}
+      row.parentNode.insertBefore(d,row.nextSibling);/* под кнопками: главные не сдвигаются */STAT.ev('mod',{m:'soc',a:'of_'+o.k});const b=$('mSoc');b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_'+o.k});o.run();};}
   }catch(e){}}
 window.addEventListener('resize',()=>{if($('scr-game').classList.contains('on')){const r=stage.getBoundingClientRect();if(Math.abs(r.width-W)>1||Math.abs(r.height-H)>1||Math.min(2,window.devicePixelRatio||1)!==dpr)layout();}
   else if($('scr-menu').classList.contains('on'))drawMenuBg();});

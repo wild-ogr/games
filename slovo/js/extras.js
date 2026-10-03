@@ -43,7 +43,7 @@ function buyItem(isZ,id){
       <div class="btns"><button class="btn green" id="mYes">Да, купить</button><button class="btn ghost" id="mNo">Подумаю</button></div>`);
     if(!isZ)applySkin($('cfPv'),id);
     $('mNo').onclick=()=>{hideModal();SND.tap();};
-    $('mYes').onclick=()=>{hideModal();if(S.coins<it.p)return;S.own=S.own||{};S.own[k]=1;addCoins(-it.p);SND.coin();
+    $('mYes').onclick=()=>{hideModal();if(S.coins<it.p)return;S.own=S.own||{};S.own[k]=1;addCoins(-it.p);STAT.ev('spend',{k:k,c:it.p});SND.coin();
       if(isZ)S.outfit=id;else S.skin=id;save();openShop();shopSay(say(isZ?'buy':'buyPlate'),'happy');};
     return;
   }
@@ -61,7 +61,7 @@ function shortModal(it,isZ,id){
     <div class="btns">${left?`<button class="btn green" id="mAd">🎬 +${ECO.adCoins} за рекламу</button>`:''}<button class="btn ghost" id="mNo">${left?'Потом':'Хорошо'}</button></div>`);
   if(!isZ)applySkin($('cfPv'),id);
   $('mNo').onclick=()=>{hideModal();SND.tap();shopSay('Проходи уровни — накопим! Я пока в старом похожу.','norm');};
-  const b=$('mAd');if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;
+  const b=$('mAd');if(b)STAT.offer('coins');if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place('coins');
     showRewarded(()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;hideModal();addCoins(ECO.adCoins);SND.coin();
       if(document.querySelector('.screen.on')===$('shopS')){openShop();const r=it.p-S.coins;shopSay(r>0?`Держи +${ECO.adCoins}! До «${it.n}» осталось ${r}.`:`Держи +${ECO.adCoins}! Теперь хватает на «${it.n}» — бери!`,'happy');}},
       ()=>{b.disabled=false;});};
@@ -165,11 +165,11 @@ async function drawCard(w){
 }
 // открытка: показать, поделиться (если телефон умеет файлы), на стену VK или сохранить картинку
 async function shareDef(w,back){
-  SND.tap();let c;try{c=await drawCard(w);}catch(e){toast('Не получилось нарисовать открытку');return;}
+  SND.tap();STAT.ev('mod',{m:'card',a:'def'});let c;try{c=await drawCard(w);}catch(e){toast('Не получилось нарисовать открытку');return;}
   shareImg(c,'slovo-'+w,`«${yo(w).toUpperCase()}» — ${DEFS[w]} — баба Зина. Игра «Баба Зина: слова из букв»`,back,'Толковый словарь бабы Зины','Отправь родным — пусть тоже посмеются!');}
 // открытка за главу (аудит 14): «Я прошёл главу «Подъезд» с бабой Зиной»
 async function shareChap(c,back){
-  SND.tap();let cv;try{cv=await drawChapCard(c);}catch(e){toast('Не получилось нарисовать открытку');return;}
+  SND.tap();STAT.ev('mod',{m:'card',a:'chap'});let cv;try{cv=await drawChapCard(c);}catch(e){toast('Не получилось нарисовать открытку');return;}
   const ch=CHAPTERS[c%CHAPTERS.length];
   shareImg(cv,'slovo-glava-'+(c+1),`Я прошёл главу «${ch.n}» с бабой Зиной! Игра «Баба Зина: слова из букв»`,back,'Баба Зина: слова из букв','Похвастайся родным — пусть знают, какой ты грамотей!');}
 async function drawChapCard(c){
@@ -239,8 +239,8 @@ function pickAsk(){
   if(PLAT==='vk'){ // VK: одно предложение за сессию из общего модуля SOC (правила п. 2.6.3)
     const o=SOC.offer(S.wins||0,Date.now()-lastRew<60000||adBusy||paused||(typeof interDue==='function'&&interDue()));
     if(!o)return null;askShown=true;
-    return {t:o.b,ok:'Готово!',soc:o.t,run:()=>Promise.resolve(o.run()).then(r=>r!==false)};}
+    return {k:'soc_'+(o.k||''),t:o.b,ok:'Готово!',soc:o.t,run:()=>Promise.resolve(o.run()).then(r=>r!==false)};}
   const now=Date.now(),a=ASKS.find(x=>{const st=S.ask[x.k]||{};return x.can()&&(S.wins||0)>=x.wins&&!st.done&&(st.n||0)<3&&now-(st.t||0)>3*864e5;});
   if(!a)return null;askShown=true;const st=S.ask[a.k]=S.ask[a.k]||{};st.n=(st.n||0)+1;st.t=now;save();
-  return {t:a.t,ok:a.ok,run:()=>a.run().then(ok=>{if(ok){S.ask[a.k].done=1;save();}return ok;})};
+  return {k:a.k,t:a.t,ok:a.ok,run:()=>a.run().then(ok=>{if(ok){S.ask[a.k].done=1;save();}return ok;})};
 }
