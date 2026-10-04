@@ -75,7 +75,7 @@ function drawMap(cvm,W,d){cvm=cvm||$('mapCv');if(!cvm)return;const fixed=!!W;W=W
     if(open&&chStars(c)){const st=chStars(c)+'/18 ★';g.font='800 '+Math.round(fs*.85)+'px system-ui';g.textAlign='left';g.strokeStyle='rgba(255,248,230,.95)';g.strokeText(st,x+r*1.05,y-r*.2);g.fillStyle='#a0501a';g.fillText(st,x+r*1.05,y-r*.2);g.textAlign='center';}
     if(S.stars[lvKey(c,5)]){g.font='900 '+Math.round(r*.7)+'px system-ui';g.fillText('✅',x+r*.75,y-r*.75);}}
   const v=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);v.addColorStop(0,'rgba(80,40,10,0)');v.addColorStop(1,'rgba(80,40,10,.35)');g.fillStyle=v;g.fillRect(0,0,W,H);}
-function renderChCard(){const c=mapSel,ch=CH[c];let nl=0;for(let l=0;l<6;l++)if(lvOpen(c,l)&&!S.stars[lvKey(c,l)]){nl=l;break;}else if(lvOpen(c,l))nl=l;
+function renderChCard(){if(!$('chCard'))return;const c=mapSel,ch=CH[c];let nl=0;for(let l=0;l<6;l++)if(lvOpen(c,l)&&!S.stars[lvKey(c,l)]){nl=l;break;}else if(lvOpen(c,l))nl=l;
   const hd='<div class="row"><img class="ic" src="'+ic(ch.boss)+'" style="width:44px;height:44px"><div class="t"><b>'+(c+1)+'. '+ch.name+'</b><span>'+ch.sub+'</span></div>'+
     '<button class="btn" id="playNext">'+swordImg()+(S.stars[lvKey(c,nl)]?Lg('Ещё','Again'):Lg('Играть','Play'))+'</button></div>';
   // look1: на телефоне шапка главы с «Играть» стоит над картой глав (видна в первом экране и на 320×568), плитки уровней — под картой

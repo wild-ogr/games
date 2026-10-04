@@ -987,7 +987,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'kirpichiki',gv:'v6-100416',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'kirpichiki',gv:'v6-100418',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl уровни/задание дня/бесконечная, ad ролики и ×2, gift подарок за вход, chest сундуки глав и посылки сезона, buy покупки,
    quest поручения/звания/кладовка/неделя/кубки); progress — после облака, но не позже 2,5 с: pl — уровней со звёздами, cn — монеты, bt — облако хоть раз отдало
    сохранение (метка устройства kirpichiki-cl, в сохранение не пишется); cfg — тема, звук, спокойный режим. */
@@ -2030,7 +2030,7 @@ function winJuice(stars,coins,el){const my=G,w=$(el||'wCoins'),gc=$('gCoins');if
   if(gc)gc.textContent='💰 '+(S.coins-coins);
   for(let i=0;i<stars;i++)setTimeout(()=>{if(G===my&&modalOn)SND.star(i);},250+i*300+220);
   let n=0;const steps=Math.min(coins,20),t0=250+stars*300;clearInterval(winJuice._c);
-  setTimeout(()=>{if(G!==my)return;winJuice._c=setInterval(()=>{n++;const v=Math.round(coins*n/steps);if(w.isConnected&&!G.x2)w.textContent='+'+coinsTxt(v);
+  setTimeout(()=>{if(G!==my)return;winJuice._c=setInterval(()=>{if(G!==my||!G){clearInterval(winJuice._c);return;}n++;const v=Math.round(coins*n/steps);if(w.isConnected&&!G.x2)w.textContent='+'+coinsTxt(v);
       if(n>=steps){clearInterval(winJuice._c);flyCoins(w,gc);}},35);},t0);}
 function flyCoins(from,to){if(!from||!to||!from.isConnected||!modalOn){updCoins();return;}const a=from.getBoundingClientRect(),b=to.getBoundingClientRect();
   const f=document.createElement('div');f.className='flyc';f.textContent='💰';f.style.left=(a.left+a.width/2-13)+'px';f.style.top=(a.top)+'px';document.body.appendChild(f);
