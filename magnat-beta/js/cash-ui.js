@@ -22,7 +22,7 @@ const rk=a=>Math.abs(a)>=1e4?Math.round(a/1e3)*1e3:Math.round(a/10)*10;
 const nb=s=>String(s).replace(/(\d) (\d)/g,'$1 $2');
 // виды строк: значок, подпись (в ленте и в «Этот месяц»)
 const K={rec:['🧾','От покупателей','From buyers'],sale:['🏪','Выручка точек','Outlet takings'],job:['🏭','Зарплата','Wages'],gig:['📋','Заказы','Gigs'],supp:['📦','Товар точек','Outlet stock'],
-  whs:['🏬','Закупка склада','Warehouse buying'],rent:['🏢','Аренда и зарплаты точек','Outlet rent & wages'],mgr:['👔','Управляющим','Managers’ share'],opd:['💼','Опердиректорам','Operations directors'],
+  whs:['🏬','Закупка опта','Wholesale buying'],rent:['🏢','Аренда и зарплаты точек','Outlet rent & wages'],mgr:['👔','Управляющим','Managers’ share'],opd:['💼','Опердиректорам','Operations directors'],
   life:['🏠','Жизнь','Living costs'],ipf:['📄','Взносы ИП','Sole-trader contributions'],acc:['📒','Бухгалтер','Accountant'],tax:['🏛','Налог','Tax'],int:['🏦','Проценты банку','Bank interest'],
   loan:['🏦','Платёж по кредиту','Loan repayment'],od:['⚠','Овердрафт','Overdraft'],build:['🏗','Стройка','Construction'],fix:['🏭','Постоянные расходы объектов','Sites’ fixed costs'],
   adm:['🏢','Офис','Head office'],log:['🚂','Перевозки и доставка','Freight & delivery'],con:['🤝','Контракты','Contracts'],mkt:['📈','Продажи на рынке','Market sales'],prod:['⛏','Добыча и передел','Production'],

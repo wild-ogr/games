@@ -74,7 +74,7 @@ SRC.push(function points(W,days,P){const o=[];
   for(const f of P.take(f=>/^opd\./.test(f.tag))){const t=f.tag.slice(4),B=E.BIZ&&E.BIZ[t];o.push(P.item(f,'opd','Операционный директор'+(B?': '+B.n:''),'Operations director'+(B?': '+B.en:''),f.tag));}
   for(const f of P.take(f=>isPt(W,f.tag)||/^z\d+$/.test(f.tag))){const n=bizName(W,f.tag)||L2('точка','outlet'),t=ptT(W,f.tag);let k='oth',ru=n.ru,en=n.en;
     if(f.cf==='sales'){k='sale';ru='Выручка: '+n.ru;en='Takings: '+n.en;}
-    else if(f.cf==='supp'){if(t==='whs'){k='whs';ru='Закупка склада: '+n.ru;en='Warehouse buying: '+n.en;}else{k='supp';ru='Товар: '+n.ru;en='Stock: '+n.en;}}
+    else if(f.cf==='supp'){if(t==='whs'){k='whs';ru='Закупка опта: '+n.ru;en='Wholesale buying: '+n.en;}else{k='supp';ru='Товар: '+n.ru;en='Stock: '+n.en;}}
     else if(f.cf==='fix'){k='rent';ru='Аренда и зарплаты: '+n.ru;en='Rent & wages: '+n.en;}
     else if(f.cf==='capex'){k='build';ru='Стройка: '+n.ru;en='Construction: '+n.en;}
     else if(f.cf==='log'){k='log';ru='Доставка: '+n.ru;en='Delivery: '+n.en;}
@@ -165,8 +165,10 @@ const sumK=(its,ks,d1,sg)=>{let s=0;for(const x of its)if(x.d<=d1&&ks.indexOf(x.
 const FXC={};let FXN=0;
 function fxKey(W,g){let k='';for(const b of W.biz||[])k+=b.t[0]+(b.k&&b.k.def||'');return [W.m,Math.floor(W.d/3),g.k,g.why,g.d>0?1:0,(W.loans||[]).length,(W.obj||[]).length,(W.biz||[]).length,k,W.st].join('|');}
 function lazyFix(W,p,g){let v=null;Object.defineProperty(g,'fix',{enumerable:true,configurable:true,get(){if(!v){const k=fxKey(W,g);const c=FXC[k];if(c&&c.W===W)v=c.v;else{v=fixesOf(W,p,g);if(++FXN>40){for(const x in FXC)delete FXC[x];FXN=0;}FXC[k]={W,v};}}return v;}});return g;}
-function whsGap(W){const b=(W.biz||[]).find(x=>x.t==='whs'&&x.st==='w');if(!b||!E.bizEcon||!E.bizOpt)return null;const B=E.BIZ.whs;let sd=B.sd;try{const o=E.bizOpt(B,'gd',b.k&&b.k.cat);sd=o&&o.sd||B.sd;}catch(e){}
-  const x=E.bizEcon(W,b);const tgt=rnd0(x.vc/DAYS*sd);return {id:b.id,tgt,stk:rnd0(b.stk||0),need:Math.max(0,tgt-rnd0(b.stk||0)),def:b.k&&b.k.def};}
+// M39: опт по видам — сумма по всем оптам (закупка опта), id — опт с самой большой нехваткой товара
+function whsGap(W){const a=(W.biz||[]).filter(x=>x.t==='whs'&&x.st==='w');if(!a.length||!E.bizEcon)return null;let r=null,tgt=0,stk=0,need=0,mx=-1;
+  for(const b of a){const sd=E.optSd?E.optSd(b):E.BIZ.whs.sd,x=E.bizEcon(W,b),t=rnd0(x.vc/DAYS*sd),s=rnd0(b.stk||0),n=Math.max(0,t-s);tgt+=t;stk+=s;need+=n;if(n>mx){mx=n;r=b;}}
+  return {id:r.id,tgt,stk,need,def:r.k&&r.k.def,n:a.length};}
 function gapsOf(W,p,sh,o){const g=[];if(o.nogap)return g;const its=p.items;
   const neg=p.own0<0?{d:0,t:W.t,own:p.own0,rec:recSum(W)}:p.byDay.find(x=>x.own<0);
   const wg=whsGap(W);

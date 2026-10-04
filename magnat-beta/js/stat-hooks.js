@@ -29,7 +29,10 @@ GAME.on('close',rep=>{if(!rep)return;let p=0;try{const n=ECON.netOf(rep.pl);p=n>
 // M30: действия главы 3 «Сеть» — открытие точки (bopen: t, k — отсрочка склада), ручки (knob: t, k, v), факторинг (factor: a — млн, p — часть), кредит (loan: a — млн, n, k),
 // подряды и покупатель сети (pc / fs: r — take|no). Через GAME.act → emit('change', имя, итог, аргументы).
 GAME.on('change',(n,r,a)=>{if(!n||r!=='ok'||!Array.isArray(a))return;const w=W();const s=GAME.stage();try{
-  if(n==='bizOpen'){const o=a[1]||{};STAT.ev('bopen',{t:String(a[0]||''),s,k:o.k&&o.k.def?String(o.k.def):''});}
+  if(n==='bizOpen'){const o=a[1]||{};STAT.ev('bopen',{t:String(a[0]||''),s,k:o.k&&o.k.def?String(o.k.def):''});if(a[0]==='whs')STAT.ev('opt_open',{kd:String(o.kd||'food').slice(0,6),s});}
+  else if(n==='vehAdd'){const o=w&&w.biz.find(x=>x.id===a[0]);STAT.ev('veh_add',{t:o&&o.t==='base'?'truck':'van',kd:o&&o.kd?o.kd:'',n:o?w.biz.filter(x=>x.at===o.id).length:0,s});}   // M39
+  else if(n==='vehDel')STAT.ev('veh_del',{h:String(a[1]||'sell').slice(0,4),s});
+  else if(n==='optUp'){const o=w&&w.biz.find(x=>x.id===a[0]);STAT.ev('opt_up',{kd:o&&o.kd||'',lv:o?o.up|0:0,s});}
   else if(n==='bizKnob'){const b=w&&w.biz.find(x=>x.id===a[0]);STAT.ev('knob',{t:b?b.t:'',k:String(a[1]||'').slice(0,8),v:String(a[2]).slice(0,10),s});}
   else if(n==='factor')STAT.ev('factor',{p:String(a[0]||'all').slice(0,6),s});
   else if(n==='takeLoan')STAT.ev('loan',{a:mln(a[0]),n:a[1]|0,k:String(a[2]||'').slice(0,6),s});
@@ -56,4 +59,6 @@ function frDrain(){const w=W(),F=w&&w.fr;if(!F||!Array.isArray(F.sx)||!F.sx.leng
     for(const k of ['d','l','a'])if(typeof e[k]==='number')o[k]=e[k]|0;for(const k of ['p','r','o','t'])if(e[k]!=null)o[k]=String(e[k]);STAT.ev('fr',o);}}
 GAME.on('change',frDrain);GAME.on('day',frDrain);
 chap(); // мир уже создан (ui.js запускает GAME.start раньше этого файла)
+// M39: первая связь опта со своими точками (W.lnk.m — месяц, когда связь впервые дала пользу)
+GAME.on('close',()=>{try{const w=W(),l=w&&w.lnk;if(!l||l.m<0||l.st)return;l.st=1;STAT.ev('link_first',{a:Math.round((l.sum||0)/1e3),s:GAME.stage()});}catch(e){}});
 })();

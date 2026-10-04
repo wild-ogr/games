@@ -25,6 +25,8 @@ const num=(x,d)=>FMT.num(x,d);
 const ICO_FIX={tire:'🔩'};                       // 🛞 — Emoji 14, на старых Android не рисуется
 const bico=t=>ICO_FIX[t]||(E.BIZ[t]&&E.BIZ[t].ico)||'🏪';
 const bn=t=>E.BIZ[t]?L(E.BIZ[t].n,E.BIZ[t].en):t;
+// M39: имя и значок дела с учётом вида опта (b.kd)
+const bnB=b=>b&&b.t==='whs'&&E.OPTK&&E.OPTK[b.kd]?L(E.OPTK[b.kd].n,E.OPTK[b.kd].en):bn(b&&b.t),bicoB=b=>b&&b.t==='whs'&&E.OPTK&&E.OPTK[b.kd]?E.OPTK[b.kd].ico:bico(b&&b.t);
 const gn=t=>t==='santa'?hg(L('Дед Мороз на праздник','Father Frost for a party'),L('Снегурочка на праздник','Snow Maiden for a party')):E.GIGS[t]?L(E.GIGS[t].n,E.GIGS[t].en):t;
 const opv=o=>L(o[1],o[2]);
 const cityN=c=>{try{return NM.city(c);}catch(e){return c;}};
@@ -695,7 +697,7 @@ function rBiz(el){const W=w();if(V.biz==='pt'){const b=W.biz.find(x=>x.id===V.id
   if(!W.ned)h+=(window.OWNUI?OWNUI.bizCards(W,cc,multi(W)?`<div class="bz-cities">${W.cities.map(c=>`<button class="noenter${c===cc?' on':''}" data-b="bmk" data-c="${c}">${esc(cityN(c))}</button>`).join('')}</div>`:''):'');   // M17: маркетинг города; M38 — выбранного города
   el.innerHTML=h;}
 function ptRow(W,b){const p=lastPm(b);let sea='';if(ch3(W)&&p!=null&&p<0&&b.st==='w'){try{const f=E.bizForecast(W,b,b.k).prof;if(f>0)sea=' · '+L('за год в среднем ','yearly average ')+money0(Math.round(f/100)*100);}catch(e){}}   // M34: имя «№N», сезонный минус
-  return `<button class="bz-li" data-b="bpt" data-id="${b.id}"><span class="bz-ic">${bico(b.t)}${bizDot(W,b)?'<i></i>':''}</span><span class="f1"><b>${esc(ch3(W)?ptName(W,b):bn(b.t))}</b><small>${esc(bizState(W,b)+(window.MECHUI?MECHUI.badge(W,b):'')+sea)}</small></span><span class="v ${p==null?'':p>=0?'good':'bad'}">${b.st==='w'&&p!=null?money0(p):'—'}<small>${b.st==='w'&&p!=null?L('за месяц','a month'):''}</small></span></button>`;}
+  return `<button class="bz-li" data-b="bpt" data-id="${b.id}"><span class="bz-ic">${bicoB(b)}${bizDot(W,b)?'<i></i>':''}</span><span class="f1"><b>${esc(ch3(W)?ptName(W,b):bnB(b))}</b><small>${esc(bizState(W,b)+(window.MECHUI?MECHUI.badge(W,b):'')+(window.OPTUI?OPTUI.badge(W,b):'')+sea)}</small></span><span class="v ${p==null?'':p>=0?'good':'bad'}">${b.st==='w'&&p!=null?money0(p):'—'}<small>${b.st==='w'&&p!=null?L('за месяц','a month'):''}</small></span></button>`;}
 const NEED_WHY={stage:()=>L('откроется в следующей главе','unlocks in the next chapter'),nc:()=>L('по договору с покупателем сети — 2 года не открываем','under the deal with the chain’s buyer — not for 2 years'),ip:()=>L('нужно ИП','needs sole-trader status'),max:()=>L('в городе уже максимум','city limit reached'),city:()=>L('нет представительства в городе','no office in this city'),no:()=>L('недоступно','unavailable')};
 function needTxt(W,t,r){const B=E.BIZ[t],n=B.need||{};
   if(r==='have')return L('сначала откройте «','first open the “')+bn(n.have)+L('»','”')+(n.or?L(' или капитал от ',' or equity from ')+M(n.or):'');
@@ -721,9 +723,9 @@ function catView(W){const c=V.city||W.home||'kuz';let h=`<div class="bz-back"><b
   else if(V.catAll&&lk.length>3)h+=`<button class="btn w noenter" data-b="bcatall" style="margin:4px 0 14px">${L('Свернуть закрытые','Collapse locked')}</button>`;
   return h;}
 // M38: склад, стройбаза, самосвалы — один на всю сеть (в другие города не ставим: лимит как был)
-const MID_NET={whs:c=>L(`🏬 Склад работает на <b>все города</b>: скидка 3,5 % на закупку всем магазинам сети. Стоит ${cityP(c)}, отдельный склад в другом городе не нужен.`,`🏬 The warehouse serves <b>every city</b>: a 3.5% purchase discount for all your shops. It stands in ${cityN(c)}; no separate warehouse is needed elsewhere.`),
+const MID_NET={whs:c=>L(`🏬 Опт работает на <b>всю сеть</b>: свои точки закупают у него дешевле (в другом городе — вполсилы). Стоит ${cityP(c)}.`,`🏬 The wholesale serves <b>the whole network</b>: your outlets buy from it cheaper (half as much in another city). It stands in ${cityN(c)}.`),   // M39: вместо −3,5 % всей рознице — связи
   base:c=>L(`🏗 Стройбаза продаёт щебень и песок на весь регион — город для неё не важен. Стоит ${cityP(c)}.`,`🏗 The builders’ yard sells gravel and sand to the whole region — the city doesn’t matter. It stands in ${cityN(c)}.`),
-  truck:c=>L(`🚛 Самосвал возит щебень своей стройбазе — работает на всю сеть, стоит ${cityP(c)}.`,`🚛 The truck hauls gravel for your builders’ yard — it serves the whole network and is based in ${cityN(c)}.`)};
+  truck:c=>L(`🚛 Самосвал возит щебень своей стройбазе — работает в её парке, стоит ${cityP(c)}.`,`🚛 The truck hauls gravel for your builders’ yard — it serves the whole network and is based in ${cityN(c)}.`)};
 // M38: «⚙ Настроить все точки вида в городе» — по каждой ручке прогноз вариантов, ★ выгоднее здесь, «как в Кемерово»; одно нажатие — всем точкам вида
 function openCityTune(c,t0){const W=w();if(!W)return;const home=W.home||'kuz',ts=[];for(const b of ptsOf(W))if(b.c===c&&(!t0||b.t===t0)&&tunable(b.t)&&ts.indexOf(b.t)<0)ts.push(b.t);
   let h=`<div class="bz-hd"><span class="bz-ic lg">⚙</span><div class="f1"><h2>${t0?L('Настроить все: ','Set up all: ')+esc(bn(t0)):L('Настроить все точки','Set up all outlets')}</h2><small>${esc(cityN(c))}</small></div></div>
@@ -748,14 +750,15 @@ function openCityTune(c,t0){const W=w();if(!W)return;const home=W.home||'kuz',ts
   if($$('bzCtAll'))$$('bzCtAll').onclick=()=>{let n=0,r='ok';for(const [t,k,v] of todo){const q=act('bizKnobCity',t,c,k,v);if(!q)continue;n+=q.n;if(q.r!=='ok'){r=q.r;if(q.r==='cash')break;}}done(n,r);};
   $$('bzCtNo').onclick=()=>{snd('tap');hideModal();};}
 // окно открытия дела
-function openBizModal(t,c,wk,st){const W=w(),B=E.BIZ[t];if(!B)return;c=isMid(t)?(W.home||'kuz'):c||curCity(W);const r=E.bizCan(W,t,c),f=E.bizForecast(W,t,null,c),H=E.hands(W);wk=t==='whs'?(wk||'d0'):null;   // M38: склад/стройбаза/самосвалы — только в родном городе (на всю сеть)
+function openBizModal(t,c,wk,st){const W=w(),B=E.BIZ[t];if(!B)return;if(window.OPTUI&&(t==='whs'||B.veh)){OPTUI.openModal(t==='whs'?wk:null,t);return;}   // M39: опт по видам и машины — окна js/opt-ui.js
+  c=isMid(t)?(W.home||'kuz'):c||curCity(W);const r=E.bizCan(W,t,c),f=E.bizForecast(W,t,null,c),H=E.hands(W);wk=t==='whs'?(wk||'d0'):null;   // M38: склад/стройбаза/самосвалы — только в родном городе (на всю сеть)
   const needMgr=B.hand&&H.free<B.hand&&!W.opd[t];
   let h=`<div class="bz-hd"><span class="bz-ic lg">${bico(t)}</span><div class="f1"><h2>${esc(bn(t))}</h2><small>${esc(isMid(t)&&multi(W)?L('на всю сеть · стоит ','serves the whole network · located ')+cityP(c):cityN(c))}</small></div></div>`+(isMid(t)&&multi(W)&&MID_NET[t]?`<div class="tip">${MID_NET[t](c)}</div>`:'')+(t==='whs'?whsBuy(W,wk,r):`
     <div class="facts" style="margin-top:12px"><span>${L('Вложения','Investment')}</span><b>${M(capOf(t))}${capOf(t)<B.cap?`<small>${L(`подержанный: Людмила нашла у знакомого, новый — ${M(B.cap)}`,`used: Lyudmila found one via a friend; a new one is ${M(B.cap)}`)}</small>`:''}</b><span>${L('Откроется через','Opens in')}</span><b>${days(B.days)}</b>
     <span>${L('Выручка','Revenue')}</span><b>~${Mr(f.rev)}${L('/мес','/mo')}</b><span>${L('Расходы','Costs')}</span><b>~${Mr(f.vc+f.f+f.risk)}${L('/мес','/mo')}</b>
     <span>${L('Прибыль','Profit')}</span><b class="${f.prof>=0?'good':'bad'}">~${Mr(f.prof)}${L('/мес','/mo')}</b>${f.prof>0?`<span>${L('Окупаемость','Payback')}</span><b>~${mons(Math.ceil(f.pay))}</b>`:''}
     <span>${L('Ваше время','Hands')}</span><b>${!B.hand?L('не занимает','none'):B.hand<1?L('полдела','half a hand'):L('одно дело ✋','one hand ✋')}</b></div>
-    ${window.OWNUI?OWNUI.passport(W,t,c):''}<p class="bz-note">${KNOB_TIP[t]?esc(KNOB_TIP[t]())+' '+L('Это настроите после открытия — в карточке точки.','You’ll set this after opening — on the outlet card.'):''}</p>`)+(t==='vend'&&E.vendOps&&E.vendOps(W,1)>E.vendOps(W)?`<div class="tip">🧰 ${L(`С этим автоматом понадобится оператор: +${M(E.VEND_OP)} в месяц на 10 автоматов.`,`With this machine you’ll need an operator: +${M(E.VEND_OP)} a month per 10 machines.`)}</div>`:'');
+    ${window.OWNUI?OWNUI.passport(W,t,c):''}<p class="bz-note">${KNOB_TIP[t]?esc(KNOB_TIP[t]())+(B.knob||B.sl||B.k2?' '+L('Это настроите после открытия — в карточке точки.','You’ll set this after opening — on the outlet card.'):''):''}</p>`)+(t==='vend'&&E.vendOps&&E.vendOps(W,1)>E.vendOps(W)?`<div class="tip">🧰 ${L(`С этим автоматом понадобится оператор: +${M(E.VEND_OP)} в месяц на 10 автоматов.`,`With this machine you’ll need an operator: +${M(E.VEND_OP)} a month per 10 machines.`)}</div>`:'');
   // M38: «Открыть сразу N» и ручка заранее (каждая точка — обычный bizOpen: деньги, лимит вида на город, руки, запас на жизнь)
   st=st||{};const have=E.cityPts(W,t,c).length,mxN=r==='ok'&&!isMid(t)?Math.max(1,Math.min(B.max-have,Math.floor((W.cash-E.bizRes(W,t))/B.cap))):1;
   const mass=mxN>=2&&(ch3(W)||W.ooo||have>=2);let K=null;
@@ -899,7 +902,8 @@ function promoCard(W,b,inner){if(b.st!=='w'||E.SMALL.indexOf(b.t)<0)return '';co
 // прогноз прибыли с управляющим: строка для карточки точки (красным — если с ним в минусе)
 function mgrLine(W,b){const x=E.mgrProf(W,b);if(!x)return '';const bad=x.mgr<0,thin=!bad&&x.mgr<x.dep;
   return `${window.OWNUI?OWNUI.tip('mgr'):''}<p class="bz-note${bad?' bad':''}" style="margin:0 0 10px">📊 ${L('Прибыль в месяц: с управляющим ~','Profit a month: with a manager ~')+Mr(x.mgr)+L(' (он берёт 30 %, не меньше 15 000 ₽, но не больше прибыли), самому ~',' (he takes 30%, at least 15,000 ₽ but never more than the profit), yourself ~')+Mr(x.self)}${bad?'. '+L('С ним точка в минусе — лучше стоять самому или поставить управляющего в точку побольше.','With him the outlet loses money — better run it yourself or put the manager into a bigger outlet.'):thin?'. '+L('С ним точка едва окупает износ.','With him the outlet barely covers depreciation.'):''}</p>`;}
-function ptView(W,b){const B=E.BIZ[b.t],from=V.from;let h=`<div class="bz-back"><button class="back" data-b="bback">← ${from==='net'?L('Сеть','Network'):from==='pit'?L('Карьер','Quarry'):from==='today'?L('Сегодня','Today'):L('Мои точки','My outlets')}</button></div>`;
+function ptView(W,b){if(window.OPTUI&&(b.t==='whs'||b.t==='base'||E.BIZ[b.t].veh)){const x=OPTUI.card(W,b,V);if(x)return x;}   // M39: опт, стройбаза, машины — карточки js/opt-ui.js
+  const B=E.BIZ[b.t],from=V.from;let h=`<div class="bz-back"><button class="back" data-b="bback">← ${from==='net'?L('Сеть','Network'):from==='pit'?L('Карьер','Quarry'):from==='today'?L('Сегодня','Today'):L('Мои точки','My outlets')}</button></div>`;
   h+=`<div class="card"><div class="bz-hd"><span class="bz-ic lg">${bico(b.t)}</span><div class="f1"><h2>${esc(bn(b.t))}</h2><small>⭐ ${num(b.rt||0,2)} · ${esc(cityN(b.c))}${b.wm?' · '+L('работает ','open ')+mons(b.wm):''}</small></div></div>`;
   if(b.st==='b'){const tot=b.tot||B.days;h+=`<p class="bz-note">${esc(bizState(W,b))}</p>${prog((tot-b.left)/tot)}`;
     const sp1=E.bizSpeedOk(W,b.id),sp2=adL('open')&&E.bizAdSpeedOk(W,b.id);
@@ -943,7 +947,7 @@ function ptaBtn(W,t){if(!E.ptUpAll||W.ned)return '';const p=E.ptUpAll(W,t,true);
 /* ---------------- M34: глава 3 «Сеть» — удобство по разбору M33 (Н2–Н8, Н11–Н13) ---------------- */
 const ch3=W=>!!W&&!W.ned&&W.st==='mid';
 // имя точки среди одинаковых: «Кофейный автомат №5» (+ город, если городов несколько)
-function ptName(W,b){if(!b)return '';const a=W.biz.filter(x=>x.t===b.t),n=a.length>1?a.indexOf(b)+1:0;return bn(b.t)+(n?' №'+n:'')+(W.cities&&W.cities.length>1&&b.c?' · '+cityN(b.c):'');}
+function ptName(W,b){if(!b)return '';if(b.t==='whs')return bnB(b);const a=W.biz.filter(x=>x.t===b.t),n=a.length>1?a.indexOf(b)+1:0;return bn(b.t)+(n?' №'+n:'')+(W.cities&&W.cities.length>1&&b.c?' · '+cityN(b.c):'');}
 function zTxt(it){const f=ZTXT[it.k];if(!f)return '';const a=it.a||{},W=w();let t=f(a);const b=a.id&&W?W.biz.find(x=>x.id===a.id):null;
   if(b&&t){const n0=bn(b.t),n1=ptName(W,b);if(n1!==n0)t=t.replace('«'+n0+'»','«'+n1+'»').replace('“'+n0+'”','“'+n1+'”');}return t;}
 // окно закрытия месяца: один и тот же совет — не чаще раза в 3 месяца (S.advM — ключ → месяц показа)
@@ -1005,7 +1009,8 @@ function moreBtn1(W,t){if(!W.ooo||isMid(t)||isPit(t))return '';const B=E.BIZ[t];
 // второй ручной факторинг за игровой месяц — Людмила предлагает галочку автофакторинга (M32), один раз в месяц
 function afAsk(W){if(!W||W.afa||!E.afacSet)return;if(!S.fcN||S.fcN.m!==W.m)S.fcN={m:W.m,n:0};S.fcN.n++;save();if(S.fcN.n!==2)return;
   setTimeout(()=>{if(typeof modalOn!=='undefined'&&modalOn)return;modalYes(L('Продавать долг автоматически?','Sell the debt automatically?'),L('Уже второй раз за месяц продаёте банку долг покупателей вручную. Включить автофакторинг? Я буду продавать только нужную часть — когда денег до закрытия месяца не хватает на платежи, раз в день, комиссия те же 3 %.','This is the second time this month you’ve sold buyers’ debt to the bank by hand. Turn on auto-factoring? I’ll sell only the part we need — when cash won’t cover the payments until month end, once a day, the same 3% fee.'),L('Да, включить','Yes, turn it on'),()=>{if(act('afacSet',true)==='ok'){snd('tap');afT=W.afS&&W.afS.t!=null?W.afS.t:-1;toast('🔁 '+L('Автофакторинг включён','Auto-factoring on'),2600);try{STAT.ev('mod',{m:'afac',a:1,ask:1});}catch(e){}}},L('Не сейчас','Not now'));},600);}
-function rNet(el){const W=w();if(V.biz==='pt'&&V.from==='net'){const b=W.biz.find(x=>x.id===V.id);if(b){el.innerHTML=ptView(W,b);return;}V.biz='list';}
+function rNet(el){const W=w();if(V.biz==='pt'&&(V.from==='net'||V.from==='opt')){const b=W.biz.find(x=>x.id===V.id);if(b){el.innerHTML=ptView(W,b);return;}V.biz='list';}
+  if(V.biz==='links'&&window.OPTUI){el.innerHTML=OPTUI.links(W);return;}   // M39: «🔗 Как мои бизнесы помогают друг другу»
   let h=`<div class="bz-top"><div class="bz-sub">${esc(statusLine(W))}</div><div class="bz-h1">${L('Сеть','Network')}</div></div>`+cityBar(W);
   if(W.ooo&&!W.ned&&W.biz.some(b=>b.st==='w'&&E.SMALL.indexOf(b.t)>=0))h+=`<div class="card" id="bzNetTop">${upAllRow(W)}${mkApRow(W)}</div>`;   // M34: все точки до максимума, реклама на автопилоте
   // сети по типам
@@ -1016,23 +1021,25 @@ function rNet(el){const W=w();if(V.biz==='pt'&&V.from==='net'){const b=W.biz.fin
     return `<div class="bz-li" style="flex-wrap:wrap"><span class="bz-ic">${bico(t)}</span><span class="f1"><b>${esc(bn(t))} · ${n}</b><small>${n>=3?L('скидка на закупку ','purchase discount ')+FMT.pct(d):L('сеть — от 3 точек','a chain starts at 3 outlets')}${od?' · '+L('опердиректор','ops director'):''}</small>${multi(W)?`<small>${esc(W.cities.map(c=>[c,W.biz.filter(b=>b.t===t&&b.c===c).length]).filter(x=>x[1]).map(x=>cityN(x[0])+' '+x[1]).join(' · '))}</small>`:''}${ch3(W)?`<small>${esc(chainExtra(W,t))}</small>`:''}</span>${n>=3&&W.ooo&&(E.BIZ[t].hand||od)?`<button class="btn sm noenter" data-b="opd" data-t="${t}" style="flex:1 0 100%;margin:8px 0 0 58px;max-width:calc(100% - 58px)">${od?L('Уволить директора','Dismiss director'):L('Опердиректор','Ops director')+(ch3(W)?(x=>' · '+(x.gain>=0?L('выгода +','saves +')+Mr(x.gain):L('дороже на ','costs ')+Mr(-x.gain)+L('',' more'))+L('/мес','/mo'))(opdCmp(W,t)):'')}</button>`:''}${ptaBtn(W,t)}${ch3(W)?moreBtn1(W,t):''}</div>`;}).join(''):`<div class="bz-li"><span class="f1"><small>${L('Пока нет точек','No outlets yet')}</small></span></div>`)+
     `</div>`;
   // склад, стройбаза, самосвалы
-  h+=`<div class="bz-sec">${L('Опт, стройматериалы, транспорт','Wholesale, building materials, transport')}</div><div class="card bz-list">`;
+  let opt0='';const whs=W.biz.filter(x=>x.t==='whs');
+  if(window.OPTUI){opt0=OPTUI.netBlock(W);h=h.replace('<div class="bz-sec">','<div id="opLnkTop">'+OPTUI.linksBtn(W)+'</div><div class="bz-sec">');}   // M39: блок «Опт и доставка» по видам (js/opt-ui.js), машины строками не показываются
+  else{h+=`<div class="bz-sec">${L('Опт, стройматериалы, транспорт','Wholesale, building materials, transport')}</div><div class="card bz-list">`;
   for(const b of W.biz.filter(x=>isMid(x.t)&&x.t!=='whs'))h+=ptRow(W,b).replace('data-b="bpt"','data-b="bpt" data-from="net"');
   for(const t of E.MID)h+=catRow(W,t,W.home||'kuz');
-  h+='</div>';
+  h+='</div>';}
   // M30: есть склад — блок «Опт» (склад и долг покупателей по датам) первым, над покупателем сети и списком сетей
-  let opt0='';const whs=W.biz.filter(x=>x.t==='whs');if(whs.length){opt0=`<div class="bz-sec">${L('Опт','Wholesale')}</div><div class="card bz-list">`+whs.map(x=>ptRow(W,x).replace('data-b="bpt"','data-b="bpt" data-from="net"')).join('')+'</div>';
+  if(whs.length&&!window.OPTUI){opt0=`<div class="bz-sec">${L('Опт','Wholesale')}</div><div class="card bz-list">`+whs.map(x=>ptRow(W,x).replace('data-b="bpt"','data-b="bpt" data-from="net"')).join('')+'</div>';
     for(const x of whs){if(x.st!=='w')continue;const s=E.whsState(W,x);if(s.fill<.5)opt0+=`<div class="bz-warn bad">📦 ${L(`Склад полупустой: товара ${Mr(s.stk)} из ${Mr(s.norm)}${s.lack?' — нет свободных денег сверх подушки ~'+Mr(s.pad):''}.`,`The warehouse is half-empty: stock ${Mr(s.stk)} of ${Mr(s.norm)}${s.lack?' — no spare money above the ~'+Mr(s.pad)+' cushion':''}.`)}</div>`;}
     opt0+=recCard(W);}
   h=h.replace(`<div class="bz-sec">${L('Сети точек','Chains')}</div>`,opt0+fsCard(W)+`<div class="bz-sec">${L('Сети точек','Chains')}</div>`);   // M22: покупатель сети — над списком сетей
   h+=pcCard(W);   // M22: подряды стройбазы
-  if(!W.biz.some(x=>x.t==='whs'))h+=recCard(W);   // склад продан, а долг остался — внизу, как раньше
+  if(!W.biz.some(x=>x.t==='whs')&&!window.OPTUI)h+=recCard(W);   // склад продан, а долг остался — внизу, как раньше (M39: в блоке опта)
   if(W.bobr)h+=`<div class="card"><b>⛰ ${L('Бобров поднял цену щебня','Bobrov raised the gravel price')}</b><p class="bz-note">${L('Карьер-поставщик — Боброва. Мы платим ему по 1 300 ₽ за тонну и больше, а свой карьер добывал бы по 450–650. Пора в «Карьер».','The supplying quarry is Bobrov’s. We pay him 1,300 ₽ a tonne and up; our own quarry would mine at 450–650. Time for the Quarry chapter.')}</p></div>`;
   // города
   const cs=Object.keys(E.CITY);h+=`<div class="bz-sec">${L('Города','Cities')}</div><div class="card bz-list">`+cs.map(c=>{const has=W.cities.indexOf(c)>=0;
     return `<div class="bz-li"><span class="bz-ic">🏙</span><span class="f1"><b>${esc(cityN(c))}</b><small>${has?(c===(W.home||'kuz')?L('родной город','home town'):L('представительство открыто','office open')):L('аренда ×','rent ×')+num(E.CITY[c].rent,2)+' · '+L('спрос ×','demand ×')+num(E.CITY[c].dem,2)}</small></span>${has?'<span class="v good">✓</span>':`<button class="btn sm noenter" data-b="city" data-c="${c}"${W.ooo?'':' disabled'}>${L('Открыть','Open')} · ${M(1e6)}</button>`}</div>`;}).join('')+'</div>';
-  if(W.st==='mid'){const eq=E.equity(W),has=W.biz.some(b=>b.t==='base')||W.biz.filter(b=>b.t==='truck').length>=2;
-    h+=`<div class="card"><b>⛏ ${L('Следующая глава — «Карьер»','Next chapter — Quarry')}</b><div class="bz-ck">${ck(eq>=Q_EQ(),L('Капитал от ','Equity from ')+M(Q_EQ())+L(' — сейчас ',' — now ')+M(eq))}${ck(has,L('Свой сбыт щебня: стройбаза или 2 самосвала','Your own gravel sales: a builders’ yard or 2 trucks'))}${ck(W.ch>=50,L('Кредитная история «хорошая» — сейчас «','Credit history “good” — now “')+chW(W.ch)+L('»','”'))}</div></div>`;}
+  if(W.st==='mid'){const eq=E.equity(W),has=E.quarrySale?E.quarrySale(W):W.biz.some(b=>b.t==='base')||W.biz.filter(b=>b.t==='truck').length>=2;
+    h+=`<div class="card"><b>⛏ ${L('Следующая глава — «Карьер»','Next chapter — Quarry')}</b><div class="bz-ck">${ck(eq>=Q_EQ(),L('Капитал от ','Equity from ')+M(Q_EQ())+L(' — сейчас ',' — now ')+M(eq))}${ck(has,E.quarrySale?L('Свой сбыт: стройбаза или 2 оптовых бизнеса','Your own sales: a builders’ yard or 2 wholesale businesses'):L('Свой сбыт щебня: стройбаза или 2 самосвала','Your own gravel sales: a builders’ yard or 2 trucks'))}${ck(W.ch>=50,L('Кредитная история «хорошая» — сейчас «','Credit history “good” — now “')+chW(W.ch)+L('»','”'))}</div></div>`;}
   el.innerHTML=h;}
 
 /* ---------------- M22: подряды стройбазы (модель — ECON.pcNew/pcTake/pcFore в js/biz.js) ---------------- */
@@ -1421,6 +1428,7 @@ const ZTXT={z_od:a=>a&&a.why==='whs'?L(`Денег не хватило — ба�
     :stI()<=1?L('Денег не хватило — банк дал овердрафт под высокий процент, кредитная история страдает. Возьмите пару заказов и не покупайте новое, пока долг не закрыт.','We ran short — the bank gave an expensive overdraft and our credit history suffers. Take a couple of orders and buy nothing new until the debt is closed.')
     :L('Денег не хватило — банк дал овердрафт под высокий процент, кредитная история страдает. Продайте лишнее и не открывайте новое, пока не выправимся.','We ran short — the bank gave an expensive overdraft and our credit history suffers. Sell what’s idle and open nothing new until we recover.'),
   z_taxy:a=>L(`Декабрь — налог за год: на УСН 15 % не меньше 1 % оплаченных доходов за год. В конце месяца — около ${Mr(a.t)}, на счёте ${Mr(a.cash)}. Не тратьте эти деньги до закрытия.`,`December — the tax for the year: on 15% simplified it’s at least 1% of the year’s income received. About ${Mr(a.t)} at month end, ${Mr(a.cash)} in the account. Don’t spend it before the close.`),
+  z_cars:a=>L(`${E.OPTK&&E.OPTK[a.kd]?E.OPTK[a.kd].n:'Опту'}: своих газелей не хватает — наёмные возят ${String(a.hire).replace('.',',')} машины и переплачивают ~${Mr(a.over)} в месяц. Ещё одна своя газель — +${Mr(a.g)} в месяц, окупится за ~${mons(Math.ceil(E.VAN_CAP/a.g))}. Купить можно в карточке опта, блок «Доставка».`,`${E.OPTK&&E.OPTK[a.kd]?E.OPTK[a.kd].en:'Wholesale'}: not enough own vans — hired ones run ${a.hire} vehicles and overcharge ~${Mr(a.over)} a month. One more own van — +${Mr(a.g)} a month, pays back in ~${mons(Math.ceil(E.VAN_CAP/a.g))}. Buy it on the wholesale card, “Delivery”.`),   // M39
   z_whs:a=>L(`Склад почти пустой: товара ${Mr(a.stk)} из ${Mr(a.norm)}. Свободных денег сверх подушки (~${Mr(a.pad)} на аренду, зарплаты, налог и кредиты) нет, а аренда и зарплаты склада идут. Кредит на оборотку ~${Mr(Math.max(0,a.norm-a.stk))}${a.dd?' или «без отсрочки»':''} — или продать склад.`,`The warehouse is nearly empty: stock ${Mr(a.stk)} of ${Mr(a.norm)}. No spare money above the cushion (~${Mr(a.pad)} for rent, wages, tax and loans), while its rent and wages run. A working-capital loan ~${Mr(Math.max(0,a.norm-a.stk))}${a.dd?' or “no credit”':''} — or sell the warehouse.`),
 
   z_tired:a=>L(`Сил ${Math.round(a.en||0)} — возьмите выходной, иначе рейтинг пострадает.`,`Energy ${Math.round(a.en||0)} — take a day off, or your rating will suffer.`),
@@ -1428,7 +1436,7 @@ const ZTXT={z_od:a=>a&&a.why==='whs'?L(`Денег не хватило — ба�
   z_ip:()=>L('Скоро хватит на кофейный автомат. Оформим ИП заранее — это бесплатно и 3 дня.','You’ll soon afford a coffee machine. Let’s register as a sole trader now — free, 3 days.'),
   z_vend:()=>L('Хватает на автомат. Купим?','We can afford the machine. Shall we buy it?'),
   z_mgrloss:a=>L(`«${bn(a.bt)}» с управляющим в минусе: ~${Mr(a.mgr)} в месяц, а без него ~${Mr(a.self)}. Может, встать самому?`,`“${bn(a.bt)}” loses money with a manager: ~${Mr(a.mgr)} a month, ~${Mr(a.self)} without. Run it yourself?`),
-  z_loss:a=>a.bt==='truck'?L('Самосвалы второй месяц в минусе: без подрядов они простаивают. Подряды приходят раз в 2–3 месяца — тогда свои самосвалы окупаются. Не ждём подрядов — продайте лишние в карточке самосвала.','The dump trucks are in the red for the second month: idle without contracts. Contracts come every 2–3 months — then our own trucks pay off. Not waiting for contracts? Sell the spare ones on the truck card.')   // M34: настройки у самосвала нет — не тупик
+  z_loss:a=>a.bt==='truck'?L('Самосвалы без хозяина второй месяц в минусе: на частных заказах они почти не зарабатывают. Самосвал выгоден в парке стройбазы — откройте стройбазу или продайте лишние в «Сети».','The trucks with no owner are in the red for the second month: private jobs barely pay. A truck pays off in a builders’ yard fleet — open a yard or sell the spare ones in Network.')   // M39: у самосвала с хозяином совета нет (польза — в прибыли базы)   // M34: настройки у самосвала нет — не тупик
     :L(`«${bn(a.bt)}» второй месяц в минусе. Загляните — поправим главную настройку.`,`“${bn(a.bt)}” is in the red for the second month. Let’s adjust its main setting.`),
   z_ooo:()=>L('Всё готово для ООО — дальше сети, склад и стройбаза.','All set for an LLC — chains, a warehouse and a builders’ yard come next.'),
   z_opi:()=>L('Идут торги за участок. Бобров точно пойдёт — решайте, сколько готовы дать.','A plot auction is on. Bobrov will surely bid — decide how much you’re willing to pay.'),
@@ -1456,6 +1464,7 @@ function zGo(it){const W=w(),a=it.a||{};switch(it.k){
   case 'z_gig':return ()=>{if(act('gigTake',a.id)==='ok'){snd('coin');toast(L('Заказ взят','Order taken'));}};
   case 'z_ip':return openIP;case 'z_vend':return ()=>openBizModal('vend');
   case 'z_loss':case 'z_mgrloss':return ()=>BIZUI.openBiz(a.id);
+  case 'z_cars':return ()=>BIZUI.openBiz(a.id,'net');
   case 'z_ev':return ()=>{UI.go('today');setTimeout(()=>{const e=$$('owEv');if(e)e.scrollIntoView({block:'center'});},60);};case 'z_tax':return ()=>{if(act('taxSet',a.m)==='ok'){snd('coin');toast(L('Режим налога сменён','Tax regime switched'));}};
   case 'z_up':case 'z_mx':return ()=>BIZUI.openBiz(a.id);case 'z_upall':return upAllGo;case 'z_sat':return ()=>{V.biz='cat';UI.go('biz');};case 'z_hand':return ()=>{if(window.OWNUI)OWNUI.openJobs();};case 'z_ooo':return openOOO;case 'z_opi':return ()=>UI.go('pit');case 'z_nedra':return openNedra;case 'z_factor':return a.id?()=>BIZUI.openBiz(a.id,'net'):()=>UI.go('net');case 'z_cash':return ()=>{if(window.CASHUI)CASHUI.open();};case 'z_pc':return ()=>UI.go(stI()>=3?'pit':'net');case 'z_fs':return ()=>UI.go('net');case 'z_qe':case 'z_halt':return ()=>UI.go('pit');case 'z_pup':return ()=>BIZUI.openBiz(a.id);}return null;}
 function advOpen(){const W=w();const it=(E.advise(W)||[])[0]||{k:'ok'};const f=ZTXT[it.k];const g=zGo(it);
@@ -1515,7 +1524,11 @@ function tutTick(cur){const st=tutStep();if(st==='hi'){if(!chapQ&&!proOn){chapQ=
   tutShown=m.key;const av=$$('adv');if(av)av.dataset.bz=m.key;UI.adv({key:m.key,tut:1,hold:m.hold,html:m.html,mood:m.mood||'calm',go:m.go||(m.tab&&cur!==m.tab?()=>UI.go(m.tab):null),goLbl:m.goLbl||(m.tab&&cur!==m.tab?L('Показать','Show me'):null),ok:m.ok});}
 
 /* ================= события дня: новости, заказы, главы ================= */
-const NEWS={open:null,built:a=>'🎉 '+L('Открылась точка: ','Now open: ')+low(bn(a.bt)),ip:()=>'📄 '+L('ИП оформлено — можно открывать своё дело','Registered as a sole trader — you can open a business'),
+const NEWS={open:null,built:a=>a.bt==='van'?'🚚 '+L('Газель вышла на линию','The van is on the road'):a.bt==='truck'?'🚛 '+L('Самосвал вышел на линию','The truck is on the road'):'🎉 '+L('Открылась точка: ','Now open: ')+low(bn(a.bt)),
+  // M39: опт по видам
+  optup:a=>'⬆ '+L('Улучшение опта готово: ступень ','Wholesale upgrade done: step ')+a.lv,link1:a=>'🔗 '+L('Свой опт снабжает ваши точки — закупка дешевле: +','Your wholesale supplies your outlets — cheaper buying: +')+M(Math.round(a.a/1e3)*1e3)+L(' в месяц. Все связи — в «Сети» → 🔗',' a month. All links — Network → 🔗'),
+  optnew:()=>'🔄 '+L('Опт перешёл на новые правила: наценка, запас и доставка — в карточке опта','Wholesale switched to the new rules: mark-up, stock and delivery — on its card'),
+  optmig:a=>a.a==='build'?'🏬 '+L('Склад стройматериалов стал «Хозтовары»: штучные стройматериалы теперь продаёт стройбаза','The building-supplies warehouse became “Household goods”: the builders’ yard sells building supplies now'):'🏬 '+L('Второй склад теперь торгует другим товаром: ','The second warehouse now trades something else: ')+(E.OPTK&&E.OPTK[a.kd]?L(E.OPTK[a.kd].n,E.OPTK[a.kd].en):''),ip:()=>'📄 '+L('ИП оформлено — можно открывать своё дело','Registered as a sole trader — you can open a business'),
   opi:a=>'🔨 '+L('Лицензия на участок ваша! ','The plot licence is yours! ')+M(a.pr),opilost:a=>'🔨 '+L('Участок ушёл: ','Plot taken by ')+rivN(a.who)+' · '+M(a.pr),
   bobr:()=>'⛰ '+L('Бобров поднял цену щебня на 15 %','Bobrov raised the gravel price by 15%'),fsold:a=>'🤝 '+L('Сеть продана: ','Chain sold: ')+bn(a.bt)+' × '+a.n+' · '+M(a.pr),nsold:a=>'🤝 '+L('Все точки проданы федеральной сети: ','All outlets sold to a national chain: ')+a.n+' · '+M(a.pr),nclose:a=>'🔒 '+L('Закрыты убыточные точки: ','Loss-making outlets closed: ')+a.n+' · +'+M(a.pr),pc:a=>'📋 '+L('Подряд взят: ','Contract taken: ')+pcG(a.g)+' '+tn(a.q)+L(' по ',' at ')+rpt(a.p),pcok:a=>'✅ '+L('Подряд выполнен, прибыль ','Contract done, profit ')+money0(a.pr),pcbad:a=>'⚠ '+L('Подряд сорван: штраф ','Contract failed: penalty ')+M(a.pen)+L(', итог ',', result ')+money0(a.pr),
   demol:a=>'🚧 '+L('Точку снесли, выплатили компенсацию: ','Outlet demolished, compensation paid: ')+low(bn(a.bt)),
@@ -1557,7 +1570,7 @@ function openTrial(){const W=w(),M0=W&&W.me;if(!M0||W.ned)return;const sg=W.mon.
 function onDay(){const W=w();if(!W)return;cashHist();
   if(W.ned){newsT=W.t;return;}
   const fresh=W.news.filter(n=>n.t>newsT);if(newsT>=0)for(const n of fresh){let t=null;try{if(n.k==='biz'&&NEWS[n.a.k])t=NEWS[n.a.k](n.a);else if(n.k==='bizev'&&BEV[n.a.k])t=(n.a.k==='viral'?'🌟 ':'📰 ')+BEV[n.a.k](n.a);else if(n.k==='san')t='🏦 '+L('Банк продал часть точек и свёл долги в один кредит','The bank sold some outlets and merged the debts into one loan');}catch(e){}
-    if(t){if(n.a.k==='built'||n.a.k==='ip'||n.a.k==='opi'){snd('win');try{UI.salute(true);}catch(x){}}tst(t,3200);}}
+    if(t){if((n.a.k==='built'&&!(E.BIZ[n.a.bt]&&E.BIZ[n.a.bt].veh))||n.a.k==='ip'||n.a.k==='opi'){snd('win');try{UI.salute(true);}catch(x){}}tst(t,3200);}}
   newsT=W.t;
   // итог заказа — из события модели (GAME 'gig'): причина из GIG_WHY и сумма
   // цель на «Сегодня» сменилась — сказать об этом (раньше велосипед молча сменялся автоматом)
@@ -1693,7 +1706,9 @@ function auditRes(id,r){const W=w(),b=W.biz.find(x=>x.id===id);snd(r.ok?'coin':'
   modal(`<h2>🔍 ${L('Ревизия','Audit')}: ${esc(b?bn(b.t):'')}</h2><div class="say">${UI.face(r.ok?'happy':'strict')}<div><p>${r.ok?L('Всё сходится до копейки. Управляющий честный.','Everything adds up to the kopeck. The manager is honest.'):L(`Недостача ${M(r.th)} за время работы. Управляющий подворовывает. Сменить?`,`A shortfall of ${M(r.th)} over time. The manager is skimming. Replace him?`)}</p></div></div>
     <div class="row">${r.ok?'':`<button class="btn green noenter" id="bzFire">${L('Сменить управляющего','Replace the manager')}</button>`}<button class="btn" id="bzAudOk" data-esc>${L('Понятно','Got it')}</button></div>`);
   $$('bzAudOk').onclick=()=>{snd('tap');hideModal();};if($$('bzFire'))$$('bzFire').onclick=()=>{hideModal();if(act('bizFire',id)==='ok')toast(L('Новый управляющий вышел на работу','A new manager has started'));};}
-function back(){if(!UI)return false;const cur=UI.cur;if((cur==='biz'||cur==='net'||cur==='pit')&&V.biz!=='list'){const f=V.biz==='pt'?V.from:'biz';V.biz='list';if(f&&f!==cur&&SCR.indexOf(f)>=0)UI.go(f);else UI.render();return true;}
+function back(){if(!UI)return false;const cur=UI.cur;
+  if(cur==='net'&&V.biz==='pt'&&V.from==='opt'&&V.own){V.id=V.own;V.own=null;V.from='net';UI.render();return true;}   // M39: карточка машины → карточка хозяина
+  if((cur==='biz'||cur==='net'||cur==='pit')&&V.biz!=='list'){const f=V.biz==='pt'?(V.from==='opt'?'net':V.from):V.biz==='links'?'net':'biz';V.biz='list';if(f&&f!==cur&&SCR.indexOf(f)>=0)UI.go(f);else UI.render();return true;}
   if(cur==='biz'&&w()&&w().ned){UI.go('obj');return true;}return false;}
 // ползунок: прогноз меняется сразу, действие — по отпусканию
 function onInput(e){const t=e.target;if(t.id!=='bzSl')return;drag=true;const W=w(),b=W.biz.find(x=>x.id===t.dataset.id);if(!b)return;const k=Object.assign({},b.k,{[t.dataset.k]:+t.value});
@@ -1760,12 +1775,14 @@ function init(){css();const m=$$('main');
   GAME.on('day',afDay);GAME.on('offline',()=>{const W=w();afT=W&&W.afS&&W.afS.t!=null?W.afS.t:-1;});   // M32: тост автофакторинга
   window.BIZUI.ready=true;}
 window.BIZUI={ready:false,openChapter,init,render,after,home,hname,back,early:early1,openTrial,
-  navKey(s){if(s==='biz')return V.biz==='pt'?'pt'+V.id:V.biz==='cat'?'cat':'';if(s==='net'||s==='pit')return V.biz==='pt'&&V.from===s?'pt'+V.id:'';return '';},   // M37: подвид для памяти прокрутки (ui.js navKey)
+  navKey(s){if(s==='biz')return V.biz==='pt'?'pt'+V.id:V.biz==='cat'?'cat':'';if(s==='net'&&V.biz==='links')return 'links';if(s==='net'&&V.biz==='pt'&&V.from==='opt')return 'pt'+V.id;if(s==='net'||s==='pit')return V.biz==='pt'&&V.from===s?'pt'+V.id:'';return '';},   // M39: экран связей, карточка машины из парка   // M37: подвид для памяти прокрутки (ui.js navKey)
   openClose:()=>false,advFresh,closeExtra,adAllowed,offAd,offline,advOpen,idle,
   // вход снаружи: телефон и сюжет
   open(tab){if(!UI)return;const W=w();if(tab==='biz'||tab==='net'||tab==='pit')V.biz='list';UI.go(tab||home());},
   openGigs(){const W=w();if(!W||W.ned||!W.me)return false;UI.go('gigs');return true;},
-  leave(p){if(V.biz==='pt'&&V.from===p&&(p==='net'||p==='biz'||p==='pit'))V.biz='list';},   // M30 (баг 9): ушли с «Сети» — при возврате список, а не карточка склада
+  leave(p){if(V.biz==='pt'&&(V.from===p||V.from==='opt'&&p==='net')&&(p==='net'||p==='biz'||p==='pit'))V.biz='list';if(V.biz==='links'&&p==='net')V.biz='list';},   // M39: и карточка машины, и экран связей   // M30 (баг 9): ушли с «Сети» — при возврате список, а не карточка склада
   openBiz(id,from){const W=w(),b=W&&W.biz.find(x=>x.id===id);if(!b){this.open('biz');return;}V.biz='pt';V.id=id;const f=from||(isPit(b.t)?'pit':isMid(b.t)?'net':'biz');V.from=f==='today'?'biz':f;UI.go(V.from==='pit'&&!W.ned?'pit':V.from==='net'&&!W.ned?'net':'biz');try{$$('main').scrollTop=0;}catch(e){}},
-  openLesson,openIP,openOOO,openNedra,openBizModal,tutStep};
+  openLesson,openIP,openOOO,openNedra,openBizModal,tutStep,
+  // M39: помощники для js/opt-ui.js (вёрстка в том же стиле)
+  h:{w,V,$$,esc,M,Mr,snd,days,mons,T,low,num,bico,bicoB,bn,bnB,act,money0,prog,barsSvg,lastPm,bizState,bizDot,ptRow,recCard,whsCard,afRow,whsOpt,whsWarn,cityN,ptName,isMid,isPit,ch3,modalYes:(...a)=>modalYes(...a),back}};
 })();
