@@ -32,11 +32,12 @@ const SKEY='oborona-v1';
 const SHOT=/[?&]shot/.test(location.search);
 function freshSave(){return {v:1,ts:0,gold:0,stars:{},forge:{},village:{},afkT:0,afkBoost:null,sound:1,music:1,shake:REDUCED?0:1,
   boost:900,boostDay:'',endBest:0,endRuns:0,runs:0,wins:0,kills:0,seen:{},introSeen:{},tut:0,lastCh:0,gift:0,lose:{},
-  dq:null,login:null,ret:{},diff:1,crown:{},bk:{},ach:{},wk:null,dch:null,dchN:0,skins:{},skin:{},deco:{},bns:{},bn:'',bnSet:0,goal:''};}
+  dq:null,login:null,ret:{},diff:1,crown:{},bk:{},ach:{},wk:null,dch:null,dchN:0,skins:{},skin:{},deco:{},bns:{},bn:'',bnSet:0,goal:'',th:''};}
 // поля-объекты могли прийти битыми (ручная правка, старая версия) — чиним
 function fixSave(){for(const k of['stars','forge','village','seen','introSeen','lose','ret','crown','bk','ach','skins','skin','deco','bns'])if(!S[k]||typeof S[k]!=='object'||Array.isArray(S[k]))S[k]={};
   if(!S.afkT)S.afkT=Date.now();if(S.boost==null||isNaN(S.boost))S.boost=900;if(S.shake==null)S.shake=REDUCED?0:1;
-  if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];}
+  if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];
+  if(typeof S.th!=='string')S.th='';}   // look1: выбранная тема оформления ('' — основная)
 let S=freshSave();
 try{const r=!SHOT&&localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 fixSave();
@@ -63,7 +64,7 @@ function mergeProgress(d,L,newer){const base=newer?d:L,other=newer?L:d;const o=O
   o.crown=obj(o.crown);mx(o.crown,obj(other.crown));o.bk=obj(o.bk);mx(o.bk,obj(other.bk));
   // облики и украшения: купленное — объединение; надетый облик — из основы, недостающее — из другого
   o.skins=obj(o.skins);mx(o.skins,obj(other.skins));o.deco=obj(o.deco);mx(o.deco,obj(other.deco));o.skin=Object.assign({},obj(other.skin),obj(o.skin));
-  o.bns=obj(o.bns);mx(o.bns,obj(other.bns));o.bnSet=Math.max(+o.bnSet||0,+other.bnSet||0);if(!o.bn)o.bn=other.bn||'';   // знамёна: купленное — объединение
+  o.bns=obj(o.bns);mx(o.bns,obj(other.bns));o.bnSet=Math.max(+o.bnSet||0,+other.bnSet||0);if(!o.bn)o.bn=other.bn||'';if(!o.th)o.th=typeof other.th==='string'?other.th:'';   // знамёна: купленное — объединение
   // кузница: берём целиком ту сторону, где её меняли позже (S.forgeT) — иначе сброс на одном устройстве откатывался бы облаком;
   // у старых сохранений без отметки — объединение, как раньше
   const fa=+o.forgeT||0,fb=+other.forgeT||0;

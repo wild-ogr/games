@@ -1,7 +1,8 @@
 'use strict';
 /* ================= Игровой забег ================= */
 let G=null,cv,ctx,lastT=0;
-const FT='Georgia,"Times New Roman","Noto Serif",serif'; // «сказочный» шрифт заголовков (системный, с засечками) — как --ft в index.html
+// вид (look1): шрифт холста и цвета подложек боя — из темы (js/look.js → LOOK.cv, переменные --cv-* в css/look.css). Рисунки и значки боя темой не меняются
+const CVL=(typeof LOOK!=='undefined'&&LOOK.cv)||{font:'system-ui,-apple-system,sans-serif',track:'rgba(10,14,30,.6)',edge:'rgba(255,255,255,0)',stroke:'rgba(10,14,30,.7)',pill:'',pillE:'',pillT:'#fff',pillG:'#ffd84a',bub:'rgba(255,255,255,.95)',bubE:'',bubT:'#2a2238',ban1:'rgba(34,40,78,.9)',ban2:'rgba(16,20,44,.9)',banE:'#e6b85a',num:'rgba(40,20,20,.9)',vig:.45,dark:0,v:0};
 const VIEW={B:1,cx:0,cy:0,W:0,H:0,dpr:1,zoom:1,ww:200,wh:200,R:300};
 let groundTiles={},SPR_OK=0,rDirty=true,vigCache=null;
 const CALM=()=>!!S.calm; // «спокойный режим»: без тряски и красных вспышек (включается сам при prefers-reduced-motion)
@@ -553,7 +554,7 @@ function groundTile(chi){if(groundTiles[chi])return groundTiles[chi];groundTiles
     g.moveTo(X-2,Y);g.quadraticCurveTo(X-3,Y-s*.6,X-4,Y-s);g.moveTo(X,Y);g.lineTo(X,Y-s*1.2);g.moveTo(X+2,Y);g.quadraticCurveTo(X+3,Y-s*.6,X+4,Y-s);g.stroke();});}
   for(let i=0;i<46;i++){const x=R()*T,y=R()*T,col=gr.flow[Math.floor(R()*gr.flow.length)];wrap(x,y,6,(X,Y)=>{for(let j=0;j<5;j++){const a=j/5*TAU;g.beginPath();g.arc(X+Math.cos(a)*2,Y+Math.sin(a)*2,1.5,0,TAU);g.fillStyle=col;g.fill();}
     g.beginPath();g.arc(X,Y,1.2,0,TAU);g.fillStyle='#ffd84a';g.fill();});}
-  if(CH[chi].tint){g.fillStyle=CH[chi].tint;g.fillRect(0,0,T,T);}
+  if(CH[chi].tint){g.fillStyle=CH[chi].tint;g.fillRect(0,0,T,T);}if(CH[chi].dark&&CVL.dark>0){g.fillStyle='rgba(236,226,255,'+CVL.dark+')';g.fillRect(0,0,T,T);} // вид: тёмные главы чуть светлее (читаемость)
   return groundTiles[chi]=c;}
 function worldT(){const B=VIEW.B;ctx.setTransform(B,0,0,B,cv.width/2-VIEW.cx*B,cv.height/2-VIEW.cy*B);}
 function drawSpr(key,x,y,sx,sy,flash,rot,alpha){const s=SPR[key]||spr(key);if(!s)return;const B=VIEW.B,tx=(x-VIEW.cx)*B+cv.width/2,ty=(y-VIEW.cy)*B+cv.height/2;
@@ -635,8 +636,9 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
   // эффекты
   for(const f of G.fx){const q=f.t/f.dur,fx=f.own?H.x:f.x,fy=f.own?H.y:f.y;
     if(f.k==='slash'){const sp2=f.full?Math.PI:1.25,a0=f.a-sp2,a1=f.a+sp2,cur=lerp(a0,a1,Math.min(1,q*1.6)),al=1-q;
-      const gr=c.createRadialGradient(fx,fy,f.r*.35,fx,fy,f.r);gr.addColorStop(0,'rgba(160,210,255,0)');gr.addColorStop(.75,'rgba(190,230,255,'+.5*al+')');gr.addColorStop(1,'rgba(255,255,255,'+.9*al+')');
-      c.fillStyle=gr;c.beginPath();c.arc(fx,fy,f.r,a0,cur);c.arc(fx,fy,f.r*.45,cur,a0,true);c.closePath();c.fill();}
+      const gr=c.createRadialGradient(fx,fy,f.r*.35,fx,fy,f.r);gr.addColorStop(0,'rgba(160,210,255,0)');gr.addColorStop(.75,'rgba(190,230,255,'+.66*al+')');gr.addColorStop(1,'rgba(255,255,255,'+.95*al+')');
+      c.fillStyle=gr;c.beginPath();c.arc(fx,fy,f.r,a0,cur);c.arc(fx,fy,f.r*.45,cur,a0,true);c.closePath();c.fill();
+      c.strokeStyle='rgba(255,255,255,'+.9*al+')';c.lineWidth=2.5;c.beginPath();c.arc(fx,fy,f.r,a0,cur);c.stroke();} // вид: край удара — плотная светлая дуга
     else if(f.k==='boom'){const r=f.r*(.4+q*.8),ga=c.globalAlpha;c.globalAlpha=ga*(1-q)*(calm?.5:1);c.drawImage(glowSpr('boom'),fx-r,fy-r,r*2,r*2);c.globalAlpha=ga;}
     else if(f.k==='bolt'){const al=(1-q)*(calm?.5:1);c.lineJoin='round';c.strokeStyle='rgba(120,200,255,'+.5*al+')';c.lineWidth=9;c.beginPath();c.moveTo(f.pts[0],f.pts[1]);for(let i=2;i<f.pts.length;i+=2)c.lineTo(f.pts[i],f.pts[i+1]);c.stroke();
       c.strokeStyle='rgba(255,255,255,'+al+')';c.lineWidth=2.5;c.stroke();glowDot(fx,fy,40*(1-q*.5),'#8ad8ff');}
@@ -657,10 +659,10 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
   for(const e of G.en)if((e.elite||e.type==='egg')&&onScreen(e,20)){const w=e.r*2;c.fillStyle='rgba(0,0,0,.45)';rr(c,e.x-w/2,e.y-e.r*1.9,w,5,2.5);c.fill();c.fillStyle='#ffc83a';rr(c,e.x-w/2,e.y-e.r*1.9,w*clamp(e.hp/e.max,0,1),5,2.5);c.fill();}
   // цифры урона
   // цифры урона: шрифт задаём один раз, «выпрыгивание» — масштабом, обводка — тёмной тенью со сдвигом
-  c.textAlign='center';c.textBaseline='middle';c.font='900 13px system-ui,-apple-system,sans-serif';
+  c.textAlign='center';c.textBaseline='middle';c.font='900 13px '+CVL.font;c.lineWidth=2.8;c.lineJoin='round';c.strokeStyle=CVL.num;
   // крит — в 1,5 раза крупнее и с «!» (в спокойном режиме — без «выпрыгивания»)
   for(const n of G.nums){const q=n.t/.8,s=(calm?1:q<.15?.6+q/.15*.5:1.1-q*.2)*(n.cr?1.5:1),k=B*s,tx=n.cr&&typeof n.v==='number'?n.v+'!':n.v;c.globalAlpha=q>.6?(1-q)/.4:1;
-    c.setTransform(k,0,0,k,(n.x-VIEW.cx)*B+cv.width/2,(n.y-q*22-VIEW.cy)*B+cv.height/2);c.fillStyle='rgba(40,20,20,.9)';c.fillText(tx,1.2,1.2);c.fillStyle=n.col||'#fff';c.fillText(tx,0,0);}c.globalAlpha=1;worldT();
+    c.setTransform(k,0,0,k,(n.x-VIEW.cx)*B+cv.width/2,(n.y-q*22-VIEW.cy)*B+cv.height/2);c.strokeText(tx,0,0);c.fillStyle=n.col||'#fff';c.fillText(tx,0,0);}c.globalAlpha=1;worldT();
   // реплики
   for(const b of G.bub)drawBubble(b);
   // оттенок главы, виньетка
@@ -679,87 +681,93 @@ function glowSpr(col){let c=GLOW[col];if(c)return c;c=mkCanvas(64,64);const g=c.
   g.fillStyle=gr;g.fillRect(0,0,64,64);return GLOW[col]=c;}
 function glowDot(x,y,r,col){ctx.drawImage(glowSpr(col),x-r,y-r,r*2,r*2);}
 // виньетка и красные края — небольшие готовые картинки, пересоздаются только при смене размера экрана
-function vignette(){const w=cv.width,h=cv.height;if(vigCache&&vigCache.w===w&&vigCache.h===h)return vigCache;
+function vignette(){const w=cv.width,h=cv.height;if(vigCache&&vigCache.w===w&&vigCache.h===h&&vigCache.v===CVL.v)return vigCache;
   const k=256/Math.max(w,h),W=Math.max(8,Math.round(w*k)),Hh=Math.max(8,Math.round(h*k)),mk=(a0,col)=>{const c=mkCanvas(W,Hh),g=c.getContext('2d'),r=g.createRadialGradient(W/2,Hh/2,Math.min(W,Hh)*a0,W/2,Hh/2,Math.hypot(W,Hh)*.55);
     r.addColorStop(0,'rgba(0,0,0,0)');r.addColorStop(1,col);g.fillStyle=r;g.fillRect(0,0,W,Hh);return c;};
-  return vigCache={w,h,dark:mk(.35,'rgba(10,10,30,.45)'),red:mk(.3,'rgba(220,20,20,1)')};}
+  return vigCache={w,h,v:CVL.v,dark:mk(.35,'rgba(10,10,30,'+CVL.vig+')'),red:mk(.3,'rgba(220,20,20,1)')};}
 function rr(c,x,y,w,h,r){if(w<=0)return c.beginPath();r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 // реплика: 14 px (не меньше 13 экранных), длинная — в две строки (раньше сжималась по ширине); строки считаются один раз
 function wrapText(c,t,maxW){const w=t.split(' '),lines=[];let cur='';for(const x of w){const n=cur?cur+' '+x:x;if(cur&&c.measureText(n).width>maxW){lines.push(cur);cur=x;}else cur=n;}if(cur)lines.push(cur);return lines;}
 function drawBubble(b){const c=ctx,e=b.e,x=e.x,y=e.y-(e.r||16)*(e.sc||1)-(e===G.hero?40:18);const q=b.t/b.dur,a=q<.1?q/.1:q>.85?(1-q)/.15:1;
-  const fs=Math.round(Math.max(14,13.5/VIEW.zoom));worldT();c.globalAlpha=a;c.font='700 '+fs+'px system-ui,-apple-system,sans-serif';
+  const fs=Math.round(Math.max(14,13.5/VIEW.zoom));worldT();c.globalAlpha=a;c.font='700 '+fs+'px '+CVL.font;
   if(!b.lines||b.fs!==fs){b.fs=fs;b.lines=wrapText(c,b.s,fs*12);b.w=Math.max.apply(null,b.lines.map(l=>c.measureText(l).width))+18;}
   const lh=fs*1.2,h=b.lines.length*lh+8,w=b.w,pad=6/VIEW.zoom,topY=VIEW.cy-VIEW.wh+((window.__safeTop||0)+(G.boss&&!G.boss.dead?136:92))/VIEW.zoom;
   // boost: облачко не вылезает за края экрана и не лезет на верхнюю панель (хвостик — у говорящего, если он на экране)
-  const vis=e===G.hero||onScreen(e,0),bx=vis?clamp(x,VIEW.cx-VIEW.ww+w/2+pad,Math.max(VIEW.cx-VIEW.ww+w/2+pad,VIEW.cx+VIEW.ww-w/2-pad)):x,by=vis?Math.max(y,topY+h):y,tx=clamp(x,bx-w/2+10,bx+w/2-10); // говорящий за краем экрана — облачко не подтягиваем (иначе кажется, что это сказал богатырь)
-  c.fillStyle='rgba(255,255,255,.95)';rr(c,bx-w/2,by-h,w,h,10);c.fill();if(by===y&&Math.abs(tx-x)<1){c.beginPath();c.moveTo(tx-5,by-1);c.lineTo(tx+5,by-1);c.lineTo(tx,by+6);c.fill();}
-  c.fillStyle='#2a2238';c.textAlign='center';c.textBaseline='middle';b.lines.forEach((l,i)=>c.fillText(l,bx,by-h+4+lh*(i+.5)));c.globalAlpha=1;}
+  const vis=e===G.hero||onScreen(e,0),bx=vis?clamp(x,VIEW.cx-VIEW.ww+w/2+pad,Math.max(VIEW.cx-VIEW.ww+w/2+pad,VIEW.cx+VIEW.ww-w/2-pad)):x;let by=vis?Math.max(y,topY+h):y;
+  // вид: реплика не ложится на баннер — пока баннер на экране и облачко его задевает, оно встаёт ПОД говорящим (без хвостика)
+  if(vis&&G.banner&&G.banR){const s1=(by-VIEW.cy)*VIEW.zoom+VIEW.H/2,s0=s1-h*VIEW.zoom;if(s1>G.banR[0]-4&&s0<G.banR[1]+4)by=e.y+(e===G.hero?40:(e.r||16)*(e.sc||1)+10)+h;}
+  const tx=clamp(x,bx-w/2+10,bx+w/2-10); // говорящий за краем экрана — облачко не подтягиваем (иначе кажется, что это сказал богатырь)
+  c.fillStyle=CVL.bub;rr(c,bx-w/2,by-h,w,h,10);c.fill();if(CVL.bubE){c.lineWidth=1.6/VIEW.zoom;c.strokeStyle=CVL.bubE;c.stroke();}if(by===y&&Math.abs(tx-x)<1){c.beginPath();c.moveTo(tx-5,by-1);c.lineTo(tx+5,by-1);c.lineTo(tx,by+6);c.fill();}
+  c.fillStyle=CVL.bubT;c.textAlign='center';c.textBaseline='middle';b.lines.forEach((l,i)=>c.fillText(l,bx,by-h+4+lh*(i+.5)));c.globalAlpha=1;}
 function drawHUD(){const c=ctx,d=VIEW.dpr,W=VIEW.W,H=G.hero;c.setTransform(d,0,0,d,0,0);const top=(window.__safeTop||0)+8;
   // полоса опыта
-  const bx=12,bw=W-24,bh=16;c.fillStyle='rgba(10,14,30,.6)';rr(c,bx,top,bw,bh,6);c.fill();
+  const bx=12,bw=W-24,bh=16;c.fillStyle=CVL.track;rr(c,bx,top,bw,bh,6);c.fill();c.lineWidth=1.5;c.strokeStyle=CVL.edge;c.stroke();
   const gr=c.createLinearGradient(bx,0,bx+bw,0);gr.addColorStop(0,'#3ad0ff');gr.addColorStop(1,'#7a6aff');c.fillStyle=gr;rr(c,bx+2,top+2,(bw-4)*clamp(H.xp/H.need,0,1),bh-4,4);c.fill();
-  c.font='900 13px system-ui,-apple-system,sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineWidth=3;c.strokeStyle='rgba(10,14,30,.7)';c.strokeText(L('Ур. ','Lv ')+H.lvl,bx+bw/2,top+bh/2+.5);c.fillStyle='#fff';c.fillText(L('Ур. ','Lv ')+H.lvl,bx+bw/2,top+bh/2+.5);
+  c.font='900 13px '+CVL.font;c.textAlign='center';c.textBaseline='middle';c.lineWidth=3;c.lineJoin='round';c.strokeStyle=CVL.stroke;c.strokeText(L('Ур. ','Lv ')+H.lvl,bx+bw/2,top+bh/2+.5);c.fillStyle='#fff';c.fillText(L('Ур. ','Lv ')+H.lvl,bx+bw/2,top+bh/2+.5);
   // таймер
-  c.font='900 22px system-ui,-apple-system,sans-serif';c.lineWidth=4;c.strokeStyle='rgba(10,14,30,.55)';const tt=G.boss&&!G.boss.dead?L('БОСС','BOSS'):fmtTime(G.t);
+  c.font='900 22px '+CVL.font;c.lineWidth=4.5;c.strokeStyle=CVL.stroke;const tt=G.boss&&!G.boss.dead?L('БОСС','BOSS'):fmtTime(G.t);
   c.strokeText(tt,W/2,top+36);c.fillStyle=LT()>=RUN_BOSS_T-10&&!G.win&&LT()<RUN_BOSS_T?'#ff6a5a':'#fff';c.fillText(tt,W/2,top+36);
   // до босса: полоска под таймером с мордой босса на конце — ясная цель похода (boost)
   if(!(G.boss&&!G.boss.dead)&&!G.win&&LT()<RUN_BOSS_T){const bw2=Math.min(110,W*.28),x=W/2-bw2/2,y=top+50,q=clamp(LT()/RUN_BOSS_T,0,1),bs=spr(G.ch.boss);
-    c.fillStyle='rgba(10,14,30,.6)';rr(c,x,y,bw2,7,3.5);c.fill();c.fillStyle=q>.9?'#ff6a5a':'#ffc94a';rr(c,x+1,y+1,(bw2-2)*q,5,2.5);c.fill();
+    c.fillStyle=CVL.track;rr(c,x,y,bw2,7,3.5);c.fill();c.fillStyle=q>.9?'#ff6a5a':'#ffc94a';rr(c,x+1,y+1,(bw2-2)*q,5,2.5);c.fill();
     if(bs)c.drawImage(bs.c,x+bw2-4,y-9,24,24);}
   // убийства и золото
-  c.font='800 14px system-ui,-apple-system,sans-serif';c.textAlign='left';c.lineWidth=4;c.strokeText('⚔ '+G.kills,14,top+34);c.fillStyle='#fff';c.fillText('⚔ '+G.kills,14,top+34);
-  const cs=spr('coin');if(cs){c.drawImage(cs.c,14,top+46,16,16);}c.strokeText(fmtNum(Math.floor(G.gold)),34,top+55);c.fillStyle='#ffd84a';c.fillText(fmtNum(Math.floor(G.gold)),34,top+55);
+  c.font='800 14px '+CVL.font;c.textAlign='left';c.lineWidth=4;const cs=spr('coin'),kt='⚔ '+G.kills,gt=fmtNum(Math.floor(G.gold));
+  if(CVL.pill){ // вид: счётчики на светлых плашках (значки прежние)
+    c.lineWidth=1.5;c.fillStyle=CVL.pill;rr(c,10,top+23,c.measureText(kt).width+16,20,10);c.fill();c.strokeStyle=CVL.pillE;c.stroke();c.fillStyle=CVL.pill;rr(c,10,top+45,c.measureText(gt).width+36,20,10);c.fill();c.stroke();
+    c.fillStyle=CVL.pillT;c.fillText(kt,18,top+33.5);if(cs)c.drawImage(cs.c,14,top+47,16,16);c.fillStyle=CVL.pillG;c.fillText(gt,34,top+55.5);c.lineWidth=4;c.strokeStyle=CVL.stroke;}
+  else{c.strokeText(kt,14,top+34);c.fillStyle='#fff';c.fillText(kt,14,top+34);if(cs){c.drawImage(cs.c,14,top+46,16,16);}c.strokeText(gt,34,top+55);c.fillStyle='#ffd84a';c.fillText(gt,34,top+55);}
   // здоровье богатыря
   // (полоса 18 px, число 13 px с тёмной обводкой — читается на любом цвете полосы)
-  {const q=clamp(H.hp/G.st.maxHp,0,1),y=top+66,w=Math.min(150,W*.36);c.fillStyle='rgba(10,14,30,.7)';rr(c,12,y,w,18,9);c.fill();c.fillStyle=q<.3?'#ff4a4a':q<.6?'#ffc83a':'#3fcf5e';rr(c,14,y+2,(w-4)*q,14,7);c.fill();
-    c.font='900 13px system-ui,-apple-system,sans-serif';c.textAlign='center';c.lineWidth=3.5;c.strokeStyle='rgba(10,14,30,.85)';const ht='❤ '+Math.ceil(H.hp)+' / '+Math.round(G.st.maxHp);c.strokeText(ht,12+w/2,y+9.5);c.fillStyle='#fff';c.fillText(ht,12+w/2,y+9.5);c.font='800 14px system-ui,-apple-system,sans-serif';c.textAlign='left';}
+  {const q=clamp(H.hp/G.st.maxHp,0,1),y=top+68,w=Math.min(150,W*.36);c.fillStyle=CVL.track;rr(c,12,y,w,18,9);c.fill();c.lineWidth=1.5;c.strokeStyle=CVL.edge;c.stroke();c.fillStyle=q<.3?'#ff4a4a':q<.6?'#ffc83a':'#3fcf5e';rr(c,14,y+2,(w-4)*q,14,7);c.fill();
+    c.font='900 13px '+CVL.font;c.textAlign='center';c.lineWidth=3.5;c.strokeStyle=CVL.stroke;const ht='❤ '+Math.ceil(H.hp)+' / '+Math.round(G.st.maxHp);c.strokeText(ht,12+w/2,y+9.5);c.fillStyle='#fff';c.fillText(ht,12+w/2,y+9.5);c.font='800 14px '+CVL.font;c.textAlign='left';}
   // босс
-  if(G.boss&&!G.boss.dead){const e=G.boss,w=Math.min(420,W*.7),x=(W-w)/2,y=top+92;c.fillStyle='rgba(10,14,30,.65)';rr(c,x,y,w,14,7);c.fill();
+  if(G.boss&&!G.boss.dead){const e=G.boss,w=Math.min(420,W*.7),x=(W-w)/2,y=top+92;c.fillStyle=CVL.track;rr(c,x,y,w,14,7);c.fill();c.lineWidth=1.5;c.strokeStyle=CVL.edge;c.stroke();
     const g2=c.createLinearGradient(x,0,x+w,0);g2.addColorStop(0,'#ff3a5a');g2.addColorStop(1,'#ff8a3a');c.fillStyle=e.invul?'#8a8aa0':g2;rr(c,x+2,y+2,(w-4)*clamp(e.hp/e.max,0,1),10,5);c.fill();
-    c.font='800 14px system-ui,-apple-system,sans-serif';c.textAlign='center';c.lineWidth=4;c.strokeStyle='rgba(10,14,30,.7)';c.fillStyle='#fff';c.strokeText(EN[e.type].n,W/2,y+28);c.fillText(EN[e.type].n,W/2,y+28);}
+    c.font='800 14px '+CVL.font;c.textAlign='center';c.lineWidth=4;c.strokeStyle=CVL.stroke;c.fillStyle='#fff';c.strokeText(EN[e.type].n,W/2,y+28);c.fillText(EN[e.type].n,W/2,y+28);}
   // серия: «Раззудись плечо! ×50» под таймером (1,6 с)
   if(G.combo){const b=G.combo;{const a=b.t<.15?b.t/.15:b.t>1.2?(1.6-b.t)/.4:1,sc=CALM()?1:1+Math.max(0,.25-b.t)*1.6,y=top+(G.boss&&!G.boss.dead?142:104);
-    c.save();c.globalAlpha=a;c.translate(W/2,y);c.scale(sc,sc);c.textAlign='center';c.textBaseline='middle';c.font='900 17px system-ui,-apple-system,sans-serif';c.lineWidth=5;c.strokeStyle='rgba(60,20,10,.8)';
+    c.save();c.globalAlpha=a;c.translate(W/2,y);c.scale(sc,sc);c.textAlign='center';c.textBaseline='middle';c.font='900 17px '+CVL.font;c.lineWidth=5;c.strokeStyle='rgba(60,20,10,.8)';
     const t=L('Раззудись плечо! ×','Mighty swing! ×')+b.n;c.strokeText(t,0,0);c.fillStyle='#ffd84a';c.fillText(t,0,0);c.restore();}}
   // стрелки к важному за краем экрана
   const marks=[];if(G.egg&&!G.egg.dead)marks.push([G.egg,'#ffd84a']);if(G.gift)marks.push([G.gift,'#ff9a2a']);if(G.stone)marks.push([G.stone,'#e8e0d0']);for(const p of G.picks)if(p.k==='chest')marks.push([p,'#ffd84a']);if(G.prop&&!G.prop.dead)marks.push([G.prop,'#9aff6a']);if(G.boss&&!G.boss.dead)marks.push([G.boss,'#ff4a4a']);
   for(const [o,col] of marks){const sx=(o.x-VIEW.cx)*VIEW.zoom+W/2,sy=(o.y-VIEW.cy)*VIEW.zoom+VIEW.H/2;if(sx>0&&sx<W&&sy>0&&sy<VIEW.H)continue;
     const big=o===G.boss,a=Math.atan2(sy-VIEW.H/2,sx-W/2),m=big?40:28,ex=clamp(sx,m,W-m),ey=clamp(sy,m+top+(G.boss&&!G.boss.dead?130:92),VIEW.H-m);c.save();c.translate(ex,ey);c.rotate(a);if(big)c.scale(1.7+Math.sin(G.t*8)*.15,1.7+Math.sin(G.t*8)*.15);c.fillStyle=col;c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=2;
     c.beginPath();c.moveTo(14,0);c.lineTo(-6,-9);c.lineTo(-2,0);c.lineTo(-6,9);c.closePath();c.stroke();c.fill();c.restore();
-    if(big){const tx=ex-Math.cos(a)*34,ty=ey-Math.sin(a)*30;c.font='900 12px system-ui,-apple-system,sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineWidth=3;c.strokeStyle='rgba(10,10,30,.8)';c.strokeText(L('БОСС','BOSS'),tx,ty);c.fillStyle='#ff8a7a';c.fillText(L('БОСС','BOSS'),tx,ty);}}
+    if(big){const tx=ex-Math.cos(a)*34,ty=ey-Math.sin(a)*30;c.font='900 12px '+CVL.font;c.textAlign='center';c.textBaseline='middle';c.lineWidth=3;c.strokeStyle='rgba(10,10,30,.8)';c.strokeText(L('БОСС','BOSS'),tx,ty);c.fillStyle='#ff8a7a';c.fillText(L('БОСС','BOSS'),tx,ty);}}
   // туман/тьма (события глав): видно только вокруг богатыря
   if(G.fogT>0){const a=Math.min(1,G.fogT/1.5,(14-G.fogT)/1.5),hx=(H.x-VIEW.cx)*VIEW.zoom+W/2,hy=(H.y-VIEW.cy)*VIEW.zoom+VIEW.H/2,m=Math.min(W,VIEW.H),col=G.fogK==='night'?'12,8,28':'196,222,206';
     const gr=c.createRadialGradient(hx,hy,m*.2,hx,hy,m*.62);gr.addColorStop(0,'rgba('+col+',0)');gr.addColorStop(1,'rgba('+col+','+(.86*a)+')');c.fillStyle=gr;c.fillRect(0,0,W,VIEW.H);}
   // подписи дорог у камня
   if(G.stone){c.textAlign='center';c.textBaseline='middle';for(let i=0;i<3;i++){const p=G.stone.p[i],q=STONE[i],sx=(p.x-VIEW.cx)*VIEW.zoom+W/2,sy=(p.y-VIEW.cy)*VIEW.zoom+VIEW.H/2;
-      c.font='20px system-ui,sans-serif';c.fillStyle='#fff';c.fillText(q.ic,sx,sy);c.font='900 12px system-ui,-apple-system,sans-serif';c.lineWidth=4;c.strokeStyle='rgba(10,10,30,.8)';
-      const lx=clamp(sx,74,W-74);c.strokeText(q.t,lx,sy+30);c.fillStyle='#fff3c8';c.fillText(q.t,lx,sy+30);c.font='700 11px system-ui,-apple-system,sans-serif';c.strokeText(q.s,lx,sy+44);c.fillStyle='#e8e4f4';c.fillText(q.s,lx,sy+44);}c.textBaseline='alphabetic';}
+      c.font='20px system-ui,sans-serif';c.fillStyle='#fff';c.fillText(q.ic,sx,sy);c.font='900 12px '+CVL.font;c.lineWidth=4;c.strokeStyle='rgba(10,10,30,.8)';
+      const lx=clamp(sx,74,W-74);c.strokeText(q.t,lx,sy+30);c.fillStyle='#fff3c8';c.fillText(q.t,lx,sy+30);c.font='700 11px '+CVL.font;c.strokeText(q.s,lx,sy+44);c.fillStyle='#e8e4f4';c.fillText(q.s,lx,sy+44);}c.textBaseline='alphabetic';}
   // баннер: плашка-лента (boost, единый сказочный стиль): босс — красная, эволюция — золотая, остальное — тёмно-синяя; заголовок — с засечками
-  if(G.banner){const b=G.banner,q=b.t,D=bannerDur(),a=q<.25?q/.25:q>D-.4?Math.max(0,(D-q)/.4):1,y=VIEW.H*.3,SF='system-ui,-apple-system,sans-serif';c.globalAlpha=a;c.textAlign='center';c.textBaseline='middle';
+  if(G.banner){const b=G.banner,q=b.t,D=bannerDur(),a=q<.25?q/.25:q>D-.4?Math.max(0,(D-q)/.4):1,y=VIEW.H*.3,SF=CVL.font;c.globalAlpha=a;c.textAlign='center';c.textBaseline='middle';
     // по ширине экрана: шрифт меньше, пока надпись не влезет (заголовок не мельче 18 px, подпись — 11 px)
-    let f1=28;for(;f1>18;f1-=2){c.font='900 '+f1+'px '+FT;if(c.measureText(b.title).width<=W-60)break;}c.font='900 '+f1+'px '+FT;const w1=c.measureText(b.title).width;
+    let f1=28;for(;f1>18;f1-=2){c.font='900 '+f1+'px '+CVL.font;if(c.measureText(b.title).width<=W-60)break;}c.font='900 '+f1+'px '+CVL.font;const w1=c.measureText(b.title).width;
     let f2=15,w2=0;if(b.sub){for(;f2>11;f2--){c.font='700 '+f2+'px '+SF;if(c.measureText(b.sub).width<=W-44)break;}c.font='700 '+f2+'px '+SF;w2=c.measureText(b.sub).width;}
-    const pw=Math.min(W-8,Math.max(w1,w2)+56),ph=b.sub?f1+f2+22:f1+16,px=W/2-pw/2,py=y-f1/2-8,n=9,k=b.pri>=5?0:b.pri===4?1:2;
+    const pw=Math.min(W-8,Math.max(w1,w2)+56),ph=b.sub?f1+f2+22:f1+16,px=W/2-pw/2,py=y-f1/2-8,n=9,k=b.pri>=5?0:b.pri===4?1:2;G.banR=[py,py+ph];
     const path=o=>{c.beginPath();c.moveTo(px+o,py+o);c.lineTo(px+pw-o,py+o);c.lineTo(px+pw-n-o,py+ph/2);c.lineTo(px+pw-o,py+ph-o);c.lineTo(px+o,py+ph-o);c.lineTo(px+n+o,py+ph/2);c.closePath();};
-    const g3=c.createLinearGradient(0,py,0,py+ph);g3.addColorStop(0,['rgba(178,38,30,.94)','rgba(190,128,20,.95)','rgba(34,40,78,.9)'][k]);g3.addColorStop(1,['rgba(110,18,15,.94)','rgba(122,74,6,.95)','rgba(16,20,44,.9)'][k]);
+    const g3=c.createLinearGradient(0,py,0,py+ph);g3.addColorStop(0,['rgba(178,38,30,.94)','rgba(190,128,20,.95)',CVL.ban1][k]);g3.addColorStop(1,['rgba(110,18,15,.94)','rgba(122,74,6,.95)',CVL.ban2][k]);
     path(0);c.fillStyle=g3;c.fill();c.lineWidth=2;c.strokeStyle='#e6b85a';c.stroke();path(4);c.lineWidth=1;c.strokeStyle='rgba(255,233,176,.35)';c.stroke();
     c.fillStyle='#ffe9b0';for(const sx of[px+n+11,px+pw-n-11]){c.beginPath();c.moveTo(sx,py+ph/2-5);c.lineTo(sx+5,py+ph/2);c.lineTo(sx,py+ph/2+5);c.lineTo(sx-5,py+ph/2);c.closePath();c.fill();}
-    c.font='900 '+f1+'px '+FT;c.lineWidth=4;c.strokeStyle='rgba(40,10,6,.7)';c.strokeText(b.title,W/2,py+8+f1/2);c.fillStyle='#fff3c8';c.fillText(b.title,W/2,py+8+f1/2);
+    c.font='900 '+f1+'px '+CVL.font;c.lineWidth=4;c.strokeStyle='rgba(40,10,6,.7)';c.strokeText(b.title,W/2,py+8+f1/2);c.fillStyle='#fff3c8';c.fillText(b.title,W/2,py+8+f1/2);
     if(b.sub){c.font='700 '+f2+'px '+SF;c.lineWidth=3;c.strokeText(b.sub,W/2,py+12+f1+f2/2);c.fillStyle='#fff';c.fillText(b.sub,W/2,py+12+f1+f2/2);}c.globalAlpha=1;}
   // дар богатыря: портрет и кольцо перезарядки
   {const cx=36,cy=VIEW.H-44-(window.__safeBot||0),R=24,q=1-clamp(G.darT/darCd(),0,1),sp=spr('hp_'+G.hkey);
-    c.fillStyle='rgba(10,14,30,.6)';c.beginPath();c.arc(cx,cy,R,0,TAU);c.fill();if(sp)c.drawImage(sp.c,cx-R*.85,cy-R*.85,R*1.7,R*1.7);
+    c.fillStyle=CVL.track;c.beginPath();c.arc(cx,cy,R,0,TAU);c.fill();if(sp)c.drawImage(sp.c,cx-R*.85,cy-R*.85,R*1.7,R*1.7);
     c.lineWidth=4;c.strokeStyle='rgba(255,255,255,.15)';c.beginPath();c.arc(cx,cy,R,0,TAU);c.stroke();
     c.strokeStyle=q>=1?'#ffd84a':'#8ad0ff';c.beginPath();c.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+TAU*q);c.stroke();
     if(G.wolfT>0||G.swordT>0||G.dashT>0){c.strokeStyle='#ff9a3a';c.lineWidth=2;c.beginPath();c.arc(cx,cy,R+5,0,TAU);c.stroke();}
-    c.font='800 13px system-ui,-apple-system,sans-serif';c.textAlign='left';c.lineWidth=3.5;c.strokeStyle='rgba(10,14,30,.75)';const nm=heroDef(G.heroId).dar.name;c.strokeText(nm,cx+R+6,cy+4);c.fillStyle='#fff';c.fillText(nm,cx+R+6,cy+4);}
+    c.font='800 13px '+CVL.font;c.textAlign='left';c.lineWidth=3.5;c.strokeStyle=CVL.stroke;const nm=heroDef(G.heroId).dar.name;c.strokeText(nm,cx+R+6,cy+4);c.fillStyle='#fff';c.fillText(nm,cx+R+6,cy+4);}
   // джойстик
   if(IN.on){c.fillStyle='rgba(255,255,255,.10)';c.strokeStyle='rgba(255,255,255,.35)';c.lineWidth=2;c.beginPath();c.arc(IN.ox,IN.oy,48,0,TAU);c.fill();c.stroke();
     c.fillStyle='rgba(255,255,255,.55)';c.beginPath();c.arc(IN.px,IN.py,20,0,TAU);c.fill();}
   else if(G.tut&&TUT[G.tut.i]&&TUT[G.tut.i].id==='move'){const cx=W/2,cy=VIEW.H*.56,a=G.t*2.2,px=cx+Math.cos(a)*34,py=cy+Math.sin(a)*22;
     c.fillStyle='rgba(255,255,255,.10)';c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=2;c.beginPath();c.arc(cx,cy,48,0,TAU);c.fill();c.stroke();
     c.fillStyle='rgba(255,255,255,.6)';c.beginPath();c.arc(px,py,20,0,TAU);c.fill();c.font='30px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText('👆',px+6,py+22);}
-  else if(G.t<6&&!G.tut){c.globalAlpha=Math.min(1,(6-G.t));c.font='700 15px system-ui,-apple-system,sans-serif';c.textAlign='center';c.fillStyle='#fff';c.strokeStyle='rgba(10,10,30,.6)';c.lineWidth=4;
+  else if(G.t<6&&!G.tut){c.globalAlpha=Math.min(1,(6-G.t));c.font='700 15px '+CVL.font;c.textAlign='center';c.fillStyle='#fff';c.strokeStyle='rgba(10,10,30,.6)';c.lineWidth=4;
     for(const [s,dy] of[[L('Веди пальцем по экрану — богатырь пойдёт.','Drag your finger — the hero walks.'),-80],[L('Бьёт он сам!','He attacks on his own!'),-58]]){c.strokeText(s,W/2,VIEW.H+dy);c.fillText(s,W/2,VIEW.H+dy);}c.globalAlpha=1;}}
 
 // на паузе, под окном выбора и на итогах кадр не перерисовываем (rDirty — один кадр после смены размера)

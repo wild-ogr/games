@@ -44,7 +44,7 @@ try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof 
 function fixSave(){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v);
   for(const k of['forge','village','armory','done','best','rank','bought','stats','bossKill','evoSeen','skins','skin','ach','meet','bk','ask','stars'])if(!ob(S[k]))S[k]={};
   for(const i in S.done)if(S.done[i])S.stars[i+'w']=1; // звёзды глав (boost 2): пройденной главе — первая звезда
-  if(typeof S.gold!=='number'||!isFinite(S.gold))S.gold=0;if(!S.afkT)S.afkT=nowMs();
+  if(typeof S.gold!=='number'||!isFinite(S.gold))S.gold=0;if(!S.afkT)S.afkT=nowMs();if(typeof S.th!=='string')S.th=''; // S.th — тема оформления (js/look.js), '' = основная
   for(const k of['payT','payV'])if(S[k]!=null&&!Array.isArray(S[k]))S[k]=[];if(S.buy!=null&&!ob(S.buy))S.buy={};if(S.buyB!=null&&!ob(S.buyB))S.buyB={};} // покупки (js/pay.js)
 fixSave();
 const BOOT={ts:S.ts||0,fresh:!S.ts}; // что было на этом устройстве при запуске
@@ -218,7 +218,7 @@ function mergeProgress(d,loc,useCloud){const ob=v=>v&&typeof v==='object'&&!Arra
     aq.list.forEach((x,i)=>{const y=dq.list[i];if(y&&y.id===x.id){x.p=Math.max(x.p||0,y.p||0);x.c=Math.max(x.c||0,y.c||0);}});aq.bonus=Math.max(aq.bonus||0,dq.bonus||0);}}
   const ar=ob(o.dr),dr=ob(d.dr);if(dr.day&&(!ar.day||dr.day>ar.day))o.dr=dr;else if(dr.day&&dr.day===ar.day)for(const k of['best','got','runs'])ar[k]=Math.max(ar[k]||0,dr[k]||0); // поход дня
   const aw=ob(o.wk),dw=ob(d.wk);if(dw.w&&(!aw.w||dw.w>aw.w))o.wk=dw;else if(dw.w&&dw.w===aw.w)for(const k of['best','got','runs'])aw[k]=Math.max(aw[k]||0,dw[k]||0);
-  if(useCloud)for(const k of['hero','skin','curse','sound','music','vm','vs','calm','vib'])if(k in d)o[k]=d[k];
+  if(useCloud)for(const k of['hero','skin','curse','sound','music','vm','vs','calm','vib','th'])if(k in d)o[k]=d[k];
   if(typeof payMerge==='function')payMerge(d,o); // покупки (js/pay.js): купленное — объединение
   o.ts=Math.max(+o.ts||0,+d.ts||0);return o;}
 function mergeSave(d){if(!d||typeof d!=='object'||Array.isArray(d)||!d.ts)return false;
