@@ -1,0 +1,349 @@
+/* Дворовая викторина — новый вид (look1, 04.10): основной вид А «Дворовое шоу». Журнал: hobby-analytics/release-g/viktorina-look1.md.
+   Всё под html.lk — без этого класса (тема «Классика») игра выглядит как раньше (встроенный CSS в index.html).
+   Цвета — переменные ниже; темы (css/themes.css) переопределяют их на html.th-<тема>. Ничего мельче 16 px, кнопки ≥ 48 px.
+   Старые WebView: без inset, gap — с запасным вариантом (@supports not (inset:0) в конце), без grid/aspect-ratio/clamp/conic-gradient. */
+@font-face{font-family:KF;font-weight:400 900;font-display:swap;src:url(fonts/rubik-cyrillic.woff2) format("woff2");unicode-range:U+0400-045F,U+0490-0491}
+@font-face{font-family:KF;font-weight:400 900;font-display:swap;src:url(fonts/rubik-latin.woff2) format("woff2");unicode-range:U+0020-002F,U+003A-007E,U+00A0-00FF,U+2013-2014,U+2018-201E,U+2022,U+2026,U+2039-203A,U+2116,U+2212}
+@font-face{font-family:KF;font-weight:400 900;font-display:swap;src:url(fonts/poster-num.woff2) format("woff2");unicode-range:U+0030-0039}
+
+html.lk{--bg:#bfe6f5;--ink:#233247;--muted:#5a6676;--hd-ink:#1d3350;--hd-ink2:#3a587a;--o:#233247;
+ --card:#fffaf0;--card-ink:#233247;--card-mut:#4d5868;--pan:#fffdf6;--pan2:#fff0c9;--line:#e6dcc4;--set:#f6efdd;
+ --r:18px;--r2:14px;--bd:2.5px solid #233247;--bd2:2px solid #233247;--sh:0 4px 0 #233247;--sh2:0 3px 0 #233247;--sha:0 1px 0 #233247;
+ --btn:#fffdf6;--btn-ink:#233247;--go:#ff7a1a;--go-ink:#fff;--sh-go:0 5px 0 #233247;--day:#3f8fe0;--day-ink:#fff;--sh-day:0 4px 0 #233247;--duel:#7b4fb8;--grn:#2fa84f;
+ --gold:#ffcf40;--gold-ink:#3b2a00;--gold-ink2:#a66a00;--gold-d:#e09a00;--sh-gold:0 3px 0 #233247;
+ --q-bg:#fffaf0;--q-ink:#1b2433;--q-ink2:#3c4a5c;--q-meta:#9a6a1c;--q-line:#e6dcc4;--q-bd:3px solid #233247;--sh-q:0 6px 0 #233247;
+ --ans:#fff;--ans-ink:#1b2433;--ans-bd:2.5px solid #233247;--sh-ans:0 4px 0 #233247;--let:#ffe9a8;--let-ink:#7a4d00;--sel:#ffe08a;
+ --ok:#2fa84f;--ok-d:#1d7a36;--ok-glow:rgba(47,168,79,.3);--no:#e5484d;--no-d:#a82a2f;--tip:#3f8fe0;
+ --dim:#ebe6d8;--dim-ink:#8d8a80;--dim-bd:#c9c3b2;--step:#fffdf6;--step-ink:#5a6676;--cur:#ff7a1a;--cur-ink:#fff;--acc-ink:#e8590c;
+ --i1:#2f6fb5;--i2:#ff7a1a;--i3:#fff3d6;--il:#233247;--coin1:#ffd24a;--coin2:#c98a00;--ray:rgba(255,255,255,.55);--scrim:rgba(20,34,52,.55);--toast:#233247}
+html.lk body{font-family:KF,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+html.lk #app{background:var(--bg)}
+html.lk .scene{position:absolute;top:0;left:0;right:0;bottom:0;z-index:0;pointer-events:none;overflow:hidden}
+html.lk .scene svg{display:block;width:100%;height:100%}
+html.lk .screen{z-index:1}
+/* значки вместо эмодзи */
+lk-i{display:none}
+html.lk lk-i{display:inline-block;width:1.2em;height:1.2em;vertical-align:-.24em;line-height:0;margin:0 .1em}
+html.lk lk-i svg{display:block;width:100%;height:100%}
+html.lk lk-i+lk-t+*{margin-left:0}
+html.lk .ic{width:28px;height:28px;flex:none;display:inline-block;vertical-align:middle}
+.bust{display:block;width:100%;height:100%}
+
+/* ---------- кнопки ---------- */
+html.lk .btn{background:var(--btn);color:var(--btn-ink);border:var(--bd);box-shadow:var(--sh);border-radius:var(--r);font-weight:800;font-size:19px;min-height:56px;text-shadow:none;line-height:1.18}
+html.lk .btn:active{transform:translateY(3px);box-shadow:var(--sha)}
+html.lk .btn.accent{background:var(--go);color:var(--go-ink);box-shadow:var(--sh-go)}
+html.lk .btn.green{background:var(--grn);color:#fff;box-shadow:var(--sh)}
+html.lk .btn.blue{background:var(--day);color:var(--day-ink);box-shadow:var(--sh-day)}
+html.lk .btn.violet{background:var(--duel);color:#fff}
+html.lk .btn.accent:active,html.lk .btn.green:active,html.lk .btn.blue:active,html.lk .btn.violet:active{box-shadow:var(--sha)}
+html.lk .btn small{font-size:16px;font-weight:600;opacity:.95}
+html.lk .btn[disabled]{opacity:.5}
+html.lk .btn.big{font-size:24px;min-height:68px}
+/* кнопка со значком слева и подписью ниже (Играть, Викторина дня, Дуэль) */
+html.lk .btn.wide,html.lk .btn.big{position:relative;text-align:left;padding:10px 16px 10px 64px}
+html.lk .btn.wide>lk-i:first-child,html.lk .btn.big>lk-i:first-child{position:absolute;left:16px;top:50%;width:34px;height:34px;margin-top:-17px}
+html.lk .icon{width:52px;height:52px;border-radius:var(--r2);background:var(--pan);border:var(--bd);box-shadow:var(--sh2);font-size:26px;display:flex;align-items:center;justify-content:center;padding:0;color:var(--ink)}
+html.lk .icon lk-i{width:30px;height:30px;vertical-align:0}
+html.lk .icon:active,html.lk .pill:active{transform:translateY(2px);box-shadow:var(--sha)}
+html.lk .pill{background:var(--pan);border:var(--bd);box-shadow:var(--sh2);color:var(--ink);font-size:20px;font-weight:800;min-height:52px;padding:4px 14px 4px 9px;display:flex;align-items:center}
+html.lk .pill lk-i{width:28px;height:28px;margin-right:5px;vertical-align:0}
+html.lk .pill.sm{font-size:19px}
+html.lk .lnk{color:var(--hd-ink);font-size:17px}
+html.lk .dot{position:absolute;top:7px;right:9px;width:13px;height:13px;margin:0;background:var(--no);box-shadow:0 0 0 2px #fff}
+
+/* ---------- меню ---------- */
+html.lk .mh{padding-top:max(10px,env(safe-area-inset-top));padding-bottom:4px}
+html.lk .logo{background:var(--pan);border:var(--bd);box-shadow:var(--sh2);border-radius:var(--r2);padding:5px 12px;font-size:21px;line-height:1.05;color:var(--hd-ink);text-shadow:none;white-space:normal;max-width:60%}
+html.lk .logo .lc{display:none}
+html.lk .logo small{font-size:16px;font-weight:600;color:var(--hd-ink2);margin-top:1px}
+html.lk .hdr-r{flex:none}
+html.lk .mscroll{padding-top:2px;gap:10px}
+html.lk .host{flex:1 0 auto;min-height:170px;flex-direction:column;align-items:center;gap:0;margin:0}
+html.lk .host .bub{order:1;flex:none;align-self:stretch;margin:0;background:var(--card);color:var(--card-ink);border:var(--bd);box-shadow:var(--sh2);border-radius:var(--r);font-size:18px;padding:11px 14px;z-index:2}
+html.lk .host .bub::before{left:50%;bottom:-12px;top:auto;margin-left:-11px;border:11px solid transparent;border-top-color:var(--o);border-bottom:0}
+html.lk .host .bub::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:var(--card);border-bottom:0}
+html.lk .host .bub b{color:var(--acc-ink)}
+html.lk .host .av{order:2;flex:1 1 0;min-height:96px;max-height:290px;width:100%;height:auto;border-radius:0;background:none;box-shadow:none;overflow:visible;margin-top:2px}
+html.lk .rankb{position:relative;background:var(--pan);border:var(--bd);box-shadow:var(--sh2);border-radius:var(--r);padding:9px 12px 10px 60px;text-align:left;font-size:19px;color:var(--ink)}
+html.lk .rankb>lk-i:first-child{position:absolute;left:12px;top:12px;width:38px;height:38px}
+html.lk .rankb small{font-size:16px;color:var(--muted);margin-top:2px}
+html.lk .mini{display:flex;margin-top:7px}
+html.lk .mini i{flex:1;height:10px;border-radius:5px;background:var(--line);margin-right:4px}html.lk .mini i:last-child{margin-right:0}html.lk .mini i.on{background:var(--ok)}
+html.lk .fr{position:absolute;right:12px;top:50%;margin-top:-17px;font-style:normal;display:flex;align-items:center;font-size:20px;font-weight:900;background:rgba(255,255,255,.25);border-radius:999px;padding:3px 10px 3px 6px;line-height:28px}
+html.lk .fr lk-i{width:24px;height:24px;margin-right:3px;vertical-align:0}
+html.lk #btnDaily{padding-right:74px}
+html.lk #btnDaily.done{opacity:.9}
+html.lk .nrow{gap:8px}
+html.lk .nrow .btn{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px;min-height:68px;padding:6px 4px;position:relative;line-height:1.1}
+html.lk .nrow .btn lk-i{width:34px;height:34px;margin-bottom:3px}
+html.lk .mfoot{background:var(--pan2);color:var(--ink);border-radius:var(--r2);font-size:16px;padding:8px 10px;border:var(--bd2)}
+html.lk .mfoot b{color:var(--acc-ink)}
+
+/* ---------- выбор темы ---------- */
+html.lk .gh{padding-top:max(8px,env(safe-area-inset-top));padding-bottom:6px}
+html.lk .gt{color:var(--hd-ink);font-size:19px}
+html.lk .gt .sub{color:var(--hd-ink2);font-size:16px}
+html.lk .tscroll{padding-top:2px}
+html.lk .thint{background:var(--pan2);border:var(--bd2);border-radius:var(--r2);font-size:16px;color:var(--ink);margin:2px 0 9px}
+html.lk .tgrid{justify-content:flex-start}
+html.lk .tp{width:31.6%;margin:0 2.6% 9px 0;background:var(--card);color:var(--card-ink);border:var(--bd);box-shadow:var(--sh2);border-radius:var(--r);padding:8px 5px 9px;min-height:104px;align-items:center;justify-content:center;text-align:center}
+html.lk .tp:nth-child(3n+1){margin-right:0}
+html.lk .tp:active{transform:translateY(2px);box-shadow:var(--sha)}
+html.lk .tp .ti{font-size:16px;line-height:0;margin:2px 0 3px}
+html.lk .tp .ti lk-i{width:46px;height:46px}
+html.lk .tp b{font-size:16px;line-height:1.12;margin:2px 0 6px}
+html.lk .tp small{display:none}
+html.lk .tp .bar{width:86%;height:7px;background:var(--line);margin-top:auto}
+html.lk .bar i{background:var(--ok)}
+html.lk .tp .md{top:4px;right:4px;font-size:16px;line-height:0}html.lk .tp .md lk-i{width:26px;height:26px}
+html.lk .tp .tag{position:absolute;top:5px;left:5px;margin:0;background:var(--gold);color:var(--gold-ink);font-size:16px;font-weight:900;border-radius:8px;padding:0 6px;line-height:22px;border:var(--bd2)}
+html.lk .tp .tag.rc{background:#dff3e3;color:#1f5e2c}html.lk .tp .tag lk-i{width:18px;height:18px;vertical-align:-3px}
+html.lk .tp.wk{box-shadow:0 0 0 3px var(--gold-d),var(--sh2)}
+html.lk .tp.all{width:100%;margin-right:0;min-height:62px;flex-direction:row;justify-content:flex-start;text-align:left;background:var(--gold);color:var(--gold-ink);box-shadow:var(--sh-gold);padding:6px 14px}
+html.lk .tp.all .ti lk-i{width:40px;height:40px}
+html.lk .tp.all b{font-size:20px;margin:0}
+html.lk .tp.all small{display:block;font-size:16px;color:var(--gold-ink)}
+
+/* ---------- вопрос ---------- */
+html.lk .ladder{gap:4px}
+html.lk .ladder span{height:30px;border-radius:7px;background:var(--step);color:var(--step-ink);border:var(--bd2);font-size:16px;flex-direction:column;line-height:1}
+html.lk .ladder span b{font-weight:800}
+html.lk .ladder span b lk-i{width:20px;height:20px;vertical-align:-4px}
+html.lk .ladder em{display:none;font-style:normal}
+html.lk .ladder span.safe{border-color:var(--acc-ink);border-width:3px;box-shadow:none}
+html.lk .ladder span.done{background:var(--coin1);color:var(--ok-d)}
+html.lk .ladder span.bad{background:var(--no);color:#fff}
+html.lk .ladder span.cur{background:var(--cur);color:var(--cur-ink);transform:scale(1.1);box-shadow:0 2px 0 var(--o)}
+html.lk .ladinfo{align-items:center;font-size:16px;color:var(--hd-ink);min-height:34px}
+html.lk .ladinfo i{font-style:normal}
+html.lk .sk1{text-transform:uppercase;letter-spacing:.05em;font-weight:800;margin-right:8px}
+html.lk .ladinfo .sk0{display:none}
+html.lk .sk2{display:inline-block;font-size:23px;font-weight:900;background:var(--gold);color:var(--gold-ink);border-radius:999px;padding:0 12px 0 13px;line-height:31px;box-shadow:var(--sh-gold);border:var(--bd2)}
+html.lk .sk2 lk-i,html.lk .sk3 lk-i{width:22px;height:22px;vertical-align:-4px}
+html.lk .sk3{font-weight:800;font-size:17px}
+html.lk .say{min-height:58px;align-items:flex-end}
+html.lk .say .av{width:58px;height:64px;border-radius:0;background:none;box-shadow:none;overflow:visible;margin-bottom:-6px}
+html.lk .say .sb{background:var(--card);color:var(--card-ink);border:var(--bd);box-shadow:var(--sh2);border-radius:var(--r2);font-size:17px;padding:8px 12px;align-self:center}
+html.lk .say .sb::before{border-right-color:var(--o);left:-11px;border-width:9px}
+html.lk .say .sb b{color:var(--acc-ink)}
+html.lk .say.help .sb{background:var(--pan2)}
+html.lk .qcard{position:relative;background:var(--q-bg);color:var(--q-ink);border:var(--q-bd);box-shadow:var(--sh-q);border-radius:var(--r);padding:13px 15px 14px}
+html.lk .qcard::before{content:"";position:absolute;top:-10px;left:50%;width:70px;height:15px;margin-left:-35px;background:var(--gold);border:var(--bd2);border-radius:4px;transform:rotate(-2deg)}
+html.lk .qmeta{font-size:16px;color:var(--q-meta)}
+html.lk .qmeta lk-i{width:22px;height:22px;vertical-align:-5px;margin-right:2px}
+html.lk .qtext{color:var(--q-ink);font-weight:800;line-height:1.24}
+html.lk .qx{color:var(--q-ink2);border-top-color:var(--q-line);font-size:17px}
+html.lk .ans{position:relative;background:var(--ans);color:var(--ans-ink);border:var(--ans-bd);box-shadow:var(--sh-ans);border-radius:var(--r);min-height:58px;padding:7px 12px;gap:10px}
+html.lk .ans:active{transform:translateY(2px);box-shadow:var(--sha)}
+html.lk .ans i{width:36px;height:36px;background:var(--let);color:var(--let-ink);font-size:18px}
+html.lk .ans span{flex:1;min-width:0}
+html.lk .ans u{text-decoration:none}
+html.lk .ans .mk{flex:none;width:30px;height:30px;line-height:0}
+html.lk .ans .mk svg{width:100%;height:100%}
+html.lk .ans.sel{background:var(--sel);box-shadow:var(--sh-ans)}
+html.lk .ans.ok{background:var(--ok);color:#fff;border-color:var(--ok-d);box-shadow:0 4px 0 var(--ok-d),0 0 0 4px var(--ok-glow)}
+html.lk .ans.no{background:var(--no);color:#fff;border-color:var(--no-d);box-shadow:0 4px 0 var(--no-d)}
+html.lk .ans.ok i,html.lk .ans.no i{background:rgba(255,255,255,.28);color:#fff}
+html.lk .ans.gone{opacity:1;background:var(--dim);color:var(--dim-ink);border-color:var(--dim-bd);box-shadow:none}
+html.lk .ans.gone i{background:var(--dim-bd);color:var(--dim-ink)}
+html.lk .ans.tip{box-shadow:0 0 0 4px var(--tip),var(--sh-ans)}
+html.lk .qdone .ans:not(.ok):not(.no){background:var(--dim);color:var(--dim-ink);border-color:var(--dim-bd);box-shadow:none}
+html.lk .qdone .ans:not(.ok):not(.no) i{background:var(--dim-bd);color:var(--dim-ink)}
+html.lk .ans .plus{position:absolute;right:44px;top:-15px;background:var(--gold);color:var(--gold-ink);font-size:19px;font-weight:900;border-radius:999px;padding:0 10px;line-height:27px;border:var(--bd2);transform:rotate(-4deg);white-space:nowrap}
+html.lk .ans .plus lk-i{width:20px;height:20px;vertical-align:-4px}
+html.lk .ans .lbl{position:absolute;right:44px;top:-13px;background:#fff;color:var(--ok-d);font-size:16px;font-weight:800;border-radius:999px;padding:0 9px;line-height:23px;border:2px solid var(--ok-d);white-space:nowrap}
+html.lk .lifes{gap:7px}
+html.lk .life{background:var(--pan);color:var(--ink);border:var(--bd);box-shadow:var(--sh2);border-radius:var(--r2);min-height:64px;font-size:16px;line-height:1;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+html.lk .life:active{transform:translateY(2px);box-shadow:var(--sha)}
+html.lk .life lk-i{width:32px;height:32px}
+html.lk .life lk-i[data-k^="face:"]{width:36px;height:36px;margin-top:-3px}
+html.lk .life small{font-size:16px;font-weight:800;color:var(--ink);margin-top:2px;white-space:nowrap}
+html.lk .life.used{opacity:.55}
+html.lk .life.paid::after{content:"";top:4px;right:4px;width:16px;height:16px;border-radius:50%;background:var(--coin1);box-shadow:inset 0 0 0 2.5px var(--coin2)}
+html.lk .life.used::after{color:var(--ok-d);font-size:16px;font-weight:900}
+html.lk #lifes.nudge .life:not([disabled]):not(.used){animation:lkNudge 1.6s ease-in-out 3}
+@keyframes lkNudge{50%{box-shadow:0 0 0 4px var(--gold),var(--sh2);transform:translateY(-2px)}}
+/* после ответа: на месте подсказок — «Верно! · 3 подряд» и большая «Дальше» */
+html.lk .lifes.off{display:none}
+html.lk .next.on{flex-direction:row;flex-wrap:wrap;align-items:stretch;gap:8px}
+html.lk .verd{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;background:var(--pan);border:var(--bd);box-shadow:var(--sh2);border-radius:var(--r2);padding:5px 10px;line-height:1.1}
+html.lk .verd b{font-size:21px;font-weight:900}
+html.lk .verd small{font-size:16px;font-weight:700;color:var(--muted);margin-top:2px}
+html.lk .verd small lk-i{width:18px;height:18px;vertical-align:-3px}
+html.lk .verd.right b{color:var(--ok-d)}html.lk .verd.wrong b{color:var(--no-d)}
+html.lk #btnNext{flex:1.25 1 0;min-width:0;min-height:62px;font-size:22px;text-align:center;padding:8px 10px}
+html.lk #btnNext lk-i{width:26px;height:26px;vertical-align:-5px}
+html.lk #btnRep{flex:1 0 100%;min-height:44px;padding:4px 8px;font-size:16px}
+html.lk #btnRep lk-i{width:20px;height:20px;vertical-align:-4px}
+/* подгонка fitQ (классы fit1…fit4 на #scr-game) — в новом виде свои размеры */
+html.lk .fit1 .say .av{width:44px;height:48px;margin-bottom:-3px}html.lk .fit1 .say .sb{padding:5px 10px;font-size:16px}
+html.lk .fit1 .ans{min-height:48px;padding:4px 12px}html.lk .fit1 .life{min-height:56px}html.lk .fit1 .qcard{padding:9px 13px 10px}
+html.lk .fit1 .verd{padding:3px 9px}html.lk .fit1 #btnNext{min-height:54px}
+html.lk .fit2 .ladder span{height:26px}html.lk .fit2 .ans{min-height:46px}html.lk .fit2 .ans i{width:30px;height:30px}html.lk .fit2 .life{min-height:52px}
+html.lk .fit2 .life lk-i{width:26px;height:26px}html.lk .fit2 .ladinfo{min-height:30px}html.lk .fit2 .sk2{font-size:20px;line-height:27px}
+html.lk .fit3 .qcard::before{display:none}html.lk .fit3 .verd small{display:none}html.lk .fit3 #btnRep{min-height:36px;padding:0 8px}
+html.lk .fit4 .ans{min-height:44px}html.lk .fit4 .say .av{width:36px;height:40px}
+html.lk .fitS .next.on{background:linear-gradient(rgba(233,217,182,0),var(--bg) 26%)}
+
+/* ---------- окна ---------- */
+html.lk .modal{background:var(--scrim)}
+html.lk .card{background:var(--card);color:var(--card-ink);border:var(--q-bd);box-shadow:var(--sh-q);border-radius:calc(var(--r) + 4px)}
+html.lk .card h2{font-size:25px;font-weight:900;color:var(--card-ink)}
+html.lk .card h2 lk-i{width:30px;height:30px;vertical-align:-6px}
+html.lk .card p{color:var(--card-mut);font-size:17px}
+html.lk .card .av{width:96px;height:106px;border-radius:0;background:none;box-shadow:none;overflow:visible}
+html.lk .card .btn{width:100%}
+html.lk .card .score{color:var(--acc-ink)!important;font-size:56px;line-height:1;margin:2px 0!important}
+html.lk .card .coins-won{color:var(--gold-ink2)!important;font-size:28px;font-weight:900}
+html.lk .coins-won lk-i{width:30px;height:30px;vertical-align:-6px}
+html.lk .coins-won .wk,html.lk .coins-won small{font-size:16px;color:var(--card-mut)}
+html.lk .card .quote{background:var(--pan2);color:var(--card-ink)!important;border-radius:var(--r2);font-size:17px}
+html.lk .card .goal{font-size:16px!important;color:var(--card-ink)!important}
+html.lk .card .goal.tipl{background:#e3f5e6;color:#1d5a2a!important;border:2px solid #9fd6aa}
+html.lk .card .goal.tmr{background:#e8f1fb;color:#1d3350!important;border:2px solid #b6cdea}
+html.lk .goal lk-i{width:22px;height:22px;vertical-align:-5px}
+html.lk .how p{font-size:17px;color:var(--card-ink)}
+html.lk .how p>lk-i:first-child{width:26px;height:26px;vertical-align:-6px;margin-right:3px}
+html.lk .about{color:var(--card-mut)}
+html.lk .set{background:var(--set);border:var(--bd2);border-radius:var(--r2);font-size:17px;color:var(--card-ink);min-height:56px}
+html.lk .set span>lk-i:first-child{width:26px;height:26px;vertical-align:-6px;margin-right:3px}
+html.lk .set small{font-size:16px;color:var(--card-mut)}
+html.lk .set i{background:var(--grn);font-size:16px}html.lk .set i.off{background:var(--dim-bd);color:var(--card-ink)}
+html.lk .set i.go,html.lk .pay .set i{background:none;color:var(--ok-d);font-size:22px}
+html.lk .pay h3{font-size:17px;color:var(--card-ink)}
+html.lk .pbuy b{color:var(--ok-d);font-size:18px}
+html.lk .pick button{background:var(--set);border:var(--bd2);border-radius:var(--r2);font-size:16px;color:var(--card-ink);padding:6px 4px 8px}
+html.lk .pick button .av{width:66px;height:72px;margin:0 auto 2px}
+html.lk .pick button small{font-size:16px;color:var(--card-mut)}
+html.lk .pick button.strong{background:#e3f5e6;box-shadow:0 0 0 3px var(--ok)}
+html.lk .sd{background:var(--set);border:var(--bd2);font-size:16px;color:var(--card-mut);border-radius:var(--r2)}
+html.lk .sd small{font-size:16px}
+html.lk .sd.done{background:#d6f2da;color:#1d5a2a}
+html.lk .sd.today{background:var(--go);color:#fff;box-shadow:var(--sh2)}
+html.lk .sd.d7{background:var(--pan2)}
+html.lk .sd lk-i{width:20px;height:20px;vertical-align:-4px}
+html.lk .mdr{background:var(--set);border:var(--bd2);font-size:16px;color:var(--card-ink)}
+html.lk .mdr>lk-i:first-child{width:34px;height:34px}
+html.lk .mdr i{font-size:16px}html.lk .mdr i lk-i{width:28px;height:28px}
+html.lk .lbr{font-size:17px}html.lk .lbr.me{background:var(--pan2)}
+html.lk .dots{font-size:16px;line-height:0;margin:6px 0}html.lk .dots lk-i{width:26px;height:26px;margin:0 1px}
+html.lk .link{font-size:16px}
+html.lk .toast{background:var(--toast);color:#fff;border-radius:14px;font-size:17px;border:2px solid rgba(255,255,255,.5)}
+html.lk .toast lk-i{width:22px;height:22px;vertical-align:-5px}
+html.lk .ad{background:#1b2433}
+html.lk .ad small{font-size:16px}
+/* окно итогов — праздник: лучи за окном, ведущий над карточкой, ряд из 10 ступенек */
+html.lk #modal.rs{background:var(--scrim)}
+html.lk #rays{display:none}
+html.lk #modal.rs #rays{display:block;position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:.9}
+html.lk #rays svg{width:100%;height:100%}
+html.lk #mcard.res{margin-top:64px;overflow:visible;position:relative}
+html.lk #mcard.res>.av:first-child{width:128px;height:140px;margin:-104px auto 2px}
+html.lk .lad10{display:flex;max-width:330px;margin:6px auto 4px}
+html.lk .lad10 span{flex:1;height:24px;border-radius:6px;border:var(--bd2);background:var(--step);margin-right:4px;line-height:0;display:flex;align-items:center;justify-content:center;color:var(--ok-d)}
+html.lk .lad10 span:last-child{margin-right:0}
+html.lk .lad10 span.done{background:var(--coin1)}html.lk .lad10 span.bad{background:var(--no);color:#fff}
+html.lk .lad10 lk-i{width:16px;height:16px}
+html.lk .conf{border:1.5px solid var(--o)}
+
+/* ---------- окно «Оформление» (js/themes.js) ---------- */
+.thg{text-align:left;margin-top:8px}
+.thc{display:flex;align-items:stretch;background:#f1ede2;border-radius:14px;padding:8px;margin-top:8px}
+html.lk .thc{background:var(--set);border:var(--bd2)}
+.thc.on{box-shadow:0 0 0 3px #2b8a3e}
+.thp{flex:none;width:84px;height:100px;border-radius:10px;overflow:hidden;position:relative;margin-right:10px;border:2px solid rgba(0,0,0,.25)}
+.thp i{position:absolute;display:block}
+.thp-h{left:8px;right:8px;top:8px;height:12px;border-radius:4px}
+.thp-c{left:8px;right:8px;top:26px;height:34px;border-radius:5px;padding:6px 5px}
+.thp-c b{display:block;height:5px;border-radius:2px;margin-bottom:5px;opacity:.85}
+.thp-b{left:8px;right:8px;bottom:8px;height:24px;border-radius:7px}
+.thc-b{flex:1;min-width:0;display:flex;flex-direction:column}
+.thc-b>b{font-size:18px;line-height:1.15}
+.thc-b>small{font-size:16px;font-weight:600;color:#57606f;line-height:1.25;margin-top:2px}
+html.lk .thc-b>small{color:var(--card-mut)}
+.thc-f{margin-top:auto;padding-top:6px}
+.thc-f .btn{width:100%;min-height:50px;font-size:17px;padding:6px 10px}
+.th-on{display:block;font-weight:800;color:#237032;font-size:17px;padding:8px 0 2px}
+.th-lk{display:block;font-weight:700;color:#57606f;font-size:16px;padding:6px 0 2px}
+.gbar{display:block;height:8px;border-radius:4px;background:#dcd6c8;margin-top:6px;overflow:hidden}.gbar i{display:block;height:100%;background:#2b8a3e}
+
+/* ---------- низкие телефоны ---------- */
+@media (max-height:700px) and (max-width:699px){
+ html.lk .host{min-height:120px}html.lk .host .bub{font-size:16.5px;padding:8px 11px}html.lk .host .av{min-height:70px}
+ html.lk .btn.big{min-height:60px;font-size:22px}html.lk .nrow .btn{min-height:60px}html.lk .nrow .btn lk-i{width:28px;height:28px}
+ html.lk .mfoot{display:none}html.lk .rankb{padding-top:7px;padding-bottom:7px}html.lk .rankb>lk-i:first-child{top:9px;width:32px;height:32px}html.lk .mini{display:none}
+ html.lk .tp{min-height:86px;padding:5px 4px 7px}html.lk .tp .ti lk-i{width:38px;height:38px}html.lk .tp.all{min-height:54px}html.lk .thint{display:none}
+ html.lk .say .av{width:50px;height:55px}html.lk .ans{min-height:52px}html.lk .life{min-height:58px}
+ html.lk .card .av{width:74px;height:82px}html.lk #mcard.res{margin-top:46px}html.lk #mcard.res>.av:first-child{width:96px;height:104px;margin-top:-80px}html.lk .score{font-size:44px}
+}
+@media (max-width:370px){html.lk .logo{font-size:19px}html.lk .life small{font-size:16px;letter-spacing:-.02em}html.lk .verd b{font-size:19px}html.lk #btnNext{font-size:20px}html.lk .sk1{letter-spacing:0;margin-right:5px}}
+@media (max-width:360px){html.lk .logo small{display:none}html.lk .logo{font-size:18px}html.lk .nrow .btn{font-size:16px}html.lk .tp b{font-size:16px;letter-spacing:-.02em}}
+
+/* ---------- компьютер и альбомная: столбик сумм справа, как в телеигре ---------- */
+@media (min-aspect-ratio:1/1) and (min-width:700px){
+ html.lk .mscroll{max-width:none;flex-direction:column;flex-wrap:wrap;align-content:center;justify-content:center;padding:6px 40px 24px;overflow:hidden}
+ html.lk .mscroll>*{width:400px;flex:none;margin-left:36px}
+ html.lk .host{width:380px;height:100%;max-height:640px;margin-left:0;justify-content:flex-end}
+ html.lk .host .av{max-height:none}
+ html.lk .mfoot{margin-top:0}
+ html.lk .tp{width:18.4%;margin:0 2% 12px 0}html.lk .tp:nth-child(3n+1){margin-right:2%}html.lk .tp:nth-child(5n+1){margin-right:0}
+ html.lk .tp.all{width:100%;margin-right:0}html.lk .tp .ti lk-i{width:56px;height:56px}html.lk .tp b{font-size:18px}html.lk .tp small{display:block;font-size:16px;color:var(--card-mut)}html.lk .tp{min-height:132px}
+ html.lk .gbody{position:relative;padding-right:196px}
+ html.lk .gcol1 .ladder{position:absolute;right:22px;top:66px;bottom:18px;width:156px;flex-direction:column-reverse;justify-content:center}
+ html.lk .ladder span{flex:none;height:42px;flex-direction:row;justify-content:space-between;padding:0 12px;font-size:18px;margin-top:5px;border-radius:12px}
+ html.lk .ladder span.cur{transform:scale(1.06)}
+ html.lk .ladder em{display:inline-flex;align-items:center;font-size:19px;font-weight:800}
+ html.lk .ladinfo{position:absolute;right:22px;top:4px;width:156px;flex-direction:column;align-items:stretch;text-align:center}
+ html.lk .ladinfo>span{display:block}html.lk .sk1{display:block;margin:0 0 2px}html.lk .sk2{font-size:26px}html.lk .sk3{margin-top:4px}
+ html.lk .say .av{width:96px;height:106px;margin-bottom:-14px}html.lk .say .sb{font-size:19px}
+ html.lk .qcard{padding:18px 20px}html.lk .ans{min-height:64px}html.lk .life{min-height:70px}
+}
+/* окно VK на ноутбуке (911×630) */
+@media (min-aspect-ratio:1/1) and (min-width:700px) and (max-height:700px){html.lk .ladder span{height:34px;margin-top:4px}html.lk .say .av{width:70px;height:78px}html.lk .ans{min-height:54px}html.lk .life{min-height:58px}html.lk .host{height:70vh}}
+
+/* ---------- спокойный режим и «меньше движения» ---------- */
+html.lk body.calm #lifes.nudge .life{animation:none}
+@media (prefers-reduced-motion:reduce){html.lk #lifes.nudge .life{animation:none}}
+/* ---------- старые WebView: gap → отступы ---------- */
+@supports not (inset:0){html.lk .nrow>*+*,html.lk .lifes>*+*,html.lk .ladder>*+*,html.lk .next.on>*+*{margin-left:8px}html.lk .next.on>#btnRep{margin-left:0;margin-top:8px}html.lk .ans>*+*{margin-left:10px}}
+html.lk .fr:empty{display:none}
+html.lk .ans .plus .ic{width:20px;height:20px;vertical-align:-4px;margin-left:1px}
+html.lk #mcard{position:relative;z-index:1}
+html.lk #btnNext>lk-i{position:static;margin:0 0 0 6px}
+html.lk .verd small lk-i{margin:0 3px 0 0}
+html.lk .tscroll{display:flex;flex-direction:column}
+html.lk .tgrid{flex:1 0 auto;min-height:0;align-content:stretch}
+html.lk .tp{height:calc((100% - 71px)/5 - 9px);min-height:84px}
+html.lk .tp.all{height:auto;flex:none}
+html.lk .gt div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-height:900px) and (max-width:699px){html.lk .thint{display:none}}
+html.lk lk-i .ic,html.lk lk-i svg{width:100%;height:100%;margin:0}
+@media (max-height:700px) and (max-width:699px){html.lk .rankb small{display:none}html.lk .rankb{font-size:18px;min-height:52px;display:flex;align-items:center}html.lk .rankb>lk-i:first-child{top:50%;margin-top:-16px}
+ html.lk #btnDaily small,html.lk #btnDuel small{display:none}html.lk .btn.wide{min-height:56px}}
+@media (max-width:360px){html.lk .gh .icon,html.lk .mh .icon{width:48px;height:48px}html.lk .pill{font-size:18px;padding:3px 10px 3px 6px;min-height:48px}html.lk .pill lk-i{width:24px;height:24px}
+ html.lk .btn.wide,html.lk .btn.big{padding-left:54px}html.lk .btn.wide>lk-i:first-child,html.lk .btn.big>lk-i:first-child{left:12px;width:30px;height:30px;margin-top:-15px}html.lk #btnDaily{padding-right:64px}html.lk .fr{right:8px;font-size:18px}}
+@media (min-aspect-ratio:1/1) and (min-width:700px){html.lk .tp{height:calc((100% - 75px)/3 - 12px);min-height:120px}html.lk .tp.all{min-height:62px;height:auto}html.lk .tp small{margin-bottom:5px}
+ html.lk .host{max-height:600px}html.lk .host .av{max-height:440px}}
+/* самые низкие телефоны (320×568): реплика страховки + вопрос + подсказки — без прокрутки */
+html.lk .fit3 .say .av{display:none}html.lk .fit3 .say{min-height:0}html.lk .fit3 .say .sb::before{display:none}
+html.lk .fit3 .ladder span{height:24px}html.lk .fit3 .ladinfo{min-height:28px}html.lk .fit3 .sk2{font-size:19px;line-height:25px}
+html.lk .fit4 .life{min-height:48px;padding:2px}html.lk .fit4 .life lk-i{width:24px;height:24px}html.lk .fit4 .qcard{padding:7px 12px 8px}html.lk .fit4 .ans i{width:28px;height:28px;font-size:16px}
+html.lk .fit4 .answers,html.lk .fit4 .gcol1,html.lk .fit4 .gcol2{gap:4px}html.lk .fit4 .gcol2{margin-top:4px}html.lk .fit4 .ans{min-height:42px;padding:3px 10px}html.lk .fit4 .say .sb{padding:4px 9px;line-height:1.2}
+/* живость (не в спокойном режиме и не при «уменьшить движение»): верный ответ подпрыгивает, «+N» взлетает, вердикт и окно итогов — «пружинкой» */
+@keyframes lkOk{0%{transform:scale(1)}40%{transform:scale(1.035)}100%{transform:scale(1)}}
+@keyframes lkUp{0%{opacity:0;transform:translateY(12px) rotate(-4deg)}60%{opacity:1;transform:translateY(-4px) rotate(-4deg)}100%{transform:translateY(0) rotate(-4deg)}}
+@keyframes lkPop{0%{opacity:0;transform:scale(.85)}70%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+@keyframes lkSway{0%,100%{transform:rotate(0)}50%{transform:rotate(-2deg)}}
+@keyframes lkSpin{to{transform:rotate(360deg)}}
+html.lk body:not(.calm) .qdone .ans.ok{animation:lkOk .45s ease-out}
+html.lk body:not(.calm) .ans .plus{animation:lkUp .6s ease-out both}
+html.lk body:not(.calm) .next.on .verd,html.lk body:not(.calm) .next.on #btnNext{animation:lkPop .32s ease-out both}
+html.lk body:not(.calm) #mcard.res>.av:first-child{animation:lkPop .45s ease-out both}
+html.lk body:not(.calm) #scr-menu .host .av svg{transform-origin:50% 100%;animation:lkSway 4s ease-in-out infinite}
+html.lk body:not(.calm) #modal.rs #rays svg{animation:lkSpin 60s linear infinite}
+@media (prefers-reduced-motion:reduce){html.lk .ans,html.lk .ans .plus,html.lk .verd,html.lk #btnNext,html.lk #mcard.res>.av,html.lk .host .av svg,html.lk #rays svg{animation:none!important}}
+.tns{display:none}
+@media (max-width:360px){html.lk .tp .tnl{display:none}html.lk .tp .tns{display:inline}}
+@media (max-height:600px) and (max-width:699px){html.lk .tp{min-height:72px;padding:3px 3px 6px}html.lk .tp .ti lk-i{width:32px;height:32px}html.lk .tp b{margin:1px 0 4px}
+ html.lk .tp.all{min-height:50px}html.lk .tp.all small{display:none}html.lk .tp.all .ti lk-i{width:32px;height:32px}html.lk .gh{padding-bottom:3px}}

@@ -1,0 +1,125 @@
+/* Дворовая викторина — темы оформления (look1, 04.10). Основной вид А «Дворовое шоу» — css/look.css (html.lk).
+   Тема = html.lk.th-<id>: переопределяет переменные вида и немного формы. Реестр и способ открыть — js/themes.js.
+   Б «Телестудия» (th-tele, покупка th_tele: 79 ₽ / 11 голосов) — вечерняя телеигра: синяя студия, табло в лампочках, золото.
+   В «Школьная доска» (th-doska, за 15 роликов) — вопрос мелом на доске, ответы — листки из тетради, красная ручка.
+   «Классика» — html без lk (прежний вид игры). */
+
+/* ===================== Б «ТЕЛЕСТУДИЯ» ===================== */
+html.lk.th-tele{--bg:#0f1840;--ink:#fff;--muted:#c3cdfa;--hd-ink:#fff;--hd-ink2:#c3cdfa;--o:#0a1030;
+ --card:#fff6dc;--card-ink:#1b1f3a;--card-mut:#3a3f5c;--pan:#22307a;--pan2:#2c3c92;--line:#3b4ba3;--set:#fbeec4;
+ --r:16px;--r2:13px;--bd:2px solid #f4c542;--bd2:2px solid #f4c542;--sh:0 4px 0 #0a1030;--sh2:0 3px 0 #0a1030;--sha:0 1px 0 #0a1030;
+ --btn:linear-gradient(#2c3f9e,#1d2b74);--btn-ink:#fff;--go:linear-gradient(#ffe27a,#f2a900);--go-ink:#2a1a00;--sh-go:0 5px 0 #8a5a00,0 0 22px rgba(255,210,80,.55);
+ --day:linear-gradient(#e2475f,#b3243d);--day-ink:#fff;--sh-day:0 4px 0 #5e0f1e;--duel:linear-gradient(#8a5ad0,#5c3399);--grn:linear-gradient(#2fc06a,#16884a);
+ --gold:linear-gradient(#ffe27a,#f2a900);--gold-ink:#2a1a00;--gold-ink2:#b97800;--gold-d:#f4c542;--sh-gold:0 3px 0 #8a5a00;
+ --q-bg:#fff6dc;--q-ink:#1b1f3a;--q-ink2:#3a3f5c;--q-meta:#a3152f;--q-line:#e2d3a5;--q-bd:0;--sh-q:0 6px 0 #0a1030,0 0 30px rgba(255,220,120,.35);
+ --ans:linear-gradient(#2f43a8,#1c2a72);--ans-ink:#fff;--ans-bd:2px solid #f4c542;--sh-ans:0 4px 0 #0a1030;--let:linear-gradient(#ffe27a,#f2a900);--let-ink:#2a1a00;--sel:linear-gradient(#ffe27a,#f2a900);
+ --ok:#1faa59;--ok-d:#0f6f38;--ok-glow:rgba(60,230,130,.45);--no:#e03a4e;--no-d:#8f1626;--tip:#7fd3ff;
+ --dim:#18225a;--dim-ink:#8f9be0;--dim-bd:#34408a;--step:#16205a;--step-ink:#aab4ee;--cur:#fff;--cur-ink:#1b1f3a;--acc-ink:#b3243d;
+ --i1:#ffd95a;--i2:#ff7b8a;--i3:#fff6dc;--il:#ffd95a;--coin1:#ffd95a;--coin2:#b97800;--ray:rgba(255,225,130,.28);--scrim:rgba(6,10,34,.62);--toast:#0a1030}
+/* на светлом (табло, окна) — значки тёмные */
+html.lk.th-tele .qcard,html.lk.th-tele .card,html.lk.th-tele .say .sb,html.lk.th-tele .host .bub{--i1:#27357a;--i2:#d6304a;--i3:#fff;--il:#27357a}
+html.lk.th-tele .card .btn{--i1:#ffd95a;--i2:#ff7b8a;--i3:#fff6dc;--il:#ffd95a}
+html.lk.th-tele .card .btn.accent{--i1:#2a1a00;--i3:#fff6dc}
+html.lk.th-tele .logo{background:linear-gradient(#2c3f9e,#1d2b74);color:#ffe27a;text-transform:uppercase;letter-spacing:.03em;font-size:18px}
+html.lk.th-tele .logo small{text-transform:none;letter-spacing:0;color:#fff}
+html.lk.th-tele .qcard{border:9px solid transparent;background:linear-gradient(#fff6dc,#fff6dc) padding-box,radial-gradient(circle,#fff3b8 0,#fff3b8 2.6px,#f2a900 3.4px,rgba(0,0,0,0) 4.2px) -3.5px -3.5px/16px 16px border-box,#7c1228 border-box}
+html.lk.th-tele .qcard::before{display:none}
+html.lk.th-tele .ladder span{background:var(--step);border-color:#34408a;border-radius:13px}
+html.lk.th-tele .ladder span.done{background:radial-gradient(circle at 40% 35%,#fff7c8,#ffd24a 55%,#f2a900);border-color:#fff3b8;box-shadow:0 0 10px rgba(255,210,80,.9);color:#2a1a00}
+html.lk.th-tele .ladder span.cur{box-shadow:0 0 14px #fff;border-color:#fff}
+html.lk.th-tele .ladder span.safe{border-color:#f4c542;border-width:3px}
+html.lk.th-tele .ladder span.bad{border-color:#ff9aa6}
+html.lk.th-tele .tp{background:linear-gradient(#2c3f9e,#1d2b74);color:#fff}
+html.lk.th-tele .tp.all{background:var(--gold);color:var(--gold-ink)}
+html.lk.th-tele .bar,html.lk.th-tele .tp .bar{background:#101a4a}
+html.lk.th-tele .rankb,html.lk.th-tele .icon,html.lk.th-tele .pill,html.lk.th-tele .life,html.lk.th-tele .verd{background:linear-gradient(#2c3f9e,#1d2b74);color:#fff}
+html.lk.th-tele .rankb small{color:#c3cdfa}
+html.lk.th-tele .life small{color:#fff}
+html.lk.th-tele .verd small{color:#c3cdfa}
+html.lk.th-tele .verd.right b{color:#7dffb0}html.lk.th-tele .verd.wrong b{color:#ff9aa6}
+html.lk.th-tele .mfoot{background:rgba(255,255,255,.08);color:#fff}html.lk.th-tele .mfoot b{color:#ffe27a}
+html.lk.th-tele .thint{background:rgba(255,255,255,.1);color:#fff}
+html.lk.th-tele .ans.ok{box-shadow:0 4px 0 var(--ok-d),0 0 0 4px var(--ok-glow),0 0 26px rgba(60,230,130,.7);border-color:#b9ffd6}
+html.lk.th-tele .say .sb,html.lk.th-tele .host .bub{border-color:#f4c542}
+html.lk.th-tele .say .sb::before,html.lk.th-tele .host .bub::before{border-right-color:#f4c542;border-top-color:#f4c542}
+html.lk.th-tele .host .bub::before{border-right-color:transparent}
+html.lk.th-tele .say.help .sb{background:#fbe9b0}
+html.lk.th-tele .bust{filter:drop-shadow(0 0 10px rgba(255,235,170,.55))}
+html.lk.th-tele .card{border:3px solid #f4c542}
+html.lk.th-tele .card .btn:not(.accent):not(.green):not(.blue):not(.violet){color:#fff}
+html.lk.th-tele .lnk{color:#ffe27a}
+html.lk.th-tele #btnRep{color:#c3cdfa}
+html.lk.th-tele .lad10 span{background:#16205a;border-color:#34408a}html.lk.th-tele .lad10 span.done{background:#ffd24a}
+html.lk.th-tele .fitS .next.on{background:linear-gradient(rgba(15,24,64,0),#0f1840 26%)}
+html.lk.th-tele .toast{border-color:#f4c542}
+@media (min-aspect-ratio:1/1) and (min-width:700px){html.lk.th-tele .ladder span{border-radius:12px}}
+
+/* ===================== В «ШКОЛЬНАЯ ДОСКА» ===================== */
+html.lk.th-doska{--bg:#2c5847;--ink:#f8f5ea;--muted:#cfe3d5;--hd-ink:#f8f5ea;--hd-ink2:#ffe08a;--o:rgba(0,0,0,.35);
+ --card:#fdfbf3;--card-ink:#22304d;--card-mut:#4b5878;--pan:#fdfbf3;--pan2:#fff1b8;--line:#d9dfea;--set:#f3f1e6;
+ --r:10px;--r2:8px;--bd:0 solid transparent;--bd2:0 solid transparent;--sh:0 4px 0 rgba(0,0,0,.35);--sh2:0 3px 0 rgba(0,0,0,.3);--sha:0 1px 0 rgba(0,0,0,.3);
+ --btn:#fdfbf3;--btn-ink:#22304d;--go:#ffcf40;--go-ink:#3b2a00;--sh-go:0 5px 0 #a87400;--day:#cfe4ff;--day-ink:#16305e;--sh-day:0 4px 0 #5b7fb5;--duel:#e9d5ff;--grn:#2f9e4a;
+ --gold:#ffcf40;--gold-ink:#3b2a00;--gold-ink2:#a66a00;--gold-d:#ffe08a;--sh-gold:0 3px 0 #a87400;
+ --q-bg:transparent;--q-ink:#f8f5ea;--q-ink2:#dcebe0;--q-meta:#ffe08a;--q-line:rgba(255,255,255,.45);--q-bd:3px dashed rgba(248,245,234,.75);--sh-q:none;
+ --ans:#fdfbf3;--ans-ink:#1c2c57;--ans-bd:0 solid transparent;--sh-ans:0 3px 0 rgba(0,0,0,.35);--let:transparent;--let-ink:#d8343b;--sel:#fff1b8;
+ --ok:#2f9e4a;--ok-d:#1c6e31;--ok-glow:rgba(190,255,190,.35);--no:#d8343b;--no-d:#9b1d23;--tip:#ffe08a;
+ --dim:#3d6a58;--dim-ink:#b9d4c6;--dim-bd:#58826f;--step:transparent;--step-ink:#e9efe6;--cur:#ffe08a;--cur-ink:#2c2200;--acc-ink:#d8343b;
+ --i1:#2f5fb5;--i2:#d8343b;--i3:#fff;--il:#22304d;--coin1:#ffd24a;--coin2:#b98000;--ray:rgba(255,224,138,.16);--scrim:rgba(14,30,24,.62);--toast:#1c3a2f}
+/* мел: значки на доске — светлые */
+html.lk.th-doska .gh,html.lk.th-doska .mh .hdr-r,html.lk.th-doska .qcard,html.lk.th-doska .ladinfo,html.lk.th-doska .mfoot,html.lk.th-doska .thint{--i1:#f8f5ea;--i2:#ffe08a;--i3:#2c5847;--il:#f8f5ea}
+html.lk.th-doska .qcard{--i1:#ffe08a;--i2:#ff9a9a}
+html.lk.th-doska #scene{border:10px solid #9a6a3c;box-shadow:inset 0 0 0 3px #6e4520,inset 0 0 60px rgba(0,0,0,.35)}
+html.lk.th-doska .mh,html.lk.th-doska .gh{padding-left:20px;padding-right:20px;padding-top:max(14px,env(safe-area-inset-top))}
+html.lk.th-doska .mscroll,html.lk.th-doska .tscroll{padding-left:20px;padding-right:20px}
+html.lk.th-doska .gbody{padding-left:18px;padding-right:18px;padding-bottom:22px}
+html.lk.th-doska .icon,html.lk.th-doska .pill{background:transparent;border:2.5px solid rgba(248,245,234,.8);color:#f8f5ea;box-shadow:none}
+html.lk.th-doska .logo{background:transparent;box-shadow:none;border:0;padding:0;color:#f8f5ea;font-size:23px}
+html.lk.th-doska .logo small{color:#ffe08a}
+html.lk.th-doska .ans,html.lk.th-doska .host .bub,html.lk.th-doska .say .sb,html.lk.th-doska .rankb,html.lk.th-doska .card{background:linear-gradient(90deg,rgba(0,0,0,0) 30px,#f2a5a5 30px,#f2a5a5 31.5px,rgba(0,0,0,0) 31.5px),repeating-linear-gradient(#fdfbf3 0,#fdfbf3 21px,#c9d8f0 21px,#c9d8f0 22.5px)}
+html.lk.th-doska .life,html.lk.th-doska .nrow .btn,html.lk.th-doska .tp,html.lk.th-doska .verd{background:repeating-linear-gradient(#fdfbf3 0,#fdfbf3 21px,#c9d8f0 21px,#c9d8f0 22.5px);color:#22304d}
+html.lk.th-doska .tp.all{background:var(--gold);color:var(--gold-ink)}
+html.lk.th-doska .host .bub::before,html.lk.th-doska .host .bub::after{border-top-color:#fdfbf3}
+html.lk.th-doska .say .sb::before{border-right-color:#fdfbf3}
+html.lk.th-doska .say.help .sb{background:#fff1b8}
+html.lk.th-doska .host .bub,html.lk.th-doska .say .sb,html.lk.th-doska .rankb{color:#22304d}
+html.lk.th-doska .ans{padding-left:38px}
+html.lk.th-doska .ans:nth-child(odd){transform:rotate(-.5deg)}html.lk.th-doska .ans:nth-child(even){transform:rotate(.4deg)}
+html.lk.th-doska .ans i{border:2.5px solid #d8343b;width:34px;height:34px}
+html.lk.th-doska .ans.ok{background:#c9f3bf;color:#143d1c;box-shadow:0 3px 0 rgba(0,0,0,.35),0 0 0 4px var(--ok-glow)}
+html.lk.th-doska .ans.ok i{background:#2f9e4a;border-color:#2f9e4a;color:#fff}
+html.lk.th-doska .ans.no{background:#ffd9d6;color:#7a1418;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+html.lk.th-doska .ans.no span{text-decoration:line-through;text-decoration-color:#d8343b}
+html.lk.th-doska .ans.no i{background:#d8343b;border-color:#d8343b;color:#fff}
+html.lk.th-doska .ans.gone,html.lk.th-doska .qdone .ans:not(.ok):not(.no){background:var(--dim);transform:none}
+html.lk.th-doska .ans.gone i,html.lk.th-doska .qdone .ans:not(.ok):not(.no) i{background:transparent;border-color:#7da38f}
+html.lk.th-doska .ans .lbl{border-color:#1c6e31}
+html.lk.th-doska .qcard{box-shadow:none}
+html.lk.th-doska .qcard::before{display:none}
+html.lk.th-doska .qtext{letter-spacing:.01em;text-shadow:0 0 1px rgba(255,255,255,.6)}
+html.lk.th-doska .ladder span{border:2px solid rgba(248,245,234,.7);border-radius:4px}
+html.lk.th-doska .ladder span.done{background:transparent;border-color:#bff0b5;color:#bff0b5}
+html.lk.th-doska .ladder span.bad{background:transparent;border-color:#ff9a9a;color:#ff9a9a}
+html.lk.th-doska .ladder span.safe{border-color:#ffe08a;border-width:3px}
+html.lk.th-doska .ladder span.cur{border-color:#ffe08a}
+html.lk.th-doska .life small,html.lk.th-doska .verd small{color:#4b5878}
+html.lk.th-doska .life lk-i,html.lk.th-doska .nrow .btn lk-i{--i1:#2f5fb5;--i2:#d8343b;--i3:#fff;--il:#22304d}
+html.lk.th-doska .mfoot{background:transparent;color:#f8f5ea;border:2px dashed rgba(248,245,234,.6)}html.lk.th-doska .mfoot b{color:#ffe08a}
+html.lk.th-doska .thint{background:transparent;color:#f8f5ea;border:2px dashed rgba(248,245,234,.6)}
+html.lk.th-doska .score{transform:rotate(-4deg)}
+html.lk.th-doska .bust{filter:drop-shadow(2px 0 0 #fdfbf3) drop-shadow(-2px 0 0 #fdfbf3) drop-shadow(0 -2px 0 #fdfbf3)}
+html.lk.th-doska #btnRep,html.lk.th-doska .lnk{color:#f8f5ea}
+html.lk.th-doska .card .lnk{color:#22304d}
+html.lk.th-doska .set,html.lk.th-doska .mdr,html.lk.th-doska .sd,html.lk.th-doska .pick button,html.lk.th-doska .thc{border:1.5px solid #c9d8f0}
+html.lk.th-doska .tp.wk{box-shadow:0 0 0 3px #ffe08a,var(--sh2)}
+html.lk.th-doska .lad10 span{border:2px solid #c9d8f0}
+html.lk.th-doska .fitS .next.on{background:linear-gradient(rgba(44,88,71,0),#2c5847 26%)}
+@media (max-height:700px) and (max-width:699px){html.lk.th-doska #scene{border-width:6px}html.lk.th-doska .gbody{padding-left:14px;padding-right:14px;padding-bottom:12px}html.lk.th-doska .mh,html.lk.th-doska .gh{padding-left:14px;padding-right:14px;padding-top:max(10px,env(safe-area-inset-top))}}
+html.lk.th-tele .ladder span.cur{background:#fff;color:#1b1f3a;border-color:#fff}
+html.lk.th-doska .rankb small{color:#4b5878}
+html.lk.th-doska .mscroll{padding-bottom:calc(36px + env(safe-area-inset-bottom))}
+html.lk.th-doska .tscroll{padding-bottom:36px}
+html.lk.th-doska .gbody{padding-bottom:30px}
+@media (max-height:700px) and (max-width:699px){html.lk.th-doska .gbody{padding-bottom:14px}html.lk.th-doska .mscroll{padding-bottom:18px}}
+html.lk.th-tele .card .quote{background:#fbe9b0;color:#1b1f3a!important}
+html.lk.th-tele .fit3 .qcard{border-width:6px}html.lk.th-doska .fit3 .qcard{padding:5px 9px}
+html.lk.th-tele .fit4 .qcard{border-width:4px;padding:5px 10px}html.lk.th-tele .fit4 .life{min-height:46px}
