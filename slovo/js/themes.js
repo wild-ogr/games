@@ -187,12 +187,14 @@ function adOk(){try{return typeof adsOk==='function'&&adsOk()&&!SHOT;}catch(e){r
 function trial(id){TRIAL=id&&get(id)?id:null;trDone=false;apply();}
 function tryTheme(id){var T=get(id);if(!T||owned(id)||trN>=TRY_MAX||!adOk())return;try{STAT.offer('thtry');STAT.place('thtry');}catch(e){}
   showRewarded(function(){trN++;trial(id);try{STAT.ev('mod',{m:'theme',a:'try',k:id});}catch(e){}
-    var lv=inLevel()&&typeof G!=='undefined'&&G&&!G.won;hideModal();toast((lv?'Этот уровень':'Следующий уровень')+' — в оформлении «'+T.ru+'»',3600);},function(){open();});}
+    var lv=inLevel()&&typeof G!=='undefined'&&G&&!G.won;hideModal();toast((lv?'Этот уровень':'Следующий уровень')+' — в оформлении «'+T.ru+'»',3600);},function(){open();},
+    /* поздний зачёт (adt): примерка — всегда (окна не трогаем); тема уже своя — монеты по цене ролика (у примерки цены в монетах нет) */
+    function(){if(owned(id)||TRIAL===id)return typeof adLateCoins==='function'?adLateCoins():'';trN++;trial(id);try{STAT.ev('mod',{m:'theme',a:'try',k:id});}catch(e){}return 'примерка оформления «'+T.ru+'»';});}
 function trialEnd(){if(!TRIAL)return;var T=get(TRIAL);TRIAL=null;trDone=false;apply();try{toast('Примерка закончилась. Оформление «'+T.ru+'» — в ⚙️ → Оформление',4200);}catch(e){}}
 function buy(id){var T=get(id);if(!T||owned(id))return;var u=T.unlock;
   if(u.t==='pay'){if(canBuy(T))PAY.buy(u.pay);else toast('Покупки сейчас недоступны');return;}
   if(u.t==='ads'){if(!adOk()){toast('Ролик сейчас недоступен — загляни позже');return;}
-    try{STAT.offer('theme');STAT.place('theme');}catch(e){}showRewarded(function(){check();open();},function(){open();});}}
+    try{STAT.offer('theme');STAT.place('theme');}catch(e){}showRewarded(function(){check();open();},function(){open();},function(){return 'ролик в счёт оформления засчитан';});}} // поздний зачёт (adt): счётчик роликов растёт в обёртке ниже
 function prevHtml(T){return '<span class="thp thp-'+T.id+'"><i class="thp-h"></i><i class="thp-c"><b>З</b><b>И</b><b>Н</b><b>А</b></i><i class="thp-b"></i></span>';}
 var back=null;
 function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen('theme');}catch(e){}var c=cur(),h='',ads=adOk();
@@ -234,7 +236,8 @@ function nowUpd(){try{var q=document.querySelectorAll('.th-now'),T=get(cur());fo
 {var osh=openShop;openShop=function(){osh.apply(this,arguments);var sl=document.getElementById('shopList'),tb=sl&&sl.querySelector('.tabs');if(!tb||document.getElementById('shTheme'))return;
   var b=rowBtn('shTheme');b.className='setrow shth';tb.parentNode.insertBefore(b,tb.nextSibling);b.onclick=function(){try{SND.tap();}catch(e){}open(function(){hideModal();nowUpd();});};};}
 // ролики за награду — счётчик досмотренных за всё время (тема за ролики): считается только в колбэке награды
-{var sr=showRewarded;showRewarded=function(cb,onFail){return sr(function(){S.adTot=(+S.adTot||0)+1;try{save();}catch(e){}try{cb&&cb.apply(this,arguments);}finally{try{check();}catch(e){}}},onFail);};}
+{var sr=showRewarded,cnt=function(f){return function(){S.adTot=(+S.adTot||0)+1;try{save();}catch(e){}try{return f&&f.apply(this,arguments);}finally{try{check();}catch(e){}}};};
+ showRewarded=function(cb,onFail,late){return sr(cnt(cb),onFail,cnt(late));};} // late — поздний «досмотрел» (adt): тоже в счёт роликов
 // покупка темы — включить сразу
 {var pa=payAfter;payAfter=function(id){if(id)try{bought(id);}catch(e){}pa.apply(this,arguments);};}
 // окно — значки сразу (до fitWin), экран — для фона-места

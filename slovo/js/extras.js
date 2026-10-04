@@ -64,7 +64,10 @@ function shortModal(it,isZ,id){
   const b=$('mAd');if(b)STAT.offer('coins');if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place('coins');
     showRewarded(()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;hideModal();addCoins(ECO.adCoins);SND.coin();
       if(document.querySelector('.screen.on')===$('shopS')){openShop();const r=it.p-S.coins;shopSay(r>0?`Держи +${ECO.adCoins}! До «${it.n}» осталось ${r}.`:`Держи +${ECO.adCoins}! Теперь хватает на «${it.n}» — бери!`,'happy');}},
-      ()=>{b.disabled=false;});};
+      ()=>{b.disabled=false;},
+      // поздний зачёт (adt): монеты — всегда (в счёт дневного предела)
+      ()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;const mine=$('modal').classList.contains('on')&&document.body.contains(b);if(mine)hideModal();addCoins(ECO.adCoins);SND.coin();
+        if(mine&&document.querySelector('.screen.on')===$('shopS'))openShop();return 'держи монеты: +'+ECO.adCoins;});};
 }
 
 /* ================= рейтинг и статистика ================= */

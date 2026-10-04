@@ -348,7 +348,10 @@ function pay(kind,then){
   $('mYes').onclick=()=>{if(S.coins<pr)return;const na=$('mNoAsk');if(na&&na.checked){S.tip.noAsk=1;save();}hideModal();doPay();};
   $('mNo').onclick=()=>{hideModal();SND.tap();};
   const b=$('mAd');if(b)STAT.offer(kind);if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place(kind);
-    showRewarded(()=>{hideModal();if(G===g&&!g.won){S.hintsUsed=(S.hintsUsed||0)+1;then();}},()=>{b.disabled=false;});};
+    showRewarded(()=>{hideModal();if(G===g&&!g.won){S.hintsUsed=(S.hintsUsed||0)+1;then();}},()=>{b.disabled=false;},
+      // поздний «досмотрел» (adt): тот же уровень ещё идёт и не открыто чужое окно — подсказка; иначе монеты по полной цене подсказки (PRICE)
+      ()=>{const mo=$('modal').classList.contains('on'),mine=mo&&document.body.contains(b);if(G!==g||g.won||!$('game').classList.contains('on')||(mo&&!mine))return adLateCoins(pr);
+        if(mine)hideModal();S.hintsUsed=(S.hintsUsed||0)+1;then();return kind==='letter'?'открываю букву':'открываю слово';});};
 }
 function hintLetter(){
   if(!G||G.won)return;poke();
@@ -368,7 +371,7 @@ function hintLetter(){
 function hintWord(){
   if(!G||G.won)return;poke();
   const ws=G.words.filter(w=>!w.found);if(!ws.length)return;
-  pay('word',()=>{G.hinted=true;STAT.use('hint');const wd=ws.sort((a,b)=>b.w.length-a.w.length)[0];SND.open();const t=wordInfo(wd.w);
+  pay('word',()=>{const wd=G.words.filter(w=>!w.found).sort((a,b)=>b.w.length-a.w.length)[0];if(!wd)return;G.hinted=true;STAT.use('hint');SND.open();const t=wordInfo(wd.w);
     zina(t&&!DEFS[wd.w]?'Держи слово! '+t:say('hintWord'),'happy',t&&!DEFS[wd.w]?7:0);foundWord(wd,true);});
 }
 function checkAutoFoundAndWin(){checkAutoFound();checkWin();}
@@ -386,7 +389,8 @@ function jarFull(hj){let got=0;
   coinBurst($('mcard').querySelector('.reward'),JAR_PRIZE);
   $('jfOk').onclick=()=>{hideModal();SND.tap();};
   const x=$('jfX2');STAT.offer('jar');x.onclick=()=>{if(got||x.disabled)return;x.disabled=true;STAT.place('jar');
-    showRewarded(()=>{if(got)return;got=1;addCoins(JAR_PRIZE);SND.coin();x.textContent='✅ Получено: +'+JAR_PRIZE*2;coinBurst($('jfX2'),JAR_PRIZE);},()=>{if(!got)x.disabled=false;});};}
+    showRewarded(()=>{if(got)return;got=1;addCoins(JAR_PRIZE);SND.coin();x.textContent='✅ Получено: +'+JAR_PRIZE*2;coinBurst($('jfX2'),JAR_PRIZE);},()=>{if(!got)x.disabled=false;},
+      ()=>{if(got)return '';got=1;addCoins(JAR_PRIZE);SND.coin();if(document.body.contains(x)){x.disabled=true;x.textContent='✅ Получено: +'+JAR_PRIZE*2;}return 'держи монеты: +'+JAR_PRIZE;});};} // поздний зачёт (adt): монеты — всегда, один раз
 function updJar(){const n=Math.max(0,Math.min(JAR_SIZE,S.jar||0)),c=$('jarCnt'),p=$('jarPg');c.textContent=n;c.classList.toggle('z',!n);
   if(p)p.setAttribute('stroke-dasharray',(n/JAR_SIZE*113.1).toFixed(1)+' 200');$('hJar').title='Банка бонусных слов: '+n+' из '+JAR_SIZE;}
 function showJar(){

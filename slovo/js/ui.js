@@ -62,7 +62,8 @@ function updGift(){const b=$('btnGift'),t=$('mTmr');if(!b)return;const lg=lgDue(
 function takeGift(){const b=$('btnGift');if(!b||b.disabled)return;if(lgDue()){SND.tap();openLogin();return;}if(giftTaken())return;SND.tap();b.disabled=true;STAT.place('gift');
   showRewarded(()=>{b.disabled=false;if(giftTaken()){updGift();return;}S.gift={d:todayKey()};addCoins(ECO.gift);SND.coin();updGift();
     $('mSay').textContent=pick(['Держи +'+ECO.gift+'! Из пенсии отложила. Завтра приходи — ещё припасу.','Вот тебе +'+ECO.gift+' на подсказки. Только не на семечки!']);},
-    ()=>{b.disabled=false;});}
+    ()=>{b.disabled=false;},
+    ()=>{if(giftTaken())return '';S.gift={d:todayKey()};addCoins(ECO.gift);SND.coin();updGift();return 'держи подарок: +'+ECO.gift;});} // поздний зачёт (adt): подарок — всегда, если сегодня ещё не взят
 // значок + подпись; выключенное — другим значком и словом, а не прозрачностью
 function sndIcon(){$('btnSnd').innerHTML=(S.sound?'🔊':'🔇')+'<small>'+(S.sound?'Звук':'Без звука')+'</small>';
   $('btnMus').innerHTML=(S.music?'🎵':'🔕')+'<small>'+(S.music?'Музыка':'Без музыки')+'</small>';$('btnMus').classList.toggle('off',!S.music);$('btnSnd').classList.toggle('off',!S.sound);}
@@ -222,7 +223,8 @@ function winModal(g,r,again){
     go();};
   // кнопку блокируем сразу (двойной тап не даёт двойную награду); если реклама не удалась — возвращаем
   const x2=$('mX2');if(x2)STAT.offer('x2');if(x2)x2.onclick=()=>{if(r.x2||x2.disabled)return;x2.disabled=true;STAT.place('x2');
-    showRewarded(()=>{if(r.x2)return;r.x2=1;addCoins(Math.max(reward,ECO.x2min));SND.coin();x2.textContent='✅ Получено: +'+(reward+Math.max(reward,ECO.x2min));coinBurst(x2,Math.max(reward,ECO.x2min));},()=>{if(!r.x2)x2.disabled=false;});};
+    showRewarded(()=>{if(r.x2)return;r.x2=1;addCoins(Math.max(reward,ECO.x2min));SND.coin();x2.textContent='✅ Получено: +'+(reward+Math.max(reward,ECO.x2min));coinBurst(x2,Math.max(reward,ECO.x2min));},()=>{if(!r.x2)x2.disabled=false;},
+      ()=>{if(r.x2)return '';r.x2=1;const n=Math.max(reward,ECO.x2min);addCoins(n);SND.coin();if(document.body.contains(x2)){x2.disabled=true;x2.textContent='✅ Получено: +'+(reward+n);}return 'держи монеты: +'+n;});}; // поздний зачёт (adt)
   const ak=$('mAsk');if(ak&&!again)STAT.ev('mod',{m:ask.soc?'soc':'ask',a:'of_'+ask.k});
   if(ak)ak.onclick=()=>{if(ak.disabled)return;ak.disabled=true;SND.tap();r.ask=null;STAT.ev('mod',{m:ask.soc?'soc':'ask',a:'ok_'+ask.k});
     ask.run().then(ok=>{toast(ok?ask.ok:'Ну и ладно, в другой раз!');}).catch(()=>{toast('Не получилось. Ничего, в другой раз.');});
@@ -246,7 +248,8 @@ function openChapFinale(g,r,nextI,again){r.chapSeen=1;
       <button class="btn ghost small" id="mCard">📤 Открытка «Я прошёл главу»</button></div>`);
   if(!again){SND.win();SND.coin();confetti();buzz('win');coinBurst($('mRew'),r.chap);}
   const cx=$('mChX2');if(cx)STAT.offer('chap');if(cx)cx.onclick=()=>{if(r.chx2||cx.disabled)return;cx.disabled=true;STAT.place('chap');
-    showRewarded(()=>{if(r.chx2)return;r.chx2=1;addCoins(r.chap);SND.coin();cx.textContent='✅ Получено: +'+r.chap*2;coinBurst(cx,r.chap);},()=>{if(!r.chx2)cx.disabled=false;});};
+    showRewarded(()=>{if(r.chx2)return;r.chx2=1;addCoins(r.chap);SND.coin();cx.textContent='✅ Получено: +'+r.chap*2;coinBurst(cx,r.chap);},()=>{if(!r.chx2)cx.disabled=false;},
+      ()=>{if(r.chx2)return '';r.chx2=1;addCoins(r.chap);SND.coin();if(document.body.contains(cx)){cx.disabled=true;cx.textContent='✅ Получено: +'+r.chap*2;}return 'держи монеты: +'+r.chap;});}; // поздний зачёт (adt)
   $('mGo').onclick=()=>{hideModal();SND.tap();maybeInterstitial(()=>{if(nextI<0)openMenu();else startLevel(nextI);});};
   $('mCard').onclick=()=>shareChap(c,()=>openChapFinale(g,r,nextI,true));
 }
@@ -285,7 +288,9 @@ function openStreakFix(){const n=S.streak||0;
     <p>Вчера ты не заходил, и серия в <b>${n} ${plural(n,'день','дня','дней')}</b> вот-вот сгорит.</p><p>Посмотри рекламу — скажу, что ты болел, и серия продолжится.</p>
     <div class="btns"><button class="btn green" id="mFix">🎬 Спасти серию за рекламу</button><button class="btn ghost small" id="mNo">Начать заново</button></div>`);
   const b=$('mFix');STAT.offer('streak');b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place('streak');
-    showRewarded(()=>{S.fix={d:todayKey()};S.lastDaily=dayKey(1);save();hideModal();toast('Серия спасена! Баба Зина прикрыла.');openDaily();},()=>{b.disabled=false;});};
+    showRewarded(()=>{S.fix={d:todayKey()};S.lastDaily=dayKey(1);save();hideModal();toast('Серия спасена! Баба Зина прикрыла.');openDaily();},()=>{b.disabled=false;},
+      // поздний зачёт (adt): серию спасаем, только пока открыто это же окно; иначе (уже «начал заново») — монеты по цене ролика (у серии цены в монетах нет)
+      ()=>{if(!($('modal').classList.contains('on')&&document.body.contains(b)))return adLateCoins();S.fix={d:todayKey()};S.lastDaily=dayKey(1);save();hideModal();openDaily();return 'серия спасена!';});};
   $('mNo').onclick=()=>{S.fix={d:todayKey()};save();hideModal();openDaily();};}
 // задание дня одно на весь день; новичкам (до 30-го уровня) — из тех, где 6 букв, а не 7
 function dailyIdx(){const d=todayKey();if(S.dailyPick&&S.dailyPick.d===d)return S.dailyPick.i;

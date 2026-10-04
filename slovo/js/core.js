@@ -269,7 +269,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Игра только на русском — lang:'ru' (window.LANG от Яндекса интерфейс не меняет).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v2.1',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v2.1-1004c',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // причины паузы: реклама, пауза от Яндекса, VK свернул игру, вкладка скрыта. Снимаем паузу, только когда ушли все
 const PR=new Set();
 function setPause(r,on){if(on)PR.add(r);else PR.delete(r);paused=PR.has('ad')||PR.has('sdk')||PR.has('vk');muted=PR.size>0;
@@ -488,7 +488,7 @@ async function initSDK(){
   if(PLAT==='vk'){
     try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
       await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;vkFitInit();SOC.ready();if(typeof updMore==='function')updMore();
-      VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',true);clearTimeout(cloudT);cloudT=0;cloudSave();}else if(t==='VKWebAppViewRestore')setPause('vk',false);});
+      VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',true);clearTimeout(cloudT);cloudT=0;cloudSave();}else if(t==='VKWebAppViewRestore'){setPause('vk',false);if(typeof adBack==='function')adBack();}});
       Promise.resolve(cloudLoad()).then(payInit,payInit);if(typeof askProbe==='function')askProbe();if(typeof updGift==='function')updGift();
       adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
     }catch(e){VK=null;}
@@ -536,33 +536,93 @@ function adSoon(){return 'Ролик будет через несколько с
 function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
   vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(r&&r.result)adReady();else again();},again);}
 function adReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast('Ролик готов — можно смотреть');},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
-function adWait(on){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
-  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.74);color:#fff;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
-  w.textContent='Ролик загружается…';w.style.display='flex';}
+function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
+  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.74);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
+  w.textContent=txt||'Ролик загружается…';
+  if(exit){const n=document.createElement('div');n.style.cssText='margin-top:14px;font-weight:600;font-size:16px;max-width:340px';n.textContent='Ролик уже закрыт, а награды нет? Можно не ждать: подтвердится просмотр — награду отдам.';w.appendChild(n);
+    const b=document.createElement('button');b.id='adExit';b.className='noenter';b.textContent='Продолжить без награды';b.style.cssText='margin-top:18px;min-height:52px;padding:12px 22px;border:0;border-radius:14px;background:#fff;color:#222;font:inherit;font-size:18px;cursor:pointer';b.onclick=exit;w.appendChild(b);}
+  w.style.display='flex';}
 // кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду); гаснут через opacity, не disabled: нажатие по погасшей объясняет
 function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)q[i].style.opacity=off?'.45':'';}catch(e){}if(off)adDimT=setTimeout(adDim,1000);}
 function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
+/* adt (04.10): обрыв ролика через 60 с. Раньше показ ждал ответа VK 60 с (vkSend(…,60000)), потом писал «недоступна», а поздний ответ «досмотрел» никто не слушал —
+   на Android так кончалось каждое пятое нажатие: ролик посмотрен, награды нет. Теперь:
+   1) ответа площадки ждём AD_WAIT_MS (180 с); игра всё это время на паузе «ad» (звук выключен, как при рекламе);
+   2) ролик закрылся, а ответа нет: по знаку «игрок вернулся» (adBack: вкладка снова видна, окно получило фокус, VK вернул игру, нажатие по игре позже AD_TAP_MS)
+      через AD_CHK_MS — надпись «Проверяем просмотр ролика…», через AD_EXIT_MS от знака — кнопка «Продолжить без награды». Знака нет — считаем им 60-ю секунду
+      (надпись под роликом никому не мешает);
+   3) вышли без ответа (кнопка или 180 с) — игра снята с паузы, onFail (кнопка рекламы снова живая), но ответ слушаем дальше. Пришёл ПОЗДНИЙ «досмотрел» —
+      награда один раз (тот же флаг paid) по правилу места: третий параметр showRewarded(cb,onFail,late). late() сам выдаёт награду, если она ещё уместна,
+      иначе замену (adLateCoins(n) — монеты по полной цене обещанного; цены в монетах нет — ECO.adCoins), и возвращает слова для надписи («держи монеты: +10»); вернул '' — выдавать нечего
+      (награду уже получили другим роликом). Идёт другой ролик или игра свёрнута — поздняя награда ждёт. Поздний отказ — ничего не даём;
+   4) статистика (секунды ожидания — поле w): ok c=slow — ответ пришёл на 60–180-й секунде (раньше оборвался бы); ok c=late — засчитано после выхода,
+      ok c=latec — заменено монетами, ok c=late0 — выдавать было нечего; err c=timeout (w=180) / c=exit (игрок вышел кнопкой) — ответ так и не пришёл
+      (пишется через AD_LATE_MS после выхода или когда игру свернули; пришёл ответ ещё позже — событие с dup:1); fail c=late / skip c=late / err c=late:код — поздний отказ.
+   Яндекс: таймера там не было (колбэки живут сами), добавлены та же надпись, выход и учёт — чтобы пауза не висела, если SDK не ответит.
+   Образец для остальных игр — hobby-analytics/release-g/ads-timeout.md, раздел «ОБРАЗЕЦ». Числа — let, а не const: стенд их укорачивает. */
+let AD_WAIT_MS=180000,AD_SLOW_MS=60000,AD_CHK_MS=1500,AD_EXIT_MS=15000,AD_TAP_MS=5000,AD_LATE_MS=600000;
+const AD_CHK='Проверяем просмотр ролика…';
+let adW=null,adPl='',adLateC=0;const adLateQ=[];
+// место рекламы (STAT.place) запоминаем сами: позднее событие пишется, когда STAT его уже сбросил; модуль STAT не правим
+{const sp=STAT.place;STAT.place=function(p){adPl=String(p||'');return sp.apply(STAT,arguments);};}
+// событие ролика с секундами ожидания w (обычные — по-прежнему через STAT.ad); x.p — место позднего события, x.dup — «ответ не пришёл» уже записано
+function adStat(r,c,w,x){const p={f:'rew',r:r,p:x&&x.p||adPl||'?',w:w};if(c!==''&&c!=null)p.c=String(c).slice(0,24);if(x&&x.dup)p.dup=1;STAT.ev('ad',p);}
+// ожидание ответа: rel('timeout'|'exit') — отпустить игрока без ответа
+function adWatch(rel){adUnwatch();const w=adW={t0:Date.now(),back:0,rel:rel};w.tS=setTimeout(adBack,AD_SLOW_MS);w.tW=setTimeout(()=>{if(adW===w)rel('timeout');},AD_WAIT_MS);}
+function adUnwatch(){const w=adW;if(!w)return;adW=null;clearTimeout(w.tS);clearTimeout(w.tW);clearTimeout(w.tC);clearTimeout(w.tE);adWait(0);}
+function adBack(){const w=adW;if(!w||w.back)return;w.back=Date.now();
+  w.tC=setTimeout(()=>{if(adW===w)adWait(1,AD_CHK);},AD_CHK_MS);
+  w.tE=setTimeout(()=>{if(adW===w)adWait(1,AD_CHK,()=>w.rel('exit'));},AD_EXIT_MS);}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)adBack();else adLateFlush();});
+window.addEventListener('focus',adBack);window.addEventListener('pagehide',adLateFlush);
+['pointerdown','touchstart','keydown'].forEach(n=>document.addEventListener(n,()=>{if(adW&&Date.now()-adW.t0>=AD_TAP_MS)adBack();},true));
+// вышли без ответа: событие «так и не пришло» откладываем (вдруг придёт), но не дольше AD_LATE_MS и не дальше сворачивания игры
+function adLatePend(rec){adLateQ.push(rec);rec.tF=setTimeout(()=>adLateFin(rec),AD_LATE_MS);}
+function adLateFin(rec){if(rec.fin||rec.hold)return;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);adStat('err',rec.exit?'exit':'timeout',rec.w,{p:rec.p});}
+function adLateFlush(){adLateQ.slice().forEach(adLateFin);}
+// поздний ответ пришёл: r/c — что писать; после уже записанного «не пришло» отказ не пишем, а «досмотрел» пишем с dup
+function adLateEnd(rec,r,c){const dup=rec.fin;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);if(dup&&r!=='ok')return;
+  adStat(r,c,Math.round((Date.now()-rec.t0)/1000),{p:rec.p,dup:dup});}
+// замена награды, которая уже неуместна (уровень пройден, окно закрыто): монеты по ПОЛНОЙ цене обещанного (n — из констант игры: PRICE.word, PRICE.letter);
+// у награды нет цены в монетах (серия, примерка темы) — цена одного ролика ECO.adCoins
+function adLateCoins(n){n=n>0?n:ECO.adCoins;adLateC=1;addCoins(n);SND.coin();return 'держи монеты: +'+n;}
 // за награду — по желанию игрока; пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
 let adBusy=false;
-function showRewarded(cb0,onFail0){
+function showRewarded(cb0,onFail0,late0){
   if(adBusy)return;
   if(Date.now()<adCoolT){toast('Ролик ещё загружается — подожди несколько секунд');if(onFail0)onFail0();return;} // пауза кнопок: площадку не дёргаем, в статистику не пишем
-  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},135000);
-  let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;lastRew=Date.now();cb0();},onFail=()=>{adBusy=false;lastRew=Date.now();onFail0&&onFail0();};
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},AD_WAIT_MS*2+AD_RETRY_MS+15000);
+  const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';const secs=()=>Math.round((Date.now()-t0)/1000);
+  let paid=false,st=0; // st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний)
+  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastRew=Date.now();cb0();},onFail=()=>{adBusy=false;lastRew=Date.now();onFail0&&onFail0();};
+  const stat=(r,c)=>{const w=secs();if(Date.now()-t0>=AD_SLOW_MS){adStat(r,c||'slow',w,{p:rec.p});STAT.place('');}else STAT.ad('rew',r,c);};
+  const rel=why=>{if(st)return;st=2;rec.w=secs();rec.exit=why==='exit';adUnwatch();adClose();adPreload();
+    toast(rec.exit?'Хорошо. Подтвердится просмотр — награду отдам':'Не дождалась ответа о просмотре. Придёт — награду отдам',4500);onFail();adDim();adLatePend(rec);};
+  const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||interOn||document.hidden){setTimeout(lateOk,1000);return;} // другой ролик или игра свёрнута — подождём (hold: «не пришло» уже не пишем)
+    paid=true;lastRew=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}
+    adLateEnd(rec,'ok',m?(adLateC?'latec':'late'):'late0');if(m)toast('Просмотр подтвердился — '+m,4500);};
   if(VK){
     let tries=0;
-    const go=()=>{adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000).then(r=>{adClose();
-        if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'');adPreload();cb();}else{STAT.ad('rew','fail','noresult');toast(AD_FAIL);adPreload();onFail();}
+    const go=()=>{adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{
+        if(st===2){if(r&&r.result)lateOk();else adLateEnd(rec,'fail','late');return;}
+        if(st)return;st=1;adUnwatch();adClose();
+        if(r&&r.result){stat('ok',tries?'retry':'');adPreload();cb();}else{stat('fail','noresult');toast(AD_FAIL);adPreload();onFail();}
       },e=>{
+        if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
+        if(st)return;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
-        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e));toast(AD_FAIL);adPreload();}
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload();}
         onFail();adDim();});};
     go();return;}
   if(!VK&&!ysdk){if(LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',PLAT==='vk'?'nobridge':'nosdk');toast(AD_FAIL);onFail();}return;} // мост/SDK не ответили — награду даром не даём
-  let got=false;
+  let got=false;adWatch(rel);
+  // поздние колбэки (после выхода): ролик мог открыться и поставить паузу — снимаем её, если не идёт другой ролик
+  const lateY=f=>{if(!adBusy)adClose();f();};
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
-    onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast('Досмотри ролик до конца — тогда награда твоя');onFail();}},
-    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);adCool();onFail();adDim();}}});
+    onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
+      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast('Досмотри ролик до конца — тогда награда твоя');onFail();}},
+    onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
+      adClose();stat('err','');toast(AD_FAIL);adCool();onFail();adDim();}}});
 }
 // межэкранная (отчёт 12, 27.09): после ЛЮБОГО пройденного уровня («Дальше», «В меню» в окне победы) и при входе в уровень из меню
 // («Играть», выбор уровня, задание дня) — только в этот момент перехода: не по таймеру, никогда во время уровня и не при запуске.
@@ -578,8 +638,8 @@ function maybeInterstitial(cb){
   if(!interDue()){cb();return;}
   // показ не состоялся (площадка отказала, нет рекламы) — паузу не засчитываем, попробуем на следующем переходе
   const prev=lastInter;lastInter=Date.now();interOn=true;const done=()=>{interOn=false;const f=interNext||cb;interNext=null;f();};
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{STAT.ad('int',r&&r.result?'show':'none');if(!(r&&r.result))lastInter=prev;}).catch(e=>{STAT.ad('int','none',e&&e.error_data&&e.error_data.error_code);lastInter=prev;})
-      .finally(()=>{adClose();done();});return;}
+  if(VK){const fin=()=>{adClose();done();};adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{STAT.ad('int',r&&r.result?'show':'none');if(!(r&&r.result))lastInter=prev;}).catch(e=>{STAT.ad('int','none',e&&e.error_data&&e.error_data.error_code);lastInter=prev;})
+      .then(fin,fin);return;} // не .finally: в старых WebView его нет
   if(!ysdk){STAT.ad('int','show','stub');stubAd(done);return;} // свой компьютер — заглушка
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:shown=>{STAT.ad('int',shown!==false?'show':'none');if(shown===false)lastInter=prev;adClose();done();},onError:()=>{STAT.ad('int','none','err');lastInter=prev;adClose();done();}}});
 }
