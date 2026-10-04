@@ -315,7 +315,7 @@ function onCloud(){const on=document.querySelector('.screen.on');updCoins();
 function openSettings(){SND.tap();STAT.screen('settings');
   const row=(id,ic,t,on)=>`<button class="setrow${on?'':' off'}" id="${id}"><span>${ic} ${t}</span><b>${on?'● вкл':'○ выкл'}</b></button>`;
   // вибрация — только там, где она бывает (Android, приложение VK); «Крупные буквы» — клетки и круг крупнее (для зрения 45+)
-  const vibOk=CAN_VIB&&TOUCH||PLAT==='vk'&&VK_MOBILE;
+  const vibOk=CAN_VIB&&TOUCH||PLAT==='vk'&&VK_MOBILE&&!OK; // ОК: «таптика» моста нет — строка только там, где есть обычная вибрация
   const draw=()=>{$('setRows').innerHTML=row('sMus','🎵','Музыка',S.music)+row('sSnd',S.sound?'🔊':'🔇','Звуки',S.sound)+
       (vibOk?row('sVib','📳','Вибрация',S.vib!==0):'')+row('sBig','🔍','Крупные буквы',!!S.big)+
       (STAT.available()?row('sStat','📊','Анонимная статистика',STAT.enabled())+'<p style="font-size:14px;color:var(--ink2);margin:2px 4px 8px;text-align:left">Уровни, ошибки и нажатия кнопок — без имени, ID и IP. Помогает делать игру лучше.</p>':'');
@@ -327,16 +327,16 @@ function openSettings(){SND.tap();STAT.screen('settings');
     const st=$('sStat');if(st)st.onclick=()=>{STAT.setEnabled(!STAT.enabled());SND.tap();draw();};};
   // покупки — только вне уровня (из меню), ведут в магазин
   const shop=typeof PAY!=='undefined'&&PAY.on&&!$('game').classList.contains('on');
-  modal(`<h2>⚙️ Настройки</h2><div id="setRows"></div>${SOC.ok()?'<button class="setrow" id="sSoc"><span>👥 Друзья и игры</span><b>›</b></button>':''}${shop?PAY.html(['no_ads'],false)+'<button class="setrow" id="sShop"><span>🛒 Все покупки</span><b>›</b></button>':''}<div class="btns"><button class="btn green" id="mOk">Продолжить</button></div>`);
+  modal(`<h2>⚙️ Настройки</h2><div id="setRows"></div>${SOC.ok()?'<button class="setrow" id="sSoc"><span>👥 '+(OK?'Друзья<br><small>позвать друзей в игру</small>':'Друзья и игры')+'</span><b>›</b></button>':''}${shop?PAY.html(['no_ads'],false)+'<button class="setrow" id="sShop"><span>🛒 Все покупки</span><b>›</b></button>':''}<div class="btns"><button class="btn green" id="mOk">Продолжить</button></div>`);
   draw();$('mOk').onclick=()=>{hideModal();SND.tap();};if($('sSoc'))$('sSoc').onclick=()=>{SND.tap();openSocial();};
   if(shop){PAY.bind($('mcard'));PAY.re=openSettings;$('sShop').onclick=()=>{hideModal();SND.tap();openShop();const p=document.querySelector('#shopList .pay');if(p)p.scrollIntoView();};}
 }
 
-function updMore(){const b=$('btnMore');if(b)b.style.display=SOC.ok()?'':'none';}
+function updMore(){const b=$('btnMore');if(b)b.style.display=SOC.can('more')?'':'none';}
 // «Друзья и игры» (VK с мостом): позвать, поделиться, избранное, экран, сообщество, плитки других игр
 function openSocial(back){if(!SOC.ok()){openSettings();return;}STAT.screen('social');STAT.ev('mod',{m:'soc',a:'open'});
   const bk=typeof back==='function'?back:openSettings;
-  modal(`<h2>Друзья и игры</h2>${SOC.settingsHtml()}<div class="btns"><button class="btn ghost" id="socBack">← Назад</button></div>`);
+  modal(`<h2>${OK?'Друзья':'Друзья и игры'}</h2>${SOC.settingsHtml()}<div class="btns"><button class="btn ghost" id="socBack">← Назад</button></div>`);
   SOC.bind($('mcard'),()=>openSocial(bk));$('socBack').onclick=()=>{SND.tap();bk();};}
 function applyBig(){document.body.classList.toggle('big',!!S.big);if(G)layoutWheel();}
 
@@ -345,9 +345,9 @@ function applyBig(){document.body.classList.toggle('big',!!S.big);if(G)layoutWhe
 function openCredits(){STAT.screen('credits');modal(`<h2>Благодарности</h2><p style="font-weight:800;color:var(--blue)">«Баба Зина: слова из букв»</p><p>Музыка, под которую баба Зина разгадывает кроссворды:</p>
   <div class="cred"><b>«Black Tea Rag»</b><br>автор — decimnet<br>opengameart.org/content/black-tea-rag<br>лицензия CC BY 4.0: creativecommons.org/licenses/by/4.0/<br>перекодировано в AAC (моно)</div>
   <div class="cred"><b>Словарь бонусных слов</b><br>Russian-Nouns, А. Сергиенко (Harrix), лицензия MIT</div>
-  <div class="cred"><b>VK Bridge</b><br>VK, лицензия MIT</div>
+  ${OK?'':'<div class="cred"><b>VK Bridge</b><br>VK, лицензия MIT</div>'}
   <p style="font-size:14px">Спасибо авторам! Шутки, рисунки и баба Зина — свои. Возраст: 0+.</p>
-  ${SOC.ok()?'<button class="setrow" id="credSoc"><span>👥 Друзья и игры</span><b>›</b></button>':''}
+  ${SOC.ok()?'<button class="setrow" id="credSoc"><span>👥 '+(OK?'Друзья':'Друзья и игры')+'</span><b>›</b></button>':''}
   ${typeof PAY!=='undefined'&&PAY.on?PAY.html(['tea']):''}
   <div class="btns"><button class="btn" id="credOk">Спасибо!</button>${typeof PAY!=='undefined'&&PAY.on?'<button class="btn ghost" id="credPay">↻ Восстановить покупки</button>':''}</div>`);$('credOk').onclick=()=>{SND.tap();hideModal();};if($('credSoc'))$('credSoc').onclick=()=>{SND.tap();openSocial(openCredits);};
   if(typeof PAY!=='undefined'&&PAY.on){PAY.bind($('mcard'));PAY.re=openCredits;$('credPay').onclick=()=>{SND.tap();PAY.again();};}}
@@ -377,6 +377,7 @@ function bind(){
   $('btnShop').onclick=()=>{SND.tap();openShop();};
   $('btnCred').onclick=()=>{SND.tap();openCredits();};
   $('btnRate').onclick=()=>{SND.tap();openRating();};
+  if(OK){$('btnRate').textContent='🏅 Успехи';const rt=document.querySelector('#rateS .hdr .t b');if(rt)rt.textContent='Мои успехи';} // ОК: таблицы рейтинга нет (VKWebAppShowLeaderBoardBox) — экран остаётся как «Успехи»: звание и счёт слов
   document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{SND.tap();const t=b.dataset.back;t==='menu'?openMenu():t==='chapters'?openChapters():show(t);});
   $('gSet').onclick=openSettings;
   $('gBack').onclick=()=>{SND.tap();saveCur();G=null;openMenu();}; // openMenu сам пишет STAT.end('quit')

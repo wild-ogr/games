@@ -66,6 +66,7 @@ function buy(id){var T=get(id);if(!T||owned(id))return;var u=T.unlock;
 function swatch(T){var p=T.prev;return '<span class="thp" style="background:'+p.bg+'"><i class="thp-h" style="background:'+p.hd+';border:1.5px solid '+p.line+'"></i><i class="thp-c" style="background:'+p.card+';border:1.5px solid '+p.line+'"><b style="background:'+p.ink+'"></b><b style="background:'+p.ink+';width:60%"></b></i><i class="thp-b" style="background:'+p.ans+';border:1.5px solid '+p.line+'"></i><i class="thp-b" style="background:'+p.acc+';bottom:36px;left:8px;right:40px;height:10px;border-radius:5px"></i></span>';}
 function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen('look');}catch(e){}var c=cur(),h='';
   for(var i=0;i<THEMES.length;i++){var T=THEMES[i],own=owned(T.id),u=T.unlock,pr=prog(T),btn='';
+    if(u.t==='pay'&&!own&&typeof OK!=='undefined'&&OK)continue; // Одноклассники: покупок нет — платную тему не показываем
     if(T.id===c)btn='<span class="th-on">✓ '+Lx('Включено','On')+'</span>';
     else if(own)btn='<button class="btn green noenter" data-th="set:'+T.id+'">'+Lx('Включить','Use')+'</button>';
     else if(u.t==='pay')btn=canBuy(T)?'<button class="btn accent noenter" data-th="buy:'+T.id+'">'+Lx('Купить','Buy')+' · '+PAY.price(PAY.item(u.pay))+'</button>':'<span class="th-lk">🔒 '+Lx('покупка сейчас недоступна','not available now')+'</span>';

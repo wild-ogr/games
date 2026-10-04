@@ -200,6 +200,7 @@ function prevHtml(T){return '<span class="thp thp-'+T.id+'"><i class="thp-h"></i
 var back=null;
 function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen('look');}catch(e){}var c=cur(),h='',ads=adOk();
   for(var i=0;i<THEMES.length;i++){var T=THEMES[i],own=owned(T.id),u=T.unlock,pr=prog(T),btn='',on=T.id===c&&!(TRIAL===T.id);
+    if(u.t==='pay'&&!own&&typeof OK!=='undefined'&&OK)continue; // ОК: покупок нет — платные темы не показываем (ни «купить», ни примерки)
     if(on)btn='<span class="th-on">✓ Включено</span>';
     else if(own)btn='<button class="btn green" data-th="set:'+T.id+'">Включить</button>';
     else if(u.t==='pay'){btn=canBuy(T)?'<button class="btn green noenter" data-th="buy:'+T.id+'">Купить · '+PAY.price(PAY.item(u.pay))+'</button>':'<span class="th-lk">'+(inLevel()?'Купить можно из меню':'Покупки сейчас недоступны')+'</span>';

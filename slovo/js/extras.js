@@ -105,11 +105,12 @@ function openRating(){
   show('rateS');
   let h=`<div class="dhead"><div class="av">${zinaSVG('wow')}</div><p>${say('rating')}</p></div>${statsHtml()}`;
   if(ysdk)h+='<div class="lbbox" id="lbBox"><h3>🏆 Лучшие грамотеи</h3><p style="color:var(--ink2);margin:6px 0">Загружаю таблицу… Надеваю очки…</p></div>';
+  else if(OK){} // ОК: рейтинга нет — только свои успехи
   else if(VK)h+=`<div class="lbbox"><h3>🏆 Рейтинг друзей</h3><p style="color:var(--ink2);margin:6px 0 10px;font-size:15px">Посмотри, кто из друзей нашёл больше слов. Или пригласи их — пусть попотеют!</p>
     <button class="btn blue" id="vkLb" style="width:100%">Таблица друзей</button></div>`;
   else h+=`<p style="text-align:center;color:var(--ink2);font-size:14px">${PLAT==='vk'?'Таблица друзей сейчас недоступна — загляни чуть позже.':'Общая таблица сейчас недоступна.'} А пока соревнуйся с собой — тоже полезно!</p>`;
   $('rateList').innerHTML=h;$('rateList').scrollTop=0;
-  const vb=$('vkLb');if(vb)vb.onclick=()=>{SND.tap();vkSend('VKWebAppShowLeaderBoardBox',{user_result:wordsTotal()},60000).catch(()=>toast('Таблица сейчас недоступна — загляни чуть позже'));};
+  const vb=$('vkLb');if(vb)vb.onclick=()=>{SND.tap();if(OK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:wordsTotal()},60000).catch(()=>toast('Таблица сейчас недоступна — загляни чуть позже'));};
   if(ysdk)loadBoard();
 }
 async function loadBoard(){
@@ -209,7 +210,7 @@ function shareImg2(c,url,blob,w,txt,back,title,sub){
   modal(`<h2>Открытка</h2><p>${sub}</p><img class="cardimg" src="${url}" alt="Открытка">
     ${hold?'<p style="font-size:15px">Чтобы сохранить, нажми на картинку и подержи палец.</p>':''}
     <div class="btns">${hold?'':`<button class="btn green" id="cShare">${canFiles?'📤 Поделиться':'💾 Сохранить картинку'}</button>`}
-      ${VK?'<button class="btn blue" id="cWall">На стену ВКонтакте</button>':''}
+      ${VK&&!OK?'<button class="btn blue" id="cWall">На стену ВКонтакте</button>':''}
       <button class="btn ghost small" id="cBack">${back?'← Назад':'Закрыть'}</button></div>`);
   const done=()=>{if(back)back();else hideModal();};
   // скачать: проверить, получилось ли, браузер не даёт — поэтому не обещаем «сохранено», а подсказываем запасной путь

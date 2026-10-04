@@ -169,7 +169,9 @@ function progress(id){var t=BY[id],u=t.unlock,o=owned(id);
   if(u.t==='old'){var d=Math.ceil(oldLeft()/864e5);return {have:1,need:1,txt:T('Ещё '+d+' дн.','Still '+d+' days')};}
   return {have:0,need:1,txt:''};}
 function how(id){var u=BY[id].unlock;return {free:T('бесплатно','free'),pay:T('покупка','purchase'),coins:T('за монеты','for coins'),ads:T('за ролики','for videos'),rk:T('за звёзды','for stars'),old:T('для давних игроков','for old players')}[u.t]||'';}
-function list(){return THEMES.filter(function(t){return !t.hide||(t.id==='classic'&&oldLeft()>0);}).map(function(t){return {id:t.id,ru:t.ru,en:t.en,name:T(t.ru,t.en),dark:!!t.dark,prev:t.prev,unlock:t.unlock,owned:owned(t.id),cur:cur()===t.id,progress:progress(t.id),how:how(t.id)};});}
+function canPay(id){try{return typeof payCan==='function'?payCan(id):!!(PAY.on&&PAY.item(id));}catch(e){return false;}} /* «покупки доступны» — общее условие игры (payCan в index.html) */
+function list(){ /* платная тема: куплена — видна всегда; не куплена — только там, где её можно купить (нет в ОК, VK на iPhone, без моста/SDK) */
+  return THEMES.filter(function(t){return (!t.hide||(t.id==='classic'&&oldLeft()>0))&&!(t.unlock.t==='pay'&&!owned(t.id)&&!canPay(t.unlock.pay));}).map(function(t){return {id:t.id,ru:t.ru,en:t.en,name:T(t.ru,t.en),dark:!!t.dark,prev:t.prev,unlock:t.unlock,owned:owned(t.id),cur:cur()===t.id,progress:progress(t.id),how:how(t.id)};});}
 
 /* ================= кэш картинок: кирпичики, предметы, подложка поля ================= */
 var SPR={},SPRN=0,BASE=null,BASEK='';
@@ -401,7 +403,7 @@ function open(back){try{STAT.screen('look');}catch(e){}if(typeof inGame==='funct
     var bar=(t.unlock.t==='ads'||t.unlock.t==='rk')&&!t.owned?'<div class="chbar"><i style="width:'+Math.round(100*p.have/Math.max(1,p.need))+'%"></i><span>'+esc(p.txt)+'</span></div>':'<small>'+esc(t.owned?(t.id==='classic'?p.txt:T(BY[t.id].d,BY[t.id].de)):p.txt)+'</small>';
     var tr=!t.owned&&!ig&&typeof W.k3TryHtml==='function'?W.k3TryHtml(t):''; /* K3: «📺 Примерить на партию» */
     h+='<div class="thc'+(t.cur?' cur':'')+'" data-tc="'+t.id+'">'+(t.owned?'':'<span class="lock">🔒</span>')+'<b>'+esc(t.name)+'</b>'+bar+bt+tr+'</div>';});
-  modal('<h2>🎨 '+T('Оформление','Looks')+'</h2><p>'+T('Вид двора, поля и кирпичиков. Новые темы открываются за звёзды, ролики, монеты или покупкой.','How the yard, board and bricks look. New themes open for stars, videos, coins or a purchase.')+'</p><div class="thgrid">'+h+'</div>'+
+  modal('<h2>🎨 '+T('Оформление','Looks')+'</h2><p>'+(!L0.some(function(t){return t.unlock.t==='pay'&&!t.owned;})?T('Вид двора, поля и кирпичиков. Новые темы открываются за звёзды, ролики или монеты.','How the yard, board and bricks look. New themes open for stars, videos or coins.'):T('Вид двора, поля и кирпичиков. Новые темы открываются за звёзды, ролики, монеты или покупкой.','How the yard, board and bricks look. New themes open for stars, videos, coins or a purchase.'))+'</p><div class="thgrid">'+h+'</div>'+
     '<button class="trow" id="thSkins"><span class="ic">🧱</span><span>'+T('Кирпичики: стена, ящики, домино…','Bricks: wall, crates, dominoes…')+'<small>'+T('сейчас: ','now: ')+esc(theme().id==='yard'?T('как в теме','theme bricks'):T(theme().n,theme().en))+'</small></span><i>›</i></button>'+
     '<div class="row"><button class="btn green" id="thClose">'+T('Готово','Done')+'</button></div>');
   var mc=DOC.getElementById('mcard');mc.querySelectorAll('[data-tc]').forEach(function(el){var cvp=previewCanvas(el.getAttribute('data-tc'),300,170);el.insertBefore(cvp,el.querySelector('b'));});
