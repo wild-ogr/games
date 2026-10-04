@@ -176,11 +176,11 @@ function tstat(type,lvl,br){const d=TW[type],b=lvl===4?d.br[br-1]:null,i=lvl-1,F
 function towerKey(t){const k='t_'+t.type+'_'+(t.lvl<4?t.lvl:t.lvl+(t.br===1?'a':'b')),sk=typeof skinOf==='function'?skinOf(t.type):'';return sk?k+'~'+sk:k;}
 function tryBuild(i,type){const c=buildCost(type);if(!G||G.tw[i]||G.coins<c||!towerUnlocked(type))return false;
   const s=G.map.spots[i];G.coins-=c;G.tw[i]={i,type,lvl:1,br:0,x:s.x,y:s.y,cd:.3,inv:c,ang:-Math.PI/2,stunT:0,frostT:0,bounce:0,kills:0,dmgd:0,aim:(G.aimDef&&G.aimDef[type])||'first'};
-  G.spendT=G.t;G.tw[i].st=tstat(type,1,0);G.tw[i].bounce=.35;SND.build();dust(s.x,s.y+6);G.built=(G.built||0)+1;if(G.tut===1){G.tut=2;G.advCd=1.5;if(!S.wins)STAT.ev('tut',{s:2});}return true;}
+  G.spendT=G.t;G.tw[i].st=tstat(type,1,0);G.tw[i].bounce=.35;SND.build();dust(s.x,s.y+6);G.built=(G.built||0)+1;if(G.tut===1){G.tut=2;G.advCd=1.5;if(!S.wins)STAT.ev('tut',{s:2});}STAT.move();return true;}
 function tryUpgrade(i,br){const t=G&&G.tw[i];if(!t||t.lvl>=4)return false;if(t.lvl===3&&(!br||!branchUnlocked()))return false;
   const c=upCost(t,br);if(G.coins<c)return false;G.coins-=c;G.spendT=G.t;t.inv+=c;t.lvl++;if(t.lvl===4)t.br=br;t.st=tstat(t.type,t.lvl,t.br);t.bounce=.35;SND.up();dust(t.x,t.y+6);G.ups=(G.ups||0)+1;
-  sparkle(t.x,t.y-20,'#ffd84a',14);return true;}
-function sellTower(i){const t=G&&G.tw[i];if(!t)return false;const v=Math.round(t.inv*.7);G.coins+=v;G.tw[i]=null;G.gone.push(t);SND.sell();dust(t.x,t.y+6);addNum(t.x,t.y-20,'+'+v,'#ffd84a');return true;}
+  sparkle(t.x,t.y-20,'#ffd84a',14);STAT.move();return true;}
+function sellTower(i){const t=G&&G.tw[i];if(!t)return false;STAT.move();const v=Math.round(t.inv*.7);G.coins+=v;G.tw[i]=null;G.gone.push(t);SND.sell();dust(t.x,t.y+6);addNum(t.x,t.y-20,'+'+v,'#ffd84a');return true;}
 function refreshTowerStats(){if(G)for(const t of G.tw)if(t)t.st=tstat(t.type,t.lvl,t.br);}
 
 /* ================= волны: запуск ================= */
@@ -358,9 +358,9 @@ function updPools(dt){
 /* ================= чары ================= */
 function spellCd(k){let cd=SPELLS[k].cd;if(k==='thunder'&&forgeN('thunder')>=3)cd-=10;if(k==='cat'&&forgeN('cat')>=3)cd-=15;return cd*(1-.08*(S.village.herb||0));}
 function castThunder(x,y){const f=forgeN('thunder'),dmg=SPELLS.thunder.dmg*Math.pow(1.35,f)*(G.endless?Math.pow(1.08,G.wave):HP_MUL[G.ci]*.8+.2),r=SPELLS.thunder.r*(f>=2?1.2:1);
-  G.sp.thunder.cd=spellCd('thunder');SND.thunder();G.shake=12;G.spells=(G.spells||0)+1;G.fx.push({k:'thunder',x,y,r,t:0,dur:.6});
+  STAT.move();G.sp.thunder.cd=spellCd('thunder');SND.thunder();G.shake=12;G.spells=(G.spells||0)+1;G.fx.push({k:'thunder',x,y,r,t:0,dur:.6});
   for(const e of G.en)if(!e.dead&&(e.x-x)**2+(e.y-y)**2<(r+e.r)**2){dmgEnemy(e,dmg,'true');if(!e.dead)e.stunT=Math.max(e.stunT,.5);}}
-function castCat(){const dur=SPELLS.cat.dur+.6*Math.min(2,forgeN('cat'));G.sp.cat.cd=spellCd('cat');SND.purr();G.spells=(G.spells||0)+1;
+function castCat(){STAT.move();const dur=SPELLS.cat.dur+.6*Math.min(2,forgeN('cat'));G.sp.cat.cd=spellCd('cat');SND.purr();G.spells=(G.spells||0)+1;
   for(const e of G.en)if(!e.dead)e.sleepT=Math.max(e.sleepT,e.boss?dur*.35:dur);G.fx.push({k:'cat',t:0,dur:dur});}
 function spellReady(k){return G&&!G.sp[k].locked&&G.sp[k].cd<=0;}
 
@@ -698,7 +698,7 @@ function fmtBoost(s){s=Math.max(0,Math.round(s));const h=Lg(' ч ','h '),m=Lg(' 
 /* шаги расчёта: не больше 4 за кадр (на ×3 шаг длиннее) — слабый телефон не уходит в «спираль» тормозов.
    Кадр рисуем, только пока бой идёт: под паузой, окном и после окончания эффектов — один раз и стоп */
 function loop(t){requestAnimationFrame(loop);const dt=Math.min(1/20,(t-lastT)/1000||0);lastT=t;if(!G)return;
-  const live=!paused&&!G.paused&&!G.over;
+  const live=!paused&&!G.paused&&!G.over;if(live)STAT.frame(); // STAT v1.2: плавность — только идущий бой
   // открыто кольцо выбора: ×2/×3 не идут (запас не тратится — значит, и ускорения нет); «Вечное ×2» — ×2
   if(live){const x2f=typeof payX2==='function'&&payX2(),sp=ringI>=0&&G.speed>=2?(x2f?2:1):G.speed,rem=dt*sp,n=Math.min(4,Math.max(1,Math.ceil(rem*60-1e-6)));if(rem>1e-4)for(let i=0;i<n;i++)update(rem/n);
     if(G.speed>=2&&ringI<0&&!(G.speed<3&&typeof payX2==='function'&&payX2()))boostDrain(dt*(G.speed>=3?2:1));} // «Вечное ×2» (покупка) — ×2 без запаса

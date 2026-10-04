@@ -14,7 +14,7 @@ const PAY_ITEMS={
 // английские name/desc/done (поле en) — наложением js/i18n.js: applyLang() ставит нужный язык
 for(const id in PAY_ITEMS)if(PAY_ITEMS[id].en)trData(PAY_ITEMS[id],PAY_ITEMS[id].en);
 const PAY_TEST={no_ads:99,skins_fest:79,mead:49}; // цены только для ?paytest=1; настоящие — в консоли
-function payAdd(n){S.gold=(+S.gold||0)+n;} // золото не продаём — нужно только общему модулю
+function payAdd(n){S.gold=(+S.gold||0)+n;ern('buy',n);} // золото не продаём — нужно только общему модулю
 function payFlush(){cloudFlush();}
 function payPause(on){if(!adShowing)setMuted(on);}
 // покупки — только в меню (в походе и на экране итогов их нет)

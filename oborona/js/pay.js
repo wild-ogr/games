@@ -12,7 +12,7 @@ const PAY_ITEMS={
     en:{name:'Outpost look “Firebird”',desc:'Fiery feathers on all five kinds of outposts — right away, no finished village needed. Looks only',done:'All outposts now wear the Firebird!'},give(){for(const t of TW_ORDER)S.skin[t]='firebird';}}
 };
 const PAY_TEST={no_ads:99,speed_x2:79,skins_firebird:99}; // цены только для ?paytest=1; настоящие — в консоли
-function payAdd(n){S.gold=(+S.gold||0)+n;} // золото не продаём — нужно только общему модулю
+function payAdd(n){S.gold=(+S.gold||0)+n;if(typeof ern==='function')ern('buy',n);} // золото не продаём — нужно только общему модулю
 function payFlush(){cloudFlush();}
 function payPause(on){setPause('pay',on?1:0);}
 // покупки — только в меню (в бою и на итогах их нет)

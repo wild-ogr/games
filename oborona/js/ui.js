@@ -25,7 +25,7 @@ function lvOpen(c,l){if(c===0&&l===0)return true;if(l>0)return !!S.stars[lvKey(c
 function chOpen(c){return lvOpen(c,0);}
 function chStars(c){let n=0;for(let l=0;l<6;l++)n+=S.stars[lvKey(c,l)]||0;return n;}
 // красная точка — только там, где правда ждёт дело, и не на открытой вкладке (раньше горели все четыре сразу — аудит 14)
-function setPills(){forgeGuard();$('pGold').textContent=fmtNum(S.gold);$('pStar').textContent=starsFree();const cur=G?'':curTab;
+function setPills(){forgeGuard();STAT.bal(Math.floor(+S.gold||0));$('pGold').textContent=fmtNum(S.gold);$('pStar').textContent=starsFree();const cur=G?'':curTab;
   $('navF').classList.toggle('dot',cur!=='Forge'&&canForge());$('navV').classList.toggle('dot',cur!=='Village'&&(afkGold()>=afkReadyAt()||giftReady()));
   $('navM').classList.toggle('dot',cur!=='Map'&&(dqClaimable()||!!loginAvail()));$('navS').classList.toggle('dot',cur!=='Siege'&&eventsReady());}
 // звёзд потрачено больше, чем есть (кузница пришла из облака с другого устройства) — сбрасываем кузницу, звёзды возвращаются
@@ -351,14 +351,15 @@ function openBoostOffer(empty){STAT.screen('boost');const wasG=G&&!G.over&&!G.pa
   showModal('<h3>'+Lg('⏩ Время ускорения','⏩ Speed-up time')+'</h3><p class="sub">'+Lg((empty?'Запас пуст. ':'')+'Скорость ×1 и ×1,5 — бесплатно всегда. ×2 — победа возвращает потраченное; ×3 — тратит запас (2 секунды за секунду боя).',(empty?'The reserve is empty. ':'')+'Speed ×1 and ×1.5 are always free. ×2 — a victory gives back what you spent; ×3 — uses the reserve (2 seconds per second of battle).')+'</p>'+
     '<div class="card treasury" style="text-align:center"><b style="font-size:20px">'+Lg('Запас: ','Reserve: ')+fmtBoost(S.boost)+'</b><br><span class="note">'+Lg('Пополняется за победы (+1 мин и больше), раз в день бесплатно и за рекламу. Максимум — ','Refills with victories (+1 min or more), once a day for free, and for ads. Maximum — ')+fmtBoost(BOOST_CAP)+'.</span></div>'+
     '<div class="btns">'+(S.boost<BOOST_CAP-60&&adOk()?'<button class="btn ad big" id="bAd">'+Lg('🎬 +10 мин за рекламу','🎬 +10 min for an ad')+'</button>':'')+'<button class="btn ghost" id="bNo">'+(empty?(payX2()?Lg('Играть на ×2','Play at ×2'):Lg('Играть на ×1,5','Play at ×1.5')):Lg('Закрыть','Close'))+'</button></div>');
-  adOn('bAd','boost',()=>showRewarded(()=>{boostAdd(600);save();SND.up();toast(Lg('+10 минут ускорения!','+10 minutes of speed-up!'));if(G&&!G.over)G.speed=Math.max(G.speed,2);close();}));
+  adOn('bAd','boost',()=>showRewarded(()=>{boostAdd(600);save();SND.up();toast(Lg('+10 минут ускорения!','+10 minutes of speed-up!'));if(G&&!G.over)G.speed=Math.max(G.speed,2);close();},null,
+    ()=>{boostAdd(600);save();SND.up();return Lg('+10 минут ускорения','+10 minutes of speed-up');})); /* поздний зачёт (adt): всегда, окна не трогаем */
   on('bNo',()=>{if(empty&&G)G.speed=payX2()?2:1.5;close();});}
 function dailyBoost(){const d=dayKey();if(S.boostDay!==d){S.boostDay=d;if(S.boost<300){boostAdd(300);toast(Lg('Ежедневный запас ускорения: +5 мин','Daily speed-up reserve: +5 min'));}save();}}
 
 /* ================= ИТОГ БОЯ ================= */
 /* уход с экрана итогов: если сейчас можно (interReady в core.js) — «Реклама через секунду…», межэкранная, потом переход.
    ok — это итог победы (или осады); после поражения межэкранной нет никогда */
-function afterAd(ok,fn){if(!ok||!interReady()){fn();return;}
+function afterAd(ok,fn){if(!ok||!interReady()){if(ok)adWhy();fn();return;}  // STAT v1.2: положена, но не показана — ad int none gap|cap|nosdk
   for(const b of document.querySelectorAll('#modal button'))b.disabled=true;
   toast(Lg('Реклама через секунду…','Ad in a second…'));setTimeout(()=>showInterstitial(fn),1000);}
 function starsFor(){const lost=G.maxLives-G.lives;return lost<=2?3:lost<=10?2:1;}
@@ -386,7 +387,7 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
   if(G.endless){const waves=Math.max(0,G.wave-1),rec=waves>P.best0;S.endBest=Math.max(S.endBest||0,waves);if(P.n===1)S.endRuns++;
     // золото и ускорение — за весь забег; после «ещё попытки» доплачиваем только разницу
     const total=siegeGold(waves),reward=total-P.gold,x2=total-P.x2;P.gold=total;
-    dqAdd('siege',waves-P.waves);S.gold+=reward;const bref=boostRefund(1);G.win=true;boostAdd(Math.min(120,5*waves)-Math.min(120,5*P.waves));P.waves=waves;save();LB.set('endless',S.endBest);
+    dqAdd('siege',waves-P.waves);S.gold+=reward;ern('lvl',reward);const bref=boostRefund(1);G.win=true;boostAdd(Math.min(120,5*waves)-Math.min(120,5*P.waves));P.waves=waves;save();LB.set('endless',S.endBest);
     // «Ещё попытка за рекламу» — один раз за забег, с 2-й волны, если игрок не сам вышел
     const cont=!G.contUsed&&!G.quit&&G.wave>=2&&adOk();
     showModal('<h3>'+Lg('Осада окончена','The siege is over')+'</h3><p class="sub">'+(rec?Lg('🏆 Новый рекорд! Летописец записал.','🏆 New record! The chronicler wrote it down.'):Lg('Нечисть прорвалась. Но и мы ей бока намяли!','The monsters broke through. But we gave them a good beating!'))+'</p>'+
@@ -395,14 +396,19 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
       dqNote(dq0)+'<div class="btns stick">'+(cont?'<button class="btn ad big" id="rCont">'+Lg('🎬 Ещё попытка за рекламу (+10 ❤, забег продолжится)','🎬 One more try for an ad (+10 ❤, the run goes on)')+'</button>':'')+
       (x2>0&&goldWanted()&&adOk()?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить за рекламу: ещё +','🎬 Double for an ad: +')+fmtNum(x2)+'</button>':'')+(LB.vkOk()?'<button class="btn ghost" id="rVkLb">🏆 Рекорды друзей</button>':'')+'<button class="btn'+(cont?'':' big')+'" id="rAgain">'+Lg('Ещё раз','Play again')+'</button><button class="btn ghost" id="rMap">'+Lg('В меню','Menu')+'</button></div>');
     on('rVkLb',()=>LB.vkFriends(S.endBest));
-    adOn('rCont','conts',()=>showRewarded(()=>{hideModal();G.win=false;continueBattle();voice(Lg('Второе дыхание! Кот Баюн усыпил нечисть — осада продолжается!','Second wind! Bayun the Cat put the monsters to sleep — the siege goes on!'),VOEV(),'voevoda',5);}));
-    adOn('rX2','x2s',()=>showRewarded(()=>{S.gold+=x2;P.x2=total;save();toast('+'+fmtGold(x2)+'');const b=$('rX2');if(b)b.remove();}));
+    {const g=G,cb_=$('rCont');adOn('rCont','conts',()=>showRewarded(()=>{hideModal();G.win=false;continueBattle();voice(Lg('Второе дыхание! Кот Баюн усыпил нечисть — осада продолжается!','Second wind! Bayun the Cat put the monsters to sleep — the siege goes on!'),VOEV(),'voevoda',5);},null,
+    /* поздний зачёт (adt): тот же забег и его окно итогов ещё открыто → забег продолжается; иначе золото по цене ролика */
+    ()=>{if(G!==g||!G.over||G.contUsed||!cb_||!document.body.contains(cb_)||!$('modal').classList.contains('on'))return adLateCoins();
+      hideModal();G.win=false;continueBattle();voice(Lg('Второе дыхание! Кот Баюн усыпил нечисть — осада продолжается!','Second wind! Bayun the Cat put the monsters to sleep — the siege goes on!'),VOEV(),'voevoda',5);return Lg('осада продолжается!','the siege goes on!');}));}
+    {let x2d=0;const bt=$('rX2'),pay=()=>{x2d=1;const v=Math.max(0,total-P.x2);S.gold+=v;ern('ad',v);P.x2=Math.max(P.x2,total);save();if(bt&&bt.parentNode)bt.parentNode.removeChild(bt);return v;};
+    adOn('rX2','x2s',()=>showRewarded(()=>{if(x2d)return;toast('+'+fmtGold(pay())+'');},null,
+      ()=>{if(x2d)return '';const v=pay();SND.coin();setPills();return v>0?Lg('удвоено: +','doubled: +')+fmtGold(v):'';}));} /* поздний зачёт (adt): всегда, один раз */
     on('rAgain',()=>afterAd(true,startEndless));on('rMap',()=>afterAd(true,()=>toMenu('Siege')));achAfter();return;}
   const c=G.ci,l=G.li,key=lvKey(c,l);
   if(win){const st=starsFor(),prev=S.stars[key]||0,first=!prev;S.stars[key]=Math.max(prev,st);S.wins++;if(S.lose)delete S.lose[key];
     const crownNew=G.diff===2&&!S.crown[key];if(G.diff===2)S.crown[key]=1;
     dqAdd('win',1);if(st===3)dqAdd('star3',1);const lg=S.login?0:loginFirst();   // первый день серии входов засчитываем с первой победой
-    const reward=winGold(c,l,st,first);S.gold+=reward;const bst=(60+30*(st-1))*(l===5?2:1);const bref=boostRefund(1);boostAdd(bst);save();
+    const reward=winGold(c,l,st,first);S.gold+=reward;ern('lvl',reward);const bst=(60+30*(st-1))*(l===5?2:1);const bref=boostRefund(1);boostAdd(bst);save();
     const lines=Lg(['Отбились! Нечисть бежит, роняя тапки.','Победа! Воевода доволен и даже улыбнулся.','Застава устояла! Тётушка Яга печёт пироги.','Славно! Про нас сложат былину. Короткую.'],
       ['We held them off! The monsters flee, losing their slippers.','Victory! The commander is pleased and even smiled.','The outpost stands! Auntie Yaga is baking pies.','Glorious! They’ll write an epic about us. A short one.']);
     const next=l<5?[c,l+1]:c<CH.length-1?[c+1,0]:null;
@@ -419,7 +425,9 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
       (next?'<button class="btn big" id="rNext">'+Lg('Дальше: ','Next: ')+CH[next[0]].levels[next[1]]+' ▸</button>':'<button class="btn big" id="rMap">'+Lg('На карту','To the map')+'</button>')+
       (x2b?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить золото за рекламу: ещё +','🎬 Double the gold for an ad: +')+fmtNum(reward)+(needB(reward)?Lg(' — хватит на «'+needB(reward)+'»',' — enough for “'+needB(reward)+'”'):'')+'</button>':'')+
       '<div class="btns h" style="margin-top:0">'+(hintWall?'<button class="btn ghost" id="rWall">'+Lg('🏠 В деревню','🏠 To the village')+'</button>':'<button class="btn ghost" id="rAgain">'+Lg('Ещё раз','Play again')+'</button>')+(next?'<button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button>':'')+'</div></div>','win');
-    adOn('rX2','x2',()=>showRewarded(()=>{S.gold+=reward;save();toast('+'+fmtGold(reward)+'');const b=$('rX2');if(b)b.remove();}));
+    {let x2d=0;const bt=$('rX2'),pay=()=>{x2d=1;S.gold+=reward;ern('ad',reward);save();if(bt&&bt.parentNode)bt.parentNode.removeChild(bt);};
+    adOn('rX2','x2',()=>showRewarded(()=>{if(x2d)return;pay();toast('+'+fmtGold(reward)+'');},null,
+      ()=>{if(x2d)return '';pay();SND.coin();setPills();return Lg('удвоено: +','doubled: +')+fmtGold(reward);}));} /* поздний зачёт (adt): всегда, один раз */
     // межэкранная — только тут, при уходе с экрана победы, и со 2-й главы (после Соловья)
     const ia=c>=1;
     on('rNext',()=>afterAd(ia,()=>{toMenu('Map');mapSel=next[0];renderMap();if(!$('modal').classList.contains('on'))openIntro(next[0],next[1]);}));
@@ -429,7 +437,7 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
     if(PLAT==='vk'){try{const o=SOC.offer(S.wins,Date.now()-lastAdT<60000||paused||interBusy);if(o){retAsked=true;const d=document.createElement('div');d.className='soc-o';d.innerHTML='<span>'+o.t+'</span><button class="btn ghost" id="mSoc">'+o.b+'</button>';
       $('mBody').appendChild(d);fitModal();STAT.ev('mod',{m:'soc',a:'of_'+(o.k||'ret')});const b=$('mSoc');b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_'+(o.k||'ret')});o.run();};}}catch(e){}}
     if(l===5&&c===CH.length-1)setTimeout(()=>toast(Lg('Тридевятое царство спасено! Осада и Босс недели ждут.','The Thrice-Nine Kingdom is saved! The Siege and the Boss of the Week await.')),800);
-  }else{const cons=loseGold(c,G.wave);S.gold+=cons;S.lose=S.lose||{};S.lose[key]=(S.lose[key]||0)+1;const pity=pityCoins(c,l);const bref=boostRefund(.5);save();
+  }else{const cons=loseGold(c,G.wave);S.gold+=cons;ern('lvl',cons);S.lose=S.lose||{};S.lose[key]=(S.lose[key]||0)+1;const pity=pityCoins(c,l);const bref=boostRefund(.5);save();
     const lines=Lg(['Нечисть прорвалась в город и съела все пирожки. Все!','Ворота не выдержали. Воевода чешет бороду: «Строить надо больше!»','Прорвались, окаянные! Ничего — отстроимся и всыплем им.'],
       ['The monsters broke into the city and ate all the pies. ALL of them!','The gates gave way. The commander scratches his beard: “We need to build more!”','They got through, the rascals! Never mind — we’ll rebuild and give them what for.']);
     const nw=G.waves.length,held=Math.max(0,G.wave-1),soft=Math.round((1-novK(c,l))*100),lb=G.leakedBoss;
@@ -444,7 +452,10 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
       dqNote(dq0)+'<div class="btns stick">'+(early?againB+contB:contB+againB)+
       // два поражения подряд — ненавязчиво предложить полегче (звёзды те же)
       (S.lose[key]>=2&&G.diff>0?'<button class="btn ghost" id="rEasy">'+Lg('Полегче: сыграть на «'+DIFF[G.diff-1].p+'»','Easier: play on “'+DIFF[G.diff-1].p+'”')+'</button>':'')+'<button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button></div>','lose');
-    adOn('rCont','cont',()=>showRewarded(()=>{hideModal();continueBattle();voice(Lg('Второе дыхание! Кот Баюн усыпил нечисть — строй скорее!','Second wind! Bayun the Cat put the monsters to sleep — build, quick!'),VOEV(),'voevoda',5);}));
+    {const g=G,cb_=$('rCont');adOn('rCont','cont',()=>showRewarded(()=>{hideModal();continueBattle();voice(Lg('Второе дыхание! Кот Баюн усыпил нечисть — строй скорее!','Second wind! Bayun the Cat put the monsters to sleep — build, quick!'),VOEV(),'voevoda',5);},null,
+    /* поздний зачёт (adt): тот же бой и окно поражения ещё открыто → бой продолжается; иначе золото по цене ролика (у попытки цены в золоте нет) */
+    ()=>{if(G!==g||!G.over||G.contUsed||!cb_||!document.body.contains(cb_)||!$('modal').classList.contains('on'))return adLateCoins();
+      hideModal();continueBattle();voice(Lg('Второе дыхание! Кот Баюн усыпил нечисть — строй скорее!','Second wind! Bayun the Cat put the monsters to sleep — build, quick!'),VOEV(),'voevoda',5);return Lg('бой продолжается!','the battle goes on!');}));}
     on('rAgain',()=>startLevel(c,l));on('rMap',()=>toMenu('Map'));
     on('rEasy',()=>{S.diff=G.diff-1;save();startLevel(c,l);toast(Lg('Сложность: «'+DIFF[S.diff].n+'». Поменять — в окне перед боем','Difficulty: “'+DIFF[S.diff].n+'”. Change it in the window before a battle'));});}
   achAfter();
@@ -482,8 +493,8 @@ function loseWhy(){const tws=G.tw.filter(Boolean),empty=G.map.spots.length-tws.l
 function weekEnd(dq0){const w=G.wk.w,b=CH[G.ci].boss,kill=!!G.wkKill;let pct=G.wkPct||0;
   if(!kill){const e=G.en.find(x=>!x.dead&&x.type===b);if(e)pct=Math.max(pct,1-e.hp/e.max);}
   const sc=weekScore(kill,pct,G.wkT||G.t);if(!S.wk||S.wk.w!==w)S.wk={w,best:0,got:0,runs:0};const W=S.wk;W.runs++;const rec=sc>W.best&&W.runs>1;W.best=Math.max(W.best,sc);
-  const waves=Math.max(0,G.wave-(kill?0:1)),reward=siegeGold(waves);S.gold+=reward;let prize=0;
-  if(kill&&!W.got){W.got=1;S.wkN=(S.wkN||0)+1;prize=weekReward();S.gold+=prize;boostAdd(600);}
+  const waves=Math.max(0,G.wave-(kill?0:1)),reward=siegeGold(waves);S.gold+=reward;ern('lvl',reward);let prize=0;
+  if(kill&&!W.got){W.got=1;S.wkN=(S.wkN||0)+1;prize=weekReward();S.gold+=prize;ern('quest',prize);boostAdd(600);}
   const bref=boostRefund(1);G.win=true;save();if(W.best>0)LB.set('weekly',w*WEEK_SCORE+W.best);
   const txt=kill?Lg(EN[b].n+' '+defeatedWord(b)+' за ',EN[b].n+' defeated in ')+fmtTime(G.wkT||G.t)+'!':pct>0?Lg('Сняли ','You took ')+dnum(Math.floor(pct*1000)/10)+Lg('% здоровья. Прокачай заставы — и ещё раз!','% of its health. Upgrade your outposts — and try again!'):Lg('До босса не дошли. Кузница и деревня помогут — и ещё раз!','You didn’t reach the boss. The forge and the village will help — try again!');
   const wv=s=>fmtWeek(s).replace(/^(победа за|урон|won in|damage) /,'');
@@ -493,13 +504,15 @@ function weekEnd(dq0){const w=G.wk.w,b=CH[G.ci].boss,kill=!!G.wkKill;let pct=G.w
     '<div class="card treasury" style="text-align:center"><b>+'+fmtGold(reward)+'</b>'+(prize?'<br><b>'+Lg('Награда недели: +'+fmtGold(prize)+' и +10 мин ⏩','Weekly reward: +'+fmtGold(prize)+' and +10 min ⏩')+'</b>':'')+(bref>=1?'<br><span style="font-size:13px">'+BREF()+fmtBoost(bref)+'</span>':'')+'</div>'+dqNote(dq0)+
     '<div class="btns stick">'+(reward>0&&goldWanted()&&adOk()?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить за рекламу: ещё +','🎬 Double for an ad: +')+fmtNum(reward)+'</button>':'')+(LB.ok()&&PLAT!=='vk'?'<button class="btn ghost" id="rWkLb">'+Lg('🏆 Таблица недели','🏆 Weekly leaderboard')+'</button>':'')+
     '<button class="btn big" id="rAgain">'+Lg('Ещё раз','Play again')+'</button><button class="btn ghost" id="rMap">'+Lg('В меню','Menu')+'</button></div>');
-  adOn('rX2','x2w',()=>showRewarded(()=>{S.gold+=reward;save();toast('+'+fmtGold(reward));const x=$('rX2');if(x)x.remove();}));
+  {let x2d=0;const bt=$('rX2'),pay=()=>{x2d=1;S.gold+=reward;ern('ad',reward);save();if(bt&&bt.parentNode)bt.parentNode.removeChild(bt);};
+  adOn('rX2','x2w',()=>showRewarded(()=>{if(x2d)return;pay();toast('+'+fmtGold(reward));},null,
+    ()=>{if(x2d)return '';pay();SND.coin();setPills();return Lg('удвоено: +','doubled: +')+fmtGold(reward);}));} /* поздний зачёт (adt): всегда, один раз */
   on('rWkLb',()=>afterAd(kill,()=>{lbSeg='weekly';toMenu('Siege');setTimeout(()=>{const x=$('lbBox');if(x)x.scrollIntoView({block:'center'});},60);}));
   on('rAgain',()=>afterAd(kill,startWeekly));on('rMap',()=>afterAd(kill,()=>toMenu('Siege')));}
 /* ---------- итог испытания дня ---------- */
 function dchEnd(win,dq0){const D=S.dch||{},R=DCH_RULES.find(r=>r.k===G.rule)||DCH_RULES[0],prize=!!(G.dchPrize&&win);let g=0;
   if(win){S.wins++;dqAdd('win',1);}
-  if(G.dchPrize&&D.day===dayKey()){if(win){D.res=1;S.dchN=(S.dchN||0)+1;g=dchGold();S.gold+=g;boostAdd(300);}else D.res=2;}
+  if(G.dchPrize&&D.day===dayKey()){if(win){D.res=1;S.dchN=(S.dchN||0)+1;g=dchGold();S.gold+=g;ern('quest',g);boostAdd(300);}else D.res=2;}
   const bref=boostRefund(win?1:.5);if(win)G.win=true;save();
   showModal('<h3>'+(win?Lg('Испытание пройдено!','Challenge complete!'):Lg('Испытание не далось','Challenge failed'))+'</h3><p class="sub">'+Lg('«'+R.n+'»','“'+R.n+'”')+' · '+CH[G.ci].levels[G.li]+'</p>'+
     '<div class="say"><img src="'+ic('voevoda')+'" alt=""><div>'+(prize?Lg('Вот это воевода! Держи награду.','Now that’s a commander! Here’s your reward.'):win?Lg('Славно! Награда — за первую попытку дня, но умение дороже золота.','Glorious! The reward is for the first try of the day, but skill is worth more than gold.'):G.dchPrize?Lg('Не вышло. Награда была за первую попытку — завтра будет новое испытание.','No luck. The reward was for the first try — a new challenge comes tomorrow.'):Lg('Не вышло. Попробуй построить иначе!','No luck. Try building differently!'))+'</div></div>'+
@@ -557,6 +570,14 @@ function giftReady(){return S.runs>0&&nowMs()-(S.gift||0)>4*3600e3;}
 function nextBld(){let best=null;for(const b of BLD){const l=S.village[b.id]||0;if(l<b.cost.length&&(!best||b.cost[l]<best.c))best={n:b.name,c:b.cost[l]};}return best;}
 function needV(){const b=nextBld();return b&&b.c>S.gold?{n:b.n,d:b.c-S.gold}:null;}
 function needB(extra){const b=nextBld();return b&&b.c>S.gold&&b.c<=S.gold+extra?b.n:'';}
+/* adt: поздний зачёт в деревне. afkTk — последнее «забрать казну» (от какой отметки S.afkT, сколько, ×1/×2; только в памяти).
+   «Казна ×2»: казна с той же отметки ещё не взята → забрать ×2; её уже забрали ×1 → доплатить вторую половину (один раз); забрали ×2 другим роликом → ничего */
+let afkTk=null;
+function afkLate(t0){if(S.afkT===t0){const g=afkGold();if(g<=0)return '';afkTk={t:t0,g:g,m:2};S.gold+=g*2;ern('chest',g);ern('ad',g);S.afkT=nowMs();save();SND.coin();vilRe();return Lg('казна ×2: +','treasury ×2: +')+fmtGold(g*2);}
+  if(afkTk&&afkTk.t===t0&&afkTk.m===1){afkTk.m=2;S.gold+=afkTk.g;ern('ad',afkTk.g);save();SND.coin();vilRe();return Lg('казна ×2, доплата: +','treasury ×2, the rest: +')+fmtGold(afkTk.g);}
+  return '';}
+/* перерисовать деревню после поздней награды — только если она на экране и окна нет */
+function vilRe(){setPills();if(!G&&curTab==='Village'&&!$('modal').classList.contains('on'))renderVillage();}
 function renderVillage(){const el=$('tabVillage');const giftAmt=giftGold();
   let h='<h2>'+Lg('Деревня','Village')+'</h2><p class="sub">'+Lg('Золото из боёв тратим тут: постройки усиливают заставу во всех боях.','Spend battle gold here: buildings make your outposts stronger in every battle.')+'</p>'+powerHTML()+'<canvas id="vilCv" class="vilcv" aria-label="'+Lg('Твоя деревня','Your village')+'"></canvas>';
   {const g=afkGold(),cap=afkCapH(),h2=Math.max(0,Math.min(cap,(nowMs()-S.afkT)/3600e3));
@@ -582,11 +603,15 @@ function renderVillage(){const el=$('tabVillage');const giftAmt=giftGold();
   el.innerHTML=h;
   {const c=$('vilCv');if(c)drawVillage(c,c.clientWidth||Math.min(520,el.clientWidth||340),Math.round(Math.min(170,Math.max(120,(c.clientWidth||340)*.36))));}
   cosmeticsBind();bannersBind(el);
-  const takeAfk=m=>{const g=afkGold();if(g<=0)return;S.gold+=g*m;S.afkT=nowMs();save();SND.coin();toast('+'+fmtGold(g*m)+Lg(' из казны',' from the treasury'));renderVillage();setPills();};
+  const takeAfk=m=>{const g=afkGold();if(g<=0)return;afkTk={t:S.afkT,g:g,m:m};S.gold+=g*m;ern('chest',g);ern('ad',g*(m-1));S.afkT=nowMs();save();SND.coin();toast('+'+fmtGold(g*m)+Lg(' из казны',' from the treasury'));renderVillage();setPills();};
   on('vBoost',()=>openBoostOffer());
-  on('afkTake',()=>takeAfk(1));adOn('afkX2','afk2',()=>showRewarded(()=>takeAfk(2)));
-  adOn('afkBoost','afkh',()=>showRewarded(()=>{const bst=S.afkBoost&&S.afkBoost.day===dayKey()?S.afkBoost.n:0;const amt=afkRate()*2;S.afkBoost={day:dayKey(),n:bst+1};S.gold+=amt;save();SND.coin();toast('+'+fmtGold(amt));renderVillage();setPills();}));
-  adOn('giftBtn','gift',()=>showRewarded(()=>{S.gold+=giftAmt;S.gift=nowMs();save();SND.up();toast(Lg('Тётушка Яга: «Кушай, воевода!» +','Auntie Yaga: “Eat up, commander!” +')+fmtGold(giftAmt));renderVillage();setPills();}));
+  on('afkTake',()=>takeAfk(1));{const t0=S.afkT;adOn('afkX2','afk2',()=>showRewarded(()=>takeAfk(2),null,()=>afkLate(t0)));}
+  {const hb=()=>{const bst=S.afkBoost&&S.afkBoost.day===dayKey()?S.afkBoost.n:0;const amt=afkRate()*2;S.afkBoost={day:dayKey(),n:bst+1};S.gold+=amt;ern('ad',amt);save();SND.coin();return amt;};
+    adOn('afkBoost','afkh',()=>showRewarded(()=>{toast('+'+fmtGold(hb()));renderVillage();setPills();},null,
+      ()=>{const a=hb();vilRe();return Lg('+2 часа казны: +','+2 treasury hours: +')+fmtGold(a);}));} /* поздний зачёт (adt): всегда, в счёт двух в день */
+  adOn('giftBtn','gift',()=>showRewarded(()=>{S.gold+=giftAmt;ern('ad',giftAmt);S.gift=nowMs();save();SND.up();toast(Lg('Тётушка Яга: «Кушай, воевода!» +','Auntie Yaga: “Eat up, commander!” +')+fmtGold(giftAmt));renderVillage();setPills();},null,
+    /* поздний зачёт (adt): гостинец ещё готов → выдаём; уже взят другим роликом → ничего */
+    ()=>{if(!giftReady())return '';const a=giftGold();S.gold+=a;ern('ad',a);S.gift=nowMs();save();SND.up();vilRe();return Lg('гостинец Яги: +','Yaga’s treat: +')+fmtGold(a);}));
   for(const b of el.querySelectorAll('[data-b]'))b.onclick=()=>{const bd=BLD.find(x=>x.id===b.dataset.b),l=S.village[bd.id]||0,cost=bd.cost[l];if(S.gold<cost)return;
     const dl=bldDelta(bd.id,l),p0=powerNow();S.gold-=cost;STAT.ev('spend',{k:'b:'+bd.id+(l+1),c:cost});S.village[bd.id]=l+1;save();SND.build();renderVillage();setPills();vilAnim(bd.id,bd.name+(l?': '+lvLbl(l+1):Lg(' построен'+({wall:'',herb:'а',range:'о',smith:'а',fair:'а'}[bd.id]||'')+'!',' built!')));
     toast(bd.name+' — '+dl[0]+': '+dl[1]+' → '+dl[2]+powerToast(p0));};}
@@ -687,7 +712,7 @@ function loadLB(){const name=lbSeg,wn=weekNo(),box0=$('lbBox');if(!box0)return;b
 function chronicleBtns(){return typeof openBook==='function'?'<div class="btns h" style="margin-top:0"><button class="btn ghost" id="bookBtn">'+Lg('📖 Книга нечисти','📖 Monster book')+'</button><button class="btn ghost" id="achBtn">'+Lg('🏆 Достижения','🏆 Achievements')+'</button></div>':'';}
 function chronicleBind(){if(typeof openBook==='function'){on('bookBtn',openBook);on('achBtn',openAch);}}
 /* ---------- достижения ---------- */
-function achCheck(){const got=[];for(const a of ACH){if(S.ach[a.id])continue;let v=0;try{v=a.v();}catch(e){}if(v>=a.goal){S.ach[a.id]=1;S.gold+=a.r;got.push(a);}}if(got.length){save();setPills();}return got;}
+function achCheck(){const got=[];for(const a of ACH){if(S.ach[a.id])continue;let v=0;try{v=a.v();}catch(e){}if(v>=a.goal){S.ach[a.id]=1;S.gold+=a.r;ern('quest',a.r);got.push(a);}}if(got.length){save();setPills();}return got;}
 function achAfter(){const got=achCheck();if(!got.length)return;const g=got.reduce((x,a)=>x+a.r,0);
   setTimeout(()=>{SND.star(2);toast('🏆 '+(got.length===1?Lg('Достижение «'+got[0].n+'»','Achievement “'+got[0].n+'”'):Lg('Достижения: ','Achievements: ')+got.length)+' — +'+fmtGold(g));},1400);}
 function openAch(){STAT.screen('ach');const n=ACH.filter(a=>S.ach[a.id]).length,list=ACH.slice().sort((a,b)=>(S.ach[a.id]?1:0)-(S.ach[b.id]?1:0));
@@ -744,7 +769,8 @@ function openSettings(){STAT.screen('settings');const oo=v=>v?Lg('Вкл','On'):
   on('sSnd',()=>{S.sound=S.sound?0:1;save();openSettings();});on('sMus',()=>{S.music=S.music?0:1;save();musicSync();openSettings();});on('sOk',hideModal);
   on('sShk',()=>{S.shake=S.shake?0:1;save();openSettings();});on('sStat',()=>{STAT.toggle();openSettings();});on('sCred',openCredits);on('sSoc',openSocial);diffSegBind();
   // покупки Яндекса (js/pay.js) — только в меню; нет платежей — раздела нет
-  if(typeof payHere==='function'&&payHere()){const c=document.createElement('div');c.innerHTML=payHtml()+'<button class="btn ghost" id="payRe" style="width:100%;margin-top:4px">'+Lg('↻ Восстановить покупки','↻ Restore purchases')+'</button>';
+  if(typeof payHere==='function'&&payHere()){STAT.screen('shop');const c=document.createElement('div');  // STAT v1.2: покупки — в ⚙ (своего магазина нет)
+    c.innerHTML=payHtml()+'<button class="btn ghost" id="payRe" style="width:100%;margin-top:4px">'+Lg('↻ Восстановить покупки','↻ Restore purchases')+'</button>';
     const b=$('mBody').querySelector('.btns');b.parentNode.insertBefore(c,b);PAY.bind(c);PAY.re=openSettings;on('payRe',()=>PAY.again());}}
 
 /* ================= благодарности: музыка чужая, подпись авторов обязательна по лицензии =================
@@ -777,12 +803,12 @@ function renderQuests(){const box=$('dqBox');if(!box)return;if(!S.wins){box.inne
       (q.got?'<span class="tag ok">✓</span>':'<button class="btn gold" data-q="'+i+'" '+(ok?'':'disabled')+'><img src="'+ic('ingot',40)+'">'+questGold(Q)+'</button>')+'</div>';}
   if(!D.bonus)h+='<div class="qrow"><div class="t"><b>'+Lg('Все три задания','All three quests')+'</b><span>'+Lg('Сундук дня: +5 мин ускорения','Daily chest: +5 min of speed-up')+'</span></div><button class="btn gold" id="dqBonus" '+(D.list.every(q=>q.got)?'':'disabled')+'>'+Lg('⏩ +5 мин','⏩ +5 min')+'</button></div>';
   h+='<span class="note">'+Lg('Новые задания — завтра.','New quests tomorrow.')+'</span></div>';box.innerHTML=h;
-  for(const b of box.querySelectorAll('[data-q]'))b.onclick=()=>{const q=D.list[+b.dataset.q],Q=QUESTS.find(x=>x.k===q.k);if(q.got||q.n<q.goal)return;q.got=1;const g=questGold(Q);S.gold+=g;save();SND.coin();toast(Lg('Задание дня: +','Daily quest: +')+fmtGold(g));renderQuests();setPills();};
+  for(const b of box.querySelectorAll('[data-q]'))b.onclick=()=>{const q=D.list[+b.dataset.q],Q=QUESTS.find(x=>x.k===q.k);if(q.got||q.n<q.goal)return;q.got=1;const g=questGold(Q);S.gold+=g;ern('quest',g);save();SND.coin();toast(Lg('Задание дня: +','Daily quest: +')+fmtGold(g));renderQuests();setPills();};
   on('dqBonus',()=>{if(D.bonus||!D.list.every(q=>q.got))return;D.bonus=1;boostAdd(DQ_BONUS);save();SND.up();toast(Lg('Сундук дня: +5 мин ускорения','Daily chest: +5 min of speed-up'));renderQuests();setPills();});}
 function dayDiff(a,b){const p=s=>{const x=s.split('-').map(Number);return new Date(x[0],x[1]-1,x[2]).getTime();};return Math.round((p(b)-p(a))/864e5);}
 // что можно забрать сегодня: {idx — день серии 0..6, cont — серия продолжается}; null — уже забрано или серия ещё не начата
 function loginAvail(){const L=S.login;if(!L||!L.day)return null;const d=dayKey();if(L.day===d)return null;const gap=dayDiff(L.day,d),cont=gap>=1&&gap<=2;return {idx:cont?(L.n||0)%7:0,cont};}
-function loginGive(idx){const g=LOGIN_GOLD[idx];S.gold+=g;if(idx===6)boostAdd(600);return g;}
+function loginGive(idx){const g=LOGIN_GOLD[idx];S.gold+=g;ern('gift',g);if(idx===6)boostAdd(600);return g;}
 function loginFirst(){S.login={day:dayKey(),n:1};return loginGive(0);}
 function loginTomorrow(){const L=S.login,x=loginAvail();const n=L&&L.day===dayKey()?L.n:x&&x.cont?(L.n||0)+1:1;return LOGIN_GOLD[n%7];}
 function loginOffer(){const x=loginAvail();if(!x||$('modal').classList.contains('on'))return false;
@@ -835,7 +861,13 @@ function onReady(){
   if(/[?&](bot|shot)/.test(location.search))loadScript('tools/bot.js').then(()=>SHOT&&loadScript('tools/promo.js')).catch(()=>{});
   window.__test={get G(){return G;},update,render,layout,newBattle,startLevel,startEndless,tryBuild,tryUpgrade,callWave};
 }
-// STAT: покупки — обёртка снаружи общего модуля PAY (сам модуль не меняем). Все товары постоянные: «ok» — флаг появился после покупки
-{const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);const had=PAY.own(id);STAT.ev('buy',{i:id,r:'try'});
-  return Promise.resolve(b0.call(PAY,id)).then(()=>STAT.ev('buy',{i:id,r:!had&&PAY.own(id)?'ok':'cancel'}));};}
+/* STAT: покупки — обёртка снаружи общего модуля PAY (сам модуль не меняем). Все товары постоянные: «ok» — флаг появился после покупки.
+   v1.2: buy {i, r:try|ok|cancel|fail, v: голоса из PAY_ITEMS (= hobby-pay/catalog.json)}; отказ игрока (VK код 4, success:false, cancel/closed/denied) — cancel, остальные ошибки — fail */
+function payWhy(e){const d=e&&e.error_data||{},s=String(d.error_reason||d.error_msg||(e&&(e.message||e.code||e.error_type))||e||'');return +d.error_code===4||/cancel|close|denied|reject|user/i.test(s)?'cancel':'fail';}
+{const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);const had=PAY.own(id);let why='';const v=(PAY_ITEMS[id]||{}).vk|0,o=PAY.v,p=PAY.p,ov=o&&o.order,pp=p&&p.purchase;
+  if(ov)o.order=function(){return Promise.resolve(ov.apply(o,arguments)).then(r=>{if(!r||!r.success)why='cancel';return r;},e=>{why=payWhy(e);throw e;});};
+  if(pp)try{p.purchase=function(){return Promise.resolve(pp.apply(p,arguments)).catch(e=>{why=payWhy(e);throw e;});};}catch(e){}
+  const back=()=>{if(ov)o.order=ov;if(pp)try{p.purchase=pp;}catch(e){}};
+  STAT.ev('buy',{i:id,r:'try',v:v});
+  return Promise.resolve(b0.call(PAY,id)).then(()=>{back();STAT.ev('buy',{i:id,r:!had&&PAY.own(id)?'ok':why||'fail',v:v});},e=>{back();STAT.ev('buy',{i:id,r:'fail',v:v});throw e;});};}
 initSDK();
