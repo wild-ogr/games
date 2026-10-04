@@ -20,9 +20,9 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 .btn.blue{background:linear-gradient(#1c6fb8,#155a96);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.25);box-shadow:0 4px 0 #0d3e69,0 6px 14px rgba(0,0,0,.15)}
 .btn[disabled]{opacity:.6}
 .btn small{opacity:.9;font-size:.8em}
-.icon{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.88);font-size:22px;font-weight:800;box-shadow:0 3px 0 rgba(0,0,0,.12);flex:none}
+.icon{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.88);font-size:22px;font-weight:800;box-shadow:0 3px 0 rgba(0,0,0,.12);flex:none}
 .pill{background:rgba(255,255,255,.92);border-radius:999px;padding:7px 12px;font-weight:800;font-size:16px;box-shadow:0 3px 0 rgba(0,0,0,.1);white-space:nowrap}
-button.pill{cursor:pointer;position:relative;min-height:40px}
+button.pill{cursor:pointer;position:relative;min-height:48px}
 button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;right:-4px}
 .pill.sm{padding:5px 10px;font-size:15px}
 /* карта турнира */
@@ -42,8 +42,8 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .mrow.done .num{background:linear-gradient(#8be28f,#3fae5a);color:#0f3d1f;box-shadow:0 3px 0 #2b7a3f}
 .mrow.lock .num{background:linear-gradient(#d5dbdf,#aab4ba);box-shadow:0 3px 0 #7f8c8d;font-size:16px}
 .mrow .who{flex:1;min-width:0;line-height:1.2}
-.mrow .who b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mrow .who small{color:#57606f;font-weight:700;font-size:14px}
+.mrow .who b{display:block;font-size:17px;overflow-wrap:break-word} /* имена пар целиком, в две строки при нужде */
+.mrow .who small{color:#57606f;font-weight:700;font-size:15px}
 .mrow .avs{display:flex;flex:none}
 .mrow .avs span{width:40px;height:40px;border-radius:50%;background:#f1ede2;overflow:hidden;display:block;margin-left:-8px;box-shadow:0 0 0 2px #fff}
 .mrow .avs span:first-child{margin-left:0}
@@ -52,16 +52,16 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .st .e{color:#b8b2a4}
 .chest{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;background:rgba(0,0,0,.35);color:#fff;border-radius:14px;padding:6px 10px;font-weight:800;font-size:15px}
 .soc-o{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;background:#f1ede2;border-radius:14px;padding:8px 10px;text-align:left;font-weight:700;font-size:15px;color:#2d3436;line-height:1.3}
-.soc-o span{flex:1;min-width:0}.soc-o .btn{flex:none;padding:8px 12px;font-size:15px;min-height:44px;width:auto;margin:0}
+.soc-o span{flex:1;min-width:0}.soc-o .btn{flex:none;padding:8px 12px;font-size:15px;min-height:48px;width:auto;margin:0}
 .nrow .btn{min-width:0}
 @media (max-width:420px){.nrow.m4{gap:6px}.nrow.m4 .btn{font-size:14px;padding-left:3px;padding-right:3px}.nrow.m4 .btn.sq{flex-basis:52px;font-size:18px}.nrow.m4 .btn.sq small{font-size:11px}}
 @media (max-width:350px){.nrow.m4 .ne{display:none}}
-.chest .btn{padding:6px 12px;font-size:15px;min-height:40px}
+.chest .btn{padding:6px 12px;font-size:16px;min-height:48px}
 .mnav{padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:rgba(255,255,255,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .nrow{display:flex;gap:8px;max-width:520px;margin:0 auto}
 .nrow+.nrow{margin-top:8px}
 .nrow .btn{flex:1;padding:10px 6px;font-size:16px;white-space:nowrap}
-.rankb{max-width:520px;margin:2px auto 0;text-align:center}.rankb button{background:rgba(255,255,255,.85);border-radius:999px;padding:6px 14px;font-weight:800;font-size:15px;box-shadow:0 3px 0 rgba(0,0,0,.1);min-height:40px}
+.rankb{max-width:520px;margin:2px auto 0;text-align:center}.rankb button{background:rgba(255,255,255,.85);border-radius:999px;padding:6px 14px;font-weight:800;font-size:16px;box-shadow:0 3px 0 rgba(0,0,0,.1);min-height:48px}
 .nrow .btn.sq{flex:0 0 64px;padding:4px 0;font-size:20px;position:relative;line-height:1.1}
 .btn.sq small{display:block;font-size:12px;font-weight:700;opacity:1}
 .btn.sq .dot{position:absolute;top:4px;right:6px;width:10px;height:10px;border-radius:50%;background:#ff4757;box-shadow:0 0 0 2px #fff}
@@ -72,7 +72,7 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .gh{display:flex;align-items:center;gap:8px;padding:8px 10px 6px;padding-top:max(8px,env(safe-area-inset-top));background:rgba(0,0,0,.28);color:#fff;z-index:3}
 .gt{flex:1;min-width:0;line-height:1.15}
 .gt>div:first-child{font-weight:900;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sub{font-size:14px;font-weight:700;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:16px;font-weight:700;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gh .pill{color:var(--ink)}
 .tbl{flex:1;position:relative;min-height:0;overflow:hidden;touch-action:none}
 .tbl::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.35));pointer-events:none;z-index:0}
@@ -94,7 +94,7 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .ix2 b{display:block;font-size:.2em}.ix2 i{display:block;width:.16em;height:.16em;margin:0 auto}
 .pip{position:absolute;left:30%;top:36%;width:.5em;height:.5em}
 .fc{position:absolute;left:24%;top:24%;width:62%;height:56%;border-radius:.06em;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,"Times New Roman",serif;font-weight:900}
-.fc b{font-size:.36em;line-height:1}.fc i{width:.26em;height:.26em;display:block}
+.fc.fg{padding:0}.fc b{font-size:.36em;line-height:1}.fc i{width:.26em;height:.26em;display:block}
 .cd svg{display:block;width:100%;height:100%}
 .s0,.s1{color:#15171a}.s2,.s3{color:#c8102e}
 .four .s2{color:#0b5cc4}.four .s1{color:#157a34}
@@ -118,6 +118,13 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .bk-palekh{background:#141414;background-image:radial-gradient(circle,#e4b43a 12%,transparent 14%),radial-gradient(circle,#c0392b 12%,transparent 14%);background-size:.24em .24em,.24em .24em;background-position:0 0,.12em .12em}
 .bk-star{background:#b0231b;background-image:repeating-linear-gradient(90deg,rgba(255,215,0,.25) 0 .02em,transparent .02em .12em)}
 .bk-week{background:linear-gradient(135deg,#f6d365,#d4a52a);background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0 .03em,transparent .03em .1em)}
+.bk-daisy{background:#3f8a3a;background-image:radial-gradient(circle,#ffd23f 9%,#fff 11%,#fff 22%,transparent 24%);background-size:.22em .22em}
+.bk-gold{background:linear-gradient(135deg,#f9e08a,#c9971f 55%,#8c6410)}
+.bk-gold::before{content:"♣";position:absolute;left:0;right:0;top:30%;text-align:center;font-size:.36em;color:#6b4a08;line-height:1}
+.bk-cherry{background:#fff2f2;background-image:radial-gradient(circle,#c8102e 16%,transparent 18%),radial-gradient(circle,#2f7a3d 7%,transparent 9%);background-size:.18em .18em,.18em .18em;background-position:0 0,.07em -.05em}
+.bk-herring{background:#3b5f8a;background-image:linear-gradient(135deg,rgba(255,255,255,.25) 25%,transparent 25%),linear-gradient(225deg,rgba(255,255,255,.25) 25%,transparent 25%);background-size:.12em .12em}
+.bk-aurora{background:linear-gradient(160deg,#0b1d3a 10%,#1a7a6e 45%,#6be2b0 60%,#3b2a7a 85%)}
+.bk-cherry::after{border-color:rgba(200,16,46,.45)}
 .b::after{content:"";position:absolute;left:18%;top:14%;right:18%;bottom:14%;border:.025em solid rgba(255,255,255,.55);border-radius:.05em}
 .bk-star::before{content:"★";position:absolute;left:0;right:0;top:34%;text-align:center;font-size:.36em;color:#ffd23f;line-height:1}
 .bk-week::before{content:"7";position:absolute;left:0;right:0;top:32%;text-align:center;font-size:.34em;color:#7a4e00;font-weight:900;line-height:1}
@@ -137,15 +144,22 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .tb-khokh{background-color:#161010;background-image:radial-gradient(circle at 50% 50%,rgba(200,40,30,.55) 12%,transparent 14%),radial-gradient(circle at 50% 50%,rgba(230,180,60,.5) 6%,transparent 8%);background-size:48px 48px,24px 24px}
 .tb-gold{background:radial-gradient(ellipse at 50% 40%,#c9a13f,#8a6a1f 70%,#5a430f)}
 .tb-ny{background-color:#0f3057;background-image:radial-gradient(#fff 1.5px,transparent 2px),radial-gradient(rgba(255,255,255,.6) 1px,transparent 1.5px),radial-gradient(ellipse at 50% 110%,rgba(0,168,120,.5),transparent 60%);background-size:50px 50px,31px 31px,100% 100%}
+/* 03.10 boost: новые столы (монеты, подарки) */
+.tb-quilt{background-color:#d98e6a;background-image:linear-gradient(45deg,rgba(255,255,255,.25) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.25) 75%),linear-gradient(45deg,rgba(60,90,160,.3) 25%,transparent 25%,transparent 75%,rgba(60,90,160,.3) 75%);background-size:64px 64px;background-position:0 0,32px 32px}
+.tb-sunset{background:linear-gradient(#f6a05a,#d9634a 45%,#6b3a6e)}
+.tb-club{background-color:#173a5c;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 6px,transparent 6px 12px),radial-gradient(ellipse at 50% 45%,#2c5f8a,#173a5c 70%,#0d2238)}
+.tb-samovar{background-color:#8c2f1c;background-image:radial-gradient(circle,rgba(255,210,63,.5) 10%,transparent 12%),radial-gradient(circle,rgba(255,255,255,.15) 30%,transparent 32%);background-size:40px 40px,40px 40px;background-position:0 0,20px 20px}
+.tb-marble{background-color:#e8e6e1;background-image:linear-gradient(115deg,transparent 40%,rgba(120,120,130,.25) 42%,transparent 46%),linear-gradient(35deg,transparent 60%,rgba(120,120,130,.2) 61%,transparent 64%),radial-gradient(ellipse at 30% 30%,#fff,transparent 60%);background-size:260px 260px,180px 180px,100% 100%}
 /* места за столом */
 .seat{position:absolute;top:0;left:0;text-align:center;z-index:3;pointer-events:none}
 .av{border-radius:50%;background:#f1ede2;overflow:hidden;margin:0 auto;box-shadow:0 0 0 3px rgba(255,255,255,.85),0 3px 8px rgba(0,0,0,.35)}
 .av svg{display:block;width:100%;height:100%}
 .seat.turn .av{box-shadow:0 0 0 4px #ffd23f,0 0 14px 3px rgba(255,210,63,.8)}
 .seat.out .av{filter:grayscale(.2) brightness(1.05);box-shadow:0 0 0 4px #3fae5a}
-.nm{display:inline-block;margin-top:4px;background:rgba(0,0,0,.55);color:#fff;font-weight:800;font-size:14px;border-radius:999px;padding:2px 10px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.nm{display:inline-block;margin-top:4px;background:rgba(0,0,0,.55);color:#fff;font-weight:800;font-size:16px;border-radius:999px;padding:2px 7px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .nm i{font-style:normal;color:#ffd23f}
-.stt{display:block;margin:3px auto 0;font-size:13px;font-weight:800;color:#fff;background:#b8390a;border-radius:8px;padding:1px 8px;width:max-content;max-width:100%}
+.seat.sl .nm,.seat.sr .nm{white-space:normal;line-height:1.15;overflow-wrap:normal;border-radius:12px} /* soft4: на узком экране «Дядя Коля» — в две строки, а не «Дядя Ко…» */
+.stt{display:block;margin:3px auto 0;font-size:15px;font-weight:800;color:#fff;background:#b8390a;border-radius:8px;padding:1px 8px;width:max-content;max-width:100%}
 .stt.g{background:#2b8a3e}.stt.b{background:#1c6fb8}.stt:empty{display:none}
 .bub{position:absolute;left:50%;transform:translateX(-50%);background:#fff;color:#2d3436;border-radius:14px;padding:7px 11px;font-weight:700;font-size:15px;line-height:1.25;box-shadow:0 4px 14px rgba(0,0,0,.3);width:max-content;max-width:210px;opacity:0;transition:opacity .25s;z-index:6;pointer-events:none;text-align:center}
 .bub.on{opacity:1}
@@ -160,11 +174,12 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 #say:empty{display:none}
 #bar .btn{pointer-events:auto;flex:none;padding:10px 18px;font-size:18px}
 #act.hide,#act2.hide{display:none}
-.tip{position:absolute;left:10px;right:10px;background:rgba(255,255,255,.96);border-radius:14px;padding:9px 12px;font-weight:700;font-size:15px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.25);display:none;z-index:7;line-height:1.3;pointer-events:none}
+.tip{position:absolute;left:10px;right:10px;background:rgba(255,255,255,.96);border-radius:14px;padding:7px 10px 8px;font-weight:700;font-size:15px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.25);display:none;z-index:7;line-height:1.25;pointer-events:auto}
 .tip.on{display:block}
+.tip button{display:block;width:100%;margin:6px 0 0;min-height:48px;padding:8px 12px;font-size:17px}
 /* магазин украшений */
 .tabs{display:flex;gap:6px;padding:8px 12px 4px;max-width:560px;width:100%;margin:0 auto}
-.tabs button{flex:1;background:rgba(255,255,255,.7);border-radius:12px;padding:10px 4px;font-weight:800;font-size:15px;min-height:44px}
+.tabs button{flex:1;background:rgba(255,255,255,.7);border-radius:12px;padding:10px 4px;font-weight:800;font-size:16px;min-height:48px}
 .tabs button.on{background:#fff;box-shadow:0 3px 0 rgba(0,0,0,.15)}
 .shop-grid{flex:1;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-wrap:wrap;justify-content:space-between;padding:8px 12px 24px;align-content:flex-start;max-width:560px;width:100%;margin:0 auto}
 .it{width:48.5%;background:var(--card);border-radius:18px;padding:8px;text-align:center;box-shadow:0 4px 0 #d9d2bf;margin-bottom:10px;position:relative}
@@ -172,7 +187,7 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .it .pv .cd{transition:none}
 .it b{display:block;margin-top:6px;font-size:16px}
 .it small{display:block;color:#57606f;font-weight:600;font-size:14px;min-height:18px}
-.it .btn{width:100%;margin-top:6px;padding:8px 6px;font-size:15px;min-height:44px}
+.it .btn{width:100%;margin-top:6px;padding:8px 6px;font-size:16px;min-height:48px}
 .shop-grid{-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 8px);mask-image:linear-gradient(to bottom,transparent 0,#000 8px)}
 .shop-pay{width:100%;margin-bottom:10px}.shop-pay .pay{margin-top:0;background:var(--card);border-radius:18px;padding:10px 12px 12px;box-shadow:0 4px 0 #d9d2bf}
 .it small.pnote{color:#1f5e2c;font-weight:800;margin-top:6px}
@@ -200,13 +215,29 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 @keyframes hornup{from{transform:translateY(12px) scale(.6);opacity:0}}
 body.calm .goat .horns{animation:none}
 .achips{display:flex;flex-wrap:wrap;justify-content:center;margin:6px 0 2px}.achips span{background:#e6f6e9;color:#1f5e2c;border-radius:999px;padding:4px 10px;margin:3px;font-weight:800;font-size:14px;line-height:1.3}.achips b{color:#c98f00}
-.btn.x2p{background:#fff4d6;color:#a4520a;border:2px solid #f0a020;box-shadow:none;padding:7px 12px;font-size:15px;min-height:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center;max-width:100%;width:auto}
+.btn.x2p{background:#fff4d6;color:#a4520a;border:2px solid #f0a020;box-shadow:none;padding:7px 12px;font-size:15px;min-height:48px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center;max-width:100%;width:auto}
 .row>.x2p{flex:0 0 auto!important}
+@media (max-width:359px){.btn.x2p,.card.res .btn.x2p{white-space:normal;font-size:15px;line-height:1.2;padding:5px 8px}}
+@media (max-width:599px) and (max-height:700px){.modal{padding:8px 12px}.card.res{padding:10px 12px}.card.res .goats{margin:10px 0 0}.card.res .goat,.card.res .goat .av{width:50px;height:50px}.card.res .goat .horns{width:60px;height:24px;top:-14px}.card.res .goats.dry .horns{width:70px;height:28px;top:-17px;left:-10px}
+  .card.res h2{font-size:21px;margin-bottom:2px}.card.res .big-stars{font-size:26px;margin:0;letter-spacing:2px}.card.res p{margin:3px 0;font-size:15px;line-height:1.25}.card.res .quote,.card.res .goal:not(.tipl):not(.ngoal),.card.res .stars3,.card.res .ngoal+.ngoal{display:none}.card.res .ngoal{font-size:14px!important;margin:2px 0!important}
+  .card.res .coins-won{font-size:20px}.card.res .achips{margin:2px 0}.card.res .achips span{font-size:13px;padding:2px 8px;margin:2px}.card.res .row{margin-top:8px}.card.res .btn{padding:8px 12px}.card.res .btn.x2p{min-height:48px;font-size:16px}}
 .stars3{font-size:13px!important;margin:2px 0!important}
+.ngoal{font-size:15px!important;margin:4px 0 2px!important;color:#5a3d00!important}
 .flyc{position:absolute;left:0;top:0;font-size:22px;z-index:12;pointer-events:none}
 .card.res .quote{padding:6px 10px;margin:6px 0}
 .quote{background:#fff3d6;border-radius:14px;padding:8px 12px;font-style:italic;color:#5a4a2a!important}
 .goal{font-size:15px!important;margin:8px 0 2px!important;color:#2d3436!important;font-weight:700}
+.task{display:flex;align-items:center;background:#fff;border-radius:14px;padding:10px 12px;margin:8px 0;text-align:left;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.task>*+*{margin-left:10px}.task .ti{font-size:24px;flex:none;width:30px;text-align:center}.task>span:nth-child(2){flex:1;min-width:0}
+.task b{display:block;font-size:17px;line-height:1.25}.task small{display:block;color:#57606f;font-weight:700;font-size:15px}
+.task .tr{flex:none;font-weight:900;color:#a4520a;font-size:17px}.task.ok{background:#e6f6e9}.task.ok .ti{color:#2e7d32;font-weight:900}
+.tbar{display:block;height:8px;background:#e3e0d6;border-radius:4px;margin-top:5px;overflow:hidden}.tbar i{display:block;height:100%;background:#3fae5a;border-radius:4px}
+.today{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;max-width:520px;margin:8px auto 0}
+.today .tl{font-weight:800;font-size:16px;color:#1d3a24;margin-right:4px}
+.today button{min-height:48px;border-radius:999px;padding:6px 14px;margin:3px;font-weight:800;font-size:17px;background:rgba(255,255,255,.9);box-shadow:0 3px 0 rgba(0,0,0,.12)}
+.today button.on{background:#fff4d6;border:2px solid #f0a020}.today button.ok{opacity:.75}.today button.lk{opacity:.6}
+@media (max-width:400px){.today .tl{display:none}.today button{padding:6px 9px;margin:2px;font-size:16px}}
+.rkbar{display:block;height:6px;background:rgba(0,0,0,.12);border-radius:3px;margin:4px 6px 0;overflow:hidden}.rkbar i{display:block;height:100%;background:#f0a020}
 .goal.tipl{background:#e6f6e9;border-radius:12px;padding:8px 10px;color:#1f5e2c!important}
 .ad{background:#111;color:#fff;text-align:center;font-size:22px;font-weight:800}
 .ad small{font-weight:500;opacity:.7;font-size:14px}
@@ -237,7 +268,7 @@ body.calm .goat .horns{animation:none}
 .deckview span{background:#fff;border:1px solid #cfc8b8;border-radius:6px;padding:1px 5px;margin:2px}
 .deckview .r{color:#c8102e}
 .deckview h4{width:100%;margin:6px 0 2px;font-size:14px;color:#57606f}
-.opt3{display:flex;gap:6px;margin-top:4px}.opt3 button{flex:1;background:#f1ede2;border-radius:10px;padding:8px 2px;font-weight:800;font-size:15px;min-height:44px}.opt3 button.on{background:#2b8a3e;color:#fff}
+.opt3{display:flex;gap:6px;margin-top:4px}.opt3 button{flex:1;background:#f1ede2;border-radius:10px;padding:8px 2px;font-weight:800;font-size:16px;min-height:48px}.opt3 button.on{background:#2b8a3e;color:#fff}
 .pick{display:flex;flex-wrap:wrap;justify-content:center;margin-top:6px}
 .pick button{width:88px;margin:4px;background:#f1ede2;border-radius:14px;padding:6px 2px;font-weight:800;font-size:13px;line-height:1.1}
 .pick button .av{width:52px;height:52px;margin-bottom:3px;box-shadow:none}
@@ -273,11 +304,13 @@ body.calm .mrow.cur,body.calm .card{animation:none}
 .nm.pt{background:rgba(35,112,50,.92)}
 .cd.win .f{box-shadow:0 0 0 .05em #ffd23f,0 0 .22em .08em rgba(255,210,63,.95),0 2px 6px rgba(0,0,0,.4)}
 .cd.hn .f{box-shadow:0 0 0 .06em #1c6fb8,0 0 .24em .08em rgba(28,111,184,.95),0 4px 10px rgba(0,0,0,.4)}
-.ptsl{position:absolute;left:8px;top:8px;z-index:3;background:rgba(0,0,0,.55);color:#fff;font-weight:800;font-size:14px;border-radius:10px;padding:4px 9px;pointer-events:none;line-height:1.25}
+.ptsl{position:absolute;left:8px;top:8px;z-index:3;background:rgba(0,0,0,.55);color:#fff;font-weight:800;font-size:16px;border-radius:10px;padding:4px 9px;pointer-events:none;line-height:1.25}
+.ptfly{position:absolute;z-index:120;pointer-events:none;font-weight:900;font-size:22px;color:#9ff0a8;text-shadow:0 2px 3px rgba(0,0,0,.7),0 0 2px #000;white-space:nowrap}
+.ptfly.th{color:#ffc9b8}
 .ptsl b{color:#9ff0a8}.ptsl i{font-style:normal;color:#ffc9b8}.ptsl:empty{display:none}
-.trl{position:absolute;right:8px;top:8px;z-index:3;background:rgba(0,0,0,.55);color:#fff;font-weight:800;font-size:14px;border-radius:10px;padding:4px 9px;line-height:1.25;min-height:34px;text-align:right}
-.trl svg{width:15px;height:15px;display:inline-block;vertical-align:-2px;background:#fff;border-radius:3px;padding:1px}
-#hintB{padding:8px 12px;font-size:17px;min-height:44px}
+.trl{position:absolute;right:8px;top:8px;z-index:3;background:rgba(0,0,0,.55);color:#fff;font-weight:800;font-size:16px;border-radius:10px;padding:4px 9px;line-height:1.25;min-height:48px;text-align:right}
+.trl svg{width:17px;height:17px;display:inline-block;vertical-align:-2px;background:#fff;border-radius:3px;padding:1px}
+#hintB{padding:8px 12px;font-size:17px;min-height:48px;min-width:48px}
 #hintB.hide{display:none}
 .sc{width:100%;border-collapse:collapse;margin:8px 0 4px;font-weight:700;font-size:15px}
 .sc th{font-size:13px;color:#57606f;font-weight:700;padding:3px 4px}.sc td{padding:4px;border-top:1px solid #e6e0d0;text-align:center}
@@ -305,9 +338,9 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <div id="app">
   <section id="scr-map" class="screen on">
     <header class="mh"><div class="logo"><span class="lc">🐐 </span>Козёл во дворе</div><div class="hdr-r"><button class="icon" id="btnSet" aria-label="Настройки">⚙️</button><button class="pill" id="mRank" aria-label="Погоны и достижения">🏅</button><button class="pill" id="mCoins" aria-label="Монеты">💰 <span id="coinCnt">0</span></button></div></header>
-    <div class="map-scroll" id="mapScroll"><div class="rankb" id="rankB"></div><div id="resumeB"></div><div class="route" id="mapList"></div></div>
+    <div class="map-scroll" id="mapScroll"><div class="rankb" id="rankB"></div><div class="today" id="todayB"></div><div id="resumeB"></div><div class="route" id="mapList"></div></div>
     <nav class="mnav"><div class="nrow"><button id="btnDaily" class="btn accent">📅 Расклад дня</button><button id="btnQuick" class="btn accent">🃏 Своя игра</button></div>
-      <div class="nrow"><button id="btnShop" class="btn"><span class="ne">🎨 </span>Украшения</button><button id="btnRules" class="btn"><span class="ne">📖 </span>Правила</button><button id="btnStreak" class="btn sq" aria-label="Серия дней">🎁<small>Подарок</small></button><button id="btnMore" class="btn sq noenter" style="display:none" aria-label="Ещё игры">🎲<small>Игры</small></button></div></nav>
+      <div class="nrow"><button id="btnShop" class="btn"><span class="ne">🎨 </span>Украшения</button><button id="btnRules" class="btn"><span class="ne">📖 </span>Правила</button><button id="btnStreak" class="btn sq" aria-label="Подарок за заход">🎁<small>Подарок</small></button><button id="btnMore" class="btn sq noenter" style="display:none" aria-label="Ещё игры">🎲<small>Игры</small></button></div></nav>
   </section>
 
   <section id="scr-game" class="screen">
@@ -421,8 +454,23 @@ const AI_P={
   base:{noise:0,count:1,smear:1,thrift:.6,pull:4,risk:.2},              // ровная игра для доигрывания в прикидке
   hint:{noise:0,count:1,smear:1,thrift:.6,pull:4,risk:.2,mc:16,mcHand:9}, // подсказка игроку — по его же видимым картам
   // «особые соперники» (покупка) — только вид и характер: играют как знакомые персонажи
-  barsik:{like:'mihalych'},petrovich:{like:'kolya'}
+  barsik:{like:'mihalych'},petrovich:{like:'kolya'},
+  // boost 03.10 — «мягкие» соседи для новичка (Двор и Подъезд, а также после двух проигрышей подряд): рассеяннее, не считают карты
+  mihalych0:{noise:.34,count:0,smear:.3,thrift:.3,pull:9,risk:.4},
+  valya0:{noise:.26,count:0,smear:.5,thrift:.8,pull:9,risk:.2},
+  kolya0:{noise:.22,count:0,smear:.6,thrift:.4,pull:9,risk:.4},
+  // soft4 03.10 — «совсем мягкие» соседи: партия Подъезда с Митяем-партнёром, пока игрок её ни разу не выиграл (модель: novice4.sh)
+  mihalych00:{noise:.85,count:0,smear:.2,thrift:.3,pull:9,risk:.5},
+  valya00:{noise:.85,count:0,smear:.3,thrift:.8,pull:9,risk:.3}
 };
+// какой профиль ИИ у соперника: idx — партия турнира (−1 — не турнир), nwins — побед у игрока, mercy — два проигрыша подряд.
+// Мягче играют только СОПЕРНИКИ (партнёр — как обычно). Честность не меняется: мягкий — тот же ИИ, только рассеяннее
+// fresh — эту партию турнира игрок ещё ни разу не выиграл, pid — партнёр: в Подъезде с Митяем-партнёром (партии 4 и 6) соперники «совсем мягкие»
+function softId(id,idx,nwins,mercy,fresh,pid){const s=id+'0';if(!AI_P[s])return id;
+  if(fresh&&pid==='mityai'&&idx>=0&&idx<6&&AI_P[id+'00'])return id+'00';
+  if(idx>=0&&idx<6)return s;                 // Двор и Подъезд — всегда помягче
+  if(mercy&&idx>=0&&idx<12)return s;         // Рынок, Гаражи — после двух проигрышей подряд
+  return id;}
 function persona(id){const P=AI_P[id]||AI_P.mihalych;return P.like?AI_P[P.like]:P;}
 function aiMove(v,id,R){const P=typeof id==='object'?id:persona(id),L=v.legal;if(!L.length)return null;if(L.length===1)return L[0];
   if(P.noise&&R()<P.noise)return L[Math.floor(R()*L.length)];
@@ -519,6 +567,119 @@ const SUITP=['M50 6C60 22 92 38 92 60C92 74 82 82 70 82C62 82 56 78 53 72C54 84 
   'M32 28a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM11 58a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM53 58a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM46 50L41 94H59L54 50Z',
   'M50 4L88 50L50 96L12 50Z','M50 90C22 68 6 50 6 31C6 16 17 6 30 6C40 6 46 12 50 20C54 12 60 6 70 6C83 6 94 16 94 31C94 50 78 68 50 90Z'];
 const suitSvg=s=>'<svg viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" d="'+SUITP[s]+'"/></svg>';
+/* CARDS — общий модуль фигур (~/Projects/hobby-analytics/cards/cards.js), копия */
+/* CARDS — рисованные фигуры игральных карт (Валет, Дама, Король, Туз) для всех карточных игр серии.
+   Встроенный SVG, без внешних файлов и шрифтов; только var/function (старые WebView).
+   API:  CARDS.face(rank, suit, w, h)  -> строка <svg>  (rank: 11|'J' Валет, 12|'Q' Дама, 13|'K' Король, 14|'A' Туз;
+                                          suit: 0♠ 1♣ 2♦ 3♥ или 's','c','d','h' или '♠♣♦♥'; w,h — px, без них 100% размера места)
+         CARDS.ok(rank)  -> true, если для ранга есть рисунок (11..14)
+         CARDS.suit(suit, w, h) -> строка <svg> одной масти
+   Цвет мантии/масти берётся из CSS `color` (currentColor): красные/чёрные/«четыре цвета» — обычными классами.
+   Пропорции рисунка 62:80 (примерно область 62% x 56% карты 1:1.42). Кэш строк по (ранг, масть, w, h). */
+var CARDS = (function () {
+  var SP = [
+    'M50 6C60 22 92 38 92 60C92 74 82 82 70 82C62 82 56 78 53 72C54 84 59 91 67 95H33C41 91 46 84 47 72C44 78 38 82 30 82C18 82 8 74 8 60C8 38 40 22 50 6Z',
+    'M32 28a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM11 58a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM53 58a18 18 0 1 0 36 0a18 18 0 1 0-36 0ZM46 50L41 94H59L54 50Z',
+    'M50 4L88 50L50 96L12 50Z',
+    'M50 90C22 68 6 50 6 31C6 16 17 6 30 6C40 6 46 12 50 20C54 12 60 6 70 6C83 6 94 16 94 31C94 50 78 68 50 90Z'];
+  var OL = '#2a2320', GO = '#e6b422', SK = '#f6d7b0', BL = '#2a5db0', ST = ' stroke="' + OL + '" stroke-width=".9" stroke-linejoin="round"';
+  var cache = {};
+
+  function suitIdx(s) {
+    if (typeof s === 'number') return s & 3;
+    var k = 'scdh'.indexOf(String(s).charAt(0).toLowerCase());
+    if (k < 0) k = '♠♣♦♥'.indexOf(String(s).charAt(0));
+    return k < 0 ? 0 : k;
+  }
+  function rankIdx(r) {
+    if (typeof r === 'number') return r;
+    var k = { J: 11, Q: 12, K: 13, A: 14, 'В': 11, 'Д': 12, 'К': 13, 'Т': 14 }[String(r).toUpperCase()];
+    return k || 0;
+  }
+  function pip(s, x, y, k) { // масть в рамке 100x100, масштаб k, левый верхний угол (x,y)
+    return '<path fill="currentColor"' + ST + ' d="' + SP[s] + '" transform="translate(' + x + ' ' + y + ') scale(' + k + ')"/>';
+  }
+  // верхняя половина фигуры 62x40 (низ y=40 — линия симметрии); нижняя — поворот на 180
+  function half(r, s) {
+    var o = '';
+    if (r === 13) { // Король: борода, корона, меч справа, масть слева
+      o += '<rect x="27" y="24" width="8" height="8" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M6 40C6 34 14 30 31 30C48 30 56 34 56 40Z" fill="currentColor"' + ST + '/>';
+      o += '<path d="M19 31.5L31 40L43 31.5" fill="none" stroke="' + GO + '" stroke-width="3.4"/>';
+      o += '<path d="M7 37.5H55" stroke="' + GO + '" stroke-width="2"/>';
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<ellipse cx="31" cy="15" rx="7.6" ry="8.6" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M23.6 15.5C22.5 27 39.5 27 38.4 15.5C36.5 21 25.5 21 23.6 15.5Z" fill="#e9e6df"' + ST + '/>';
+      o += '<circle cx="28" cy="14" r="1.1" fill="' + OL + '"/><circle cx="34" cy="14" r="1.1" fill="' + OL + '"/>';
+      o += '<path d="M21.5 9.5L20.5 1.5L26.5 6L31 0.5L35.5 6L41.5 1.5L40.5 9.5Z" fill="' + GO + '"' + ST + '/>';
+      o += '<circle cx="31" cy="7.4" r="1.4" fill="' + BL + '"/>';
+      o += '</g>';
+      o += '<path d="M50 5L51.5 0.5L53 5V29H50Z" fill="#dfe3e8"' + ST + '/>';
+      o += '<rect x="45.5" y="28.5" width="11" height="3" rx="1" fill="' + GO + '"' + ST + '/>';
+      o += '<rect x="50" y="31" width="3" height="6" fill="#7a4a24"' + ST + '/>';
+      o += pip(s, 6, 6, .13);
+    } else if (r === 12) { // Дама: длинные волосы, диадема, цветок слева, масть справа
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<path d="M21.5 16C19 4 43 4 40.5 16L43 29L19 29Z" fill="#b5651d"' + ST + '/></g>';
+      o += '<rect x="27" y="24" width="8" height="8" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M6 40C6 34 14 30 31 30C48 30 56 34 56 40Z" fill="currentColor"' + ST + '/>';
+      o += '<path d="M21 31.5C25 36 37 36 41 31.5" fill="none" stroke="' + GO + '" stroke-width="3"/>';
+      o += '<path d="M7 37.5H55" stroke="' + GO + '" stroke-width="2"/>';
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<ellipse cx="31" cy="15" rx="7" ry="8.4" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M24 12C27 6 35 6 38 12C34 9.5 28 9.5 24 12Z" fill="#b5651d"/>';
+      o += '<circle cx="28.2" cy="15" r="1.1" fill="' + OL + '"/><circle cx="33.8" cy="15" r="1.1" fill="' + OL + '"/>';
+      o += '<path d="M28 19.6Q31 21.6 34 19.6" fill="none" stroke="#c0392b" stroke-width="1.3"/>';
+      o += '<path d="M23.5 9L24.5 3.5L28 7L31 2L34 7L37.5 3.5L38.5 9Z" fill="' + GO + '"' + ST + '/>';
+      o += '<circle cx="31" cy="5.5" r="1.2" fill="' + BL + '"/>';
+      o += '<circle cx="21.6" cy="21" r="1.6" fill="' + GO + '"/><circle cx="40.4" cy="21" r="1.6" fill="' + GO + '"/>';
+      o += '</g>';
+      o += '<path d="M12 39V25" stroke="#2e7d32" stroke-width="1.8"/><circle cx="12" cy="21.5" r="4.6" fill="currentColor"' + ST + '/><circle cx="12" cy="21.5" r="1.7" fill="' + GO + '"/>';
+      o += pip(s, 45, 6, .13);
+    } else { // Валет: берет с пером, копьё слева, масть справа
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<path d="M21.5 22C19 5 43 5 40.5 22L37 17L25 17Z" fill="#7a4a24"' + ST + '/></g>';
+      o += '<rect x="27" y="24" width="8" height="8" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M6 40C6 34 14 30 31 30C48 30 56 34 56 40Z" fill="currentColor"' + ST + '/>';
+      o += '<path d="M23 31.5L31 37L39 31.5" fill="none" stroke="' + BL + '" stroke-width="3.2"/>';
+      o += '<path d="M7 37.5H55" stroke="' + GO + '" stroke-width="2"/>';
+      o += '<g transform="translate(0 4) translate(31 24) scale(1.22) translate(-31 -24)">';
+      o += '<ellipse cx="31" cy="15.5" rx="7" ry="8" fill="' + SK + '"' + ST + '/>';
+      o += '<path d="M24 13C27 8 35 8 38 13C34 11 28 11 24 13Z" fill="#7a4a24"/>';
+      o += '<circle cx="28.2" cy="15.5" r="1.1" fill="' + OL + '"/><circle cx="33.8" cy="15.5" r="1.1" fill="' + OL + '"/>';
+      o += '<path d="M28.4 20Q31 21.4 33.6 20" fill="none" stroke="#c0392b" stroke-width="1.3"/>';
+      o += '<path d="M20.5 10.5C20 3.5 34 0.5 41.5 6C43 9 38.5 10 34 9C29 10.5 24 11.5 20.5 10.5Z" fill="currentColor"' + ST + '/>';
+      o += '<path d="M40 6C47 -1 52 4 56 1C53 9 46 9 40 8Z" fill="' + GO + '"' + ST + '/>';
+      o += '</g>';
+      o += '<rect x="10.2" y="6" width="1.8" height="34" fill="#7a4a24"' + ST + '/>';
+      o += '<path d="M11 0L15 6.5L11 9L7 6.5Z" fill="#dfe3e8"' + ST + '/>';
+      o += pip(s, 45, 6, .13);
+    }
+    return o;
+  }
+  function frame(inner, w, h) {
+    var sz = (w ? ' width="' + w + '"' : ' width="100%"') + (h ? ' height="' + h + '"' : ' height="100%"');
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 62 80"' + sz + ' preserveAspectRatio="xMidYMid meet" style="overflow:visible" aria-hidden="true">' + inner + '</svg>';
+  }
+  function face(rank, suit, w, h) {
+    var r = rankIdx(rank), s = suitIdx(suit), key = r + ',' + s + ',' + (w || 0) + ',' + (h || 0);
+    if (cache[key]) return cache[key];
+    var o;
+    if (r === 14) { // Туз: большая масть в кольце
+      o = '<circle cx="31" cy="40" r="27" fill="none" stroke="' + GO + '" stroke-width="2.4"/><circle cx="31" cy="40" r="23" fill="none" stroke="currentColor" stroke-width=".8"/>' + pip(s, 12, 21, .38);
+    } else if (r >= 11 && r <= 13) {
+      var t = half(r, s);
+      o = t + '<g transform="rotate(180 31 40)">' + t + '</g><path d="M2 40H60" stroke="' + OL + '" stroke-width=".8" opacity=".55"/>';
+    } else return '';
+    return (cache[key] = frame(o, w, h));
+  }
+  function suit(s, w, h) {
+    var i = suitIdx(s);
+    return '<svg viewBox="0 0 100 100" width="' + (w || '100%') + '" height="' + (h || '100%') + '" aria-hidden="true"><path fill="currentColor" d="' + SP[i] + '"/></svg>';
+  }
+  return { face: face, suit: suit, ok: function (r) { r = rankIdx(r); return r >= 11 && r <= 14; } };
+})();
+
 const cardName=c=>(RK(c)<=10?RK(c):['валет','дама','король','туз'][RK(c)-11])+' '+SUITN1[SU(c)];
 /* персонажи — явно персонажи (не «живые игроки»): у каждого свой стиль игры (AI_P) и реплики. Те же соседи, что в «Дураке во дворе» */
 const CHARS={
@@ -534,31 +695,31 @@ const CHARS={
 // реплики: start — начало, lead — заход, trump — побил козырем, win — забрал взятку, smear — подложил очки партнёру,
 // praise — хвалит партнёра (вас), youTook — вы забрали дорогую взятку, goat — его пара «козлы», youWin/youLose — итог партии, eggs — 60:60
 const LINES={
-  mityai:{start:['Ну что, пара на пару? В домино я — «рыба», а в козла — зверь!','Раздавай, не жалей!','Эх, тряхну стариной!','Чую, сегодня мой день!'],
+  mityai:{start:['Ну что, пара на пару? В домино я — «рыба», а в козла — зверь!','Раздавай, не жалей!','Эх, тряхну стариной!','Чую, сегодня мой день!','Бабки на лавочке болеют за меня!','Карты тасовал ещё при Брежневе!'],
     lead:['Лови!','На-ка!','С этой и зайду!','Опа!'],trump:['Козырем его!','А вот и козырёк!','Бью, не глядя!'],win:['Моя взяточка!','Забираю!','Ха, моё!','В копилочку!'],
-    smear:['Держи, партнёр, подмазываю!','Туза не жалко — для своих!','Кладу жирненькую!'],praise:['Молодец, партнёр!','Вот это я понимаю!','Так их, так!'],
+    smear:['Держи, партнёр, подмазываю!','Туза не жалко — для своих!','Кладу жирненькую!'],praise:['Молодец, партнёр!','Вот это я понимаю!','Так их, так!','Голова! Весь в меня!'],
     youTook:['Ишь ты, забрал!','Ну, повезло тебе…','Эх, прозевал!'],goat:['Эх, козлы мы с тобой, напарник…','Ме-е-е… Ладно, в домино отыграюсь!','Козлом быть не стыдно — стыдно не играть!'],
     youWin:['Ловко вы нас! Уважаю!','Молодцы! Весь двор видел!'],youLose:['Не переживай, в следующий раз повезёт!','Ме-е! Шучу. Ещё партию?'],eggs:['Яйца! Ровно по шестьдесят!','Поровну, как в яичнице!']},
-  mihalych:{start:['Двор подмёл — можно и в козла.','По-соседски, без обид.','Сдали. Поехали потихоньку.'],lead:['Потихонечку.','С маленькой.','Аккуратненько.'],
+  mihalych:{start:['Двор подмёл — можно и в козла.','По-соседски, без обид.','Сдали. Поехали потихоньку.','Метлу к стенке — и за стол.'],lead:['Потихонечку.','С маленькой.','Аккуратненько.'],
     trump:['Козырной метлой!','Против козыря не попрёшь.'],win:['Подмёл взяточку.','В кучку!','Порядок!'],smear:['Подкину тебе, сосед, не пропадать же.','Держи, в хозяйстве сгодится.'],
-    praise:['Чисто сработано!','Хорошо, сосед!'],youTook:['Ишь, подмёл у меня.','Ну, твоя взяла.'],goat:['Эх, остались козлами… Пойду мести.','Ну, козлы так козлы. Без обид.'],
+    praise:['Чисто сработано!','Хорошо, сосед!','Вот это по-хозяйски!'],youTook:['Ишь, подмёл у меня.','Ну, твоя взяла.'],goat:['Эх, остались козлами… Пойду мести.','Ну, козлы так козлы. Без обид.'],
     youWin:['Чисто сработано, уважаю.','Хорошо играешь, сосед.'],youLose:['Не беда, сосед. Ещё раз?','Бывает. Главное — без обид.'],eggs:['Поровну! По-соседски.']},
-  valya:{start:['Вас много, а я одна!','Граждане, не толпимся, раздаю!','Карты — не колбаса, всем хватит!'],lead:['Следующий!','Вот, пожалуйста, свеженькая!','Проходим, не задерживаем!'],
+  valya:{start:['Вас много, а я одна!','Граждане, не толпимся, раздаю!','Карты — не колбаса, всем хватит!','Перерыв на обед отменяется!'],lead:['Следующий!','Вот, пожалуйста, свеженькая!','Проходим, не задерживаем!'],
     trump:['А козыри у меня под прилавком!','Для своих — козырь!','Дефицит, но вам — пожалуйста!'],win:['Приму на склад.','Оприходовано!','Меня не обвесишь!'],
-    smear:['Довесок для напарника!','Сдачи не надо!'],praise:['Обслужили по высшему разряду!','Вот это покупатель!'],youTook:['Недостача!','Ишь, унёс без очереди!'],
+    smear:['Довесок для напарника!','Сдачи не надо!'],praise:['Обслужили по высшему разряду!','Вот это покупатель!','Как по накладной!'],youTook:['Недостача!','Ишь, унёс без очереди!'],
     goat:['Недостача… Опять я крайняя!','Переучёт показал: мы козлы.'],youWin:['Ловко! Всё посчитали.','Вы у нас постоянный покупатель!'],youLose:['Не расстраивайтесь, приходите ещё!','В следующий раз повезёт.'],
     eggs:['Ровно пополам, как на весах!']},
-  kolya:{start:['«Москвич» заведён, можно и сыграть.','Садись, пока карбюратор сохнет.','Поехали, только без обгона!'],lead:['С ходу!','Первая передача!','Поехали!'],
+  kolya:{start:['«Москвич» заведён, можно и сыграть.','Садись, пока карбюратор сохнет.','Поехали, только без обгона!','Ключ на тринадцать — и вперёд!'],lead:['С ходу!','Первая передача!','Поехали!'],
     trump:['Козырь — полный газ!','Обгон козырем!'],win:['В багажник!','Приехали — моё!','Как по маслу!'],smear:['Подкину запчасть напарнику!','Держи, на запчасти!'],
-    praise:['Вот это водитель!','Лихо, напарник!'],youTook:['Подрезал меня!','Ну и манёвр!'],goat:['Эх, заглохли на последнем повороте…','Козлы — как «Москвич» без бензина…'],
+    praise:['Вот это водитель!','Лихо, напарник!','С ветерком!'],youTook:['Подрезал меня!','Ну и манёвр!'],goat:['Эх, заглохли на последнем повороте…','Козлы — как «Москвич» без бензина…'],
     youWin:['Обогнали! Молодцы!','Лихо! Я бы так не смог.'],youLose:['Не переживай, мотор ещё заведётся!','Следующий заезд твой!'],eggs:['Ноздря в ноздрю — по шестьдесят!']},
-  bogatyr:{start:['Здравы будьте! Сразимся парой?','Плечом к плечу — и в бой!','Не лёгкий будет бой!'],lead:['Иду на вы!','Принимай удар!','Эх, раззудись, плечо!'],
+  bogatyr:{start:['Здравы будьте! Сразимся парой?','Плечом к плечу — и в бой!','Не лёгкий будет бой!','Богатырская сила — в дружбе!'],lead:['Иду на вы!','Принимай удар!','Эх, раззудись, плечо!'],
     trump:['Козырем — наотмашь!','Вот мой меч-кладенец!','Козырной булавой!'],win:['Трофей мой!','Поле за нами!','Взял с боем!'],smear:['Держи, брат, подмогу!','Дружине — лучшее!'],
-    praise:['Славно, брат!','Вот это удаль!'],youTook:['Силён, супостат!','Ишь, отбил!'],goat:['Эх, пали мы, брат… Но встанем!','Козлы — не навек. Отыграемся!'],
+    praise:['Славно, брат!','Вот это удаль!','Добрый удар, богатырский!'],youTook:['Силён, супостат!','Ишь, отбил!'],goat:['Эх, пали мы, брат… Но встанем!','Козлы — не навек. Отыграемся!'],
     youWin:['Силён! Достойные соперники!','Победа честная, признаю!'],youLose:['Не кручинься, воин!','Утро вечера мудренее — отыграешься!'],eggs:['Ничья — как в былине: силы равны!']},
-  zina:{start:['Садитесь. Урок начинается!','Раздаю. Шпаргалки убрать!','Внимательно, я всё записываю!'],lead:['К доске!','Вот тебе задачка.','Отвечай!'],
+  zina:{start:['Садитесь. Урок начинается!','Раздаю. Шпаргалки убрать!','Внимательно, я всё записываю!','Тетради на край стола!'],lead:['К доске!','Вот тебе задачка.','Отвечай!'],
     trump:['Козырь — как пятёрка в четверти!','Козыри надо знать, как таблицу умножения!'],win:['Верно, садись, пять.','Эта взятка — моя, я считала.','Правильный ответ!'],
-    smear:['Держи, дружок, на пятёрку!','Подкладываю — запиши в тетрадку!'],praise:['Умница!','Пять с плюсом, партнёр!'],youTook:['Хм, неплохо. Четыре.','Ишь, списал у меня!'],
+    smear:['Держи, дружок, на пятёрку!','Подкладываю — запиши в тетрадку!'],praise:['Умница!','Пять с плюсом, партнёр!','Вот это я понимаю — отличник!'],youTook:['Хм, неплохо. Четыре.','Ишь, списал у меня!'],
     goat:['Ну и ну… Садись, Зина, два.','Даже учитель ошибается. Редко!'],youWin:['Пять с плюсом! Горжусь!','Отлично! В дневник — пятёрку!'],
     youLose:['Ничего, ошибки — лучшие учителя.','Повторим пройденное и ещё раз?'],eggs:['Шестьдесят на шестьдесят — ровно, как в тетради!']},
   barsik:{start:['Мур-р! Сыграем?','Мяу! Раздаю лапкой.'],lead:['Мяу!','Лапкой — хоп!'],trump:['Козырной коготь!'],win:['Мур-р-р! Моё!','Цап-царап!'],smear:['Мур, держи!'],
@@ -641,13 +802,20 @@ const PLACES=[
 ];
 const TOUR=[];PLACES.forEach((pl,pi)=>pl.g.forEach((g,k)=>TOUR.push({pi,k,p:g.p,o:g.o,r:Object.assign({},RULES0,g.r||{})})));
 const ALL_OPP=['mityai','mihalych','valya','kolya','bogatyr','zina'];
+/* 03.10 boost: «Соседние дворы» — лесенка из 12 партий после турнира (до 12, соперники сильные, правила разные). S.yard — сколько пройдено */
+const YARDS=[['На Садовой','valya',['kolya','mihalych']],['У школы','mihalych',['valya','bogatyr'],{deck:32}],['У бани','kolya',['bogatyr','valya']],
+  ['У почты','valya',['zina','mihalych'],{trump:'deal'}],['У депо','bogatyr',['kolya','zina']],['У реки','mityai',['valya','kolya'],{deck:32}],
+  ['У стадиона','kolya',['zina','valya']],['У рынка','valya',['bogatyr','kolya'],{trump:'deal'}],['У вокзала','mihalych',['zina','kolya']],
+  ['У парка','bogatyr',['zina','valya'],{deck:32,trump:'deal'}],['У завода','kolya',['zina','bogatyr']],['Главный двор района','mityai',['zina','bogatyr']]]
+  .map((y,i)=>({i,n:y[0],p:y[1],o:y[2],r:Object.assign({},RULES0,{target:12},y[3]||{})}));
 // украшения: place — открывается, когда дошёл до места турнира; p — цена в монетах; pay — покупка; streak — за 7 дней подряд
 const TABLES=[{id:'cloth',n:'Зелёное сукно',free:1},{id:'oil',n:'Клеёнка в клетку',place:0},{id:'news',n:'Газетка',place:1},{id:'plank',n:'Прилавок',place:2},
   {id:'metal',n:'Гаражный верстак',place:3},{id:'dacha',n:'Дачная скатерть',place:4},{id:'velvet',n:'Санаторный бархат',place:5},
   {id:'lace',n:'Бабушкина скатерть',p:300},{id:'chess',n:'Шахматный столик',p:350},{id:'birch',n:'Берёзовый',p:350},{id:'night',n:'Звёздная ночь',p:500},
+  {id:'sunset',n:'Закат над двором',p:600},{id:'club',n:'Карточный клуб',p:700},{id:'samovar',n:'Самоварный',p:900},{id:'marble',n:'Мраморный',p:1200},{id:'quilt',n:'Лоскутное одеяло',gift:15},
   {id:'khokh',n:'Хохлома',pay:'tables'},{id:'gold',n:'Золотая парча',pay:'tables'},{id:'ny',n:'Новогодний',pay:'tables'}];
 const BACKS=[{id:'red',n:'Классика',free:1},{id:'blue',n:'Синяя',place:1},{id:'green',n:'Рыночная',place:2},{id:'check',n:'Гаражная',place:3},{id:'dacha',n:'Дачная',place:4},{id:'sanat',n:'Санаторная',place:5},
-  {id:'cat',n:'Барсик',p:150},{id:'sea',n:'Море',p:200},{id:'choco',n:'Шоколадка',p:250},{id:'week',n:'Неделя подряд',streak:1},
+  {id:'cat',n:'Барсик',p:150},{id:'sea',n:'Море',p:200},{id:'choco',n:'Шоколадка',p:250},{id:'cherry',n:'Вишня',p:300},{id:'herring',n:'Ёлочка',p:450},{id:'aurora',n:'Северное сияние',p:800},{id:'week',n:'Неделя подарков',streak:1},{id:'daisy',n:'Ромашки',gift:5},{id:'gold',n:'Золотой козёл',gift:30},
   {id:'gzhel',n:'Гжель',pay:'backs'},{id:'palekh',n:'Палех',pay:'backs'},{id:'star',n:'Звезда',pay:'backs'}];
 const DECKS=[{id:'classic',n:'Классическая',free:1},{id:'soviet',n:'Советская',p:350},{id:'bogatyr',n:'Богатырская',p:500}];
 const ACH=[
@@ -660,9 +828,11 @@ const ACH=[
   {id:'zina10',ic:'👓',n:'Садись, Зина, два!',d:'Оставь бабу Зину в козлах 10 раз',r:120},
   {id:'carry',ic:'🤝',n:'Вытянул партнёра',d:'Выиграй в паре с Митяем против бабы Зины',r:80},
   {id:'daily7',ic:'📅',n:'Неделя раскладов',d:'Выиграй 7 раскладов дня',r:60},
-  {id:'streak7',ic:'🔥',n:'Семь дней подряд',d:'Заходи в игру 7 дней подряд',r:50},
+  {id:'streak7',ic:'🔥',n:'Семь подарков',d:'Забери 7 подарков за заход (не обязательно подряд)',r:50},
   {id:'tour',ic:'🏅',n:'Чемпион двора',d:'Пройди весь турнир',r:200},
-  {id:'wins50',ic:'⭐',n:'Полсотни побед',d:'Выиграй 50 партий',r:150}];
+  {id:'wins50',ic:'⭐',n:'Полсотни побед',d:'Выиграй 50 партий',r:150},
+  {id:'yards',ic:'🏘',n:'Чемпион района',d:'Пройди все 12 соседних дворов',r:250},
+  {id:'tasks7',ic:'📝',n:'Работяга',d:'Выполни все задания дня 7 раз',r:80}];
 // погоны в шутку — по числу побед
 const RANKS=[[0,'Новичок'],[3,'Рядовой'],[8,'Ефрейтор'],[15,'Сержант'],[25,'Старшина'],[40,'Прапорщик'],[60,'Лейтенант'],[85,'Капитан'],[120,'Майор'],[160,'Подполковник'],[210,'Полковник'],[300,'Генерал двора']];
 function rankOf(w){let r=RANKS[0];for(const x of RANKS)if(w>=x[0])r=x;return r;}
@@ -675,9 +845,9 @@ const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 const NUMOBJ=['tour','daily','chest','ach','beat','lost','own','tips'];
 // защита от сохранений неожиданной формы (ручная правка, старая версия)
 function fixSave(){for(const f of NUMOBJ)if(!isObj(S[f]))S[f]={};if(!isObj(S.sel))S.sel={t:'auto',b:'auto',d:'classic'};
-  if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;for(const f of ['wins','games','deals','adW','lossRow','hints'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;
+  if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;for(const f of ['wins','games','deals','adW','lossRow','hints','yard','tqAll'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;
   if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
-  if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.quick!=null&&!isObj(S.quick))delete S.quick;if(S.match!=null&&!isObj(S.match))delete S.match;
+  if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.tq!=null&&(!isObj(S.tq)||!Array.isArray(S.tq.l)))delete S.tq;if(S.quick!=null&&!isObj(S.quick))delete S.quick;if(S.match!=null&&!isObj(S.match))delete S.match;
   if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
 fixSave();
 // «точка отсчёта» с облаком (как в «Выезде»): монеты, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным
@@ -705,7 +875,7 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 /* ================= площадка: Яндекс Игры или VK (модули — из «Выезда») ================= */
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 /*STAT*/
-/* ===== STAT v1 (29.09.2026): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1 (29.09.2026; 03.10 — тесты с мака/LAN/webdriver не шлются): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Проект — hobby-analytics/37-own-analytics.md.
    Что НЕ отправляем никогда: vk_user_id и любые параметры адреса запуска (кроме vk_platform и vk_ref), имя, IP (сервер его не пишет),
    постоянный номер устройства/игрока. Единственный «ключ» — случайная строка СЕАНСА (живёт только в памяти, до закрытия игры).
@@ -751,8 +921,17 @@ var STAT=(function(){
        Локально считаются только день установки и число сеансов — чтобы после включения возвраты считались от настоящей установки.
      dev:true (или ?stat=dev на localhost) без url — журнал в консоль и window.__stat, без отправки (стенд, мак).
      S — если передать, отметки живут ещё и в сохранении игры (S.stc) → облако, меньше «ложных новичков». */
-  var first=false,hooked=false;
+  var first=false,hooked=false,cut='';
+  /* A1 (03.10): НАШИ ТЕСТЫ — не в боевую базу. Боевой адрес обнуляется (модуль молчит, как с пустым url), если игра открыта
+     автоматом (navigator.webdriver или HeadlessChrome в User-Agent: CDP-прогоны) или с мака/локальной сети: localhost, 127.*, [::1], *.localhost,
+     *.local, *.test, 192.168.*, 10.*, 172.16–31.*, file://. Адрес на сам localhost/LAN или относительный (?stat=sink, стенд) не трогаем.
+     ?stat=dev на localhost — журнал в консоль, как раньше. Почему молчим — STAT._dbg().cut ('wd'|'local'|'file').
+     Площадка 'yandex' на нашем сайте *.github.io (там нет SDK Яндекса: бета, прямые ссылки) пишется как p:'web'. */
+  function locH(h){return /^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|0\.0\.0\.0|)$|\.localhost$|\.local$|\.test$|^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(String(h||''));}
+  function locU(u){var m=/^https?:\/\/(\[[^\]]*\]|[^\/:?#]+)/i.exec(u);return !!m&&locH(m[1]);}
   function init(o){O=o||{};O.url=String(O.url||'');G=String(O.g||'game').slice(0,16);t0=Date.now();actT=t0;
+    cut='';if(/^https?:/i.test(O.url)&&!locU(O.url)){var wd=false;try{wd=navigator.webdriver===true||/HeadlessChrome|PhantomJS|Puppeteer|Playwright/.test(navigator.userAgent||'');}catch(e){}
+      cut=wd?'wd':location.protocol==='file:'?'file':locH(location.hostname)?'local':'';if(cut)O.url='';}
     dev=!O.url&&(O.dev===true||(/[?&]stat=dev/.test(location.search)&&/^(localhost|127\.0\.0\.1|\[::1\])$|\.localhost$|\.test$/.test(location.hostname)));
     var s=jp(ls('stat-'+G))||{},c=O.S&&O.S.stc||{};
     st={c:+s.c||+c.c||0,n:Math.max(+s.n||0,+c.n||0),d:Math.max(+s.d||0,+c.d||0)};
@@ -761,13 +940,13 @@ var STAT=(function(){
     if(!enabled()||Math.random()>=(typeof O.rate==='number'?O.rate:1)){on=false;ls('stat-q-'+G,null);saveSt();return;}
     start();}
   function start(){var d=device();on=true;sk=rnd();seq=0;
-    hdr={v:V,g:G,gv:String(O.gv||'').slice(0,12),p:String(O.plat||'').slice(0,8),l:String(O.lang||'').slice(0,4),
+    hdr={v:V,g:G,gv:String(O.gv||'').slice(0,12),p:String(O.plat==='yandex'&&/\.github\.io$/.test(location.hostname)?'web':O.plat||'').slice(0,8),l:String(O.lang||'').slice(0,4),
       vp:scrub(qp('vk_platform'),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
     pend=jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[];
     ev('start',{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)});
     dayMark();saveSt();
     if(!hooked){hooked=true;
-      window.addEventListener('error',function(e){var x=e&&e.target;if(x&&x!==window&&x.tagName){err('load '+String(x.tagName).toLowerCase(),x.src||x.href||'');return;} // не загрузилась картинка/скрипт: без message
+      window.addEventListener('error',function(e){var x=e&&e.target;if(x&&x!==window&&x.tagName){var u=x.src||x.href||'';if(/\/sdk\.js([?#]|$)/.test(u)&&hdr.p!=='yandex')return;err('load '+String(x.tagName).toLowerCase(),u);return;} // не загрузилась картинка/скрипт: без message; SDK Яндекса вне Яндекса (сайт, VK) — не ошибка (03.10)
         err(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);},true);
       window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;err('promise: '+(r&&r.message||r),r&&r.stack?String(r.stack).split('\n')[1]:'');});
       document.addEventListener('visibilitychange',function(){document.visibilityState==='hidden'?hide():show();});
@@ -830,7 +1009,7 @@ var STAT=(function(){
     'Levels, errors and button taps — no name, ID or IP. Helps us improve the game.');}
   function toggle(){setEnabled(!enabled());return label();}
   return {init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,place:setPlace,ad:ad,offer:offer,err:err,flush:flush,merge:merge,optOut:optOut,
-    _dbg:function(){return {on:on,dev:dev,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr};}};
+    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr};}};
 })();
 /*/STAT*/
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера. Адрес приёмника пока пуст —
@@ -849,16 +1028,17 @@ const YG={
 // слияние облака с локальным: прогресс — максимум/объединение, монеты — облачные + изменение на устройстве, настройки — из более нового
 function mergeSave(d,ref){if(!isObj(d))return;
   const dt=typeof d.ts==='number'?d.ts:0,rt=ref==null?BOOT_TS:ref,newer=dt>rt;
-  for(const f of ['unlocked','wins','games','deals'])if(typeof d[f]==='number')S[f]=Math.max(S[f]||0,d[f]);
+  for(const f of ['unlocked','wins','games','deals','yard','tqAll'])if(typeof d[f]==='number')S[f]=Math.max(S[f]||0,d[f]);
+  if(isObj(d.tq)&&Array.isArray(d.tq.l)){const a=S.tq; // задания дня: тот же день — по каждому большее; другой — более поздний
+    if(!isObj(a)||!Array.isArray(a.l)||String(d.tq.d)>String(a.d))S.tq=d.tq;else if(d.tq.d===a.d){a.l.forEach((x,i)=>{const y=d.tq.l[i];if(Array.isArray(y)&&y[0]===x[0])x[1]=Math.max(x[1],y[1]);});a.all=Math.max(a.all||0,d.tq.all||0);}}
   for(const f of NUMOBJ)if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(k!=='soc'&&k!=='stc'&&(!(k in S)||newer&&!/^(ts|unlocked|wins|games|deals|tour|daily|chest|ach|beat|lost|own|tips|coins|streak|buy|buyB|payT|payV|soc|stc)$/.test(k)))S[k]=d[k]; // флажки и настройки
+  for(const k in d)if(k!=='soc'&&k!=='stc'&&(!(k in S)||newer&&!/^(ts|unlocked|wins|games|deals|yard|tqAll|tq|tour|daily|chest|ach|beat|lost|own|tips|coins|streak|buy|buyB|payT|payV|soc|stc)$/.test(k)))S[k]=d[k]; // флажки и настройки
   payMerge(d);
   STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
   SOC.merge(d.soc); // соц-предложения VK: сливаем в тот же объект S.soc (модуль держит ссылку)
-  if(isObj(d.streak)){const a=S.streak,b=d.streak;
-    if(!a||(b.last||0)>(a.last||0))S.streak=b;
-    else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last,cyc:Math.max(a.cyc||0,b.cyc||0)};}}
+  if(isObj(d.streak)){const a=S.streak,b=d.streak; // подарки: у кого больше взято; день последнего — более поздний
+    if(!a)S.streak=b;else{const m=giftCnt(b)>giftCnt(a)?b:a;S.streak={day:m.day||0,last:Math.max(a.last||0,b.last||0),cyc:m.cyc||0};}}}
 function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
@@ -1040,7 +1220,7 @@ function vkFitInit(){try{
   window.vkBridge.send('VKWebAppGetConfig').then(function(c){if(c&&c.viewport_height)vkFit(c.viewport_height);}).catch(function(){});
 }catch(e){}}
 async function initVK(){
-  try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
+  try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js').catch(function(){return new Promise(function(r){setTimeout(r,1500);}).then(function(){return window.vkBridge||loadScript('js/vk-bridge.min.js?r=2');});});
     await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;vkFitInit();SOC.ready();updMore();
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
@@ -1130,9 +1310,12 @@ function showRewarded(cb0,onFail0){
     onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL);onFail();}}});
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
-function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
+// 03.10 boost: первые 3 партии — никакой рекламы, даже кнопок «📺» (новичок знакомится с игрой)
+const AD_NEW=3;
+function adOk(){return (S.games||0)>=AD_NEW&&!(PLAT==='vk'&&!VK&&VK_REAL);}
 // не после двух проигранных партий подряд (раздражает сильнее всего) — долг ждёт
-function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.games||0)>=1&&(S.lossRow||0)<2;}
+// новичку (< 10 партий) — ни после одной проигранной партии, дальше — не после двух подряд
+function adDue(){const n=S.games||0;return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&n>=AD_NEW&&(S.lossRow||0)<(n<10?1:2);}
 function showInterstitial(cb0,where){ // where: 'mid' — внутри партии, 'end' — между партиями (для статистики)
   const cb=shown=>{lastAdT=Date.now();STAT.ad('int',shown!==false?'show':'none',where||'');if(shown!==false){S.adW=0;save();}cb0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nobridge');cb0();}else stubAd(cb);return;}
@@ -1151,12 +1334,13 @@ function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(
 const coinsTxt=n=>n+' 💰';
 function plural(n,a,b,c){n=Math.abs(n)%100;const k=n%10;return n>10&&n<20?c:k>1&&k<5?b:k===1?a:c;}
 function updCoins(){for(const id of ['gCoins','shCoins'])if($(id))$(id).textContent='💰 '+S.coins;if($('coinCnt'))$('coinCnt').textContent=S.coins;
-  const rb=$('rankB');if(rb){const r=rankOf(S.wins||0);rb.innerHTML='<button id="rankBtn">🏅 '+r[1]+' · побед: '+(S.wins||0)+'</button>';$('rankBtn').onclick=()=>$('mRank').click();}}
+  const rb=$('rankB');if(rb){const r=rankOf(S.wins||0);const nx=RANKS[RANKS.indexOf(r)+1],w=S.wins||0;
+    rb.innerHTML='<button id="rankBtn">🏅 '+r[1]+' · побед: '+w+(nx?'<i class="rkbar"><i style="width:'+Math.round(100*(w-r[0])/(nx[0]-r[0]))+'%"></i></i>':'')+'</button>';$('rankBtn').onclick=()=>$('mRank').click();}}
 function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
 function openCoins(){STAT.screen('coins');
   // покупки за деньги — только вне партии; нет платежей — раздела нет совсем
   const buy=PAY.on&&!inGame();
-  modal(`<h2>Монеты 💰</h2><p>У тебя ${coinsTxt(S.coins)}. Монеты дают за победы, расклад дня, серию дней и сундуки. Тратятся только на украшения — сила соперников от них не меняется.</p>${buy?PAY.html():''}<div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} за рекламу</button>`:''}<button class="btn" id="mCancel">Закрыть</button></div>`,'wide');
+  modal(`<h2>Монеты 💰</h2><p>У тебя ${coinsTxt(S.coins)}. Монеты дают за победы, расклад дня, задания, подарки и сундуки. Тратятся только на украшения — сила соперников от них не меняется.</p>${buy?PAY.html():''}<div class="row">${adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} за рекламу</button>`:''}<button class="btn" id="mCancel">Закрыть</button></div>`,'wide');
   if(buy){PAY.bind($('mcard'));PAY.re=openCoins;}
   if($('mAdCoins'))STAT.offer('coins');if($('mAdCoins'))$('mAdCoins').onclick=()=>{hideModal();STAT.place('coins');showRewarded(()=>{setCoins(S.coins+AD_COINS);SND.coin();toast('+'+coinsTxt(AD_COINS));});};$('mCancel').onclick=hideModal;}
 function inGame(){return !!(playing()&&$('scr-game').classList.contains('on'));}
@@ -1345,7 +1529,7 @@ const speed=()=>S.speed==='slow'?1.6:S.speed==='fast'?.55:S.speed==='test'?.03:1
 const dur=k=>Math.round(300*(k||1)*speed());
 
 /* ================= украшения: что выбрано и что есть ================= */
-function owns(kind,it){if(!it)return false;if(it.free)return true;if(it.place!=null)return S.unlocked>it.place*3;if(it.pay)return PAY.own(it.pay);return !!S.own[kind+':'+it.id];}
+function owns(kind,it){if(!it)return false;if(it.free)return true;if(it.gift)return giftN()>=it.gift;if(it.place!=null)return S.unlocked>it.place*3;if(it.pay)return PAY.own(it.pay);return !!S.own[kind+':'+it.id];}
 function itemShow(kind,it){return !it.pay||PAY.own(it.pay)||!!(PAY.on&&PAY.item(it.pay));}
 const LIST={t:TABLES,b:BACKS,d:DECKS};
 function pickLook(kind,def){const id=S.sel[kind],it=LIST[kind].find(x=>x.id===id);return id&&id!=='auto'&&owns(kind,it)?id:def;}
@@ -1360,7 +1544,7 @@ function applyLook(){const tb=$('tbl');tb.className='tbl tb-'+curTable();
 /* ================= стол: карты — 36 постоянных элементов, двигаются переходами CSS (цикл кадров не нужен) ================= */
 const CEL=[],FACE=[];
 function faceHtml(c){if(FACE[c])return FACE[c];const s=SU(c),r=RK(c),sv=suitSvg(s),t=RANKN[r];
-  const mid=r>=11&&r<=13?`<div class="fc"><b>${t}</b><i>${sv}</i></div>`:`<div class="pip"${r===14?' style="width:.6em;height:.6em;left:25%;top:30%"':''}>${sv}</div>`;
+  const mid=r>=11&&r<=13?`<div class="fc fg">${CARDS.face(r,s)}</div>`:`<div class="pip"${r===14?' style="width:.6em;height:.6em;left:25%;top:30%"':''}>${sv}</div>`;
   return FACE[c]=`<div class="f s${s}"><div class="ix"><b>${t}</b><i>${sv}</i></div>${mid}<div class="ix2"><b>${t}</b><i>${sv}</i></div></div>`;}
 function buildCards(){const box=$('cards');if(CEL.length)return;
   for(let c=0;c<36;c++){const el=document.createElement('div');el.className='cd';el.dataset.c=c;el._up=null;el._bk='';box.appendChild(el);CEL.push(el);}}
@@ -1371,11 +1555,12 @@ function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
 // раскладка: партнёр сверху, соперники слева и справа, взятка посередине крестом, ваша рука снизу
 function layout(){const tb=$('tbl'),W=tb.clientWidth,H=tb.clientHeight;if(!G||!G.s||!W||!H)return null;
   const land=W>H*1.1;
-  let cw=land?clamp(H*.19,58,112):clamp(Math.min(W*.19,H*.118),50,96);if(S.big)cw=Math.min(cw*1.08,land?120:104);
+  const big=W>=900&&H>=640; // ПК во весь экран: стол не пустой, карты и лица крупнее
+  let cw=land?clamp(H*.19,58,big?150:112):clamp(Math.min(W*.19,H*.118),50,big?132:96);if(big&&!land)cw=clamp(Math.min(W*.115,H*.13),96,132);if(S.big)cw=Math.min(cw*1.08,land?120:104);
   const ch=cw*1.42,pad=8;
-  const A=clamp(Math.min(W*.15,H*(land?.15:.08)),42,land?78:62),ow=clamp(A*.34,15,26),oh=ow*1.42;
+  const A=clamp(Math.min(W*.15,H*(land?.15:big?.1:.08)),42,big?112:land?78:62),ow=clamp(A*.34,15,big?36:26),oh=ow*1.42;
   const handY=H-ch-pad,barY=handY-54;
-  const sideW=Math.min(W*.3,Math.max(A*1.5,ow*3.4)+8);
+  const sideW=Math.min(W*(land?.3:.31),Math.max(A*1.5,ow*3.4,land?128:96)+8); // в альбомной — чтобы «Тётя Валя» не резалась
   const topH=6+A+36+(land?0:oh)+4; // в альбомной веер партнёра — справа от портрета, по высоте экономнее
   const seats=[null,{x:sideW/2+2,y:0,w:sideW,A,side:'l'},{x:W/2,y:6,w:Math.min(W*.5,A*3.4),A,side:''},{x:W-sideW/2-2,y:0,w:sideW,A,side:'r'}];
   const midT=topH,midB=barY-6,midH=Math.max(80,midB-midT);
@@ -1431,7 +1616,7 @@ function renderSeats(L){const s=G.s,box=$('seats');
     if(av._m!==id+mood){av._m=id+mood;av.innerHTML=portrait(id,mood);}
     const nm=el.childNodes[1];nm.className='nm'+(q===2?' pt':'');nm.innerHTML=(q===2?'🤝 ':'')+CHARS[id].n;
     const stt=el.childNodes[2];stt.textContent=q===s.dealer&&s.moves===0&&!G.hold?'сдавал':'';stt.className='stt b';
-    stt.style.position='absolute';stt.style.left='50%';stt.style.transform='translateX(-50%)';stt.style.top=(st.A-12)+'px';
+    stt.style.position='absolute';stt.style.left='50%';stt.style.transform='translateX(-50%)';stt.style.top='-4px';stt.style.zIndex=2; // «сдавал» — над лицом, не на имени
     // облачко: под веером; у партнёра в альбомной — справа от веера, чтобы не закрывать взятку
     const b=el.childNodes[3],bs=L.land&&q===2;b.classList.toggle('lft',bs);
     if(bs){const n=s.hands[2].length,fw=L.ow+Math.max(0,n-1)*Math.min(L.ow*.5,(Math.min(st.w,L.A*1.7)-L.ow)/Math.max(1,n-1));b.style.top='4px';b.style.left=(st.w/2+st.A*.5+fw+22)+'px';}
@@ -1443,21 +1628,32 @@ function renderBar(L,leg){const s=G.s,T=s.T,bar=$('bar'),say=$('say');bar.style.
     else{const Ls=esu(s.trick[0].c,T),has=s.hands[0].some(c=>esu(c,T)===Ls);
       t=has?(Ls===4?'Зашли козырем — кладите козырь':'В масть: '+sv(Ls)+' '+SUITN[Ls]):(Ls===4?'Козырей нет — любая карта':'Нет '+SUITN1[Ls]+' — любая карта');}}
   else if(s.cur>0)t=CHARS[G.who[s.cur]].n+' думает…';
-  say.innerHTML=t;$('hintB').classList.toggle('hide',!(s.cur===0&&!G.busy&&!s.over&&!G.last&&!G.hold));}
+  say.innerHTML=t;$('gBack').style.visibility=G.kind==='tour'&&G.idx===0&&!(S.wins>0)&&G.m.deals===0&&!G.done?'hidden':''; // в самой первой раздаче выйти нельзя — стрелку не показываем
+  $('hintB').classList.toggle('hide',!(s.cur===0&&!G.busy&&!s.over&&!G.last&&!G.hold));}
 // реплики: облачко под веером, не чаще раза в 1,6 с (важные — всегда)
-function say(q,kind,force){if(!G||q<=0||q>3)return;const id=G.who[q],L=LINES[id]&&LINES[id][kind];if(!L||!L.length)return;
+function say(q,kind,force){if(!G||q<=0||q>3)return;if(q===2&&tipOn())return;/* плашка и так голос партнёра */const id=G.who[q],L=LINES[id]&&LINES[id][kind];if(!L||!L.length)return;
   const now=Date.now();if(!force&&now-G.lastSay<1600)return;G.lastSay=now;
   const t=L[Math.floor(Math.random()*L.length)],el=$('seats').childNodes[q-1];if(!el)return;const b=el.childNodes[3];b.textContent=t;b.classList.add('on');
   G.mood[q]=kind==='goat'||kind==='youTook'?'sad':kind==='win'||kind==='praise'||kind==='smear'||kind==='eggs'||kind==='youWin'?'happy':kind==='trump'?'wow':'norm';render();
   clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove('on');if(G){G.mood[q]='norm';render();}},Math.max(2200,900+55*t.length));}
 function anyOpp(){return Math.random()<.5?1:3;}
-let tipQ=[],tipAt=0;
-function tip(key,text){if(!G||(S.tips||{})[key])return;if((S.games||0)>=5)return;S.tips[key]=1;save();
-  const e=$('tip'),left=3500-(Date.now()-tipAt);if(e.classList.contains('on')&&left>0){tipQ.push(text);clearTimeout(tip._q);tip._q=setTimeout(tipNext,left);return;}
-  tipShow(text);}
-function tipShow(text){const e=$('tip');e.innerHTML=text;e.style.top=((LY?LY.midT:90)+4)+'px';e.classList.add('on');tipAt=Date.now();clearTimeout(tip._t);tip._t=setTimeout(()=>{e.classList.remove('on');tipNext();},7000);}
-function tipNext(){if(tipQ.length&&G)tipShow(tipQ.shift());}
-function tipOff(all){clearTimeout(tip._t);clearTimeout(tip._q);$('tip').classList.remove('on');if(all)tipQ=[];else tipNext();}
+let tipQ=[];
+// обучающая плашка: висит над рукой (не закрывает соперников), пока не нажмут «Понятно» или не сходят; следующая — после неё
+function tip(key,text){if(!G||(S.tips||{})[key])return;if((S.games||0)>=5)return;
+  // очередь — по порядку (взятка не перебивает «цель» и «козыри»); «совет синей» — первым, пока подсветка видна
+  if(tipOn()||tipQ.length){if(!tipQ.some(x=>x[0]===key)){if(key==='auto')tipQ.unshift([key,text]);else tipQ.push([key,text]);}if(!tipOn())tipNext();return;}
+  tipShow(key,text);}
+function tipShow(key,text){S.tips[key]=1;save();const e=$('tip'),tb=$('tbl');
+  e.innerHTML='<div>'+text+'</div><button class="btn green noenter" id="tipOk">Понятно</button>';
+  e.style.left=e.style.right=LY&&LY.land?(LY.sideW+8)+'px':'';e.style.top='auto';e.style.bottom=Math.max(4,(LY?tb.clientHeight-LY.barY+4:90))+'px';e.classList.add('on');
+  $('tipOk').onclick=()=>{SND.tap();tipOff();};}
+function tipNext(){while(tipQ.length&&G){const q=tipQ.shift();if(!(S.tips||{})[q[0]]){tipShow(q[0],q[1]);return;}}}
+// 03.10 boost: важные плашки первой партии (команда, цель, козыри, совет) ход игрока НЕ сбрасывает — они ждут своего хода
+const TIP_KEEP={team:1,goal:1,trumps:1,auto:1,took:1};
+function tipOff(all){$('tip').classList.remove('on');if(all==='move'){tipQ=tipQ.filter(q=>TIP_KEEP[q[0]]);return;}if(all)tipQ=[];else tipNext();}
+// плашка голосом партнёра: «🤝 Богатырь: …»
+function pv(t){return G&&G.who[2]?'<b>🤝 '+CHARS[G.who[2]].n+':</b> '+t:t;}
+const tipOn=()=>$('tip').classList.contains('on');
 
 /* ================= партия: несколько раздач до 12 (6) штрафных ================= */
 function rulesTxt(r){const a=[];if(r.deck===32)a.push('32 карты');if(r.trump==='deal')a.push('козырь по раздаче');a.push('до '+r.target+' штрафных');return a.join(' · ');}
@@ -1470,8 +1666,8 @@ function startMatch(o){tipOff(true);hideModal();clearTimeout(G&&G.timer);
   const seedBase=(o.seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0))>>>0;
   const m=o.m||newMatch({rules:o.rules,dealer:o.dealer!=null?o.dealer:(o.warm?3:seedBase%4)});
   G={kind:o.kind,idx:o.idx==null?-1:o.idx,place:o.place==null?-1:o.place,who:[null,o.opp[0],o.partner,o.opp[1]],m,s:null,seedBase,single:o.kind==='daily',day:o.day||'',
-    R:rng(seedBase^0x5bd1e995),busy:false,timer:0,hold:null,sel:null,drag:null,hint:null,last:null,lastSay:0,mood:{},title:o.title,warm:!!o.warm,x2:false,achQ:[]};
-  STAT.lvl(o.kind==='tour'?o.idx+1:0,o.kind+(o.m?'-r':''));STAT.screen('game');
+    R:rng(seedBase^0x5bd1e995),busy:false,timer:0,hold:null,sel:null,drag:null,hint:null,last:null,lastSay:0,mood:{},title:o.title,warm:!!o.warm,x2:false,achQ:[],tq:(S.games||0)>=1,soft:o.kind==='tour',mercy:o.mercy!=null?!!o.mercy:o.kind==='tour'&&(S.lossRow||0)>=2,fresh:o.fresh!=null?!!o.fresh:o.kind==='tour'&&!(S.tour&&S.tour[o.idx]),myMoves:0};
+  STAT.lvl(o.kind==='tour'?o.idx+1:o.kind==='yard'?101+o.idx:0,o.kind+(o.m?'-r':''));STAT.screen('game');
   buildCards();$('gTitle').textContent=o.title;$('seats').innerHTML='';show('scr-game');applyLook();updCoins();
   if(o.s&&validDeal(o.s)){G.s=o.s;G.hands0=o.hands0||null;G.deck0=o.deck0||null;resumeDeal();}else startDeal();}
 // сохранённая раздача цела? (ручная правка, старая версия)
@@ -1489,33 +1685,38 @@ function startDeal(){const g=G,m=G.m,seed=(G.seedBase+m.deals*7919)>>>0;G.dT=Dat
 function resumeDeal(){const g=G;for(const el of CEL){el._up=null;el._t='';el.classList.add('nt');}$('gSub').textContent=subTxt();render();
   requestAnimationFrame(()=>{for(const el of CEL)el.classList.remove('nt');setTimeout(()=>{if(G!==g)return;YG.start();step();},300);});}
 function afterDealTips(){const s=G.s,m=G.m;
-  if(m.deals===0)say(2,'start',true);
-  tip('team','Играем пара на пару: вы и '+CHARS[G.who[2]].n+' (сверху, 🤝) против '+CHARS[G.who[1]].gen+' и '+CHARS[G.who[3]].gen+'. Очки ваших взяток складываются.');
-  tip('trumps','Козыри — всегда все дамы, все валеты и '+(s.rules.trump==='deal'?'масть раздачи':'все трефы')+'. Старшая карта — дама треф. Козырь бьёт любую простую карту. Какие козыри — в углу справа, ⓘ.');
+  if(m.deals===0&&(S.tips||{}).team)say(2,'start',true);
+  tip('team',pv('Играем пара на пару: мы с вами против '+CHARS[G.who[1]].gen+' и '+CHARS[G.who[3]].gen+'. Я сверху. Очки наших взяток — общие.'));
+  tip('goal',pv('Наша цель — набрать вдвоём <b>больше 60 очков из 120</b>. Очки дают: туз — 11, десятка — 10, король — 4, дама — 3, валет — 2. Шестёрки–девятки — ноль.'));
+  tip('trumps',pv('Козыри — все дамы, все валеты и '+(s.rules.trump==='deal'?'масть этой раздачи':'все трефы ♣')+'. Старшая — дама треф. Козырь бьёт любую простую карту. Лесенка козырей — ⓘ вверху.'));
   if(s.rules.trump==='deal')toast('Козырь этой раздачи — '+SUITN[s.T]+': такую карту открыл сдающий'+(s.dealer===0?' (вы)':' — '+CHARS[G.who[s.dealer]].n),3200);
   else if(m.mul>1)toast('После «яиц» эта раздача считается вдвойне!',2600);}
 // ход ИИ: только из того, что видит этот персонаж (viewFor)
 function step(){if(!G||!G.s||G.done)return;const s=G.s;if(paused){G.wait=true;return;}
   if(s.over){dealOver();return;}
   if(s.cur===0){G.busy=false;render();humanTips();return;}
-  G.busy=true;render();const q=s.cur,id=G.warm&&G.who[q]==='mityai'?'mityai0':G.who[q];
+  G.busy=true;render();const q=s.cur,id=q===2?G.who[q]:G.soft?softId(G.who[q],G.kind==='tour'?G.idx:-1,S.wins||0,G.mercy,G.fresh,G.who[2]):G.who[q];
   const a=aiMove(viewFor(s,q),id,G.R),think=dur(s.trick.length?1.25:1.7);
   G.timer=setTimeout(()=>{if(!G||G.s!==s)return;if(paused){G.pend=a;G.wait=true;return;}doAct(a);},think);}
 function kick(){if(G&&G.wait&&!paused){G.wait=false;const a=G.pend;G.pend=null;if(a&&G.s&&G.s.cur>0)doAct(a);else step();}}
 function humanTips(){const s=G.s;
-  if(!s.trick.length)tip('lead','Ваш ход: нажмите на карту или перетащите её на стол. Подсвечены карты, которыми можно ходить.');
+  if(!tipOn())tipNext();
+  // первые 3 хода самой первой раздачи: синяя карта — совет партнёра (как 💡, по вашим же картам)
+  if(G.warm&&G.m.deals===0&&G.myMoves<3&&G.hint==null){const a=aiMove(viewFor(s,0),'hint',rng((s.moves+1)*7919+G.seedBase));
+    if(a){G.hint=a.c;render();tip('auto',pv('Синей я подсветил карту, которой советую сходить. Можно и любой жёлтой — решать вам.'));}}
+  if(!s.trick.length)tip('lead','Ваш ход: нажмите на карту или перетащите её на стол. Жёлтым подсвечены разрешённые.');
   else{const Ls=esu(s.trick[0].c,s.T),has=s.hands[0].some(c=>esu(c,s.T)===Ls);
-    if(has)tip('follow','Ходить нужно в масть первой карты. Козыри — тоже «масть»: зашли козырем — кладите козырь.');
-    else tip('void','Нужной масти нет — кладите любую карту: козырем можно забрать взятку, а можно сбросить мелочь.');
-    const best=s.trick[trickWin(s.trick,s.T)];if(best.p===2&&s.trick.length===3)tip('smear','Взятку берёт партнёр — подложите ему туз или десятку, если можно: очки пойдут вам.');}
+    if(has)tip('follow','Ходите в масть первой карты. Козыри — тоже «масть»: зашли козырем — кладите козырь.');
+    else tip('void','Масти нет — кладите любую: козырем можно забрать взятку или сбросить мелочь.');
+    const best=s.trick[trickWin(s.trick,s.T)];if(best.p===2&&s.trick.length===3)tip('smear','Взятку берёт партнёр — подложите ему туз или десятку: очки пойдут вам.');}
   if(s.hist.length>=2)tip('hint','Не знаете, чем ходить? Нажмите 💡 — подскажем и объясним почему.');}
 function doAct(a){if(!G||!G.s)return;const s=G.s,p=s.cur;let ev;
   try{ev=apply(s,a);}catch(e){G.busy=false;render();return;}
-  G.busy=true;G.sel=null;G.hint=null;if(p===0)tipOff();
+  G.busy=true;G.sel=null;G.hint=null;if(p===0){tipOff('move');G.myMoves++;}
   let trickEv=null;
   for(const e of ev){
     if(e.t==='play'){const tr=s.trick.length?s.trick:s.hist[s.hist.length-1].t,Ls=esu(tr[0].c,s.T),i=tr.findIndex(x=>x.c===e.c),trumpIn=i>0&&isTr(e.c,s.T)&&Ls!==4;
-      trumpIn?SND.trump():SND.card();if(p===0)buzz(8);
+      trumpIn?SND.trump():SND.card();if(p===0){buzz(8);if(e.c===15)tqAdd('qc');}
       if(p>0){if(i===0){if(Math.random()<.3)say(p,'lead');}
         else if(trumpIn){if(Math.random()<.45)say(p,'trump');}
         else{const bw=tr[trickWin(tr.slice(0,i),s.T)];if(team(bw.p)===team(p)&&pts(e.c)>=10&&Math.random()<.6)say(p,'smear');}}}
@@ -1525,17 +1726,26 @@ function doAct(a){if(!G||!G.s)return;const s=G.s,p=s.cur;let ev;
     G.timer=setTimeout(()=>{if(G!==g)return;G.last=null;render();SND.trick();trickTalk(trickEv);persist();
       G.timer=setTimeout(()=>{if(G!==g)return;G.busy=false;step();},dur(s.over?1.2:.7));},dur(1.7));return;}
   render();G.timer=setTimeout(()=>{if(G!==g)return;G.busy=false;step();},dur(.9));}
-function trickTalk(e){const w=e.w,p=e.pts,r=Math.random();
+// «+N очков» у того, кто забрал взятку (очки пары: зелёные — наши, розовые — их)
+function ptsFly(w,p){if(!p||!LY)return;const tb=$('tbl'),d=document.createElement('div'),pp=pilePos(LY,w),mine=w===0||w===2;
+  d.className='ptfly'+(mine?'':' th');d.textContent='+'+p;const x=Math.max(6,Math.min(LY.W-60,pp.x)),y=Math.max(40,pp.y-10);
+  d.style.left=x+'px';d.style.top=y+'px';tb.appendChild(d);
+  const a=!calm()&&d.animate?d.animate([{transform:'translateY(8px) scale(.7)',opacity:0},{transform:'translateY(-6px) scale(1.15)',opacity:1,offset:.25},{transform:'translateY(-34px) scale(1)',opacity:0}],{duration:1500,easing:'ease-out'}):null;
+  if(a)a.onfinish=()=>d.remove();else setTimeout(()=>d.remove(),1300);}
+function trickTalk(e){const w=e.w,p=e.pts,r=Math.random();ptsFly(w,p);
+  const tr=G.s&&G.s.hist.length?G.s.hist[G.s.hist.length-1].t:[];
+  if(w===0||w===2){tqAdd('tricks');if(tr.some(x=>RK(x.c)===14))tqAdd('ace');if(w===2&&tr.some(x=>x.p===0&&pts(x.c)>=10))tqAdd('smear');}
+  if(p>0&&(w===0||w===2))tip('took',pv('Взятка наша: <b>+'+p+'</b> '+plural(p,'очко','очка','очков')+'! Счёт раздачи — слева вверху: «Мы» и «Они». Нужно больше 60.'));
   if(w===0&&p>=15){if(r<.35)say(2,'praise');else if(r<.7)say(anyOpp(),'youTook');}
   else if(w>0&&p>=10&&r<.45)say(w,'win');}
 function humanAct(a){if(!G||G.busy||!G.s||G.s.cur!==0||G.s.over||G.last)return;if(!isLegal(G.s,a)){SND.no();return;}doAct(a);}
 function persist(){if(!G||G.done||window.__demo)return;
-  S.match={kind:G.kind,idx:G.idx,place:G.place,who:G.who.slice(),title:G.title,warm:G.warm,seedBase:G.seedBase,day:G.day,m:G.m,s:G.s&&!G.s.over?G.s:null,hands0:G.hands0,deck0:G.deck0};save();}
+  S.match={kind:G.kind,idx:G.idx,place:G.place,who:G.who.slice(),title:G.title,warm:G.warm,mercy:G.mercy,fresh:G.fresh,seedBase:G.seedBase,day:G.day,m:G.m,s:G.s&&!G.s.over?G.s:null,hands0:G.hands0,deck0:G.deck0};save();}
 function resumeMatch(){const x=S.match;if(!isObj(x)||!isObj(x.m))return;
-  startMatch({kind:x.kind,idx:x.idx,place:x.place,partner:x.who[2],opp:[x.who[1],x.who[3]],title:x.title,warm:x.warm,seed:x.seedBase,day:x.day,m:x.m,s:x.s,hands0:x.hands0,deck0:x.deck0});}
+  startMatch({kind:x.kind,idx:x.idx,place:x.place,partner:x.who[2],opp:[x.who[1],x.who[3]],title:x.title,warm:x.warm,mercy:x.mercy,fresh:x.fresh,seed:x.seedBase,day:x.day,m:x.m,s:x.s,hands0:x.hands0,deck0:x.deck0});}
 // сохранённая партия цела? иначе — забыть
 function matchOk(x){return isObj(x)&&isObj(x.m)&&isObj(x.m.rules)&&Array.isArray(x.m.pen)&&Array.isArray(x.who)&&x.who.length===4&&[1,2,3].every(q=>!!CHARS[x.who[q]])&&!x.m.over&&typeof x.seedBase==='number'
-  &&(x.kind!=='tour'||TOUR[x.idx])&&(x.kind!=='daily'||x.day===todayKey());}
+  &&(x.kind!=='tour'||TOUR[x.idx])&&(x.kind!=='yard'||YARDS[x.idx])&&(x.kind!=='daily'||x.day===todayKey());}
 // новая партия, а старая не доиграна — спросить
 function guardNew(f){const x=S.match;if(!matchOk(x)){if(x)delete S.match;f();return;}
   modal(`<h2>Есть незаконченная партия</h2><p>«${x.title}» — штраф: мы ${x.m.pen[0]} · они ${x.m.pen[1]}. Если начать новую, старая не сохранится.</p>
@@ -1583,6 +1793,7 @@ function dealOver(){if(!G||G.done||!G.s)return;const s=G.s,m=G.m,g=G;if(G.dealDo
   if(!G.single){matchAdd(m,r);S.adW=(S.adW||0)+1;}
   const ok=id=>{if(!S.ach[id]){S.ach[id]=1;const a=ACH.find(x=>x.id===id);G.achQ.push(a);S.coins+=a.r;}};
   if(r.tb===0)ok('all');if(r.a>=100)ok('hundred');if(r.eggs)ok('eggs');
+  tqAdd('deals');if(r.a>=80)tqAdd('p80');
   save();updCoins();$('gSub').textContent=subTxt();YG.stop();
   if(r.eggs)say(anyOpp(),'eggs',true);else if(r.loser===0&&Math.random()<.5)say(anyOpp(),'youLose');
   if(G.single||m.over){setTimeout(()=>{if(G===g)finish(r);},dur(1.2)+500);return;}
@@ -1599,9 +1810,9 @@ function showDeal(r){const m=G.m,g=G,T=m.rules.target;
     <p>${why}</p>
     <p class="goal">Штраф: мы <b>${m.pen[0]}</b> · они <b>${m.pen[1]}</b> из ${T}${m.mul>1?' · следующая раздача ×'+m.mul:''}</p>
     ${first?`<p class="goal tipl">Как считают: у кого меньше 60 очков — 2 штрафных, меньше 30 — 4, ни одной взятки — 6. Первая пара, набравшая ${T} штрафных, — «козлы».</p>`:''}
-    ${G.achQ.map(a=>`<p class="goal tipl">${a.ic} Достижение: «${a.n}» (+${a.r} 💰)</p>`).join('')}
+    ${G.achQ.map(a=>`<p class="goal tipl">${a.ic} Достижение: «${a.n}» (+${a.r} 💰)</p>`).join('')}${(G.tqQ||[]).map(x=>`<p class="goal tipl">${x} 💰</p>`).join('')}
     <div class="row"><button class="btn green" id="dNext">Следующая раздача →</button><button class="btn noenter" id="dDeck" style="font-size:15px">🔍 Честная раздача: как лежали карты</button></div>`);
-  G.achQ=[];
+  G.achQ=[];G.tqQ=[];
   $('dNext').onclick=()=>{$('dNext').disabled=true;const go=()=>{hideModal();if(G===g)startDeal();};
     if(adDue()&&(S.adW||0)>=Math.max(AD_MID,AD_EVERY)&&adReady()){toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(go,'mid'),1000);}else go();};
   $('dDeck').onclick=()=>showDeck(()=>showDeal(r));}
@@ -1620,15 +1831,21 @@ function finish(rl){if(!G||G.done)return;G.done=true;YG.stop();tipOff(true);cons
   else if(kind==='daily'){const k=todayKey(),was=S.daily[k]||0;S.daily[k]=Math.max(was,win?2:1);reward=win?(was>=2?5:30):3;}
   else if(kind==='quick')reward=win?(m.rules.target>=12?30:15):4;
   else if(kind==='endless')reward=win?40:5;
+  else if(kind==='yard'){const i=G.idx;if(win){const was=S.yard||0;S.yard=Math.max(was,i+1);if(S.yard>was)unlockTxt=i+1<YARDS.length?'Открыт следующий двор: «'+YARDS[i+1].n+'»':'Все соседние дворы пройдены — вы чемпион района!';}
+    reward=win?50+5*i+(i===YARDS.length-1?100:0):5;}
+  if(win&&!G.single)tqAdd('win'),tqAdd('win2');if(win&&kind==='daily')tqAdd('daily');
+  // подарок за знакомство: один раз, после самой первой партии (победа или нет)
+  let hello=0;if(!S.hello&&(S.games||0)===1){S.hello=1;hello=50;reward+=hello;}
+  const rk0=rankOf((S.wins||0)-(win?1:0)),rk1=rankOf(S.wins||0),rankUp=rk1!==rk0?rk1[1]:'';
   const ok=id=>{if(!S.ach[id]){S.ach[id]=1;const a=ACH.find(x=>x.id===id);newAch.push(a);reward+=a.r;}};
   if(win){ok('first');if(!G.single){if(m.pen[0]===0)ok('dry');if(G.who[2]==='mityai'&&(G.who[1]==='zina'||G.who[3]==='zina'))ok('carry');}
-    if((S.beat.mityai||0)>=10)ok('mityai10');if((S.beat.zina||0)>=10)ok('zina10');if(LB.days()>=7)ok('daily7');if((S.wins||0)>=50)ok('wins50');if(S.unlocked>TOUR.length)ok('tour');}
+    if((S.beat.mityai||0)>=10)ok('mityai10');if((S.beat.zina||0)>=10)ok('zina10');if(LB.days()>=7)ok('daily7');if((S.wins||0)>=50)ok('wins50');if(S.unlocked>TOUR.length)ok('tour');if((S.yard||0)>=YARDS.length)ok('yards');}
   S.coins+=reward;delete S.match;save();updCoins();
   if(win){SND.win();if(!draw)confetti();}else SND.lose();
   if(G.single){if(win)say(anyOpp(),'youWin',true);else say(2,'youLose',true);}
   else if(win){say(1,'goat',true);setTimeout(()=>{if(G===g)say(3,'youWin',true);},1700);}else{say(2,'goat',true);setTimeout(()=>{if(G===g)say(anyOpp(),'youLose',true);},1700);}
   if(kind==='daily'&&win)LB.submit();
-  setTimeout(()=>{if(G!==g)return;showResult({st,reward,newAch,unlockTxt,win,draw,rl});},dur(1.6)+900);}
+  setTimeout(()=>{if(G!==g)return;showResult({st,reward,newAch,unlockTxt,win,draw,rl,hello,rankUp});},dur(1.6)+900);}
 function confetti(){if(calm())return;const box=$('app'),cs=['#ffd23f','#e74c3c','#3fae5a','#1c6fb8','#fd79a8'];
   for(let i=0;i<24;i++){const d=document.createElement('div');d.className='conf';d.style.background=cs[i%5];box.appendChild(d);
     const x=Math.random()*box.clientWidth,a=d.animate?d.animate([{transform:'translate('+x+'px,-20px) rotate(0)'},{transform:'translate('+(x+Math.random()*80-40)+'px,'+(box.clientHeight*.8)+'px) rotate('+(Math.random()*720)+'deg)',opacity:.2}],{duration:1600+Math.random()*900,easing:'ease-in'}):null;
@@ -1659,31 +1876,39 @@ function showResult(r){const kind=G.kind,m=G.m,g=G,rl=r.rl;
     :r.win?CHARS[G.who[1]].n+' и '+CHARS[G.who[3]].n+' — козлы'+(m.dry?' всухую!':'!')+' Штраф: мы '+m.pen[0]+' · они '+m.pen[1]+'.'
     :'Штраф: мы '+m.pen[0]+' · они '+m.pen[1]+(m.dry?' — всухую…':'.')+' Ничего, отыграемся!';
   const quote=r.win?pickLine(G.who[1],G.single?'youWin':'goat'):pickLine(G.who[2],G.single?'youLose':'goat');
-  const hasNext=kind==='tour'&&r.win&&G.idx+1<TOUR.length&&TOUR[G.idx+1].pi===TOUR[G.idx].pi;
+  const hasNext=kind==='tour'&&r.win&&G.idx+1<TOUR.length&&TOUR[G.idx+1].pi===TOUR[G.idx].pi||kind==='yard'&&r.win&&G.idx+1<YARDS.length;
   const adNext=adDue()&&adReady();
-  const x2=X2_ON&&r.win&&r.reward>0&&(S.games||0)>=2&&adOk();
+  const x2=X2_ON&&r.win&&r.reward>0&&(S.games||0)>AD_NEW&&adOk();
   let main='',sec='';
-  if(kind==='tour'){main=r.win?(hasNext?'<button class="btn green" id="rNext">Дальше →</button>':'<button class="btn green" id="rMap">🗺 На карту</button>'):'<button class="btn green" id="rAgain">↻ Ещё раз</button>';
+  if(kind==='tour'||kind==='yard'){main=r.win?(hasNext?'<button class="btn green" id="rNext">Дальше →</button>':'<button class="btn green" id="rMap">🗺 На карту</button>'):'<button class="btn green" id="rAgain">↻ Ещё раз</button>';
     sec=r.win&&!hasNext?'':'<button class="btn" id="rMap">🗺 На карту</button>';}
   else if(kind==='daily'){main=r.win?(LB.ok()?'<button class="btn accent noenter" id="rLb">🏆 Рейтинг</button>':''):'<button class="btn green" id="rAgain">↻ Сыграть расклад ещё раз</button>';sec='<button class="btn'+(r.win&&!LB.ok()?' green':'')+'" id="rMap">🗺 На карту</button>';}
   else{main='<button class="btn green" id="rAgain">↻ Ещё партия</button>';sec='<button class="btn" id="rMap">🗺 На карту</button>';}
-  const nx=hasNext?TOUR[G.idx+1]:null,nextTxt=nx?'<p class="goal">Следующая партия: '+whoTxt(nx.p,nx.o)+' · '+rulesTxt(nx.r)+'</p>':'';
+  const nx=hasNext?(kind==='yard'?YARDS:TOUR)[G.idx+1]:null,nextTxt=nx?'<p class="goal">Следующая партия: '+whoTxt(nx.p,nx.o)+' · '+rulesTxt(nx.r)+'</p>':'';
   const html=`${face}<h2>${title}</h2>${kind==='tour'&&r.win?`<div class="big-stars">${starsHtml(r.st)}</div>`:''}
     <p>${who}</p>${quote?`<p class="quote">«${quote}»</p>`:''}
     ${r.reward?`<p class="coins-won" id="mWon">+${coinsTxt(r.reward)}</p>`:'<p id="mWon"></p>'}
-    ${r.newAch.length?`<div class="achips">${r.newAch.map(a=>`<span>${a.ic} ${a.n} <b>+${a.r}</b></span>`).join('')}</div>`:''}
+    ${r.newAch.length||r.hello||r.rankUp||(g.tqQ||[]).length?`<div class="achips">${(g.tqQ||[]).map(x=>'<span>'+x+'</span>').join('')}${r.hello?`<span>🎁 Подарок за знакомство <b>+${r.hello}</b></span>`:''}${r.rankUp?`<span>🏅 Новое звание: ${r.rankUp}</span>`:''}${r.newAch.map(a=>`<span>${a.ic} ${a.n} <b>+${a.r}</b></span>`).join('')}</div>`:''}
     ${r.unlockTxt?`<p class="goal tipl">${r.unlockTxt}</p>`:''}${nextTxt}
+    ${nextGoal()}
     ${kind==='tour'&&r.win&&r.st<3?`<p class="stars3">★ победа · ★ у нас ≤ ${Math.floor(m.rules.target/3)} штрафных · ★ всухую</p>`:''}
-    <div class="row">${x2?`<button class="btn x2 x2p noenter" id="rX2">📺 Удвоить за рекламу: +${r.reward}&nbsp;💰</button>`:''}${main}${sec}
+    <div class="row">${main}${x2?`<button class="btn x2 x2p noenter" id="rX2">📺 Удвоить за рекламу: +${r.reward}&nbsp;💰</button>`:''}${sec}
     ${G.hands0&&(kind!=='daily'||r.win)?'<button class="btn noenter" id="rDeck" style="font-size:15px">🔍 Честная раздача: как лежали карты</button>':''}</div>`; // в раскладе дня — только после победы (иначе переигрывали бы, зная все руки)
   G.resHtml=html;G.resR=r;modal(html,'res');bindResult(adNext);
   if(!G.single)setTimeout(()=>{if(G===g&&modalOn)SND.goat();},r.win?500:250);
   coinRun(g,r.reward);g.resHtml=null;setTimeout(()=>{if(G===g&&!g.resHtml)g.resHtml=$('mcard').innerHTML;},1300);
   setTimeout(offerReturn,2200);}
+// строка-цель под итогом: первое украшение (пока не куплено ни одного за монеты), иначе — что ждёт завтра
+function nextGoal(){const bought=Object.keys(S.own).some(k=>{const it=LIST[k[0]]&&LIST[k[0]].find(x=>x.id===k.slice(2));return it&&it.p;});
+  let h='';if(!bought){let best=null;for(const k of ['b','t','d'])for(const it of LIST[k])if(it.p&&(!best||it.p<best.p))best=it;
+    if(best)h='<p class="goal ngoal">'+(S.coins>=best.p?'🎨 Хватает на украшение «'+best.n+'» — загляните в «Украшения» на карте':'🎨 До первого украшения («'+best.n+'») — ещё <b>'+(best.p-S.coins)+' 💰</b>')+'</p>';
+    if(h&&(S.games||0)>3)return h;}
+  const st=streakState(),gift=st.claimed?STREAK[st.day%7]:0;
+  return h+'<p class="goal ngoal">'+(st.claimed?'🌅 Завтра: подарок +'+gift+' 💰 и новые задания':(S.wins||0)>=1?'🎁 Сегодня вас ждёт подарок — он на карте':'🌅 Заходите завтра: подарок и новые задания')+'</p>';}
 function bindResult(adNext){const g=G,r=G.resR;
   const go=f=>{if(adNext&&adDue()&&adReady()){toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(f,'end'),1000);}else f();};
-  const n=$('rNext');if(n)n.onclick=()=>{n.disabled=true;go(()=>startTour(g.idx+1));};
-  const a=$('rAgain');if(a)a.onclick=()=>{a.disabled=true;go(()=>g.kind==='tour'?startTour(g.idx):g.kind==='daily'?startDaily():g.kind==='endless'?startEndless():startQuick());};
+  const n=$('rNext');if(n)n.onclick=()=>{n.disabled=true;go(()=>g.kind==='yard'?startYard(g.idx+1):startTour(g.idx+1));};
+  const a=$('rAgain');if(a)a.onclick=()=>{a.disabled=true;go(()=>g.kind==='tour'?startTour(g.idx):g.kind==='yard'?startYard(g.idx):g.kind==='daily'?startDaily():g.kind==='endless'?startEndless():startQuick());};
   $('rMap').onclick=()=>{hideModal();leaveGame();};
   const lb=$('rLb');if(lb)lb.onclick=LB.show;
   const d=$('rDeck');if(d)d.onclick=()=>{if(g.cT){clearInterval(g.cT);g.cT=0;updCoins();const w=$('mWon');if(w&&r.reward)w.textContent='+'+coinsTxt(r.reward);}const h=g.resHtml||$('mcard').innerHTML;g.resHtml=h;showDeck(()=>{modal(h,'res');bindResult(false);});};
@@ -1722,12 +1947,17 @@ function openMap(){STAT.once('menu');STAT.screen('map');G=null;show('scr-map');u
           <span class="who"><b>${CHARS[m.o[0]].n} и ${CHARS[m.o[1]].n}</b><small>🤝 ${CHARS[m.p].n} · ${rulesTxt(m.r)}</small></span><span class="st">${done?starsHtml(S.tour[i]):''}</span></button>`;}
       h+=chestRow(pi,ps);}
     h+='</div>';});
+  if(S.unlocked>TOUR.length){const yi=Math.min(S.yard||0,YARDS.length-1),y=YARDS[yi],yd=(S.yard||0)>=YARDS.length;
+    h+=`<div class="place" style="background:linear-gradient(#5d8fc9,#2f5f96)"><h3><span>🏘 Соседние дворы</span><small>${S.yard||0}/${YARDS.length}</small></h3>
+      <button class="mrow cur" id="mYard"><span class="num">${yd?'🏆':yi+1}</span><span class="avs">${y.o.map(x=>'<span>'+portrait(x,'norm')+'</span>').join('')}</span>
+      <span class="who"><b>${yd?'Все дворы пройдены! Сыграть ещё':'Двор «'+y.n+'»'}</b><small>🤝 ${CHARS[y.p].n} · ${rulesTxt(y.r)} · +${50+5*yi} 💰</small></span></button></div>`;}
   if(S.unlocked>TOUR.length)h+=`<div class="place" style="background:linear-gradient(#f6b93b,#d4880f)"><h3><span>∞ Весь двор</span><small>после турнира</small></h3><button class="mrow cur" id="mEndless"><span class="num">∞</span><span class="who"><b>Случайные партнёр и соперники</b><small>любые правила · больше монет</small></span></button></div>`;
   else h+=`<div class="chest" style="margin-top:14px"><span>🏅 Пройди турнир — откроется «Весь двор»</span></div>`;
   list.innerHTML=h;
   list.querySelectorAll('.mrow[data-i]').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i>=S.unlocked){SND.no();toast('Сначала выиграйте предыдущую партию');return;}SND.tap();startTour(i);});
   list.querySelectorAll('.chest .btn').forEach(b=>b.onclick=()=>openChest(+b.dataset.p,+b.dataset.c));
   if($('mEndless'))$('mEndless').onclick=()=>guardNew(startEndless);
+  if($('mYard'))$('mYard').onclick=()=>{SND.tap();startYard(Math.min(S.yard||0,YARDS.length-1));};todayStrip();
   $('btnDaily').classList.toggle('locked',dailyLocked());$('btnQuick').classList.toggle('locked',(S.wins||0)<1);
   $('btnDaily').innerHTML='📅 Расклад дня'+((S.daily[todayKey()]||0)>=2?' ✓':'');
   requestAnimationFrame(()=>{const c=list.querySelector('.mrow.cur');if(c){const sc=$('mapScroll');sc.scrollTop=Math.max(0,c.offsetTop-sc.clientHeight/2);}});}
@@ -1784,6 +2014,9 @@ function openQuick(){STAT.screen('quick');const q=quickCfg(),met=metOpp(),av=(id
   $('qGo').onclick=()=>{S.quick=q;save();hideModal();guardNew(startQuick);};$('mCancel').onclick=hideModal;}
 function startQuick(){const q=quickCfg();startMatch({kind:'quick',partner:q.p,opp:q.o.slice(),rules:{deck:q.deck,trump:q.trump,target:q.target,eggs:!!q.eggs},title:'🃏 Своя игра'});}
 $('btnQuick').onclick=()=>{if((S.wins||0)<1){toast('«Своя игра» откроется после первой победы');return;}SND.tap();openQuick();};
+function startYard(i){const y=YARDS[i],x=S.match;if(!y)return;
+  if(matchOk(x)&&x.kind==='yard'&&x.idx===i){resumeMatch();return;}
+  guardNew(()=>startMatch({kind:'yard',idx:i,place:i%PLACES.length,partner:y.p,opp:y.o.slice(),rules:y.r,title:'🏘 Двор '+(i+1)+' · '+y.n}));}
 function startEndless(){const pool=ALL_OPP.slice();shuffle(pool,Math.random);const R=Math.random;
   const rules={deck:R()<.3?32:36,trump:R()<.35?'deal':'clubs',target:12,eggs:true};
   startMatch({kind:'endless',partner:pool[0],opp:[pool[1],pool[2]],rules,place:Math.floor(R()*PLACES.length),title:'∞ Весь двор'});}
@@ -1809,7 +2042,8 @@ function openShop2(){STAT.screen('shop');show('scr-shop');updCoins();$('shTabs')
     let btn='';
     if(own)btn=on?'<button class="btn" disabled>✓ Выбрано</button>':`<button class="btn green" data-sel="${it.id}">Выбрать</button>`;
     else if(it.place!=null)btn=`<small>🔒 Откроется: ${PLACES[it.place].ic} ${PLACES[it.place].n}</small>`;
-    else if(it.streak)btn='<small>🔥 За 7 дней подряд</small>';
+    else if(it.streak)btn='<small>🎁 За 7 подарков</small>';
+    else if(it.gift)btn='<small>🎁 За '+it.gift+' подарков (у вас '+giftN()+')</small>';
     else if(it.pay){btn='<small class="pnote">🛒 В наборе ↓</small>';if(packs.indexOf(it.pay)<0)packs.push(it.pay);}
     else btn=`<button class="btn accent buy noenter" data-buy="${it.id}">${coinsTxt(it.p)}</button>`;
     h+=`<div class="it${on?' on':''}">${previewHtml(shopTab,it)}<b>${it.n}</b>${btn}</div>`;}
@@ -1819,7 +2053,7 @@ function openShop2(){STAT.screen('shop');show('scr-shop');updCoins();$('shTabs')
   g.innerHTML=h;
   g.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{S.sel[shopTab]=b.dataset.sel;save();SND.tap();openShop2();});
   g.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const it=list.find(x=>x.id===b.dataset.buy);if(!it)return;
-    if(S.coins<it.p){SND.no();modal(`<h2>Не хватает монет</h2><p>Нужно ${coinsTxt(it.p)}, а у вас ${coinsTxt(S.coins)}. Монеты — за победы, расклад дня, серию дней и сундуки.</p><div class="row"><button class="btn accent" id="mSh">💰 Получить монеты</button><button class="btn" id="mCancel">← Назад</button></div>`);
+    if(S.coins<it.p){SND.no();modal(`<h2>Не хватает монет</h2><p>Нужно ${coinsTxt(it.p)}, а у вас ${coinsTxt(S.coins)}. Монеты — за победы, расклад дня, задания, подарки и сундуки.</p><div class="row"><button class="btn accent" id="mSh">💰 Получить монеты</button><button class="btn" id="mCancel">← Назад</button></div>`);
       $('mSh').onclick=openCoins;$('mCancel').onclick=hideModal;return;}
     S.coins-=it.p;STAT.ev('spend',{k:shopTab+':'+it.id,c:it.p});S.own[shopTab+':'+it.id]=1;S.sel[shopTab]=it.id;save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);toast('Готово: «'+it.n+'»');openShop2();});
   PAY.bind(g);PAY.re=null;}
@@ -1828,47 +2062,81 @@ $('shBack').onclick=openMap;
 /* ================= погоны и достижения ================= */
 $('mRank').onclick=()=>{const w=S.wins||0,r=rankOf(w),i=RANKS.indexOf(r),nx=RANKS[i+1];
   modal(`<h2>🏅 ${r[1]}</h2><p>Побед: <b>${w}</b> из ${S.games||0} партий, раздач сыграно: ${S.deals||0}.${nx?' До звания «'+nx[1]+'» — '+(nx[0]-w)+' '+plural(nx[0]-w,'победа','победы','побед')+'.':''}</p>
+    ${nx?`<i class="tbar" style="height:12px;margin:0 10px 8px"><i style="width:${Math.round(100*(w-r[0])/(nx[0]-r[0]))}%"></i></i>`:''}
     <p class="about">В козлах оставили: ${ALL_OPP.map(id=>CHARS[id].n+' — '+(S.beat[id]||0)).join(', ')}.</p>
     ${ACH.map(a=>`<div class="ach ${S.ach[a.id]?'done':'no'}"><span class="ai">${a.ic}</span><span><b>${a.n}</b><small>${a.d} · +${a.r} 💰${S.ach[a.id]?' ✓':''}</small></span></div>`).join('')}
     <div class="row"><button class="btn" id="mCancel">Закрыть</button></div>`);$('mCancel').onclick=hideModal;};
-/* ---- серия дней: 7 дней подряд, награда растёт; на 7-й — рубашка «Неделя подряд» ---- */
+/* ---- подарок за заход (03.10 boost, как в «Выезде»): лесенка 7 подарков по кругу, пропуск дня НИЧЕГО не сжигает.
+   S.streak={day: ступень последнего подарка 1…7, last: день последнего, cyc: полных кругов}. Подарков всего — giftCnt ---- */
 const STREAK=[10,10,15,15,20,25,40];
+const giftCnt=s=>s?(s.cyc||0)*7+((s.day||0)%7):0; // 7-й день уже учтён в cyc
+const giftN=()=>giftCnt(S.streak);
+const GIFT_PRIZE=[[5,'b','daisy'],[15,'t','quilt'],[30,'b','gold']]; // вещи за 5/15/30 подарков (не обязательно подряд)
 function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
 function streakState(){const s=S.streak||{day:0,last:0,cyc:0},t=dayKey(0);
   if(s.last===t)return{claimed:true,day:s.day};
-  const cont=s.last===dayKey(-1)&&s.day>0;return{claimed:false,day:cont?s.day%7+1:1,broken:!cont&&s.day>0&&s.day<7};}
+  return{claimed:false,day:(s.day||0)%7+1};}
 function maybeStreak(){if(G||window.__demo||$('modal').classList.contains('on')||$('ad').classList.contains('on'))return;
   const st=streakState();if(st.claimed||(S.wins||0)<1)return;
-  const s=S.streak||{};if(st.broken&&s.day>=2&&adOk())return streakRestore();
-  if(st.day===1)claimStreak(1,true);else showStreak();}
-function streakRestore(){const s=S.streak;
-  modal(`<h2>Серия прервалась 😿</h2><p>Серия дошла до ${s.day}-го дня, но денёк пропущен. Бабушки на лавочке заметили… но могут и забыть.</p>
-    <div class="row"><button class="btn accent noenter" id="sRes">📺 Вернуть серию за рекламу</button><button class="btn noenter" id="sNew">Начать заново</button></div>`);
-  STAT.offer('streak');$('sRes').onclick=()=>{hideModal();STAT.place('streak');showRewarded(()=>{S.streak.last=dayKey(-1);save();showStreak();},()=>streakRestore());};
-  $('sNew').onclick=()=>{hideModal();S.streak={day:0,last:0,cyc:s.cyc||0};save();maybeStreak();};}
+  if(giftN()===0)claimStreak(1,true);else showStreak();}
 const weekBack=()=>!S.own['b:week'];
+function nextPrize(){const n=giftN();return GIFT_PRIZE.find(x=>x[0]>n);}
+function prizeName(x){const it=LIST[x[1]].find(i=>i.id===x[2]);return (x[1]==='t'?'стол':'рубашка')+' «'+(it?it.n:x[2])+'»';}
 function showStreak(){STAT.screen('gift');const st=streakState();let cells='';
   for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day;
     const ic=d===7?'🎁':'💰',val=d===7?(weekBack()?'рубашка':'+'+(STREAK[6]*2)):'+'+STREAK[d-1];
-    cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>День ${d}</small><span class="ic">${ic}</span>${val}${d===7&&weekBack()?'<small>и +'+STREAK[6]+' 💰</small>':''}</div>`;}
-  const r=st.claimed?0:streakReward(st.day);
-  modal(`<h2>Серия дней 🔥</h2><p>${st.claimed?'Сегодняшняя награда уже ваша. Заходите завтра — день '+(st.day%7+1)+'!':st.broken?'Серия прервалась — начинаем заново. Заходите каждый день!':'Заходите каждый день — награда растёт, на 7-й день рубашка «Неделя подряд»!'}</p>
+    cells+=`<div class="sd ${done?'done':''} ${today?'today':''} ${d===7?'d7':''}"><small>${d}-й</small><span class="ic">${ic}</span>${val}${d===7&&weekBack()?'<small>и +'+STREAK[6]+' 💰</small>':''}</div>`;}
+  const r=st.claimed?0:streakReward(st.day),np=nextPrize(),n=giftN();
+  modal(`<h2>Подарок 🎁</h2><p>${st.claimed?'Сегодняшний подарок уже ваш. Завтра — следующий: '+(st.day===7?'+'+coinsTxt(STREAK[0]):'+'+coinsTxt(STREAK[st.day%7]))+'.':'Заходите в любой день — подарок растёт по лесенке. Пропустили день — ничего не сгорает.'}</p>
     <div class="streak">${cells}</div>
-    <div class="row">${st.claimed?'<button class="btn" id="sClose">Закрыть</button>':`${adOk()?`<button class="btn accent noenter" id="sX2">📺 ×2 за рекламу (+${coinsTxt(r.coins*2)})</button>`:''}<button class="btn green" id="sGet">Забрать +${coinsTxt(r.coins)}${r.back?' и рубашку':''}</button>`}</div>`);
+    <p class="goal">Подарков получено: <b>${n}</b>${np?' · за '+np[0]+' — '+prizeName(np)+' (ещё '+(np[0]-n)+')':''}</p>
+    <div class="row">${st.claimed?'<button class="btn" id="sClose">Закрыть</button>':`<button class="btn green" id="sGet">Забрать +${coinsTxt(r.coins)}${r.back?' и рубашку':''}</button>${adOk()?`<button class="btn x2p noenter" id="sX2">📺 ×2 за рекламу (+${coinsTxt(r.coins*2)})</button>`:''}`}</div>`);
   if(st.claimed){$('sClose').onclick=hideModal;return;}
   $('sGet').onclick=()=>claimStreak(1);
   if($('sX2'))STAT.offer('gift');if($('sX2'))$('sX2').onclick=()=>{hideModal();STAT.place('gift');showRewarded(()=>claimStreak(2),()=>showStreak());};}
 function streakReward(day){const back=day===7&&weekBack();return{coins:day===7&&!back?STREAK[6]*2:STREAK[day-1],back};}
 function claimStreak(mult,quiet){const st=streakState();if(st.claimed){hideModal();return;}
-  const r=streakReward(st.day),s=S.streak||{cyc:0};S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
+  const r=streakReward(st.day),s=S.streak||{cyc:0},n0=giftN();S.streak={day:st.day,last:dayKey(0),cyc:(s.cyc||0)+(st.day===7?1:0)};
   if(r.back)S.own['b:week']=1;if(st.day===7&&!S.ach.streak7){S.ach.streak7=1;S.coins+=ACH.find(x=>x.id==='streak7').r;}
+  const prize=GIFT_PRIZE.find(x=>x[0]>n0&&x[0]<=giftN());
   S.coins+=r.coins*mult;save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);updStreakDot();
-  if(quiet){toast('📅 Серия дней: день 1, +'+coinsTxt(r.coins)+'. Заходите завтра!',3500);return;}
-  modal(`<h2>${st.day===7?'Неделя подряд! 🏆':'День '+st.day+' ✓'}</h2><p class="coins-won">+${coinsTxt(r.coins*mult)}${mult>1?' <small>(×2)</small>':''}</p>
-    ${r.back?'<p class="goal tipl">Новая рубашка «Неделя подряд» — в «🎨 Украшениях»</p>':''}
-    <p>${st.day<7?'Завтра — день '+(st.day+1)+': +'+coinsTxt(STREAK[st.day])+(st.day===6?' и подарок!':''):'Серия начнётся заново — и снова с подарками!'}</p>
+  if(quiet){toast('🎁 Подарок за заход: +'+coinsTxt(r.coins)+'. Завтра — ещё один!',3500);return;}
+  modal(`<h2>${st.day===7?'Седьмой подарок! 🏆':'Подарок '+st.day+' ✓'}</h2><p class="coins-won">+${coinsTxt(r.coins*mult)}${mult>1?' <small>(×2)</small>':''}</p>
+    ${r.back?'<p class="goal tipl">Новая рубашка «Неделя подарков» — в «🎨 Украшениях»</p>':''}
+    ${prize?'<p class="goal tipl">🎉 '+prize[0]+' подарков — ваш '+prizeName(prize)+'! Он уже в «🎨 Украшениях».</p>':''}
+    <p>Завтра: +${coinsTxt(STREAK[st.day%7])}${st.day===6?' и подарок-рубашка!':''}</p>
     <div class="row"><button class="btn green" id="sOk">Отлично!</button></div>`);$('sOk').onclick=hideModal;}
-function updStreakDot(){const b=$('btnStreak');b.innerHTML='🎁<small>Подарок</small>'+(streakState().claimed?'':'<span class="dot"></span>');}
+/* ---- задания дня (03.10 boost): 3 в день, без рекламы, за все три — бонус. S.tq={d:день, l:[[id,сделано],…], all:бонус выдан}, S.tqAll — дней «всё выполнено» ---- */
+const TASKS={win:{n:'Выиграйте партию',need:1,r:20},win2:{n:'Выиграйте 2 партии',need:2,r:35},deals:{n:'Сыграйте 4 раздачи',need:4,r:15},
+  p80:{n:'Наберите в раздаче 80 очков и больше',need:1,r:20},ace:{n:'Заберите 3 взятки с тузом',need:3,r:15},qc:{n:'Сыграйте даму треф — старший козырь',need:1,r:10},
+  smear:{n:'Подложите партнёру туз или десятку в его взятку',need:2,r:15},tricks:{n:'Заберите вдвоём с партнёром 15 взяток',need:15,r:15},
+  daily:{n:'Выиграйте расклад дня',need:1,r:25}};
+const TQ_BONUS=25;
+function tqToday(){const k=todayKey();if(isObj(S.tq)&&S.tq.d===k&&Array.isArray(S.tq.l))return S.tq;
+  const R=rng(todaySeed()*131+7),pool=Object.keys(TASKS).filter(id=>id!=='daily'||!dailyLocked()),l=[];
+  while(l.length<3&&pool.length){const id=pool.splice(Math.floor(R()*pool.length),1)[0];if((id==='win'&&l.some(x=>x[0]==='win2'))||(id==='win2'&&l.some(x=>x[0]==='win')))continue;l.push([id,0]);}
+  S.tq={d:k,l,all:0};return S.tq;}
+const tqDone=()=>tqToday().l.filter(x=>x[1]>=TASKS[x[0]].need).length;
+function tqAdd(id,n){if(!G||!G.tq)return;const q=tqToday(),x=q.l.find(y=>y[0]===id);if(!x)return;const t=TASKS[id];if(x[1]>=t.need)return;
+  x[1]=Math.min(t.need,x[1]+(n||1));
+  // в конце раздачи/партии — чипом в окне итога (тост закрыл бы кнопки), посреди раздачи — тостом
+  const quiet=!G.s||G.s.over||G.done;if(!G.tqQ)G.tqQ=[];
+  if(x[1]>=t.need){S.coins+=t.r;if(quiet)G.tqQ.push('📝 '+t.n+' <b>+'+t.r+'</b>');else{toast('📝 Задание выполнено: '+t.n.toLowerCase()+' · +'+coinsTxt(t.r),3200);SND.coin();}
+    if(!q.all&&tqDone()===3){q.all=1;S.tqAll=(S.tqAll||0)+1;S.coins+=TQ_BONUS;if(quiet)G.tqQ.push('📝 Все задания дня <b>+'+TQ_BONUS+'</b>');else setTimeout(()=>toast('📝 Все задания дня! Бонус +'+coinsTxt(TQ_BONUS),3200),3300);
+      if(S.tqAll>=7&&!S.ach.tasks7){S.ach.tasks7=1;const a=ACH.find(z=>z.id==='tasks7');S.coins+=a.r;}}
+    updCoins();}
+  save();}
+function openTasks(){STAT.screen('tasks');const q=tqToday();
+  modal(`<h2>📝 Задания дня</h2><p>Новые — каждый день. Без рекламы: просто играйте.</p>
+    ${q.l.map(([id,h])=>{const t=TASKS[id],ok=h>=t.need;return `<div class="task${ok?' ok':''}"><span class="ti">${ok?'✓':'📝'}</span><span><b>${t.n}</b><small>${ok?'Готово':'Сделано '+h+' из '+t.need}</small><i class="tbar"><i style="width:${Math.round(100*h/t.need)}%"></i></i></span><span class="tr">+${t.r} 💰</span></div>`;}).join('')}
+    <p class="goal">${q.all?'Все три выполнены ✓ Завтра — новые задания.':'За все три — ещё +'+coinsTxt(TQ_BONUS)+'.'}</p>
+    <div class="row"><button class="btn green" id="mCancel">Понятно</button></div>`);$('mCancel').onclick=hideModal;}
+/* ---- полоска «Сегодня» на карте: подарок · расклад дня · задания ---- */
+function todayStrip(){const b=$('todayB');if(!b)return;if((S.games||0)<1){b.innerHTML='';return;}
+  const gc=streakState().claimed,dl=dailyLocked(),dd=(S.daily[todayKey()]||0)>=2,tn=tqDone();
+  b.innerHTML=`<span class="tl">Сегодня:</span><button id="tdGift" class="${gc?'ok':'on'}">🎁 ${gc?'✓':'Подарок'}</button><button id="tdDaily" class="${dl?'lk':dd?'ok':'on'}">📅 ${dl?'🔒':dd?'✓':'Расклад'}</button><button id="tdTask" class="${tn>=3?'ok':'on'}">📝 ${tn}/3</button>`;
+  $('tdGift').onclick=()=>{SND.tap();showStreak();};$('tdDaily').onclick=()=>$('btnDaily').click();$('tdTask').onclick=()=>{SND.tap();openTasks();};}
+function updStreakDot(){const b=$('btnStreak');b.innerHTML='🎁<small>Подарок</small>'+(streakState().claimed?'':'<span class="dot"></span>');todayStrip();}
 $('btnStreak').onclick=showStreak;
 /* ================= настройки ================= */
 function openSettings(){STAT.screen('settings');const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</i>',sp=S.speed||'norm';
@@ -1987,7 +2255,7 @@ if(!/[?&]demo=/.test(location.search)&&!(S.wins>0)&&S.unlocked===1&&!(S.games>0)
 SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal()});updMore();
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
-window.__test={get G(){return G;},get S(){return S;},startTour,startDaily,startQuick,startEndless,resumeMatch,humanAct,legal,viewFor,aiMove,render,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,openShop2,openMap,openQuick,dailyCfg,dealScore,set VK(v){VK=v;},get VK(){return VK;},PAY};
+window.__test={get G(){return G;},get S(){return S;},startTour,startYard,openTasks,tqToday,showStreak,startDaily,startQuick,startEndless,resumeMatch,humanAct,legal,viewFor,aiMove,render,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,openShop2,openMap,openQuick,dailyCfg,dealScore,set VK(v){VK=v;},get VK(){return VK;},PAY};
 </script>
 </body>
 </html>

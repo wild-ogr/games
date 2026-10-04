@@ -670,7 +670,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'viktorina',gv:'v3-100417',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'viktorina',gv:'v3-100420',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (pl — пройдено уровней, cn — монеты, bt — облако хоть раз отдавало сохранение: метка устройства viktorina-cl) — после облака, не позже 2,5 с
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('viktorina-cl')?1:0;}catch(e){}STAT.progress({pl:+S.lvl||0,cn:+S.coins||0,bt:bt});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound===false?0:1,calm:S.calm===true?1:0});
@@ -887,7 +887,7 @@ function vkFitInit(){try{
   window.vkBridge.send('VKWebAppGetConfig').then(function(c){if(c&&c.viewport_height)vkFit(c.viewport_height);}).catch(function(){});
 }catch(e){}}
 async function initVK(){
-  try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
+  try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js').catch(function(){return new Promise(function(r){setTimeout(r,1500);}).then(function(){return window.vkBridge||loadScript('js/vk-bridge.min.js?r=2');});});
     await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;vkFitInit();SOC.ready();updMore();
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}

@@ -301,7 +301,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v2.0-100418',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v2.0-100420',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
@@ -522,7 +522,7 @@ async function ycloud(n){if(!ysdk)return;try{if(!YP)YP=await withTimeout(ysdk.ge
 async function initSDK(){
   if(PLAT==='vk'){
     // меню не ждёт ответа моста: VKWebAppInit уходит сразу, ответ ждём до 20 с (и ещё раз, если не пришёл); облако догружается следом
-    try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');vkInit(1);}catch(e){VK=null;}
+    try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js').catch(function(){return new Promise(function(r){setTimeout(r,1500);}).then(function(){return window.vkBridge||loadScript('js/vk-bridge.min.js?r=2');});});vkInit(1);}catch(e){VK=null;}
   }else if(!/[?&](nosdk|bot|shot)/.test(location.search)){
     try{await loadScript('/sdk.js');}catch(e){}
     if(window.YaGames){
