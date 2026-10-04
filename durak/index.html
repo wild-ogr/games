@@ -1161,7 +1161,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'durak',gv:'v2-100416',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'durak',gv:'v2-100420',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl партии/расклад/задачка, ad ролики и ×2, gift гостинцы лавочки, chest сундуки, buy покупки, quest достижения);
    progress — после облака, но не позже 2,5 с: pl — побед всего, cn — монеты, bt — облако хоть раз отдало сохранение (метка устройства durak-cl, в сохранение не пишется);
    cfg — стол (th), звук, спокойный режим. Покадрового цикла нет (переходы CSS) — STAT.frame() не зовём. */
@@ -1378,7 +1378,7 @@ function vkFitInit(){try{
   window.vkBridge.send('VKWebAppGetConfig').then(function(c){if(c&&c.viewport_height)vkFit(c.viewport_height);}).catch(function(){});
 }catch(e){}}
 async function initVK(){
-  try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js');
+  try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js').catch(function(){return new Promise(function(r){setTimeout(r,1500);}).then(function(){return window.vkBridge||loadScript('js/vk-bridge.min.js?r=2');});});
     await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;vkFitInit();SOC.ready();updMore(); /* соц-кнопки и «Ещё игры» (только VK с мостом) */
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
