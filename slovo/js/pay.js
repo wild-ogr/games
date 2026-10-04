@@ -14,7 +14,7 @@ const PAY_ITEMS={
   th_veranda:{perm:1,vk:11,ic:'🎨',name:'Оформление «Веранда. Летний вечер»',desc:'Закат над садом и гирлянда лампочек. Навсегда',done:'Оформление «Веранда» включено!'}
 };
 const PAY_TEST={no_ads:149,coins_s:39,coins_l:99,starter:59,tea:29,th_kitchen:79,th_veranda:79}; // цены только для ?paytest=1; настоящие — в консоли
-function payAdd(n){S.coins=Math.max(0,(+S.coins||0)+n);}
+function payAdd(n){S.coins=Math.max(0,(+S.coins||0)+n);if(n>0&&typeof STAT!=='undefined')STAT.earn('buy',n);} // STAT v1.2: монеты из покупки
 function payFlush(){cloudSave(true);}
 function payPause(on){setPause('pay',on);}
 // после покупки/восстановления: монеты на экране; перерисовать окно (PAY.re) или магазин, если он открыт

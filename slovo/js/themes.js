@@ -186,18 +186,19 @@ function adOk(){try{return typeof adsOk==='function'&&adsOk()&&!SHOT;}catch(e){r
 /* примерка платной темы на один уровень за ролик (как «примерка на партию» в Кирпичиках): не сохраняется, до TRY_MAX раз за запуск */
 function trial(id){TRIAL=id&&get(id)?id:null;trDone=false;apply();}
 function tryTheme(id){var T=get(id);if(!T||owned(id)||trN>=TRY_MAX||!adOk())return;try{STAT.offer('thtry');STAT.place('thtry');}catch(e){}
-  showRewarded(function(){trN++;trial(id);try{STAT.ev('mod',{m:'theme',a:'try',k:id});}catch(e){}
+  showRewarded(function(){trN++;trial(id);try{STAT.ev('try',{th:id});}catch(e){}
     var lv=inLevel()&&typeof G!=='undefined'&&G&&!G.won;hideModal();toast((lv?'Этот уровень':'Следующий уровень')+' — в оформлении «'+T.ru+'»',3600);},function(){open();},
     /* поздний зачёт (adt): примерка — всегда (окна не трогаем); тема уже своя — монеты по цене ролика (у примерки цены в монетах нет) */
-    function(){if(owned(id)||TRIAL===id)return typeof adLateCoins==='function'?adLateCoins():'';trN++;trial(id);try{STAT.ev('mod',{m:'theme',a:'try',k:id});}catch(e){}return 'примерка оформления «'+T.ru+'»';});}
+    function(){if(owned(id)||TRIAL===id)return typeof adLateCoins==='function'?adLateCoins():'';trN++;trial(id);try{STAT.ev('try',{th:id});}catch(e){}return 'примерка оформления «'+T.ru+'»';});}
 function trialEnd(){if(!TRIAL)return;var T=get(TRIAL);TRIAL=null;trDone=false;apply();try{toast('Примерка закончилась. Оформление «'+T.ru+'» — в ⚙️ → Оформление',4200);}catch(e){}}
 function buy(id){var T=get(id);if(!T||owned(id))return;var u=T.unlock;
   if(u.t==='pay'){if(canBuy(T))PAY.buy(u.pay);else toast('Покупки сейчас недоступны');return;}
   if(u.t==='ads'){if(!adOk()){toast('Ролик сейчас недоступен — загляни позже');return;}
-    try{STAT.offer('theme');STAT.place('theme');}catch(e){}showRewarded(function(){check();open();},function(){open();},function(){return 'ролик в счёт оформления засчитан';});}} // поздний зачёт (adt): счётчик роликов растёт в обёртке ниже
+    try{STAT.offer('theme');STAT.place('theme');}catch(e){}var thad=function(){try{STAT.ev('thad',{th:id,n:Math.min(u.n,S.adTot||0)});}catch(e){}};
+    showRewarded(function(){thad();check();open();},function(){open();},function(){thad();return 'ролик в счёт оформления засчитан';});}} // поздний зачёт (adt): счётчик роликов растёт в обёртке ниже
 function prevHtml(T){return '<span class="thp thp-'+T.id+'"><i class="thp-h"></i><i class="thp-c"><b>З</b><b>И</b><b>Н</b><b>А</b></i><i class="thp-b"></i></span>';}
 var back=null;
-function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen('theme');}catch(e){}var c=cur(),h='',ads=adOk();
+function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen('look');}catch(e){}var c=cur(),h='',ads=adOk();
   for(var i=0;i<THEMES.length;i++){var T=THEMES[i],own=owned(T.id),u=T.unlock,pr=prog(T),btn='',on=T.id===c&&!(TRIAL===T.id);
     if(on)btn='<span class="th-on">✓ Включено</span>';
     else if(own)btn='<button class="btn green" data-th="set:'+T.id+'">Включить</button>';
@@ -256,4 +257,5 @@ if(S.th&&!owned(S.th)&&!FORCE){/* выбранной темы больше не�
 apply();
 // покупки приходят позже (PAY.init после облака) — применить ещё раз
 setTimeout(apply,1500);setTimeout(apply,6000);
+try{STAT.cfg({th:cur()});}catch(e){} // STAT v1.2: тема сеанса → событие cfg
 })();

@@ -11,7 +11,7 @@ let shopTab='zina';
 const owned=(kind,it)=>it.pay?typeof PAY!=='undefined'&&PAY.own(it.pay):it.gift?!!(S.own||{})[kind+':'+it.id]:!it.p||!!(S.own||{})[kind+':'+it.id];
 const payShow=it=>!it.pay||owned('o',it)||typeof PAY!=='undefined'&&PAY.on&&!!PAY.item(it.pay);
 function openShop(){
-  show('shopS');updCoins();
+  show('shopS');STAT.screen('shop');updCoins();
   const isZ=shopTab==='zina',list=isZ?OUTFITS:SKINS,cur=isZ?S.outfit:S.skin;
   let h=`<div class="dhead"><div class="av">${zinaSVG('happy')}</div><p>${isZ?'Полвека в одном платье ходила — хватит! Купи бабушке обновку, а я уж тебе слова подберу.':'Буквы на хорошем блюдце и складываются лучше. Это научный факт — я проверяла.'}</p></div>
    <div class="tabs"><button data-t="zina" class="${isZ?'on':''}">👗 Наряды</button><button data-t="plate" class="${isZ?'':'on'}">🍽️ Блюдца</button></div><div class="shopg">`;
@@ -62,11 +62,11 @@ function shortModal(it,isZ,id){
   if(!isZ)applySkin($('cfPv'),id);
   $('mNo').onclick=()=>{hideModal();SND.tap();shopSay('Проходи уровни — накопим! Я пока в старом похожу.','norm');};
   const b=$('mAd');if(b)STAT.offer('coins');if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place('coins');
-    showRewarded(()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;hideModal();addCoins(ECO.adCoins);SND.coin();
+    showRewarded(()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;hideModal();addCoins(ECO.adCoins,'ad');SND.coin();
       if(document.querySelector('.screen.on')===$('shopS')){openShop();const r=it.p-S.coins;shopSay(r>0?`Держи +${ECO.adCoins}! До «${it.n}» осталось ${r}.`:`Держи +${ECO.adCoins}! Теперь хватает на «${it.n}» — бери!`,'happy');}},
       ()=>{b.disabled=false;},
       // поздний зачёт (adt): монеты — всегда (в счёт дневного предела)
-      ()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;const mine=$('modal').classList.contains('on')&&document.body.contains(b);if(mine)hideModal();addCoins(ECO.adCoins);SND.coin();
+      ()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;const mine=$('modal').classList.contains('on')&&document.body.contains(b);if(mine)hideModal();addCoins(ECO.adCoins,'ad');SND.coin();
         if(mine&&document.querySelector('.screen.on')===$('shopS'))openShop();return 'держи монеты: +'+ECO.adCoins;});};
 }
 

@@ -386,10 +386,11 @@ function buy(id,after){var t=BY[id];if(!t)return;var u=t.unlock;after=after||fun
     modal('<h2>🎨 '+T('Тема «','Theme “')+T(t.ru,t.en)+T('»','”')+'</h2><p>'+T(t.d,t.de)+'</p><div class="row"><button class="btn green noenter" id="thYes">'+T('Открыть за ','Unlock for ')+u.c+' 💰</button><button class="btn" id="thNo">'+T('Отмена','Cancel')+'</button></div>');
     DOC.getElementById('thNo').onclick=function(){after();};
     DOC.getElementById('thYes').onclick=function(){if(S.coins<u.c)return;S.coins-=u.c;try{STAT.ev('spend',{k:'th:'+id,c:u.c});}catch(e){}thU()[id]=1;updCoins();SND.coin();set(id);toast(T('Новая тема: ','New theme: ')+T(t.ru,t.en));after();};return;}
-  if(u.t==='ads'){if(!adOk()){toast(AD_FAIL);return;}try{STAT.place('theme');}catch(e){}showRewarded(function(){toast(T('Ролик засчитан: ','Video counted: ')+Math.min(S.adTot|0,u.n)+T(' из ',' of ')+u.n);check();after();},function(){after();});return;}
+  if(u.t==='ads'){if(!adOk()){toast(AD_FAIL);return;}try{STAT.place('theme');}catch(e){}showRewarded(function(){try{STAT.ev('thad',{th:id,n:Math.min(S.adTot|0,u.n)});}catch(e){}toast(T('Ролик засчитан: ','Video counted: ')+Math.min(S.adTot|0,u.n)+T(' из ',' of ')+u.n);check();after();},function(){after();},
+    function(){try{STAT.ev('thad',{th:id,n:Math.min(S.adTot|0,u.n)});}catch(e){}check();return T('ролик засчитан: ','video counted: ')+Math.min(S.adTot|0,u.n)+T(' из ',' of ')+u.n;});return;} /* adt: поздний досмотр — всегда +1 к счётчику (S.adTot — в showRewarded), окна не трогаем */
   if(u.t==='rk'){toast(progress(id).txt,3500);return;}}
 function trial(id){TRIAL=id&&BY[id]?id:null;apply();}
-function open(back){try{STAT.screen('looks');}catch(e){}if(typeof inGame==='function'&&inGame())YG.stop();var L0=list(),h='',ig=typeof inGame==='function'&&inGame();
+function open(back){try{STAT.screen('look');}catch(e){}if(typeof inGame==='function'&&inGame())YG.stop();var L0=list(),h='',ig=typeof inGame==='function'&&inGame();
   L0.forEach(function(t){var p=t.progress,bt;
     if(t.cur)bt='<button class="btn" disabled>✓ '+T('Выбрано','Selected')+'</button>';
     else if(t.owned)bt='<button class="btn green" data-th="set:'+t.id+'">'+T('Выбрать','Select')+'</button>';

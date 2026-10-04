@@ -118,6 +118,8 @@ html.lk .boost button i{top:-10px;right:-4px;min-width:32px;height:30px;line-hei
   background:linear-gradient(180deg,#ffb057,#ff6a3d);box-shadow:0 3px 8px rgba(255,106,61,.45),0 0 0 2px #fff}
 html.lk .boost button i.free{background:linear-gradient(180deg,#8fd85a,#34a84a);box-shadow:0 3px 8px rgba(52,168,74,.45),0 0 0 2px #fff}
 html.lk .boost button.on{background:#fff7d1;box-shadow:0 0 0 3px #ffc21a,0 8px 18px var(--sh)}
+/* adhelp: значок «за рекламу» на помощнике и подсветка «тесно» */
+html.lk .boost button i.tv{background:#fff;padding:0 6px;box-shadow:0 3px 8px rgba(25,113,194,.35),0 0 0 2px #5aa9ee}html.lk .boost button i.tv lk-i{width:22px;height:22px;padding:0;margin:0;border-radius:0;background:none;display:inline-block;vertical-align:-5px}html.lk .boost button.nudge{box-shadow:0 0 0 3px #ffc21a,0 8px 18px var(--sh)}
 html.lk #app.land .boost button{min-height:84px}
 html.lk #app.land .bub{left:0}
 html.lk .fly{width:34px;height:34px}

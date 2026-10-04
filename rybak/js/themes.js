@@ -66,11 +66,11 @@ function canBuy(T){var u=T.unlock;return u.t==='pay'&&typeof PAY!=='undefined'&&
 function buy(id,after){var T=get(id);if(!T||owned(id))return;var u=T.unlock;
   if(u.t==='pay'){if(canBuy(T))PAY.buy(u.pay);else toast(Lx('Покупки сейчас недоступны','Purchases are not available right now'));return;}
   if(u.t==='ads'){if(!(typeof adOk==='function'&&adOk())){toast(Lx('Ролик сейчас недоступен — загляни позже','No video right now — try later'));return;}
-    try{STAT.offer('theme');STAT.place('theme');}catch(e){}hideModal();showRewarded(function(){check();(after||open)();},function(){(after||open)();});return;}
+    try{STAT.offer('theme');STAT.place('theme');}catch(e){}hideModal();var thad=function(){try{STAT.ev('thad',{th:id,n:Math.min(u.n,S.adTot||0)});}catch(e){}};showRewarded(function(){thad();check();(after||open)();},function(){(after||open)();},function(){thad();return Lx('ролик в счёт оформления засчитан','the video counts towards the look');});return;} /* поздний зачёт (adt): счётчик роликов растёт в обёртке ниже */
   if(u.t==='cr'||u.t==='coins'){if(S.coins<u.n){notEnough(u.n);return;}S.coins-=u.n;thU()[T.id]=1;try{STAT.ev('spend',{k:'theme:'+id,c:u.n});}catch(e){}updCoins();set(id);(after||open)();}}
 function swatch(T){var p=T.prev;return '<span class="thp" style="background:'+p.bg+'"><i class="thp-h" style="background:'+p.hd+'"></i><i class="thp-c" style="background:'+p.card+'"><b style="background:'+p.ink+'"></b><b style="background:'+p.ink+';width:40%"></b></i><i class="thp-b" style="background:linear-gradient(135deg,'+p.acc+','+p.acc2+')"></i></span>';}
 var back=null;
-function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen('theme');}catch(e){}var c=cur(),h='';
+function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen('look');}catch(e){}var c=cur(),h='';
   for(var i=0;i<THEMES.length;i++){var T=THEMES[i],own=owned(T.id),u=T.unlock,pr=prog(T),btn='';
     if(T.id===c)btn='<span class="th-on">✓ '+Lx('Включено','On')+'</span>';
     else if(own)btn='<button class="btn green" data-th="set:'+T.id+'">'+Lx('Включить','Use')+'</button>';
@@ -93,7 +93,8 @@ window.THEME={list:list,owned:owned,cur:cur,set:set,get:get,progress:function(id
   row.parentNode.insertBefore(b,row);b.onclick=function(){try{SND.tap();}catch(e){}open(openSettings);};};
  var bs=document.getElementById('btnSet'),fs=document.getElementById('fSet');if(bs)bs.onclick=openSettings;if(fs)fs.onclick=openSettings;}
 // ролики за награду — счётчик за всё время (тема за ролики)
-{var sr=showRewarded;showRewarded=function(cb,onFail){return sr(function(){S.adTot=(S.adTot||0)+1;try{cb&&cb.apply(this,arguments);}finally{try{check();}catch(e){}}},onFail);};}
+{var sr=showRewarded,cnt=function(f){return function(){S.adTot=(S.adTot||0)+1;try{return f&&f.apply(this,arguments);}finally{try{check();}catch(e){}}};};
+ showRewarded=function(cb,onFail,late){return sr(cnt(cb),onFail,cnt(late));};} /* late — поздний «досмотрел» (adt): тоже в счёт роликов */
 // покупка темы
 {var pa=payAfter;payAfter=function(id){bought(id);pa.apply(this,arguments);};}
 // облако: открытые — объединение, ролики — максимум
@@ -107,5 +108,6 @@ if(typeof fbSpecHtml==='function'){var fh=fbSpecHtml;fbSpecHtml=function(){var h
   return h+(PAY.item('th_warm')?payHtml(['th_warm']).replace(/<h3>[^<]*<\/h3>/,'<h3>'+Lx('Оформление','Looks')+'</h3>'):'')+'<button class="a3m noenter" id="lkThL" onclick="THEME.open()">🎨 <b>'+Lx('Все оформления','All looks')+'</b> · '+Lx('бесплатные, за ролики и сезонные','free, for videos and seasonal')+' ›</button>';};}
 // a3PayIds не показывает тему в «Монетах» — и не надо: она в «Особом» и в ⚙
 apply();check(true);
+try{STAT.cfg({th:cur(),snd:S.sound===false?0:1,calm:S.calm===true?1:0});}catch(e){} // STAT v1.2: настройки сеанса → событие cfg
 try{if(document.getElementById('scr-map').classList.contains('on'))LOOK.bg(topPlace(),window.__todForce||todOf(hourNow()),'sun');}catch(e){}
 })();

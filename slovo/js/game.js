@@ -226,9 +226,9 @@ function submit(w){
   if(!dictReady()){ensureDict();flashPreview(w,'old');zina('Погоди, тетрадку со словами ищу… Скажи это слово ещё раз чуть позже.','norm');return;}
   if(isWord(w)){
     if(G.bonus.has(w)){flashPreview(w,'old');SND.old();zina(say('old'),'stern');return;}
-    G.bonus.add(w);const nd=collectDef(w);S.bonusAll=(S.bonusAll||0)+1;S.jar=(S.jar||0)+1;flashPreview(w+(nd?' 📖':''),'bonus');SND.bonus();buzz('word');
+    G.bonus.add(w);STAT.move();const nd=collectDef(w);S.bonusAll=(S.bonusAll||0)+1;S.jar=(S.jar||0)+1;flashPreview(w+(nd?' 📖':''),'bonus');SND.bonus();buzz('word');
     flyTo(w,$('hJar'));
-    if(S.jar>=JAR_SIZE){S.jar=0;setTimeout(()=>{addCoins(JAR_PRIZE);SND.coin();zina(say('jar')+' +'+JAR_PRIZE,'happy');const hj=$('hJar');hj.classList.remove('glow');void hj.offsetWidth;hj.classList.add('glow');
+    if(S.jar>=JAR_SIZE){S.jar=0;setTimeout(()=>{addCoins(JAR_PRIZE,'chest');SND.coin();zina(say('jar')+' +'+JAR_PRIZE,'happy');const hj=$('hJar');hj.classList.remove('glow');void hj.offsetWidth;hj.classList.add('glow');
       if(adsOk()&&G&&!G.won&&!$('modal').classList.contains('on'))jarFull(hj);},500);}
     else zina(say('bonus')+defNote(nd),'happy',nd?4.5:3.2);
     updJar();saveCur();return;
@@ -279,7 +279,7 @@ function foundWord(wd,byHint){
   const land=!byHint&&flyLetters(cs,nd?1.6:0);
   cs.forEach((c,i)=>{const t=land?land[i]:i*70;if(!c.open)openCell(c,t,byHint?'hint':null);else{setTimeout(()=>{c.el.classList.add('flash');setTimeout(()=>c.el.classList.remove('flash'),600);},t);}});
   const left=G.words.filter(w=>!w.found).length,half=!G.half&&(G.words.length-left)*2>=G.words.length&&left>1;if(half)G.half=true;
-  if(!byHint){SND.word(wd.w.length,G.combo);S.found=(S.found||0)+1;G.combo++;G.miss=0;
+  if(!byHint){STAT.move();SND.word(wd.w.length,G.combo);S.found=(S.found||0)+1;G.combo++;G.miss=0;
     const long=wd.w.length>=7;buzz(long?'long':'word');if(long)boardStamp(pick(['Молодец!','Пять с плюсом!','Вот это слово!']));
     const note=defNote(nd);
     if(G.tut){STAT.ev('tut',{s:3}); // обучение: первое слово
@@ -389,8 +389,8 @@ function jarFull(hj){let got=0;
   coinBurst($('mcard').querySelector('.reward'),JAR_PRIZE);
   $('jfOk').onclick=()=>{hideModal();SND.tap();};
   const x=$('jfX2');STAT.offer('jar');x.onclick=()=>{if(got||x.disabled)return;x.disabled=true;STAT.place('jar');
-    showRewarded(()=>{if(got)return;got=1;addCoins(JAR_PRIZE);SND.coin();x.textContent='✅ Получено: +'+JAR_PRIZE*2;coinBurst($('jfX2'),JAR_PRIZE);},()=>{if(!got)x.disabled=false;},
-      ()=>{if(got)return '';got=1;addCoins(JAR_PRIZE);SND.coin();if(document.body.contains(x)){x.disabled=true;x.textContent='✅ Получено: +'+JAR_PRIZE*2;}return 'держи монеты: +'+JAR_PRIZE;});};} // поздний зачёт (adt): монеты — всегда, один раз
+    showRewarded(()=>{if(got)return;got=1;addCoins(JAR_PRIZE,'ad');SND.coin();x.textContent='✅ Получено: +'+JAR_PRIZE*2;coinBurst($('jfX2'),JAR_PRIZE);},()=>{if(!got)x.disabled=false;},
+      ()=>{if(got)return '';got=1;addCoins(JAR_PRIZE,'ad');SND.coin();if(document.body.contains(x)){x.disabled=true;x.textContent='✅ Получено: +'+JAR_PRIZE*2;}return 'держи монеты: +'+JAR_PRIZE;});};} // поздний зачёт (adt): монеты — всегда, один раз
 function updJar(){const n=Math.max(0,Math.min(JAR_SIZE,S.jar||0)),c=$('jarCnt'),p=$('jarPg');c.textContent=n;c.classList.toggle('z',!n);
   if(p)p.setAttribute('stroke-dasharray',(n/JAR_SIZE*113.1).toFixed(1)+' 200');$('hJar').title='Банка бонусных слов: '+n+' из '+JAR_SIZE;}
 function showJar(){

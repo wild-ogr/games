@@ -36,7 +36,7 @@ function tmrHtml(){if(S.lv<LOGIN_FROM||!lgTaken())return '';
 function openLogin(then){
   if(!lgDue()){if(then)then();return;}
   const n=lgN(),amt=lgAmt(n),item=lgItem(n)&&!owned('s',skinOf('guest')),first=!S.lg;
-  S.lg={d:todayKey(),n:n+1};if(item){S.own=S.own||{};S.own['s:guest']=1;}addCoins(amt);cloudSoon(); // выдаём сразу: закрыл окно как угодно — подарок уже твой
+  S.lg={d:todayKey(),n:n+1};if(item){S.own=S.own||{};S.own['s:guest']=1;}addCoins(amt,'gift');cloudSoon(); // выдаём сразу: закрыл окно как угодно — подарок уже твой
   const k=n%LOGIN.length,cells=LOGIN.map((a,i)=>`<div class="wc${i===k?' now':''}${i<k?' got':''}"><small>${i+1}-й</small><b>${i<k?'✓':i===LOGIN.length-1&&n<LOGIN.length?'🍽️':'+'+a}</b></div>`).join('');
   modal(`<h2>🎁 Гостинец от бабы Зины</h2><div style="width:100px;height:100px;margin:2px auto">${zinaSVG('happy')}</div>
     <p>${first?'Кто ко мне заходит — без гостинца не уходит. Заходи каждый день: чем дальше, тем гостинец больше!':pick(['Пришёл! А я уж гостинец приготовила.','Опять ты! Ну держи, заслужил.','Каждый день заходишь — вот это внук! Держи.','Я знала, что придёшь. Кот — не верил.'])}</p>
@@ -60,10 +60,10 @@ function updGift(){const b=$('btnGift'),t=$('mTmr');if(!b)return;const lg=lgDue(
   // когда всё сегодняшнее забрано — строка «Завтра» (просто текст, не кнопка)
   if(t){const h=on?'':tmrHtml();t.innerHTML=h;t.style.display=h?'':'none';}}
 function takeGift(){const b=$('btnGift');if(!b||b.disabled)return;if(lgDue()){SND.tap();openLogin();return;}if(giftTaken())return;SND.tap();b.disabled=true;STAT.place('gift');
-  showRewarded(()=>{b.disabled=false;if(giftTaken()){updGift();return;}S.gift={d:todayKey()};addCoins(ECO.gift);SND.coin();updGift();
+  showRewarded(()=>{b.disabled=false;if(giftTaken()){updGift();return;}S.gift={d:todayKey()};addCoins(ECO.gift,'ad');SND.coin();updGift();
     $('mSay').textContent=pick(['Держи +'+ECO.gift+'! Из пенсии отложила. Завтра приходи — ещё припасу.','Вот тебе +'+ECO.gift+' на подсказки. Только не на семечки!']);},
     ()=>{b.disabled=false;},
-    ()=>{if(giftTaken())return '';S.gift={d:todayKey()};addCoins(ECO.gift);SND.coin();updGift();return 'держи подарок: +'+ECO.gift;});} // поздний зачёт (adt): подарок — всегда, если сегодня ещё не взят
+    ()=>{if(giftTaken())return '';S.gift={d:todayKey()};addCoins(ECO.gift,'ad');SND.coin();updGift();return 'держи подарок: +'+ECO.gift;});} // поздний зачёт (adt): подарок — всегда, если сегодня ещё не взят
 // значок + подпись; выключенное — другим значком и словом, а не прозрачностью
 function sndIcon(){$('btnSnd').innerHTML=(S.sound?'🔊':'🔇')+'<small>'+(S.sound?'Звук':'Без звука')+'</small>';
   $('btnMus').innerHTML=(S.music?'🎵':'🔕')+'<small>'+(S.music?'Музыка':'Без музыки')+'</small>';$('btnMus').classList.toggle('off',!S.music);$('btnSnd').classList.toggle('off',!S.sound);}
@@ -164,7 +164,7 @@ function finishLevel(g){
   // «Отличник» громко (печать и фраза) — в первый раз и потом каждый 5-й; остальные — значок у монет
   let exLoud=false;if(exc&&first){S.exAll=(S.exAll||0)+1;exLoud=S.exAll%5===1;}
   if(!g.daily&&first)S.lv=Math.max(S.lv,g.idx+1);
-  delete S.curs[g.key];addCoins(reward+chap);save();cloudSoon();
+  delete S.curs[g.key];addCoins(reward+chap,'lvl');save();cloudSoon();
   const rank1=rankName(wordsTotal()),rankUp=g.rank0&&rank1!==g.rank0?rank1:'';
   if(first)S.wins=(S.wins||0)+1;
   return {first,reward,base:reward-exBonus-sbonus-week,dw,isNew,streak,sbonus,exc,exBonus,exLoud,week,chap,dk,rankUp,test:first&&isTest(g.idx,g.daily)};
@@ -223,8 +223,8 @@ function winModal(g,r,again){
     go();};
   // кнопку блокируем сразу (двойной тап не даёт двойную награду); если реклама не удалась — возвращаем
   const x2=$('mX2');if(x2)STAT.offer('x2');if(x2)x2.onclick=()=>{if(r.x2||x2.disabled)return;x2.disabled=true;STAT.place('x2');
-    showRewarded(()=>{if(r.x2)return;r.x2=1;addCoins(Math.max(reward,ECO.x2min));SND.coin();x2.textContent='✅ Получено: +'+(reward+Math.max(reward,ECO.x2min));coinBurst(x2,Math.max(reward,ECO.x2min));},()=>{if(!r.x2)x2.disabled=false;},
-      ()=>{if(r.x2)return '';r.x2=1;const n=Math.max(reward,ECO.x2min);addCoins(n);SND.coin();if(document.body.contains(x2)){x2.disabled=true;x2.textContent='✅ Получено: +'+(reward+n);}return 'держи монеты: +'+n;});}; // поздний зачёт (adt)
+    showRewarded(()=>{if(r.x2)return;r.x2=1;addCoins(Math.max(reward,ECO.x2min),'ad');SND.coin();x2.textContent='✅ Получено: +'+(reward+Math.max(reward,ECO.x2min));coinBurst(x2,Math.max(reward,ECO.x2min));},()=>{if(!r.x2)x2.disabled=false;},
+      ()=>{if(r.x2)return '';r.x2=1;const n=Math.max(reward,ECO.x2min);addCoins(n,'ad');SND.coin();if(document.body.contains(x2)){x2.disabled=true;x2.textContent='✅ Получено: +'+(reward+n);}return 'держи монеты: +'+n;});}; // поздний зачёт (adt)
   const ak=$('mAsk');if(ak&&!again)STAT.ev('mod',{m:ask.soc?'soc':'ask',a:'of_'+ask.k});
   if(ak)ak.onclick=()=>{if(ak.disabled)return;ak.disabled=true;SND.tap();r.ask=null;STAT.ev('mod',{m:ask.soc?'soc':'ask',a:'ok_'+ask.k});
     ask.run().then(ok=>{toast(ok?ask.ok:'Ну и ладно, в другой раз!');}).catch(()=>{toast('Не получилось. Ничего, в другой раз.');});
@@ -248,8 +248,8 @@ function openChapFinale(g,r,nextI,again){r.chapSeen=1;
       <button class="btn ghost small" id="mCard">📤 Открытка «Я прошёл главу»</button></div>`);
   if(!again){SND.win();SND.coin();confetti();buzz('win');coinBurst($('mRew'),r.chap);}
   const cx=$('mChX2');if(cx)STAT.offer('chap');if(cx)cx.onclick=()=>{if(r.chx2||cx.disabled)return;cx.disabled=true;STAT.place('chap');
-    showRewarded(()=>{if(r.chx2)return;r.chx2=1;addCoins(r.chap);SND.coin();cx.textContent='✅ Получено: +'+r.chap*2;coinBurst(cx,r.chap);},()=>{if(!r.chx2)cx.disabled=false;},
-      ()=>{if(r.chx2)return '';r.chx2=1;addCoins(r.chap);SND.coin();if(document.body.contains(cx)){cx.disabled=true;cx.textContent='✅ Получено: +'+r.chap*2;}return 'держи монеты: +'+r.chap;});}; // поздний зачёт (adt)
+    showRewarded(()=>{if(r.chx2)return;r.chx2=1;addCoins(r.chap,'ad');SND.coin();cx.textContent='✅ Получено: +'+r.chap*2;coinBurst(cx,r.chap);},()=>{if(!r.chx2)cx.disabled=false;},
+      ()=>{if(r.chx2)return '';r.chx2=1;addCoins(r.chap,'ad');SND.coin();if(document.body.contains(cx)){cx.disabled=true;cx.textContent='✅ Получено: +'+r.chap*2;}return 'держи монеты: +'+r.chap;});}; // поздний зачёт (adt)
   $('mGo').onclick=()=>{hideModal();SND.tap();maybeInterstitial(()=>{if(nextI<0)openMenu();else startLevel(nextI);});};
   $('mCard').onclick=()=>shareChap(c,()=>openChapFinale(g,r,nextI,true));
 }
@@ -396,8 +396,13 @@ function bind(){
 function onReady(){
   bind();updCoins();
   // покупки (STAT): общий модуль PAY не трогаем — оборачиваем снаружи; «ok» — если payAfter получил id этой покупки
-  if(typeof PAY!=='undefined'){const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;STAT.ev('buy',{i:id,r:'try'});
-    return Promise.resolve(b0.call(PAY,id)).then(()=>STAT.ev('buy',{i:id,r:payOk===id?'ok':'cancel'}));};}
+  // STAT v1.2: buy {i, r: try|ok|cancel|fail, v: цена в голосах из PAY_ITEMS (= hobby-pay/catalog.json)}; fail — ошибка моста/SDK, cancel — отказ игрока
+  if(typeof PAY!=='undefined'){const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;
+    const it=PAY_ITEMS[id],v=it&&it.vk||0;let why='';STAT.ev('buy',{i:id,r:'try',v:v});
+    const cls=e=>{const d=e&&e.error_data||{},m=String(d.error_reason||d.error_msg||e&&e.message||e||'');return +d.error_code===4||/cancel|closed?|denied|abort|user/i.test(m)?'cancel':'fail';};
+    const wrap=(o,k,ok)=>{if(!o||typeof o[k]!=='function')return null;const f=o[k];o[k]=function(){return Promise.resolve(f.apply(o,arguments)).then(r=>{if(ok&&!ok(r))why='cancel';return r;},e=>{why=cls(e);throw e;});};return ()=>{o[k]=f;};};
+    const un=[wrap(PAY.v,'order',r=>r&&r.success),wrap(PAY.p,'purchase')];
+    return Promise.resolve(b0.call(PAY,id)).then(()=>{un.forEach(u=>u&&u());STAT.ev('buy',{i:id,r:payOk===id?'ok':why||'cancel',v:v});});};}
   const q=new URLSearchParams(location.search);
   if(q.has('lv'))startLevel(+q.get('lv')-1);
   else if(S.lv===0&&!S.tip.tut&&!SHOT){startLevel(0);if(!S.tip.intro)openIntro();} // новичок — знакомство и сразу первый уровень (обучение), меню — потом
