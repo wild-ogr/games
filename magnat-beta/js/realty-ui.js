@@ -331,5 +331,5 @@ function init(){css();screen();hookAdv();
   entries();}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
-window.REALTY_UI={open,render,newsText,entries,openObj,openBuy};
+window.REALTY_UI={open,render,newsText,entries,openObj,openBuy,navKey:s=>s==='re'?ST.tab||'':''};   // M37: navKey — подвид для памяти прокрутки
 })();

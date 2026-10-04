@@ -199,7 +199,7 @@ function claimAll(){const p=GAME.plan();let n=0,dec='';if(!p.got){n+=GAME.planGi
 function allBtn(c,cls){return `<button class="mt-btn go noenter${cls||''}" data-mt="all">${T('Забрать всё','Take all')}${c.n?' +'+cr(c.n):''}</button>`;}
 function planLine(){const p=GAME.plan(),ts=p.t||[],done=ts.filter(t=>t.ok==='got').length,c=claimable();
   return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">📋 <b>${T('Планёрка','Morning meeting')}</b>: ${c.k?`<b>${c.n?cr(c.n):'🎁'}</b> ${T('ждут','waiting')} · `:''}${T('поручения','tasks')} ${done} ${T('из','of')} ${ts.length}</span>${c.k?allBtn(c):`<button class="mt-btn noenter" data-mt="plan">${T('Открыть','Open')}</button>`}</div>${p.got&&ad()&&GAME.planX2Ok()?`<div class="mt-row"><span class="mt-f1 mt-mut">🎁 ${T('Подарок получен','Gift received')}${p.gv?': +'+cr(p.gv):''}</span><button class="mt-btn x2 noenter" data-mt="x2">${p.gv?x2Lbl(p.gv,p.gv+giftE(p)):'📺 +'+cr(giftE(p))+' '+T('за рекламу','for an ad')}</button></div>`:''}</div>`;}
-function html(m){if(early())return planMini();if(m==='mini')return planLine()+hintCard();if(m==='rest')return perkCard()+passCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard()+shopCard();const x=shopCard()+hintCard();return perkCard()+passCard()+planCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard()+x;}
+function html(m){if(early())return planMini();if(m==='mini')return planLine()+hintCard();if(m==='mini2')return planLine()+hintCard()+shopCard();if(m==='rest2')return perkCard()+passCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard();/* M38: «Сегодня» глав 1–2 — Планёрка строкой + разовые карточки магазина */if(m==='rest')return perkCard()+passCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard()+shopCard();const x=shopCard()+hintCard();return perkCard()+passCard()+planCard()+qgCard()+milesCard()+cabCard()+boostCard()+starterCard()+x;}
 /* ---------- M36: магазин открылся (П1) и мягкие подсказки Людмилы/друзей (П2) — карточки на «Сегодня», не окна ---------- */
 const ask=()=>{if(!S.ask||typeof S.ask!=='object')S.ask={};return S.ask;};
 const payOn=()=>{try{return typeof PAY!=='undefined'&&PAY.on;}catch(e){return false;}};
@@ -372,7 +372,7 @@ document.addEventListener('click',()=>{if(!ipoQ.arm)return;ipoQ.arm=0;const mc=$
   // не стопкой: окно ответа Бориса прячем, после короткой паузы (0,8 с) — «Доля основателя»; сам ответ Бориса — не раньше чем через 2 минуты
   ipoQ.boris=mc.innerHTML;ipoQ.perks=1;ipoQ.borisT=Date.now()+120000;hideModal();
   const go=()=>{if(modalOn){setTimeout(go,600);return;}openPerks();};setTimeout(go,800);},false);
-function calmNow(){if(modalOn||(typeof paused!=='undefined'&&paused)||document.hidden)return false;try{if(GAME.hold&&GAME.hold.size)return false;}catch(e){}
+function calmNow(){if((typeof winCalm==='function'&&!winCalm())||modalOn||(typeof paused!=='undefined'&&paused)||document.hidden)return false;try{if(GAME.hold&&GAME.hold.size)return false;}catch(e){}
   const a=$m('ad');return !(a&&a.classList.contains('on'));}
 function borisLater(){if(!ipoQ.boris||Date.now()<ipoQ.borisT||!calmNow())return;const h=ipoQ.boris;ipoQ.boris='';modal(h);
   const c=$m('mcard');c&&c.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{snd('tap');close();});}

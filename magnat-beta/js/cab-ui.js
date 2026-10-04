@@ -36,8 +36,9 @@ function css(){if(cssOn)return;cssOn=true;const s=document.createElement('style'
 .cb-btn[disabled]{opacity:.55;cursor:default}
 .cb-say{font-size:16px;color:var(--muted,#5a6675);margin:2px 0 4px;font-style:italic}
 .cb-now{font-size:22px;letter-spacing:2px;line-height:1.2}
-#rkBtn{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:44px;margin:0 10px 0 0;padding:0 10px;border-radius:14px;border:0;background:var(--hd-btn,#eef1f4);color:var(--gold,#b8860b);font:inherit;font-weight:800;font-size:18px;white-space:nowrap;cursor:pointer}
-body.th-office #rkBtn,body.th-90s #rkBtn{color:#ffd66b}
+#rkBtn{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:44px;margin:0 10px 0 0;padding:0 10px;border-radius:14px;border:0;background:var(--hd-btn,#eef1f4);color:var(--hd-ink,var(--ink,#1d2733));font:inherit;font-weight:800;font-size:18px;white-space:nowrap;cursor:pointer}
+.cb-new{background:var(--accent-t,#eaefff);border-radius:16px;padding:10px 14px;margin:0 0 10px}.cb-new ul{margin:6px 0 0;padding-left:4px;list-style:none}.cb-new li{margin:4px 0;font-size:16px}.cb-new small{font-size:15px;color:var(--ink2)}
+#rkBtn .rkS{color:var(--gold,#b8860b);margin-right:2px}body.th-office #rkBtn{color:#ffd66b}body.th-office #rkBtn .rkS{color:#ffd66b}body.th-90s #rkBtn{color:var(--hd-ink,#1d2733)}
 #rkBtn i{position:absolute;right:2px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--bad,#c62828);display:none}
 #rkBtn.dot i{display:block}
 .cb-top{text-align:center;margin:0 0 8px}
@@ -323,7 +324,9 @@ function top(){const rk=S.rk|0,n=GAME.stars().n,nx=GAME.RK[rk+1];
 function open(t,from){css();if(t)tab=t;if(!GAME.W)return;slotOpen='';if(tab==='wall')GAME.wallSeen();if(tab==='lx'){const sn=S.lxSeen&&typeof S.lxSeen==='object'?S.lxSeen:(S.lxSeen={});for(const x of lxList())if(st(x.id).st==='sale')sn[x.id]=1;}
   try{STAT.ev('cab',{t:tab,f:from||'x'});}catch(e){}
   const body=tab==='wall'?tabWall():tab==='rk'?tabRk():tabLx();
-  modal(`<h2>🏛 ${T('Кабинет','Office')}</h2>${top()}<div class="cb-tabs"><button class="noenter${tab==='lx'?' on':''}" data-cb="tab:lx">🛍 ${T('Вещи','Things')}</button><button class="noenter${tab==='wall'?' on':''}" data-cb="tab:wall">🖼 ${T('Стена почёта','Wall of fame')}</button><button class="noenter${tab==='rk'?' on':''}" data-cb="tab:rk">★ ${T('Звания','Ranks')}</button>${window.FRUI?`<button class="noenter" data-cb="fr">👥 ${T('Друзья','Friends')}</button>`:''}</div>
+  // M38: мелкие награды (звания) — списком «Новое» вверху Кабинета; увидели — список очищается
+  let nw='';if(Array.isArray(S.rwNew)&&S.rwNew.length){nw=`<div class="cb-new"><b>🆕 ${T('Новое','New')}</b><ul>${S.rwNew.slice().reverse().map(x=>`<li>${x.ico||'🎖'} ${esc(x.title)}${x.cr?' · +'+x.cr+' 💎':''}${x.lines&&x.lines.length?'<br><small>'+x.lines.join('<br>')+'</small>':''}</li>`).join('')}</ul></div>`;S.rwNew=[];try{save();}catch(e){}}
+  modal(`<h2>🏛 ${T('Кабинет','Office')}</h2>${nw}${top()}<div class="cb-tabs"><button class="noenter${tab==='lx'?' on':''}" data-cb="tab:lx">🛍 ${T('Вещи','Things')}</button><button class="noenter${tab==='wall'?' on':''}" data-cb="tab:wall">🖼 ${T('Стена почёта','Wall of fame')}</button><button class="noenter${tab==='rk'?' on':''}" data-cb="tab:rk">★ ${T('Звания','Ranks')}</button>${window.FRUI?`<button class="noenter" data-cb="fr">👥 ${T('Друзья','Friends')}</button>`:''}</div>
     <div id="cbBody" style="--wf:${(GAME.cosCur('wf')||{c:'#8d5a2b'}).c}">${body}</div><div class="row"><button class="btn" id="cbClose" data-esc="1">${T('Закрыть','Close')}</button></div>`);
   try{modalRe=()=>open();}catch(e){}bind();badge();}
 function sub(html,re){css();modal(`<div style="--wf:${(GAME.cosCur('wf')||{c:'#8d5a2b'}).c}">${html}</div>`);try{modalRe=re;}catch(e){}bind();}
@@ -355,7 +358,7 @@ function badge(){css();let b=$c('rkBtn');const hn=$c('hName');if(!hn)return;
   if(!b){b=document.createElement('button');b.id='rkBtn';b.className='noenter';b.setAttribute('aria-label',T('Кабинет и звание','Office and rank'));b.onclick=e=>{e.stopPropagation();snd('tap');open(pend().length?'rk':tab,'hdr');};
     // во второй строке шапки, между деньгами и полосой месяца: в первой строке кнопок уже много — на 360–390 px пропало бы название главы
     const hm=document.querySelector('#hdr .hmon');if(hm&&hm.parentNode)hm.parentNode.insertBefore(b,hm);else hn.parentNode.insertBefore(b,hn.nextSibling);}
-  crack();const rk=(S.rk|0)+1,dot=(S.wN|0)>0||pend().length>0||saleNow(),t='★ '+rk+'<i></i>';if(b.innerHTML!==t)b.innerHTML=t;b.classList.toggle('dot',dot);}
+  crack();const rk=(S.rk|0)+1,dot=(S.wN|0)>0||pend().length>0||saleNow()||(Array.isArray(S.rwNew)&&S.rwNew.length>0),t='<span class="rkS">★</span> '+rk+'<i></i>';if(b.innerHTML!==t)b.innerHTML=t;b.classList.toggle('dot',dot);}
 function crack(){try{const w=W();document.body.classList.toggle('cb-crack',!!w&&E.luxCur(w,'phone').id==='ph0');}catch(e){}}
 function pulseBadge(){const b=$c('rkBtn');if(b&&window.UI&&UI.pulse)try{UI.pulse(b);}catch(e){}badge();}
 // есть что купить прямо сейчас (новая вещь в продаже и хватает денег по правилу Людмилы) — точка на ★
@@ -406,7 +409,7 @@ function stat(o,a,c){try{STAT.ev('rw',{k:o.k,a,c:c==null?o.cr||0:c});}catch(e){}
 /* ---------- очередь наград REWQ ---------- */
 function pend(){const o=[];if((S.rk|0)>(S.rkG|0))o.push({k:'rk'});for(const k in (S.col||{}))if(S.col[k]&&!(S.colG&&S.colG[k]))o.push({k:'col',id:k});
   if(S.wkR&&!S.wkR.got)o.push({k:'wk'});return o;}
-function quiet(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
+function quiet(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof winCalm==='function'&&!winCalm())return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
   try{if(GAME.hold&&GAME.hold.size)return false;}catch(e){}const a=$c('adv');if(a&&a.classList.contains('on'))return false;const d=$c('ad');if(d&&d.classList.contains('on'))return false;
   try{if(window.BIZUI&&BIZUI.tutStep&&BIZUI.tutStep())return false;}catch(e){}try{if(window.UI&&UI.tutStep&&UI.tutStep())return false;}catch(e){}
   if(window.PHONE&&PHONE.isOpen)return false;return true;}
@@ -426,6 +429,9 @@ function flush(){let p=pend();if(!p.length)return;let rkSoc=false;const q=a=>T('
     for(const id of r.cos){const c=GAME.COS.find(y=>y.id===id);if(c&&c.k==='wf')GAME.cosSel('wf',id);else if(c&&!GAME.cosCur(c.k))GAME.cosSel(c.k,id);}
     try{if(window.META&&META.applyCos)META.applyCos();}catch(e){}}
   if(!parts.length)return;const k=parts.length>1?'multi':parts[0];if(k==='multi'){title=T('Сегодня у вас','Today you’ve got');ico='🎉';}
+  // M38 (a45): мелкая награда (звание без «Магната», < 20 💎) — без окна: короткий тост и список «Новое» в Кабинете (★ с точкой)
+  if(k==='rk'&&!rkSoc&&sum<20){const it={t:Date.now(),ico,title,cr:sum,lines};S.rwNew=(Array.isArray(S.rwNew)?S.rwNew:[]).concat([it]).slice(-6);
+    try{save();}catch(e){}snd('coin');toast('🎖 '+title+(sum?' · +'+sum+' 💎':'')+' — '+T('в Кабинете ★','in the Office ★'));stat({k:'rk',cr:sum},'cab');lastRw=Date.now()-60000;badge();pulseBadge();return;}
   if(!calmMode())try{UI.salute(true);}catch(e){}snd('win');
   show({k,ico,title,cr:sum,lines,soc:rkSoc?'rank':''});badge();}
 let ipoT=0;   // M30: после IPO окно звания — не сразу (через 3 минуты), чтобы не было стопки окон

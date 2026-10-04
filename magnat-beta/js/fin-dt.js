@@ -273,7 +273,7 @@ const CSS=`
 .an-p .bar i.neg{background:var(--bad,#c62828)}
 .an-x{padding:4px 12px 12px;font-size:16px;background:var(--bg,#f5f6f8)}
 .an-x .tx-r{font-size:16px}
-.an-m{display:flex;align-items:flex-end;height:64px;margin:8px 0 2px}.an-m div{flex:1;margin:0 2px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:64px;font-size:12px;color:var(--muted,#5a6675)}
+.an-m{display:flex;align-items:flex-end;height:64px;margin:8px 0 2px}.an-m div{flex:1;margin:0 2px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:64px;font-size:14px;color:var(--muted,#5a6675)}
 .an-m i{display:block;width:100%;background:var(--good,#2e7d32);border-radius:3px 3px 0 0;min-height:2px}.an-m i.neg{background:var(--bad,#c62828)}
 .an-say{display:flex;align-items:flex-start;margin:0 0 10px}.an-say .ph{flex:none;width:56px;height:56px;margin-right:10px}.an-say .ph svg{width:56px;height:56px}
 .an-say div.tx2{flex:1;font-size:17px;line-height:1.4;background:var(--card,#fff);border:1px solid var(--line,#d5dbe2);border-radius:12px;padding:10px 12px}
@@ -369,7 +369,7 @@ function advList(w){const a=[],ps=pts(w).map(b=>ptData(w,b));
     ups.sort((p,q)=>p.g.pay-q.g.pay);for(const u of ups.slice(0,2)){const ok=E.ptUpOk(w,u.x.b.id)==='ok';
       a.push({t:L(`Улучшить «${ptName(w,u.x.b.id)}» до уровня ${u.g.x.n}: стоит ${M(u.g.x.c)}, даст ≈ +${M(u.g.g)} в месяц — окупится за ${pn(Math.ceil(u.g.pay),'месяц','месяца','месяцев','','')}.`,`Upgrade “${ptName(w,u.x.b.id)}” to level ${u.g.x.n}: costs ${M(u.g.x.c)}, adds ≈ +${M(u.g.g)} a month — pays back in ${Math.ceil(u.g.pay)} months.`),
         k:ok?L('Денег хватает — улучшение в карточке точки.','You can afford it — the upgrade is in the outlet card.'):L('Пока не хватает денег — отложите на это.','Not enough cash yet — save up for it.')});}}
-  for(const x of ps.filter(x=>x.b.mgr&&x.b.mp>0&&x.last<0).slice(0,1))a.push({t:L(`«${ptName(w,x.b.id)}» в минусе даже без учёта износа, а управляющему уходит ${M(x.b.mp)} в месяц.`,`“${ptName(w,x.b.id)}” loses money even before wear, and the manager takes ${M(x.b.mp)} a month.`),k:L('Возьмите точку на себя (если есть свободные руки) или смените управляющего.','Run it yourself (if you have free hands) or change the manager.')});
+  for(const x of ps.filter(x=>x.b.mgr&&x.b.mp>0&&x.last<0).slice(0,1))a.push({t:L(`«${ptName(w,x.b.id)}» в минусе даже без учёта износа, а управляющему уходит ${M(x.b.mp)} в месяц.`,`“${ptName(w,x.b.id)}” loses money even before wear, and the manager takes ${M(x.b.mp)} a month.`),k:L('Возьмите точку на себя (если есть свободное время) или смените управляющего.','Run it yourself (if you have free hands) or change the manager.')});
   if(E.taxAdv&&w.ip&&!w.ned&&(w.taxm==='usn6'||w.taxm==='usn15')){try{const t=E.taxAdv(w),cur=w.taxm==='usn6'?t.u6:t.u15,oth=w.taxm==='usn6'?t.u15:t.u6;if(t.best!==w.taxm&&cur-oth>12000)
     a.push({t:L(`Налог: по прогнозу на год ${w.taxm==='usn6'?'УСН 15 %':'УСН 6 %'} выйдет на ${M(cur-oth)} дешевле (${M(oth)} против ${M(cur)}).`,`Tax: for the year ${w.taxm==='usn6'?'15%':'6%'} simplified tax would be ${M(cur-oth)} cheaper (${M(oth)} vs ${M(cur)}).`),k:E.taxOk&&E.taxOk(w)?L('Сменить можно сейчас — в карточке ИП.','You can switch now — in the sole-trader card.'):L('Сменить можно раз в год, в январе.','You can switch once a year, in January.')});}catch(e){}}
   return a;}

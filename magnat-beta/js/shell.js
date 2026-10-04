@@ -223,7 +223,7 @@ const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':
 // бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta3' (бета-1 — 'beta1', бета-2 — 'beta2'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta6':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta7':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
   if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
@@ -456,7 +456,7 @@ async function initVK(){
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
       else if(t==='VKWebAppViewRestore')setPause('hide',false);});
     await cloudLoad();
-    vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{});
+    adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
   }catch(e){VK=null;}
   clearTimeout(safety);PAY.init();updCr();sdkReady();}
 async function initSDK(){
@@ -525,22 +525,55 @@ let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=2;
 let AD_FROM=5,AD_OFF=0;
 function adFrom(){return AD_FROM;}
 function adOffOn(){return AD_OFF===1;}
+/* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще всего на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
+   1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе 'ad', нажать ничего нельзя);
+   2) снова нет → не ошибка, а «Ролик будет через несколько секунд…»; кнопки «📺 … за рекламу» (adBtns) гаснут, игра в фоне раз в AD_POLL_MS спрашивает VK (Check);
+      VK ответил «готов» (но не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS.
+      Нажатие по погасшей кнопке VK не дёргает — только «ещё загружается» (adHold() — для кнопок, которые до показа закрывают своё окно).
+   3) заранее: Check при запуске и после каждого показа; VK сказал «не готов» — переспрашиваем в фоне (до 6 раз).
+   Ответу Check «не готов» как запрету не верим (бывает ложным) — кнопку из-за него не гасим. Автоповтор — только на «ролика нет», не на закрытый ролик.
+   Награда — по-прежнему только за досмотр (result:true / onRewarded) и один раз (paid). Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора.
+   Яндекс: только фраза и пауза кнопок после onError. APK и межэкранная не тронуты. Образец — «Богатырь» (hobby-analytics/release-f/ads-fail.md, «ОБРАЗЕЦ»);
+   отличия Магната: adReady() здесь занято межэкранной → adVidReady(); общего класса у рекламных кнопок нет → adBtns() по значку 📺 в тексте кнопки; тексты на «вы». */
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='button:not(.shop-tab)';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
+function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
+function adStill(){return L('Ролик ещё загружается — подождите несколько секунд','The video is still loading — please wait a few seconds');}
+function adHold(){if(Date.now()<adCoolT){toast(adStill());return true;}return false;} // идёт пауза кнопок: сказать и ничего не делать
+function adBtns(){const r=[];try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].dataset.adc||(q[i].textContent||'').indexOf('📺')>=0)r.push(q[i]);}catch(e){}return r;} // значки icons.js оставляют 📺 в textContent
+// подгрузка ролика заранее; «не готов» — переспросить n раз (каждые AD_POLL_MS); «готов» во время паузы кнопок — зажечь их
+function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(r&&r.result)adVidReady();else again();},again);}
+function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adWait(on){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
+  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.74);color:#fff;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
+  w.textContent=L('Ролик загружается…','Loading the video…');w.style.display='flex';}
+// кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду); метка data-adc — чтобы вернуть яркость только своим
+function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT,q=adBtns();for(let i=0;i<q.length;i++){if(off){q[i].style.opacity='.45';q[i].dataset.adc='1';}else if(q[i].dataset.adc){q[i].style.opacity='';delete q[i].dataset.adc;}}if(off)adDimT=setTimeout(adDim,1000);}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
 let adBusy=false;
 function showRewarded(cb0,onFail0){
-  if(adBusy)return;adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;},90000);
+  if(adBusy)return;
+  if(adHold()){if(onFail0)onFail0();adDim();return;} // onFail мог перерисовать окно — сразу гасим заново открытые кнопки
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},135000);
   if(adRewLeft()<=0){adBusy=false;toast(L('Ролики за награду на сегодня закончились — завтра будут снова','No more reward videos today — back tomorrow'));onFail0&&onFail0();return;}
-  const cb=()=>{adBusy=false;lastAdT=Date.now();adRewLeft();S.adR.n=(S.adR.n|0)+1;S.adTot=(S.adTot|0)+1;if(AD_REW_DAY&&S.adR.n===AD_REW_DAY)STAT.ev('adcap',{});try{save();}catch(e){}cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
+  let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();adRewLeft();S.adR.n=(S.adR.n|0)+1;S.adTot=(S.adTot|0)+1;if(AD_REW_DAY&&S.adR.n===AD_REW_DAY)STAT.ev('adcap',{});try{save();}catch(e){}cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
   if(PLAT==='apk'){const A=apkAds();if(A&&A.rewarded){adOpen();A.rewarded(ok=>{adClose();STAT.ad('rew',ok?'ok':'fail','apk');if(ok)cb();else{toast(adFail());onFail();}});}else if(!APK_REAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail','noapk');toast(adFail());onFail();}return;}
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(adFail());onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000)
-      .then(r=>{adClose();if(r&&r.result){STAT.ad('rew','ok');cb();}else{STAT.ad('rew','fail','noresult');toast(adFail());onFail();}})
-      .catch(e=>{adClose();STAT.ad('rew','err',e&&e.error_data&&e.error_data.error_code);toast(adFail());onFail();})
-      .then(()=>vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).catch(()=>{}));return;} // без .finally — старые WebView
+  if(VK){let tries=0;
+    const go=()=>{adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000).then(r=>{adClose();
+        if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'');adPreload();cb();}else{STAT.ad('rew','fail','noresult');toast(adFail());adPreload();onFail();}
+      },e=>{
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
+        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e));toast(adFail());adPreload();}
+        onFail();adDim();});};
+    go();return;}
   if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(L('Досмотрите видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
-    onError:()=>{adClose();STAT.ad('rew','err');toast(adFail());onFail();}}});
+    onError:()=>{adClose();STAT.ad('rew','err');toast(adFail());adCool();onFail();adDim();}}});
 }
 function adPlat(){return !(PLAT==='vk'&&!VK&&VK_REAL)&&!(PLAT==='apk'&&APK_REAL&&!apkAds());}   // площадка умеет рекламу (мост/SDK)
 // общий дневной предел роликов за награду: 0 — нет предела (решение владельца 01.10: убрали 20 в день). M31: и у мест дневных лимитов нет — паузы мест GAME.adWait (game.js AD_GAP), лесенка + бонус-ролики. S.adR — счёт роликов дня (для STAT)
@@ -837,14 +870,50 @@ const LB={
 const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const calm=()=>S.calm===true||RM;
 let modalOn=false,modalRe=null; // modalRe — функция, которая перерисует открытое окно (смена языка)
-function toast(t,ms){if(LANG==='en'&&TOAST_EN[t])t=TOAST_EN[t];const e=$('toast');if(!e)return;e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
-  const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*String(t).length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
+// M38 (a45, игрок 45+): тост — не дольше 2 с, на месте нижнего меню (не поверх читаемого текста), при открытом окне — в очередь
+// (покажется после закрытия; ответ на своё нажатие в окне — сразу, внизу); очередь — не больше 3, одинаковые не повторяются
+let tapT=0;try{document.addEventListener('pointerdown',()=>{tapT=Date.now();},{passive:true,capture:true});}catch(e){}
+function toast(t,ms){if(LANG==='en'&&TOAST_EN[t])t=TOAST_EN[t];const e=$('toast');if(!e||!t)return;
+  if(modalOn&&Date.now()-tapT>700){const q=toast.q||(toast.q=[]);const i=q.indexOf(t);if(i>=0)q.splice(i,1);q.push(t);if(q.length>3)q.shift();return;}
+  e.textContent=t;e.classList.add('on');clearTimeout(toast._t);toast.at=Date.now();
+  const d=ms&&ms<2000?ms:2000;toast._t=setTimeout(()=>{e.classList.remove('on');if(toast.q&&toast.q.length)setTimeout(toastNext,350);},d);}
+function toastNext(){if(modalOn||!toast.q||!toast.q.length)return;const e=$('toast');if(e&&e.classList.contains('on'))return;toast(toast.q.shift());}
 // окно = нижний лист на телефоне (css: .modal/#mcard); role=dialog, фокус внутрь окна и обратно
 let mFocus=null;
-function hideModal(){const m=$('modal');if(m)m.classList.remove('on');modalOn=false;modalRe=null;YG.start();
+// M38 (a45): одно окно за раз — окна, которые игра открывает сама (награды, сцены, торги), ждут WIN_GAP после закрытия прошлого окна
+// (в проверке check.py с помощником __chk — без паузы, если не задано window.__winGap)
+// M38 (a45): пауза «читаю» — человек сам листает экран (палец, колесо, клавиши) — игровое время стоит ещё READ_MS после последнего листания
+// (GAME.hold 'read'; офлайн и симуляторы не задевает: S.lastT идёт всегда, модель та же). Программная прокрутка паузу не ставит.
+const READ_MS=6000;(function(){let inT=0,rdT=null;const mark=()=>{inT=Date.now();};
+  try{for(const ev of ['touchmove','wheel','keydown'])document.addEventListener(ev,mark,{passive:true,capture:true});
+    document.addEventListener('scroll',()=>{if(Date.now()-inT>1200||S.readP===false)return;let G=null;try{G=GAME;}catch(e){}if(!G||!G.hold)return;
+      G.hold.add('read');clearTimeout(rdT);rdT=setTimeout(()=>{try{G.hold.delete('read');}catch(e){}},READ_MS);},{passive:true,capture:true});}catch(e){}})();
+let mCloseT=0;function winCalm(){const g=window.__winGap!=null?window.__winGap:(window.__chk?0:5000);return !modalOn&&Date.now()-mCloseT>=g;}
+/* M37: память прокрутки окон. Цепочка окон одного показа (до hideModal + 0,6 с) — стек {s:подпись, y, my, n}; подпись — data-nav или заголовок h2 + выбранная вкладка + начало первого абзаца (без цифр).
+   Новое окно с подписью из стека — это «назад» (или перерисовка того же окна): позиция, где был; иначе — вперёд, сверху. Вложенные прокрутки (.lb и т. п.) — тоже. */
+let mNav=[],mNavT=0;
+// поставить прокрутку и подержать её ~0,2 с: после перерисовки бывают поздние вставки (✕ окна через 30 мс, плашки, недвижимость), и «якорение» браузера сдвигает позицию; палец/колесо — отпускаем
+function scrollPin(el,y){if(!el)return;const t=el._pin=(el._pin|0)+1,re=()=>{if(el._pin===t&&Math.abs(el.scrollTop-y)>1)el.scrollTop=y;};el.scrollTop=y;if(!y)return;
+  Promise.resolve().then(re);try{requestAnimationFrame(()=>{re();setTimeout(re,60);setTimeout(re,160);setTimeout(re,260);});}catch(e){setTimeout(re,60);}}
+// кто-то прокручивает сам (подсветка обучения, «к событию») — его прокрутка главнее удержания
+try{const siv=Element.prototype.scrollIntoView,sto=Element.prototype.scrollTo;
+  if(siv)Element.prototype.scrollIntoView=function(){let p=this.parentNode;while(p&&p.nodeType===1){if(p._pin)p._pin++;p=p.parentNode;}return siv.apply(this,arguments);};
+  if(sto)Element.prototype.scrollTo=function(){if(this._pin)this._pin++;return sto.apply(this,arguments);};}catch(e){}
+['wheel','touchstart','pointerdown','keydown'].forEach(k=>document.addEventListener(k,e=>{let p=e.target;while(p&&p.nodeType===1){if(p._pin)p._pin++;p=p.parentNode;}const m=document.getElementById('main'),c=document.getElementById('mcard');if(m&&m._pin&&k!=='pointerdown')m._pin++;if(c&&c._pin&&k!=='pointerdown')c._pin++;},{capture:true,passive:true}));
+function mSig(c){const d=c.querySelector('[data-nav]');if(d)return d.getAttribute('data-nav');const h=c.querySelector('h2')||c.querySelector('h3');let s=h?h.textContent:'';
+  const t=c.querySelector('[role="tab"][aria-selected="true"],.shop-tab.on,.f-tab.on');if(t)s+='|'+t.textContent;const p=c.querySelector('p');if(p)s+='|'+p.textContent.slice(0,60);   // абзац: шаги сюжета с тем же заголовком — разные окна (сверху)
+  return s.replace(/[0-9\s.,:+\u2212%()₽-]+/g,'').slice(0,140);}
+function mNest(c){const n={};try{const all=c.querySelectorAll('*');for(let i=0;i<all.length;i++){const e=all[i];if(e.scrollTop||e.scrollLeft){const sel=e.id?'#'+e.id:e.classList.length?'.'+e.classList[0]:'';if(!sel)continue;const l=c.querySelectorAll(sel);let j=0;while(j<l.length&&l[j]!==e)j++;n[sel+'|'+j]=[e.scrollLeft,e.scrollTop];}}}catch(e){}return n;}
+function mKeep(){const m=$('modal'),c=$('mcard'),e=mNav[mNav.length-1];if(!e||!c)return;e.y=c.scrollTop;e.my=m?m.scrollTop:0;e.n=mNest(c);}
+function mPlace(m,c){const s=mSig(c);let i=-1;if(s)for(let j=mNav.length-1;j>=0;j--)if(mNav[j].s===s){i=j;break;}
+  if(i<0){mNav.push({s,y:0,my:0,n:{}});if(mNav.length>20)mNav.shift();c.scrollTop=0;m.scrollTop=0;return;}
+  const e=mNav[i];mNav.length=i+1;scrollPin(c,e.y);if(e.my)scrollPin(m,e.my);else m.scrollTop=0;
+  for(const k in e.n){const p=k.split('|'),x=c.querySelectorAll(p[0])[+p[1]];if(x){x.scrollLeft=e.n[k][0];x.scrollTop=e.n[k][1];}}}
+function hideModal(){if(modalOn){try{mKeep();}catch(e){}mNavT=Date.now();}const m=$('modal');if(m)m.classList.remove('on');modalOn=false;document.body.classList.remove('mon');mCloseT=Date.now();modalRe=null;YG.start();setTimeout(toastNext,400);
   try{const c=$('mcard');if(c)c.style.transform='';if(mFocus&&document.contains(mFocus)&&mFocus.focus)mFocus.focus({preventScroll:true});}catch(e){}mFocus=null;}
 function modal(html){PAY.re=null;modalRe=null;const m=$('modal'),c=$('mcard');if(!m||!c)return;const was=modalOn;if(!was)mFocus=document.activeElement;
-  c.innerHTML=html;c.style.transform='';m.classList.add('on');m.classList.toggle('re',was);modalOn=true;c.scrollTop=0;m.scrollTop=0;YG.stop();
+  try{if(was)mKeep();else if(Date.now()-mNavT>600)mNav=[];}catch(e){mNav=[];}
+  c.innerHTML=html;c.style.transform='';m.classList.add('on');m.classList.toggle('re',was);modalOn=true;document.body.classList.add('mon');try{mPlace(m,c);}catch(e){c.scrollTop=0;m.scrollTop=0;}YG.stop();
   try{c.setAttribute('role','dialog');c.setAttribute('aria-modal','true');const h=c.querySelector('h2');if(h){if(!h.id)h.id='mTitle';c.setAttribute('aria-labelledby',h.id);}else c.removeAttribute('aria-labelledby');c.tabIndex=-1;c.focus({preventScroll:true});}catch(e){}}
 function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
 
@@ -863,10 +932,10 @@ function setLang(l){l=normLang(l);if(IS_VK)l='ru';if(l===LANG)return;LANG=l;appl
 /* ================= настройки, покупки, «Об игре» ================= */
 function openSave(){const code=(()=>{try{return btoa(unescape(encodeURIComponent(JSON.stringify(sOut()))));}catch(e){return '';}})();
   modal(`<h2>💾 ${L('Сохранение','Save')}</h2><p class="about">${L('Игра сохраняется сама на этом устройстве'+(PLAT==='apk'?'':' и в облаке площадки')+'. Чтобы перенести холдинг на другое устройство — скопируйте код и вставьте его там.','The game saves itself on this device'+(PLAT==='apk'?'':' and in the platform cloud')+'. To move your holding to another device, copy the code and paste it there.')}</p>
-    <textarea id="svCode" rows="4" style="width:100%;font-size:13px;border-radius:12px;padding:8px" readonly>${code}</textarea>
+    <textarea id="svCode" rows="4" style="width:100%;font-size:14px;border-radius:12px;padding:8px" readonly>${code}</textarea>
     <div class="row"><button class="btn noenter" id="svCopy">📋 ${L('Скопировать','Copy')}</button></div>
     <p class="about">${L('Загрузить сохранение (текущий холдинг будет заменён):','Load a save (your current holding will be replaced):')}</p>
-    <textarea id="svIn" rows="3" style="width:100%;font-size:13px;border-radius:12px;padding:8px" placeholder="${L('вставьте код','paste the code')}"></textarea>
+    <textarea id="svIn" rows="3" style="width:100%;font-size:14px;border-radius:12px;padding:8px" placeholder="${L('вставьте код','paste the code')}"></textarea>
     <div class="row"><button class="btn noenter" id="svLoad">⬆️ ${L('Загрузить','Load')}</button><button class="btn" id="svBack" data-esc>${L('← Назад','← Back')}</button></div>`);
   $('svCopy').onclick=()=>{const t=$('svCode');t.select();try{navigator.clipboard?navigator.clipboard.writeText(t.value).then(()=>toast(L('Код скопирован','Code copied'))):document.execCommand('copy');}catch(e){}};
   $('svLoad').onclick=()=>{let d=null;try{d=wIn(JSON.parse(decodeURIComponent(escape(atob($('svIn').value.trim())))));}catch(e){}
@@ -898,6 +967,8 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('меньше анимации и движения','less animation and motion')}</small></span>${on(calm())}</button>
+    <button class="set" id="stBig"><span>🔠 ${L('Крупный шрифт','Large text')}<br><small>${L('весь текст и кнопки крупнее','all text and buttons bigger')}</small></span><i${(S.bigF|0)?'':' class="off"'}>${[L('обычный','normal'),L('крупнее','larger'),L('ещё крупнее','largest')][S.bigF|0]}</i></button>
+    <button class="set" id="stNoIco"><span>🔤 ${L('Без значков','No icons')}<br><small>${L('слова вместо значков: «силы 60» вместо «⚡ 60»','words instead of icons: “energy 60” instead of “⚡ 60”')}</small></span>${on(!!S.noIco)}</button>
     ${IS_VK?'':`<button class="set" id="stLang"><span>🌐 Язык / Language</span><i>${LANG==='en'?'EN':'RU'}</i></button>`}
     ${window.THEME?`<button class="set" id="stTheme"><span>🎨 ${L('Оформление','Themes')}<br><small>${L('сейчас: ','now: ')}${(THEME.list().filter(t=>t.cur)[0]||{name:''}).name}</small></span><i class="go">›</i></button>`:''}
     ${PAY.on?payHtml(['no_ads'],false):''}<button class="set" id="stShop"><span>🛒 ${L('Магазин','Shop')}<br><small>${PAY.on?L('кристаллы, наборы, оформление, награды','crystals, bundles, looks, rewards'):L('кристаллы, оформление, награды','crystals, looks, rewards')}</small></span><i class="go">›</i></button>
@@ -912,6 +983,8 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
   modalRe=openSettings;
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
+  $('stBig').onclick=()=>{S.bigF=((S.bigF|0)+1)%3;save();applyA11y();openSettings();};
+  $('stNoIco').onclick=()=>{S.noIco=!S.noIco;save();applyA11y();try{window.uiRefresh&&window.uiRefresh();}catch(e){}openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Turned on in your device settings (“reduce motion”)'));return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   if($('stLang'))$('stLang').onclick=()=>{const l=LANG==='en'?'ru':'en';LANG_MAN=l;try{localStorage.setItem(LANG_KEY,l);}catch(e){}setLang(l);};
   if($('stTheme'))$('stTheme').onclick=()=>{SND.tap();THEME.open(openSettings);};
@@ -959,7 +1032,7 @@ function openShop(){const lb=adOk()&&window.GAME&&GAME.ladLabel?GAME.ladLabel():
     <div class="row">${ad?`<button class="btn accent noenter" id="shAd">${lb}</button>`:''}${window.META&&typeof META.openCos==='function'?`<button class="btn noenter" id="shCos">🎨 ${L('Украшения','Decorations')}</button>`:''}<button class="btn" id="shClose">${L('Закрыть','Close')}</button></div>
     ${!ad&&adOk()&&window.GAME&&GAME.lad&&GAME.lad().n>=GAME.LAD.length?'<p style="text-align:center"><small>'+L('«Ролики дня» на сегодня пройдены — завтра лесенка начнётся заново','Today’s daily videos are done — the ladder starts again tomorrow')+'</small></p>':''}${adDayHtml()}`);
   modalRe=openShop;PAY.re=openShop;if(PAY.on)PAY.bind($('mcard')); // PAY.re и без PAY.on: каталог/мост пришёл, пока окно открыто, — перерисуем с покупками
-  if($('shAd'))$('shAd').onclick=()=>{hideModal();GAME.ladWatch();};
+  if($('shAd'))$('shAd').onclick=()=>{if(adHold())return;hideModal();GAME.ladWatch();};
   if($('shCos'))$('shCos').onclick=()=>{try{META.openCos();}catch(e){console.error(e);}};
   $('shClose').onclick=hideModal;}
 function openAbout(){
@@ -975,6 +1048,12 @@ function openAbout(){
   if($('abPay'))$('abPay').onclick=()=>PAY.again();
   $('abBack').onclick=openSettings;}
 function applyCalm(){if(document.body)document.body.classList.toggle('calm',calm());}
+// M38 (a45): «Крупный шрифт» — масштаб всего #app (zoom 1,12 / 1,24: весь текст и кнопки на 2 и 4 ступени крупнее, вёрстка переносится как на узком экране);
+// старые WebView со «старым» zoom растягивают высоту — тогда высоту #app делим на масштаб. «Без значков» — body.noico (icons.js: слово вместо значка у чисел)
+const BIG_Z=[1,1.12,1.24];
+function applyA11y(){const a=$('app'),z=BIG_Z[S.bigF|0]||1;document.documentElement.classList.toggle('bigf',z>1);if(document.body)document.body.classList.toggle('noico',!!S.noIco);
+  if(!a)return;a.style.zoom=z>1?String(z):'';a.style.height='';const hc=$('hCash');if(hc)hc.textContent='';   // шапка заново подгонит сумму под новую ширину
+  if(z>1)try{requestAnimationFrame(()=>{const r=a.getBoundingClientRect();if(r.height>window.innerHeight+4)a.style.height=(100/z).toFixed(3)+'%';});}catch(e){}}
 
 /* ---- клавиатура на ПК: только окна (остальное — интерфейс) ---- */
 document.addEventListener('keydown',e=>{const k=e.key;if(!modalOn||e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;const ad=$('ad');if(ad&&ad.classList.contains('on'))return;const mc=$('mcard');if(!mc)return;
@@ -1013,10 +1092,10 @@ document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hide',true);cloudFlush();}else setPause('hide',false);});
 window.addEventListener('pagehide',()=>{cloudFlush();});
 if(document.hidden)setPause('hide',true);
-applyLang();applyCalm();applyOffice();
-// «Назад» Android: закрыть окно, иначе — шаг назад в интерфейсе (обёртка шлёт событие backbutton или зовёт window.__back())
+applyLang();applyCalm();applyOffice();try{applyA11y();}catch(e){}
+// «Назад» Android: в окне — кнопка «←» (шаг назад, M37), иначе закрыть окно; без окна — шаг назад в интерфейсе (обёртка шлёт событие backbutton или зовёт window.__back())
 function goBack(){const ad=$('ad');if(ad&&ad.classList.contains('on'))return true;
-  if(modalOn){const mc=$('mcard'),b=mc&&(mc.querySelector('[data-esc]')||['socClose','socBack','mCancel','lbClose','shClose','stClose','abBack','hBack','hClose'].map($).find(x=>x&&mc.contains(x)));if(b)b.click();else hideModal();return true;}
+  if(modalOn){const mc=$('mcard'),b=mc&&(Array.prototype.find.call(mc.querySelectorAll('button'),x=>!x.disabled&&x.offsetParent!==null&&/^\s*←/.test(x.textContent||''))||mc.querySelector('[data-esc]')||['socClose','socBack','mCancel','lbClose','shClose','stClose','abBack','hBack','hClose'].map($).find(x=>x&&mc.contains(x)));if(b)b.click();else hideModal();return true;}
   return !!(window.UI&&UI.back&&UI.back());}
 window.__back=goBack;document.addEventListener('backbutton',e=>{e.preventDefault&&e.preventDefault();goBack();},false);
 // SOC — после загрузки сохранения, до моста VK (считает сессии в S.soc); окна — через modal() игры

@@ -271,7 +271,10 @@ function tutOn(){try{if(window.UI&&UI.tutStep&&UI.tutStep())return true;}catch(e
   // «Карьера»: первые шаги обучения (взять заказ, дождаться, второй заказ) — без баннеров; дальше обучение длинное, баннеры можно
   try{if(window.BIZUI&&typeof BIZUI.tutStep==='function'&&['hi','take1','wait1','take2'].indexOf(BIZUI.tutStep())>=0)return true;}catch(e){}
   try{if(GAME.hold&&GAME.hold.has('tut'))return true;}catch(e){}return false;}
-function pushTick(){if(!PQ.length)return;const now=Date.now(),cm=isCalm();
+// M38 (a45): пока человек читает (касался, листал последние 6 с) — баннер не выскакивает поверх текста; листание прячет показанный
+let actT=0;try{const onAct=()=>{actT=Date.now();};document.addEventListener('pointerdown',onAct,{passive:true,capture:true});
+  document.addEventListener('scroll',()=>{actT=Date.now();const b=$e('phPush');if(b&&b.classList.contains('on')&&Date.now()-pushT>800)hidePush();},{passive:true,capture:true});document.addEventListener('wheel',onAct,{passive:true,capture:true});}catch(e){}
+function pushTick(){if(!PQ.length)return;const now=Date.now(),cm=isCalm();if(now-actT<6000)return;
   if(now-T0<10000||mOn()||isOpen()||document.hidden||tutOn())return;
   if((typeof paused!=='undefined'&&paused))return;
   const ad=$e('ad');if(ad&&ad.classList.contains('on'))return;
@@ -286,7 +289,7 @@ function showPush(it){const b=$e('phPush');if(!b)return;const c=who(it.id);
   try{const hd=$e('hdr');b.style.top=hd&&hd.offsetHeight?(hd.offsetTop+hd.offsetHeight+6)+'px':'';}catch(e){}
   b.innerHTML=`<button class="ph-pm noenter" data-pg="1">${face(it.id,'calm',44)}<span class="ph-pt"><b>${esc(c.n)}</b><span>${esc(it.text)}</span></span></button><button class="ph-px noenter" data-px="1" aria-label="${T('Закрыть','Close')}">×</button>`;
   b.classList.add('on');b.onclick=e=>{const g=e.target.closest('[data-pg]'),x=e.target.closest('[data-px]');if(!g&&!x)return;hidePush();if(g){snd('tap');open(it.go[0],it.go[1]);}};
-  clearTimeout(pushHideT);pushHideT=setTimeout(hidePush,isCalm()?8000:5500);}
+  clearTimeout(pushHideT);pushHideT=setTimeout(hidePush,isCalm()?6000:4000);}
 function hidePush(){const b=$e('phPush');if(b)b.classList.remove('on');clearTimeout(pushHideT);}
 
 /* ---------------- приложения ---------------- */
@@ -448,7 +451,7 @@ const LVC=['#c62828','#c8641e','#5a6675','#2e7d32','#b8860b'];
 function lvN(i){try{if(window.FRUI)return FRUI.lvName(i);}catch(e){}return ['в ссоре','прохладно','приятели','друзья','не разлей вода'][i|0]||'';}
 
 /* ---------------- действия в телефоне ---------------- */
-const TAKE={hand:['Все руки заняты','All hands are busy'],en:['Не хватает сил — отдохните','Not enough energy — take a rest'],rest:['Сегодня выходной','It’s your day off'],out:['Вы пока на больничном','You’re on sick leave'],
+const TAKE={hand:['Всё время занято','All hands are busy'],en:['Не хватает сил — отдохните','Not enough energy — take a rest'],rest:['Сегодня выходной','It’s your day off'],out:['Вы пока на больничном','You’re on sick leave'],
   req:['Нужен инструмент или рейтинг повыше','Needs tools or a higher rating'],cash:['Не хватает денег на товар','Not enough money for the goods'],no:['Заказ уже ушёл','The job is gone']};
 function answer(qid,o){const w=W();const q=w&&w.fr&&w.fr.q.find(x=>x.id===qid);const wh=q?(su('speaker',q)||(q.w==='all'?'owl':q.w)):'owl';
   let r;try{r=GAME.act('friendAnswer',qid,o);}catch(e){console.error(e);r={res:'no'};}
@@ -482,12 +485,13 @@ function doCall(id){callRes=null;
 /* ---------------- отрисовка ---------------- */
 function viewOf(n){const v=n.v,a=n.a;return v==='chats'?vChats():v==='contacts'?vContacts():v==='chat'?vChat(a):v==='contact'?vContact(a):v==='call'?vCall(a):v==='app'?vApp(a):vHome();}
 function render(keep){const ph=$e('phone');if(!ph||!isOn)return;const n=nav[nav.length-1];let r;try{r=viewOf(n);}catch(e){console.error(e);r={t:T('Телефон','Phone'),h:''};}
-  const bd=ph.querySelector('.ph-body'),top=keep?bd.scrollTop:0,atBot=bd.scrollHeight-bd.scrollTop-bd.clientHeight<40;
+  const bd=ph.querySelector('.ph-body'),bk=n.y!=null,top=bk?n.y:keep?bd.scrollTop:0,atBot=bd.scrollHeight-bd.scrollTop-bd.clientHeight<40;delete n.y;   // M37: n.y — где был на этом экране до шага вперёд («назад» возвращает туда)
   ph.querySelector('.ph-t').textContent=r.t;ph.querySelector('.ph-bk').style.visibility=nav.length>1?'visible':'hidden';
-  bd.innerHTML=r.h;if(r.chat&&(!keep||atBot))bd.scrollTop=bd.scrollHeight;else bd.scrollTop=top;
+  bd.innerHTML=r.h;if(r.chat&&!bk&&(!keep||atBot))bd.scrollTop=bd.scrollHeight;else bd.scrollTop=top;
   if(n.v==='chat')markRead(n.a);if(n.v==='app'&&n.a==='news'&&SY()&&W()&&W().fr&&W().fr.rd<W().t){try{GAME.act('storyRead');}catch(e){}}}
 function rerender(){if(isOn)render(true);renderEmbed();badge();}
-function go(v,a){if(v==='chats'||v==='contacts'){const t=nav[nav.length-1];if(t.v==='chats'||t.v==='contacts')nav.pop();}if(v!=='call')callRes=null;
+function go(v,a){if(isOn)try{const bd=$e('phone').querySelector('.ph-body'),t=nav[nav.length-1];if(t&&bd)t.y=bd.scrollTop;}catch(e){}   // M37: запомнить, где был
+  if(v==='chats'||v==='contacts'){const t=nav[nav.length-1];if(t.v==='chats'||t.v==='contacts')nav.pop();}if(v!=='call')callRes=null;
   if(!isOn){open(v,a);return;}nav.push({v,a});render();}
 function open(v,a){ensure();hidePush();nav=[{v:'home'}];if(v&&v!=='home')nav.push({v,a});callRes=null;
   const ph=$e('phone');isOn=true;ph.classList.add('on');document.body.classList.add('phon');place();render();navHL();snd('tap');}
@@ -523,7 +527,7 @@ function badge(){const b=$e('phBtn');if(!b)return;const n=unreadAll(),q=needAll(
 /* ---------------- DOM и CSS ---------------- */
 const CSS=`
 #phBtn{position:relative}@media (max-width:699px){body.phtab #phBtn{display:none}}#phBtn svg{width:26px;height:26px}#phBtn.on{background:var(--accent-t);color:var(--accent)}
-.ph-hb.dot{min-width:14px;width:14px;height:14px;padding:0;top:0;right:0}.ph-hb{position:absolute;top:-3px;right:-3px;min-width:22px;height:22px;border-radius:11px;background:var(--bad);color:#fff;font-size:13px;font-weight:700;font-style:normal;line-height:22px;padding:0 5px;text-align:center;border:2px solid var(--hd-bg)}
+.ph-hb.dot{min-width:14px;width:14px;height:14px;padding:0;top:0;right:0}.ph-hb{position:absolute;top:-3px;right:-3px;min-width:22px;height:22px;border-radius:11px;background:var(--bad);color:#fff;font-size:14px;font-weight:700;font-style:normal;line-height:22px;padding:0 5px;text-align:center;border:2px solid var(--hd-bg)}
 #phone{position:absolute;top:0;left:0;right:0;bottom:0;z-index:8;background:var(--bg);display:none;flex-direction:column;font-size:17px}
 #phone.on{display:flex}
 .ph-top{flex:none;display:flex;align-items:center;background:var(--hd-bg);border-bottom:1px solid var(--hd-line);padding:6px 6px;padding-top:max(6px,env(safe-area-inset-top))}
@@ -553,7 +557,7 @@ const CSS=`
 .ph-li>b{flex:none;margin-left:10px;font-size:17px}
 .ph-tx{display:block;font-size:17px;line-height:1.35}
 .ph-li .btn{margin-top:8px}
-.ph-hr{color:var(--bad);font-size:13px;margin-left:6px;letter-spacing:1px;font-weight:400}
+.ph-hr{color:var(--bad);font-size:14px;margin-left:6px;letter-spacing:1px;font-weight:400}
 .ph-rr{flex:none;margin-left:8px;text-align:right;display:flex;flex-direction:column;align-items:flex-end}.ph-rr small{font-size:14px;color:var(--muted);margin-bottom:4px}
 .ph-new{font-style:normal;font-size:15px;color:var(--accent);font-weight:600;margin-left:4px}
 .ph-dot{width:10px;height:10px;border-radius:50%;background:var(--bad);flex:none;margin-left:8px}

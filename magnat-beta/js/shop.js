@@ -119,7 +119,7 @@ function ladBtn(){let lb='';try{lb=adOn()&&GAME.ladLabel?GAME.ladLabel():'';}cat
   return '';}
 
 /* ---- разделы ---- */
-function secCr(){let h=`<p class="shop-p">${T('Кристаллы ускоряют стройку и разведку, покупают руки, силы и украшения. Рубли в игре не продаются, место в рейтинге — тоже.','Crystals speed up construction and exploration and buy hands, energy and decorations. In-game rubles are not for sale, nor is a place in the leaderboard.')}</p>`;
+function secCr(){let h=`<p class="shop-p">${T('Кристаллы ускоряют стройку и разведку, покупают время на дела, силы и украшения. Рубли в игре не продаются, место в рейтинге — тоже.','Crystals speed up construction and exploration and buy hands, energy and decorations. In-game rubles are not for sale, nor is a place in the leaderboard.')}</p>`;
   if(ctx.miss>0)h+=`<p class="shop-need">💎 ${T('Не хватает '+ctx.miss+' 💎'+(ctx.hl?' — подойдёт пакет, отмеченный «Хватит»':''),'You’re '+ctx.miss+' 💎 short'+(ctx.hl?' — the pack marked “Enough” will do':''))}</p>`;
   h+=firstHtml();const r=rowsOf('cr');h+=r;
   if(!r)h+=`<p class="shop-p">${T('Кристаллы даются за достижения, звания, Планёрку'+(adOn()?' и ролики':'')+' — загляните в соседние разделы.','Crystals come for achievements, ranks, the Briefing'+(adOn()?' and videos':'')+' — see the other sections.')}</p>`;
@@ -162,7 +162,7 @@ function infoRow(ic,nm,sub,right){return `<div class="shop-info"><span>${ic} ${n
 function secBoost(){const w=W(),E=window.ECON||{};let h=`<p class="shop-p">${T('За кристаллы можно сделать дела быстрее или навсегда стать сильнее. Деньги (₽) так не купить — их зарабатывают делом.','Crystals let you get things done faster or become stronger for good. Money (₽) can’t be bought this way — you earn it by doing business.')}</p>`;
   if(w&&w.me&&!w.ned&&GAME.handNext){
     h+=`<h4>💪 ${T('Навсегда','Forever')}</h4>`;
-    h+=pkRow('✋',T('+1 рука','+1 hand'),T('Берёте больше заказов одновременно','Take more orders at once'),GAME.handNext(),GAME.handLv&&GAME.handLv()>0,'hand');
+    h+=pkRow('✋',T('+1 дело одновременно','+1 hand'),T('Берёте больше заказов одновременно','Take more orders at once'),GAME.handNext(),GAME.handLv&&GAME.handLv()>0,'hand');
     h+=pkRow('⚡',T('+'+(E.EN_STEP||20)+' к запасу сил','+'+(E.EN_STEP||20)+' to energy reserve'),T('Больше работы без отдыха','More work without rest'),GAME.enNext(),GAME.enLv&&GAME.enLv()>0,'en');
     if(GAME.regNext)h+=pkRow('🌅',T('Режим дня: +'+(E.REG_STEP||10)+' ⚡ за ночь','Daily routine: +'+(E.REG_STEP||10)+' ⚡ per night'),T('Силы восстанавливаются быстрее','Energy recovers faster'),GAME.regNext(),GAME.regLv&&GAME.regLv()>0,'reg');}
   h+=`<h4>⏩ ${T('Ускорить сейчас','Speed up now')}</h4><p class="shop-p">${T('Кнопки — прямо на карточках дел: там, где это можно.','The buttons are right on the cards — wherever it’s possible.')}</p>`;
@@ -247,13 +247,13 @@ function open(sec){css();const ok=secs();cur=typeof sec==='string'&&sec?sec:'cr'
   if($s('shThAll'))$s('shThAll').onclick=()=>{snd('tap');THEME.open(()=>open('look'));};
   mc.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{snd('tap');askPk(b.dataset.pk);});
   if($s('shRest'))$s('shRest').onclick=()=>{snd('tap');PAY.again();};
-  if($s('shAd'))$s('shAd').onclick=()=>{hideModal();GAME.ladWatch();};
+  if($s('shAd'))$s('shAd').onclick=()=>{if(adHold())return;hideModal();GAME.ladWatch();};
   if($s('shCos'))$s('shCos').onclick=()=>{try{META.openCos();}catch(e){console.error(e);}};
   if($s('shLx'))$s('shLx').onclick=()=>{snd('tap');try{CAB.open('lx');}catch(e){console.error(e);}};
   if($s('shCab'))$s('shCab').onclick=()=>{snd('tap');try{CAB.open('rk');}catch(e){console.error(e);}};
   $s('shClose').onclick=()=>{snd('close');hideModal();};}
 // «навсегда за 💎» из магазина: подтверждение отдельным шагом (45+: случайно не потратить)
-function askPk(k){const E=window.ECON||{},P={hand:[GAME.handNext,GAME.buyHand,'✋ '+T('+1 рука навсегда','+1 hand for good')],
+function askPk(k){const E=window.ECON||{},P={hand:[GAME.handNext,GAME.buyHand,'✋ '+T('+1 дело одновременно — навсегда','+1 hand for good')],
     en:[GAME.enNext,GAME.buyEn,'⚡ '+T('+'+(E.EN_STEP||20)+' к запасу сил навсегда','+'+(E.EN_STEP||20)+' energy reserve for good')],
     reg:[GAME.regNext,GAME.buyReg,'🌅 '+T('Режим дня: +'+(E.REG_STEP||10)+' ⚡ за ночь навсегда','Daily routine: +'+(E.REG_STEP||10)+' ⚡ per night for good')]}[k];
   if(!P||!P[0])return;const n=P[0]();if(!n)return open('boost');

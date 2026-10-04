@@ -262,9 +262,9 @@ const OFR={ship:[['Мои ребята на неделе везут товар �
   rate:[['У нас в банке программа для своих. Поручусь — кредит на {r} п. п. дешевле. Действует 3 месяца.','My bank has a scheme for friends. I’ll vouch for you — a loan {r} p.p. cheaper. Valid for 3 months.'],['Спасибо, Соня!','Thanks, Sonya!'],'кредит в банке на {r} п. п. дешевле, лимит +15 %; ❤ +3','bank loan {r} p.p. cheaper, limit +15%; ❤ +3'],
   buy:[['Беру товар оптом — давай вскладчину? Выйдет на {b} дешевле, пару месяцев.','I’m buying stock wholesale — shall we split it? {b} cheaper for a couple of months.'],['Давай вскладчину','Let’s split it'],'закупка −{b}; ❤ +3','supplies −{b}; ❤ +3'],
   // M20: «Газель на двоих» (Витя) и доля в фонде Сони — ещё в первом холдинге
-  jvvit:[['Присмотрел вторую Газель — почти новая. Одному тянуть тяжело. Давай на двоих? Вклад {a}, доля пополам. Вожу я, твои руки свободны, прибыль — пополам.','I’ve spotted a second van — almost new. Too much for me alone. Shall we go halves? You put in {a}, half the share. I drive, your hands stay free, profit split down the middle.'],['Берём Газель!','Let’s get the van!'],'вклад {a}, ~2 % в месяц к вкладу, без рук; ❤ +3','invest {a}, ~2% a month on it, no hands needed; ❤ +3'],
-  jvowl:[['Фонд «Сова Инвест» набирает первых пайщиков. Своим — без комиссии. Вложишь {a}? Доход скромный, зато ровный — я считаю каждый рубль.','The Owl Invest fund is taking its first investors. No fee for friends. Will you put in {a}? Modest returns, but steady — I count every rouble.'],['Вхожу в фонд','I’m in'],'вклад {a}, ~1,3 % в месяц, ровно, без рук; ❤ +3','invest {a}, ~1.3% a month, steady, no hands needed; ❤ +3'],
-  jv:[['Есть место под точку, одному тянуть не хочу. Откроем на двоих? Вклад {a}, доля пополам. Я присмотрю — твои руки свободны.','I’ve found a spot for a new place but don’t want to go it alone. Shall we open it together? You put in {a}, half the share. I’ll run it — your hands stay free.'],['Открываем!','Let’s open it!'],'вклад {a}, ~3 % в месяц к вкладу, без рук; ❤ +3','invest {a}, ~3% a month on it, no hands needed; ❤ +3']};
+  jvvit:[['Присмотрел вторую Газель — почти новая. Одному тянуть тяжело. Давай на двоих? Вклад {a}, доля пополам. Вожу я, твоё время свободно, прибыль — пополам.','I’ve spotted a second van — almost new. Too much for me alone. Shall we go halves? You put in {a}, half the share. I drive, your hands stay free, profit split down the middle.'],['Берём Газель!','Let’s get the van!'],'вклад {a}, ~2 % в месяц к вкладу, без вашего времени; ❤ +3','invest {a}, ~2% a month on it, no hands needed; ❤ +3'],
+  jvowl:[['Фонд «Сова Инвест» набирает первых пайщиков. Своим — без комиссии. Вложишь {a}? Доход скромный, зато ровный — я считаю каждый рубль.','The Owl Invest fund is taking its first investors. No fee for friends. Will you put in {a}? Modest returns, but steady — I count every rouble.'],['Вхожу в фонд','I’m in'],'вклад {a}, ~1,3 % в месяц, ровно, без вашего времени; ❤ +3','invest {a}, ~1.3% a month, steady, no hands needed; ❤ +3'],
+  jv:[['Есть место под точку, одному тянуть не хочу. Откроем на двоих? Вклад {a}, доля пополам. Я присмотрю — твоё время свободно.','I’ve found a spot for a new place but don’t want to go it alone. Shall we open it together? You put in {a}, half the share. I’ll run it — your hands stay free.'],['Открываем!','Let’s open it!'],'вклад {a}, ~3 % в месяц к вкладу, без вашего времени; ❤ +3','invest {a}, ~3% a month on it, no hands needed; ❤ +3']};
 const pctS=x=>(Math.round(x*1000)/10).toLocaleString(en()?'en':'ru')+(en()?'%':' %');
 function offerAsk(q){const a=q.a||{},p=a.p==='gig'&&q.w==='bars'?'gigb':a.p==='jv'&&(q.w==='vit'||q.w==='owl')?'jv'+q.w:a.p,x=OFR[p]||OFR.ship,P=SY.PK||{},L=SY.lv?SY.lv(W(),q.w):3;
   const f=t=>t.replace('{p}',pctS(P.ship||.04)).replace('{b}',pctS(P.buyD||.03)).replace('{r}',String(Math.round(-((P.guarDr||[])[Math.max(3,L)]||-.02)*100))).replace('{a}',money(a.a||0));
@@ -522,7 +522,7 @@ function css(){if(document.getElementById('st-css'))return;const s=document.crea
 .st-away .st-f{font-size:16px;line-height:1.4}
 .st-next{font-size:16px;line-height:1.4;margin:8px 0 2px}
 @supports not (inset:0){.st-four>.st-av,.st-photo>.st-av{margin:4px}}
-#stBtn{position:relative}#stBtn em{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:var(--bad);color:#fff;font-size:13px;font-style:normal;line-height:20px;padding:0 5px}
+#stBtn{position:relative}#stBtn em{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:var(--bad);color:#fff;font-size:14px;font-style:normal;line-height:20px;padding:0 5px}
 `;document.head.appendChild(s);}
 function open(html,re){css();modal(html);try{modalRe=re||null;}catch(e){}}
 function close(){try{hideModal();}catch(e){}}
@@ -796,7 +796,7 @@ function awayAuto(){const c=document.getElementById('mcard');if(!c||c._stObs||ty
 const hasPhone=()=>!!window.PHONE;
 let shown={},bigT=0;
 // спокойный момент для большой сцены: нет окна, паузы, рекламы, открытого телефона и первых шагов обучения
-function calmNow(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
+function calmNow(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof winCalm==='function'&&!winCalm())return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
   try{if(GAME.hold&&GAME.hold.size)return false;}catch(e){}
   try{if(window.UI&&UI.tutStep&&UI.tutStep())return false;}catch(e){}
   try{if(window.BIZUI&&BIZUI.tutStep&&['hi','take1','wait1','take2'].indexOf(BIZUI.tutStep())>=0)return false;}catch(e){}

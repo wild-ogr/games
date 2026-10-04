@@ -112,7 +112,7 @@ const CSS=`
 .f-met.on{background:var(--sub,#fafbfc)}
 .f-met small{display:block;color:var(--muted,#667085);font-size:15px;margin-top:6px;line-height:1.35}
 .f-q{display:inline-block;font-style:normal;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:var(--icbg,#f2f4f7);color:var(--muted,#667085);font-size:14px;font-weight:600;margin-left:4px}
-.f-new{display:inline-block;font-style:normal;background:var(--bad,#e5484d);color:#fff;border-radius:9px;padding:1px 7px;font-size:13px;font-weight:600;margin-left:4px;vertical-align:1px}
+.f-new{display:inline-block;font-style:normal;background:var(--bad,#e5484d);color:#fff;border-radius:9px;padding:1px 7px;font-size:14px;font-weight:600;margin-left:4px;vertical-align:1px}
 .f-hdr{display:grid;grid-template-columns:1fr auto;align-items:baseline;grid-gap:8px;gap:8px}
 .f-rp{font-size:15px;margin:2px 0 0}.f-rp span{display:inline-block;margin:0 10px 2px 0;white-space:nowrap;color:var(--muted,#667085)}.f-rp span.me{font-weight:600;color:var(--ink,#0e1320)}.f-rp i{font-style:normal}
 .f-pro{font-size:17px;line-height:1.45;margin:8px 0}.f-pro b{white-space:nowrap;font-weight:600}
@@ -164,7 +164,7 @@ const CSS=`
 .f-rr.b{background:var(--key,#f3f6ff)}.f-rr.b .rn{font-weight:600}.f-rr.b .cv{font-size:19px}
 .f-rr.n .rn{font-weight:500}
 .f-rr.h{font-weight:600;font-size:15px;color:var(--ink,#0e1320);padding-top:16px;border-bottom:0}
-.f-rr .tg{display:inline-block;margin-left:6px;color:var(--muted,#667085);font-style:normal;font-size:13px;font-weight:600;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:var(--icbg,#f2f4f7)}
+.f-rr .tg{display:inline-block;margin-left:6px;color:var(--muted,#667085);font-style:normal;font-size:14px;font-weight:600;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:var(--icbg,#f2f4f7)}
 .f-rr .exp{font-size:15px;color:var(--muted,#667085);margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--bg,#f5f6f8)}
 @media (min-width:600px){.f-rr{display:flex;align-items:center;flex-wrap:wrap}.f-rr .rn{flex:1;min-width:0}.f-rr .rv{margin-top:0}.f-rr .rv .c0{display:none}.f-rr .exp{flex-basis:100%}}
 .f-nxt{display:block;width:100%;text-align:left;font:inherit;color:inherit;border:0;cursor:pointer;padding:16px 18px}.f-nxt span{display:block;color:var(--muted,#667085);font-size:15px}.f-nxt b{font-size:18px;font-weight:600;color:var(--accent,#2e5bff)}
@@ -570,7 +570,7 @@ function repBody(list,i,kind){const r=list[i],prev=list[i-1]||null,w=Wd();let h=
   return h;}
 function mswHtml(list,i){return `<div class="f-card f-msw" data-swipe="1"><button data-a="rprev"${i<=0?' disabled':''} aria-label="${L('Раньше','Earlier')}">◀</button><div><b>${mLbl(list[i])}</b><span>${L('листайте пальцем ← →','swipe ← →')}</span></div><button data-a="rnext"${i>=list.length-1?' disabled':''} aria-label="${L('Позже','Later')}">▶</button></div>`;}
 // модальное окно отчётов (из окна закрытия месяца): переключатель БДР/ДДС/Баланс и месяцы
-function repBlock(list,i,kind){return mswHtml(list,i)+tabs([['pl',L('БДР','P&L')],['cf',L('ДДС','Cash flow')],['bs',L('Баланс','Balance')]],kind,'rk')+repBody(list,i,kind);}
+function repBlock(list,i,kind){return mswHtml(list,i)+tabs([['pl',L('Прибыль (БДР)','P&L')],['cf',L('Деньги (ДДС)','Cash flow')],['bs',L('Баланс','Balance')]],kind,'rk')+repBody(list,i,kind);}
 function mxHtml(w){const mt=E.metrics(w);if(!mt)return `<div class="f-card f-mut">${L('Показатели появятся после первого закрытого месяца.','Ratios appear after the first month closes.')}</div>`;
   const it=[
     ['e12','EBITDA '+L('за 12 мес.','(12 m)'),FMT.money(mt.e12),L('EBITDA — прибыль от самой работы: выручка минус все текущие затраты, но до амортизации, процентов и налога. Растёт — дело идёт; меньше нуля — работа убыточна. Если месяцев меньше 12 — пересчитано на год.','EBITDA is profit from operations: revenue minus running costs, before depreciation, interest and tax. Growing — good; below zero — operations lose money. Annualised if fewer than 12 months.')],
@@ -621,7 +621,7 @@ function finSum(w,el){const wide=isWide(el),r=w.reps[w.reps.length-1],p=w.reps[w
   const rv=[{v:GAME.value(),me:1}].concat(w.bots.map(b=>({v:E.botValue(w,b)}))).sort((a,b)=>b.v-a.v),pos=rv.findIndex(x=>x.me)+1;
   const lst=`<div class="f-card f-lst">
     ${window.CASHUI?`<button data-a="go" data-v="cash"><span class="lic">📅</span><div class="li"><b>${L('Деньги на 30 дней','Money for 30 days')}</b><span>${CASHUI.finSub(w)}</span></div><span class="chev">›</span></button>`:''}
-    <button data-a="go" data-v="reps"><span class="lic">${LIC.doc}</span><div class="li"><b>${L('Полные отчёты','Full reports')}</b><span>${L('БДР, ДДС, баланс, показатели, история','P&L, cash flow, balance, ratios, history')}</span></div><span class="chev">›</span></button>
+    <button data-a="go" data-v="reps"><span class="lic">${LIC.doc}</span><div class="li"><b>${L('Полные отчёты','Full reports')}</b><span>${L('прибыли и убытки (БДР), движение денег (ДДС), баланс, показатели, история','P&L, cash flow, balance, ratios, history')}</span></div><span class="chev">›</span></button>
     ${early?`<div class="f-lock" style="padding:12px 14px;color:var(--muted);font-size:16px">🔒 ${L('Банк и соперники откроются со своим делом — в главе 2. Пока копим и берём заказы.','Bank and rivals open with your own business — in chapter 2. For now we save and take jobs.')}</div>`:''}
     ${early?'':`<button data-a="go" data-v="bank"><span class="lic">${LIC.bank}</span><div class="li"><b>${L('Банк и кредиты','Bank & loans')}</b><span>${w.loans.length?`${L('Долг','Debt')} ${FMT.money(debtOfW(w))} · ${L('платёж','payment')} ${FMT.money(pay)} ${L('в конце месяца','at month end')}`:`${L('Долгов нет · банк даст до','No debt · the bank lends up to')} ${FMT.money(o.max)}`}</span></div><span class="chev">›</span></button>`}
     ${early?'':`<button data-a="go" data-v="riv"><span class="lic">${LIC.cup}</span><div class="li"><b>${L('Соперники и рейтинг','Rivals & leaderboard')}</b><span>${rv.length>1?L('Вы','You are')+' '+pos+L('-й из',' of')+' '+rv.length:L('соперники появятся в «Недрах»','rivals appear in Mining')} · ${L('стоимость','value')} ${FMT.money(GAME.value())}</span></div><span class="chev">›</span></button>`}</div>`;
@@ -815,7 +815,8 @@ function dayUpd(){if(!vis(lastM))return;const w=Wd();if(!w)return;if(st.mt==='co
 try{GAME.on('day',dayUpd);}catch(e){}
 function refresh(){if(vis(lastM))renderMarket(lastM);if(vis(lastF))renderFin(lastF);}
 let rsT=0;window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(()=>{if(vis(lastF))renderFin(lastF);},250);});
-window.FIN={bankFor(a){st.fv='bank';if(a>0)st.la=a;},   // M30: «Кредит на оборотку» из карточки склада — открыть «Банк» с суммой
+window.FIN={navKey(s){return s==='fin'?(st.fv||'sum')+(st.fv==='rep'||st.fv==='reps'?':'+st.rk:''):s==='market'?st.mt:'';},   // M37: подвид для памяти прокрутки (ui.js navKey)
+  bankFor(a){st.fv='bank';if(a>0)st.la=a;},   // M30: «Кредит на оборотку» из карточки склада — открыть «Банк» с суммой
   renderMarket,renderFin,openReport,refresh,openSell,openBuy,icon,newOffers,
   chart:{box:chartBox,open:openChart,hide:hideTip,price:priceSpec,rev:revSpec,cash:cashSpec,riv:rivSpec,CV},
   get state(){return st;}};

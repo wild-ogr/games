@@ -364,7 +364,7 @@ function ownAdvise(W,o){if(W.ned||!W.me||!W.ip)return;const O=ow(W);
   if(E.taxOk(W)){const a=taxAdv(W);const cur=W.taxm==='usn6'?a.u6:a.u15,oth=W.taxm==='usn6'?a.u15:a.u6;if(a.best!==W.taxm&&cur-oth>Math.max(12e3,cur*.1))o.push({k:'z_tax',pri:58,a:{m:a.best,save:rnd0(cur-oth)}});}
   let bu=null;for(const b of W.biz){if(b.st!=='w'||!LV[b.t])continue;const g=lvGain(W,b);if(g&&g.pay<=8&&W.cash>=g.x.c+E.bizRes(W)&&(!bu||g.pay<bu.pay))bu={id:b.id,bt:b.t,pay:g.pay,g:g.g,ru:g.x.ru,en:g.x.en};}
   if(bu)o.push({k:'z_up',pri:45,a:bu});
-  for(const t in TR){const n=W.biz.filter(b=>b.t===t&&b.c===(W.home||'kuz')).length;if(n<2)continue;const s=satOf(W,t,W.home||'kuz',W.biz.find(b=>b.t===t&&b.c===(W.home||'kuz')));if(s.pct>=.2){o.push({k:'z_sat',pri:44,a:{bt:t,n,p:s.pct}});break;}}
+  sat:for(const c of (W.cities&&W.cities.length?W.cities:[W.home||'kuz']))for(const t in TR){const n=W.biz.filter(b=>b.t===t&&b.c===c).length;if(n<2)continue;const s=satOf(W,t,c,W.biz.find(b=>b.t===t&&b.c===c));if(s.pct>=.2){o.push({k:'z_sat',pri:44,a:{bt:t,n,p:s.pct,c}});break sat;}}   // M38: все города, не только родной
   if(E.stI(W)>=1&&!O.j.length&&E.hands(W).free>0&&W.me.en>=40&&W.biz.some(b=>b.st==='w'))o.push({k:'z_hand',pri:38});}
 // миграция старых миров: уровни 1, налог можно сменить сразу (раньше — только в январе), пустое состояние хозяина
 function ownMig(W,fx){if(!W.ow||typeof W.ow!=='object'){W.ow=owNew();if(fx&&W.biz&&W.biz.length)fx.push('owner');}const O=W.ow,d=owNew();for(const k in d)if(O[k]===undefined)O[k]=d[k];

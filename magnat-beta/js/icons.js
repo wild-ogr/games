@@ -171,12 +171,28 @@ var SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,'LK-I':1,'LK-T':1,svg:1,SVG:1,text
 // значок «в кружке» — когда эмодзи единственное содержимое такого места
 var BADGE='.bz-ic,.bz-hand>i,.qs>i,.fu-av,.mt-ic,.cb-ic';
 function inSvg(n){for(var p=n.parentNode;p&&p.nodeType===1;p=p.parentNode){if(p.namespaceURI==='http://www.w3.org/2000/svg'||SKIP[p.nodeName])return true;if(p.id==='splash')return true;}return false;}
-function swapText(t){if(!t.parentNode)return;var s=t.nodeValue;if(!s||!RE.test(s)){RE.lastIndex=0;return;}RE.lastIndex=0;if(inSvg(t))return;
+// M38 (a45): числа не рвутся по строкам — «10 000 ₽», «30-го», «10 лет»: пробел после цифры и дефис в «30-го» — неразрывные
+var NBR=/(\d) (?=[\dА-Яа-яЁёA-Za-z₽%$€])|(\d)-(?=[а-яё]{1,3}(?![а-яёА-ЯЁ]))|(тыс\.|млн|млрд) (?=₽)/g;
+function nbFix(m,a,b,c){return a?a+'\u00a0':b?b+'\u2011':c+'\u00a0';}
+var WORD={en:['силы','energy'],cr:['кр.','cr.'],hand:['время','hands'],heart:['отношения','relations'],star:['рейтинг','rating'],sleep:['выходной','day off'],lock:['закрыто','locked'],ad:['реклама','ad']};
+function isEn(){try{return typeof LANG!=='undefined'&&LANG==='en';}catch(e){return false;}}
+// «Без значков»: эмодзи без своего SVG — тоже в обёртку (прячется), только когда режим включён
+var RAW=/(?:[\u2600-\u27BF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDD00-\uDFFF])\uFE0F?/g;
+function rawWrap(t){if(!document.body||!document.body.classList.contains('noico'))return false;var s=t.nodeValue;if(!s||!RAW.test(s)){RAW.lastIndex=0;return false;}RAW.lastIndex=0;if(inSvg(t))return false;
+  var par=t.parentNode,fr=document.createDocumentFragment(),last=0,mm;
+  while((mm=RAW.exec(s))){if(mm.index>last)fr.appendChild(document.createTextNode(s.slice(last,mm.index)));var el=document.createElement('lk-i');el.className='i-raw';el.innerHTML='<lk-t>'+mm[0]+'</lk-t>';fr.appendChild(el);last=mm.index+mm[0].length;}
+  if(last<s.length)fr.appendChild(document.createTextNode(s.slice(last)));par.replaceChild(fr,t);return true;}
+function swapText(t){if(!t.parentNode)return;var s=t.nodeValue;
+  if(s&&NBR.test(s)){NBR.lastIndex=0;if(!inSvg(t)){var s2=s.replace(NBR,nbFix);if(s2!==s){t.nodeValue=s2;s=s2;}}}NBR.lastIndex=0;
+  if(!RE.test(s)){RE.lastIndex=0;rawWrap(t);return;}RE.lastIndex=0;if(!s||!RE.test(s)){RE.lastIndex=0;return;}RE.lastIndex=0;if(inSvg(t))return;
   var par=t.parentNode,only=s.replace(RE,'').trim()==='',bd=false;
   if(only&&par&&par.matches&&par.matches(BADGE)){var n=0;for(var c=par.firstChild;c;c=c.nextSibling)if(c.nodeType===3?c.nodeValue.trim():c.nodeName!=='I'||!par.classList.contains('bz-ic'))n++;bd=n===1;}
   var fr=document.createDocumentFragment(),last=0,mm;
   while((mm=RE.exec(s))){if(mm.index>last)fr.appendChild(document.createTextNode(s.slice(last,mm.index)));
     var k=MAP[mm[1]],el=document.createElement('lk-i');el.className='i-'+k+(bd?' bd':'');el.setAttribute('style',vars(k));
+    // M38 (a45): «Без значков» (body.noico): у значка-единицы рядом с числом («⚡ 60», «+3 💎», «⭐ 4,2») — слово вместо значка (data-w)
+    var wd=WORD[k];if(wd){var bef=s.slice(Math.max(0,mm.index-3),mm.index),aft=s.slice(mm.index+mm[0].length,mm.index+mm[0].length+3);
+      if(/[\d+−-]\s?$/.test(bef)||/^\s?[\d+−-]/.test(aft))el.setAttribute('data-w',(isEn()?wd[1]:wd[0]));}
     el.innerHTML=svg(k)+'<lk-t>'+mm[0]+'</lk-t>';fr.appendChild(el);last=mm.index+mm[0].length;}
   if(last<s.length)fr.appendChild(document.createTextNode(s.slice(last)));
   par.replaceChild(fr,t);}

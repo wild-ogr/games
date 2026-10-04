@@ -85,7 +85,7 @@ function mapCard(){const W=w();if(!W||!W.ned)return '';let h='';const e=evOf(W);
 document.addEventListener('click',ev=>{const t=ev.target&&ev.target.closest?ev.target.closest('[data-nevo],[data-auco]'):null;if(!t)return;ev.preventDefault();ev.stopPropagation();snd('tap');
   if(t.dataset.nevo)open();else{const W=w(),a=W&&W.auc.find(x=>x.id===t.dataset.auco);if(a){try{UI.openRegion(a.r);}catch(x){}try{UI.openAuc(a.id);}catch(x){}}}},true);
 // само окно — один раз на событие, в спокойный момент (нет окон, обучения, пузыря Людмилы, рекламы)
-function quiet(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
+function quiet(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof winCalm==='function'&&!winCalm())return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
   try{if(UI.tutStep&&UI.tutStep())return false;}catch(x){}const a=$$('adv');if(a&&a.classList.contains('on'))return false;const d=$$('ad');if(d&&d.classList.contains('on'))return false;return true;}
 const aucSeen={};let busyT=0;
 setInterval(()=>{const W=w();if(!W||!W.ned)return;if(typeof modalOn!=='undefined'&&modalOn){busyT=Date.now();return;}if(Date.now()-busyT<2500||!quiet())return;

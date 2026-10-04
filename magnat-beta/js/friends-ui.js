@@ -51,7 +51,7 @@ function css(){if(document.getElementById('fu-css'))return;const s=document.crea
 .fu-bar{position:relative;height:14px;border-radius:7px;background:var(--soft,#eef1f4);margin:6px 0 2px;overflow:hidden}
 .fu-bar i{position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--muted,#5a6675);opacity:.5}
 .fu-bar b{position:absolute;top:0;bottom:0;border-radius:7px}
-.fu-sc{display:flex;justify-content:space-between;font-size:13px;color:var(--muted,#5a6675)}
+.fu-sc{display:flex;justify-content:space-between;font-size:14px;color:var(--muted,#5a6675)}
 .fu-can{display:block;font-size:15px;color:var(--ink,#1d2733);margin-top:4px}
 .fu-q{display:inline-block;margin-top:4px;background:#fff3e0;color:#8a4b00;border-radius:10px;padding:2px 8px;font-size:15px;font-weight:700}
 .fu-hd{display:flex;align-items:center;margin-bottom:10px}.fu-hd>.fu-av{margin-right:14px}.fu-hd b{font-size:20px;display:block}.fu-hd small{display:block;color:var(--muted,#5a6675);font-size:15px}
@@ -66,7 +66,7 @@ function css(){if(document.getElementById('fu-css'))return;const s=document.crea
 .fu-two{display:flex;flex-wrap:wrap;margin:0 -5px}.fu-two>div{flex:1 1 44%;min-width:150px;margin:0 5px 10px;background:var(--soft,#f2f4f7);border-radius:14px;padding:10px 12px;font-size:16px}
 .fu-two b{display:block;font-size:16px;margin-bottom:4px}
 .fu-log{list-style:none;padding:0;margin:0}.fu-log li{display:flex;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line,#e3e7ee);font-size:16px}
-.fu-log li span{flex:1 1 auto}.fu-log li small{flex:none;color:var(--muted,#5a6675);font-size:13px;margin-right:8px;width:62px}
+.fu-log li span{flex:1 1 auto}.fu-log li small{flex:none;color:var(--muted,#5a6675);font-size:14px;margin-right:8px;width:66px}
 .fu-log li em{flex:none;font-style:normal;font-weight:800;margin-left:8px}.fu-log .up{color:#2e7d32}.fu-log .dn{color:#c62828}
 .fu-help .btn{display:block;width:100%;min-height:56px;margin:0 0 4px;font-size:17px;text-align:left;padding-left:16px}
 .fu-help .fu-why{display:block;font-size:14px;color:var(--muted,#5a6675);margin:0 0 12px 4px}
@@ -87,13 +87,13 @@ function perks(w,id){const P=SY.PK,F=w.fr,f=SY.friend(w,id),L=f.lv,s=stage(),a=[
     add(T('Проверит финансы и подскажет, какой налог дешевле (УСН 6 % или 15 %)','Checks your finances and tells you which tax is cheaper (6% or 15%)'),1);
     add(T(`Поручительство: кредит в банке на ${Math.round(-P.guarDr[3]*100)} п. п. дешевле (не разлей вода — на ${Math.round(-P.guarDr[4]*100)}), лимит +15 %`,`Guarantee: a bank loan ${Math.round(-P.guarDr[3]*100)} p.p. cheaper (inseparable — ${Math.round(-P.guarDr[4]*100)}), limit +15%`),3,f.on.guar);
     add(T(`«Перекрою платёж»: ${P.bridgeK} платежа банку без процентов на 3 месяца`,`“I’ll cover it”: ${P.bridgeK} bank payments interest-free for 3 months`),3);
-    if(w.hold===1&&w.fr&&w.fr.dn&&w.fr.dn.owl4!==undefined)add(T('Позовёт в свой фонд «Сова Инвест»: около 1,3 % в месяц, ровно, руки свободны','Will invite you into her Owl Invest fund: about 1.3% a month, steady, hands free'),3);
+    if(w.hold===1&&w.fr&&w.fr.dn&&w.fr.dn.owl4!==undefined)add(T('Позовёт в свой фонд «Сова Инвест»: около 1,3 % в месяц, ровно, ваше время свободно','Will invite you into her Owl Invest fund: about 1.3% a month, steady, hands free'),3);
     add(T('Прохладно: ставка в банке +0,5 п. п., в ссоре +1 п. п.','Cool: bank rate +0.5 p.p., on the outs +1 p.p.'),-1,L<=1,1);}
   if(id==='beav'){
     if(!w.ned)add(T(`Пари: ставка ${pc(P.pari)} капитала или ${SY.PARI_CR||5} 💎 — выручка +10 % за месяц, выиграл — забираешь`,`Bets: ${pc(P.pari)} of net worth or ${SY.PARI_CR||5} 💎 — revenue +10% in a month, win and you take it`),1,f.on.pari);
     add(T('Займ без процентов — до 10 % его капитала','Interest-free loan — up to 10% of his net worth'),2);
     if(!w.ned)add(T(`Общая закупка: товар на ${pc(P.buyD)} дешевле, ${mon(P.buyM[3])} (не разлей вода — ${mon(P.buyM[4])})`,`Joint purchasing: goods ${pc(P.buyD)} cheaper for ${mon(P.buyM[3])} (inseparable — ${mon(P.buyM[4])})`),3,f.on.buy);
-    if(!w.ned&&s>=1)add(T('Предложит точку на двоих: доля 50 %, около 3 % в месяц к вкладу, руки свободны','Will offer a joint place: 50% share, about 3% a month on your stake, hands free'),3);
+    if(!w.ned&&s>=1)add(T('Предложит точку на двоих: доля 50 %, около 3 % в месяц к вкладу, ваше время свободно','Will offer a joint place: 50% share, about 3% a month on your stake, hands free'),3);
     add(T(`Прохладно: может открыть точку рядом с вашей — −${Math.round((1-P.rival[1])*100)} % покупателей на 3 месяца (в ссоре −${Math.round((1-P.rival[0])*100)} %)`,`Cool: may open a place next to yours — −${Math.round((1-P.rival[1])*100)}% customers for 3 months (on the outs −${Math.round((1-P.rival[0])*100)}%)`),-1,L<=1,1);}
   if(id==='bars'){
     if(s===0)add(T('Подкинет выгодную шабашку: оплата ×1,5','Passes you a well-paid side job: pay ×1.5'),2);
@@ -108,7 +108,7 @@ function perks(w,id){const P=SY.PK,F=w.fr,f=SY.friend(w,id),L=f.lv,s=stage(),a=[
     if(!w.ned)add(T(`Всегда: закупка −${pc(P.sup[3])} и доставка −${pc(P.logd[3])} (не разлей вода: −${pc(P.sup[4])} и −${pc(P.logd[4])})`,`Always: supplies −${pc(P.sup[3])} and delivery −${pc(P.logd[3])} (inseparable: −${pc(P.sup[4])} and −${pc(P.logd[4])})`),3,f.on.ship);
     add(T('Машины на месяц: доставка −25 %','Trucks for a month: delivery −25%'),3,f.on.truck);
     if(!w.ned)add(T(`Переезд точки за его счёт: −${pc(P.move[3])} (не разлей вода −${pc(P.move[4])})`,`Moving a place on his trucks: −${pc(P.move[3])} (inseparable −${pc(P.move[4])})`),3);
-    if(!w.ned&&s>=1&&s<=2)add(T('Предложит «Газель на двоих»: доля 50 %, около 2 % в месяц к вкладу, руки свободны','Will offer a shared van: 50% share, about 2% a month on your stake, hands free'),3);
+    if(!w.ned&&s>=1&&s<=2)add(T('Предложит «Газель на двоих»: доля 50 %, около 2 % в месяц к вкладу, ваше время свободно','Will offer a shared van: 50% share, about 2% a month on your stake, hands free'),3);
     add(T('В ссоре: доставка +10 %','On the outs: delivery +10%'),-1,L<=0,1);}
   return a.map(x=>Object.assign(x,{on:x.neg?!!x.act:L>=x.need}));}
 // короткая строка «сейчас может» для списка

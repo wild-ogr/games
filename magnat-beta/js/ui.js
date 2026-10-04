@@ -211,7 +211,39 @@ function buildNav(){const n=$$('nav'),on=TABS_ON(),key=on.join()+LANG;if(n.datas
   n.innerHTML=TAB_DEF.filter(t=>on.indexOf(t.id)>=0).map(t=>`<button data-tab="${t.id}"${cur===t.id||(cur==='reg'&&t.id==='map')?' class="on"':''}>${t.ico}<span>${L(t.ru,t.en)}</span></button>`).join('');
   // телефон на узком экране закрывает весь экран: другая вкладка меню сначала закрывает его (на широком он сбоку — не трогаем)
   n.querySelectorAll('button').forEach(b=>b.onclick=()=>{snd('tap');if(b.dataset.tab!=='phone'&&window.PHONE&&PHONE.isOpen&&innerWidth<900)PHONE.close();go(b.dataset.tab);});}
-let cur='map',curReg='kuz',hlSel=null,hlTut=false,hlScroll=false;const scrollMem={};const Q=[];const watch={};
+let cur='map',curReg='kuz',hlSel=null,hlTut=false,hlScroll=false;const Q=[];const watch={};
+
+/* ===== M37: память прокрутки. Ключ вида = экран (+регион) + подвид модуля (BIZUI/FIN/REALTY_UI .navKey(экран)).
+   Смена ключа: «назад» (стрелка ←, .back, Android/Esc/свайп — UI.back) или ключ есть в истории — позиция, где был; вкладка (меню, .f-tab, [role=tab], data-b=tab) — где был;
+   иначе — вперёд: сверху. Тот же ключ (данные перерисовались) — #main не трогаем, вложенные прокрутки (.fchips и т. п.) возвращаем.
+   Позиции пишет слушатель scroll (до перерисовки, поэтому обрезка короткой страницей не портит память). Вызов — navSync() в render() и наблюдатель экранов. */
+const NAV={k:null,mem:{},hist:[],it:null,itT:0};
+function navScr(){const s=document.querySelector('#main > .screen.on');return s?s.id.replace(/^scr-/,''):cur;}
+function navKey(){const s=navScr();let k=s+(s==='reg'?':'+curReg:'');
+  for(const g of ['BIZUI','FIN','REALTY_UI']){const o=window[g];if(o&&typeof o.navKey==='function'){try{const x=o.navKey(s);if(x)k+='/'+x;}catch(e){}}}return k;}
+function navIntent(t){NAV.it=t;NAV.itT=Date.now();}
+function navMem(k){return NAV.mem[k]||(NAV.mem[k]={y:0,n:{}});}
+function navScrEl(){return document.querySelector('#main > .screen.on');}
+function navSig(el,root){if(!root||!root.contains(el)||el===root)return '';const sel=el.id?'#'+el.id:el.classList&&el.classList.length?'.'+el.classList[0]:'';if(!sel)return '';
+  const all=root.querySelectorAll(sel);for(let i=0;i<all.length;i++)if(all[i]===el)return sel+'|'+i;return '';}
+function navNest(k,force){const r=navScrEl(),n=NAV.mem[k]&&NAV.mem[k].n;if(!r||!n)return;
+  for(const s in n){const p=s.split('|'),el=r.querySelectorAll(p[0])[+p[1]];if(!el)continue;const v=n[s];if(force||(el.scrollLeft===0&&el.scrollTop===0)){el.scrollLeft=v[0];el.scrollTop=v[1];}}}
+function navSync(){const m=$$('main');if(!m)return;const k=navKey();
+  if(k===NAV.k){navNest(k,false);return;}
+  const p=NAV.k;NAV.k=k;const it=Date.now()-NAV.itT<700?NAV.it:null;NAV.it=null;if(p==null)return;
+  const i=NAV.hist.lastIndexOf(k);
+  if(it==='back'||i>=0){if(i>=0)NAV.hist.length=i;scrollPin(m,navMem(k).y);navNest(k,true);}
+  else if(it==='tab'){scrollPin(m,navMem(k).y);navNest(k,true);}
+  else{NAV.hist.push(p);if(NAV.hist.length>40)NAV.hist.shift();NAV.mem[k]={y:0,n:{}};m._pin=(m._pin|0)+1;m.scrollTop=0;}}
+document.addEventListener('scroll',e=>{const t=e.target,m=$$('main');if(!m||NAV.k==null||!t||t.nodeType!==1)return;
+  if(t===m){navMem(NAV.k).y=m.scrollTop;return;}if(m.contains(t)){const s=navSig(t,navScrEl());if(s)navMem(NAV.k).n[s]=[t.scrollLeft,t.scrollTop];}},{capture:true,passive:true});
+document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('button,a,[data-a],[data-b],[data-ra]');if(!b||b.closest('#modal'))return;
+  if(/^\s*←/.test(b.textContent||'')||b.matches('.back,.f-back,[data-b="bback"],[data-ra="back"]'))navIntent('back');
+  else if(b.matches('#nav button,[role="tab"],.f-tab,.re-tabs button,.pick button,[data-b="tab"]'))navIntent('tab');},true);
+// запасной путь: экран перерисовали в обход render() (fin.js, realty-ui.js, телефон) — наблюдатель за содержимым и классом экранов
+function navObs(){const m=$$('main');if(!m||!window.MutationObserver||NAV.obs)return;NAV.obs=new MutationObserver(()=>{try{navSync();}catch(e){}});
+  const add=()=>m.querySelectorAll(':scope > .screen').forEach(s=>{if(s.navObs)return;s.navObs=1;NAV.obs.observe(s,{childList:true,attributes:true,attributeFilter:['class']});});
+  add();new MutationObserver(add).observe(m,{childList:true});if(NAV.k==null)NAV.k=navKey();}
 
 // история экранов для «Назад» (кнопка Android, Esc, свайп от левого края, «←»): возвращает на предыдущий экран, а не всегда на главный
 const navStack=[];let navBack=false;
@@ -222,18 +254,19 @@ function go(tab,r){
   const prev=cur,prevReg=curReg;if(tab==='reg'&&r)curReg=r;if(!hlTut)hlSel=null;if(tab!==cur)advStale();
   if(tab!==prev&&window.BIZUI&&BIZUI.leave)try{BIZUI.leave(prev,tab);}catch(e){}   // M30: ушли с вкладки — карточка точки закрывается (вернёмся к списку)
   if(!navBack&&(tab!==prev||(tab==='reg'&&curReg!==prevReg))){navStack.push({t:prev,r:prevReg});if(navStack.length>30)navStack.shift();}
-  const m=$$('main');scrollMem[cur+(cur==='reg'?curReg:'')]=m.scrollTop;cur=tab;
+  if(navBack)navIntent('back');cur=tab;   // M37: прокрутку запоминает/ставит navSync (вызов в render)
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id==='scr-'+tab));
   // плавный переход: вглубь — выезд справа, назад — слева, смена вкладки — лёгкое проявление (в спокойном режиме — без движения)
   const sc=$$('scr-'+tab);if(sc&&tab!==prev){sc.classList.remove('push','pop','fade');if(!calm()){void sc.offsetWidth;sc.classList.add(navBack?'pop':tab==='reg'?'push':'fade');}}
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab||(tab==='reg'&&b.dataset.tab==='map')));
   if(hlSel&&hlSel.indexOf('data-tab="'+tab+'"')>=0){hlSel=null;}
-  render('go');m.scrollTop=scrollMem[tab+(tab==='reg'?curReg:'')]||0;tutTick();}
+  render('go');tutTick();}
 function render(ev){const W=w();if(!W)return;
   try{if(BZ()&&BZ().render(cur,ev)){}else if(cur==='map')rMap();else if(cur==='reg')rReg();else if(cur==='obj')rObj();else if(cur==='logi')rLogi();
     else if(cur==='market'){const el=$$('scr-market');if(ev&&ev!=='go'&&hasFin('refresh')&&el.firstChild){if(ev!=='day')FIN.refresh();}else if(hasFin('renderMarket'))FIN.renderMarket(el);else el.innerHTML='<div class="card mut">'+L('Рынок загружается…','Market is loading…')+'</div>';}
     else if(cur==='fin'){const el=$$('scr-fin');if(ev&&ev!=='go'&&hasFin('refresh')&&el.firstChild){if(ev!=='day')FIN.refresh();}else if(hasFin('renderFin'))FIN.renderFin(el);else el.innerHTML='<div class="card mut">'+L('Финансы загружаются…','Finance is loading…')+'</div>';}
   }catch(e){console.error(e);}
+  try{navSync();}catch(e){console.error(e);}
   navDots();applyHl();if(BZ())try{BZ().after(cur,ev);}catch(e){console.error(e);}}
 // пока палец на экране — смену дня не рисуем (дорисуем сразу после отпускания): нажатие не попадает в перерисовку
 let ptrDown=0,pendDay=false;
@@ -582,8 +615,8 @@ function act(name,...a){let r;try{r=GAME.act(name,...a);}catch(e){console.error(
   else if(r==='limit'){snd('no');tst(L('Банк больше не даёт','The bank won’t lend more'));}
   return r;}
 function closeM(){hideModal();setTimeout(nextQ,60);}
-function showQ(fn){if(modalOn||adOn())Q.push(fn);else fn();}
-function nextQ(){if(!modalOn&&!adOn()&&Q.length){const f=Q.shift();try{f();}catch(e){console.error(e);}}}
+function showQ(fn){if(modalOn||adOn()||(typeof winCalm==='function'&&!winCalm()))Q.push(fn);else fn();}
+function nextQ(){if(!modalOn&&!adOn()&&!(typeof winCalm==='function'&&!winCalm())&&Q.length){const f=Q.shift();try{f();}catch(e){console.error(e);}}}
 const adOn=()=>{const a=$$('ad');return !!(a&&a.classList.contains('on'))||(typeof paused!=='undefined'&&paused&&!document.hidden);};
 function onClick(e){const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a,id=b.dataset.id,W=w();
   if(hlSel&&!hlTut){try{if(b.matches(hlSel))hlSel=null;}catch(er){}}
@@ -681,7 +714,7 @@ function openOffline(s){if(BZ()&&BZ().offline(s))return;const W=w(),mo=s.months|
     <button class="btn green" id="oOk">${L('К делам','Back to work')}</button>${canPay?`<button class="btn noenter" id="oShop">🛒 ${L('Управляющий на '+GAME.SHIFT_MGR_H+' ч',GAME.SHIFT_MGR_H+'-hour manager')}</button>`:''}</div>`;
   modal(h);try{modalRe=()=>openOffline(s);}catch(e){}
   $$('oOk').onclick=()=>{snd('tap');closeM();if(!s.ext&&BZ()&&BZ().offAd)BZ().offAd();};
-  if($$('oExt'))$$('oExt').onclick=()=>{hideModal();STAT.place('shift');showRewarded(()=>{shiftStat('ad');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);},()=>setTimeout(nextQ,60));};
+  if($$('oExt'))$$('oExt').onclick=()=>{if(adHold())return;hideModal();STAT.place('shift');showRewarded(()=>{shiftStat('ad');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);},()=>setTimeout(nextQ,60));};
   if($$('oExtM'))$$('oExtM').onclick=()=>{snd('tap');hideModal();shiftStat('mgr');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);};   // M36: с «Управляющим» — без ролика
   if($$('oShop'))$$('oShop').onclick=()=>{snd('tap');try{openShop('pack',{from:'off',hl:'manager'});}catch(e){}};}
 
@@ -760,7 +793,7 @@ function openIpo(){const W=w();if(!GAME.ipoReady())return;const v=GAME.value(),h
 // «Как играть»: по главам (текст M9 3.1), темп текущей главы считаем сами; в «Недрах» — подробно про недра
 function openHow(){const W=w(),mm=GAME.DAY_BASE*30/60000,mmT=String(Math.round(mm*10)/10).replace('.',LANG==='en'?'.':','),ch=n=>`<b>${L('Глава '+n,'Chapter '+n)}.</b>`;
   const top=`<p class="mut" style="font-size:16px!important">${L(`Сейчас 1 игровой месяц = ${mmT} ${pl(mm,'минута','минуты','минут','minute','minutes')}. Кнопка ×1 в шапке — вдвое быстрее (×2) или пауза (⏸).`,`Right now 1 game month = ${mmT} ${mm===1?'minute':'minutes'}. The ×1 button in the header doubles the speed (×2) or pauses (⏸).`)}</p>`;
-  const cr=`<p><b>💎 ${L('Кристаллы','Crystals')}</b> — ${L('за главы, вехи, достижения и ролики. Ими можно немного ускорить дело, взять ещё руку или силы, купить украшения. Ускорения чуть сказываются и на рейтинге недели, но само место не продаётся.','for chapters, milestones, achievements and videos. They speed things up a little, buy an extra hand or energy, or decorations. Speed-ups count a little towards the weekly ranking, but a place can’t be bought.')}</p>`;
+  const cr=`<p><b>💎 ${L('Кристаллы','Crystals')}</b> — ${L('за главы, вехи, достижения и ролики. Ими можно немного ускорить дело, взять время ещё на одно дело или силы, купить украшения. Ускорения чуть сказываются и на рейтинге недели, но само место не продаётся.','for chapters, milestones, achievements and videos. They speed things up a little, buy an extra hand or energy, or decorations. Speed-ups count a little towards the weekly ranking, but a place can’t be bought.')}</p>`;
   const body=W&&W.ned?`
   <p>1. <b>${L('Разведка','Exploration')}</b> — ${L('на карте откройте регион и разведайте участок с «?».','open a region on the map and explore a “?” plot.')}</p>
   <p>2. <b>${L('Лицензия','Licence')}</b> — ${L('нашли полезное — берите лицензию: без торгов или на торгах с соперниками. Разумная цена — до 0,6 оценки.','found something — get the licence: directly or at an auction against rivals. A sensible price is up to 0.6 of the estimate.')}</p>
@@ -771,7 +804,7 @@ function openHow(){const W=w(),mm=GAME.DAY_BASE*30/60000,mmT=String(Math.round(m
   <p>7. <b>${L('Кредиты','Loans')}</b> — ${L('во вкладке «Финансы». Банк сам скажет, сколько даст. Берите на заводы, но следите, чтобы платежи по долгу не съедали прибыль.','in Finance. The bank tells you how much it will lend. Borrow for plants, but don’t let debt payments eat your profit.')}</p>
   <p>8. <b>IPO</b> — ${L('стоимость от '+M(E.IPO_EQ)+' и год с прибылью: выводите холдинг на биржу и начинайте новый, с репутацией выше.','value from '+M(E.IPO_EQ)+' and a profitable year: take the holding public and start a new one with a better reputation.')}</p>
 `:`
-  <p>${ch(1)} <b>${L('Карьера','Career')}</b> — ${L('у вас 5 000 ₽ и работа кладовщиком. Берите заказы на вкладке «Заказы» — они выполняются сами, нажимать не нужно. ✋ Руки — сколько дел сразу; ⚡ силы тратятся на заказы и восстанавливаются сном и выходным.','you have 5,000 ₽ and a storekeeper’s job. Take jobs in the Orders tab — they get done by themselves, no tapping needed. ✋ Hands are how many jobs you can do at once; ⚡ energy is spent on jobs and comes back with sleep and a day off.')}</p>
+  <p>${ch(1)} <b>${L('Карьера','Career')}</b> — ${L('у вас 5 000 ₽ и работа кладовщиком. Берите заказы на вкладке «Заказы» — они выполняются сами, нажимать не нужно. ✋ Время — сколько дел сразу; ⚡ силы тратятся на заказы и восстанавливаются сном и выходным.','you have 5,000 ₽ and a storekeeper’s job. Take jobs in the Orders tab — they get done by themselves, no tapping needed. ✋ Hands are how many jobs you can do at once; ⚡ energy is spent on jobs and comes back with sleep and a day off.')}</p>
   <p>${ch(2)} <b>${L('Своё дело','My business')}</b> — ${L('накопили — оформляйте ИП и открывайте точку на вкладке «Бизнес». Кофейный автомат работает сам, а в ларьке стоите вы, пока не наймёте управляющего. Точки приносят выручку каждый день.','once you’ve saved up, register as a sole trader and open an outlet in the Business tab. A coffee machine runs by itself; at a kiosk you stand yourself until you hire a manager. Outlets earn every day.')}</p>
   <p>${ch(3)} <b>${L('Сеть','Network')}</b> — ${L(`капитал от ${M(E.OOO_EQ)}, 4 точки, хотя бы один управляющий и кредитная история от 50 — регистрируйте ООО. Склад и опт, стройбаза, самосвалы, второй город.`,`equity from ${M(E.OOO_EQ)}, 4 outlets, at least one manager and a credit history of 50+ — register an LLC. Wholesale, a builders’ yard, dump trucks, a second city.`)}</p>
   <p>${ch(4)} <b>${L('Карьер','Quarry')}</b> — ${L(`капитал от ${M(E.QUARRY_EQ)} и стройбаза или 2 самосвала: торги за участки с песком и щебнем, свой карьер вместо закупки.`,`equity from ${M(E.QUARRY_EQ)} and a builders’ yard or 2 dump trucks: auctions for sand and gravel plots, your own quarry instead of buying.`)}</p>
@@ -781,6 +814,7 @@ function openHow(){const W=w(),mm=GAME.DAY_BASE*30/60000,mmT=String(Math.round(m
   <p><b>📱 ${L('Телефон','Phone')}</b> — ${L('сообщения друзей из 11 «Б», банк, новости. Со 2-й главы — недвижимость: квартиры под аренду, ипотека, помещения.','messages from your Class 11B friends, the bank, news. From chapter 2 — real estate: flats to rent out, mortgages, commercial units.')}</p>
   <p><b>${L('Без вас','While away')}</b> — ${L(`1 игровой месяц за час, до ${GAME.shiftH()} ч: точки торгуют, начатые заказы доделываются${W&&W.me&&W.me.job?', зарплата капает':''}. Новое без вас не открывается.`,`1 game month per hour away, up to ${GAME.shiftH()} h: outlets trade, started jobs get finished${W&&W.me&&W.me.job?', the wage comes in':''}. Nothing new is opened without you.`)}</p>`;
   modal(`<h2>❓ ${L('Как играть','How to play')}</h2>${top}${body}${cr}
+  ${window.GLOSS?GLOSS.listHtml(false):''}
   <p class="mut" style="font-size:15px!important">${L('На компьютере: 1–5 — вкладки, Esc — назад или закрыть.','On a computer: 1–5 switch tabs, Esc goes back or closes.')}</p>
   <div class="row"><button class="btn green" id="hClose">${L('Понятно','Got it')}</button></div>`);
   try{modalRe=openHow;}catch(e){}$$('hClose').onclick=()=>{snd('tap');closeM();};}
@@ -801,7 +835,7 @@ function advShow(o){advCur=o;const el=$$('adv');clearTimeout(advT);try{if(o.hold
   if($$('advOff'))$$('advOff').onclick=()=>{snd('tap');tutOffAsk();};}
 // в главах 1–2 (подработки, свои точки) окно 💎 объясняет траты этих глав; в недрах — как было
 function crCh1(){try{const W=w();if(!W||W.ned||!W.me||E.stI(W)>1)return;const p=document.querySelector('#mcard p');if(!p)return;
-  p.innerHTML=L(`У вас <b>${S.cr} 💎</b>. Их дают за достижения и рекламу. Тратятся на: «Второе дыхание» (+50 сил), «Срочный заказ» (оплата ×1,5), «+1 рука» и «+20 сил» навсегда. Рейтинг недели они двигают лишь чуть-чуть — само место в нём не продаётся.`,`You have <b>${S.cr} 💎</b>. You get them for achievements and ads. Spend them on: “Second wind” (+50 energy), “Urgent order” (pay ×1.5), “+1 hand” and “+20 energy” for good. They move the weekly leaderboard only a little — a place in it isn’t sold.`);}catch(e){}}
+  p.innerHTML=L(`У вас <b>${S.cr} 💎</b>. Их дают за достижения и рекламу. Тратятся на: «Второе дыхание» (+50 сил), «Срочный заказ» (оплата ×1,5), «+1 дело одновременно» и «+20 сил» навсегда. Рейтинг недели они двигают лишь чуть-чуть — само место в нём не продаётся.`,`You have <b>${S.cr} 💎</b>. You get them for achievements and ads. Spend them on: “Second wind” (+50 energy), “Urgent order” (pay ×1.5), “+1 hand” and “+20 energy” for good. They move the weekly leaderboard only a little — a place in it isn’t sold.`);}catch(e){}}
 function advHide(){try{GAME.hold.delete('advb');}catch(e){}$$('adv').classList.remove('on');document.body.classList.remove('advon');advCur=null;holdTut();}
 function advOpen(){snd('tap');const W=w();if(!W)return;if($$('adv').classList.contains('on')){advHide();return;}
   if(BZ()&&!W.ned){BZ().advOpen();return;}
@@ -1014,7 +1048,9 @@ function fly(from,amount,kind){const cr=kind==='cr',tg=$$(cr?'crBtn':'hCash');if
   setTimeout(()=>{if(cashHold&&Date.now()-cashHold>2500){cashHold=0;cashShown=null;hdr();}},2600);}
 // салют: canvas поверх всего на ~1,6 с; small — маленький «хлопок» (открылась точка, достроили объект)
 function salute(small){if(calm()||!window.requestAnimationFrame)return;const cv=document.createElement('canvas'),dpr=Math.min(2,window.devicePixelRatio||1),W0=window.innerWidth,H0=window.innerHeight;
-  cv.className='salute';cv.width=W0*dpr;cv.height=H0*dpr;document.body.appendChild(cv);const x=cv.getContext('2d');if(!x){cv.remove();return;}x.scale(dpr,dpr);
+  cv.className='salute';cv.width=W0*dpr;cv.height=H0*dpr;
+  // M38 (a45): при открытом окне конфетти — за листом окна (не поверх итога месяца/главы)
+  const mo=typeof modalOn!=='undefined'&&modalOn&&$$('modal');if(mo){cv.classList.add('behind');mo.insertBefore(cv,mo.firstChild);}else document.body.appendChild(cv);const x=cv.getContext('2d');if(!x){cv.remove();return;}x.scale(dpr,dpr);
   const cs=getComputedStyle(document.body),col=['--accent','--good','--gold','--bad','--cr1'].map(v=>cs.getPropertyValue(v).trim()||'#2e5bff').concat(['#ffd98a']);
   const P=[],bursts=small?[[W0/2,H0*.42]]:[[W0*.3,H0*.32],[W0*.7,H0*.28],[W0*.5,H0*.45]];
   bursts.forEach((b,k)=>{for(let i=0;i<(small?36:60);i++){const a=Math.random()*Math.PI*2,v=(small?2.2:3)+Math.random()*(small?3:4.5);P.push({x:b[0],y:b[1],vx:Math.cos(a)*v,vy:Math.sin(a)*v-1.5,c:col[(i+k)%col.length],s:3+Math.random()*4,r:Math.random()*6,d:k*9});}});
@@ -1045,7 +1081,7 @@ function applyBig(){document.body.classList.toggle('big',!!S.big);}
 /* ================= клавиши ПК: 1–5 — вкладки, Esc — назад ================= */
 function onKey(e){if(e.ctrlKey||e.metaKey||e.altKey||e.repeat||modalOn||adOn())return;
   if(e.key==='Escape'){back();e.preventDefault();}
-  else if(/^[1-9]$/.test(e.key)){const t=TABS_ON()[+e.key-1];if(t){snd('tap');go(t);}}}
+  else if(/^[1-9]$/.test(e.key)){const t=TABS_ON()[+e.key-1];if(t){snd('tap');navIntent('tab');go(t);}}}
 
 /* ================= запуск ================= */
 function init(){
@@ -1053,7 +1089,7 @@ function init(){
   buildNav();
   $$('crBtn').onclick=()=>{snd('tap');try{if(window.BIZUI&&BIZUI.early&&BIZUI.early()){toast(L('💎 копятся. Магазин откроется после 10 заказов — сначала заработаем на своё дело.','💎 are adding up. The shop opens after 10 orders — first let’s earn for a business.'),3200);return;}openShop('',{from:'hdr'});crCh1();}catch(e){}};   // M30: магазин — не в первые минуты
   $$('btnSet').onclick=()=>{snd('tap');try{openSettings();}catch(e){}};
-  $$('main').addEventListener('click',onClick);applyBig();modalWatch();
+  $$('main').addEventListener('click',onClick);applyBig();modalWatch();try{navObs();}catch(e){}
   const hn=document.querySelector('.hname');if(hn){hn.style.cursor='pointer';hn.onclick=()=>{if(BZ()&&BZ().hname(w()))return;snd('tap');openRename();};}
   if($$('spdBtn'))$$('spdBtn').onclick=spdCycle;
   $$('advMin').innerHTML=face('calm');$$('advMin').onclick=advOpen;
@@ -1084,7 +1120,8 @@ function init(){
   sheetSwipe();}
 
 // «Назад» Android: пузырь советника → регион → карта; на карте — false (обёртка решит сама)
-function back(){if($$('adv').classList.contains('on')){advHide();return true;}if(BZ()&&BZ().back())return true;
+function back(){navIntent('back');if($$('adv').classList.contains('on')){advHide();return true;}if(BZ()&&BZ().back())return true;
+  {const sb=document.querySelector('#main > .screen.on .f-back,#main > .screen.on [data-ra="back"]');if(sb&&sb.offsetParent!==null){sb.click();return true;}}   // M37: подвид экрана (Финансы → отчёт/банк…, недвижимость) — сначала его «←»
   const okT=t=>t==='reg'||TABS_ON().indexOf(t)>=0||(BZ()&&['today','gigs','biz','net','pit'].indexOf(t)>=0);
   while(navStack.length){const p=navStack.pop();if(p.t===cur&&(p.t!=='reg'||p.r===curReg))continue;if(!okT(p.t))continue;navBack=true;try{go(p.t,p.r);}finally{navBack=false;}return true;}
   if(cur!==HOME()){navBack=true;try{go(HOME());}finally{navBack=false;}return true;}return false;}
@@ -1094,6 +1131,7 @@ function back(){if($$('adv').classList.contains('on')){advHide();return true;}if
   document.addEventListener('pointerup',e=>{if(x0<0)return;const dx=e.clientX-x0,dy=Math.abs(e.clientY-y0);x0=-1;if(dx>80&&dy<60&&Date.now()-t0<800){snd('tap');back();}},{passive:true});
   document.addEventListener('pointercancel',()=>{x0=-1;},{passive:true});})();
 window.UI={fly,salute,pulse:pulseEl,tweenNum,face,TAB_DEF,buildNav,init,refresh,go,back,restartTut,idleTest:()=>{lastIn=0;lastIdle=0;idleWait=0;idleTick();return advCur&&advCur.key;},show:t=>go(t),openRegion:r=>go('reg',r),render,openHow,openAuc,openClose,openOffline,openIpo,openFac,openRoute,adv:advShow,advOpen,tutStep,
+  navSync,navKey,navIntent,navMem:()=>NAV,
   get cur(){return cur;},get reg(){return curReg;}};
 init();
 })();
