@@ -97,6 +97,8 @@ function cloudApply(start){if(!cloudPending||(!start&&typeof G!=='undefined'&&G&
 /* ================= площадка: Яндекс Игры или VK ================= */
 // VK передаёт в адрес игры параметры запуска (vk_app_id и др.); ?vk=1 — проверка VK-режима на маке
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
+const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
+const OK_LINK=''; // ссылка на игру в ОК; пусто — «Поделиться» в ОК спрятано
 let ysdk=null,YP=null,VK=null,paused=false,muted=false;
 /*STAT*/
 /* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
@@ -141,7 +143,8 @@ var STAT=(function(){
 
   /* STAT.init({g:'gastronom', gv:'v16', plat:PLAT, lang:LANG, url:STAT_URL, now:nowMs, S:S, rate:1}) — README.
      url пустой → модуль молчит. Боевой адрес на маке/LAN/file:// или в автомате (webdriver, HeadlessChrome) обнуляется (_dbg().cut);
-     ?stat=dev на localhost — журнал в консоль и window.__stat без отправки. Площадка yandex на *.github.io пишется как p:'web'. */
+     ?stat=dev на localhost — журнал в консоль и window.__stat без отправки. Площадка yandex на *.github.io пишется как p:'web',
+     vk в Одноклассниках (vk_client=ok) — как p:'ok' (игра по-прежнему передаёт plat:PLAT, модуль различает сам). */
   var first=false,hooked=false,cut='';
   function locH(h){return /^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|0\.0\.0\.0|)$|\.localhost$|\.local$|\.test$|^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(String(h||''));}
   function locU(u){var m=/^https?:\/\/(\[[^\]]*\]|[^\/:?#]+)/i.exec(u);return !!m&&locH(m[1]);}
@@ -156,8 +159,11 @@ var STAT=(function(){
     if(!enabled()||Math.random()>=(typeof O.rate==='number'?O.rate:1)){on=false;ls('stat-q-'+G,null);saveSt();return;}
     start();}
   function start(){var d=device(),i,x,se=window.__se;on=true;sk=rnd();seq=0;
-    hdr={v:V,sv:SV,g:G,gv:String(O.gv||'').slice(0,20),p:String(O.plat==='yandex'&&/\.github\.io$/.test(location.hostname)?'web':O.plat||'').slice(0,8),l:String(O.lang||'').slice(0,4),
-      vp:scrub(qp('vk_platform'),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
+    // Одноклассники: та же VK-сборка, запущенная с vk_client=ok (vk_platform — с хвостом _ok; на маке ?vk=1&ok=1) → площадка p:'ok',
+    // а vp — без хвоста (mobile_android_ok не влезает в 16 знаков; значения те же, что в VK: desktop_web, mobile_android, mobile_iphone, mobile_web)
+    var okp=/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
+    hdr={v:V,sv:SV,g:G,gv:String(O.gv||'').slice(0,20),p:String(O.plat==='yandex'&&/\.github\.io$/.test(location.hostname)?'web':O.plat==='vk'&&okp?'ok':O.plat||'').slice(0,8),l:String(O.lang||'').slice(0,4),
+      vp:scrub(qp('vk_platform').replace(/_ok$/,''),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
     pend=dev&&!O.url?[]:jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[]; // журнал мака очередь не трогает
     // start ждёт STAT.progress() (поля pl, cn, bt), но не дольше 3 с; события до него встанут после
     sP=['start',sec(),{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)}];
@@ -301,7 +307,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v2.0-100420',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v2.0-100423',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
@@ -323,16 +329,21 @@ const SDK_WAIT=20000;
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||SDK_WAIT);});}
 function vkSend(method,params,ms){return withTimeout(window.vkBridge.send(method,params||{}),ms||4000);}
 /*SOC*/
-/* ===== SOC v2.1 (04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
+/* ===== SOC v2.2 (04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
    Общий модуль для всех игр. Источник — ~/Projects/hobby-analytics/soc/soc.js (правки — только там, потом soc-sync.sh).
    Правила VK: 2.6.2 — никаких наград за приглашение/«поделиться»/избранное/экран (разрешено лишь за вступление в сообщество —
    в наших играх НЕ даём); 2.6.3 — само-предложения не в первую сессию, отказ помним, повтор не чаще раза в 30 дней, ≤3 раз.
    Покер (18+) в список не добавлять никогда. 12+ (Дурак, Козёл) — с пометкой «12+».
-   Старый синтаксис: без optional chaining и nullish-оператора, без CSS-свойства inset. Нужны из игры: PLAT ('vk'|…), VK (мост после VKWebAppInit или null), vkSend(метод,параметры,мс). */
+   Старый синтаксис: без optional chaining и nullish-оператора, без CSS-свойства inset. Нужны из игры: PLAT ('vk'|…), VK (мост после VKWebAppInit или null), vkSend(метод,параметры,мс).
+   ОК (Одноклассники; та же игра VK, запущенная с vk_client=ok — модуль узнаёт сам, SOC.isOk): в ОК нет избранного и значка на экран,
+   ссылки на vk.com запрещены, группа у нас только ВКонтакте, ID игр в ОК другие. Поэтому в ОК остаётся только «Позвать друзей»
+   (окно приглашения с обязательным message), а остальное включается настройками SOC.init: okLink — ссылка на игру в ОК («Поделиться»),
+   okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК («Ещё игры», только сайт и мобильный браузер ОК). */
 var SOC=(function(){
-  var GROUP=241793582,DAY=864e5,VER=2.1;
+  var GROUP=241793582,DAY=864e5,VER=2.2;
   // i — место в спрайте dvor.jpg (по 96 px), g — группа (c карты, p головоломки, s сказка, r спокойные), a — возраст,
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
+  // ok — ID этой игры в Одноклассниках (vk_ok_app_id), когда она там вышла; без него в ОК игра в «Ещё игры» не показывается.
   var GAMES=[
     {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p'},
     {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p'},
@@ -351,6 +362,8 @@ var SOC=(function(){
   var N=GAMES.length;
   function qp(k){var m=new RegExp('[?&]'+k+'=([^&#]*)').exec(location.search);return m?decodeURIComponent(m[1]):'';}
   var APP=+qp('vk_app_id')||0,PF=qp('vk_platform'),WEB=PF.indexOf('desktop')===0;
+  // Одноклассники: vk_client=ok (и vk_platform с хвостом _ok); на маке — ?vk=1&ok=1. То же правило, что у константы OK в играх
+  var OKP=/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search),OKWEB=PF.indexOf('web')>=0;
   var st={},O={},T0=Date.now(),asked=false,homeOk=null,readyOn=false;
   function tx(ru,en){return typeof LANG!=='undefined'&&LANG==='en'?en:ru;} // VK всегда по-русски; обёртка — по правилам игр
   function nop(){}
@@ -360,6 +373,11 @@ var SOC=(function(){
   // только настоящий VK (vk_app_id в адресе) и живой мост
   function ok(){return typeof PLAT!=='undefined'&&PLAT==='vk'&&typeof VK!=='undefined'&&!!VK&&APP>0;}
   function send(m,p){return vkSend(m,p||{},60000);}
+  // что доступно на этой площадке: inv|share|fav|home|grp|more. В VK — всё (как было), в ОК — см. шапку модуля
+  function can(k){if(!ok())return false;
+    if(k==='more')return list(1).length>0;
+    if(!OKP)return k==='home'?!!homeOk:k==='fav'?!(st.fav&&st.fav.d):true;
+    return k==='inv'||(k==='share'&&!!O.okLink)||(k==='grp'&&!!O.okGroup);}
   function me(){for(var i=0;i<N;i++)if(GAMES[i].id===APP)return GAMES[i];return null;}
   function done(k){st[k]={d:1};saveFn();}
   function tried(k){var x=st[k]||{};x.n=(x.n||0)+1;x.t=Date.now();st[k]=x;saveFn();}
@@ -372,10 +390,10 @@ var SOC=(function(){
      cls — классы кнопок (по умолчанию 'btn noenter': Enter их не жмёт); modal(html) — показать окно игры и вернуть его
      контейнер; close() — закрыть окно игры. Без modal — своё лёгкое окно. */
   function init(S,opt){O=opt||{};if(!S.soc||typeof S.soc!=='object')S.soc={};st=S.soc;
-    st.ses=(st.ses||0)+1;if(qp('vk_is_favorite')==='1')st.fav={d:1};saveFn();ready();}
+    st.ses=(st.ses||0)+1;if(!OKP&&qp('vk_is_favorite')==='1')st.fav={d:1};saveFn();ready();}
   // после VKWebAppInit (мост готов): узнать, можно ли значок на экран (только Android)
   function ready(){if(readyOn||!ok())return;readyOn=true;
-    if(PF.indexOf('android')>=0)vkSend('VKWebAppAddToHomeScreenInfo',{},4000).then(function(r){
+    if(!OKP&&PF.indexOf('android')>=0)vkSend('VKWebAppAddToHomeScreenInfo',{},4000).then(function(r){
       homeOk=!!(r&&r.is_feature_supported&&!r.is_added_to_home_screen);},function(){homeOk=false;});
     else homeOk=false;}
   // облако: вызвать из слияния сохранений игры — SOC.merge(d.soc); сессии — максимум, «сделано» — навсегда, попытки — больше/позже
@@ -393,16 +411,22 @@ var SOC=(function(){
   // «Приведи друга» (модуль REF, если он есть в игре и включён): вместо окна приглашения — ссылка с меткой #ref=<id>,
   // иначе друг, открывший игру с телефона, не засчитается (окно приглашения передаёт автора только на сайте ВК)
   function refOn(){return typeof REF!=='undefined'&&!!REF&&typeof REF.on==='function'&&REF.on();}
-  function invite(){if(refOn())return send('VKWebAppShare',{link:REF.link()}).then(function(){done('inv');sx('inv','ok');return true;},function(e){sr('inv')(e);tried('inv');return false;});
+  // ОК: ссылка REF ведёт на vk.com — не годится; окно приглашения, message обязателен на сайте и в мобильном браузере ОК
+  function invite(){if(OKP)return send('VKWebAppShowInviteBox',{message:O.okMsg||tx('Заходи в игру — посоревнуемся!','Come and play — let us compete!')}).then(function(r){if(r&&r.success!==false)done('inv');sx('inv',r&&r.success!==false?'ok':'no');return true;},function(e){sr('inv')(e);tried('inv');return false;});
+    if(refOn())return send('VKWebAppShare',{link:REF.link()}).then(function(){done('inv');sx('inv','ok');return true;},function(e){sr('inv')(e);tried('inv');return false;});
     return send('VKWebAppShowInviteBox').then(function(r){if(r&&r.success!==false)done('inv');sx('inv',r&&r.success!==false?'ok':'no');return true;},function(e){sr('inv')(e);tried('inv');return false;});}
-  function share(){return send('VKWebAppShare',{link:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
-  function group(){return send('VKWebAppJoinGroup',{group_id:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
-  function open(g){return send('VKWebAppOpenApp',{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
+  function share(){if(OKP&&!O.okLink)return Promise.resolve(false);
+    return send('VKWebAppShare',{link:OKP?O.okLink:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
+  function group(){if(OKP&&!O.okGroup)return Promise.resolve(false);
+    return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
+  function open(g){if(OKP&&!g.ok)return Promise.resolve(false);
+    return send('VKWebAppOpenApp',OKP?{app_id:g.ok,app_is_local:true}:{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
     toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
 
   // --- список «Ещё игры»: без себя, без 18+, без неопубликованных на этой площадке; сначала родственные, дальше — сдвиг по дню ---
   function list(n){var m=me(),mg=m?m.g:'',out=[],i,g,day=Math.floor(Date.now()/DAY);
-    for(i=0;i<N;i++){g=GAMES[i];if(g.id===APP||g.a>=18||g.off==='all'||(g.off==='web'&&WEB))continue;out.push(g);}
+    for(i=0;i<N;i++){g=GAMES[i];if(g.id===APP||g.a>=18)continue;
+      if(OKP?!(g.ok&&OKWEB):(g.off==='all'||(g.off==='web'&&WEB)))continue;out.push(g);} // ОК: только игры с ID в ОК и только там, где работает OpenApp
     out.sort(function(a,b){var x=(b.g===mg)-(a.g===mg);if(x)return x;return ((a.i+day)%N)-((b.i+day)%N);});
     return out.slice(0,n||6);}
 
@@ -424,10 +448,12 @@ var SOC=(function(){
 
   // --- кнопки для ⚙ (HTML); в Яндексе и без моста — пусто ---
   function settingsHtml(){if(!ok())return '';
-    var b=btn('inv',tx('👥 Позвать друзей','👥 Invite friends'))+btn('share',tx('📤 Поделиться игрой','📤 Share the game'));
-    if(!(st.fav&&st.fav.d))b+=btn('fav',tx('⭐ В избранное','⭐ Add to favourites'));
-    if(homeOk)b+=btn('home',tx('📲 На экран телефона','📲 Add to home screen'));
-    b+=btn('grp',tx('📣 Наше сообщество','📣 Our community'))+btn('more',tx('🎲 Ещё игры во дворе','🎲 More yard games'));
+    var b=btn('inv',tx('👥 Позвать друзей','👥 Invite friends'));
+    if(can('share'))b+=btn('share',tx('📤 Поделиться игрой','📤 Share the game'));
+    if(can('fav'))b+=btn('fav',tx('⭐ В избранное','⭐ Add to favourites'));
+    if(can('home'))b+=btn('home',tx('📲 На экран телефона','📲 Add to home screen'));
+    if(can('grp'))b+=btn('grp',tx('📣 Наше сообщество','📣 Our community'));
+    if(can('more'))b+=btn('more',tx('🎲 Ещё игры во дворе','🎲 More yard games'));
     return '<div class="soc-set">'+b+'</div>';}
   // навесить обработчики после вставки HTML: SOC.bind(контейнер, back) — back() вызывается при «Назад» из «Ещё игры»
   function bind(root,back){if(!root)return;var bs=root.querySelectorAll('[data-soc]');
@@ -436,7 +462,7 @@ var SOC=(function(){
       else if(k==='home')home().then(function(){if(back)back();});else if(k==='grp')group();else if(k==='more')showMore(back);};}
 
   // --- окно «Ещё игры во дворе»: через modal() игры (O.modal) или своё лёгкое. back — куда вернуться по «Назад» ---
-  function showMore(back){if(!ok())return;css();var G=list(6),spr=O.sprite||'js/dvor.jpg',h='';
+  function showMore(back){if(!can('more'))return;css();var G=list(6),spr=O.sprite||'js/dvor.jpg',h='';
     for(var i=0;i<G.length;i++)h+='<button class="soc-g" data-g="'+i+'"><span class="soc-ic" style="background-image:url('+spr+');background-position:'+(-48*G[i].i)+'px 0;background-size:'+(48*N)+'px 48px"></span>'+
       '<span class="soc-t">'+G[i].t+(G[i].a>=12?'<small>'+G[i].a+'+</small>':'')+'</span><span class="soc-a">›</span></button>';
     var head='<h2>'+tx('Ещё игры во дворе','More yard games')+'</h2>',
@@ -456,19 +482,19 @@ var SOC=(function(){
      Показ сразу считается «отказом» (≤3 раз, не чаще раза в 30 дней); успех fav/home/inv/grp — больше никогда. --- */
   function offer(wins,busy){if(!ok()||asked||busy||(st.ses||0)<2||Date.now()-T0<120000)return null;
     var o=null;
-    if(due('fav'))o={k:'fav',t:tx('Добавьте игру в избранное — будет всегда под рукой.','Add the game to favourites — always at hand.'),b:tx('⭐ В избранное','⭐ Add to favourites'),run:fav};
-    else if(homeOk&&st.ses>=3&&due('home'))o={k:'home',t:tx('Значок игры на экране — заходить в одно касание.','A game icon on your screen — one tap to play.'),b:tx('📲 На экран телефона','📲 Add to home screen'),run:home};
+    if(can('fav')&&due('fav'))o={k:'fav',t:tx('Добавьте игру в избранное — будет всегда под рукой.','Add the game to favourites — always at hand.'),b:tx('⭐ В избранное','⭐ Add to favourites'),run:fav};
+    else if(can('home')&&st.ses>=3&&due('home'))o={k:'home',t:tx('Значок игры на экране — заходить в одно касание.','A game icon on your screen — one tap to play.'),b:tx('📲 На экран телефона','📲 Add to home screen'),run:home};
     else if(st.ses>=3&&(wins||0)>=5&&due('inv'))o={k:'inv',t:tx('Позовите друзей — будет с кем посоревноваться.','Invite friends — someone to compete with.'),b:tx('👥 Позвать друзей','👥 Invite friends'),run:invite};
-    else if(st.ses>=4&&due('grp'))o={k:'grp',t:tx('Новости и новые игры — в сообществе «Игры во дворе».','News and new games — in the "Yard Games" community.'),b:tx('📣 Наше сообщество','📣 Our community'),run:group};
+    else if(can('grp')&&st.ses>=4&&due('grp'))o={k:'grp',t:tx('Новости и новые игры — в сообществе «Игры во дворе».','News and new games — in the "Yard Games" community.'),b:tx('📣 Наше сообщество','📣 Our community'),run:group};
     else{var x=st.more||{};if(!x.t||Date.now()-x.t>7*DAY){var g=list(1)[0];
       if(g)o={k:'more',t:tx('Попробуйте ещё: «'+g.t+'»'+(g.a>=12?' ('+g.a+'+)':'')+'.','Try another one: "'+g.t+'".'),b:tx('🎲 Открыть','🎲 Open'),run:function(){return open(g);}};}}
     if(!o)return null;asked=true;sx(o.k,'show');if(o.k==='more'){st.more={t:Date.now()};saveFn();}else tried(o.k);return o;}
 
-  return {v:VER,ok:ok,init:init,ready:ready,merge:merge,fav:fav,home:home,invite:invite,share:share,group:group,open:open,list:list,
+  return {v:VER,ok:ok,isOk:OKP,can:can,init:init,ready:ready,merge:merge,fav:fav,home:home,invite:invite,share:share,group:group,open:open,list:list,
     settingsHtml:settingsHtml,bind:bind,showMore:showMore,offer:offer,games:GAMES};
 })();
 /*/SOC*/
-SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{showModal(h);return $('mBody');},close:()=>hideModal()});
+SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{showModal(h);return $('mBody');},close:()=>hideModal(),okLink:OK_LINK});
 /* VK хранит значения до 4096 байт, а на деле (vk-bridge#226) надёжно ~2 КБ — режем сохранение на куски по 1000 знаков.
    Двойной буфер: новые куски пишем под другим префиксом (sa0…, sb0…) по одному, ключ svn = «префикс:кусков:длина» — строго последним.
    Пока svn не переписан, старый набор цел; оборванная запись облако не портит. Старый формат (sv0…, svn = число) читается. */
@@ -506,14 +532,14 @@ function vkFitInit(){try{
   window.vkBridge.subscribe(function(e){var d=e&&e.detail;
     if(d&&d.type==='VKWebAppUpdateConfig'&&d.data&&d.data.viewport_height){clearTimeout(VK_FIT.t);
       VK_FIT.t=setTimeout(function(){vkFit(d.data.viewport_height);},200);}});
-  window.vkBridge.send('VKWebAppGetConfig').then(function(c){if(c&&c.viewport_height)vkFit(c.viewport_height);}).catch(function(){});
+  if(!OK)window.vkBridge.send('VKWebAppGetConfig').then(function(c){if(c&&c.viewport_height)vkFit(c.viewport_height);}).catch(function(){});
 }catch(e){}}
 async function vkInit(tries){
   try{await vkSend('VKWebAppInit',{},SDK_WAIT);}catch(e){if(tries>0)vkInit(tries-1);return;}
   if(VK)return;VK=window.vkBridge;SOC.ready();if(typeof updMore==='function')updMore();
   vkFitInit(); // VK web: подогнать высоту окна под экран (без ожидания)
   VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',1);cloudFlush();}else if(t==='VKWebAppViewRestore'){setPause('vk',0);if(typeof adBack==='function')adBack();}});
-  vkCloudInit(3).then(()=>{if(typeof PAY!=='undefined')PAY.init();}); // покупки VK (js/pay.js): после моста и первого чтения облака
+  vkCloudInit(3).then(()=>{if(typeof PAY!=='undefined'&&!OK)PAY.init();}); // покупки VK (js/pay.js): после моста и первого чтения облака
   adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
   interPre();} // подгрузка межэкранной (как в Богатыре); правила показа не меняются
 // Яндекс: игрок и облако — с тайм-аутом, иначе повисший запрос оставит игру без облака навсегда
@@ -537,7 +563,7 @@ async function initSDK(){
   }
   if(typeof onReady==='function')onReady();
   try{ysdk&&ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
-  if(typeof PAY!=='undefined')PAY.init(); // покупки (js/pay.js): Яндекс; VK — после моста (vkInit), здесь только заглушка ?vk=1&paytest=1 без моста
+  if(typeof PAY!=='undefined'&&!OK)PAY.init(); // ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет. Покупки (js/pay.js): Яндекс; VK — после моста (vkInit), здесь только заглушка ?vk=1&paytest=1 без моста
 }
 /* Реклама: за награду — по желанию игрока (кнопки «… за рекламу»); межэкранная — бережно, правило П2 (решение владельца 27.09,
    hobby-analytics/12): только при уходе с экрана итогов после победы (кампания со 2-й главы, испытание дня, повергнутый Босс недели)
@@ -712,8 +738,8 @@ const LB={
   // после входа это уже другой игрок со своим облаком: не пишем в него, пока не прочитали и не свели
   async login(){try{await ysdk.auth.openAuthDialog();if(cloudT){clearTimeout(cloudT);cloudT=0;}cloudLoaded=false;cloudPending=null;
     YP=await withTimeout(ysdk.getPlayer({scopes:false}),10000);await ycloud(3);return true;}catch(e){return false;}},
-  vkOk(){return !!VK;},
-  vkFriends(score){if(!VK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:Math.floor(score)},60000).catch(e=>{
+  vkOk(){return !!VK&&!OK;}, // ОК: VKWebAppShowLeaderBoardBox нет в списке — «Рекорды друзей» спрятаны
+  vkFriends(score){if(!VK||OK)return;vkSend('VKWebAppShowLeaderBoardBox',{user_result:Math.floor(score)},60000).catch(e=>{
     // отказ игрока (закрыл окно) — молча; иначе таблица не настроена или недоступна
     const d=e&&(e.error_data||e.data)||{},c=d.error_code;if(c!==4)toast('Таблица друзей сейчас недоступна');});}
 };

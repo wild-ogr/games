@@ -745,12 +745,12 @@ function openBeast(id){const d=EN[id],k=bookKnown(id),n=(S.bk||{})[id]||0,boss=d
 /* ================= настройки ================= */
 // VK: друзья, избранное, сообщество, «Ещё игры» (модуль SOC); наград нет (правила VK 2.6.2)
 function openSocial(){if(!SOC.ok()){openSettings();return;}STAT.screen('social');
-  showModal('<h3>Друзья и игры</h3>'+SOC.settingsHtml()+'<div class="btns"><button class="btn ghost" id="socBack">← Назад</button></div>');
+  showModal('<h3>'+(OK?'Друзья':'Друзья и игры')+'</h3>'+SOC.settingsHtml()+'<div class="btns"><button class="btn ghost" id="socBack">← Назад</button></div>');
   SOC.bind($('mBody'),openSocial);on('socBack',openSettings);socStat();}
 // STAT: какие соц-кнопки жмут (модуль SOC не трогаем — слушаем клики рядом; «Ещё игры» перерисовывает окно — навешиваем снова)
 function socStat(){for(const b of $('mBody').querySelectorAll('[data-soc],[data-g]'))b.addEventListener('click',()=>{const k=b.getAttribute('data-soc');
   STAT.ev('mod',{m:'soc',a:k?k:'app'});if(k==='more')setTimeout(socStat,50);});}
-function updMore(){const b=$('btnMore');if(b){b.style.display=SOC.ok()?'':'none';b.parentNode.classList.toggle('more',SOC.ok());}}   // .more — в шапке четыре кнопки (на 320 px название уступает им место)
+function updMore(){const b=$('btnMore');if(b){const m=SOC.can('more');b.style.display=m?'':'none';b.parentNode.classList.toggle('more',m);}}   // .more — в шапке четыре кнопки (на 320 px название уступает им место)
 function openSettings(){STAT.screen('settings');const oo=v=>v?Lg('Вкл','On'):Lg('Выкл','Off');showModal('<h3>'+Lg('Настройки','Settings')+'</h3>'+
   // язык: в VK всегда русский — переключателя нет
   (LANG_VK?'':'<div class="tg">'+Lg('Язык','Language')+' <div class="seg" style="margin:0;flex:none"><button data-lang="ru" class="'+(LANG==='ru'?'on':'')+'" style="padding:4px 14px">RU</button><button data-lang="en" class="'+(LANG==='en'?'on':'')+'" style="padding:4px 14px">EN</button></div></div>')+
@@ -762,7 +762,7 @@ function openSettings(){STAT.screen('settings');const oo=v=>v?Lg('Вкл','On'):
   (LK&&LOOK.list().filter(t=>LOOK.owned(t.id)).length>1?'<div class="tg" style="border:0;padding-bottom:0">'+Lg('Оформление','Look')+'</div><div class="seg">'+LOOK.list().filter(t=>LOOK.owned(t.id)).map(t=>'<button data-th="'+t.id+'" class="'+(LOOK.cur()===t.id?'on':'')+'">'+Lg(t.ru,t.en)+'</button>').join('')+'</div>':'')+
   '<div class="tg" style="border:0;padding-bottom:0">'+Lg('Сложность кампании','Campaign difficulty')+'</div>'+diffSegHTML()+
   '<p class="sub" style="margin-top:12px">'+Lg('Тридевятая оборона: защита башен.<br>Реклама за награду — по желанию. Между боями иногда бывает короткая реклама.','Thrice-Nine Defense: fairy-tale tower defense.<br>Rewarded ads are optional. A short ad sometimes plays between battles.')+'</p>'+
-  (SOC.ok()?'<button class="btn ghost" id="sSoc" style="width:100%;margin-top:8px;justify-content:center">👥 Друзья и игры ›</button>':'')+
+  (SOC.ok()?'<button class="btn ghost" id="sSoc" style="width:100%;margin-top:8px;justify-content:center">👥 '+(OK?'Друзья':'Друзья и игры')+' ›</button>':'')+
   '<div class="btns stick"><button class="btn ghost" id="sCred">'+Lg('🎻 Благодарности','🎻 Credits')+'</button><button class="btn big" id="sOk">'+Lg('Готово','Done')+'</button></div>');
   for(const b of document.querySelectorAll('[data-lang]'))b.onclick=()=>{SND.click();setLang(b.dataset.lang,true);openSettings();};
   for(const b of document.querySelectorAll('[data-th]'))b.onclick=()=>{SND.click();LOOK.set(b.dataset.th);openSettings();};
@@ -783,7 +783,7 @@ function openCredits(){STAT.screen('credits');
   showModal('<h3>'+Lg('Благодарности','Credits')+'</h3><p class="sub">'+Lg('Музыка, под которую застава держит оборону. Спасибо авторам!','The music our outpost holds the line to. Thanks to the authors!')+'</p>'+
     CREDITS.map(c=>'<div class="card cred"><b>'+Lg('«'+c.t+'»','“'+c.t+'”')+'</b> <span class="mutd">— '+Lg(c.w,c.we)+'</span><br>'+
       Lg('Автор: ','Author: ')+c.a+'<br>'+Lg('Лицензия: ','License: ')+Lg(c.l,c.le||c.l)+'<br>'+Lg('Источник: OpenGameArt (opengameart.org). Перекодировано в AAC, моно.','Source: OpenGameArt (opengameart.org). Re-encoded to AAC, mono.')+'</div>').join('')+
-    (PLAT==='vk'?'<div class="card cred"><b>VK Bridge</b> — библиотека для VK Игр. © 2017-present, V Kontakte, LLC. Лицензия MIT.</div>':'')+
+    (PLAT==='vk'&&!OK?'<div class="card cred"><b>VK Bridge</b> — библиотека'+' для VK Игр'+'. © 2017-present, V Kontakte, LLC. Лицензия MIT.</div>':'')+
     '<div class="btns stick"><button class="btn big" id="credOk">'+Lg('Назад','Back')+'</button></div>');on('credOk',openSettings);}
 
 /* ================= задания дня (3) и награда за вход (7 дней) =================
