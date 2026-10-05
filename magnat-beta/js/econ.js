@@ -154,7 +154,7 @@ function boost(W){if(!boostOk(W))return 'no';const d=boostD(W);W.bst=W.t+d;W.bst
 /* ---------------- миграция сохранений ----------------
    ПРАВИЛО: любой новый товар, объект, регион или поле мира — только вместе с шагом миграции здесь (и тестом в check.py).
    FMT_V — версия формата мира; migrate(W) доводит старый мир до текущего и возвращает список исправлений. */
-const FMT_V=5;   // M39: 5 — опт по видам (b.kd), машины у хозяина (b.at), W.lnk
+const FMT_V=6;   // M39: 5 — опт по видам (b.kd), машины у хозяина (b.at), W.lnk; M44: 6 — износ машин (wr), смены/закупка к сезону опта, ТК
 function migrate(W){const fx=[];if(!W||typeof W!=='object')throw new Error('мир пуст');
   const num=(o,k,d)=>{if(typeof o[k]!=='number'||!isFinite(o[k])){o[k]=d;fx.push(k);}};
   for(const k of ['t','m','d','cash','cap','ret','lossCF','od','odM','san','rep','hold','nid'])num(W,k,k==='hold'||k==='nid'?1:0);

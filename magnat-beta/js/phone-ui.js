@@ -321,11 +321,13 @@ function pushTick(){pqDrop(x=>!pqLive(x));if(!PQ.length)return;const now=Date.no
   let i=cm?PQ.findIndex(x=>x.imp):0;if(i<0){PQ.length=0;return;}
   const it=PQ.splice(i,1)[0];
   pushT=now;showPush(it);}
-function showPush(it){const b=$e('phPush');if(!b)return;const c=who(it.id);
+// STAT v1.2 (M44): пуши и вход в телефон — psh {a: show|go|x} и pho {u: непрочитано, w: ждут ответа, v: куда}; не больше 40 / 10 за сеанс
+let pshN=0,phoN=0;function pshStat(a){if(pshN>=40)return;pshN++;try{STAT.ev('psh',{a});}catch(e){}}
+function showPush(it){const b=$e('phPush');if(!b)return;const c=who(it.id);pshStat('show');
   // ниже шапки — сумма денег всегда видна
   try{const hd=$e('hdr');b.style.top=hd&&hd.offsetHeight?(hd.offsetTop+hd.offsetHeight+6)+'px':'';}catch(e){}
   b.innerHTML=`<button class="ph-pm noenter" data-pg="1">${face(it.id,'calm',44)}<span class="ph-pt"><b>${esc(c.n)}</b><span>${esc(it.text)}</span></span></button><button class="ph-px noenter" data-px="1" aria-label="${T('Закрыть','Close')}">×</button>`;
-  b.classList.add('on');b.onclick=e=>{const g=e.target.closest('[data-pg]'),x=e.target.closest('[data-px]');if(!g&&!x)return;hidePush();if(g){snd('tap');open(it.go[0],it.go[1]);}};
+  b.classList.add('on');b.onclick=e=>{const g=e.target.closest('[data-pg]'),x=e.target.closest('[data-px]');if(!g&&!x)return;hidePush();pshStat(g?'go':'x');if(g){snd('tap');open(it.go[0],it.go[1]);}};
   clearTimeout(pushHideT);pushHideT=setTimeout(hidePush,isCalm()?6000:4000);}
 function hidePush(){const b=$e('phPush');if(b)b.classList.remove('on');clearTimeout(pushHideT);}
 
@@ -532,7 +534,7 @@ function rerender(){if(isOn)render(true);renderEmbed();badge();}
 function go(v,a){if(isOn)try{const bd=$e('phone').querySelector('.ph-body'),t=nav[nav.length-1];if(t&&bd)t.y=bd.scrollTop;}catch(e){}   // M37: запомнить, где был
   if(v==='chats'||v==='contacts'){const t=nav[nav.length-1];if(t.v==='chats'||t.v==='contacts')nav.pop();}if(v!=='call')callRes=null;
   if(!isOn){open(v,a);return;}nav.push({v,a});render();}
-function open(v,a){ensure();hidePush();nav=[{v:'home'}];if(v&&v!=='home')nav.push({v,a});callRes=null;
+function open(v,a){if(phoN<10){phoN++;try{STAT.ev('pho',{u:unreadAll(),w:waitAll(),v:String(v||'home').slice(0,12)});}catch(e){}}ensure();hidePush();nav=[{v:'home'}];if(v&&v!=='home')nav.push({v,a});callRes=null;
   const ph=$e('phone');isOn=true;ph.classList.add('on');document.body.classList.add('phon');place();render();navHL();snd('tap');}
 function close(){const ph=$e('phone');isOn=false;if(ph)ph.classList.remove('on');document.body.classList.remove('phon');callRes=null;badge();navHL();}
 // нижнее меню: пока телефон открыт на узком экране (закрывает всё), подсвечена вкладка «Телефон»; закрыли — снова вкладка текущего экрана

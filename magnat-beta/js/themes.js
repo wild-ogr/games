@@ -107,8 +107,9 @@ function buy(id,re){var t=BY[id];if(!t||owned(id))return;var u=t.unlock;re=re||f
     Promise.resolve(r).then(function(){if(owned(id)&&cur()!==id)set(id);re();},function(){re();});return;}
   if(u.t==='cr'){if(!window.GAME||!GAME.spend(u.cr,'th_'+id)){try{SND.no();}catch(e){}toast(T('Не хватает 💎: нужно '+u.cr,'Not enough 💎: you need '+u.cr));return;}
     thU()[id]=1;try{SND.coin();}catch(e){}set(id);toast('🎨 '+T('Оформление «'+t.ru+'» — ваше навсегда','The “'+t.en+'” theme is yours forever'));re();return;}
+  // STAT v1.2: ролик в счёт темы — thad {th, n: сколько набрано}
   if(u.t==='ads'){if(typeof adOk!=='function'||!adOk())return;try{STAT.place('theme');}catch(e){}
-    showRewarded(function(){if(!check(true)){toast('📺 '+T('Засчитано: '+Math.min(S.adTot|0,u.n)+' из '+u.n,'Counted: '+Math.min(S.adTot|0,u.n)+' of '+u.n));}
+    showRewarded(function(){try{STAT.ev('thad',{th:id,n:Math.min(S.adTot|0,u.n)});}catch(e){}if(!check(true)){toast('📺 '+T('Засчитано: '+Math.min(S.adTot|0,u.n)+' из '+u.n,'Counted: '+Math.min(S.adTot|0,u.n)+' of '+u.n));}
       else{set(id);toast('🎨 '+T('Открыто «'+t.ru+'»!','“'+t.en+'” unlocked!'));}re();});}}
 /* ---------- окно «Оформление» ---------- */
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -131,7 +132,7 @@ function open(bk){if(bk!==undefined)back=bk;check(true);var L0=list(),h='';
   var mc=document.getElementById('mcard');mc.querySelectorAll('[data-th]').forEach(function(b){b.onclick=function(){var a=b.getAttribute('data-th').split(':');
     try{SND.tap();}catch(e){}if(a[0]==='set'){set(a[1]);open();}else buy(a[1],function(){if(typeof modalOn!=='undefined'&&modalOn)open();});};});
   document.getElementById('thBack').onclick=function(){if(back)back();else hideModal();};
-  try{STAT.screen('themes');}catch(e){}}
+  try{STAT.screen('look');}catch(e){}}   // STAT v1.2: окно «Оформление» — scr look (было 'themes')
 window.THEME={THEMES:THEMES,list:list,owned:owned,cur:cur,set:set,progress:progress,get:function(id){return BY[id]||null;},buy:buy,open:open,apply:apply,check:check,bought:bought};
 apply();
 window.addEventListener('load',function(){apply();check(true);if(window.GAME&&GAME.on){GAME.on('change',function(){if(check())apply();});GAME.on('close',function(){if(check())apply();});}});

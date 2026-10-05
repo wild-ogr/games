@@ -46,7 +46,13 @@ var T={
  obor:['Оборот','Turnover','Сколько товара опт продаёт за месяц в рублях (по цене продажи). Прибыль — только часть оборота: наценка минус расходы.','How much the wholesale sells in a month, in roubles at sale price. Profit is only part of it: the mark-up minus costs.',/[Оо]борот(а|у|ом|е)?(?![а-яё])/,/\b[Tt]urnover\b/],
  mult:['Множитель «×1,25»','Multiplier “×1.25”','Во сколько раз больше обычного: «аренда ×1,25» — аренда на 25 % дороже, «спрос ×1,20» — покупателей на 20 % больше, «×0,80» — на 20 % меньше.','How many times the usual: “rent ×1.25” — rent is 25% dearer, “demand ×1.20” — 20% more buyers, “×0.80” — 20% fewer.',/×\s?\d+,\d+/,/×\s?\d+\.\d+/],
  sami:['Стоите сами','You run it yourself','Точка без управляющего: за прилавком вы сами. Она занимает одну вашу «руку» (время), зато вся прибыль ваша и ещё +5 % — «хозяйский глаз».','An outlet without a manager: you stand at the counter yourself. It takes one of your hands, but all the profit is yours, plus 5% — the “owner’s eye”.',/[Сс]тоите (сами|вы)/,/\byou run it yourself\b/],
- cap:['Потолок склада','Warehouse ceiling','Сколько склад может отгрузить в месяц. Выше — нужна вторая смена или адресное хранение.','How much the warehouse can ship a month. Beyond that you need a second shift or address storage.',/[Пп]отолок склада/,/\b[Ww]arehouse ceiling\b/]
+ cap:['Потолок склада','Warehouse ceiling','Сколько склад может отгрузить в месяц. Выше — нужна вторая смена или адресное хранение.','How much the warehouse can ship a month. Beyond that you need a second shift or address storage.',/[Пп]отолок склада/,/\b[Ww]arehouse ceiling\b/],
+ // M44: термины опта, этап 2
+ to:['ТО','Service','Техническое обслуживание машины: масло, тормоза, проверка. 30–50 тыс. ₽ и 2 дня простоя, износ падает до 5 %. Без ТО после износа 80 % машина чаще ломается: ремонт дороже и неделя простоя.','Vehicle maintenance: oil, brakes, checks. 30–50k ₽ and 2 days off, wear drops to 5%. Without it, past 80% wear a vehicle breaks down more often: dearer repair and a week off.',/ТО(?=[ \u00a0:,.!?)»]|$)/,/\b[Ss]ervic(e|ing)\b(?= (for|it|—|:))/],
+ izn:['Износ','Wear','Насколько машина «устала»: +8 % в месяц в работе. С 80 % она ломается чаще. ТО возвращает износ к 5 %.','How tired a vehicle is: +8% a month at work. From 80% it breaks down more often. Service brings wear back to 5%.',/[Ии]знос[а-я]*/,/\b[Ww]ear\b/],
+ smena:['Вторая смена','Second shift','Склад работает дольше и отгружает больше (потолок склада ×1,35), но зарплаты выше на 180 тыс. ₽ в месяц. Нужна, когда склад упирается в потолок.','The warehouse works longer and ships more (ceiling ×1.35), but wages rise by 180k ₽ a month. Needed when the warehouse hits its ceiling.',/[Вв]тор[а-я]+ смен[а-я]*|[Дд]ве смены/,/\b([Ss]econd|[Tt]wo) shifts?\b/],
+ sez:['Закупка к сезону','Stocking up for the season','Купить товар на пик заранее, за 2 месяца: на 5 % дешевле, но деньги уходят раньше и «сидят» в товаре.','Buying peak-season stock 2 months ahead: 5% cheaper, but the money leaves earlier and sits in stock.',/[Зз]акупк[а-я]* к сезону/,/\b[Ss]tock(ing)? up for the season\b/],
+ snow:['Вывоз снега','Snow removal','Зимой (декабрь–март) город нанимает самосвалы вывозить снег. Лишние самосвалы через Транспортную компанию зарабатывают на этом, а не стоят.','In winter (Dec–Mar) the city hires trucks to haul snow away. Spare trucks earn on it through your haulage company instead of standing idle.',/[Вв]ывоз[а-я]* снега/,/\b[Ss]now removal\b/]
 };
 var KEYS=Object.keys(T);
 /* ---------- CSS ---------- */
@@ -89,7 +95,8 @@ var Q=[],AUTO_GAP=75e3,lastAuto=Date.now()-AUTO_GAP+20e3;   // первая — 
 function learned(){try{return (typeof S!=='undefined'&&S&&S.glK)||{};}catch(e){return {};}}
 function meet(k){if(learned()[k]||Q.indexOf(k)>=0)return;Q.push(k);}
 function learn(k){try{if(typeof S==='undefined'||!S)return;S.glK=S.glK||{};if(S.glK[k])return;var W=window.GAME&&GAME.W;S.glK[k]={m:W?W.m:0,t:W?W.t:0};
-  var n=Object.keys(S.glK).length;if(n>=10&&!S.glW){S.glW=1;setTimeout(function(){try{toast('🎓 '+tx('Знаток терминов: 10 слов изучено — значок в словарике','Term expert: 10 words learned — badge in the glossary'),3000);}catch(e){}},400);try{STAT.ev('gl10',{});}catch(e){}}
+  var n=Object.keys(S.glK).length;try{STAT.ev('glk',{k:k,n:n});}catch(e){}   // STAT v1.2 (M44): термин изучен — glk {k: термин, n: изучено всего}
+  if(n>=10&&!S.glW){S.glW=1;setTimeout(function(){try{toast('🎓 '+tx('Знаток терминов: 10 слов изучено — значок в словарике','Term expert: 10 words learned — badge in the glossary'),3000);}catch(e){}},400);try{STAT.ev('gl10',{});}catch(e){}}
   if(typeof save==='function')save();}catch(e){}}
 function visAbbr(k){var L=document.querySelectorAll('abbr.gl[data-gl="'+k+'"]');for(var i=0;i<L.length;i++){var r=L[i].getBoundingClientRect();if(r.width>0&&r.bottom>60&&r.top<innerHeight-120&&!inCtl(L[i]))return L[i];}return null;}
 function busyUi(){try{if(window.__chk||S0()||S.glAuto===false||document.hidden)return true;if(typeof modalOn!=='undefined'&&modalOn)return true;var a=document.getElementById('adv');if(a&&a.classList.contains('on'))return true;
@@ -117,7 +124,7 @@ function listHtml(open){var K=learned(),ks=KEYS.filter(function(k){return K[k];}
  if(rest.length)h+='<p class="mut" style="font-size:15px;margin:12px 0 0">'+tx('Ещё не встречались в игре:','Not met in the game yet:')+'</p>';
  for(var j=0;j<rest.length;j++)h+=row(rest[j],1);
  return h+'</dl><p class="mut" style="font-size:15px">'+tx('Слова с пунктиром в тексте игры можно нажать — появится такое же пояснение.','Dotted words in the game’s text can be tapped for the same explanation.')+'</p></details>';}
-function openList(){css();if(typeof modalOn!=='undefined'&&modalOn){var mc=document.getElementById('mcard');if(mc&&!mc.querySelector('.gl-wrap')){var d=document.createElement('div');d.innerHTML=listHtml(true);mc.insertBefore(d.firstChild,mc.querySelector('.row:last-child')||null);}return;}
+function openList(){css();try{STAT.screen('gloss');}catch(e){}if(typeof modalOn!=='undefined'&&modalOn){var mc=document.getElementById('mcard');if(mc&&!mc.querySelector('.gl-wrap')){var d=document.createElement('div');d.innerHTML=listHtml(true);mc.insertBefore(d.firstChild,mc.querySelector('.row:last-child')||null);}return;}
  if(typeof modal!=='function')return;modal('<h2>📖 '+tx('Словарик','Glossary')+'</h2>'+listHtml(true)+'<div class="row"><button class="btn green" id="glOk">'+tx('Понятно','Got it')+'</button></div>');
  var b=document.getElementById('glOk');if(b)b.onclick=function(){hideModal();};}
 /* ---------- нажатия ---------- */

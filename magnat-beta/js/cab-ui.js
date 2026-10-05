@@ -335,7 +335,7 @@ function open(t,from){css();if(!GAME.W)return;slotOpen='';
   const nz=news();
   if(t)tab=t;else if(from==='hdr')tab=nz.wall.length?'wall':nz.lx.length?'lx':nz.rw?'rk':tab;
   if(tab==='wall')GAME.wallSeen();if(tab==='lx'){const sn=S.lxSeen&&typeof S.lxSeen==='object'?S.lxSeen:(S.lxSeen={});for(const x of lxList())if(st(x.id).st==='sale')sn[x.id]=1;}
-  try{STAT.ev('cab',{t:tab,f:from||'x'});}catch(e){}
+  try{STAT.ev('cab',{t:tab,f:from||'x',n:nz.n|0});}catch(e){}   // M44: n — число на ★ (новое) в момент открытия
   const body=tab==='wall'?tabWall():tab==='rk'?tabRk():tabLx();
   // M38: мелкие награды (звания) — списком «Новое» вверху Кабинета; M43: там же всё, что входит в число на ★ (новое на Стене, вещь в продаже); увидели — список очищается
   let nw='';const li=[];

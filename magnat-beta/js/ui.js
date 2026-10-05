@@ -440,10 +440,10 @@ function spdBtn(o){const j=o.st==='b'?o:o.up;if(!j)return '';const W=w(),ad=adL(
   const adB=ad?`<button class="btn w noenter" data-a="spdAd" data-id="${o.id}" style="margin-top:6px"${adD('build')}>📺 ${L('на 5 дней раньше — за рекламу','5 days sooner — for an ad')}${adS('build')}</button>`:'';
   if(o.sp)return `<p class="mut" style="font-size:15px;margin:6px 0 0">⚡ ${L('уже ускорено','already sped up')}</p>`+adB;
   return `<button class="btn cr w noenter" data-a="spd" data-id="${o.id}">💎 ${GAME.CR.speed} — ${L('ускорить','speed up')}<small>${L('готово на 15 дней раньше','done 15 days sooner')}</small></button>`+adB;}
-function crAsk(n,what,fn){const c=GAME.cr();if(c<n)return crNo(n);
+function crAsk(n,what,fn){const c=GAME.cr();if(c<n)return crNo(n);try{STAT.ev('cfm',{k:'cr',a:'show',c:n});}catch(e){}   // STAT v1.2 (M44): воронка подтверждений трат — cfm {k, a: show|yes|no, c}
   modal(`<h2>💎 ${L('Потратить кристаллы?','Spend crystals?')}</h2><p style="text-align:center">${what}</p><p style="text-align:center;font-size:20px">${L('Потратить','Spend')} <b>${n} 💎</b>? ${L('Останется','Left')}: <b>${c-n} 💎</b></p>
     <div class="row"><button class="btn cr noenter" id="caYes">💎 ${L('Да, потратить','Yes, spend')} ${n}</button><button class="btn" id="caNo" data-esc>${L('Нет','No')}</button></div>`);
-  $$('caYes').onclick=()=>{hideModal();fn();setTimeout(nextQ,60);};$$('caNo').onclick=()=>{snd('tap');closeM();};}
+  $$('caYes').onclick=()=>{try{STAT.ev('cfm',{k:'cr',a:'yes',c:n});}catch(e){}hideModal();fn();setTimeout(nextQ,60);};$$('caNo').onclick=()=>{try{STAT.ev('cfm',{k:'cr',a:'no',c:n});}catch(e){}snd('tap');closeM();};}
 function crNo(need){snd('no');const lb=adOk()&&GAME.ladLabel?GAME.ladLabel():'',ad=!!lb;
   modal(`<h2>💎 ${L('Не хватает кристаллов','Not enough crystals')}</h2><p>${L(`У вас ${GAME.cr()} 💎. Кристаллы даются за первые шаги, каждый игровой год, в Планёрке, за «Ролики дня» (2, 3, 3, 4 и 6 💎 — каждый следующий щедрее) и в магазине.`,`You have ${GAME.cr()} 💎. Crystals come for first steps, every game year, in the Briefing, for daily videos (2, 3, 3, 4 and 6 💎 — each one more generous) and in the shop.`)}</p>
     <div class="row">${ad?`<button class="btn accent noenter" id="crAd">${lb}</button>`:''}<button class="btn noenter" id="crShop">🛒 ${L('Магазин','Shop')}</button><button class="btn" id="crClose" data-esc>${L('Закрыть','Close')}</button></div>${typeof adDayHtml==='function'?adDayHtml():''}`);
@@ -683,7 +683,7 @@ function openClose(rep){if(BZ()&&BZ().openClose&&BZ().openClose(rep))return;cons
   if($$('cOff'))$$('cOff').onclick=()=>{snd('tap');delete S.pendRep;save();closeM();goMk('con')();};
   $$('cGo').onclick=()=>{snd('tap');delete S.pendRep;save();const fr=$$('cGo').getBoundingClientRect();hideModal();if(net>0)fly({x:fr.left+fr.width/2,y:fr.top},0);
     const after=()=>{try{offerReturn();}catch(e){}afterClose(rep);setTimeout(nextQ,60);};
-    if(adDue()&&adReady()&&(!BZ()||BZ().adAllowed()))showInterstitial(after);else after();};}
+    if(adDue()&&adReady()&&(!BZ()||BZ().adAllowed()))showInterstitial(after);else{if(adDue()&&(!BZ()||BZ().adAllowed()))try{STAT.ad('int','none',adIntWhy());}catch(e){}after();}};}   // STAT v1.2: положена, но рано/нет SDK
 // «🔮 Завтра…» из сюжета — одна строка в окне закрытия месяца
 function closeTeaser(){try{const t=window.STORYUI&&STORYUI.teaser&&STORYUI.teaser();return t&&t.tx?`<p class="mut" style="font-size:16px">🔮 ${esc(t.tx)}</p>`:'';}catch(e){return '';}}
 // советы по ситуации: без «начните с разведки», если уже есть находка; без вагонов/тарифов/цен, пока нечего возить
@@ -714,7 +714,7 @@ function openOffline(s){if(BZ()&&BZ().offline(s))return;const W=w(),mo=s.months|
     <button class="btn green" id="oOk">${L('К делам','Back to work')}</button>${canPay?`<button class="btn noenter" id="oShop">🛒 ${L('Управляющий на '+GAME.SHIFT_MGR_H+' ч',GAME.SHIFT_MGR_H+'-hour manager')}</button>`:''}</div>`;
   modal(h);try{modalRe=()=>openOffline(s);}catch(e){}
   $$('oOk').onclick=()=>{snd('tap');closeM();if(!s.ext&&BZ()&&BZ().offAd)BZ().offAd();};
-  if($$('oExt'))$$('oExt').onclick=()=>{if(adHold())return;hideModal();STAT.place('shift');showRewarded(()=>{shiftStat('ad');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);},()=>setTimeout(nextQ,60));};
+  if($$('oExt'))$$('oExt').onclick=()=>{if(adHold('shift'))return;hideModal();STAT.place('shift');showRewarded(()=>{shiftStat('ad');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);},()=>setTimeout(nextQ,60));};
   if($$('oExtM'))$$('oExtM').onclick=()=>{snd('tap');hideModal();shiftStat('mgr');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);};   // M36: с «Управляющим» — без ролика
   if($$('oShop'))$$('oShop').onclick=()=>{snd('tap');try{openShop('pack',{from:'off',hl:'manager'});}catch(e){}};}
 

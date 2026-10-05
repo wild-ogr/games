@@ -238,7 +238,7 @@ function open(sec){css();const ok=secs();cur=typeof sec==='string'&&sec?sec:'cr'
     <div class="row"><button class="btn" id="shClose" data-esc>${T('Закрыть','Close')}</button></div>`);
   const mc=$s('mcard');if(mc)mc.classList.add('shop-card');
   modalRe=()=>open(cur);if(typeof PAY!=='undefined')PAY.re=()=>open(cur);   // каталог/мост пришёл или покупка прошла, пока окно открыто, — перерисуем
-  try{STAT.screen('shop_'+cur);}catch(e){}
+  try{STAT.screen('shop');STAT.screen('shop_'+cur);if(cur==='look')STAT.screen('look');}catch(e){}   // STAT v1.2: вход в магазин — scr shop (раз за сеанс), раздел — shop_<раздел>; «Оформление» — и scr look
   mc.querySelectorAll('.shop-tab').forEach(b=>b.onclick=()=>{snd('tap');open(b.dataset.sec);});
   mc.querySelectorAll('.pbuy[data-pid]').forEach(b=>b.onclick=()=>{snd('tap');buy(b.dataset.pid);});
   mc.querySelectorAll('[data-thset]').forEach(b=>b.onclick=()=>{snd('tap');const id=b.dataset.thset;

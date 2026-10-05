@@ -557,6 +557,9 @@ function openAsk(qid){const w=W();if(!w||!w.fr)return false;const q=w.fr.q.find(
 function answer(q,o){let r;try{r=GAME.act('friendAnswer',q.id,o);}catch(e){console.error(e);r={res:'no'};}
   if(!r||r.res!=='ok'){snd('no');toast(why(r&&r.res||'no'));return;}
   snd(spendO(q,o)?'coin':'tap');const af=after(W(),r);const wh=spk(q);
+  // M44: встреча выпускников — одно окно (таблица уже сказала место, кубок и награду): итог тостом, фото и кубок — в «Новое» Кабинета (Стена, CAB.news)
+  if(q.k==='reu'||q.k==='pro'){close();const c=r.cr?` +${r.cr} 💎`:'',cu=r.cup==='you'?T(' · 🏆 кубок ваш',' · 🏆 the cup is yours'):'';
+    toast('🥂 '+T('За встречу!','Cheers!')+c+cu+' · '+T('фото — в Кабинете ★','photo — in the Office ★'));try{CAB.badge();}catch(e){}next();return;}
   open(`<div class="st-hd">${pic(wh,af.mood,72)}<div><b>${esc(nm(wh))}</b><small>${esc(who(wh).sub)}</small></div></div><p class="st-say">${esc(af.tx)}</p>${af.toast?`<p class="st-toast">${esc(af.toast)}</p>`:''}<div class="row"><button class="btn w accent" data-x="1">${T('Хорошо','OK')}</button></div>`);
   bind('[data-x]',()=>{close();next();});}
 // встреча выпускников: «Кто из нас дальше»
