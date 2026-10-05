@@ -3,6 +3,20 @@
 <head>
 <meta charset="utf-8">
 <script>window.__se=[];addEventListener('error',function(e){var t=e.target,s=window.__se;if(s&&s.length<10)s.push(t&&t.tagName?[2,t.src||t.href||'',t.tagName]:[1,e.message,e.filename,e.lineno]);},true);</script> <!-- STAT v1.2: ранние ошибки и незагрузившиеся файлы — до всех скриптов -->
+<script>/* предохранитель загрузки (05.10.2026): свой файл игры не загрузился → перезагрузка до 2 раз, потом окно «Обновить» */
+(function(){var K='ldfail',n=0,done=false;try{n=+sessionStorage.getItem(K)||0;}catch(e){}
+function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
+  try{var a=document.createElement('a');a.href=u;if(a.host!==location.host)return false;}catch(e){return false;}
+  return !/vk-bridge|sdk\.js/.test(u);}
+addEventListener('error',function(e){if(done||!own(e.target))return;done=true;
+  if(n<2){try{sessionStorage.setItem(K,n+1);}catch(x){}setTimeout(function(){location.reload();},700+n*1500);return;}
+  var ru=!/^en/i.test('ru'/* Зина всегда по-русски (игра только на русском) */)||/[?&](vk_app_id|vk)=/.test(location.search);
+  function show(){var d=document.createElement('div');d.id='ldfail';d.setAttribute('style','position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#1c2b3a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px/1.4 system-ui,sans-serif;text-align:center;padding:24px');
+    d.innerHTML='<div style="max-width:320px">'+(ru?'Не получилось загрузить игру. Проверьте интернет и попробуйте ещё раз.':'The game failed to load. Check your connection and try again.')+'</div><button type="button" style="margin-top:18px;font:700 18px system-ui,sans-serif;padding:12px 28px;border:0;border-radius:14px;background:#4caf50;color:#fff">'+(ru?'Обновить':'Reload')+'</button>';
+    d.querySelector('button').onclick=function(){try{sessionStorage.removeItem(K);}catch(x){}location.reload();};(document.body||document.documentElement).appendChild(d);}
+  if(document.body)show();else addEventListener('DOMContentLoaded',show);},true);
+addEventListener('load',function(){setTimeout(function(){if(!done)try{sessionStorage.removeItem(K);}catch(x){}},3000);});})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Баба Зина: слова из букв</title>
 <meta name="description" content="Баба Зина: слова из букв — составляй слова из букв, разгадывай кроссворды и собирай смешной «Толковый словарь бабы Зины».">
@@ -41,6 +55,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .btn.ghost:active{box-shadow:0 1px 0 var(--edge)}
 .btn.small{padding:10px 16px;font-size:16px;border-radius:14px}
 .btn[disabled]{filter:grayscale(1);opacity:.55;pointer-events:none}
+/* pre: ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
+button[data-adwait]{position:relative}
+button[data-adwait]::after{content:"⏳";position:absolute;top:3px;right:6px;font-size:15px;line-height:1;pointer-events:none}
 .ibtn{width:46px;height:46px;flex:none;border-radius:14px;background:var(--card);box-shadow:0 3px 0 var(--edge),0 4px 10px rgba(39,50,74,.08);
   display:flex;align-items:center;justify-content:center;font-size:22px}
 .ibtn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}

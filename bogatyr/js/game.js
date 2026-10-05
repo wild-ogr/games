@@ -65,11 +65,12 @@ function newRun(chi,heroId,endless,wk,dr){
     weapons:[{id:WM.only||hero.weapon,lvl:1,t:.3,a:0}],pas:{},kills:0,gold:0,goldMul:1,spawnAcc:0,pid:1,lvlQ:0,boss:null,bossDone:false,
     ev:mkEvents(0),
     rerolls:(S.village.altar||0),revives:(S.village.hut?1:0),adRevive:true,quipT:6,gift:null,banner:null,cards:S.village.tavern?4:3};
-  G.first=!S.runs&&!endless&&!dr;G.short=!endless&&!dr&&!S.done[chi]?(chi===0?FIRST:chi===1?STEP2:chi===2?STEP3:null):null;G.ev=mkEvents(0); // G.short — числа короткого похода: глава 1 (FIRST) глава 2 (STEP2, «лесенка») и глава 3 (STEP3), пока глава не пройдена; иначе null
+  G.first=!S.runs&&!endless&&!dr;G.short=!endless&&!dr&&!S.done[chi]?(chi===0?FIRST:chi===1?STEP2:chi===2?STEP3:chi===3?STEP4:null):null;G.ev=mkEvents(0); // G.short — числа короткого похода: глава 1 (FIRST) глава 2 (STEP2, «лесенка»), глава 3 (STEP3) и глава 4 (STEP4), пока глава не пройдена; иначе null
   // «оберег новичка» (boost): самый первый поход — нечисть бьёт на 25% слабее и один раз выручает каравай; главы 1–2, пока не пройдены (первые 8 походов) — на 15% слабее
   G.nov=G.first&&chi===0?2:!endless&&!dr&&!wk&&chi<=1&&!S.done[chi]&&S.runs<8?1:0;G.novHeal=G.nov===2?1:0;
   // глава 2 мягче (решение владельца 02.10): только в самой главе «Гиблое болото» (не сеча, не поход дня, не неделя) — числа CH2_SOFT в data.js
-  G.soft=!endless&&!dr&&!wk&&chi===1?CH2_SOFT:null;
+  // глава 4, пока не пройдена (ch4-soft 05.10): Колдун-стрелок мягче — CH4_SOFT в data.js (вместе с лесенкой STEP4)
+  G.soft=!endless&&!dr&&!wk&&chi===1?CH2_SOFT:!endless&&!dr&&!wk&&chi===3&&!S.done[3]?CH4_SOFT:null;
   // «боевой дух»: после поражения в главе следующая попытка В ЭТОЙ ЖЕ главе чуть легче — нечисть бьёт на 10% слабее за каждое поражение подряд (не больше 30%); победа сбрасывает. Только главы (не сеча, не поход дня, не неделя)
   G.pity=!endless&&!dr&&!wk&&S.pity&&S.pity.c===chi?clamp(S.pity.n|0,0,PITY_MAX):0;G.emD=Math.max(.6,(G.nov===2?.75:G.nov===1?.85:1)*(1-PITY_STEP*G.pity)*(G.short&&G.short.dmg||1));G.daily=dr||null;G.rng=dr?mulberry(dr.seed):null;
   G.hkey=skinKey(hero.id);G.curse=endless||dr?0:Math.min(S.curse||0,S.curseMax||0);G.hits=0;

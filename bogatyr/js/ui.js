@@ -191,7 +191,11 @@ function forgeDelta(id){const h=HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.her
   if(id==='luck')return L('удача ','luck ')+pc(a.luck-1)+ar+pc(b.luck-1);
   return L('золото ','gold ')+pc(a.gold-1)+ar+pc(b.gold-1);}
 // что советуем новичку: пока в кузнице меньше 6 ковок — самое дешёвое из «Здоровье / Сила / Броня»
-function forgeTip(){let n=0;for(const k in S.forge)n+=S.forge[k];if(n>=6)return '';let best='',bc=1e9;for(const id of['hp','might','armor']){const c=forgeCost(S.forge[id]||0,id);if(c<bc){bc=c;best=id;}}return best;}
+// подсказка кузнеца перед главой 4 (ch4-soft 05.10): глава 3 пройдена, 4 — нет: в главе 4 первый настоящий стрелок (Колдун) — советуем Броню и Здоровье
+function ch4Tip(){return !!(S.done[2]&&!S.done[3]);}
+function ch4TipText(){return L('🔨 Кузнец: «Колдун бьёт издалека — берите Броню и Здоровье».','🔨 Blacksmith: “The '+EN.koldun.n+' strikes from afar — take '+FORGE[2].name+' and '+FORGE[0].name+'.”');}
+function forgeTip(){if(ch4Tip()){const ids=['armor','hp'].filter(id=>(S.forge[id]||0)<FORGE.find(f=>f.id===id).max);if(ids.length)return ids.sort((a,b)=>forgeCost(S.forge[a]||0,a)-forgeCost(S.forge[b]||0,b))[0];}
+  let n=0;for(const k in S.forge)n+=S.forge[k];if(n>=6)return '';let best='',bc=1e9;for(const id of['hp','might','armor']){const c=forgeCost(S.forge[id]||0,id);if(c<bc){bc=c;best=id;}}return best;}
 function powerHTML(){const h=HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.hero:'dob';return '<div class="power"><img src="'+ic('hp_'+skinKey(h),96)+'" alt=""><span>'+L('Сила богатыря','Hero power')+'</span><b id="pwrN">⚔ '+fmtNum(powerScore(h))+'</b></div>';}
 function powerToast(was){const h=HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.hero:'dob',now=powerScore(h);if(now>was)toast(L('⚔ Сила богатыря: ','⚔ Hero power: ')+fmtNum(was)+' → '+fmtNum(now)+' (+'+fmtNum(now-was)+')');}
 // снаряжение на рисунке богатыря обновилось (ступени GEAR в art.js) — сказать, что именно появилось
@@ -210,7 +214,7 @@ function renderForge(){const el=$('tabForge');
     el.innerHTML=h;on('needAd',()=>needCard.fn());on('fsH',()=>{forgeSeg='hero';renderForge();});
     for(const b of el.querySelectorAll('[data-a]'))b.onclick=()=>{const id=b.dataset.a,l=S.armory[id]||0,cost=armoryCost(l);if(S.gold<cost||l>=ARMORY_MAX)return;const pw=powerNow();S.gold-=cost;STAT.ev('spend',{k:'arm:'+id,c:cost});S.armory[id]=l+1;save();SND.level();renderForge();setGold();powerToast(pw);};
     return;}
-  h+=needCard(FORGE.filter(f=>(S.forge[f.id]||0)<f.max).map(f=>({n:f.name+L(', ур. ',', lv ')+((S.forge[f.id]||0)+1),c:forgeCost(S.forge[f.id]||0,f.id)})),renderForge)+'<p class="sub">'+L('Прокачка навсегда — для всех богатырей и всех походов.','Permanent upgrades — for every hero and every run.')+'</p>';
+  h+=needCard(FORGE.filter(f=>(S.forge[f.id]||0)<f.max).map(f=>({n:f.name+L(', ур. ',', lv ')+((S.forge[f.id]||0)+1),c:forgeCost(S.forge[f.id]||0,f.id)})),renderForge)+'<p class="sub">'+L('Прокачка навсегда — для всех богатырей и всех походов.','Permanent upgrades — for every hero and every run.')+'</p>'+(ch4Tip()?'<div class="card next ch4tip" id="ch4TipF"><b style="font-size:14.5px;line-height:1.4">'+ch4TipText()+'</b></div>':'');
   const tipId=forgeTip();
   for(const f of FORGE){const l=S.forge[f.id]||0,cost=forgeCost(l,f.id);
     h+='<div class="card'+(f.id===tipId?' next':'')+'"><div class="row"><img class="ic" src="'+ic(f.icon)+'"><div class="t"><b>'+f.name+(f.id===tipId?' <em class="rec">'+L('👍 советуем','👍 good pick')+'</em>':'')+'</b>'+(l<f.max?'<span class="delta">'+forgeDelta(f.id)+'</span>':'')+'<span>'+f.per+L(' за уровень',' per level')+(f.max>10?(l>=10?L(' · мастерская ковка',' · master forging'):L(' · до '+f.max+' ур.',' · up to lv '+f.max)):'')+'</span><div class="pips'+(f.max>10?' long':'')+'">'+Array.from({length:f.max},(_,i)=>'<i class="'+(i<l?'on':'')+(i>=10?' m':'')+'"></i>').join('')+'</div></div>'+
@@ -444,8 +448,10 @@ function openStars(i){STAT.screen('stars');showModal('<h3>'+CH[i].name+'</h3><p 
 function renderChInfo(){const c=CH[mapSel],hr=HERO_BY[S.hero]||HEROES[0],best=S.best[mapSel];
   // выбранная глава — компактной карточкой в закреплённой панели над «Выступить»: всегда видна целиком (boost 2); звёзды главы — тут же
   const sn=chStars(mapSel),sel=$('chSel');
-  if(sel){sel.innerHTML='<div class="chsel"><img src="'+ic(c.boss,110)+'" alt=""><div class="t"><b>'+c.name+' <i class="stars" id="chStars">'+starsHTML3(mapSel)+'</i></b><span>'+L('Босс: ','Boss: ')+'<em>'+EN[c.boss].n+'</em>'+(best?L(' · рекорд ',' · record ')+fmtTime(best):'')+'</span></div></div>';
-    sel.onclick=()=>{SND.click();openStars(mapSel);};}
+  if(sel){sel.innerHTML='<div class="chsel"><img src="'+ic(c.boss,110)+'" alt=""><div class="t"><b>'+c.name+' <i class="stars" id="chStars">'+starsHTML3(mapSel)+'</i></b><span>'+L('Босс: ','Boss: ')+'<em>'+EN[c.boss].n+'</em>'+(best?L(' · рекорд ',' · record ')+fmtTime(best):'')+'</span></div></div>'+
+      // ch4-soft: глава 4 ещё не пройдена — подсказка кузнеца прямо над «Выступить» (нажатие — в кузницу)
+      (mapSel===3&&ch4Tip()?'<div class="ch4tip" id="ch4Tip" style="margin-top:6px;padding:7px 10px;border-radius:12px;background:var(--parch,#2a2238);color:var(--ink,#fff);border:2px solid #ffcf5a;font-size:14px;font-weight:800;line-height:1.35;cursor:pointer">'+ch4TipText()+(S.village.forge?' <u id="ch4Forge" style="white-space:nowrap">'+L('В кузницу →','To the Forge →')+'</u>':'')+'</div>':'');
+    sel.onclick=e=>{if(e.target.closest&&e.target.closest('#ch4Tip')){SND.click();if(S.village.forge){forgeSeg='hero';openTab('Forge');}return;}SND.click();openStars(mapSel);};}
   $('chInfo').innerHTML=
     '<div class="card"><div class="row"><img class="ic" src="'+ic('hp_'+skinKey(hr.id),120)+'"><div class="t"><b>'+hr.name+'</b><span>'+WEAPONS[hr.weapon].name+' · '+hr.perk+'</span><span class="delta" style="color:var(--gold)">⚔ '+L('Сила ','Power ')+fmtNum(powerScore(hr.id))+'</span></div><button class="btn ghost" id="chgHero">'+L('Сменить','Change')+'</button></div></div>'+
     (S.curseMax?'<div class="card"><b style="font-size:14px">'+L('☠ Проклятие','☠ Curse')+'</b><span style="display:block;font-size:12px;color:var(--mut);margin:2px 0 8px">'+L('Нечисть сильнее, золота больше. Новое проклятие откроется, если победить в Тридевятом царстве на самом сильном из открытых.','Stronger monsters, more gold. Win in the Thrice-Nine Kingdom on your strongest curse to unlock the next one.')+'</span><div class="seg" style="margin:0">'+

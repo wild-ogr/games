@@ -309,6 +309,9 @@ body.calm .node.cur,body.calm .sd.today,body.calm .card{animation:none}
 @keyframes bump{40%{transform:scale(1.18)}}
 body.calm .pill.bump{animation:none}
 @supports not (inset:0){.shura>*+*,.tday>*+*{margin-left:10px}}
+/* pre: ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
+button[data-adwait]{position:relative}
+button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;font-size:16px;line-height:1;pointer-events:none}
 </style>
 <style id="lookcss">/* ===== v22 «Летний двор»: оформление поверх прежних правил (раскладка и названия классов те же). Шрифт Rubik вшит (один файл для обеих площадок) ===== */
 @font-face{font-family:Rubik;font-weight:400 800;font-display:swap;src:url(data:font/woff2;base64,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) format("woff2");unicode-range:U+0400-045F,U+0490-0491,U+2116}
@@ -705,7 +708,7 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 // VK передаёт в адрес игры параметры запуска (vk_app_id и др.); ?vk=1 — проверка VK-режима на маке
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
-const OK_LINK=''; // ссылка на игру в ОК; пусто — «Поделиться» в ОК спрятано
+const OK_LINK='https://ok.ru/game/512004864050'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
 /* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
@@ -714,13 +717,14 @@ let ysdk=null,YP=null,VK=null,paused=false;
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
-   progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function. */
+   progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
 var STAT=(function(){
   var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
-      cfgO=null,cfgS=0,abs={},rdT=0,acted=0,pre=0,tp=0,fT=0,fS=0,fC=0,fN=0,fH=[],fLo=999,fHg=0,pfS=0;
+      cfgO=null,cfgS=0,abs={},rdT=0,acted=0,pre=0,tp=0,fL=0,fP=0,fR=0,fX=0,fA=0,fC=0,fN=0,fH=[],fLo=999,fHg=0,fJ=0,pfS=0,FGR=100;
   function ls(k,v){try{if(v===undefined)return window.localStorage.getItem(k);if(v===null)window.localStorage.removeItem(k);else window.localStorage.setItem(k,v);}catch(e){}return null;}
   function jp(s){try{return s?JSON.parse(s):null;}catch(e){return null;}}
   function now(){var t=0;try{t=O.now?O.now():0;}catch(e){}return typeof t==='number'&&t>1.6e12?t:Date.now();}
@@ -783,6 +787,7 @@ var STAT=(function(){
       window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;err('promise: '+(r&&r.message||r),r&&r.stack?String(r.stack).split('\n')[1]:'');});
       document.addEventListener('visibilitychange',function(){document.visibilityState==='hidden'?hide():show();});
       window.addEventListener('pagehide',hide);
+      window.addEventListener('blur',function(){fBrk();});window.addEventListener('focus',function(){fBrk();});
       var ts=['pointerdown','touchstart','keydown'];for(i=0;i<3;i++)document.addEventListener(ts[i],tap,{capture:true,passive:true});
       timer=setInterval(function(){if(on&&vis&&(Q.length||pend.length))flush();},FLUSH*1000);}
     setTimeout(flush,5000); // старое неотправленное + первые шаги — быстро (воронка первой минуты)
@@ -817,11 +822,13 @@ var STAT=(function(){
      оба не чаще раза в 20 с на место, поле n — сколько набежало. STAT.ad('int','none','cap'|'gap'|'nosdk'|'nofill') — межэкранная не показана. --- */
   var place='';
   function setPlace(p){place=String(p||'').slice(0,16);}
-  function adReq(f){aR[f]=Date.now();}
+  function adReq(f){aR[f]=Date.now();fBrk(2e5);}
   function thrN(k,n,p){var x=thr[k]||(thr[k]={c:0,t:0}),t=Date.now();x.c++;x.n=n;x.p=p;if(t-x.t>=THR){x.t=t;thrOut(x);}}
   function thrOut(x){if(!x.c)return;x.p.n=x.c;x.c=0;ev(x.n,x.p);}
-  function ad(f,r,code){var p={f:f,r:r,p:f==='int'?'int':(place||'?')};if(code!==undefined&&code!==null&&code!=='')p.c=scrub(code,24);
+  function ad(f,r,code,x){var p={f:f,r:r,p:f==='int'?'int':(place||'?')},k;if(code!==undefined&&code!==null&&code!=='')p.c=scrub(code,24);
+    if(x)for(k in x)if(x[k]!==undefined&&x[k]!==null&&p[k]===undefined)p[k]=x[k]; /* 4-й параметр — свои поля итога, напр. {pr:1} «ролик был готов к нажатию» */
     if(r==='hold'){thrN('h'+p.p,'ad',p);return;}
+    fX=0;fBrk(r==='show'?2e5:1000); /* плавность: пока идёт реклама (и секунду после итога) кадры не меряем */
     if(aR[f]){p.ms=Date.now()-aR[f];aR[f]=0;}ev('ad',p);if(f!=='int'&&r!=='show')place='';}
   function offer(p){p=String(p).slice(0,13);thrN('o'+p,'of_'+p,{p:p});}
   function adChk(f,ok){var x=aC[f]||(aC[f]={y:0,n:0});x[ok?'y':'n']++;}
@@ -839,11 +846,21 @@ var STAT=(function(){
 
   // --- первое нажатие: act {ms} от ready (без ready — от начала сеанса, при сворачивании, nr:1) ---
   function tap(){if(acted||!on)return;var t=Date.now();if(!rdT){pre++;if(!tp)tp=t;return;}acted=1;var p={ms:t-rdT};if(pre)p.pre=pre;ev('act',p);}
-  // --- плавность: STAT.frame() раз за кадр игрового цикла → perf {fps (медиана), lo (худшая секунда), hg (подвисаний > 1 с)} ---
-  function frame(){var t=Date.now(),d=t-fT;fT=t;if(d>5000||!fS){fS=t;fC=0;return;}fN++;fC++;if(d>1000)fHg++;
-    if(t-fS>=1000){d=Math.min(240,Math.round(fC*1000/(t-fS)));fH[d]=(fH[d]||0)+1;if(d<fLo)fLo=d;fS=t;fC=0;}}
+  /* --- плавность: STAT.frame() раз за кадр игрового цикла → perf {fps (медиана), lo (худшая секунда), hg (подвисаний > 1 с), jk (рывков > 0,25 с), s (секунд замера), v:2}.
+     v:2 (05.10): игра своим вызовом только говорит «я сейчас рисую» (fL). Модуль сам ведёт цепочку кадров браузера (ftick) и меряет промежутки
+     между НИМИ. Промежуток идёт в счёт, только если игра звала frame() прямо перед ним (не раньше FGR мс до его начала) — то есть ждала кадр.
+     Игра перестала звать (пауза, окно, спящий цикл) → цепочка гаснет, после возобновления первый промежуток не считается: пауза — не подвисание.
+     Помехи (fX): сворачивание/возврат, потеря/возврат фокуса (системные окна поверх игры), реклама от adReq/ad('show') до итога + 1 с — промежутки с ними
+     выбрасываются. Старый счёт (до 05.10, без v) мерил разрыв между вызовами игры и принимал её паузы за подвисания — его hg и lo не верить. --- */
+  function frame(){fL=Date.now();if(!fR&&on&&window.requestAnimationFrame){fR=1;requestAnimationFrame(ftick);}}
+  function ftick(){var t=Date.now(),d=t-fP,ok=fP>0&&fL>=fP-FGR&&fX<fP&&vis&&d>=0&&d<=5000;fR=0;
+    if(t-fL>FGR&&!ok){fP=0;return;}                 // игра кадров не просит — серия кончилась
+    fP=t;fR=1;requestAnimationFrame(ftick);if(!ok)return;
+    fN++;fC++;fA+=d;if(d>1000)fHg++;if(d>250)fJ++;
+    if(fA>=1000){d=Math.min(240,Math.round(fC*1000/fA));fH[d]=(fH[d]||0)+1;if(d<fLo)fLo=d;fA=0;fC=0;}}
+  function fBrk(ms){var t=Date.now()+(ms||0);if(t>fX)fX=t;}   // помеха: промежутки кадров до этой минуты не считаем
   function perf(){var i,s=0,h=0;if(pfS||fN<300)return;for(i=0;i<=240;i++)s+=fH[i]||0;if(!s)return;pfS=1;for(i=0;i<=240;i++){h+=fH[i]||0;if(h*2>=s)break;}
-    ev('perf',{fps:i,lo:fLo,hg:fHg});}
+    ev('perf',{fps:i,lo:fLo,hg:fHg,jk:fJ,s:s,v:2});}
 
   // --- ошибки JS: не больше MAXERR разных за сеанс, без адресов с параметрами (в них vk_user_id!); x — доп. поля (e:1 — до запуска) ---
   function err(m,src,ln,col,x){if(!on||errN>=MAXERR)return;m=scrub(m||'?',120);src=scrub(String(src||'').replace(/[?#].*$/,'').replace(/^.*\//,''),40)+(ln?':'+ln+(col?':'+col:''):'');
@@ -880,12 +897,12 @@ var STAT=(function(){
     for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(O.url,JSON.stringify(b)));}catch(e){}
       if(!ok||srv)left.push(b);}
     pend=left;keep();if(pend.length&&!srv)send(pend[0]);}
-  function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fS=0;rel();var k,p={d:actSec()};
+  function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
     if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
-  function show(){if(!on||vis)return;vis=true;actT=Date.now();
+  function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
       if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
       var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
@@ -907,13 +924,13 @@ var STAT=(function(){
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
     progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
-    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,pl:place};}};
+    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v22-100423',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v22-100521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: настройки сеанса; прогресс на входе — после чтения облака, но не позже 2,5 с (bt — облако хоть раз отдало сохранение: метка устройства, не в сохранении)
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -967,19 +984,19 @@ var SOC=(function(){
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
   // ok — ID этой игры в Одноклассниках (vk_ok_app_id), когда она там вышла; без него в ОК игра в «Ещё игры» не показывается.
   var GAMES=[
-    {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p'},
-    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p'},
-    {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s'},
-    {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s'},
+    {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p',ok:512004864050},
+    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p',ok:512005727621},
+    {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s',ok:512005580574},
+    {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s',ok:512005500650},
     {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',off:'all'},
-    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c'},
-    {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c'},
-    {id:54792011,t:'Паук на даче',a:0,i:7,g:'c'},
-    {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c'},
+    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c',ok:512005141228},
+    {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c',ok:512005597603},
+    {id:54792011,t:'Паук на даче',a:0,i:7,g:'c',ok:512005626567},
+    {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c',ok:512005010476},
     {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all'},
-    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p'},
-    {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r'},
-    {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p'}
+    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p',ok:512005552366},
+    {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r',ok:512005219424},
+    {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p',ok:512005471658}
   ];
   var N=GAMES.length;
   function qp(k){var m=new RegExp('[?&]'+k+'=([^&#]*)').exec(location.search);return m?decodeURIComponent(m[1]):'';}
@@ -1041,7 +1058,7 @@ var SOC=(function(){
     return send('VKWebAppShare',{link:OKP?O.okLink:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
   function group(){if(OKP&&!O.okGroup)return Promise.resolve(false);
     return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
-  function open(g){if(OKP&&!g.ok)return Promise.resolve(false);
+  function open(g){if(OKP&&!(g.ok&&OKWEB))return Promise.resolve(false); // ОК: OpenApp есть только на сайте и в мобильном браузере
     return send('VKWebAppOpenApp',OKP?{app_id:g.ok,app_is_local:true}:{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
     toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
 
@@ -1165,9 +1182,9 @@ async function initVK(){
     SOC.ready();updMore();
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
-      else if(t==='VKWebAppViewRestore'){setPause('hide',false);if(typeof adBack==='function')adBack();}});
+      else if(t==='VKWebAppViewRestore'){setPause('hide',false);if(typeof adBack==='function')adBack();setTimeout(adBackChk,300);}});
+    adPreload('boot'); // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
     await cloudLoad();
-    adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
   }catch(e){VK=null;}
   if(!OK)PAY.init(); // покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1). ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
   updCoins(); // мост не ответил — с кнопок подсказки/эвакуатора уходит «за рекламу»
@@ -2108,7 +2125,7 @@ let adBusy=false;
    1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе);
    2) снова нет → «Ролик будет через несколько секунд…», кнопки «за рекламу» (AD_BTN_SEL) гаснут, в фоне раз в AD_POLL_MS спрашиваем VK (Check);
       «готов» (не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS. Нажатие по погасшей кнопке VK не дёргает;
-   3) заранее: Check при запуске и после каждого показа, «не готов» — переспрашиваем в фоне (до 6 раз). Ответу «не готов» как запрету не верим.
+   3) заранее: Check при запуске и после каждого показа, «не готов» — переспрашиваем в фоне, пока не станет «готов» (см. pre ниже). Ответу «не готов» как запрету не верим.
    Награда — только за досмотр и один раз. Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора.
    Один приём во всех играх: hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ».
    Отличие Выезда: в образце функция зовётся adReady, но здесь это имя занято (готовность межэкранной) — поэтому adVidReady. */
@@ -2117,8 +2134,40 @@ function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_r
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
 function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
 function adBtns(){const o=[];try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++){const b=q[i];if(!AD_BTN_RE||b.hasAttribute('data-adoff')||(AD_BTN_RE.test(b.textContent)&&!/без реклам|no ads/i.test(b.textContent)))o.push(b);}}catch(e){}return o;}
-function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
-  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{STAT.adChk('rew',r&&r.result?1:0);if(r&&r.result)adVidReady();else again();},()=>{STAT.adChk('rew',0);again();});}
+/* pre (05.10): ролик за награду подгружаем ЗАРАНЕЕ и помним ответ. VKWebAppCheckNativeAds не только отвечает «есть/нет», но и просит VK загрузить ролик,
+   поэтому «нет» переспрашиваем, пока не станет «есть» (раньше — 6 раз за 30 с и тишина): шаги AD_STEP (6 раз по 5 с, 4 раза по 15 с), дальше раз в AD_STEP_MAX (45 с).
+   Не чаще раза в AD_ASK_MIN; в свёрнутой игре не спрашиваем (вернулись — спросили сразу). Ответ «есть» перепроверяем, только если он старше AD_FRESH и на экране есть кнопка ролика.
+   adSt: 1 — ролик готов, −1 — VK ответил «нет», 0 — неизвестно (ещё не спрашивали / ролик только что показан / мост молчит). Два «нет» подряд → на кнопках ролика значок ⏳
+   (data-adwait; нажать всё равно можно: «нет» — не запрет, показ сам попробует загрузить), предложение «Застрял?» не подсвечиваем (adLikely). Стало «есть» → значок уходит, «Ролик готов».
+   Статистика: в событии ad поле pr — 1 «был готов к нажатию», 0 «VK говорил нет», нет поля — неизвестно; при переходе «нет»→«есть» — adchk {f:'rew',w:секунд ждали,k:сколько «нет»,s:повод}.
+   Образец для остальных игр: hobby-analytics/release-h/preload/preload-sample.md, раздел «ОБРАЗЕЦ». */
+let AD_STEP=[5000,5000,5000,5000,5000,5000,15000,15000,15000,15000],AD_STEP_MAX=45000,AD_ASK_MIN=3000,AD_FRESH=120000,AD_LOOK_MS=20000;
+let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAskWhy='boot',adMarkT=0,adRdyToastT=0;
+function adLikely(){return !(VK&&adSt<0&&adNoN>=2);} // false — VK уже дважды подряд ответил «ролика нет»: предложение ролика не подсвечиваем
+function adPreload(why){if(!VK)return;clearTimeout(adChkT);if(typeof why==="string"){adAskWhy=why;adStepN=0;}
+  if(document.hidden||pauseWhy.has('hide')||adW)return; // свёрнуты или ролик на экране — молчим; вернёмся / ролик закончится — спросим (adBackChk, итог показа)
+  const now=typeof why==='string'&&why!=='back'&&why!=='look'; // итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN
+  if(!now){const wait=adAsking?AD_ASK_MIN:adAskT+AD_ASK_MIN-Date.now();if(wait>0){adChkT=setTimeout(adPreload,wait);return;}}
+  adAskT=Date.now();const id=adAsking=++adAskN; // ответ на прежний, уже устаревший вопрос не слушаем
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(id!==adAskN)return;adAsking=0;const ok=!!(r&&r.result);STAT.adChk('rew',ok?1:0);adAns(ok);},()=>{if(id!==adAskN)return;adAsking=0;STAT.adChk('rew',0);adAns(null);});}
+function adAns(ok){const t=Date.now();
+  if(ok){if(adNoN)STAT.ev('adchk',{f:'rew',w:Math.round((t-adNoT0)/1000),k:adNoN,s:adAskWhy});
+    const was=adSt<0&&adNoN>=2;adSt=1;adStT=t;adNoN=0;adStepN=0;adVidReady();
+    if(adMark()&&was&&t>=adCoolT&&!adBusy&&t-adRdyToastT>30000){adRdyToastT=t;toast(L('Ролик готов — можно смотреть','The video is ready to watch'));}
+    return;}
+  if(ok===false){if(!adNoN)adNoT0=t;adNoN++;adSt=-1;adStT=t;adMark();} // null — мост не ответил: состояние не трогаем, но спрашивать продолжаем
+  adChkT=setTimeout(adPreload,AD_STEP[adStepN++]||AD_STEP_MAX);}
+// ⏳ на кнопках ролика, пока VK говорит «нет» (окна перерисовываются — поэтому раз в секунду, только пока «нет»); вернёт true, если значок был на видимой кнопке и снят
+function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];let seen=false,old=[];try{old=document.querySelectorAll('[data-adwait]');}catch(e){}
+  for(let i=0;i<q.length;i++)q[i].setAttribute('data-adwait','1');
+  for(let i=0;i<old.length;i++){const b=old[i];if(q.indexOf(b)<0){b.removeAttribute('data-adwait');if(!on&&b.offsetParent)seen=true;}} // кнопка перестала быть рекламной (появились монеты) — значок снять
+  if(on)adMarkT=setTimeout(adMark,1000);return seen;}
+// вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз
+function adBackChk(tick){if(!VK||adBusy||document.hidden||pauseWhy.has('hide'))return;
+  if(adSt<1){if(tick!==1)adPreload('back');else if(Date.now()-adAskT>AD_STEP_MAX+2*AD_ASK_MIN)adPreload();return;} // по таймеру — только страховка, шаги не сбрасываем
+  if(Date.now()-adStT<AD_FRESH)return;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent){adPreload('look');return;}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(adChkT);else setTimeout(adBackChk,300);});
+setInterval(()=>adBackChk(1),AD_LOOK_MS);
 function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
 function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
   if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:rgba(0,0,0,.74);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
@@ -2129,7 +2178,7 @@ function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(
 // кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду)
 function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT,q=adBtns();for(let i=0;i<q.length;i++){const b=q[i];
     if(off){b.style.opacity='.45';b.setAttribute('data-adoff','1');}else if(b.hasAttribute('data-adoff')){b.style.opacity='';b.removeAttribute('data-adoff');}}if(off)adDimT=setTimeout(adDim,1000);}
-function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload('none');}
 // нажатие по погасшей кнопке: окно не закрываем, площадку не дёргаем — только «ещё загружается» (ставить первой строкой обработчика, если он сам закрывает окно)
 function adHold(p){if(adBusy||Date.now()>=adCoolT)return false;if(p)STAT.place(p);STAT.ad('rew','hold');toast(L('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds'));return true;}
 /* adt (04.10): обрыв ролика за награду через 60 с (образец — Зина, hobby-analytics/release-g/ads-timeout.md «ОБРАЗЕЦ»). Раньше показ ждал ответа VK 60 с (vkSend(…,60000)),
@@ -2147,7 +2196,7 @@ let AD_WAIT_MS=180000,AD_SLOW_MS=60000,AD_CHK_MS=1500,AD_EXIT_MS=15000,AD_TAP_MS
 const AD_CHK=()=>L('Проверяем просмотр ролика…','Checking the video view…');
 let adW=null,adPl='',adLateC=0;const adLateQ=[];
 {const sp=STAT.place;STAT.place=function(p){adPl=String(p||'');return sp.apply(STAT,arguments);};} /* место рекламы запоминаем сами: позднее событие пишется, когда STAT его уже сбросил (STAT v1.2: ms — от нажатия) */
-function adStat(r,c,ms,x){const p={f:'rew',r:r,p:x&&x.p||adPl||'?',ms:ms};if(c!==''&&c!=null)p.c=String(c).slice(0,24);if(x&&x.dup)p.dup=1;STAT.ev('ad',p);}
+function adStat(r,c,ms,x){const p={f:'rew',r:r,p:x&&x.p||adPl||'?',ms:ms};if(c!==''&&c!=null)p.c=String(c).slice(0,24);if(x&&x.dup)p.dup=1;if(x&&x.pr!=null)p.pr=x.pr;STAT.ev('ad',p);}
 function adWatch(rel){adUnwatch();const w=adW={t0:Date.now(),back:0,rel:rel};w.tS=setTimeout(adBack,AD_SLOW_MS);w.tW=setTimeout(()=>{if(adW===w)rel('timeout');},AD_WAIT_MS);}
 function adUnwatch(){const w=adW;if(!w)return;adW=null;clearTimeout(w.tS);clearTimeout(w.tW);clearTimeout(w.tC);clearTimeout(w.tE);adWait(0);}
 function adBack(){const w=adW;if(!w||w.back)return;w.back=Date.now();
@@ -2157,10 +2206,10 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)adBack();e
 window.addEventListener('focus',adBack);window.addEventListener('pagehide',adLateFlush);
 ['pointerdown','touchstart','keydown'].forEach(n=>document.addEventListener(n,()=>{if(adW&&Date.now()-adW.t0>=AD_TAP_MS)adBack();},true));
 function adLatePend(rec){adLateQ.push(rec);rec.tF=setTimeout(()=>adLateFin(rec),AD_LATE_MS);}
-function adLateFin(rec){if(rec.fin||rec.hold)return;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);adStat('err',rec.exit?'exit':'timeout',rec.w,{p:rec.p});}
+function adLateFin(rec){if(rec.fin||rec.hold)return;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);adStat('err',rec.exit?'exit':'timeout',rec.w,{p:rec.p,pr:rec.pr});}
 function adLateFlush(){adLateQ.slice().forEach(adLateFin);}
 function adLateEnd(rec,r,c){const dup=rec.fin;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);if(dup&&r!=='ok')return;
-  adStat(r,c,Date.now()-rec.t0,{p:rec.p,dup:dup});}
+  adStat(r,c,Date.now()-rec.t0,{p:rec.p,dup:dup,pr:rec.pr});}
 /* замена неуместной поздней награды: монеты по ПОЛНОЙ цене обещанного (n — цена из констант игры); цены в монетах нет — как за один ролик (AD_COINS) */
 function adLateCoins(n){n=n>0?n:AD_COINS;adLateC=1;ern('ad',n);setCoins(S.coins+n);SND.coin();return L('держи монеты: +','here are your coins: +')+n;}
 function adLateMsg(n){return L('держи монеты: +','here are your coins: +')+n;} /* слова для поздней выдачи монет, которые и были наградой (не замена) */
@@ -2169,11 +2218,11 @@ function showRewarded(cb0,onFail0,late0){
   if(Date.now()<adCoolT){STAT.ad('rew','hold');toast(L('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds'));if(onFail0)onFail0();adDim();return;}
   STAT.adReq('rew'); // STAT v1.2: нажатие → ms в итоговом ad
   adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},AD_WAIT_MS*2+AD_RETRY_MS+15000);
-  const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';const secs=()=>Date.now()-t0; /* STAT v1.2: мс от нажатия */
+  const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0; /* pre: был ли ролик готов к нажатию */const secs=()=>Date.now()-t0; /* STAT v1.2: мс от нажатия */
   let paid=false,st=0; /* st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний) */
   const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
-  const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c); // ms ставит модуль; место живёт до итога
-  const rel=why=>{if(st)return;st=2;rec.w=secs();rec.exit=why==='exit';adUnwatch();adClose();adPreload();
+  const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr}); // ms ставит модуль; место живёт до итога; pre: pr — был ли ролик готов к нажатию (нужен STAT с 4-м параметром)
+  const rel=why=>{if(st)return;st=2;rec.w=secs();rec.exit=why==='exit';adUnwatch();adClose();adPreload('exit');
     toast(rec.exit?L('Хорошо. Подтвердится просмотр — награду отдам','OK. Once the view is confirmed, you’ll get the reward'):L('Ответа о просмотре пока нет. Придёт — награду отдам','No answer about the view yet. If it comes, you’ll get the reward'),4500);onFail();adDim();adLatePend(rec);};
   const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||pauseWhy.has('ad')||document.hidden){setTimeout(lateOk,1000);return;} /* другой ролик, межэкранная или игра свёрнута — подождём */
     paid=true;lastAdT=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}
@@ -2181,15 +2230,15 @@ function showRewarded(cb0,onFail0,late0){
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL_());onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
   if(VK){
     let tries=0;
-    const go=()=>{adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{
+    const go=()=>{clearTimeout(adChkT);if(adSt>0){adSt=0;adMark();}adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{
         if(st===2){if(r&&r.result)lateOk();else adLateEnd(rec,'fail','late');return;}
         if(st)return;st=1;adUnwatch();adClose();
-        if(r&&r.result){stat('ok',tries?'retry':'');adPreload();cb();}else{stat('fail','noresult');toast(AD_FAIL_());adPreload();onFail();}
+        if(r&&r.result){stat('ok',tries?'retry':'');adPreload('shown');cb();}else{stat('fail','noresult');toast(AD_FAIL_());adPreload('fail');onFail();}
       },e=>{
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
-        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе */
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL_());adPreload();}
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе */
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL_());adPreload('err');}
         onFail();adDim();});}; /* adDim — окно с кнопкой могло открыться заново */
     go();return;}
   if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
@@ -2231,7 +2280,7 @@ function hintChain(id){const {w,h}=G.p,occ=G.occ.slice(),out=[],gone=new Set([id
 const AD_HINT_MAX=3,AD_TOW_MAX=1,SOS_IDLE=25,SOS_SHOW=12,X2_POOR=100;
 function adHintOk(){return !!G&&adOk()&&(G.daily||G.idx>=3)&&(G.adH||0)<AD_HINT_MAX;}
 function sosOff(){if(G)G.sos=0;const b=$('gHint');if(b)b.classList.remove('sos');updCoins();}
-function sos(){if(!G||G.over||G.sosDone||G.soft||modalOn||G.towMode||window.__demo||!adHintOk()||(S.freeHint&&!G.daily)||(G.hint>=0&&G.hintT>0))return;
+function sos(){if(!G||G.over||G.sosDone||G.soft||modalOn||G.towMode||window.__demo||!adHintOk()||!adLikely()||(S.freeHint&&!G.daily)||(G.hint>=0&&G.hintT>0))return;
   const {w,h}=G.p;if(!G.vs.some(v=>v.state==='idle'&&canExit(v,G.occ,w,h,v.id).free))return;
   G.sosDone=1;G.sos=SOS_SHOW;STAT.offer('sos');$('gHint').classList.add('sos');updCoins();say(L('Застрял? Подскажу — бесплатно за рекламу','Stuck? I’ll show you — free for an ad'),'bench');}
 /* adt: поздний зачёт помощи во дворе — только тот же двор, игра идёт, чужих окон нет; иначе монеты по полной цене (PRICE) */
