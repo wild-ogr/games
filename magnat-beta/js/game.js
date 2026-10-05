@@ -343,18 +343,23 @@ const COL={dacha:{ico:'🌻',ru:'Дачник',en:'Dacha lover',cr:10,cos:'em_su
 const LXC={plate:{ids:['car1','car2','car2b','suv'],cr:40,ico:'7️⃣',ru:'Номер «777» на все машины',en:'“777” plates on all cars'},engrave:{ids:['watch1','watch2','watch3'],cr:20,ico:'✍',ru:'Гравировка на часах',en:'Engraving on the watches'},
   flag:{ids:['yacht'],cr:30,ico:'🚩',ru:'Флаг холдинга на яхте',en:'Holding flag on the yacht'},kennel:{ids:['dog'],cr:15,ico:'🏠',ru:'Будка-терем для Барона',en:'A carved kennel for Baron'},
   gframe:{ids:['paint1','paint2'],cr:20,ico:'🖼',ru:'Золочёная рама для картин',en:'Gilded frames for the paintings'},plaque:{ids:['gym11'],cr:25,ico:'🏅',ru:'Табличка «Почётный спонсор» на спортзале',en:'“Honorary sponsor” plaque on the gym'}};
-function wallAdd(k,o){const w=so('wall');if(w[k])return false;w[k]=Object.assign({m:W?W.m:null,h:W?W.hold:1},o||{});S.wN=(S.wN|0)+1;return true;}
+function wallAdd(k,o){const w=so('wall');if(w[k])return false;wsMig();w[k]=Object.assign({m:W?W.m:null,h:W?W.hold:1},o||{});S.wN=wallNew().length;return true;}
+// M43: «новое на Стене» — не счётчик, а список увиденного S.wS={ключ:1} (облако — объединение): новое = есть на стене, но не увидено.
+// Миграция: всё, что на стене, кроме последних S.wN (старый счётчик), — уже увидено. S.wN оставлен как число для старых версий.
+function wsMig(){const s=so('wS');if(!S.wsV){const ks=Object.keys(so('wall')),n=Math.min(ks.length,Math.max(0,S.wN|0));for(const k of ks.slice(0,ks.length-n))s[k]=1;S.wsV=1;}return s;}
+function wallNew(){const s=wsMig(),w=so('wall');return Object.keys(w).filter(k=>!s[k]);}
 // все грамоты: достижения ACH (глав и недр) и вехи всех глав
 function wallGrams(){const o=[];for(const k in ACH)o.push({k,ach:1});if(E.MILES)for(const st in E.MILES)for(const m of E.MILES[st])o.push({k:'ms_'+m[0],st,m});return o;}
 // синхронизация стены с тем, что уже заработано; первый запуск после обновления — молча (без «новое»), старые сейвы сразу видят полстены
-function wallSync(silent){if(!W)return [];const w=so('wall'),crE=so('crE'),nw=[];const first=!S.wallV;
+function wallSync(silent){if(!W)return [];wsMig();const w=so('wall'),crE=so('crE'),nw=[];const first=!S.wallV;
   for(const g of wallGrams())if(crE[g.k]&&!w[g.k]){w[g.k]={m:first?null:W.m,h:W.hold};nw.push(g.k);}
   for(const p of PH)if(p.ok()&&!w[p.k]){w[p.k]={m:first?null:W.m,h:W.hold};nw.push(p.k);}
   // встречи выпускников (сюжет): фото каждой встречи и «Кубок 11 „Б“», если капитал больше, чем у Бориса
   try{const F=W.fr;if(F&&Array.isArray(F.rh))for(const h of F.rh){const k='ph_meet_'+h.y;if(!w[k]){w[k]={m:h.m,h:W.hold,y:h.y};nw.push(k);}
     const c='cup_11b_'+h.y;if(h.r&&h.r.beav!=null&&h.r.you>h.r.beav&&!w[c]){w[c]={m:h.m,h:W.hold,y:h.y,t:4};nw.push(c);}}}catch(e){}
   if(!first)for(const k of nw)if(k.indexOf('ph_')===0)try{STAT.ev('ph',{k});}catch(e){}
-  if(first){S.wallV=1;S.wN=0;}else if(nw.length&&!silent){S.wN=(S.wN|0)+nw.length;emit('wall',nw);}
+  if(first||silent){const s=so('wS');for(const k of nw)s[k]=1;}
+  if(first){S.wallV=1;}else if(nw.length&&!silent){emit('wall',nw);}S.wN=wallNew().length;
   return nw;}
 // фото главы в золотой рамке: собраны все грамоты (вехи) этой главы
 function phGold(k){const st=PH_ST[k];if(!st||!E.MILES||!E.MILES[st])return false;const crE=so('crE');return E.MILES[st].every(m=>crE['ms_'+m[0]]);}
@@ -404,7 +409,7 @@ function wkClaim(){const r=S.wkR;if(!r||r.got)return 0;r.got=1;if(r.t)wallAdd('c
   try{STAT.ev('wk',{t:r.t,pd:r.pd,c:r.cr});}catch(e){}
   if(r.cr)GAME.addCr(r.cr,'rew');else{persist(true);emit('change');}rankSync();return r.cr;}
 Object.assign(GAME,{wkClose,plDay,PH,PH_ST,RK,RK_F,COL,LXC,stars,rankOf,rkLock,rkLockTxt,rankSync,rkClaim,wallSync,wallGrams,phGold,colSync,colClaim,luxBuy,luxUse,lxcBuy,wfBuy,wkClaim,
-  wallSeen:()=>{S.wN=0;persist(true);},stN,realDay});
+  wallSeen:ks=>{const s=wsMig();for(const k of (ks||Object.keys(so('wall'))))s[k]=1;S.wN=wallNew().length;persist(true);},wallNew,stN,realDay});
 /* «Ролики дня» (M8 п. 3.1, модуль QUEST, механика Б): лесенка 2 → 3 → 3 → 4 → 6 💎 вместо плоских «+3 💎 × 5», пауза 120 с, сброс в полночь по nowMs().
    ok/adOk = adOk() shell.js (общего предела роликов нет с 01.10). Цепочку QUEST не включаем — её роль играет Планёрка.
    «Договор со спонсором» удваивает ступеньку. Состояние — S.quest (облако: QUEST.merge в mergeSave). STAT: place('ladder') перед роликом, lad {n} после. */

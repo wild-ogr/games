@@ -238,16 +238,18 @@ function askHelp(id,k){const w=W();
   if(!r||r.res!=='ok'){snd('no');tst(SU().why?SU().why(r&&r.res||'no'):'');help(id);return;}
   snd(k==='bridge'||k==='gig'?'coin':'tap');let af=null;try{af=SU().after?SU().after(W(),r):null;}catch(e){af=null;}
   last={id,tx:af&&af.tx||T('Договорились!','Deal!'),mood:af&&af.mood};if(af&&af.toast)tst(af.toast);
-  try{if(window.PHONE&&PHONE.say&&last.tx)PHONE.say(id,last.tx,last.tx,null,{push:false});}catch(e){}
+  try{if(window.PHONE&&PHONE.say&&last.tx)PHONE.say(id,last.tx,last.tx,null,{push:false,read:1});}catch(e){}   // M43: ответ на вашу же просьбу — не «новое»
   card(id);}
 
 // визит из «Дел хозяина» (ветка экономики): GAME.emit('friendVisit', id) — рука и силы уже потрачены, здесь только отношения
 function onVisit(id){const w=W();if(!w||FRS.indexOf(id)<0)return;let r;try{r=E.friendVisit(w,id,'econ');}catch(e){r=null;}
-  if(r&&r.res==='ok'){tst(`🏠 ${nm(id)}: ❤ +${r.d}`);try{if(window.PHONE&&PHONE.say)PHONE.say(id,visitTx(id,r),visitTx(id,r),null,{push:false});}catch(e){}try{if(typeof save==='function')save();}catch(e){}}}
+  if(r&&r.res==='ok'){tst(`🏠 ${nm(id)}: ❤ +${r.d}`);try{if(window.PHONE&&PHONE.say){const v=visit2(id,r);PHONE.say(id,v[0],v[1],null,{push:false,read:1});}}catch(e){}try{if(typeof save==='function')save();}catch(e){}}}
 if(GAME.on)GAME.on('friendVisit',onVisit);
 // «Сходить в гости» из «Дел хозяина» (js/owner.js): отношения уже посчитаны там, здесь — только тост и сообщение в телефоне
 if(GAME.on)GAME.on('ownVisit',o=>{const r=o&&o.r;if(!r||o.off||FRS.indexOf(o.fr)<0)return;tst(`🏠 ${nm(o.fr)}: ❤ +${r.d}`);
-  try{if(window.PHONE&&PHONE.say)PHONE.say(o.fr,visitTx(o.fr,r),visitTx(o.fr,r),null,{push:false});}catch(e){}});
+  try{if(window.PHONE&&PHONE.say){const v=visit2(o.fr,r);PHONE.say(o.fr,v[0],v[1],null,{push:false,read:1});}}catch(e){}});
+// M43: визит — ваше действие: в переписке остаётся, но «новым» не считается (read:1); текст сразу на двух языках (раньше en = русскому)
+function visit2(id,r){const l0=typeof LANG!=='undefined'?LANG:'ru',o=[];for(const l of ['ru','en']){try{LANG=l;o.push(visitTx(id,r));}catch(e){o.push(visitTx(id,r));}finally{try{LANG=l0;}catch(e){}}}return o;}
 
 // M20: пари на 💎 — модель копит W.fr.crp (+ выигрыш / − ставка), здесь переводим в S.cr (GAME.addCr / GAME.spend)
 SY.crHave=()=>GAME.cr?GAME.cr():0;

@@ -40,13 +40,14 @@ function css(){if(cssOn)return;cssOn=true;const s=document.createElement('style'
 .cb-new{background:var(--accent-t,#eaefff);border-radius:16px;padding:10px 14px;margin:0 0 10px}.cb-new ul{margin:6px 0 0;padding-left:4px;list-style:none}.cb-new li{margin:4px 0;font-size:16px}.cb-new small{font-size:15px;color:var(--ink2)}
 #rkBtn .rkS{color:var(--gold,#b8860b);margin-right:2px}body.th-office #rkBtn{color:#ffd66b}body.th-office #rkBtn .rkS{color:#ffd66b}body.th-90s #rkBtn{color:var(--hd-ink,#1d2733)}
 #rkBtn i{position:absolute;right:2px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--bad,#c62828);display:none}
-#rkBtn.dot i{display:block}
+#rkBtn.dot i{display:block}#rkBtn i.n{width:auto;height:auto;min-width:20px;right:-4px;top:-4px;padding:0 5px;font:700 14px/20px Arial,sans-serif;font-style:normal;color:#fff!important;background:#c62828!important;text-align:center;border-radius:10px}
 .cb-top{text-align:center;margin:0 0 8px}
 .cb-top b{font-size:22px;display:block;line-height:1.25}
 .cb-tabs{display:flex;flex-wrap:wrap;margin:8px 0 10px}
 .cb-tabs button{flex:1 1 30%;min-width:96px;min-height:52px;margin:0 6px 6px 0;border-radius:14px;border:2px solid var(--line,#e3e7ee);background:var(--soft,#f2f4f7);color:var(--ink,#1d2733);font:inherit;font-size:17px;font-weight:700;cursor:pointer}
 .cb-tabs button.on{border-color:var(--gold,#b8860b);background:var(--card,#fff)}
 .cb-tabs button:last-child{margin-right:0}
+.cb-tabs i.cb-tn{display:inline-block;min-width:22px;height:22px;line-height:22px;border-radius:11px;background:#d32f2f;color:#fff;font-size:14px;font-weight:700;font-style:normal;padding:0 5px;margin-left:6px;text-align:center;vertical-align:middle}
 .cb-slots{display:flex;flex-wrap:wrap;margin:4px 0 8px}
 .cb-slot{flex:0 0 auto;width:31.5%;min-height:96px;margin:0 2.75% 8px 0;padding:8px 6px;border-radius:14px;border:2px solid var(--line,#e3e7ee);background:var(--card,#fff);color:var(--ink,#1d2733);font:inherit;font-size:15px;line-height:1.2;cursor:pointer;text-align:center}
 .cb-slot:nth-child(3n){margin-right:0}
@@ -321,12 +322,33 @@ function tabRk(){const rk=S.rk|0,n=GAME.stars().n;let h=`<p class="cb-mut">${T('
 /* ---------- окно «Кабинет» ---------- */
 function top(){const rk=S.rk|0,n=GAME.stars().n,nx=GAME.RK[rk+1];
   const A=ART();return `<div class="cb-top${A?' cb-hero':''}">${A?'<span class="cb-hf">'+A.hero()+'</span><div class="cb-ht">':''}<b>★ ${rk+1} · ${esc(rkName(rk))}</b>${nx?bar((n-GAME.RK[rk].s)/(nx.s-GAME.RK[rk].s))+`<span class="cb-mut">${T('Следующее','Next')}: <b style="display:inline;font-size:17px">${esc(rkName(rk+1))}</b> — ${n} ${T('из','of')} ${nx.s} ★${GAME.rkLockTxt?esc(GAME.rkLockTxt(rk+1)):''}${rkPrize(rk+1)?' · '+esc(rkPrize(rk+1)):''}</span>`:`<span class="cb-mut">${T('Высшее звание!','The highest rank!')} ${n} ★</span>`}${A?'</div>':''}</div>`;}
-function open(t,from){css();if(t)tab=t;if(!GAME.W)return;slotOpen='';if(tab==='wall')GAME.wallSeen();if(tab==='lx'){const sn=S.lxSeen&&typeof S.lxSeen==='object'?S.lxSeen:(S.lxSeen={});for(const x of lxList())if(st(x.id).st==='sale')sn[x.id]=1;}
+/* M43: один учёт «нового» Кабинета — из него число на ★, блок «🆕 Новое» и метки вкладок:
+   pend — награды, которые ждут окна (звание/набор/итог недели), rw — мелкие звания (S.rwNew), wall — новое на Стене (GAME.wallNew), lx — вещи в продаже, которые ещё не показывали (S.lxSeen). */
+function news(){const r={pend:pend().length,rw:Array.isArray(S.rwNew)?S.rwNew.length:0,wall:[],lx:[]};
+  try{r.wall=GAME.wallNew?GAME.wallNew():[];}catch(e){r.wall=[];}
+  try{if(W()){const seen=S.lxSeen||{};r.lx=lxList().filter(x=>{const s2=st(x.id);return s2.st==='sale'&&!s2.why&&!seen[x.id];}).map(x=>x.id);}}catch(e){r.lx=[];}
+  r.n=r.pend+r.rw+r.wall.length;r.dot=r.n>0||r.lx.length>0;return r;}   // вещи в продаже — точка без числа (их бывает много сразу)
+function wallLbl(k){try{const i=k.indexOf('ph_')===0?phInfo(k):k.indexOf('cup_')===0?cupInfo(k):gramInfo(k);return {ico:(i&&i.ico)||'🖼',t:(i&&i.t)||k};}catch(e){return {ico:'🖼',t:k};}}
+function open(t,from){css();if(!GAME.W)return;slotOpen='';
+  // M43: пришли за наградой, которая ждёт окна, — выдаём сразу (окно награды; мелкое звание — тостом и в «Новое» ниже)
+  if(from!=='rew'&&pend().length){flush();if(rw)return;}
+  const nz=news();
+  if(t)tab=t;else if(from==='hdr')tab=nz.wall.length?'wall':nz.lx.length?'lx':nz.rw?'rk':tab;
+  if(tab==='wall')GAME.wallSeen();if(tab==='lx'){const sn=S.lxSeen&&typeof S.lxSeen==='object'?S.lxSeen:(S.lxSeen={});for(const x of lxList())if(st(x.id).st==='sale')sn[x.id]=1;}
   try{STAT.ev('cab',{t:tab,f:from||'x'});}catch(e){}
   const body=tab==='wall'?tabWall():tab==='rk'?tabRk():tabLx();
-  // M38: мелкие награды (звания) — списком «Новое» вверху Кабинета; увидели — список очищается
-  let nw='';if(Array.isArray(S.rwNew)&&S.rwNew.length){nw=`<div class="cb-new"><b>🆕 ${T('Новое','New')}</b><ul>${S.rwNew.slice().reverse().map(x=>`<li>${x.ico||'🎖'} ${esc(x.title)}${x.cr?' · +'+x.cr+' 💎':''}${x.lines&&x.lines.length?'<br><small>'+x.lines.join('<br>')+'</small>':''}</li>`).join('')}</ul></div>`;S.rwNew=[];try{save();}catch(e){}}
-  modal(`<h2>🏛 ${T('Кабинет','Office')}</h2>${nw}${top()}<div class="cb-tabs"><button class="noenter${tab==='lx'?' on':''}" data-cb="tab:lx">🛍 ${T('Вещи','Things')}</button><button class="noenter${tab==='wall'?' on':''}" data-cb="tab:wall">🖼 ${T('Стена почёта','Wall of fame')}</button><button class="noenter${tab==='rk'?' on':''}" data-cb="tab:rk">★ ${T('Звания','Ranks')}</button>${window.FRUI?`<button class="noenter" data-cb="fr">👥 ${T('Друзья','Friends')}</button>`:''}</div>
+  // M38: мелкие награды (звания) — списком «Новое» вверху Кабинета; M43: там же всё, что входит в число на ★ (новое на Стене, вещь в продаже); увидели — список очищается
+  let nw='';const li=[];
+  if(nz.rw)for(const x of S.rwNew.slice().reverse())li.push(`<li>${x.ico||'🎖'} ${esc(x.title)}${x.cr?' · +'+x.cr+' 💎':''}${x.lines&&x.lines.length?'<br><small>'+x.lines.join('<br>')+'</small>':''}</li>`);
+  for(const k of nz.wall.slice(-6).reverse()){const l=wallLbl(k);li.push(`<li>${l.ico} ${T('На Стене почёта','On the Wall of fame')}: ${esc(l.t)}</li>`);}
+  if(nz.wall.length>6)li.push(`<li>${T('и ещё','and')} ${nz.wall.length-6}${T('',' more')}</li>`);
+  for(const id of nz.lx.slice(0,3)){const x=E.luxOf(id);if(x)li.push(`<li>🛍 ${T('В продаже','For sale')}: ${esc(lxName(x))} — ${M(x.p)}</li>`);}
+  if(nz.lx.length>3)li.push(`<li>🛍 ${T('и ещё','and')} ${nz.lx.length-3}${T(' — во вкладке «Вещи»',' more in “Things”')}</li>`);
+  if(li.length){const bt=(nz.wall.length&&tab!=='wall'?`<button class="cb-btn go noenter" data-cb="tab:wall">🖼 ${T('Смотреть на Стене','See on the Wall')}</button>`:'')+(nz.lx.length&&tab!=='lx'?`<button class="cb-btn noenter" data-cb="tab:lx">🛍 ${T('К вещам','To things')}</button>`:'');
+    nw=`<div class="cb-new"><b>🆕 ${T('Новое','New')}</b><ul>${li.join('')}</ul>${bt?'<div class="cb-row">'+bt+'</div>':''}</div>`;
+    S.rwNew=[];try{GAME.wallSeen(nz.wall);}catch(e){}const sn=S.lxSeen&&typeof S.lxSeen==='object'?S.lxSeen:(S.lxSeen={});for(const id of nz.lx)sn[id]=1;try{save();}catch(e){}}
+  const tm=n=>n?`<i class="cb-tn">${n>9?'9+':n}</i>`:'';
+  modal(`<h2>🏛 ${T('Кабинет','Office')}</h2>${nw}${top()}<div class="cb-tabs"><button class="noenter${tab==='lx'?' on':''}" data-cb="tab:lx">🛍 ${T('Вещи','Things')}${tm(nz.lx.length)}</button><button class="noenter${tab==='wall'?' on':''}" data-cb="tab:wall">🖼 ${T('Стена почёта','Wall of fame')}${tm(nz.wall.length)}</button><button class="noenter${tab==='rk'?' on':''}" data-cb="tab:rk">★ ${T('Звания','Ranks')}${tm(nz.rw)}</button>${window.FRUI?`<button class="noenter" data-cb="fr">👥 ${T('Друзья','Friends')}</button>`:''}</div>
     <div id="cbBody" style="--wf:${(GAME.cosCur('wf')||{c:'#8d5a2b'}).c}">${body}</div><div class="row"><button class="btn" id="cbClose" data-esc="1">${T('Закрыть','Close')}</button></div>`);
   try{modalRe=()=>open();}catch(e){}bind();badge();}
 function sub(html,re){css();modal(`<div style="--wf:${(GAME.cosCur('wf')||{c:'#8d5a2b'}).c}">${html}</div>`);try{modalRe=re;}catch(e){}bind();}
@@ -355,10 +377,10 @@ function buy(id,btn){const x=E.luxOf(id);if(!x)return;const r=GAME.luxBuy(id);
 
 /* ---------- значок ★ в шапке ---------- */
 function badge(){css();let b=$c('rkBtn');const hn=$c('hName');if(!hn)return;
-  if(!b){b=document.createElement('button');b.id='rkBtn';b.className='noenter';b.setAttribute('aria-label',T('Кабинет и звание','Office and rank'));b.onclick=e=>{e.stopPropagation();snd('tap');open(pend().length?'rk':tab,'hdr');};
+  if(!b){b=document.createElement('button');b.id='rkBtn';b.className='noenter';b.setAttribute('aria-label',T('Кабинет и звание','Office and rank'));b.onclick=e=>{e.stopPropagation();snd('tap');open(null,'hdr');};   // M43: open сам выдаёт ждущую награду и выбирает вкладку, где новое
     // во второй строке шапки, между деньгами и полосой месяца: в первой строке кнопок уже много — на 360–390 px пропало бы название главы
     const hm=document.querySelector('#hdr .hmon');if(hm&&hm.parentNode)hm.parentNode.insertBefore(b,hm);else hn.parentNode.insertBefore(b,hn.nextSibling);}
-  crack();const rk=(S.rk|0)+1,dot=(S.wN|0)>0||pend().length>0||saleNow()||(Array.isArray(S.rwNew)&&S.rwNew.length>0),t='<span class="rkS">★</span> '+rk+'<i></i>';if(b.innerHTML!==t)b.innerHTML=t;b.classList.toggle('dot',dot);}
+  crack();const nz=news(),rk=(S.rk|0)+1,nn=nz.n,dot=nz.dot,t='<span class="rkS">★</span> '+rk+'<i'+(nn>0?' class="n">'+Math.min(9,nn):'>')+'</i>';if(b.innerHTML!==t)b.innerHTML=t;b.classList.toggle('dot',dot);b.setAttribute('data-w',T('звание','rank'));}
 function crack(){try{const w=W();document.body.classList.toggle('cb-crack',!!w&&E.luxCur(w,'phone').id==='ph0');}catch(e){}}
 function pulseBadge(){const b=$c('rkBtn');if(b&&window.UI&&UI.pulse)try{UI.pulse(b);}catch(e){}badge();}
 // есть что купить прямо сейчас (новая вещь в продаже и хватает денег по правилу Людмилы) — точка на ★
@@ -436,7 +458,12 @@ function flush(){let p=pend();if(!p.length)return;let rkSoc=false;const q=a=>T('
   show({k,ico,title,cr:sum,lines,soc:rkSoc?'rank':''});badge();}
 let ipoT=0;   // M30: после IPO окно звания — не сразу (через 3 минуты), чтобы не было стопки окон
 function tick(){if(!GAME.W)return;if(typeof modalOn!=='undefined'&&modalOn){busyT=Date.now();return;}if(ipoT&&Date.now()-ipoT<180000)return;
-  if(!pend().length||Date.now()-busyT<1500||Date.now()-lastRw<90000||!quiet())return;flush();}
+  if(!pend().length||Date.now()-busyT<1500)return;
+  // M43: мелкое звание — без окна (тост + «Новое»): не ждём закрытия телефона и 90 с после прошлой награды
+  if(smallRk()){const d=$c('ad');if(!document.hidden&&!(d&&d.classList.contains('on')))flush();return;}
+  if(Date.now()-lastRw<90000||!quiet())return;flush();}
+function smallRk(){const p=pend();if(!p.length||p.some(x=>x.k!=='rk'))return false;let s=0;
+  for(let i=(S.rkG|0)+1;i<=(S.rk|0);i++){const r=GAME.RK[i];if(!r)continue;s+=r.cr||0;if(r.ru==='Магнат')return false;}return s<20;}
 setInterval(tick,1500);
 
 /* ---------- события ---------- */
@@ -455,6 +482,6 @@ function hook(){if(!GAME.on){setTimeout(hook,200);return;}css();
 hook();
 window.addEventListener('load',badge);
 // карточка кабинета — в слоте META (Сегодня / карта недр): дописываем её к карточкам Планёрки
-window.CAB={open,card:cardHtml,cardHtml,chLine,badge,refresh,pend,flush};
+window.CAB={open,card:cardHtml,cardHtml,chLine,badge,refresh,pend,flush,news};
 window.REW={show,flush,pend};
 })();

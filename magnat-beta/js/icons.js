@@ -172,8 +172,9 @@ var SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,'LK-I':1,'LK-T':1,svg:1,SVG:1,text
 var BADGE='.bz-ic,.bz-hand>i,.qs>i,.fu-av,.mt-ic,.cb-ic';
 function inSvg(n){for(var p=n.parentNode;p&&p.nodeType===1;p=p.parentNode){if(p.namespaceURI==='http://www.w3.org/2000/svg'||SKIP[p.nodeName])return true;if(p.id==='splash')return true;}return false;}
 // M38 (a45): числа не рвутся по строкам — «10 000 ₽», «30-го», «10 лет»: пробел после цифры и дефис в «30-го» — неразрывные
-var NBR=/(\d) (?=[\dА-Яа-яЁёA-Za-z₽%$€])|(\d)-(?=[а-яё]{1,3}(?![а-яёА-ЯЁ]))|(тыс\.|млн|млрд) (?=₽)/g;
-function nbFix(m,a,b,c){return a?a+'\u00a0':b?b+'\u2011':c+'\u00a0';}
+// M41: и «₽/мес» не рвётся на «₽/» и «мес» (после «/» — неразрывный соединитель U+2060)
+var NBR=/(\d) (?=[\dА-Яа-яЁёA-Za-z₽%$€])|(\d)-(?=[а-яё]{1,3}(?![а-яёА-ЯЁ]))|(тыс\.|млн|млрд) (?=₽)|(₽\/)(?=мес|mo\b|год|yr)/g;
+function nbFix(m,a,b,c,d){return a?a+'\u00a0':b?b+'\u2011':c?c+'\u00a0':d+'\u2060';}
 var WORD={en:['силы','energy'],cr:['кр.','cr.'],hand:['время','hands'],heart:['отношения','relations'],star:['рейтинг','rating'],sleep:['выходной','day off'],lock:['закрыто','locked'],ad:['реклама','ad']};
 function isEn(){try{return typeof LANG!=='undefined'&&LANG==='en';}catch(e){return false;}}
 // «Без значков»: эмодзи без своего SVG — тоже в обёртку (прячется), только когда режим включён

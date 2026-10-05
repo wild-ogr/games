@@ -58,10 +58,14 @@ function face(id,mood,sz){sz=sz||48;let s='';
 function wkey(){const w=W();return (w&&w.hold||1)+'/'+((typeof S!=='undefined'&&S.rst)||0);}
 function P(){if(typeof S==='undefined')return null;const w=W();let p=S.ph;
   if(!p||typeof p!=='object'||p.v!==1||p.wk!==wkey()||(w&&typeof p.lt==='number'&&w.t<p.lt-2))p=S.ph=fresh();
-  for(const k of ['rd','rdk','rdn','loc','rem','bz'])if(!p[k]||typeof p[k]!=='object')p[k]={};
-  if(!Array.isArray(p.qs))p.qs=[];if(!Array.isArray(p.ln))p.ln=[];if(typeof p.n!=='number')p.n=0;
+  for(const k of ['rd','rdk','rdn','loc','rem','bz','qr'])if(!p[k]||typeof p[k]!=='object')p[k]={};
+  if(!Array.isArray(p.qs))p.qs=[];if(!Array.isArray(p.ow))p.ow=[];if(!Array.isArray(p.ln))p.ln=[];if(typeof p.n!=='number')p.n=0;
+  // M43, миграция без потерь: раньше «Новости» вели свою отметку W.fr.rd — что прочитано там, остаётся прочитанным и в чатах
+  if(!p.m43){const F=w&&w.fr;if(F&&Array.isArray(F.fd)&&typeof F.rd==='number'&&F.rd>=0)for(const f of F.fd){if(!f)continue;const id=f.w;
+      if(p.rd[id]==null||p.rd[id]<F.rd){p.rd[id]=F.rd;p.rdk[id]=F.fd.filter(x=>x&&x.w===id&&x.t===F.rd).length;}}
+    if(w)p.m43=1;}
   return p;}
-function fresh(){const w=W(),p={v:1,wk:wkey(),n:0,rd:{},rdk:{},rdn:{},loc:{},rem:{},bz:{},qs:[],ln:[],mh:-99,hi:0};
+function fresh(){const w=W(),p={v:1,wk:wkey(),n:0,rd:{},rdk:{},rdn:{},loc:{},rem:{},bz:{},qs:[],qr:{},ow:[],ln:[],mh:-99,hi:0,m43:1};
   if(w){p.nt=w.t>0?w.t:-1;p.lt=w.t;p.lm=w.reps&&w.reps.length?w.reps[w.reps.length-1].m:-1;p.ln=(w.loans||[]).filter(l=>l.k!=='fr').map(l=>l.id);p.od=w.odM||0;
     for(const b of w.biz||[])p.bz[b.id]=b.st;
     const F=w.fr;if(F&&Array.isArray(F.q))p.qs=F.q.map(q=>q.id);}
@@ -72,8 +76,10 @@ function persist(){try{if(typeof save==='function')save();}catch(e){}}
 // сообщение от контакта (или «я» при me:1): ru/en хранятся оба — смена языка на лету
 function say(id,ru,e2,acts,o){const p=P(),w=W();if(!p||!w||!CT[id])return null;o=o||{};
   const m={n:++p.n,t:w.t,ru:String(ru||''),en:String(e2||ru||'')};if(acts&&acts.length)m.a=acts;if(o.g)m.g=o.g;if(o.imp)m.i=1;if(o.me)m.me=1;if(o.mood)m.mo=o.mood;
+  // M43: o.read — ответ на действие самого игрока (визит, «Попросить помощь», звонок): в переписке есть, но «новым» не считается и без пуша
+  if(o.read||(isOn&&nav[nav.length-1].v==='chat'&&nav[nav.length-1].a===id))m.r=1;
   const a=p.loc[id]||(p.loc[id]=[]);a.push(m);if(a.length>14)a.splice(0,a.length-14);
-  if(!o.me&&o.push!==false)push(id,T(m.ru,m.en),{imp:!!o.imp,go:['chat',id]});
+  if(!o.me&&!m.r&&o.push!==false)push(id,T(m.ru,m.en),{imp:!!o.imp,go:['chat',id],ref:{k:'m',n:m.n}});
   badge();return m;}
 function gigLive(id){const w=W();return !!(w&&w.me&&Array.isArray(w.me.board)&&w.me.board.some(g=>g.id===id));}
 function dayOf(t){const w=W();if(!w)return 0;return w.m*30+w.d-(w.t-t);}
@@ -153,19 +159,38 @@ function thread(id){const p=P(),w=W(),out=[];if(!w)return out;
       const r=su('msg',w,it);if(r&&r.tx==='')continue;out.push({t:it.t,s:it,r:r||null,o:0});}}
   const loc=p&&p.loc[id]||[];for(const m of loc)out.push({t:m.t,m,o:1});
   out.sort((a,b)=>a.t-b.t||a.o-b.o);return out;}
-function unread(id){const p=P(),w=W();if(!p||!w)return 0;let n=0;
-  // старше 30 игровых дней (кроме важных) — точку не держим неделями (аудит M3)
-  for(const m of p.loc[id]||[])if(!m.me&&m.n>(p.rdn[id]||0)&&(m.i||!(m.t<w.t-30)))n++;
-  if(stChat(id)&&SY()&&w.fr){const rd=p.rd[id]==null?-1:p.rd[id];let same=0;
-    for(const f of w.fr.fd)if(f.w===id){if(f.t>rd){if(f.t>=w.t-30)n++;}else if(f.t===rd)same++;}
-    n+=Math.max(0,same-(p.rdk[id]||0));
-    for(const q of w.fr.q)if(q.w===id||(q.w==='all'&&id==='owl'))n++;}
+/* ---------------- M43: один учёт «нового» (NEWS) ----------------
+   Всё «новое» телефона считается только здесь; точки и числа (📱, вкладка «Телефон», строки чатов, приложения «Новости»/«Друзья», пуши) — из этих функций.
+   • служебные сообщения S.ph.loc — прочитано до номера S.ph.rdn[id]; m.r — прочитано сразу (ответ на действие игрока);
+   • лента друзей W.fr.fd — ОДНА отметка S.ph.rd[id] (день) + rdk[id] (сколько в тот же день): её снимают и чат, и «Новости» (markFeed);
+   • вопросы/сцены W.fr.q — «увидел» S.ph.qr[qid] (открыл чат или окно сцены): до этого — непрочитанное (красное), после — «ждёт ответа» (оранжевое);
+   • «старше 30 игровых дней — не новое» считается от ПОЯВЛЕНИЯ у игрока: всё, что пришло за офлайн (окна S.ph.ow = [было,стало]), появилось в день входа. */
+function arr(t){const p=P();if(p)for(const g of p.ow)if(t>g[0]&&t<=g[1])return g[1];return t;}
+function fresh30(t){const w=W();return !!w&&arr(t)>=w.t-30;}
+function asksOf(id){const w=W();if(!w||!w.fr||!SY()||!stChat(id)||!Array.isArray(w.fr.q))return [];return w.fr.q.filter(q=>q.w===id||(q.w==='all'&&id==='owl'));}
+// индексы W.fr.fd, которые ещё не прочитаны (по контакту: день и число в тот же день)
+function feedNew(){const w=W(),p=P(),out={};if(!w||!p||!w.fr||!SY()||!Array.isArray(w.fr.fd))return out;const cnt={};
+  w.fr.fd.forEach((f,i)=>{if(!f)return;const id=f.w,rd=p.rd[id]==null?-1:p.rd[id];let nw=false;
+    if(f.t>rd)nw=true;else if(f.t===rd){cnt[id]=(cnt[id]||0)+1;nw=cnt[id]>(p.rdk[id]||0);}
+    if(nw&&fresh30(f.t))out[i]=1;});return out;}
+function locNew(id){const p=P();if(!p)return [];return (p.loc[id]||[]).filter(m=>!m.me&&!m.r&&m.n>(p.rdn[id]||0)&&(m.i||fresh30(m.t)));}
+function unread(id){const p=P(),w=W();if(!p||!w)return 0;let n=locNew(id).length;
+  if(stChat(id)&&SY()&&w.fr){const fn=feedNew();w.fr.fd.forEach((f,i)=>{if(f&&f.w===id&&fn[i])n++;});
+    for(const q of asksOf(id))if(!p.qr[q.id])n++;}
   return n;}
-function markRead(id){const p=P(),w=W();if(!p||!w)return;p.rd[id]=w.t;let same=0;if(w.fr)for(const f of w.fr.fd)if(f.w===id&&f.t===w.t)same++;p.rdk[id]=same;
-  const loc=p.loc[id];p.rdn[id]=loc&&loc.length?loc[loc.length-1].n:p.n;persist();badge();}
-// сколько ждёт ответа: вопросы друзей и важные (банк: овердрафт и т. п.) — число на значке; остальное непрочитанное — просто точка
-function needAll(){const p=P(),w=W();if(!p||!w)return 0;let n=0;if(SY()&&w.fr)n+=w.fr.q.length;for(const id of contacts())for(const m of p.loc[id]||[])if(m.i&&!m.me&&m.n>(p.rdn[id]||0))n++;return n;}
+// ждут ответа (уже увиденные, но без ответа) — оранжевая метка, не «непрочитанное»
+function waitN(id){const p=P();return p?asksOf(id).filter(q=>p.qr[q.id]).length:0;}
+function markRead(id){const p=P(),w=W();if(!p||!w)return;p.rd[id]=w.t;let same=0;if(w.fr&&Array.isArray(w.fr.fd))for(const f of w.fr.fd)if(f&&f.w===id&&f.t===w.t)same++;p.rdk[id]=same;
+  const loc=p.loc[id];p.rdn[id]=loc&&loc.length?loc[loc.length-1].n:p.n;for(const q of asksOf(id))p.qr[q.id]=1;
+  pqDrop(x=>x.id===id);persist();badge();}
+// «Новости»: та же отметка, что у чатов, — для ленты всех друзей
+function markFeed(){const p=P(),w=W();if(!p||!w||!w.fr||!Array.isArray(w.fr.fd))return;const ids={};for(const f of w.fr.fd)if(f)ids[f.w]=1;
+  for(const id in ids){p.rd[id]=w.t;p.rdk[id]=w.fr.fd.filter(f=>f&&f.w===id&&f.t===w.t).length;}persist();badge();}
+function seenQ(qid){const p=P();if(!p||!qid)return;if(!p.qr[qid]){p.qr[qid]=1;persist();}pqDrop(x=>x.ref&&x.ref.k==='q'&&x.ref.q===qid);badge();}
+// число на 📱: вопросы друзей (все, пока без ответа) и важные непрочитанные (банк: овердрафт и т. п.)
+function needAll(){const p=P(),w=W();if(!p||!w)return 0;let n=0;for(const id of contacts()){n+=asksOf(id).length;n+=locNew(id).filter(m=>m.i).length;}return n;}
 function unreadAll(){let n=0;for(const id of contacts())n+=unread(id);return n;}
+function waitAll(){let n=0;for(const id of contacts())n+=waitN(id);return n;}
 function lastOf(id){const th=thread(id);for(let i=th.length-1;i>=0;i--){const x=th[i],tx=itemTx(x);if(tx)return {t:x.t,tx};}return null;}
 function itemTx(x){if(x.m)return T(x.m.ru,x.m.en);const it=x.s,r=x.r;if(r&&r.tx)return r.tx;if(r&&(r.ans||r.q))return r.ans||r.q;
   if(it.type==='feed')return feedTx(it.x);if(it.type==='ask')return askTx(it.x);if(it.type==='log')return logTx(it.x);return '';}
@@ -184,6 +209,9 @@ function monthPay(w){let s=0;for(const l of bankLoans(w)){try{s+=Math.min(l.a,E.
 const inL=(l,f)=>{if(typeof LANG==='undefined')return f();const o=LANG;try{LANG=l;return f();}finally{LANG=o;}};
 const mR=x=>inL('ru',()=>money(x)),mE=x=>inL('en',()=>money(x)),pR=x=>inL('ru',()=>window.FMT?FMT.pct(x,1):x),pE=x=>inL('en',()=>window.FMT?FMT.pct(x,1):x),plR=(n,a,b,c)=>inL('ru',()=>pln(n,a,b,c,'',''));
 function service(){const w=W(),p=P();if(!w||!p)return;
+  // M43: скачок времени (офлайн, облако) — окно «пришло за время отсутствия»: всё из него появилось у игрока сегодня
+  if(typeof p.lt==='number'&&w.t-p.lt>1){p.ow.push([p.lt,w.t]);}
+  p.ow=p.ow.filter(g=>Array.isArray(g)&&g[1]>=w.t-30).slice(-8);
   // Людмила: приветствие в «Карьере»
   if(!p.hi){p.hi=1;if(early()&&st()==='gig'&&w.t<40)say('lud','Я на связи! Писать буду коротко: итоги месяца и что важно. Звоните, если что — я всё равно не сплю 🙂 А пока — заказы: на доске есть листовки у метро, берите первый.',
     'I’m here! I’ll keep it short: monthly results and anything important. Call anytime — I don’t sleep much anyway 🙂 For now — jobs: there are flyers at the metro on the board, take the first one.',[['gigs']],{push:false});}
@@ -225,9 +253,10 @@ function service(){const w=W(),p=P();if(!w||!p)return;
     say('lud','Одно наблюдение по делу. Друзья — это не только поздравления: Соня поручится в банке и подскажет налог, Пётр починит и смонтирует дешевле, Витя довезёт и закупит дешевле, а Борис… с Борисом можно поспорить на деньги или на 💎 😄 Помогайте им — и они помогут. Отношения видно в «Друзьях»: шкала от «в ссоре» до «не разлей вода». Следите за ней, как за кассой.',
       'One business note. Friends aren’t just for birthdays: Sonya will vouch for you at the bank and advise on tax, Pyotr will fix and fit things cheaper, Vitya will deliver and buy cheaper, and Boris… you can bet money or 💎 with Boris 😄 Help them and they’ll help you. Relations are in “Friends”: a scale from “on the outs” to “inseparable”. Watch it like you watch the till.',[['friends']],{mood:'happy'});}
   // сюжет: новые просьбы и сцены — пуш «нужен ответ»
-  if(SY()&&w.fr&&Array.isArray(w.fr.q)){for(const q of w.fr.q){if(p.qs.indexOf(q.id)>=0)continue;p.qs.push(q.id);
+  // M43: большие сцены (q.big) story-ui сам открывает окном — пуш их только дублировал (и приходил после ответа)
+  if(SY()&&w.fr&&Array.isArray(w.fr.q)){for(const q of w.fr.q){if(p.qs.indexOf(q.id)>=0)continue;p.qs.push(q.id);if(q.big||p.qr[q.id])continue;
       const id=q.w==='all'?'owl':q.w;let tx=q.ph||'';if(!tx){const r=su('msg',w,{t:q.t,type:'ask',x:q});tx=(r&&r.tx)||askTx(q);}
-      push(id,tx,{imp:true,go:['chat',id]});}
+      push(id,tx,{imp:true,go:['chat',id],ref:{k:'q',q:q.id}});}
     if(p.qs.length>40)p.qs=p.qs.filter(id=>w.fr.q.some(q=>q.id===id));}
   p.lt=w.t;}
 
@@ -263,8 +292,10 @@ function remind(){const w=W(),p=P();if(!w||!p)return;const now=w.m*30+w.d;
 
 /* ---------------- пуши-баннеры ---------------- */
 const PQ=[];let pushT=0,pushHideT=0;const T0=Date.now();
+// M43: у элемента очереди — ссылка, к чему он (ref: {k:'m',n} сообщение / {k:'q',q} сцена); перед показом — «ещё не прочитано?»; срок жизни 2 мин
+const PQ_TTL=120000;
 function push(id,text,o){o=o||{};if(!text)return;text=String(text);if(text.length>90)text=text.slice(0,88)+'…';
-  const i=PQ.findIndex(x=>x.id===id);const it={id,text,imp:!!o.imp,go:o.go||['chat',id]};
+  const i=PQ.findIndex(x=>x.id===id);const it={id,text,imp:!!o.imp,go:o.go||['chat',id],ref:o.ref||null,at:Date.now()};
   if(i>=0){it.imp=it.imp||PQ[i].imp;PQ[i]=it;}else PQ.push(it);
   while(PQ.length>3){const j=PQ.findIndex(x=>!x.imp);PQ.splice(j>=0?j:0,1);}}
 function tutOn(){try{if(window.UI&&UI.tutStep&&UI.tutStep())return true;}catch(e){}
@@ -274,12 +305,18 @@ function tutOn(){try{if(window.UI&&UI.tutStep&&UI.tutStep())return true;}catch(e
 // M38 (a45): пока человек читает (касался, листал последние 6 с) — баннер не выскакивает поверх текста; листание прячет показанный
 let actT=0;try{const onAct=()=>{actT=Date.now();};document.addEventListener('pointerdown',onAct,{passive:true,capture:true});
   document.addEventListener('scroll',()=>{actT=Date.now();const b=$e('phPush');if(b&&b.classList.contains('on')&&Date.now()-pushT>800)hidePush();},{passive:true,capture:true});document.addEventListener('wheel',onAct,{passive:true,capture:true});}catch(e){}
-function pushTick(){if(!PQ.length)return;const now=Date.now(),cm=isCalm();if(now-actT<6000)return;
-  if(now-T0<10000||mOn()||isOpen()||document.hidden||tutOn())return;
+function pqDrop(f){for(let i=PQ.length-1;i>=0;i--)if(f(PQ[i]))PQ.splice(i,1);}
+function pqLive(it){const p=P(),w=W();if(!p||!w)return false;if(Date.now()-it.at>PQ_TTL)return false;const r=it.ref;
+  if(r&&r.k==='m'){const m=(p.loc[it.id]||[]).find(x=>x.n===r.n);return !!m&&!m.r&&m.n>(p.rdn[it.id]||0);}
+  if(r&&r.k==='q')return !!(w.fr&&Array.isArray(w.fr.q)&&w.fr.q.some(q=>q.id===r.q))&&!p.qr[r.q];
+  return true;}
+function pushTick(){pqDrop(x=>!pqLive(x));if(!PQ.length)return;const now=Date.now(),cm=isCalm();if(now-actT<6000)return;
+  const tg=typeof window.__pushGap==='number'?window.__pushGap:null;   // M43: проверки (check.py only=badges) сокращают паузы между баннерами
+  if(now-T0<(tg!=null?0:10000)||mOn()||isOpen()||document.hidden||tutOn())return;
   if((typeof paused!=='undefined'&&paused))return;
   const ad=$e('ad');if(ad&&ad.classList.contains('on'))return;
   // не чаще раза в 30 с (в спокойном режиме — 45 с) и не поверх пузыря главбуха
-  if(now-pushT<(cm?45000:30000))return;
+  if(now-pushT<(tg!=null?tg:cm?45000:30000))return;
   const av=$e('adv');if(av&&av.classList.contains('on'))return;
   let i=cm?PQ.findIndex(x=>x.imp):0;if(i<0){PQ.length=0;return;}
   const it=PQ.splice(i,1)[0];
@@ -303,17 +340,17 @@ const ICO={
   friends:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3 20c.4-3.6 2.8-5.6 6-5.6s5.6 2 6 5.6M14.6 14.6c.6-.2 1.2-.3 1.9-.3 2.6 0 4.4 1.7 4.8 4.7"/></svg>',
   phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>'};
 function bankOn(){const w=W();if(!w)return false;if(bankLoans(w).length)return true;try{return E.loanOffer(w).max>0;}catch(e){return false;}}
-function newsUnread(){const w=W();if(!w||!w.fr||!SY())return 0;let n=0;for(const f of w.fr.fd)if(f.t>w.fr.rd)n++;return n;}
+function newsUnread(){return Object.keys(feedNew()).length;}
 function apps(){const w=W(),a=[['orders',T('Заказы','Jobs'),early()&&w.me?(w.me.board||[]).length:(w&&w.offers||[]).length,0]];
   if(bankOn())a.push(['bank',T('Банк','Bank'),w&&w.odM>0?1:0,w&&w.odM>0]);
-  if(SY()&&window.FRUI&&w&&w.fr)a.push(['friends',T('Друзья','Friends'),(w.fr.q||[]).filter(q=>FRS.indexOf(q.w)>=0).length,1]);   // M18: окно «Друзья» (js/friends-ui.js)
+  if(SY()&&window.FRUI&&w&&w.fr){const fq=(w.fr.q||[]).filter(q=>FRS.indexOf(q.w)>=0),pp=P();a.push(['friends',T('Друзья','Friends'),fq.length,1,pp&&fq.every(q=>pp.qr[q.id])?'wait':'']);}   // M18: окно «Друзья» (js/friends-ui.js); M43: все вопросы уже видели — оранжевая метка «ждут ответа»
   a.push(['cal',T('Календарь','Calendar'),0,0],['news',T('Новости','News'),newsUnread(),1]);return a;}
-function appsHtml(){return '<div class="ph-apps">'+apps().map(x=>`<button class="ph-app noenter" data-p="app" data-a="${x[0]}"><span class="ph-ai">${ICO[x[0]]}${x[2]&&x[3]?`<i class="ph-b">${x[2]>9?'9+':x[2]}</i>`:''}</span><span class="ph-al">${x[1]}</span></button>`).join('')+'</div>';}
-function rowHtml(id,full){const c=who(id),l=lastOf(id),u=unread(id);
+function appsHtml(){return '<div class="ph-apps">'+apps().map(x=>`<button class="ph-app noenter" data-p="app" data-a="${x[0]}"><span class="ph-ai">${ICO[x[0]]}${x[2]&&x[3]?`<i class="ph-b${x[4]?' '+x[4]:''}">${x[2]>9?'9+':x[2]}</i>`:''}</span><span class="ph-al">${x[1]}</span></button>`).join('')+'</div>';}
+function rowHtml(id,full){const c=who(id),l=lastOf(id),u=unread(id),wq=u?0:waitN(id);
   const sub=full?esc(c.sub):l?esc(l.tx):esc(c.sub);
   const hr=full&&isFr(id)&&id!=='bear'&&SY()?(()=>{try{const f=STORY.friend(W(),id);return ` <span class="ph-hr" style="color:${LVC[f.lv]}">· ${esc(lvN(f.lv))}</span>`;}catch(e){return '';}})():'';
-  return `<button class="ph-row noenter" data-p="go" data-v="${full?'contact':'chat'}" data-a="${id}">${face(id,'calm',48)}<span class="ph-rt"><b>${esc(c.n)}${hr}</b><span>${sub}</span></span><span class="ph-rr">${l&&!full?`<small>${esc(when(l.t))}</small>`:''}${u?`<i class="ph-b">${u>9?'9+':u}</i>`:''}</span></button>`;}
-function chatList(n){const ids=contacts().map(id=>({id,l:lastOf(id),u:unread(id)})).filter(x=>x.l||x.u);ids.sort((a,b)=>(b.u?1:0)-(a.u?1:0)||(b.l?b.l.t:-1)-(a.l?a.l.t:-1));
+  return `<button class="ph-row noenter" data-p="go" data-v="${full?'contact':'chat'}" data-a="${id}">${face(id,'calm',48)}<span class="ph-rt"><b>${esc(c.n)}${hr}</b><span>${sub}</span></span><span class="ph-rr">${l&&!full?`<small>${esc(when(l.t))}</small>`:''}${u?`<i class="ph-b">${u>9?'9+':u}</i>`:wq&&!full?`<i class="ph-wait">${T('ждёт ответа','awaits reply')}</i>`:''}</span></button>`;}
+function chatList(n){const ids=contacts().map(id=>({id,l:lastOf(id),u:unread(id)+(waitN(id)?.5:0)})).filter(x=>x.l||x.u);ids.sort((a,b)=>(b.u?1:0)-(a.u?1:0)||(b.l?b.l.t:-1)-(a.l?a.l.t:-1));
   const sh=n?ids.slice(0,n):ids;if(!sh.length)return `<div class="ph-empty">${T('Пока тихо. Сообщения появятся, когда что-то случится.','All quiet. Messages will appear when something happens.')}</div>`;
   return '<div class="ph-list">'+sh.map(x=>rowHtml(x.id)).join('')+'</div>';}
 
@@ -414,10 +451,10 @@ function newsTx(n){let s='';try{s=window.ADV&&ADV.news?ADV.news(n):'';}catch(e){
     const x=BIZT[a.k];if(x)return (window.FMT?FMT.mon(n.m)+' · ':'')+T(x[0],x[1]).replace('{b}',bizN(a.bt).toLowerCase());}
   return '';}
 function appNews(w){let h='';
-  if(SY()&&w.fr){const fd=w.fr.fd.map((f,i)=>({f,i})).reverse().slice(0,12);
+  if(SY()&&w.fr){const fd=w.fr.fd.map((f,i)=>({f,i})).reverse().slice(0,12),fn=feedNew();
     h+=`<p class="ph-note">${T('Друзья','Friends')}</p>`;
     if(!fd.length)h+=`<div class="ph-empty">${T('Друзья пока ничего не писали.','Your friends haven’t posted yet.')}</div>`;
-    else h+='<div class="ph-list">'+fd.map(({f,i})=>{const nw=f.t>w.fr.rd;
+    else h+='<div class="ph-list">'+fd.map(({f,i})=>{const nw=!!fn[i];
       const cg=f.c&&!f.g&&FRS.indexOf(f.w)>=0?`<button class="btn sm noenter" data-p="cg" data-i="${i}">🎉 ${T('Поздравить','Congratulate')}</button>`:'';
       return `<div class="ph-li top">${face(f.w,'calm',40)}<span><b>${esc(who(f.w).n)}${nw?' <i class="ph-new">'+T('новое','new')+'</i>':''}</b><span class="ph-tx">${esc(feedTx(f))}</span><small>${esc(when(f.t))}</small>${cg}</span></div>`;}).join('')+'</div>';}
   const ns=(w.news||[]).slice().reverse().map(newsTx).filter(Boolean).slice(0,12);
@@ -457,7 +494,7 @@ function answer(qid,o){const w=W();const q=w&&w.fr&&w.fr.q.find(x=>x.id===qid);c
   let r;try{r=GAME.act('friendAnswer',qid,o);}catch(e){console.error(e);r={res:'no'};}
   if(!r||r.res!=='ok'){snd('no');tst(why(r&&r.res||'no'));rerender();return;}
   snd('tap');const af=su('after',W(),r);
-  if(af&&af.tx)say(wh,af.tx,af.tx,null,{push:false,mood:af.mood});
+  if(af&&af.tx)say(wh,af.tx,af.tx,null,{push:false,read:1,mood:af.mood});seenQ(qid);
   tst(af&&af.toast?af.toast:r.d?(r.d>0?'❤ +'+r.d:'❤ '+r.d):'');rerender();}
 function callKind(id,k,n){const w=W();if(SU().call&&su('call',id,k)===true){rerender();return;}
   const arg=k==='loan'?{n:+n===12?12:6}:undefined;let r;try{r=GAME.act('friendCall',id,k,arg);}catch(e){console.error(e);r={res:'no'};}
@@ -470,7 +507,7 @@ function callKind(id,k,n){const w=W();if(SU().call&&su('call',id,k)===true){rere
     else if(k==='build')tx=T(`Подгоню своих ребят — строек ускорили: ${r.n||0}.`,`I’ll send my crew — constructions sped up: ${r.n||0}.`);
     else if(k==='truck')tx=T('Машины твои! В этом месяце доставка на 25 % дешевле.','The trucks are yours! Delivery is 25% cheaper this month.');
     else tx=T('Договорились!','Deal!');}
-  callRes={tx,mood:(af&&af.mood)||'happy'};say(id,tx,tx,null,{push:false});if(af&&af.toast)tst(af.toast);rerender();}
+  callRes={tx,mood:(af&&af.mood)||'happy'};say(id,tx,tx,null,{push:false,read:1});if(af&&af.toast)tst(af.toast);rerender();}
 function congr(i){let r;try{r=GAME.act('congrats',+i);}catch(e){r='no';}
   if(r==='ok'){snd('coin');tst(T('Поздравили! ❤ +2','Congratulated! ❤ +2'));}else if(r==='quarter')tst(T('Уже поздравляли в этом квартале','Already congratulated this quarter'));rerender();}
 function take(gid){let r;try{r=GAME.act('gigTake',gid);}catch(e){r='no';}
@@ -488,7 +525,9 @@ function render(keep){const ph=$e('phone');if(!ph||!isOn)return;const n=nav[nav.
   const bd=ph.querySelector('.ph-body'),bk=n.y!=null,top=bk?n.y:keep?bd.scrollTop:0,atBot=bd.scrollHeight-bd.scrollTop-bd.clientHeight<40;delete n.y;   // M37: n.y — где был на этом экране до шага вперёд («назад» возвращает туда)
   ph.querySelector('.ph-t').textContent=r.t;ph.querySelector('.ph-bk').style.visibility=nav.length>1?'visible':'hidden';
   bd.innerHTML=r.h;if(r.chat&&!bk&&(!keep||atBot))bd.scrollTop=bd.scrollHeight;else bd.scrollTop=top;
-  if(n.v==='chat')markRead(n.a);if(n.v==='app'&&n.a==='news'&&SY()&&W()&&W().fr&&W().fr.rd<W().t){try{GAME.act('storyRead');}catch(e){}}}
+  if(n.v==='chat')markRead(n.a);
+  // M43: «Новости» снимают ту же отметку, что и чаты (markFeed); W.fr.rd модели — для совместимости
+  if(n.v==='app'&&n.a==='news'&&SY()&&W()&&W().fr){if(Object.keys(feedNew()).length)markFeed();if(W().fr.rd<W().t){try{GAME.act('storyRead');}catch(e){}}}}
 function rerender(){if(isOn)render(true);renderEmbed();badge();}
 function go(v,a){if(isOn)try{const bd=$e('phone').querySelector('.ph-body'),t=nav[nav.length-1];if(t&&bd)t.y=bd.scrollTop;}catch(e){}   // M37: запомнить, где был
   if(v==='chats'||v==='contacts'){const t=nav[nav.length-1];if(t.v==='chats'||t.v==='contacts')nav.pop();}if(v!=='call')callRes=null;
@@ -518,15 +557,17 @@ function onClick(e){const b=e.target.closest('[data-p]');if(!b||b.disabled)retur
   else if(p==='cg')congr(b.dataset.i);else if(p==='take')take(b.dataset.g);}
 
 /* ---------------- бейдж в шапке ---------------- */
-function badge(){const b=$e('phBtn');if(!b)return;const n=unreadAll(),q=needAll();let i=b.querySelector('.ph-hb');
-  if(n>0){if(!i){i=document.createElement('i');i.className='ph-hb';b.appendChild(i);}i.textContent=q>0?(q>9?'9+':q):'';i.classList.toggle('dot',!q);}else if(i)i.remove();
-  b.setAttribute('aria-label',T('Телефон','Phone')+(n?' · '+n:''));b.classList.toggle('on',isOn);
+// M43: красное — есть непрочитанное (число — сколько ждут ответа/важных); всё прочитано, но вопросы без ответа — оранжевое число «ждут ответа»
+function badge(){const b=$e('phBtn');if(!b)return;const n=unreadAll(),q=needAll(),on=n>0||q>0;let i=b.querySelector('.ph-hb');
+  if(on){if(!i){i=document.createElement('i');i.className='ph-hb';b.appendChild(i);}i.textContent=q>0?(q>9?'9+':q):'';i.classList.toggle('dot',!q);i.classList.toggle('wait',!n);}else if(i)i.remove();
+  b.setAttribute('aria-label',T('Телефон','Phone')+(n?' · '+T('новых: ','new: ')+n:'')+(!n&&q?' · '+T('ждут ответа: ','awaiting reply: ')+q:''));b.classList.toggle('on',isOn);
   document.body.classList.toggle('phtab',!!document.querySelector('#nav [data-tab="phone"]'));
-  const t=document.querySelector('#nav [data-tab="phone"]');if(t){let d=t.querySelector('.dot');if(n&&!d){d=document.createElement('i');d.className='dot';t.appendChild(d);}else if(!n&&d)d.remove();}}
+  const t=document.querySelector('#nav [data-tab="phone"]');if(t){let d=t.querySelector('.dot');if(on&&!d){d=document.createElement('i');d.className='dot';t.appendChild(d);}else if(!on&&d)d.remove();if(d)d.classList.toggle('wait',!n);}}
 
 /* ---------------- DOM и CSS ---------------- */
 const CSS=`
 #phBtn{position:relative}@media (max-width:699px){body.phtab #phBtn{display:none}}#phBtn svg{width:26px;height:26px}#phBtn.on{background:var(--accent-t);color:var(--accent)}
+.ph-hb.wait,#nav .dot.wait,.ph-b.wait{background:#a8480a}.ph-wait{font-style:normal;font-size:14px;font-weight:600;color:#fff;background:#a8480a;border-radius:12px;padding:2px 8px;white-space:nowrap;line-height:20px}
 .ph-hb.dot{min-width:14px;width:14px;height:14px;padding:0;top:0;right:0}.ph-hb{position:absolute;top:-3px;right:-3px;min-width:22px;height:22px;border-radius:11px;background:var(--bad);color:#fff;font-size:14px;font-weight:700;font-style:normal;line-height:22px;padding:0 5px;text-align:center;border:2px solid var(--hd-bg)}
 #phone{position:absolute;top:0;left:0;right:0;bottom:0;z-index:8;background:var(--bg);display:none;flex-direction:column;font-size:17px}
 #phone.on{display:flex}
@@ -629,7 +670,7 @@ function tabSetup(){if(!window.UI||!Array.isArray(UI.TAB_DEF)||UI.TAB_DEF.some(t
     let n=0;for(const t of UI.TAB_DEF)if(t.id!=='phone'){try{if(!t.show||t.show())n++;}catch(e){n++;}}return n<=4;}});
   try{UI.buildNav();}catch(e){}
   // кнопка вкладки открывает телефон поверх экрана (Biz-UI в ранних главах возвращает чужие экраны на «Сегодня»)
-  const nv=$e('nav');const hook=()=>{const t=nv&&nv.querySelector('[data-tab="phone"]');if(t&&!t.__ph){t.__ph=1;t.onclick=()=>{if(isOn){snd('tap');close();}else open();};}navHL();};
+  const nv=$e('nav');const hook=()=>{const t=nv&&nv.querySelector('[data-tab="phone"]');if(t&&!t.__ph){t.__ph=1;t.onclick=()=>{if(isOn){snd('tap');close();}else open();};}navHL();if(t&&!t.querySelector('.dot'))badge();};   // M43: меню перестроили (смена главы) — точку на вкладку сразу
   hook();if(nv)try{new MutationObserver(hook).observe(nv,{childList:true});}catch(e){}}
 
 /* ---------------- «Назад» и Esc ---------------- */
@@ -651,6 +692,9 @@ function start(){ensure();btn();tabSetup();wrapBack();
 
 window.PHONE={open:(v,a)=>open(v,a),close,back,render:el=>renderEmbed(el),unread:unreadAll,
   say:(id,ru,e2,acts,o)=>say(id,ru,e2,acts,o),push:(id,text,o)=>push(id,text,o||{imp:true}),poll,autoTab:true,
-  get isOpen(){return isOn;},_cal:cal,_state:()=>S.ph};
+  get isOpen(){return isOn;},_cal:cal,_state:()=>S.ph,
+  // M43: учёт «нового» для других модулей и проверок
+  seenQ,markFeed,newsUnread,wait:waitAll,need:needAll,chatUnread:unread,
+  _pq:()=>PQ.map(x=>({id:x.id,k:x.ref?x.ref.k:'',n:x.ref&&x.ref.n,q:x.ref&&x.ref.q,imp:x.imp,age:Date.now()-x.at}))};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();

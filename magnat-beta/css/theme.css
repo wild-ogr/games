@@ -80,6 +80,9 @@ p{margin:6px 0}
 .hname span{display:block;font-size:15px;color:var(--hd-mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hbtn{min-width:48px;height:48px;border-radius:14px;background:var(--hd-btn);color:var(--hd-ink);font-weight:600;font-size:17px;margin-left:8px;padding:0 12px;white-space:nowrap;flex:none;display:inline-flex;align-items:center;justify-content:center}
 .hbtn svg{width:26px;height:26px}
+/* M41: подпись у кнопки скорости («скорость ×1», «пауза ⏸») и у чисел шапки в «Без значков» */
+#spdBtn{flex-direction:column;line-height:1;padding:0 6px}#spdBtn .hb-cap{display:block;font-size:14px;font-weight:600;color:var(--hd-ink);margin-bottom:2px}#spdBtn b{font-size:17px}
+body.noico #crBtn[data-w]::before,body.noico #rkBtn[data-w]::before{content:attr(data-w);font-size:14px;font-weight:500;margin-right:4px}
 .hbtn:active{opacity:.75}
 .h2{display:flex;align-items:flex-end;margin-top:6px}
 .hcash{flex:none;margin-right:16px}
@@ -179,6 +182,15 @@ button.card{display:block}button.card.regc{display:flex}
   .hmon{flex:0 1 50%;max-width:210px;padding-bottom:0}
   .hname.tiny{display:none}
   .hmon small{margin-top:4px}}
+/* M41: «Крупный шрифт» на телефоне — деньги и ★ одной строкой, полоса месяца с «день N из 30» — своей строкой на всю ширину (ничего не обрезается) */
+@media (max-width:699px){
+  html.bigf #hdr .h2{flex-wrap:wrap}
+  html.bigf .hcash{flex:1 1 auto}
+  html.bigf .hmon{flex:1 1 100%;max-width:none;margin-top:4px}
+  html.bigf .hmon small{text-align:left;margin-top:2px}
+  html.bigf #hdr .hbtn{min-width:44px;margin-left:4px;padding:0 6px}html.bigf #spdBtn{padding:0 4px}
+  html.bigf #nav button{font-size:13px;letter-spacing:-.3px}
+  html.bigf #nav button span{padding:0}}
 /* низкий телефон (SE, 360×640): те же две строки, плотнее */
 @media (max-width:420px){.hbtn{padding:0 10px;margin-left:6px}}
 @media (max-height:699px) and (max-width:699px){
@@ -443,3 +455,12 @@ body:not(.ready) #hdr,body:not(.ready) #nav{visibility:hidden}
 body.calm .flyc,body.calm .flyt,body.calm .salute{display:none}body.calm .pulse,body.calm .newrow{animation:none}
 /* пузырь советника на низких экранах: компактный, не закрывает доску заказов */
 @media (max-height:700px) and (max-width:639px){#adv{padding:8px 10px 6px}#adv .ah>svg{display:none}#adv .an{display:none}#adv .at{font-size:16px;line-height:1.28;max-height:none}#adv .advpz{display:none}#adv .btns{margin-top:4px}#adv .btn.sm{min-height:48px;padding:4px 10px}body.advon .screen{padding-bottom:34vh}}
+/* M41 (п.15 старого топа, игрок 45+): «вкл/выкл» — переключатель с кружком, а не серая пилюля-надпись.
+   Кружок слева — выключено, справа — включено; слово остаётся. Не трогаем пилюли-значения (язык, крупный шрифт, «›», покупки). */
+.set>i:not(.go),.sw>i,.f-sw>i,.bz-ab>i{position:relative;min-width:88px;padding:4px 36px 4px 12px;border-radius:999px;line-height:1.5}
+.set>i:not(.go)::after,.sw>i::after,.f-sw>i::after,.bz-ab>i::after{content:"";position:absolute;right:4px;top:50%;margin-top:-12px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.set>i.off:not(.go),.sw>i.off,.f-sw>i.off,.bz-ab>i.off{padding:4px 12px 4px 36px}
+.set>i.off:not(.go)::after,.sw>i.off::after,.f-sw>i.off::after,.bz-ab>i.off::after{right:auto;left:4px}
+#stBig>i,#stLang>i,.pay .set>i{min-width:56px;padding:3px 12px}#stBig>i::after,#stLang>i::after,.pay .set>i::after{display:none}
+/* M41: «▼ Подробнее/Ещё» — своя стрелка в тексте, системный треугольник не нужен */
+.ip-more>summary,.op-more>summary{list-style:none}.ip-more>summary::-webkit-details-marker,.op-more>summary::-webkit-details-marker{display:none}

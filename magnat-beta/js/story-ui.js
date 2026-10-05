@@ -540,6 +540,7 @@ const TITLE={beav3:['🌙 Ночной звонок','🌙 A late-night call'],n
 
 // сцена/просьба (и большие сцены, кроме встречи): портрет, текст, варианты
 function openAsk(qid){const w=W();if(!w||!w.fr)return false;const q=w.fr.q.find(x=>x.id===qid);if(!q)return false;
+  phSeen(qid);   // M43: сцену увидели окном — в телефоне она уже не «непрочитанная», пуш о ней снимается
   if(q.k==='reu'||q.k==='pro')return openReunion(qid);
   if(q.k==='ipo')return openIpoScene(qid);
   const wh=spk(q),s=ask(w,q),ops=SY.optsOf(w,q);
@@ -590,7 +591,8 @@ function openReunion(qid){const w=W();if(!w||!w.fr)return false;const q=w.fr.q.f
   const cr=[10,6,4,2,2,2,2][me]||2;
   h+=`<p class="st-hint" style="text-align:center">${T(`За встречу: +${cr} 💎`,`For showing up: +${cr} 💎`)}</p><div class="row"><button class="btn w accent noenter" data-o="a">🥂 ${y>=30?T('За 11 «Б»!','To Class 11B!'):T('За встречу!','Cheers!')}</button></div>`;
   open(h,()=>openReunion(qid));bind('[data-o]',()=>answer(q,'a'));return true;}
-function big(qid){const w=W();const q=w&&w.fr&&w.fr.q.find(x=>x.id===qid);if(!q)return false;
+function phSeen(qid){try{if(window.PHONE&&PHONE.seenQ)PHONE.seenQ(qid);}catch(e){}}
+function big(qid){const w=W();const q=w&&w.fr&&w.fr.q.find(x=>x.id===qid);if(!q)return false;phSeen(qid);
   return q.k==='reu'||q.k==='pro'?openReunion(qid):openAsk(qid);}
 
 // займ у друга: сумма и срок
@@ -675,7 +677,7 @@ function prologue(done,o){o=o||{};const w=W();let fired=false;const fin=()=>{if(
   const four=m=>`<div class="st-four">${['owl','beav','bars','vit'].map(id=>pic(id,m||'happy',52)).join('')}</div>`;
   function draw(){let h='';
     if(step===0){const ks=dr.g==='f'?['f1','f2','f3']:['m1','m2','m3'];
-      h=`<h2>🥂 ${T('Кафе «Юность», январь 2027','Youth Café, January 2027')}</h2>${four('happy')}
+      h=`<h2>🥂 ${T('Кафе «Юность», январь 2027','Youth Café, January 2027')}</h2>${!o.only0&&window.bigBtnHtml?bigBtnHtml():''}${four('happy')}
         <p class="st-say">${T('Десять лет, как 11 «Б» окончил школу. Соня машет от окна: «Проходи! Как тебя теперь называть — всё так же, председатель?»','Ten years since class 11B left school. Sonya waves from the window: “Come in! What do we call you now — still president?”')}</p>
         <p class="st-hint">${T('Кто вы?','Who are you?')}</p>
         <div class="st-pick"><button class="btn noenter${dr.g==='m'?' on':''}" data-g="m">👨 ${T('Мужчина','Man')}</button><button class="btn noenter${dr.g==='f'?' on':''}" data-g="f">👩 ${T('Женщина','Woman')}</button></div>
@@ -701,7 +703,7 @@ function prologue(done,o){o=o||{};const w=W();let fired=false;const fin=()=>{if(
         <div class="st-facts st-start"><div>💰 <b>5 000 ₽</b> ${T('на счёте','in the account')}</div><div>🏠 ${T('комната в общежитии','a dorm room')}</div><div>📦 ${T('работа кладовщиком','a storekeeper’s job')}</div></div>
         <p class="st-say">🎯 ${T('Цель: свой ларёк → сеть → карьер → недра → биржа. А через 5 лет — кубок 11 «Б».','The goal: your own kiosk → a chain → a quarry → mining → the stock exchange. And in 5 years — the Class 11B cup.')}</p>
         ${dots()}<div class="row"><button class="btn w accent noenter" data-next="1">${o.replay?T('Закрыть','Close'):T('Дальше','Next')}</button>${o.replay?'':skipB()}</div>`;}
-    open(h,draw);
+    open(h,draw);if(window.bigBtnBind)bigBtnBind(draw);   // M41: крупный текст — сразу на первом экране
     bind('[data-g]',b=>{if(dr.g!==b.dataset.g){dr.g=b.dataset.g;if(dr.n&&dr.n[0]!==dr.g)dr.n='';}touched=true;snd('tap');draw();});
     bind('[data-n]',b=>{dr.n=b.dataset.n;dr.nc='';touched=true;snd('tap');draw();});
     const inp=document.getElementById('stName');if(inp){inp.addEventListener('input',()=>{dr.nc=inp.value.replace(/[<>&"`\\]/g,'').slice(0,16);touched=true;});
@@ -806,7 +808,7 @@ function calmNow(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(type
 // Без телефона — окном и обычные сцены/просьбы, по одной.
 function next(){const w=W();if(!w||!w.fr||!calmNow())return;
   // IPO — кульминация: три кадра сразу после окна биржи, без очереди
-  {const q=w.fr.q.find(x=>x.k==='ipo'&&!shown[x.id]);if(q){shown[q.id]=Date.now();bigT=Date.now();openIpoScene(q.id);return;}}
+  {const q=w.fr.q.find(x=>x.k==='ipo'&&!shown[x.id]);if(q){shown[q.id]=Date.now();bigT=Date.now();phSeen(q.id);openIpoScene(q.id);return;}}
   // закрытую крестиком большую сцену показываем снова через 10 минут (сцены Людмилы и Топтыгина в телефоне видны не всегда)
   const fresh=x=>!shown[x.id]||(x.big&&Date.now()-shown[x.id]>600000);
   if(hasPhone()){if(Date.now()-bigT<180000)return;const q=w.fr.q.find(x=>x.big&&fresh(x));if(!q)return;shown[q.id]=Date.now();bigT=Date.now();big(q.id);return;}

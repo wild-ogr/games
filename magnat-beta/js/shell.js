@@ -35,7 +35,7 @@ let S={w:null,cr:20,crE:{},adW:0,ask:{},tut:{},fame:[]};
 function wIn(o){if(isObj(o)&&isObj(o.w)&&o.w.$pk===1){try{o.w=PACK.unpack(o.w);}catch(e){try{localStorage.setItem('magnat-backup-'+Date.now(),JSON.stringify(o));}catch(x){}o.w=null;}}return o;}
 function sOut(){return isObj(S.w)&&typeof PACK!=='undefined'?Object.assign({},S,{w:PACK.packSafe(S.w)}):S;}
 try{const r=localStorage.getItem(SKEY);if(r){let o=null;try{o=wIn(JSON.parse(r));}catch(e){}if(isObj(o))S=Object.assign(S,o);else try{localStorage.setItem('magnat-backup-'+Date.now(),r);}catch(e){}}}catch(e){}   // сейв не читается — кладём копию рядом, а не теряем молча (игра начнётся заново, облако может вернуть мир)
-const OBJF=['crE','ask','tut','cos','pk','psG','psT','wall','lxE','lxc','col','colG','thU','adT'];   // M31: adT — пауза мест рекламы (мс последнего ролика), берём позднее   // M27: thU — открытые темы оформления (js/themes.js), объединение
+const OBJF=['crE','ask','tut','cos','pk','psG','psT','wall','lxE','lxc','col','colG','thU','adT','wS','lxSeen'];   // M43: wS — увиденное на Стене, lxSeen — показанные вещи в продаже (объединение = «прочитано по максимуму»)   // M31: adT — пауза мест рекламы (мс последнего ролика), берём позднее   // M27: thU — открытые темы оформления (js/themes.js), объединение
    // M8: стена почёта, вещи, украшения вещей, наборы — объединение // cos — украшения за 💎, pk — улучшения «Доли основателя» (объединение, берём больший уровень); psG/psT — «Путёвка председателя» (день начала / сколько взято по ключу покупки)
 // защита от сохранений неожиданной формы (ручная правка, старая версия)
 function fixSave(){for(const f of OBJF)if(!isObj(S[f]))S[f]={};
@@ -223,7 +223,7 @@ const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':
 // бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta3' (бета-1 — 'beta1', бета-2 — 'beta2'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta8':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta9':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
   if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
@@ -241,7 +241,8 @@ const wDays=o=>isObj(o)&&isObj(o.w)&&typeof o.w.t==='number'?o.w.t:-1;
 function mergeSave(d,ref){if(!isObj(d))return;wIn(d);
   const dt=typeof d.ts==='number'?d.ts:0,rt=ref==null?BOOT_TS:ref,newer=dt>rt;
   if(isObj(d.w)){const ga=wGen(S),gb=wGen(d),ta=wDays(S),tb=wDays(d);
-    if(gb>ga||gb===ga&&(tb>ta||tb===ta&&dt>(S.ts||0))){S.w=d.w;for(const f of ['wk','lastT','offMore','freeM','ph','adD','gift'])if(f in d)S[f]=d[f];}}
+    if(gb>ga||gb===ga&&(tb>ta||tb===ta&&dt>(S.ts||0))){S.w=d.w;const ph0=S.ph;for(const f of ['wk','lastT','offMore','freeM','ph','adD','gift'])if(f in d)S[f]=d[f];S.ph=phMerge(S.ph,ph0);}
+    else S.ph=phMerge(S.ph,d.ph);}   // M43: телефон едет с миром; прочитанное с другого устройства того же холдинга — по максимуму
   if(typeof d.cr==='number'&&isFinite(d.cr))S.cr=newer?Math.max(0,d.cr+(S.cr-BOOT_CR)):(dt===rt&&!dt)?Math.max(S.cr,d.cr):S.cr;
   for(const f of OBJF)if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f]){const a=S[f][k],b=d[f][k];
     if(typeof b==='number'&&(typeof a!=='number'||b>a))S[f][k]=b;else if(a==null)S[f][k]=b;}}
@@ -254,13 +255,21 @@ function mergeSave(d,ref){if(!isObj(d))return;wIn(d);
   if(typeof d.maxT==='number')S.maxT=Math.max(S.maxT||0,d.maxT);
   if(typeof d.st0==='number'&&d.st0>0)S.st0=S.st0>0?Math.min(S.st0,d.st0):d.st0;   // M28: первый запуск — самый ранний с любого устройства
   if(typeof d.rst==='number')S.rst=Math.max(S.rst||0,d.rst);
-  for(const f of ['rk','rkG','udN','adTot'])if(typeof d[f]==='number')S[f]=Math.max(S[f]|0,d[f]);   // звание не падает и на другом устройстве
+  for(const f of ['rk','rkG','udN','adTot','wsV'])if(typeof d[f]==='number')S[f]=Math.max(S[f]|0,d[f]);   // звание не падает и на другом устройстве
   if(typeof d.adW==='number')S.adW=Math.max(S.adW||0,d.adW);
   if(typeof d.lbB==='number')S.lbB=Math.max(S.lbB||0,d.lbB);
   if(typeof QUEST!=='undefined'&&isObj(d.quest)){if(!isObj(S.quest))S.quest=d.quest;else QUEST.merge(d.quest);}   // «Ролики дня»: тот же день — максимумы
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|w|cr|crE|ask|tut|fame|adCr|adR|adT|adF|maxT|st0|adW|lbB|wk|lastT|offMore|freeM|buy|buyB|payT|payV|soc|stc|quest|rk|rkG|udN|adTot|thU|wall|lxE|lxc|col|colG)$/.test(k))S[k]=d[k]; // флажки и настройки
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|w|cr|crE|ask|tut|fame|adCr|adR|adT|adF|maxT|st0|adW|lbB|wk|lastT|offMore|freeM|buy|buyB|payT|payV|soc|stc|quest|rk|rkG|udN|adTot|thU|wall|lxE|lxc|col|colG|ph|wN|rwNew|lxSeen|wS|wsV)$/.test(k))S[k]=d[k]; // флажки и настройки (M43: «новое» телефона и ★ — не отсюда: ph едет с миром, wS/lxSeen — объединение, wN считается, rwNew — своё)
   SOC.merge(d.soc);STAT.merge(d.stc); // соц-предложения VK (модуль держит ссылку на S.soc) и отметки статистики — сливаем, а не заменяем
   payMerge(d);}
+// M43: «прочитано» телефона — максимум из двух устройств, если это тот же холдинг (S.ph.wk); a — основа (едет с выбранным миром), b — другое
+function phMerge(a,b){if(!isObj(a))return isObj(b)?b:a;if(!isObj(b)||a.wk!==b.wk||a.v!==b.v)return a;
+  // лента (день + число в тот же день) и вопросы (qid) — общие для устройств; служебные сообщения (loc, rdn) у каждого устройства свои — их не смешиваем
+  if(!isObj(a.rd))a.rd={};if(!isObj(a.rdk))a.rdk={};
+  if(isObj(b.rd))for(const k in b.rd){const x=b.rd[k],y=a.rd[k];if(typeof x!=='number')continue;
+    if(typeof y!=='number'||x>y){a.rd[k]=x;a.rdk[k]=isObj(b.rdk)?b.rdk[k]|0:0;}else if(x===y&&isObj(b.rdk))a.rdk[k]=Math.max(a.rdk[k]|0,b.rdk[k]|0);}
+  if(isObj(b.qr)){if(!isObj(a.qr))a.qr={};for(const k in b.qr)a.qr[k]=1;}
+  return a;}
 function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
@@ -963,11 +972,11 @@ function openReset2(){const bizOk=!!(window.ECON&&ECON.bizInit);
 const storyOn=()=>!!(window.STORYUI&&window.GAME&&GAME.W&&GAME.W.fr&&GAME.W.fr.rags);
 function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="off">'+L('выкл','off')+'</i>';
   modal(`<h2>${L('Настройки','Settings')}</h2>
+    <button class="set" id="stBig"><span>🔠 ${L('Крупный шрифт','Large text')}<br><small>${L('весь текст и кнопки крупнее','all text and buttons bigger')}</small></span><i${(S.bigF|0)?'':' class="off"'}>${[L('обычный','normal'),L('крупнее','larger'),L('ещё крупнее','largest')][S.bigF|0]}</i></button>
     ${BETA?`<button class="set" id="stFb"><span>✉️ ${L('Написать отзыв','Send feedback')}<br><small>${L('тестовая версия — нам важно ваше мнение','test version — your opinion matters')}</small></span><i class="go">›</i></button>`:''}
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('меньше анимации и движения','less animation and motion')}</small></span>${on(calm())}</button>
-    <button class="set" id="stBig"><span>🔠 ${L('Крупный шрифт','Large text')}<br><small>${L('весь текст и кнопки крупнее','all text and buttons bigger')}</small></span><i${(S.bigF|0)?'':' class="off"'}>${[L('обычный','normal'),L('крупнее','larger'),L('ещё крупнее','largest')][S.bigF|0]}</i></button>
     <button class="set" id="stNoIco"><span>🔤 ${L('Без значков','No icons')}<br><small>${L('слова вместо значков: «силы 60» вместо «⚡ 60»','words instead of icons: “energy 60” instead of “⚡ 60”')}</small></span>${on(!!S.noIco)}</button>
     ${IS_VK?'':`<button class="set" id="stLang"><span>🌐 Язык / Language</span><i>${LANG==='en'?'EN':'RU'}</i></button>`}
     ${window.THEME?`<button class="set" id="stTheme"><span>🎨 ${L('Оформление','Themes')}<br><small>${L('сейчас: ','now: ')}${(THEME.list().filter(t=>t.cur)[0]||{name:''}).name}</small></span><i class="go">›</i></button>`:''}
@@ -979,7 +988,9 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
     <button class="set" id="stSave"><span>💾 ${L('Сохранение','Save')}<br><small>${L('перенести на другое устройство','move to another device')}</small></span><i class="go">›</i></button>
     ${window.GAME&&GAME.reset?`<button class="set noenter" id="stReset"><span>🔄 ${L('Начать игру заново','Start the game over')}<br><small>${L('кристаллы и покупки сохранятся','crystals and purchases are kept')}</small></span><i class="go">›</i></button>`:''}
     ${window.UI&&UI.restartTut?`<button class="set" id="stTut"><span>🎓 ${L('Обучение заново','Restart tutorial')}<br><small>${L('подсказки главбуха с первого шага','the accountant’s tips from step one')}</small></span><i class="go">›</i></button>`:''}
-    <div class="row"><button class="btn noenter" id="stHow">❓ ${L('Как играть','How to play')}</button><button class="btn noenter" id="stAbout">ℹ️ ${L('Об игре','About')}</button><button class="btn green" id="stClose">${L('Готово','Done')}</button></div>`);
+    <button class="set noenter" id="stHow"><span>❓ ${L('Как играть','How to play')}<br><small>${L('правила, главы, словарик','rules, chapters, glossary')}</small></span><i class="go">›</i></button>
+    <button class="set noenter" id="stAbout"><span>ℹ️ ${L('Об игре','About')}</span><i class="go">›</i></button>
+    <div class="row"><button class="btn green" id="stClose">${L('Готово','Done')}</button></div>`);   // M41: внизу окна — одна кнопка (при крупном шрифте три кнопки закрывали полэкрана)
   modalRe=openSettings;
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
@@ -1051,9 +1062,16 @@ function applyCalm(){if(document.body)document.body.classList.toggle('calm',calm
 // M38 (a45): «Крупный шрифт» — масштаб всего #app (zoom 1,12 / 1,24: весь текст и кнопки на 2 и 4 ступени крупнее, вёрстка переносится как на узком экране);
 // старые WebView со «старым» zoom растягивают высоту — тогда высоту #app делим на масштаб. «Без значков» — body.noico (icons.js: слово вместо значка у чисел)
 const BIG_Z=[1,1.12,1.24];
-function applyA11y(){const a=$('app'),z=BIG_Z[S.bigF|0]||1;document.documentElement.classList.toggle('bigf',z>1);if(document.body)document.body.classList.toggle('noico',!!S.noIco);
+// M41: кнопка «🔠 Крупный текст» для пролога и «Как играть» (data-bigf; нажатие — следующая ступень, fn — перерисовать окно)
+const BIGN=()=>[L('обычный','normal'),L('крупнее','larger'),L('ещё крупнее','largest')][S.bigF|0];
+function bigBtnHtml(){return `<button class="btn w noenter" data-bigf="1" style="margin:4px 0 8px;min-height:48px">🔠 ${L('Крупный текст','Large text')}: <b>${BIGN()}</b> · ${L('нажмите','tap')}</button>`;}
+function bigBtnBind(fn){document.querySelectorAll('#mcard [data-bigf]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();S.bigF=((S.bigF|0)+1)%3;save();applyA11y();try{SND.tap();}catch(x){}try{STAT.ev('mod',{m:'bigf',a:S.bigF|0});}catch(x){}if(fn)fn();});}
+window.bigBtnHtml=bigBtnHtml;window.bigBtnBind=bigBtnBind;
+function applyA11y(){const a=$('app'),z=BIG_Z[S.bigF|0]||1;try{$('crBtn').setAttribute('data-w',L('кристаллы','crystals'));}catch(e){}   // M41: «Без значков» — подпись к 💎 в шапке
+  document.documentElement.classList.toggle('bigf',z>1);if(document.body)document.body.classList.toggle('noico',!!S.noIco);
   if(!a)return;a.style.zoom=z>1?String(z):'';a.style.height='';const hc=$('hCash');if(hc)hc.textContent='';   // шапка заново подгонит сумму под новую ширину
-  if(z>1)try{requestAnimationFrame(()=>{const r=a.getBoundingClientRect();if(r.height>window.innerHeight+4)a.style.height=(100/z).toFixed(3)+'%';});}catch(e){}}
+  if(z>1)try{requestAnimationFrame(()=>{const r=a.getBoundingClientRect();if(r.height>window.innerHeight+4)a.style.height=(100/z).toFixed(3)+'%';});}catch(e){}
+  try{requestAnimationFrame(()=>{if(window.UI&&UI.hdr)UI.hdr();});}catch(e){}}   // M41: сумму в шапке подогнать сразу (раньше — только на следующем дне)
 
 /* ---- клавиатура на ПК: только окна (остальное — интерфейс) ---- */
 document.addEventListener('keydown',e=>{const k=e.key;if(!modalOn||e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;const ad=$('ad');if(ad&&ad.classList.contains('on'))return;const mc=$('mcard');if(!mc)return;

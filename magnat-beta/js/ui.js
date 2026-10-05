@@ -284,7 +284,7 @@ let fitW=0;function fitCash(c){fitW=window.innerWidth;c.style.fontSize='';let fs
 function hdr(){const W=w();if(!W)return;hnameFit();
   {const ch=BZ()&&BZ().hname(W);$$('hName').textContent=ch?ch:holdName(W)+' ✎';}spdBtnUpd();
   $$('hDate').textContent=FMT.date(W.m);
-  const c=$$('hCash'),ct=M(W.cash);if(!cashHold&&cashShown==null&&(c.textContent!==ct||fitW!==window.innerWidth)){c.textContent=ct;fitCash(c);}c.classList.toggle('neg',W.cash<0);
+  const c=$$('hCash'),ct=M(W.cash);if(!cashHold&&cashShown==null&&(c.textContent!==ct||fitW!==window.innerWidth)){c.textContent=ct;fitCash(c);}else if(!cashHold&&c.scrollWidth>c.clientWidth+1)fitCash(c);c.classList.toggle('neg',W.cash<0);
   const run=GAME.running(),fr=Math.min(1,(W.d+GAME.dayFrac())/E.DAYS);
   $$('hBar').style.width=(fr*100).toFixed(1)+'%';
   $$('hdr').classList.toggle('stop',!run);
@@ -793,6 +793,7 @@ function openIpo(){const W=w();if(!GAME.ipoReady())return;const v=GAME.value(),h
 // «Как играть»: по главам (текст M9 3.1), темп текущей главы считаем сами; в «Недрах» — подробно про недра
 function openHow(){const W=w(),mm=GAME.DAY_BASE*30/60000,mmT=String(Math.round(mm*10)/10).replace('.',LANG==='en'?'.':','),ch=n=>`<b>${L('Глава '+n,'Chapter '+n)}.</b>`;
   const top=`<p class="mut" style="font-size:16px!important">${L(`Сейчас 1 игровой месяц = ${mmT} ${pl(mm,'минута','минуты','минут','minute','minutes')}. Кнопка ×1 в шапке — вдвое быстрее (×2) или пауза (⏸).`,`Right now 1 game month = ${mmT} ${mm===1?'minute':'minutes'}. The ×1 button in the header doubles the speed (×2) or pauses (⏸).`)}</p>`;
+  const dots=`<p><b><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--bad);vertical-align:middle"></span> ${L('Красная точка','Red dot')}</b> — ${L('там новое или ждут вашего решения; цифра на ★ — сколько наград ждут в Кабинете.','something new or a decision waits there; the number on ★ is how many rewards wait in the Office.')}</p>`;   // M41
   const cr=`<p><b>💎 ${L('Кристаллы','Crystals')}</b> — ${L('за главы, вехи, достижения и ролики. Ими можно немного ускорить дело, взять время ещё на одно дело или силы, купить украшения. Ускорения чуть сказываются и на рейтинге недели, но само место не продаётся.','for chapters, milestones, achievements and videos. They speed things up a little, buy an extra hand or energy, or decorations. Speed-ups count a little towards the weekly ranking, but a place can’t be bought.')}</p>`;
   const body=W&&W.ned?`
   <p>1. <b>${L('Разведка','Exploration')}</b> — ${L('на карте откройте регион и разведайте участок с «?».','open a region on the map and explore a “?” plot.')}</p>
@@ -813,11 +814,11 @@ function openHow(){const W=w(),mm=GAME.DAY_BASE*30/60000,mmT=String(Math.round(m
   <p><b>${L('Каждый день','Every day')}</b> — ${L('«Планёрка» у Людмилы Санны: подарок дня, поручения, вехи главы. В конце месяца — отчёт: выручка, прибыль и деньги.','the morning meeting with Lyudmila Sanna: a daily gift, tasks, chapter milestones. At month end — the report: revenue, profit and cash.')}</p>
   <p><b>📱 ${L('Телефон','Phone')}</b> — ${L('сообщения друзей из 11 «Б», банк, новости. Со 2-й главы — недвижимость: квартиры под аренду, ипотека, помещения.','messages from your Class 11B friends, the bank, news. From chapter 2 — real estate: flats to rent out, mortgages, commercial units.')}</p>
   <p><b>${L('Без вас','While away')}</b> — ${L(`1 игровой месяц за час, до ${GAME.shiftH()} ч: точки торгуют, начатые заказы доделываются${W&&W.me&&W.me.job?', зарплата капает':''}. Новое без вас не открывается.`,`1 game month per hour away, up to ${GAME.shiftH()} h: outlets trade, started jobs get finished${W&&W.me&&W.me.job?', the wage comes in':''}. Nothing new is opened without you.`)}</p>`;
-  modal(`<h2>❓ ${L('Как играть','How to play')}</h2>${top}${body}${cr}
+  modal(`<h2>❓ ${L('Как играть','How to play')}</h2>${window.bigBtnHtml?bigBtnHtml():''}${top}${body}${cr}${dots}
   ${window.GLOSS?GLOSS.listHtml(false):''}
   <p class="mut" style="font-size:15px!important">${L('На компьютере: 1–5 — вкладки, Esc — назад или закрыть.','On a computer: 1–5 switch tabs, Esc goes back or closes.')}</p>
   <div class="row"><button class="btn green" id="hClose">${L('Понятно','Got it')}</button></div>`);
-  try{modalRe=openHow;}catch(e){}$$('hClose').onclick=()=>{snd('tap');closeM();};}
+  try{modalRe=openHow;}catch(e){}if(window.bigBtnBind)bigBtnBind(openHow);$$('hClose').onclick=()=>{snd('tap');closeM();};}
 
 /* ================= советник: пузырь над меню ================= */
 let advCur=null,advT=0;
@@ -1070,7 +1071,8 @@ function openRename(){const W=w();modal(`<h2>✎ ${L('Название холд�
 /* ================= скорость времени: ⏸ / ×1 / ×2 (GAME.setSpeed, если есть) ================= */
 function spdNow(){try{return typeof GAME.speed==='function'?GAME.speed():1;}catch(e){return 1;}}
 function spdBtnUpd(){const b=$$('spdBtn');if(!b)return;const ok=typeof GAME.setSpeed==='function';b.style.display=ok?'':'none';if(!ok)return;
-  const v=spdNow();b.textContent=v===0?'⏸':v===2?'×2':'×1';b.classList.toggle('on2',v===2);b.classList.toggle('on0',v===0);
+  const v=spdNow(),bt=v===0?'⏸':v===2?'×2':'×1',bh=`<small class="hb-cap">${v===0?L('пауза','paused'):L('скорость','speed')}</small><b>${bt}</b>`;if(b.innerHTML!==bh)b.innerHTML=bh;   // M41: «×1» с подписью «скорость» (игрок 45+ не понимал значка)
+  b.classList.toggle('on2',v===2);b.classList.toggle('on0',v===0);
   b.setAttribute('aria-label',v===0?L('Время стоит — нажмите, чтобы пошло','Time is paused — tap to run'):v===2?L('Быстрее вдвое','Double speed'):L('Обычная скорость','Normal speed'));}
 function spdCycle(){if(typeof GAME.setSpeed!=='function')return;const v=spdNow(),n=v===1?2:v===2?0:1;GAME.setSpeed(n);snd('tap');spdBtnUpd();hdr();
   tst(n===0?L('⏸ Время остановлено','⏸ Time paused'):n===2?L('⏩ Время идёт вдвое быстрее','⏩ Double speed'):L('▶ Обычная скорость','▶ Normal speed'),1500);}
@@ -1130,7 +1132,7 @@ function back(){navIntent('back');if($$('adv').classList.contains('on')){advHide
   document.addEventListener('pointerdown',e=>{x0=-1;if(e.clientX<24&&!(typeof modalOn!=='undefined'&&modalOn)&&!e.target.closest('#modal,#phone,.ph-body')){x0=e.clientX;y0=e.clientY;t0=Date.now();}},{passive:true});
   document.addEventListener('pointerup',e=>{if(x0<0)return;const dx=e.clientX-x0,dy=Math.abs(e.clientY-y0);x0=-1;if(dx>80&&dy<60&&Date.now()-t0<800){snd('tap');back();}},{passive:true});
   document.addEventListener('pointercancel',()=>{x0=-1;},{passive:true});})();
-window.UI={fly,salute,pulse:pulseEl,tweenNum,face,TAB_DEF,buildNav,init,refresh,go,back,restartTut,idleTest:()=>{lastIn=0;lastIdle=0;idleWait=0;idleTick();return advCur&&advCur.key;},show:t=>go(t),openRegion:r=>go('reg',r),render,openHow,openAuc,openClose,openOffline,openIpo,openFac,openRoute,adv:advShow,advOpen,tutStep,
+window.UI={hdr,fly,salute,pulse:pulseEl,tweenNum,face,TAB_DEF,buildNav,init,refresh,go,back,restartTut,idleTest:()=>{lastIn=0;lastIdle=0;idleWait=0;idleTick();return advCur&&advCur.key;},show:t=>go(t),openRegion:r=>go('reg',r),render,openHow,openAuc,openClose,openOffline,openIpo,openFac,openRoute,adv:advShow,advOpen,tutStep,
   navSync,navKey,navIntent,navMem:()=>NAV,
   get cur(){return cur;},get reg(){return curReg;}};
 init();
