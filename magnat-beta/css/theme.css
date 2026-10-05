@@ -464,3 +464,11 @@ body.calm .flyc,body.calm .flyt,body.calm .salute{display:none}body.calm .pulse,
 #stBig>i,#stLang>i,.pay .set>i{min-width:56px;padding:3px 12px}#stBig>i::after,#stLang>i::after,.pay .set>i::after{display:none}
 /* M41: «▼ Подробнее/Ещё» — своя стрелка в тексте, системный треугольник не нужен */
 .ip-more>summary,.op-more>summary{list-style:none}.ip-more>summary::-webkit-details-marker,.op-more>summary::-webkit-details-marker{display:none}
+/* M46 (владелец, бета-10): плашка паузы «читаю» под шапкой — видно, что время стоит не само, и как продолжить */
+#rdP{position:fixed;left:50%;transform:translateX(-50%);top:120px;z-index:60;display:none;align-items:center;gap:10px;max-width:calc(100vw - 32px);box-sizing:border-box;
+  padding:6px 6px 6px 14px;border-radius:999px;background:var(--card);color:var(--ink);box-shadow:var(--sh2);border:1.5px solid var(--accent);font-size:15px;font-weight:600;white-space:nowrap}
+#rdP.on{display:flex}
+#rdP span{white-space:normal;line-height:1.2;min-width:0}
+#rdP button{flex:none;min-height:44px;padding:0 14px;border:0;border-radius:999px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:700;cursor:pointer}
+body.mon #rdP{display:none!important}
+#spdBtn.au,#spdBtn.au .hb-cap{background:var(--accent);color:var(--on-accent)}#spdBtn.au .hb-cap{background:none}   /* M46: авто-пауза — «▶ дальше» */

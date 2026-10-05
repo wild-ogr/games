@@ -312,17 +312,18 @@ function rToday(el){const W=w(),M0=W.me,st=W.st;let h='';
   h+=(window.OWNUI?OWNUI.evCard(W):'');   // M17: событие с выбором (js/owner-ui.js)
   if(W.st==='quarry')h+=qeCard(W,'bzQeT');   // M30: событие карьера — и на «Сегодня», чтобы не пропустить
   if(W.st==='quarry'&&!W.ned)return q4Today(el,W,h);   // M34: «Сегодня» главы 4 — срочное, карьеры, деньги; хвосты глав 1–2 — под «▼ Ещё»
-  h+=goalCard(W);
   const les=lesDue(W),lesH=les?`<button class="card tap bz-li" data-b="les" data-n="${les.n}" style="padding:14px 18px"><span class="bz-ic">📘<i></i></span><span class="f1"><b>${L('Школа Людмилы: урок ','Lyudmila’s school: lesson ')+les.n}</b><small>${esc(LES[les.n].t())}</small></span><span class="chev">›</span></button>`:'';
+  h+=goalCard(W);
+  h+=lesH;   // M46 (владелец: точка на «Сегодня» горит, а урок-вопрос Людмилы спрятан под «▼ Ещё»): то, что ждёт игрока, — наверху, не под «Ещё»
   const nedraH=W.st==='quarry'&&E.nedraOk(W)?`<div class="card"><b>🎉 ${L('Можно в недра!','Ready for mining!')}</b><p class="bz-note">${L('Капитал и карьер готовы. Партнёр ждёт звонка.','Capital and quarry are ready. The partner is waiting for your call.')}</p><button class="btn accent w noenter" data-b="nedra" style="margin-top:10px">${L('Перейти в недра','Go to mining')}</button></div>`:'';
   if(ch2){   // M38 (a45): «Сегодня» главы 2 сжато до уровня главы 3 — цель, событие, Планёрка строкой, «к 30-му», остальное под «▼ Ещё»
     h+='<div id="metaSlot" data-keep="1" data-mtm="mini2"></div>';
     if(window.CASHUI){h+=CASHUI.todayLine(W);const mo=!!S.mcMore;h+=`<button class="btn w noenter bz-more" data-b="mcmore" aria-expanded="${mo?'true':'false'}" style="margin:0 0 10px">${mo?'▲ '+L('Свернуть «Этот месяц»','Collapse “This month”'):'▼ '+L('Этот месяц подробно','This month in detail')}</button>`;if(mo)h+=monthCard(W);}else h+=monthCard(W);
     let fr='';if(window.FRUI&&FRUI.todayCard)fr=FRUI.todayCard(W);const frOn=/fu-td on/.test(fr);if(frOn)h+=fr;   // друзья ждут ответа — на виду
     const taxDue=!!(E.taxOk&&E.taxOk(W));if(taxDue)h+=taxCard(W);
-    const open=!!S.tdMore,more=[];if(M0)more.push(L('время и дела хозяина','hands and owner’s tasks'));if(les)more.push(L('урок','lesson'));if(M0)more.push(L('склад','warehouse'));if(window.FRUI&&!frOn)more.push(L('друзья','friends'));if(W.biz.length)more.push(L('доходы точек','outlet income'));if(!taxDue)more.push(L('налоги','taxes'));more.push(L('вехи и подарки','milestones and gifts'),L('кредиты','loans'));
+    const open=!!S.tdMore,more=[];if(M0)more.push(L('время и дела хозяина','hands and owner’s tasks'));if(M0)more.push(L('склад','warehouse'));if(window.FRUI&&!frOn)more.push(L('друзья','friends'));if(W.biz.length)more.push(L('доходы точек','outlet income'));if(!taxDue)more.push(L('налоги','taxes'));more.push(L('вехи и подарки','milestones and gifts'),L('кредиты','loans'));
     h+=`<button class="btn w noenter bz-more" data-b="tdmore" aria-expanded="${open?'true':'false'}" style="margin:6px 0 10px">${open?'▲ '+L('Свернуть','Collapse'):'▼ '+L('Ещё: ','More: ')+more.join(', ')}</button>`;
-    if(open){h+=lesH;if(M0)h+=handsCard(W)+(window.OWNUI?OWNUI.ownCard(W)+OWNUI.eduCard(W):'');if(M0)h+=jobCard(W);if(!frOn)h+=fr;if(W.biz.length)h+=incomeCard(W);if(!taxDue)h+=taxCard(W);if(!gOoo)h+=oooCard(W);h+='<div id="metaSlot2" data-keep="1" data-mtm="rest2"></div>';h+=borrowCard(W,gOoo);}
+    if(open){if(M0)h+=handsCard(W)+(window.OWNUI?OWNUI.ownCard(W)+OWNUI.eduCard(W):'');if(M0)h+=jobCard(W);if(!frOn)h+=fr;if(W.biz.length)h+=incomeCard(W);if(!taxDue)h+=taxCard(W);if(!gOoo)h+=oooCard(W);h+='<div id="metaSlot2" data-keep="1" data-mtm="rest2"></div>';h+=borrowCard(W,gOoo);}
   }else if(ch3(W)){   // M34: «Сегодня» главы 3 — цель, «что сделать сейчас», Планёрка одной строкой, «к 30-му», остальное под «▼ Ещё»
     h+=doCard(W);
     h+='<div id="metaSlot" data-keep="1" data-mtm="mini"></div>';
@@ -331,14 +332,13 @@ function rToday(el){const W=w(),M0=W.me,st=W.st;let h='';
     let taxDue=false;try{taxDue=!!(E.taxOk&&E.taxOk(W))&&(E.advise(W)||[]).some(x=>x.k==='z_tax');}catch(e){}if(taxDue)h+=taxCard(W);   // налог — на виду, только если другой режим выгоднее
     const open=!!S.tdMore,more=[];if(M0)more.push(L('время и дела хозяина','hands and owner’s tasks'));more.push(L('доходы точек','outlet income'));if(!taxDue)more.push(L('налоги','taxes'));more.push(L('вехи','milestones'),L('кредиты','loans'));
     h+=`<button class="btn w noenter bz-more" data-b="tdmore" aria-expanded="${open?'true':'false'}" style="margin:6px 0 10px">${open?'▲ '+L('Свернуть','Collapse'):'▼ '+L('Ещё: ','More: ')+more.join(', ')}</button>`;
-    if(open){h+=lesH;if(M0)h+=handsCard(W)+(window.OWNUI?OWNUI.ownCard(W)+OWNUI.eduCard(W):'');if(!frOn)h+=fr;if(W.biz.length)h+=incomeCard(W);if(!taxDue)h+=taxCard(W);h+='<div id="metaSlot2" data-keep="1" data-mtm="rest"></div>';h+=borrowCard(W);}
+    if(open){if(M0)h+=handsCard(W)+(window.OWNUI?OWNUI.ownCard(W)+OWNUI.eduCard(W):'');if(!frOn)h+=fr;if(W.biz.length)h+=incomeCard(W);if(!taxDue)h+=taxCard(W);h+='<div id="metaSlot2" data-keep="1" data-mtm="rest"></div>';h+=borrowCard(W);}
   }else{   // M38 (a45): глава 1 — Планёрка строкой сверху, подарки/поручения/вехи/кабинет — под «▼ Ещё» (было 8+ блоков с 💎 подряд)
     if(!e1)h+='<div id="metaSlot" data-keep="1" data-mtm="mini2"></div>';
     if(window.CASHUI)h+=CASHUI.todayLine(W);   // M30: «💰 К 30-му ≈ …» (js/cash-ui.js)
     h+=monthCard(W);
     if(M0&&stI()<=1)h+=jobCard(W);
     if(!e1&&window.FRUI&&FRUI.todayCard)h+=FRUI.todayCard(W);   // M20: «Друзья» — кто ждёт ответа (js/friends-ui.js)
-    h+=lesH;
     if(M0)h+=handsCard(W);
     if(e1)h+='<div id="metaSlot" data-keep="1"></div>';   // Планёрка — одной строкой (META сам свернёт в начале главы 1)
     if(M0)h+=(window.OWNUI?OWNUI.ownCard(W)+OWNUI.eduCard(W):'');   // M17: дела хозяина и учёба
@@ -360,10 +360,11 @@ function q4Today(el,W,h){const M0=W.me;
   h+=aucCard(W)||goalCard(W);h+=pitSum(W)+invCard(W,1);
   if(W.st==='quarry'&&E.nedraOk(W))h+=`<div class="card"><b>🎉 ${L('Можно в недра!','Ready for mining!')}</b><button class="btn accent w noenter" data-b="nedra" style="margin-top:10px">${L('Перейти в недра','Go to mining')}</button></div>`;
   h+=monthCard(W)+'<div id="metaSlot" data-keep="1"></div>';
-  const open=!!S.tdMore;const more=[L('доходы точек','outlet income'),L('налоги','taxes')];if(window.FRUI)more.unshift(L('друзья','friends'));if(M0)more.push(L('время и дела хозяина','hands and owner’s tasks'));more.push(L('кредиты','loans'));
+  const les=lesDue(W);if(les)h+=`<button class="card tap bz-li" data-b="les" data-n="${les.n}" style="padding:14px 18px"><span class="bz-ic">📘</span><span class="f1"><b>${L('Школа Людмилы: урок ','Lyudmila’s school: lesson ')+les.n}</b><small>${esc(LES[les.n].t())}</small></span><span class="chev">›</span></button>`;   // M46: урок — на виду
+  if(window.FRUI&&FRUI.todayCard)h+=FRUI.todayCard(W);   // M46: в «Карьере» 5 вкладок — кнопки «Друзья» в меню нет, карточка друзей — на виду (не под «▼ Ещё»)
+  const open=!!S.tdMore;const more=[L('доходы точек','outlet income'),L('налоги','taxes')];if(M0)more.push(L('время и дела хозяина','hands and owner’s tasks'));more.push(L('кредиты','loans'));
   h+=`<button class="btn w noenter bz-more" data-b="tdmore" aria-expanded="${open?'true':'false'}" style="margin:6px 0 10px">${open?'▲ '+L('Свернуть','Collapse'):'▼ '+L('Ещё: ','More: ')+more.join(', ')}</button>`;
-  if(open){if(window.FRUI&&FRUI.todayCard)h+=FRUI.todayCard(W);if(W.biz.length)h+=incomeCard(W);h+=taxCard(W);if(M0)h+=handsCard(W)+(window.OWNUI?OWNUI.ownCard(W)+OWNUI.eduCard(W):'');h+=borrowCard(W);
-    const les=lesDue(W);if(les)h+=`<button class="card tap bz-li" data-b="les" data-n="${les.n}" style="padding:14px 18px"><span class="bz-ic">📘</span><span class="f1"><b>${L('Школа Людмилы: урок ','Lyudmila’s school: lesson ')+les.n}</b><small>${esc(LES[les.n].t())}</small></span><span class="chev">›</span></button>`;}
+  if(open){if(W.biz.length)h+=incomeCard(W);h+=taxCard(W);if(M0)h+=handsCard(W)+(window.OWNUI?OWNUI.ownCard(W)+OWNUI.eduCard(W):'');h+=borrowCard(W);}
   if(typeof socMoreHtml==='function')h+=socMoreHtml();
   put(el,h);const ms=$$('metaSlot');if(ms&&window.META&&typeof META.card==='function'){try{META.card(ms);}catch(e){console.error(e);}}}
 // M34: идущие торги — одной карточкой с кнопкой ставки (вместо цели «Выиграть торги 50 %»)
@@ -569,8 +570,8 @@ function rGigs(el){const W=w(),M0=W.me;if(!M0){el.innerHTML='';return;}const H=E
   else if(M0.rest>0)h+=`<div class="tip">🛌 ${L('Выходной ещё ','Day off: ')+days(M0.rest)+L('. Силы восстанавливаются.',' left. Energy is recovering.')}</div>`;
   else if(M0.en<30)h+=`<div class="tip">⚡ ${L('Сил мало — риск сорвать заказ вдвое выше. Возьмите выходной (кнопка 🛌 вверху).','Low energy — twice the risk of failing an order. Take a day off (the 🛌 button at the top).')}</div>`;
   // второе дыхание и срочный заказ — одной карточкой
-  const bOk=E.breathOk(W),uOk=E.urgentGigOk(W);
-  h+=`<div class="bz-sec">${L('Ускорители','Boosts')}</div><div class="card"><b>⚡ ${L('Второе дыхание: +50 сил','Second wind: +50 energy')}</b><p class="bz-note">${bOk?L('Раз в игровую неделю.','Once per game week.'):L('Уже было на этой неделе.','Already used this week.')}</p><div class="btns">
+  const bOk=E.breathOk(W),uOk=E.urgentGigOk(W);   // M45: блок «Ускорители» — только в «Карьере» (в «Своём деле» второе дыхание и срочный заказ не работают)
+  if(W.st==='gig')h+=`<div class="bz-sec">${L('Ускорители','Boosts')}</div><div class="card"><b>⚡ ${L('Второе дыхание: +50 сил','Second wind: +50 energy')}</b><p class="bz-note">${bOk?L('Раз в игровую неделю.','Once per game week.'):L('Уже было на этой неделе.','Already used this week.')}</p><div class="btns">
     <button class="btn cr sm noenter" data-b="brCr"${bOk?'':' disabled'}>💎 ${E.CR_BIZ.breath}</button>${adL('breath')?`<button class="btn sm noenter" data-b="brAd"${bOk?adD('breath'):' disabled'}>📺 ${L('бесплатно за рекламу','free for an ad')}${bOk?adS('breath'):''}</button>`:''}</div>
     <div class="hr"></div><b>🔥 ${L('Срочный заказ: оплата ×1,5','Urgent order: pay ×1.5')}</b><p class="bz-note">${uOk?L('Раз в игровой месяц появится на доске.','Once a game month it appears on the board.'):L('В этом месяце уже был.','Already used this month.')}</p><div class="btns"><button class="btn cr sm noenter" data-b="urgCr"${uOk?'':' disabled'}>💎 ${E.CR_BIZ.urgent} — ${L('найти','find one')}</button>${adL('urg')?`<button class="btn sm noenter" data-b="urgAd"${uOk?adD('urg'):' disabled'}>📺 ${L('бесплатно за рекламу','free for an ad')}${uOk?adS('urg'):''}</button>`:''}</div></div>`;
   // постоянный клиент
@@ -1342,6 +1343,9 @@ const LES={
     q:()=>L('Какой режим выгоднее по вашим цифрам?','Which regime is better for your numbers?'),a:()=>[L('6 % с доходов','6% of revenue'),L('15 % с прибыли','15% of profit')],ok:d=>d.usn6<=d.usn15?0:1},
   8:{t:()=>L('Дебиторка и кассовый разрыв','Receivables and cash gaps'),b:d=>L(`Покупатели должны нам ${M(d.rec)}, а на счёте ${M(d.cash)}. Прибыль в отчёте есть, а денег нет — они у покупателей. Выручают факторинг (деньги сразу за 3 %), кредит на оборотку или «без отсрочки»; овердрафт — самый дорогой путь. Налог на упрощёнке — с оплаченного: с долга заплатим, когда его вернут.`,`Buyers owe us ${M(d.rec)}, and we have ${M(d.cash)} in the bank. The P&L shows profit, but the cash is with the buyers. Factoring (cash now for 3%), a working-capital loan or “no credit” help; an overdraft is the dearest way. Simplified tax is on cash received: we pay tax on the debt when it’s paid.`),
     q:()=>L('Прибыль есть, а денег нет — почему?','Profit but no cash — why?'),a:()=>[L('Покупатели ещё не заплатили','Buyers haven’t paid yet'),L('Ошибка бухгалтера','An accounting error'),L('Всё ушло в налог','It all went on tax')],ok:0}};
+// M46: нажали вкладку с точкой — показать то, что её зажгло (урок/событие карьера на «Сегодня»): прокрутка к карточке и подсветка 2,5 с
+function dotGo(t){if(t!=='today')return;const e=document.querySelector('#scr-today [data-b="les"],#main [data-b="les"]')||$$('bzQeT');if(!e)return;
+  try{e.scrollIntoView({block:'center'});}catch(x){}e.classList.add('hl');setTimeout(()=>e.classList.remove('hl'),2600);}
 function lesDue(W){if(!W||W.ned||!E.lessons)return null;if(S.lesOff)return null;try{return E.lessons(W).find(x=>x.due&&!x.done&&LES[x.n])||null;}catch(e){return null;}}
 function openLesson(n){const W=w(),x=E.lessons(W).find(y=>y.n===n);if(!x||!LES[n])return;const Ls=LES[n],d=x.d||{},ok=typeof Ls.ok==='function'?Ls.ok(d):Ls.ok,ans=Ls.a(d);
   modal(`<div class="bz-ch"><div class="n">📘 ${L('Школа Людмилы · урок ','Lyudmila’s School · lesson ')+n}</div><h2 style="font-size:24px">${Ls.t()}</h2></div>
@@ -1603,7 +1607,7 @@ function onDay(){const W=w();if(!W)return;cashHist();
 function bikeAsk(W){const q=E.EQ.bike;let vp=0;try{vp=E.bizForecast(W,'vend').prof;}catch(e){}const vc=capOf('vend')||0;
   const go=()=>{if(act('eqBuy','bike')==='ok'){snd('coin');toast('🚲 '+L('Куплено: велосипед. Следующая цель — кофейный автомат','Bought: a bicycle. Next goal — a coffee machine'),3600);}};
   const ok=()=>tst('🎯 '+L('Цель: кофейный автомат — велосипед можно купить позже в «Заказах»','Goal: a coffee machine — you can buy the bicycle later in “Orders”'),4200);
-  queue(()=>{if(!w()||w().cash<q.c)return ok();try{UI.adv({hold:1,mood:'calm',html:esc(L(`Хватает на велосипед (${M(q.c)}): курьеру платят 3 700 вместо 3 100 за смену, окупится за ~30 смен. А кофейный автомат${vc?' ('+M(vc)+')':''} работает сам и вашего времени не занимает${vp>0?' — примерно +'+Mr(vp)+' в месяц':''}. Я бы копила на автомат. Решайте сами.`,`You can afford a bicycle (${M(q.c)}): couriers get 3,700 instead of 3,100 a shift, it pays back in ~30 shifts. A coffee machine${vc?' ('+M(vc)+')':''} runs by itself and needs no hands${vp>0?' — about +'+Mr(vp)+' a month':''}. I’d save for the machine. Your call.`)),go,goLbl:'🚲 '+L('Купить велосипед','Buy the bicycle'),okLbl:'☕ '+L('Копить на автомат','Save for the machine'),okMain:1,ok});}catch(e){ok();}});}
+  queue(()=>{if(!w()||w().cash<q.c)return ok();try{UI.adv({mood:'calm',html:esc(L(`Хватает на велосипед (${M(q.c)}): курьеру платят 3 700 вместо 3 100 за смену, окупится за ~30 смен. А кофейный автомат${vc?' ('+M(vc)+')':''} работает сам и вашего времени не занимает${vp>0?' — примерно +'+Mr(vp)+' в месяц':''}. Я бы копила на автомат. Решайте сами.`,`You can afford a bicycle (${M(q.c)}): couriers get 3,700 instead of 3,100 a shift, it pays back in ~30 shifts. A coffee machine${vc?' ('+M(vc)+')':''} runs by itself and needs no hands${vp>0?' — about +'+Mr(vp)+' a month':''}. I’d save for the machine. Your call.`)),go,goLbl:'🚲 '+L('Купить велосипед','Buy the bicycle'),okLbl:'☕ '+L('Копить на автомат','Save for the machine'),okMain:1,ok});}catch(e){ok();}});}
 function gigRes(e){if(!e||!e.t)return;const w0=GIG_WHY[e.why],good=e.ok&&!e.why,acc=Math.round(e.acc!=null?e.acc:(e.net||0)),n=Math.round(e.net!=null?e.net:acc);
   // M30: тост = та же сумма, что на доске («на руки» после налога); на счёт сразу приходит больше — налог спишется в конце месяца (первые 3 раза поясняем с числами)
   let tx='';const tw=w(),tr=tw&&tw.taxm==='usn6'?'6 %':tw&&tw.taxm==='usn15'?'15 %':'4 %';
@@ -1792,7 +1796,7 @@ function init(){css();const m=$$('main');
   GAME.on('gig',gigRes);
   GAME.on('day',afDay);GAME.on('offline',()=>{const W=w();afT=W&&W.afS&&W.afS.t!=null?W.afS.t:-1;});   // M32: тост автофакторинга
   window.BIZUI.ready=true;}
-window.BIZUI={ready:false,openChapter,init,render,after,home,hname,back,early:early1,openTrial,
+window.BIZUI={ready:false,dotGo,openChapter,init,render,after,home,hname,back,early:early1,openTrial,
   navKey(s){if(s==='biz')return V.biz==='pt'?'pt'+V.id:V.biz==='cat'?'cat':'';if(s==='net'&&V.biz==='links')return 'links';if(s==='net'&&V.biz==='pt'&&V.from==='opt')return 'pt'+V.id;if(s==='net'||s==='pit')return V.biz==='pt'&&V.from===s?'pt'+V.id:'';return '';},   // M39: экран связей, карточка машины из парка   // M37: подвид для памяти прокрутки (ui.js navKey)
   openClose:()=>false,advFresh,closeExtra,adAllowed,offAd,offline,advOpen,idle,
   // вход снаружи: телефон и сюжет

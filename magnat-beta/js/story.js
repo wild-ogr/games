@@ -196,7 +196,8 @@ const partA=W=>Math.floor(Math.max(0,cashFree(W))*.5/1000)*1000;
 const okCash=(W,F,q)=>!acctOk(W)?'no':cashFree(W)>=q.a.a?true:'cash';
 const SC={
   pro:{w:'all',big:1,kind:'reu',when:(W,F)=>F.rags&&W.t>=6,prm:(W,F)=>({i:reuSnap(W,F,10),y:10,m:W.m})},
-  vit1:{w:'vit',when:(W,F)=>F.rags&&si(W)===0&&W.t>=20&&!!W.me,prm:()=>({a:3000}),
+  vit1:{w:'vit',when:(W,F)=>F.rags&&si(W)===0&&W.t>=20&&!!W.me&&!(W.me.out>0)&&!(W.me.rest>0),   // M46: подработку не зовут на больничном/выходном
+   prm:()=>({a:3000}),
     o:{a:{fx:(W,F,q)=>{if(W.me){const a=recv(W,q.a.a,'sales');pl(W,'rev',a);sgAdd(W,'gig',a,a);W.me.tb=(W.me.tb||0)+a;}yes(F,'vit');return tr(F,'vit',3);}},
        b:{fx:()=>0}}},
   owl1:{w:'owl',when:(W,F)=>F.rags&&si(W)<=1&&W.m-F.m0>=2&&!!E.cardLimit&&E.cardLimit(W)>0&&!W.loans.some(l=>l.card),prm:W=>({a:E.cardLimit(W)}),

@@ -350,7 +350,7 @@ function hol(t,m){return t==='flow'&&(m===1||m===2||m===8||m===11);}
 function econ(W,b,k,m,noEv){const B=BIZ[b.t],t=b.t;k=k||b.k||{};m=m==null?month(W):m;const C=CITY[b.c]||CITY.kuz;
   let dem=C.dem*(1+.1*((b.rt||3.5)-3))*season(t,m,k);if(C.tour&&m>=5&&m<=7&&B.seg==='retail')dem*=C.tour;
   if(!noEv&&b.ev){for(const x in b.ev){const e=b.ev[x];if(e&&e[0]>W.m&&e[1])dem*=e[1];}}
-  if(!noEv&&b.ad>W.t)dem*=1+PROMO_K;   // «📺 Реклама точки»: +20 % покупателей, пока идёт
+  if(!noEv&&b.ad>W.t)dem*=1+PROMO_K;   // «📺 Реклама точки»: +15 % покупателей (M45), пока идёт
   const ld=E.linkDisc&&SMALL.indexOf(t)>=0?E.linkDisc(W,b):0,disc=chainDisc(W,t)+ld;let rev=0,vc=0,sp=0,f=(B.rent*C.rent)+B.staff,risk=0;   // M39: + связи опта (с потолком)   // M17: управляющий — доля прибыли (mgrCut), не оклад
   const o=opt(B,'knob',k[B.knob?B.knob.k:'']),o2=opt(B,'k2',k[B.k2?B.k2.k:'']);if(o2.f)f+=o2.f;
   if(t==='vend'){dem*=vendSpot(W,b);rev=B.R*o.d*dem;vc=rev*B.v*(1-disc);f+=o.f*C.rent;if(vendOps(W,W.biz.indexOf(b)<0?1:0))f+=VEND_OP/10;if(o.rk)risk=o.rk*o.rc;risk+=.4*3e3;}
@@ -1060,25 +1060,28 @@ function bizMiles(W,st){st=st||W.st;const a=MILES[st];if(!a||W.ned&&st!=='nedra'
 /* ---------------- ускорения за 💎 (цены и списание 💎 — в интерфейсе: GAME.spend, потом GAME.act) ----------------
    CR_BIZ: срочный заказ 3 (раз в игровой месяц, оплата ×1,5), ускорить открытие точки 4 (−5 дней, раз на точку), второе дыхание 2 (+50 сил, раз в игровую неделю) */
 const CR_BIZ={urgent:3,open:4,pit:10,breath:2};
-function urgentGigOk(W){return !!W.me&&!W.ned&&W.me.urgM!==W.m;}
+// M45: срочный заказ и «второе дыхание» (за ролик и за 💎) — тоже только в «Карьере»: 💎 набора и рекламы в «Своём деле» уходили на срочный заказ каждый месяц
+function urgentGigOk(W){return !!W.me&&!W.ned&&W.st==='gig'&&W.me.urgM!==W.m;}
 function urgentGig(W){if(!urgentGigOk(W))return null;const M=W.me,ts=GL2.filter(t=>t!=='resale'&&t!=='flyer'&&gigOk(W,t)&&gigSeason(W,t));const t=ts[Math.floor(R(W)*ts.length)]||'courier';
   const g=mkGig(W,t);g.pay=rnd0(g.pay*1.5/50)*50;g.G=rnd0(g.G*1.5);g.urg=1;g.exp=W.t+3;M.board.unshift(g);if(M.board.length>5)M.board.pop();M.urgM=W.m;return g;}
 function bizSpeedOk(W,id){const b=W.biz.find(x=>x.id===id);return !!b&&b.st==='b'&&!b.sp&&b.left>1;}
 function bizSpeed(W,id){if(!bizSpeedOk(W,id))return 'no';const b=W.biz.find(x=>x.id===id);b.sp=1;const cut=Math.min(PITS.indexOf(b.t)>=0?15:5,b.left-1);b.left-=cut;if(b.tot)b.tot=Math.max(b.left,b.tot);return 'ok';}
-function breathOk(W){return !!W.me&&!W.ned&&!(W.me.brT>W.t-7);}
+function breathOk(W){return !!W.me&&!W.ned&&W.st==='gig'&&!(W.me.brT>W.t-7);}
 function breath(W){if(!breathOk(W))return 'no';W.me.en=Math.min(enMax(W),W.me.en+50);W.me.brT=W.t;return 'ok';}
 /* ---------------- награды за рекламу (спецификация 5.7; кнопки «📺 … за рекламу» — только при adOk(), награда — в колбэке досмотра) ----------------
    Здесь — только модель и лимиты в игровом времени (раз в месяц, раз на точку/заказ/объект). Паузы мест в реальных минутах — GAME.adWait (S.adT, M31).
    Всё умеренно: рейтинг недели рекламой не покупается (критерий net_ad в tools/sim-rags.js: ≤ +15 % капитала, недра не раньше чем на 6 мес.). */
-const PROMO_K=.2,PROMO_D=15,AD_SPD=5;
+const PROMO_K=.15,PROMO_D=15,AD_SPD=5;   // M45: «реклама точки» +15 % (было +20 %): net_ad к net на зёрнах 1–20 1,18 → 1,13
 // «📺 ×2 за этот заказ»: заказчик доплачивает столько же, сколько заказ даёт на руки — сразу (раз в игровой месяц; не перепродажа, не «постоянный клиент»)
-function gigX2Ok(W,id){const M=W.me;if(!M||W.ned||M.x2M===W.m)return false;const g=M.gigs.find(x=>x.id===id);return !!g&&!g.x2&&!g.auto&&g.t!=='resale'&&g.pay>0;}
+// M45 (баланс): «×2» и «Проверить сделку» — только в главе «Карьера» (W.st==='gig'): с подержанным автоматом M38 ранний перевес рекламы
+// в «Карьере» больше не выравнивается и копится сложным процентом (net_ad к net 1,25 при пределе 1,15); в «Своём деле» заказы — подработка
+function gigX2Ok(W,id){const M=W.me;if(!M||W.ned||W.st!=='gig'||M.x2M===W.m)return false;const g=M.gigs.find(x=>x.id===id);return !!g&&!g.x2&&!g.auto&&g.t!=='resale'&&g.pay>0;}
 function gigX2(W,id){if(!gigX2Ok(W,id))return 0;const M=W.me,g=M.gigs.find(x=>x.id===id);g.x2=1;M.x2M=W.m;
   const G=rnd0(g.pay/(1-NPD));inc(W,G,'gig',true);return g.pay;}   // выручка заказа (доход НПД), «на руки» после налога ≈ g.pay
 // «📺 Людмила проверит сделку»: точный риск «не продастся» у перепродажи (у каждой сделки свой, 4–26 %; без проверки видно только «около 15 %»)
-function dealChkOk(W,id){const M=W.me;if(!M||W.ned)return false;const g=M.board.find(x=>x.id===id);return !!g&&g.t==='resale'&&!g.chk;}
+function dealChkOk(W,id){const M=W.me;if(!M||W.ned||W.st!=='gig')return false;const g=M.board.find(x=>x.id===id);return !!g&&g.t==='resale'&&!g.chk;}
 function dealChk(W,id){if(!dealChkOk(W,id))return null;const g=W.me.board.find(x=>x.id===id);g.chk=1;return typeof g.rk==='number'?g.rk:.15;}
-// «📺 Реклама точки»: +20 % покупателей на 15 дней, раз в игровой месяц на точку (малый бизнес; не склад, не стройбаза, не карьер)
+// «📺 Реклама точки»: +15 % покупателей (M45; было +20 %) на 15 дней, раз в игровой месяц на точку (малый бизнес; не склад, не стройбаза, не карьер)
 function bizPromoOk(W,id){const b=W.biz.find(x=>x.id===id);return !!b&&SMALL.indexOf(b.t)>=0&&b.st==='w'&&!(b.down>0)&&b.adM!==W.m&&!(b.ad>W.t);}
 function bizPromo(W,id){if(!bizPromoOk(W,id))return 'no';const b=W.biz.find(x=>x.id===id);b.ad=W.t+PROMO_D;b.adM=W.m;return 'ok';}
 // «📺 Ускорить открытие»: точка — то же, что за 💎 (−5 дней, раз на точку: либо 💎, либо реклама); карьер — отдельно от 💎, −5 дней, раз на карьер

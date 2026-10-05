@@ -245,7 +245,8 @@ function service(){const w=W(),p=P();if(!w||!p)return;
         `Payment for ${mn} taken: ${mE(rp+it)} (principal ${mE(rp)}, interest ${mE(it)}). Debt left — ${mE(d)}.`,[['bank']],{push:false});}}
   // Михалыч: вызов «мастер на час» на доске (не чаще раза в 10 дней)
   // не чаще раза в 15 игровых дней и только если заказ провисит ещё хотя бы 2 дня; исчез с доски — сообщение помечается «уже неактуально»
-  if(early()&&w.me&&Array.isArray(w.me.board)&&w.t-(p.mh==null?-99:p.mh)>=15){const g=w.me.board.find(x=>x.t==='handy'&&x.id!==p.mg&&x.exp-w.t>=2);
+  if(early()&&w.me&&!(w.me.out>0)&&!(w.me.rest>0)&&Array.isArray(w.me.board)&&w.t-(p.mh==null?-99:p.mh)>=15){   // M46: не на больничном/выходном
+  const g=w.me.board.find(x=>x.t==='handy'&&x.id!==p.mg&&x.exp-w.t>=2);
     if(g&&(!E.gigOk||E.gigOk(w,'handy'))){p.mg=g.id;p.mh=w.t;
       say('mih',`Есть вызов — мастер на час, ${mR(g.pay)} на руки. Возьмёшь, пока не увели?`,`There’s a call-out — handyman for an hour, ${mE(g.pay)} in hand. Take it before someone else does?`,[['gigs']],{g:g.id});}}
   // M18: Людмила один раз объясняет, зачем друзья (главы 1–2): когда друг впервые помог или попросил, но не раньше 2-го месяца; одно письмо, без окон
@@ -343,9 +344,11 @@ const ICO={
   phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>'};
 function bankOn(){const w=W();if(!w)return false;if(bankLoans(w).length)return true;try{return E.loanOffer(w).max>0;}catch(e){return false;}}
 function newsUnread(){return Object.keys(feedNew()).length;}
+// M46: «Друзья» (приложение телефона и кнопка в нижнем меню) — одно число: вопросы друзей; wait — все уже видели (оранжевое «ждут ответа»)
+function frNew(){const w=W(),pp=P();if(!SY()||!w||!w.fr)return {n:0,wait:false};const fq=(w.fr.q||[]).filter(q=>FRS.indexOf(q.w)>=0);return {n:fq.length,wait:!!(fq.length&&pp&&fq.every(q=>pp.qr[q.id]))};}
 function apps(){const w=W(),a=[['orders',T('Заказы','Jobs'),early()&&w.me?(w.me.board||[]).length:(w&&w.offers||[]).length,0]];
   if(bankOn())a.push(['bank',T('Банк','Bank'),w&&w.odM>0?1:0,w&&w.odM>0]);
-  if(SY()&&window.FRUI&&w&&w.fr){const fq=(w.fr.q||[]).filter(q=>FRS.indexOf(q.w)>=0),pp=P();a.push(['friends',T('Друзья','Friends'),fq.length,1,pp&&fq.every(q=>pp.qr[q.id])?'wait':'']);}   // M18: окно «Друзья» (js/friends-ui.js); M43: все вопросы уже видели — оранжевая метка «ждут ответа»
+  if(SY()&&window.FRUI&&w&&w.fr){const f=frNew();a.push(['friends',T('Друзья','Friends'),f.n,1,f.wait?'wait':'']);}   // M18: окно «Друзья» (js/friends-ui.js); M43: все вопросы уже видели — оранжевая метка «ждут ответа»
   a.push(['cal',T('Календарь','Calendar'),0,0],['news',T('Новости','News'),newsUnread(),1]);return a;}
 function appsHtml(){return '<div class="ph-apps">'+apps().map(x=>`<button class="ph-app noenter" data-p="app" data-a="${x[0]}"><span class="ph-ai">${ICO[x[0]]}${x[2]&&x[3]?`<i class="ph-b${x[4]?' '+x[4]:''}">${x[2]>9?'9+':x[2]}</i>`:''}</span><span class="ph-al">${x[1]}</span></button>`).join('')+'</div>';}
 function rowHtml(id,full){const c=who(id),l=lastOf(id),u=unread(id),wq=u?0:waitN(id);
@@ -696,7 +699,7 @@ window.PHONE={open:(v,a)=>open(v,a),close,back,render:el=>renderEmbed(el),unread
   say:(id,ru,e2,acts,o)=>say(id,ru,e2,acts,o),push:(id,text,o)=>push(id,text,o||{imp:true}),poll,autoTab:true,
   get isOpen(){return isOn;},_cal:cal,_state:()=>S.ph,
   // M43: учёт «нового» для других модулей и проверок
-  seenQ,markFeed,newsUnread,wait:waitAll,need:needAll,chatUnread:unread,
+  seenQ,markFeed,newsUnread,frNew,wait:waitAll,need:needAll,chatUnread:unread,
   _pq:()=>PQ.map(x=>({id:x.id,k:x.ref?x.ref.k:'',n:x.ref&&x.ref.n,q:x.ref&&x.ref.q,imp:x.imp,age:Date.now()-x.at}))};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();

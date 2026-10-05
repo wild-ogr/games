@@ -311,7 +311,7 @@ const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':
 // бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta3' (бета-1 — 'beta1', бета-2 — 'beta2'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta10':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta11':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 /* STAT v1.2 (M44): «монеты» статистики в Магнате — 💎 (S.cr): cn в start, cb в pause, earn по источникам (js/stat-hooks.js, GAME 'cr'; покупки — payAdd).
    progress — после облака или готовности SDK, но не позже 2,5 с (statProg; pl — глава 1–5, bt — облако хоть раз отдавало сохранение: метка устройства magnat-cl) */
 STAT.bal(S.cr|0);
@@ -1019,10 +1019,34 @@ let mFocus=null;
 // (в проверке check.py с помощником __chk — без паузы, если не задано window.__winGap)
 // M38 (a45): пауза «читаю» — человек сам листает экран (палец, колесо, клавиши) — игровое время стоит ещё READ_MS после последнего листания
 // (GAME.hold 'read'; офлайн и симуляторы не задевает: S.lastT идёт всегда, модель та же). Программная прокрутка паузу не ставит.
-const READ_MS=6000;(function(){let inT=0,rdT=null;const mark=()=>{inT=Date.now();};
+// M46 (владелец, бета-10: «постоянно включает паузу»): пауза «читаю» — мягкая. Короткая прокрутка (к кнопке, по списку) время НЕ останавливает;
+// пауза — только если человек листает дольше READ_ARM (серия касаний с промежутками < READ_GAP), держится READ_MS после последнего листания
+// и не дольше READ_MAX подряд (потом время идёт, пока не будет READ_GAP без листания). Пока стоит — заметная плашка «⏸ Пауза — вы читаете · ▶ Продолжить»
+// (#rdP под шапкой); «Продолжить» снимает паузу и не ставит её READ_OFF. В ⚙ — «⏸ Пауза, пока листаю» (S.readP=false — выключить).
+const READ_MS=4000,READ_ARM=3500,READ_GAP=5000,READ_MAX=20000,READ_OFF=60000;
+const RD={s0:0,last:0,on0:0,off:0,t:null};
+function rdHold(){try{return !!(window.GAME&&GAME.hold&&GAME.hold.has('read'));}catch(e){return false;}}
+function rdUi(){let b=$('rdP');const on=rdHold()&&!modalOn&&!document.hidden;
+  if(!on){if(b)b.classList.remove('on');return;}
+  if(!b){b=document.createElement('div');b.id='rdP';b.setAttribute('role','status');document.body.appendChild(b);}
+  const h=`<span>⏸ ${L('Пауза — вы читаете','Paused — you’re reading')}</span><button class="noenter" id="rdGo">▶ ${L('Продолжить','Continue')}</button>`;if(b.dataset.l!==LANG){b.innerHTML=h;b.dataset.l=LANG;$('rdGo').onclick=rdGo;}
+  try{const r=$('hdr').getBoundingClientRect();b.style.top=Math.max(0,Math.round(r.bottom)+6)+'px';}catch(e){}b.classList.add('on');}
+function rdOff(){clearTimeout(RD.t);RD.t=null;try{GAME.hold.delete('read');}catch(e){}rdUi();try{window.UI&&UI.hdr&&UI.hdr();}catch(e){}}
+function rdGo(e){if(e){e.preventDefault();e.stopPropagation();}resumeNow();try{SND.tap();}catch(x){}}
+// M46 (владелец: «пауза включается — её не снимешь»): кнопка скорости ×1/×2 при авто-паузе меняла скорость, а «читаю» держало время (и ставилось снова от
+// следующего листания) — время не шло. resumeNow() — снять все мягкие авто-паузы («читаю», совет Людмилы, словарик) и не ставить «читаю»,
+// пока игрок сам не откроет окно (modal после касания). Зовут: кнопка скорости, «▶ Продолжить», нажатие на строку дня в шапке.
+function resumeNow(){RD.off=Infinity;clearTimeout(RD.t);RD.t=null;try{GAME.hold.delete('read');GAME.hold.delete('advb');}catch(e){}
+  try{if(window.GLOSS&&GLOSS.isOpen())GLOSS.hide();}catch(e){}rdUi();try{window.UI&&UI.hdr&&UI.hdr();}catch(e){}
+  try{return GAME.running();}catch(e){return false;}}
+(function(){let inT=0;const mark=()=>{inT=Date.now();};
   try{for(const ev of ['touchmove','wheel','keydown'])document.addEventListener(ev,mark,{passive:true,capture:true});
-    document.addEventListener('scroll',()=>{if(Date.now()-inT>1200||S.readP===false)return;let G=null;try{G=GAME;}catch(e){}if(!G||!G.hold)return;
-      G.hold.add('read');clearTimeout(rdT);rdT=setTimeout(()=>{try{G.hold.delete('read');}catch(e){}},READ_MS);},{passive:true,capture:true});}catch(e){}})();
+    document.addEventListener('scroll',()=>{const now=Date.now();if(now-inT>1200||S.readP===false)return;let G=null;try{G=GAME;}catch(e){}if(!G||!G.hold)return;
+      if(now-RD.last>READ_GAP){RD.s0=now;if(!G.hold.has('read'))RD.on0=0;}RD.last=now;   // новая серия листания
+      if(now<RD.off||now-RD.s0<READ_ARM)return;   // «Продолжить» нажали недавно / листает недолго — время идёт
+      if(!G.hold.has('read')){if(RD.on0&&now-RD.on0>=READ_MAX)return;RD.on0=now;G.hold.add('read');try{window.UI&&UI.hdr&&UI.hdr();}catch(e){}}
+      else if(now-RD.on0>=READ_MAX){rdOff();return;}   // не залипает: 20 с подряд — хватит
+      rdUi();clearTimeout(RD.t);RD.t=setTimeout(rdOff,READ_MS);},{passive:true,capture:true});}catch(e){}})();
 let mCloseT=0;function winCalm(){const g=window.__winGap!=null?window.__winGap:(window.__chk?0:5000);return !modalOn&&Date.now()-mCloseT>=g;}
 /* M37: память прокрутки окон. Цепочка окон одного показа (до hideModal + 0,6 с) — стек {s:подпись, y, my, n}; подпись — data-nav или заголовок h2 + выбранная вкладка + начало первого абзаца (без цифр).
    Новое окно с подписью из стека — это «назад» (или перерисовка того же окна): позиция, где был; иначе — вперёд, сверху. Вложенные прокрутки (.lb и т. п.) — тоже. */
@@ -1046,7 +1070,8 @@ function mPlace(m,c){const s=mSig(c);let i=-1;if(s)for(let j=mNav.length-1;j>=0;
   for(const k in e.n){const p=k.split('|'),x=c.querySelectorAll(p[0])[+p[1]];if(x){x.scrollLeft=e.n[k][0];x.scrollTop=e.n[k][1];}}}
 function hideModal(){if(modalOn){try{mKeep();}catch(e){}mNavT=Date.now();}const m=$('modal');if(m)m.classList.remove('on');modalOn=false;document.body.classList.remove('mon');mCloseT=Date.now();modalRe=null;YG.start();setTimeout(()=>toastNext(1),400);
   try{const c=$('mcard');if(c)c.style.transform='';if(mFocus&&document.contains(mFocus)&&mFocus.focus)mFocus.focus({preventScroll:true});}catch(e){}mFocus=null;}
-function modal(html){PAY.re=null;modalRe=null;const m=$('modal'),c=$('mcard');if(!m||!c)return;const was=modalOn;if(!was)mFocus=document.activeElement;
+function modal(html){if(RD.off===Infinity&&Date.now()-tapT<700)RD.off=0;   // M46: игрок сам открыл окно — «читаю» снова можно
+  PAY.re=null;modalRe=null;const m=$('modal'),c=$('mcard');if(!m||!c)return;const was=modalOn;if(!was)mFocus=document.activeElement;
   try{if(was)mKeep();else if(Date.now()-mNavT>600)mNav=[];}catch(e){mNav=[];}
   c.innerHTML=html;c.style.transform='';m.classList.add('on');m.classList.toggle('re',was);modalOn=true;document.body.classList.add('mon');try{mPlace(m,c);}catch(e){c.scrollTop=0;m.scrollTop=0;}YG.stop();
   try{c.setAttribute('role','dialog');c.setAttribute('aria-modal','true');const h=c.querySelector('h2');if(h){if(!h.id)h.id='mTitle';c.setAttribute('aria-labelledby',h.id);}else c.removeAttribute('aria-labelledby');c.tabIndex=-1;c.focus({preventScroll:true});}catch(e){}}
@@ -1103,6 +1128,7 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('меньше анимации и движения','less animation and motion')}</small></span>${on(calm())}</button>
+    <button class="set" id="stReadP"><span>⏸ ${L('Пауза, пока листаю','Pause while I scroll')}<br><small>${L('время стоит, пока вы долго читаете экран','time stops while you read a long screen')}</small></span>${on(S.readP!==false)}</button>
     <button class="set" id="stNoIco"><span>🔤 ${L('Без значков','No icons')}<br><small>${L('слова вместо значков: «силы 60» вместо «⚡ 60»','words instead of icons: “energy 60” instead of “⚡ 60”')}</small></span>${on(!!S.noIco)}</button>
     ${IS_VK?'':`<button class="set" id="stLang"><span>🌐 Язык / Language</span><i>${LANG==='en'?'EN':'RU'}</i></button>`}
     ${window.THEME?`<button class="set" id="stTheme"><span>🎨 ${L('Оформление','Themes')}<br><small>${L('сейчас: ','now: ')}${(THEME.list().filter(t=>t.cur)[0]||{name:''}).name}</small></span><i class="go">›</i></button>`:''}
@@ -1121,6 +1147,7 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stBig').onclick=()=>{S.bigF=((S.bigF|0)+1)%3;save();applyA11y();openSettings();};
+  $('stReadP').onclick=()=>{S.readP=S.readP===false;save();if(S.readP===false)rdOff();openSettings();};   // M46
   $('stNoIco').onclick=()=>{S.noIco=!S.noIco;save();applyA11y();try{window.uiRefresh&&window.uiRefresh();}catch(e){}openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Turned on in your device settings (“reduce motion”)'));return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   if($('stLang'))$('stLang').onclick=()=>{const l=LANG==='en'?'ru':'en';LANG_MAN=l;try{localStorage.setItem(LANG_KEY,l);}catch(e){}setLang(l);};

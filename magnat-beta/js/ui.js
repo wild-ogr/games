@@ -207,10 +207,17 @@ const TAB_DEF=[
   {id:'fin',ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M10 17V8h3.5a2.5 2.5 0 010 5H9M9 15h5"/></svg>',ru:'Финансы',en:'Finance',show:()=>true}];
 const BZ=()=>window.BIZUI&&BIZUI.ready?BIZUI:null,HOME=()=>{const b=BZ();return b?b.home():'map';};
 const TABS_ON=()=>TAB_DEF.filter(t=>{try{return t.show();}catch(e){return true;}}).map(t=>t.id);
-function buildNav(){const n=$$('nav'),on=TABS_ON(),key=on.join()+LANG;if(n.dataset.k===key)return;n.dataset.k=key;
-  n.innerHTML=TAB_DEF.filter(t=>on.indexOf(t.id)>=0).map(t=>`<button data-tab="${t.id}"${cur===t.id||(cur==='reg'&&t.id==='map')?' class="on"':''}>${t.ico}<span>${L(t.ru,t.en)}</span></button>`).join('');
+// M46 (владелец, бета-10: «друзей вывести из скрытого меню»): «👥 Друзья» — кнопка нижнего меню (открывает окно друзей, не вкладку), пока в меню ≤ 4 вкладок
+// (главы 1–3) или меню сбоку (≥ 700 px); точка — из единого учёта M43 (PHONE.frNew: красная — есть невиденный вопрос, оранжевая — ждут ответа)
+const FR_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.5 14.2c2.6-.3 4.6 1.2 5 4.3"/></svg>';
+function frNavOn(on){try{const W=w();if(!W||!W.fr||!W.fr.v||!window.FRUI||!FRUI.open)return false;if(BZ()&&BZ().early&&BZ().early())return false;return (on||TABS_ON()).length<=4||window.innerWidth>=700;}catch(e){return false;}}
+function buildNav(){const n=$$('nav'),on=TABS_ON(),fr=frNavOn(on),key=on.join()+LANG+(fr?'|fr':'');if(n.dataset.k===key)return;n.dataset.k=key;
+  n.innerHTML=TAB_DEF.filter(t=>on.indexOf(t.id)>=0).map(t=>`<button data-tab="${t.id}"${cur===t.id||(cur==='reg'&&t.id==='map')?' class="on"':''}>${t.ico}<span>${L(t.ru,t.en)}</span></button>`).join('')
+    +(fr?`<button data-fr="1" class="nav-fr" aria-label="${L('Друзья','Friends')}">${FR_ICO}<span>${L('Друзья','Friends')}</span></button>`:'');
+  {const b=n.querySelector('[data-fr]');if(b)b.onclick=()=>{snd('tap');if(window.PHONE&&PHONE.isOpen&&innerWidth<900)PHONE.close();FRUI.open('nav');};}
   // телефон на узком экране закрывает весь экран: другая вкладка меню сначала закрывает его (на широком он сбоку — не трогаем)
-  n.querySelectorAll('button').forEach(b=>b.onclick=()=>{snd('tap');if(b.dataset.tab!=='phone'&&window.PHONE&&PHONE.isOpen&&innerWidth<900)PHONE.close();go(b.dataset.tab);});}
+  n.querySelectorAll('button[data-tab]').forEach(b=>b.onclick=()=>{snd('tap');if(b.dataset.tab!=='phone'&&window.PHONE&&PHONE.isOpen&&innerWidth<900)PHONE.close();const dt=!!b.querySelector('.dot');go(b.dataset.tab);
+    if(dt&&BZ()&&BZ().dotGo)setTimeout(()=>{try{BZ().dotGo(b.dataset.tab);}catch(e){}},120);});}   // M46: точка на вкладке ведёт прямо к тому, что её зажгло
 let cur='map',curReg='kuz',hlSel=null,hlTut=false,hlScroll=false;const Q=[];const watch={};
 
 /* ===== M37: память прокрутки. Ключ вида = экран (+регион) + подвид модуля (BIZUI/FIN/REALTY_UI .navKey(экран)).
@@ -288,14 +295,28 @@ function hdr(){const W=w();if(!W)return;hnameFit();
   const run=GAME.running(),fr=Math.min(1,(W.d+GAME.dayFrac())/E.DAYS);
   $$('hBar').style.width=(fr*100).toFixed(1)+'%';
   $$('hdr').classList.toggle('stop',!run);
-  $$('hMon').textContent=FMT.date(W.m);const nar=window.innerWidth<700,dn=(nar&&window.innerWidth>=380?FMT.mon(W.m)+' · ':'')+(window.innerWidth<370||(nar&&!run)?L('день ','day ')+(W.d+1)+'/'+E.DAYS:L('день ','day ')+(W.d+1)+L(' из ',' of ')+E.DAYS);const hn0=document.querySelector('#hdr .hname'),chN=hn0&&hn0.classList.contains('tiny')&&BZ()&&BZ().hname(W);$$('hLeft').textContent=(chN?chN+' · ':'')+(run?dn:'⏸ '+dn);   // на 320 px название главы не влезает в шапку — пишем его у дня (аудит M3)
+  $$('hMon').textContent=FMT.date(W.m);hLeftFit(W,run);
   const cr=$$('crCnt');if(cr)cr.textContent=GAME.cr();}
+// M46 (владелец, бета-10: «день наверху — не видно число»): на 400 px «Своё дело · ⏸ июл 28 · день 1 из 30» резалось многоточием до «д…».
+// Число дня — главное: пробуем подписи от длинной к короткой и берём первую, что влезает целиком (название главы и месяц — только если есть место).
+function hLeftFit(W,run){const e=$$('hLeft');if(!e)return;const d=W.d+1,N=E.DAYS,p=run?'':'⏸ ',nar=window.innerWidth<700;
+  const hn0=document.querySelector('#hdr .hname'),chN=hn0&&hn0.classList.contains('tiny')&&BZ()&&BZ().hname(W);   // на узком название главы не влезает в шапку — пишем его у дня (аудит M3)
+  const full=L('день ','day ')+d+L(' из ',' of ')+N,sh=L('день ','day ')+d+'/'+N,mo=FMT.mon(W.m)+' · ',c=chN?chN+' · ':'';
+  const v=nar?[c+p+mo+full,c+p+mo+sh,c+p+full,c+p+sh,p+mo+sh,p+full,p+sh,p+d+'/'+N]:[c+p+full,c+p+sh,p+full,p+sh];
+  const key=v[0]+'|'+window.innerWidth+'|'+(($$('hCash')||{}).textContent||'')+'|'+(S.bigF|0)+'|'+document.documentElement.className+'|'+document.body.classList.contains('noico')+'|'+(($$('spdBtn')||{}).textContent||'');
+  const over=()=>e.clientWidth>0&&e.scrollWidth>e.clientWidth+1;let i=hLeftFit.k===key?v.indexOf(e.dataset.v):-1;
+  if(i>=0&&!over())return;i=i<0?0:i+1;hLeftFit.k=key;   // ⏸ icons.js меняет на значок позже (шире) — поэтому проверка ещё раз через 80 мс и шаг к более короткой подписи
+  for(;i<v.length;i++){e.textContent=v[i];e.dataset.v=v[i];if(!over())break;}
+  clearTimeout(hLeftFit.t);hLeftFit.t=setTimeout(()=>{try{if(over()&&v.indexOf(e.dataset.v)<v.length-1)hLeftFit(W,run);}catch(x){}},80);}
 function navDots(){const W=w();if(!W)return;buildNav();
   const bad=W.obj.some(o=>(o.st==='b'&&o.halt)||(o.up&&o.up.halt)||(o.st==='w'&&!o.off&&o.why&&o.why!=='acc'));
   const auc=W.auc.some(a=>a.finder==='you'||(a.lead&&a.lead!=='you'&&a.you));
   const set=(t,on)=>{const b=document.querySelector('#nav [data-tab="'+t+'"]');if(!b)return;let d=b.querySelector('.dot');if(on&&!d){d=document.createElement('i');d.className='dot';b.appendChild(d);}else if(!on&&d)d.remove();};
   const nof=W.offers.some(o=>!offSeen[o.id]);if(cur==='market')for(const o of W.offers)offSeen[o.id]=1;
-  set('obj',bad);set('map',auc&&cur!=='map'&&cur!=='reg');set('market',nof&&cur!=='market');}
+  set('obj',bad);set('map',auc&&cur!=='map'&&cur!=='reg');set('market',nof&&cur!=='market');
+  {const b=document.querySelector('#nav [data-fr]');if(b){let f={n:0,wait:false};try{if(window.PHONE&&PHONE.frNew)f=PHONE.frNew();}catch(e){}let d=b.querySelector('.dot');   // M46: точка «Друзей» — единый учёт M43
+    if(f.n&&!d){d=document.createElement('i');d.className='dot';b.appendChild(d);}else if(!f.n&&d){d.remove();d=null;}if(d)d.classList.toggle('wait',!!f.wait);
+    const al=L('Друзья','Friends')+(f.n?' — '+(f.wait?L('ждут ответа','waiting for your reply'):L('новое','new')):'');if(b.getAttribute('aria-label')!==al)b.setAttribute('aria-label',al);}}}
 const offSeen={};
 
 /* ================= карта ================= */
@@ -1071,10 +1092,15 @@ function openRename(){const W=w();modal(`<h2>✎ ${L('Название холд�
 /* ================= скорость времени: ⏸ / ×1 / ×2 (GAME.setSpeed, если есть) ================= */
 function spdNow(){try{return typeof GAME.speed==='function'?GAME.speed():1;}catch(e){return 1;}}
 function spdBtnUpd(){const b=$$('spdBtn');if(!b)return;const ok=typeof GAME.setSpeed==='function';b.style.display=ok?'':'none';if(!ok)return;
-  const v=spdNow(),bt=v===0?'⏸':v===2?'×2':'×1',bh=`<small class="hb-cap">${v===0?L('пауза','paused'):L('скорость','speed')}</small><b>${bt}</b>`;if(b.innerHTML!==bh)b.innerHTML=bh;   // M41: «×1» с подписью «скорость» (игрок 45+ не понимал значка)
+  const v=spdNow(),au=v!==0&&!modalOn&&!GAME.running();   // M46: авто-пауза («читаю», совет) — на кнопке «▶ дальше»: одно нажатие запускает время
+  const bt=au?'▶':v===0?'⏸':v===2?'×2':'×1',bh=`<small class="hb-cap">${au?L('дальше','resume'):v===0?L('пауза','paused'):L('скорость','speed')}</small><b>${bt}</b>`;if(b.innerHTML!==bh)b.innerHTML=bh;   // M41: «×1» с подписью «скорость» (игрок 45+ не понимал значка)
   b.classList.toggle('on2',v===2);b.classList.toggle('on0',v===0);
-  b.setAttribute('aria-label',v===0?L('Время стоит — нажмите, чтобы пошло','Time is paused — tap to run'):v===2?L('Быстрее вдвое','Double speed'):L('Обычная скорость','Normal speed'));}
-function spdCycle(){if(typeof GAME.setSpeed!=='function')return;const v=spdNow(),n=v===1?2:v===2?0:1;GAME.setSpeed(n);snd('tap');spdBtnUpd();hdr();
+  b.classList.toggle('au',au);b.setAttribute('aria-label',au?L('Время стоит — нажмите, чтобы пошло','Time is paused — tap to run'):v===0?L('Время стоит — нажмите, чтобы пошло','Time is paused — tap to run'):v===2?L('Быстрее вдвое','Double speed'):L('Обычная скорость','Normal speed'));}
+// M46: одно нажатие ВСЕГДА запускает время: стоит авто-пауза («читаю», совет, словарик) — снимаем её, скорость не трогаем; стоит своя ⏸ — ×1 и тоже снимаем авто-паузы
+function spdCycle(){if(typeof GAME.setSpeed!=='function')return;const v=spdNow(),rs=()=>{try{return typeof resumeNow==='function'?resumeNow():GAME.running();}catch(e){return GAME.running();}};
+  if(v!==0&&!GAME.running()){const ok=rs();snd('tap');spdBtnUpd();hdr();tst(ok?L('▶ Время идёт','▶ Time is running'):L('Время стоит, пока открыта подсказка — закройте её','Time stands while a tip is open — close it'),1500);return;}
+  if(v===0){GAME.setSpeed(1);rs();snd('tap');spdBtnUpd();hdr();tst(L('▶ Обычная скорость','▶ Normal speed'),1500);return;}
+  const n=v===1?2:0;GAME.setSpeed(n);snd('tap');spdBtnUpd();hdr();
   tst(n===0?L('⏸ Время остановлено','⏸ Time paused'):n===2?L('⏩ Время идёт вдвое быстрее','⏩ Double speed'):L('▶ Обычная скорость','▶ Normal speed'),1500);}
 
 /* ================= крупный шрифт (S.big) ================= */
@@ -1094,6 +1120,7 @@ function init(){
   $$('main').addEventListener('click',onClick);applyBig();modalWatch();try{navObs();}catch(e){}
   const hn=document.querySelector('.hname');if(hn){hn.style.cursor='pointer';hn.onclick=()=>{if(BZ()&&BZ().hname(w()))return;snd('tap');openRename();};}
   if($$('spdBtn'))$$('spdBtn').onclick=spdCycle;
+  {const hm=document.querySelector('#hdr .hmon');if(hm)hm.addEventListener('click',()=>{if(!GAME.running()&&!modalOn)spdCycle();});}   // M46: нажатие на «⏸ день N» — тоже «продолжить»
   $$('advMin').innerHTML=face('calm');$$('advMin').onclick=advOpen;
   GAME.on('change',()=>refresh('change'));GAME.on('day',()=>refresh('day'));
   GAME.on('close',rep=>{refresh('close');showQ(()=>openClose(rep));});
