@@ -3,6 +3,20 @@
 <head>
 <meta charset="utf-8">
 <script>window.__se=[];addEventListener('error',function(e){var t=e.target,s=window.__se;if(s&&s.length<10)s.push(t&&t.tagName?[2,t.src||t.href||'',t.tagName]:[1,e.message,e.filename,e.lineno]);},true);</script> <!-- STAT v1.2: ранние ошибки и незагрузившиеся файлы — до всех скриптов -->
+<script>/* предохранитель загрузки (05.10.2026): свой файл игры не загрузился → перезагрузка до 2 раз, потом окно «Обновить» */
+(function(){var K='ldfail',n=0,done=false;try{n=+sessionStorage.getItem(K)||0;}catch(e){}
+function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
+  try{var a=document.createElement('a');a.href=u;if(a.host!==location.host)return false;}catch(e){return false;}
+  return !/vk-bridge|sdk\.js/.test(u);}
+addEventListener('error',function(e){if(done||!own(e.target))return;done=true;
+  if(n<2){try{sessionStorage.setItem(K,n+1);}catch(x){}setTimeout(function(){location.reload();},700+n*1500);return;}
+  var ru=!/^en/i.test(navigator.language||'ru')||/[?&](vk_app_id|vk)=/.test(location.search);
+  function show(){var d=document.createElement('div');d.id='ldfail';d.setAttribute('style','position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#1c2b3a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px/1.4 system-ui,sans-serif;text-align:center;padding:24px');
+    d.innerHTML='<div style="max-width:320px">'+(ru?'Не получилось загрузить игру. Проверьте интернет и попробуйте ещё раз.':'The game failed to load. Check your connection and try again.')+'</div><button type="button" style="margin-top:18px;font:700 18px system-ui,sans-serif;padding:12px 28px;border:0;border-radius:14px;background:#4caf50;color:#fff">'+(ru?'Обновить':'Reload')+'</button>';
+    d.querySelector('button').onclick=function(){try{sessionStorage.removeItem(K);}catch(x){}location.reload();};(document.body||document.documentElement).appendChild(d);}
+  if(document.body)show();else addEventListener('DOMContentLoaded',show);},true);
+addEventListener('load',function(){setTimeout(function(){if(!done)try{sessionStorage.removeItem(K);}catch(x){}},3000);});})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Рыбалка с Петровичем</title>
 <style>
@@ -266,6 +280,9 @@ button.a3g{width:100%}
 #mcard p.fbhead,.fbhead{font-size:19px;font-weight:800;line-height:1.3;color:#1f3b4a;margin:2px 0 8px;text-align:left}
 .btn.fbmain{width:100%;font-size:19px;min-height:56px;margin:2px 0 6px}
 .btn.fbx2{width:100%;margin-top:8px;font-size:17px}
+/* pre (05.10): ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
+button[data-adwait]{position:relative}
+button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;font-size:16px;line-height:1;pointer-events:none}
 .a3g.fbl i{color:#1f5f80}@media (max-width:359px){.fbrt{display:none}}.a3g.fbpe{background:#f3f4ef}.a3g.fbpe small{color:#4b5560}
 .fbfore{display:block;width:100%;text-align:left;background:#eef6fb;border-radius:14px;padding:8px 12px;margin:0 0 8px;box-shadow:0 3px 0 rgba(31,95,128,.25);font-weight:700;font-size:17px;line-height:1.3;color:#1f3b4a;min-height:48px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fbfore b{font-weight:900;display:block}.fbfore small{display:block;font-size:16px;font-weight:700;color:#2f5568;overflow:hidden;text-overflow:ellipsis}
@@ -902,7 +919,7 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 /* ================= площадка: Яндекс Игры или VK (модули — из «Выезда»/«Дурака») ================= */
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
-const OK_LINK=''; // ссылка на игру в ОК; пусто — «Поделиться» в ОК спрятано
+const OK_LINK='https://ok.ru/game/512005219424'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 /*STAT*/
 /* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
@@ -910,13 +927,14 @@ const OK_LINK=''; // ссылка на игру в ОК; пусто — «Под
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
-   progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function. */
+   progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
 var STAT=(function(){
   var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
-      cfgO=null,cfgS=0,abs={},rdT=0,acted=0,pre=0,tp=0,fT=0,fS=0,fC=0,fN=0,fH=[],fLo=999,fHg=0,pfS=0;
+      cfgO=null,cfgS=0,abs={},rdT=0,acted=0,pre=0,tp=0,fL=0,fP=0,fR=0,fX=0,fA=0,fC=0,fN=0,fH=[],fLo=999,fHg=0,fJ=0,pfS=0,FGR=100;
   function ls(k,v){try{if(v===undefined)return window.localStorage.getItem(k);if(v===null)window.localStorage.removeItem(k);else window.localStorage.setItem(k,v);}catch(e){}return null;}
   function jp(s){try{return s?JSON.parse(s):null;}catch(e){return null;}}
   function now(){var t=0;try{t=O.now?O.now():0;}catch(e){}return typeof t==='number'&&t>1.6e12?t:Date.now();}
@@ -979,6 +997,7 @@ var STAT=(function(){
       window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;err('promise: '+(r&&r.message||r),r&&r.stack?String(r.stack).split('\n')[1]:'');});
       document.addEventListener('visibilitychange',function(){document.visibilityState==='hidden'?hide():show();});
       window.addEventListener('pagehide',hide);
+      window.addEventListener('blur',function(){fBrk();});window.addEventListener('focus',function(){fBrk();});
       var ts=['pointerdown','touchstart','keydown'];for(i=0;i<3;i++)document.addEventListener(ts[i],tap,{capture:true,passive:true});
       timer=setInterval(function(){if(on&&vis&&(Q.length||pend.length))flush();},FLUSH*1000);}
     setTimeout(flush,5000); // старое неотправленное + первые шаги — быстро (воронка первой минуты)
@@ -1013,11 +1032,13 @@ var STAT=(function(){
      оба не чаще раза в 20 с на место, поле n — сколько набежало. STAT.ad('int','none','cap'|'gap'|'nosdk'|'nofill') — межэкранная не показана. --- */
   var place='';
   function setPlace(p){place=String(p||'').slice(0,16);}
-  function adReq(f){aR[f]=Date.now();}
+  function adReq(f){aR[f]=Date.now();fBrk(2e5);}
   function thrN(k,n,p){var x=thr[k]||(thr[k]={c:0,t:0}),t=Date.now();x.c++;x.n=n;x.p=p;if(t-x.t>=THR){x.t=t;thrOut(x);}}
   function thrOut(x){if(!x.c)return;x.p.n=x.c;x.c=0;ev(x.n,x.p);}
-  function ad(f,r,code){var p={f:f,r:r,p:f==='int'?'int':(place||'?')};if(code!==undefined&&code!==null&&code!=='')p.c=scrub(code,24);
+  function ad(f,r,code,x){var p={f:f,r:r,p:f==='int'?'int':(place||'?')},k;if(code!==undefined&&code!==null&&code!=='')p.c=scrub(code,24);
+    if(x)for(k in x)if(x[k]!==undefined&&x[k]!==null&&p[k]===undefined)p[k]=x[k]; /* 4-й параметр — свои поля итога, напр. {pr:1} «ролик был готов к нажатию» */
     if(r==='hold'){thrN('h'+p.p,'ad',p);return;}
+    fX=0;fBrk(r==='show'?2e5:1000); /* плавность: пока идёт реклама (и секунду после итога) кадры не меряем */
     if(aR[f]){p.ms=Date.now()-aR[f];aR[f]=0;}ev('ad',p);if(f!=='int'&&r!=='show')place='';}
   function offer(p){p=String(p).slice(0,13);thrN('o'+p,'of_'+p,{p:p});}
   function adChk(f,ok){var x=aC[f]||(aC[f]={y:0,n:0});x[ok?'y':'n']++;}
@@ -1035,11 +1056,21 @@ var STAT=(function(){
 
   // --- первое нажатие: act {ms} от ready (без ready — от начала сеанса, при сворачивании, nr:1) ---
   function tap(){if(acted||!on)return;var t=Date.now();if(!rdT){pre++;if(!tp)tp=t;return;}acted=1;var p={ms:t-rdT};if(pre)p.pre=pre;ev('act',p);}
-  // --- плавность: STAT.frame() раз за кадр игрового цикла → perf {fps (медиана), lo (худшая секунда), hg (подвисаний > 1 с)} ---
-  function frame(){var t=Date.now(),d=t-fT;fT=t;if(d>5000||!fS){fS=t;fC=0;return;}fN++;fC++;if(d>1000)fHg++;
-    if(t-fS>=1000){d=Math.min(240,Math.round(fC*1000/(t-fS)));fH[d]=(fH[d]||0)+1;if(d<fLo)fLo=d;fS=t;fC=0;}}
+  /* --- плавность: STAT.frame() раз за кадр игрового цикла → perf {fps (медиана), lo (худшая секунда), hg (подвисаний > 1 с), jk (рывков > 0,25 с), s (секунд замера), v:2}.
+     v:2 (05.10): игра своим вызовом только говорит «я сейчас рисую» (fL). Модуль сам ведёт цепочку кадров браузера (ftick) и меряет промежутки
+     между НИМИ. Промежуток идёт в счёт, только если игра звала frame() прямо перед ним (не раньше FGR мс до его начала) — то есть ждала кадр.
+     Игра перестала звать (пауза, окно, спящий цикл) → цепочка гаснет, после возобновления первый промежуток не считается: пауза — не подвисание.
+     Помехи (fX): сворачивание/возврат, потеря/возврат фокуса (системные окна поверх игры), реклама от adReq/ad('show') до итога + 1 с — промежутки с ними
+     выбрасываются. Старый счёт (до 05.10, без v) мерил разрыв между вызовами игры и принимал её паузы за подвисания — его hg и lo не верить. --- */
+  function frame(){fL=Date.now();if(!fR&&on&&window.requestAnimationFrame){fR=1;requestAnimationFrame(ftick);}}
+  function ftick(){var t=Date.now(),d=t-fP,ok=fP>0&&fL>=fP-FGR&&fX<fP&&vis&&d>=0&&d<=5000;fR=0;
+    if(t-fL>FGR&&!ok){fP=0;return;}                 // игра кадров не просит — серия кончилась
+    fP=t;fR=1;requestAnimationFrame(ftick);if(!ok)return;
+    fN++;fC++;fA+=d;if(d>1000)fHg++;if(d>250)fJ++;
+    if(fA>=1000){d=Math.min(240,Math.round(fC*1000/fA));fH[d]=(fH[d]||0)+1;if(d<fLo)fLo=d;fA=0;fC=0;}}
+  function fBrk(ms){var t=Date.now()+(ms||0);if(t>fX)fX=t;}   // помеха: промежутки кадров до этой минуты не считаем
   function perf(){var i,s=0,h=0;if(pfS||fN<300)return;for(i=0;i<=240;i++)s+=fH[i]||0;if(!s)return;pfS=1;for(i=0;i<=240;i++){h+=fH[i]||0;if(h*2>=s)break;}
-    ev('perf',{fps:i,lo:fLo,hg:fHg});}
+    ev('perf',{fps:i,lo:fLo,hg:fHg,jk:fJ,s:s,v:2});}
 
   // --- ошибки JS: не больше MAXERR разных за сеанс, без адресов с параметрами (в них vk_user_id!); x — доп. поля (e:1 — до запуска) ---
   function err(m,src,ln,col,x){if(!on||errN>=MAXERR)return;m=scrub(m||'?',120);src=scrub(String(src||'').replace(/[?#].*$/,'').replace(/^.*\//,''),40)+(ln?':'+ln+(col?':'+col:''):'');
@@ -1076,12 +1107,12 @@ var STAT=(function(){
     for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(O.url,JSON.stringify(b)));}catch(e){}
       if(!ok||srv)left.push(b);}
     pend=left;keep();if(pend.length&&!srv)send(pend[0]);}
-  function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fS=0;rel();var k,p={d:actSec()};
+  function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
     if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
-  function show(){if(!on||vis)return;vis=true;actT=Date.now();
+  function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
       if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
       var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
@@ -1103,13 +1134,13 @@ var STAT=(function(){
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
     progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
-    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,pl:place};}};
+    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v3-100423',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v3-100521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -1162,19 +1193,19 @@ var SOC=(function(){
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
   // ok — ID этой игры в Одноклассниках (vk_ok_app_id), когда она там вышла; без него в ОК игра в «Ещё игры» не показывается.
   var GAMES=[
-    {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p'},
-    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p'},
-    {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s'},
-    {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s'},
+    {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p',ok:512004864050},
+    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p',ok:512005727621},
+    {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s',ok:512005580574},
+    {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s',ok:512005500650},
     {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',off:'all'},
-    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c'},
-    {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c'},
-    {id:54792011,t:'Паук на даче',a:0,i:7,g:'c'},
-    {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c'},
+    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c',ok:512005141228},
+    {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c',ok:512005597603},
+    {id:54792011,t:'Паук на даче',a:0,i:7,g:'c',ok:512005626567},
+    {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c',ok:512005010476},
     {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all'},
-    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p'},
-    {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r'},
-    {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p'}
+    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p',ok:512005552366},
+    {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r',ok:512005219424},
+    {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p',ok:512005471658}
   ];
   var N=GAMES.length;
   function qp(k){var m=new RegExp('[?&]'+k+'=([^&#]*)').exec(location.search);return m?decodeURIComponent(m[1]):'';}
@@ -1236,7 +1267,7 @@ var SOC=(function(){
     return send('VKWebAppShare',{link:OKP?O.okLink:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
   function group(){if(OKP&&!O.okGroup)return Promise.resolve(false);
     return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
-  function open(g){if(OKP&&!g.ok)return Promise.resolve(false);
+  function open(g){if(OKP&&!(g.ok&&OKWEB))return Promise.resolve(false); // ОК: OpenApp есть только на сайте и в мобильном браузере
     return send('VKWebAppOpenApp',OKP?{app_id:g.ok,app_is_local:true}:{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
     toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
 
@@ -1354,9 +1385,10 @@ async function initVK(){
     await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;vkFitInit();SOC.ready();updMore();
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
-      else if(t==='VKWebAppViewRestore'){setPause('hide',false);if(typeof adBack==='function')adBack();}});
+      else if(t==='VKWebAppViewRestore'){setPause('hide',false);if(typeof adBack==='function')adBack();setTimeout(adBackChk,300);}});
+    adPreload('boot'); // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
     await cloudLoad();
-    adPreload();vkIntLoad(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
+    vkIntLoad();
   }catch(e){VK=null;}
   if(!OK)PAY.init(); // ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
   updCoins();
@@ -1422,7 +1454,7 @@ let touched=false;['pointerdown','keydown'].forEach(t=>document.addEventListener
 function buzz(ms){try{if(touched&&S.vib!==false&&navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
 /* праздник: конфетти, звёзды, монеты поверх всего (холст #fx). В спокойном режиме и на паузе — ничего. Цикл кадров живёт, пока есть частицы */
 const FX={ps:[],raf:0,last:0,
-  burst(x,y,n,kind,pow){if(typeof calm==='function'&&calm()||paused||window.__noFx)return;const c=document.getElementById('fx'),r=c.parentNode.getBoundingClientRect(),dp=Math.min(2,window.devicePixelRatio||1);
+  burst(x,y,n,kind,pow){if(typeof calm==='function'&&calm()||paused||window.__noFx)return;const c=document.getElementById('fx'),r=c.parentNode.getBoundingClientRect(),dp=typeof lowDp==='function'?lowDp():Math.min(2,window.devicePixelRatio||1);if(typeof LOW!=='undefined'&&LOW)n=Math.ceil(n/3);
     if(c.width!==Math.round(r.width*dp)||c.height!==Math.round(r.height*dp)){c.width=Math.round(r.width*dp);c.height=Math.round(r.height*dp);}
     FX.W=r.width;FX.H=r.height;FX.dp=dp;pow=pow||1;const u=Math.min(r.width,r.height)/100,cols=['#ffd43b','#ff922b','#40c057','#4dabf7','#f783ac','#fff3bf'];
     for(let i=0;i<n;i++){const a=-Math.PI/2+(Math.random()-.5)*Math.PI*1.5,v=u*(38+Math.random()*60)*pow;
@@ -1458,7 +1490,7 @@ let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=3,AD_COINS=30,AD_FROM=3,X2_ON=true
    2) снова нет → не ошибка, а «Ролик будет через несколько секунд…»; кнопки «за рекламу» (AD_BTN_SEL) гаснут, игра в фоне раз в AD_POLL_MS спрашивает VK (Check);
       VK ответил «готов» (но не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS.
       Нажатие по погасшей кнопке VK не дёргает и окно не закрывает (adHold) — только «ещё загружается».
-   3) заранее: Check при запуске и после каждого показа; «не готов» — переспрашиваем в фоне (до 6 раз). Ответу Check «не готов» как запрету не верим — кнопку из-за него не гасим.
+   3) заранее: Check при запуске и после каждого показа; «не готов» — переспрашиваем в фоне, пока не станет «готов» (см. pre ниже). Ответу Check «не готов» как запрету не верим — кнопку из-за него не гасим.
    Автоповтор — только на «ролика нет», не на закрытый ролик. Награда — только за досмотр (result:true / onRewarded) и один раз (paid).
    Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора; err — код/причина.
    Тот же приём — во всех играх (журнал hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ»). Отличие Рыбалки: adReady() занято межэкранной → здесь adVidReady(). */
@@ -1468,8 +1500,41 @@ function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no 
 function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
 function adStill(){return L('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds');}
 /* подгрузка ролика заранее; «не готов» — переспросить n раз (каждые AD_POLL_MS); «готов» во время паузы кнопок — зажечь их */
-function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
-  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{STAT.adChk('rew',r&&r.result?1:0);if(r&&r.result)adVidReady();else again();},()=>{STAT.adChk('rew',0);again();});}
+/* pre (05.10): ролик за награду подгружаем ЗАРАНЕЕ и помним ответ. VKWebAppCheckNativeAds не только отвечает «есть/нет», но и просит VK загрузить ролик,
+   поэтому «нет» переспрашиваем, пока не станет «есть» (раньше — 6 раз за 30 с и тишина): шаги AD_STEP (6 раз по 5 с, 4 раза по 15 с), дальше раз в AD_STEP_MAX (45 с).
+   Не чаще раза в AD_ASK_MIN; в свёрнутой игре и пока ролик на экране не спрашиваем (вернулись — спросили сразу). Ответ «есть» перепроверяем, только если он старше AD_FRESH и на экране есть кнопка ролика.
+   adSt: 1 — ролик готов, −1 — VK ответил «нет», 0 — неизвестно (ещё не спрашивали / ролик только что показан / мост молчит). Два «нет» подряд → на кнопках ролика значок ⏳
+   (data-adwait; нажать всё равно можно: «нет» — не запрет, показ сам попробует загрузить), окно «Вернуть сошедшую рыбу» само не всплывает (adLikely в backOk). Стало «есть» → значок уходит, «Ролик готов».
+   Статистика: в событии ad поле pr — 1 «был готов к нажатию», 0 «VK говорил нет», нет поля — неизвестно; при переходе «нет»→«есть» — adchk {f:'rew',w:секунд ждали,k:сколько «нет»,s:повод}.
+   Образец — hobby-analytics/release-h/preload/preload-sample.md, раздел «ОБРАЗЕЦ». Числа — let: стенд их укорачивает. */
+let AD_STEP=[5000,5000,5000,5000,5000,5000,15000,15000,15000,15000],AD_STEP_MAX=45000,AD_ASK_MIN=3000,AD_FRESH=120000,AD_LOOK_MS=20000;
+let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAskWhy='boot',adMarkT=0,adRdyToastT=0;
+function adBtns(){try{return Array.prototype.slice.call(document.querySelectorAll(AD_BTN_SEL));}catch(e){return [];}} /* все кнопки ролика на странице */
+function adLikely(){return !(VK&&adSt<0&&adNoN>=2);} /* false — VK уже дважды подряд ответил «ролика нет»: сами ролик не предлагаем */
+function adPreload(why){if(!VK)return;clearTimeout(adChkT);if(typeof why==="string"){adAskWhy=why;adStepN=0;}
+  if(document.hidden||pauseWhy.has('hide')||adW)return; /* свёрнуты или ролик на экране — молчим; вернёмся / ролик закончится — спросим (adBackChk, итог показа) */
+  const now=typeof why==='string'&&why!=='back'&&why!=='look'; /* итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN */
+  if(!now){const wait=adAsking?AD_ASK_MIN:adAskT+AD_ASK_MIN-Date.now();if(wait>0){adChkT=setTimeout(adPreload,wait);return;}}
+  adAskT=Date.now();const id=adAsking=++adAskN; /* ответ на прежний, уже устаревший вопрос не слушаем */
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(id!==adAskN)return;adAsking=0;const ok=!!(r&&r.result);STAT.adChk('rew',ok?1:0);adAns(ok);},()=>{if(id!==adAskN)return;adAsking=0;STAT.adChk('rew',0);adAns(null);});}
+function adAns(ok){const t=Date.now();
+  if(ok){if(adNoN)STAT.ev('adchk',{f:'rew',w:Math.round((t-adNoT0)/1000),k:adNoN,s:adAskWhy});
+    const was=adSt<0&&adNoN>=2;adSt=1;adStT=t;adNoN=0;adStepN=0;adVidReady();
+    if(adMark()&&was&&t>=adCoolT&&!adBusy&&t-adRdyToastT>30000){adRdyToastT=t;toast(L('Ролик готов — можно смотреть','The video is ready to watch'));}
+    return;}
+  if(ok===false){if(!adNoN)adNoT0=t;adNoN++;adSt=-1;adStT=t;adMark();} /* null — мост не ответил: состояние не трогаем, но спрашивать продолжаем */
+  adChkT=setTimeout(adPreload,AD_STEP[adStepN++]||AD_STEP_MAX);}
+/* ⏳ на кнопках ролика, пока VK говорит «нет» (окна перерисовываются — поэтому раз в секунду, только пока «нет»); вернёт true, если значок был на видимой кнопке и снят */
+function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];let seen=false,old=[];try{old=document.querySelectorAll('[data-adwait]');}catch(e){}
+  for(let i=0;i<q.length;i++)q[i].setAttribute('data-adwait','1');
+  for(let i=0;i<old.length;i++){const b=old[i];if(q.indexOf(b)<0){b.removeAttribute('data-adwait');if(!on&&b.offsetParent)seen=true;}}
+  if(on)adMarkT=setTimeout(adMark,1000);return seen;}
+/* вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз */
+function adBackChk(tick){if(!VK||adBusy||document.hidden||pauseWhy.has('hide'))return;
+  if(adSt<1){if(tick!==1)adPreload('back');else if(Date.now()-adAskT>AD_STEP_MAX+2*AD_ASK_MIN)adPreload();return;} /* по таймеру — только страховка, шаги не сбрасываем */
+  if(Date.now()-adStT<AD_FRESH)return;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent){adPreload('look');return;}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(adChkT);else setTimeout(adBackChk,300);});
+setInterval(()=>adBackChk(1),AD_LOOK_MS);
 function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
 function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
   if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.74);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
@@ -1479,7 +1544,7 @@ function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(
   w.style.display='flex';}
 /* кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду) */
 function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)q[i].style.opacity=off?'.45':'';}catch(e){}if(off)adDimT=setTimeout(adDim,1000);}
-function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload('none');}
 /* нажатие по погасшей кнопке: площадку не дёргаем, окно не закрываем — только объясняем (зовётся первым в обработчиках кнопок «за рекламу») */
 function adHold(p){if(adBusy||Date.now()>=adCoolT)return false;if(p)STAT.place(p);STAT.ad('rew','hold');toast(adStill());return true;} // STAT v1.2: нажатие по погасшей — ad rew hold (p — место кнопки)
 /* adt (04.10): обрыв ролика через 60 с. Раньше показ ждал ответа VK 60 с (vkSend(…,60000)), потом писал «недоступна», а поздний ответ «досмотрел» никто не слушал —
@@ -1502,7 +1567,7 @@ let adW=null,adPl='',adLateC=0;const adLateQ=[];
 /* место рекламы (STAT.place) запоминаем сами: позднее событие пишется после выхода, когда место у модуля уже другое; модуль STAT не правим */
 {const sp=STAT.place;STAT.place=function(p){adPl=String(p||'');return sp.apply(STAT,arguments);};}
 /* позднее событие ролика (после выхода игрока): ms — от нажатия (STAT v1.2; раньше — секунды w); x.p — место, x.dup — «ответ не пришёл» уже записано */
-function adStat(r,c,ms,x){const p={f:'rew',r:r,p:x&&x.p||adPl||'?',ms:ms};if(c!==''&&c!=null)p.c=String(c).slice(0,24);if(x&&x.dup)p.dup=1;STAT.ev('ad',p);}
+function adStat(r,c,ms,x){const p={f:'rew',r:r,p:x&&x.p||adPl||'?',ms:ms};if(c!==''&&c!=null)p.c=String(c).slice(0,24);if(x&&x.dup)p.dup=1;if(x&&x.pr!=null)p.pr=x.pr;STAT.ev('ad',p);}
 /* ожидание ответа: rel('timeout'|'exit') — отпустить игрока без ответа */
 function adWatch(rel){adUnwatch();const w=adW={t0:Date.now(),back:0,rel:rel};w.tS=setTimeout(adBack,AD_SLOW_MS);w.tW=setTimeout(()=>{if(adW===w)rel('timeout');},AD_WAIT_MS);}
 function adUnwatch(){const w=adW;if(!w)return;adW=null;clearTimeout(w.tS);clearTimeout(w.tW);clearTimeout(w.tC);clearTimeout(w.tE);adWait(0);}
@@ -1514,11 +1579,11 @@ window.addEventListener('focus',adBack);window.addEventListener('pagehide',adLat
 ['pointerdown','touchstart','keydown'].forEach(n=>document.addEventListener(n,()=>{if(adW&&Date.now()-adW.t0>=AD_TAP_MS)adBack();},true));
 /* вышли без ответа: событие «так и не пришло» откладываем (вдруг придёт), но не дольше AD_LATE_MS и не дальше сворачивания игры */
 function adLatePend(rec){adLateQ.push(rec);rec.tF=setTimeout(()=>adLateFin(rec),AD_LATE_MS);}
-function adLateFin(rec){if(rec.fin||rec.hold)return;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);adStat('err',rec.exit?'exit':'timeout',rec.w,{p:rec.p});}
+function adLateFin(rec){if(rec.fin||rec.hold)return;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);adStat('err',rec.exit?'exit':'timeout',rec.w,{p:rec.p,pr:rec.pr});}
 function adLateFlush(){adLateQ.slice().forEach(adLateFin);}
 /* поздний ответ пришёл: r/c — что писать; после уже записанного «не пришло» отказ не пишем, а «досмотрел» пишем с dup */
 function adLateEnd(rec,r,c){const dup=rec.fin;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);if(dup&&r!=='ok')return;
-  adStat(r,c,Date.now()-rec.t0,{p:rec.p,dup:dup});}
+  adStat(r,c,Date.now()-rec.t0,{p:rec.p,dup:dup,pr:rec.pr});}
 /* замена награды, которая уже неуместна (рыбалка кончилась, окно закрыто): монеты по ПОЛНОЙ цене обещанного (n); у награды нет цены в монетах — цена одного ролика adCoins() */
 function adLateCoins(n){n=n>0?Math.round(n):adCoins();adLateC=1;setCoins(S.coins+ern('ad',n));SND.coin();return L('держи монеты: +','here are coins: +')+coinsTxt(n);}
 /* пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду) */
@@ -1528,11 +1593,11 @@ function showRewarded(cb0,onFail0,late0){
   if(Date.now()<adCoolT){STAT.ad('rew','hold');toast(adStill());if(onFail0)onFail0();adDim();return;}
   adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},AD_WAIT_MS*2+AD_RETRY_MS+15000);
   STAT.adReq('rew'); // STAT v1.2: нажатие → ms в итоговом ad
-  const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';
+  const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0; /* pre: был ли ролик готов к нажатию */
   let paid=false,st=0; /* st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний) */
   const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
-  const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c); // ms ставит модуль; место живёт до итога
-  const rel=why=>{if(st)return;st=2;rec.w=Date.now()-t0;rec.exit=why==='exit';adUnwatch();adClose();adPreload();
+  const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr}); // ms ставит модуль; место живёт до итога; pre: pr — был ли ролик готов к нажатию (нужен STAT с 4-м параметром)
+  const rel=why=>{if(st)return;st=2;rec.w=Date.now()-t0;rec.exit=why==='exit';adUnwatch();adClose();adPreload('exit');
     onFail();adDim();toast(rec.exit?L('Хорошо. Подтвердится просмотр — награду отдам','All right. Once the view is confirmed, the reward is yours'):L('Не дождался ответа о просмотре. Придёт — награду отдам','No answer about the video yet. If it comes, the reward is yours'),4500);adLatePend(rec);};
   const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||pauseWhy.has('ad')||$('ad').classList.contains('on')||document.hidden){setTimeout(lateOk,1000);return;} /* другая реклама или игра свёрнута — подождём (hold: «не пришло» уже не пишем) */
     paid=true;lastAdT=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}
@@ -1540,15 +1605,15 @@ function showRewarded(cb0,onFail0,late0){
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL);onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
   if(VK){
     let tries=0;
-    const go=()=>{adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{
+    const go=()=>{clearTimeout(adChkT);if(adSt>0){adSt=0;adMark();}adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{
         if(st===2){if(r&&r.result)lateOk();else adLateEnd(rec,'fail','late');return;}
         if(st)return;st=1;adUnwatch();adClose();
-        if(r&&r.result){stat('ok',tries?'retry':'');adPreload();cb();}else{stat('fail','noresult');toast(AD_FAIL);adPreload();onFail();}
+        if(r&&r.result){stat('ok',tries?'retry':'');adPreload('shown');cb();}else{stat('fail','noresult');toast(AD_FAIL);adPreload('fail');onFail();}
       },e=>{
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
-        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него) */
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload();}
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него) */
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
         onFail();adDim();});}; /* adDim после onFail: отказ заново открывает окно — его кнопку гасим сразу */
     go();return;}
   /* Яндекс без SDK: заглушка — только при локальном запуске (AD_LOCAL); в настоящем Яндексе награду даром не даём (и кнопок нет — adOk) */
@@ -1801,6 +1866,37 @@ const LB={
 const $=id=>document.getElementById(id);
 const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const calm=()=>S.calm===true||RM;
+/* ===== perf1 (05.10): РЕЖИМ СЛАБОГО ТЕЛЕФОНА — `LOW`. Образец: hobby-analytics/release-h/perf/perf-sample.md =====
+   Включается сам: мало памяти (≤ 2 ГБ), Android с ≤ 4 ядрами, старый движок (нет roundRect), либо по факту — два окна по 90 кадров подряд медленнее ~48 к/с
+   (на iPhone ровные 30 к/с — это энергосбережение системы, не считаем). Включившись, до конца сеанса не выключается (не мигает); на устройстве помнится 7 дней.
+   Проверка: ?low=1 (включить), ?low=0 (запретить). «Меньше движения» (calm) — отдельная настройка игрока, LOW её не трогает и не заменяет.
+   Что меняет LOW: холст ≤ 1,25 точки (было ≤ 2), панели без размытия (body.nb — запасной вид из look.css), без свечений shadowBlur, вдвое меньше бликов,
+   облаков ≤ 4, костёр — готовым пятном, лупа без отражения, в спокойных фазах (прицел, ожидание, карточка) и под окном кадр рисуется через раз, конфетти втрое меньше.
+   Логику, клёв, экономику и рекламу LOW не трогает — только рисование. */
+const LOW_K='rybak-low',LOW_Q=(/[?&]low=([01])/.exec(location.search)||[])[1]||'',LOW_DAYS=7,LOW_MS=21,LOW_WIN=90;
+const LOW_IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let LOW=false,LOW_WHY='',lowAcc=0,lowN=0,lowBad=0,lowSkip=60,lowStat=0;
+function lowGuess(){if(LOW_Q)return LOW_Q==='1'?'q':'';const m=navigator.deviceMemory,c=navigator.hardwareConcurrency;
+  if(m>0&&m<=2)return 'mem';if(c>0&&c<=4&&/Android/.test(navigator.userAgent))return 'cpu';
+  if(!(window.CanvasRenderingContext2D&&CanvasRenderingContext2D.prototype.roundRect))return 'old';
+  try{const d=+localStorage.getItem(LOW_K);if(d>0&&Date.now()-d<LOW_DAYS*864e5)return 'was';}catch(e){}return '';}
+// LOW: свечение (поплавок ночью, фонарь, окно домика, светлячки) — готовым пятном, а не градиентом на каждый кадр. yMax — нижняя граница, как у прежней заливки
+const GLOW_SP={};
+function glowSp(g,x,y,r,rgb,a,yMax){const k=rgb+'|'+a;let c=GLOW_SP[k];if(!c){c=GLOW_SP[k]=document.createElement('canvas');c.width=c.height=64;const q=c.getContext('2d'),gr=q.createRadialGradient(32,32,.5,32,32,32);
+    gr.addColorStop(0,'rgba('+rgb+','+a+')');gr.addColorStop(1,'rgba('+rgb+',0)');q.fillStyle=gr;q.fillRect(0,0,64,64);}
+  const f=yMax!=null&&yMax<y+r?Math.max(0,(yMax-(y-r))/(2*r)):1;if(f>0)g.drawImage(c,0,0,64,64*f,x-r,y-r,r*2,r*2*f);}
+function lowDp(){return Math.min(LOW?1.25:2,window.devicePixelRatio||1);}
+function lowSend(ms){if(lowStat)return;lowStat=1;try{const p={w:LOW_WHY};if(ms)p.ms=Math.round(ms);STAT.ev('low',p);}catch(e){}} // раз за сеанс: сеансы без события low — обычный вид
+function lowOn(why,ms){if(LOW)return;LOW=true;LOW_WHY=why;window.__low=why;
+  if(why==='fps')try{localStorage.setItem(LOW_K,String(Date.now()));}catch(e){}
+  const b=()=>{document.body.classList.add('low');document.body.classList.add('nb');};if(document.body)b();else document.addEventListener('DOMContentLoaded',b);
+  lowSend(ms);
+  try{if(typeof GEO!=='undefined'&&GEO&&G&&$('scr-fish').classList.contains('on')){layout();render();}}catch(e){}}
+// раз за кадр идущей рыбалки (ms — время с прошлого кадра): медленно два окна подряд → LOW. Разовые заминки (> 250 мс) и разгон после паузы не считаем
+function lowTick(ms){if(LOW||LOW_Q==='0')return;if(lowSkip>0){lowSkip--;return;}if(!(ms>0)||ms>250)return;lowAcc+=ms;
+  if(++lowN>=LOW_WIN){const avg=lowAcc/lowN;lowAcc=lowN=0;const cap=LOW_IOS&&avg>30&&avg<36; // iPhone в энергосбережении: система сама держит 30 к/с
+    if(avg>LOW_MS&&!cap){if(++lowBad>=2)lowOn('fps',avg);}else lowBad=0;}}
+{const w=lowGuess();if(w)lowOn(w);}
 let G=null,modalOn=false;
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(id!=='scr-fish')stopLoop();}
 function toast(t,ms,low){const e=$('toast');e.textContent=t;if(!low&&$('catch')&&$('catch').classList.contains('on'))low=true; /* boost1: над карточкой улова — внизу, не на заголовке */const fg=!(low||modalOn)&&!!(G&&G.ft&&(G.phase==='fight'||G.phase==='reel'));e.classList.toggle('low',!!(low||modalOn));e.classList.toggle('fgt',fg);e.classList.add('on');clearTimeout(toast._t);
@@ -1988,13 +2084,13 @@ function paintBg(g,W,H,geo,pi,P,thumb){const R=rng(pi*131+7),hz=geo.hz,u=Math.mi
 
 /* ================= рыбалка: состояние, геометрия, цикл кадров ================= */
 const cv=$('cv'),cx=cv.getContext('2d');
-let GEO=null,BG=null,CLOUDS=[],SHIM=[],raf=0,lastT=0;
+let GEO=null,BG=null,CLOUDS=[],SHIM=[],raf=0,lastT=0,FIRE_SP=null,LOUPE_SP=null;
 function geoMake(W,H){const land=W>H*1.1,hz=H*(land?.36:.31),shY=H*(land?.84:.8),k=(shY-hz)*.97;
   return {W,H,hz,shY,u:Math.min(W,H)/100,land,yOf:d=>hz+k*9/(9+d),dOf:y=>Math.max(0,9*(k/Math.max(1,y-hz)-1)),ps:d=>9/(9+d),
     tip:{x:W*(land?.6:.64),y:hz+(shY-hz)*.52},butt:{x:W*1.03,y:H*1.04}};}
-function layout(){const r=$('scr-fish').getBoundingClientRect(),W=Math.max(200,r.width),H=Math.max(200,r.height),dp=Math.min(2,window.devicePixelRatio||1);
+function layout(){const r=$('scr-fish').getBoundingClientRect(),W=Math.max(200,r.width),H=Math.max(200,r.height),dp=lowDp();
   cv.width=Math.round(W*dp);cv.height=Math.round(H*dp);cx.setTransform(dp,0,0,dp,0,0);GEO=geoMake(W,H);if(G)buildBg();}
-function buildBg(){if(!G||!GEO)return;const dp=Math.min(2,window.devicePixelRatio||1),W=GEO.W,H=GEO.H;
+function buildBg(){if(!G||!GEO)return;const dp=lowDp(),W=GEO.W,H=GEO.H;
   BG=document.createElement('canvas');BG.width=Math.round(W*dp);BG.height=Math.round(H*dp);const g=BG.getContext('2d');g.scale(dp,dp);
   G.P=pal(PLACES[G.pi].look,G.cond.tod,G.cond.wx);paintBg(g,W,H,GEO,G.pi,G.P,false);a2PaintZones(g);
   const R=rng(G.pi*17+3),n={sun:2,cloud:5,rain:7,wind:4,fog:2}[G.cond.wx],u=GEO.u;CLOUDS=[];
@@ -2002,11 +2098,16 @@ function buildBg(){if(!G||!GEO)return;const dp=Math.min(2,window.devicePixelRati
     const base=G.cond.tod==='night'?'#3a4466':G.cond.wx==='rain'?'#8a949c':G.cond.tod==='evening'?'#f3c2a4':'#ffffff';
     for(let k=0;k<7;k++){const x=w*(.4+R()*1.2),y=h*(.7+R()*.6),r=h*(.35+R()*.35);const gr=cg.createRadialGradient(x,y,1,x,y,r);gr.addColorStop(0,rgba(base,.85));gr.addColorStop(1,rgba(base,0));cg.fillStyle=gr;cg.fillRect(0,0,w*2,h*2);}
     CLOUDS.push({c,w:w*2,h:h*2,x:R()*W,y:GEO.hz*(.05+R()*.55),v:u*(.3+R()*.5)*(G.cond.wx==='wind'?3:1)});}
-  SHIM=[];for(let i=0;i<90;i++){const t=Math.pow(R(),1.6),y=GEO.hz+u*.8+t*(GEO.shY-GEO.hz-u);SHIM.push({x:R()*W,y,l:u*(1.5+t*6)*(.6+R()*.8),ph:R()*7,s:.6+R()*1.4,dark:R()<.35});}}
-function kick(){if(!raf&&G&&$('scr-fish').classList.contains('on')){lastT=performance.now();raf=requestAnimationFrame(loop);}}
+  if(LOW&&CLOUDS.length>4)CLOUDS.length=4;FIRE_SP=null;
+  SHIM=[];for(let i=0;i<90;i++){const t=Math.pow(R(),1.6),y=GEO.hz+u*.8+t*(GEO.shY-GEO.hz-u);SHIM.push({x:R()*W,y,l:u*(1.5+t*6)*(.6+R()*.8),ph:R()*7,s:.6+R()*1.4,dark:R()<.35});}
+  if(LOW)SHIM=SHIM.filter((s,i)=>i%2===0);}
+function kick(){if(!raf&&G&&$('scr-fish').classList.contains('on')){lastT=performance.now();lowSkip=Math.max(lowSkip,20);raf=requestAnimationFrame(loop);}}
+// LOW: в спокойных фазах (ничего быстрого на экране) и под окном кадр рисуем через раз; поклёвка, заброс, вываживание, подсак — каждый кадр
+let lowF=0;const LOW_QUIET={aim:1,wait:1,card:1,done:1};
+function lowSkipFrame(){if(!LOW)return false;lowF++;if(modalOn)return lowF%4!==0;return LOW_QUIET[G.phase]===1&&!G.parts.length&&!(G.flash>0)&&lowF%2!==0;}
 function stopLoop(){if(raf)cancelAnimationFrame(raf);raf=0;}
-function loop(t){raf=0;if(!G||!$('scr-fish').classList.contains('on'))return;STAT.frame();const dt=Math.min(.05,(t-lastT)/1000||.016);lastT=t;
-  if(!paused&&!modalOn)update(dt);render();
+function loop(t){raf=0;if(!G||!$('scr-fish').classList.contains('on'))return;STAT.frame();const dt=Math.min(.05,(t-lastT)/1000||.016);if(!paused&&!modalOn&&!document.hidden)lowTick(t-lastT);lastT=t;
+  if(!paused&&!modalOn)update(dt);if(!lowSkipFrame())render();
   if(!paused)raf=requestAnimationFrame(loop);}
 // таймеры рыбалки: не срабатывают, если рыбалка уже другая
 function later(fn,ms){const g=G;setTimeout(()=>{if(G===g&&!g.over)fn();},ms);}
@@ -2150,7 +2251,7 @@ function fightEnd(res){const pk=G.pk;G.hold=false;
   else if(!S.tips.lost&&!pk.f.leg){S.tips.lost=1;save();later(()=>say('mit',res==='break'?L('Леска слабая для такой рыбы. Купи потолще в «Снастях» — или чаще отпускай, когда краснеет.',''):L('Не отпускай надолго — рыба уйдёт. Держи, пока полоска зелёная.',''),6500),2600);}
   if(backOk(pk))later(()=>offerBack(pk),1300);else later(nextCast,2200);}
 // stage1: 📺 «Вернуть сошедшую рыбу» — раз за рыбалку, крупная (вываживание), не в турнирах (честность), не в первой рыбалке
-function backOk(pk){return !!(G&&!G.tourn&&!G.back&&pk&&pk.f&&adOk()&&(S.sessions||0)>=1);}
+function backOk(pk){return !!(G&&!G.tourn&&!G.back&&pk&&pk.f&&adOk()&&adLikely()&&(S.sessions||0)>=1);} /* pre: VK дважды ответил «ролика нет» — окно само не всплывает (попытка не тратится) */
 function offerBack(pk){if(!G||G.over||G.phase!=='lost'){if(G&&!G.over)nextCast();return;}G.back='ask';STAT.offer('back');const f=pk.f,g=G;
   modal(`<h2>${f.leg?'✨ ':''}${L('Сошла!','It got away!')}</h2><div id="obImg"></div><p><b>${esc(nm(f))}</b> · ${L('около','about')} ${String(Math.max(.6,Math.round(pk.w*10)/10)).replace('.',LANG==='en'?'.':',')} ${L('кг','kg')}</p>
     <p>${L('Петрович знает старый приём — можно ещё раз подвести её к берегу. Один раз за рыбалку.','Petrovich knows an old trick — one more chance to land it. Once per trip.')}</p>
@@ -2284,7 +2385,7 @@ function render(){if(!G||!GEO)return;const g=cx,W=GEO.W,H=GEO.H,u=GEO.u,t=G.ptim
   const wk=G.cond.wx==='wind'?2.4:1;g.lineCap='round';
   for(const s of SHIM){const a=(Math.sin(t*s.s*1.3+s.ph)+1)/2,x=((s.x+t*u*.9*wk*s.s)%(W+s.l*2))-s.l;
     g.strokeStyle=s.dark?'rgba(0,25,35,'+(.1*a).toFixed(3)+')':'rgba(255,255,255,'+(.05+.2*a).toFixed(3)+')';g.lineWidth=Math.max(1,s.l*.08);g.beginPath();g.moveTo(x,s.y);g.lineTo(x+s.l,s.y);g.stroke();}
-  if(P.sun&&G.cond.wx!=='rain'){const cl=P.tod==='night'?'255,250,220':'255,236,180',R=rng(Math.floor(t*6));for(let i=0;i<18;i++){const k=R(),y=GEO.hz+k*k*(GEO.shY-GEO.hz)*.9,w=u*(1+k*5);const x=P.sun[0]+(R()-.5)*u*(4+k*22);
+  if(P.sun&&G.cond.wx!=='rain'){const cl=P.tod==='night'?'255,250,220':'255,236,180',R=rng(Math.floor(t*6));for(let i=0;i<(LOW?10:18);i++){const k=R(),y=GEO.hz+k*k*(GEO.shY-GEO.hz)*.9,w=u*(1+k*5);const x=P.sun[0]+(R()-.5)*u*(4+k*22);
     g.strokeStyle='rgba('+cl+','+(.25+R()*.45).toFixed(2)+')';g.lineWidth=Math.max(1,u*.25*(1+k));g.beginPath();g.moveTo(x-w/2,y);g.lineTo(x+w/2,y);g.stroke();}}
   a1Water(g,t);
   // круги на воде и брызги
@@ -2311,12 +2412,12 @@ function render(){if(!G||!GEO)return;const g=cx,W=GEO.W,H=GEO.H,u=GEO.u,t=G.ptim
     const sag=ph==='fight'?u*10*(1-Math.min(1,T)):ph==='fly'?u*2:u*7;g.quadraticCurveTo((tip.x+end.x)/2,(tip.y+end.y)/2+sag,end.x,end.y);g.stroke();}
   for(const p of G.parts){g.fillStyle='rgba(235,245,250,'+Math.min(1,p.life*1.5).toFixed(2)+')';g.beginPath();g.arc(p.x,p.y,p.r,0,7);g.fill();}
   a1Life(g,t);drawNear(g,t);drawRod(g,tip,T);a2Bell(g,tip,t);
-  if(G.cond.wx==='rain'){g.strokeStyle='rgba(220,230,240,.35)';g.lineWidth=1;g.beginPath();for(let i=0;i<70;i++){const x=Math.random()*W,y=Math.random()*H;g.moveTo(x,y);g.lineTo(x-u*.6,y+u*3);}g.stroke();}
+  if(G.cond.wx==='rain'){g.strokeStyle='rgba(220,230,240,.35)';g.lineWidth=1;g.beginPath();for(let i=0;i<(LOW?40:70);i++){const x=Math.random()*W,y=Math.random()*H;g.moveTo(x,y);g.lineTo(x-u*.6,y+u*3);}g.stroke();}
   if(P.tod==='night'){g.fillStyle='rgba(10,20,50,.12)';g.fillRect(0,0,W,H);}
   if(G.flash>0&&!calm()){g.fillStyle='rgba(255,250,220,'+Math.min(.55,G.flash*.6).toFixed(3)+')';g.fillRect(0,0,W,H);}
   a1Loupe(g,t);
   if(ph==='fight'&&G.ft)drawTension(g,G.ft);
-  else if(ph==='reel'&&G.ft){g.font='800 '+Math.round(clamp(u*3.4,13,17))+'px -apple-system,Segoe UI,Roboto,sans-serif';g.textAlign='center';g.fillStyle='rgba(255,255,255,.95)';g.shadowColor='rgba(0,0,0,.6)';g.shadowBlur=4;g.fillText('🐟 '+Math.max(0,G.ft.D).toFixed(0)+' '+L('м','m'),W/2,GEO.hz*.55+30);g.shadowBlur=0;}
+  else if(ph==='reel'&&G.ft){g.font='800 '+Math.round(clamp(u*3.4,13,17))+'px -apple-system,Segoe UI,Roboto,sans-serif';g.textAlign='center';g.fillStyle='rgba(255,255,255,.95)';g.shadowColor='rgba(0,0,0,.6)';g.shadowBlur=LOW?0:4;g.fillText('🐟 '+Math.max(0,G.ft.D).toFixed(0)+' '+L('м','m'),W/2,GEO.hz*.55+30);g.shadowBlur=0;}
   g.restore();}
 function rodTip(end,T){const b=GEO.tip,ph=G.phase;let x=b.x,y=b.y;
   if(ph==='fly'){const k=Math.min(1,G.t/.6);y-=Math.sin(Math.min(1,k*2)*Math.PI)*GEO.u*10;x-=Math.sin(Math.min(1,k*2)*Math.PI)*GEO.u*3;}
@@ -2374,7 +2475,9 @@ function drawReeds(g,t){const u=GEO.u,W=GEO.W,y=GEO.shY,wk=G.cond.wx==='wind'?2.
 function drawNear(g,t){const u=GEO.u,W=GEO.W,H=GEO.H,yb=GEO.shY+(H-GEO.shY)*.52,night=G.cond.tod==='night',tn=G.P.tint;
   // костёр ночью и вечером
   if(night||G.cond.tod==='evening'&&G.cond.wx!=='rain'){const fx=W*.44,fy=GEO.shY+(H-GEO.shY)*.35,k=.8+.2*Math.sin(t*9)+.1*Math.sin(t*23);
-    const gl=g.createRadialGradient(fx,fy,1,fx,fy,u*(night?22:14)*k);gl.addColorStop(0,'rgba(255,170,70,'+(night?.45:.25)+')');gl.addColorStop(1,'rgba(255,170,70,0)');g.fillStyle=gl;g.fillRect(fx-u*25,fy-u*25,u*50,u*50);
+    if(LOW){if(!FIRE_SP||FIRE_SP.n!==night){const c=document.createElement('canvas');c.width=c.height=96;const q=c.getContext('2d'),gr=q.createRadialGradient(48,48,1,48,48,48);gr.addColorStop(0,'rgba(255,170,70,'+(night?.45:.25)+')');gr.addColorStop(1,'rgba(255,170,70,0)');q.fillStyle=gr;q.fillRect(0,0,96,96);FIRE_SP={c,n:night};}
+      const rr=u*(night?22:14)*k;g.drawImage(FIRE_SP.c,fx-rr,fy-rr,rr*2,rr*2);}
+    else{const gl=g.createRadialGradient(fx,fy,1,fx,fy,u*(night?22:14)*k);gl.addColorStop(0,'rgba(255,170,70,'+(night?.45:.25)+')');gl.addColorStop(1,'rgba(255,170,70,0)');g.fillStyle=gl;g.fillRect(fx-u*25,fy-u*25,u*50,u*50);}
     g.fillStyle='#4a3020';g.save();g.translate(fx,fy);g.rotate(.3);g.fillRect(-u*3,-u*.5,u*6,u*1);g.rotate(-.6);g.fillRect(-u*3,-u*.5,u*6,u*1);g.restore();
     for(const [c,sz] of [['#ff7a1a',1],['#ffc43a',.62],['#fff2b0',.3]]){g.fillStyle=c;g.beginPath();g.moveTo(fx-u*1.8*sz,fy);g.quadraticCurveTo(fx-u*1.4*sz,fy-u*3*sz*k,fx+Math.sin(t*7)*u*.4,fy-u*5*sz*k);g.quadraticCurveTo(fx+u*1.4*sz,fy-u*3*sz*k,fx+u*1.8*sz,fy);g.fill();}}
   drawShoreDec(g,t);
@@ -2479,11 +2582,11 @@ function a1FloatPose(A,t){const ph=G.phase,f=G.fl,k=G.pk&&G.pk.f?biteK(G.pk.f):'
   return {dx,dy,rot};}
 function a1Loupe(g,t){const A=a1S(),f=G.fl;if(A.lp<=.01||!f)return;const P=G.P,{r,cx,cy}=a1LoupeGeo(),wl=cy+r*.22,h=r*.95,w=h*.34,ps=a1FloatPose(A,t),night=P.tod==='night';
   g.save();g.globalAlpha=A.lp;
-  g.fillStyle='rgba(0,0,0,.22)';g.beginPath();g.arc(cx+2,cy+5,r+6,0,7);g.fill();
+  if(!LOW){g.fillStyle='rgba(0,0,0,.22)';g.beginPath();g.arc(cx+2,cy+5,r+6,0,7);g.fill();}
   g.save();g.beginPath();g.arc(cx,cy,r,0,7);g.clip();
   const wg=g.createLinearGradient(0,cy-r,0,cy+r);wg.addColorStop(0,P.water1);wg.addColorStop(1,P.water2);g.fillStyle=wg;g.fillRect(cx-r,cy-r,r*2,r*2);
   g.fillStyle=rgba(P.bot,.25);g.fillRect(cx-r,cy-r,r*2,r*.5);
-  g.lineCap='round';for(let i=0;i<9;i++){const yy=cy-r*.9+((i*41+t*9)%(r*1.9)),xx=cx-r+((i*67+t*(6+i))%(r*2.4))-r*.2,a=(Math.sin(t*1.7+i)+1)/2;
+  g.lineCap='round';for(let i=0;i<(LOW?0:9);i++){const yy=cy-r*.9+((i*41+t*9)%(r*1.9)),xx=cx-r+((i*67+t*(6+i))%(r*2.4))-r*.2,a=(Math.sin(t*1.7+i)+1)/2;
     g.strokeStyle='rgba(255,255,255,'+(.08+.14*a).toFixed(3)+')';g.lineWidth=Math.max(1,r*.025);g.beginPath();g.moveTo(xx,yy);g.lineTo(xx+r*(.15+.1*(i%3)),yy);g.stroke();}
   const fx=cx+ps.dx*h,id=fltSel();
   for(const q of A.lr){const rr0=w*(1.2+q.r*3.2*q.s);g.strokeStyle='rgba(255,255,255,'+(.55*q.l).toFixed(3)+')';g.lineWidth=Math.max(1.2,r*.02);g.beginPath();g.ellipse(fx,wl,rr0,rr0*.28,0,0,7);g.stroke();}
@@ -2493,7 +2596,7 @@ function a1Loupe(g,t){const A=a1S(),f=G.fl;if(A.lp<=.01||!f)return;const P=G.P,{
   const at=(above)=>{g.save();g.beginPath();if(above)g.rect(cx-r,cy-r,r*2,wl-(cy-r));else g.rect(cx-r,wl,r*2,cy+r-wl);g.clip();if(!above)g.globalAlpha*=.3;
     g.translate(fx,wl+ps.dy*h);g.rotate(ps.rot);keel();floatBody(g,w,h,id,night);g.restore();};
   at(false);at(true);
-  if(ps.dy<.5){g.save();g.beginPath();g.rect(cx-r,wl,r*2,cy+r-wl);g.clip();g.globalAlpha*=.22*(1-ps.dy*2);g.translate(fx,wl);g.scale(1,-.7);g.translate(0,ps.dy*h);g.rotate(ps.rot);floatBody(g,w,h,id,night);g.restore();}
+  if(ps.dy<.5&&!LOW){g.save();g.beginPath();g.rect(cx-r,wl,r*2,cy+r-wl);g.clip();g.globalAlpha*=.22*(1-ps.dy*2);g.translate(fx,wl);g.scale(1,-.7);g.translate(0,ps.dy*h);g.rotate(ps.rot);floatBody(g,w,h,id,night);g.restore();}
   g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1;g.beginPath();g.moveTo(cx-r,wl);g.lineTo(cx+r,wl);g.stroke();
   g.restore();
   // латунное кольцо, как у бинокля; LK: рамка — в стиле темы (LOOK.ring)
@@ -2634,14 +2737,14 @@ function a1Sky(g,t){const A=a1S(),P=G.P,W=GEO.W,u=GEO.u;
     if(b.gull){g.strokeStyle='rgba(60,60,60,.5)';g.lineWidth=1;g.stroke();}}}
 // вода и берег (после бликов): рябь от ветра; (перед ближним планом): стрекоза, бабочка, светлячки
 function a1Water(g,t){const A=a1S();if(A.low||!A.wp.length)return;const u=GEO.u;
-  for(const p of A.wp){const y=GEO.yOf(p.d),ps=GEO.ps(p.d)*2.2,w=p.w*ps*1.6,h=w*.18;const gr=g.createRadialGradient(p.x,y,1,p.x,y,w);gr.addColorStop(0,'rgba(10,30,45,.16)');gr.addColorStop(1,'rgba(10,30,45,0)');
-    g.save();g.translate(p.x,y);g.scale(1,h/w);g.translate(-p.x,-y);g.fillStyle=gr;g.beginPath();g.arc(p.x,y,w,0,7);g.fill();g.restore();
+  for(const p of A.wp){const y=GEO.yOf(p.d),ps=GEO.ps(p.d)*2.2,w=p.w*ps*1.6,h=w*.18;if(LOW){g.save();g.translate(p.x,y);g.scale(1,h/w);glowSp(g,0,0,w,'10,30,45',.16);g.restore();}const gr=LOW?null:g.createRadialGradient(p.x,y,1,p.x,y,w);if(gr){gr.addColorStop(0,'rgba(10,30,45,.16)');gr.addColorStop(1,'rgba(10,30,45,0)');}
+    if(gr){g.save();g.translate(p.x,y);g.scale(1,h/w);g.translate(-p.x,-y);g.fillStyle=gr;g.beginPath();g.arc(p.x,y,w,0,7);g.fill();g.restore();}
     g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=1;for(let i=-2;i<=2;i++){const xx=p.x+i*w*.3;g.beginPath();g.moveTo(xx-u*ps,y+i*h*.2);g.lineTo(xx+u*ps,y+i*h*.2);g.stroke();}}}
 function a1Life(g,t){const A=a1S();if(A.low)return;const u=GEO.u;
   if(A.df){const d=A.df;g.save();g.translate(d.x,d.y);g.fillStyle='#2b6f8f';g.fillRect(-u*1.6,-u*.12,u*2.2,u*.25);g.fillStyle='rgba(220,240,255,.6)';const fl=Math.sin(t*60)*.4;
     for(const s of [-1,1]){g.beginPath();g.ellipse(-u*.3,s*u*.5*(1+fl*.2),u*.9,u*.22,s*.3,0,7);g.fill();g.beginPath();g.ellipse(u*.2,s*u*.45,u*.8,u*.2,-s*.3,0,7);g.fill();}g.restore();}
   if(A.bf){const b=A.bf,fl=Math.abs(Math.sin(t*14));g.save();g.translate(b.x,b.y);g.fillStyle='#f6c945';for(const s of [-1,1]){g.beginPath();g.ellipse(s*u*.5*fl,0,u*.6*fl+u*.1,u*.75,0,0,7);g.fill();}g.fillStyle='#333';g.fillRect(-u*.08,-u*.5,u*.16,u*1);g.restore();}
-  if(A.ff.length&&(G.P.tod==='night'||G.P.tod==='evening')){for(const p of A.ff){const a=(Math.sin(t*2+p.ph)+1)/2;if(a<.3)continue;const gl=g.createRadialGradient(p.x,p.y,0,p.x,p.y,u*1.4);gl.addColorStop(0,'rgba(220,255,140,'+(a*.9).toFixed(2)+')');gl.addColorStop(1,'rgba(220,255,140,0)');g.fillStyle=gl;g.fillRect(p.x-u*1.5,p.y-u*1.5,u*3,u*3);}}
+  if(A.ff.length&&(G.P.tod==='night'||G.P.tod==='evening')){for(const p of A.ff){const a=(Math.sin(t*2+p.ph)+1)/2;if(a<.3)continue;if(LOW){const ga=g.globalAlpha;g.globalAlpha=ga*a*.9;glowSp(g,p.x,p.y,u*1.4,'220,255,140',1);g.globalAlpha=ga;continue;}const gl=g.createRadialGradient(p.x,p.y,0,p.x,p.y,u*1.4);gl.addColorStop(0,'rgba(220,255,140,'+(a*.9).toFixed(2)+')');gl.addColorStop(1,'rgba(220,255,140,0)');g.fillStyle=gl;g.fillRect(p.x-u*1.5,p.y-u*1.5,u*3,u*3);}}
   if(G.P.wx==='rain'){g.strokeStyle='rgba(230,240,250,.35)';g.lineWidth=1;g.beginPath();for(let i=0;i<10;i++){const x=Math.random()*GEO.W,y=GEO.shY+u*2+Math.random()*(GEO.H-GEO.shY-u*2);g.moveTo(x-u*.6,y);g.quadraticCurveTo(x,y-u*.9,x+u*.6,y);}g.stroke();}}
 /* ---------- 4) фото трофея: кадр рисуется заново из параметров (S.ph хранит только {id,w,pi,tod,wx,d,k}), альбом «📷 Фото», «В историю» (только VK) ---------- */
 const PH_MAX=24,A1_MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'],A1_MON_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2784,7 +2887,7 @@ function decOn(id){return !!(S.dec[id]&&!(S.decOff&&S.decOff[id]));}
 function decCount(){return DECOR.filter(d=>S.dec[d.id]).length;}
 // поплавок в своих координатах: (0,0) — ватерлиния, вверх — минус; w — полуширина, h — высота
 function floatBody(g,w,h,id,night){const c=FLT[id]||FLT.std,quill=id==='goose',bw=quill?w*.6:w,bh=quill?h*.5:h*.32;
-  if(id==='glow'||night){const cl=id==='glow'?'150,255,120':'120,255,140',cy=-h*(id==='glow'?.35:1.1),gl=g.createRadialGradient(0,cy,1,0,cy,w*(id==='glow'?3.6:2.5));gl.addColorStop(0,'rgba('+cl+',.5)');gl.addColorStop(1,'rgba('+cl+',0)');g.fillStyle=gl;g.fillRect(-w*4,-h*2.4,w*8,h*2.8);}
+  if(id==='glow'||night){const cl=id==='glow'?'150,255,120':'120,255,140',cy=-h*(id==='glow'?.35:1.1);if(LOW)glowSp(g,0,cy,w*(id==='glow'?3.6:2.5),cl,.5,h*.4);else{const gl=g.createRadialGradient(0,cy,1,0,cy,w*(id==='glow'?3.6:2.5));gl.addColorStop(0,'rgba('+cl+',.5)');gl.addColorStop(1,'rgba('+cl+',0)');g.fillStyle=gl;g.fillRect(-w*4,-h*2.4,w*8,h*2.8);}}
   g.fillStyle=c[0];g.beginPath();g.ellipse(0,0,bw,bh,0,Math.PI,0);g.fill();
   g.fillStyle=c[1];g.beginPath();g.ellipse(0,-bh*.16,bw*.98,bh*.78,0,Math.PI,0);g.fill();
   if(id==='bee'||id==='melon'){g.save();g.beginPath();g.ellipse(0,0,bw,bh,0,Math.PI,0);g.clip();g.fillStyle=id==='bee'?'#222':'#1b6e2e';
@@ -2801,7 +2904,7 @@ const DRAW_DEC={
   bowl(g,x,y,u,tn){g.fillStyle=tn('#3b7dd8');g.beginPath();g.moveTo(x-u*2.3,y-u*1.4);g.lineTo(x+u*2.3,y-u*1.4);g.lineTo(x+u*1.6,y);g.lineTo(x-u*1.6,y);g.closePath();g.fill();
     g.fillStyle=tn('#e9eef2');g.beginPath();g.ellipse(x,y-u*1.4,u*2.3,u*.6,0,0,7);g.fill();g.fillStyle=tn('#8fb0c4');g.beginPath();g.ellipse(x,y-u*1.4,u*1.7,u*.36,0,0,7);g.fill();
     g.fillStyle=tn('#c9d2c8');g.beginPath();g.moveTo(x+u*.1,y-u*1.5);g.lineTo(x+u*1.5,y-u*2.6);g.lineTo(x+u*1.3,y-u*1.4);g.fill();},
-  lamp(g,x,y,u,tn,t,lit){if(lit){const k=.9+.1*Math.sin(t*7),gl=g.createRadialGradient(x,y-u*2.5,1,x,y-u*2.5,u*15*k);gl.addColorStop(0,'rgba(255,205,100,.42)');gl.addColorStop(1,'rgba(255,205,100,0)');g.fillStyle=gl;g.fillRect(x-u*16,y-u*18,u*32,u*32);}
+  lamp(g,x,y,u,tn,t,lit){if(lit){const k=.9+.1*Math.sin(t*7);if(LOW)glowSp(g,x,y-u*2.5,u*15*k,'255,205,100',.42);else{const gl=g.createRadialGradient(x,y-u*2.5,1,x,y-u*2.5,u*15*k);gl.addColorStop(0,'rgba(255,205,100,.42)');gl.addColorStop(1,'rgba(255,205,100,0)');g.fillStyle=gl;g.fillRect(x-u*16,y-u*18,u*32,u*32);}}
     const fr=tn('#2f4a3a');g.fillStyle=fr;g.fillRect(x-u*1.5,y-u*1,u*3,u*1);
     g.fillStyle=lit?'#ffd86b':tn('#cfe3ea');rr(g,x-u*1.1,y-u*4,u*2.2,u*3,u*.8);g.fill();
     if(lit){g.fillStyle='#fff6c8';g.beginPath();g.ellipse(x,y-u*2.3,u*.35,u*.85,0,0,7);g.fill();}
@@ -2844,7 +2947,7 @@ const DRAW_DEC={
     g.strokeStyle=tn('#f2efe6');g.lineWidth=Math.max(1,u*.5);g.beginPath();g.moveTo(-u*9.6,-u*2.1);g.quadraticCurveTo(0,-u*1,u*9.6,-u*2.5);g.stroke();
     g.strokeStyle=tn('#6a4220');g.lineWidth=Math.max(1,u*.25);g.beginPath();g.moveTo(-u*8.6,-u*.9);g.quadraticCurveTo(0,u*.1,u*8.6,-u*1.2);g.stroke();
     g.fillStyle=tn('#6a4220');g.fillRect(-u*3.5,-u*2,u*1.6,u*.5);g.fillRect(u*2,-u*2.2,u*1.6,u*.5);g.restore();},
-  house(g,x,y,u,tn,t,lit){const w=u*14,h=u*7.5;if(lit){const gl=g.createRadialGradient(x-w*.19,y-h*.5,1,x-w*.19,y-h*.5,u*12);gl.addColorStop(0,'rgba(255,210,110,.4)');gl.addColorStop(1,'rgba(255,210,110,0)');g.fillStyle=gl;g.fillRect(x-u*14,y-u*14,u*28,u*20);}
+  house(g,x,y,u,tn,t,lit){const w=u*14,h=u*7.5;if(lit){if(LOW)glowSp(g,x-w*.19,y-h*.5,u*12,'255,210,110',.4,y+u*6);else{const gl=g.createRadialGradient(x-w*.19,y-h*.5,1,x-w*.19,y-h*.5,u*12);gl.addColorStop(0,'rgba(255,210,110,.4)');gl.addColorStop(1,'rgba(255,210,110,0)');g.fillStyle=gl;g.fillRect(x-u*14,y-u*14,u*28,u*20);}}
     g.fillStyle=tn('#8a8f93');g.fillRect(x+w*.2,y-h*1.85,u*1.5,u*4);puffs(g,x+w*.2+u*.75,y-h*1.85-u*.4,u*1.1,t,'225,225,225');
     g.fillStyle=tn('#9a6a3a');g.fillRect(x-w/2,y-h,w,h);g.strokeStyle=tn('#7a5028');g.lineWidth=Math.max(1,u*.25);g.beginPath();for(let i=1;i<5;i++){g.moveTo(x-w/2,y-h*i/5);g.lineTo(x+w/2,y-h*i/5);}g.stroke();
     g.fillStyle=tn('#5b3a2a');g.beginPath();g.moveTo(x-w*.62,y-h);g.lineTo(x,y-h*1.9);g.lineTo(x+w*.62,y-h);g.closePath();g.fill();

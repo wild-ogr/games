@@ -186,7 +186,7 @@ function tension(g,o){var x0=o.x0,y0=o.y0,bw=o.bw,bh=o.bh,fs=o.fs,T=o.T,sc=o.sc,
   if(T>1){g.fillStyle=CV.bad;}else{var gr=g.createLinearGradient(sc(0),0,sc(1),0);gr.addColorStop(0,CV.ok);gr.addColorStop(.7,CV.ok);gr.addColorStop(1,CV.warn);g.fillStyle=gr;}
   g.fillRect(sc(0),y0,w,bh);g.restore();
   // бегунок со свечением
-  g.save();g.shadowColor=CV.glow;g.shadowBlur=12;g.fillStyle=CV.mark;rr(g,sc(T)-3,y0-6,6,bh+12,3);g.fill();g.restore();
+  g.save();g.shadowColor=CV.glow;g.shadowBlur=window.__low?0:12;g.fillStyle=CV.mark;rr(g,sc(T)-3,y0-6,6,bh+12,3);g.fill();g.restore();
   g.font='600 '+fs+'px '+CV.font+',-apple-system,Segoe UI,Roboto,sans-serif';g.textBaseline='alphabetic';g.textAlign='left';g.fillStyle=CV.tx;
   g.fillText(o.t1,x0,y0-7);g.textAlign='right';g.fillStyle=CV.tx2;g.fillText(o.t2,x0+bw,y0-7);
   if(lbl){g.font='500 '+(fs-1)+'px '+CV.font+',-apple-system,Segoe UI,Roboto,sans-serif';g.fillStyle=CV.tx2;g.textAlign='center';var yl=y0+bh+fs+3;

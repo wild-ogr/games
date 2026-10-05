@@ -3,6 +3,20 @@
 <head>
 <meta charset="utf-8">
 <script>window.__se=[];addEventListener('error',function(e){var t=e.target,s=window.__se;if(s&&s.length<10)s.push(t&&t.tagName?[2,t.src||t.href||'',t.tagName]:[1,e.message,e.filename,e.lineno]);},true);</script> <!-- STAT v1.2: ранние ошибки и незагрузившиеся файлы — до всех скриптов -->
+<script>/* предохранитель загрузки (05.10.2026): свой файл игры не загрузился → перезагрузка до 2 раз, потом окно «Обновить» */
+(function(){var K='ldfail',n=0,done=false;try{n=+sessionStorage.getItem(K)||0;}catch(e){}
+function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
+  try{var a=document.createElement('a');a.href=u;if(a.host!==location.host)return false;}catch(e){return false;}
+  return !/vk-bridge|sdk\.js/.test(u);}
+addEventListener('error',function(e){if(done||!own(e.target))return;done=true;
+  if(n<2){try{sessionStorage.setItem(K,n+1);}catch(x){}setTimeout(function(){location.reload();},700+n*1500);return;}
+  var ru=!/^en/i.test(navigator.language||'ru')||/[?&](vk_app_id|vk)=/.test(location.search);
+  function show(){var d=document.createElement('div');d.id='ldfail';d.setAttribute('style','position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#1c2b3a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px/1.4 system-ui,sans-serif;text-align:center;padding:24px');
+    d.innerHTML='<div style="max-width:320px">'+(ru?'Не получилось загрузить игру. Проверьте интернет и попробуйте ещё раз.':'The game failed to load. Check your connection and try again.')+'</div><button type="button" style="margin-top:18px;font:700 18px system-ui,sans-serif;padding:12px 28px;border:0;border-radius:14px;background:#4caf50;color:#fff">'+(ru?'Обновить':'Reload')+'</button>';
+    d.querySelector('button').onclick=function(){try{sessionStorage.removeItem(K);}catch(x){}location.reload();};(document.body||document.documentElement).appendChild(d);}
+  if(document.body)show();else addEventListener('DOMContentLoaded',show);},true);
+addEventListener('load',function(){setTimeout(function(){if(!done)try{sessionStorage.removeItem(K);}catch(x){}},3000);});})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Тридевятая оборона: защита башен</title>
 <link rel="icon" href="data:,">
@@ -122,6 +136,9 @@ button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertic
 .big{width:100%;padding:14px;font-size:16px;border-radius:16px;white-space:normal;line-height:1.2}
 /* длинные подписи кнопок рекламы (особенно по-английски) переносятся, а не вылезают за окно */
 .btns .btn.ad{white-space:normal;line-height:1.2}
+/* pre: ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
+button[data-adwait]{position:relative}
+button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;font-size:16px;line-height:1;pointer-events:none}
 #mapCv{width:100%;border-radius:20px;display:block;margin:6px 0 10px;box-shadow:0 10px 30px rgba(0,0,0,.35);touch-action:pan-y}
 .lvls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .lvl{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:16px;padding:8px 4px 6px;text-align:center;font-weight:800;font-size:13px;line-height:1.15;min-height:74px;display:flex;flex-direction:column;align-items:center;justify-content:space-between}

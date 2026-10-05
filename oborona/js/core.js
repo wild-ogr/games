@@ -98,7 +98,7 @@ function cloudApply(start){if(!cloudPending||(!start&&typeof G!=='undefined'&&G&
 // VK передаёт в адрес игры параметры запуска (vk_app_id и др.); ?vk=1 — проверка VK-режима на маке
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
-const OK_LINK=''; // ссылка на игру в ОК; пусто — «Поделиться» в ОК спрятано
+const OK_LINK='https://ok.ru/game/512005500650'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 let ysdk=null,YP=null,VK=null,paused=false,muted=false;
 /*STAT*/
 /* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
@@ -107,13 +107,14 @@ let ysdk=null,YP=null,VK=null,paused=false,muted=false;
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
-   progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function. */
+   progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
 var STAT=(function(){
   var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
-      cfgO=null,cfgS=0,abs={},rdT=0,acted=0,pre=0,tp=0,fT=0,fS=0,fC=0,fN=0,fH=[],fLo=999,fHg=0,pfS=0;
+      cfgO=null,cfgS=0,abs={},rdT=0,acted=0,pre=0,tp=0,fL=0,fP=0,fR=0,fX=0,fA=0,fC=0,fN=0,fH=[],fLo=999,fHg=0,fJ=0,pfS=0,FGR=100;
   function ls(k,v){try{if(v===undefined)return window.localStorage.getItem(k);if(v===null)window.localStorage.removeItem(k);else window.localStorage.setItem(k,v);}catch(e){}return null;}
   function jp(s){try{return s?JSON.parse(s):null;}catch(e){return null;}}
   function now(){var t=0;try{t=O.now?O.now():0;}catch(e){}return typeof t==='number'&&t>1.6e12?t:Date.now();}
@@ -176,6 +177,7 @@ var STAT=(function(){
       window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;err('promise: '+(r&&r.message||r),r&&r.stack?String(r.stack).split('\n')[1]:'');});
       document.addEventListener('visibilitychange',function(){document.visibilityState==='hidden'?hide():show();});
       window.addEventListener('pagehide',hide);
+      window.addEventListener('blur',function(){fBrk();});window.addEventListener('focus',function(){fBrk();});
       var ts=['pointerdown','touchstart','keydown'];for(i=0;i<3;i++)document.addEventListener(ts[i],tap,{capture:true,passive:true});
       timer=setInterval(function(){if(on&&vis&&(Q.length||pend.length))flush();},FLUSH*1000);}
     setTimeout(flush,5000); // старое неотправленное + первые шаги — быстро (воронка первой минуты)
@@ -210,11 +212,13 @@ var STAT=(function(){
      оба не чаще раза в 20 с на место, поле n — сколько набежало. STAT.ad('int','none','cap'|'gap'|'nosdk'|'nofill') — межэкранная не показана. --- */
   var place='';
   function setPlace(p){place=String(p||'').slice(0,16);}
-  function adReq(f){aR[f]=Date.now();}
+  function adReq(f){aR[f]=Date.now();fBrk(2e5);}
   function thrN(k,n,p){var x=thr[k]||(thr[k]={c:0,t:0}),t=Date.now();x.c++;x.n=n;x.p=p;if(t-x.t>=THR){x.t=t;thrOut(x);}}
   function thrOut(x){if(!x.c)return;x.p.n=x.c;x.c=0;ev(x.n,x.p);}
-  function ad(f,r,code){var p={f:f,r:r,p:f==='int'?'int':(place||'?')};if(code!==undefined&&code!==null&&code!=='')p.c=scrub(code,24);
+  function ad(f,r,code,x){var p={f:f,r:r,p:f==='int'?'int':(place||'?')},k;if(code!==undefined&&code!==null&&code!=='')p.c=scrub(code,24);
+    if(x)for(k in x)if(x[k]!==undefined&&x[k]!==null&&p[k]===undefined)p[k]=x[k]; /* 4-й параметр — свои поля итога, напр. {pr:1} «ролик был готов к нажатию» */
     if(r==='hold'){thrN('h'+p.p,'ad',p);return;}
+    fX=0;fBrk(r==='show'?2e5:1000); /* плавность: пока идёт реклама (и секунду после итога) кадры не меряем */
     if(aR[f]){p.ms=Date.now()-aR[f];aR[f]=0;}ev('ad',p);if(f!=='int'&&r!=='show')place='';}
   function offer(p){p=String(p).slice(0,13);thrN('o'+p,'of_'+p,{p:p});}
   function adChk(f,ok){var x=aC[f]||(aC[f]={y:0,n:0});x[ok?'y':'n']++;}
@@ -232,11 +236,21 @@ var STAT=(function(){
 
   // --- первое нажатие: act {ms} от ready (без ready — от начала сеанса, при сворачивании, nr:1) ---
   function tap(){if(acted||!on)return;var t=Date.now();if(!rdT){pre++;if(!tp)tp=t;return;}acted=1;var p={ms:t-rdT};if(pre)p.pre=pre;ev('act',p);}
-  // --- плавность: STAT.frame() раз за кадр игрового цикла → perf {fps (медиана), lo (худшая секунда), hg (подвисаний > 1 с)} ---
-  function frame(){var t=Date.now(),d=t-fT;fT=t;if(d>5000||!fS){fS=t;fC=0;return;}fN++;fC++;if(d>1000)fHg++;
-    if(t-fS>=1000){d=Math.min(240,Math.round(fC*1000/(t-fS)));fH[d]=(fH[d]||0)+1;if(d<fLo)fLo=d;fS=t;fC=0;}}
+  /* --- плавность: STAT.frame() раз за кадр игрового цикла → perf {fps (медиана), lo (худшая секунда), hg (подвисаний > 1 с), jk (рывков > 0,25 с), s (секунд замера), v:2}.
+     v:2 (05.10): игра своим вызовом только говорит «я сейчас рисую» (fL). Модуль сам ведёт цепочку кадров браузера (ftick) и меряет промежутки
+     между НИМИ. Промежуток идёт в счёт, только если игра звала frame() прямо перед ним (не раньше FGR мс до его начала) — то есть ждала кадр.
+     Игра перестала звать (пауза, окно, спящий цикл) → цепочка гаснет, после возобновления первый промежуток не считается: пауза — не подвисание.
+     Помехи (fX): сворачивание/возврат, потеря/возврат фокуса (системные окна поверх игры), реклама от adReq/ad('show') до итога + 1 с — промежутки с ними
+     выбрасываются. Старый счёт (до 05.10, без v) мерил разрыв между вызовами игры и принимал её паузы за подвисания — его hg и lo не верить. --- */
+  function frame(){fL=Date.now();if(!fR&&on&&window.requestAnimationFrame){fR=1;requestAnimationFrame(ftick);}}
+  function ftick(){var t=Date.now(),d=t-fP,ok=fP>0&&fL>=fP-FGR&&fX<fP&&vis&&d>=0&&d<=5000;fR=0;
+    if(t-fL>FGR&&!ok){fP=0;return;}                 // игра кадров не просит — серия кончилась
+    fP=t;fR=1;requestAnimationFrame(ftick);if(!ok)return;
+    fN++;fC++;fA+=d;if(d>1000)fHg++;if(d>250)fJ++;
+    if(fA>=1000){d=Math.min(240,Math.round(fC*1000/fA));fH[d]=(fH[d]||0)+1;if(d<fLo)fLo=d;fA=0;fC=0;}}
+  function fBrk(ms){var t=Date.now()+(ms||0);if(t>fX)fX=t;}   // помеха: промежутки кадров до этой минуты не считаем
   function perf(){var i,s=0,h=0;if(pfS||fN<300)return;for(i=0;i<=240;i++)s+=fH[i]||0;if(!s)return;pfS=1;for(i=0;i<=240;i++){h+=fH[i]||0;if(h*2>=s)break;}
-    ev('perf',{fps:i,lo:fLo,hg:fHg});}
+    ev('perf',{fps:i,lo:fLo,hg:fHg,jk:fJ,s:s,v:2});}
 
   // --- ошибки JS: не больше MAXERR разных за сеанс, без адресов с параметрами (в них vk_user_id!); x — доп. поля (e:1 — до запуска) ---
   function err(m,src,ln,col,x){if(!on||errN>=MAXERR)return;m=scrub(m||'?',120);src=scrub(String(src||'').replace(/[?#].*$/,'').replace(/^.*\//,''),40)+(ln?':'+ln+(col?':'+col:''):'');
@@ -273,12 +287,12 @@ var STAT=(function(){
     for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(O.url,JSON.stringify(b)));}catch(e){}
       if(!ok||srv)left.push(b);}
     pend=left;keep();if(pend.length&&!srv)send(pend[0]);}
-  function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fS=0;rel();var k,p={d:actSec()};
+  function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
     if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
-  function show(){if(!on||vis)return;vis=true;actT=Date.now();
+  function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
       if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
       var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
@@ -300,14 +314,14 @@ var STAT=(function(){
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
     progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
-    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,pl:place};}};
+    _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v2.0-100423',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v2.0-100521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
@@ -345,19 +359,19 @@ var SOC=(function(){
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
   // ok — ID этой игры в Одноклассниках (vk_ok_app_id), когда она там вышла; без него в ОК игра в «Ещё игры» не показывается.
   var GAMES=[
-    {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p'},
-    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p'},
-    {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s'},
-    {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s'},
+    {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p',ok:512004864050},
+    {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p',ok:512005727621},
+    {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s',ok:512005580574},
+    {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s',ok:512005500650},
     {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',off:'all'},
-    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c'},
-    {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c'},
-    {id:54792011,t:'Паук на даче',a:0,i:7,g:'c'},
-    {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c'},
+    {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c',ok:512005141228},
+    {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c',ok:512005597603},
+    {id:54792011,t:'Паук на даче',a:0,i:7,g:'c',ok:512005626567},
+    {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c',ok:512005010476},
     {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all'},
-    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p'},
-    {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r'},
-    {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p'}
+    {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p',ok:512005552366},
+    {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r',ok:512005219424},
+    {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p',ok:512005471658}
   ];
   var N=GAMES.length;
   function qp(k){var m=new RegExp('[?&]'+k+'=([^&#]*)').exec(location.search);return m?decodeURIComponent(m[1]):'';}
@@ -419,7 +433,7 @@ var SOC=(function(){
     return send('VKWebAppShare',{link:OKP?O.okLink:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
   function group(){if(OKP&&!O.okGroup)return Promise.resolve(false);
     return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
-  function open(g){if(OKP&&!g.ok)return Promise.resolve(false);
+  function open(g){if(OKP&&!(g.ok&&OKWEB))return Promise.resolve(false); // ОК: OpenApp есть только на сайте и в мобильном браузере
     return send('VKWebAppOpenApp',OKP?{app_id:g.ok,app_is_local:true}:{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
     toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
 
@@ -538,9 +552,9 @@ async function vkInit(tries){
   try{await vkSend('VKWebAppInit',{},SDK_WAIT);}catch(e){if(tries>0)vkInit(tries-1);return;}
   if(VK)return;VK=window.vkBridge;SOC.ready();if(typeof updMore==='function')updMore();
   vkFitInit(); // VK web: подогнать высоту окна под экран (без ожидания)
-  VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',1);cloudFlush();}else if(t==='VKWebAppViewRestore'){setPause('vk',0);if(typeof adBack==='function')adBack();}});
+  VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',1);cloudFlush();}else if(t==='VKWebAppViewRestore'){setPause('vk',0);if(typeof adBack==='function')adBack();setTimeout(adBackChk,300);}});
   vkCloudInit(3).then(()=>{if(typeof PAY!=='undefined'&&!OK)PAY.init();}); // покупки VK (js/pay.js): после моста и первого чтения облака
-  adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
+  adPreload('boot'); // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне, пока не станет «есть»
   interPre();} // подгрузка межэкранной (как в Богатыре); правила показа не меняются
 // Яндекс: игрок и облако — с тайм-аутом, иначе повисший запрос оставит игру без облака навсегда
 async function ycloud(n){if(!ysdk)return;try{if(!YP)YP=await withTimeout(ysdk.getPlayer({scopes:false}),10000);cloudIn(await withTimeout(YP.getData(),10000));}
@@ -585,7 +599,7 @@ let adBusy=false;
    1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе);
    2) снова нет → «Ролик будет через несколько секунд…», кнопки «за рекламу» (AD_BTN_SEL) гаснут, в фоне раз в AD_POLL_MS спрашиваем VK (Check);
       «готов» (не раньше AD_COOL_MIN) → кнопки загораются и «Ролик готов»; ответа нет — загораются сами через AD_COOL_MS. Нажатие по погасшей кнопке VK не дёргает;
-   3) заранее: Check при запуске и после каждого показа, «не готов» — переспрашиваем в фоне (до 6 раз). Ответу «не готов» как запрету не верим.
+   3) заранее: Check при запуске и после каждого показа, «не готов» — переспрашиваем в фоне, пока не станет «готов» (см. pre ниже). Ответу «не готов» как запрету не верим.
    Награда — только за досмотр и один раз. Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора.
    Один приём во всех играх: hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ». */
 const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='.btn.ad',AD_BTN_RE=null;let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
@@ -593,8 +607,42 @@ function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_r
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
 function adSoon(){return Lg('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
 function adBtns(){const o=[];try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++){const b=q[i];if(!AD_BTN_RE||b.hasAttribute('data-adoff')||(AD_BTN_RE.test(b.textContent)&&!/без реклам|no ads/i.test(b.textContent)))o.push(b);}}catch(e){}return o;}
-function adPreload(n){if(!VK)return;clearTimeout(adChkT);n=n===undefined?6:n;const again=()=>{if(n>0)adChkT=setTimeout(()=>adPreload(n-1),AD_POLL_MS);};
-  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{STAT.adChk('rew',r&&r.result?1:0);if(r&&r.result)adReady();else again();},()=>{STAT.adChk('rew',0);again();});}
+/* pre (05.10): ролик за награду подгружаем ЗАРАНЕЕ и помним ответ. VKWebAppCheckNativeAds не только отвечает «есть/нет», но и просит VK загрузить ролик,
+   поэтому «нет» переспрашиваем, пока не станет «есть» (раньше — 6 раз за 30 с и тишина): шаги AD_STEP (6 раз по 5 с, 4 раза по 15 с), дальше раз в AD_STEP_MAX (45 с).
+   Не чаще раза в AD_ASK_MIN; в свёрнутой игре не спрашиваем (вернулись — спросили сразу). Ответ «есть» перепроверяем, только если он старше AD_FRESH и на экране есть кнопка ролика.
+   adSt: 1 — ролик готов, −1 — VK ответил «нет», 0 — неизвестно (ещё не спрашивали / ролик только что показан / мост молчит). Два «нет» подряд → на кнопках ролика значок ⏳
+   (data-adwait; нажать всё равно можно: «нет» — не запрет, показ сам попробует загрузить). Стало «есть» → значок уходит, «Ролик готов». Игра САМА к ролику не зовёт
+   (подсветок и реплик «за рекламу» в Обороне нет); появится такое предложение — показывать только при adLikely().
+   Статистика: в событии ad поле pr — 1 «был готов к нажатию», 0 «VK говорил нет», нет поля — неизвестно; при переходе «нет»→«есть» — adchk {f:'rew',w:секунд ждали,k:сколько «нет»,s:повод}.
+   Имя adWhy занято межэкранной — у опроса adAskWhy. Образец: hobby-analytics/release-h/preload/preload-sample.md, раздел «ОБРАЗЕЦ». Числа — let: стенд их укорачивает. */
+let AD_STEP=[5000,5000,5000,5000,5000,5000,15000,15000,15000,15000],AD_STEP_MAX=45000,AD_ASK_MIN=3000,AD_FRESH=120000,AD_LOOK_MS=20000;
+let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAskWhy='boot',adMarkT=0,adRdyToastT=0;
+function adLikely(){return !(VK&&adSt<0&&adNoN>=2);} // false — VK уже дважды подряд ответил «ролика нет»
+function adHid(){return document.hidden||!!PAUSE.vk||!!PAUSE.hidden;} // игра свёрнута (вкладка скрыта или VKWebAppViewHide)
+function adPreload(why){if(!VK)return;clearTimeout(adChkT);if(typeof why==="string"){adAskWhy=why;adStepN=0;}
+  if(adHid()||adW)return; // свёрнуты или ролик на экране — молчим; вернёмся / ролик закончится — спросим (adBackChk, итог показа)
+  const now=typeof why==='string'&&why!=='back'&&why!=='look'; // итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN
+  if(!now){const wait=adAsking?AD_ASK_MIN:adAskT+AD_ASK_MIN-Date.now();if(wait>0){adChkT=setTimeout(adPreload,wait);return;}}
+  adAskT=Date.now();const id=adAsking=++adAskN; // ответ на прежний, уже устаревший вопрос не слушаем
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(id!==adAskN)return;adAsking=0;const ok=!!(r&&r.result);STAT.adChk('rew',ok?1:0);adAns(ok);},()=>{if(id!==adAskN)return;adAsking=0;STAT.adChk('rew',0);adAns(null);});}
+function adAns(ok){const t=Date.now();
+  if(ok){if(adNoN)STAT.ev('adchk',{f:'rew',w:Math.round((t-adNoT0)/1000),k:adNoN,s:adAskWhy});
+    const was=adSt<0&&adNoN>=2;adSt=1;adStT=t;adNoN=0;adStepN=0;adReady();
+    if(adMark()&&was&&t>=adCoolT&&!adBusy&&t-adRdyToastT>30000){adRdyToastT=t;toast(Lg('Ролик готов — можно смотреть','The video is ready to watch'));}
+    return;}
+  if(ok===false){if(!adNoN)adNoT0=t;adNoN++;adSt=-1;adStT=t;adMark();} // null — мост не ответил: состояние не трогаем, но спрашивать продолжаем
+  adChkT=setTimeout(adPreload,AD_STEP[adStepN++]||AD_STEP_MAX);}
+// ⏳ на кнопках ролика, пока VK говорит «нет» (окна перерисовываются — поэтому раз в секунду, только пока «нет»); вернёт true, если значок был на видимой кнопке и снят
+function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];let seen=false,old=[];try{old=document.querySelectorAll('[data-adwait]');}catch(e){}
+  for(let i=0;i<q.length;i++)q[i].setAttribute('data-adwait','1');
+  for(let i=0;i<old.length;i++){const b=old[i];if(q.indexOf(b)<0){b.removeAttribute('data-adwait');if(!on&&b.offsetParent)seen=true;}}
+  if(on)adMarkT=setTimeout(adMark,1000);return seen;}
+// вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз
+function adBackChk(tick){if(!VK||adBusy||adHid())return;
+  if(adSt<1){if(tick!==1)adPreload('back');else if(Date.now()-adAskT>AD_STEP_MAX+2*AD_ASK_MIN)adPreload();return;} // по таймеру — только страховка, шаги не сбрасываем
+  if(Date.now()-adStT<AD_FRESH)return;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent){adPreload('look');return;}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(adChkT);else setTimeout(adBackChk,300);});
+setInterval(()=>adBackChk(1),AD_LOOK_MS);
 function adReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;if(vis&&!adBusy)toast(Lg('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
 function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
   if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:rgba(0,0,0,.74);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
@@ -605,7 +653,7 @@ function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(
 // кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду)
 function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT,q=adBtns();for(let i=0;i<q.length;i++){const b=q[i];
     if(off){b.style.opacity='.45';b.setAttribute('data-adoff','1');}else if(b.hasAttribute('data-adoff')){b.style.opacity='';b.removeAttribute('data-adoff');}}if(off)adDimT=setTimeout(adDim,1000);}
-function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload();}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload('none');}
 /* adt (04.10): обрыв ролика через 60 с. Раньше показ ждал ответа VK 60 с (vkSend(…,60000)), потом писал «недоступна», а поздний ответ «досмотрел» никто не слушал —
    на Android так кончалось каждое пятое нажатие: ролик посмотрен, награды нет. Теперь:
    1) ответа площадки ждём AD_WAIT_MS (180 с); игра всё это время на паузе «ad» (звук выключен, как при рекламе);
@@ -627,7 +675,7 @@ let adW=null,adPl='',adLateC=0;const adLateQ=[];
 {const sp=STAT.place;STAT.place=function(p){adPl=String(p||'');return sp.apply(STAT,arguments);};}
 /* позднее событие ролика (после выхода): ms — мс от нажатия (STAT v1.2; было w — секунды), x.p — место позднего события, x.dup — «ответ не пришёл» уже записано.
    Обычные итоги и slow — через STAT.ad (ms ставит модуль от STAT.adReq) */
-function adStat(r,c,ms,x){const p={f:'rew',r:r,p:x&&x.p||adPl||'?',ms:ms};if(c!==''&&c!=null)p.c=String(c).slice(0,24);if(x&&x.dup)p.dup=1;STAT.ev('ad',p);}
+function adStat(r,c,ms,x){const p={f:'rew',r:r,p:x&&x.p||adPl||'?',ms:ms};if(c!==''&&c!=null)p.c=String(c).slice(0,24);if(x&&x.dup)p.dup=1;if(x&&x.pr!=null)p.pr=x.pr;STAT.ev('ad',p);}
 /* ожидание ответа: rel('timeout'|'exit') — отпустить игрока без ответа */
 function adWatch(rel){adUnwatch();const w=adW={t0:Date.now(),back:0,rel:rel};w.tS=setTimeout(adBack,AD_SLOW_MS);w.tW=setTimeout(()=>{if(adW===w)rel('timeout');},AD_WAIT_MS);}
 function adUnwatch(){const w=adW;if(!w)return;adW=null;clearTimeout(w.tS);clearTimeout(w.tW);clearTimeout(w.tC);clearTimeout(w.tE);adWait(0);}
@@ -639,11 +687,11 @@ window.addEventListener('focus',adBack);window.addEventListener('pagehide',adLat
 ['pointerdown','touchstart','keydown'].forEach(n=>document.addEventListener(n,()=>{if(adW&&Date.now()-adW.t0>=AD_TAP_MS)adBack();},true));
 /* вышли без ответа: событие «так и не пришло» откладываем (вдруг придёт), но не дольше AD_LATE_MS и не дальше сворачивания игры */
 function adLatePend(rec){adLateQ.push(rec);rec.tF=setTimeout(()=>adLateFin(rec),AD_LATE_MS);}
-function adLateFin(rec){if(rec.fin||rec.hold)return;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);adStat('err',rec.exit?'exit':'timeout',rec.ms,{p:rec.p});}
+function adLateFin(rec){if(rec.fin||rec.hold)return;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);adStat('err',rec.exit?'exit':'timeout',rec.ms,{p:rec.p,pr:rec.pr});}
 function adLateFlush(){adLateQ.slice().forEach(adLateFin);}
 /* поздний ответ пришёл: r/c — что писать; после уже записанного «не пришло» отказ не пишем, а «досмотрел» пишем с dup */
 function adLateEnd(rec,r,c){const dup=rec.fin;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);if(dup&&r!=='ok')return;
-  adStat(r,c,Date.now()-rec.t0,{p:rec.p,dup:dup});}
+  adStat(r,c,Date.now()-rec.t0,{p:rec.p,dup:dup,pr:rec.pr});}
 /* цена одного ролика в золоте — гостинец Яги за рекламу (giftGold, data.js) */
 function adCoins(){return typeof giftGold==='function'?giftGold():40;}
 /* замена награды, которая уже неуместна (бой кончился, окно закрыто): золото по ПОЛНОЙ цене обещанного (n); цены в золоте нет — цена одного ролика adCoins() */
@@ -654,11 +702,11 @@ function showRewarded(cb0,onFail0,late0){
   if(Date.now()<adCoolT){STAT.ad('rew','hold');toast(Lg('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds'));if(onFail0)onFail0();adDim();return;} // STAT v1.2: нажатие по погасшей (место — от adOn)
   STAT.adReq('rew'); // STAT v1.2: нажатие → ms в итоговом ad
   adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},AD_WAIT_MS*2+AD_RETRY_MS+15000);
-  const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';
+  const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0; /* pre: был ли ролик готов к нажатию */
   let paid=false,st=0; /* st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний) */
   const cb=()=>{if(paid)return;paid=true;adBusy=false;cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
-  const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c); // STAT v1.2: ms ставит модуль; место живёт до итога
-  const rel=why=>{if(st)return;st=2;rec.ms=Date.now()-t0;rec.exit=why==='exit';adUnwatch();adClose();adPreload();
+  const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr}); // STAT v1.2: ms ставит модуль; место живёт до итога; pre: pr — был ли ролик готов к нажатию (нужен STAT с 4-м параметром)
+  const rel=why=>{if(st)return;st=2;rec.ms=Date.now()-t0;rec.exit=why==='exit';adUnwatch();adClose();adPreload('exit');
     onFail();adDim();toast(rec.exit?Lg('Хорошо. Подтвердится просмотр — награду отдам','All right. Once the view is confirmed, the reward is yours'):Lg('Не дождался ответа о просмотре. Придёт — награду отдам','No answer about the video yet. If it comes, the reward is yours'));adLatePend(rec);};
   const lateOk=()=>{if(paid)return;rec.hold=1;if(adOther()){setTimeout(lateOk,1000);return;} /* другая реклама или игра свёрнута — подождём (hold: «не пришло» уже не пишем) */
     paid=true;lastAdT=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}
@@ -667,15 +715,15 @@ function showRewarded(cb0,onFail0,late0){
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL);onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
   if(VK){
     let tries=0;
-    const go=()=>{adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{
+    const go=()=>{clearTimeout(adChkT);if(adSt>0){adSt=0;adMark();}adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{
         if(st===2){if(r&&r.result)lateOk();else adLateEnd(rec,'fail','late');return;}
         if(st)return;st=1;adUnwatch();adClose();
-        if(r&&r.result){stat('ok',tries?'retry':'');adPreload();cb();}else{stat('fail','noresult');toast(AD_FAIL);adPreload();onFail();}
+        if(r&&r.result){stat('ok',tries?'retry':'');adPreload('shown');cb();}else{stat('fail','noresult');toast(AD_FAIL);adPreload('fail');onFail();}
       },e=>{
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
-        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload();}
+        if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
         onFail();adDim();});}; // adDim: колбэк мог заново открыть окно с кнопкой — гасим её сразу
     go();return;}
   if(!ysdk){if(LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail','nosdk');toast(AD_FAIL);onFail();}return;}
