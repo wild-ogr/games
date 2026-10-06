@@ -111,6 +111,14 @@ function needCard(UL,rerender){const g=S.gold,ga=giftReady()?giftAmt():0,ba=boos
 
 /* ---------- деревня ---------- */
 const VPOS={home:[.5,.62,1.1],forge:[.16,.72,.9],altar:[.84,.74,.8],barn:[.33,.5,.95],tower:[.7,.45,.9],well:[.5,.86,.7],hut:[.9,.52,.8],tavern:[.1,.46,.95],mill:[.28,.84,.85],fair:[.7,.84,.85]};
+/* ntf в деревне (решение владельца 06.10): если вопрос про напоминания VK положен, но в окне итогов победы его не показали (новый богатырь/облик, кузница,
+   не влез, следом межэкранная) — ntfPend, и он показывается плашкой на экране деревни после возвращения из похода. Одно предложение за сеанс и расписание — в SOC.offer;
+   не пока нет кузницы (там обучение «первым делом — кузница»), не при открытом окне, не при рекламе. Плашка живёт до нажатия или до следующего похода */
+let ntfPend=false,ntfV=null;
+function ntfVillage(){
+  if(!ntfV&&ntfPend&&curTab==='Village'&&!G&&S.village.forge&&!$('modal').classList.contains('on')&&typeof SOC!=='undefined'&&SOC.ntfDue()){
+    const o=SOC.offer(S.runs||0,Date.now()-ADV.last<60000||adShowing||adBusy);if(o){ntfPend=false;if(o.k==='ntf')ntfV=o;}}
+  return ntfV?'<div class="card ntfv" id="vNtf"><p>'+ntfV.t+'</p><button class="btn ghost" id="vNtfB">'+ntfV.b+'</button></div>':'';}
 function renderVillage(){const el=$('tabVillage');const giftOk=nowMs()-(S.gift||0)>4*3600e3,gAmt=giftAmt(),mill=!!S.village.mill,vet=!!S.runs;
   let h='<canvas id="village"></canvas>';
   if(!S.runs)h+='<div class="card"><div class="row"><img class="ic" src="'+ic('hp_dob')+'"><div class="t"><b>'+L('Нечисть лезет из леса!','Monsters are pouring out of the forest!')+'</b><span>'+L('Жми «В поход». Золото из походов тратим тут: строим деревню и куём силу.','Tap “Battle!”. Spend gold from runs here: build the village and forge your strength.')+'</span></div></div></div>';
@@ -118,6 +126,7 @@ function renderVillage(){const el=$('tabVillage');const giftOk=nowMs()-(S.gift||
   if(mill){const g=afkGold(),cap=afkCapH(),h2=afkH();
     h+='<div class="card treasury"><div class="row"><img class="ic" src="'+ic('chest',96)+'"><div class="t"><b>'+L('Казна: ','Treasury: ')+fmtNum(g)+goldW()+'</b><span>'+L(afkRate()+' в час, пока тебя нет · вмещает '+String(cap).replace('.',',')+' ч',afkRate()+' per hour while you’re away · holds '+cap+' h')+'</span><div class="bar"><i style="width:'+Math.round(h2/cap*100)+'%"></i></div></div></div>'+
       (g>0?'<div class="btns" style="flex-direction:row"><button class="btn gold" id="afkTake" style="flex:1">'+L('Забрать ','Collect ')+fmtNum(g)+'</button>'+(g>=30&&adOk()?'<button class="btn ad" id="afkX2" style="flex:1">'+L('🎬 ×2 за рекламу','🎬 ×2 for an ad')+'</button>':'')+'</div>':'')+'</div>';}
+  h+=ntfVillage(); /* ntf: отложенный вопрос рассказчика про напоминания VK — плашкой под картинкой деревни */
   const noForge=!S.village.forge;
   if(noForge)h+='<h2>'+L('Первым делом — кузница','First things first — the Forge')+'</h2><p class="sub">'+L('В кузнице прокачка остаётся навсегда. Остальные постройки откроются после неё.','Forge upgrades stay forever. Other buildings unlock after it.')+'</p>';
   else h+='<h2>'+L('Постройки','Buildings')+'</h2><p class="sub">'+L('Каждая постройка даёт силу во всех походах.','Every building makes you stronger in all runs.')+(mill?'':L(' Мельница откроет казну — золото без игры.',' The Mill opens the Treasury — gold while you’re away.'))+'</p>';
@@ -132,6 +141,7 @@ function renderVillage(){const el=$('tabVillage');const giftOk=nowMs()-(S.gift||
       (giftOk?'<button class="btn ad" id="giftBtn">'+L('🎬 За рекламу','🎬 Watch ad')+'</button>':'')+'</div>';
     if(mill&&bst<2)h+='<div class="card gift"><img src="'+ic('chest',60)+'" width="48" height="48"><div class="t" style="flex:1"><b>'+L('Казна сразу','Instant treasury')+'</b><span style="display:block;font-size:12.5px;color:var(--mut)">'+L('осталось '+(2-bst)+' из 2 сегодня',(2-bst)+' of 2 left today')+'</span></div><button class="btn ad" id="afkBoost">'+L('🎬 +'+ECO.boostH+' ч за рекламу','🎬 +'+ECO.boostH+' h for an ad')+'</button></div>';}
   el.innerHTML=h;drawVillage();
+  on('vNtfB',()=>{const o=ntfV;ntfV=null;const c=$('vNtf');if(c)c.remove();if(!o)return;STAT.ev('mod',{m:'soc',a:'offer'});Promise.resolve(o.run()).then(y=>{if(y&&o.ok)toast(o.ok);}).catch(()=>{});});
   if($('afkBoost'))STAT.offer('boost');on('afkBoost',()=>takeBoost(renderVillage));
   // пока идёт ролик ×2 — бесплатная кнопка не срабатывает (иначе ролик впустую)
   on('afkTake',()=>{if(!adBusy)takeAfk(1,renderVillage);});onAd('afkX2','afk2',()=>{const g0=afkGold();showRewarded(()=>takeAfk(2,renderVillage),null,()=>{const g=afkGold(),took=g<g0*.5,a=took?g0:g*2;if(a<=0)return '';S.gold+=a;if(took)ern('ad',a);else{ern('oth',g);ern('ad',g);}if(!took)S.afkT=nowMs();save();SND.coin();lateRe();return '+'+fmtNum(a)+L(' золота из казны',' gold from the treasury');});}); // adt: казну уже забрали без ×2 — доплата второй половины
@@ -517,7 +527,7 @@ function drawMap(){const c=$('mapCv');if(!c)return;const r=c.getBoundingClientRe
     if(!open){g.font='18px system-ui';g.fillText('🔒',px,py);}});}
 
 /* ---------- забег ---------- */
-function startRun(chi,endless,wk,dr){ac();hideModal();gearRefresh();$('toast').classList.remove('on');document.body.classList.add('run');layout();newRun(chi,HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.hero:'dob',endless,wk,dr);musicPlay('run');YG.start();
+function startRun(chi,endless,wk,dr){ntfV=null;ac();hideModal();gearRefresh();$('toast').classList.remove('on');document.body.classList.add('run');layout();newRun(chi,HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.hero:'dob',endless,wk,dr);musicPlay('run');YG.start();
   STAT.screen('game');if(G.endless&&!G.weekly)STAT.lvl('inf');else STAT.lvl(G.chi+1,G.daily?'daily':G.weekly?'week':G.dif==='s'||G.dif==='h'?'ch_'+G.dif:'ch');} // сеча (бесконечный) — l:'inf' (STAT v1.2), как и в end // статистика: поход = «уровень» (номер главы, режим)
 function togglePause(){if(!G||G.over)return;if($('modal').classList.contains('on')&&!G.pauseOpen)return;
   if(G.pauseOpen){G.pauseOpen=false;G.paused=false;hideModal();musicDuck(1);YG.start();return;}
@@ -721,7 +731,9 @@ function openResult(win){const GE=G.endless||!!G.daily; // поход дня: к
   const forgeFirst=!S.village.forge&&!GE; // кузницы нет — главный шаг после похода: построить её
   // VK: одно предложение «Друзья и игры» (модуль SOC: со 2-й сессии, отказ → 30 дней, ≤3 раз) — ПОД кнопками итогов, только после победы в главе
   let more=false;const lowScr=window.innerHeight<620,tipL=!win&&!GE?lossTip():''; // «Подробнее» в итогах раскрыто; на низком экране совет после поражения — тоже там
-  const soc=win&&!GE&&typeof SOC!=='undefined'?SOC.offer(S.runs||0,Date.now()-ADV.last<60000||adShowing||adBusy||interPeek(runT)):null;let socUsed=false;
+  /* ntf (06.10): вопрос рассказчика про напоминания VK идёт тем же путём (SOC.offer вернёт k:'ntf') и ставится в окно СРАЗУ при открытии — см. socPick ниже */
+  const socBusy=Date.now()-ADV.last<60000||adShowing||adBusy||interPeek(runT),socFull=!!newHero||forgeFirst||skinsNew.length>0||(G.difUp==='s'&&G.chi===CH.length-1);
+  let soc=null,socUsed=false,rc=false; /* rc — плотный вид окна (как на низком экране), когда иначе вопрос про напоминания не влезает */
   const draw=()=>{const cur=doubled?R*XM:R,loss=!win&&!GE,k=G.lastBy&&EN[G.lastBy]?G.lastBy:null;
     const title=G.daily?(G.newRec?L('🏆 Лучший поход дня!','🏆 Best run of the day!'):L('Поход дня окончен','Daily Run over')):G.weekly?(G.newRec?L('🏆 Рекорд недели!','🏆 Week record!'):L('Испытание окончено','Trial over')):G.endless?(G.newRec?L('🏆 Новый рекорд!','🏆 New record!'):L('Сеча окончена','Battle over')):win?L('🎉 Победа! 🎉','🎉 Victory! 🎉'):L('Поход окончен','Run over');
     const sub=G.daily?L('Очки: ','Score: ')+fmtNum(G.drScore)+L(' · лучшие сегодня ',' · best today ')+fmtNum(drMine().best):G.weekly?weekly().name+L(': время ',': time ')+fmtTime(G.t)+L(' · рекорд недели ',' · week record ')+fmtTime(wkMine().best):G.endless?L('Время ','Time ')+fmtTime(G.t)+L(', боссов повержено: ',', bosses beaten: ')+(G.bossesKilled||0)+L(' · рекорд ',' · record ')+fmtTime(S.endBest):win?L('Земля «'+G.ch.name+'» освобождена!',G.ch.name+' is free!'):L('Золото из похода остаётся с тобой','You keep the gold from this run');
@@ -761,9 +773,10 @@ function openResult(win){const GE=G.endless||!!G.daily; // поход дня: к
       (doubled||R<ECO.x2min||!adOk()?'':'<button class="btn ad" id="rX2">'+L('🎬 Забрать ×'+XM+' ('+fmtNum(R*XM)+') за рекламу','🎬 Collect ×'+XM+' ('+fmtNum(R*XM)+') for an ad')+'</button>')+
       (forgeFirst&&next?'<button class="btn ghost" id="rNext">'+L('Дальше: ','Next: ')+next.name+'</button>':'')+
       (G.daily&&(PLAT==='vk'?!!VK&&!OK:LB.ok())?'<button class="btn gold" id="rLb">🏆 '+(PLAT==='vk'?'Таблица друзей':L('Рейтинг дня','Daily leaderboard'))+'</button>':'')+'</div>'+ // i18n:ru — только VK (там всегда русский)
-      (soc&&!socUsed?'<div class="socof" id="rSocBox"><p>'+soc.t+'</p><button class="btn ghost" id="rSoc">'+soc.b+'</button></div>':''),'result');
+      (soc&&!socUsed?'<div class="socof'+(soc.k==='ntf'?' ntf':'')+'" id="rSocBox"><p>'+soc.t+'</p><button class="btn ghost" id="rSoc">'+soc.b+'</button></div>':''),'result');
+    $('mBody').classList.toggle('rc',rc);
     on('rMore',()=>{more=!more;draw();if(more){const m=$('rMore');if(m&&m.scrollIntoView)m.scrollIntoView();}});
-    on('rSoc',()=>{socUsed=true;STAT.ev('mod',{m:'soc',a:'offer'});const b=$('rSocBox');if(b)b.remove();soc.run();});
+    on('rSoc',()=>{socUsed=true;STAT.ev('mod',{m:'soc',a:'offer'});const b=$('rSocBox');if(b)b.remove();const r=soc.run();if(soc.k==='ntf')Promise.resolve(r).then(y=>{if(y&&soc.ok)toast(soc.ok);}).catch(()=>{});});
     onAd('rX2',XM===3?'x3':'x2',()=>showRewarded(()=>{if(taken||doubled)return;doubled=true;S.gold+=(XM-1)*R;ern('ad',(XM-1)*R);save();SND.chest();draw();},null,()=>{if(doubled)return '';doubled=true;const a=(XM-1)*R;S.gold+=a;ern('ad',a);save();SND.chest(); // adt: ×2/×3 — всегда, один раз, даже если итоги уже закрыты
       if(modalHas($('rX2'))&&!taken)draw();else lateRe();return L('золото похода ×'+XM+': +','run gold ×'+XM+': +')+fmtNum(a);}));
     const take=()=>{if(taken||adBusy)return false;taken=true;save();return true;}; // золото похода уже зачислено в endRun
@@ -776,7 +789,23 @@ function openResult(win){const GE=G.endless||!!G.daily; // поход дня: к
     on('rOk',()=>{if(!take())return;go(S.village.forge||GE?'Map':'Village',after);});
     on('rHard',()=>{if(!take())return;S.dfc[0]='s';save();STAT.ev('mod',{m:'dif',a:'s',l:1,c:'camp'});mapSel=0;go('Map',()=>toast(L('⚔ Сложная выбрана в главе 1 — жми «Выступить»','⚔ Hard selected in Chapter 1 — tap “March”')));});
     on('rUp',()=>{if(!take())return;const ci=G.chi,k=G.difUp;S.dfc[ci]=k;save();STAT.ev('mod',{m:'dif',a:k,l:ci+1,c:'res'});mapSel=ci;go('Map',()=>toast(difName(k)+L(' — выбрана. Жми «Выступить»',' selected — tap “March”')));});};
-  draw();save();}
+  draw();
+  /* предложение «Друзья и игры» под кнопками. Пока модуль хочет спросить про напоминания (SOC.ntfDue — показа не тратит), вопрос ставим только если
+     окно с ним целиком влезает в экран (ничего не уезжает под край и не вытесняется) и в окне нет важного (новый богатырь, новый облик, «построй кузницу», «кампания пройдена»);
+     не влезло / не к месту — в этом окне молчат и остальные предложения (иначе избранное съест «одно предложение за сеанс») */
+  if(win&&!GE&&typeof SOC!=='undefined'){const m=$('mBody'),due=!socBusy&&(S.runs||0)>=3&&SOC.ntfDue();let fit=!due;
+    const probe=()=>{m.insertAdjacentHTML('beforeend','<div class="socof ntf" id="rSocBox"><p>'+(ntfText(((S.soc&&S.soc.ntf&&+S.soc.ntf.n)||0)+1)||ntfText(3))+'</p><button class="btn ghost">'+L('🔔 Напоминать','🔔 Remind me')+'</button></div>');
+      const y=m.scrollHeight<=m.clientHeight+1,pb=$('rSocBox');if(pb)pb.remove();return y;};
+    if(due&&!socFull){fit=probe();if(!fit){rc=true;m.classList.add('rc');fit=probe();if(!fit){rc=false;m.classList.remove('rc');}}}
+    if(fit)soc=SOC.offer(S.runs||0,socBusy);
+    if(rc&&!(soc&&soc.k==='ntf'))rc=false;
+    if(soc||m.classList.contains('rc')!==rc)draw();
+    ntfPend=!(soc&&soc.k==='ntf')&&(S.runs||0)>=3&&SOC.ntfDue();} /* положен, но тут не показан → спросим в деревне (ntfVillage) */
+  save();}
+// ntf: три вопроса рассказчика про напоминания VK (n — какой показ по счёту; расписание 1/3/7-й день — в модуле SOC). Наград за разрешение нет
+function ntfText(n){return n<=1?L('Завтра в деревне новые дела и награда за вход. Напомнить?','New quests and a login reward await tomorrow. Remind you?'):
+  n===2?L('Каждый день в деревне новые задания. Напоминать о них?','There are new quests in the village every day. Remind you?'):
+  L('Изредка буду звать в поход — когда нечисть осмелеет. Звать?','Now and then I’ll call you to a run when monsters grow bold. Shall I?');}
 // после победы (с 3-го похода) — одно предложение за сессию: ярлык/оценка на Яндексе, избранное/экран/друзья в VK
 async function askReturn(){if(ASK.session||S.runs<3||G)return;let o=null;try{o=await ASK.next();}catch(e){}if(!o||G||$('modal').classList.contains('on'))return;
   ASK.session=true;S.ask[o.k]=Date.now();save();
@@ -818,7 +847,8 @@ function firstStart(){if(/[?&](bot|promo)\b/.test(location.search))return;const 
   if(QS.has('bot')){const b=document.createElement('script');b.src='tools/bot.js';document.head.appendChild(b);}
   if(QS.has('promo')){const b=document.createElement('script');b.src='tools/promo.js';document.head.appendChild(b);} // картинки для магазина (только локально)
   // «Друзья и игры» (общий модуль SOC в core.js; только VK с мостом): сессии, кнопка 🎲, строка в ⚙
-  SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{showModal(h);return $('mBody');},close:()=>hideModal(),okLink:OK_LINK});
+  SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{showModal(h);return $('mBody');},close:()=>hideModal(),okLink:OK_LINK,
+    now:()=>nowMs(),ntf:{t:n=>ntfText(n),b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Уговор! Попусту тревожить не стану.','Deal! I won’t bother you for nothing.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}}); /* ntf: разрешение на напоминания VK (SOC v2.4) — вопрос в итогах победы, см. openResult */
   $('moreBtn').onclick=()=>{SND.click();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();};updMore();
   requestAnimationFrame(loop);
   onReady(); // меню — сразу, не дожидаясь SDK и облака (и в Яндексе, и в VK)

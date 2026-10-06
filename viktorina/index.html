@@ -713,7 +713,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'viktorina',gv:'v3-100521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'viktorina',gv:'v3-100622',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (pl — пройдено уровней, cn — монеты, bt — облако хоть раз отдавало сохранение: метка устройства viktorina-cl) — после облака, не позже 2,5 с
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('viktorina-cl')?1:0;}catch(e){}STAT.progress({pl:+S.lvl||0,cn:+S.coins||0,bt:bt});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound===false?0:1,calm:S.calm===true?1:0});
@@ -1136,7 +1136,8 @@ function showRewarded(cb0,onFail0,late0){
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
         st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();onFail('wait');adDim();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');onFail();}});};
     go();return;}
-  if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
+  /* Яндекс без SDK: заглушка — только при локальном запуске (AD_LOCAL); на площадке награду даром не даём (и кнопок нет — adOk) */
+  if(!ysdk){if(AD_LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',window.__sdkDone?'nosdk':'loading');toast(AD_FAIL);onFail();}return;}
   let got=false;adWatch(rel);
   // поздние колбэки (после выхода): ролик мог открыться и поставить паузу — снимаем её, если не идёт другой ролик
   const lateY=f=>{if(!adBusy)adClose();f();};
@@ -1147,15 +1148,19 @@ function showRewarded(cb0,onFail0,late0){
       adClose();stat('err','');toast(AD_FAIL);adCool();onFail();adDim();}}});
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
-function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
+/* заглушка рекламы — только при локальном запуске (мак, домашняя сеть, файл); в настоящем Яндексе без SDK рекламных кнопок и награды нет (пока SDK грузится — кнопки есть) */
+const AD_LOCAL=/^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|.*\.local|.*\.localhost)$/.test(location.hostname)||location.protocol==='file:';
+function adOk(){if(PLAT==='vk')return !(!VK&&VK_REAL);return !!ysdk||AD_LOCAL||!window.__sdkDone;}
 // boost: не в первые 4 лестницы и НЕ сразу после проигрыша (только после пройденного уровня / дня / дуэли)
 function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.games||0)>=4&&(S.lossRow||0)===0;}
 function showInterstitial(cb0){STAT.adReq('int'); // STAT v1.2: ms в итоговом ad int; не показана — none nofill / nosdk
-  const cb=shown=>{lastAdT=Date.now();if(shown!==false)STAT.ad('int','show');else STAT.ad('int','none','nofill');if(shown!==false){S.adW=0;save();}cb0();};
+  /* не показана: none c=nofill (площадка не дала: result:false или код 20) / nosdk; ошибка — err c=код VK или причина (как у ролика — adErrCode) */
+  const fin=(r,c)=>{lastAdT=Date.now();STAT.ad('int',r,c);if(r==='show'){S.adW=0;save();}cb0();};
+  const cb=shown=>fin(shown!==false?'show':'none',shown!==false?'':'nofill');
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nosdk');cb0();}else stubAd(cb);return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),()=>false).then(ok=>{adClose();cb(ok);});return;}
-  if(!ysdk){stubAd(cb);return;}
-  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();cb(!!(r&&r.result));},e=>{adClose();if(adNoFill(e))cb(false);else fin('err',adErrCode(e));});return;}
+  if(!ysdk){if(AD_LOCAL)stubAd(cb);else{STAT.ad('int','none','nosdk');cb0();}return;}
+  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();fin('err','');}}});
 }
 // межэкранная — только здесь: между лестницами, по кнопке «Дальше/Ещё раз» в окне итогов
 function between(cb){if(adDue()&&adReady())showInterstitial(cb);else{if(adDue())STAT.ad('int','none',Date.now()-lastAdT<AD_GAP?'gap':'nosdk');cb();}} // STAT v1.2: положена, но рано после прошлой рекламы — gap
