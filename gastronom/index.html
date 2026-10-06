@@ -34,7 +34,16 @@ button.pill::before{content:"";position:absolute;top:-8px;bottom:-8px;left:-4px;
 .city span{display:block;font-size:24px;font-weight:900;letter-spacing:1px;text-shadow:0 2px 0 rgba(0,0,0,.25)}
 .city.locked{filter:grayscale(.8);opacity:.75}
 .city small{display:block;font-size:14px;font-weight:700;opacity:.95}
-.route{max-width:420px;margin:0 auto}
+.route{max-width:420px;margin:0 auto;position:relative}
+.route .rd{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:visible}
+.route .node-row{position:relative;z-index:1}
+/* v13: карта ярче — мятно-салатовое небо, плитка гастронома, пунктирная дорога между уровнями */
+#scr-map{background:linear-gradient(45deg,rgba(30,140,120,.12) 25%,transparent 25%,transparent 75%,rgba(30,140,120,.12) 75%) 0 0/60px 60px,linear-gradient(45deg,rgba(30,140,120,.12) 25%,transparent 25%,transparent 75%,rgba(30,140,120,.12) 75%) 30px 30px/60px 60px,linear-gradient(#b9e4ea 0,#d8f0d2 34%,#f7e4b4 100%)}
+#scr-map .nlabel{background:rgba(70,38,14,.86);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+#scr-map .node{box-shadow:0 5px 0 #b86a17,0 0 0 4px rgba(255,255,255,.75),0 8px 16px rgba(0,0,0,.22)}
+#scr-map .node.done{box-shadow:0 5px 0 #2b7a3f,0 0 0 4px rgba(255,255,255,.75),0 8px 16px rgba(0,0,0,.2)}
+#scr-map .node.boss{box-shadow:0 5px 0 #7d1d15,0 0 0 4px rgba(255,255,255,.75),0 8px 16px rgba(0,0,0,.2)}
+#scr-map .node.locked{box-shadow:0 5px 0 #857a6c,0 0 0 4px rgba(255,255,255,.6)}
 .node-row{display:flex;align-items:center;gap:12px;height:78px}
 .node-row.r{flex-direction:row-reverse;text-align:right}
 .node-row.l{padding-left:16%}.node-row.r{padding-right:16%}
@@ -121,6 +130,10 @@ canvas{display:block;touch-action:none}
 .lb{max-height:46vh;overflow:auto;overscroll-behavior:contain;margin-top:8px;text-align:left}.lbr{display:flex;gap:10px;align-items:center;padding:6px 8px;border-radius:10px}.lbr:nth-child(odd){background:rgba(0,0,0,.05)}.lbr.me{background:#ffe7a3}.lbr b{width:28px;text-align:right}.lbr span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbr i{font-style:normal;font-weight:800}
 .bst-ex{display:flex;align-items:center;gap:12px;text-align:left;background:#f3e7d2;border-radius:14px;padding:10px 12px;margin-top:8px}
 .bst-ex b{font-size:28px}
+/* v13: окно победы — главное «Дальше» крупнее всех, ×2 за рекламу — скромная светлая кнопка, «Обставить» — белая */
+.btn.big{font-size:21px;padding:16px 14px}
+.btn.x2b{background:#fff3d6;color:#9a3410;box-shadow:0 3px 0 #d9b98a,0 4px 10px rgba(0,0,0,.08);font-size:16px;padding:8px 26px;min-height:48px;line-height:1.2;border:2px solid #e6b36a}
+.btn.x2b .nw{font-weight:700}
 .row2{display:flex;gap:10px}.row2>.btn{flex:1;min-width:0;padding-left:8px;padding-right:8px}
 .nw{white-space:nowrap}
 /* серия дней (задание дня): 7 клеток в ряд, 7-я — подарок */
@@ -145,6 +158,8 @@ canvas{display:block;touch-action:none}
 .city.new{animation:cityOn 1.4s ease-out}@keyframes cityOn{0%{transform:scale(.7);filter:brightness(2.2);opacity:0}60%{transform:scale(1.06);filter:brightness(1.3)}}
 /* узкие, низкие экраны, ПК */
 @media (max-height:700px){.big-stars{font-size:36px;margin:2px 0}.vsay canvas{width:44px;height:44px}.card h2{font-size:22px}.goal{margin-top:6px}.chest{margin:6px 0}}
+/* маленький телефон (320×568): окно победы влезает целиком, без прокрутки (06.10) */
+@media (max-height:600px) and (max-width:599px){.modal{padding-top:6px;padding-bottom:6px}.card{padding:14px 16px 12px}.card p{margin:4px 0}.big-stars{font-size:32px;margin:0;line-height:1.15}.row{gap:8px;margin-top:10px}.btn.big{padding-top:13px;padding-bottom:13px}}
 /* низкое окно VK на компьютере (VKWebAppResizeWindow до 560 px): окна компактнее, чтобы влезали без прокрутки */
 @media (max-height:620px) and (min-width:600px){.modal{padding-top:8px;padding-bottom:8px}.card{padding:12px 18px 12px}.card h2{font-size:21px;margin-bottom:2px}.card p{margin:3px 0}.big-stars{font-size:28px;margin:0;line-height:1.1}.vsay canvas{width:38px;height:38px}.row{gap:7px;margin-top:8px}.card .btn{padding-top:9px;padding-bottom:9px}.goal,.chest{padding-top:6px;padding-bottom:6px}.chest{margin:5px 0}.goal{margin-top:5px}}
 /* английское название длиннее «Гастроном №1»: логотип в две строки и мельче, чтобы 💰 и ⭐ не уезжали за край */
@@ -302,8 +317,8 @@ function levelParams(i){
   return{boss,c,S,D:Math.min(4,2+Math.floor(d/7))+(boss?1:0),T:Math.min(15,3+Math.floor(d/2)+(boss?1:0)),
     E:Math.max(3,Math.ceil(S/2)+1-Math.floor(saw/3)),
     ice:i>=5?Math.min(4,Math.floor((saw+cc)/3)+(boss?1:0)):0,
-    box:i>=11?Math.min(3,(saw>=3?1:0)+(cc>=3?1:0)+(boss?1:0)):0,
-    rare:i>=11&&(i%3===1||boss),
+    box:i>=11?Math.min(3,(saw>=3?1:0)+(cc>=3?1:0)+(boss?1:0)):i===6?1:0, // 7-й уровень — первая коробка «Дефицит» (одна, без льда)
+    rare:i===6||(i>=11&&(i%3===1||boss)),
     K:Math.min(12,3+Math.floor(d/3)+(boss?2:0)),pt:(boss?2:0)-Math.min(2,Math.floor(c/3))+(i>=100?4:0)};} // после 100-го — терпения +4 (аудит 14)
 function shuffle(a,R){for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function buildLevel(P,R,i,rareId){
@@ -498,7 +513,7 @@ const PH={
       scales:'Весы! Теперь всё до грамма.',calendar:'Календарь! Ни одного праздника не пропущу.',pennant:'Лучший магазин района — это мы!',lamps:'Светло-то как стало!',
       radio:'Радиоточка! С утра — зарядка.',kassa:'Касса! Дзынь — и всё по-честному.',lace:'Салфеточки! Красота, как у мамы.',samovar:'Самовар — к чаю! Заходите.',
       tiles:'Кафель! Чистота — залог здоровья.',frame:'Витрина — как в музее!',cat:'Барсик, брысь с прилавка! Ладно уж, лежи.',neon:'Вывеска горит — весь квартал видит!',
-      panels:'Дубовые панели — солидно!',fridge:'Холодильник! Докторская не заветрится.'}}};
+      panels:'Дубовые панели — солидно!',fridge:'Холодильник! Докторская не заветрится.',ny:'С Новым годом! Мишура, шарики — как в детстве.',birusa:'Бирюса! Тарахтит, зато не подводит.'}}};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 // обстановка магазина: покупается за монеты, видна в зале (или на витрине) на каждом уровне.
 // 8 первых — 1070 💰; с ×2 за рекламу (аудит 12) добавлены ещё 10 на 1950 💰 — цель на месяц. Порядок — по цене
@@ -512,11 +527,13 @@ const DECOR=[
   {id:'pennant',n:'Вымпел',p:140,d:'«Лучший магазин района» — с бахромой.'},
   {id:'lamps',n:'Плафоны',p:150,d:'Тёплый свет над прилавком.'},
   {id:'radio',n:'Радиоточка',p:160,d:'Висит на стене, как в каждом доме.'},
+  {id:'ny',n:'Новогоднее украшение',p:160,d:'Гирлянда, шары и снежок — праздник круглый год.'},
   {id:'kassa',n:'Касса',p:180,d:'Как в настоящем гастрономе — с клавишами.'},
   {id:'lace',n:'Кружевные салфетки',p:180,d:'Беленькие, на каждой полке витрины.'},
   {id:'samovar',n:'Самовар',p:200,d:'Блестит на прилавке. Чайку?'},
   {id:'tiles',n:'Кафель',p:220,d:'Нарядная плитка на стене.'},
   {id:'frame',n:'Резная витрина',p:220,d:'Золочёная резьба по раме витрины.'},
+  {id:'birusa',n:'Холодильник «Бирюса»',p:240,d:'Гудит, как трактор, зато морозит по-настоящему.'},
   {id:'cat',n:'Кот Барсик',p:250,d:'Спит на прилавке. Мышей не ловит.'},
   {id:'neon',n:'Неоновая вывеска',p:260,d:'«ГАСТРОНОМ» светится красным.'},
   {id:'panels',n:'Дубовые панели',p:280,d:'Стена вокруг витрины обшита деревом.'},
@@ -586,7 +603,7 @@ const EN_DATA={
         scales:'Scales! Everything to the gram now.',calendar:'A calendar! I won\'t miss a single holiday.',pennant:'Best store in the district — that\'s us!',lamps:'Look how bright it is now!',
         radio:'A radio! Morning exercises at seven sharp.',kassa:'A till! Ding — all fair and square.',lace:'Lace doilies! Pretty, just like Mum\'s.',samovar:'A samovar for tea! Do drop in.',
         tiles:'Tiles! Cleanliness is the key to health.',frame:'A display case fit for a museum!',cat:'Barsik, off the counter! Oh, fine, stay.',neon:'The sign is lit — the whole block can see it!',
-        panels:'Oak panels — very respectable!',fridge:'A fridge counter! The sausage won\'t dry out.',q_badge:'An Excellent Worker badge! I\'ve dreamed of this all my life.',q_ribbon:'A model store — that\'s us!',q_gold:'A golden sign! People come from the next district to see it.'}}},
+        panels:'Oak panels — very respectable!',fridge:'A fridge counter! The sausage won\'t dry out.',ny:'Happy New Year! Tinsel and baubles — just like when I was a kid.',birusa:'A Biryusa! It rattles, but it never lets you down.',q_badge:'An Excellent Worker badge! I\'ve dreamed of this all my life.',q_ribbon:'A model store — that\'s us!',q_gold:'A golden sign! People come from the next district to see it.'}}},
   QDECOR:[
     {n:'"Excellent Worker of Trade" badge',d:'For Aunt Valya — for flawless service. Pinned to her coat.'},
     {n:'"Model Store" ribbon',d:'A scarlet ribbon with gold fringe on the counter.'},
@@ -601,11 +618,13 @@ const EN_DATA={
     {n:'Pennant',d:'"Best store in the district" — with a fringe.'},
     {n:'Ceiling lamps',d:'Warm light over the counter.'},
     {n:'Wall radio',d:'Hangs on the wall, like in every Soviet home.'},
+    {n:'New Year decorations',d:'Garland, baubles and a dusting of snow — festive all year round.'},
     {n:'Cash register',d:'Just like in a real gastronom — with keys.'},
     {n:'Lace doilies',d:'Snow-white, on every display shelf.'},
     {n:'Samovar',d:'Gleams on the counter. Tea, anyone?'},
     {n:'Wall tiles',d:'Fancy tiles on the wall.'},
     {n:'Carved display',d:'Gilded carving on the display frame.'},
+    {n:'Biryusa fridge',d:'Hums like a tractor, but really keeps things cold.'},
     {n:'Barsik the cat',d:'Sleeps on the counter. Doesn\'t catch mice.'},
     {n:'Neon sign',d:'"GASTRONOM" glows red.'},
     {n:'Oak panels',d:'The wall around the display is panelled in wood.'},
@@ -892,7 +911,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
 // (на маке — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (STAT.optOut)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'gastronom',gv:'v12s-100614',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'gastronom',gv:'v13-100619',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: настройки сеанса (cfg), вход (start: pl — пройдено уровней, cn — монет, bt — было ли сохранение в облаке; после облака, но не позже 2,5 с),
    баланс (bal → cb в pause), откуда монеты (ern → earn: lvl, ad, gift, chest, buy, quest) */
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
@@ -1305,7 +1324,7 @@ async function initVK(){
     SOC.ready();updMore();updQuest(); // соц-кнопки и «Ещё игры» (только VK с мостом)
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
-      else if(t==='VKWebAppViewRestore'){setPause('hide',false);setTimeout(adBackChk,300);}});
+      else if(t==='VKWebAppViewRestore'){setPause('hide',false);if(typeof adBack==='function')adBack();setTimeout(adBackChk,300);}});
     adPreload('boot'); // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
     await cloudLoad();
   }catch(e){VK=null;updQuest();} /* без моста в настоящем VK — задания молчат */
@@ -1433,10 +1452,10 @@ const GOOD_DRAW={
   1(g,cx,by,u){shadowE(g,cx,by,32*u,u);can(g,cx,by,60*u,56*u,'#6fa8dc',(x,y,w,h)=>{g.fillStyle='#fbfaf3';g.fillRect(x,y+h*.3,w,h*.42);
       g.fillStyle='#2f6db3';g.fillRect(x,y+h*.28,w,h*.05);g.fillRect(x,y+h*.7,w,h*.05);
       const dx=x+w/2,dy=y+h*.52;g.beginPath();g.moveTo(dx,dy-h*.15);g.quadraticCurveTo(dx+w*.13,dy+h*.02,dx,dy+h*.1);g.quadraticCurveTo(dx-w*.13,dy+h*.02,dx,dy-h*.15);g.fillStyle='#2f6db3';g.fill();});},
-  2(g,cx,by,u){shadowE(g,cx,by,40*u,u);rrect(g,cx-41*u,by-22*u,82*u,20*u,10*u);g.fillStyle=lin(g,0,by-22*u,0,by,['#c9982a','#8a6414']);g.fill();
-    rrect(g,cx-41*u,by-40*u,82*u,28*u,13*u);g.fillStyle=lin(g,cx-41*u,0,cx+41*u,0,['#f4d677','#e2b43e','#c9982a']);g.fill();
-    rrect(g,cx-34*u,by-36*u,68*u,20*u,9*u);g.strokeStyle='rgba(120,80,10,.55)';g.lineWidth=2*u;g.stroke();
-    for(const k of[-1,1]){const fx=cx+k*12*u,fy=by-26*u;ell(g,fx,fy,11*u,4*u,'#d4a43a');poly(g,[fx+k*10*u,fy,fx+k*16*u,fy-4*u,fx+k*16*u,fy+4*u],'#d4a43a');ell(g,fx-k*6*u,fy-1*u,1.2*u,1.2*u,'#7a5510');}
+  2(g,cx,by,u){shadowE(g,cx,by,40*u,u);rrect(g,cx-41*u,by-22*u,82*u,20*u,10*u);g.fillStyle=lin(g,0,by-22*u,0,by,['#3d342b','#171310']);g.fill();
+    rrect(g,cx-41*u,by-40*u,82*u,28*u,13*u);g.fillStyle=lin(g,cx-41*u,0,cx+41*u,0,['#5a4d40','#2b241d','#1c1712']);g.fill();
+    rrect(g,cx-34*u,by-36*u,68*u,20*u,9*u);g.fillStyle=lin(g,0,by-36*u,0,by-16*u,['#f6dc82','#d8a72c']);g.fill();g.strokeStyle='rgba(60,40,5,.75)';g.lineWidth=2*u;g.stroke();
+    for(const k of[-1,1]){const fx=cx+k*12*u,fy=by-26*u;ell(g,fx,fy,11*u,4*u,'#3b2a10');poly(g,[fx+k*10*u,fy,fx+k*16*u,fy-4*u,fx+k*16*u,fy+4*u],'#3b2a10');ell(g,fx-k*6*u,fy-1*u,1.4*u,1.4*u,'#f6dc82');}
     rrect(g,cx+30*u,by-44*u,16*u,7*u,3*u);g.fillStyle='#bfc6ca';g.fill();},
   3(g,cx,by,u){shadowE(g,cx,by,28*u,u);can(g,cx,by,50*u,46*u,'#c8352a',(x,y,w,h)=>{const fx=x+w*.45,fy=y+h*.55;ell(g,fx,fy,w*.26,h*.13,'#fff3e6');poly(g,[fx+w*.22,fy,fx+w*.4,fy-h*.14,fx+w*.4,fy+h*.14],'#fff3e6');ell(g,fx-w*.14,fy-h*.02,w*.03,w*.03,'#c8352a');
       ell(g,x+w*.2,y+h*.22,w*.09,w*.09,'#e74c3c');});},
@@ -1455,7 +1474,7 @@ const GOOD_DRAW={
   7(g,cx,by,u){shadowE(g,cx,by,20*u,u);bottle(g,cx,by,34*u,94*u,13*u,20*u,20*u,'#f5a623',74*u);
     ell(g,cx,by-32*u,15*u,12*u,'#fdfbf2');rrect(g,cx-15*u,by-35*u,30*u,6*u,3*u);g.fillStyle='#d6402f';g.fill();
     rrect(g,cx-8*u,by-100*u,16*u,8*u,2*u);g.fillStyle='#c0392b';g.fill();},
-  8(g,cx,by,u){shadowE(g,cx,by,42*u,u);capsule(g,cx,by-16*u,90*u,30*u,'#eab96a','#b27432');
+  8(g,cx,by,u){shadowE(g,cx,by,42*u,u);capsule(g,cx,by-16*u,90*u,30*u,'#e8a24f','#a4531c');
     g.strokeStyle='#f7dfa8';g.lineWidth=4*u;for(let k=-1.5;k<=1.5;k++){g.beginPath();g.moveTo(cx+k*18*u-6*u,by-24*u);g.lineTo(cx+k*18*u+6*u,by-12*u);g.stroke();}
     g.fillStyle='rgba(255,255,255,.25)';rrect(g,cx-36*u,by-29*u,72*u,6*u,3*u);g.fill();},
   9(g,cx,by,u){shadowE(g,cx,by,42*u,u);capsule(g,cx,by-14*u,84*u,26*u,'#f4a7b9','#d9788f');
@@ -1479,9 +1498,9 @@ const GOOD_DRAW={
   13(g,cx,by,u){shadowE(g,cx,by,28*u,u);box3(g,cx,by,40*u,66*u,14*u,'#b8322a',(x,y,w,h)=>{g.fillStyle='#e1b12c';g.fillRect(x,y+h*.14,w,h*.08);g.fillRect(x,y+h*.84,w,h*.06);
       rrect(g,x+w*.24,y+h*.4,w*.42,h*.26,w*.08);g.fillStyle='#fff';g.fill();g.strokeStyle='#fff';g.lineWidth=w*.06;g.beginPath();g.arc(x+w*.7,y+h*.5,w*.1,-1.4,1.4);g.stroke();
       g.lineWidth=w*.04;for(let k=0;k<2;k++){g.beginPath();g.moveTo(x+w*(.36+k*.16),y+h*.36);g.quadraticCurveTo(x+w*(.3+k*.16),y+h*.3,x+w*(.38+k*.16),y+h*.25);g.stroke();}});},
-  14(g,cx,by,u){shadowE(g,cx,by,30*u,u);box3(g,cx,by,46*u,56*u,14*u,'#d8b77a',(x,y,w,h)=>{g.fillStyle='#7b4a1e';g.fillRect(x+w*.1,y+h*.3,w*.8,h*.4);
+  14(g,cx,by,u){shadowE(g,cx,by,30*u,u);box3(g,cx,by,46*u,56*u,14*u,'#86b552',(x,y,w,h)=>{g.fillStyle='#7b4a1e';g.fillRect(x+w*.1,y+h*.3,w*.8,h*.4);
       g.fillStyle='#e9c98a';for(let k=0;k<9;k++)ell(g,x+w*(.2+(k%3)*.3),y+h*(.38+Math.floor(k/3)*.11),w*.05,w*.035,'#c9955a');
-      g.fillStyle='rgba(0,0,0,.15)';g.fillRect(x,y,w,h*.1);});poly(g,[cx-29*u,by-56*u,cx+17*u,by-56*u,cx+12*u,by-64*u,cx-24*u,by-64*u],'#e8cf9a');},
+      g.fillStyle='rgba(0,0,0,.15)';g.fillRect(x,y,w,h*.1);});poly(g,[cx-29*u,by-56*u,cx+17*u,by-56*u,cx+12*u,by-64*u,cx-24*u,by-64*u],'#b4d98a');},
   15(g,cx,by,u){shadowE(g,cx,by,32*u,u);const mb=(yy,off)=>box3(g,cx+off,yy,54*u,20*u,16*u,'#6d4c41',(x,y,w,h)=>{g.fillStyle='#2c6fbb';g.fillRect(x+w*.1,y+h*.12,w*.8,h*.76);
       g.fillStyle='#fff';g.fillRect(x+w*.14,y+h*.4,w*.35,h*.2);poly(g,[x+w*.66,y+h*.8,x+w*.58,y+h*.45,x+w*.66,y+h*.18,x+w*.74,y+h*.45],'#f39c12');ell(g,x+w*.66,y+h*.6,w*.05,h*.16,'#e74c3c');},'#8d6e63');
     mb(by,0);mb(by-21*u,4*u);},
@@ -1496,12 +1515,12 @@ const GOOD_DRAW={
     rrect(g,cx-18*u,by-50*u,36*u,24*u,4*u);g.fillStyle='#fbf1dc';g.fill();ell(g,cx,by-38*u,8*u,7*u,'#e74c3c');poly(g,[cx-3*u,by-45*u,cx+3*u,by-45*u,cx,by-49*u],'#27ae60');},
   19(g,cx,by,u){shadowE(g,cx,by,34*u,u);box3(g,cx,by,58*u,24*u,20*u,'#f3dd6d',(x,y,w,h)=>{g.fillStyle='#2d5fa6';g.fillRect(x,y+h*.3,w,h*.42);g.fillStyle='#fff';g.fillRect(x+w*.2,y+h*.46,w*.6,h*.1);},'#f8eaa0');},
   20(g,cx,by,u){shadowE(g,cx,by,30*u,u);for(let k=0;k<3;k++){const y=by-8*u-k*14*u,x=cx+(k===1?4*u:k===2?-2*u:0);g.fillStyle='#a35f26';g.fillRect(x-27*u,y-6*u,54*u,8*u);ell(g,x,y+2*u,27*u,8*u,'#a35f26');
-      ell(g,x,y-6*u,27*u,8*u,'#c98a4b');ell(g,x,y-6*u,19*u,5*u,'#f1e2c2');ell(g,x,y-6*u,9*u,2.5*u,'#c98a4b');}},
+      ell(g,x,y-6*u,27*u,8*u,'#f19bbd');ell(g,x,y-6*u,19*u,5*u,'#fff1f6');ell(g,x,y-6*u,9*u,2.5*u,'#d9578a');}},
   21(g,cx,by,u){shadowE(g,cx,by,30*u,u);box3(g,cx,by,46*u,46*u,16*u,'#f4f6fa',(x,y,w,h)=>{g.fillStyle='#3867d6';g.fillRect(x,y,w,h*.14);g.fillRect(x,y+h*.86,w,h*.14);
       const s=w*.3,X=x+w*.35,Y=y+h*.42;poly(g,[X,Y,X+s,Y,X+s,Y+s,X,Y+s],'#fff');poly(g,[X,Y,X+s*.4,Y-s*.3,X+s*1.4,Y-s*.3,X+s,Y],'#e5e9f2');poly(g,[X+s,Y,X+s*1.4,Y-s*.3,X+s*1.4,Y+s*.7,X+s,Y+s],'#cfd6e4');
       g.strokeStyle='#8a96ad';g.lineWidth=1;g.strokeRect(X,Y,s,s);});},
   22(g,cx,by,u){shadowE(g,cx,by,26*u,u);bottle(g,cx,by,44*u,54*u,38*u,6*u,6*u,'#df7a2c',48*u);
-    rrect(g,cx-20*u,by-60*u,40*u,8*u,3*u);g.fillStyle=lin(g,cx-20*u,0,cx+20*u,0,['#b8860b','#f1c40f','#b8860b']);g.fill();
+    rrect(g,cx-20*u,by-60*u,40*u,8*u,3*u);g.fillStyle=lin(g,cx-20*u,0,cx+20*u,0,['#2b7a33','#62c06a','#2b7a33']);g.fill();
     g.fillStyle='#5b8c2a';g.fillRect(cx-22*u,by-34*u,44*u,14*u);g.fillStyle='#fff';g.fillRect(cx-14*u,by-29*u,28*u,3*u);}
 };
 // редкие товары «Дефицит»
@@ -1700,6 +1719,31 @@ function drawCat(g,cx,by,s){const u=s/100;shadowE(g,cx,by,44*u,u);
   ell(g,hx,hy,16*u,14*u,lin(g,0,hy-14*u,0,hy+14*u,['#f0a257','#d97e36']));ell(g,hx,hy+5*u,8*u,5*u,'#f7d2a6');
   g.strokeStyle='#5a2e10';g.lineWidth=1.8*u;for(const k of[-1,1]){g.beginPath();g.arc(hx+k*6*u,hy-1*u,3.5*u,.15*Math.PI,.85*Math.PI);g.stroke();}
   poly(g,[hx-2*u,hy+3*u,hx+2*u,hy+3*u,hx,hy+5*u],'#c0587a');g.lineCap='butt';}
+// холодильник «Бирюса»: (cx, by) — низ, fh — высота (ширина ≈ 0,44 высоты); двухдверный, хромированные ручки, фирменная табличка
+function drawBirusa(g,cx,by,fh){const u=fh/100,w=fh*.44,x=cx-w/2,top=by-fh,ch=lin(g,x,0,x+w,0,['#8d959a','#f2f5f6','#9aa2a7']);
+  ell(g,cx,by,w*.62,2.6*u,'rgba(0,0,0,.22)');
+  g.fillStyle='#3d3833';g.fillRect(x+w*.08,by-3*u,w*.16,3*u);g.fillRect(x+w*.76,by-3*u,w*.16,3*u);
+  rrect(g,x,top,w,fh-2.5*u,Math.max(2,w*.09));g.fillStyle=lin(g,x,0,x+w,0,['#d5d0bf','#fbf9f0','#f3f0e3','#cfc9b6']);g.fill();g.strokeStyle='rgba(60,50,30,.35)';g.lineWidth=Math.max(1,u*.9);g.stroke();
+  g.fillStyle='rgba(255,255,255,.7)';g.fillRect(x+w*.1,top+1.5*u,w*.8,1.6*u);
+  const sy=top+fh*.3;g.fillStyle='rgba(70,60,40,.45)';g.fillRect(x+u*.5,sy,w-u,Math.max(1.3,1.8*u)); // щель между морозилкой и камерой
+  g.fillStyle=ch;g.fillRect(x+w*.8,top+fh*.06,Math.max(2,w*.07),fh*.17);g.fillRect(x+w*.8,sy+fh*.06,Math.max(2,w*.07),fh*.34);
+  // табличка «БИРЮСА» — синий шильдик на верхней трети нижней двери
+  const px=x+w*.16,py=sy+fh*.07,pw=w*.5,ph=Math.max(4,fh*.07);rrect(g,px,py,pw,ph,ph*.3);g.fillStyle='#1f5f99';g.fill();
+  const fs=Math.floor(ph*.78);if(fs>=4){g.fillStyle='#fff';g.font='800 '+fs+'px '+FNT;g.textAlign='center';g.textBaseline='middle';g.fillText(L('БИРЮСА','BIRYUSA'),px+pw/2,py+ph*.54);}
+  ell(g,x+w*.3,sy+fh*.34,w*.09,w*.09,'#c0392b');rrect(g,x+w*.52,sy+fh*.3,w*.22,w*.18,1.5*u);g.fillStyle='#f4c542';g.fill(); // магнитики на дверце
+}
+// новогодняя гирлянда: провисающие дуги мишуры с лампочками по верху зала и шары на стыках
+function drawNYTop(g,w,h,sy,sx0,sx1,sh){const n=Math.max(2,Math.round(w/105)),sag=Math.max(4,Math.min(h*.03,(sh||40)*.16)),r=Math.max(2.2,Math.min(4.4,h*.016)),cols=['#e0352b','#f5c93a','#2f7fd8','#3fb26a'];let bi=0;
+  for(let k=0;k<n;k++){const x0=k*w/n,x1=(k+1)*w/n,y0=Math.max(2,h*.008),cxm=(x0+x1)/2,cym=y0+sag*2;
+    g.lineWidth=r*.9;g.strokeStyle='#2c8a4a';g.beginPath();g.moveTo(x0,y0);g.quadraticCurveTo(cxm,cym,x1,y0);g.stroke();
+    g.lineWidth=r*.35;g.strokeStyle='#c8f0b0';g.setLineDash([r*.9,r*1.1]);g.beginPath();g.moveTo(x0,y0);g.quadraticCurveTo(cxm,cym,x1,y0);g.stroke();g.setLineDash([]);
+    for(let j=1;j<=4;j++){const t=j/5,x=(1-t)*(1-t)*x0+2*t*(1-t)*cxm+t*t*x1,y=(1-t)*(1-t)*y0+2*t*(1-t)*cym+t*t*y0,c=cols[bi++%4];
+      ell(g,x,y+r*1.1,r*.95,r*1.25,c);ell(g,x-r*.3,y+r*.8,r*.28,r*.4,'rgba(255,255,255,.75)');}
+    if(k>0&&!(x0>sx0-2&&x0<sx1+2)){const bx=x0,by=y0+sag*.45+r*2,br=Math.max(5,h*.034),c=cols[k%2?0:2];g.strokeStyle='rgba(60,60,60,.6)';g.lineWidth=1;g.beginPath();g.moveTo(bx,y0);g.lineTo(bx,by);g.stroke();
+      ell(g,bx,by+br,br,br,lin(g,bx-br,by,bx+br,by+2*br,[c,shade(c,-.3)]));ell(g,bx-br*.35,by+br*.6,br*.3,br*.22,'rgba(255,255,255,.8)');g.fillStyle='#e9b949';g.fillRect(bx-br*.3,by-br*.15,br*.6,br*.3);}}}
+// снег на кромке плитки
+function drawNYSnow(g,w,ty,ts){g.fillStyle='rgba(255,255,255,.96)';g.beginPath();g.moveTo(0,ty-4);for(let x=0;x<=w+ts;x+=ts*.9){g.quadraticCurveTo(x+ts*.45,ty+ts*.5,x+ts*.9,ty-4);}g.lineTo(w,ty-8);g.lineTo(0,ty-8);g.closePath();g.fill();
+  g.fillStyle='rgba(120,160,200,.25)';g.fillRect(0,ty-5,w,1.5);}
 // холодильный прилавок: стекло и товары вместо деревянных филёнок
 function drawFridge(q,x0,y,w,h){q.fillStyle=lin(q,0,y,0,y+h,['#dff0f3','#b6d3da']);q.fillRect(x0,y,w,h);
   const s=Math.min(h*.9,Math.max(w/9,h*.45)),T=[9,10,19,11,2,16,9,10,19,11,2,16,9,10,19,11,2,16];let k=0;
@@ -1716,10 +1760,13 @@ function buildHall(){const R=HALL;if(!R)return;hallCv=hallCv||document.createEle
   if(hasDecor('tiles')){for(let y=ty,r=0;y<h;y+=ts,r++)for(let x=-(r%2)*ts/2,c=0;x<w;x+=ts,c++){g.fillStyle=(r+c)%2?'#d9e7f2':'#fdfdfb';g.fillRect(x,y,ts,ts);if((r+c)%4===0){ell(g,x+ts/2,y+ts/2,ts*.18,ts*.18,'#4f86b8');}}
     g.fillStyle='#4f86b8';g.fillRect(0,ty-4,w,4);}
   else{g.fillStyle='#f1eee6';g.fillRect(0,ty,w,h-ty);g.strokeStyle='rgba(120,110,95,.22)';g.lineWidth=1;g.beginPath();for(let y=ty;y<h;y+=ts){g.moveTo(0,y);g.lineTo(w,y);}for(let x=0;x<w;x+=ts){g.moveTo(x,ty);g.lineTo(x,h);}g.stroke();g.fillStyle=shade(col,.3);g.fillRect(0,ty-3,w,3);}
+  if(hasDecor('ny'))drawNYSnow(g,w,ty,ts);
   const sw=Math.min(w*.62,380);drawSign(g,(w-sw)/2,R.sy,sw,R.sh,col);
-  if(hasDecor('poster')){const pw=R.posW,ph=pw*1.35;drawPoster(g,w-pw-w*.05,R.posY,pw,ph);}
+  if(hasDecor('ny'))drawNYTop(g,w,h,R.sy,(w-sw)/2,(w+sw)/2,R.sh);
+  if(hasDecor('poster')){const pw=R.posW,ph=pw*1.35;drawPoster(g,w-pw-w*.05-(R.birW||0),R.posY,pw,ph);}
   if(hasDecor('lamps'))for(let k=0;k<3;k++)drawLamp(g,w*(.28+k*.22),0,R.lampL,R.lampW,true);
-  if(hasDecor('ficus'))drawFicus(g,w-Math.max(20,w*.05),R.base,R.ficH);
+  if(hasDecor('ficus'))drawFicus(g,w-Math.max(20,w*.05)-(R.birW||0),R.base,R.ficH);
+  if(hasDecor('birusa')){const bw=Math.max(R.birW,26),fh=Math.min(bw/.44,R.base-R.sy-R.sh-10);drawBirusa(g,w-bw/2-2,R.base,fh);}
   // по краям от вывески: календарь над часами, вымпел над плакатом, радиоточка под часами
   const sx0=(w-sw)/2,ckx=R.ckx,ckr=R.ckr,ckTop=R.ckY-ckr;
   if(hasDecor('calendar')){const ch=Math.min(ckTop-R.sy-6,46,(sx0-8)*1.3);if(ch>=16)drawCalendar(g,Math.min(ckx,sx0-ch*.4-3),R.sy+2,ch*.76,ch);}
@@ -1735,7 +1782,7 @@ function buildHall(){const R=HALL;if(!R)return;hallCv=hallCv||document.createEle
   else{q.strokeStyle='rgba(60,30,10,.35)';q.lineWidth=2;const fh=h-cy;for(let x=w*.1;x<w;x+=Math.max(60,w*.16)){q.strokeRect(x,cy+fh*.3,Math.max(40,w*.12),fh*.5);}}
   if(hasDecor('q_ribbon')){const fy=cy+Math.max(4,h*.03)+3,rh=Math.max(12,Math.min(22,(h-cy)*.34)),rw0=Math.min(w*.56,rh*14);let rx=(w-rw0)/2;if(R.tall)rx=Math.max(rx,R.vX+R.vS*.42); // высокий зал: правее Вали, чтобы не закрывала
     const rw=Math.min(rw0,w-4-rx);drawRibbon(q,rx,fy,rw,rh);}
-  const ks=Math.min(R.ph*.6,70);if(hasDecor('kassa'))drawKassa(q,R.vx+R.vw*.72,cy+2,ks);if(hasDecor('scales'))drawScales(q,w-Math.max(40,w*.12)-(hasDecor('ficus')?w*.06:0),cy+2,ks*.9);
+  const ks=Math.min(R.ph*.6,70);if(hasDecor('kassa'))drawKassa(q,R.vx+R.vw*.72,cy+2,ks);if(hasDecor('scales'))drawScales(q,w-Math.max(40,w*.12)-(hasDecor('ficus')?w*.06:0)-(R.birW||0)*.9,cy+2,ks*.9);
   // между покупателями: самовар и кот
   if(hasDecor('samovar'))drawSamovar(q,R.cx0+R.cw,cy+3,ks*.72);
   if(hasDecor('cat'))drawCat(q,R.cx0+R.cw*2-ks*.08,cy+3,ks*.78);}
@@ -1803,7 +1850,7 @@ function startLevel(idx,daily){hideModal();STAT.lvl(idx+1,daily?'daily':'');STAT
   const lv=Object.assign({},lv0,{sh:lv0.sh.map(L=>L.map(r=>r.slice())),live:1}); // live: «вечный тупик» с коробками разруливает settle
   const st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=>j));
   G={idx:daily?DAILY_IDX:idx,daily:!!daily,lv,st,q:qInit(lv,rng((daily?todaySeed():idx)*31+3)),queue:[],hearts:3,moves:0,angry:0,served:0,undo:[],
-    fly:[],pops:[],adv:{},opens:[],fx:[],hide:{},sel:null,drag:null,hint:null,speech:null,valyaMood:0,valyaTalk:0,table:false,over:false,usedRevive:false,freeUndo:true,x2:false,
+    fly:[],pops:[],adv:{},opens:[],fx:[],rings:[],fl:[],hide:{},sel:null,drag:null,hint:null,speech:null,valyaMood:0,valyaTalk:0,table:false,over:false,usedRevive:false,freeUndo:true,x2:false,
     newCard:-1,combo:0,t:0,tutor:!daily&&idx===0,won:false,vetOk:false,vetFront:false,lookN:0};
   G.boss=!daily&&isBoss(idx);
   // ветеран «без очереди» (аудит 14): раз в 4 уровня с 11-го, не в Ревизию и не в задании дня; встаёт первым, за него +5 💰 в конце уровня.
@@ -1858,7 +1905,7 @@ function say(text,who){if(!G)return;G.speech={text,who,t:0,life:Math.max(2.2,1.2
 // высокий зал в альбомной раскладке (компьютер, окно VK): очередь на всю ширину колонки и крупно, Валя крупно внизу слева перед прилавком
 // (видна целиком по пояс), над очередью — стена с вывеской и обстановкой; свободная высота уходит Вале и обстановке, а не в пустую стену
 function hallTall(R){const w=R.w,h=R.h,m=Math.max(6,w*.03),fic=hasDecor('ficus')?Math.max(24,w*.09):0;
-  R.vx=0;R.cx0=m;R.cw=(w-m*2-fic)/3;R.sy=Math.max(6,h*.02);R.sh=Math.max(26,Math.min(w*.13,54));
+  R.vx=0;R.cx0=m;R.birW=hasDecor('birusa')?Math.max(30,w*.14):0;R.cw=(w-m*2-fic-R.birW)/3;R.sy=Math.max(6,h*.02);R.sh=Math.max(26,Math.min(w*.13,54));
   R.ph=Math.min(R.cw*1.42,h*.3);R.bs=Math.min(R.cw*.74,96,h*.15);
   const wallTop=R.sy+R.sh+8,need=R.ph*.96+R.bs*1.16+h*.1; // очередь с облачками + полоса стены под обстановку
   R.vS=Math.max(R.ph*1.1,Math.min(w*.66,(h-wallTop-need)/.9,h*.42)); // Валя: сколько останется, но не больше 2/3 ширины колонки
@@ -1869,7 +1916,7 @@ function hallTall(R){const w=R.w,h=R.h,m=Math.max(6,w*.03),fic=hasDecor('ficus')
   R.vX=w*.3;R.vY=h+R.vS*.1;R.vw=R.vX/.35;}
 // обычный зал (портрет и телефон в альбомной; и сцена «обновка в зале» в магазине)
 function hallStd(R){
-  R.vx=0;R.vw=Math.min(R.w*.24,R.h*.62);R.cx0=R.vw*.78;const end=R.w-(hasDecor('ficus')?Math.max(22,R.w*.08):R.w*.02);R.cw=(end-R.cx0)/3;
+  R.vx=0;R.vw=Math.min(R.w*.24,R.h*.62);R.cx0=R.vw*.78;R.birW=hasDecor('birusa')?Math.max(30,R.w*.12):0;const end=R.w-(hasDecor('ficus')?Math.max(22,R.w*.08):R.w*.02)-R.birW;R.cw=(end-R.cx0)/3;
   // сверху вывеска, под ней облачка, под облачками головы покупателей (по пояс за прилавком)
   R.sh=Math.max(22,Math.min(R.h*.12,40));R.sy=Math.max(4,R.h*.025);R.bs=Math.min(R.cw*.7,R.h*.27,86);
   const headTop=R.sy+R.sh+4+R.bs*1.12;R.ph=Math.max(40,Math.min((R.h*.84-headTop)/.86,R.cw*1.15));
@@ -1897,19 +1944,28 @@ function layout(){if(!G)return;const r=stage.getBoundingClientRect();if(r.width<
   if(R.tall)hallTall(R);else hallStd(R);
   const n=G.lv.S;let best=null;
   for(let cols=1;cols<=Math.min(n,6);cols++){const rows=Math.ceil(n/cols),u=Math.min(AREA.w/(cols*3.38+.1),AREA.h/(rows*1.52+.1),104);if(!best||u>best.u+.5)best={u,cols,rows};}
-  U=best.u;const cols=best.cols,rows=best.rows,tw=cols*3.38*U-.1*U,th=rows*1.52*U-.1*U,x0=AREA.x+(AREA.w-tw)/2,y0=AREA.y+Math.max(0,(AREA.h-th)/2)*(land?1:.6);
+  U=best.u;const cols=best.cols,rows=best.rows;
+  // v13: товар мелкий на узких экранах (ширина ограничивает U), а под витриной пусто. Лишнюю высоту отдаём полкам (выше ярус, ровно на e) и рисуем товар крупнее (kk ≤ 1,2), пока он влезает
+  const e=Math.max(0,Math.min((land?.22:.4)*U,(AREA.h*(land?.92:.96)-(rows*1.52*U-.1*U))/Math.max(1,rows))),ep=e/U,
+    kw=Math.max(1,Math.min(1.2,1.2-(U-56)*.004)),kh=Math.min((1.27+ep)/1.12,(.91+ep)/.896);G.kk=Math.max(1,Math.min(kw,kh));
+  if(cols===1&&G.lv.S>=5&&W<=H)G.kk=Math.max(G.kk,1.12); /* 06.10: не мельче, чем до v13 — одна колонка в 5+ полок на телефоне и раньше рисовалась с множителем 1,12 (без этого на 375–390 товар стал на 9% меньше) */
+  const py=1.52*U+e,tw=cols*3.38*U-.1*U,th=rows*py-.1*U,x0=AREA.x+(AREA.w-tw)/2,y0=AREA.y+Math.max(0,(AREA.h-th)/2)*(land?1:.6);
   G.grid={cols,rows,x:x0,y:y0,w:tw,h:th};G.units=[];
-  for(let i=0;i<n;i++){const rr=Math.floor(i/cols);let cc=i%cols;if(rr%2)cc=cols-1-cc;const x=x0+cc*3.38*U,y=y0+rr*1.52*U;
-    G.units.push({x,y,w:3.28*U,h:1.42*U,pt:y+1.22*U,sx:x+.14*U});}
+  for(let i=0;i<n;i++){const rr=Math.floor(i/cols);let cc=i%cols;if(rr%2)cc=cols-1-cc;const x=x0+cc*3.38*U,y=y0+rr*py;
+    G.units.push({x,y,w:3.28*U,h:1.42*U+e,pt:y+1.22*U+e,sx:x+.14*U});}
   buildSprites();buildHall();buildShelves();updHud();
   for(const c of G.queue)if(c.st==='wait'||c.st==='in')c.x=c.x==null||c.st==='wait'?custX(c.slot):Math.min(c.x,HALL.x+HALL.w+60);
   render();}
 const slotX=(i,k)=>G.units[i].sx+(k+.5)*U;
 // товар крупнее в ячейке, когда витрина — узкая колонка в портрете (5+ полок): по бокам всё равно пусто (аудит 14)
+// v13: задний ряд темнее по яркости (×0,66) и чуть насыщеннее — оттенок сохраняется; без getImageData — старая вуаль
+function dimCanvas(d){const q=d.getContext('2d');try{const im=q.getImageData(0,0,d.width,d.height),a=im.data;
+    for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;let r=a[i]*.68,g=a[i+1]*.68,b=a[i+2]*.68;const m=(r+g+b)/3;r=m+(r-m)*1.3;g=m+(g-m)*1.3;b=m+(b-m)*1.3;a[i]=r<0?0:r>255?255:r;a[i+1]=g<0?0:g>255?255:g;a[i+2]=b<0?0:b>255?255:b;}
+    q.putImageData(im,0,0);}catch(e){q.globalCompositeOperation='source-atop';q.fillStyle='rgba(45,28,12,.5)';q.fillRect(0,0,d.width,d.height);q.globalCompositeOperation='source-over';}}
 function buildSprites(){SPR={};SPRD={};const types=new Set(G.lv.types);lvHas(G.lv,c=>{types.add(tOf(c));return false;});
-  const k=G.grid&&G.grid.cols===1&&G.lv.S>=5&&W<=H?1.12:1,w=Math.ceil(U*1.14*k),h=Math.ceil(U*1.12*k);
+  const k=G.kk||1,w=Math.ceil(U*1.14*k),h=Math.ceil(U*1.12*k);
   for(const t of types){const c=document.createElement('canvas');c.width=Math.ceil(w*dpr);c.height=Math.ceil(h*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);drawGood(g,t,w/2,h-U*.03,U*k);
-    const d=document.createElement('canvas');d.width=c.width;d.height=c.height;const q=d.getContext('2d');q.drawImage(c,0,0);q.globalCompositeOperation='source-atop';q.fillStyle='rgba(45,28,12,.5)';q.fillRect(0,0,d.width,d.height);
+    const d=document.createElement('canvas');d.width=c.width;d.height=c.height;const q=d.getContext('2d');q.drawImage(c,0,0);dimCanvas(d);
     SPR[t]={c,w,h};SPRD[t]={c:d,w,h};}
   const b=document.createElement('canvas');b.width=Math.ceil(w*dpr);b.height=Math.ceil(h*dpr);const g=b.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);drawBoxItem(g,w/2,h-U*.03,U*k);BOXS={c:b,w,h};}
 // шкаф-витрина: рама, задние стенки, полки; «Столик» (бустер) — раскладной столик на ножках
@@ -1958,7 +2014,7 @@ function afterMove(ev,delay,isMove){let clears=0,rare=-1,lonely=0;
       if(v){G.served++;if(v.id===G.vetId)G.vetOk=true;const c=G.queue.find(x=>x.id===v.id&&(x.st==='wait'||x.st==='in'));if(c)tgt={x:c.x,y:HALL.y+HALL.base-HALL.ph*.6,cust:v};}
       else if(G.q.left<=0&&!G.q.vis.length)lonely++;
       if(e.t>=RARE0){rare=e.t-RARE0;}
-      G.pops.push({i:e.i,cells:e.cells,t:-d,tgt,served:v});G.undo=[];}
+      G.pops.push({i:e.i,cells:e.cells,t:-d,tgt,served:v,cb:isMove?G.combo+1:1});G.undo=[];}
     else if(e.k==='open'){G.opens.push({i:e.i,s:e.s,t:-(delay+.15)});later(()=>SND.box(),(delay+.15)*1000);}
     else if(e.k==='adv'){G.adv[e.i]={t:-(delay+(clears?0.3:0))};later(()=>SND.adv(),(delay+.3)*1000);}
     else if(e.k==='rescue'){G.undo=[];later(()=>{say(pick(e.ice?PH.valya.thaw:PH.valya.rescue),'valya');toast(e.ice?L('Тётя Валя открыла коробки и растопила лёд — дорешайте!','Aunt Valya opened the boxes and melted the ice — finish it off!'):L('Тётя Валя открыла все коробки «Дефицит» — дорешайте!','Aunt Valya opened all the Rare goods boxes — finish it off!'));},(delay+.6)*1000);}}
@@ -2026,7 +2082,7 @@ function useBoost(k){if(!G||G.over)return;
   const fr=freeUndo(k),goFree=()=>{G.freeUndo=false;go();updCoins();};
   if(!S.tips['b_'+k]){S.tips['b_'+k]=1;save();const b=BOOST[k],can=fr||S.coins>=PRICE[k];
     modal(`<h2>${b.i} ${b.n}</h2><p>${b.d}</p>${k==='undo'?'<p><small>'+L('Первая отмена на уровне — бесплатно, дальше ','The first undo on a level is free, then ')+PRICE.undo+' 💰.</small></p>':''}<div class="row">${can?`<button class="btn accent buy" id="bxGo">${L('Использовать','Use')} — ${fr?FREE():PRICE[k]+' 💰'}</button>`:adOk()?`<button class="btn accent rw" id="bxAd">${FORAD(BNAME[k])}</button>`:''}<button class="btn" id="mCancel">${L('Отмена','Cancel')}</button></div>`);
-    if(can)$('bxGo').onclick=()=>{hideModal();if(fr)goFree();else spend(k,go);};else if($('bxAd')){STAT.offer(k);$('bxAd').onclick=()=>{hideModal();STAT.place(k);showRewarded(go);};}$('mCancel').onclick=hideModal;return;}
+    if(can)$('bxGo').onclick=()=>{hideModal();if(fr)goFree();else spend(k,go);};else if($('bxAd')){STAT.offer(k);$('bxAd').onclick=()=>{const g=G;hideModal();STAT.place(k);showRewarded(go,null,()=>lateBoost(g,k,go));};}$('mCancel').onclick=hideModal;return;}
   if(fr){goFree();return;}
   spend(k,go);}
 function doUndo(){const s=G.undo.pop();if(!s)return;G.st=s.st;G.q=s.q;G.hearts=s.hearts;G.angry=s.angry;G.served=s.served;G.moves=s.moves;G.over=false;
@@ -2081,18 +2137,23 @@ cv.addEventListener('pointerup',e=>ptrUp(e,false));cv.addEventListener('pointerc
 /* ---- кадр ---- */
 function update(dt){G.t+=dt;tk+=dt;
   for(const f of G.fly)f.t+=dt;G.fly=G.fly.filter(f=>{if(f.t>=f.dur){delete G.hide[f.i+':'+f.s];return false;}return true;});
-  for(const p of G.pops){p.t+=dt;if(p.t>=0&&!p.fx){p.fx=1;const u=G.units[p.i];for(let k=0;k<(calm()?6:16);k++)G.fx.push({x:u.x+u.w/2+(Math.random()-.5)*u.w*.8,y:u.pt-U*.5,vx:(Math.random()-.5)*U*4,vy:-Math.random()*U*4,t:0,life:.7,col:['#ffd23f','#fff','#ff9f43','#7bed9f'][k%4],s:U*.06});}}
+  // v13: «сочная» тройка — вспышка, кольцо, искры разлетаются во все стороны, всплывает 💰 (и «×2!» за серию); в спокойном режиме — 6 искр и 💰
+  for(const p of G.pops){p.t+=dt;if(p.t>=0&&!p.fx){p.fx=1;const u=G.units[p.i],cx=u.x+u.w/2,cy=u.pt-U*.5,cm=calm(),cl=['#ffd23f','#fff','#ff9f43','#7bed9f','#ff6b6b'];
+    for(let k=0;k<(cm?6:26);k++){const an=Math.random()*6.283,sp=U*(1.2+Math.random()*3.4);G.fx.push({x:cx+(Math.random()-.5)*u.w*.6,y:cy,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp-U*1.4,t:0,life:.5+Math.random()*.4,col:cl[k%5],s:U*(k%4===0?.11:.06),star:k%4===0&&!cm});}
+    if(!cm)G.rings.push({x:cx,y:cy,t:0});
+    G.fl.push({x:cx,y:u.pt-U*.8,t:0,cb:p.cb||1});}}
   G.pops=G.pops.filter(p=>p.t<.75);
   for(const k in G.adv){G.adv[k].t+=dt;if(G.adv[k].t>.35)delete G.adv[k];}
   for(const o of G.opens)o.t+=dt;G.opens=G.opens.filter(o=>o.t<.6);
   for(const f of G.fx){f.t+=dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.vy+=U*9*dt;}G.fx=G.fx.filter(f=>f.t<f.life);
+  for(const r of G.rings)r.t+=dt;G.rings=G.rings.filter(r=>r.t<.5);for(const f of G.fl)f.t+=dt;G.fl=G.fl.filter(f=>f.t<1.1);
   if(G.speech){G.speech.t+=dt;if(G.speech.t>G.speech.life)G.speech=null;}
   if(G.valyaTalk>0)G.valyaTalk-=dt;if(G.hint)G.hint.t+=dt;
   for(const c of G.queue){if(c.talk>0)c.talk-=dt;if(c.shake>0)c.shake-=dt;
     if(c.st==='in'||c.st==='wait'){const tx=custX(c.slot);c.x+=(tx-c.x)*Math.min(1,dt*6);if(Math.abs(tx-c.x)<1){c.x=tx;c.st='wait';}}
     else{c.tt+=dt;c.x+=HALL.cw*1.6*dt*(c.tt>.35?1:0);}}
   G.queue=G.queue.filter(c=>!(c.st==='happy'||c.st==='angry')||c.tt<1.1);}
-function busy(){return G&&(G.fly.length||G.pops.length||G.fx.length||G.opens.length||G.drag||Object.keys(G.adv).length||G.queue.some(c=>c.st!=='wait'))}
+function busy(){return G&&(G.fly.length||G.pops.length||G.fx.length||G.rings.length||G.fl.length||G.opens.length||G.drag||Object.keys(G.adv).length||G.queue.some(c=>c.st!=='wait'))}
 function drawCell(c,x,by,sc,dim){const sp=(c&BOXF)?BOXS:(dim?SPRD:SPR)[tOf(c)];if(!sp)return;const w=sp.w*sc,h=sp.h*sc;ctx.drawImage(sp.c,x-w/2,by-h+U*.03*sc,w,h);
   if(!(c&BOXF)&&G&&iceOf(c)>G.st.cl)drawIce(ctx,x,by,U*sc,iceOf(c)-G.st.cl);}
 function render(){if(!G||!HALL)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.drawImage(shelfCv,0,0,W,H);
@@ -2103,11 +2164,11 @@ function render(){if(!G||!HALL)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clea
     const more=L.length-1-p-(p+1<L.length?1:0);if(more>0){ctx.fillStyle='rgba(255,240,200,.9)';for(let k=0;k<Math.min(more,4);k++)ell(ctx,un.x+U*.18+k*U*.14,un.pt+U*.1,U*.045,U*.045);}
     for(let k=0;k<3;k++){const c=st.F[i][k];if(!c||G.hide[i+':'+k])continue;let y=un.pt,sc=1,dim=false;
       if(f<1){y=un.pt-.34*U*(1-f);sc=.8+.2*f;dim=f<.5;}
-      if(G.sel&&G.sel.i===i&&G.sel.k===k){y-=U*.12;ctx.fillStyle='rgba(255,220,90,.45)';ell(ctx,slotX(i,k),un.pt-U*.02,U*.42,U*.1);ctx.fill();}
+      if(G.sel&&G.sel.i===i&&G.sel.k===k){y-=U*.16;sc*=1.14;ctx.fillStyle='rgba(0,0,0,.22)';ell(ctx,slotX(i,k),un.pt-U*.01,U*.4,U*.09);ctx.fill();ctx.fillStyle='rgba(255,220,90,.5)';ell(ctx,slotX(i,k),un.pt-U*.02,U*.46,U*.11);ctx.fill();}
       drawCell(c,slotX(i,k),y,sc,dim);}}
   // подсказка: светится товар и место
   if(G.hint&&G.hint.t<5){const h=G.hint,a=.35+.3*Math.sin(G.hint.t*7);ctx.strokeStyle=`rgba(255,196,0,${a+.3})`;ctx.lineWidth=U*.07;
-    for(const [i,s] of [[h.a,h.sa],[h.b,h.sb]]){if(i>=G.units.length)continue;rrect(ctx,slotX(i,s)-U*.46,G.units[i].pt-U*1.02,U*.92,U*1.04,U*.14);ctx.stroke();}
+    for(const [i,s] of [[h.a,h.sa],[h.b,h.sb]]){if(i>=G.units.length)continue;{const q=1+((G.kk||1)-1)*.9;rrect(ctx,slotX(i,s)-U*.46*q,G.units[i].pt-U*1.02*q,U*.92*q,U*1.04*q,U*.14);ctx.stroke();}}
     if(h.a<G.units.length&&h.b<G.units.length){const x0=slotX(h.a,h.sa),y0=G.units[h.a].pt-U*.5,x1=slotX(h.b,h.sb),y1=G.units[h.b].pt-U*.5;ctx.beginPath();ctx.moveTo(x0,y0);ctx.quadraticCurveTo((x0+x1)/2,Math.min(y0,y1)-U*.8,x1,y1);ctx.setLineDash([U*.12,U*.1]);ctx.stroke();ctx.setLineDash([]);}}
   for(const o of G.opens){if(o.t<0)continue;const x=slotX(o.i,o.s),y=G.units[o.i].pt-U*.4,k=o.t/.6;ctx.globalAlpha=1-k;ctx.fillStyle='#c9a26b';
     for(let j=0;j<6;j++){const an=j/6*Math.PI*2;ctx.fillRect(x+Math.cos(an)*U*k*.9-U*.08,y+Math.sin(an)*U*k*.7-U*.06+k*k*U*.6,U*.16,U*.12);}ctx.globalAlpha=1;}
@@ -2115,14 +2176,19 @@ function render(){if(!G||!HALL)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clea
   // тройка: подпрыгивает и летит к покупателю
   for(const p of G.pops){if(p.t<0){for(let s=0;s<3;s++)drawCell(p.cells[s],slotX(p.i,s),G.units[p.i].pt,1,false);continue;}const un=G.units[p.i];
     for(let s=0;s<3;s++){const x0=slotX(p.i,s),y0=un.pt;let x=x0,y=y0,sc=1;
-      if(p.t<.18){sc=1+.3*Math.sin(p.t/.18*Math.PI/2);}else{const k=ease((p.t-.18)/.5),tx=p.tgt?p.tgt.x:W-30,ty=p.tgt?p.tgt.y:-20;x=x0+(tx-x0)*k;y=y0+(ty-y0)*k-Math.sin(k*Math.PI)*U*.8;sc=1.3-k*.9;}
+      if(p.t<.18){sc=1+.38*Math.sin(p.t/.18*Math.PI/2);}else{const k=ease((p.t-.18)/.5),tx=p.tgt?p.tgt.x:W-30,ty=p.tgt?p.tgt.y:-20;x=x0+(tx-x0)*k;y=y0+(ty-y0)*k-Math.sin(k*Math.PI)*U*.8;sc=1.3-k*.9;}
       ctx.globalAlpha=p.t<.6?1:Math.max(0,1-(p.t-.6)/.15);drawCell(p.cells[s]&~(255<<8),x,y,sc,false);ctx.globalAlpha=1;}
-    if(p.t<.2){ctx.fillStyle=`rgba(255,255,220,${.5*(1-p.t/.2)})`;rrect(ctx,un.x,un.y,un.w,un.h,U*.1);ctx.fill();}}
-  for(const f of G.fx){ctx.globalAlpha=Math.max(0,1-f.t/f.life);ctx.fillStyle=f.col;ctx.fillRect(f.x-f.s,f.y-f.s,f.s*2,f.s*2);}ctx.globalAlpha=1;
+    if(p.t<.2){ctx.fillStyle=`rgba(255,255,220,${.5*(1-p.t/.2)})`;rrect(ctx,un.x,un.y,un.w,un.h,U*.1);ctx.fill();}
+    if(p.t<.3&&!calm()){const cx=un.x+un.w/2,cy=un.pt-U*.5,g=ctx.createRadialGradient(cx,cy,0,cx,cy,U*1.7);g.addColorStop(0,`rgba(255,244,190,${.85*(1-p.t/.3)})`);g.addColorStop(1,'rgba(255,220,120,0)');ctx.fillStyle=g;ctx.fillRect(cx-U*1.7,cy-U*1.7,U*3.4,U*3.4);}}
+  for(const r of G.rings){const k=r.t/.5;ctx.globalAlpha=1-k;ctx.strokeStyle='#ffd23f';ctx.lineWidth=U*.14*(1-k)+1;ctx.beginPath();ctx.arc(r.x,r.y,U*(.3+1.5*ease(k)),0,6.2832);ctx.stroke();}ctx.globalAlpha=1;
+  for(const f of G.fx){ctx.globalAlpha=Math.max(0,1-f.t/f.life);ctx.fillStyle=f.col;if(f.star){const a=f.s*1.7;poly(ctx,[f.x,f.y-a,f.x+a*.45,f.y,f.x,f.y+a,f.x-a*.45,f.y],f.col);}else ctx.fillRect(f.x-f.s,f.y-f.s,f.s*2,f.s*2);}ctx.globalAlpha=1;
+  for(const f of G.fl){const k=f.t/1.1,a=Math.min(1,(1-k)*2.5),fs=Math.round(U*.55);ctx.globalAlpha=a;ctx.textAlign='center';ctx.textBaseline='middle';const y=f.y-ease(Math.min(1,k*1.3))*U*1.1;
+    ctx.font=`${fs}px sans-serif`;ctx.fillText('💰',f.x,y);
+    if(f.cb>=2){ctx.font=`900 ${Math.round(U*(.5+Math.min(.2,f.cb*.04)))}px -apple-system,Segoe UI,Roboto,sans-serif`;ctx.lineWidth=U*.14;ctx.strokeStyle='#7a2a05';ctx.strokeText('×'+f.cb+'!',f.x,y-U*.55);ctx.fillStyle='#ffd23f';ctx.fillText('×'+f.cb+'!',f.x,y-U*.55);}}ctx.globalAlpha=1;
   // стекло витрины: лёгкий блик
   const gr=G.grid;ctx.fillStyle='rgba(255,255,255,.06)';ctx.beginPath();ctx.moveTo(gr.x+gr.w*.55,gr.y);ctx.lineTo(gr.x+gr.w*.72,gr.y);ctx.lineTo(gr.x+gr.w*.42,gr.y+gr.h);ctx.lineTo(gr.x+gr.w*.25,gr.y+gr.h);ctx.closePath();ctx.fill();
-  if(G.drag&&G.drag.moved){const d=G.drag;const t=dropAt(d.x,d.y,d.i);if(t){ctx.strokeStyle='rgba(46,139,71,.85)';ctx.lineWidth=U*.06;rrect(ctx,slotX(t.i,t.k)-U*.46,G.units[t.i].pt-U*1.0,U*.92,U*1.0,U*.14);ctx.stroke();}
-    ctx.fillStyle='rgba(0,0,0,.18)';ell(ctx,d.x,d.y+U*.12,U*.36,U*.09);ctx.fill();drawCell(d.c,d.x,d.y+U*.1,1.12,false);}
+  if(G.drag&&G.drag.moved){const d=G.drag;const t=dropAt(d.x,d.y,d.i);if(t){ctx.strokeStyle='rgba(46,139,71,.85)';ctx.lineWidth=U*.06;{const q=1+((G.kk||1)-1)*.9;rrect(ctx,slotX(t.i,t.k)-U*.46*q,G.units[t.i].pt-U*1.0*q,U*.92*q,U*1.0*q,U*.14);ctx.stroke();}}
+    ctx.fillStyle='rgba(0,0,0,.26)';ell(ctx,d.x+U*.06,d.y+U*.2,U*.42,U*.11);ctx.fill();drawCell(d.c,d.x,d.y+U*.05,1.22,false);}
   if(G.tutor)drawTutor();
   drawSpeech();}
 function drawTutor(){const k=(G.t%2.2)/1.6;if(k>1)return;const x0=slotX(1,1),y0=G.units[1].pt-U*.45,x1=slotX(0,2),y1=G.units[0].pt-U*.45,e=ease(k),x=x0+(x1-x0)*e,y=y0+(y1-y0)*e;
@@ -2180,7 +2246,7 @@ function adBtns(){const o=[];try{const q=document.querySelectorAll(AD_BTN_SEL);f
    adSt: 1 — ролик готов, −1 — VK ответил «нет», 0 — неизвестно (ещё не спрашивали / ролик только что показан / мост молчит). Два «нет» подряд → на кнопках ролика (adBtns) значок ⏳
    (data-adwait; нажать всё равно можно: «нет» — не запрет, показ сам попробует загрузить). Стало «есть» → значок уходит, «Ролик готов». adLikely() — для будущих само-предложений ролика (сейчас в игре их нет).
    Статистика: в событии ad поле pr — 1 «был готов к нажатию», 0 «VK говорил нет», нет поля — неизвестно (нужен STAT с 4-м параметром у STAT.ad); при переходе «нет»→«есть» — adchk {f:'rew',w:секунд ждали,k:сколько «нет»,s:повод}.
-   Образец: hobby-analytics/release-h/preload/preload-sample.md, раздел «ОБРАЗЕЦ». Отличие Гастронома: блока adt (сторож adW) нет — «ролик на экране» помнит свой флаг adVidOn. */
+   Образец: hobby-analytics/release-h/preload/preload-sample.md, раздел «ОБРАЗЕЦ». «Ролик на экране» помнит флаг adVidOn (снимается и при выходе без ответа — adt, ниже). */
 let AD_STEP=[5000,5000,5000,5000,5000,5000,15000,15000,15000,15000],AD_STEP_MAX=45000,AD_ASK_MIN=3000,AD_FRESH=120000,AD_LOOK_MS=20000;
 let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAskWhy='boot',adMarkT=0,adRdyToastT=0,adVidOn=0;
 function adLikely(){return !(VK&&adSt<0&&adNoN>=2);} /* false — VK уже дважды подряд ответил «ролика нет» */
@@ -2210,37 +2276,97 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeou
 setInterval(()=>adBackChk(1),AD_LOOK_MS);
 function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
 function adWaitOn(){const w=document.getElementById('adWait');return !!w&&w.style.display!=='none';}
-function adWait(on){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
-  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:rgba(0,0,0,.74);color:#fff;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
-  w.textContent=L('Ролик загружается…','Loading the video…');w.style.display='flex';}
+function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
+  if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:rgba(0,0,0,.74);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
+  w.textContent=txt||L('Ролик загружается…','Loading the video…');
+  if(exit){const n=document.createElement('div');n.style.cssText='margin-top:14px;font-weight:600;font-size:16px;max-width:340px';n.textContent=L('Ролик уже закрыт, а награды нет? Можно не ждать: подтвердится просмотр — награду отдам.','The video is closed but there’s no reward? No need to wait: once the view is confirmed, you’ll get it.');w.appendChild(n);
+    const b=document.createElement('button');b.id='adExit';b.className='noenter';b.textContent=L('Продолжить без награды','Continue without the reward');b.style.cssText='margin-top:18px;min-height:52px;padding:12px 22px;border:0;border-radius:14px;background:#fff;color:#222;font:inherit;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 0 0 2px rgba(0,0,0,.25)';b.onclick=exit;w.appendChild(b);}
+  w.style.display='flex';}
 /* кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду); остаются нажимаемыми — нажатие объясняет */
 function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT,q=adBtns();for(let i=0;i<q.length;i++){const b=q[i];
     if(off){b.style.opacity='.45';b.setAttribute('data-adoff','1');}else if(b.hasAttribute('data-adoff')){b.style.opacity='';b.removeAttribute('data-adoff');}}if(off)adDimT=setTimeout(adDim,1000);}
 function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload('none');}
 let adBusy=false;
-function showRewarded(cb0,onFail0){
+/* adt (06.10): обрыв ролика за награду через 60 с (образец — Зина, hobby-analytics/release-g/ads-timeout.md «ОБРАЗЕЦ»; так же, как в «Выезде»). Раньше показ ждал ответа VK 60 с
+   (vkSend(…,60000)), потом писал «недоступна», а поздний ответ «досмотрел» никто не слушал: ролик посмотрен, награды нет. Теперь:
+   1) ответа площадки ждём AD_WAIT_MS (180 с), игра на паузе «ad»;
+   2) ролик закрылся, а ответа нет: по знаку «игрок вернулся» (adBack: вкладка видна, фокус, VK вернул игру, нажатие по игре позже AD_TAP_MS; запасной знак — 60-я секунда)
+      через AD_CHK_MS — надпись «Проверяем просмотр ролика…», через AD_EXIT_MS — кнопка «Продолжить без награды» (#adExit);
+   3) вышли без ответа (кнопка или 180 с) — пауза снята, onFail, но ответ слушаем дальше. Пришёл ПОЗДНИЙ «досмотрел» — награда один раз (тот же флаг paid) по правилу места:
+      третий параметр showRewarded(cb,onFail,late). late() сам выдаёт награду, если она ещё уместна, иначе замену — adLateCoins(n): монеты по ПОЛНОЙ цене обещанного
+      (цены в монетах нет — AD_COINS), и возвращает слова для надписи; вернул '' — выдавать нечего. Идёт другой ролик или игра свёрнута — поздняя награда ждёт. Поздний отказ — ничего;
+   4) статистика (секунды — поле ms): ok c=slow (ответ на 60–180-й с), ok c=late / latec (замена монетами) / late0 (нечего выдавать), err c=timeout / exit (ответ так и не пришёл;
+      пишется через AD_LATE_MS или при сворачивании; пришёл ещё позже — ok late с dup:1), fail|skip c=late, err c=late:код.
+   Числа — let (стенд их укорачивает). НОВАЯ КНОПКА РЕКЛАМЫ — ОБЯЗАТЕЛЬНО С ТРЕТЬИМ ПАРАМЕТРОМ late. Имя adReady — срок межэкранной, не трогать; adW — сторож ожидания (S.adW — долг межэкранной, другое). */
+let AD_WAIT_MS=180000,AD_SLOW_MS=60000,AD_CHK_MS=1500,AD_EXIT_MS=15000,AD_TAP_MS=5000,AD_LATE_MS=600000;
+const AD_CHK=()=>L('Проверяем просмотр ролика…','Checking the video view…');
+let adW=null,adPl='',adLateC=0;const adLateQ=[];
+{const sp=STAT.place;STAT.place=function(p){adPl=String(p||'');return sp.apply(STAT,arguments);};} /* место рекламы запоминаем сами: позднее событие пишется, когда STAT его уже сбросил */
+function adStat(r,c,ms,x){const p={f:'rew',r:r,p:x&&x.p||adPl||'?',ms:ms};if(c!==''&&c!=null)p.c=String(c).slice(0,24);if(x&&x.dup)p.dup=1;if(x&&x.pr!=null)p.pr=x.pr;STAT.ev('ad',p);}
+function adWatch(rel){adUnwatch();const w=adW={t0:Date.now(),back:0,rel:rel};w.tS=setTimeout(adBack,AD_SLOW_MS);w.tW=setTimeout(()=>{if(adW===w)rel('timeout');},AD_WAIT_MS);}
+function adUnwatch(){const w=adW;if(!w)return;adW=null;clearTimeout(w.tS);clearTimeout(w.tW);clearTimeout(w.tC);clearTimeout(w.tE);adWait(0);}
+function adBack(){const w=adW;if(!w||w.back)return;w.back=Date.now();
+  w.tC=setTimeout(()=>{if(adW===w)adWait(1,AD_CHK());},AD_CHK_MS);
+  w.tE=setTimeout(()=>{if(adW===w)adWait(1,AD_CHK(),()=>w.rel('exit'));},AD_EXIT_MS);}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)adBack();else adLateFlush();});
+window.addEventListener('focus',adBack);window.addEventListener('pagehide',adLateFlush);
+['pointerdown','touchstart','keydown'].forEach(n=>document.addEventListener(n,()=>{if(adW&&Date.now()-adW.t0>=AD_TAP_MS)adBack();},true));
+function adLatePend(rec){adLateQ.push(rec);rec.tF=setTimeout(()=>adLateFin(rec),AD_LATE_MS);}
+function adLateFin(rec){if(rec.fin||rec.hold)return;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);adStat('err',rec.exit?'exit':'timeout',rec.w,{p:rec.p,pr:rec.pr});}
+function adLateFlush(){adLateQ.slice().forEach(adLateFin);}
+function adLateEnd(rec,r,c){const dup=rec.fin;rec.fin=1;clearTimeout(rec.tF);const i=adLateQ.indexOf(rec);if(i>=0)adLateQ.splice(i,1);if(dup&&r!=='ok')return;
+  adStat(r,c,Date.now()-rec.t0,{p:rec.p,dup:dup,pr:rec.pr});}
+/* замена неуместной поздней награды: монеты по ПОЛНОЙ цене обещанного (n — цена из констант игры: PRICE[…]); цены в монетах нет — как за один ролик (AD_COINS) */
+function adLateCoins(n){n=n>0?n:AD_COINS;adLateC=1;setCoins(S.coins+ern('ad',n));SND.coin();return adLateMsg(n);}
+function adLateMsg(n){return L('держите монеты: +','here are your coins: +')+n+' 💰';} /* слова для поздней выдачи монет */
+/* поздний бустер (k — undo/hint/mix/table; g — уровень, где нажали; run — применить). Уровень тот же и идёт: открыто окно тупика — закрываем его и применяем;
+   окон нет — подсказку и столик применяем, а отмену и перемешивание посреди игры сами не делаем (игрок уже ходит дальше) — монеты по цене бустера.
+   Уровень другой/кончился, открыто чужое окно, бустеру нечего делать — монеты по цене бустера. */
+function lateBoost(g,k,run){const nm=BICON[k]+' '+BNAME[k];
+  if(G===g&&!G.over&&$('scr-game').classList.contains('on')){
+    const can=k==='undo'?G.undo.length>0:k==='table'?!G.table:k==='mix'?canMix():listMoves(G.lv,G.st,null).length>0;
+    const mine=modalOn&&!!document.querySelector('#mcard [id^="sa_"],#mcard [id^="sk_"]'); /* окно «Полки забиты!» */
+    if(can&&mine){hideModal();run();return nm;}
+    if(can&&!modalOn&&(k==='hint'||k==='table')){run();return nm;}}
+  return adLateCoins(PRICE[k]);}
+function showRewarded(cb0,onFail0,late0){
   if(adBusy)return;
   if(Date.now()<adCoolT){STAT.ad('rew','hold');toast(L('Ролик ещё загружается — подождите несколько секунд','The video is still loading — wait a few seconds'));if(onFail0)onFail0();adDim();return;}
   STAT.adReq('rew'); /* STAT v1.2: нажатие → ms в итоговом ad */
-  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adVidOn=0;adWait(0);},135000);
-  const X={pr:VK&&adSt?(adSt>0?1:0):undefined}; /* pre: был ли ролик готов к нажатию (1/0; неизвестно — поля нет) → 4-й параметр STAT.ad */
-  let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adVidOn=0;adWait(0);},AD_WAIT_MS*2+AD_RETRY_MS+15000);
+  const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0; /* pre: был ли ролик готов к нажатию (1/0; неизвестно — поля нет) → 4-й параметр STAT.ad */
+  const X={pr:rec.pr};
+  let paid=false,st=0; /* st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний) */
+  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();cb0();},onFail=()=>{adBusy=false;onFail0&&onFail0();};
+  const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,X); /* ms ставит модуль; ответ позже 60-й секунды без своей причины — slow */
+  const rel=why=>{if(st)return;st=2;rec.w=Date.now()-t0;rec.exit=why==='exit';adVidOn=0;adUnwatch();adClose();adPreload('exit');
+    toast(rec.exit?L('Хорошо. Подтвердится просмотр — награду отдам','OK. Once the view is confirmed, you’ll get the reward'):L('Ответа о просмотре пока нет. Придёт — награду отдам','No answer about the view yet. If it comes, you’ll get the reward'),4500);onFail();adDim();adLatePend(rec);};
+  const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||pauseWhy.has('ad')||document.hidden){setTimeout(lateOk,1000);return;} /* другой ролик, межэкранная или игра свёрнута — подождём */
+    paid=true;lastAdT=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}
+    adLateEnd(rec,'ok',m?(adLateC?'latec':'late'):'late0');if(m)toast(L('Просмотр подтвердился — ','View confirmed — ')+m,4500);};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL_T());onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
   if(VK){
     let tries=0;
     const go=()=>{clearTimeout(adChkT);if(adSt>0){adSt=0;adMark();}adVidOn=1; /* pre: ролик тратится → «неизвестно»; пока он на экране, опрос молчит */
-      adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'reward'},60000).then(r=>{adVidOn=0;adClose();
-        if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'',X);adPreload('shown');cb();}else{STAT.ad('rew','fail','noresult',X);toast(AD_FAIL_T());adPreload('fail');onFail();}
-      },e=>{adVidOn=0;
+      adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{ /* adt: напрямую, без таймера vkSend — ждёт сторож adWatch */
+        if(st===2){if(r&&r.result)lateOk();else adLateEnd(rec,'fail','late');return;}
+        if(st)return;st=1;adVidOn=0;adUnwatch();adClose();
+        if(r&&r.result){stat('ok',tries?'retry':'');adPreload('shown');cb();}else{stat('fail','noresult');toast(AD_FAIL_T());adPreload('fail');onFail();}
+      },e=>{
+        if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
+        if(st)return;adVidOn=0;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него) */
-        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e),X);toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e),X);toast(AD_FAIL_T());adPreload('err');}
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL_T());adPreload('err');}
         onFail();adDim();});}; /* adDim после onFail: окно могло перерисоваться — гасим и новую кнопку сразу */
     go();return;}
   if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
-  let got=false;
+  let got=false;adWatch(rel);
+  const lateY=f=>{if(!adBusy)adClose();f();}; /* поздние колбэки Яндекса: ролик мог поставить паузу — снимаем, если не идёт другой */
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
-    onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(L('Досмотрите видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
-    onError:()=>{adClose();STAT.ad('rew','err');toast(AD_FAIL_T());adCool();onFail();adDim();}}});
+    onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
+      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(L('Досмотрите видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
+    onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
+      adClose();stat('err','');toast(AD_FAIL_T());adCool();onFail();adDim();}}});
 }
 // межэкранная — не чаще раза в AD_GAP после ЛЮБОЙ рекламы (и за награду тоже) и после запуска
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&adOk();}
@@ -2275,11 +2401,12 @@ function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
 function spend(kind,then){const pr=PRICE[kind];
   if(S.coins>=pr){setCoins(S.coins-pr);SND.coin();STAT.ev('spend',{k:kind,c:pr});then();return;}
   modal(`<h2>${L('Не хватает монет','Not enough coins')}</h2><p>${L('Нужно '+coinsTxt(pr)+', а у вас '+coinsTxt(S.coins)+'.','You need '+coinsTxt(pr)+', and you have '+coinsTxt(S.coins)+'.')}</p><div class="row">${adOk()?`<button class="btn accent rw" id="mAdFree">${FORAD(BNAME[kind])}</button>`:''}${adOk()&&adCoinsLeft()?`<button class="btn" id="mShopC">${L('💰 Получить монеты','💰 Get coins')}</button>`:''}<button class="btn" id="mCancel">${L('Отмена','Cancel')}</button></div>`);
-  const a=$('mAdFree'),c=$('mShopC');if(a){STAT.offer(kind);a.onclick=()=>{hideModal();STAT.place(kind);showRewarded(then);};}if(c)c.onclick=()=>{hideModal();openCoins();};$('mCancel').onclick=hideModal;}
+  const a=$('mAdFree'),c=$('mShopC');if(a){STAT.offer(kind);a.onclick=()=>{const g=G;hideModal();STAT.place(kind);showRewarded(then,null,()=>lateBoost(g,kind,then));};}if(c)c.onclick=()=>{hideModal();openCoins();};$('mCancel').onclick=hideModal;}
 // +AD_COINS за рекламу — не больше AD_DAY раз в день (счётчик S.adc по дате площадки)
 function adCoinsLeft(){const t=dayKey(0);return Math.max(0,AD_DAY-(isObj(S.adc)&&S.adc.d===t?S.adc.n||0:0));}
 function watchCoins(done){if(!adCoinsLeft())return;STAT.place('coins');
-  showRewarded(()=>{const t=dayKey(0);if(!isObj(S.adc)||S.adc.d!==t)S.adc={d:t,n:0};S.adc.n=(S.adc.n||0)+1;setCoins(S.coins+ern('ad',AD_COINS));SND.coin();toast('+'+AD_COINS+' 💰');if(done)done();});}
+  const give=late=>{const t=dayKey(0);if(!isObj(S.adc)||S.adc.d!==t)S.adc={d:t,n:0};S.adc.n=(S.adc.n||0)+1;setCoins(S.coins+ern('ad',AD_COINS));SND.coin();if(!late)toast('+'+AD_COINS+' 💰');if(done)done();return adLateMsg(AD_COINS);};
+  showRewarded(()=>{give();},null,()=>give(1));} /* adt: поздний досмотр — монеты всегда (в счёт дневного предела) */
 function openCoins(){STAT.screen('coins');const left=adCoinsLeft(),ok=adOk(),buy=PAY.on&&!inLevel(); // покупки — только вне уровня
   modal(`<h2>${L('Монеты','Coins')} 💰</h2><p>${L('У вас '+coinsTxt(S.coins)+'. Монеты дают за каждый уровень — больше за три звезды, за Ревизию и задание дня.','You have '+coinsTxt(S.coins)+'. You earn coins for every level — more for three stars, for an Inspection and for the daily task.')}</p>
     ${ok&&!left&&!qOn()?'<p><small>'+L('Монеты за рекламу на сегодня закончились — завтра можно снова.','No more coins for ads today — come back tomorrow.')+'</small></p>':''}
@@ -2523,7 +2650,7 @@ function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true
     ${card>=0?`<div class="newcard"><p>${L('⭐ Новое в коллекции «Дефицит»:','⭐ New in the Rare Goods collection:')} <b>${RARE[card].n}</b></p><canvas id="ncv"></canvas></div>`:''}
     ${dOpen?'<div class="chest">'+L('📅 Открылось задание дня: каждый день +'+DAILY_REWARD+' 💰 и подарок за серию дней!','📅 Daily task unlocked: +'+DAILY_REWARD+' 💰 every day and a gift for a streak!')+'</div>':''}
     ${G.daily?'':goalHtml()}
-    <div class="row">${G.daily?'':'<button class="btn green" id="mNext">'+L('Дальше →','Next →')+'</button>'}${x2?`<button class="btn accent rw" id="mX2">${L('📺 ×2 монеты за рекламу','📺 ×2 coins for an ad')} <span class="nw">(+${reward}&nbsp;💰${bonus?L(' за уровень',' for the level'):''})</span></button>`:''}${sk&&sk.lost&&adOk()?`<button class="btn accent rw" id="mRes">${L('📺 Вернуть серию за рекламу','📺 Restore streak for an ad')} <span class="nw">(${L('день','day')} ${sk.lost+1})</span></button>`:''}${G.daily&&LB.ok()?'<button class="btn accent" id="mLb">'+L('🏆 Рейтинг','🏆 Leaderboard')+'</button>':''}${dOpen?'<button class="btn accent noent" id="mDaily">'+L('📅 К заданию дня','📅 Go to the daily task')+'</button>':''}${canBuy?'<button class="btn green noent" id="mShop">'+L('🏪 Обставить магазин','🏪 Decorate the store')+'</button>':''}<button class="btn" id="mMap">${L('На карту','To the map')}</button></div>`);
+    <div class="row">${G.daily?'':'<button class="btn green big" id="mNext">'+L('Дальше →','Next →')+'</button>'}${x2?`<button class="btn x2b rw" id="mX2">${L('📺 ×2 монеты за рекламу','📺 ×2 coins for an ad')} <span class="nw">(+${reward}&nbsp;💰${bonus?L(' за уровень',' for the level'):''})</span></button>`:''}${sk&&sk.lost&&adOk()?`<button class="btn accent rw" id="mRes">${L('📺 Вернуть серию за рекламу','📺 Restore streak for an ad')} <span class="nw">(${L('день','day')} ${sk.lost+1})</span></button>`:''}${G.daily&&LB.ok()?'<button class="btn accent" id="mLb">'+L('🏆 Рейтинг','🏆 Leaderboard')+'</button>':''}${dOpen?'<button class="btn x2b noent" id="mDaily">'+L('📅 К заданию дня','📅 Go to the daily task')+'</button>':''}${canBuy?'<button class="btn noent" id="mShop">'+L('🏪 Обставить магазин','🏪 Decorate the store')+'</button>':''}<button class="btn" id="mMap">${L('На карту','To the map')}</button></div>`);
   if(card>=0)cardCanvas('ncv',RARE0+card);
   valyaDraw();if(!G.daily)goalDraw();
   if(G.daily){LB.submit();const b=$('mLb');if(b)b.onclick=LB.show;}
@@ -2531,12 +2658,17 @@ function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true
   if(!G.daily)setTimeout(()=>{try{levelFor(i+1);}catch(e){}},450);
   // награда — только после досмотренного ролика; второй раз за уровень не даём
   const g=G,bx=$('mX2');let got=reward+bonus;if(bx)STAT.offer('x2');if(bx)bx.onclick=()=>{if(g.x2)return;bx.disabled=true;STAT.place('x2');
-    showRewarded(()=>{if(g.x2)return;g.x2=true;setCoins(S.coins+ern('ad',reward));got+=reward;SND.coin();toast('+'+reward+L(' 💰 — удвоено!',' 💰 — doubled!'));
-      const w=$('mWon');if(w&&G===g)w.innerHTML='+'+got+' 💰 <small>(×2)</small>';if(bx.parentNode)bx.parentNode.removeChild(bx);},()=>{bx.disabled=false;});};
+    const x2=late=>{if(g.x2)return '';g.x2=true;setCoins(S.coins+ern('ad',reward));got+=reward;SND.coin();if(!late)toast('+'+reward+L(' 💰 — удвоено!',' 💰 — doubled!'));
+      const w=$('mWon');if(w&&G===g&&document.body.contains(bx))w.innerHTML='+'+got+' 💰 <small>(×2)</small>';if(bx.parentNode)bx.parentNode.removeChild(bx);return adLateMsg(reward);};
+    showRewarded(()=>{x2();},()=>{bx.disabled=false;},()=>x2(1));}; /* adt: поздний досмотр — ×2 всегда и один раз (g.x2), чужие окна не трогаем */
   // вернуть серию: сегодняшний день становится следующим после прерванного, бонус — разница
   const br=$('mRes');if(br)STAT.offer('streak');if(br)br.onclick=()=>{br.disabled=true;STAT.place('streak');
-    showRewarded(()=>{if(!sk.lost)return;const d=sk.lost+1,add=STREAK[d-1]-STREAK[sk.day-1];S.streak={day:d,last:dayKey(0)};sk.lost=0;sk.day=d;setCoins(S.coins+ern('ad',add));got+=add;SND.coin();
-      toast(L('🔥 Серия возвращена: день ','🔥 Streak restored: day ')+d+(add>0?', +'+add+' 💰':''));const w=$('mWon'),m=$('mStreak');if(w&&G===g)w.innerHTML='+'+got+' 💰';if(m)m.innerHTML=streakHtml(d);if(br.parentNode)br.parentNode.removeChild(br);},()=>{br.disabled=false;});};
+    const skL=isObj(S.streak)?S.streak.last:0,res=late=>{if(!sk.lost)return '';
+      if(late&&!(isObj(S.streak)&&S.streak.last===skL&&S.streak.day===sk.day))return adLateCoins(); /* серия уже другая (новый день) — её не трогаем; цены в монетах у серии нет → как за один ролик */
+      const d=sk.lost+1,add=STREAK[d-1]-STREAK[sk.day-1];S.streak={day:d,last:dayKey(0)};sk.lost=0;sk.day=d;setCoins(S.coins+ern('ad',add));got+=add;SND.coin();
+      const txt=L('🔥 Серия возвращена: день ','🔥 Streak restored: day ')+d+(add>0?', +'+add+' 💰':'');if(!late)toast(txt);
+      if(document.body.contains(br)){const w=$('mWon'),m=$('mStreak');if(w&&G===g)w.innerHTML='+'+got+' 💰';if(m)m.innerHTML=streakHtml(d);}if(br.parentNode)br.parentNode.removeChild(br);return txt;};
+    showRewarded(()=>{res();},()=>{br.disabled=false;},()=>res(1));};
   // оценка/ярлык — только пока окно победы на экране (игрок мог уже нажать «Дальше»)
   setTimeout(()=>offerReturn(adNext||!(G===g&&modalOn)),2200);
   // межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут, первая — после 6-го уровня; перед показом — предупреждение.
@@ -2551,7 +2683,8 @@ function lose(){if(!G)return;YG.stop();SND.stuck();qEnd(false,0);STAT.end('lose'
     <div class="row">${canPay?`<button class="btn accent buy" id="mLife">${L('❤️ Ещё попытка','❤️ One more try')} — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent rw" id="mRev">'+L('📺 Ещё попытка за рекламу','📺 One more try for an ad')+'</button>'}<button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn" id="mMap2">${L('На карту','To the map')}</button></div>`);
   const revive=()=>{STAT.lvl(G.idx+1,'rev');G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();kick();if(!hasMove(G.lv,G.st))stuck();};
   if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);SND.coin();STAT.ev('spend',{k:'life',c:PRICE.life});revive();};
-  const r=$('mRev');if(r){STAT.offer('life');r.onclick=()=>{hideModal();STAT.place('life');showRewarded(()=>{G.usedRevive=true;revive();},lose);};}
+  const r=$('mRev');if(r){STAT.offer('life');r.onclick=()=>{const g=G;hideModal();STAT.place('life');showRewarded(()=>{G.usedRevive=true;revive();},lose,
+    ()=>{if(G===g&&G.over&&modalOn&&$('mRev')&&$('scr-game').classList.contains('on')){G.usedRevive=true;revive();return L('❤️ ещё попытка','❤️ one more try');}return adLateCoins(PRICE.life);});};} /* adt: поздний досмотр — попытка, только если то же окно поражения ещё открыто; иначе монеты по цене попытки */
   $('mRe').onclick=()=>startLevel(G.daily?0:G.idx,G.daily);$('mMap2').onclick=()=>{hideModal();openMap();};}
 // тупик: ставить некуда — предлагаем бустеры, иначе уровень заново
 // тупик: ставить некуда — бустеры за монеты и рядом тот же бустер за рекламу (многие берегут монеты на обстановку), иначе уровень заново
@@ -2569,7 +2702,7 @@ function stuck(){if(!G||G.over||modalOn)return;SND.stuck();G.nStuck=(G.nStuck||0
   const run=k=>{STAT.use(k);if(k==='mix')G.nMix=(G.nMix||0)+1;if(k==='table')G.nTable=(G.nTable||0)+1;({undo:doUndo,mix:doMix,table:doTable})[k]();YG.start();};
   for(const k of ks){const b=$('sk_'+k),a=$('sa_'+k);
     if(b)b.onclick=()=>{hideModal();if(freeUndo(k)){G.freeUndo=false;run(k);updCoins();}else{setCoins(S.coins-PRICE[k]);SND.coin();STAT.ev('spend',{k:k,c:PRICE[k]});run(k);}};
-    if(a){STAT.offer(k);a.onclick=()=>{hideModal();STAT.place(k);showRewarded(()=>run(k),stuck);};}}
+    if(a){STAT.offer(k);a.onclick=()=>{const g=G;hideModal();STAT.place(k);showRewarded(()=>run(k),stuck,()=>lateBoost(g,k,()=>run(k)));};}}
   $('mRe').onclick=()=>startLevel(G.daily?0:G.idx,G.daily);$('mMap2').onclick=()=>{hideModal();openMap();};}
 
 /* ================= карта городов ================= */
@@ -2586,7 +2719,10 @@ function openMap(o){o=o||{};if(G){YG.stop();STAT.end('quit',stEnd());}STAT.once(
     for(let i=from;i<from+10;i++){const un=i<S.unlocked,st=S.stars[i]||0,isCur=un&&!st,boss=isBoss(i);
       const row=document.createElement('div');row.className='node-row '+(i%2?'r':'l');
       row.innerHTML=`<button class="node ${un?'':'locked'} ${st?'done':''} ${isCur?'cur':''} ${boss?'boss':''}" ${un?'':'disabled'} aria-label="${L('Уровень','Level')} ${i+1}">${un?i+1:'🔒'}${boss?'<span class="fire">🔥</span>':''}</button><div class="nlabel"><b>${boss?L('Ревизия','Inspection'):levelTitle(i%10)}</b><span class="st">${un?starsHtml(st).replace(/<span class="e">☆<\/span>/g,'☆'):''}</span></div>`;
-      if(un)row.querySelector('button').onclick=()=>startLevel(i);route.appendChild(row);}}
+      if(un)row.querySelector('button').onclick=()=>startLevel(i);route.appendChild(row);}
+    // дорога между уровнями: S-образные дуги от узла к узлу (узлы чередуются слева и справа)
+    {let d='M24 39';for(let j=0;j<9;j++){const x0=j%2?76:24,x1=j%2?24:76,y0=39+78*j,y1=y0+78;d+=' C'+x0+' '+(y0+50)+' '+x1+' '+(y1-50)+' '+x1+' '+y1;}
+      route.insertAdjacentHTML('afterbegin','<svg class="rd" viewBox="0 0 100 780" preserveAspectRatio="none" aria-hidden="true"><path d="'+d+'" fill="none" stroke="rgba(70,110,90,.28)" stroke-width="11" stroke-linecap="round" vector-effect="non-scaling-stroke"/><path d="'+d+'" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 11" vector-effect="non-scaling-stroke"/></svg>');}}
   $('totStars').textContent=totalStars();updCoins();
   const dd=S.daily[todayKey()],bd=$('btnDaily'),dl=S.unlocked<7;bd.classList.toggle('locked',dl);
   const sn=streakNow(),fire=sn?' · 🔥'+sn:'';
@@ -2620,6 +2756,8 @@ function decorPreview(c,id){const r=c.getBoundingClientRect(),d=Math.min(2,windo
   else if(id==='radio'){g.fillStyle='#efe0c4';g.fillRect(0,0,w,h);drawRadio(g,w/2,h*.22,h*.7);}
   else if(id==='samovar')drawSamovar(g,w/2,h*.97,h*.92);
   else if(id==='cat')drawCat(g,w/2+h*.1,h*.92,h*1.25);
+  else if(id==='birusa'){g.fillStyle='#e6eef2';g.fillRect(0,0,w,h);g.fillStyle='#d8c9a8';g.fillRect(0,h*.93,w,h*.07);drawBirusa(g,w/2,h*.94,h*.86);}
+  else if(id==='ny'){g.fillStyle='#cfe3f2';g.fillRect(0,0,w,h);const ty=h*.62,ts=Math.max(10,h*.14);g.fillStyle='#fdfdfb';g.fillRect(0,ty,w,h-ty);drawNYTop(g,w,h*1.5,0);drawNYSnow(g,w,ty,ts);}
   else if(id==='fridge'){g.fillStyle='#9a6437';g.fillRect(0,0,w,h*.2);drawFridge(g,0,h*.2,w,h*.8);}
   else if(id==='lace'){g.fillStyle=lin(g,0,0,0,h*.55,['#f7ead0','#ead3a8']);g.fillRect(0,0,w,h*.55);g.fillStyle=lin(g,0,h*.55,0,h*.75,['#d39a60','#a8703f','#8a5530']);g.fillRect(0,h*.55,w,h*.2);
     const r=h*.07,ly=h*.75;g.fillStyle='#fffdf7';g.beginPath();g.rect(0,ly-h*.03,w,h*.035);for(let x=r;x<w;x+=r*2){g.moveTo(x+r,ly);g.arc(x,ly,r,0,Math.PI);}g.fill();
@@ -2682,7 +2820,7 @@ function celebrate(id){const d=DECOR.concat(QDECOR).find(x=>x.id===id);if(!d)ret
     frame();});}
 function openAlbum(){STAT.screen('album');const gd=$('albGrid');gd.innerHTML='';$('albSub').textContent=L(S.album.length+' из '+NRARE+' собрано',S.album.length+' of '+NRARE+' collected');
   RARE.forEach((r,k)=>{const has=S.album.includes(k),e=document.createElement('div');e.className='gcard'+(has?'':' lock');
-    e.innerHTML=`<canvas id="alb${k}"></canvas><b>${has?r.n:'???'}</b><p>${has?r.c:L('Ищите в коробках «Дефицит» — с 14-го уровня.','Look in Rare goods boxes — from level 14.')}</p>`;gd.appendChild(e);cardCanvas('alb'+k,RARE0+k);});
+    e.innerHTML=`<canvas id="alb${k}"></canvas><b>${has?r.n:'???'}</b><p>${has?r.c:L('Ищите в коробках «Дефицит» — с 7-го уровня.','Look in Rare goods boxes — from level 7.')}</p>`;gd.appendChild(e);cardCanvas('alb'+k,RARE0+k);});
   show('scr-album');}
 $('shopBack').onclick=openMap;$('albBack').onclick=openMap;
 
@@ -2793,7 +2931,7 @@ setLang(LANG);
 SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noent',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK});
 // QUEST (пилот 29.09, отчёт hobby-analytics/33): цепочка «Задания дня» (скромно, 0,4·D: 5+10+10+15 💰, главный приз — талон ударника → вещи «только за задания»)
 // и лесенка «Ролики дня» 10/15/25/40/60 (заменяет «+30 за рекламу ×5»), пауза 2 мин. Ролик — только необязательный бонус; в настоящем VK без моста — молчит
-QUEST.init(S,{save:()=>save(),toast:t=>toast(t),now:()=>nowMs(),ok:()=>adOk()&&!window.__demo,adOk:()=>adOk(),ad:(ok,fail)=>{STAT.place('quest');showRewarded(ok,fail);},
+QUEST.init(S,{save:()=>save(),toast:t=>toast(t),now:()=>nowMs(),ok:()=>adOk()&&!window.__demo,adOk:()=>adOk(),ad:(ok,fail)=>{STAT.place('quest');showRewarded(ok,fail,()=>{const c0=S.coins;ok();return S.coins>c0?adLateMsg(S.coins-c0):'';});}, /* adt: поздний досмотр — колбэк модуля сам защищён от повтора (шаг уже взят — ничего) */
   grant:qGrant,cur:n=>n+' 💰',rTxt:r=>r&&r.talon?'🎫 '+L('талон','coupon'):'',cls:'btn noent',
   modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),onChange:()=>updQuest(),log:qLog,
   note:()=>{const nx=QDECOR.find(d=>!hasDecor(d.id));return nx?L('🎫 Талоны ударника — за главный приз. За '+nx.t+' талонов — «'+nx.n+'» (у вас '+(S.qTal||0)+'). В магазине такого не купить!','🎫 Shock-worker coupons come from the big prize. '+nx.t+' coupons get you the '+nx.n+' (you have '+(S.qTal||0)+'). Not sold in the store!'):L('🎫 Все вещи за талоны уже в зале — спасибо за работу!','🎫 All coupon items are already in your store — great work!');},
