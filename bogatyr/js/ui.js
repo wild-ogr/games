@@ -441,29 +441,41 @@ function mapFocus(smooth){setTimeout(()=>{const c=$('mapCv'),tab=$('tabMap'),gb=
   const r=c.getBoundingClientRect(),p=CH[mapSel].map,y=r.top+p[1]*r.height,tr=tab.getBoundingClientRect(),bot=($('chSel')||gb).getBoundingClientRect().top-12,top=tr.top+8,R=48;
   let d=0;if(y+R+22>bot)d=y+R+22-bot;else if(y-R<top)d=y-R-top; // +22 — подпись под кружком
   if(Math.abs(d)>2){try{tab.scrollBy({top:d,behavior:smooth?'smooth':'auto'});}catch(e){tab.scrollTop+=d;}}},0);}
-function starsHTML3(i){return STAR_K.map(k=>S.stars[i+k]?'★':'<u>★</u>').join('');}
-function starRows(i,got){const T=[['w',L('Победа над боссом','Beat the boss')],['d',L('Победа без единого падения','Win without falling once')],['t',L('Победа быстрее '+fmtTime(STAR_T),'Win faster than '+fmtTime(STAR_T))]];
-  return '<div class="starrows">'+T.map(([k,t])=>'<div class="'+(S.stars[i+k]?'on':'')+'"><i>★</i><span>'+t+'</span>'+(got&&got[k]&&got.fresh&&got.fresh[k]?'<em>'+L('новая!','new!')+'</em>':'')+'</div>').join('')+'</div>';}
-function openStars(i){STAT.screen('stars');showModal('<h3>'+CH[i].name+'</h3><p class="sub">'+L('Три звезды главы — для тех, кто любит проходить начисто. Всего звёзд: ','Three stars per chapter — for those who like a clean sweep. Stars in total: ')+starsTotal()+' / '+CH.length*3+'</p>'+starRows(i)+'<div class="btns"><button class="btn big" id="stOk">'+L('Понятно','Got it')+'</button></div>');on('stOk',hideModal);}
+function starsHTML3(i,d){const p=DIF_PRE[d||'n']||'';return STAR_K.map(k=>S.stars[i+p+k]?'★':'<u>★</u>').join('');}
+function starRows(i,got,d){const p=DIF_PRE[d||'n']||'',T=[['w',L('Победа над боссом','Beat the boss')],['d',L('Победа без единого падения','Win without falling once')],['t',L('Победа быстрее '+fmtTime(STAR_T),'Win faster than '+fmtTime(STAR_T))]];
+  return '<div class="starrows">'+T.map(([k,t])=>'<div class="'+(S.stars[i+p+k]?'on':'')+'"><i>★</i><span>'+t+'</span>'+(got&&got[k]&&got.fresh&&got.fresh[k]?'<em>'+L('новая!','new!')+'</em>':'')+'</div>').join('')+'</div>';}
+// звёзды главы — по уровням сложности (у каждого свои); закрытый уровень — строкой «откроется…»
+function openStars(i){STAT.screen('stars');showModal('<h3>'+CH[i].name+'</h3><p class="sub">'+L('Три звезды главы на каждой сложности — для тех, кто любит проходить начисто. Всего звёзд: ','Three stars per chapter on each difficulty — for those who like a clean sweep. Stars in total: ')+starsTotal()+' / '+CH.length*9+'</p>'+
+  DIF_K.map(k=>'<div class="difst"><b>'+difName(k)+'</b>'+(difOpen(i,k)?starRows(i,null,k):'<div class="difnote2">🔒 '+difLockTxt(k)+'</div>')+'</div>').join('')+'<div class="btns"><button class="btn big" id="stOk">'+L('Понятно','Got it')+'</button></div>');on('stOk',hideModal);}
+/* ---------- уровни сложности (difficulty 05.10, линейные: Обычная → Сложная → Адская; числа — DIF и ECO.dif в data.js, план — hobby-analytics/release-h/bogatyr-diff/plan.md) ---------- */
+function difName(k){return k==='s'?L('⚔ Сложная','⚔ Hard'):k==='h'?L('🔥 Адская','🔥 Hell'):L('Обычная','Normal');}
+function difNote(k){return k==='s'?L('Нечисть сильнее, без поблажек · свои звёзды · золота ×'+dec(ECO.dif.s,1),'Stronger monsters, no mercy · own stars · gold ×'+ECO.dif.s):
+  k==='h'?L('Нечисть ещё сильнее · свои звёзды · золота ×'+dec(ECO.dif.h,1),'Even stronger monsters · own stars · gold ×'+ECO.dif.h):'';}
+function difLockTxt(k){return k==='s'?L('Сложная откроется, когда пройдёте главу на обычной','Hard opens once you beat this chapter on Normal'):L('Адская откроется, когда пройдёте главу на сложной','Hell opens once you beat this chapter on Hard');}
+function difBadges(i){return (difWon(i,'s')?' <i class="difb" title="'+L('пройдена на сложной','beaten on Hard')+'">⚔</i>':'')+(difWon(i,'h')?' <i class="difb" title="'+L('пройдена на адской','beaten on Hell')+'">🔥</i>':'');}
+function difRow(i){const cur=difOf(i);
+  return '<div class="difrow" id="difRow"><div class="difseg">'+DIF_K.map(k=>{const op=difOpen(i,k);return '<button data-df="'+k+'" class="'+(cur===k?'on':'')+(op?'':' lock')+'">'+(op?difName(k):'🔒 '+(k==='s'?L('Сложная','Hard'):L('Адская','Hell')))+'</button>';}).join('')+'</div>'+
+    (cur!=='n'?'<div class="difnote">'+difNote(cur)+'</div>':difOpen(i,'s')&&!difWon(i,'s')?'<div class="difnote">'+L('⚔ Сложная открыта: свои звёзды, золота ×'+dec(ECO.dif.s,1)+', проклятия','⚔ Hard is open: own stars, gold ×'+ECO.dif.s+', curses')+'</div>':'')+'</div>';}
+function difSet(i,k){if(!difOpen(i,k)){toast(difLockTxt(k));SND.click();return;}S.dfc[i]=k;save();SND.click();STAT.ev('mod',{m:'dif',a:k,l:i+1});renderChInfo();}
 function renderChInfo(){const c=CH[mapSel],hr=HERO_BY[S.hero]||HEROES[0],best=S.best[mapSel];
   // выбранная глава — компактной карточкой в закреплённой панели над «Выступить»: всегда видна целиком (boost 2); звёзды главы — тут же
   const sn=chStars(mapSel),sel=$('chSel');
-  if(sel){sel.innerHTML='<div class="chsel"><img src="'+ic(c.boss,110)+'" alt=""><div class="t"><b>'+c.name+' <i class="stars" id="chStars">'+starsHTML3(mapSel)+'</i></b><span>'+L('Босс: ','Boss: ')+'<em>'+EN[c.boss].n+'</em>'+(best?L(' · рекорд ',' · record ')+fmtTime(best):'')+'</span></div></div>'+
+  if(sel){sel.innerHTML='<div class="chsel"><img src="'+ic(c.boss,110)+'" alt=""><div class="t"><b>'+c.name+' <i class="stars" id="chStars">'+starsHTML3(mapSel,difOf(mapSel))+'</i>'+difBadges(mapSel)+'</b><span>'+L('Босс: ','Boss: ')+'<em>'+EN[c.boss].n+'</em>'+(best?L(' · рекорд ',' · record ')+fmtTime(best):'')+'</span></div></div>'+
       // ch4-soft: глава 4 ещё не пройдена — подсказка кузнеца прямо над «Выступить» (нажатие — в кузницу)
-      (mapSel===3&&ch4Tip()?'<div class="ch4tip" id="ch4Tip" style="margin-top:6px;padding:7px 10px;border-radius:12px;background:var(--parch,#2a2238);color:var(--ink,#fff);border:2px solid #ffcf5a;font-size:14px;font-weight:800;line-height:1.35;cursor:pointer">'+ch4TipText()+(S.village.forge?' <u id="ch4Forge" style="white-space:nowrap">'+L('В кузницу →','To the Forge →')+'</u>':'')+'</div>':'');
-    sel.onclick=e=>{if(e.target.closest&&e.target.closest('#ch4Tip')){SND.click();if(S.village.forge){forgeSeg='hero';openTab('Forge');}return;}SND.click();openStars(mapSel);};}
+      (mapSel===3&&ch4Tip()?'<div class="ch4tip" id="ch4Tip" style="margin-top:6px;padding:7px 10px;border-radius:12px;background:var(--parch,#2a2238);color:var(--ink,#fff);border:2px solid #ffcf5a;font-size:14px;font-weight:800;line-height:1.35;cursor:pointer">'+ch4TipText()+(S.village.forge?' <u id="ch4Forge" style="white-space:nowrap">'+L('В кузницу →','To the Forge →')+'</u>':'')+'</div>':'')+difRow(mapSel);
+    sel.onclick=e=>{const db=e.target.closest&&e.target.closest('[data-df]');if(db){difSet(mapSel,db.dataset.df);return;}if(e.target.closest&&e.target.closest('#difRow'))return;if(e.target.closest&&e.target.closest('#ch4Tip')){SND.click();if(S.village.forge){forgeSeg='hero';openTab('Forge');}return;}SND.click();openStars(mapSel);};}
   $('chInfo').innerHTML=
     '<div class="card"><div class="row"><img class="ic" src="'+ic('hp_'+skinKey(hr.id),120)+'"><div class="t"><b>'+hr.name+'</b><span>'+WEAPONS[hr.weapon].name+' · '+hr.perk+'</span><span class="delta" style="color:var(--gold)">⚔ '+L('Сила ','Power ')+fmtNum(powerScore(hr.id))+'</span></div><button class="btn ghost" id="chgHero">'+L('Сменить','Change')+'</button></div></div>'+
     (S.curseMax?'<div class="card"><b style="font-size:14px">'+L('☠ Проклятие','☠ Curse')+'</b><span style="display:block;font-size:12px;color:var(--mut);margin:2px 0 8px">'+L('Нечисть сильнее, золота больше. Новое проклятие откроется, если победить в Тридевятом царстве на самом сильном из открытых.','Stronger monsters, more gold. Win in the Thrice-Nine Kingdom on your strongest curse to unlock the next one.')+'</span><div class="seg" style="margin:0">'+
       CURSES.slice(0,S.curseMax+1).map((c,i)=>'<button data-cu="'+i+'" class="'+((S.curse||0)===i?'on':'')+'">'+(i?['I','II','III','IV','V'][i-1]:L('Нет','None'))+'</button>').join('')+'</div>'+
-      ((S.curse||0)?'<span style="display:block;font-size:12px;color:#ff9aa8;margin-top:6px">'+CURSES[S.curse]+L(': здоровье нечисти ×',': monster health ×')+dec(curseMul(S.curse).hp,2)+L(', урон ×',', damage ×')+dec(curseMul(S.curse).dmg,2)+L(', золото ×',', gold ×')+dec(curseMul(S.curse).gold,1)+'</span>':'')+'</div>':'')+
+      ((S.curse||0)?'<span style="display:block;font-size:12px;color:#ff9aa8;margin-top:6px">'+CURSES[S.curse]+L(': здоровье нечисти ×',': monster health ×')+dec(curseMul(S.curse).hp,2)+L(', урон ×',', damage ×')+dec(curseMul(S.curse).dmg,2)+L(', золото ×',', gold ×')+dec(curseMul(S.curse).gold,1)+'</span>':'')+'<span style="display:block;font-size:14px;color:var(--mut);margin-top:6px">'+(CURSE_CAP.h<5?L('Проклятие действует на сложной и адской (на адской — не выше '+['I','II','III','IV','V'][CURSE_CAP.h-1]+').','Curses apply on Hard and Hell (on Hell — up to '+['I','II','III','IV','V'][CURSE_CAP.h-1]+').'):L('Проклятие действует на сложной и адской сложности.','Curses apply on Hard and Hell difficulty.'))+'</span>'+'</div>':'')+
 
     // сеча и испытание недели — только когда открыты (до первой победы закрытые карточки не отвлекают)
     (S.done[0]?'<div class="card" style="margin-top:14px;background:linear-gradient(135deg,rgba(255,90,90,.18),rgba(138,106,255,.18))"><div class="row"><img class="ic" src="'+ic('e_sword',96)+'"><div class="t"><b>'+L('Бесконечная сеча','Endless Battle')+'</b><span>'+
       L('Все главы по кругу, каждые 5 минут — босс, с каждым кругом сильнее. Рекорд: ','All chapters in a loop, a boss every 5 minutes, tougher each round. Record: ')+(S.endBest?fmtTime(S.endBest):'—')+'</span></div>'+
       '<button class="btn" id="endBtn">'+L('⚔️ В бой','⚔️ Fight')+'</button></div></div>'+weeklyCard():'');
   for(const b of document.querySelectorAll('[data-cu]'))b.onclick=()=>{S.curse=+b.dataset.cu;save();SND.click();renderChInfo();};
-  const gb=$('goBtn');if(gb)gb.innerHTML='<img src="'+ic('i_sword',48)+'" style="width:22px;height:22px">'+L('Выступить: ','March: ')+c.name;
+  const gb=$('goBtn');if(gb){const d=difOf(mapSel);gb.innerHTML='<img src="'+ic('i_sword',48)+'" style="width:22px;height:22px">'+L('Выступить: ','March: ')+c.name+(d==='n'?'':' · '+(d==='s'?'⚔':'🔥'));}
   on('chgHero',()=>openTab('Heroes'));on('endBtn',()=>startRun(0,true));
   on('wkBtn',()=>startRun(0,true,true));on('wkRules',openWkRules);on('wkLb',()=>{qSeg='q';lbSeg='weekly';openTab('Quests');setTimeout(()=>{const b=$('lbBox');if(b)b.scrollIntoView({block:'center'});},50);});}
 /* ---------- испытание недели ---------- */
@@ -506,7 +518,7 @@ function drawMap(){const c=$('mapCv');if(!c)return;const r=c.getBoundingClientRe
 
 /* ---------- забег ---------- */
 function startRun(chi,endless,wk,dr){ac();hideModal();gearRefresh();$('toast').classList.remove('on');document.body.classList.add('run');layout();newRun(chi,HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.hero:'dob',endless,wk,dr);musicPlay('run');YG.start();
-  STAT.screen('game');if(G.endless&&!G.weekly)STAT.lvl('inf');else STAT.lvl(G.chi+1,G.daily?'daily':G.weekly?'week':'ch');} // сеча (бесконечный) — l:'inf' (STAT v1.2), как и в end // статистика: поход = «уровень» (номер главы, режим)
+  STAT.screen('game');if(G.endless&&!G.weekly)STAT.lvl('inf');else STAT.lvl(G.chi+1,G.daily?'daily':G.weekly?'week':G.dif==='s'||G.dif==='h'?'ch_'+G.dif:'ch');} // сеча (бесконечный) — l:'inf' (STAT v1.2), как и в end // статистика: поход = «уровень» (номер главы, режим)
 function togglePause(){if(!G||G.over)return;if($('modal').classList.contains('on')&&!G.pauseOpen)return;
   if(G.pauseOpen){G.pauseOpen=false;G.paused=false;hideModal();musicDuck(1);YG.start();return;}
   G.paused=true;G.pauseOpen=true;IN.on=false;YG.stop();musicDuck(.35);
@@ -717,10 +729,15 @@ function openResult(win){const GE=G.endless||!!G.daily; // поход дня: к
     showModal((win&&!GE?'<div class="confetti">'+Array.from({length:14},(_,i)=>'<i style="left:'+(i*7+3)+'%;animation-delay:'+(i%5*.25)+'s;background:'+['#ffd84a','#ff6a3d','#6ae0ff','#8af0a0','#b86bff'][i%5]+'"></i>').join('')+'</div>':'')+
       '<h3>'+title+'</h3><p class="sub">'+sub+'</p>'+
       // вид (look1): главное крупно — звёзды, три цифры, золото, открытия; остальные строки — под «Подробнее»
-      (win&&!GE?(()=>{const miss=!S.stars[G.chi+'d']?L('без единого падения','without falling once'):!S.stars[G.chi+'t']?L('быстрее '+fmtTime(STAR_T),'faster than '+fmtTime(STAR_T)):'';return '<div class="rstars"><i class="stars">'+starsHTML3(G.chi)+'</i><small>'+(miss?L('ещё звезда — за победу ','one more star for a win ')+miss:L('все три звезды главы!','all three chapter stars!'))+'</small></div>';})():'')+
+      (win&&!GE?(()=>{const p=DIF_PRE[G.dif]||'',miss=!S.stars[G.chi+p+'d']?L('без единого падения','without falling once'):!S.stars[G.chi+p+'t']?L('быстрее '+fmtTime(STAR_T),'faster than '+fmtTime(STAR_T)):'';return '<div class="rstars">'+(G.dif!=='n'?'<b class="difb">'+difName(G.dif)+'</b> ':'')+'<i class="stars">'+starsHTML3(G.chi,G.dif)+'</i><small>'+(miss?L('ещё звезда — за победу ','one more star for a win ')+miss:L('все три звезды главы!','all three chapter stars!'))+'</small></div>';})():'')+
       '<div class="stats s3"><div><b>'+fmtTime(G.t)+'</b>'+L('время','time')+'</div><div><b>'+G.kills+'</b>'+L('одолено','defeated')+'</div><div><b>'+G.hero.lvl+'</b>'+L('уровень','level')+'</div></div>'+
       '<div class="goldrow"><img src="'+ic('coin',68)+'" alt=""><b>'+fmtNum(cur)+'</b><small>'+L('золота <br>за поход','gold <br>this run')+'</small></div>'+
-      (loss?lossBar():'')+(G.nbGold?big(ic('chest',160),L('Подъёмные от старосты: +'+G.nbGold+' золота','A gift from the village elder: +'+G.nbGold+' gold'),L('Хватит на кузницу и первую ковку — прокачка остаётся навсегда.','Enough for the Forge and your first upgrades — they last forever.')):'')+
+      (loss?lossBar():'')+
+      (win&&!GE&&G.difUp==='s'&&G.chi===CH.length-1?'<div class="tutbox difbox difnext"><b>'+L('🏆 Кампания пройдена! Дальше — ⚔ Сложная','🏆 Campaign complete! Next: ⚔ Hard')+'</b><br>'+
+        L('Во всех пройденных главах открыта Сложная: нечисть сильнее, без поблажек — как настоящая былина. Свои звёзды и значки, золота ×'+dec(ECO.dif.s,1)+', а после победы в «'+G.ch.name+'» на Сложной — проклятия (ещё больше золота). Без кузницы там не обойтись!',
+          'Hard is now open in every chapter you\'ve cleared: stronger monsters, no mercy. Its own stars and badges, gold ×'+ECO.dif.s+', and beating '+G.ch.name+' on Hard unlocks curses (even more gold). You\'ll need the Forge!')+
+        '<button class="btn" id="rHard" style="margin-top:10px;width:100%">'+L('⚔ Попробовать Сложную — с главы 1','⚔ Try Hard — from Chapter 1')+'</button></div>':'')+
+      (win&&!GE&&G.difUp&&!forgeFirst&&!(G.difUp==='s'&&G.chi===CH.length-1)?'<div class="tutbox difbox"><b>'+(G.difUp==='s'?L('⚔ В этой главе открыта Сложная','⚔ Hard is now open in this chapter'):L('🔥 В этой главе открыта Адская','🔥 Hell is now open in this chapter'))+'</b><br>'+difNote(G.difUp)+'<button class="btn ghost" id="rUp" style="margin-top:8px;width:100%">'+(G.difUp==='s'?L('⚔ Выбрать сложную','⚔ Pick Hard'):L('🔥 Выбрать адскую','🔥 Pick Hell'))+'</button></div>':'')+(G.nbGold?big(ic('chest',160),L('Подъёмные от старосты: +'+G.nbGold+' золота','A gift from the village elder: +'+G.nbGold+' gold'),L('Хватит на кузницу и первую ковку — прокачка остаётся навсегда.','Enough for the Forge and your first upgrades — they last forever.')):'')+
       (loss&&k?'<div class="killer"><img src="'+ic(k,120)+'"><span>'+L('Кто одолел: ','Defeated by: ')+'<b>'+EN[k].n+'</b>'+(lowScr?'':'<br><small>💡 '+tipL+'</small>')+'</span></div>':loss&&!lowScr?'<div class="tutbox">💡 '+tipL+'</div>':'')+
       (newHero?big(ic('hp_'+newHero.id,160),L('Новый богатырь!','New hero!'),newHero.name+L(' теперь с тобой. Дар: ',' has joined you. Power: ')+newHero.dar.name):'')+
       skinsNew.map(a=>big(ic('hp_'+a.r,160),L('Новый облик!','New outfit!'),qt(skinName(a.r))+' — '+a.name)).join('')+
@@ -756,7 +773,9 @@ function openResult(win){const GE=G.endless||!!G.daily; // поход дня: к
     on('rNext',()=>{if(!take())return;mapSel=G.chi+1;go('Map',after);});
     on('rForge',()=>{if(!take())return;if(next)mapSel=G.chi+1;go('Village');if(S.gold>=BLD[0].cost[0])toast(L('Хватает на кузницу — жми «'+fmtNum(BLD[0].cost[0])+'»!','Enough for the Forge — tap “'+fmtNum(BLD[0].cost[0])+'”!'));});
     on('rLb',()=>{if(PLAT==='vk'){LB.vkFriends();return;}if(!take())return;qSeg='q';lbSeg='daily';go('Quests');setTimeout(()=>{const b=$('lbBox');if(b)b.scrollIntoView({block:'center'});},80);});
-    on('rOk',()=>{if(!take())return;go(S.village.forge||GE?'Map':'Village',after);});};
+    on('rOk',()=>{if(!take())return;go(S.village.forge||GE?'Map':'Village',after);});
+    on('rHard',()=>{if(!take())return;S.dfc[0]='s';save();STAT.ev('mod',{m:'dif',a:'s',l:1,c:'camp'});mapSel=0;go('Map',()=>toast(L('⚔ Сложная выбрана в главе 1 — жми «Выступить»','⚔ Hard selected in Chapter 1 — tap “March”')));});
+    on('rUp',()=>{if(!take())return;const ci=G.chi,k=G.difUp;S.dfc[ci]=k;save();STAT.ev('mod',{m:'dif',a:k,l:ci+1,c:'res'});mapSel=ci;go('Map',()=>toast(difName(k)+L(' — выбрана. Жми «Выступить»',' selected — tap “March”')));});};
   draw();save();}
 // после победы (с 3-го похода) — одно предложение за сессию: ярлык/оценка на Яндексе, избранное/экран/друзья в VK
 async function askReturn(){if(ASK.session||S.runs<3||G)return;let o=null;try{o=await ASK.next();}catch(e){}if(!o||G||$('modal').classList.contains('on'))return;

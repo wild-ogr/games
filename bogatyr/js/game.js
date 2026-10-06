@@ -65,21 +65,25 @@ function newRun(chi,heroId,endless,wk,dr){
     weapons:[{id:WM.only||hero.weapon,lvl:1,t:.3,a:0}],pas:{},kills:0,gold:0,goldMul:1,spawnAcc:0,pid:1,lvlQ:0,boss:null,bossDone:false,
     ev:mkEvents(0),
     rerolls:(S.village.altar||0),revives:(S.village.hut?1:0),adRevive:true,quipT:6,gift:null,banner:null,cards:S.village.tavern?4:3};
-  G.first=!S.runs&&!endless&&!dr;G.short=!endless&&!dr&&!S.done[chi]?(chi===0?FIRST:chi===1?STEP2:chi===2?STEP3:chi===3?STEP4:null):null;G.ev=mkEvents(0); // G.short — числа короткого похода: глава 1 (FIRST) глава 2 (STEP2, «лесенка»), глава 3 (STEP3) и глава 4 (STEP4), пока глава не пройдена; иначе null
+  G.first=!S.runs&&!endless&&!dr;
+  // уровень сложности (difficulty 05.10): только главы; 'n' Обычная — игра × DIF.n + лесенка, 's' Сложная — игра как была без поблажек, 'h' Адская — Сложная × DIF.h; вне глав — '' (как было)
+  const camp=!endless&&!dr&&!wk;G.dif=camp?difOf(chi):'';G.df=G.dif?difProf(chi,G.dif):null;G.rep=G.dif==='n'&&difWon(chi,'n'); /* rep — повтор уже пройденной на Обычной главы (золото ×ECO.difR) */const nrm=G.dif==='n';
+  G.short=camp&&nrm&&!S.done[chi]?(chi===0?FIRST:chi===1?STEP2:chi===2?STEP3:chi===3?STEP4:null):null;G.ev=mkEvents(0); // G.short — числа короткого похода: глава 1 (FIRST) глава 2 (STEP2, «лесенка»), глава 3 (STEP3) и глава 4 (STEP4), пока глава не пройдена; иначе null
   // «оберег новичка» (boost): самый первый поход — нечисть бьёт на 25% слабее и один раз выручает каравай; главы 1–2, пока не пройдены (первые 8 походов) — на 15% слабее
-  G.nov=G.first&&chi===0?2:!endless&&!dr&&!wk&&chi<=1&&!S.done[chi]&&S.runs<8?1:0;G.novHeal=G.nov===2?1:0;
+  G.nov=nrm&&G.first&&chi===0?2:nrm&&chi<=1&&!S.done[chi]&&S.runs<8?1:0;G.novHeal=G.nov===2?1:0;
   // глава 2 мягче (решение владельца 02.10): только в самой главе «Гиблое болото» (не сеча, не поход дня, не неделя) — числа CH2_SOFT в data.js
   // глава 4, пока не пройдена (ch4-soft 05.10): Колдун-стрелок мягче — CH4_SOFT в data.js (вместе с лесенкой STEP4)
-  G.soft=!endless&&!dr&&!wk&&chi===1?CH2_SOFT:!endless&&!dr&&!wk&&chi===3&&!S.done[3]?CH4_SOFT:null;
+  // difficulty: на Обычной стрелки и так мягче (DIF.n сильнее CH2/CH4_SOFT) — без двойного смягчения; на Сложной/Адской CH2_SOFT остаётся (постоянная часть главы 2), CH4_SOFT был только до победы — его нет
+  G.soft=camp&&!nrm&&chi===1?CH2_SOFT:null;
   // «боевой дух»: после поражения в главе следующая попытка В ЭТОЙ ЖЕ главе чуть легче — нечисть бьёт на 10% слабее за каждое поражение подряд (не больше 30%); победа сбрасывает. Только главы (не сеча, не поход дня, не неделя)
-  G.pity=!endless&&!dr&&!wk&&S.pity&&S.pity.c===chi?clamp(S.pity.n|0,0,PITY_MAX):0;G.emD=Math.max(.6,(G.nov===2?.75:G.nov===1?.85:1)*(1-PITY_STEP*G.pity)*(G.short&&G.short.dmg||1));G.daily=dr||null;G.rng=dr?mulberry(dr.seed):null;
-  G.hkey=skinKey(hero.id);G.curse=endless||dr?0:Math.min(S.curse||0,S.curseMax||0);G.hits=0;
+  G.pity=nrm&&S.pity&&S.pity.c===chi?clamp(S.pity.n|0,0,PITY_MAX):0;G.emD=Math.max(.6,(G.nov===2?.75:G.nov===1?.85:1)*(1-PITY_STEP*G.pity)); /* урон лесенки (G.short.dmg) не берём — на Обычной урон задаёт DIF.n */G.daily=dr||null;G.rng=dr?mulberry(dr.seed):null;
+  G.hkey=skinKey(hero.id);G.curse=CURSE_CAP[G.dif]?Math.min(S.curse||0,S.curseMax||0,CURSE_CAP[G.dif]):0; /* проклятия: Сложная — все, Адская — до CURSE_CAP.h (economy.md) */G.hits=0;
   G.weekly=!!wk;G.wk=WM;G.kt={};G.meet={};if(WM.oneLife){G.revives=0;G.adRevive=false;}
   G.st=null;computeStats();G.hero.hp=G.st.maxHp;G.darT=darCd()*.5;G.q={chests:0,evos:0,dars:0};G.wolfT=0;G.swordT=0;G.dashT=0;
   G.hpLock=G.hero.hp;
   // v13: изгнать/закрепить (окно уровня), находки на поле, замирание кадра, серия убийств, сон-трава
   G.haz=[];G.fogT=0;G.stone=null;G.stoneMod=null;G.richT=0;G.loot=0;G.ban={};G.banN=2;G.pin=null;G.propT=G.short?G.short.prop:G.first?50:28;G.prop=null;G.hs=0;G.kb=null;G.combo=null;G.sleepT=0;
-  if(G.daily)banner(L('Поход дня','Daily Run'),G.daily.rule.name);else if(G.weekly)banner(L('Испытание недели','Weekly Trial'),weekly().name);else if(G.endless)banner(L('Бесконечная сеча','Endless Battle'),L('Круг 1: ','Round 1: ')+G.ch.name);else banner(G.ch.name,G.pity?L('💪 Боевой дух: ты сильнее на '+Math.round(PITY_MIGHT*G.pity*100)+'%, нечисть слабее на '+Math.round(PITY_STEP*G.pity*100)+'%','💪 Fighting spirit: you hit '+Math.round(PITY_MIGHT*G.pity*100)+'% harder, monsters '+Math.round(PITY_STEP*G.pity*100)+'% weaker'):G.ch.sub);
+  if(G.daily)banner(L('Поход дня','Daily Run'),G.daily.rule.name);else if(G.weekly)banner(L('Испытание недели','Weekly Trial'),weekly().name);else if(G.endless)banner(L('Бесконечная сеча','Endless Battle'),L('Круг 1: ','Round 1: ')+G.ch.name);else banner(G.ch.name,G.dif==='s'?L('⚔ Сложная: нечисть сильнее','⚔ Hard: stronger monsters'):G.dif==='h'?L('🔥 Адская: нечисть ещё сильнее','🔥 Hell: even stronger monsters'):G.pity?L('💪 Боевой дух: ты сильнее на '+Math.round(PITY_MIGHT*G.pity*100)+'%, нечисть слабее на '+Math.round(PITY_STEP*G.pity*100)+'%','💪 Fighting spirit: you hit '+Math.round(PITY_MIGHT*G.pity*100)+'% harder, monsters '+Math.round(PITY_STEP*G.pity*100)+'% weaker'):G.ch.sub);
   if(G.short)for(let i=0;i<G.short.pack;i++){const a=(i+.5)/G.short.pack*TAU;mkEnemy(G.ch.en[0],Math.cos(a)*VIEW.R*.55,Math.sin(a)*VIEW.R*.55);} // короткий первый поход: нечисть рядом с первой секунды
   G.tut=null;if((S.tut===-1||!S.tut&&!S.runs)&&!G.endless)tutStart();
   later(3.4,()=>heroSay(pick(PH.start)));
@@ -124,15 +128,17 @@ function mkEnemy(type,x,y,o){const d=EN[type],ch=G.ch,lt=DT(),tm=1+lt/60*.34;
   const e={type,x,y,r:d.r,hp:(d.boss||type==='egg'?d.hp:d.hp*(1+(ch.hp-1)*clamp(lt/120,.3,1))*tm)*G.em,spd:d.spd*(d.boss?1:rand(.9,1.1)),dmg:d.dmg*ch.dmg*(G.emD||1),xp:d.xp||0,
     fly:d.fly,ranged:d.ranged,kx:0,ky:0,flash:0,hk:{},dead:false,ph:Math.random()*TAU,face:1,slow:0,shootT:rand(1.5,3),sc:1};
   if(G.soft){e.dmg*=d.boss?G.soft.bossDmg:G.soft.dmg;if(!d.boss&&type!=='egg'&&!d.prop)e.hp*=G.soft.hp;if(e.ranged)e.shootT*=G.soft.cd;}
-  if(o&&o.elite){e.elite=1;e.sc=1.55;e.r*=1.55;e.hp*=14*(G.short?G.short.eliteHp:1);e.dmg*=1.4;e.spd*=.85;}
-  if(d.boss&&G.short){e.hp*=G.short.bossHp;e.spd*=G.short.bossSpd;e.dmg*=G.short.bossDmg||1;}
+  const df=G.df,mn=(a,b)=>a==null?(b==null?1:b):b==null?a:Math.min(a,b);if(df&&!d.boss&&type!=='egg'&&!d.prop){e.hp*=df.hp;e.dmg*=df.dmg;if(e.ranged)e.shootT*=df.cd;} // уровень сложности; вожак/босс — сильнейшее из лесенки и уровня (не двоим)
+
+  if(o&&o.elite){e.elite=1;e.sc=1.55;e.r*=1.55;e.hp*=14*mn(G.short&&G.short.eliteHp,df&&df.eliteHp);e.dmg*=1.4;e.spd*=.85;}
+  if(d.boss){e.hp*=mn(G.short&&G.short.bossHp,df&&df.bossHp);e.dmg*=mn(G.short&&(G.short.bossDmg||1),df&&df.bossDmg);if(G.short)e.spd*=G.short.bossSpd;}
   if(d.boss){e.boss=1;e.at=3;e.at2=8;e.at3=10;e.state='';e.st=0;e.phase=0;}
   if(G.curse){const cm=curseMul(G.curse);e.hp*=cm.hp;e.dmg*=cm.dmg;}
   const wm=G.wk;if(d.prop){e.prop=1;e.spd=0;}else{if(wm.espd)e.spd*=d.boss?1+(wm.espd-1)/2:wm.espd;if(!d.boss&&type!=='egg'){if(wm.ehp)e.hp*=wm.ehp;if(wm.esz){e.sc*=wm.esz;e.r*=wm.esz;}if(wm.exp)e.xp*=wm.exp;if(qLow())e.hp*=1.25;}G.meet[type]=1;} // эффекты «мало»: нечисти ×0,8, но она крепче
   e.max=e.hp;G.en.push(e);return e;}
 function spawnPos(far){const H=G.hero;let a=rand(0,TAU);if(H.moving&&Math.random()<.5)a=Math.atan2(H.fy,H.fx)+rand(-1,1);
   const d=(far||VIEW.R)+rand(0,40);return [H.x+Math.cos(a)*d,H.y+Math.sin(a)*d];}
-function pickType(){const t=DT(),en=G.ch.en,unl=[0,35,95,165];let tot=0;const w=en.map((id,i)=>{if(t<unl[i])return 0;let v=i===3?.3:1;if(i>0&&t-unl[i]<60)v*=1.6;if(G.soft&&EN[id].ranged)v*=G.soft.w;if(i===0&&t>150)v*=.6;tot+=v;return v;});
+function pickType(){const t=DT(),en=G.ch.en,unl=[0,35,95,165];let tot=0;const w=en.map((id,i)=>{if(t<unl[i])return 0;let v=i===3?.3:1;if(i>0&&t-unl[i]<60)v*=1.6;if(G.soft&&EN[id].ranged)v*=G.soft.w;if(G.df&&EN[id].ranged)v*=G.df.w;if(i===0&&t>150)v*=.6;tot+=v;return v;});
   let r=Math.random()*tot;for(let i=0;i<en.length;i++){r-=w[i];if(r<=0)return en[i];}return en[0];}
 function spawnTick(dt){const t=DT();let rate=(1.15+t/60*1.2)*(G.wk.spawn||1);const cap=(48+t/60*56)*(G.wk.cap||1)*(qLow()?.8:1);
   if(G.boss&&!G.boss.dead)rate*=.35;if(G.richT>0)rate*=1.6;if(G.win)return;if(G.sleepT>0)rate=0; // сон-трава: пока нечисть спит, новая не лезет
@@ -242,7 +248,7 @@ function bossDie(e){G.shake=16;SND.win();S.bossKill[e.type]=1;musicPlay(G.endles
 function defeated(t){const d=EN[t];return LANG==='en'?d.n+' defeated!':d.n+' '+(d.g==='f'?'повержена':d.g==='n'?'повержено':'повержен')+'!';} // i18n:ru — русская ветка (род босса)
 function runStats(win){const t=S.stats,mx=(k,v)=>{t[k]=Math.max(t[k]||0,v);};mx('maxLvl',G.hero.lvl);mx('maxChests',G.q.chests);mx('maxGold',G.reward);
   if(win&&!G.endless&&!G.daily){if(G.weapons.length===1)t.one=1;if(!Object.keys(G.pas).length)t.nopas=1;if(G.hits<=5&&G.chi>=3)t.tough=1;mx('maxCurse',G.curse);
-    G.curseUp=false;if(G.chi===CH.length-1){if(!S.curseMax){S.curseMax=1;G.curseUp=1;}else if(G.curse===S.curseMax&&S.curseMax<5){S.curseMax++;G.curseUp=S.curseMax;}}}
+    G.curseUp=false;if(G.chi===CH.length-1&&G.dif!=='n'){if(!S.curseMax){S.curseMax=1;G.curseUp=1;}else if(G.curse===S.curseMax&&S.curseMax<5){S.curseMax++;G.curseUp=S.curseMax;}}}
   G.achNew=achCheck();}
 /* бесконечная сеча: после 8 глав каждый новый круг ×1,5 к здоровью (урон ×1,25) — от уровня последней главы, без обрыва ×9 */
 function nextCycle(){if(!G||G.over)return;G.cyc++;const LAP=Math.floor(G.cyc/CH.length),F=CH[CH.length-1];G.chi=G.cyc%CH.length;G.ch=CH[G.chi]; // не L: L() — функция перевода
@@ -275,7 +281,7 @@ function razryv(){G.fx.push({k:'wave',own:1,t:0,dur:.6,r1:VIEW.R,col:'#9aff6a'})
   G.eproj.length=0;}
 // сон-трава: нечисть спит 5 с (босс — 1,5 с), снаряды пропадают, новая не лезет
 function sleepAll(){G.sleepT=5;for(const e of G.en){if(e.dead||e.prop)continue;e.stun=Math.max(e.stun||0,e.boss?1.5:5);}G.eproj.length=0;G.fx.push({k:'pulse',own:1,t:0,dur:.9,r1:VIEW.R,evo:1});SND.heal();vib(40);}
-function addXp(v){const H=G.hero;H.xp+=v*G.st.xp*(G.short?(H.lvl<4?G.short.xp0:G.short.xp):1);while(H.xp>=H.need){H.xp-=H.need;H.lvl++;H.need=xpNeed(H.lvl);G.lvlQ++;}}
+function addXp(v){const H=G.hero;H.xp+=v*G.st.xp*Math.max(G.short?(H.lvl<4?G.short.xp0:G.short.xp):1,G.df?G.df.xp:1);while(H.xp>=H.need){H.xp-=H.need;H.lvl++;H.need=xpNeed(H.lvl);G.lvlQ++;}}
 function heroSay(s){const H=G.hero;H.sayT=6;compact(G.bub,b=>b.e!==H);G.bub.push({e:H,s,t:0,dur:2.5+s.length*.05});}
 function say(e,s,dur){const H=G.hero;compact(G.bub,b=>b.e!==e&&(b.e===H||b.e.boss||e.boss));G.bub.push({e,s,t:0,dur:Math.max(dur||0,2.5+s.length*.05)});}
 /* баннеры (boost): один за раз, остальные ждут в очереди (не больше 3) по важности pri: 5 — босс, 4 — эволюция, 3 — событие/начало (по умолчанию), 2 — «Окружили!» и подсказки, 1 — находки.
@@ -472,7 +478,7 @@ function update(dt){
     else if(e.stun>0){e.stun-=dt;e.x+=e.kx*dt;e.y+=e.ky*dt;e.kx*=Math.pow(.004,dt);e.ky*=Math.pow(.004,dt);continue;}
     else{const dx=H.x-e.x,dy=H.y-e.y,d=Math.hypot(dx,dy)||1;let sp=e.spd*(e.slow>0?.55:1),mx=dx/d,my=dy/d;
       if(e.ranged){if(d<160){mx=-mx*.6;my=-my*.6;}else if(d<240){const t=mx;mx=-my*.5;my=t*.5;}
-        e.shootT-=dt;if(e.shootT<=0&&d<340){const sf=G.soft;e.shootT=rand(2.4,3.4)*(sf?sf.cd:1);eShoot(e,Math.atan2(dy,dx),150*(sf?sf.shotSpd:1),EN[e.type].col,6,sf?e.dmg*sf.shot:0);}}
+        e.shootT-=dt;if(e.shootT<=0&&d<340){const sf=G.soft,df=G.df,sh=(sf?sf.shot:1)*(df?df.shot:1);e.shootT=rand(2.4,3.4)*(sf?sf.cd:1)*(df?df.cd:1);eShoot(e,Math.atan2(dy,dx),150*(sf?sf.shotSpd:1)*(df?df.shotSpd:1),EN[e.type].col,6,sh!==1?e.dmg*sh:0);}}
       if(e.fly)my+=Math.sin(G.t*4+e.ph)*.35;
       e.x+=(mx*sp+e.kx)*dt;e.y+=(my*sp+e.ky)*dt;e.kx*=Math.pow(.004,dt);e.ky*=Math.pow(.004,dt);e.face=dx<0?-1:1;
       if(d>VIEW.R*1.7&&!e.elite){const p=spawnPos();e.x=p[0];e.y=p[1];}}
@@ -529,7 +535,7 @@ function pickup(p){const H=G.hero;
 function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dead?clamp(G.boss.hp/G.boss.max,0,1):null;G.paused=true;IN.on=false;YG.stop();musicPlay(null);tipHide();
   G.bestNew=[];for(const t in G.meet){if(!S.meet[t]&&EN[t]){S.meet[t]=1;G.bestNew.push(t);}}for(const t in G.kt)S.bk[t]=(S.bk[t]||0)+G.kt[t];
   // награда: монеты из похода + за нечисть (1 за 40) + за время (3×глава за минуту) + за босса; множители — глава (ECO.chk), жадность, проклятие, испытание
-  const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*(ECO.chk[G.chi]||.65),parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold*(G.short?G.short.kill:1)],['time',(G.short?G.t*RUN_BOSS_T/G.short.boss:G.t)/60*ECO.time*(G.chi+1)*G.st.gold],['boss',win?100*G.ch.gold:0],['loot',(G.loot||0)*G.goldMul*G.st.gold]];
+  const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*(ECO.chk[G.chi]||.65)*(ECO.dif[G.dif]||1)*(G.rep?ECO.difR:1),parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold*(G.short?G.short.kill:1)],['time',(G.short?G.t*RUN_BOSS_T/G.short.boss:G.t)/60*ECO.time*(G.chi+1)*G.st.gold],['boss',win?100*G.ch.gold:0],['loot',(G.loot||0)*G.goldMul*G.st.gold]];
   if(G.endless)parts[3][1]=150*(G.bossesKilled||0)*G.ch.gold;
   G.rw={};G.reward=0;for(const [k,v] of parts){G.rw[k]=Math.round(v*mul);G.reward+=G.rw[k];}
   if(G.daily){const sc=G.kills+(win?500:0),m=drMine();S.dr={day:m.day,best:Math.max(m.best,sc),got:m.got,runs:m.runs+1};G.drScore=sc;G.newRec=sc>m.best;
@@ -540,7 +546,10 @@ function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dea
   else if(G.endless){G.newRec=Math.floor(G.t)>(S.endBest||0);S.endBest=Math.max(S.endBest||0,Math.floor(G.t));}
   else{G.prevBest=S.best[G.chi]||0;if(win){if(S.pity&&S.pity.c===G.chi)S.pity=null;
       // звёзды главы: что взято в этом походе и что из этого новое
-      const got={w:1,d:!G.falls?1:0,t:G.t<=STAR_T?1:0};G.starGot=got;G.starNew=0;for(const k of STAR_K)if(got[k]&&!S.stars[G.chi+k]){S.stars[G.chi+k]=1;G.starNew++;}}else if(G.t>=30)S.pity={c:G.chi,n:Math.min(PITY_MAX,(S.pity&&S.pity.c===G.chi?S.pity.n|0:0)+1)};if(win)S.done[G.chi]=1;S.best[G.chi]=Math.max(S.best[G.chi]||0,Math.floor(G.t));}if(G.t>=30)S.runs++; // поход, брошенный в первые 30 с, не считается (задания, достижения)
+      // уровень сложности: у каждого уровня свои звёзды (S.stars['<глава><приставка DIF_PRE><w|d|t>'])
+      const pre=DIF_PRE[G.dif]||'';G.difUp=G.dif==='n'&&!difWon(G.chi,'n')?'s':G.dif==='s'&&!difWon(G.chi,'s')?'h':''; // победа открывает следующий уровень главы
+      {const got={w:1,d:!G.falls?1:0,t:G.t<=STAR_T?1:0};G.starGot=got;G.starNew=0;for(const k of STAR_K)if(got[k]&&!S.stars[G.chi+pre+k]){S.stars[G.chi+pre+k]=1;G.starNew++;}}}
+    else if(G.t>=30){S.pity={c:G.chi,n:Math.min(PITY_MAX,(S.pity&&S.pity.c===G.chi?S.pity.n|0:0)+1)};}if(win)S.done[G.chi]=1;S.best[G.chi]=Math.max(S.best[G.chi]||0,Math.floor(G.t));}if(G.t>=30)S.runs++; // поход, брошенный в первые 30 с, не считается (задания, достижения)
   S.kills+=G.kills;G.bossN=G.endless?(G.bossesKilled||0):(win?1:0);S.bosses=(S.bosses||0)+G.bossN;G.questDone=questsFromRun(win);runStats(win);
   if(G.endless&&!G.weekly)LB.set('endless',S.endBest);LB.set('kills',S.kills);
   if(!win&&!G.endless&&!G.daily&&!S.nb&&!S.village.forge&&G.t>=30){S.nb=1;G.nbGold=NOV_GIFT;S.gold+=NOV_GIFT;ern('gift',NOV_GIFT);} // подъёмные от старосты: один раз, новичку после первого поражения

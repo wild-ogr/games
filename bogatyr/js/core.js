@@ -44,8 +44,9 @@ function freshSave(){return {v:1,ts:0,gold:0,forge:{},village:{},armory:{},done:
 let S=freshSave();
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 function fixSave(){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v);
-  for(const k of['forge','village','armory','done','best','rank','bought','stats','bossKill','evoSeen','skins','skin','ach','meet','bk','ask','stars'])if(!ob(S[k]))S[k]={};
-  for(const i in S.done)if(S.done[i])S.stars[i+'w']=1; // звёзды глав (boost 2): пройденной главе — первая звезда
+  for(const k of['forge','village','armory','done','best','rank','bought','stats','bossKill','evoSeen','skins','skin','ach','meet','bk','ask','stars','dfc'])if(!ob(S[k]))S[k]={};
+  // уровни сложности (difficulty 05.10): S.dfc — выбор {глава:'n'|'s'|'h'}; победы и звёзды уровней — в S.stars (Обычная — без приставки, Сложная 's', Адская 'h')
+  for(const i in S.done)if(S.done[i])S.stars[i+'w']=1; // звёзды глав (boost 2): пройденной главе — первая звезда Обычной; старые сейвы: всё пройденное → Обычная, в этих главах сразу открыта Сложная
   if(typeof S.gold!=='number'||!isFinite(S.gold))S.gold=0;if(!S.afkT)S.afkT=nowMs();if(typeof S.th!=='string')S.th=''; // S.th — тема оформления (js/look.js), '' = основная
   for(const k of['payT','payV'])if(S[k]!=null&&!Array.isArray(S[k]))S[k]=[];if(S.buy!=null&&!ob(S.buy))S.buy={};if(S.buyB!=null&&!ob(S.buyB))S.buyB={};} // покупки (js/pay.js)
 fixSave();
@@ -271,7 +272,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'bogatyr',gv:'v22-100521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+STAT.init({g:'bogatyr',gv:'v22-100614',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
@@ -307,7 +308,7 @@ function mergeProgress(d,loc,useCloud){const ob=v=>v&&typeof v==='object'&&!Arra
     aq.list.forEach((x,i)=>{const y=dq.list[i];if(y&&y.id===x.id){x.p=Math.max(x.p||0,y.p||0);x.c=Math.max(x.c||0,y.c||0);}});aq.bonus=Math.max(aq.bonus||0,dq.bonus||0);}}
   const ar=ob(o.dr),dr=ob(d.dr);if(dr.day&&(!ar.day||dr.day>ar.day))o.dr=dr;else if(dr.day&&dr.day===ar.day)for(const k of['best','got','runs'])ar[k]=Math.max(ar[k]||0,dr[k]||0); // поход дня
   const aw=ob(o.wk),dw=ob(d.wk);if(dw.w&&(!aw.w||dw.w>aw.w))o.wk=dw;else if(dw.w&&dw.w===aw.w)for(const k of['best','got','runs'])aw[k]=Math.max(aw[k]||0,dw[k]||0);
-  if(useCloud)for(const k of['hero','skin','curse','sound','music','vm','vs','calm','vib','th'])if(k in d)o[k]=d[k];
+  if(useCloud)for(const k of['hero','skin','curse','dfc','sound','music','vm','vs','calm','vib','th'])if(k in d)o[k]=d[k];
   if(typeof payMerge==='function')payMerge(d,o); // покупки (js/pay.js): купленное — объединение
   o.ts=Math.max(+o.ts||0,+d.ts||0);return o;}
 function mergeSave(d){if(!d||typeof d!=='object'||Array.isArray(d)||!d.ts)return false;
