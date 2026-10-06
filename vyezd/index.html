@@ -931,7 +931,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v22-100613',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v22-100614',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: настройки сеанса; прогресс на входе — после чтения облака, но не позже 2,5 с (bt — облако хоть раз отдало сохранение: метка устройства, не в сохранении)
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -3183,7 +3183,7 @@ if(!/[?&]demo=/.test(location.search)&&!(S.levelsDone>0)&&S.unlocked===1&&!Objec
   save=()=>{};})();
 // VK: мост из js/vk-bridge.min.js (только в VK-сборке). Яндекс: SDK по относительному пути; локально 404 → заглушки рекламы
 // «Друзья и игры» (общий модуль SOC, только VK с мостом): сессии, облако, кнопки
-SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,okGroup:OK_GROUP});updMore();
+SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK});updMore(); /* okGroup в SOC не передаём: в ОК VKWebAppJoinGroup с номером группы ОК ничего не делает (проверено вживую 06.10) — группа открывается ссылкой в «Об игре» */
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
 window.__test={DAILY_T,dailyTier,cam,birdsInit,scare,streakState,showStreak,claimStreak,dayKey,LEVELS,DAILY,genLevel,depth,get G(){return G;},tapCell:(x,y)=>tapAt(ox+(x+.5)*cs,oy+(y+.5)*cs),canExit,startLevel,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,get S(){return S;},set VK(v){VK=v;},get VK(){return VK;}};
