@@ -819,7 +819,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Имя игры — по сборке (BUILD_GAME → GID): Косынка — kosynka, Паук — pauk, Ячейка — yacheyka. Раздача = «уровень» (STAT.lvl в startDeal/resumeDeal)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v2-100521',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v2-100620',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (сыграно раскладов, монеты, было ли облачное сохранение) — после облака или через 2,5 с; баланс; настройки
 let statPr=0,statBt=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:played(),cn:+S.coins||0,bt:statBt});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0,th:S.th||'day'});
@@ -2439,11 +2439,13 @@ function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
 // Если сейчас нельзя (пауза после рекламы) — показ не сгорает, а ждёт следующей раздачи. Обнуляется только после настоящего показа
 function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.games||0)>=AD_FROM;}
 function showInterstitial(cb0){STAT.adReq('int');
-  const cb=shown=>{lastAdT=Date.now();if(shown!==false)STAT.ad('int','show');else STAT.ad('int','none','nofill');if(shown!==false){S.adW=0;save();}cb0();};
+  /* не показана: none c=nofill (площадка не дала: result:false или код 20) / nosdk; ошибка — err c=код VK или причина (как у ролика — adErrCode) */
+  const fin=(r,c)=>{lastAdT=Date.now();STAT.ad('int',r,c);if(r==='show'){S.adW=0;save();}cb0();};
+  const cb=shown=>fin(shown!==false?'show':'none',shown!==false?'':'nofill');
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nosdk');cb0();}else stubAd(cb);return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),()=>false).then(ok=>{adClose();cb(ok);});return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();cb(!!(r&&r.result));},e=>{adClose();if(adNoFill(e))cb(false);else fin('err',adErrCode(e));});return;}
   if(!ysdk){if(AD_LOCAL)stubAd(cb);else{STAT.ad('int','none','nosdk');cb0();}return;}
-  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
+  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();fin('err','');}}});
 }
 
 /* ================= монеты ================= */

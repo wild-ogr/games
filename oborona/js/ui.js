@@ -6,10 +6,10 @@ const LK=!!(window.LOOK&&LOOK.on);   // look1: вид «Живая сказка�
 const VOEV=()=>Lg('Воевода Потап','Commander Potap');
 const lvLbl=n=>Lg(n+' ур.','lv '+n);
 const BREF=()=>Lg('⏩ Ускорение: возвращено ','⏩ Speed-up refunded: ');
-function showModal(html,kind){if(typeof PAY!=='undefined')PAY.re=null;$('mBody').innerHTML=html;$('mBody').setAttribute('data-w',kind||'');$('modal').classList.add('on');if(LK)$('toast').classList.remove('on');$('mBody').scrollTop=0;fitModal();}
+function showModal(html,kind){if(typeof PAY!=='undefined')PAY.re=null;$('mBody').innerHTML=html;$('mBody').setAttribute('data-w',kind||'');$('mBody').classList.remove('rc');$('modal').classList.add('on');if(LK)$('toast').classList.remove('on');$('mBody').scrollTop=0;fitModal();}
 /* look1: окно ужимается под экран — необязательные блоки помечены data-fit (меньше число — убирается раньше); строка SOC под кнопками в счёт не идёт */
 function fitModal(){const m=$('mBody');if(!m||!$('modal').classList.contains('on'))return;const L=Array.from(m.querySelectorAll('[data-fit]'));if(!L.length)return;for(const e of L)e.style.display='';
-  const over=()=>{const so=m.querySelector('.soc-o');return m.scrollHeight-(so?so.offsetHeight+14:0)-m.clientHeight;};
+  const over=()=>{const so=m.querySelector('.soc-o:not(.ntf)');return m.scrollHeight-(so?so.offsetHeight+14:0)-m.clientHeight;}; /* вопрос про напоминания (.ntf) в счёт идёт: он должен быть на экране */
   L.sort((a,b)=>a.getAttribute('data-fit')-b.getAttribute('data-fit'));for(const e of L){if(over()<=1)break;e.style.display='none';}}
 function hideModal(){$('modal').classList.remove('on');}
 function on(id,fn){const el=$(id);if(el)el.onclick=e=>{SND.click();fn(e);};}
@@ -434,8 +434,24 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
     on('rWall',()=>afterAd(ia,()=>{toMenu('Village');const w=document.querySelector('[data-b="wall"]');if(w){w.classList.add('hl');w.scrollIntoView({block:'center'});}}));
     on('rAgain',()=>afterAd(ia,()=>startLevel(c,l)));on('rMap',()=>afterAd(ia,()=>{toMenu('Map');if(canForge())toast(Lg('Есть звёзды для кузницы!','You have stars for the forge!'));}));
     // VK: одно предложение за сессию (модуль SOC) — строкой и кнопкой ПОД кнопками окна победы; диалог VK — только по нажатию игрока
-    if(PLAT==='vk'){try{const o=SOC.offer(S.wins,Date.now()-lastAdT<60000||paused||interBusy);if(o){retAsked=true;const d=document.createElement('div');d.className='soc-o';d.innerHTML='<span>'+o.t+'</span><button class="btn ghost" id="mSoc">'+o.b+'</button>';
-      $('mBody').appendChild(d);fitModal();STAT.ev('mod',{m:'soc',a:'of_'+(o.k||'ret')});const b=$('mSoc');b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_'+(o.k||'ret')});o.run();};}}catch(e){}}
+    /* ntf (06.10): вопрос воеводы про напоминания VK идёт тем же путём (SOC.offer вернёт k:'ntf') и ставится СРАЗУ при открытии окна. Пока модуль хочет
+       спросить (SOC.ntfDue — показа не тратит): не в окнах первых трёх побед (там подсказки новичку), не в «Глава освобождена!» и не с новой короной;
+       только если окно с вопросом влезает в экран (fitModal убирает необязательные data-fit; не влез с портретом — короткой строкой; не влез и так — не спрашиваем,
+       показ не тратится, другие предложения в этом окне тоже молчат) */
+    if(PLAT==='vk'){try{const m=$('mBody'),busy=Date.now()-lastAdT<60000||paused||interBusy,due=!busy&&S.wins>=3&&SOC.ntfDue(),full=S.wins<4||l===5||crownNew;let fit=!due,lite=false;
+      if(due&&!full){const txt=ntfText(((S.soc&&S.soc.ntf&&+S.soc.ntf.n)||0)+1)||ntfText(3);
+        /* проба невидимой строкой: влезает ли окно с вопросом и сколько необязательных блоков (data-fit) при этом прячется; −1 — не влезает */
+        const probe=(r,z)=>{m.classList.toggle('rc',r);m.insertAdjacentHTML('beforeend',socRow({k:'ntf',t:txt,b:Lg('🔔 Напоминать','🔔 Remind me')},z));fitModal();
+          const y=m.scrollHeight<=m.clientHeight+1,h=Array.from(m.querySelectorAll('[data-fit]')).filter(e=>e.style.display==='none').length,pb=m.querySelector('.soc-o');if(pb)pb.remove();return y?h:-1;};
+        /* четыре вида: окно как есть / плотное (класс rc, как на низком экране) × реплика с портретом / короткая строка. Берём первый, где вопрос ничего не вытесняет (спрятано не больше, чем без него); нет такого — где спрятано меньше всего */
+        const h0=Array.from(m.querySelectorAll('[data-fit]')).filter(e=>e.style.display==='none').length; /* сколько спрятано и без вопроса */
+        let best=-1,bh=99;[[false,false],[false,true],[true,false],[true,true]].forEach((v,k)=>{if(bh<=h0)return;const h=probe(v[0],v[1]);if(h>=0&&h<bh){bh=h;best=k;}});
+        fit=best>=0;lite=best===1||best===3;m.classList.toggle('rc',best>=2);if(!fit)fitModal();}
+      const o=fit?SOC.offer(S.wins,busy):null;
+      if(o){retAsked=true;m.insertAdjacentHTML('beforeend',socRow(o,lite));fitModal();STAT.ev('mod',{m:'soc',a:'of_'+(o.k||'ret')});const b=$('mSoc');
+        b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_'+(o.k||'ret')});const r=o.run();
+          if(o.k==='ntf'){const d=m.querySelector('.soc-o');if(d)d.remove();Promise.resolve(r).then(y=>{if(y&&o.ok)toast(o.ok);}).catch(()=>{});}};}
+      if(!(o&&o.k==='ntf')&&m.classList.contains('rc')){m.classList.remove('rc');fitModal();}}catch(e){}}
     if(l===5&&c===CH.length-1)setTimeout(()=>toast(Lg('Тридевятое царство спасено! Осада и Босс недели ждут.','The Thrice-Nine Kingdom is saved! The Siege and the Boss of the Week await.')),800);
   }else{const cons=loseGold(c,G.wave);S.gold+=cons;ern('lvl',cons);S.lose=S.lose||{};S.lose[key]=(S.lose[key]||0)+1;const pity=pityCoins(c,l);const bref=boostRefund(.5);save();
     const lines=Lg(['Нечисть прорвалась в город и съела все пирожки. Все!','Ворота не выдержали. Воевода чешет бороду: «Строить надо больше!»','Прорвались, окаянные! Ничего — отстроимся и всыплем им.'],
@@ -819,6 +835,13 @@ function loginOffer(){const x=loginAvail();if(!x||$('modal').classList.contains(
   return true;}
 /* ярлык, оценка, избранное — не чаще одного предложения за сессию, после победы, с 3-й победы и не в первые 2 минуты; спросили — запомнили */
 let retAsked=false;
+// ntf: три вопроса воеводы про напоминания VK (n — какой показ по счёту; расписание 1/3/7-й день — в модуле SOC). Наград за разрешение нет
+function ntfText(n){return n<=1?Lg('Завтра готовлю новые задания и награду за вход. Напомнить?','New quests and a daily bonus are coming tomorrow. Remind you?'):
+  n===2?Lg('Каждый день у застав новые задания. Напоминать о них?','There are new quests at the outposts every day. Remind you?'):
+  Lg('Изредка буду звать к заставам, коли нечисть у ворот. Звать?','Now and then I’ll call you to the outposts when monsters are at the gates. Shall I?');}
+// строка предложения SOC под кнопками окна победы; напоминания — репликой воеводы (lite — без портрета, одной строкой)
+function socRow(o,lite){const n=o.k==='ntf';
+  return '<div class="soc-o'+(n?' ntf':'')+'">'+(n&&!lite?'<div class="say"><img src="'+ic('voevoda')+'" alt=""><div><b class="who">'+VOEV()+'</b>'+o.t+'</div></div>':'<span>'+(n?'<b>'+Lg('Воевода','Commander')+':</b> ':'')+o.t+'</span>')+'<button class="btn ghost" id="mSoc">'+o.b+'</button></div>';}
 async function retOffer(){if(G||retAsked||S.wins<3||Date.now()-BOOT_T<120000||Date.now()-lastAdT<60000||$('modal').classList.contains('on'))return;const R=S.ret;
   const ask=(k,fn)=>{retAsked=true;R[k]=1;save();try{const p=fn();p&&p.catch&&p.catch(()=>{});}catch(e){}};
   try{if(ysdk){

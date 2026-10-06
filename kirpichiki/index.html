@@ -96,6 +96,8 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .gt{flex:1;min-width:0;line-height:1.15}
 .gt>div:first-child{font-weight:900;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sub{font-size:15px;font-weight:700;opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* small 06.10: название режима не влезло в одну строку (320 px) — две строки, подстрочник прячется (fitHead) */
+.gt.w2>div:first-child{white-space:normal;line-height:1.08;text-overflow:clip}.gt.w2 .sub{display:none}
 .gh .pill{color:var(--ink)}
 .map-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:6px 14px 24px}
 .chap{max-width:480px;margin:12px auto 4px;border-radius:20px;padding:10px 12px 12px;box-shadow:0 4px 0 rgba(0,0,0,.14);position:relative}
@@ -1024,7 +1026,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'kirpichiki',gv:'v6-100521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'kirpichiki',gv:'v6-100622',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl уровни/задание дня/бесконечная, ad ролики и ×2, gift подарок за вход, chest сундуки глав и посылки сезона, buy покупки,
    quest поручения/звания/кладовка/неделя/кубки); progress — после облака, но не позже 2,5 с: pl — уровней со звёздами, cn — монеты, bt — облако хоть раз отдало
    сохранение (метка устройства kirpichiki-cl, в сохранение не пишется); cfg — тема, звук, спокойный режим. */
@@ -1468,7 +1470,8 @@ function showRewarded(cb0,onFail0,late0){
         st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
         onFail();adDim();});}; /* adDim — окно с кнопкой могло открыться заново */
     go();return;}
-  if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
+  /* Яндекс без SDK: заглушка — только при локальном запуске (AD_LOCAL); на площадке награду даром не даём (и кнопок нет — adOk) */
+  if(!ysdk){if(AD_LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',window.__sdkDone?'nosdk':'loading');toast(AD_FAIL);onFail();}return;}
   let got=false;adWatch(rel);
   const lateY=f=>{if(!adBusy)adClose();f();}; /* поздние колбэки Яндекса: ролик мог поставить паузу — снимаем, если не идёт другой */
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
@@ -1478,18 +1481,22 @@ function showRewarded(cb0,onFail0,late0){
       adClose();stat('err','');toast(AD_FAIL);adCool();onFail();adDim();}}});
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
-function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
+/* заглушка рекламы — только при локальном запуске (мак, домашняя сеть, файл); в настоящем Яндексе без SDK рекламных кнопок и награды нет (пока SDK грузится — кнопки есть) */
+const AD_LOCAL=/^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|.*\.local|.*\.localhost)$/.test(location.hostname)||location.protocol==='file:';
+function adOk(){if(PLAT==='vk')return !(!VK&&VK_REAL);return !!ysdk||AD_LOCAL||!window.__sdkDone;}
 // межэкранная — с 6-го законченного уровня/партии, раз в AD_EVERY, не после двух поражений подряд, не при покупке «Без рекламы»
 function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.done||0)>=6&&(S.lossRow||0)===0;} /* boost: с 6-го законченного, не после поражения */
 // кнопки «📺 … за рекламу» — не раньше, чем закончены 3 уровня/партии (первые минуты — без рекламы совсем)
 function adBtnOk(){return adOk()&&(S.done||0)>=3;}
 function showInterstitial(cb0){
   STAT.adReq('int');
-  const cb=shown=>{lastAdT=Date.now();if(shown!==false)STAT.ad('int','show');else STAT.ad('int','none','nofill');if(shown!==false){S.adW=0;S.adN=(S.adN||0)+1;save();adHintOnce();}cb0();};
+  /* не показана: none c=nofill (result:false или код 20) / nosdk; ошибка — err c=код VK или причина (adErrCode, как у ролика) */
+  const fin=(r,c)=>{lastAdT=Date.now();STAT.ad('int',r,c);if(r==='show'){S.adW=0;S.adN=(S.adN||0)+1;save();adHintOnce();}cb0();};
+  const cb=shown=>fin(shown!==false?'show':'none',shown!==false?'':'nofill');
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nosdk');cb0();}else stubAd(cb);return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),()=>false).then(ok=>{adClose();cb(ok);});return;}
-  if(!ysdk){stubAd(cb);return;}
-  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();cb(!!(r&&r.result));},e=>{adClose();if(adNoFill(e))cb(false);else fin('err',adErrCode(e));});return;}
+  if(!ysdk){if(AD_LOCAL)stubAd(cb);else{STAT.ad('int','none','nosdk');cb0();}return;}
+  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();fin('err','');}}});
 }
 // одно мягкое напоминание после 5-й межэкранной (каталог покупок, п. 3.2): строка внизу, не окно, не чаще раза в 7 дней
 function adHintOnce(){if(!PAY.on||!PAY.item('no_ads')||PAY.own('no_ads')||(S.adN||0)<5)return;if(!isObj(S.ask))S.ask={};const now=Date.now();
@@ -1821,9 +1828,12 @@ function begin(mode,cfg,st,day){hideModal();STAT.once('ready',{ms:Math.round(per
   G={mode,cfg,st:st||newGame(cfg,mode==='daily'?cfg.seed*7+1:undefined),day,drag:null,sel:-1,tool:null,hint:null,parts:[],pops:[],flashes:[],placed:null,back:null,curtain:null,shake:0,
     busy:false,host:hostOf(mode,cfg),par:0,lifeAd:false,x2:false,rec:false,dealT:performance.now(),tight:0,paid:{},cGiven:0,counted:false,bu:{}};
   show('scr-game');
-  $('gTitle').textContent=mode==='endless'?L('Бесконечная игра','Endless game'):mode==='daily'?(cfg.hard?'💪 '+L('Трудное задание','Hard task'):cfg.late?'↺ '+L('Задание ','Task of ')+(day%100)+' '+monG(Math.floor(day/100)%100-1):L('Задание дня','Daily task')):(cfg.boss?'🔥 ':'')+L('Уровень ','Level ')+cfg.i;
-  /* узкий экран (320 px): «Уровень 104» не помещается рядом с монетами — короткая подпись вместо «Уровен…» */if(mode==='level'){const gt=$('gTitle'),sh=(cfg.boss?'🔥 ':'')+L('Ур. ','Lv ')+cfg.i,fit=()=>{if(G&&G.cfg===cfg&&gt.clientWidth&&gt.scrollWidth>gt.clientWidth+1)gt.textContent=sh;};fit();setTimeout(fit,300);}
-  $('gSub').textContent=mode==='endless'?L('Рекорд: ','Best: ')+(S.best||0)+' · '+L('без помощников','no helpers'):mode==='daily'?L('Одно на всех · ','Same for all · ')+new Date(nowMs()).toLocaleDateString(LANG==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long'}):chName(cfg.ch)+(cfg.boss?' · '+L('субботник','big clean-up'):'')+' · '+hostName(G.host);
+  /* шапка (small 06.10): название и подстрочник — списком «полный вид → короче»; под ширину подгоняет fitHead() — название не обрезается многоточием */
+  {const dt=mode==='daily'?new Date(nowMs()).toLocaleDateString(LANG==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long'}):'',bs=cfg.boss?'🔥 ':'';
+   G.hd=mode==='endless'?{t:[L('Бесконечная игра','Endless game')],s:[L('Рекорд: ','Best: ')+(S.best||0)+' · '+L('без помощников','no helpers'),L('Рекорд: ','Best: ')+(S.best||0)]}
+    :mode==='daily'?{t:[cfg.hard?'💪 '+L('Трудное задание','Hard task'):cfg.late?'↺ '+L('Задание ','Task of ')+(day%100)+' '+monG(Math.floor(day/100)%100-1):L('Задание дня','Daily task')],s:[L('Одно на всех · ','Same for all · ')+dt,dt]}
+    :{t:[bs+L('Уровень ','Level ')+cfg.i,bs+L('Ур. ','Lv ')+cfg.i],s:[chName(cfg.ch)+(cfg.boss?' · '+L('субботник','big clean-up'):'')+' · '+hostName(G.host),chName(cfg.ch)+(cfg.boss?' · '+L('субботник','big clean-up'):''),chName(cfg.ch)]};
+   const my0=G;fitHead();setTimeout(()=>{if(G===my0)fitHead();},300);}
   $('hAv').innerHTML=portrait(G.host,'norm');$('bub').classList.remove('on');$('tip').classList.remove('on');
   setHud();updBoost();layout();render();kick();YG.start(); /* сначала HUD и помощники, потом размер поля (аудит release-f №1: лоток уходил под помощников); kick — аудит 36 */
   G.idleT=performance.now();
@@ -1891,6 +1901,19 @@ function firstTips(){const c=G.cfg,my=G;setTimeout(()=>{if(G!==my)return;
   else if(c.i===4)tipOnce('boost',L('Внизу — помощники: подсказка, поворот фигуры, новые фигуры и бомба. Первые — бесплатно!','Helpers are below: hint, rotate, new pieces and bomb. The first ones are free!'),6500);},500);}
 
 /* ---- раскладка: поле 8×8 и лоток на 3 фигуры (в альбомной — лоток справа) ---- */
+/* шапка игрового экрана под ширину (small 06.10): 1) короткий вариант названия («Ур. 104»); 2) кегль названия вниз до 16 px; 3) не влезло — название в две строки
+   (класс w2: подстрочник прячется, высота шапки та же), длинное слово — кегль до 13 px; 4) подстрочник — короче по списку, дальше как раньше многоточие */
+let fitN=0;
+function fitHead(){const h=G&&G.hd,gt=$('gTitle'),gs=$('gSub');if(!h||!gt||!gs)return;const my=G,seq=++fitN,box=gt.parentNode,over=e=>e.scrollWidth>e.clientWidth+1;
+  /* мерить — после того как значки заменят эмодзи (MutationObserver — микрозадача), поэтому каждый шаг после смены текста — через Promise */
+  const tick=fn=>Promise.resolve().then(()=>{if(G===my&&seq===fitN)fn();});let ti=0,si=0;
+  box.classList.remove('w2');gt.style.fontSize='';gt.textContent=h.t[0];gs.textContent=h.s[0];if(!gt.clientWidth)return;
+  const stepS=()=>{if(over(gs)&&si+1<h.s.length){gs.textContent=h.s[++si];tick(stepS);}};
+  const stepT=()=>{if(over(gt)&&ti+1<h.t.length){gt.textContent=h.t[++ti];tick(stepT);return;}
+    const f0=parseFloat(getComputedStyle(gt).fontSize)||16;let f=f0;while(f>16&&over(gt)){f-=.5;gt.style.fontSize=f+'px';}
+    if(over(gt)){box.classList.add('w2');f=Math.min(f0,18);gt.style.fontSize=f+'px';while(f>13&&over(gt)){f-=.5;gt.style.fontSize=f+'px';}return;}
+    stepS();};
+  tick(stepT);}
 function layout(){const f=$('field'),app=$('app');const land=app.clientWidth>app.clientHeight*1.05&&app.clientWidth>=600;app.classList.toggle('land',land);
   const W=f.clientWidth,H=f.clientHeight;if(!W||!H)return;const dpr=Math.min(2,window.devicePixelRatio||1);
   cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';
@@ -1902,7 +1925,7 @@ function layout(){const f=$('field'),app=$('app');const land=app.clientWidth>app
     bx=pad+fr+Math.max(0,Math.round((W-2*pad-2*fr-B-Math.round(B*.4)-12)*.3));by=Math.round((H-B)/2);
     const tx=bx+B+fr+12,tw=Math.max(cs*2.2,Math.min(W-tx-pad,B*.4)),th=(B+2*fr)/3;slots=[0,1,2].map(i=>({x:tx,y:by-fr+i*th,w:tw,h:th}));}
   LY={W,H,dpr,land,cs,B,bx,by,fr,slots};}
-let rzT=0;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(G&&$('scr-game').classList.contains('on')){layout();render();kick();}},80);});
+let rzT=0;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(G&&$('scr-game').classList.contains('on')){layout();fitHead();render();kick();}},80);});
 function trayGeom(ti,now){const p=G.st.tray[ti];if(!p)return null;const v=VARS[p.v],sl=LY.slots[ti];
   const s=Math.min(LY.cs*.76,sl.w*.88/v.w,sl.h*.82/v.h); /* boost: фигуры в лотке крупнее (45+) */let x=sl.x+(sl.w-v.w*s)/2,y=sl.y+(sl.h-v.h*s)/2;
   const e=Math.min(1,Math.max(0,((now||performance.now())-G.dealT-ti*70)/260));if(e<1){const k=1-Math.pow(1-e,3);x+=(1-k)*(LY.land?LY.W*.3:LY.W*.6);}
