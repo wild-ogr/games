@@ -36,7 +36,7 @@ function tmrHtml(){if(S.lv<LOGIN_FROM||!lgTaken())return '';
 function openLogin(then){
   if(!lgDue()){if(then)then();return;}
   const n=lgN(),amt=lgAmt(n),item=lgItem(n)&&!owned('s',skinOf('guest')),first=!S.lg;
-  S.lg={d:todayKey(),n:n+1};if(item){S.own=S.own||{};S.own['s:guest']=1;}addCoins(amt,'gift');cloudSoon(); // выдаём сразу: закрыл окно как угодно — подарок уже твой
+  S.lg={d:todayKey(),n:n+1};if(item){S.own=S.own||{};S.own['s:guest']=1;}addCoins(amt,'gift');vkmCheck();cloudSoon(); // выдаём сразу: закрыл окно как угодно — подарок уже твой
   const k=n%LOGIN.length,cells=LOGIN.map((a,i)=>`<div class="wc${i===k?' now':''}${i<k?' got':''}"><small>${i+1}-й</small><b>${i<k?'✓':i===LOGIN.length-1&&n<LOGIN.length?'🍽️':'+'+a}</b></div>`).join('');
   modal(`<h2>🎁 Гостинец от бабы Зины</h2><div style="width:100px;height:100px;margin:2px auto">${zinaSVG('happy')}</div>
     <p>${first?'Кто ко мне заходит — без гостинца не уходит. Заходи каждый день: чем дальше, тем гостинец больше!':pick(['Пришёл! А я уж гостинец приготовила.','Опять ты! Ну держи, заслужил.','Каждый день заходишь — вот это внук! Держи.','Я знала, что придёшь. Кот — не верил.'])}</p>
@@ -167,6 +167,7 @@ function finishLevel(g){
   delete S.curs[g.key];addCoins(reward+chap,'lvl');save();cloudSoon();
   const rank1=rankName(wordsTotal()),rankUp=g.rank0&&rank1!==g.rank0?rank1:'';
   if(first)S.wins=(S.wins||0)+1;
+  vkmCheck(); // vkev: уровень, очки и миссии VK — модулю SOC (шлёт он сам, молча)
   return {first,reward,base:reward-exBonus-sbonus-week,dw,isNew,streak,sbonus,exc,exBonus,exLoud,week,chap,dk,rankUp,test:first&&isTest(g.idx,g.daily)};
 }
 // текст золотой кнопки: «×2» — только когда прибавка ровно равна награде, иначе честно «ещё +N (итого +M)»
@@ -347,6 +348,7 @@ function openCredits(){STAT.screen('credits');modal(`<h2>Благодарнос�
   <div class="cred"><b>Словарь бонусных слов</b><br>Russian-Nouns, А. Сергиенко (Harrix), лицензия MIT</div>
   ${OK?'':'<div class="cred"><b>VK Bridge</b><br>VK, лицензия MIT</div>'}
   <p style="font-size:14px">Спасибо авторам! Шутки, рисунки и баба Зина — свои. Возраст: 0+.</p>
+  ${OK&&OK_GROUP?`<p id="abSup" style="font-size:14px"><b>Поддержка.</b> Вопросы и пожелания — в группе «Игры во дворе» в Одноклассниках.<br><a class="btn ghost noenter" id="abGrp" href="${OK_GROUP_LINK}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;text-decoration:none">Открыть группу поддержки</a></p>`:''}
   ${SOC.ok()?'<button class="setrow" id="credSoc"><span>👥 '+(OK?'Друзья':'Друзья и игры')+'</span><b>›</b></button>':''}
   ${typeof PAY!=='undefined'&&PAY.on?PAY.html(['tea']):''}
   <div class="btns"><button class="btn" id="credOk">Спасибо!</button>${typeof PAY!=='undefined'&&PAY.on?'<button class="btn ghost" id="credPay">↻ Восстановить покупки</button>':''}</div>`);$('credOk').onclick=()=>{SND.tap();hideModal();};if($('credSoc'))$('credSoc').onclick=()=>{SND.tap();openSocial(openCredits);};
@@ -409,5 +411,5 @@ function onReady(){
   else if(S.lv===0&&!S.tip.tut&&!SHOT){startLevel(0);if(!S.tip.intro)openIntro();} // новичок — знакомство и сразу первый уровень (обучение), меню — потом
   else openMenu();
 }
-window.__test={openLogin,openIntro,openMenu,jarFull,openChapFinale,coinBurst,applyFlags,freeLeft,maybeInterstitial,AD,PRICE,ECO,startLevel,submit,finishLevel,winModal,openShop,openRating,openDict,drawCard,shareDef,get G(){return G;},S:()=>S,LEVELS,DAILY,layoutGrid,layoutWheel};
+window.__test={vkmCheck,VKM_CNT,openLogin,openIntro,openMenu,jarFull,openChapFinale,coinBurst,applyFlags,freeLeft,maybeInterstitial,AD,PRICE,ECO,startLevel,submit,finishLevel,winModal,openShop,openRating,openDict,drawCard,shareDef,get G(){return G;},S:()=>S,LEVELS,DAILY,layoutGrid,layoutWheel};
 initSDK();

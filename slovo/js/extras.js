@@ -43,7 +43,7 @@ function buyItem(isZ,id){
       <div class="btns"><button class="btn green" id="mYes">Да, купить</button><button class="btn ghost" id="mNo">Подумаю</button></div>`);
     if(!isZ)applySkin($('cfPv'),id);
     $('mNo').onclick=()=>{hideModal();SND.tap();};
-    $('mYes').onclick=()=>{hideModal();if(S.coins<it.p)return;S.own=S.own||{};S.own[k]=1;addCoins(-it.p);STAT.ev('spend',{k:k,c:it.p});SND.coin();
+    $('mYes').onclick=()=>{hideModal();if(S.coins<it.p)return;S.own=S.own||{};S.own[k]=1;addCoins(-it.p);STAT.ev('spend',{k:k,c:it.p});vkmCheck();SND.coin();
       if(isZ)S.outfit=id;else S.skin=id;save();openShop();shopSay(say(isZ?'buy':'buyPlate'),'happy');};
     return;
   }
@@ -69,6 +69,33 @@ function shortModal(it,isZ,id){
       ()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;const mine=$('modal').classList.contains('on')&&document.body.contains(b);if(mine)hideModal();addCoins(ECO.adCoins,'ad');SND.coin();
         if(mine&&document.querySelector('.screen.on')===$('shopS'))openShop();return 'держи монеты: +'+ECO.adCoins;});};
 }
+
+/* ================= миссии VK, лента друзей и таблица (vkev, 06.10) =================
+   Условия миссий — данными: VKM=[[код, счётчик, порог],…] в js/vkm.js (пишет tools/missions.py — список миссий править только там).
+   Счётчики — VKM_CNT: только то, что игра уже считает (новых полей в сохранении нет). vkmCheck() зовётся после победы, гостинца и покупки
+   обновки: сообщает модулю SOC уровень (пройдено уровней), очки (всего слов — то же число, что в «Таблице друзей») и выполненные миссии.
+   Отправкой, очередью и повторами занят SOC (S.soc.ev); здесь — ни сети, ни окон. В ОК и Яндексе SOC ничего не запоминает и не шлёт. */
+const VKM_CNT={
+  lv:()=>Math.min(+S.lv||0,LEVELS.length),            // пройдено уровней
+  wd:()=>wordsTotal(),                                 // всего слов: кроссворд + бонусные
+  bn:()=>+S.bonusAll||0,                               // бонусных слов
+  dl:()=>Object.keys(S.daily||{}).length,              // выполнено заданий дня
+  gs:()=>lgN(),                                        // получено гостинцев (дней захода)
+  sr:()=>Math.max(+S.bestStreak||0,+S.streak||0),      // лучшая серия заданий дня подряд
+  ex:()=>exCount(),                                    // уровней без подсказок
+  dc:()=>Object.keys(S.dict||{}).length,               // слов в «Толковом словаре»
+  dcall:()=>{const n=Object.keys(DEFS).length;return n>0&&Object.keys(DEFS).every(w=>S.dict[w])?1:0;}, // словарь собран целиком
+  ow:()=>Object.keys(S.own||{}).filter(k=>S.own[k]).length, // обновки: наряды и блюдца за монеты или в гостинец
+  wk:()=>{const w={};for(const k in S.daily||{}){const m=weekDays(+k)[0];w[m]=(w[m]||0)+1;}return Object.keys(w).filter(m=>w[m]>=WEEK.need).length;} // «Тетрадей недели»: недель с 5 заданиями дня
+};
+function vkmCheck(){try{
+  if(SHOT||PLAT!=='vk'||OK||typeof VKM==='undefined')return;
+  SOC.level(VKM_CNT.lv());SOC.score(VKM_CNT.wd());
+  const memo={};
+  for(const m of VKM){if(SOC.missionKnown(m[0]))continue;const f=VKM_CNT[m[1]];if(!f)continue;
+    if(!(m[1] in memo))memo[m[1]]=f();
+    if(memo[m[1]]>=m[2])SOC.mission(m[0]);}
+}catch(e){}}
 
 /* ================= рейтинг и статистика ================= */
 const LB_NAME='words';
@@ -243,7 +270,7 @@ function pickAsk(){
   if(PLAT==='vk'){ // VK: одно предложение за сессию из общего модуля SOC (правила п. 2.6.3)
     const o=SOC.offer(S.wins||0,Date.now()-lastRew<60000||adBusy||paused||(typeof interDue==='function'&&interDue()));
     if(!o)return null;askShown=true;
-    return {k:'soc_'+(o.k||''),t:o.b,ok:'Готово!',soc:o.t,run:()=>Promise.resolve(o.run()).then(r=>r!==false)};}
+    return {k:'soc_'+(o.k||''),t:o.b,ok:o.ok||'Готово!',soc:o.t,run:()=>Promise.resolve(o.run()).then(r=>r!==false)};}
   const now=Date.now(),a=ASKS.find(x=>{const st=S.ask[x.k]||{};return x.can()&&(S.wins||0)>=x.wins&&!st.done&&(st.n||0)<3&&now-(st.t||0)>3*864e5;});
   if(!a)return null;askShown=true;const st=S.ask[a.k]=S.ask[a.k]||{};st.n=(st.n||0)+1;st.t=now;save();
   return {k:a.k,t:a.t,ok:a.ok,run:()=>a.run().then(ok=>{if(ok){S.ask[a.k].done=1;save();}return ok;})};
