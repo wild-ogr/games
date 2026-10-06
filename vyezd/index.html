@@ -709,6 +709,7 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512004864050'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
+const OK_GROUP=70000058939568,OK_GROUP_LINK='https://ok.ru/group/'+OK_GROUP; /* группа поддержки в ОК «Игры во дворе» (правила ОК, п. 1.6): «Наше сообщество» в «Друзьях» (SOC okGroup) и строка в «Об игре»; 0 — спрятано */
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
 /* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
@@ -930,7 +931,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v22-100521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v22-100613',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: настройки сеанса; прогресс на входе — после чтения облака, но не позже 2,5 с (bt — облако хоть раз отдало сохранение: метка устройства, не в сохранении)
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -3102,6 +3103,7 @@ function howIcon(c,kind){const d=Math.min(2,window.devicePixelRatio||1),S0=46;c.
 function openAbout(){STAT.screen('about');
   modal(`<h2>${L('Об игре','About')}</h2><p class="about">${L('«Выезд со двора» — головоломка про тесный двор: выпусти все машины по стрелкам и не устрой аварию. Машины, дворы, кот и голуби нарисованы прямо в игре, звуки тоже собраны кодом.','“Yard Escape: Parking Jam” is a puzzle about a crowded Russian courtyard: get every car out along its arrow without a crash. The cars, yards, cat and pigeons are all drawn by the game itself, and the sounds are made in code too.')}</p>
     ${PLAT==='vk'&&!OK?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
+    ${OK&&OK_GROUP?`<p class="about" id="abSup"><b>${L('Поддержка.','Support.')}</b> ${L('Вопросы и пожелания — в группе «Игры во дворе» в Одноклассниках.','Questions and feedback — in the “Yard Games” group on OK.')}<br><a class="btn noenter" id="abGrp" href="${OK_GROUP_LINK}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;text-decoration:none;color:inherit">${L('Открыть группу поддержки','Open the support group')}</a></p>`:''}
     <p class="about">${L('На ПК: Esc — назад, Enter — главная кнопка окна, H — подсказка, R — заново, +/− — приблизить.','On PC: Esc — back, Enter — main button, H — hint, R — restart, +/− — zoom.')}</p>
     <div class="row">${PAY.on?`<button class="btn" id="abPay">${L('↻ Восстановить покупки','↻ Restore purchases')}</button>`:''}<button class="btn" id="abBack">${L('← Назад','← Back')}</button></div>`);
   modalRe=openAbout;
@@ -3181,7 +3183,7 @@ if(!/[?&]demo=/.test(location.search)&&!(S.levelsDone>0)&&S.unlocked===1&&!Objec
   save=()=>{};})();
 // VK: мост из js/vk-bridge.min.js (только в VK-сборке). Яндекс: SDK по относительному пути; локально 404 → заглушки рекламы
 // «Друзья и игры» (общий модуль SOC, только VK с мостом): сессии, облако, кнопки
-SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK});updMore();
+SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,okGroup:OK_GROUP});updMore();
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
 window.__test={DAILY_T,dailyTier,cam,birdsInit,scare,streakState,showStreak,claimStreak,dayKey,LEVELS,DAILY,genLevel,depth,get G(){return G;},tapCell:(x,y)=>tapAt(ox+(x+.5)*cs,oy+(y+.5)*cs),canExit,startLevel,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,get S(){return S;},set VK(v){VK=v;},get VK(){return VK;}};
