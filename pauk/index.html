@@ -129,6 +129,9 @@ body.calm .card{animation:none}
 .gh,.gf{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 /* запасные отступы для старых браузеров без gap во flex (≈ те же, где нет inset) */
 @supports not (inset:0){.achs>*{margin:3px}.soc-o>*+*{margin-left:8px}}
+/* ntf 07.10: строка предложения SOC под кнопками окна победы (вопрос про напоминания — голосом хозяйки) */
+.card .soc-o{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(0,0,0,.05);border-radius:14px;padding:8px 10px;margin-top:10px;text-align:left;font-size:15px;line-height:1.3}.card .soc-o span{flex:1 1 150px;min-width:0}.card .soc-o .btn{flex:0 0 auto;width:auto;min-height:44px;padding:6px 14px;font-size:16px}
+.card .soc-o.ntf.lite{font-size:13px;line-height:1.2;padding:4px 8px;margin-top:6px;gap:6px}.card .soc-o.ntf.lite span{flex:1 1 100px}.card .soc-o.ntf.lite .btn{min-height:38px;padding:4px 10px;font-size:14px}
 @supports not (inset:0){.row>*+*{margin-top:12px}.row2>*+*,.tabs>*+*,.ach>*+*,.lbr>*+*{margin-left:8px}.grid>*{margin:5px}.host>*+*{margin-left:8px}.it>*+*{margin-top:4px}}
 /* ===== look1: каркас меню, раздачи и окон (цвета — переменные выше) ===== */
 html,body{background:var(--mb);font-family:"Rubik",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
@@ -221,6 +224,13 @@ body.lk-old .strip{display:none}
 body.lk-card .gt b,body.lk-card .gt span{text-shadow:none;background:#fffaf0;padding:0 6px;border-radius:6px;display:inline-block;max-width:100%}
 .gh .rb,.gh .pill{position:relative}
 .stage{position:relative;flex:1;min-height:0;overflow:hidden}
+/* start1 07.10: праздник за собранную масть в Пауке — вспышка и строка «Собрано N из 8» (+1 монета только за первую масть раздачи) */
+.sfx{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;opacity:0;background:var(--pill);color:var(--ink);border:var(--bd);border-radius:18px;padding:10px 20px;font-weight:800;font-size:22px;line-height:1.2;text-align:center;white-space:nowrap;box-shadow:0 0 0 3px #f0b429,0 6px 24px rgba(0,0,0,.25)}
+.sfx small{display:block;font-size:15px;font-weight:700;color:#b7791f;margin-top:2px}
+.sfx.on{animation:sfx 1.8s ease-out forwards}.sfx.on.calm{animation:sfxc 1.8s linear forwards}
+@keyframes sfx{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}24%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+@keyframes sfxc{0%,85%{opacity:1}100%{opacity:0}}
+.stage.sflash::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(circle at 50% 40%,rgba(255,214,90,.55),rgba(255,214,90,0) 65%);animation:sfl .7s ease-out forwards}@keyframes sfl{from{opacity:1}to{opacity:0}}
 #cv{position:absolute;top:0;left:0;touch-action:none}
 .gf{display:flex;padding:8px 10px 10px;background:var(--barbg);flex:0 0 auto;justify-content:center}
 .gf>*+*{margin-left:8px}
@@ -232,6 +242,7 @@ body.lk-card .gt b,body.lk-card .gt span{text-shadow:none;background:#fffaf0;pad
 .cnt{position:absolute;top:5px;right:7px;min-width:24px;height:24px;border-radius:12px;background:var(--ac);color:var(--ac-ink);font-style:normal;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;line-height:1}
 .cnt.ad{background:var(--adb);color:var(--ad-ink)}.cnt.ad .ic{width:18px;height:18px;margin:0;color:inherit}
 @media (min-width:700px){.gf .btn{flex:none;width:170px;flex-direction:row;font-size:18px}.gf .btn .ic{margin:0 8px 0 0}.gf .btn small{font-size:18px}.cnt{position:static;margin-left:6px}}
+.say.near{bottom:auto}
 .say{position:absolute;left:8px;bottom:8px;max-width:420px;max-width:calc(100% - 16px);display:flex;align-items:center;pointer-events:none;opacity:0;transition:opacity .3s;z-index:3;background:var(--pill);border-radius:18px;padding:4px 12px 4px 4px;box-shadow:var(--sh);border:var(--bd)}
 .say>*+*{margin-left:6px}
 .say.on{opacity:1}.say.tut{border:3px solid #e8a33d}
@@ -318,7 +329,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 
   <section id="scr-game" class="screen">
     <header class="gh"><div class="strip" id="gStrip"></div><button class="rb" id="gBack" aria-label="В меню" data-ic="back"></button><div class="gt"><b id="gTitle">Косынка</b><span id="gInfo"></span></div><button class="pill" id="gCoins" aria-label="Монеты"><b id="gCoinN">0</b></button><button class="rb" id="gSet" aria-label="Настройки" data-ic="gear"></button></header>
-    <div class="stage" id="stage"><canvas id="cv"></canvas><div class="say" id="say"><canvas id="sayCv" width="92" height="100"></canvas><div id="sayT"></div></div></div>
+    <div class="stage" id="stage"><canvas id="cv"></canvas><div class="say" id="say"><canvas id="sayCv" width="92" height="100"></canvas><div id="sayT"></div></div><div class="sfx" id="sfx"></div></div>
     <footer class="gf"><button class="btn tool" id="bUndo" data-ic="undo"><small id="undoL">Отмена</small></button><button class="btn tool" id="bHint" data-ic="hint"><small id="hintL">Подсказка</small></button><button class="btn tool green hide" id="bCollect" data-ic="magic"><small>Собрать</small></button><button class="btn tool" id="bNew" data-ic="deal"><small>Новая</small></button></footer>
   </section>
 
@@ -349,7 +360,7 @@ const topc=a=>a[a.length-1];
 /* ---- Косынка (Klondike): 0 колода, 1 сброс, 2–5 дом (стопка 2+масть), 6–12 столбцы. Колоду можно перебирать без ограничений ---- */
 const KL={id:'klondike',TAB:6,NT:7,FND:2,
   kind(i){return i===0?'stock':i===1?'waste':i<6?'found':'tab';},
-  deal(seed,draw){const c=shuffled(range(52),seed),p=[],d=[];for(let i=0;i<13;i++){p.push([]);d.push(0);}let k=0;
+  deal(seed,draw){const X=draw!==3&&ladDeal('klondike',seed);if(X)return X;const c=shuffled(range(52),seed),p=[],d=[];for(let i=0;i<13;i++){p.push([]);d.push(0);}let k=0;
     for(let col=0;col<7;col++){for(let j=0;j<=col;j++)p[6+col].push(c[k++]);d[6+col]=col;}
     while(k<52)p[0].push(c[k++]);d[0]=p[0].length;return {g:'klondike',p,d,draw:draw===3?3:1,done:0};},
   isRun(a,j){for(let k=j+1;k<a.length;k++){const x=a[k-1],y=a[k];if(RK(x)!==RK(y)+1||RED(x)===RED(y))return false;}return true;},
@@ -402,6 +413,7 @@ const SP={id:'spider',TAB:9,NT:10,FND:1,
   FIX:{'-1':{c:'2437JQ2562T2TQ9QTQKK4889K79TQK56Q7K566TKJQ8J4983K2K5JJAA35J33AAA7246Q4J34A8357A78452T46928956AJ77T39T698',p:'448748438428738418724714257947247644635628618236936925227219352342337325053043032150S0418d1S028830826819S543533524514S143132129119019S103907004806205'}},
   fixPath(p){const out=[];for(let i=0;i<p.length;){if(p[i]==='S'){out.push({s:1});i++;continue;}out.push({f:9+(+p[i]),j:parseInt(p[i+1],36),t:9+(+p[i+2])});i+=3;}return out;},
   deal(seed,suits){suits=suits===4?4:suits===2?2:1;const ids=[];
+    const X=suits===1&&ladDeal('spider',seed);if(X)return X;
     const F=suits===1&&SP.FIX[seed];
     if(F){const cnt=[0,0,0,0,0,0,0,0,0,0,0,0,0];for(const ch of F.c){const r='A23456789TJQK'.indexOf(ch);ids.push((cnt[r]++)*52+r);}}
     else{const S=suits===1?[0]:suits===2?[0,1]:[0,1,2,3],copies=8/S.length;for(let k=0;k<copies;k++)for(const su of S)for(let r=0;r<13;r++)ids.push(k*52+su*13+r);}
@@ -447,7 +459,7 @@ const SP={id:'spider',TAB:9,NT:10,FND:1,
 /* ---- Свободная ячейка (FreeCell): 0–3 ячейки, 4–7 дом (стопка 4+масть), 8–15 столбцы. Все карты открыты ---- */
 const FC={id:'freecell',TAB:8,NT:8,FND:4,
   kind(i){return i<4?'cell':i<8?'found':'tab';},
-  deal(seed){const c=shuffled(range(52),seed),p=[],d=[];for(let i=0;i<16;i++){p.push([]);d.push(0);}for(let k=0;k<52;k++)p[8+k%8].push(c[k]);return {g:'freecell',p,d,draw:1,done:0};},
+  deal(seed){const X=ladDeal('freecell',seed);if(X)return X;const c=shuffled(range(52),seed),p=[],d=[];for(let i=0;i<16;i++){p.push([]);d.push(0);}for(let k=0;k<52;k++)p[8+k%8].push(c[k]);return {g:'freecell',p,d,draw:1,done:0};},
   isRun:KL.isRun,
   // сколько карт можно перенести разом (через свободные ячейки и пустые столбцы)
   cap(s,toEmpty,f){let fc=0,ec=0;for(let i=0;i<4;i++)if(!s.p[i].length)fc++;for(let i=8;i<16;i++)if(!s.p[i].length&&i!==f)ec++;if(toEmpty)ec--;return (fc+1)*Math.pow(2,Math.max(0,ec));},
@@ -490,6 +502,30 @@ const FC={id:'freecell',TAB:8,NT:8,FND:4,
 };
 const RULES={klondike:KL,spider:SP,freecell:FC};
 
+/* ---- start1 (06.10): «лестница новичка» — особые расклады первых раздач (номера раздач меньше −10; у каждой игры свои).
+   Это НЕ перетасовка по номеру, а заранее составленная позиция по тем же правилам: часть карт уже лежит в доме («хозяйка начала раскладывать»),
+   остальные — на столе и в колоде. Запись s: стопки через «/» в порядке игры (колода, дома, столбцы…); стопка — «сколько снизу рубашкой:» (если есть) и карты
+   снизу вверх, по два знака: достоинство A23456789TJQK и масть s♠ h♥ d♦ c♣. p — проверенное решение (ладPath: по три знака «откуда, с какой карты, куда» в base36, «-» — колода).
+   Подбор и проверка ботом — hobby-analytics/release-h/pauk/start1-tools (genS.js, genKF.js); tools/test.sh проверяет: колода цела, решение проходит по правилам.
+   Обычные раздачи, списки SEEDS и правила ходов этим не затронуты (ветка в deal срабатывает только на эти номера). ---- */
+const LADX={};
+
+LADX.spider={'-11':{s:'/KsQsJsTs9s8s7s6s5s4s3s2sAs/KsQsJsTs9s8s7s6s5s4s3s2sAs/KsQsJsTs9s8s7s6s5s4s3s2sAs/KsQsJsTs9s8s7s6s5s4s3s2sAs/////JsTs3s2sAs/Ts9s8s2sAs/QsJsTs8s7s6s5s/KsQs/9s8s7s6s5s4s/9s8s7s6s5s4s3s/9sKs7s6s5s4s3s2sAs/KsQsJsJsTs/KsQs/4s3s2sAs',p:'e0gi0bg3ca3ca0gf2g92dd0990hb39b0ff1a90ff0a'},
+  '-12':{s:'/KsQsJsTs9s8s7s6s5s4s3s2sAs/KsQsJsTs9s8s7s6s5s4s3s2sAs/KsQsJsTs9s8s7s6s5s4s3s2sAs//////1:As5s4s3s2sKs/As4s3sJs/1:6s5s4s3s2s/KsQsJsTs9s8s7s/2s7s6s5s4s3s2sAs/KsQs5s4s3s2s/As7sTs9s8sTs9s8s/1:JsKsQsTs9s8s7s6s/1:6s6s5s7sQsJs/1:AsKsQsJsTs9s8s',p:'d1ii0bb1gb0cg3aa3gd0ae2cg0ef5ef2hh49f19f0ch3eh19h0ea19a0991e90e'},
+  '-13':{s:'6sAsJs7s5sQs6s8s9s6s/KsQsJsTs9s8s7s6s5s4s3s2sAs/KsQsJsTs9s8s7s6s5s4s3s2sAs/KsQsJsTs9s8s7s6s5s4s3s2sAs//////Ts9s8s5s2sAs/4s3s4s3s2sJsTs9s/KsQsJs/1:8s5s4s3s2sAs/1:7s6s5s4sKs/8s7sTs/KsJs5sKsQsJsTs9s/1:KsTs9s8s7s/Qs3s/Qs7s6s4s3s2sAs2sAs',p:'g1b-96ff8bb7ac6bc1bc0fe3aa8ee2ge0aa5da2g94aa0993ii9dh2gi7hh1dg1hh0gd1aa0dd0fi3ff2i90fi1ff1ii0f'},
+  '-14':{s:'QsTsKs9s6s2s4sAs8s2s/KsQsJsTs9s8s7s6s5s4s3s2sAs/KsQsJsTs9s8s7s6s5s4s3s2sAs///////1:Ts8s7s6sAs/1:7s6s5s4s3s2sAs/2s5s4s3s2sAs/1:KsQsJsKsQsJs/1:As5s4s3sJsAs/1:Ts9s6s5s4s3s/8s7s6s7s5s4s3s/1:Js9s8sKsQsQsJsTs9s/2:2s9sTsKs/8s7s6s5s3sKsQsJsTs9s8s7s',p:'a1ie2ag5h-a5fa0ff7hf4ee2f95f94d91ee19d6hb6fb19d5b90dd4ii5gb0di4cc6ih8ci0he0cc1990cg39g1cf3cg09d1fh3ah29f0hh19d0hh0a'},
+  '-15':{s:'2s6s8s7s5sJsTs2s6s7sKs4s4sQs5s9s7s4s3s8s/KsQsJsTs9s8s7s6s5s4s3s2sAs////////1:5s4s4s3s9s8s7s6s3s/1:9s8sKsQsJsTs9s/1:Ts2sAsAs/1:8s7s6s5sKsQsJsTs/1:6s7s6s5sQsJsTs9s/3:Js8s7s6sAsKsQs/KsQsJsTsKs9s/3:KsQs3s2sAs5s4s/2:8s9s3s3s2sAs2sAs/1:5s3s2sAs4sJsTs',p:'h6998gg5994cg3992cg29i5eh3if5eg1fd4g91di49--a89b5aa7b95a90ab4eebhh4ff7ab3ac9dd7fa1da0fc8gg6fh3eb1hh2eh1bh0bc1bd69d1cd0feafc0ei5ef6ii1gg5ie5ae4ai0ee3aa0ee2aa0ee1gb0ee0f90f'}};
+
+function ladDecode(g,str){const NP=g==='klondike'?13:g==='spider'?19:16,q=String(str).split('/');if(q.length!==NP)return null;const p=[],d=[],cnt={};
+  for(let i=0;i<NP;i++){const k=q[i].indexOf(':'),t=k<0?q[i]:q[i].slice(k+1),a=[];
+    for(let x=0;x<t.length;x+=2){const r='A23456789TJQK'.indexOf(t[x]),su='shdc'.indexOf(t[x+1]);if(r<0||su<0)return null;const c=su*13+r,n=cnt[c]||0;cnt[c]=n+1;a.push(n*52+c);}
+    p.push(a);d.push(k<0?0:+q[i].slice(0,k)||0);}
+  const st={g,p,d,draw:1,done:0};if(g!=='freecell')d[0]=p[0].length;
+  if(g==='spider'){st.suits=1;for(let i=1;i<9;i++)if(p[i].length)st.done++;}
+  return st;}
+function ladDeal(g,seed){const L=LADX[g],F=L&&L[seed];return F?ladDecode(g,F.s):null;}
+function ladPath(t){const out=[];for(let i=0;i<t.length;){if(t[i]==='-'){out.push({s:1});i++;continue;}out.push({f:parseInt(t[i],36),j:parseInt(t[i+1],36),t:parseInt(t[i+2],36)});i+=3;}return out;}
+
 // применить ход к состоянию (без проверки)
 function applyMove(R,s,m){if(m.s)return R.stock(s);R.move(s,m.f,m.j,m.t);return true;}
 // проверка хода по правилам (для прогона решений и ввода игрока)
@@ -528,6 +564,14 @@ const EASY_ALL={};
 EASY_ALL.spider={1:[-1].concat(seedList("d1ryq,h4p9h0,wowele,ah8yul,w12niq,5o52ve,hsj0jo,yl46va,73jca6,htgpd0,u9rikl,a6hzdn,9fmylw,u8ttr9,a8pim,l99wt6,8o2g9s,p0rsjm,2w5mhy,nz5sax,khh781,cbldht,kfltlb,wc1u8p,nr7va1,xmjgbo,ogwzzf,5p2ros,jqudpb,ouxgeh,xwcqza,92se97,kdi8pm,wrxoah")),2:seedList("syjx3r,nld1bc,12ym3l,9nsl29,kujh09,4jpid3,lee9kg,xmr5r5,qqf9ai,r23xku,cbt2xa,51gq1l,r5579x,lh7c0k,rvs0sp,tka3aq,ulw3jf,4pjuia,xslhwc,v1jqc8")};
 
 const EASY=EASY_ALL[GID]||{};
+// start1 (06.10): «лестница новичка» — первые 5 раздач основного режима, у всех новичков одни и те же и по порядку: 1-я почти собранная (2–3 минуты),
+// 2-я и 3-я лёгкие, 4-я и 5-я мягче обычных; с 6-й — как раньше (лёгкие EASY до трёх побед, потом обычные). Номера меньше −10 — особые расклады LADX (в блоке правил),
+// остальные — обычные раздачи по номеру, отобранные слабым ботом (hobby-analytics/release-h/pauk/start1-tools); tools/test.sh проверяет, что каждая решается.
+const LAD_ALL={};
+
+LAD_ALL.spider={1:[-11,-12,-13,-14,-15]};
+
+const LAD=LAD_ALL[GID]||{};
 /*SEEDS-END*/
 /* ---- настройки игр серии: название, режимы, «родной» стол и персонаж ---- */
 const GAMES={
@@ -558,7 +602,7 @@ function fixSave(){for(const f of ['st','daily','ach','own','seq'])if(!isObj(S[f
   if(typeof S.rk!=='number'||!isFinite(S.rk))S.rk=rankOf(S.wins); // старое сохранение: звания до обновления — без награды задним числом
   if(!S.lk1){S.lk1=1;if(!S.table||S.table===GC.table)S.table='home';if(!S.back||S.back==='red')S.back='home';} // look1: родные стол и рубашка нового вида
   if(S.thU!=null&&!isObj(S.thU))delete S.thU;if(typeof S.adTot!=='number'||!isFinite(S.adTot))S.adTot=0;
-  if(S.dwk!=null&&!isObj(S.dwk))delete S.dwk;if(S.ez!=null&&!isObj(S.ez))delete S.ez;if(S.col!=null&&!isObj(S.col))delete S.col;}
+  if(S.dwk!=null&&!isObj(S.dwk))delete S.dwk;if(S.ez!=null&&!isObj(S.ez))delete S.ez;if(S.lad!=null&&!isObj(S.lad))delete S.lad;if(S.col!=null&&!isObj(S.col))delete S.col;}
 fixSave();
 // «точка отсчёта» с облаком: какое сохранение и сколько монет было общим у устройства и облака (при запуске, после слияния и после записи).
 // Монеты, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным — не теряются и не возвращаются
@@ -819,7 +863,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Имя игры — по сборке (BUILD_GAME → GID): Косынка — kosynka, Паук — pauk, Ячейка — yacheyka. Раздача = «уровень» (STAT.lvl в startDeal/resumeDeal)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v2-100620',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v3-100712',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (сыграно раскладов, монеты, было ли облачное сохранение) — после облака или через 2,5 с; баланс; настройки
 let statPr=0,statBt=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:played(),cn:+S.coins||0,bt:statBt});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0,th:S.th||'day'});
@@ -849,6 +893,7 @@ function mergeSave(d,ref){if(!isObj(d))return;
   STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
   S.rk=Math.max(S.rk||0,typeof d.rk==='number'?d.rk:rankOf(d.wins||0)); // звание: награда выдана — у кого больше
   if(isObj(d.dwk)&&(!isObj(S.dwk)||d.dwk.k>S.dwk.k||d.dwk.k===S.dwk.k&&(d.dwk.g||0)>(S.dwk.g||0)))S.dwk={k:d.dwk.k,g:d.dwk.g||0}; // премии недели
+  if(isObj(d.lad)){if(!isObj(S.lad))S.lad={};for(const k in d.lad)if(typeof d.lad[k]==='number')S.lad[k]=Math.max(S.lad[k]||0,d.lad[k]);} // start1: лестница новичка — сколько ступеней выдано
   if(isObj(d.ez)){if(!isObj(S.ez))S.ez={};for(const k in d.ez)if(typeof d.ez[k]==='number')S.ez[k]=Math.max(S.ez[k]||0,d.ez[k]);} // лёгкие раздачи: сколько уже выдано
   if(typeof d.abn==='number'&&newer)S.abn=d.abn;
   if(isObj(d.col)){if(!isObj(S.col))S.col={};for(const k in d.col)if(d.col[k])S.col[k]=1;} // собранные наборы (награда выдана)
@@ -863,7 +908,7 @@ function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.create
 // ответ VK с ограничением по времени (вне VK мост может не ответить вовсе); VKWebAppInit на слабом телефоне может идти долго — ждём до 20 с
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
 /*SOC*/
-/* ===== SOC v2.2 (04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
+/* ===== SOC v2.4 (06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
    Общий модуль для всех игр. Источник — ~/Projects/hobby-analytics/soc/soc.js (правки — только там, потом soc-sync.sh).
    Правила VK: 2.6.2 — никаких наград за приглашение/«поделиться»/избранное/экран (разрешено лишь за вступление в сообщество —
    в наших играх НЕ даём); 2.6.3 — само-предложения не в первую сессию, отказ помним, повтор не чаще раза в 30 дней, ≤3 раз.
@@ -874,21 +919,22 @@ function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(meth
    (окно приглашения с обязательным message), а остальное включается настройками SOC.init: okLink — ссылка на игру в ОК («Поделиться»),
    okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК («Ещё игры», только сайт и мобильный браузер ОК). */
 var SOC=(function(){
-  var GROUP=241793582,DAY=864e5,VER=2.2;
+  var GROUP=241793582,DAY=864e5,VER=2.4;
   // i — место в спрайте dvor.jpg (по 96 px), g — группа (c карты, p головоломки, s сказка, r спокойные), a — возраст,
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
   // ok — ID этой игры в Одноклассниках (vk_ok_app_id), когда она там вышла; без него в ОК игра в «Ещё игры» не показывается.
+  // v2.4: off:'all' прячет игру везде, и в ОК тоже (Козёл: номер ОК вписан заранее, показ включится, когда уберём off).
   var GAMES=[
     {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p',ok:512004864050},
     {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p',ok:512005727621},
     {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s',ok:512005580574},
     {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s',ok:512005500650},
-    {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',off:'all'},
+    {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',ok:512005037494},
     {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c',ok:512005141228},
     {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c',ok:512005597603},
     {id:54792011,t:'Паук на даче',a:0,i:7,g:'c',ok:512005626567},
     {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c',ok:512005010476},
-    {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all'},
+    {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all',ok:512005062986},
     {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p',ok:512005552366},
     {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r',ok:512005219424},
     {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p',ok:512005471658}
@@ -910,13 +956,14 @@ var SOC=(function(){
   // что доступно на этой площадке: inv|share|fav|home|grp|more. В VK — всё (как было), в ОК — см. шапку модуля
   function can(k){if(!ok())return false;
     if(k==='more')return list(1).length>0;
+    if(k==='ntf')return !OKP&&!ntfOn(); // уведомления — пока только ВКонтакте
     if(!OKP)return k==='home'?!!homeOk:k==='fav'?!(st.fav&&st.fav.d):true;
     return k==='inv'||(k==='share'&&!!O.okLink)||(k==='grp'&&!!O.okGroup);}
   function me(){for(var i=0;i<N;i++)if(GAMES[i].id===APP)return GAMES[i];return null;}
   function done(k){st[k]={d:1};saveFn();}
   function tried(k){var x=st[k]||{};x.n=(x.n||0)+1;x.t=Date.now();st[k]=x;saveFn();}
   // STAT v1.2 (А15): итог предложения площадки → soc {a: fav|home|inv|grp|shr|more, r: show|ok|no|err}; отказ игрока (код 4 / «denied») — no
-  function sx(a,r){try{if(typeof STAT!=='undefined'&&STAT.ev)STAT.ev('soc',{a:a,r:r});}catch(e){}}
+  function sx(a,r,n,x){try{if(typeof STAT!=='undefined'&&STAT.ev){var p={a:a,r:r},k;if(n)p.n=n;if(x)for(k in x)if(x[k]!==''&&x[k]!=null)p[k]=x[k];STAT.ev('soc',p);}}catch(e){}} // n — номер попытки (уведомления: 1–3); x — доп. поля (v2.4)
   function sr(a){return function(e){var d=e&&e.error_data||{};sx(a,d.error_code===4||/denied|cancel/i.test(String(d.error_reason||d.error_msg||''))?'no':'err');};}
   function due(k){var x=st[k]||{};return !x.d&&(x.n||0)<3&&(!x.t||Date.now()-x.t>30*DAY);}
 
@@ -924,9 +971,10 @@ var SOC=(function(){
      cls — классы кнопок (по умолчанию 'btn noenter': Enter их не жмёт); modal(html) — показать окно игры и вернуть его
      контейнер; close() — закрыть окно игры. Без modal — своё лёгкое окно. */
   function init(S,opt){O=opt||{};if(!S.soc||typeof S.soc!=='object')S.soc={};st=S.soc;
-    st.ses=(st.ses||0)+1;if(!OKP&&qp('vk_is_favorite')==='1')st.fav={d:1};saveFn();ready();}
+    if(!st.ses&&!st.d0)st.d0=nowFn(); // день первого запуска (для расписания уведомлений); у давних игроков его нет
+    st.ses=(st.ses||0)+1;if(!OKP&&qp('vk_is_favorite')==='1')st.fav={d:1};evInit();saveFn();ready();}
   // после VKWebAppInit (мост готов): узнать, можно ли значок на экран (только Android)
-  function ready(){if(readyOn||!ok())return;readyOn=true;
+  function ready(){if(readyOn||!ok())return;readyOn=true;evPlan(8000);ntfSes();
     if(!OKP&&PF.indexOf('android')>=0)vkSend('VKWebAppAddToHomeScreenInfo',{},4000).then(function(r){
       homeOk=!!(r&&r.is_feature_supported&&!r.is_added_to_home_screen);},function(){homeOk=false;});
     else homeOk=false;}
@@ -934,6 +982,8 @@ var SOC=(function(){
   function merge(d){if(!d||typeof d!=='object')return;
     for(var k in d){var a=st[k],b=d[k];
       if(k==='ses'){if(typeof b==='number'&&b>(st.ses||0))st.ses=b;continue;}
+      if(k==='ev'){evMerge(b);continue;}
+      if(k==='d0'){if(+b>0&&(!st.d0||+b<st.d0))st.d0=+b;continue;} // первый запуск — более ранний
       if(!b||typeof b!=='object')continue;
       if(!a||typeof a!=='object'){st[k]=b;continue;}
       if(a.d||b.d){st[k]={d:1};continue;}
@@ -960,7 +1010,7 @@ var SOC=(function(){
   // --- список «Ещё игры»: без себя, без 18+, без неопубликованных на этой площадке; сначала родственные, дальше — сдвиг по дню ---
   function list(n){var m=me(),mg=m?m.g:'',out=[],i,g,day=Math.floor(Date.now()/DAY);
     for(i=0;i<N;i++){g=GAMES[i];if(g.id===APP||g.a>=18)continue;
-      if(OKP?!(g.ok&&OKWEB):(g.off==='all'||(g.off==='web'&&WEB)))continue;out.push(g);} // ОК: только игры с ID в ОК и только там, где работает OpenApp
+      if(g.off==='all'||(OKP?!(g.ok&&OKWEB):(g.off==='web'&&WEB)))continue;out.push(g);} // ОК: только игры с ID в ОК и только там, где работает OpenApp
     out.sort(function(a,b){var x=(b.g===mg)-(a.g===mg);if(x)return x;return ((a.i+day)%N)-((b.i+day)%N);});
     return out.slice(0,n||6);}
 
@@ -987,13 +1037,14 @@ var SOC=(function(){
     if(can('fav'))b+=btn('fav',tx('⭐ В избранное','⭐ Add to favourites'));
     if(can('home'))b+=btn('home',tx('📲 На экран телефона','📲 Add to home screen'));
     if(can('grp'))b+=btn('grp',tx('📣 Наше сообщество','📣 Our community'));
+    if(O.ntf&&can('ntf'))b+=btn('ntf',O.ntf.s||tx('🔔 Напоминания от игры','🔔 Game reminders'));
     if(can('more'))b+=btn('more',tx('🎲 Ещё игры во дворе','🎲 More yard games'));
     return '<div class="soc-set">'+b+'</div>';}
   // навесить обработчики после вставки HTML: SOC.bind(контейнер, back) — back() вызывается при «Назад» из «Ещё игры»
   function bind(root,back){if(!root)return;var bs=root.querySelectorAll('[data-soc]');
     for(var i=0;i<bs.length;i++)bs[i].onclick=function(){var k=this.getAttribute('data-soc');
       if(k==='inv')invite();else if(k==='share')share();else if(k==='fav')fav().then(function(){if(back)back();});
-      else if(k==='home')home().then(function(){if(back)back();});else if(k==='grp')group();else if(k==='more')showMore(back);};}
+      else if(k==='home')home().then(function(){if(back)back();});else if(k==='ntf')ntf(0).then(function(){if(back)back();});else if(k==='grp')group();else if(k==='more')showMore(back);};}
 
   // --- окно «Ещё игры во дворе»: через modal() игры (O.modal) или своё лёгкое. back — куда вернуться по «Назад» ---
   function showMore(back){if(!can('more'))return;css();var G=list(6),spr=O.sprite||'js/dvor.jpg',h='';
@@ -1014,18 +1065,125 @@ var SOC=(function(){
   /* --- одно само-предложение за сессию (звать из окна победы). wins — число побед всего; busy — игра занята
      (реклама < 60 с назад, пауза, следом межэкранная). Вернёт {k, t, b, run} или null — строку и кнопку рисует игра.
      Показ сразу считается «отказом» (≤3 раз, не чаще раза в 30 дней); успех fav/home/inv/grp — больше никогда. --- */
-  function offer(wins,busy){if(!ok()||asked||busy||(st.ses||0)<2||Date.now()-T0<120000)return null;
+  function offer(wins,busy){if(!ok()||asked||busy||Date.now()-T0<120000)return null;
     var o=null;
-    if(can('fav')&&due('fav'))o={k:'fav',t:tx('Добавьте игру в избранное — будет всегда под рукой.','Add the game to favourites — always at hand.'),b:tx('⭐ В избранное','⭐ Add to favourites'),run:fav};
+    // уведомления: до 3 показов за всё время — в 1-й, 3-й и 7-й день игрока (NTF_DAYS), после 3 побед; из ⚙ игрок может включить сам
+    var nn=ntfDue()&&(wins||0)>=3?ntfN()+1:0,nt=nn?ntfText(nn):'';
+    if(nn&&nt)o={k:'ntf',n:nn,t:nt,b:O.ntf.b||tx('🔔 Напоминать','🔔 Remind me'),ok:O.ntf.ok||'',run:function(){return ntf(nn);}};
+    else if((st.ses||0)<2)return null; // остальные предложения — не в первую сессию (п. 2.6.3)
+    else if(can('fav')&&due('fav'))o={k:'fav',t:tx('Добавьте игру в избранное — будет всегда под рукой.','Add the game to favourites — always at hand.'),b:tx('⭐ В избранное','⭐ Add to favourites'),run:fav};
     else if(can('home')&&st.ses>=3&&due('home'))o={k:'home',t:tx('Значок игры на экране — заходить в одно касание.','A game icon on your screen — one tap to play.'),b:tx('📲 На экран телефона','📲 Add to home screen'),run:home};
     else if(st.ses>=3&&(wins||0)>=5&&due('inv'))o={k:'inv',t:tx('Позовите друзей — будет с кем посоревноваться.','Invite friends — someone to compete with.'),b:tx('👥 Позвать друзей','👥 Invite friends'),run:invite};
     else if(can('grp')&&st.ses>=4&&due('grp'))o={k:'grp',t:tx('Новости и новые игры — в сообществе «Игры во дворе».','News and new games — in the "Yard Games" community.'),b:tx('📣 Наше сообщество','📣 Our community'),run:group};
     else{var x=st.more||{};if(!x.t||Date.now()-x.t>7*DAY){var g=list(1)[0];
       if(g)o={k:'more',t:tx('Попробуйте ещё: «'+g.t+'»'+(g.a>=12?' ('+g.a+'+)':'')+'.','Try another one: "'+g.t+'".'),b:tx('🎲 Открыть','🎲 Open'),run:function(){return open(g);}};}}
-    if(!o)return null;asked=true;sx(o.k,'show');if(o.k==='more'){st.more={t:Date.now()};saveFn();}else tried(o.k);return o;}
+    if(!o)return null;asked=true;sx(o.k,'show',o.n,o.k==='ntf'?{d:ntfDay()}:null);
+    if(o.k==='more'){st.more={t:Date.now()};saveFn();}
+    else if(o.k==='ntf'){st.ntf={n:o.n,t:nowFn()};saveFn();}
+    else tried(o.k);return o;}
+
+  /* ===== v2.3. Разрешение на уведомления (VKWebAppAllowNotifications) =====
+     Сам модуль ничего не показывает: игра включает настройкой SOC.init(…,{ntf:{t:'вопрос' или function(n){…},b:'кнопка',ok:'ответ',s:'кнопка в ⚙'},now:часы игры}).
+     Тогда: в ⚙ — кнопка (жмёт сам игрок, всегда, пока не разрешено), в SOC.offer — предложение 'ntf' до NTF_MAX=3 раз за всё время,
+     по дням игрока NTF_DAYS=[1,3,7] (день 1 — день первого запуска, S.soc.d0; дни календарные, по часам игры O.now):
+     показ №1 — в первый же день (условие «вторая сессия» на него НЕ действует; остаётся: не в первые 2 минуты сеанса и при ≥3 победах),
+     №2 — не раньше 3-го дня, №3 — не раньше 7-го; не заходил в нужный день — при первом заходе позже; два показа в один день — никогда.
+     Игрок, который начал играть до этой версии (нет S.soc.d0): №1 — сразу по обычному условию, №2 — через 2 дня после №1, №3 — через 4 дня после №2.
+     t — строка или функция от номера попытки (1–3): каждый раз свой повод; вернула пусто — в этот раз не предлагаем (показ не тратится).
+     S.soc.ntf: {n: сколько раз показали, t: когда в последний раз (часы игры O.now, иначе Date.now)} или {d:1} — разрешено, больше никогда.
+     Облако (merge): счётчик — больший, дата — более поздняя, «разрешено» — навсегда. Окно VK вызывается только нажатием кнопки игроком.
+     Статистика: soc {a:'ntf', r: show|ok|no|err, n: номер попытки 1–3; из ⚙ — без n}. Если VK уже сообщил vk_are_notifications_enabled=1 — не спрашиваем. В ОК пока выключено. Наград нет.
+     v2.4 — статистика подробнее (событие то же, soc с a:'ntf'; сервер статистики править не надо):
+       show {n, d}        — предложение показано: n — какое по счёту (1–3), d — день игрока (1 — день первого запуска; 0 — неизвестен, давний игрок);
+       ok | no | err {n, d, e} — ответ на окно VK: разрешил | отказал (закрыл окно, код 4) | ошибка; e — код ошибки VK (число) или короткая причина; из ⚙ — без n;
+       on {s}             — раз за сеанс, если уведомления включены: s:'vk' — так сообщил VK (vk_are_notifications_enabled=1), s:'me' — игрок разрешил нашей кнопкой, а VK параметра не дал;
+       off                — раз за сеанс: игрок разрешал нашей кнопкой, а VK сообщает vk_are_notifications_enabled=0 (выключил в настройках VK).
+     «Пришёл по уведомлению» модуль не пишет: метка захода vk_ref и так есть в шапке каждой пачки статистики (поле src).
+     Если игрок выключил уведомления в VK (параметр = 0), кнопка в ⚙ появляется снова (включить может только он сам); само-предложение — никогда. */
+  var ntfNow=false; // разрешил в этом сеансе (параметр запуска VK до перезапуска остаётся прежним)
+  function ntfOn(){var v=qp('vk_are_notifications_enabled');return ntfNow||v==='1'||(v!=='0'&&!!(st.ntf&&st.ntf.d));}
+  function ntfDay(){return st.d0?Math.max(0,dayNo(nowFn())-dayNo(st.d0)+1):0;}
+  function ntfSes(){if(!O.ntf||OKP)return;var v=qp('vk_are_notifications_enabled'),d=!!(st.ntf&&st.ntf.d);
+    if(v==='1')sx('ntf','on',0,{s:'vk'});else if(d)sx('ntf',v==='0'?'off':'on',0,v==='0'?null:{s:'me'});}
+  var NTF_MAX=3,NTF_DAYS=[1,3,7]; // показов всего; в какой день игрока (от первого запуска) не раньше — показ №1, №2, №3
+  function dayNo(t){var d=new Date(t);return Math.floor((t-d.getTimezoneOffset()*60000)/DAY);} // номер календарного дня (местное время)
+  function nowFn(){var t=0;try{t=+(O.now&&O.now())||0;}catch(e){}return t>0?t:Date.now();}
+  function ntfN(){return st.ntf&&+st.ntf.n||0;}
+  function ntfDue(){if(!O.ntf||!can('ntf')||(st.ntf&&st.ntf.d))return false;var n=ntfN();
+    if(n>=NTF_MAX)return false;if(!n)return true;
+    var now=dayNo(nowFn()),last=dayNo(+st.ntf.t||0);if(now<=last)return false; // в один день — никогда
+    return st.d0?now-dayNo(st.d0)+1>=NTF_DAYS[n]:now-last>=NTF_DAYS[n]-NTF_DAYS[n-1];}
+  function ntfText(n){var t=O.ntf.t;if(typeof t==='function'){try{t=t(n);}catch(e){t='';}}
+    return t==null?tx('Напомнить, когда появится что-то новое?','Remind you when there is something new?'):String(t||'');}
+  // n — номер попытки из offer (1–3) или 0/пусто — кнопка в ⚙. Отказ счётчик показов не меняет (показ уже посчитан в offer)
+  function ntf(n){n=+n||0;return send('VKWebAppAllowNotifications').then(function(r){var y=!!(r&&r.result);if(y){done('ntf');ntfNow=true;}sx('ntf',y?'ok':'no',n,{d:ntfDay()});return y;},
+    function(e){var d=e&&e.error_data||{},c=+d.error_code||0,why=String(d.error_reason||d.error_msg||'');
+      sx('ntf',c===4||/denied|cancel/i.test(why)?'no':'err',n,{d:ntfDay(),e:c||String(why||(e&&(e.error_type||e.message))||'?').slice(0,24)});return false;});}
+
+  /* ===== v2.3. События VK: лента активности друзей, таблица результатов, миссии =====
+     VK принимает их только с сервера (secure.addAppEvent), поэтому игра шлёт в свою функцию (hobby-pay, ?op=vkev) подписанные параметры
+     запуска и список событий; сервер проверяет подпись. Включается настройками SOC.init: evUrl — адрес функции,
+     evId(код) — номер миссии из кабинета VK (0/пусто — миссия ещё не заведена, не шлём), evGap — пауза между отправками уровня/очков (мс).
+     Игра зовёт (в любой момент, хоть на каждую победу): SOC.level(n) — пройдено уровней, SOC.score(n) — очки, SOC.mission('код') — миссия выполнена.
+     Модуль помнит в S.soc.ev: l/p — что надо отправить, ls/ps — что уже отправлено, m — миссии {код: 0 ждёт | 1 отправлена},
+     f — {код: когда VK в последний раз отказал}. Отказ VK по миссии (ещё на проверке у модератора, отклонена, сбой) — НЕ навсегда:
+     миссия остаётся ждать и повторяется при следующих запусках, но не чаще раза в сутки (EV_RETRY_DAYS) на миссию. Шлёт пачкой (до 4 событий, миссий — до 2 за запрос и до 4 за сеанс), уровень/очки — не чаще раза в evGap (3 мин),
+     плюс при сворачивании игры; не отправилось (нет сети, сервер молчит) — уйдёт в следующий раз/при следующем запуске.
+     Только ВКонтакте с мостом и подписью в адресе: в ОК, в Яндексе и на маке без vk_app_id — ни одного запроса. Всё молча: игрок ничего не видит.
+     Статистика: STAT.ev('vkev',{a:'lvl'|'pts'|'mis'|'req', r:итог, k:код миссии}). Наград за это нет. */
+  var evT=0,evBusy=false,evLast=0,evSes=0,evDead=false,evWait=0,evFails=0,evSkip={},EV_RETRY_DAYS=1;
+  function evHold(k){var e=evSt(),t=e.f&&+e.f[k]||0;return evSkip[k]||(t>0&&nowFn()-t<EV_RETRY_DAYS*DAY&&nowFn()>=t);} // недавно отказали — пока не шлём
+  function evSt(){if(!st.ev||typeof st.ev!=='object')st.ev={};if(!st.ev.m||typeof st.ev.m!=='object')st.ev.m={};return st.ev;}
+  function evKeep(){return typeof PLAT!=='undefined'&&PLAT==='vk'&&!OKP;} // запоминать достижения (даже без сети/моста)
+  function evOn(){return ok()&&!OKP&&!!O.evUrl&&!!qp('sign')&&!evDead&&typeof fetch==='function';}
+  function evNum(code){var n=0;try{n=+(typeof O.evId==='function'?O.evId(code):O.evId&&O.evId[code])||0;}catch(e){}return n>=3?n:0;}
+  function evStat(a,r,k){try{if(typeof STAT!=='undefined'&&STAT.ev){var p={a:a,r:String(r).slice(0,8)};if(k)p.k=k;STAT.ev('vkev',p);}}catch(e){}}
+  function evInit(){if(!evKeep())return;evSt();
+    try{document.addEventListener('visibilitychange',function(){if(document.hidden)evFlush(true);});}catch(e){}}
+  function evMerge(b){if(!b||typeof b!=='object')return;var e=evSt(),k,i,ks=['l','ls','p','ps'];
+    for(i=0;i<ks.length;i++){k=ks[i];if(+b[k]>(+e[k]||0))e[k]=+b[k];}
+    if(b.m&&typeof b.m==='object')for(k in b.m)if(e.m[k]==null||+b.m[k]>+e.m[k])e.m[k]=+b.m[k]===1?1:0;
+    if(b.f&&typeof b.f==='object'){if(!e.f)e.f={};for(k in b.f)if(+b.f[k]>(+e.f[k]||0))e.f[k]=+b.f[k];}}
+  function evSet(k,n){if(!evKeep())return;n=Math.floor(+n||0);var e=evSt();if(!(n>(+e[k]||0)))return;e[k]=n;saveFn();evPlan(5000);}
+  function level(n){evSet('l',n);}
+  function score(n){evSet('p',n);}
+  function missionKnown(code){return !evKeep()||evSt().m[code]!=null;}
+  function mission(code){if(!evKeep()||!code)return false;var e=evSt();if(e.m[code]!=null)return false;e.m[code]=0;saveFn();evPlan(5000);return true;}
+  function evPick(force){var e=evSt(),out=[],k,n=0,gap=+O.evGap||180000,now=Date.now();
+    for(k in e.m){if(e.m[k]!==0||evHold(k)||!evNum(k))continue;if(n>=2||evSes+n>=4)break;out.push({m:k,id:evNum(k)});n++;}
+    if(out.length||!evLast||now-evLast>=(force?30000:gap)){
+      if((+e.l||0)>(+e.ls||0))out.push({a:1,v:+e.l});
+      if((+e.p||0)>(+e.ps||0))out.push({a:2,v:+e.p});}
+    return out;}
+  function evPlan(ms){if(evT||!evOn())return;var e=evSt(),gap=+O.evGap||180000,left=evLast?evLast+gap-Date.now():0,k,mis=false;
+    for(k in e.m)if(e.m[k]===0&&!evHold(k)&&evNum(k)&&evSes<4){mis=true;break;}
+    if(!mis&&!((+e.l||0)>(+e.ls||0)||(+e.p||0)>(+e.ps||0)))return;
+    evT=setTimeout(function(){evT=0;evFlush();},Math.max(ms||5000,mis?0:left,evWait-Date.now()));}
+  function evFlush(force){if(evBusy||!evOn()||Date.now()<evWait)return;
+    try{if(navigator.onLine===false)return;}catch(e){}
+    var list=evPick(force);if(!list.length)return;evBusy=true;evLast=Date.now();
+    var fin=false,guard=setTimeout(function(){end(null);},15000);
+    function end(d){if(fin)return;fin=true;clearTimeout(guard);evBusy=false;evDone(list,d);}
+    try{fetch(O.evUrl,{method:'POST',mode:'cors',keepalive:true,headers:{'Content-Type':'text/plain'},body:JSON.stringify({app:String(APP),q:location.search,ev:list})})
+      .then(function(r){return r.json();}).then(function(d){end(d&&typeof d==='object'?d:null);},function(){end(null);});}catch(e){end(null);}}
+  function evDone(list,d){var e=evSt(),i,x,r,again=false;
+    if(!d){evFails++;evWait=Date.now()+Math.min(3600000,60000*Math.pow(2,evFails));evStat('req','net');evPlan(5000);return;} // сеть/сервер: позже, в этом же сеансе реже
+    if(!d.ok||!d.r){evDead=true;evStat('req',d.why||'bad');return;} // подпись устарела, игра не включена на сервере и т. п. — до следующего запуска молчим
+    evFails=0;
+    for(i=0;i<list.length;i++){x=list[i];r=String(d.r[i]||'net');
+      if(x.m){evStat('mis',r,x.m);
+        if(r==='ok'||r==='dup'){e.m[x.m]=1;evSes++;if(e.f)delete e.f[x.m];}
+        else if(r==='off')evSkip[x.m]=1; // на сервере миссии ещё нет — до следующего запуска не спрашиваем
+        else if(r==='busy'||r==='net')again=true;
+        else{if(!e.f)e.f={};e.f[x.m]=nowFn();evSkip[x.m]=1;}} // VK отказал (на проверке / отклонена / сбой): миссия ждёт дальше, повтор — не раньше чем через сутки
+      else{evStat(x.a===1?'lvl':'pts',r);
+        if(r==='busy'||r==='net')again=true;
+        else if(x.a===1)e.ls=x.v;else e.ps=x.v;}} // ok — принято; off/bad/e… — это значение больше не шлём, следующее (больше) попробуем
+    saveFn();if(again)evWait=Date.now()+120000;evPlan(20000);}
 
   return {v:VER,ok:ok,isOk:OKP,can:can,init:init,ready:ready,merge:merge,fav:fav,home:home,invite:invite,share:share,group:group,open:open,list:list,
-    settingsHtml:settingsHtml,bind:bind,showMore:showMore,offer:offer,games:GAMES};
+    settingsHtml:settingsHtml,bind:bind,showMore:showMore,offer:offer,games:GAMES,
+    ntf:ntf,ntfOn:ntfOn,ntfDue:ntfDue,ntfDay:ntfDay,level:level,score:score,mission:mission,missionKnown:missionKnown,evOn:evOn,evFlush:evFlush};
 })();
 /*/SOC*/
 // VK хранит значение до 4096 байт — режем на куски по 1800 символов (сохранение — латиница и цифры).
@@ -1052,7 +1210,7 @@ async function vkLoadCloud(){const r0=await vkSend('VKWebAppStorageGet',{keys:['
   if(pre!=='sv'){vkCur=pre;for(const k of keys)vkSent[k]=mm[k];vkSent.svn=raw;}
   return d;}
 // облако пришло позже меню: перерисовать то, что на экране (раскладку на столе не трогаем — она своя у устройства)
-function onCloud(){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}updCoins();applyLook();
+function onCloud(){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}updCoins();applyLook();bootUndo(); // start1: новичок оказался опытным игроком с облаком — в меню
   if(PLAT!=='vk'&&LB.days()>Math.max(LB.sent,LB0))LB.submit(); // дни с другого устройства — в рейтинг сразу
   if(!modalOn&&$('scr-menu').classList.contains('on'))openMenu();}
 // VK web: высота окна под экран браузера (модерация VK 29.09: VKWebAppResizeWindow)
@@ -1554,7 +1712,7 @@ let G=null,W=0,H=0,dpr=1,LY=null,modalOn=false;
 const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const calm=()=>S.calm===true||RM;
 const now=()=>performance.now();
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
+function show(id){if(!$(id).classList.contains('on'))scrT=Date.now();document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
 // тост живёт не меньше 2,5 с и дольше для длинного текста
 function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
   const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
@@ -1669,13 +1827,26 @@ function render(){if(!LY)return;const t=now();ctx.setTransform(dpr,0,0,dpr,0,0);
   if(G.hl){const e=t-G.hl.t0,D=2600;if(e>D&&!G.hl.keep)G.hl=null;else{const a=calm()?1:.75+.25*Math.cos(e/260*Math.PI);const h=G.hl;
       if(h.stock){const s=LY.sl[0],p=st.p[0].length?cardXY(0,st.p[0].length-1):s;glow(p.x,p.y,LY.cw,LY.ch,a);}
       else{const a0=st.p[h.f];if(h.j<a0.length){const p0=cardXY(h.f,h.j),pl=cardXY(h.f,a0.length-1);glow(p0.x,p0.y,LY.cw,pl.y-p0.y+LY.ch,a);}
-        const b=st.p[h.t],pt=b.length?cardXY(h.t,b.length-1):LY.sl[h.t];glow(pt.x,pt.y,LY.cw,LY.ch,a*.8);}}}
+        const b=st.p[h.t],pt=b.length?cardXY(h.t,b.length-1):LY.sl[h.t];glow(pt.x,pt.y,LY.cw,LY.ch,a*.8);}
+      if(h.fin)drawFinger(h,e);}}
   if(drag){for(const q of drag.ok||[]){if(q===drag.over)continue;const b=st.p[q],pt=b.length?cardXY(q,b.length-1):LY.sl[q];glow(pt.x,pt.y,LY.cw,LY.ch,.3);}
     if(drag.over>=0){const b=st.p[drag.over],pt=b.length?cardXY(drag.over,b.length-1):LY.sl[drag.over];glow(pt.x,pt.y,LY.cw,LY.ch,.9);}
     const step=R.kind(drag.pi)==='tab'?colStep(drag.pi):null,base=cardXY(drag.pi,drag.j,step);
     for(let k=0;k<drag.ids.length;k++){const p=cardXY(drag.pi,drag.j+k,step),s=SPR[drag.ids[k]];const x=drag.x-drag.ox+(p.x-base.x),y=drag.y-drag.oy+(p.y-base.y),cx=x+LY.cw/2,cy=y+LY.ch/2;
       ctx.save();ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=14;ctx.shadowOffsetY=7;ctx.translate(cx,cy);ctx.scale(1.04,1.04);ctx.translate(-cx,-cy);
       drawCard(drag.ids[k],x,y,s,t);ctx.restore();}}}
+// start1: палец-указатель под картой (или колодой), которую надо нажать; покачивается (в спокойном режиме стоит)
+function drawFinger(h,e){const st=G.st;let x,y;
+  if(h.stock){const s=LY.sl[0],p=st.p[0].length?cardXY(0,st.p[0].length-1):s;x=p.x+LY.cw/2;y=p.y+LY.ch*.55;}
+  else{const a=st.p[h.f];if(h.j>=a.length)return;const p=cardXY(h.f,h.j),strip=h.j<a.length-1?cardXY(h.f,h.j+1).y-p.y:LY.ch;x=p.x+LY.cw/2;y=p.y+Math.min(strip*.55,LY.ch*.5);}
+  // рисуем сами (не значком-эмодзи: на старых Android и Windows его может не быть): указательный палец, кулак, большой палец — белые с тёмным контуром
+  const fs=Math.round(Math.max(36,Math.min(66,LY.cw))),u=fs/10,k=calm()?0:Math.abs(Math.sin(e/330)),bob=k*fs*.2;y+=bob;
+  const P=[[x-1.15*u,y,2.3*u,6.4*u,1.15*u],[x+1.0*u,y+3.5*u,1.9*u,3.4*u,.95*u],[x+2.7*u,y+3.9*u,1.9*u,3.2*u,.95*u],[x+4.4*u,y+4.4*u,1.8*u,3*u,.9*u],[x-3.3*u,y+5.2*u,3.2*u,2.2*u,1.1*u],[x-1.5*u,y+5*u,7.7*u,5*u,1.9*u]];
+  ctx.save();
+  if(!calm()){ctx.globalAlpha=.55*(1-k);ctx.beginPath();ctx.arc(x,y-bob+u*.6,u*(1.6+2.2*(1-k)),0,Math.PI*2);ctx.lineWidth=u*.5;ctx.strokeStyle='#fff';ctx.stroke();ctx.globalAlpha=1;} // «круг от нажатия»
+  ctx.lineJoin='round';ctx.strokeStyle='#2b2118';ctx.lineWidth=u*1.1;for(const q of P){rrect(ctx,q[0],q[1],q[2],q[3],q[4]);ctx.stroke();}
+  ctx.fillStyle='#fff';for(const q of P){rrect(ctx,q[0],q[1],q[2],q[3],q[4]);ctx.fill();}
+  ctx.restore();}
 function animating(t){if(G&&(G.hl&&!(G.hl.keep&&calm()&&t-G.hl.t0>400)||G.fx||G.shake))return true;for(const id in SPR){const s=SPR[id];if(t<s.t0+s.dur||s.ft&&s.want!==s.up)return true;}return false;}
 // цикл кадров спит, когда ничего не движется (и на паузе); любое изменение — kick()
 let loopOn=false;
@@ -1723,7 +1894,8 @@ function dropOk(pi,j){const st=G.st,r=[];if(!R.canPick(st,pi,j))return r;const n
   return r;}
 let ptr=null;
 cv.addEventListener('pointerdown',e=>{if(G&&G.fx&&!modalOn){endFx();return;} // тап по столу — пропустить «водопад»
-  if(!G||G.won||G.busy||modalOn)return;if(ptr)return;const p=cvPos(e),h=hitTest(p.x,p.y);
+  if(!G||G.won||G.busy||modalOn)return;if(ptr){if(G.drag||now()-ptr.t<1200)return;ptr=null;} // start1: нажатие без «отпускания» (система отняла палец) не блокирует стол дольше 1,2 с
+  const p=cvPos(e),h=hitTest(p.x,p.y);
   ptr={id:e.pointerId,x0:p.x,y0:p.y,h,t:now()};if(h&&h.pick){try{cv.setPointerCapture(e.pointerId);}catch(er){}}});
 cv.addEventListener('pointermove',e=>{if(!ptr||ptr.id!==e.pointerId||!G)return;const p=cvPos(e),h=ptr.h;
   if(!G.drag&&h&&h.pick&&Math.hypot(p.x-ptr.x0,p.y-ptr.y0)>8){const c=cardXY(h.pi,h.j);G.drag={on:true,pi:h.pi,j:h.j,ids:G.st.p[h.pi].slice(h.j),ox:ptr.x0-c.x,oy:ptr.y0-c.y,x:p.x,y:p.y,over:-1,ok:dropOk(h.pi,h.j)};G.hl=null;}
@@ -1734,7 +1906,8 @@ function ptrEnd(e){if(!ptr||ptr.id!==e.pointerId)return;const h=ptr.h;ptr=null;i
       const step=R.kind(d.pi)==='tab'?colStep(d.pi):null,base=cardXY(d.pi,d.j,step),tt=now();
       d.ids.forEach((id,k)=>{const s=SPR[id],p=cardXY(d.pi,d.j+k,step);s.fx=d.x-d.ox+(p.x-base.x);s.fy=d.y-d.oy+(p.y-base.y);s.t0=tt;s.dur=200;});kick();}
     return;}
-  if(e.type==='pointercancel'||!h)return;
+  if(e.type==='pointercancel')return;
+  if(!h||(!h.stock&&!h.pick)){G.miss=(G.miss|0)+1;if(Date.now()-scrT<2000)e2N++;if(!h)return;}
   if(h.stock){stockTap();return;}
   if(h.pick&&R.kind(h.pi)==='found')return; // карта из дома обратно — только перетаскиванием (случайный тап её не трогает)
   if(h.pick)tapMove(h.pi,h.j);else if(h.up)nudge();}
@@ -1753,6 +1926,22 @@ function tapMove(pi,j){const h=G.hl;if(h&&!h.stock&&h.f===pi&&h.j===j&&R.canDrop
   const t=bestTarget(pi,j);if(t<0){nudge();shake(pi,j);fcWhy(pi,j);return;}doMove(pi,j,t);}
 function shake(pi,j){if(calm())return;const a=G.st.p[pi],tt=now();for(let k=j;k<a.length;k++){const s=SPR[a[k]];if(!s)continue;s.fx=s.tx+(k%2?-1:1)*LY.cw*.08;s.fy=s.ty;s.t0=tt;s.dur=180;}kick();}
 
+/* ---- start1: статистика первой минуты (модуль STAT не меняли; сервер принимает любые имена событий и поля) ----
+   mv1 {t, a, ld} — первый ход раздачи: t секунд от раздачи, a=1 — его сделала игра (первый ход «за руку»), ld — ступень лестницы (1–5);
+   mvn {n, ld}    — вехи 5 / 10 / 20 / 50 / 100 ходов (видно, на каком ходу бросили — число ходов при уходе с точностью до вехи);
+   away {mv,u,h,ms,e2,ld,dn,sk} — игрок свернул/закрыл игру посреди раздачи: ходов, отмен, подсказок, ms — нажатий по столу мимо (не привели к ходу),
+                    e2 — «пустых» нажатий в первые 2 с после смены экрана (подозрение «первое касание пропадает»), у Паука dn — собрано мастей, sk — карт в колоде;
+   taps {r,mv,ms,e2,ld} — итог раздачи (r: win/menu/new) с промахами: в `end` места нет (сервер и модуль берут не больше 8 полей события); lvl … ld — ступень; gift {d:1,mv} — подарок первого дня выдан после 10 ходов; boot1 — новичок начал без меню; m1 {b,t} — первая кнопка меню. */
+const MV_MARKS=[5,10,20,50,100];let scrT=Date.now(),e2N=0;
+function moveStat(){const g=G;if(!g)return;if(!g.m1&&g.moves>=1){g.m1=1;const p={t:Math.round((Date.now()-(g.t0||Date.now()))/100)/10};if(g.a1)p.a=1;if(g.ld)p.ld=g.ld;STAT.ev('mv1',p);}
+  for(const n of MV_MARKS)if(g.moves>=n&&(g.mm|0)<n){g.mm=n;STAT.ev('mvn',g.ld?{n,ld:g.ld}:{n});}}
+function tapStat(g,r){const p={r,mv:g.moves|0,ms:(g.miss||g.ms)|0,e2:e2N};if(g.ld)p.ld=g.ld;STAT.ev('taps',p);}
+function awayStat(){const g=G;if(!g||g.won||!$('scr-game').classList.contains('on'))return;const p={mv:g.moves|0,u:g.undoUsed|0,h:g.hintUsed|0,ms:g.miss|0,e2:e2N};if(g.ld)p.ld=g.ld;
+  if(GID==='spider'){p.dn=g.st.done|0;p.sk=g.st.p[0].length;}STAT.ev('away',p);}
+// раньше слушателей модуля STAT (он шлёт пачку при сворачивании): ловим на window в фазе погружения
+window.addEventListener('visibilitychange',()=>{if(document.hidden)awayStat();},true);
+// «пустое» нажатие сразу после смены экрана: не по кнопке и не по карте (по карте считает ptrEnd → G.miss)
+document.addEventListener('pointerdown',e=>{if(Date.now()-scrT>2000)return;const t=e.target;if(t&&t.closest&&(t.closest('button')||t.id==='cv'))return;e2N++;},{capture:true,passive:true});
 /* ---- ходы, отмена, автоматический дом ---- */
 const UNDO_FREE=10,UNDO_AD=10,HINT_FREE=3,HINT_AD=3;
 // без ограничений: «Без рекламы» (кроме расклада дня: там у всех поровну) или когда ролик не показать
@@ -1778,12 +1967,19 @@ function afterMove(home,suitDone,fb,stock){STAT.move();const st=G.st,autos=[];
   if(!G.counted){G.counted=true;const m=stat();m.p=(m.p||0)+1;save();}
   if(GID==='freecell'){let c=0;for(let i=0;i<4;i++)if(st.p[i].length)c++;G.maxCells=Math.max(G.maxCells||0,c);}
   const fa=R.fcount(st);
-  if(suitDone){setTimeout(()=>SND.suit(),200);buzz(20);if(Math.random()<.5)say('suit');}
+  if(suitDone){setTimeout(()=>SND.suit(),200);buzz(20);if(Math.random()<.5)say('suit');if(GID==='spider'){const c=suitCoin();if(!R.won(st))suitFx(st.done,c);}}
   else if(fa>fb){SND.home(fa%13);for(let k=1;k<=autos.length;k++)setTimeout(()=>SND.home((fb+1+k)%13),140+k*110);}
   else if(!stock)SND.place();
-  G.hl=null;tutHide();idleReset();if(G.tut&&!R.won(st))setTimeout(tutStep,350);updButtons();saveCur();
+  G.hl=null;tutHide();idleReset();clearTimeout(G.a1T);if(G.first&&G.moves===1&&!G.a1&&!R.won(st)){tutSay(tutRule());G.tutT=Date.now();}
+  moveStat();earlyGift();if(G.tut&&!R.won(st))setTimeout(tutStep,350);updButtons();saveCur();
   if(R.won(st))winLater(Math.max(450,autos.length*110+450,GID==='spider'?800:0));
   else if(!R.moves(st).length){const g=G,k=R.key(st);setTimeout(()=>{if(G!==g||g.won||g.busy||modalOn||!inPlay()||R.key(g.st)!==k)return;if(g.daily){toast('Ходов больше нет. Отмени ход или начни расклад заново',3600);return;}stuckWin(1);},1100);}} // first1: тупик виден сразу, не только по кнопке «Подсказка»
+// start1 07.10 (решение владельца: вариант (а)+(в)): +1 монета только за ПЕРВУЮ собранную игроком масть раздачи (G.s1; отмена и повторный сбор второй раз не платят)
+function suitCoin(){const g=G;if(!g||g.s1||window.__demo)return 0;g.s1=1;S.coins+=1;STAT.earn('lvl',1);save();updCoins();setTimeout(()=>SND.coin(),650);
+  const p=$('gCoins');if(p&&!calm()){p.classList.remove('bump');void p.offsetWidth;p.classList.add('bump');setTimeout(()=>p.classList.remove('bump'),400);}saveCur();return 1;}
+function sfxOff(){const e=$('sfx');if(e){clearTimeout(suitFx._t);e.className='sfx';}} // плашка масти не висит поверх окна победы и новой раздачи
+function suitFx(n,c){const e=$('sfx');if(!e||window.__demo)return;e.innerHTML='Собрано '+n+' из 8'+(c?'<small>+'+c+' монета за первую масть</small>':'');e.className='sfx';void e.offsetWidth;e.className='sfx on'+(calm()?' calm':'');clearTimeout(suitFx._t);suitFx._t=setTimeout(()=>{e.className='sfx';},1900);
+  if(!calm()){const s=$('stage');s.classList.remove('sflash');void s.offsetWidth;s.classList.add('sflash');setTimeout(()=>s.classList.remove('sflash'),750);}}
 function undo(){if(!G||G.won||G.busy)return;if(!G.hist.length){toast('Отменять пока нечего');return;}
   // сверх лимита — последний ход можно вернуть бесплатно (один раз после каждого хода; не в раскладе дня, там у всех поровну)
   let free=false;if(undoLeft()<=0){if(G.daily||!G.lastFree){outOf('undo');return;}free=true;G.lastFree=false;if(!S.tipFree){S.tipFree=1;toast('Последний ход вернули бесплатно. Дальше — ещё отмены за рекламу',3200);}}
@@ -1826,7 +2022,7 @@ function findHint(){const st=G.st;return planNext(st)||hintFrom(st,solve(R,st,GI
 // first2: у особой раздачи (SP.FIX) план — её заранее найденное короткое решение (решатель нашёл бы ~90 ходов)
 // раздача ряда кладёт карты по местам столбцов, а R.key столбцы сортирует — поэтому для особой раздачи ещё и точный план «позиция как есть → ход» (fixPlan)
 const exKey=s=>s.p.map(a=>a.join(',')).join('|')+'/'+s.d.join(',');
-function planFix(g){const F=GID==='spider'&&g.mode===1&&SP.FIX[g.seed];if(!F)return false;const path=SP.fixPath(F.p),s0=R.deal(g.seed,1);planSet(g,path,s0);
+function planFix(g){const X=!g.daily&&LADX[GID]&&LADX[GID][g.seed],F=X||GID==='spider'&&g.mode===1&&SP.FIX[g.seed];if(!F)return false;const path=X?ladPath(X.p):SP.fixPath(F.p),s0=R.deal(g.seed,g.mode);planSet(g,path,s0);
   if(!g.fixPlan){g.fixPlan=new Map();const s=stClone(s0);for(const m of path){g.fixPlan.set(exKey(s),m);applyMove(R,s,m);}}return true;}
 function planAhead(){if(G&&planFix(G))return;const g=G,st0=stClone(G.st);if(!solverWorker())return;solveAsync(st0,GID==='spider'?150000:80000).then(r=>{if(G===g&&r&&r.ok)planSet(g,r.path,st0);});}
 async function hint(){if(!G||G.won||G.busy||G.thinking)return;if(hintLeft()<=0){outOf('hint');return;}
@@ -1848,10 +2044,11 @@ function collectPath(){if(!G||G.won)return null;if(GID==='spider')return spColle
     return null;}
   return null;}
 // Паук: колода пуста и все карты открыты — решатель доводит до конца (результат запоминаем по позиции: зовётся при каждом ходе)
-function spCollect(){const st=G.st;if(st.p[0].length)return null;for(let i=R.TAB;i<R.TAB+R.NT;i++)if(st.d[i]>0)return null;
+function spCollect(){const st=G.st;if(st.p[0].length)return null;if(G.seed<-10&&st.done<7)return null; // start1: в особых раскладах лестницы (там всё открыто с самого начала) «Собрать» — только на последней масти, иначе первая раздача решалась бы одной кнопкой
+  for(let i=R.TAB;i<R.TAB+R.NT;i++)if(st.d[i]>0)return null;
   const k=R.key(st);if(G.spk===k)return G.spp;const r=solve(R,stClone(st),20000);G.spk=k;G.spp=r&&r.ok&&r.path.length?r.path:null;return G.spp;}
 function collect(){const path=collectPath();if(GID==='spider'&&path&&path.length){G.busy=true;pushHist();const st=G.st,d0=st.done;for(const m of path){applyMove(R,st,m);G.moves++;}
-  const f0={};let n=0;for(let i=0;i<st.p.length;i++)if(R.kind(i)==='found'&&st.p[i].length)f0[i]=n++;const nn=Math.max(1,st.done-d0);
+  if(st.done>d0)suitCoin();const f0={};let n=0;for(let i=0;i<st.p.length;i++)if(R.kind(i)==='found'&&st.p[i].length)f0[i]=n++;const nn=Math.max(1,st.done-d0);
   setTargets((id,pi)=>R.kind(pi)==='found'?f0[pi]*260+(12-RK(id))*25:0);for(let q=0;q<nn;q++)setTimeout(()=>SND.suit(),q*260+300);
   winLater(n*260+700);return;}
   if(!path)return;if(!path||!path.length)return;G.busy=true;pushHist();const st=G.st,order={};let k=0;
@@ -1879,8 +2076,8 @@ const LINES={
   };
 const HOSTL=LINES[GID==='freecell'?'san':GC.host];
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-function say(kind,force){if(!force&&Math.random()<.35)return;const t=pick(HOSTL[kind]||HOSTL.start);if(!t)return;
-  drawHost($('sayCv'),GC.host);$('sayT').textContent=t;const e=$('say');e.classList.add('on');clearTimeout(say._t);say._t=setTimeout(()=>e.classList.remove('on'),3400);}
+function say(kind,force){if(!force&&Math.random()<.35)return;const t=pick(HOSTL[kind]||HOSTL.start);if(!t)return;if(G&&G.tutStay)return; // реплика первого хода горит до хода — не перебиваем
+  sayNear(0);drawHost($('sayCv'),GC.host);$('sayT').textContent=t;const e=$('say');e.classList.add('on');clearTimeout(say._t);say._t=setTimeout(()=>e.classList.remove('on'),3400);}
 
 /* ---- обучение в первой раздаче (boost 03.10): хозяйка объясняет правила по шагу после каждого хода, первый ход подсвечен ----
    Только в самой первой раздаче этой игры на устройстве/в облаке (S.tut). Подсветка — как у подсказки, но подсказку не тратит */
@@ -1891,8 +2088,31 @@ const TUT={
     'Ходов нет — нажми на колоду: в каждый столбец ляжет по карте. Только пустых столбцов при этом быть не должно.',
     'Застрял — жми «Подсказка», ошибся — «Отмена». В первых раздачах их сколько угодно.'],
   };
-function tutSay(t,stay){drawHost($('sayCv'),GC.host);$('sayT').textContent=t;const e=$('say');e.classList.add('on','tut');clearTimeout(say._t);if(G)G.tutStay=stay?1:0;if(!stay)say._t=setTimeout(()=>e.classList.remove('on','tut'),9000);}
-function tutHide(){if(G&&G.tutStay){G.tutStay=0;$('say').classList.remove('on','tut');}}
+function tutSay(t,stay,near){drawHost($('sayCv'),GC.host);$('sayT').textContent=t;const e=$('say');e.classList.add('on','tut');clearTimeout(say._t);if(G)G.tutStay=stay?1:0;sayNear(near?1:0);if(!stay)say._t=setTimeout(()=>{e.classList.remove('on','tut');sayNear(0);},9000);}
+function tutHide(){if(G&&G.tutStay){G.tutStay=0;$('say').classList.remove('on','tut');sayNear(0);}}
+function tutOff(){clearTimeout(say._t);$('say').classList.remove('on','tut');sayNear(0);}
+// start1: реплика первого хода — РЯДОМ со столом (сразу под самым длинным столбцом), а не внизу экрана; не помещается — остаётся внизу
+function sayNear(on){const e=$('say');if(!on||!G||!LY){e.classList.remove('near');e.style.top='';return;}
+  let y=0;for(const t of tabs()){const a=G.st.p[t];y=Math.max(y,(a.length?cardXY(t,a.length-1).y:LY.sl[t].y)+LY.ch);}
+  y=Math.round(y+Math.max(34,LY.cw*.9)+10); // ниже — ещё место под палец
+  if(y+e.offsetHeight+8>H){e.classList.remove('near');e.style.top='';return;}e.classList.add('near');e.style.top=y+'px';}
+/* start1: ПЕРВЫЙ ХОД «ЗА РУКУ» (самая первая раздача игры, G.first): над картой в рамке — палец (G.hl.fin), короткая реплика рядом со столом.
+   AUTO1_MS без хода — игра САМА делает первый ход (карта перелетает) и говорит «Теперь ты», палец — на следующем ходе.
+   Спокойный режим / «меньше движения»: палец стоит на месте, сам ход игра не делает (без анимации), подсказка та же. Палец — первые FIN_MOVES ходов. */
+const AUTO1_MS=5000,FIN_MOVES=3;
+const tutRule=()=>(GID==='freecell'?'Так и дальше: карту кладём на карту на одну старше и другого цвета.':GID==='spider'?'Так и дальше: карту — на карту на одну старше.':'Так и дальше: карту — на карту на одну старше и другого цвета.');
+function tutShort(m){const st=G.st,fc=GID==='freecell',tap=fc?'Нажмите':'Нажми';if(!m)return TUT[GID][0];
+  if(m.s)return tap+' на колоду — '+(GID==='spider'?'в каждый столбец ляжет по карте.':'откроется новая карта.');
+  const a=cardAcc(st.p[m.f][m.j]),k=R.kind(m.t);
+  if(k==='found')return tap+' на '+a+' — карта уедет в дом.';
+  if(k==='cell')return tap+' на '+a+' — карта ляжет в ячейку.';
+  if(!st.p[m.t].length)return tap+' на '+a+' — карта переедет в пустой столбец.';
+  return tap+' на '+a+' — карта сама ляжет на '+cardAcc(st.p[m.t][st.p[m.t].length-1])+'.';}
+function hlSet(m,fin){G.hl=m.s?{stock:true,t0:now(),keep:1,fin:fin?1:0}:{f:m.f,j:m.j,t:m.t,t0:now(),keep:1,fin:fin?1:0};kick();}
+function auto1(g){if(G!==g||g.won||g.moves>0||g.m1||modalOn||g.drag||ptr||pauseWhy.size||calm()||!g.hl||!g.hl.fin||!inPlay())return;
+  const h=g.hl;g.a1=1;if(h.stock)stockTap();else doMove(h.f,h.j,h.t);if(G!==g||!g.moves)return;
+  setTimeout(()=>{if(G!==g||g.won||g.moves!==1||modalOn||g.hl)return;const onCard=x=>x&&!x.s&&R.kind(x.t)!=='cell';let m=planNext(g.st);if(!onCard(m))m=R.moves(g.st).find(onCard)||m;
+    tutSay('Вот так! '+(GID==='freecell'?'Теперь вы':'Теперь ты')+(m?': '+tutShort(m).replace(/^Нажмите/,'нажмите').replace(/^Нажми/,'нажми'):'.'),!!m,true);if(m&&G===g)hlSet(m,1);},900);}
 // первый шаг обучения называет ИМЕННО подсвеченный ход: «красную тройку — на чёрную четвёрку»
 const RK_ACC=['туза','двойку','тройку','четвёрку','пятёрку','шестёрку','семёрку','восьмёрку','девятку','десятку','валета','даму','короля'];
 function cardAcc(c){const r=RK(c),nm=RK_ACC[r];if(GID==='spider')return nm;const masc=r===0||r===10||r===12;return (RED(c)?(masc?'красного ':'красную '):(masc?'чёрного ':'чёрную '))+nm;}
@@ -1909,8 +2129,16 @@ function tutStep(){const g=G;if(!g||!g.tut||g.won||modalOn)return;if(Date.now()-
   g.tut++;STAT.ev('tut',{s:k+1});if(g.tut>L.length){g.tut=0;}if(k===L.length-1){S.tut=Object.assign(isObj(S.tut)?S.tut:{},{[GID]:1});save();}
   if(k===0){let m=planNext(g.st)||findHint();const onCard=x=>x&&!x.s&&R.kind(x.t)==='tab'&&g.st.p[x.t].length;
     if(!onCard(m))m=R.moves(g.st).find(onCard)||m; // первым показываем ход карта-на-карту, не колоду
-    tutSay(tutFirst(m),!!m);if(m&&G===g)g.hl=m.s?{stock:true,t0:now(),keep:1}:{f:m.f,j:m.j,t:m.t,t0:now(),keep:1};kick();} // first1: рамка и реплика — до первого хода (раньше рамка гасла через 2,6 с — раньше, чем успевали дочитать)
-  else tutSay(L[k]);}
+    tutSay(g.first?tutShort(m):tutFirst(m),!!m,!!g.first);if(m&&G===g){hlSet(m,g.first);if(g.first&&!g.moves){clearTimeout(g.a1T);g.a1T=setTimeout(()=>auto1(g),AUTO1_MS);}}} // first1: рамка и реплика — до первого хода (раньше рамка гасла через 2,6 с — раньше, чем успевали дочитать)
+  else tutSay(tutTxt(k));}
+// start1: в особом раскладе первой раздачи часть карт уже в доме, а у Паука нет колоды — реплики обучения про это
+function tutTxt(k){const L=TUT[GID];if(G&&G.seed<-10){
+    if(GID==='spider'&&k===2&&!G.st.p[0].length)return 'Наверху слева — масти, которые я уже собрала. Собери остальные — и раздача разложена!';
+    if(GID==='klondike'&&k===1)return 'Наверху — дом: там собираем каждую масть от туза до короля. Начало я уже положила — докладывай!';}
+  return L[k];}
+// первая раздача лестницы Паука, где есть колода (3-я): один раз объясняем колоду (в первой раздаче её нет)
+function stockTip(g){if(GID!=='spider'||!g.ld||!g.st.p[0].length||(isObj(S.tut)&&S.tut.stk))return false;S.tut=Object.assign(isObj(S.tut)?S.tut:{},{stk:1});save();
+  tutSay('Новое: колода — справа вверху. Не видишь ходов — нажми на неё: в каждый столбец ляжет по карте.');return true;}
 function tutDue(){return !window.__demo&&!(isObj(S.tut)&&S.tut[GID])&&played()===0;}
 
 /* ---- подсказка-пульс: нет хода 25 с — кнопка «Подсказка» мягко мигает (первые 10 побед; не в спокойном режиме) ---- */
@@ -1931,7 +2159,7 @@ const GUIDE_MOVES=12,GUIDE_SEC=6,GUIDE_SEC2=14;
 async function guide(){if(!G||G.won||G.busy||G.thinking||modalOn||G.hl||G.drag)return;const g=G,st=G.st,k=R.key(st);let m=planNext(st);
   if(!m){g.thinking=true;const res=await solveAsync(st,60000);g.thinking=false;if(G!==g||G.won||modalOn||G.hl||R.key(G.st)!==k)return;m=hintFrom(st,res);}
   if(!m||m.s&&GID==='spider'&&!R.canStock(G.st))return;g.gd=(g.gd||0)+1;if(g.gd===1)STAT.ev('guide');
-  G.hl=m.s?{stock:true,t0:now(),keep:1}:{f:m.f,j:m.j,t:m.t,t0:now(),keep:1};kick();}
+  hlSet(m,g.moves<FIN_MOVES);}
 function idleReset(){if(G)G.idle=0;$('bHint').classList.remove('pulse');stuckOff();}
 
 /* ---- Ячейка: длинная цепочка не едет — объясняем, сколько можно ---- */
@@ -1960,7 +2188,7 @@ function pickMode(m){const t=HARD[m],w=(S.st[String(m)]||{}).w||0;if(!t||w>0||is
 /* ================= раздача ================= */
 const CKEY=SKEY+'-cur'; // текущая раздача — только на этом устройстве (в облако не пишем: большая и своя у каждого экрана)
 function saveCur(){if(window.__demo)return;try{if(!G||G.won){localStorage.removeItem(CKEY);return;}
-  localStorage.setItem(CKEY,JSON.stringify({g:GID,seed:G.seed,mode:G.mode,daily:G.daily,st:G.st,moves:G.moves,time:G.time,uu:G.undoUsed,uc:G.undoCap,hu:G.hintUsed,hc:G.hintCap,mc:G.maxCells||0,counted:G.counted,hist:G.hist.slice(-80)}));}catch(e){}}
+  localStorage.setItem(CKEY,JSON.stringify({g:GID,seed:G.seed,mode:G.mode,daily:G.daily,st:G.st,moves:G.moves,time:G.time,uu:G.undoUsed,uc:G.undoCap,hu:G.hintUsed,hc:G.hintCap,mc:G.maxCells||0,counted:G.counted,hist:G.hist.slice(-80),ld:G.ld|0,eg:G.eg|0,s1:G.s1|0,m1:G.m1|0,mm:G.mm|0,ms:G.miss|0}));}catch(e){}}
 function loadCur(){try{const o=JSON.parse(localStorage.getItem(CKEY));if(!isObj(o)||o.g!==GID||!isObj(o.st)||!Array.isArray(o.st.p))return null;
     // проверка целостности: все карты на месте, по одному разу
     const all=[].concat.apply([],o.st.p);if(all.length!==(GID==='spider'?104:52)||new Set(all).size!==all.length)return null;
@@ -1973,20 +2201,28 @@ function newG(st,seed,mode,daily){return {st,seed,mode,daily,moves:0,time:0,hist
 const EASY_WINS=3,EASY_MAX=8;
 function easyDue(mode){const E=EASY[mode];if(!E||!E.length||S.solv===false)return false;if((S.abn||0)>=2)return true;
   const st=S.st[String(mode)]||{};return (st.w||0)<EASY_WINS&&((S.ez||{})[mode]||0)<EASY_MAX;}
-function nextSeed(mode){const L=SEEDS[mode];
+// start1: лестница новичка. Кому: у кого на момент первой раздачи режима нет ни одной победы (решается один раз, S.lad[режим]); у остальных — 9 («не нужна»).
+// Облако принесло опытного игрока (5+ побед) — лестница молча кончается. Счётчик растёт при выдаче раздачи (как S.ez)
+const LAD_WINS=5;
+function ladDue(mode){const L=LAD[mode];if(!L||!L.length||S.solv===false||window.__demo)return false;if(!isObj(S.lad))S.lad={};
+  if(typeof S.lad[mode]!=='number')S.lad[mode]=(S.wins||0)<1?0:9;return S.lad[mode]<L.length&&(S.wins||0)<LAD_WINS;}
+let ladStep=0; // ступень лестницы у только что выданной раздачи (1–5; 0 — не лестница) — для статистики
+function nextSeed(mode){const L=SEEDS[mode];ladStep=0;
+  if(ladDue(mode)){const n=S.lad[mode];S.lad[mode]=n+1;S.abn=0;ladStep=n+1;return LAD[mode][n];}
   if(easyDue(mode)){if(!isObj(S.ez))S.ez={};const n=S.ez[mode]||0;S.ez[mode]=n+1;S.abn=0;return EASY[mode][n%EASY[mode].length];}
   if(S.solv!==false&&L&&L.length){if(typeof S.off!=='number')S.off=Math.floor(Math.random()*L.length);const n=S.seq[mode]||0;S.seq[mode]=n+1;return L[(S.off+n*7)%L.length];}
   return 1+Math.floor(Math.random()*2147483000);}
 function dayNum(){const k=dayKey(0);return Math.round(Date.UTC(Math.floor(k/10000),Math.floor(k/100)%100-1,k%100)/864e5);}
 function dailySeed(){const L=SEEDS[GC.daily];return L[(dayNum()*131)%L.length];}
 function startDeal(daily,mode){mode=daily?GC.daily:mode!=null?mode:S.mode;const seed=daily?dailySeed():nextSeed(mode);
-  const tut=tutDue();G=newG(R.deal(seed,mode),seed,mode,daily?dayKey(0):0);G.tut=tut?1:0;G.first=tut&&!daily?1:0;STAT.lvl(played()+1,daily?'daily':String(mode),{sd:statSd(seed)});save();openGame();dealFrom();SND.deal();const g=G;setTimeout(()=>{if(G!==g)return;if(g.tut)tutStep();else say('start');},tut?1300:900);saveCur();planAhead();}
-function resumeDeal(o){G=newG(o.st,o.seed,o.mode,o.daily||0);G.moves=o.moves|0;G.time=o.time|0;G.undoUsed=o.uu|0;G.undoCap=o.uc||UNDO_FREE;G.hintUsed=o.hu|0;G.hintCap=o.hc||HINT_FREE;G.counted=!!o.counted;G.maxCells=o.mc|0;
+  const tut=tutDue();if(G)clearTimeout(G.a1T);tutOff();sfxOff(); // реплика «Нажми на…» от прежней раздачи не остаётся над новой
+  G=newG(R.deal(seed,mode),seed,mode,daily?dayKey(0):0);G.tut=tut?1:0;G.first=tut&&!daily?1:0;G.ld=daily?0:ladStep;G.t0=Date.now();STAT.lvl(played()+1,daily?'daily':String(mode),G.ld?{sd:statSd(seed),ld:G.ld}:{sd:statSd(seed)});save();openGame();dealFrom();SND.deal();const g=G;setTimeout(()=>{if(G!==g)return;if(g.tut)tutStep();else if(!stockTip(g))say('start');},tut?1300:900);saveCur();planAhead();}
+function resumeDeal(o){G=newG(o.st,o.seed,o.mode,o.daily||0);G.moves=o.moves|0;G.time=o.time|0;G.undoUsed=o.uu|0;G.undoCap=o.uc||UNDO_FREE;G.hintUsed=o.hu|0;G.hintCap=o.hc||HINT_FREE;G.counted=!!o.counted;G.maxCells=o.mc|0;G.ld=o.ld|0;G.eg=o.eg|0;G.s1=o.s1|0;G.m1=o.m1|0||(G.moves>0?1:0);G.mm=o.mm|0;G.miss=o.ms|0;G.t0=Date.now();
   G.hist=Array.isArray(o.hist)?o.hist.filter(h=>h&&h.st&&Array.isArray(h.st.p)):[];STAT.lvl(played()+(G.counted?0:1),(G.daily?'daily':String(G.mode))+'-r',{sd:statSd(G.seed)});openGame();setTargets(null,true);planAhead();}
 function openGame(){hideModal();show('scr-game');STAT.screen('game');$('gTitle').textContent=G.daily?'📅 Расклад дня':GID==='freecell'&&innerWidth<420?'Ячейка':GC.name;$('gTitle').style.fontSize=GC.name.length>10&&$('gTitle').textContent!=='Ячейка'?'16px':'';
   layout();updButtons();updCoins();YG.start();}
 // бросить раздачу (текущую на экране или сохранённую): серия побед обнуляется; «долг» межэкранной растёт, только если раздачу правда играли
-function abandon(){const c=G&&!G.won?G:loadCur();if(c)STAT.end(c.stk?'stuck':'quit',{mv:c.moves|0,sd:statSd(c.seed)});if(c){if(c.moves>=5&&!c.daily){S.adW=(S.adW||0)+1;S.abn=(S.abn||0)+1;}if(c.counted&&!c.daily){const k=String(c.mode);if(isObj(S.st[k]))S.st[k].cs=0;}}
+function abandon(){const c=G&&!G.won?G:loadCur();if(c)STAT.end(c.stk?'stuck':'quit',{mv:c.moves|0,sd:statSd(c.seed)});if(c)tapStat(c,'new');if(c){if(c.moves>=5&&!c.daily){S.adW=(S.adW||0)+1;S.abn=(S.abn||0)+1;}if(c.counted&&!c.daily){const k=String(c.mode);if(isObj(S.st[k]))S.st[k].cs=0;}}
   G=null;try{localStorage.removeItem(CKEY);}catch(e){}save();}
 function askNew(then){const c=G&&!G.won?G:loadCur();
   if(c&&c.moves>0){modal(`<h2>Новая раздача?</h2><p>${c.daily?'Расклад дня':'Эта раздача'} не разложена — начнём другую? Её уже не вернуть.</p>
@@ -2024,11 +2260,12 @@ const ACH=[
     [{id:'c2',ic:'📦',name:'Экономно',d:'Разложить, ни разу не заняв больше двух ячеек',c:50,t:a=>a.cells<=2}]);
 // победа (аудит QA 18 №1–2): засчитываем СРАЗУ (монеты, статистика, день), окно — после разлёта карт и только если на экране та же раздача
 // (новая раздача, «←», N/Esc за эти секунды не превращают пустую раздачу в «разложенную» и не теряют победу)
-function winLater(wait){const g=G;g.won=true;g.busy=true;YG.stop();winRecord(g);updButtons();setTimeout(()=>winShow(g),wait);}
+function winLater(wait){const g=G;g.won=true;g.busy=true;YG.stop();winRecord(g);updButtons();setTimeout(()=>{sfxOff();winShow(g);},wait);}
 function onWin(){if(!G)return;const g=G;winRecord(g);winShow(g);}
 function winShow(g){if(G!==g)return;g.busy=false;SND.win();buzz(30);celebrate(()=>{if(G===g)showWin(g.got,g.firstDaily);});}
-function winRecord(G){if(G.rec)return;G.rec=true;G.won=true;STAT.end('win',{mv:G.moves|0,sc:Math.round(G.time/1000),sd:statSd(G.seed)});try{localStorage.removeItem(CKEY);}catch(e){}
-  const m=stat(G),sec=Math.max(1,Math.round(G.time/1000));const old=(m.w||0)>=2;G.recT=old&&m.bt>0&&sec<m.bt;G.recM=old&&m.bm>0&&G.moves<m.bm;G.recTs=sec;m.w=(m.w||0)+1;m.cs=(m.cs||0)+1;m.bs=Math.max(m.bs||0,m.cs);m.bt=m.bt>0?Math.min(m.bt,sec):sec;m.bm=m.bm>0?Math.min(m.bm,G.moves):G.moves;
+function winRecord(G){if(G.rec)return;G.rec=true;G.won=true;STAT.end('win',{mv:G.moves|0,sc:Math.round(G.time/1000),sd:statSd(G.seed)});tapStat(G,'win');try{localStorage.removeItem(CKEY);}catch(e){}
+  const m=stat(G),sec=Math.max(1,Math.round(G.time/1000));const old=(m.w||0)>=2,fx=G.seed<-10; // start1: особый расклад лестницы (почти собранный) в рекорды «лучшее время / меньше ходов» не идёт
+  G.recT=!fx&&old&&m.bt>0&&sec<m.bt;G.recM=!fx&&old&&m.bm>0&&G.moves<m.bm;G.recTs=sec;m.w=(m.w||0)+1;m.cs=(m.cs||0)+1;m.bs=Math.max(m.bs||0,m.cs);if(!fx){m.bt=m.bt>0?Math.min(m.bt,sec):sec;m.bm=m.bm>0?Math.min(m.bm,G.moves):G.moves;}
   S.wins=(S.wins||0)+1;S.games=(S.games||0)+1;if(!G.daily)S.adW=(S.adW||0)+1;
   let coins=modeOf(G.mode).coins,firstDaily=false;
   if(G.daily&&!S.daily[G.daily]){S.daily[G.daily]=1;coins+=DAILY_BONUS;firstDaily=true;}
@@ -2053,7 +2290,7 @@ function showWin(got,firstDaily){if(!G)return;STAT.screen('win');const gf=streak
   if($('mX2'))STAT.offer('x2');if($('mX2'))$('mX2').onclick=()=>{const g=G,b0=$('mX2');STAT.place('x2');showRewarded(()=>{if(g.x2)return;g.x2=true;S.coins+=g.coins;STAT.earn('ad',g.coins);save();updCoins();SND.coin();$('wCoins')&&($('wCoins').textContent='+'+g.coins*2+' (×2)');const b=$('mX2');b&&b.remove();},()=>{},
     ()=>{if(g.x2)return '';g.x2=true;S.coins+=g.coins;STAT.earn('ad',g.coins);save();updCoins();SND.coin();if(document.body.contains(b0)){b0.remove();$('wCoins')&&($('wCoins').textContent='+'+g.coins*2+' (×2)');}return 'монеты за раздачу ×2: +'+g.coins;});}; // поздний зачёт (adt): всегда, один раз (g.x2), чужие окна не трогаем
   $('mNext').onclick=()=>{const md=G&&!G.daily?G.mode:undefined;hideModal();newDeal(md);};$('mMenu').onclick=()=>{hideModal();G=null;openMenu();};if($('mDaily'))$('mDaily').onclick=()=>{hideModal();G=null;openDaily();};if($('mLb'))$('mLb').onclick=()=>LB.show();
-  coinsRoll(G);setTimeout(offerReturn,1200);}
+  socEarly(x2||got.length>=3);coinsRoll(G);setTimeout(offerReturn,1200);}
 // look1: веер королей над окном победы (карты рисуются той же колодой) и конфетти (в спокойном режиме — без него)
 function winFan(){const el=$('wFan');if(!el)return;const d=Math.min(2,window.devicePixelRatio||1),ids=[12,25,38,51,0];el.innerHTML='';
   ids.forEach((id,i)=>{const c=document.createElement('canvas');c.width=Math.round(54*d);c.height=Math.round(77*d);const g=c.getContext('2d');g.scale(d,d);const sv=S.deck;if(sv==='con')S.deck='std';drawFace(g,id,54,77);S.deck=sv;c.style.transform='rotate('+((i-2)*15)+'deg)';el.appendChild(c);});}
@@ -2063,7 +2300,7 @@ function winConf(){if(calm()||window.__demo)return;const app=$('app');let o=docu
 // что дальше (повод вернуться): расклад дня ждёт / завтрашний подарок за вход
 function winNext(){const st=streakState(),dd=!!S.daily[dayKey(0)],a=[];
   if(!dd)a.push('<button class="btn green noenter wnx" id="mDaily">'+ic('cal')+'Расклад дня ждёт: +'+DAILY_BONUS+'</button>');
-  if(!window.__demo){if(!st.claimed&&(S.wins||0)>=1&&st.cnt>0)a.push('<p class="wnext">🎁 Подарок за вход ждёт в меню</p>');
+  if(!window.__demo){if(!st.claimed&&giftOpen()&&st.cnt>0)a.push('<p class="wnext">🎁 Подарок за вход ждёт в меню</p>');
     else if(st.claimed)a.push('<p class="wnext">🎁 Завтра: '+giftTxt(giftOf(st.day%7+1,st.cyc+(st.day===7?1:0)))+'</p>');}
   return a.join('');}
 // строка под монетами: рекорд (быстрее / меньше ходов, чем раньше в этом режиме) или ближайшее украшение
@@ -2100,14 +2337,14 @@ function openMenu(){if(G)G.hl=null;STAT.once('menu');STAT.once('ready',{ms:Math.
   $('btnNew').style.display='';$('mBody').classList.toggle('has',has);
   $('btnNew').innerHTML=ic('deal')+'<span>Новая раздача'+(GC.modes.length>1?'<small>'+modeOf(S.mode).name.toLowerCase()+'</small>':'')+'</span>';
   $('btnDaily').innerHTML=ic('cal')+'<span>Расклад дня'+(S.daily[dayKey(0)]?'<small>разложен ✓</small>':'<small>+'+DAILY_BONUS+' монет</small>')+'</span>';
-  $('btnStreak').innerHTML=ic('gift')+'Подарок'+(streakState().claimed||(S.wins||0)<1?'':'<span class="dot"></span>');
+  $('btnStreak').innerHTML=ic('gift')+'Подарок'+(streakState().claimed||!giftOpen()?'':'<span class="dot"></span>');
   menuToday();$('mRank').innerHTML=ic('star')+'<span>'+rankTxt().replace(/^🎖 /,'')+'</span>';
   const sv=!(S.solv===false||!SEEDS[S.mode]);$('mNote').innerHTML=(sv?ic('check'):'')+'<span>'+(sv?'Все раздачи решаемые — проверены заранее':GID==='spider'&&S.mode===4?'В четыре масти не каждая раздача сходится — это для знатоков':'Раздачи случайные — не каждая сходится')+'</span>';
   updCoins();}
 // «что сегодня»: расклад дня, подарок за вход, ближайшее украшение (цель для монет)
-function menuToday(){const el=$('mToday');if(!el)return;const dd=!!S.daily[dayKey(0)],st=streakState(),w0=(S.wins||0)<1,gl=nextGoal(),gift=!st.claimed&&!w0;
+function menuToday(){const el=$('mToday');if(!el)return;const dd=!!S.daily[dayKey(0)],st=streakState(),w0=!giftOpen(),gl=nextGoal(),gift=!st.claimed&&!w0;
   const row=(a,i,t,sub,go)=>`<button class="trow" data-a="${a}"><b class="ti">${ic(i)}</b><span><b>${t}</b><small>${sub}</small></span>${go?'<b class="go">'+ic('right')+'</b>':''}</button>`;
-  const rows=[row('gift','gift','Подарок за вход'+(gift?' <i class="dot"></i>':''),w0?'после первой победы':st.claimed?'завтра: '+giftTxt(giftOf(st.day%7+1,st.cyc+(st.day===7?1:0))):'день '+st.day+': '+giftTxt(giftOf(st.day,st.cyc))+' ждёт',gift)];
+  const rows=[row('gift','gift','Подарок за вход'+(gift?' <i class="dot"></i>':''),w0?'после десяти ходов в раздаче':st.claimed?'завтра: '+giftTxt(giftOf(st.day%7+1,st.cyc+(st.day===7?1:0))):'день '+st.day+': '+giftTxt(giftOf(st.day,st.cyc))+' ждёт',gift)];
   if(gl)rows.push(row('goal','decor',DECOR_W[gl.kind]+' «'+gl.it.name+'»',gl.left>0?'ещё '+gl.left+' монет':'<b class="ok">монет хватает!</b>',true));
   el.innerHTML=rows.join('');
   el.querySelectorAll('.trow').forEach(b=>b.onclick=()=>{SND.tap();const a=b.dataset.a;if(a==='daily')openDaily();else if(a==='gift')showStreak();else openDecor(gl?gl.kind:'tables');});}
@@ -2115,10 +2352,11 @@ const DECOR_W={tables:'Стол',backs:'Рубашка',faces:'Карты'};
 // ближайшая цель для монет: самое дешёвое не купленное украшение за монеты (особые — за покупку — не в счёт)
 function nextGoal(){let b=null;for(const k in DECOR)for(const it of DECOR[k].list){if(it.pay||!it.price||owns(k,it))continue;if(!b||it.price<b.it.price)b={kind:k,it};}
   if(b)b.left=Math.max(0,b.it.price-S.coins);return b;}
+$('scr-menu').addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('button');if(b)STAT.once('m1',{b:String(b.id||b.dataset.a||b.dataset.m||'x').replace(/^btn/,'').toLowerCase(),t:Math.round((Date.now()-scrT)/1000)});},true);
 $('btnPlay').onclick=()=>{if(G&&!G.won){openGame();return;}const cur=loadCur();if(cur){resumeDeal(cur);return;}startDeal(0);};
 $('btnNew').onclick=()=>newDeal(S.mode);
 $('btnDaily').onclick=()=>openDaily();
-$('gBack').onclick=()=>{if(G&&G.fx)endFx();if(G&&!G.won)STAT.end(G.stk?'stuck':'quit',{mv:G.moves|0,k:'menu',sd:statSd(G.seed)});openMenu();}; // раздача сохранена: «Продолжить» — новый lvl с '-r'
+$('gBack').onclick=()=>{if(G&&G.fx)endFx();if(G&&!G.won)STAT.end(G.stk?'stuck':'quit',{mv:G.moves|0,k:'menu',sd:statSd(G.seed)});if(G&&!G.won)tapStat(G,'menu');openMenu();}; // раздача сохранена: «Продолжить» — новый lvl с '-r'
 $('bUndo').onclick=undo;$('bHint').onclick=hint;$('bCollect').onclick=collect;$('bNew').onclick=()=>newDeal(G?G.mode:S.mode);
 $('mCoins').onclick=()=>openShop();$('gCoins').onclick=()=>openShop();$('btnSet').onclick=openSettings;$('gSet').onclick=openSettings;
 $('btnStats').onclick=()=>openStats();
@@ -2657,12 +2895,12 @@ function giftOf(day,cyc){if(day===7){const id=cyc===0?'gift1':cyc===1?'gift2':''
 const giftTxt=g=>g.back?'рубашка «'+g.back.name+'»':'+'+g.c+' '+plw(g.c,'монета','монеты','монет');
 // мягкий старт: до первой разложенной раздачи окно не показываем; первый подарок — тостом
 function maybeStreak(){if(G&&!G.won||window.__demo||modalOn||$('ad').classList.contains('on'))return;
-  const st=streakState();if(st.claimed||(S.wins||0)<1)return;if(st.cnt===0)claimStreak(true);else showStreak();}
+  const st=streakState();if(st.claimed||!giftOpen())return;if(st.cnt===0)claimStreak(true);else showStreak();}
 function showStreak(){STAT.screen('gift');const st=streakState();let cells='';
   for(let d=1;d<=7;d++){const done=st.claimed?d<=st.day:d<st.day,today=!st.claimed&&d===st.day,gf=giftOf(d,st.cyc);
     cells+=`<div class="sd ${done?'done':''} ${today?'today':''}"><small>День ${d}</small><span class="ic">${gf.back?'🎁':'💰'}</span>${gf.back?'рубашка':'+'+gf.c}</div>`;}
-  const gf=giftOf(st.day,st.cyc),first=(S.wins||0)<1,nx=st.claimed?giftOf(st.day%7+1,st.cyc+(st.day===7?1:0)):null;
-  modal(`<h2>Подарки за вход 🎁</h2>${hostBub(first?'Разложи первую раздачу — и начнём копить подарки!':st.claimed?'Сегодняшний подарок уже твой. Завтра — '+giftTxt(nx)+'.':'Заходи, когда удобно: пропустишь денёк — не беда, подарок не сгорит.')}
+  const gf=giftOf(st.day,st.cyc),first=!giftOpen(),nx=st.claimed?giftOf(st.day%7+1,st.cyc+(st.day===7?1:0)):null;
+  modal(`<h2>Подарки за вход 🎁</h2>${hostBub(first?'Сделай десять ходов в раздаче — и первый подарок твой!':st.claimed?'Сегодняшний подарок уже твой. Завтра — '+giftTxt(nx)+'.':'Заходи, когда удобно: пропустишь денёк — не беда, подарок не сгорит.')}
     <div class="streak">${cells}</div><p><small>Подарков получено: ${st.cnt}. На 7-й день — рубашка, какой нет в украшениях.</small></p>
     <div class="row">${st.claimed||first?`<button class="btn" id="sClose">Закрыть</button>`:`<button class="btn green" id="sGet">Забрать: ${giftTxt(gf)}</button>`}</div>`);
   modalRe=showStreak;if(st.claimed||first){$('sClose').onclick=closeToGame;return;}
@@ -2678,6 +2916,15 @@ function claimStreak(quiet,silent){const st=streakState();if(st.claimed){hideMod
     <div class="row">${gf.back?'<button class="btn green" id="sUse">Надеть рубашку</button>':''}<button class="btn ${gf.back?'':'green'}" id="sOk">Отлично!</button></div>`);
   if(gf.back){requestAnimationFrame(()=>previewDecor('backs',gf.back.id,$('gfPv')));$('sUse').onclick=()=>{S.back=gf.back.id;save();applyLook();hideModal();if($('scr-menu').classList.contains('on'))openMenu();};}
   $('sOk').onclick=()=>{hideModal();if($('scr-menu').classList.contains('on'))openMenu();};}
+/* start1 (06.10): ПОДАРОК ПЕРВОГО ДНЯ — ПОСЛЕ GIFT_MOVES ХОДОВ, а не после победы (до победы доходил один новичок из десяти — и не видел, зачем вернуться).
+   Это ТОТ ЖЕ подарок первого дня (STREAK[0]), только раньше (репликой хозяйки, игру не останавливает): выдан здесь — в окне победы второй раз не выдаётся (streakAfterWin видит claimed).
+   Сразу строка «Завтра: …». Дальше подарки — как раньше, по дням захода; «открыты» у того, кто уже взял первый (giftOpen), победа для них больше не нужна. */
+const GIFT_MOVES=10;
+const giftOpen=()=>(S.wins||0)>=1||giftCnt(S.streak)>0;
+function earlyGift(){const g=G;if(!g||g.daily||g.eg||window.__demo||g.moves<GIFT_MOVES||g.won||R.won(g.st)||(S.wins||0)>0)return;const st=streakState();if(st.claimed||st.cnt>0)return;
+  const gf=claimStreak(true,true);if(!gf)return;g.eg=1;STAT.ev('gift',{d:1,mv:g.moves});
+  tutSay('🎁 Подарок за вход: '+giftTxt(gf)+'! Завтра — '+giftTxt(giftOf(2,0))+'. '+(GID==='freecell'?'Заходите':'Заходи')+'!');g.tutT=Date.now(); // репликой хозяйки (не тостом: тост ложился поверх реплики обучения); следующая реплика обучения — не раньше чем через 6 с
+  const p=$('gCoins');if(p&&!calm()){p.classList.remove('bump');void p.offsetWidth;p.classList.add('bump');setTimeout(()=>p.classList.remove('bump'),400);}}
 // после первой победы: первый подарок — сразу тостом; остальные ждут в меню
 function streakAfterWin(){if(window.__demo||(S.wins||0)<1)return null;const st=streakState();if(st.claimed)return null;if(st.cnt===0)return claimStreak(true,true);return null;}
 
@@ -2716,6 +2963,33 @@ document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey&&k!
   else if(c==='n'||c==='т')newDeal(G.mode);});
 /* ---- ярлык, оценка, избранное: одно предложение за сессию, после 2-й победы и не раньше 2 минут; отказ запоминаем ---- */
 const BOOT_T=Date.now();let askedNow=false,sessWins=0;
+/* ---- ntf (07.10): разрешение на напоминания VK (SOC v2.4), образец — release-h/ntf/SAMPLE.md и Дурак. Вопрос хозяйки — строкой под кнопками
+   окна победы (другого окна итога в пасьянсах нет), ставится СРАЗУ при открытии окна (socEarly в showWin), а не через 1,2 с, — кнопки не прыгают.
+   Порог «втянулся» — 3 СЫГРАННЫЕ раздачи (played(): раздача считается с первого хода; решение владельца 06.10 — победа в пасьянсе редкая),
+   поэтому в SOC.offer для этого вопроса идёт played(), а не S.wins. Расписание 1/3/7 дней и «2 минуты» — в модуле.
+   Не в «полном» окне (удвоение за рекламу, 3+ наград); не влезает в экран даже коротким видом — не спрашиваем, показ не тратится. Наград нет. ---- */
+const NTF_B='🔔 Напоминать',NTF_Y='🔔 Да';
+function ntfText(n){ // №1 — завтрашний подарок за вход, №2 — расклад дня (он есть во всех трёх играх), №3 — «буду изредка звать»
+  if(GID==='freecell')return n<=1?'Завтра вас ждёт подарок за вход. Напомнить?':n===2?'Каждый день в санатории новый расклад. Напоминать о нём?':'Буду изредка звать на пасьянс после процедур. Звать?';
+  if(GID==='spider')return n<=1?'Завтра на даче тебя ждёт подарок за вход. Напомнить?':n===2?'Каждый день на даче новый расклад. Напоминать о нём?':'Буду изредка звать на дачу — паука разложить. Звать?';
+  return n<=1?'Завтра припасу тебе подарок за вход. Напомнить?':n===2?'Каждый день во дворе новый расклад. Напоминать о нём?':'Буду изредка звать — косынку разложить. Звать?';}
+function ntfOk(){return GID==='freecell'?'Договорились! Беспокоить буду редко.':GID==='spider'?'Договорились! Попусту дёргать не буду.':'Договорились! Часто дёргать не стану.';}
+function socBusy(){return Date.now()-lastAdT<60000||pauseWhy.size>0||(adDue()&&adReady());}
+function socFits(){const m=$('modal'),c=$('mcard');return m.scrollHeight<=m.clientHeight+1&&c.scrollHeight<=c.clientHeight+1;} // на ПК (≥700 px) прокручивается само окно, на телефоне — подложка
+const SOC_OPT='#mcard .wfan,#mcard .hello,#mcard .wgoal,#mcard .wnext'; // необязательное в окне победы: убираем, чтобы вопрос влез без прокрутки
+function socEarly(full){const g=G;if(PLAT!=='vk'||askedNow||full||window.__demo||!g||!g.won||played()<3||Date.now()-BOOT_T<120000||adBusy||socBusy()||!SOC.ntfDue())return;
+  const c=$('mcard'),row=c.querySelector('.row');if(!row)return;
+  const t=ntfText(((S.soc&&S.soc.ntf&&+S.soc.ntf.n)||0)+1);if(!t)return;
+  row.insertAdjacentHTML('afterend','<div class="soc-o ntf" id="mSocBox"><span><b>'+HOSTN[GC.host]+':</b> '+t+'</span><button class="btn noenter" id="mSoc">'+NTF_B+'</button></div>');
+  const box=$('mSocBox'),opt=[].slice.call(document.querySelectorAll(SOC_OPT));
+  if(!socFits())box.classList.add('lite'); // тесный экран — плотный вид
+  if(!socFits())$('mSoc').textContent=NTF_Y; // ещё теснее — короткая кнопка «Да»
+  const bar=$('mcard').querySelector('.wgbar');if(bar)opt.splice(opt.indexOf($('mcard').querySelector('.wgoal'))+1,0,bar);
+  for(let i=0;i<opt.length&&!socFits();i++){opt[i].style.display='none';if(opt[i].classList.contains('wgoal')&&bar)bar.style.display='none';} // убираем необязательные строки по одной (веер, хозяйка, цель, «Завтра…»)
+  if(!socFits()){opt.forEach(e=>{e.style.display='';});box.remove();return;} // всё равно уйдёт за край — в этом окне не спрашиваем (показ не потрачен)
+  const o=SOC.offer(played(),false);if(!o||o.k!=='ntf'){box.remove();if(o)askedNow=true;return;}
+  askedNow=true;STAT.ev('mod',{m:'soc',a:'of_ntf'});const b=$('mSoc');
+  b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_ntf'});Promise.resolve(o.run()).then(r=>{if(r){if(o.ok)toast(o.ok,3200);if(document.body.contains(box))box.remove();}else b.disabled=false;},()=>{b.disabled=false;});};}
 // окно площадки — только пока на экране окно победы (не поверх следующей раздачи или межэкранной) и ничего не на паузе
 async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
   if(pauseWhy.size||!(G&&G.won&&modalOn&&$('mWon')))return;
@@ -2726,7 +3000,8 @@ async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(ses
       if(due('shortcut',14)&&ysdk.shortcut){const c=await ysdk.shortcut.canShowPrompt();if(c&&c.canShow){mark('shortcut');await ysdk.shortcut.showPrompt();return;}}}
     // VK: одно предложение за сессию через SOC (п. 2.6.3: не в первую сессию, отказ — не раньше 30 дней, ≤3 раз; без наград) —
     // строкой и кнопкой ПОД кнопками окна победы; сам диалог VK — только по нажатию игрока
-    else if(PLAT==='vk'){const row=document.querySelector('#mcard .row');if(!row)return;
+    else if(PLAT==='vk'){const row=document.querySelector('#mcard .row');if(!row||$('mSocBox'))return;
+      if(SOC.ntfDue())return; // ntf: вопрос про напоминания ставит только socEarly — другими предложениями его не перебиваем
       const o=SOC.offer(S.wins||0,Date.now()-lastAdT<60000||pauseWhy.size>0||(adDue()&&adReady()));if(!o)return;askedNow=true;
       const d=document.createElement('div');d.className='soc-o';d.innerHTML='<span>'+o.t+'</span><button class="btn noenter" id="mSoc">'+o.b+'</button>';
       row.parentNode.insertBefore(d,row.nextSibling);/* под кнопками: главные не сдвигаются */STAT.ev('mod',{m:'soc',a:'of_'+o.k});const b=$('mSoc');b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_'+o.k});o.run();};}
@@ -2745,7 +3020,19 @@ if(document.hidden)setPause('hide',true); // запуск в фоновой вк
 applyLook();
 try{if(document.fonts&&document.fonts.load)Promise.all([document.fonts.load('800 20px Rubik','0123456789ТВДК'),document.fonts.load('600 20px Rubik','Ая')]).then(()=>{lookChanged();},()=>{});}catch(e){}
 /* ---- запуск: меню; режим для скриншотов карточки — ?demo=play|win|menu|decor|daily|stats (&m=режим &n=сколько ходов решения сделать) ---- */
-(()=>{const q=new URLSearchParams(location.search),d=q.get('demo');if(!d){openMenu();return;}window.__demo=true;save=()=>{};
+/* start1 (06.10): НОВИЧОК СРАЗУ ЗА СТОЛОМ. Первый запуск (ни одной сыгранной раздачи, ни одной победы) — вместо меню сразу первая раздача лестницы с обучением;
+   меню — после неё (окно победы → «В меню», стрелка «назад»). Облако догружается следом: если оно принесло опытного игрока, а здесь ещё не сделано ни хода —
+   тихо уходим в меню (onCloud → bootUndo), раздача не засчитывается; сделан хоть один ход — остаёмся за столом, прогресс слит как обычно. */
+let bootG=null;
+function isNewbie(){return played()===0&&!(S.wins>0)&&!(S.games>0);}
+function bootFirst(){if(!isNewbie()||/[?&]menu=1(&|$)/.test(location.search)){openMenu();return;}
+  try{STAT.once('ready',{ms:Math.round(performance.now())});const cur=loadCur();
+    if(cur&&!cur.daily){resumeDeal(cur);if(!G.moves&&tutDue()){G.tut=1;G.first=1;const g=G;setTimeout(()=>{if(G===g)tutStep();},900);}}
+    else startDeal(0);
+    bootG=G;STAT.ev('boot1',{r:cur?1:0});}catch(e){G=null;openMenu();}}
+function bootUndo(){const g=bootG;bootG=null;if(!g||G!==g||g.moves>0||g.won||(!(S.wins>0)&&played()===0))return false;
+  STAT.end('quit',{mv:0,k:'cloud',sd:statSd(g.seed)});clearTimeout(g.a1T);G=null;try{localStorage.removeItem(CKEY);}catch(e){}tutOff();hideModal();openMenu();return true;}
+(()=>{const q=new URLSearchParams(location.search),d=q.get('demo');if(!d){bootFirst();return;}window.__demo=true;save=()=>{};
   if(q.get('m'))S.mode=+q.get('m');if(q.get('table'))S.table=q.get('table');if(q.get('back'))S.back=q.get('back');lookChanged();
   const L=SEEDS[S.mode]||SEEDS[GC.daily],seed=L[(+q.get('seed')||3)%L.length];
   const play=n=>{G=newG(R.deal(seed,S.mode),seed,S.mode,0);openGame();const r=solve(R,G.st,200000);if(r.ok){const k=Math.min(n,r.path.length);for(let i=0;i<k;i++){applyMove(R,G.st,r.path[i]);G.moves++;}}
@@ -2757,7 +3044,8 @@ try{if(document.fonts&&document.fonts.load)Promise.all([document.fonts.load('800
   else if(d==='stats'){openMenu();openStats();}
   else openMenu();})();
 // VK: мост из js/vk-bridge.min.js (только в VK-сборке). Яндекс: SDK по относительному пути; локально 404 → заглушки рекламы
-SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK});updMore();
+SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,
+  now:()=>nowMs(),ntf:{t:n=>ntfText(n),b:NTF_B,get ok(){return ntfOk();},s:'🔔 Включить напоминания'}});updMore();
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
 window.__test={get G(){return G;},set G(v){G=v;},get S(){return S;},R,RULES,SEEDS,solve,applyMove,legal,stClone,doMove,stockTap,undo,hint,findHint,collect,collectPath,solveAsync,planNext,tapMove,bestTarget,startDeal,newDeal,layout,render,setTargets,hitTest,cardXY,
