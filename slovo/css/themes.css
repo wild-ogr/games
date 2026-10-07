@@ -77,6 +77,7 @@ html.th-x .logo .rank{font-size:16px;color:var(--ink2);padding:4px 12px}
 html.th-x .hdr .t b,html.th-x .ghdr .t b,html.th-x .mcard h2,html.th-x .chap .ct b,html.th-x .defcard .word{font-family:var(--fonth)}
 html.th-x .hdr .t small,html.th-x .ghdr .t small{font-size:16px}
 html.th-x .ghdr .t small #gCnt{font-size:16px;color:var(--ink)}
+html.th-x .rib{font-size:15px}
 html.th-x .mcard{background:var(--paper);border:1.5px solid var(--pnb);color:var(--ink)}
 html.th-x .mcard h2{color:var(--hd)}
 html.th-x .mcard p{font-size:17px}

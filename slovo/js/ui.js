@@ -20,8 +20,12 @@ function openMenu(){
   // красная точка задания дня — не раньше 10-го уровня (новичка не зовём в трудное)
   $('dailyDot').classList.toggle('on',S.lv>=10&&!S.daily[todayKey()]);
   sndIcon();updGift();updMenuGoal();updDailyBadge();
+  if(typeof sosMenu==='function')sosMenu(); // «Соседки по подъезду» (js/sosedki.js): кнопка в меню
   // гостинец дня — сам, один раз за сессию (вернувшийся игрок попадает сюда первым делом)
-  if(lgDue()&&!lgAuto&&!SHOT){lgAuto=true;setTimeout(()=>{if($('menu').classList.contains('on')&&!$('modal').classList.contains('on')&&lgDue())openLogin();},500);}
+  // z-new: вернулся на следующий день — после гостинца сразу карточка «Задание дня» (retDue/retCard, js/newbie.js)
+  const lg=lgDue()&&!lgAuto&&!SHOT;if(lg)lgAuto=true;
+  if(!SHOT)setTimeout(()=>{if(!$('menu').classList.contains('on')||$('modal').classList.contains('on'))return;const rc=typeof retDue==='function'&&retDue()?retCard:null;
+    if(lg&&lgDue())openLogin(rc);else if(rc)rc();},500);
 }
 let lgAuto=false;
 // серия дней на кнопке задания дня: «🔥 3», пока серия жива (решено сегодня или вчера)
@@ -44,26 +48,33 @@ function openLogin(then){
     <div class="reward big" id="mRew">+${amt} <span class="coin"></span></div>
     ${item?`<p style="font-weight:800;color:var(--ink)">И блюдце «${skinOf('guest').n}» — оно уже в «Обликах»!</p>`:''}
     <p class="tmr">${tmrHtml()}</p>
-    <div class="btns"><button class="btn green" id="mGo">Спасибо, баба Зина!</button></div>`);
+    <div class="btns"><button class="btn green" id="mGo">Спасибо, баба Зина!</button>${giftOn()?`<button class="btn gold" id="lgAd">${giftTxt()}</button>`:''}</div>`);
   SND.coin();coinBurst($('mRew'),amt);updGift();
+  const la=$('lgAd');if(la){STAT.offer('gift');la.onclick=()=>giftAd(la,n=>{la.disabled=true;la.textContent='✅ Удвоено: +'+n+' и 💡 в запас';coinBurst(la,n);});}
   $('mGo').onclick=()=>{hideModal();SND.tap();if(then)then();};
 }
 // цель в меню: глава и ближайший облик одной полосой под «Играть»
 function updMenuGoal(){const e=$('mGoal');if(!e)return;const on=S.lv>=1&&S.lv<LEVELS.length;e.style.display=on?'':'none';
   if(on){const ch=chapOf(S.lv);e.innerHTML=`${ch.e} ${ch.n} <b>${S.lv%CH_LEN}/${CH_LEN}</b> · ${goalHtml()}`;e.classList.toggle('can',goalCan());e.onclick=goalCan()?goShop:null;}}
-// подарок дня: +ECO.gift монет за ролик, раз в день, по нажатию (с 3-го уровня; есть реклама — есть кнопка)
+// подарок дня за ролик, раз в день, по нажатию (с 3-го уровня; есть реклама — есть кнопка). w-ads (07.10): было «+25 за рекламу» бледной кнопкой (6 нажатий на 423 показа) —
+// теперь «Удвоить гостинец»: ещё раз сегодняшний гостинец (5…40) и 💡 подсказка в запас; и в окне гостинца (#lgAd), и в меню синей кнопкой (класс adg — для AD_BTN_SEL)
 const giftTaken=()=>!!(S.gift&&S.gift.d===todayKey());
-function updGift(){const b=$('btnGift'),t=$('mTmr');if(!b)return;const lg=lgDue(),on=lg||S.lv>=3&&ECO.gift>0&&adsOk()&&!giftTaken();
-  b.style.display=on?'':'none';b.classList.toggle('gold',lg);b.classList.toggle('ghost',!lg);
+const giftAmt=()=>lgTaken()?lgAmt(Math.max(0,lgN()-1)):ECO.gift;
+const giftOn=()=>S.lv>=3&&ECO.gift>0&&adsOk()&&!giftTaken()&&(typeof adLikely!=='function'||adLikely());
+const giftTxt=()=>`🎬 Гостинец ×2 за рекламу: <span class="nw">+${giftAmt()} ${COIN_I} и 💡</span>`;
+function giftGive(){if(giftTaken())return false;const n=giftAmt();S.gift={d:todayKey()};addCoins(n,'ad');hbAdd(1,'gift');SND.coin();updGift();return n;}
+// ролик за гостинец ×2: b — нажатая кнопка (в меню или в окне гостинца); done(n) — после награды
+function giftAd(b,done){if(!b||b.disabled||giftTaken())return;SND.tap();b.disabled=true;STAT.place('gift');
+  showRewarded(()=>{b.disabled=false;const n=giftGive();if(n!==false&&done)done(n);},()=>{b.disabled=false;},
+    ()=>{const n=giftGive();return n===false?'':'гостинец удвоен: +'+n+' и 💡';});} // поздний зачёт (adt): подарок — всегда, если сегодня ещё не взят
+function updGift(){const b=$('btnGift'),t=$('mTmr');if(!b)return;const lg=lgDue(),on=lg||giftOn();
+  b.style.display=on?'':'none';b.classList.toggle('gold',lg);b.classList.toggle('blue',!lg);b.classList.toggle('adg',!lg);b.classList.remove('ghost');
   if(on&&!lg)STAT.offer('gift');
-  if(on&&!b.disabled)b.innerHTML=lg?`🎁 Гостинец дня: <span class="nw">+${lgAmt(lgN())} ${COIN_I}</span> — забрать`:`🎁 Подарок дня: +${ECO.gift} ${COIN_I} за рекламу`;
+  if(on&&!b.disabled)b.innerHTML=lg?`🎁 Гостинец дня: <span class="nw">+${lgAmt(lgN())} ${COIN_I}</span> — забрать`:giftTxt();
   // когда всё сегодняшнее забрано — строка «Завтра» (просто текст, не кнопка)
   if(t){const h=on?'':tmrHtml();t.innerHTML=h;t.style.display=h?'':'none';}}
-function takeGift(){const b=$('btnGift');if(!b||b.disabled)return;if(lgDue()){SND.tap();openLogin();return;}if(giftTaken())return;SND.tap();b.disabled=true;STAT.place('gift');
-  showRewarded(()=>{b.disabled=false;if(giftTaken()){updGift();return;}S.gift={d:todayKey()};addCoins(ECO.gift,'ad');SND.coin();updGift();
-    $('mSay').textContent=pick(['Держи +'+ECO.gift+'! Из пенсии отложила. Завтра приходи — ещё припасу.','Вот тебе +'+ECO.gift+' на подсказки. Только не на семечки!']);},
-    ()=>{b.disabled=false;},
-    ()=>{if(giftTaken())return '';S.gift={d:todayKey()};addCoins(ECO.gift,'ad');SND.coin();updGift();return 'держи подарок: +'+ECO.gift;});} // поздний зачёт (adt): подарок — всегда, если сегодня ещё не взят
+function takeGift(){const b=$('btnGift');if(!b||b.disabled)return;if(lgDue()){SND.tap();openLogin();return;}
+  giftAd(b,n=>{$('mSay').textContent=pick(['Держи ещё +'+n+' и подсказку в запас! Из пенсии отложила.','Вот тебе +'+n+' и 💡 — на трудный уровень. Только не на семечки!']);});}
 // значок + подпись; выключенное — другим значком и словом, а не прозрачностью
 function sndIcon(){$('btnSnd').innerHTML=(S.sound?'🔊':'🔇')+'<small>'+(S.sound?'Звук':'Без звука')+'</small>';
   $('btnMus').innerHTML=(S.music?'🎵':'🔕')+'<small>'+(S.music?'Музыка':'Без музыки')+'</small>';$('btnMus').classList.toggle('off',!S.music);$('btnSnd').classList.toggle('off',!S.sound);}
@@ -86,7 +97,7 @@ const chEx=c=>{let n=0;for(let i=c*CH_LEN;i<(c+1)*CH_LEN;i++)if(exGet(i))n++;ret
 function openLevels(c){
   show('levels');const ch=CHAPTERS[c%CHAPTERS.length];$('lvTitle').textContent=ch.e+' '+ch.n;$('lvSub').textContent=ch.s;
   let h='';for(let i=c*CH_LEN;i<Math.min((c+1)*CH_LEN,LEVELS.length);i++){
-    const st=i<S.lv?'done':i===S.lv?'cur':'lock';const d=LEVELS[i].d;
+    const st=i<S.lv?'done':i===S.lv?'cur':'lock';const d=levelData(i).d;
     h+=`<button class="lv ${st}${isTest(i)?' test':''}" data-i="${i}">${i+1}${d&&S.dict[d]?'<span class="bk">📖</span>':''}${exGet(i)?'<span class="ex" title="Без подсказок">🏅</span>':''}${st==='lock'?'<span class="lk">🔒</span>':''}</button>`;}
   $('lvList').innerHTML=h;
   $('lvList').querySelectorAll('.lv').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i>S.lv){toast('Сначала пройди уровень '+(S.lv+1));return;}SND.tap();maybeInterstitial(()=>startLevel(i));});
@@ -170,6 +181,14 @@ function finishLevel(g){
   vkmCheck(); // vkev: уровень, очки и миссии VK — модулю SOC (шлёт он сам, молча)
   return {first,reward,base:reward-exBonus-sbonus-week,dw,isNew,streak,sbonus,exc,exBonus,exLoud,week,chap,dk,rankUp,test:first&&isTest(g.idx,g.daily)};
 }
+// w-ads: корзинка бабы Зины (BOX в game.js). Победа в счёт (ok) — +1 к S.box; набралось BOX.every — 'on' (кнопка; счётчик обнуляется сразу — перезапуск окна корзинку не размножит),
+// если ролик, по сведениям площадки, готов (adLikely) и это не конец главы (там своё окно с роликом); не готов — корзинка ждёт следующей победы. Возврат: 'on' | N побед до корзинки | 0
+function boxStep(g,ok,skip){if(!ok||!adsOk())return 0;S.box=(+S.box||0)+1;
+  if(S.box<BOX.every){save();return BOX.every-S.box;}
+  if(skip)return 0;
+  if(typeof adLikely==='function'&&!adLikely()){STAT.ev('box',{r:'wait'});save();return 0;}
+  S.box=0;save();return 'on';}
+const boxTxt=()=>`💡 +1 и +${BOX.coins} ${COIN_I}`;
 // текст золотой кнопки: «×2» — только когда прибавка ровно равна награде, иначе честно «ещё +N (итого +M)»
 function x2Txt(a,extra){return extra===a?`×2 за рекламу: <span class="nw">+${a} → +${a*2} ${COIN_I}</span>`:`За рекламу ещё <span class="nw">+${extra} ${COIN_I}</span> (итого +${a+extra})`;}
 function winModal(g,r,again){
@@ -179,21 +198,23 @@ function winModal(g,r,again){
   // заголовок выбираем один раз — после «Открытка → Назад» он не меняется; не повторяем слова последней реплики («Иди поешь» дважды)
   const title=r.title||(r.title=last?'Все уровни пройдены!':chapDone?'Глава пройдена!':sayAvoid('win',(zina.h||[]).join(' ')));
   // «Дальше»: после нового уровня — следующий; после переигрывания старого — к текущему непройденному
-  const nextI=g.daily||last?-1:first?g.idx+1:S.lv<LEVELS.length?S.lv:-1;
+  const nextI=last?-1:g.daily?(S.lv<LEVELS.length?S.lv:-1):first?g.idx+1:S.lv<LEVELS.length?S.lv:-1; // r2: после задания дня — «К уровню N ▶» (в меню — мелкой кнопкой winMenu)
   const ch=chapOf(g.idx),chDone=clamp(S.lv-Math.floor(g.idx/CH_LEN)*CH_LEN,0,CH_LEN);
   const noX2=!g.daily&&g.idx<3; // решение владельца 02.10: на уровнях 1–3 кнопки «за рекламу» в окне победы нет (как в «Выезде»), с 4-го — есть
   const light=!g.daily&&g.idx<2; // окно первых уровней — полегче: без строк монет, цели и рекламы
+  if(r.box===undefined)r.box=boxStep(g,first&&!light&&!noX2,chapDone||last); // w-ads: корзинка — раз в BOX.every побед (считаем один раз за окно)
   // аудит 14: окно короче — главное крупно (заголовок, словарь, монеты, кнопки), расшифровка — одной мелкой строкой
   const money=[r.base&&`+${r.base} за ${g.daily?'задание':r.test?'испытание (×2)':first?'уровень':'повтор'}`,r.exBonus&&!r.exLoud&&`🏅 +${r.exBonus} без подсказок`,
-    r.exBonus&&r.exLoud&&`+${r.exBonus} Отличник`,r.sbonus&&`+${r.sbonus} за серию`,r.week&&`+${r.week} за неделю`,g.bonus.size&&`🍯 +${g.bonus.size} ${plural(g.bonus.size,'слово','слова','слов')} в банку`].filter(Boolean).join(' · ');
+    r.exBonus&&r.exLoud&&`+${r.exBonus} Отличник`,r.sbonus&&`+${r.sbonus} за серию`,r.week&&`+${r.week} за неделю`,g.bonus.size&&`🍯 +${g.bonus.size} ${plural(g.bonus.size,'слово','слова','слов')} в банку`,
+    r.box>0&&`🧺 корзинка через ${r.box} ${plural(r.box,'победу','победы','побед')}`].filter(Boolean).join(' · ');
   // boost: на 10-м уровне объявляем задание дня (раз за игру); строка «Завтра» — когда сегодняшний гостинец уже взят
   if(!g.daily&&first&&g.idx===9&&!S.tip.dly){S.tip.dly=1;r.dly=1;save();}
   const tmr=light||g.daily?'':tmrHtml();
   const tomorrow=g.daily&&first?`<p style="font-size:14.5px">Завтра: <b>+${ECO.daily(r.streak+1)}</b> ${COIN_I} и серия ${r.streak+1} ${plural(r.streak+1,'день','дня','дней')}.</p>`:'';
-  const ask=r.ask!==undefined?r.ask:(r.ask=first?pickAsk():null);
+  const ask=r.ask!==undefined?r.ask:(r.ask=first&&!(typeof askHold==='function'&&askHold(g))?(typeof nbAsk==='function'?nbAsk(g):pickAsk()):null); // z-new: после задания дня с карточки возврата
   const nextTxt=r.chap&&!r.chapSeen?'Дальше ▶':nextI<0?'В меню':nextI===g.idx+1?'Дальше ▶':'К уровню '+(nextI+1)+' ▶';
   modal(`<div class="${again?'':'win'}"><h2>${title}</h2>
-    ${last?'<p>Все 400! Баба Зина уже сочиняет новые главы. А пока — задание дня каждый день.</p>':''}
+    ${last?`<p>Все ${LEVELS.length}! Новые главы скоро — баба Зина уже сочиняет. А пока — задание дня каждый день.</p>`:''}
     ${hasDef?defCardHtml(dw,isNew,true):`<div style="width:110px;height:110px;margin:4px auto">${zinaSVG('happy')}</div>`}
     ${r.exLoud?`<div class="stamp">🏅 ОТЛИЧНИК<small>без подсказок${r.exBonus?' · +'+coinsTxt(r.exBonus):''}</small></div><p class="exsay" style="font-size:15px">${r.exSay||(r.exSay=say('excellent'))}</p>`:''}
     ${r.rankUp?`<p class="rankup">🎓 Новое звание: <b>${r.rankUp}</b>!</p>`:''}
@@ -202,15 +223,18 @@ function winModal(g,r,again){
     ${money&&!light&&!r.exLoud?`<p class="money">${money}</p>`:''}
     ${g.daily&&first?weekHtml(r.dk):''}
     ${tomorrow}
-    ${r.dly?'<p class="dly">📅 Открылось <b>задание дня</b>: каждый день — новый кроссворд с подарком. Оно в меню.</p>':''}
-    ${light||chapDone||last||g.daily||r.dly||ask?'':`<div class="goal${goalCan()?' can':''}" id="mGoalW">${ch.e} ${ch.n}: <b>${chDone}/${CH_LEN}</b> · ${goalHtml()}</div>`}
+    ${r.dly?'<p class="dly">📅 Открылось <b>задание дня</b>: каждый день — новый кроссворд с подарком.</p>':''}
+    ${light||chapDone||last||g.daily||r.dly||ask||(S.wins||0)%5!==1?'':`<div class="goal${goalCan()?' can':''}" id="mGoalW">${ch.e} ${ch.n}: <b>${chDone}/${CH_LEN}</b> · ${goalHtml()}</div>`}
     ${tmr&&!ask?`<p class="tmr">${tmr}</p>`:''}
+    ${typeof sosWinHtml==='function'?sosWinHtml(g,r,light):''}
     <div class="btns">
       <button class="btn green" id="mNext">${nextTxt}</button>
-      ${first&&!light&&!noX2&&adsOk()?(r.x2?'<button class="btn gold" disabled>✅ Получено</button>':`<button class="btn gold" id="mX2">🎬 ${x2Txt(reward,Math.max(reward,ECO.x2min))}</button>`):''}
+      ${r.dly&&!S.daily[todayKey()]?'<button class="btn blue" id="mDly">📅 Сыграть задание дня</button>':''}
+      ${r.box==='on'?(r.boxGot?`<button class="btn gold" disabled>✅ ${boxTxt()}</button>`:`<button class="btn gold box" id="mBox">🎬 🧺 Корзинка за рекламу: <span class="nw">${boxTxt()}</span></button>`):''}
       ${ask?(ask.soc?`<div class="soc-o"><span>${ask.soc}</span><button class="btn ghost small" id="mAsk">${ask.t}</button></div>`:`<button class="btn ghost small" id="mAsk">${ask.t}</button>`):''}
     </div></div>`);
-  fitWin();
+  winMenu(g,r,nextI);
+  fitWin();if(typeof sosWinBind==='function')sosWinBind(g,r); // «Соседки» (js/sosedki.js): строка в окне победы
   if(!again){SND.coin();coinBurst($('mRew'),reward);}
   const sh=$('mShare');if(sh)sh.onclick=()=>shareDef(dw,()=>winModal(g,r,true));
   const gw=$('mGoalW');if(gw&&goalCan()&&!(r.chap&&!r.chapSeen))gw.onclick=goShop; // хватает на облик — прямо из окна победы в магазин (уровень уже засчитан)
@@ -218,40 +242,54 @@ function winModal(g,r,again){
   // конец главы — сначала праздник главы (openChapFinale), переход и реклама — из него
   $('mNext').onclick=()=>{hideModal();SND.tap();
     if(r.chap&&!r.chapSeen){openChapFinale(g,r,nextI);return;}
-    const go=()=>maybeInterstitial(()=>{if(nextI<0)openMenu();else startLevel(nextI);});
+    const go=()=>maybeInterstitial(()=>{if(last)openTheEnd();else if(nextI<0)openMenu();else startLevel(nextI);});
     // первая сессия: после 3-го уровня — первый гостинец и обещание на завтра (вернувшимся он выдаётся в меню)
     if(lgDue()&&!g.daily){lgAuto=true;openLogin(go);return;}
     go();};
+  // r2: на 10-м уровне задание дня — кнопкой (раньше «Оно в меню», а в меню первая сессия не попадает → серия не начиналась)
+  const dl=$('mDly');if(dl)dl.onclick=()=>{hideModal();SND.tap();maybeInterstitial(()=>startLevel(dailyIdx(),true));};
   // кнопку блокируем сразу (двойной тап не даёт двойную награду); если реклама не удалась — возвращаем
-  const x2=$('mX2');if(x2)STAT.offer('x2');if(x2)x2.onclick=()=>{if(r.x2||x2.disabled)return;x2.disabled=true;STAT.place('x2');
-    showRewarded(()=>{if(r.x2)return;r.x2=1;addCoins(Math.max(reward,ECO.x2min),'ad');SND.coin();x2.textContent='✅ Получено: +'+(reward+Math.max(reward,ECO.x2min));coinBurst(x2,Math.max(reward,ECO.x2min));},()=>{if(!r.x2)x2.disabled=false;},
-      ()=>{if(r.x2)return '';r.x2=1;const n=Math.max(reward,ECO.x2min);addCoins(n,'ad');SND.coin();if(document.body.contains(x2)){x2.disabled=true;x2.textContent='✅ Получено: +'+(reward+n);}return 'держи монеты: +'+n;});}; // поздний зачёт (adt)
+  const bx=$('mBox');if(bx&&!again)STAT.offer('box');if(bx)bx.onclick=()=>{if(r.boxGot||bx.disabled)return;bx.disabled=true;STAT.place('box');
+    const give=()=>{if(r.boxGot)return false;r.boxGot=1;addCoins(BOX.coins,'ad');hbAdd(1,'box');SND.coin();return true;};
+    showRewarded(()=>{if(!give())return;bx.textContent='✅ '+boxTxt().replace(/<[^>]+>/g,'');coinBurst(bx,BOX.coins);},
+      // ролик не пришёл не по вине игрока — корзинку бережём до следующей победы (S.box снова «полный»), кнопка остаётся живой
+      ()=>{if(r.boxGot)return;bx.disabled=false;if(/^(none|err|fail|hold|nosdk)$/.test(adFailWhy)&&(+S.box||0)<BOX.every){S.box=BOX.every;save();STAT.ev('box',{r:'save',c:adFailWhy});toast('Ролика пока нет — корзинку сберегу до следующей победы',4000);}},
+      ()=>{if(!give())return '';if(document.body.contains(bx)){bx.disabled=true;bx.textContent='✅ '+boxTxt().replace(/<[^>]+>/g,'');}return 'корзинка твоя: 💡 +1 и +'+BOX.coins;});}; // поздний зачёт (adt)
   const ak=$('mAsk');if(ak&&!again)STAT.ev('mod',{m:ask.soc?'soc':'ask',a:'of_'+ask.k});
   if(ak)ak.onclick=()=>{if(ak.disabled)return;ak.disabled=true;SND.tap();r.ask=null;STAT.ev('mod',{m:ask.soc?'soc':'ask',a:'ok_'+ask.k});
     ask.run().then(ok=>{toast(ok?ask.ok:'Ну и ладно, в другой раз!');}).catch(()=>{toast('Не получилось. Ничего, в другой раз.');});
     ak.textContent='✓ '+ask.t.replace(/^\S+\s/,'');};
 }
+// «В меню» в окне победы (z-look 07.10, UX п. 6): маленькая серая кнопка под остальными — для тех, кто ищет выход. Реклама при выходе — по тем же
+// правилам maybeInterstitial, что и «Дальше» (не чаще). Глава пройдена — сначала праздник главы, его кнопка тогда ведёт в меню. Нет на 1-м уровне и когда «Дальше» и так «В меню»
+function winMenu(g,r,nextI){const bs=document.querySelector('#mcard .btns');if(!bs||nextI<0||(!g.daily&&g.idx===0))return;
+  const b=document.createElement('button');b.className='wmenu';b.id='mMenu';b.textContent='В меню';bs.appendChild(b);
+  b.onclick=()=>{hideModal();SND.tap();if(r.chap&&!r.chapSeen){openChapFinale(g,r,-1);return;}maybeInterstitial(openMenu);};}
 // окно победы не должно прокручиваться: не влезло — убираем второстепенное по очереди (фраза «Отличника», расшифровка монет, цель, шапка карточки, «Завтра»)
 function fitWin(){const m=$('mcard'),w=m.firstElementChild;if(!w)return;const cs=getComputedStyle(m),pad=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);
-  for(const sel of['.exsay','.money','.goal','.defcard .tag','.rankup+p','.tmr']){if(w.offsetHeight+pad<=m.clientHeight+1)break;const e=w.querySelector(sel);if(e)e.style.display='none';}}
+  for(const sel of['.exsay','.money','.sosw','.goal','.defcard .tag','.rankup+p','.tmr']){if(w.offsetHeight+pad<=m.clientHeight+1)break;const e=w.querySelector(sel);if(e)e.style.display='none';}}
+// финал главы на низком экране (320×568: «Открытка» уходила под край): Зина поменьше, потом без «подарок за главу» и без строки о следующей главе (z-merge 07.10)
+function fitChap(){const m=$('mcard');if(!m)return;const over=()=>m.scrollHeight>m.clientHeight+1;if(!over())return;const w=m,z=w.querySelector('.chfin .zz');if(z){z.style.width=z.style.height='76px';}
+  for(const sel of['.money','.chnx']){if(!over())break;const e=w.querySelector(sel);if(e)e.style.display='none';}}
 // финал главы (аудит 14): отдельное окно — глава позади, подарок ECO.chap (уже начислен в finishLevel), открытка «Я прошёл главу»
 function openChapFinale(g,r,nextI,again){r.chapSeen=1;
-  const c=Math.floor(g.idx/CH_LEN),ch=CHAPTERS[c%CHAPTERS.length],nx=nextI>=0?chapOf(nextI):null;
+  const c=Math.floor(g.idx/CH_LEN),ch=CHAPTERS[c%CHAPTERS.length],nx=nextI>=0?chapOf(nextI):null,end=!g.daily&&g.idx+1>=LEVELS.length;
   r.chapSay=r.chapSay||pick(['Двадцать уровней! Я тобой горжусь — пойду соседкам расскажу.','Глава позади! Ставлю пятёрку в журнал и пирожок на стол.','Вот это усидчивость! У меня так только отличники занимались.','Молодец! Кот Ять даже встал с дивана — поздравить.']);
   modal(`<h2>🎉 Глава пройдена!</h2>
     <div class="chfin"><div class="em" style="background:${ch.c}">${ch.e}</div><div class="zz">${zinaSVG('wow')}</div>${nx?`<div class="em nx" style="background:${nx.c}">${nx.e}</div>`:''}</div>
     <p style="font-weight:800;color:var(--ink);font-size:17px">«${ch.n}» позади!</p>
     <p>${r.chapSay}</p>
     <div class="reward big" id="mRew">+${r.chap} <span class="coin"></span></div><p class="money">подарок за главу</p>
-    ${nx?`<p style="font-size:14.5px">Дальше — «${nx.n}» ${nx.e}. ${nx.s}</p>`:''}
-    <div class="btns"><button class="btn green" id="mGo">${nx?'Дальше ▶':'В меню'}</button>
-      ${adsOk()?(r.chx2?'<button class="btn gold" disabled>✅ Получено: +'+r.chap*2+'</button>':`<button class="btn gold" id="mChX2">🎬 ×2 за рекламу: <span class="nw">+${r.chap} → +${r.chap*2} ${COIN_I}</span></button>`):''}
+    ${nx?`<p class="chnx" style="font-size:14.5px">Дальше — «${nx.n}» ${nx.e}. ${nx.s}</p>`:''}
+    <div class="btns"><button class="btn green" id="mGo">${nx||end?'Дальше ▶':'В меню'}</button>
+      ${adsOk()&&(r.chx2||typeof adLikely!=='function'||adLikely())?(r.chx2?`<button class="btn gold" disabled>✅ Сундук главы: 💡 +1 и +${r.chap}</button>`:`<button class="btn gold" id="mChX2">🎬 Сундук главы за рекламу: <span class="nw">💡 +1 и +${r.chap} ${COIN_I}</span></button>`):''}
       <button class="btn ghost small" id="mCard">📤 Открытка «Я прошёл главу»</button></div>`);
+  fitChap();
   if(!again){SND.win();SND.coin();confetti();buzz('win');coinBurst($('mRew'),r.chap);}
   const cx=$('mChX2');if(cx)STAT.offer('chap');if(cx)cx.onclick=()=>{if(r.chx2||cx.disabled)return;cx.disabled=true;STAT.place('chap');
-    showRewarded(()=>{if(r.chx2)return;r.chx2=1;addCoins(r.chap,'ad');SND.coin();cx.textContent='✅ Получено: +'+r.chap*2;coinBurst(cx,r.chap);},()=>{if(!r.chx2)cx.disabled=false;},
-      ()=>{if(r.chx2)return '';r.chx2=1;addCoins(r.chap,'ad');SND.coin();if(document.body.contains(cx)){cx.disabled=true;cx.textContent='✅ Получено: +'+r.chap*2;}return 'держи монеты: +'+r.chap;});}; // поздний зачёт (adt)
-  $('mGo').onclick=()=>{hideModal();SND.tap();maybeInterstitial(()=>{if(nextI<0)openMenu();else startLevel(nextI);});};
+    showRewarded(()=>{if(r.chx2)return;r.chx2=1;addCoins(r.chap,'ad');hbAdd(1,'chap');SND.coin();cx.textContent='✅ Сундук главы: 💡 +1 и +'+r.chap;coinBurst(cx,r.chap);},()=>{if(!r.chx2)cx.disabled=false;},
+      ()=>{if(r.chx2)return '';r.chx2=1;addCoins(r.chap,'ad');hbAdd(1,'chap');SND.coin();if(document.body.contains(cx)){cx.disabled=true;cx.textContent='✅ Сундук главы: 💡 +1 и +'+r.chap;}return 'сундук главы: 💡 +1 и +'+r.chap;});}; // поздний зачёт (adt)
+  $('mGo').onclick=()=>{hideModal();SND.tap();maybeInterstitial(()=>{if(nextI<0)(end?openTheEnd:openMenu)();else startLevel(nextI);});};
   $('mCard').onclick=()=>shareChap(c,()=>openChapFinale(g,r,nextI,true));
 }
 // «Тетрадь недели»: 7 клеток пн–вс, решённый день — «5» красной ручкой; WEEK.need из 7 — подарок WEEK.gift (раз в неделю)
@@ -262,7 +300,15 @@ function weekHtml(dk){const days=weekDays(dk||todayKey()),n=days.filter(k=>S.dai
   return `<div class="week"><div class="wt">📒 Тетрадь недели: <b>${n} из 7</b>${got?' · 🎁 подарок получен':` · за ${WEEK.need} — <b>+${WEEK.gift}</b> ${COIN_I}`}</div><div class="wd">${cells}</div></div>`;}
 
 /* ---------- задание дня ---------- */
-function openDaily(){
+// z-levels: все уровни пройдены — не переигрываем последний, а зовём в задание дня (ux-market «Конец содержимого»)
+function openTheEnd(){const done=!!S.daily[todayKey()];if(!$('menu').classList.contains('on'))openMenu();STAT.screen('end');
+  modal(`<h2>Новые главы скоро!</h2><div style="width:110px;height:110px;margin:4px auto">${zinaSVG('happy')}</div>
+    <p>Все ${LEVELS.length} уровней пройдены — вот это голова! Новые главы я уже сочиняю.</p>
+    <p>${done?'Сегодняшнее задание дня решено — завтра будет новое (кнопка «📅&nbsp;Задание&nbsp;дня» в меню). А пока можно переиграть любимые уровни в «Главах».':'А пока — <b>задание дня</b>: каждый день новый кроссворд и подарок за серию. Кнопка «📅&nbsp;Задание&nbsp;дня» — в меню, или жми здесь.'}</p>
+    <div class="btns">${done?'':'<button class="btn green" id="mDay">📅 Задание дня</button>'}<button class="btn ${done?'blue':'ghost small'}" id="mCh">📚 Главы</button><button class="btn ghost small" id="mOk">В меню</button></div>`);
+  const d=$('mDay');if(d)d.onclick=()=>{hideModal();openDaily();};
+  $('mCh').onclick=()=>{hideModal();SND.tap();openChapters();};$('mOk').onclick=()=>{hideModal();SND.tap();};}
+function openDaily(ret){ret=ret==='ret'; // z-new: ret — карточка возврата (retCard, js/newbie.js)
   SND.tap();STAT.screen('daily');
   if(S.daily[todayKey()]){modal(`<h2>📅 Задание дня</h2><div style="width:110px;height:110px;margin:4px auto">${zinaSVG('happy')}</div>
     <p>Сегодня уже решено! Серия: <b>${S.streak||0} ${plural(S.streak||0,'день','дня','дней')}</b>.</p><p>Приходи завтра — будет новое слово и подарок побольше.</p>${weekHtml()}
@@ -273,12 +319,13 @@ function openDaily(){
   if(S.lastDaily===dayKey(2)&&(S.streak||0)>=2&&!(S.fix&&S.fix.d===todayKey())){if(adsOk()){openStreakFix();return;}S.fix={d:todayKey()};save();}
   const ns=S.lastDaily===yk?(S.streak||0)+1:1,sb=ECO.daily(ns)-ECO.daily(1);
   modal(`<h2>📅 Задание дня</h2><div style="width:100px;height:100px;margin:4px auto">${zinaSVG('happy')}</div>
+    ${ret?`<p class="retp">${ns>1?'С возвращением! Серию держим?':'С возвращением! Я тут новый кроссворд приготовила.'}</p>`:''}
     <p>Награда: <b>${ECO.daily(1)+sb}</b> ${COIN_I}${sb?' (с бонусом за серию)':''} и ещё +${EX_BONUS} ${COIN_I}, если без подсказок.</p>
-    <p>Серия: <b>${S.streak&&ns>1?S.streak:0} ${plural(S.streak&&ns>1?S.streak:0,'день','дня','дней')}</b>. ${ns>1?'Не прерывай!':'Начнём новую!'}</p>
+    ${ns>1||S.streak?`<p>Серия: <b>${S.streak&&ns>1?S.streak:0} ${plural(S.streak&&ns>1?S.streak:0,'день','дня','дней')}</b>. ${ns>1?'Не прерывай!':'Начнём новую!'}</p>`:`<p>Реши сегодня — начнётся серия: завтра <b>+${ECO.daily(2)}</b> ${COIN_I}.</p>`}
     ${weekHtml()}
     ${easy?'<p style="font-size:14px">Задание подобрала полегче, но слов побольше — подсказки брать не стыдно.</p>':''}
     <div class="btns"><button class="btn green" id="mGo">Начать</button><button class="btn ghost small" id="mNo">Потом</button></div>`);
-  $('mGo').onclick=()=>{hideModal();SND.tap();ac();maybeInterstitial(()=>startLevel(dailyIdx(),true));};$('mNo').onclick=()=>{hideModal();SND.tap();};
+  $('mGo').onclick=()=>{hideModal();SND.tap();ac();if(ret)retPick(1);maybeInterstitial(()=>startLevel(dailyIdx(),true));};$('mNo').onclick=()=>{hideModal();SND.tap();if(ret)retPick(0);};
 }
 // ключ дня n дней назад (20260926)
 function dayKey(n){const y=new Date(nowMs()-n*864e5);return String(y.getFullYear()*10000+(y.getMonth()+1)*100+y.getDate());}
@@ -286,7 +333,7 @@ function dayKey(n){const y=new Date(nowMs()-n*864e5);return String(y.getFullYear
 function dayKeyOf(k,n){const y=new Date(Math.floor(k/10000),Math.floor(k/100)%100-1,k%100-n,12);return String(y.getFullYear()*10000+(y.getMonth()+1)*100+y.getDate());}
 function openStreakFix(){const n=S.streak||0;
   modal(`<h2>🔥 Серия под угрозой</h2><div style="width:100px;height:100px;margin:4px auto">${zinaSVG('wow')}</div>
-    <p>Вчера ты не заходил, и серия в <b>${n} ${plural(n,'день','дня','дней')}</b> вот-вот сгорит.</p><p>Посмотри рекламу — скажу, что ты болел, и серия продолжится.</p>
+    <p>Вчера ты не заходил, и серия в <b>${n} ${plural(n,'день','дня','дней')}</b> вот-вот сгорит.</p><p>Посмотри рекламу — и я сберегу твою серию.</p>
     <div class="btns"><button class="btn green" id="mFix">🎬 Спасти серию за рекламу</button><button class="btn ghost small" id="mNo">Начать заново</button></div>`);
   const b=$('mFix');STAT.offer('streak');b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place('streak');
     showRewarded(()=>{S.fix={d:todayKey()};S.lastDaily=dayKey(1);save();hideModal();toast('Серия спасена! Баба Зина прикрыла.');openDaily();},()=>{b.disabled=false;},
@@ -302,7 +349,7 @@ function goalItem(){const all=OUTFITS.map(o=>['o',o]).concat(SKINS.map(k=>['s',k
 const goalCan=()=>{const g=goalItem();return !!g&&S.coins>=g[1].p;};
 function goShop(){const g=goalItem();if(g)shopTab=g[0]==='o'?'zina':'plate';SND.tap();hideModal();saveCur();G=null;openShop();}
 function goalHtml(){const gi=goalItem();
-  if(!gi)return 'Все облики куплены — баба Зина при параде!';const [t,it]=gi,nm=`«${it.n}»`;
+  if(!gi)return 'Все облики куплены — баба Зина при параде!';const [t,it]=gi,nm=`<span class="nw">«${it.n}»</span>`; // r2: «В / красный горошек» не рвём
   // что это такое — наряд или блюдце (аудит 14: «До «Общепит» осталось» было непонятно)
   return S.coins>=it.p?`Хватает на ${t==='o'?'наряд':'блюдце'} ${nm} — <b class="lnk">посмотреть ›</b>`:`До ${t==='o'?'наряда':'блюдца'} ${nm} осталось <b>${it.p-S.coins}</b> ${COIN_I}`;}
 // облако пришло позже меню (VK) — обновить экран
@@ -346,7 +393,7 @@ function applyBig(){document.body.classList.toggle('big',!!S.big);if(G)layoutWhe
 function openCredits(){STAT.screen('credits');modal(`<h2>Благодарности</h2><p style="font-weight:800;color:var(--blue)">«Баба Зина: слова из букв»</p><p>Музыка, под которую баба Зина разгадывает кроссворды:</p>
   <div class="cred"><b>«Black Tea Rag»</b><br>автор — decimnet<br>opengameart.org/content/black-tea-rag<br>лицензия CC BY 4.0: creativecommons.org/licenses/by/4.0/<br>перекодировано в AAC (моно)</div>
   <div class="cred"><b>Словарь бонусных слов</b><br>Russian-Nouns, А. Сергиенко (Harrix), лицензия MIT</div>
-  ${OK?'':'<div class="cred"><b>VK Bridge</b><br>VK, лицензия MIT</div>'}
+  ${PLAT==='vk'&&!OK?'<div class="cred"><b>VK Bridge</b><br>VK, лицензия MIT</div>':''}
   <p style="font-size:14px">Спасибо авторам! Шутки, рисунки и баба Зина — свои. Возраст: 0+.</p>
   ${OK&&OK_GROUP?`<p id="abSup" style="font-size:14px"><b>Поддержка.</b> Вопросы и пожелания — в группе «Игры во дворе» в Одноклассниках.<br><a class="btn ghost noenter" id="abGrp" href="${OK_GROUP_LINK}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;text-decoration:none">Открыть группу поддержки</a></p>`:''}
   ${SOC.ok()?'<button class="setrow" id="credSoc"><span>👥 '+(OK?'Друзья':'Друзья и игры')+'</span><b>›</b></button>':''}
@@ -359,16 +406,16 @@ let introOn=false;
 function openIntro(){introOn=true;STAT.ev('tut',{s:1}); // знакомство до 1-го уровня
   modal(`<div class="intro"><div class="iart">${heroSVG()}</div>
     <h2>Здравствуй! Я баба Зина</h2>
-    <p>Сорок лет учила детей русскому языку. Теперь на пенсии — учу кота. Кот Ять учёный, но ленивый.</p>
-    <p>Составляй слова из букв, а я за каждый кроссворд открою шутку из своего словаря. Пирожки — потом.</p>
-    <div class="btns"><button class="btn green" id="mGo" style="font-size:21px">Давай играть! ▶</button></div></div>`);
+    <p>Сорок лет учила детей русскому. Теперь учу кота Ятя — учёный, но ленивый.</p>
+    <p>Собирай слова из букв — за каждый кроссворд открою шутку из своего словаря.</p>
+    <div class="btns"><button class="btn green" id="mGo" style="font-size:21px">Играть! ▶</button></div></div>`);
   $('mGo').onclick=()=>{ac();SND.tap();hideModal();};}
 function introDone(){if(!introOn)return;introOn=false;S.tip.intro=1;save();}
 
 /* ---------- старт ---------- */
 function bind(){
   applyBig();
-  $('btnPlay').onclick=()=>{SND.tap();ac();maybeInterstitial(()=>startLevel(Math.min(S.lv,LEVELS.length-1)));};
+  $('btnPlay').onclick=()=>{SND.tap();ac();if(S.lv>=LEVELS.length){openTheEnd();return;}maybeInterstitial(()=>startLevel(Math.min(S.lv,LEVELS.length-1)));};
   $('btnGift').onclick=takeGift;
   $('btnMore').onclick=()=>{SND.tap();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();};updMore();
   $('btnChap').onclick=()=>{SND.tap();openChapters();};

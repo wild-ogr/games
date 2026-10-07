@@ -22,7 +22,7 @@ var FORCE=(function(){var m=/[?&]theme=([a-z0-9_]+)/.exec(location.search);retur
 var TRIAL=null,trDone=false,trN=0;
 function get(id){for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===id)return THEMES[i];return null;}
 function thU(){if(!S.thU||typeof S.thU!=='object'||Array.isArray(S.thU))S.thU={};return S.thU;}
-function prog(T){var u=T.unlock;if(u.t!=='ads')return null;var h=Math.min(u.n,S.adTot||0);return {have:h,need:u.n,txt:h+' из '+u.n+' роликов'};}
+function prog(T){var u=T.unlock;if(u.t!=='ads')return null;var h=Math.min(u.n,S.adTot||0);return {have:h,need:u.n,txt:h+' из '+u.n};}
 function earned(T){var u=T.unlock;
   if(u.t==='free')return true;if(thU()[T.id])return true;
   if(u.t==='pay')return !!(typeof PAY!=='undefined'&&PAY.own&&PAY.own(u.pay));
@@ -32,7 +32,7 @@ function owned(id){var T=get(id);if(!T)return false;if(FORCE===id)return true;re
 function how(T){var u=T.unlock;
   if(u.t==='free')return 'бесплатно';
   if(u.t==='pay')return 'покупка, навсегда';
-  if(u.t==='ads')return 'за '+u.n+' роликов';
+  if(u.t==='ads')return 'за '+u.n+' просмотров рекламы';
   return '';}
 function cur(){if(TRIAL&&get(TRIAL))return TRIAL;var id=FORCE||S.th||'classic';return owned(id)?id:'classic';}
 
@@ -76,7 +76,7 @@ dice:'<rect class="t" x="4" y="4" width="16" height="16" rx="3.500"/><path d="M9
 bolt:'<path class="t" d="M13 2.500L5 13.500h5.500l-1 8 8.500-11.500h-5.500z"/>'
 };
 /* эмодзи игры → значок */
-var EMO={'🔊':'sound','🔇':'mute','🎵':'music','ℹ':'info','▶':'play','←':'back','🗺':'map','📅':'cal','📖':'book','📒':'book','👗':'dress','🏆':'cup','🎁':'gift','🎓':'cap',
+var EMO={'🔊':'sound','🔇':'mute','🎵':'music','ℹ':'info','▶':'play','←':'back','🗺':'map','📅':'cal','📖':'book','📒':'book','👗':'dress','🏆':'cup','🎁':'gift','🧺':'gift','🎓':'cap',
  '⚙':'gear','🍯':'jar','🔀':'shuffle','📜':'word','💡':'bulb','🎬':'tv','📺':'tv','🏅':'medal','📤':'card','🔒':'lock','🔥':'fire','⭐':'star','🎉':'star','📳':'vib','🔍':'zoom',
  '✅':'check','🛒':'cart','🚫':'noads','🎨':'palette','🍽':'plate','☕':'tea','📊':'bars','👥':'people','🎲':'dice','⚡':'bolt'};
 /* рисунки глав (48×48) — вместо эмодзи глав; порядок = CHAPTERS в js/text.js */
@@ -195,18 +195,18 @@ function buy(id){var T=get(id);if(!T||owned(id))return;var u=T.unlock;
   if(u.t==='pay'){if(canBuy(T))PAY.buy(u.pay);else toast('Покупки сейчас недоступны');return;}
   if(u.t==='ads'){if(!adOk()){toast('Ролик сейчас недоступен — загляни позже');return;}
     try{STAT.offer('theme');STAT.place('theme');}catch(e){}var thad=function(){try{STAT.ev('thad',{th:id,n:Math.min(u.n,S.adTot||0)});}catch(e){}};
-    showRewarded(function(){thad();check();open();},function(){open();},function(){thad();return 'ролик в счёт оформления засчитан';});}} // поздний зачёт (adt): счётчик роликов растёт в обёртке ниже
+    showRewarded(function(){thad();check();open();},function(){open();},function(){thad();return 'просмотр рекламы засчитан в оформление';});}} // поздний зачёт (adt): счётчик роликов растёт в обёртке ниже
 function prevHtml(T){return '<span class="thp thp-'+T.id+'"><i class="thp-h"></i><i class="thp-c"><b>З</b><b>И</b><b>Н</b><b>А</b></i><i class="thp-b"></i></span>';}
 var back=null;
 function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen('look');}catch(e){}var c=cur(),h='',ads=adOk();
   for(var i=0;i<THEMES.length;i++){var T=THEMES[i],own=owned(T.id),u=T.unlock,pr=prog(T),btn='',on=T.id===c&&!(TRIAL===T.id);
-    if(u.t==='pay'&&!own&&typeof OK!=='undefined'&&OK)continue; // ОК: покупок нет — платные темы не показываем (ни «купить», ни примерки)
+    if(u.t==='pay'&&!own&&((typeof OK!=='undefined'&&OK)||typeof PAY==='undefined'||!PAY.on))continue; // ОК и площадка без покупок (Яндекс: товаров нет, PAY.on=false) — платные темы не показываем (ни «купить», ни примерки; модерация Яндекса 1.15/8.2.2)
     if(on)btn='<span class="th-on">✓ Включено</span>';
     else if(own)btn='<button class="btn green" data-th="set:'+T.id+'">Включить</button>';
     else if(u.t==='pay'){btn=canBuy(T)?'<button class="btn green noenter" data-th="buy:'+T.id+'">Купить · '+PAY.price(PAY.item(u.pay))+'</button>':'<span class="th-lk">'+(inLevel()?'Купить можно из меню':'Покупки сейчас недоступны')+'</span>';
       if(ads&&trN<TRY_MAX&&TRIAL!==T.id)btn+='<button class="btn gold thad noenter" data-th="try:'+T.id+'">📺 Примерить на уровень за рекламу</button>';
       if(TRIAL===T.id)btn+='<span class="th-lk">сейчас примеряется</span>';}
-    else if(u.t==='ads')btn=ads?'<button class="btn gold thad noenter" data-th="buy:'+T.id+'">📺 Ролик · '+pr.have+' из '+pr.need+'</button>':'<span class="th-lk">Ролики сейчас недоступны</span>';
+    else if(u.t==='ads')btn=ads?'<button class="btn gold thad noenter" data-th="buy:'+T.id+'">📺 Реклама · '+pr.have+' из '+pr.need+'</button>':'<span class="th-lk">Реклама сейчас недоступна</span>';
     h+='<div class="thc'+(on?' on':'')+(own?'':' lock')+'">'+prevHtml(T)+'<div class="thc-b"><b>'+T.ru+(own?'':' <span class="thc-l">🔒</span>')+'</b><small>'+T.ds+'</small>'+
       '<small class="th-how">'+(own?(u.t==='free'?'бесплатно, у всех':'открыто навсегда'):how(T)+(pr?': '+pr.txt:''))+'</small>'+
       (pr&&!own?'<span class="thbar"><i style="width:'+Math.round(pr.have/pr.need*100)+'%"></i></span>':'')+'</div><div class="thc-f">'+btn+'</div></div>';}

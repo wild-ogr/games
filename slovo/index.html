@@ -19,6 +19,7 @@ addEventListener('load',function(){setTimeout(function(){if(!done)try{sessionSto
 </script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Баба Зина: слова из букв</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23fbf7ec'/%3E%3Ccircle cx='32' cy='32' r='26' fill='%23fff' stroke='%231d4fa3' stroke-width='6'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='900' font-size='34' text-anchor='middle' fill='%231d4fa3'%3E%D0%97%3C/text%3E%3C/svg%3E"> <!-- значок вкладки (без него favicon.ico 404 в консоли) — блюдце-гжель с буквой «З» -->
 <meta name="description" content="Баба Зина: слова из букв — составляй слова из букв, разгадывай кроссворды и собирай смешной «Толковый словарь бабы Зины».">
 <style>
 :root{
@@ -123,10 +124,15 @@ button[data-adwait]::after{content:"⏳";position:absolute;top:3px;right:6px;fon
 .ghdr{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 8px) 12px 4px}
 .ghdr .t{flex:1;text-align:center;min-width:0}
 .ghdr .t b{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ghdr .t small{color:var(--ink2);font-size:14px;white-space:nowrap;display:flex;justify-content:center;gap:4px;min-width:0}
-.ghdr .t small #gSub{overflow:hidden;text-overflow:ellipsis;min-width:0}
-.ghdr .t small #gCnt{flex:none;font-weight:800;color:var(--blue);font-size:15px}
-.ghdr .t small #gCnt::before{content:"· ";color:var(--ink2);font-weight:400}
+/* лента главы (z-look 07.10): под шапкой уровня — лента цвета главы (CHAPTERS[].c в js/text.js) с эмодзи, названием и «Слов: N из M».
+   Цвет и текст ставит ribbon() в game.js; не влезает — fitSub() уменьшает шрифт (14→11 px), потом «0 из 9», без «…» */
+.grib{display:flex;justify-content:center;padding:0 10px 2px;min-width:0}
+.rib{--rc:#dbe7fb;--rb:#9fb9e3;display:inline-flex;align-items:center;gap:6px;max-width:100%;min-width:0;padding:2px 20px;font-size:14px;line-height:1.25;white-space:nowrap;color:#27324a;
+  background:var(--rc);border-top:1.5px solid var(--rb);border-bottom:1.5px solid var(--rb);clip-path:polygon(0 0,100% 0,calc(100% - 9px) 50%,100% 100%,0 100%,9px 50%)}
+.rib #gSub{font-weight:700}
+.rib #gSub:empty{display:none}
+.rib #gCnt{font-weight:800;color:#1d4fa3}
+.rib #gSub:not(:empty)+#gCnt::before{content:"· ";color:#5d6781;font-weight:400}
 .zina{display:flex;align-items:flex-start;gap:8px;padding:2px 12px 0;min-height:64px}
 .zina .av{width:58px;height:58px;flex:none;border-radius:50%;background:var(--card);box-shadow:var(--shadow);overflow:hidden;cursor:pointer}
 .zina .av svg{width:100%;height:100%}
@@ -137,7 +143,7 @@ button[data-adwait]::after{content:"⏳";position:absolute;top:3px;right:6px;fon
 .zina .say.on{opacity:1;transform:none}
 .zina .say::before{content:"";position:absolute;left:-8px;top:14px;border:8px solid transparent;border-left:0;border-right-color:var(--card)}
 #board{flex:1 1 auto;position:relative;min-height:120px;display:flex;align-items:center;justify-content:center;padding:6px 10px}
-#grid{position:relative}
+#grid{position:relative;transform-origin:50% 0;transition:transform .25s}
 .cell{position:absolute;border-radius:22%;background:var(--cell);border:2px solid var(--cellb);display:flex;align-items:center;justify-content:center;
   font-weight:900;color:var(--blue);text-transform:uppercase;transition:background .2s}
 .cell.open{background:var(--card);border-color:var(--cellob);box-shadow:0 3px 0 var(--cellos);cursor:pointer}
@@ -265,9 +271,11 @@ body.big #preview .w{font-size:28px}
   /* низкий экран: баба Зина — в шапке, реплика — поверх поля и ненадолго; место отдаём кроссворду */
   .zina{position:absolute;left:0;right:0;top:0;min-height:0;padding:0;z-index:6;pointer-events:none}
   .zina .av{position:absolute;left:64px;top:calc(env(safe-area-inset-top) + 6px);width:44px;height:44px;pointer-events:auto}
-  .zina .say{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 58px);margin:0;box-shadow:0 6px 20px rgba(39,50,74,.22);pointer-events:auto}
+  /* z-look 07.10: реплика — справа от аватарки ПОВЕРХ шапки (заголовок, ⚙ и монеты прикрыты на 3–5 с), а не поверх кроссворда.
+     Длиннее шапки и ленты — поле на это время уезжает под реплику (gridDodge в game.js) */
+  .zina .say{position:absolute;left:118px;right:8px;top:calc(env(safe-area-inset-top) + 4px);margin:0;box-shadow:0 6px 20px rgba(39,50,74,.22);pointer-events:auto}
   .zina .say:not(.on){pointer-events:none}
-  .zina .say::before{left:70px;top:-8px;border:8px solid transparent;border-top:0;border-bottom-color:var(--card)}
+  .zina .say::before{left:-8px;top:14px}
   .ghdr .t{padding-left:48px}}
 /* поиск и открытки */
 .search{width:100%;padding:11px 14px 11px 40px;border-radius:14px;border:2px solid #d5deec;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='10' cy='10' r='6.5' fill='none' stroke='%238f99ad' stroke-width='2.4'/%3E%3Cpath d='M15 15l5 5' stroke='%238f99ad' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") 12px 50%/20px no-repeat;
@@ -394,10 +402,27 @@ button.prow{cursor:pointer}button.prow:active{transform:translateY(2px);box-shad
   .zina .say::before{left:50%;top:-9px;margin-left:-9px;border:9px solid transparent;border-top:0;border-bottom-color:var(--card);border-right-color:transparent}
   body.big .zina .say{font-size:19px}
   .wheelwrap{width:100%;max-width:600px;margin:0 auto}
+  /* z-look: лента главы — над бабой Зиной в левой колонке (место над кроссвордом не занимает) */
+  .grib{position:absolute;left:0;top:calc(env(safe-area-inset-top) + 66px);width:310px;padding:0 6px 0 22px;z-index:7}
 }
 @media (min-width:860px) and (max-height:640px){.zina .av{width:160px;height:160px}.zina .say{font-size:15.5px;margin-top:10px;padding:9px 12px}.logo h1{font-size:44px}.logo p.sub{font-size:21px}.mbubble{font-size:16px;padding:9px 14px}}
 @media (min-width:1300px) and (min-height:860px){#app{max-width:1260px}#menu.on{grid-template-columns:1fr 420px;padding:26px 60px 40px}.logo h1{font-size:70px}.logo p.sub{font-size:32px}
-  #game{padding-left:420px}.ghdr{margin-left:-420px}.zina{width:420px;padding-left:30px}.zina .av{width:320px;height:320px}.zina .say{font-size:19px;padding:14px 18px}.mbubble{font-size:20px}}
+  #game{padding-left:420px}.ghdr{margin-left:-420px}.zina{width:420px;padding-left:30px}.grib{width:420px;padding-left:30px}.zina .av{width:320px;height:320px}.zina .say{font-size:19px;padding:14px 18px}.mbubble{font-size:20px}}
+/* z-look 07.10: крупный интерфейс на компьютере (html.zk, см. скрипт в <head>): всё внутри #app и #modal — как на окне в 1/k меньше, увеличенное в k раз */
+html.zk #app{top:0;right:0;bottom:auto;left:0;height:calc(100% / var(--zk));max-width:min(1040px,calc(100vw / var(--zk)));transform:scale(var(--zk));transform-origin:50% 0}
+@media (min-width:1300px) and (min-height:860px){html.zk #app{max-width:min(1260px,calc(100vw / var(--zk)))}}
+html.zk #modal{right:auto;bottom:auto;width:calc(100% / var(--zk));height:calc(100% / var(--zk));transform:scale(var(--zk));transform-origin:0 0}
+html.zk .mcard{max-height:calc(92vh / var(--zk))}
+html.zk #heroArt{max-height:min(calc(54vh / var(--zk)),460px)}
+/* zk: уровень в три колонки — Зина | кроссворд | круг букв, под ним 4 кнопки подсказок в ряд (раньше круг стоял под кроссвордом и оба мельчали по высоте) */
+html.zk #game.on{display:grid;grid-template-columns:minmax(0,1fr) 350px;grid-template-rows:auto auto minmax(0,1fr) auto auto minmax(0,1fr)}
+html.zk .ghdr{grid-column:1/3;grid-row:1}
+html.zk #board{grid-column:1;grid-row:3/7}html.zk #preview{grid-column:2;grid-row:4}
+html.zk .wheelwrap{grid-column:2;grid-row:5;display:grid;grid-template-columns:auto auto;justify-content:center;column-gap:30px;row-gap:12px;max-width:none;margin:0;padding:4px 0 34px}
+html.zk #wheel{grid-column:1/3;justify-self:center}
+html.zk .side{position:static;flex-direction:row;gap:24px}
+html.zk .thg{max-height:calc(92vh / var(--zk) - 210px)}
+html.zk #toast{font-size:calc(15px * var(--zk));top:calc(70px * var(--zk))}
 /* boost 02.10: знакомство и «живое» окно победы (части появляются по очереди; при «меньше движения» — сразу) */
 .intro .iart{width:230px;max-width:70%;height:170px;margin:0 auto 4px}.intro .iart svg{width:100%;height:100%}
 @media (max-height:600px){.intro .iart{height:120px}}
@@ -408,6 +433,9 @@ button.prow{cursor:pointer}button.prow:active{transform:translateY(2px);box-shad
 .week.lg{background:none;box-shadow:none;padding:0;margin:6px 0 0}.week.lg .wc{max-width:44px;height:46px}.week.lg .wc b{font-size:15px;font-style:normal;color:#8a5a00;line-height:1.3}
 .week.lg .wc.got{background:#eef7f0;border-color:#a8dab5}.week.lg .wc.got b{color:var(--green2)}.week.lg .wc.now{background:var(--hl);border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
 .mbtns #btnGift{display:block;text-align:center;line-height:1.3}.mbtns #btnGift.gold{font-size:16px;min-height:48px;padding:10px 8px}
+/* «В меню» в окне победы — неброская, но с полем касания 40+ px */
+.wmenu{align-self:center;min-height:40px;margin:-6px 0 -8px;padding:6px 18px;font-size:15px;font-weight:700;color:var(--ink2);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(93,103,129,.45)}
+.wmenu:active{transform:translateY(1px)}
 .win>*{animation:winin .4s cubic-bezier(.2,1.3,.5,1) both}
 .win>h2{animation-name:wintitle;animation-duration:.45s}
 .win>.defcard{animation-delay:.18s}.win>.stamp{animation:stamp .45s cubic-bezier(.2,1.6,.5,1) .45s both}
@@ -424,6 +452,11 @@ button.prow{cursor:pointer}button.prow:active{transform:translateY(2px);box-shad
 (function(){try{var q=location.search,m=/[?&]theme=([a-z0-9_]+)/.exec(q),t=m&&/^(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)$/.test(location.hostname)&&!/[?&]vk_app_id=/.test(q)?m[1]:'';
 if(!t&&!/[?&]shot=/.test(q)){var o=JSON.parse(localStorage.getItem('slovo-v1')||'{}');if(o&&o.th&&((o.thU||{})[o.th]||(o.buy||{})['th_'+o.th]))t=o.th;}
 if(t&&t!=='classic')document.documentElement.className='th-x th-'+t;}catch(e){}})();</script>
+<script>/* z-look 07.10: компьютер ≥1200 px — весь интерфейс крупнее (×1,1–1,25): #app и окна масштабируются transform'ом, внутри раскладка как на окне 1/k.
+   Класс html.zk и --zk ставим до первой отрисовки; uiZoom() в game.js переводит координаты пальца/мыши в круге букв */
+(function(){var D=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,k=Math.min(1.3,w/1000,h/660);
+  if(w<1200||k<1.1)k=1;k=Math.round(k*100)/100;var on=k>1;D.classList.toggle('zk',on);if(on)D.style.setProperty('--zk',k);else D.style.removeProperty('--zk');}
+fit();addEventListener('resize',fit);})();</script>
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
@@ -499,10 +532,11 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <section class="screen" id="game">
   <div class="ghdr">
     <button class="ibtn" id="gBack" aria-label="В меню">←</button>
-    <div class="t"><b id="gTitle">Уровень 1</b><small><span id="gSub"></span><span id="gCnt"></span></small></div>
+    <div class="t"><b id="gTitle">Уровень 1</b></div>
     <button class="ibtn" id="gSet" title="Настройки: звук, крупные буквы">⚙️</button>
     <div class="coins"><span class="coin"></span><span class="cc">0</span></div>
   </div>
+  <div class="grib"><div class="rib" id="gRib"><span id="gSub"></span><span id="gCnt"></span></div></div>
   <div class="zina"><div class="av" id="zAv"></div><div class="say" id="zSay"></div></div>
   <div id="board"><div id="grid"></div></div>
   <div id="preview"><div class="w"></div><button class="pvb ok" id="pvOk" aria-label="Проверить слово">✔&#xFE0E;</button><button class="pvb" id="pvX" aria-label="Стереть">✕</button></div>
@@ -534,7 +568,9 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/extras.js" defer></script>
 <script src="js/pay.js" defer></script>
 <script src="js/ui.js" defer></script>
+<script src="js/newbie.js" defer></script>
 <script src="js/themes.js" defer></script>
+<script src="js/sosedki.js" defer></script>
 <script src="js/zina.js" defer></script>
 <script src="js/gloss.js" defer></script>
 <script src="js/dict.js" defer></script>

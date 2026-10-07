@@ -20,6 +20,7 @@ function openShop(){
       :`<div class="mini" id="pv_${it.id}" style="width:112px;height:112px;--lc:${it.lc}"><div class="plate"></div></div>`;
     h+=`<div class="item${sel?' sel':''}"><div class="pv">${pv}</div><b>${it.n}</b><small>${it.d}</small>
       ${sel?`<div class="ok">✓ ${isZ?'Надето':'На столе'}</div>`:own?`<button class="btn blue" data-id="${it.id}">Выбрать</button>`
+        :it.gift==='sos'&&typeof sosShopTxt==='function'?sosShopTxt() // «Соседки по подъезду» (js/sosedki.js): блюдце за 3 недели в призёрах
         :it.gift?`<div class="ok" style="color:var(--ink2)">🎁 Седьмой гостинец<br>(${Math.min(lgN(),LOGIN.length)} из ${LOGIN.length})</div>`
         :it.pay?`<small>В покупке «${PAY_ITEMS[it.pay].name}»</small><button class="btn pbuy" data-pid="${it.pay}">🎁 ${PAY.price(PAY.item(it.pay))}</button>`
         :`<button class="btn${S.coins<it.p?' ghost':''}" data-id="${it.id}" data-p="${it.p}">${it.p} <span class="coin"></span></button>`}</div>`;}
@@ -63,7 +64,7 @@ function shortModal(it,isZ,id){
   $('mNo').onclick=()=>{hideModal();SND.tap();shopSay('Проходи уровни — накопим! Я пока в старом похожу.','norm');};
   const b=$('mAd');if(b)STAT.offer('coins');if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place('coins');
     showRewarded(()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;hideModal();addCoins(ECO.adCoins,'ad');SND.coin();
-      if(document.querySelector('.screen.on')===$('shopS')){openShop();const r=it.p-S.coins;shopSay(r>0?`Держи +${ECO.adCoins}! До «${it.n}» осталось ${r}.`:`Держи +${ECO.adCoins}! Теперь хватает на «${it.n}» — бери!`,'happy');}},
+      if(document.querySelector('.screen.on')===$('shopS')){openShop();const r=it.p-S.coins;shopSay(r>0?`Держи +${ECO.adCoins}! До «${it.n}» осталось ${r} ${plural(r,'монета','монеты','монет')}.`:`Держи +${ECO.adCoins}! Теперь хватает на «${it.n}» — бери!`,'happy');}},
       ()=>{b.disabled=false;},
       // поздний зачёт (adt): монеты — всегда (в счёт дневного предела)
       ()=>{const d=todayKey();if(!S.adc||S.adc.d!==d)S.adc={d,n:0};S.adc.n++;const mine=$('modal').classList.contains('on')&&document.body.contains(b);if(mine)hideModal();addCoins(ECO.adCoins,'ad');SND.coin();
@@ -103,7 +104,9 @@ const wordsTotal=()=>(S.found||0)+(S.bonusAll||0);
 let lbLast=0,lbObj=null;
 async function lbApi(){
   if(!ysdk)return null;if(lbObj)return lbObj;
-  if(ysdk.leaderboard&&ysdk.leaderboard.setScore)lbObj={set:v=>ysdk.leaderboard.setScore(LB_NAME,v),get:o=>ysdk.leaderboard.getEntries(LB_NAME,o)};
+  // новое API Яндекса — ysdk.leaderboards (мн. число); старое getLeaderboards() — запасной путь
+  const L=ysdk.leaderboards;
+  if(L&&L.setScore&&L.getEntries)lbObj={set:v=>L.setScore(LB_NAME,v),get:o=>L.getEntries(LB_NAME,o)};
   else if(ysdk.getLeaderboards){const lb=await ysdk.getLeaderboards();lbObj={set:v=>lb.setLeaderboardScore(LB_NAME,v),get:o=>lb.getLeaderboardEntries(LB_NAME,o)};}
   return lbObj;
 }
@@ -202,7 +205,7 @@ async function shareDef(w,back){
 async function shareChap(c,back){
   SND.tap();STAT.ev('mod',{m:'card',a:'chap'});let cv;try{cv=await drawChapCard(c);}catch(e){toast('Не получилось нарисовать открытку');return;}
   const ch=CHAPTERS[c%CHAPTERS.length];
-  shareImg(cv,'slovo-glava-'+(c+1),`Я прошёл главу «${ch.n}» с бабой Зиной! Игра «Баба Зина: слова из букв»`,back,'Баба Зина: слова из букв','Похвастайся родным — пусть знают, какой ты грамотей!');}
+  shareImg(cv,'slovo-glava-'+(c+1),`Глава «${ch.n}» пройдена — вместе с бабой Зиной! Игра «Баба Зина: слова из букв»`,back,'Баба Зина: слова из букв','Похвастайся родным — пусть знают, какой ты грамотей!');}
 async function drawChapCard(c){
   const ch=CHAPTERS[c%CHAPTERS.length],W=1080,H=1080,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
   const F='"Trebuchet MS","Segoe UI",Roboto,Arial,sans-serif';
@@ -214,7 +217,7 @@ async function drawChapCard(c){
   x.save();x.shadowColor='rgba(39,50,74,.18)';x.shadowBlur=30;x.shadowOffsetY=10;x.fillStyle='#fff';rrect(x,cx,cy,cw,chh,32);x.fill();x.restore();
   x.save();rrect(x,cx,cy,cw,chh,32);x.clip();x.fillStyle=ch.c||'#dbe7fb';x.fillRect(cx,cy,cw,150);x.restore();
   x.font=`110px ${F}`;x.fillText(ch.e,W/2+30,cy+120);
-  x.fillStyle='#5d6781';x.font=`600 44px ${F}`;x.fillText('Я прошёл главу',W/2+30,cy+220);
+  x.fillStyle='#5d6781';x.font=`600 44px ${F}`;x.fillText('Пройдена глава',W/2+30,cy+220);
   let fs=96;const nm='«'+ch.n+'»';x.font=`900 ${fs}px ${F}`;while(x.measureText(nm).width>cw-80&&fs>50){fs-=6;x.font=`900 ${fs}px ${F}`;}
   x.fillStyle='#1d4fa3';x.fillText(nm,W/2+30,cy+220+fs*1.05);
   x.fillStyle='#5d6781';x.font=`600 40px ${F}`;x.fillText('с бабой Зиной · уровни '+(c*CH_LEN+1)+'–'+(c+1)*CH_LEN,W/2+30,cy+chh-40);
@@ -265,10 +268,10 @@ const ASKS=[
   {k:'review',can:()=>ASK_CAN.review,wins:10,t:'⭐ Поставить оценку игре',ok:'Спасибо! Баба Зина ставит тебе пять.',
     run:()=>ysdk.feedback.requestReview().then(r=>{ASK_CAN.review=false;return !!(r&&r.feedbackSent);})}
 ];
-function pickAsk(){
+function pickAsk(free){ // free — окно задания дня: не ждём межэкранную (z-new, nbAsk в js/newbie.js)
   if(askShown||SHOT||Date.now()-T0<120000)return null;
   if(PLAT==='vk'){ // VK: одно предложение за сессию из общего модуля SOC (правила п. 2.6.3)
-    const o=SOC.offer(S.wins||0,Date.now()-lastRew<60000||adBusy||paused||(typeof interDue==='function'&&interDue()));
+    const o=SOC.offer(S.wins||0,Date.now()-lastRew<60000||adBusy||paused||(!free&&typeof interDue==='function'&&interDue()));
     if(!o)return null;askShown=true;
     return {k:'soc_'+(o.k||''),t:o.b,ok:o.ok||'Готово!',soc:o.t,run:()=>Promise.resolve(o.run()).then(r=>r!==false)};}
   const now=Date.now(),a=ASKS.find(x=>{const st=S.ask[x.k]||{};return x.can()&&(S.wins||0)>=x.wins&&!st.done&&(st.n||0)<3&&now-(st.t||0)>3*864e5;});

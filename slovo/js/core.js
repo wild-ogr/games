@@ -42,14 +42,14 @@ function whyNot(w){if(!WHY||(!WHY.size&&typeof ZINA_NO==='object')){WHY=new Map(
 /* ================= сохранение ================= */
 const SKEY='slovo-v1';
 function freshSave(){return {v:1,ts:0,lv:0,coins:50,sound:1,bonusAll:0,jar:0,dict:{},daily:{},streak:0,lastDaily:'',found:0,hintsUsed:0,plays:0,tip:{},curs:{},
-  music:1,ex:'',skin:'gzhel',outfit:'lilac',own:{},bestStreak:0,ask:{},vib:1,big:0};}
+  music:1,ex:'',skin:'gzhel',outfit:'lilac',own:{},bestStreak:0,ask:{},vib:1,big:0,hb:0,box:0};}
 let S=freshSave();
 const SHOT=/[?&]shot=/.test(location.search);
 try{const r=!SHOT&&localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 // BOOT — что лежит в облаке по нашим сведениям (при запуске — то, что на устройстве; после записи в облако — записанное).
 // Облако новее → монеты и банка = облако + заработанное здесь с тех пор (ничего не теряется и не удваивается).
-const BOOT={ts:S.ts||0,coins:+S.coins||0,jar:+S.jar||0};
-const bootSnap=()=>({ts:S.ts,coins:+S.coins||0,jar:+S.jar||0});
+const BOOT={ts:S.ts||0,coins:+S.coins||0,jar:+S.jar||0,hb:+S.hb||0};
+const bootSnap=()=>({ts:S.ts,coins:+S.coins||0,jar:+S.jar||0,hb:+S.hb||0}); // hb — запас подсказок-букв (w-ads, корзинка): сливается как монеты
 function synced(s){Object.assign(BOOT,s);}
 // облако: не чаще раза в 3 с (VK — 15 с); пока облако не прочитано и не слито — в него не пишем
 let cloudT=0,cloudReady=false,cloudBusy=false,cloudTry=0,cloudFails=0;
@@ -71,6 +71,7 @@ const isObj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
 // слияние облака с тем, что на устройстве: прогресс (уровни, словарь, облики, медали, дни) — объединение/максимум;
 // монеты и банка — облако + заработанное здесь после последней синхронизации; настройки — из более нового. S меняется на месте.
 function mergeSave(d){if(!isObj(d))return false;const before=canon(noTs(S)),newer=(+d.ts||0)>BOOT.ts;
+  S.lvo=lvoOf(S)&&lvoOf(d)?1:0; // z-levels: порядок уровней 1–60 — «прежний» (0) побеждает
   for(const k in d)if(!(k in S))S[k]=d[k];
   SOC.merge(d.soc); // «Друзья и игры» (VK): сессии — максимум, «сделано» — навсегда
   STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше (S.stc пишет сам модуль)
@@ -85,20 +86,24 @@ function mergeSave(d){if(!isObj(d))return false;const before=canon(noTs(S)),newe
   if(isObj(d.adc)&&(!S.adc||d.adc.d>S.adc.d||d.adc.d===S.adc.d&&d.adc.n>S.adc.n))S.adc=d.adc; // сколько раз сегодня брали монеты за рекламу
   if(isObj(d.fl)&&(!S.fl||d.fl.d>S.fl.d||d.fl.d===S.fl.d&&d.fl.n>S.fl.n))S.fl=d.fl; // бесплатные буквы дня (сколько взято)
   if(isObj(d.gift)&&(!S.gift||d.gift.d>S.gift.d))S.gift=d.gift; // подарок дня за рекламу уже взят
+  if(isObj(d.adf)&&(!S.adf||d.adf.d>S.adf.d))S.adf=d.adf; // w-ads: подсказка даром при отказе ролика уже была сегодня
   if(isObj(d.lg)&&(!S.lg||(+d.lg.n||0)>(+S.lg.n||0)||(+d.lg.n||0)===(+S.lg.n||0)&&(+d.lg.d||0)>(+S.lg.d||0)))S.lg=d.lg; // «Гостинцы»: больше взято — главнее
   if(isObj(d.wk)&&(!S.wk||d.wk.w>S.wk.w))S.wk=d.wk; // подарок «Тетради недели» уже получен (неделя — ключ понедельника)
   for(const k of['exAll','catW'])if(+d[k]>(+S[k]||0))S[k]=+d[k]; // счётчики «Отличника» и кота Ять
   if(typeof thMerge==='function')thMerge(d,newer); // темы оформления (js/themes.js): открытые — объединение, ролики — максимум, выбранная — из более нового
-  if(typeof payMerge==='function')payMerge(d); // покупки (js/pay.js): купленное, бонусы, токены и заказы VK — объединение
+  if(typeof payMerge==='function')payMerge(d);
+  if(typeof sosMerge==='function')sosMerge(d); // «Соседки по подъезду» (js/sosedki.js): неделя, очки, грамоты // покупки (js/pay.js): купленное, бонусы, токены и заказы VK — объединение
   if(newer){
     const js=typeof JAR_SIZE!=='undefined'?JAR_SIZE:0,jp=typeof JAR_PRIZE!=='undefined'?JAR_PRIZE:0;
     S.coins=Math.max(0,(+d.coins||0)+((+S.coins||0)-BOOT.coins));
     // банка: облако + собранное здесь; переполнилась — приз (раньше лишние слова обрезались)
     let jar=Math.max(0,(+d.jar||0)+((+S.jar||0)-BOOT.jar));if(js)while(jar>=js){jar-=js;S.coins+=jp;}S.jar=jar;
+    if(d.box!=null)S.box=+d.box||0; // w-ads: побед до корзинки — из более нового
+    S.hb=Math.min(typeof HB_MAX!=='undefined'?HB_MAX:9,Math.max(0,(+d.hb||0)+((+S.hb||0)-BOOT.hb)));
     for(const k of['sound','music'])if(k in d)S[k]=d[k];
     const has=(t,L,id)=>{const it=L&&L.find(x=>x.id===id);return !!it&&(!it.p&&!it.gift||!!(S.own||{})[t+':'+id]);};
     if(has('s',typeof SKINS!=='undefined'&&SKINS,d.skin))S.skin=d.skin;if(has('o',typeof OUTFITS!=='undefined'&&OUTFITS,d.outfit))S.outfit=d.outfit;
-    synced({ts:+d.ts,coins:+d.coins||0,jar:+d.jar||0});}
+    synced({ts:+d.ts,coins:+d.coins||0,jar:+d.jar||0,hb:+d.hb||0});}
   migrate();return canon(noTs(S))!==before;}
 // прочитать облако (при запуске, после входа в Яндекс или повтор после сбоя), слить и отправить итог, если в облаке чего-то не хватает.
 // Сбой или битое облако — «прочитано» не ставим (в облако не пишем), пробуем ещё до 3 раз.
@@ -110,8 +115,11 @@ async function cloudLoad(){if(cloudBusy||cloudReady||SHOT||cloudFails>=4||!(ysdk
     if(!d||canon(noTs(d))!==canon(noTs(S)))save(); // в облаке нет того, что есть на устройстве — дописываем
     if(ch&&typeof onCloud==='function')onCloud();
   }catch(e){cloudFails++;if(cloudFails<4)setTimeout(cloudLoad,11000);}finally{cloudBusy=false;}}
+// z-levels (07.10): уровни 1–60 переставлены по трудности (tools/ramp.py). Кто к обновлению прошёл 8+ уровней — S.lvo=0,
+// ему игра показывает прежний порядок (LV_OLD, js/game.js lvIdx): ни повторов, ни пропусков. Новички и стоявшие на 1–7 — S.lvo=1.
+function lvoOf(s){return s.lvo===0||s.lvo===1?s.lvo:+s.lv>=8?0:1;}
 // старые сохранения: один незаконченный уровень S.cur → словарь S.curs по ключу уровня
-function migrate(){S.curs=isObj(S.curs)?S.curs:{};if(S.cur&&S.cur.key&&!S.curs[S.cur.key])S.curs[S.cur.key]=Object.assign({t:Date.now()},S.cur);delete S.cur;
+function migrate(){S.lvo=lvoOf(S);S.curs=isObj(S.curs)?S.curs:{};if(S.cur&&S.cur.key&&!S.curs[S.cur.key])S.curs[S.cur.key]=Object.assign({t:Date.now()},S.cur);delete S.cur;
   if(!isObj(S.ask))S.ask={};if(!isObj(S.tip))S.tip={};
   for(const k of['payT','payV'])if(S[k]!=null&&!Array.isArray(S[k]))S[k]=[];for(const k of['buy','buyB'])if(S[k]!=null&&!isObj(S[k]))S[k]={};
   if(typeof thFix==='function')thFix();} // темы оформления: S.th, S.thU, S.adTot (js/themes.js)
@@ -353,7 +361,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Игра только на русском — lang:'ru' (window.LANG от Яндекса интерфейс не меняет).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v2.3-100710',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v2.4-100715',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе — после облака (что позже), но не дольше 2,5 с (иначе модуль сам отправит start без полей через 3 с).
 // pl — пройдено уровней, cn — монет, bt — облако хоть раз отдавало сохранение (S.cl — метка на устройстве, ставит cloudLoad)
 let statPr=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:+S.lv||0,cn:+S.coins||0,bt:S.cl?1:0});}
@@ -364,7 +372,7 @@ function setPause(r,on){if(on)PR.add(r);else PR.delete(r);paused=PR.has('ad')||P
   if(AC){if(muted)AC.suspend().catch(()=>{});else if(AC.state!=='running'&&(S.sound||S.music))AC.resume().catch(()=>{});}}
 // разметка геймплея для Яндекса; повторные start/stop подряд не отправляем (до готовности SDK — не отмечаем)
 const YG={on:false,
-  start(){if(this.on||!ysdk)return;this.on=true;try{ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
+  start(){if(this.on||!ysdk||document.hidden||PR.has('sdk'))return;this.on=true;try{ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
   stop(){if(!this.on)return;this.on=false;try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.stop();}catch(e){}}
 };
 // идёт ли сейчас игра: открыт экран уровня, уровень не решён, нет окна и паузы
@@ -670,10 +678,10 @@ SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{modal(h)
   now:()=>nowMs(),
   // уведомления: до 3 предложений за всё время — в 1-й, 3-й и 7-й день игрока (NTF_MAX, NTF_DAYS в модуле SOC), каждый раз свой повод
   ntf:{t:n=>{const dly=S.lv>=10,done=!!(S.daily&&S.daily[todayKey()]);
-      if(n<=1)return dly?'Напомнить, когда будет новое задание дня?':'Напомнить, когда приготовлю новый гостинец?';
+      if(n<=1)return done?'Напомнить завтра про новое задание дня?':dly?'Напомнить, когда будет новое задание дня?':'Напомнить, когда приготовлю новый гостинец?'; // z-new: сразу после задания дня — «завтра»
       if(n===2)return done&&(S.streak||0)>=2?'Напомнить, чтобы серия не прервалась?':done?'Напомнить завтра про новое задание дня?':'Напомнить о себе, если соскучусь?';
       return 'Напоминать изредка про гостинцы и новые слова?';},
-    b:'🔔 Напоминать',ok:'Хорошо, напомню! Не часто — я не назойливая.',s:'🔔 Включить напоминания'}});
+    b:'🔔 Напоминать',ok:'Хорошо, напомню! Нечасто — я не назойливая.',s:'🔔 Включить напоминания'}});
 
 /* ---------- облако VK ----------
    Значение — до 4096 байт, на деле надёжно ~2 КБ: режем JSON на куски по 900 символов (кириллица — 2 байта).
@@ -736,7 +744,7 @@ async function initSDK(){
   try{ysdk=await withTimeout(YaGames.init(),20000);}catch(e){ysdk=null;return;}
   // игра только на русском: язык из SDK читаем, но интерфейс не меняем (в консоли выбран только русский)
   try{window.LANG=ysdk.environment.i18n.lang||'ru';}catch(e){window.LANG='ru';}
-  try{ysdk.on&&ysdk.on('game_api_pause',()=>setPause('sdk',true));ysdk.on&&ysdk.on('game_api_resume',()=>setPause('sdk',false));}catch(e){}
+  try{ysdk.on&&ysdk.on('game_api_pause',()=>{setPause('sdk',true);YG.stop();});ysdk.on&&ysdk.on('game_api_resume',()=>{setPause('sdk',false);setTimeout(()=>{if(inPlay())YG.start();},0);});}catch(e){}
   try{ysdk.features.LoadingAPI&&ysdk.features.LoadingAPI.ready();}catch(e){}
   // числа рекламы и цены — флагами из консоли Яндекса (applyFlags в game.js, рамки жёсткие); нет флагов — остаются как в коде
   try{ysdk.getFlags&&ysdk.getFlags().then(f=>{if(typeof applyFlags==='function')applyFlags(f);}).catch(()=>{});}catch(e){}
@@ -763,7 +771,7 @@ function adClose(){setPause('ad',false);setTimeout(()=>{if(inPlay())YG.start();}
    Награда — по-прежнему только за досмотр (result:true / onRewarded) и один раз. Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора.
    Тот же приём — во всех играх (журнал hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ»; эта игра — ads-slovo.md).
    AD_BTN_SEL: общего класса у рекламных кнопок нет — перечислены по id; новая кнопка «за рекламу» — добавь её сюда. #btnGift гаснет только как «Подарок дня» (ghost), «Гостинец» (gold) — без рекламы. */
-const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAd,#jfX2:not([disabled]),#mX2:not([disabled]),#mChX2:not([disabled]),#mFix,#btnGift.ghost,.thad';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAd,#jfX2:not([disabled]),#mX2:not([disabled]),#mChX2:not([disabled]),#mFix,#btnGift.adg,.thad,#mBox:not([disabled]),#lgAd:not([disabled])';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
 function adSoon(){return 'Ролик будет через несколько секунд — кнопка загорится, когда он загрузится';}
@@ -856,17 +864,20 @@ function adLateEnd(rec,r,c){const dup=rec.fin;rec.fin=1;clearTimeout(rec.tF);con
 function adLateCoins(n){n=n>0?n:ECO.adCoins;adLateC=1;addCoins(n,'ad');SND.coin();return 'держи монеты: +'+n;}
 // за награду — по желанию игрока; пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
 let adBusy=false;
+// w-ads (07.10): почему ролик не дал награду — для onFail места (подсказка: «ролика нет» → раз в день даром, корзинка — сберечь):
+// none — нет рекламы, err — ошибка площадки, fail — пустой ответ, hold — жал по погасшей, skip — закрыл сам, exit/timeout — не дождались ответа, nosdk
+let adFailWhy='';
 function showRewarded(cb0,onFail0,late0){
   if(adBusy)return;
-  if(Date.now()<adCoolT){STAT.ad('rew','hold');toast('Ролик ещё загружается — подожди несколько секунд');if(onFail0)onFail0();return;} // пауза кнопок: площадку не дёргаем; STAT — «нажал по погасшей» (не чаще раза в 20 с, n)
+  if(Date.now()<adCoolT){STAT.ad('rew','hold');toast('Ролик ещё загружается — подожди несколько секунд');adFailWhy='hold';if(onFail0)onFail0();return;} // пауза кнопок: площадку не дёргаем; STAT — «нажал по погасшей» (не чаще раза в 20 с, n)
   adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},AD_WAIT_MS*2+AD_RETRY_MS+15000);
   STAT.adReq('rew'); // STAT v1.2: нажатие → ms в итоговом ad
   const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0; // pre: был ли ролик готов к нажатию
   let paid=false,st=0; // st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний)
-  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastRew=Date.now();cb0();},onFail=()=>{adBusy=false;lastRew=Date.now();onFail0&&onFail0();};
+  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastRew=Date.now();cb0();},onFail=w=>{adBusy=false;lastRew=Date.now();adFailWhy=w||'';onFail0&&onFail0();};
   const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr}); // ms ставит модуль; место живёт до итога; pre: pr — был ли ролик готов к нажатию (нужен STAT с 4-м параметром)
   const rel=why=>{if(st)return;st=2;rec.w=Date.now()-t0;rec.exit=why==='exit';adUnwatch();adClose();adPreload('exit');
-    toast(rec.exit?'Хорошо. Подтвердится просмотр — награду отдам':'Не дождалась ответа о просмотре. Придёт — награду отдам',4500);onFail();adDim();adLatePend(rec);};
+    toast(rec.exit?'Хорошо. Подтвердится просмотр — награду отдам':'Не дождалась ответа о просмотре. Придёт — награду отдам',4500);onFail(rec.exit?'exit':'timeout');adDim();adLatePend(rec);};
   const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||interOn||document.hidden){setTimeout(lateOk,1000);return;} // другой ролик или игра свёрнута — подождём (hold: «не пришло» уже не пишем)
     paid=true;lastRew=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}
     adLateEnd(rec,'ok',m?(adLateC?'latec':'late'):'late0');if(m)toast('Просмотр подтвердился — '+m,4500);};
@@ -875,23 +886,24 @@ function showRewarded(cb0,onFail0,late0){
     const go=()=>{clearTimeout(adChkT);if(adSt>0){adSt=0;adMark();}adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{ // pre: ролик тратится → «неизвестно»; пока он на экране, опрос молчит
         if(st===2){if(r&&r.result)lateOk();else adLateEnd(rec,'fail','late');return;}
         if(st)return;st=1;adUnwatch();adClose();
-        if(r&&r.result){stat('ok',tries?'retry':'');adPreload('shown');cb();}else{stat('fail','noresult');toast(AD_FAIL);adPreload('fail');onFail();}
+        if(r&&r.result){stat('ok',tries?'retry':'');adPreload('shown');cb();}else{stat('fail','noresult');toast(AD_FAIL);adPreload('fail');onFail('fail');}
       },e=>{
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
-        onFail();adDim();});};
+        st=1;adClose();const nf=adNoFill(e);if(nf){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
+        onFail(nf?'none':'err');adDim();});};
     go();return;}
-  if(!VK&&!ysdk){if(LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',PLAT==='vk'?'nobridge':'nosdk');toast(AD_FAIL);onFail();}return;} // мост/SDK не ответили — награду даром не даём
+  if(!VK&&!ysdk){if(LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',PLAT==='vk'?'nobridge':'nosdk');toast(AD_FAIL);onFail('nosdk');}return;} // мост/SDK не ответили — награду даром не даём
   let got=false;adWatch(rel);
   // поздние колбэки (после выхода): ролик мог открыться и поставить паузу — снимаем её, если не идёт другой ролик
   const lateY=f=>{if(!adBusy)adClose();f();};
-  ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
+  try{ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
-      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast('Досмотри ролик до конца — тогда награда твоя');onFail();}},
+      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast('Досмотри ролик до конца — тогда награда твоя');onFail('skip');}},
     onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
-      adClose();stat('err','');toast(AD_FAIL);adCool();onFail();adDim();}}});
+      adClose();stat('err','');toast(AD_FAIL);adCool();onFail('err');adDim();}}});}
+  catch(e){if(st)return;st=1;adUnwatch();adClose();stat('err','throw');toast(AD_FAIL);adCool();onFail('err');adDim();} // r3: SDK бросил исключение — кнопки не залипают, награды нет, игра идёт
 }
 // межэкранная (отчёт 12, 27.09): после ЛЮБОГО пройденного уровня («Дальше», «В меню» в окне победы) и при входе в уровень из меню
 // («Играть», выбор уровня, задание дня) — только в этот момент перехода: не по таймеру, никогда во время уровня и не при запуске.
@@ -914,9 +926,15 @@ function maybeInterstitial(cb){
   if(VK){const fin=()=>{adClose();done();};adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{if(r&&r.result)STAT.ad('int','show');else STAT.ad('int','none','nofill');if(!(r&&r.result))lastInter=prev;}).catch(e=>{if(adNoFill(e))STAT.ad('int','none','nofill');else STAT.ad('int','err',adErrCode(e));lastInter=prev;})
       .then(fin,fin);return;} // не .finally: в старых WebView его нет
   if(!ysdk){STAT.ad('int','show','stub');stubAd(done);return;} // свой компьютер — заглушка
-  ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:shown=>{if(shown!==false)STAT.ad('int','show');else STAT.ad('int','none','nofill');if(shown===false)lastInter=prev;adClose();done();},onError:()=>{STAT.ad('int','err','sdk');lastInter=prev;adClose();done();}}});
+  // страховка (r3, 07.10): SDK не ответил за 8 с / реклама открылась и не закрылась за 2 мин / исключение — идём дальше, пауза снята; поздний onOpen/onClose только ставят/снимают паузу
+  let fin=0,wd=0;const end=(r,c)=>{if(fin)return;fin=1;clearTimeout(wd);STAT.ad('int',r,c);if(r!=='show')lastInter=prev;adClose();done();};
+  wd=setTimeout(()=>end('err','wd'),8000);
+  try{ysdk.adv.showFullscreenAdv({callbacks:{onOpen:()=>{clearTimeout(wd);adOpen();if(!fin)wd=setTimeout(()=>end('err','wd2'),120000);},
+    onClose:shown=>{if(fin){adClose();return;}if(shown!==false)end('show');else end('none','nofill');},
+    onError:()=>{if(fin){adClose();return;}end('err','sdk');}}});}catch(e){end('err','throw');}
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hidden',true);clearTimeout(cloudT);cloudT=0;cloudSave(true);}else setPause('hidden',false);});
+// модерация Яндекса (1.19.3, справка «Геймплей»): свернули/сменили вкладку — GameplayAPI.stop, вернулись в уровень (не в рекламе, без окна) — start
+document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hidden',true);YG.stop();clearTimeout(cloudT);cloudT=0;cloudSave(true);}else{setPause('hidden',false);setTimeout(()=>{if(inPlay())YG.start();},0);}});
 
 /* ================= звук (синтез, без файлов) ================= */
 // общий выход: регулятор громкости + компрессор (сумма звуков не хрипит)
