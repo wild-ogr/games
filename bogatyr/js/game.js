@@ -107,10 +107,10 @@ function heroDef(id){return HERO_BY[id]||HEROES[0];}
 function heroMod(id){const m=heroDef(id).mod,r=(S.rank||{})[id]||0,o={};for(const k in m)o[k]=m[k]>0?m[k]*(1+.25*r):m[k];return o;}
 // чистый расчёт: богатырь + кузница + деревня + обереги (pas) + правило недели (wm) + камень (sm); fo — «кузница, как если бы» (для показа «было → стало»)
 function calcStats(heroId,pas,wm,sm,fo){const hm=heroMod(heroId),f=fo||S.forge,p=pas||{},v=S.village;
-  const st={maxHp:100*(1+(hm.hp||0)+.1*(f.hp||0)+.15*(p.apple||0)),spd:118*(1+(hm.spd||0)+.04*(f.spd||0)+.08*(p.boots||0)),
-    armor:(hm.armor||0)+(f.armor||0)+(p.mail||0),regen:.3*(p.livew||0)+.3*(v.well||0),might:(1+(hm.might||0)+.06*(f.might||0)+.1*(p.ring||0)),
-    area:1+(hm.area||0)+.1*(p.comb||0),cd:(1-(hm.cd||0))*(1-.04*(f.cd||0))*(1-.07*(p.amulet||0)),magnet:72*(1+.2*(f.magnet||0)+.25*(p.ball||0)),
-    xp:1+.1*(p.cloth||0)+.1*(v.tower||0)+.06*(f.xp||0)+(hm.xp||0),luck:1+.15*(f.luck||0)+(hm.luck||0),gold:1+.1*(f.gold||0)+.15*(v.barn||0)+(hm.gold||0),amount:p.quiver||0};
+  const E=forgeEff,st={maxHp:100*(1+(hm.hp||0)+.1*E(f.hp)+.15*(p.apple||0)),spd:118*(1+(hm.spd||0)+.04*E(f.spd)+.08*(p.boots||0)),
+    armor:(hm.armor||0)+E(f.armor)+(p.mail||0),regen:.3*(p.livew||0)+.3*(v.well||0),might:(1+(hm.might||0)+.06*E(f.might)+.1*(p.ring||0)),
+    area:1+(hm.area||0)+.1*(p.comb||0),cd:(1-(hm.cd||0))*(1-.04*E(f.cd))*(1-.07*(p.amulet||0)),magnet:72*(1+.2*E(f.magnet)+.25*(p.ball||0)),
+    xp:1+.1*(p.cloth||0)+.1*(v.tower||0)+.06*E(f.xp)+(hm.xp||0),luck:1+.15*(f.luck||0)+(hm.luck||0),gold:1+.1*(f.gold||0)+.15*(v.barn||0)+(hm.gold||0),amount:p.quiver||0};
   wm=wm||{};if(wm.hp)st.maxHp*=wm.hp;if(wm.might)st.might*=wm.might;if(wm.armor)st.armor+=wm.armor;if(wm.cd)st.cd*=wm.cd;if(wm.amount)st.amount+=wm.amount;if(wm.noHeal)st.regen=0;
   if(sm){if(sm.spd)st.spd*=sm.spd;if(sm.might)st.might*=sm.might;} // «Камень на распутье»
   return st;}
@@ -142,6 +142,7 @@ function mkEnemy(type,x,y,o){const d=EN[type],ch=G.ch,lt=DT(),tm=1+lt/60*.34;
   if(d.boss&&BOSS[type]&&BOSS[type].kit)e.kit=BOSS[type].kit; /* M3: приёмы босса темы → BK_STEP */
   if(o&&o.mini){const mk=BOSS[type]&&BOSS[type].mini;e.mini=1;if(d.boss)e.hp*=mk>0&&mk<1?mk:MB_HP;}
   const K=G.K;if(K&&type!=='egg'&&!d.prop){if(d.boss){e.hp*=K.boss;e.dmg*=K.dmg*K.bdmg;}else{e.hp*=K.hp*(e.elite?K.elite:1);e.dmg*=K.dmg;}} /* M3: hpK/dmgK/bossK темы и BAL[слот] */
+  if(G.endless&&type!=='egg'&&!d.prop){const q=d.boss?ENDP.bossK:1;e.hp*=Math.pow(endP('hp'),q);e.dmg*=Math.pow(endP('dmg'),q);} /* fix-v23: давление сечи/недели растёт со временем (снаряды, удары, приёмы босса берут e.dmg) */
   if(e.beh)BEH_ON(e); /* повадка: on(e,G) при появлении — может менять hp/spd/dmg (e.max = итоговое hp) */
   e.max=e.hp;G.en.push(e);return e;}
 function spawnPos(far){const H=G.hero;let a=rand(0,TAU);if(H.moving&&Math.random()<.5)a=Math.atan2(H.fy,H.fx)+rand(-1,1);
@@ -324,6 +325,7 @@ function runStats(win){const t=S.stats,mx=(k,v)=>{t[k]=Math.max(t[k]||0,v);};mx(
 function nextCycle(){if(!G||G.over)return;G.cyc++;const N=END_ORD.length,LAP=Math.floor(G.cyc/N),F=CH[END_ORD[N-1]];G.chi=END_ORD[G.cyc%N];G.ch=CH[G.chi]; /* M2: сеча — по END_ORD (старые 8) */ // не L: L() — функция перевода
   G.em=LAP?Math.pow(1.5,LAP)*F.hp/G.ch.hp:1;G.emD=LAP?Math.pow(1.25,LAP)*F.dmg/G.ch.dmg:1;
   G.t0=G.t;G.ev=mkEvents(G.t);G.egg=null;G.w=chW(G.ch);G.K=chK(G.chi);banner(L('Круг ','Round ')+(G.cyc+1)+': '+G.ch.name,G.ch.sub);SND.boss();}
+function endP(k){if(!G||!G.endless)return 1;const x=(G.t-ENDP.t0)/60;return x>0?Math.pow(ENDP[k],x):1;} // fix-v23: множитель давления сечи/недели (data.js ENDP)
 function hurtHero(d,src){const H=G.hero;if(H.inv>0||G.over||G.win)return;if(src)G.lastBy=src;G.hits++;d=Math.max(1,d-G.st.armor);H.hp-=d;H.inv=.5;H.hurtT=.22;SND.hurt();G.shake=Math.max(G.shake,4);
   addNum(H.x,H.y-30,d,'#ff5a5a');if(H.hp<H.max*.3&&H.sayT<=0){heroSay(pick(PH.low));}
   if(G.novHeal&&H.hp>0&&H.hp<G.st.maxHp*.35){G.novHeal=0;drop('loaf',H.x+rand(-30,30),H.y-46);const lf=G.picks[G.picks.length-1];lf.find=1;lf.t=.3;} // первый поход: каравай сам прилетит (+50% здоровья)
@@ -606,7 +608,7 @@ function pickup(p){const H=G.hero;
 function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dead?clamp(G.boss.hp/G.boss.max,0,1):null;G.paused=true;IN.on=false;YG.stop();musicPlay(null);tipHide();
   G.bestNew=[];for(const t in G.meet){if(!S.meet[t]&&EN[t]){S.meet[t]=1;G.bestNew.push(t);}}for(const t in G.kt)S.bk[t]=(S.bk[t]||0)+G.kt[t];
   // награда: монеты из похода + за нечисть (1 за 40) + за время (3×глава за минуту) + за босса; множители — глава (ECO.chk), жадность, проклятие, испытание
-  const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*ecoChk(chTier(G.chi))*(ECO.dif[G.dif]||1)*(G.rep?ECO.difR:1),parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold*(G.short?G.short.kill:1)],['time',(G.short?G.t*RUN_BOSS_T/G.short.boss:G.t)/60*ECO.time*chTier(G.chi)*G.st.gold],['boss',win?100*G.ch.gold:0],['loot',(G.loot||0)*G.goldMul*G.st.gold]];
+  const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*ecoChk(chTier(G.chi))*(ECO.dif[G.dif]||1)*(G.rep?ECO.difR:1)*(G.short?ECO.early:1), /* fix-v23: первое прохождение мест 1–4 (лесенка) — ×ECO.early */parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold*(G.short?G.short.kill:1)],['time',(G.short?G.t*RUN_BOSS_T/G.short.boss:G.t)/60*ECO.time*chTier(G.chi)*G.st.gold],['boss',win?100*G.ch.gold:0],['loot',(G.loot||0)*G.goldMul*G.st.gold]];
   if(G.endless)parts[3][1]=150*(G.bossesKilled||0)*G.ch.gold;
   G.rw={};G.reward=0;for(const [k,v] of parts){G.rw[k]=Math.round(v*mul);G.reward+=G.rw[k];}
   if(G.daily){const sc=G.kills+(win?500:0),m=drMine();S.dr={day:m.day,best:Math.max(m.best,sc),got:m.got,runs:m.runs+1};G.drScore=sc;G.newRec=sc>m.best;

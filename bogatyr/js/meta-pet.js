@@ -290,6 +290,9 @@ META_MODS.push({id:'pet',
   FRAME(dt,G0){if(PET_ON&&G0&&G0.petM)petStep(dt);},
   DRAW(c,G0){if(PET_ON&&G0&&G0.petM)try{petDraw(c);}catch(e){petErr('draw',e);}},
   END(G,win){if(!PET_ON||!G)return;const nw=petSync();if(!nw.length)return;save();
+    /* fix-v23 (задача 8): ПЕРВЫЙ питомец — крупно, с картинкой и кнопкой «К питомцу» (итоги → деревня → окно питомцев); дальше — строкой, как было */
+    if(P().own.length===nw.length&&(S.runs||0)>=3){const t=nw[0];G.metaHtml=(G.metaHtml||'')+'<div class="unlock"><img src="'+ic(PETS[t].k,160)+'"><div><b>'+L('🐾 Новый друг: ','🐾 New friend: ')+PETS[t].n+'</b><span>'+
+      L('Питомец ходит с тобой в походы и помогает в бою. Прокачивай его в деревне.','Your pet joins your runs and helps in battle. Level it up in the village.')+'</span></div></div><button class="btn gold" id="rPet" style="width:100%;margin-top:6px">'+L('🐾 К питомцу','🐾 Meet your pet')+'</button>';return;}
     G.metaHtml=(G.metaHtml||'')+'<p class="sub">🐾 '+L('Новый друг: ','New friend: ')+'<b>'+nw.map(t=>PETS[t].n).join(', ')+'</b>'+L(' — загляни в деревню, «Питомцы»',' — see Pets in the village')+'</p>';},
   VIL(el){if(!petShow()||!el)return;const p=P();petSync();if(!p.own.length&&!p.dz&&!dzHeroes().length)return;
     const un=petUnseen().length,dzr=p.dz&&dzLeft()<=0,d=document.createElement('div');d.className='card'+(un||dzr?' next':'');d.id='petCard';

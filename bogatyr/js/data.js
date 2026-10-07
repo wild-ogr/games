@@ -216,32 +216,40 @@ const FORGE=[
   {id:'gold',name:'Жадность',icon:'p_coin',per:'+10% золота',max:5}
 ];
 // Броня — самая сильная ветка на ранних главах, поэтому в 1,5 раза дороже
-function forgeCost(l,id){return Math.round(60*Math.pow(1.62,l)*(id==='armor'?1.5:1)/5)*5;}
+/* fix-v23 (задачи 7 и 11, решение владельца «делать круто»): ур.1–2 — как было, с 3-го цена ×(1,4 + 0,15·(n−3)) к прежней и множитель только растёт
+   (ур.3 ×1,4, ур.5 ×1,7, ур.10 ×2,45, ур.15 ×3,2). Компенсация срока кампании — СИЛА уровня: с 3-го каждый уровень кузницы (кроме удачи/жадности) и Оружейной
+   действует как 1 + 0,18·(n−2) прежних (forgeEff). Модель A50: казуал 7,7 нед., лёгкий 13,2, активный 2,5 (v23: 6,5/12,5/2,1). Уровни старых не отнимаем */
+const PRICE_J=1.4,PRICE_A=.15,LVL_PB=.18;
+function priceUp(l){return l<2?1:PRICE_J+PRICE_A*(l-2);} // l — сколько уровней уже куплено (покупаем уровень l+1)
+function forgeEff(l){l=Math.max(0,l|0);const k=Math.max(0,l-1);return l+LVL_PB*k*(k-1)/2;} // «прежних уровней» в l купленных: 1,2,3.18,4.54,6.08…
+function forgeCost(l,id){return Math.round(60*Math.pow(1.62,l)*(id==='armor'?1.5:1)*priceUp(l)/5)*5;}
 // Оружейная: вечная прокачка каждого оружия. Растяжка 07.10 (PROG.md): 10 ур. по +4,5% урона (макс +45%, было 5 по +10% = +50%),
 // размах +5% на 4/7/10-м (макс +15%, было +20%); цена 150·1,6^ур. (за оружие 27 230, было 3 350). Старые уровни — armMig (core.js).
 const ARMORY_MAX=10,ARM_D=.045;
-function armoryCost(l){return Math.round(150*Math.pow(1.6,l)/10)*10;}
+function armoryCost(l){return Math.round(150*Math.pow(1.6,l)*priceUp(l)/10)*10;} // fix-v23: тот же горб PRICE_UP
 function armArea(l){return l>=10?.15:l>=7?.1:l>=4?.05:0;}
 // эффект оружия id на уровне l (по умолчанию — купленный): d — +урон, a — +размах; «старый бонус» (armL) — не меньше прежних +50%/+20%
-function armFx(id,l){if(l==null)l=(S.armory||{})[id]||0;let d=ARM_D*l,a=armArea(l);if(S.armL&&S.armL[id]){d=Math.max(d,.5);a=Math.max(a,.2);}return {d,a};}
+function armFx(id,l){if(l==null)l=(S.armory||{})[id]||0;let d=ARM_D*forgeEff(l), /* fix-v23: сила старших уровней (forgeEff) */a=armArea(l);if(S.armL&&S.armL[id]){d=Math.max(d,.5);a=Math.max(a,.2);}return {d,a};}
 function armPct(v){return Math.round(v*1000)/10;} // доля → проценты (4,5 / 45)
 
 /* ================= Деревня ================= */
+/* fix-v23 (задача 10): 1-й уровень построек — как был, 2-й/3-й дороже (мельница 350/800→450/1100, капище 400/900→500/1200, амбар 500/1100→600/1400,
+   башня 700→850, колодец 800→1000), изба знахарки 450→700 (подъём раз за поход — сильная вещь), трактир 1500→2000. Модель A50 с ценами кузницы: казуал 7,0 нед. */
 const BLD=[
   {id:'forge',name:'Кузница',about:'Вечная прокачка богатыря и оружия',cost:[60]},
-  {id:'mill',name:'Мельница',about:'Открывает казну: +15 золота в час без игры',cost:[120,350,800]},
-  {id:'altar',name:'Капище',about:'+1 перебор карточек за поход',cost:[150,400,900]},
-  {id:'barn',name:'Амбар',about:'+15% золота, казна вмещает +1,5 ч',cost:[200,500,1100]},
-  {id:'tower',name:'Дозорная башня',about:'+10% опыта',cost:[250,700]},
-  {id:'well',name:'Колодец живой воды',about:'+0,3 здоровья в секунду',cost:[300,800]},
-  {id:'hut',name:'Изба знахарки',about:'Раз за поход поднимает на ноги',cost:[450]},
+  {id:'mill',name:'Мельница',about:'Открывает казну: +15 золота в час без игры',cost:[120,450,1100]},
+  {id:'altar',name:'Капище',about:'+1 перебор карточек за поход',cost:[150,500,1200]},
+  {id:'barn',name:'Амбар',about:'+15% золота, казна вмещает +1,5 ч',cost:[200,600,1400]},
+  {id:'tower',name:'Дозорная башня',about:'+10% опыта',cost:[250,850]},
+  {id:'well',name:'Колодец живой воды',about:'+0,3 здоровья в секунду',cost:[300,1000]},
+  {id:'hut',name:'Изба знахарки',about:'Раз за поход поднимает на ноги',cost:[700]},
   {id:'fair',name:'Ярмарка',about:'Казна копит на 25% быстрее',cost:[900,2500]},
-  {id:'tavern',name:'Трактир',about:'4 карточки на выбор вместо 3',cost:[1500]}
+  {id:'tavern',name:'Трактир',about:'4 карточки на выбор вместо 3',cost:[2000]}
 ];
 /* ---------- экономика (27.09): «голодный паёк» — без рекламы прогресс медленный, реклама за награду ускоряет ~вдвое ----------
    coin — ценность монетки в походе, kill — золота за 1 нечисть, time — золота в минуту за номер главы,
    chk — множитель награды по главам (поздние главы не раздувают доход), gift — Дар Жар-птицы в деревне (реклама), boostH — «казна сразу» (реклама) */
-const ECO={coin:.5,kill:1/40,time:3,chk:[1.1,1,1,.9,.8,.75,.7,.65],gift:[100,50],boostH:3,login:.15,x2min:50,dif:{n:1,s:1.3,h:1.6},difR:.7}; // dif — золото за поход по уровню сложности (difficulty 05.10): Обычная — как было, Сложная ×1,3, Адская ×1,6
+const ECO={coin:.5,kill:1/40,time:3,chk:[1.1,1,1,.9,.8,.75,.7,.65],gift:[100,50],boostH:3,login:.15,x2min:50,dif:{n:1,s:1.3,h:1.6},difR:.7,early:.7}; // early (fix-v23): золото первого прохождения мест 1–4 ×0,7 — у новичка было «тысячи за полчаса»; модель A50 — срок не меняется // dif — золото за поход по уровню сложности (difficulty 05.10): Обычная — как было, Сложная ×1,3, Адская ×1,6
 /* ---------- казна: доход без игры ---------- */
 function afkRate(){const v=S.village;let lv=0;for(const k in v)lv+=v[k];
   return Math.round((10+3*lv+15*(v.mill||0)+8*landsU())*(1+.25*(v.fair||0)));} // золота в час (27.09: вдвое скромнее — «голодный паёк», см. ECO)
@@ -287,11 +295,11 @@ const QUESTS=[
   {id:'runs',t:'Сходи в поход {n} раза',n:[2,3,4],key:'runs'},
   {id:'dar',t:'Используй дар богатыря {n} раз',n:[12,30,50],key:'dars'},
   {id:'evo',t:'Проведи эволюцию оружия',n:[1,1,1],key:'evos',need:'evo'},
-  {id:'endless',t:'Продержись {n} мин в Бесконечной сече',n:[4,7,10],key:'endTime',max:1,min:1,need:'endless'},
+  {id:'endless',t:'Продержись {n} мин в Бесконечной сече',n:[3,5,7],key:'endTime',max:1,min:1,need:'endless'},
   {id:'drun',t:'Сходи в поход дня',n:[1,1,1],key:'druns',need:'daily'} // не в общем котле: встаёт первым из трёх (dailyEnsure), когда открыт поход дня
 ];
 function questTier(){const d=landsU();return d<2?0:d<5?1:2;}
-function questReward(){return 60+30*landsU();}
+function questReward(){const l=landsU();return l<2?40+20*l:60+30*l;} // fix-v23: в первых двух землях 40/60 (было 60/90); дальше как было
 
 /* ================= Облики богатырей (скины) =================
    pal — что перекрасить в рисунке богатыря (см. HERO_ART в art.js) */
@@ -336,14 +344,16 @@ function curseMul(c){return {hp:1+.45*c,dmg:1+.2*c,gold:1+.5*c};}
 /* ================= Достижения =================
    v() — текущее значение, n — цель; r — награда: число = золото, строка = облик 'герой@облик' */
 const stat=k=>(S.stats||{})[k]||0;
+/* fix-v23 (задача 6): награды РАННИХ достижений урезаны (первый час давал ~3 000 золота — больше всей ранней кузницы): k100 100→30, k1k 300→100, b_solo 200→100, b_yaga 400→200,
+   r10 300→150, l30 500→150, e1 300→100, end10 500→300, ch5 500→150, g1k 500→250, wk1 300→150; «Логово» — lairGold. Поздние — как были (модель A50 достижений не считает) */
 const ACH=[
-  {id:'k100',name:'Первый почин',about:'Одолей нечисть: 100',n:100,v:()=>S.kills||0,r:100},
-  {id:'k1k',name:'Гроза леса',about:'Одолей нечисть: 1 000',n:1000,v:()=>S.kills||0,r:300},
+  {id:'k100',name:'Первый почин',about:'Одолей нечисть: 100',n:100,v:()=>S.kills||0,r:30},
+  {id:'k1k',name:'Гроза леса',about:'Одолей нечисть: 1 000',n:1000,v:()=>S.kills||0,r:100},
   {id:'k10k',name:'Истребитель',about:'Одолей нечисть: 10 000',n:1e4,v:()=>S.kills||0,r:'ale@forest'},
   {id:'k50k',name:'Гроза нечисти',about:'Одолей нечисть: 50 000',n:5e4,v:()=>S.kills||0,r:3000},
   {id:'k200k',name:'Легенда Руси',about:'Одолей нечисть: 200 000',n:2e5,v:()=>S.kills||0,r:'vol@white'},
-  {id:'b_solo',name:'Соловья — в клетку',about:'Победи Соловья-разбойника',n:1,v:()=>(S.bossKill||{}).solo?1:0,r:200},
-  {id:'b_yaga',name:'Не в печь!',about:'Победи Бабу-Ягу',n:1,v:()=>(S.bossKill||{}).yaga?1:0,r:400},
+  {id:'b_solo',name:'Соловья — в клетку',about:'Победи Соловья-разбойника',n:1,v:()=>(S.bossKill||{}).solo?1:0,r:100},
+  {id:'b_yaga',name:'Не в печь!',about:'Победи Бабу-Ягу',n:1,v:()=>(S.bossKill||{}).yaga?1:0,r:200},
   {id:'b_gory',name:'Три головы долой',about:'Победи Змея Горыныча',n:1,v:()=>(S.bossKill||{}).gory?1:0,r:'ily@fire'},
   {id:'b_kosh',name:'Игла сломана',about:'Победи Кощея Бессмертного',n:1,v:()=>(S.bossKill||{}).kosh?1:0,r:'dob@black'},
   {id:'b_karach',name:'Оттепель',about:'Победи Карачуна',n:1,v:()=>(S.bossKill||{}).karach?1:0,r:'ily@snow'},
@@ -351,21 +361,21 @@ const ACH=[
   {id:'b_tugar',name:'Огнеборец',about:'Победи Змея Тугарина',n:1,v:()=>(S.bossKill||{}).tugar?1:0,r:'mar@dawn'},
   {id:'b_liho',name:'Лихо не буди',about:'Победи Лихо Одноглазое',n:1,v:()=>(S.bossKill||{}).liho?1:0,r:'iva@tsar'},
   {id:'all8',name:'Освободитель Руси',about:'Освободи все 8 земель',n:8,v:()=>landsU(),r:5000,on:()=>!ACH_ALL11||!!(S.ach&&S.ach.all8)}, /* при 11 землях — у кого уже есть, остаётся; новым — all11 */
-  {id:'r10',name:'В дорогу',about:'Сходи в 10 походов',n:10,v:()=>S.runs||0,r:300},
+  {id:'r10',name:'В дорогу',about:'Сходи в 10 походов',n:10,v:()=>S.runs||0,r:150},
   {id:'r50',name:'Бывалый',about:'Сходи в 50 походов',n:50,v:()=>S.runs||0,r:1500},
   {id:'r100',name:'Сто дорог',about:'Сходи в 100 походов',n:100,v:()=>S.runs||0,r:5000},
-  {id:'l30',name:'Матёрый',about:'Достигни 30 уровня в одном походе',n:30,v:()=>stat('maxLvl'),r:500},
+  {id:'l30',name:'Матёрый',about:'Достигни 30 уровня в одном походе',n:30,v:()=>stat('maxLvl'),r:150},
   {id:'l50',name:'Непобедимый',about:'Достигни 50 уровня в одном походе',n:50,v:()=>stat('maxLvl'),r:1500},
-  {id:'e1',name:'Чудо-оружие',about:'Проведи первую эволюцию оружия',n:1,v:()=>Object.keys(S.evoSeen||{}).length,r:300},
+  {id:'e1',name:'Чудо-оружие',about:'Проведи первую эволюцию оружия',n:1,v:()=>Object.keys(S.evoSeen||{}).length,r:100},
   {id:'e9',name:'Мастер эволюций',about:'Проведи эволюцию всех 9 видов оружия',n:9,v:()=>Object.keys(S.evoSeen||{}).length,r:'mik@field'},
-  {id:'end10',name:'Стойкий',about:'Продержись 10 минут в Бесконечной сече',n:10,v:()=>Math.floor((S.endBest||0)/60),r:500},
-  {id:'end20',name:'Несгибаемый',about:'Продержись 20 минут в Бесконечной сече',n:20,v:()=>Math.floor((S.endBest||0)/60),r:1500},
-  {id:'end30',name:'Вечный страж',about:'Продержись 30 минут в Бесконечной сече',n:30,v:()=>Math.floor((S.endBest||0)/60),r:'vas@night'},
+  {id:'end10',name:'Стойкий',about:'Продержись 6 минут в Бесконечной сече',n:6, /* fix-v23: сеча теперь растёт без потолка — 10/20/30 мин → 6/12/18 (полная мета живёт ~17–20 мин) */v:()=>Math.floor((S.endBest||0)/60),r:300},
+  {id:'end20',name:'Несгибаемый',about:'Продержись 12 минут в Бесконечной сече',n:12,v:()=>Math.floor((S.endBest||0)/60),r:1500},
+  {id:'end30',name:'Вечный страж',about:'Продержись 18 минут в Бесконечной сече',n:18,v:()=>Math.floor((S.endBest||0)/60),r:'vas@night'},
   {id:'one',name:'Однолюб',about:'Победи в главе, взяв всего одно оружие',n:1,v:()=>stat('one'),r:800},
   {id:'nopas',name:'Без оберегов',about:'Победи в главе, не взяв ни одного оберега',n:1,v:()=>stat('nopas'),r:800},
   {id:'tough',name:'Непробиваемый',about:'Победи в 4-й главе или дальше, получив не больше 5 ударов',n:1,v:()=>stat('tough'),r:1500},
-  {id:'ch5',name:'Везунчик',about:'Открой 5 сундуков за один поход',n:5,v:()=>stat('maxChests'),r:500},
-  {id:'g1k',name:'Кошель полон',about:'Принеси из одного похода 1 000 золота',n:1000,v:()=>stat('maxGold'),r:500},
+  {id:'ch5',name:'Везунчик',about:'Открой 5 сундуков за один поход',n:5,v:()=>stat('maxChests'),r:150},
+  {id:'g1k',name:'Кошель полон',about:'Принеси из одного похода 1 000 золота',n:1000,v:()=>stat('maxGold'),r:250},
   {id:'vil',name:'Отстроил деревню',about:'Построй все постройки деревни',n:BLD.length,v:()=>BLD.filter(b=>S.village[b.id]).length,r:1000},
   {id:'frg',name:'Мастер кузни',about:'Получи 30 уровней в кузнице',n:30,v:()=>Object.values(S.forge).reduce((a,b)=>a+b,0),r:1500},
   {id:'rank',name:'Былинный',about:'Подними любого богатыря до звания «Былинный»',n:5,v:()=>Math.max(0,...Object.values(S.rank||{})),r:2000},
@@ -373,7 +383,7 @@ const ACH=[
   {id:'streak',name:'Верный',about:'Серия заданий дня: 7 дней подряд',n:7,v:()=>(S.streak||{}).n||0,r:1000},
   {id:'cur1',name:'Проклятый',about:'Победи в главе на Проклятии I или выше',n:1,v:()=>stat('maxCurse')>=1?1:0,r:1000},
   {id:'cur5',name:'Сильнее Лиха',about:'Победи в главе на Проклятии V',n:1,v:()=>stat('maxCurse')>=5?1:0,r:10000},
-  {id:'wk1',name:'Испытатель',about:'Пройди испытание недели (минута и дольше)',n:1,v:()=>stat('weeks'),r:300},
+  {id:'wk1',name:'Испытатель',about:'Пройди испытание недели (минута и дольше)',n:1,v:()=>stat('weeks'),r:150},
   {id:'wk4',name:'Завсегдатай',about:'Пройди испытания 4 разных недель',n:4,v:()=>stat('weeks'),r:1500},
   {id:'best',name:'Знаток нечисти',about:'Открой в Книге нечисти всю нечисть и всех боссов',get n(){return BEST_ORDER.length;},v:()=>Object.keys(S.meet||{}).length,r:2000} /* M2: n — длина BEST_ORDER (виды тем дописываются) */
 ];
@@ -426,6 +436,10 @@ function dailyDef(){const day=dayKey(),seed=+day.split('-').join(''),R=mulberry(
 function drMine(){return S.dr&&S.dr.day===dayKey()?S.dr:{day:dayKey(),best:0,got:0,runs:0};}
 function drReward(){return 60+30*landsU();}
 function drOpen(){return !!S.done[0];}
+/* fix-v23 (задача 5): Бесконечная сеча и Испытание недели — после освобождения 2-й земли (место 6 по ORD; по A50 казуал — ~день 2), а не после главы 1:
+   у новичка они были «фермой золота» (неделя 923 с → ~2 000 золота + награда + достижения). Кто уже играл в них (рекорд/недели) — открыто как было */
+function endGate(){return ORD[Math.min(5,ORD.length-1)];}
+function endOpen(){return !!S.done[endGate()]||(S.endBest|0)>0||((S.stats&&S.stats.weeks)|0)>0;}
 const WEEK_SCORE=1e5; // в таблицу Яндекса пишем неделя×100000 + секунды: у свежей недели счёт всегда выше старых
 
 /* ================= Бестиарий: книга нечисти ================= */
@@ -514,6 +528,10 @@ function chPrev(slot){const p=chPos(slot);return p>1?ORD[p-2]:-1;}  /* слот 
 function chNext(slot){const p=chPos(slot);return p&&p<ORD.length?ORD[p]:-1;} /* следующий по ORD; -1 — последний/нет */
 function campLast(){return ORD[ORD.length-1];}                       /* последний слот кампании («Кампания пройдена») */
 const CURSE_CH=7;                       /* проклятия открывает победа в «Лихо·1» (слот 7) на Сложной/Адской — как было */
+/* fix-v23: давление в бесконечных режимах (сеча и Испытание недели) — без потолка, от ОБЩЕГО времени похода (не от круга):
+   после t0 с каждая минута ×hp к здоровью нечисти (босс — в степени bossK) и ×dmg к урону нечисти (босс — тоже в степени bossK). Подбор ботом: logs/FIX-v23.md.
+   Зачем: к 10–15 мин богатырь ур.~40 со всеми умениями стоял неуязвимым — рост круга (×1,5 раз в 8 кругов) не успевал за ним */
+const ENDP={t0:30,hp:1.35,dmg:1.27,bossK:.25};
 const END_ORD=[0,1,2,3,4,5,6,7];        /* Бесконечная сеча и её рейтинг — по старым 8 слотам (решение владельца — потом) */
 const DR_TH=['les','bol','pole'];       /* поход дня — главы первых трёх тем (слоты из ORD) */
 /* «сколько земель освобождено» для наград (казна, задания, вход, неделя, поход дня, Дар): не утраивается при 33 главах и не меньше прежнего у старых игроков */
@@ -625,8 +643,10 @@ function bestAdd(def){const b0=BEST_ORDER.indexOf('solo');let at=b0<0?BEST_ORDER
   for(const k in def.en||{})if(EN[k]&&!EN[k].boss&&BEST_ORDER.indexOf(k)<0)BEST_ORDER.splice(at++,0,k);
   for(const k in def.boss||{})if(EN[k]&&EN[k].boss&&BEST_ORDER.indexOf(k)<0)BEST_ORDER.push(k);}
 function mbIds(){const a=[];for(const s of ORD){const m=CH[s]&&CH[s].mb;if(m&&m.id&&EN[m.id]&&a.indexOf(m.id)<0)a.push(m.id);}return a;}
+/* fix-v23 (задача 6): «Логово» земли — было 1 000 за каждую (2 000 за первые полчаса); теперь по порядку земли 300, 450, 600 … 1 800 (за 11 земель столько же, 11 550) */
+function lairGold(id){const i=Math.max(0,CAMP.filter(x=>x.n===3).findIndex(x=>x.th===id));return 300+150*i;}
 function achSync(){const has=id=>ACH.some(a=>a.id===id),at=ACH.findIndex(a=>a.id==='all8')+1;
   for(const id of TH_REG){const r=CAMP.find(x=>x.th===id&&x.n===3);if(!r||!CH[r.slot]||has('lair_'+id))continue;const s=r.slot;
-    ACH.splice(at,0,{id:'lair_'+id,get name(){return L('Логово: ','Lair: ')+TH[id].name;},get about(){return L('Освободи «'+CH[s].name+'» — Логово земли «'+TH[id].name+'»','Free '+CH[s].name+' — the Lair of '+TH[id].name);},n:1,v:()=>S.done&&S.done[s]?1:0,r:1000});}
+    ACH.splice(at,0,{id:'lair_'+id,get name(){return L('Логово: ','Lair: ')+TH[id].name;},get about(){return L('Освободи «'+CH[s].name+'» — Логово земли «'+TH[id].name+'»','Free '+CH[s].name+' — the Lair of '+TH[id].name);},n:1,v:()=>S.done&&S.done[s]?1:0,r:lairGold(id)});}
   if(!has('mb_all')&&mbIds().length)ACH.splice(at,0,{id:'mb_all',get name(){return L('Гроза вожаков','Bane of Champions');},get about(){return L('Победи всех мини-боссов ('+mbIds().length+')','Defeat every mini-boss ('+mbIds().length+')');},get n(){return mbIds().length;},v:()=>mbIds().filter(k=>S.bossKill&&S.bossKill[k]).length,r:2000,on:()=>mbIds().length>0});
   if(!has('all11')&&ORD.length===CAMP.length){ACH_ALL11=1;ACH.splice(at,0,{id:'all11',get name(){return L('Освободитель Руси','Liberator of Rus');},get about(){return L('Освободи все 11 земель','Free all 11 lands');},n:11,v:()=>landsU(),r:5000});}}

@@ -279,7 +279,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'bogatyr',gv:'v23-100721',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+STAT.init({g:'bogatyr',gv:'v23-100800',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
@@ -725,7 +725,8 @@ function adOk(){if(PLAT==='vk')return !!VK||(!VK_REAL&&LOCAL);return !!ysdk||LOC
 // SDK/мост пришёл или не пришёл — перерисовать открытую вкладку (кнопки рекламы)
 function adRedraw(){setTimeout(()=>{try{if(typeof langRedraw==='function'&&!$('modal').classList.contains('on'))langRedraw();}catch(e){}},0);}
 function adOpen(){adShowing=true;paused=true;setMuted(true);YG.stop();}
-function adClose(){adShowing=false;adMark();paused=document.hidden;setMuted(document.hidden);if(G&&!G.over&&!G.paused&&!G.pauseOpen&&!$('modal').classList.contains('on'))YG.start();} // окно или пауза открыты — start() вызовет их закрытие
+function adClose(noMark){adShowing=false;if(!noMark)adMark(); // noMark: ролик за награду НЕ показан (нет рекламы/ошибка) — паузу межэкранной не сдвигаем (fix-v23)
+  paused=document.hidden;setMuted(document.hidden);if(G&&!G.over&&!G.paused&&!G.pauseOpen&&!$('modal').classList.contains('on'))YG.start();} // окно или пауза открыты — start() вызовет их закрытие
 function adFail(){return L('Реклама сейчас недоступна, попробуй позже','Ad unavailable right now, try again later');}
 /* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще всего на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
    Раньше игрок видел «недоступна» и жал кнопку по 5–10 раз. Теперь:
@@ -839,13 +840,13 @@ function showRewarded(cb0,onFail0,late0){
     let tries=0;
     const go=()=>{clearTimeout(adChkT);if(adSt>0){adSt=0;adWaitMark();}adOpen();adWatch(rel);window.vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}).then(r=>{
         if(st===2){if(r&&r.result)lateOk();else adLateEnd(rec,'fail','late');return;}
-        if(st)return;st=1;adUnwatch();adClose();
+        if(st)return;st=1;adUnwatch();adClose(!(r&&r.result));
         if(r&&r.result){stat('ok',tries?'retry':'');adPreload('shown');cb();}else{stat('fail','noresult');toast(adFail());adPreload('fail');onFail();}
       },e=>{
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(adFail());adPreload('err');}
+        st=1;adClose(1);if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(adFail());adPreload('err');}
         onFail();adDim();});}; // adDim: колбэк мог заново открыть окно с кнопкой — гасим её сразу
     go();return;}
   if(!ysdk){if(LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',sdkDone?'nosdk':'loading');toast(sdkDone?adFail():L('Реклама ещё загружается, попробуй через пару секунд','Ads are still loading, try again in a few seconds'));onFail();}return;}
@@ -855,7 +856,7 @@ function showRewarded(cb0,onFail0,late0){
     onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
       adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
     onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
-      adClose();stat('err','');toast(adFail());adCool();onFail();adDim();}}});
+      adClose(1);stat('err','');toast(adFail());adCool();onFail();adDim();}}});
 }
 
 /* ================= звук: эффекты — синтез, музыка — записанные треки (ниже) =================

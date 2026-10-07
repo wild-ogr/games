@@ -232,7 +232,7 @@ function renderForge(){const el=$('tabForge');
   h+=needCard(FORGE.filter(f=>(S.forge[f.id]||0)<f.max).map(f=>({n:f.name+L(', ур. ',', lv ')+((S.forge[f.id]||0)+1),c:forgeCost(S.forge[f.id]||0,f.id)})),renderForge)+'<p class="sub">'+L('Прокачка навсегда — для всех богатырей и всех походов.','Permanent upgrades — for every hero and every run.')+'</p>'+(ch4Tip()?'<div class="card next ch4tip" id="ch4TipF"><b style="font-size:14.5px;line-height:1.4">'+ch4TipText()+'</b></div>':'');
   const tipId=forgeTip();
   for(const f of FORGE){const l=S.forge[f.id]||0,cost=forgeCost(l,f.id);
-    h+='<div class="card'+(f.id===tipId?' next':'')+'"><div class="row"><img class="ic" src="'+ic(f.icon)+'"><div class="t"><b>'+f.name+(f.id===tipId?' <em class="rec">'+L('👍 советуем','👍 good pick')+'</em>':'')+'</b>'+(l<f.max?'<span class="delta">'+forgeDelta(f.id)+'</span>':'')+'<span>'+f.per+L(' за уровень',' per level')+(f.max>10?(l>=10?L(' · мастерская ковка',' · master forging'):L(' · до '+f.max+' ур.',' · up to lv '+f.max)):'')+'</span><div class="pips'+(f.max>10?' long':'')+'">'+Array.from({length:f.max},(_,i)=>'<i class="'+(i<l?'on':'')+(i>=10?' m':'')+'"></i>').join('')+'</div></div>'+
+    h+='<div class="card'+(f.id===tipId?' next':'')+'"><div class="row"><img class="ic" src="'+ic(f.icon)+'"><div class="t"><b>'+f.name+(f.id===tipId?' <em class="rec">'+L('👍 советуем','👍 good pick')+'</em>':'')+'</b>'+(l<f.max?'<span class="delta">'+forgeDelta(f.id)+'</span>':'')+'<span>'+f.per+L(' за уровень',' per level')+(f.id!=='gold'&&f.id!=='luck'?L(', с 3-го — больше',', more from lv 3'):'')+(f.max>10?(l>=10?L(' · мастерская ковка',' · master forging'):L(' · до '+f.max+' ур.',' · up to lv '+f.max)):'')+'</span><div class="pips'+(f.max>10?' long':'')+'">'+Array.from({length:f.max},(_,i)=>'<i class="'+(i<l?'on':'')+(i>=10?' m':'')+'"></i>').join('')+'</div></div>'+
       (l>=f.max?'<span class="tag ok">'+L('Макс.','Max')+'</span>':'<button class="btn gold" data-f="'+f.id+'" '+(S.gold<cost?'disabled':'')+'><img src="'+ic('coin',36)+'">'+fmtNum(cost)+'</button>')+'</div></div>';}
   el.innerHTML=h;on('needAd',()=>needCard.fn());on('fsW',()=>{forgeSeg='arm';renderForge();});for(const b of el.querySelectorAll('[data-f]'))b.onclick=()=>{const f=FORGE.find(q=>q.id===b.dataset.f),l=S.forge[f.id]||0,cost=forgeCost(l,f.id);if(S.gold<cost||l>=f.max)return;
     const pw=powerNow(),g0=Object.assign({},GEAR);S.gold-=cost;STAT.ev('spend',{k:'forge:'+f.id,c:cost});S.forge[f.id]=l+1;save();SND.level();achToast();const gch=gearRefresh();renderForge();setGold();if(gch)gearToast(g0);else powerToast(pw);};}
@@ -316,7 +316,7 @@ function todayList(){const TL=[],ls=loginState(),dq=dailyEnsure(),qd=dq.list.fil
   if(S.village.mill){const g=afkGold();TL.push({k:'afk',ic:'chest',t:L('Казна','Treasury'),s:g>0?L('Накопилось золота: ','Gold stored: ')+fmtNum(g):L('Копится, пока тебя нет','Fills up while you’re away'),ready:g>=30,b:L('Забрать','Collect')});}
   if(S.runs&&adOk())TL.push({k:'gift',ic:'bird',t:L('Дар Жар-птицы','Firebird’s Gift'),s:giftReady()?L('+'+fmtNum(giftAmt())+' золота за рекламу','+'+fmtNum(giftAmt())+' gold for an ad'):L('Прилетит через '+giftLeftH()+' ч','Arrives in '+giftLeftH()+' h'),ready:giftReady(),b:L('🎬 За рекламу','🎬 Watch ad'),ad:1});
   if(drOpen()){const m=drMine(),d=dailyDef();TL.push({k:'dr',ic:'hp_'+d.hero,t:L('Поход дня','Daily Run'),s:CH[d.chi].name+' · '+HERO_BY[d.hero].name+' · '+qt(d.rule.name)+(m.best?L(' · очки: ',' · score: ')+fmtNum(m.best):'')+(m.got?'':' · +'+fmtNum(drReward())+goldW()),ready:!m.got,b:m.got?L('Ещё раз','Again'):L('В поход','Go'),always:1});}
-  if(S.done[0]){const m=wkMine();TL.push({k:'wk',ic:'e_perun',t:L('Испытание недели','Weekly Trial'),s:m.got?L('Награда недели получена','Weekly reward collected'):qt(weekly().name)+': +'+fmtNum(weeklyReward())+goldW(),ready:!m.got,b:L('Испытать','Try it')});}
+  if(endOpen()){const m=wkMine();TL.push({k:'wk',ic:'e_perun',t:L('Испытание недели','Weekly Trial'),s:m.got?L('Награда недели получена','Weekly reward collected'):qt(weekly().name)+': +'+fmtNum(weeklyReward())+goldW(),ready:!m.got,b:L('Испытать','Try it')});}
   const TO=S.runs<3?TL.filter(x=>x.k==='login'||x.k==='quests'):TL; // новичку (первые 3 похода) — только вход и задания, остальное не отвлекает
   META_HK('TODAY',TO);return TO;} /* мета дописывает свои дела (и новичку — сама решает): {k:'yard',ic,t,s,ready,b,fn()} */ // новичку (первые 3 похода) — только вход и задания, остальное не отвлекает
 let todayShown=false;
@@ -357,7 +357,7 @@ function villageBadge(){const b=document.querySelector('nav button[data-tab="Vil
 
 /* ---------- задания дня ---------- */
 function dailyEnsure(){const k=dayKey();if(S.dq&&S.dq.day===k)return S.dq;
-  const tier=questTier(),R=mulberry(+k.split('-').join(''));const pool=QUESTS.filter(q=>!q.need||(q.need==='endless'&&S.done[0])||(q.need==='evo'&&tier>=1));
+  const tier=questTier(),R=mulberry(+k.split('-').join(''));const pool=QUESTS.filter(q=>!q.need||(q.need==='endless'&&endOpen())||(q.need==='evo'&&tier>=1));
   const list=drOpen()?[{id:'drun',n:1,p:0,c:0}]:[]; // поход дня — вместо одного из трёх заданий (а не четвёртым делом)
   while(list.length<3&&pool.length){const q=pool.splice(Math.floor(R()*pool.length),1)[0];list.push({id:q.id,n:q.n[tier],p:0,c:0});}
   S.dq={day:k,list,bonus:0};save();return S.dq;}
@@ -454,12 +454,12 @@ const LAIR_PASS=3;
 /* renderMap, mapFocus, звёзды, ряд «Сложность», renderChInfo — в js/map.js (M1 глав данными) */
 /* ---------- испытание недели ---------- */
 function wkMine(){return S.wk&&S.wk.w===weekNo()?S.wk:{best:0,got:0,runs:0};}
-function weeklyCard(){const w=weekly(),m=wkMine(),lh=weekLeftH(),left=lh>=24?Math.floor(lh/24)+L(' дн. ','d ')+(lh%24)+L(' ч','h'):lh+L(' ч','h'),open=!!S.done[0];
+function weeklyCard(){const w=weekly(),m=wkMine(),lh=weekLeftH(),left=lh>=24?Math.floor(lh/24)+L(' дн. ','d ')+(lh%24)+L(' ч','h'):lh+L(' ч','h'),open=endOpen();
   return '<div class="card wkcard"><div class="row"><img class="ic" src="'+ic(w.mod.only?WEAPONS[w.mod.only].icon:'e_perun',96)+'"><div class="t"><span class="wkhead">'+L('🏆 Испытание недели','🏆 Weekly Trial')+'</span>'+
     '<b class="wkname">'+w.name+'</b><span class="clamp2">'+w.about+'</span></div></div>'+
     '<div class="wkstats"><div><b>'+(m.best?fmtTime(m.best):'—')+'</b>'+L('рекорд недели','week record')+'</div><div><b>'+(m.got?'✓':'+'+fmtNum(weeklyReward()))+'</b>'+(m.got?L('награда взята','reward taken'):L('за участие','for taking part'))+'</div><div><b>'+left+'</b>'+L('до смены','until reset')+'</div></div>'+
     (open?'<div class="btns" style="flex-direction:row"><button class="btn" id="wkBtn" style="flex:2">'+L('⚔️ Испытать','⚔️ Try it')+'</button><button class="btn ghost" id="wkRules" style="flex:1">'+L('Правила','Rules')+'</button><button class="btn ghost" id="wkLb" style="flex:1">'+L('Таблица','Board')+'</button></div>'
-      :'<p class="sub" style="margin:8px 0 0">'+L('🔒 Откроется, когда освободишь ','🔒 Unlocks when you free the ')+CH[0].name+'</p>')+'</div>';}
+      :'<p class="sub" style="margin:8px 0 0">'+L('🔒 Откроется после главы ','🔒 Unlocks after Chapter ')+chPos(endGate())+' — '+qt(CH[endGate()].name)+'</p>')+'</div>';}
 function openWkRules(){STAT.screen('weekly');const w=weekly();showModal('<h3>'+w.name+'</h3><p class="sub" style="font-size:14px;color:#e8e4f4">'+w.about+'</p>'+
   '<div class="card" style="font-size:13px;line-height:1.5">'+L('⚔️ Выживание: главы идут по кругу, каждые 5 минут — босс, с каждым кругом сильнее.<br>🏆 Счёт — сколько продержишься.'+(OK?'':' Лучший результат недели попадает в общую таблицу.')+'<br>🎁 Награда за участие: +'+fmtNum(weeklyReward())+' золота, если продержишься хотя бы минуту (раз в неделю).<br>⏳ Правила меняются каждый понедельник.','⚔️ Survival: chapters loop, a boss every 5 minutes, tougher each round.<br>🏆 Score — how long you last. Your best of the week goes on the leaderboard.<br>🎁 Reward for taking part: +'+fmtNum(weeklyReward())+' gold if you survive at least a minute (once a week).<br>⏳ The rules change every Monday.')+'</div>'+
   '<div class="btns"><button class="btn big" id="wrGo">'+L('⚔️ Испытать','⚔️ Try it')+'</button><button class="btn ghost" id="wrOk">'+L('Понятно','Got it')+'</button></div>');on('wrOk',hideModal);on('wrGo',()=>startRun(0,true,true));}
@@ -635,8 +635,13 @@ function openDeath(){const g0=G;SND.lose();const k=G.lastBy&&EN[G.lastBy]?G.last
   onAd('dRev','revive',()=>showRewarded(()=>{G.adRevive=false;hideModal();revive();},null,()=>{if(G!==g0||G.over||!G.adRevive||!modalHas($('dRev')))return adLateGold(); // adt: поднять можно только в том же походе, пока открыто окно гибели; иначе золото
     G.adRevive=false;hideModal();revive();return L('богатырь поднялся','the hero is back on his feet');}));on('dEnd',()=>{hideModal();endRun(false);});}
 // совет после поражения — самый полезный из подходящих
+// fix-v23 (задача 9): сила ниже рекомендованной для главы — что купить (самое дешёвое, на что хватает золота)
+function lossPwTip(){const need=G.dif?mapPw(G.chi,G.dif):0,have=powerNow();if(!(need>0)||have>=need)return '';const u=cheapestIn(upList(),0,S.gold);
+  return L('Сила богатыря ⚔ '+fmtNum(have)+', а этой главе нужна ⚔ '+fmtNum(need)+'. ','Hero power ⚔ '+fmtNum(have)+', this chapter needs ⚔ '+fmtNum(need)+'. ')+
+    (u?L('Золота хватает: '+qt(u.n)+' — загляни в кузницу.','You can afford '+qt(u.n)+' — visit the Forge.'):L('Подкопи золота на кузницу — прокачка остаётся навсегда.','Save up for the Forge — upgrades stay forever.'));}
 function lossTip(){if(S.village.forge&&G.lastBy&&EN[G.lastBy]&&EN[G.lastBy].ranged)return L('Стрелков видно по летящим огонькам: уходи от снарядов в сторону и не стой на месте.','Shooters give themselves away: step aside from their shots and keep moving.');
   if(!S.village.forge)return L('Построй кузницу в деревне — прокачка остаётся навсегда.','Build the Forge in the village — upgrades stay forever.');
+  {const pw=lossPwTip();if(pw)return pw;}
   if((S.forge.hp||0)+(S.forge.armor||0)<3)return L('Прокачай в кузнице «Здоровье» и «Броню» — нечисти станет труднее.','Upgrade '+qt(FORGE[0].name)+' and '+qt(FORGE[2].name)+' in the Forge — make the monsters work for it.');
   if(!Object.keys(G.pas).length)return L('Бери обереги: Кольчуга и Молодильное яблоко спасают шкуру.','Take charms: '+PASSIVES.mail.name+' and '+PASSIVES.apple.name+' save your hide.');
   if(G.weapons.length<3)return L('Возьми второе и третье оружие — одним мечом толпу не удержать.','Take a second and third weapon — one sword can’t hold back a horde.');
@@ -693,7 +698,7 @@ function openResult(win){const GE=G.endless||!!G.daily; // поход дня: к
       (loss&&k?'<div class="killer"><img src="'+ic(k,120)+'"><span>'+L('Кто одолел: ','Defeated by: ')+'<b>'+EN[k].n+'</b>'+(lowScr?'':'<br><small>💡 '+tipL+'</small>')+'</span></div>':loss&&!lowScr?'<div class="tutbox">💡 '+tipL+'</div>':'')+
       (newHero?big(ic('hp_'+newHero.id,160),L('Новый богатырь!','New hero!'),newHero.name+L(' теперь с тобой. Дар: ',' has joined you. Power: ')+newHero.dar.name):'')+
       skinsNew.map(a=>big(ic('hp_'+a.r,160),L('Новый облик!','New outfit!'),qt(skinName(a.r))+' — '+a.name)).join('')+
-      (next&&firstWin?big(ic(next.boss,160),L('Открыта глава ','Chapter ')+chPos(nxS)+L('!',' unlocked!'),next.name+(G.chi===0?L(' · и ⚔️ Бесконечная сеча — все главы по кругу',' · and ⚔️ Endless Battle — all chapters in a loop'):' — '+next.sub)):'')+
+      (next&&firstWin?big(ic(next.boss,160),L('Открыта глава ','Chapter ')+chPos(nxS)+L('!',' unlocked!'),next.name+(G.chi===endGate()?L(' · и ⚔️ Бесконечная сеча с 🏆 Испытанием недели',' · and ⚔️ Endless Battle with the 🏆 Weekly Trial'):' — '+next.sub)):'')+
       (()=>{const det=(loss&&lowScr?'<div class="tutbox">💡 '+tipL+'</div>':'')+(parts&&!loss?'<div class="rwparts">'+parts+'</div>':'')+
       (achGold.length?'<div class="qdone" style="color:#ffd98a">🏆 '+achGold.map(a=>a.name).join(', ')+': +'+fmtNum(achGold.reduce((q,a)=>q+a.r,0))+goldW()+'</div>':'')+
       (G.drGold?'<div class="qdone" style="color:#ffd98a">'+L('🎁 Награда за поход дня: +'+fmtNum(G.drGold)+' золота (уже у тебя)','🎁 Daily Run reward: +'+fmtNum(G.drGold)+' gold (already yours)')+'</div>':'')+(G.wkReward?'<div class="qdone" style="color:#ffd98a">'+L('🏆 Награда за испытание недели: +'+fmtNum(G.wkReward)+' золота (уже у тебя)','🏆 Weekly Trial reward: +'+fmtNum(G.wkReward)+' gold (already yours)')+'</div>':'')+
@@ -727,6 +732,7 @@ function openResult(win){const GE=G.endless||!!G.daily; // поход дня: к
     on('rForge',()=>{if(!take())return;if(next)mapSel=nxS;go('Village');if(S.gold>=BLD[0].cost[0])toast(L('Хватает на кузницу — жми «'+fmtNum(BLD[0].cost[0])+'»!','Enough for the Forge — tap “'+fmtNum(BLD[0].cost[0])+'”!'));});
     on('rLb',()=>{if(PLAT==='vk'){LB.vkFriends();return;}if(!take())return;qSeg='q';lbSeg='daily';go('Quests');setTimeout(()=>{const b=$('lbBox');if(b)b.scrollIntoView({block:'center'});},80);});
     on('rOk',()=>{if(!take())return;go(S.village.forge||GE?'Map':'Village',after);});
+    on('rPet',()=>{if(!take())return;if(nxS>=0)mapSel=nxS;STAT.ev('mod',{m:'pet',a:'res'});go('Village',()=>{try{if(typeof openPets==='function')openPets();}catch(e){}});}); // fix-v23: первый питомец — сразу к нему
     on('rHard',()=>{if(!take())return;S.dfc[0]='s';save();STAT.ev('mod',{m:'dif',a:'s',l:1,c:'camp'});mapSel=0;go('Map',()=>toast(L('⚔ Сложная выбрана в главе 1 — жми «Выступить»','⚔ Hard selected in Chapter 1 — tap “March”')));});
     on('rUp',()=>{if(!take())return;const ci=G.chi,k=G.difUp;S.dfc[ci]=k;save();STAT.ev('mod',{m:'dif',a:k,l:chPos(ci),c:'res'});mapSel=ci;go('Map',()=>toast(difName(k)+L(' — выбрана. Жми «Выступить»',' selected — tap “March”')));});};
   draw();
