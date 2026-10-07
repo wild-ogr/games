@@ -1175,7 +1175,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Турнир / раздача дня / турнир недели / учебная раздача — «уровень» STAT: lvl в newGame/resumeLive, end в finishGame (win/lose/draw) и leaveGame (quit).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'holdem',gv:'v2-100711',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'holdem',gv:'v2-100719',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: progress — после облака, но не позже 2,5 с: pl — турниров сыграно, cn — спички, bt — облако хоть раз отдавало сохранение
    (метка устройства holdem-cl, в сохранение не пишется); cfg — настройки сеанса: th — выбранный стол, snd, calm */
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('holdem-cl')?1:0;}catch(e){}
@@ -2035,6 +2035,9 @@ function layout(){const tb=$('tbl'),W=tb.clientWidth,H=tb.clientHeight;if(!G||!W
   for(let i=0;i<n;i++){const a=(90+i*360/n)*Math.PI/180;let x=cx+rx*Math.cos(a),y=cy+ry*Math.sin(a);
     x=clamp(x,Math.max(A/2+6,54),W-Math.max(A/2+6,54));if(i===0){x=cx;y=H-chMe-26;}
     seats.push({x,y,a});}
+  // низкий широкий стол (окно ниже ~560, pcfix 07.10): боковые соседи стоят теснее своей высоты — подпись сбоку от аватара, наружу (sd: −1 слева, 1 справа)
+  for(let i=1;i<n;i++)for(let j=1;j<n;j++){const p=seats[i],q=seats[j],d=p.x<cx?-1:1;
+    if(i!==j&&Math.abs(p.x-cx)>4&&Math.abs(p.x-q.x)<104&&Math.abs(p.y-q.y)<A+50&&(d<0?p.x:W-p.x)-A/2-7>=98)p.sd=d;}
   const cwB=land?clamp(Math.min(ry*.4,rx*.15),32,64):clamp(Math.min(W*.15,rx*.36,ry*.6),36,70);
   return G.L={W,H,land,cx,cy,rx,ry,A,cwMe,chMe,cwB,seats};}
 // точка между местом и центром стола (доля k пути)
@@ -2045,7 +2048,7 @@ function betPos(Y,i){if(i===0)return Y.ll?{x:Y.cx+Y.cwMe*1.12+46,y:Y.seats[0].y+
 // фишка дилера: у своего места — справа от своих карт (не на плашке «Колл»); у соперника в портрете — на нижнем внешнем краю аватара
 function dPos(Y,i){if(i===0)return {x:Y.cx+Y.cwMe*1.12+16,y:Y.seats[0].y+6};const st=Y.seats[i];
   if(Y.pl){const side=st.x<Y.cx-4?-1:1;return {x:st.x+side*Y.A*.48,y:st.y+Y.A*.22};}
-  if(topSide(Y,i))return {x:Y.cx+52,y:st.y+Y.A/2+15};const q=toward(Y,i,.3);return {x:q.x+16,y:q.y+16};}
+  if(topSide(Y,i))return {x:Y.cx-52,y:st.y+Y.A/2+15};const q=toward(Y,i,.3);return {x:q.x+16,y:q.y+16};}
 function potPos(Y){return Y.pl?{x:Y.cx,y:Y.potY}:{x:Y.cx,y:Y.cy-Y.cwB*.7-18};}
 
 /* ================= рисование стола ================= */
@@ -2064,19 +2067,21 @@ function render(){if(!G)return;const Y=layout();if(!Y)return;const s=G.s,D=G.dis
   for(let i=1;i<n;i++){const st=Y.seats[i],p=s.seats[i],id=G.seats[i].id,A=Y.A,sp=G.seats[i];
     const gone=p.out&&!(s.phase==='end'&&p.c.length&&G.disp.show&&p.show),turn=s.phase==='bet'&&s.cur===i,fold=p.f&&!p.out,won=winSeats[i]>0;
     const mood=G.mood[i]||(won&&D.show?'happy':'norm');
-    const tsd=topSide(Y,i);
-    let cls='seat'+(turn?' turn':'')+(fold?' fold':'')+(gone?' out':'')+(won&&D.won?' won':'')+(tsd?' tsd':'');
+    const tsd=topSide(Y,i),ns=tsd?-1:st.sd||0; // ns — подпись сбоку: −1 слева от аватара, 1 справа
+    let cls='seat'+(turn?' turn':'')+(fold?' fold':'')+(gone?' out':'')+(won&&D.won?' won':'')+(ns?' tsd':'');
     const nm=sp.kind==='bot'?T2(CHARS[id].n):esc(sp.name||'');
     h+=`<div class="${cls}" style="left:${st.x.toFixed(1)}px;top:${(st.y-A/2).toFixed(1)}px"><div class="av" style="width:${A}px;height:${A}px">${portrait(id,mood)}</div>
-      <div class="nm"${tsd?` style="right:calc(50% + ${(A/2+7).toFixed(0)}px)"`:''}>${nm}<span class="sk">${gone?L('выбыл','out'):fmt(D.st[i])+MT}</span></div>`;
+      <div class="nm"${ns?` style="${ns<0?'right':'left'}:calc(50% + ${(A/2+7).toFixed(0)}px)"`:''}>${nm}<span class="sk">${gone?L('выбыл','out'):fmt(D.st[i])+MT}</span></div>`;
     const tag=G.tag[i];if(tag)h+=`<div class="stt ${tag.c}" style="top:${-8}px">${tag.t}</div>`;
     const b=G.bub[i];if(b&&b.until>Date.now()){const up=st.y>Y.cy+Y.ry*.2,sh=st.x<95?95-st.x:st.x>Y.W-95?Y.W-95-st.x:0;h+=`<div class="bub on${up?' up':''}" style="${up?'bottom:100%;margin-bottom:8px':'top:100%;margin-top:4px'};transform:translateX(calc(-50% + ${sh}px));--sh:${sh}px">${esc(b.t)}</div>`;}
     h+='</div>';
     // карты соперника: рубашкой — сбоку от аватара (к центру), при вскрытии — лицом
     if(p.c.length&&!gone&&!p.f){const open=(sd&&p.show)||G.mode==='learn',A2=Y.A;let cw,x0,y0;
       if(open&&Y.pl){cw=Math.min(bw*.8,A2*.6);x0=st.x-cw*1.02;y0=st.y-A2*.33;}
-      else if(open&&tsd){cw=Math.min(bw*.86,A2*.78);x0=st.x+A2/2+6;y0=st.y-cw*.7;}
-      else if(open){cw=Math.min(bw*.86,A2*.78);const hp=toward(Y,i,.34);x0=hp.x-cw*1.02;y0=hp.y-cw*.7;}
+      else if(open){cw=Math.min(bw*.86,A2*.78);const hp=toward(Y,i,.34);x0=hp.x-cw*1.02;y0=hp.y-cw*.7;
+        // подпись сбоку или карты легли бы на своё имя (верхние места) — карты сбоку от аватара, к центру стола, ниже метки комбинации
+        if(ns||(x0<st.x+52&&x0+cw*2.04>st.x-52&&y0<st.y+A2/2+46&&y0+cw*1.4>st.y+A2/2+2)){const g=Math.max(A2/2+6,ns?0:52);
+          x0=ns>0||(!ns&&st.x>Y.cx+4)?st.x-g-cw*2.04:st.x+g;y0=st.y-A2/2+18;}}
       else{cw=A2*.42;const side=st.x<Y.cx-4?1:st.x>Y.cx+4?-1:1;x0=side>0?st.x+A2*.42:st.x-A2*.42-cw*1.6;y0=st.y-A2*.36;}
       for(let k=0;k<2;k++){const c=open?p.c[k]:-1,cls=(fx.deal?'deal':'')+(open&&hi?(hi.indexOf(c)>=0?' win':' dim'):'')+(open&&fx.open?' flip':'');
         h+=cardHtml(c,x0+k*cw*(open?1.04:.6),y0,cw,cls,(open&&Y.pl?'z-index:4;':'')+(fx.deal?dealVar(Y,x0,y0,i,k):''));}}
@@ -2089,9 +2094,9 @@ function render(){if(!G)return;const Y=layout();if(!Y)return;const s=G.s,D=G.dis
   if(me.c.length&&!me.out){for(let k=0;k<2;k++){const c=me.c[k],cls='mc '+(fx.deal?'deal':'')+(me.f?' dim':'')+(hi&&D.show?(hi.indexOf(c)>=0?' win':' dim'):'');
     h+=cardHtml(c,x0+k*cw*1.08,y0,cw,cls,(me.f?'transform:translateY('+(Y.ll?3:10)+'px);':'')+(fx.deal?dealVar(Y,x0,y0,0,k):''));}}
   const mA=Math.min(Y.A,46),mx=Math.max(8,x0-mA-12)+mA/2;
-  const turn0=s.phase==='bet'&&s.cur===0;
-  h+=`<div class="seat${turn0?' turn':''}${me.f&&!me.out?' fold':''}${winSeats[0]>0&&D.won?' won':''}${Y.ll?' tsd':''}" style="left:${mx}px;top:${(y0+4).toFixed(1)}px"><div class="av" style="width:${mA}px;height:${mA}px">${meSvg(curLook(),G.mood[0]||(winSeats[0]>0&&D.show?'happy':'norm'))}</div>
-    <div class="nm"${Y.ll?` style="right:calc(50% + ${(mA/2+7).toFixed(0)}px)"`:''}>${L('Вы','You')}<span class="sk">${fmt(D.st[0])}${MT}</span></div>${G.tag[0]?`<div class="stt me ${G.tag[0].c}" style="top:${Y.ll?mA+4:-8}px">${G.tag[0].t}</div>`:''}</div>`;
+  const turn0=s.phase==='bet'&&s.cur===0,sd0=Y.ll||(Y.land&&Y.chMe<mA+42&&!Y.seats.some((q,j)=>j&&q.x<mx&&q.x+50>mx-mA/2-83&&q.y+Y.A/2+(q.sd?0:47)>y0+mA/2-18)); // низкий стол: имя «Вы» под аватаром попало бы под полосу силы руки — ставим слева (если там не сидит сосед)
+  h+=`<div class="seat${turn0?' turn':''}${me.f&&!me.out?' fold':''}${winSeats[0]>0&&D.won?' won':''}${sd0?' tsd':''}" style="left:${mx}px;top:${(y0+4).toFixed(1)}px"><div class="av" style="width:${mA}px;height:${mA}px">${meSvg(curLook(),G.mood[0]||(winSeats[0]>0&&D.show?'happy':'norm'))}</div>
+    <div class="nm"${sd0?` style="right:calc(50% + ${(mA/2+7).toFixed(0)}px)"`:''}>${L('Вы','You')}<span class="sk">${fmt(D.st[0])}${MT}</span></div>${G.tag[0]?`<div class="stt me ${G.tag[0].c}" style="top:${sd0?mA+4:-8}px">${G.tag[0].t}</div>`:''}</div>`;
   h+=`<div class="hand-lbl" id="handLbl" style="top:${(Y.H-(Y.ll?28:24)).toFixed(0)}px${Y.dense?';display:none':''}">${G.hintHtml||''}</div>`;
   h+=`<div class="say" style="top:${(by+bw*1.4+10).toFixed(0)}px"><span>${Y.land&&G.say||''}</span></div>`;
   h+=`<div class="tip${G.tip?' on':''}" id="tipEl" style="top:${(Y.cy-Y.ry*.62).toFixed(0)}px">${G.tip||''}</div>`;
@@ -2103,13 +2108,15 @@ function fitTags(tb){const o=tb.getBoundingClientRect(),Z=o.width/(tb.clientWidt
   tb.querySelectorAll('.seat>.stt').forEach(e=>{if(!e.textContent.trim())return;const r=e.getBoundingClientRect(),l=(r.left-o.left)/Z,rt=(r.right-o.left)/Z,W=o.width/Z;
     let dx=rt>W-3?W-3-rt:l<3?3-l:0;
     if(e.classList.contains('me')){const c=tb.querySelector('.cd.mc');if(c){const cl=(c.getBoundingClientRect().left-o.left)/Z;if(rt>cl-3)dx=Math.min(dx,cl-3-rt);}}
+    const nm=e.parentElement.classList.contains('tsd')&&e.parentElement.querySelector('.nm'),q=nm&&nm.getBoundingClientRect(); // подпись сбоку: метка не заходит на своё имя
+    if(q&&r.bottom>q.top+2&&r.top<q.bottom-2){if(q.left<r.left&&q.right>r.left-3)dx=Math.max(dx,(q.right+3-r.left)/Z);else if(q.left>r.left&&q.left<r.right+3)dx=Math.min(dx,(q.left-3-r.right)/Z);}
     if(dx)e.style.marginLeft=dx.toFixed(0)+'px';});}
 function placeBubs(){const tb=$('tbl'),bs=tb.querySelectorAll('.bub.on');if(!bs.length)return;
   const o=tb.getBoundingClientRect(),Z=o.width/(tb.clientWidth||o.width)||1,W=o.width/Z,H=o.height/Z,rr=e=>{const r=e.getBoundingClientRect();return {l:(r.left-o.left)/Z,t:(r.top-o.top)/Z,r:(r.right-o.left)/Z,b:(r.bottom-o.top)/Z};}; // Z — масштаб ПК (zoom у #app)
   const hard=[],done=[],seatR=[];
   tb.querySelectorAll('.cd.bd,.cd.mc,.pot,.hand-lbl,.say span').forEach(e=>{if(e.offsetWidth&&(e.classList.contains('cd')||e.textContent.trim()))hard.push(rr(e));});
   tb.querySelectorAll(':scope>.cd:not(.bd):not(.mc)').forEach(e=>seatR.push({st:null,r:rr(e),w:1}));
-  tb.querySelectorAll('.seat').forEach(st=>st.querySelectorAll(':scope>.av,:scope>.nm,:scope>.stt').forEach(e=>{if(e.offsetWidth&&(e.classList.contains('av')||e.textContent.trim()))seatR.push({st,r:rr(e)});}));
+  tb.querySelectorAll('.seat').forEach(st=>st.querySelectorAll(':scope>.av,:scope>.nm,:scope>.stt').forEach(e=>{if(e.offsetWidth&&(e.classList.contains('av')||e.textContent.trim()))seatR.push({st:e.classList.contains('nm')&&st.classList.contains('tsd')?null:st,r:rr(e)});})); // имя сбоку (.tsd) — преграда и для своей реплики
   tb.querySelectorAll('.bet,.dbtn').forEach(e=>seatR.push({st:null,r:rr(e),w:1}));
   const ov=(a,b)=>Math.max(0,Math.min(a.r,b.r)-Math.max(a.l,b.l)+4)*Math.max(0,Math.min(a.b,b.b)-Math.max(a.t,b.t)+4);
   bs.forEach(bu=>{const st=bu.parentElement,sr=rr(st),av=st.querySelector('.av'),ar=rr(av),bw=bu.offsetWidth,bh=bu.offsetHeight,ax=(ar.l+ar.r)/2,ay=(ar.t+ar.b)/2;
