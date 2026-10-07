@@ -82,16 +82,16 @@ const I18N_EN={
     {n:"Karavai Loaf!",s:"+50% health"},
     {n:"Pot of Gold!",s:"Gold flies straight into your pocket"}
   ],
-  CH:[
-    {name:"Deep Dark Forest",sub:"Where Leshy roams and wolves howl"},
-    {name:"Deadly Swamp",sub:"Kikimoras giggle, Vodyanoy gurgles"},
-    {name:"Wild Steppe",sub:"Ravens circle over burial mounds"},
-    {name:"Koschei's Kingdom",sub:"They pine over gold and glow in the dark"},
-    {name:"Frost Mountains",sub:"Snowmen throw, bears won't sleep"},
-    {name:"Sea Kingdom",sub:"Crabs back off, rusalkas sing"},
-    {name:"Land of Fire",sub:"Imps dance, the ground burns"},
-    {name:"Thrice-Nine Kingdom",sub:"Likho never sleeps: one eye is watching"}
-  ],
+  CH:{ /* M2: по СЛОТУ (ключ = номер слота, как в CH/S.done); главы тем 8–32 переводятся в своих файлах (поле en главы → tr) */
+    0:{name:"Deep Dark Forest",sub:"Where Leshy roams and wolves howl"},
+    1:{name:"Deadly Swamp",sub:"Kikimoras giggle, Vodyanoy gurgles"},
+    2:{name:"Wild Steppe",sub:"Ravens circle over burial mounds"},
+    3:{name:"Koschei's Kingdom",sub:"They pine over gold and glow in the dark"},
+    4:{name:"Frost Mountains",sub:"Snowmen throw, bears won't sleep"},
+    5:{name:"Sea Kingdom",sub:"Crabs back off, rusalkas sing"},
+    6:{name:"Land of Fire",sub:"Imps dance, the ground burns"},
+    7:{name:"Thrice-Nine Kingdom",sub:"Likho never sleeps: one eye is watching"}
+  },
   FORGE:{
     hp:{name:"Health",per:"+10% health"},
     might:{name:"Might",per:"+6% damage"},

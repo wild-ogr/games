@@ -43,12 +43,19 @@ const SKEY='bogatyr-v1';
 function freshSave(){return {v:1,ts:0,gold:0,forge:{},village:{},armory:{},done:{},best:{},endBest:0,afkT:0,hero:'dob',sound:1,music:1,vm:.6,vs:.8,runs:0,kills:0,gift:0,tut:0};}
 let S=freshSave();
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
+/* Оружейная: растяжка 07.10 (PROG.md) — было 5 ур. по +10 % урона (+10 % размаха на 3/5), стало 10 ур. по +4,5 % (+5 % размаха на 4/7/10).
+   Старый уровень → новый с тем же или большим эффектом: 1→3, 2→5, 3→7, 4→9, 5→10 + «старый бонус» armL[id]=1 (пол +50 % урона, +20 % размаха).
+   Сейв: S.armV=2 — уже новые уровни. Облако без armV мигрирует перед слиянием (mergeProgress). Значение >5 в старом сейве — уже новый уровень (не трогаем). */
+const ARM_OLD=[0,3,5,7,9,10];
+function armMig(arm,leg){for(const k in arm){const o=Math.floor(+arm[k]||0);if(o<=0||o>5)continue;arm[k]=ARM_OLD[o];if(o===5&&leg)leg[k]=1;}}
 function fixSave(){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v);
-  for(const k of['forge','village','armory','done','best','rank','bought','stats','bossKill','evoSeen','skins','skin','ach','meet','bk','ask','stars','dfc'])if(!ob(S[k]))S[k]={};
+  for(const k of['forge','village','armory','armL','done','best','rank','bought','stats','bossKill','evoSeen','skins','skin','ach','meet','bk','ask','stars','dfc'])if(!ob(S[k]))S[k]={};
+  if(S.armV!==2){armMig(S.armory,S.armL);S.armV=2;} // Оружейная 5 → 10 ур. (см. armMig)
   // уровни сложности (difficulty 05.10): S.dfc — выбор {глава:'n'|'s'|'h'}; победы и звёзды уровней — в S.stars (Обычная — без приставки, Сложная 's', Адская 'h')
   for(const i in S.done)if(S.done[i])S.stars[i+'w']=1; // звёзды глав (boost 2): пройденной главе — первая звезда Обычной; старые сейвы: всё пройденное → Обычная, в этих главах сразу открыта Сложная
   if(typeof S.gold!=='number'||!isFinite(S.gold))S.gold=0;if(!S.afkT)S.afkT=nowMs();if(typeof S.th!=='string')S.th=''; // S.th — тема оформления (js/look.js), '' = основная
-  for(const k of['payT','payV'])if(S[k]!=null&&!Array.isArray(S[k]))S[k]=[];if(S.buy!=null&&!ob(S.buy))S.buy={};if(S.buyB!=null&&!ob(S.buyB))S.buyB={};} // покупки (js/pay.js)
+  for(const k of['payT','payV'])if(S[k]!=null&&!Array.isArray(S[k]))S[k]=[];if(S.buy!=null&&!ob(S.buy))S.buy={};if(S.buyB!=null&&!ob(S.buyB))S.buyB={}; // покупки (js/pay.js)
+  if(typeof META_HK==='function')META_HK('FIX',S);} /* мета «Подворье»: починка своих ключей (при самой первой загрузке META_HK ещё нет — meta.js чинит S сам при загрузке) */
 fixSave();
 const BOOT={ts:S.ts||0,fresh:!S.ts}; // что было на этом устройстве при запуске
 /*STAT*/
@@ -272,7 +279,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'bogatyr',gv:'v22-100622',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+STAT.init({g:'bogatyr',gv:'v23-100721',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
@@ -293,9 +300,12 @@ function cloudSave(now){clearTimeout(cloudT);cloudT=0;if(!cloudReady||cloudPendi
 function cloudFlush(){if(cloudReady&&!cloudPending)cloudSave(true);} // сворачивание — сразу
 // слияние: d — облако, L — это устройство; useCloud — настройки брать из облака
 function mergeProgress(d,loc,useCloud){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{},o=Object.assign(freshSave(),JSON.parse(JSON.stringify(loc)));
+  if(d.armV!==2){d=Object.assign({},d,{armory:Object.assign({},ob(d.armory)),armL:Object.assign({},ob(d.armL))});armMig(d.armory,d.armL);} // облако старой версии: Оружейная → новые уровни до максимума
+  if((ob(loc).armV|0)!==2){o.armory=Object.assign({},ob(o.armory));o.armL=Object.assign({},ob(o.armL));armMig(o.armory,o.armL);}o.armV=2;
   const mx=k=>{const a=Object.assign({},ob(o[k])),b=ob(d[k]);for(const i in b)if(typeof b[i]==='number')a[i]=Math.max(+a[i]||0,b[i]);o[k]=a;};
-  for(const k of['forge','village','armory','rank','best','bk','stats'])mx(k);
-  for(const k of['done','bought','bossKill','evoSeen','skins','ach','meet','ask','stars'])o[k]=Object.assign({},ob(d[k]),ob(o[k]));
+  for(const k of['forge','village','armory','armL','rank','best','bk','stats'])mx(k);
+  for(const k of['done','bought','bossKill','evoSeen','skins','ach','meet','ask','stars','mapSeen'])o[k]=Object.assign({},ob(d[k]),ob(o[k]));
+  {const a=ob(o.lairL),b=ob(d.lairL),m={};for(const s in Object.assign({},a,b))if(!o.done[s])m[s]=Math.max(a[s]|0,b[s]|0);o.lairL=m;} /* поблажка Логова: максимум, пройденное — стёрто */
   for(const k of['endBest','runs','kills','bosses','curseMax','eco','gift','tut','nb'])o[k]=Math.max(+o[k]||0,+d[k]||0);
   for(const k in d)if(/^seen\d+$/.test(k)&&d[k])o[k]=1;
   o.afkT=BOOT.fresh?(+d.afkT||o.afkT):Math.max(+o.afkT||0,+d.afkT||0);
@@ -310,6 +320,8 @@ function mergeProgress(d,loc,useCloud){const ob=v=>v&&typeof v==='object'&&!Arra
   const aw=ob(o.wk),dw=ob(d.wk);if(dw.w&&(!aw.w||dw.w>aw.w))o.wk=dw;else if(dw.w&&dw.w===aw.w)for(const k of['best','got','runs'])aw[k]=Math.max(aw[k]||0,dw[k]||0);
   if(useCloud)for(const k of['hero','skin','curse','dfc','sound','music','vm','vs','calm','vib','th'])if(k in d)o[k]=d[k];
   if(typeof payMerge==='function')payMerge(d,o); // покупки (js/pay.js): купленное — объединение
+  if(typeof TRO_MERGE==='function')TRO_MERGE(d,o); /* трофеи меты */
+  if(typeof META_HK==='function')META_HK('MERGE',d,o); /* мета «Подворье»: свои ключи S.yard/S.tro/… — максимум/объединение */
   o.ts=Math.max(+o.ts||0,+d.ts||0);return o;}
 function mergeSave(d){if(!d||typeof d!=='object'||Array.isArray(d)||!d.ts)return false;
   const soc=S.soc;S=mergeProgress(d,S,BOOT.fresh||d.ts>(S.ts||0));if(soc&&typeof soc==='object'){S.soc=soc;if(typeof SOC!=='undefined')SOC.merge(d.soc);} // «Друзья и игры»: тот же объект (модуль держит ссылку), облако — слиянием

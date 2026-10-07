@@ -191,14 +191,14 @@ const DIF_K=['n','s','h'],DIF_PRE={n:'',s:'s',h:'h'};
 /* Обычная, главы 5–8 (индекс 4–7) — поверх DIF.n, подобрано ботами (release-h/bogatyr-diff/log.md, 06.10): типичная прокачка ≈ 83–97 % у среднего, без прокачки ≤ 37 %.
    гл.5 — нечисть крепче DIF.n (иначе без кузницы 77 %), гл.7 — нечисть мягче и опыта больше (Тугарин у босса ×0,45 — нижняя граница) */
 const DIF_N5={4:{hp:.7,dmg:.55,bossHp:.55,bossDmg:.6},5:{dmg:.4,bossHp:.45,bossDmg:.5},6:{hp:.45,dmg:.3,xp:1.6,bossHp:.45,bossDmg:.5},7:{bossHp:.45,bossDmg:.5}},CURSE_CAP={s:5,h:5}; // потолок проклятия по уровню (Обычная — без проклятий). Адская — все 5: замер (полная мета) — Адская+V 566 зол/мин < Сложная+V 714, экономику не взрывает
-function difProf(chi,k){return k==='n'&&DIF_N5[chi]?Object.assign({},DIF.n,DIF_N5[chi]):DIF[k]||null;}
+function difProf(chi,k){if(k!=='n')return DIF[k]||null;const p=difNT(chNtT(chi)),b=typeof BAL!=='undefined'&&BAL[chi];return b&&b.nt?Object.assign({},p,b.nt):p;} /* M2: Обычная — по tier слота (difNT в блоке «ГЛАВЫ ДАННЫМИ»; у слотов 0–7 — прежние DIF.n/DIF_N5[4–7]). M3: + ступень главы nt (chNtT) и поправки BAL[слот].nt */
 function difWon(chi,k){return !!(S.stars&&S.stars[chi+DIF_PRE[k]+'w']);} // победа в главе на уровне k
 function difOpen(chi,k){return k==='n'?true:k==='s'?difWon(chi,'n'):k==='h'?difWon(chi,'s'):false;} // открыт ли уровень k в главе chi
 function difOf(chi){const k=S.dfc&&S.dfc[chi];return k&&DIF_K.indexOf(k)>=0&&difOpen(chi,k)?k:'n';} // уровень, с которым глава начнётся (выбран и открыт — он, иначе Обычная)
 /* звёзды глав (boost 2): w — победа, d — победа без единого падения (ни «Подняться», ни знахарка), t — победа быстрее STAR_T секунд. Хранятся как S.stars['<глава><буква>']=1. Только коллекция, наград нет */
 const STAR_T=330,STAR_K=['w','d','t'];
 function chStars(i,d){const p=DIF_PRE[d||'n']||'';let n=0;for(const k of STAR_K)if(S.stars&&S.stars[i+p+k])n++;return n;} // d — уровень сложности (по умолчанию Обычная)
-function starsTotal(d){let n=0;for(let i=0;i<CH.length;i++)n+=d?chStars(i,d):chStars(i,'n')+chStars(i,'s')+chStars(i,'h');return n;} // без d — все уровни
+function starsTotal(d){let n=0;for(const i of ORD)n+=d?chStars(i,d):chStars(i,'n')+chStars(i,'s')+chStars(i,'h');return n;} // без d — все уровни
 const NOV_GIFT=150; // «подъёмные от старосты» — один раз, после первого проигранного похода (boost)
 
 /* ================= Кузница (навсегда) =================
@@ -217,9 +217,14 @@ const FORGE=[
 ];
 // Броня — самая сильная ветка на ранних главах, поэтому в 1,5 раза дороже
 function forgeCost(l,id){return Math.round(60*Math.pow(1.62,l)*(id==='armor'?1.5:1)/5)*5;}
-// Оружейная: вечная прокачка каждого оружия (+10% урона за уровень, на 3-м и 5-м ещё +10% площади)
-const ARMORY_MAX=5;
-function armoryCost(l){return Math.round(150*Math.pow(1.8,l)/10)*10;}
+// Оружейная: вечная прокачка каждого оружия. Растяжка 07.10 (PROG.md): 10 ур. по +4,5% урона (макс +45%, было 5 по +10% = +50%),
+// размах +5% на 4/7/10-м (макс +15%, было +20%); цена 150·1,6^ур. (за оружие 27 230, было 3 350). Старые уровни — armMig (core.js).
+const ARMORY_MAX=10,ARM_D=.045;
+function armoryCost(l){return Math.round(150*Math.pow(1.6,l)/10)*10;}
+function armArea(l){return l>=10?.15:l>=7?.1:l>=4?.05:0;}
+// эффект оружия id на уровне l (по умолчанию — купленный): d — +урон, a — +размах; «старый бонус» (armL) — не меньше прежних +50%/+20%
+function armFx(id,l){if(l==null)l=(S.armory||{})[id]||0;let d=ARM_D*l,a=armArea(l);if(S.armL&&S.armL[id]){d=Math.max(d,.5);a=Math.max(a,.2);}return {d,a};}
+function armPct(v){return Math.round(v*1000)/10;} // доля → проценты (4,5 / 45)
 
 /* ================= Деревня ================= */
 const BLD=[
@@ -239,7 +244,7 @@ const BLD=[
 const ECO={coin:.5,kill:1/40,time:3,chk:[1.1,1,1,.9,.8,.75,.7,.65],gift:[100,50],boostH:3,login:.15,x2min:50,dif:{n:1,s:1.3,h:1.6},difR:.7}; // dif — золото за поход по уровню сложности (difficulty 05.10): Обычная — как было, Сложная ×1,3, Адская ×1,6
 /* ---------- казна: доход без игры ---------- */
 function afkRate(){const v=S.village;let lv=0;for(const k in v)lv+=v[k];
-  return Math.round((10+3*lv+15*(v.mill||0)+8*Object.keys(S.done).length)*(1+.25*(v.fair||0)));} // золота в час (27.09: вдвое скромнее — «голодный паёк», см. ECO)
+  return Math.round((10+3*lv+15*(v.mill||0)+8*landsU())*(1+.25*(v.fair||0)));} // золота в час (27.09: вдвое скромнее — «голодный паёк», см. ECO)
 function afkCapH(){return 6+1.5*(S.village.barn||0);}
 function afkH(){return S.afkT?clamp((nowMs()-S.afkT)/3600e3,0,afkCapH()):0;} // часов в казне — по времени сервера (nowMs), не больше вместимости
 function afkGold(){return Math.floor(afkH()*afkRate());}
@@ -285,8 +290,8 @@ const QUESTS=[
   {id:'endless',t:'Продержись {n} мин в Бесконечной сече',n:[4,7,10],key:'endTime',max:1,min:1,need:'endless'},
   {id:'drun',t:'Сходи в поход дня',n:[1,1,1],key:'druns',need:'daily'} // не в общем котле: встаёт первым из трёх (dailyEnsure), когда открыт поход дня
 ];
-function questTier(){const d=Object.keys(S.done).length;return d<2?0:d<5?1:2;}
-function questReward(){return 60+30*Object.keys(S.done).length;}
+function questTier(){const d=landsU();return d<2?0:d<5?1:2;}
+function questReward(){return 60+30*landsU();}
 
 /* ================= Облики богатырей (скины) =================
    pal — что перекрасить в рисунке богатыря (см. HERO_ART в art.js) */
@@ -345,7 +350,7 @@ const ACH=[
   {id:'b_morcar',name:'Владыка вод',about:'Победи Морского царя',n:1,v:()=>(S.bossKill||{}).morcar?1:0,r:'sad@sea'},
   {id:'b_tugar',name:'Огнеборец',about:'Победи Змея Тугарина',n:1,v:()=>(S.bossKill||{}).tugar?1:0,r:'mar@dawn'},
   {id:'b_liho',name:'Лихо не буди',about:'Победи Лихо Одноглазое',n:1,v:()=>(S.bossKill||{}).liho?1:0,r:'iva@tsar'},
-  {id:'all8',name:'Освободитель Руси',about:'Освободи все 8 земель',n:8,v:()=>Object.keys(S.done).length,r:5000},
+  {id:'all8',name:'Освободитель Руси',about:'Освободи все 8 земель',n:8,v:()=>landsU(),r:5000,on:()=>!ACH_ALL11||!!(S.ach&&S.ach.all8)}, /* при 11 землях — у кого уже есть, остаётся; новым — all11 */
   {id:'r10',name:'В дорогу',about:'Сходи в 10 походов',n:10,v:()=>S.runs||0,r:300},
   {id:'r50',name:'Бывалый',about:'Сходи в 50 походов',n:50,v:()=>S.runs||0,r:1500},
   {id:'r100',name:'Сто дорог',about:'Сходи в 100 походов',n:100,v:()=>S.runs||0,r:5000},
@@ -370,7 +375,7 @@ const ACH=[
   {id:'cur5',name:'Сильнее Лиха',about:'Победи в главе на Проклятии V',n:1,v:()=>stat('maxCurse')>=5?1:0,r:10000},
   {id:'wk1',name:'Испытатель',about:'Пройди испытание недели (минута и дольше)',n:1,v:()=>stat('weeks'),r:300},
   {id:'wk4',name:'Завсегдатай',about:'Пройди испытания 4 разных недель',n:4,v:()=>stat('weeks'),r:1500},
-  {id:'best',name:'Знаток нечисти',about:'Открой в Книге нечисти всю нечисть и всех боссов',n:37,v:()=>Object.keys(S.meet||{}).length,r:2000}
+  {id:'best',name:'Знаток нечисти',about:'Открой в Книге нечисти всю нечисть и всех боссов',get n(){return BEST_ORDER.length;},v:()=>Object.keys(S.meet||{}).length,r:2000} /* M2: n — длина BEST_ORDER (виды тем дописываются) */
 ];
 // рисунки обликов: тот же богатырь, другие цвета
 for(const sk of SKINS){const h=Object.assign({},HERO_ART[sk.hero],sk.pal),k=sk.hero+'@'+sk.id;
@@ -407,7 +412,7 @@ const WEEKLY=[
 function weekNo(t){const d=new Date(t||dayMs());return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5+3)/7);} // недели с понедельника
 function weekly(){return WEEKLY[(weekNo()*3)%WEEKLY.length];}
 function weekLeftH(){const d=new Date(dayMs()),dow=(d.getDay()+6)%7,end=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7-dow);return Math.ceil((end-d)/3600e3);}
-function weeklyReward(){return 300+100*Object.keys(S.done).length;}
+function weeklyReward(){return 300+100*landsU();}
 /* ================= Поход дня (v13) =================
    Одинаковый для всех в этот день: глава (из первых трёх), богатырь (выдаётся на поход, даже если ещё не открыт) и правило из WEEKLY
    (не то, что на этой неделе). Зерно случайности дня — у всех одинаковые карточки умений и сундуки (при одинаковом выборе).
@@ -416,10 +421,10 @@ function weeklyReward(){return 300+100*Object.keys(S.done).length;}
 const DAY0=Date.UTC(2026,0,1)/864e5,DAY_SCORE=1e5;
 function dayIdx(){const d=new Date(dayMs());return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5-DAY0);}
 function dailyDef(){const day=dayKey(),seed=+day.split('-').join(''),R=mulberry(seed*31+7);R();R();
-  const chi=Math.floor(R()*3),hero=HEROES[Math.floor(R()*HEROES.length)].id,pool=WEEKLY.filter(w=>w.id!==weekly().id),rule=pool[Math.floor(R()*pool.length)];
+  const P=ORD.filter(s=>DR_TH.indexOf(CAMP_S[s].th)>=0),chi=P[Math.floor(R()*P.length)],hero=HEROES[Math.floor(R()*HEROES.length)].id,pool=WEEKLY.filter(w=>w.id!==weekly().id),rule=pool[Math.floor(R()*pool.length)];
   return {day,seed,chi,hero,rule};}
 function drMine(){return S.dr&&S.dr.day===dayKey()?S.dr:{day:dayKey(),best:0,got:0,runs:0};}
-function drReward(){return 60+30*Object.keys(S.done).length;}
+function drReward(){return 60+30*landsU();}
 function drOpen(){return !!S.done[0];}
 const WEEK_SCORE=1e5; // в таблицу Яндекса пишем неделя×100000 + секунды: у свежей недели счёт всегда выше старых
 
@@ -467,6 +472,161 @@ const LORE={
 const BEST_ORDER=['muh','bat','wolf','lesh','piy','kik','ogon','vod','voron','skel','upyr','idol','prizr','koldun','rycar','kot',
   'wolf_i','ledyan','snow','shatun','ryba','rak','rusalka','vod_s','chert','ognev','skel_f','idol_f',
   'solo','yaga','gory','kosh','egg','karach','morcar','tugar','liho'];
-function bestWhere(id){if(id==='kot')return EN.yaga.n+L(' (глава 2)',' (chapter 2)');if(id==='egg')return CH[3].name+L(' (глава 4)',' (chapter 4)');
-  const i=CH.findIndex(c=>c.boss===id||c.en.includes(id));return i<0?'':CH[i].name+L(' (глава ',' (chapter ')+(i+1)+')';}
+function bestWhere(id){const gl=i=>L(' (глава ',' (chapter ')+chPos(i)+')';if(id==='kot')return EN.yaga.n+gl(1);if(id==='egg')return CH[3].name+gl(3);
+  const i=ORD.find(s=>CH[s]&&(CH[s].boss===id||CH[s].en.includes(id)||(CH[s].w||[]).some(x=>x&&x.id===id)||(CH[s].mb&&CH[s].mb.id===id)));return i==null?'':CH[i].name+gl(i);}
 function bestStars(id,n){const b=EN[id].boss||id==='egg',t=b?[1,5,20]:[10,100,1000];return t.filter(x=>n>=x).length;}
+
+/* ======================= ГЛАВЫ ДАННЫМИ (33 главы; A10 ENG, M1 «каркас», 07.10) =======================
+   Формат и имена — ~/Projects/hobby-analytics/release-h/bogatyr-chapters/ENGINE-API.md (главнее раздела 5 IMPLEMENTATION.md).
+   M1: каркас (реестры, хуки). M2 «кампания»: принятая глава темы = CH[slot] (тот же объект, что CHX[slot]); кампания идёт по ORD (место chPos), награды/Обычная — по tier, счётчики — landsU().
+   Без выпущенных тем ORD=[0..7] и всё = прежнему. CH[0..7] не тронуты; CH по длине НЕ обходить (при темах он разреженный) — только ORD / END_ORD.
+   CAMP — вся кампания, номера слотов навсегда (ключи сейва S.done/S.stars/S.best/S.dfc/S.pity); tier — ступень силы (у старых = номер главы). */
+const TH_IDS=['les','bol','pole','kosh','med','gory','more','luk','ogon','vihr','lih'];
+const TH_OLD={les:0,bol:1,pole:2,kosh:3,gory:4,more:5,ogon:6,lih:7}; /* тема → слот её главы 1 (старые CH[0..7]) */
+const CAMP=[[0,'les',1,1],[8,'les',2,1.33],[9,'les',3,1.67],[1,'bol',1,2],[10,'bol',2,2.33],[11,'bol',3,2.67],[2,'pole',1,3],[12,'pole',2,3.33],[13,'pole',3,3.67],
+  [3,'kosh',1,4],[14,'kosh',2,4.17],[15,'kosh',3,4.33],[16,'med',1,4.5],[17,'med',2,4.67],[18,'med',3,4.83],[4,'gory',1,5],[19,'gory',2,5.33],[20,'gory',3,5.67],
+  [5,'more',1,6],[21,'more',2,6.17],[22,'more',3,6.33],[23,'luk',1,6.5],[24,'luk',2,6.67],[25,'luk',3,6.83],[6,'ogon',1,7],[26,'ogon',2,7.17],[27,'ogon',3,7.33],
+  [28,'vihr',1,7.5],[29,'vihr',2,7.67],[30,'vihr',3,7.83],[7,'lih',1,8],[31,'lih',2,8.33],[32,'lih',3,8.67]].map(([slot,th,n,tier])=>({slot,th,n,tier}));
+const CAMP_S={};for(const r of CAMP)CAMP_S[r.slot]=r; /* слот → строка CAMP */
+/* выпущенные темы: THEME_ADD остальных игнорирует (их слотов нет в ORD). Старые главы 1 (слоты 0–7) есть всегда. На своей машине: ?th=all — все темы, ?th=les,bol — выбранные.
+   tools/thpack.sh при сборке склеивает в js/th.js только темы из этого списка. Строка — одна, формат не менять (её читает thpack.sh) */
+const THEMES_ON=['les','bol','pole','kosh','med','gory','more','luk','ogon','vihr','lih'];
+function thOn(id){if(THEMES_ON.indexOf(id)>=0)return true;if(typeof LOCAL==='undefined'||!LOCAL)return false;
+  const m=/[?&]th=([a-z,]+)/.exec(location.search);return !!m&&(m[1]==='all'||m[1].split(',').indexOf(id)>=0);}
+/* реестры: TH — темы, CHX — новые главы по слоту (8–32), BOSS — боссы/мини-боссы/«ярые» варианты (данные приёмов для BK), EVS — события по имени */
+const TH={},CHX={},BOSS={},EVS={},TH_REG=[];
+const TH_EV0=['wolves','fog','barrows','shadows','avalanche','tide','firerain','night']; /* = CH_EV в game.js: события старых глав (имена заняты) */
+(function(){const EV0=TH_EV0;
+  for(const id in TH_OLD){const s=TH_OLD[id],c=CH[s];
+    TH[id]={id,old:1,slot1:s,get name(){return CH[s].name;},get sub(){return CH[s].sub;},ground:c.ground,decor:c.decor,tint:c.tint,dark:c.dark||0,bright:c.bright||0,map:c.map,mc:c.mc,ev:EV0[s]};}})();
+/* ORD — порядок кампании (список слотов): старые 0–7 всегда + слоты, чью главу зарегистрировала выпущенная тема. Пересобирается после каждого THEME_ADD (тот же массив) */
+const ORD=[];
+function ordBuild(){ORD.length=0;for(const r of CAMP)if(r.slot<8||CHX[r.slot])ORD.push(r.slot);return ORD;}
+ordBuild();
+/* глава по слоту: всё темы + сама глава + место в CAMP; null — слота нет (тема не выпущена). id главы — тема+номер ('les2') */
+function chDef(slot){const c=slot<8?CH[slot]:CHX[slot],r=CAMP_S[slot];if(!c||!r)return null;const t=TH[r.th]||{};
+  const o=Object.assign({},t,c,{id:r.th+r.n,th:r.th,n:r.n,tier:r.tier,slot});if(c.hpK==null)o.hpK=1;if(c.dmgK==null)o.dmgK=1;if(c.bossK==null)o.bossK=1;return o;}
+function chTier(slot){const r=CAMP_S[slot];return r?r.tier:slot+1;}
+/* ---------- M2 «кампания» (07.10): место, соседи по ORD, счётчики, награды и Обычная по tier ----------
+   Номер слота = ключ сейва; МЕСТО (1…N) = позиция в ORD — для текстов, карты, лесенки новичка, STAT. Без тем ORD=[0..7] → место = слот+1, всё как было. */
+function chPos(slot){return ORD.indexOf(+slot)+1;}                  /* место в кампании 1…N; 0 — слота нет в ORD (тема не выпущена) */
+function chPrev(slot){const p=chPos(slot);return p>1?ORD[p-2]:-1;}  /* слот перед ним по ORD; -1 — нет */
+function chNext(slot){const p=chPos(slot);return p&&p<ORD.length?ORD[p]:-1;} /* следующий по ORD; -1 — последний/нет */
+function campLast(){return ORD[ORD.length-1];}                       /* последний слот кампании («Кампания пройдена») */
+const CURSE_CH=7;                       /* проклятия открывает победа в «Лихо·1» (слот 7) на Сложной/Адской — как было */
+const END_ORD=[0,1,2,3,4,5,6,7];        /* Бесконечная сеча и её рейтинг — по старым 8 слотам (решение владельца — потом) */
+const DR_TH=['les','bol','pole'];       /* поход дня — главы первых трёх тем (слоты из ORD) */
+/* «сколько земель освобождено» для наград (казна, задания, вход, неделя, поход дня, Дар): не утраивается при 33 главах и не меньше прежнего у старых игроков */
+function landsU(){let o=0,n=0;for(const k in S.done){n++;if(+k<8)o++;}return Math.max(o,Math.floor(n/3));}
+/* величина старых глав (CH[0..7].hp/dmg/gold и т. п.) по tier: целый tier — ровно число старой главы, дробный — геометрически между соседними, после 8 — +20 %/ступень */
+function tierGeo(a,t){if(t<=1)return a[0];const i=Math.floor(t)-1,f=t-i-1;if(i>=a.length-1)return a[a.length-1]*(1+.2*(t-a.length));return f?a[i]*Math.pow(a[i+1]/a[i],f):a[i];}
+/* множитель награды главы ECO.chk по tier: целый — прежнее число, дробный — линейно между, после 8 — .65 (как было «||.65») */
+function ecoChk(t){const a=ECO.chk,i=Math.floor(t)-1,f=t-i-1;if(i<0)return a[0];if(i>=a.length-1)return .65;return f?a[i]+(a[i+1]-a[i])*f:a[i];}
+/* Обычная по tier. DIF_NT — таблица ступеней от PACE ($HA/pace/prof33.json, поле dif_nt): {'<tier>':{hp,dmg,eliteHp,bossHp,bossDmg,…}} — поля поверх DIF.n (как DIF_N5).
+   Пока её нет (null): целый tier (старые слоты) — ровно прежний DIF.n/DIF_N5; дробный (новые главы) — при DIF_NI геометрическая интерполяция профилей соседних старых глав, иначе — профиль ближней младшей */
+let DIF_NT=null;const DIF_NI=1;
+function difNOld(t){const i=Math.min(8,Math.max(1,t))-1;return DIF_N5[i]?Object.assign({},DIF.n,DIF_N5[i]):DIF.n;}
+function difNT(t){if(DIF_NT&&DIF_NT[String(t)])return Object.assign({},DIF.n,DIF_NT[String(t)]);
+  if(t===Math.floor(t)||t>=8||!DIF_NI)return difNOld(Math.floor(t));
+  const a=difNOld(Math.floor(t)),b=difNOld(Math.floor(t)+1),f=t-Math.floor(t),o=Object.assign({},a);for(const k in a)if(typeof a[k]==='number'&&b[k]>0&&a[k]>0)o[k]=a[k]*Math.pow(b[k]/a[k],f);return o;}
+/* умолчания главы темы (в CH[slot] при регистрации): всё, чего глава не задала, — из темы и tier */
+function chFill(c,slot){const r=CAMP_S[slot],t=TH[r.th]||{},tr=r.tier,col=k=>CH.slice(0,8).map(x=>x[k]);
+  Object.assign(c,{id:r.th+r.n,th:r.th,n:r.n,tier:tr,slot});
+  for(const k of['ground','decor','tint','dark','bright','mc'])if(c[k]==null&&t[k]!=null)c[k]=t[k];
+  if(c.hp==null)c.hp=+tierGeo(col('hp'),tr).toFixed(3);if(c.dmg==null)c.dmg=+tierGeo(col('dmg'),tr).toFixed(3);if(c.gold==null)c.gold=+tierGeo(col('gold'),tr).toFixed(3);
+  const o=CH[t.slot1!=null?t.slot1:0]||CH[0];if(!c.en.length)c.en=o.en.slice();while(c.en.length<4)c.en.push(c.en[c.en.length-1]); /* до M3: 4 вида, как у старых */
+  if(!c.boss||!EN[c.boss])c.boss=o.boss;if(!c.decor)c.decor=o.decor;if(!c.ground)c.ground=o.ground;if(!c.sub)c.sub='';return c;}
+/* ---------- M3 «поход данными» (07.10): волны, сила главы, рисунки, крючки меты ----------
+   Старые главы (слоты 0–7, без BAL): всё ровно как было — волны из CH[i].en по порогам 0/35/95/165 (вес 4-го .3), без множителей */
+const W_T0=[0,35,95,165];
+/* состав волн главы: w:[{id,t,v,e,g}] (t — с какой секунды, v — вес, e — до какой секунды (необяз.), g — гость); нет w — из en по старым порогам */
+function chW(c){const w=c&&Array.isArray(c.w)?c.w.filter(x=>x&&EN[x.id]):[];
+  if(w.length)return w.map(x=>({id:x.id,t:+x.t||0,v:x.v==null?1:+x.v,e:+x.e||0,g:x.g?1:0}));
+  return ((c&&c.en)||['wolf']).map((id,i)=>({id,t:W_T0[i],v:i===3?.3:1}));}
+/* сила главы: hpK/dmgK/bossK темы, поверх — BAL[слот] {hpK,dmgK,bossHp,bossDmg,eliteHp}. null — всё по 1 (старые главы) */
+function chK(slot){const c=CH[slot]||{},b=(typeof BAL!=='undefined'&&BAL[slot])||{},n=(x,y)=>x!=null?+x:y!=null?+y:1;
+  const K={hp:n(b.hpK,c.hpK),dmg:n(b.dmgK,c.dmgK),boss:n(b.bossHp,c.bossK),bdmg:n(b.bossDmg),elite:n(b.eliteHp)};
+  for(const k in K)if(K[k]!==1&&K[k]>0)return K;return null;}
+/* ступень Обычной главы: tier, а при ch.nt=N (напр. «Логово» nt:1) — tier главы на N мест дальше по CAMP */
+function chNtT(slot){const c=CH[slot],t=chTier(slot);if(!c||!(c.nt>0))return t;const i=CAMP.indexOf(CAMP_S[slot]),r=CAMP[Math.min(CAMP.length-1,i+(c.nt|0))];return r?r.tier:t;}
+/* мини-босс: здоровье босса × MB_HP (или BOSS[id].mini, если это число 0…1) */
+const MB_HP=.35;
+/* все рисунки главы (предзагрузка): виды волн, вожаки, мини-босс, босс и его вариант, плитка темы; у старых глав — пусто (их список — в newRun, как было) */
+function chArt(c){if(!c||c.slot==null||c.slot<8)return [];const a=[];const add=k=>{if(k&&a.indexOf(k)<0)a.push(k);};
+  for(const x of chW(c))add(x.id);for(const x of c.el||[])add(x&&x.id);if(c.mb)add(c.mb.id);add(c.boss);const v=c.bv&&BOSS[c.bv];if(v)add(v.base||c.bv);
+  for(const k of c.decor||[])add(k);return a.filter(k=>ART[k]);}
+/* рисунок вида/босса темы: art:'ключ' — синоним готового рисунка; нет рисунка вовсе — перекраска волка/Соловья цветом col (заглушка, console.warn) */
+function thArt(id,k,d){if(ART[k])return;if(d.art&&ART[d.art]){ART[k]=ART[d.art];return;}
+  const b=d.boss||d.mini?'solo':'wolf';if(ART[b]){artTint(k,b,d.col||'#9a9a9a');thWarn(id,'нет рисунка '+k+' — временно перекраска '+b);}}
+/* крючки меты «Подворье» (js/meta.js, ветка meta): глобальные функции META_RUN(G), META_KILL(e), META_END(G,win), META_ST(st), META_TAB(t), META_VIL(el), META_TODAY(TL), META_CHIPS(a), META_FIX(S), META_MERGE(d,o) — всё необязательно.
+   META_HK('RUN',G) → META_RUN(G); нет функции — ничего; ошибка — console.warn (до 5 раз), игра идёт дальше. Формат — ENGINE-API.md §11 */
+function META_HK(k,a,b){const f=window['META_'+k];let r;
+  if(typeof f==='function')try{r=f(a,b);}catch(x){META_ERR(k,x);}
+  for(const m of META_MODS)if(typeof m[k]==='function')try{const q=m[k](a,b);if(r===undefined)r=q;}catch(x){META_ERR(m.id+'.'+k,x);}
+  return r;}
+/* части меты кроме Подворья (трофеи, слава, заказы, питомцы, оружие тем…): META_MODS.push({id:'tro', RUN(G){}, KILL(e){}, END(G,win){}, ST(st){}, TAB(t){}, VIL(el){}, TODAY(TL){}, CHIPS(a){}, FIX(S){}, MERGE(d,o){}}) — каждая в своём js/meta-<id>.js, свои ключи сейва S.<id>; порядок вызова — META_<k> Подворья, потом по порядку push */
+const META_MODS=[];
+/* трофеи — общая «валюта» меты (выпадение/виды задаёт meta-tro.js; тратят заказы, коробейник, терем, дозор…). Сейв: S.trG{id:всего получено}, S.trS{id:всего потрачено}; остаток = trG−trS; облако — максимум по каждому (не теряется и не дублируется) */
+function TRO_N(id){const g=S.trG||{},s=S.trS||{};return Math.max(0,(g[id]|0)-(s[id]|0));}
+function TRO_ADD(id,n){n=Math.round(+n||0);if(n<=0)return;const g=S.trG||(S.trG={});g[id]=(g[id]|0)+n;}
+function TRO_SPEND(o){for(const id in o)if(TRO_N(id)<(o[id]|0))return false;const s=S.trS||(S.trS={});for(const id in o)s[id]=(s[id]|0)+(o[id]|0);return true;} /* {id:n,…} — всё или ничего */
+function TRO_MERGE(d,o){for(const k of['trG','trS']){const a=o[k]&&typeof o[k]==='object'?o[k]:{},b=d[k]&&typeof d[k]==='object'?d[k]:{},m={};for(const id in Object.assign({},a,b))m[id]=Math.max(a[id]|0,b[id]|0);o[k]=m;}}
+function META_ERR(k,x){META_HK.n=(META_HK.n||0)+1;if(META_HK.n<=5)console.warn('meta '+k+': '+(x&&x.message||x));}
+/* точка главы на карте: своя map, иначе точка темы со сдвигом по номеру главы (до карты A22) */
+function chMapXY(slot){const c=CH[slot];if(c&&c.map)return c.map;const r=CAMP_S[slot],t=TH[r&&r.th]||{},m=t.map||[.5,.5],d=[[0,0],[0,0],[.075,-.04],[.035,-.085]][r?r.n:0];return [m[0]+d[0],m[1]+d[1]];}
+/* перевод данных темы: поле en:{…} рядом с русским → I18D (как js/en.js), переключение языка — applyLang() */
+function thTr(o,en){if(o&&en&&typeof en==='object'&&!Array.isArray(en))trData(o,en);}
+function thWarn(id,msg){console.warn('THEME_ADD '+id+': '+msg);}
+/* регистрация темы — файл js/th/<id>.js вызывает THEME_ADD({...}) один раз. Ошибка в данных — console.warn, игра не падает. true — тема принята */
+function THEME_ADD(def){const id=def&&def.id;
+  try{if(TH_IDS.indexOf(id)<0){thWarn(id,'неизвестный id темы');return false;}
+    if(!thOn(id))return false;
+    if(TH_REG.indexOf(id)>=0){thWarn(id,'тема уже зарегистрирована');return false;}
+    const bad=(def.ch!=null&&!Array.isArray(def.ch)?['ch']:[]).concat(['th','en','boss','evs','beh','bk','lore'].filter(k=>def[k]!=null&&(typeof def[k]!=='object'||Array.isArray(def[k]))));
+    if(bad.length){thWarn(id,'не тот вид полей: '+bad.join(', ')+' — тема не принята');return false;}
+    if(def.th){if(TH[id]&&TH[id].old){for(const k in def.th)if(k!=='name'&&k!=='sub'&&k!=='en')TH[id][k]=def.th[k];} /* старая тема: имя/подзаголовок — из CH (en.js) */
+      else{TH[id]=Object.assign({id},def.th);delete TH[id].en;thTr(TH[id],def.th.en);}}
+    else if(!TH[id]){thWarn(id,'у новой темы нет th:{…}');return false;}
+    TH[id].reg=1;
+    for(const k in def.en||{}){const d=def.en[k];if(EN[k]){thWarn(id,'вид '+k+' уже есть');continue;}if(!d||!d.n||!(d.hp>0)){thWarn(id,'вид '+k+': нет n/hp');continue;}
+      const e=EN[k]=Object.assign({},d);delete e.en;delete e.lore;delete e.ph;thTr(e,d.en);
+      if(d.lore){LORE[k]=d.lore.ru||'';trField(LORE,k,d.lore.en);}
+      if(d.ph&&d.ph.ru){PH.en[k]=d.ph.ru;if(d.ph.en)trField(PH.en,k,d.ph.en);}thArt(id,k,d);}
+    for(const k in def.boss||{}){const d=def.boss[k];if(BOSS[k]||(EN[k]&&!d.base)){thWarn(id,'босс '+k+' уже есть');continue;}
+      BOSS[k]=Object.assign({th:id},d);
+      if(!d.base){if(!d.n||!(d.hp>0)){thWarn(id,'босс '+k+': нет n/hp');delete BOSS[k];continue;}
+        const e=EN[k]=Object.assign({boss:1},d);delete e.en;delete e.lore;delete e.ph;delete e.kit;delete e.title;thTr(e,d.en);
+        if(d.ph&&d.ph.ru&&d.ph.ru.length){const p=PH.boss[k]={intro:d.ph.ru[0],lines:d.ph.ru.slice(1).length?d.ph.ru.slice(1):d.ph.ru.slice()};
+          if(d.ph.en&&d.ph.en.length){trField(p,'intro',d.ph.en[0]);trField(p,'lines',d.ph.en.slice(1).length?d.ph.en.slice(1):d.ph.en.slice());}}
+        if(d.lore){LORE[k]=d.lore.ru||'';trField(LORE,k,d.lore.en);}thArt(id,k,Object.assign({boss:1},d));}}
+    const regCh=[];
+    for(const c0 of def.ch||[]){const s=c0&&c0.slot,r=CAMP_S[s];
+      if(!r||r.th!==id){thWarn(id,'слот '+s+' не этой темы (CAMP)');continue;}
+      if(s<8){thWarn(id,'слот '+s+' — старая глава 1, её не трогаем');continue;}
+      if(r.n!==c0.n)thWarn(id,'слот '+s+': n='+c0.n+', в CAMP '+r.n);
+      if(CHX[s]){thWarn(id,'слот '+s+' уже занят');continue;}
+      const c=Object.assign({},c0);c.tr=c0.en;delete c.en;thTr(c,c0.en);
+      c.en=(c.w||[]).map(x=>x&&x.id).filter(x=>x&&EN[x]); /* служебное (как CH[i].en у старых): виды главы по порядку из w — до M3 */
+      CHX[s]=c;regCh.push(s);}
+    for(const k in def.evs||{}){if(EVS[k]||TH_EV0.indexOf(k)>=0){thWarn(id,'событие '+k+' уже есть');continue;}EVS[k]=Object.assign({th:id},def.evs[k]);}
+    for(const k in def.beh||{}){if(typeof BEH==='undefined')break;if(BEH[k]){thWarn(id,'повадка '+k+' уже есть');continue;}BEH[k]=def.beh[k];}
+    for(const k in def.afx||{}){if(typeof AFX==='undefined')break;if(AFX[k]){thWarn(id,'особенность '+k+' уже есть');continue;}AFX[k]=def.afx[k];} /* свои особенности вожаков темы */
+    for(const k in def.bk||{}){if(typeof BK==='undefined')break;if(BK[k]){thWarn(id,'приём '+k+' уже есть');continue;}BK[k]=def.bk[k];}
+    for(const k in def.lore||{}){const v=def.lore[k];if(v&&typeof v==='object'){LORE[k]=v.ru||'';trField(LORE,k,v.en);}}
+    if(def.ach)TH[id].ach=def.ach; /* достижения темы — подключит A23 (M2/M3) */
+    for(const s of regCh)CH[s]=chFill(CHX[s],s); /* M2: глава темы = CH[слот] (тот же объект, что CHX) — поход, карта, тексты работают по слоту */
+    TH_REG.push(id);ordBuild();bestAdd(def);achSync();applyLang();return true;}
+  catch(x){thWarn(id,'ошибка: '+(x&&x.message||x));return false;}}
+/* M2: Книга нечисти и достижения тем. Виды/боссы принятой темы → BEST_ORDER (виды — перед боссами, боссы — в конец); ACH best.n = BEST_ORDER.length.
+   Достижения (тексты — геттеры с L(), язык переключается): lair_<тема> — победа в «Логове» (глава 3) темы; mb_all — все мини-боссы (поле mb глав, M3; bossKill[id] ставит гибель мини-босса);
+   all11 «Освободитель Руси — 11 земель» — только когда в ORD все 33 главы (тогда all8 видят лишь те, у кого он уже есть). Поле on() — показывать ли (ui/achCheck фильтруют) */
+let ACH_ALL11=0;
+function bestAdd(def){const b0=BEST_ORDER.indexOf('solo');let at=b0<0?BEST_ORDER.length:b0;
+  for(const k in def.en||{})if(EN[k]&&!EN[k].boss&&BEST_ORDER.indexOf(k)<0)BEST_ORDER.splice(at++,0,k);
+  for(const k in def.boss||{})if(EN[k]&&EN[k].boss&&BEST_ORDER.indexOf(k)<0)BEST_ORDER.push(k);}
+function mbIds(){const a=[];for(const s of ORD){const m=CH[s]&&CH[s].mb;if(m&&m.id&&EN[m.id]&&a.indexOf(m.id)<0)a.push(m.id);}return a;}
+function achSync(){const has=id=>ACH.some(a=>a.id===id),at=ACH.findIndex(a=>a.id==='all8')+1;
+  for(const id of TH_REG){const r=CAMP.find(x=>x.th===id&&x.n===3);if(!r||!CH[r.slot]||has('lair_'+id))continue;const s=r.slot;
+    ACH.splice(at,0,{id:'lair_'+id,get name(){return L('Логово: ','Lair: ')+TH[id].name;},get about(){return L('Освободи «'+CH[s].name+'» — Логово земли «'+TH[id].name+'»','Free '+CH[s].name+' — the Lair of '+TH[id].name);},n:1,v:()=>S.done&&S.done[s]?1:0,r:1000});}
+  if(!has('mb_all')&&mbIds().length)ACH.splice(at,0,{id:'mb_all',get name(){return L('Гроза вожаков','Bane of Champions');},get about(){return L('Победи всех мини-боссов ('+mbIds().length+')','Defeat every mini-boss ('+mbIds().length+')');},get n(){return mbIds().length;},v:()=>mbIds().filter(k=>S.bossKill&&S.bossKill[k]).length,r:2000,on:()=>mbIds().length>0});
+  if(!has('all11')&&ORD.length===CAMP.length){ACH_ALL11=1;ACH.splice(at,0,{id:'all11',get name(){return L('Освободитель Руси','Liberator of Rus');},get about(){return L('Освободи все 11 земель','Free all 11 lands');},n:11,v:()=>landsU(),r:5000});}}

@@ -68,9 +68,9 @@ function newRun(chi,heroId,endless,wk,dr){
   G.first=!S.runs&&!endless&&!dr;
   // уровень сложности (difficulty 05.10): только главы; 'n' Обычная — игра × DIF.n + лесенка, 's' Сложная — игра как была без поблажек, 'h' Адская — Сложная × DIF.h; вне глав — '' (как было)
   const camp=!endless&&!dr&&!wk;G.dif=camp?difOf(chi):'';G.df=G.dif?difProf(chi,G.dif):null;G.rep=G.dif==='n'&&difWon(chi,'n'); /* rep — повтор уже пройденной на Обычной главы (золото ×ECO.difR) */const nrm=G.dif==='n';
-  G.short=camp&&nrm&&!S.done[chi]?(chi===0?FIRST:chi===1?STEP2:chi===2?STEP3:chi===3?STEP4:null):null;G.ev=mkEvents(0); // G.short — числа короткого похода: глава 1 (FIRST) глава 2 (STEP2, «лесенка»), глава 3 (STEP3) и глава 4 (STEP4), пока глава не пройдена; иначе null
+  const pos=chPos(chi);G.short=camp&&nrm&&!S.done[chi]?[FIRST,STEP2,STEP3,STEP4][pos-1]||null:null;G.ev=mkEvents(0); /* M2: лесенка — по МЕСТУ в кампании (1–4), не по слоту */ // G.short — числа короткого похода: глава 1 (FIRST) глава 2 (STEP2, «лесенка»), глава 3 (STEP3) и глава 4 (STEP4), пока глава не пройдена; иначе null
   // «оберег новичка» (boost): самый первый поход — нечисть бьёт на 25% слабее и один раз выручает каравай; главы 1–2, пока не пройдены (первые 8 походов) — на 15% слабее
-  G.nov=nrm&&G.first&&chi===0?2:nrm&&chi<=1&&!S.done[chi]&&S.runs<8?1:0;G.novHeal=G.nov===2?1:0;
+  G.nov=nrm&&G.first&&pos===1?2:nrm&&pos>=1&&pos<=2&&!S.done[chi]&&S.runs<8?1:0; /* M2: места 1–2 */G.novHeal=G.nov===2?1:0;
   // глава 2 мягче (решение владельца 02.10): только в самой главе «Гиблое болото» (не сеча, не поход дня, не неделя) — числа CH2_SOFT в data.js
   // глава 4, пока не пройдена (ch4-soft 05.10): Колдун-стрелок мягче — CH4_SOFT в data.js (вместе с лесенкой STEP4)
   // difficulty: на Обычной стрелки и так мягче (DIF.n сильнее CH2/CH4_SOFT) — без двойного смягчения; на Сложной/Адской CH2_SOFT остаётся (постоянная часть главы 2), CH4_SOFT был только до победы — его нет
@@ -88,7 +88,8 @@ function newRun(chi,heroId,endless,wk,dr){
   G.tut=null;if((S.tut===-1||!S.tut&&!S.runs)&&!G.endless)tutStart();
   later(3.4,()=>heroSay(pick(PH.start)));
   // спрайты главы — заранее, чтобы не дёргалось при первом появлении
-  for(const k of G.ch.en.concat([G.ch.boss,'h_'+G.hkey+'_0','h_'+G.hkey+'_1','hp_'+G.hkey,'gem1','gem2','gem3','coin','chest','pie','bird']))spr(k);
+  for(const k of G.ch.en.concat([G.ch.boss,'h_'+G.hkey+'_0','h_'+G.hkey+'_1','hp_'+G.hkey,'gem1','gem2','gem3','coin','chest','pie','bird'],chArt(G.ch)))spr(k); /* M3: + все рисунки главы темы (chArt; у старых — пусто) */
+  CH_RUN();HK_W=BEH_HASW();THEME_ON(G);META_HK('RUN',G); /* хуки «главы данными» (M3: волны/вожаки/мини-босс/события главы) и меты */
 }
 /* ---------- обучение первого похода (тексты — TUT и TUT_EV в data.js, плашка — tipShow в ui.js) ---------- */
 function tutStart(){G.tut={i:0,t:0,d:0,ev:{},q:null,qt:0};tipShow(TUT[0].t);STAT.ev('tut',{s:0,k:TUT[0].id||''});}
@@ -114,14 +115,16 @@ function calcStats(heroId,pas,wm,sm,fo){const hm=heroMod(heroId),f=fo||S.forge,p
   if(sm){if(sm.spd)st.spd*=sm.spd;if(sm.might)st.might*=sm.might;} // «Камень на распутье»
   return st;}
 function computeStats(){const st=calcStats(G.heroId,G.pas,G.wk,G.stoneMod);if(G.pity)st.might*=1+PITY_MIGHT*G.pity; // «боевой дух»: и бьём чуть сильнее
+  META_HK('ST',st); /* мета: узелок/таланты/питомец — поправки характеристик похода */
   const old=G.st;G.st=st;if(old&&st.maxHp>old.maxHp)G.hero.hp+=st.maxHp-old.maxHp;G.hero.hp=Math.min(G.hero.hp,st.maxHp);}
 /* «Сила богатыря» — одно число для меню: растёт от любой боевой покупки (кузница, оружейная, деревня, звание). 100 — Добрыня без прокачки.
    fo/ar/vo — «как если бы» (кузница/оружейная/деревня) для показа прироста до покупки */
 function powerScore(heroId,fo,ar,vo){const h=heroDef(heroId||S.hero),v0=S.village;let st;if(vo){S.village=vo;}try{st=calcStats(h.id,null,null,null,fo);}finally{S.village=v0;}
-  const v=vo||v0,a=(ar||S.armory||{})[h.weapon]||0,rk=(S.rank||{})[h.id]||0;
-  const p=100*(st.maxHp/100)*st.might/st.cd*(1+.07*st.armor)*(1+.1*a+(a>=3?.03:0)+(a>=5?.03:0))*(1+.5*(st.spd/118-1))*(1+.25*(st.xp-1))*(1+.04*(st.magnet/72-1))*(1+.1*(st.luck-1))
+  const v=vo||v0,af=armFx(h.weapon,(ar||S.armory||{})[h.weapon]||0),rk=(S.rank||{})[h.id]||0;
+  const p=100*(st.maxHp/100)*st.might/st.cd*(1+.07*st.armor)*(1+af.d+.3*af.a)*(1+.5*(st.spd/118-1))*(1+.25*(st.xp-1))*(1+.04*(st.magnet/72-1))*(1+.1*(st.luck-1))
     *(1+.25*st.regen)*(1+.12*(v.hut||0))*(1+.04*(v.tavern||0))*(1+.015*(v.altar||0))*(1+.03*rk);
-  return Math.round(p/1.1);} // 1,1 — «+10% урона» Добрыни: у него без прокачки ровно 100
+  let mk=1;if(typeof META_MODS!=='undefined')for(const m of META_MODS)if(typeof m.PW==='function')try{const q=+m.PW(h.id);if(q>0&&q<5)mk*=q;}catch(x){META_ERR(m.id+'.PW',x);} /* постоянные бонусы меты (таланты, питомец, оружие тем) — множитель силы; узелок (1 поход) не входит */
+  return Math.round(p*mk/1.1);} // 1,1 — «+10% урона» Добрыни: у него без прокачки ровно 100
 
 /* ---------- существа ---------- */
 function mkEnemy(type,x,y,o){const d=EN[type],ch=G.ch,lt=DT(),tm=1+lt/60*.34;
@@ -135,34 +138,97 @@ function mkEnemy(type,x,y,o){const d=EN[type],ch=G.ch,lt=DT(),tm=1+lt/60*.34;
   if(d.boss){e.boss=1;e.at=3;e.at2=8;e.at3=10;e.state='';e.st=0;e.phase=0;}
   if(G.curse){const cm=curseMul(G.curse);e.hp*=cm.hp;e.dmg*=cm.dmg;}
   const wm=G.wk;if(d.prop){e.prop=1;e.spd=0;}else{if(wm.espd)e.spd*=d.boss?1+(wm.espd-1)/2:wm.espd;if(!d.boss&&type!=='egg'){if(wm.ehp)e.hp*=wm.ehp;if(wm.esz){e.sc*=wm.esz;e.r*=wm.esz;}if(wm.exp)e.xp*=wm.exp;if(qLow())e.hp*=1.25;}G.meet[type]=1;} // эффекты «мало»: нечисти ×0,8, но она крепче
+  if(d.beh)e.beh=d.beh; /* повадка вида (BEH, M1: реестр пуст) */
+  if(d.boss&&BOSS[type]&&BOSS[type].kit)e.kit=BOSS[type].kit; /* M3: приёмы босса темы → BK_STEP */
+  if(o&&o.mini){const mk=BOSS[type]&&BOSS[type].mini;e.mini=1;if(d.boss)e.hp*=mk>0&&mk<1?mk:MB_HP;}
+  const K=G.K;if(K&&type!=='egg'&&!d.prop){if(d.boss){e.hp*=K.boss;e.dmg*=K.dmg*K.bdmg;}else{e.hp*=K.hp*(e.elite?K.elite:1);e.dmg*=K.dmg;}} /* M3: hpK/dmgK/bossK темы и BAL[слот] */
+  if(e.beh)BEH_ON(e); /* повадка: on(e,G) при появлении — может менять hp/spd/dmg (e.max = итоговое hp) */
   e.max=e.hp;G.en.push(e);return e;}
 function spawnPos(far){const H=G.hero;let a=rand(0,TAU);if(H.moving&&Math.random()<.5)a=Math.atan2(H.fy,H.fx)+rand(-1,1);
   const d=(far||VIEW.R)+rand(0,40);return [H.x+Math.cos(a)*d,H.y+Math.sin(a)*d];}
-function pickType(){const t=DT(),en=G.ch.en,unl=[0,35,95,165];let tot=0;const w=en.map((id,i)=>{if(t<unl[i])return 0;let v=i===3?.3:1;if(i>0&&t-unl[i]<60)v*=1.6;if(G.soft&&EN[id].ranged)v*=G.soft.w;if(G.df&&EN[id].ranged)v*=G.df.w;if(i===0&&t>150)v*=.6;tot+=v;return v;});
-  let r=Math.random()*tot;for(let i=0;i<en.length;i++){r-=w[i];if(r<=0)return en[i];}return en[0];}
+/* M3: волны главы G.w=[{id,t,v,e}] (chW): старые главы — из en по порогам 0/35/95/165, вес 4-го .3 — ровно как было; свежий вид первые 60 с ×1,6, первый после 2:30 ×.6 */
+function pickType(){const t=DT(),W=G.w||(G.w=chW(G.ch));let tot=0;const w=W.map((x,i)=>{if(t<x.t||x.e&&t>=x.e)return 0;let v=x.v;if(x.t>0&&t-x.t<60)v*=1.6;if(G.soft&&EN[x.id].ranged)v*=G.soft.w;if(G.df&&EN[x.id].ranged)v*=G.df.w;if(i===0&&t>150)v*=.6;tot+=v;return v;});
+  let r=Math.random()*tot;for(let i=0;i<W.length;i++){r-=w[i];if(r<=0)return W[i].id;}return W[0].id;}
 function spawnTick(dt){const t=DT();let rate=(1.15+t/60*1.2)*(G.wk.spawn||1);const cap=(48+t/60*56)*(G.wk.cap||1)*(qLow()?.8:1);
   if(G.boss&&!G.boss.dead)rate*=.35;if(G.richT>0)rate*=1.6;if(G.win)return;if(G.sleepT>0)rate=0; // сон-трава: пока нечисть спит, новая не лезет
   G.spawnAcc+=rate*dt;while(G.spawnAcc>=1){G.spawnAcc-=1;if(G.en.length>=cap)break;const p=spawnPos();mkEnemy(pickType(),p[0],p[1]);}
   while(G.ev.length&&G.t>=G.ev[0].t){const ev=G.ev.shift(),H=G.hero;
-    if(ev.k==='elite'){const p=spawnPos();const e=mkEnemy(G.ch.en[Math.min(3,Math.floor(t/80))],p[0],p[1],{elite:1});say(e,L('Я тут главный!','I\'m the boss here!'));tutEvent('elite');}
+    if(ev.k==='elite'){const p=spawnPos(),x=elPick(t);const e=mkEnemy(x?x.id:G.ch.en[Math.min(3,Math.floor(t/80))],p[0],p[1],{elite:1});if(x&&x.fx)AFX_ON(e,x.fx);say(e,e.afxT||L('Я тут главный!','I\'m the boss here!'));tutEvent('elite');} /* M3: вожак из el главы + особенности AFX */
     if(ev.k==='ring'){const n=30,R=VIEW.R-20;for(let i=0;i<n;i++){const a=i/n*TAU;mkEnemy(G.ch.en[0],H.x+Math.cos(a)*R,H.y+Math.sin(a)*R);}banner(L('Окружили!','Surrounded!'),L('Прорывайся!','Break through!'),2);tutEvent('ring');}
     if(ev.k==='swarm'){const a=rand(0,TAU),bx=H.x+Math.cos(a)*VIEW.R,by=H.y+Math.sin(a)*VIEW.R;for(let i=0;i<24;i++){const e=mkEnemy(G.ch.en[1],bx+rand(-60,60),by+rand(-60,60));e.spd*=1.25;}banner(L('Стая!','Swarm!'),L('Со всех ног!','Run for it!'));}
     if(ev.k==='bird'){spawnGift();tutEvent('bird');}
-    if(ev.k==='chev')chapterEvent();
+    if(ev.k==='chev')chapterEvent(ev.n);if(ev.k==='mb')spawnMb();
     if(ev.k==='stone')spawnStone();
     if(ev.k==='evo'&&evoHelp()&&evoPath().length){drop('chest',H.x+rand(-60,60),H.y-VIEW.wh*.5);G.picks[G.picks.length-1].mag=true;banner(L('Сундук-самогуд!','A magic chest!'),L('Сам прикатился на подмогу','It rolled in to help you'),2);}
     if(ev.k==='boss')spawnBoss();}}
-function spawnBoss(){const type=G.ch.boss,H=G.hero,a=rand(0,TAU);const e=mkEnemy(type,H.x+Math.cos(a)*VIEW.R*.7,H.y+Math.sin(a)*VIEW.R*.7);
+function spawnBoss(){const v=G.ch.bv&&BOSS[G.ch.bv],type=v&&v.base&&EN[v.base]?v.base:G.ch.boss,H=G.hero,a=rand(0,TAU);const e=mkEnemy(type,H.x+Math.cos(a)*VIEW.R*.7,H.y+Math.sin(a)*VIEW.R*.7);
+  if(v){e.bv=G.ch.bv;if(v.kit)e.kit=v.kit;if(v.rage)e.rage=1;if(v.hpK>0){e.hp*=v.hpK;e.max=e.hp;}if(v.dmgK>0)e.dmg*=v.dmgK;} /* M3: вариант босса bv («ярый»): старый ИИ + приёмы kit через BK_STEP */
   // выход босса — событие (boost): 1,4 с он стоит и грозит, края экрана темнеют, плашка с именем и прозвищем; реплика — в облачке
-  G.boss=e;e.intro=1.4;G.bossIn=1.4;banner(EN[type].n,BOSS_TITLE[type]?BOSS_TITLE[type]():'«'+PH.boss[type].intro+'»',5);say(e,PH.boss[type].intro,3.2);SND.boss();G.shake=12;vib(60,1);musicPlay('boss');
+  const pb=PH.boss[type],nm=v&&v.n?L(v.n,v.en&&v.en.n||v.n):EN[type].n,ttl=v&&v.title?L(v.title.ru,v.title.en||v.title.ru):BOSS_TITLE[type]?BOSS_TITLE[type]():pb?'«'+pb.intro+'»':'';
+  G.boss=e;e.intro=1.4;G.bossIn=1.4;banner(nm,ttl,5);if(pb)say(e,pb.intro,3.2);SND.boss();G.shake=12;vib(60,1);musicPlay('boss');
   G.fx.push({k:'wave',x:e.x,y:e.y,t:0,dur:.9,r1:240,col:'#ff5a3a'});burst(e.x,e.y,EN[type].col,24,220);}
 // прозвища боссов для плашки выхода
 const BOSS_TITLE={solo:()=>L('Свистун дремучего леса','Whistler of the Deep Forest'),yaga:()=>L('Хозяйка гиблого болота','Mistress of the Mire'),gory:()=>L('Трёхглавый хозяин Дикого поля','Three-headed lord of the Wild Field'),
   kosh:()=>L('Царь над златом и тьмой','King of gold and gloom'),karach:()=>L('Повелитель стужи','Lord of the Frost'),morcar:()=>L('Владыка морских глубин','Ruler of the deep sea'),
   tugar:()=>L('Огненный змей','The Fire Serpent'),liho:()=>L('Беда о одном глазе','One-eyed Woe')};
+/* ---------- хуки «главы данными» (A10 ENG, M1 «каркас»): библиотек нет (BEH/BK/EVS пусты) → игра идёт как раньше. Формат — ENGINE-API.md ----------
+   Ошибка внутри повадки/приёма/события — console.warn (до 5 раз), поход не падает */
+for(const k in BOSS)if(BOSS[k].title&&!BOSS_TITLE[k]){const t=BOSS[k].title;BOSS_TITLE[k]=()=>L(t.ru,t.en||t.ru);} /* прозвища боссов тем */
+let HK_W=false; /* есть ли повадки с предупреждением (warn) — считается в newRun */
+function hookErr(w,x){hookErr.n=(hookErr.n||0)+1;if(hookErr.n<=5)console.warn('hook '+w+': '+(x&&x.message||x));}
+function BEH_HASW(){for(const k in BEH)if(BEH[k]&&BEH[k].warn)return true;return false;}
+function hookUnk(w,k){const u=hookUnk.u||(hookUnk.u={});if(u[w+k])return;u[w+k]=1;console.warn('hook '+w+': unknown "'+k+'"');} /* неизвестное имя повадки/особенности/приёма — один раз на имя */
+function BEH_ON(e){const b=BEH[e.beh];if(!b){hookUnk('beh',e.beh);return;}if(b.on)try{b.on(e,G);}catch(x){hookErr('beh.on '+e.beh,x);}}
+/* урон по врагу: BEH[имя].hit(e,d,G) и AFX[имя].hit(e,d,G) → новый урон (число; не число — урон как был). Напр. щит: со спины ×1, в лоб ×0,25 */
+function BEH_HIT(e,d){const b=e.beh&&BEH[e.beh];if(b&&b.hit)try{const r=b.hit(e,d,G);if(typeof r==='number'&&r>=0)d=r;}catch(x){hookErr('beh.hit '+e.beh,x);}
+  if(e.afx)for(const k of e.afx){const x=AFX[k];if(x&&x.hit)try{const r=x.hit(e,d,G);if(typeof r==='number'&&r>=0)d=r;}catch(z){hookErr('afx.hit '+k,z);}}return d;}
+/* такт повадок раз в кадр (зоны, общие таймеры): BEH_FRAME(dt,G), если beh.js его задал; в паузе не зовётся */
+function BEH_TICK(dt){if(typeof BEH_FRAME==='function')try{BEH_FRAME(dt,G);}catch(x){hookErr('beh.frame',x);}}
+function BEH_STEP(e,dt){const b=BEH[e.beh];if(!b||!b.step)return false;try{return !!b.step(e,dt,G);}catch(x){hookErr('beh '+e.beh,x);return false;}}
+function BEH_DIE(e){const b=BEH[e.beh];if(b&&b.die)try{b.die(e,G);}catch(x){hookErr('beh.die '+e.beh,x);}}
+function BEH_WARN(c){let d=false;
+  if(G.warn&&G.warn.length&&typeof BEH_ZONES==='function'){d=true;try{BEH_ZONES(c,G);}catch(x){hookErr('zones',x);}}
+  if(HK_W)for(const e of G.en){const b=!e.dead&&e.beh&&BEH[e.beh];if(b&&b.warn&&onScreen(e,80)){d=true;try{b.warn(e,c);}catch(x){hookErr('beh.warn '+e.beh,x);}}}
+  if(d)worldT();}
+function BK_STEP(b,dt){if(typeof BK_RUN!=='function'){hookUnk('bk','BK_RUN (нет js/bk.js) у '+b.type);return false;}try{return !!BK_RUN(b,dt,G);}catch(x){hookErr('bk '+b.type,x);return false;}} // i18n:ru — служебное console.warn
+/* событие по имени из EVS: {t:{ru,en}, start(G), step(G,dt), dur} — плашка, start, потом step каждый кадр dur секунд. false — такого нет (старый код события) */
+function EV_RUN(k){const v=EVS[k];if(!v)return false;
+  try{if(v.t)banner(L(v.t.ru,v.t.en||v.t.ru),'',4);if(v.start)v.start(G);if(v.step&&v.dur>0)(G.evA||(G.evA=[])).push({k,v,t:0});}catch(x){hookErr('ev '+k,x);}return true;}
+function EV_TICK(dt){for(const a of G.evA){a.t+=dt;try{a.v.step(G,dt,a.t);}catch(x){hookErr('ev '+a.k,x);a.t=1e9;}}compact(G.evA,a=>a.t<a.v.dur);if(!G.evA.length)G.evA=null;}
+/* начало похода главы темы: TH[тема].on(G), если тема его задала (у старых глав CH[i].th нет — ничего) */
+function THEME_ON(g){const t=g&&g.ch&&g.ch.th&&TH[g.ch.th];if(t&&typeof t.on==='function')try{t.on(g);}catch(x){hookErr('theme '+t.id,x);}const c=g&&g.ch;if(c&&c.slot>=8&&typeof c.on==='function')try{c.on(g);}catch(x){hookErr('chapter '+c.id,x);}} /* M3: + on(G) самой главы темы */
+/* ---------- M3 «поход данными» (A10 ENG, 07.10): волны, вожаки el + AFX, мини-босс mb, события главы ev, сила главы. Формат — ENGINE-API.md §10 ----------
+   Старые главы (слоты 0–7): CH_RUN только ставит G.w (= старые 4 вида по порогам) и G.K (null) — ни одного Math.random, события те же */
+const EV_T2=[115,205]; /* ev[1], ev[2] без своего t — на этих секундах (ev[0] — на 4:00, вместо события главы) */
+function CH_RUN(){const c=G.ch;G.w=chW(c);G.K=chK(G.chi);G.elN=0;G.mb=null;G.mbDone=null;if(!c||G.chi<8&&c.ev==null&&!c.mb)return;
+  const ev=chEvL(c);if(ev&&!G.short)ev.forEach((x,i)=>{const t=x&&x.t>0?+x.t:i?EV_T2[i-1]||0:0;if(!i){if(t){const q=G.ev.find(z=>z.k==='chev');if(q)q.t=t+G.t0;G.ev.sort((p,q2)=>p.t-q2.t);}}else if(t)evAdd(t,'chev',i);});
+  if(c.mb&&EN[c.mb.id]&&!G.short&&!G.endless)evAdd(+c.mb.t||240,'mb');}
+function evAdd(t,k,n){G.ev.push({t:t+G.t0,k,n});G.ev.sort((a,b)=>a.t-b.t);}
+function chEvL(c){return Array.isArray(c.ev)?c.ev:typeof c.ev==='string'?[c.ev]:null;}
+/* имя события главы: ev[n] (строка или {k,t}); нет ev — старое CH_EV[слот], у главы темы — событие темы th.ev, иначе 'wolves'. Неизвестное имя — warn и 'wolves' */
+function chEvK(n){const c=G.ch,ev=chEvL(c),x=ev&&ev[n|0];let k=x?(x.k||x):n?null:CH_EV[G.chi]||(c.th&&TH[c.th]&&TH[c.th].ev)||'wolves';
+  if(k&&!EVS[k]&&TH_EV0.indexOf(k)<0){hookErr('ev '+k,'unknown event');k='wolves';}return k;}
+/* вожак главы: el:[{id,fx:[…]}] — по кругу среди тех, чей вид уже вышел по волнам (или не входит в w); нет el — старый вожак (null) */
+function elPick(t){const el=G.ch.el;if(!Array.isArray(el)||!el.length)return null;
+  const ok=el.filter(x=>x&&EN[x.id]&&!EN[x.id].boss&&!G.w.some(w=>w.id===x.id&&w.t>t));if(!ok.length)return null;return ok[(G.elN++)%ok.length];}
+/* особенности вожаков AFX[имя]={t:{ru,en} (что он скажет: «Вожак-щитоносец!»), on(e,G), step(e,dt,G), die(e,G)} — из js/beh.js (A20); нет такой — пропуск */
+function AFX_ON(e,fx){const a=[];for(const k of[].concat(fx)){const x=AFX[k];if(!x){hookUnk('afx',k);continue;}a.push(k);if(!e.afxT&&x.t)e.afxT=L(x.t.ru,x.t.en||x.t.ru);
+    if(x.on)try{x.on(e,G);}catch(z){hookErr('afx '+k,z);}}if(a.length){e.afx=a;e.max=Math.max(e.max,e.hp);}}
+function AFX_STEP(e,dt){for(const k of e.afx){const x=AFX[k];if(x&&x.step)try{x.step(e,dt,G);}catch(z){hookErr('afx '+k,z);}}}
+function AFX_DIE(e){for(const k of e.afx){const x=AFX[k];if(x&&x.die)try{x.die(e,G);}catch(z){hookErr('afx.die '+k,z);}}}
+/* мини-босс главы mb:{id,t}: босс темы (или старый) со здоровьем ×MB_HP, без музыки босса и без полосы; приёмы — kit через BK_STEP, без BK — старый bossAI / шаг к герою.
+   Обычный вид в mb — вожак. Гибель: S.bossKill[id]=1 (ACH mb_all), монеты, сундук, G.mbDone (строка в итогах). Не в коротком походе лесенки и не в сече */
+function spawnMb(){const m=G.ch.mb,d=m&&EN[m.id];if(!d||G.win||G.over)return;const H=G.hero,a=rand(0,TAU);
+  const e=mkEnemy(m.id,H.x+Math.cos(a)*VIEW.R*.7,H.y+Math.sin(a)*VIEW.R*.7,{mini:1,elite:!d.boss});e.mini=1;G.mb=e;if(d.boss)e.intro=1;
+  const pb=PH.boss[m.id];banner(d.n,BOSS_TITLE[m.id]?BOSS_TITLE[m.id]():L('Мини-босс!','Mini-boss!'),4);if(pb)say(e,pb.intro,3);SND.boss();G.shake=8;
+  G.fx.push({k:'wave',x:e.x,y:e.y,t:0,dur:.8,r1:220,col:'#ffb03a'});}
+function mbDie(e){S.bossKill[e.type]=1;G.mbDone=e.type;G.shake=10;hitStop(.1);vib(60,1);G.fx.push({k:'boom',x:e.x,y:e.y,t:0,dur:.6,r:130});burst(e.x,e.y,EN[e.type].col,30,240);
+  for(let i=0;i<8;i++)drop('coin',e.x+rand(-50,50),e.y+rand(-50,50),Math.max(1,Math.round(4*G.ch.gold)));drop('chest',e.x,e.y);
+  banner(defeated(e.type,e),L('Мини-босс одолён!','Mini-boss defeated!'),4);}
 /* ---------- свои события глав (v17, аудит 14): по силе — как прежняя «Стая» (20–25 нечисти), у каждой главы своё ---------- */
 const CH_EV=['wolves','fog','barrows','shadows','avalanche','tide','firerain','night'];
-function chapterEvent(){const H=G.hero,en=G.ch.en,k=CH_EV[G.chi]||'wolves',R=VIEW.R;
+function chapterEvent(n){const H=G.hero,en=G.ch.en,k=chEvK(n),R=VIEW.R;if(!k)return;
+  if(EV_RUN(k))return; /* событие из реестра EVS (темы); старые 8 — ниже, как было */
   if(k==='wolves'){const a=rand(0,TAU),ux=Math.cos(a),uy=Math.sin(a),bx=H.x+ux*R,by=H.y+uy*R; // клином: вершина ближе, крылья сзади
     for(let i=0;i<22;i++){const row=Math.ceil(i/2),side=i%2?1:-1,back=row*34,off=row*30*side;const e=mkEnemy(en[2],bx+ux*back-uy*off,by+uy*back+ux*off);e.spd*=1.3;}
     banner(L('Волчья стая!','Wolf pack!'),L('Идут клином — уходи вбок!','They charge in a wedge — step aside!'));}
@@ -209,6 +275,7 @@ function addNum(x,y,v,col,cr){const cap=qLow()?10:16;if(G.nums.length>=cap){if(!
    крит по вожаку/боссу — вибрация, по боссу — ещё замирание кадра 45 мс (не чаще раза в 1,2 с, иначе похоже на тормоза) */
 function hitEnemy(e,d,kx,ky){if(e.dead)return;if(e.prop){propHit(e);return;}if(e.invul){e.flash=.06;return;}
   const cr=Math.random()<.05*G.st.luck;if(cr)d*=2;
+  if(e.beh||e.afx)d=BEH_HIT(e,d); /* щиты/броня повадок и вожаков */
   e.hp-=d;e.flash=e.boss?.06:.1;const m=e.boss||e.elite?.08:1;e.kx+=(kx||0)*m;e.ky+=(ky||0)*m;
   // цифры по одному врагу за 0,25 с складываются в одну (раньше — три ряда «33 33 33» поверх героя); крит — своя цифра; слово «КРИТ!» — только по вожаку и боссу
   {const m0=e.num;if(!cr&&m0&&m0.t<.25&&G.t-m0.b<.6&&!m0.cr&&typeof m0.v==='number'){m0.v+=Math.round(d);if(m0.v>=40)m0.col='#ffd84a';m0.t=Math.min(m0.t,.12);}else{const n=addNum(e.x+rand(-6,6),e.y-e.r*1.2,d,cr?'#ffe14a':d>=40?'#ffd84a':null,cr);if(!cr)e.num=n;}}
@@ -221,11 +288,12 @@ function hitStop(s){if(CALM())return;G.hs=Math.max(G.hs||0,s);G.hsT=G.t;}
 function comboKill(){const s=Math.floor(G.t);let K=G.kb;if(!K)K=G.kb={b:[0,0,0,0,0,0,0,0,0,0],s,sum:0,lv:0};
   if(s!==K.s){for(let i=K.s+1;i<=s&&i<=K.s+10;i++){K.sum-=K.b[i%10];K.b[i%10]=0;}K.s=s;if(K.sum<25)K.lv=0;}
   K.b[s%10]++;K.sum++;const T=[50,100,200];if(K.lv<3&&K.sum>=T[K.lv]){K.lv++;G.combo={n:T[K.lv-1],t:0};SND.combo();if(K.lv>1)vib(25);}}
-function killEnemy(e){e.dead=true;G.kills++;G.kt[e.type]=(G.kt[e.type]||0)+1;SND.kill();burst(e.x,e.y,EN[e.type].col,e.boss?40:e.elite?20:7,e.boss?260:120);comboKill();
+function killEnemy(e){e.dead=true;G.kills++;G.kt[e.type]=(G.kt[e.type]||0)+1;SND.kill();burst(e.x,e.y,EN[e.type].col,e.boss?40:e.elite?20:7,e.boss?260:120);comboKill();if(e.beh)BEH_DIE(e);if(e.afx)AFX_DIE(e);META_HK('KILL',e);
   if(e.elite){hitStop(.06);vib(35,1);}
   if(e.type==='egg'){const k=G.boss;hitStop(.08);vib(50,1);if(k&&!k.dead){k.invul=false;k.phase=2;k.hp=k.max*.35;say(k,L('Ай! Моя иголочка!','Ouch! My little needle!'),2.5);G.shake=8;}return;}
+  if(e.mini){mbDie(e);return;}
   if(e.boss){bossDie(e);return;}
-  dropGem(e.x,e.y,e.xp*(e.elite?12:1)*(1+G.chi*.25));
+  dropGem(e.x,e.y,e.xp*(e.elite?12:1)*(1+(chTier(G.chi)-1)*.25));
   const lk=G.st.luck;if(Math.random()<.05*lk*(e.elite?30:1))drop('coin',e.x+rand(-8,8),e.y+rand(-8,8),randi(1,3));
   if(Math.random()<.005*lk&&!G.wk.noHeal)drop('pie',e.x,e.y);
   if(Math.random()<.0025*lk)drop('yarn',e.x,e.y);
@@ -235,8 +303,8 @@ function bossDie(e){G.shake=16;SND.win();S.bossKill[e.type]=1;musicPlay(G.endles
   G.fx.push({k:'boom',x:e.x,y:e.y,t:0,dur:.7,r:170});G.fx.push({k:'wave',x:e.x,y:e.y,t:0,dur:.8,r1:300,col:'#ffe07a'});G.fx.push({k:'wave',x:e.x,y:e.y,t:-.18,dur:.9,r1:380,col:'#ffffff'});
   spark(e.x,e.y,'#fff3b0',30);burst(e.x,e.y,'#ffd84a',26,320);if(!CALM())G.slowT=.9;
   later(.8,()=>{if(G)for(const p of G.picks)if(p.k==='coin')p.mag=true;});
-  if(G.endless){banner(defeated(e.type),L('Дальше — сильнее!','It only gets harder!'),5);G.bossesKilled=(G.bossesKilled||0)+1;later(3.5,nextCycle);}
-  else{G.win=true;G.winT=3.7;banner(PH.win[0],defeated(e.type),5);}
+  if(G.endless){banner(defeated(e.type,e),L('Дальше — сильнее!','It only gets harder!'),5);G.bossesKilled=(G.bossesKilled||0)+1;later(3.5,nextCycle);}
+  else{G.win=true;G.winT=3.7;banner(PH.win[0],defeated(e.type,e),5);}
   for(let i=0;i<16;i++)drop('coin',e.x+rand(-60,60),e.y+rand(-60,60),Math.round(8*G.ch.gold));
   // с босса — золотой сундук (3 или 5 наград); в сече сам летит к богатырю. В главе поход через 3 с кончается — умения уже не нужны:
   // вместо рулетки «Добыча богатыря» — то же золото, что лежало в сундуке (экономика та же), строкой в итогах (аудит 14)
@@ -245,15 +313,17 @@ function bossDie(e){G.shake=16;SND.win();S.bossKill[e.type]=1;musicPlay(G.endles
   G.boss=null;for(const o of G.en)if(!o.dead&&o!==e){o.dead=true;burst(o.x,o.y,EN[o.type].col,5,100);dropGem(o.x,o.y,o.xp);}
   G.eproj.length=0;for(const g of G.gems)g.mag=true;}
 // «Соловей повержен», «Баба-Яга повержена», «Лихо повержено» — род из EN[].g
-function defeated(t){const d=EN[t];return LANG==='en'?d.n+' defeated!':d.n+' '+(d.g==='f'?'повержена':d.g==='n'?'повержено':'повержен')+'!';} // i18n:ru — русская ветка (род босса)
+/* поблажка «Логова» (plan: 3 поражения подряд в главе n:3 → открыта 1-я глава следующей темы, Логово остаётся непройденным): S.lairL[слот] — поражения подряд (поход ≥30 с), победа — стирает */
+function lairMark(chi,win,t){const r=CAMP_S[chi];if(!r||r.n!==3)return;const L0=S.lairL&&typeof S.lairL==='object'?S.lairL:(S.lairL={});if(win)delete L0[chi];else if(t>=30)L0[chi]=Math.min(9,(L0[chi]|0)+1);}
+function defeated(t,e){const d=EN[t],v=e&&e.bv&&BOSS[e.bv],n=v&&v.n?L(v.n,v.en&&v.en.n||v.n):d.n;return LANG==='en'?n+' defeated!':n+' '+((v&&v.g||d.g)==='f'?'повержена':(v&&v.g||d.g)==='n'?'повержено':'повержен')+'!';} // i18n:ru — русская ветка (род босса)
 function runStats(win){const t=S.stats,mx=(k,v)=>{t[k]=Math.max(t[k]||0,v);};mx('maxLvl',G.hero.lvl);mx('maxChests',G.q.chests);mx('maxGold',G.reward);
-  if(win&&!G.endless&&!G.daily){if(G.weapons.length===1)t.one=1;if(!Object.keys(G.pas).length)t.nopas=1;if(G.hits<=5&&G.chi>=3)t.tough=1;mx('maxCurse',G.curse);
-    G.curseUp=false;if(G.chi===CH.length-1&&G.dif!=='n'){if(!S.curseMax){S.curseMax=1;G.curseUp=1;}else if(G.curse===S.curseMax&&S.curseMax<5){S.curseMax++;G.curseUp=S.curseMax;}}}
+  if(win&&!G.endless&&!G.daily){if(G.weapons.length===1)t.one=1;if(!Object.keys(G.pas).length)t.nopas=1;if(G.hits<=5&&chTier(G.chi)>=4)t.tough=1;mx('maxCurse',G.curse);
+    G.curseUp=false;if(G.chi===CURSE_CH&&G.dif!=='n'){if(!S.curseMax){S.curseMax=1;G.curseUp=1;}else if(G.curse===S.curseMax&&S.curseMax<5){S.curseMax++;G.curseUp=S.curseMax;}}}
   G.achNew=achCheck();}
 /* бесконечная сеча: после 8 глав каждый новый круг ×1,5 к здоровью (урон ×1,25) — от уровня последней главы, без обрыва ×9 */
-function nextCycle(){if(!G||G.over)return;G.cyc++;const LAP=Math.floor(G.cyc/CH.length),F=CH[CH.length-1];G.chi=G.cyc%CH.length;G.ch=CH[G.chi]; // не L: L() — функция перевода
+function nextCycle(){if(!G||G.over)return;G.cyc++;const N=END_ORD.length,LAP=Math.floor(G.cyc/N),F=CH[END_ORD[N-1]];G.chi=END_ORD[G.cyc%N];G.ch=CH[G.chi]; /* M2: сеча — по END_ORD (старые 8) */ // не L: L() — функция перевода
   G.em=LAP?Math.pow(1.5,LAP)*F.hp/G.ch.hp:1;G.emD=LAP?Math.pow(1.25,LAP)*F.dmg/G.ch.dmg:1;
-  G.t0=G.t;G.ev=mkEvents(G.t);G.egg=null;banner(L('Круг ','Round ')+(G.cyc+1)+': '+G.ch.name,G.ch.sub);SND.boss();}
+  G.t0=G.t;G.ev=mkEvents(G.t);G.egg=null;G.w=chW(G.ch);G.K=chK(G.chi);banner(L('Круг ','Round ')+(G.cyc+1)+': '+G.ch.name,G.ch.sub);SND.boss();}
 function hurtHero(d,src){const H=G.hero;if(H.inv>0||G.over||G.win)return;if(src)G.lastBy=src;G.hits++;d=Math.max(1,d-G.st.armor);H.hp-=d;H.inv=.5;H.hurtT=.22;SND.hurt();G.shake=Math.max(G.shake,4);
   addNum(H.x,H.y-30,d,'#ff5a5a');if(H.hp<H.max*.3&&H.sayT<=0){heroSay(pick(PH.low));}
   if(G.novHeal&&H.hp>0&&H.hp<G.st.maxHp*.35){G.novHeal=0;drop('loaf',H.x+rand(-30,30),H.y-46);const lf=G.picks[G.picks.length-1];lf.find=1;lf.t=.3;} // первый поход: каравай сам прилетит (+50% здоровья)
@@ -301,8 +371,8 @@ function spark(x,y,col,n){const lo=qLow(),cap=lo?200:500;if(lo)n=Math.ceil(n/2);
 /* ---------- оружие ---------- */
 function wv(w,key){return WEAPONS[w.id][key][w.lvl-1];}
 // урон и площадь с учётом силы богатыря и вечной прокачки в оружейной
-function wd(w){return wv(w,'dmg')*G.st.might*(1+.1*((S.armory||{})[w.id]||0));}
-function wa(w){const am=(S.armory||{})[w.id]||0;return G.st.area*(1+(am>=3?.1:0)+(am>=5?.1:0));}
+function wd(w){return wv(w,'dmg')*G.st.might*(1+armFx(w.id).d);}
+function wa(w){return G.st.area*(1+armFx(w.id).a);} // Оружейная: armFx (data.js)
 function slash(a,r,dmg,full){const H=G.hero,span=full?Math.PI:1.25;G.fx.push({k:'slash',own:1,a,r,t:0,dur:.2,full});SND.swing();
   forNear(H.x,H.y,r+24,e=>{const dx=e.x-H.x,dy=e.y-H.y,d=Math.hypot(dx,dy);if(d>r+e.r)return;let da=Math.atan2(dy,dx)-a;da=Math.atan2(Math.sin(da),Math.cos(da));
     if(Math.abs(da)<=span||d<e.r+16)hitEnemy(e,dmg,dx/(d||1)*160,dy/(d||1)*160);});}
@@ -401,7 +471,7 @@ function eShoot(e,a,sp,col,r,dmg,ice){if(!S.tipR&&G&&!G.tipR&&!e.boss){G.tipR=1;
 
 /* ---------- боссы ---------- */
 function bossAI(e,dt){const H=G.hero,dx=H.x-e.x,dy=H.y-e.y,d=Math.hypot(dx,dy)||1;let sp=e.spd,mx=dx/d,my=dy/d;
-  e.at-=dt;e.at2-=dt;e.at3-=dt;if(Math.random()<dt/7)say(e,pick(PH.boss[e.type].lines));
+  e.at-=dt;e.at2-=dt;e.at3-=dt;if(Math.random()<dt/7&&PH.boss[e.type])say(e,pick(PH.boss[e.type].lines));
   switch(e.type){
   case 'solo':
     if(e.state==='whistle'){sp=0;e.st-=dt;if(e.st<=0){e.state='';e.at=6;SND.whistle();G.shake=8;G.fx.push({k:'wave',x:e.x,y:e.y,t:0,dur:.8,r1:320,col:'#bfe8ff',dmg:e.dmg*1.3});}}
@@ -465,17 +535,18 @@ function update(dt){
   G.cam.x+=(H.x-G.cam.x)*Math.min(1,dt*9);G.cam.y+=(H.y-G.cam.y)*Math.min(1,dt*9);
   VIEW.cx=G.cam.x;VIEW.cy=G.cam.y;
   if(!G.win)spawnTick(dt);
-  hazTick(dt);
+  hazTick(dt);if(G.evA)EV_TICK(dt);BEH_TICK(dt);META_HK('FRAME',dt,G);
   if(G.sleepT>0)G.sleepT-=dt;
   if(!G.win){G.propT-=dt;if(G.propT<=0){G.propT=rand(36,46);if(!G.prop||G.prop.dead)spawnProp();}}
   if(G.prop&&!G.prop.dead&&G.t-G.prop.t0>35&&!onScreen(G.prop,40)){G.prop.dead=true;G.prop=null;} // не разбил и ушёл — пенёк пропадает
   gridBuild();
   // враги
-  for(const e of G.en){if(e.dead)continue;e.flash-=dt;e.slow-=dt;
-    if(e.boss){if(e.intro>0)e.intro-=dt;else if(e.stun>0){e.stun-=dt;}else bossAI(e,dt);}
+  for(const e of G.en){if(e.dead)continue;e.flash-=dt;e.slow-=dt;if(e.afx)AFX_STEP(e,dt);
+    if(e.boss){if(e.intro>0)e.intro-=dt;else if(e.stun>0){e.stun-=dt;}else if(!(e.kit&&BK_STEP(e,dt)))bossAI(e,dt);} /* BK_STEP — только у боссов с набором приёмов (M3) */
     else if(e.type==='egg'){e.y+=Math.sin(G.t*3)*dt*6;}
     else if(e.prop){continue;}
     else if(e.stun>0){e.stun-=dt;e.x+=e.kx*dt;e.y+=e.ky*dt;e.kx*=Math.pow(.004,dt);e.ky*=Math.pow(.004,dt);continue;}
+    else if(e.beh&&BEH_STEP(e,dt)){} /* повадка сама подвинула врага */
     else{const dx=H.x-e.x,dy=H.y-e.y,d=Math.hypot(dx,dy)||1;let sp=e.spd*(e.slow>0?.55:1),mx=dx/d,my=dy/d;
       if(e.ranged){if(d<160){mx=-mx*.6;my=-my*.6;}else if(d<240){const t=mx;mx=-my*.5;my=t*.5;}
         e.shootT-=dt;if(e.shootT<=0&&d<340){const sf=G.soft,df=G.df,sh=(sf?sf.shot:1)*(df?df.shot:1);e.shootT=rand(2.4,3.4)*(sf?sf.cd:1)*(df?df.cd:1);eShoot(e,Math.atan2(dy,dx),150*(sf?sf.shotSpd:1)*(df?df.shotSpd:1),EN[e.type].col,6,sh!==1?e.dmg*sh:0);}}
@@ -489,7 +560,7 @@ function update(dt){
     if(d2<m*m&&d2>.01){const d=Math.sqrt(d2),p=(m-d)*.35;e.x+=dx/d*p;e.y+=dy/d*p;}});}
   // случайные реплики нечисти
   G.quipT-=dt;if(G.quipT<=0&&!(G.first&&G.t<(G.short?50:160))){G.quipT=rand(11,17);const vis=G.en.filter(e=>!e.dead&&!e.boss&&onScreen(e,-30)&&PH.en[e.type]);if(vis.length){const e=pick(vis);say(e,pick(PH.en[e.type]));}}
-  updWeapons(dt);updDar(dt);updProj(dt);
+  updWeapons(dt);if(typeof WPN_UPD==='function')try{WPN_UPD(dt,G);}catch(x){hookErr('wpn',x);}updDar(dt);updProj(dt);
   compact(G.en,e=>!e.dead);
   // добыча
   const M=st.magnet;
@@ -535,7 +606,7 @@ function pickup(p){const H=G.hero;
 function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dead?clamp(G.boss.hp/G.boss.max,0,1):null;G.paused=true;IN.on=false;YG.stop();musicPlay(null);tipHide();
   G.bestNew=[];for(const t in G.meet){if(!S.meet[t]&&EN[t]){S.meet[t]=1;G.bestNew.push(t);}}for(const t in G.kt)S.bk[t]=(S.bk[t]||0)+G.kt[t];
   // награда: монеты из похода + за нечисть (1 за 40) + за время (3×глава за минуту) + за босса; множители — глава (ECO.chk), жадность, проклятие, испытание
-  const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*(ECO.chk[G.chi]||.65)*(ECO.dif[G.dif]||1)*(G.rep?ECO.difR:1),parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold*(G.short?G.short.kill:1)],['time',(G.short?G.t*RUN_BOSS_T/G.short.boss:G.t)/60*ECO.time*(G.chi+1)*G.st.gold],['boss',win?100*G.ch.gold:0],['loot',(G.loot||0)*G.goldMul*G.st.gold]];
+  const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*ecoChk(chTier(G.chi))*(ECO.dif[G.dif]||1)*(G.rep?ECO.difR:1),parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold*(G.short?G.short.kill:1)],['time',(G.short?G.t*RUN_BOSS_T/G.short.boss:G.t)/60*ECO.time*chTier(G.chi)*G.st.gold],['boss',win?100*G.ch.gold:0],['loot',(G.loot||0)*G.goldMul*G.st.gold]];
   if(G.endless)parts[3][1]=150*(G.bossesKilled||0)*G.ch.gold;
   G.rw={};G.reward=0;for(const [k,v] of parts){G.rw[k]=Math.round(v*mul);G.reward+=G.rw[k];}
   if(G.daily){const sc=G.kills+(win?500:0),m=drMine();S.dr={day:m.day,best:Math.max(m.best,sc),got:m.got,runs:m.runs+1};G.drScore=sc;G.newRec=sc>m.best;
@@ -544,7 +615,7 @@ function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dea
     G.newRec=sec>S.wk.best;S.wk.best=Math.max(S.wk.best,sec);if(!S.wk.got&&sec>=60){S.wk.got=1;G.wkReward=weeklyReward();S.gold+=G.wkReward;ern('lvl',G.wkReward);S.stats.weeks=(S.stats.weeks||0)+1;}
     LB.set('weekly',w*WEEK_SCORE+S.wk.best);}
   else if(G.endless){G.newRec=Math.floor(G.t)>(S.endBest||0);S.endBest=Math.max(S.endBest||0,Math.floor(G.t));}
-  else{G.prevBest=S.best[G.chi]||0;if(win){if(S.pity&&S.pity.c===G.chi)S.pity=null;
+  else{G.prevBest=S.best[G.chi]||0;lairMark(G.chi,win,G.t);if(win){if(S.pity&&S.pity.c===G.chi)S.pity=null;
       // звёзды главы: что взято в этом походе и что из этого новое
       // уровень сложности: у каждого уровня свои звёзды (S.stars['<глава><приставка DIF_PRE><w|d|t>'])
       const pre=DIF_PRE[G.dif]||'';G.difUp=G.dif==='n'&&!difWon(G.chi,'n')?'s':G.dif==='s'&&!difWon(G.chi,'s')?'h':''; // победа открывает следующий уровень главы
@@ -553,7 +624,7 @@ function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dea
   S.kills+=G.kills;G.bossN=G.endless?(G.bossesKilled||0):(win?1:0);S.bosses=(S.bosses||0)+G.bossN;G.questDone=questsFromRun(win);runStats(win);
   if(G.endless&&!G.weekly)LB.set('endless',S.endBest);LB.set('kills',S.kills);
   if(!win&&!G.endless&&!G.daily&&!S.nb&&!S.village.forge&&G.t>=30){S.nb=1;G.nbGold=NOV_GIFT;S.gold+=NOV_GIFT;ern('gift',NOV_GIFT);} // подъёмные от старосты: один раз, новичку после первого поражения
-  S.gold+=G.reward;ern('lvl',G.reward); // золото похода — сразу в кошелёк и в сохранение (openResult → save), ×2/×3 за рекламу доплачивает разницу
+  S.gold+=G.reward;ern('lvl',G.reward);META_HK('END',G,win); // золото похода — сразу в кошелёк и в сохранение (openResult → save), ×2/×3 за рекламу доплачивает разницу
   // статистика: итог похода (выход с привала — quit); t — игровые секунды, k — нечисть, lv — уровень богатыря, hr — богатырь
   // STAT v1.2: сеча (бесконечный режим) — l:'inf' (как в lvl) и w — круг (волна); у quit модуль добавляет idle — тогда без lv (в событии не больше 8 полей)
   {const q=G.quit,x={};if(G.endless){if(!G.weekly)x.l='inf';x.w=G.cyc+1;}x.t=Math.floor(G.t);x.k=G.kills;x.hr=G.heroId;if(!q)x.lv=G.hero.lvl;
@@ -596,6 +667,7 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
   // огненный дождь: круг-предупреждение
   for(const q of G.haz){if(q.hit)continue;const k=q.t/q.warn;c.fillStyle='rgba(255,60,30,'+(.12+.18*k)+')';c.beginPath();c.ellipse(q.x,q.y,q.r,q.r*.75,0,0,TAU);c.fill();
     c.strokeStyle='rgba(255,120,60,'+(.5+.4*Math.sin(G.t*20))+')';c.lineWidth=3;c.beginPath();c.ellipse(q.x,q.y,q.r*k,q.r*.75*k,0,0,TAU);c.stroke();}
+  if(G.warn||HK_W)BEH_WARN(c); /* опасные зоны и предупреждения повадок (BEH, M1: нет) */
   // камень на распутье: сам камень и три круга-дороги
   if(G.stone){const s=G.stone;for(let i=0;i<3;i++){const p=s.p[i],pul=1+Math.sin(G.t*4+i)*.06;c.fillStyle=['rgba(255,200,90,.22)','rgba(255,90,90,.22)','rgba(120,230,120,.22)'][i];
       c.strokeStyle=['#ffc85a','#ff6a6a','#7ae67a'][i];c.lineWidth=3;c.beginPath();c.ellipse(p.x,p.y,34*pul,26*pul,0,0,TAU);c.fill();c.stroke();}
@@ -645,6 +717,7 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
     else if(p.k==='kolo')drawSpr('kolo',p.x,p.y,p.sc,p.sc,false,p.rot);
     else if(p.k==='axe')drawSpr('axe',p.x,p.y,p.sc,p.sc,false,p.rot);
     else if(p.k==='flask')drawSpr('flask',p.x,p.y,1,1,false,p.rot);}
+  if(typeof WPN_DRAW==='function'){try{WPN_DRAW(c,G);}catch(x){hookErr('wpn',x);}worldT();} /* снаряды оружия земель (meta-wpn) */
   // снаряды нечисти: тёмная обводка и белое ядро всегда — в гл. 8 фиолетовое не сливается с фиолетовой землёй
   if(G.eproj.length){c.lineWidth=2;c.strokeStyle='rgba(15,8,25,.75)';for(const p of G.eproj){c.beginPath();c.arc(p.x,p.y,p.r*1.3,0,6.2832);c.stroke();}}
   worldT();const ADD=G.ch.bright?'source-over':'lighter';c.globalCompositeOperation=ADD;if(G.ch.bright)c.globalAlpha=.8;
@@ -670,6 +743,8 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
   for(const p of G.pt)if(!p.add){c.globalAlpha=1-p.t/p.dur;c.fillStyle=p.col;c.beginPath();c.arc(p.x,p.y,p.s*(1-p.t/p.dur*.5),0,TAU);c.fill();}c.globalAlpha=1;
   // Жар-птица
   if(G.gift){const b=G.gift;drawSpr('bird',b.x,b.y,b.vx<0?-1:1,1+Math.sin(G.t*12)*.12);worldT();}
+  if(typeof BK_DRAW==='function'&&(G.boss||G.mb||G.en.some(e=>e.kit||e.mini))){try{BK_DRAW(c,G);}catch(x){hookErr('bk.draw',x);}worldT();} /* приёмы/ярость/полоса мини-босса (A21) */
+  META_HK('DRAW',c,G);worldT(); /* мета (питомец и т. п.) — мировые координаты, после сущностей */
   // полоса здоровья героя
   worldT();const hw=34,hy=H.y+30;c.fillStyle='rgba(0,0,0,.45)';rr(c,H.x-hw/2-1,hy-1,hw+2,6,3);c.fill();
   c.fillStyle=H.hp/G.st.maxHp<.3?'#ff4a4a':'#4ade6a';rr(c,H.x-hw/2,hy,hw*clamp(H.hp/G.st.maxHp,0,1),4,2);c.fill();
@@ -742,13 +817,13 @@ function drawHUD(){const c=ctx,d=VIEW.dpr,W=VIEW.W,H=G.hero;c.setTransform(d,0,0
   // босс
   if(G.boss&&!G.boss.dead){const e=G.boss,w=Math.min(420,W*.7),x=(W-w)/2,y=top+92;c.fillStyle=CVL.track;rr(c,x,y,w,14,7);c.fill();c.lineWidth=1.5;c.strokeStyle=CVL.edge;c.stroke();
     const g2=c.createLinearGradient(x,0,x+w,0);g2.addColorStop(0,'#ff3a5a');g2.addColorStop(1,'#ff8a3a');c.fillStyle=e.invul?'#8a8aa0':g2;rr(c,x+2,y+2,(w-4)*clamp(e.hp/e.max,0,1),10,5);c.fill();
-    c.font='800 14px '+CVL.font;c.textAlign='center';c.lineWidth=4;c.strokeStyle=CVL.stroke;c.fillStyle='#fff';c.strokeText(EN[e.type].n,W/2,y+28);c.fillText(EN[e.type].n,W/2,y+28);}
+    c.font='800 14px '+CVL.font;c.textAlign='center';c.lineWidth=4;c.strokeStyle=CVL.stroke;c.fillStyle='#fff';const bn=(v=>v&&v.n?L(v.n,v.en&&v.en.n||v.n):EN[e.type].n)(e.bv&&BOSS[e.bv]);c.strokeText(bn,W/2,y+28);c.fillText(bn,W/2,y+28);} /* вариант bv — имя BOSS[bv], как defeated() */
   // серия: «Раззудись плечо! ×50» под таймером (1,6 с)
   if(G.combo){const b=G.combo;{const a=b.t<.15?b.t/.15:b.t>1.2?(1.6-b.t)/.4:1,sc=CALM()?1:1+Math.max(0,.25-b.t)*1.6,y=top+(G.boss&&!G.boss.dead?142:104);
     c.save();c.globalAlpha=a;c.translate(W/2,y);c.scale(sc,sc);c.textAlign='center';c.textBaseline='middle';c.font='900 17px '+CVL.font;c.lineWidth=5;c.strokeStyle='rgba(60,20,10,.8)';
     const t=L('Раззудись плечо! ×','Mighty swing! ×')+b.n;c.strokeText(t,0,0);c.fillStyle='#ffd84a';c.fillText(t,0,0);c.restore();}}
   // стрелки к важному за краем экрана
-  const marks=[];if(G.egg&&!G.egg.dead)marks.push([G.egg,'#ffd84a']);if(G.gift)marks.push([G.gift,'#ff9a2a']);if(G.stone)marks.push([G.stone,'#e8e0d0']);for(const p of G.picks)if(p.k==='chest')marks.push([p,'#ffd84a']);if(G.prop&&!G.prop.dead)marks.push([G.prop,'#9aff6a']);if(G.boss&&!G.boss.dead)marks.push([G.boss,'#ff4a4a']);
+  const marks=[];if(G.egg&&!G.egg.dead)marks.push([G.egg,'#ffd84a']);if(G.gift)marks.push([G.gift,'#ff9a2a']);if(G.stone)marks.push([G.stone,'#e8e0d0']);for(const p of G.picks)if(p.k==='chest')marks.push([p,'#ffd84a']);if(G.prop&&!G.prop.dead)marks.push([G.prop,'#9aff6a']);if(G.boss&&!G.boss.dead)marks.push([G.boss,'#ff4a4a']);if(G.mb&&!G.mb.dead)marks.push([G.mb,'#ff8a3a']); /* M3: мини-босс */
   for(const [o,col] of marks){const sx=(o.x-VIEW.cx)*VIEW.zoom+W/2,sy=(o.y-VIEW.cy)*VIEW.zoom+VIEW.H/2;if(sx>0&&sx<W&&sy>0&&sy<VIEW.H)continue;
     const big=o===G.boss,a=Math.atan2(sy-VIEW.H/2,sx-W/2),m=big?40:28,ex=clamp(sx,m,W-m),ey=clamp(sy,m+top+(G.boss&&!G.boss.dead?130:92),VIEW.H-m);c.save();c.translate(ex,ey);c.rotate(a);if(big)c.scale(1.7+Math.sin(G.t*8)*.15,1.7+Math.sin(G.t*8)*.15);c.fillStyle=col;c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=2;
     c.beginPath();c.moveTo(14,0);c.lineTo(-6,-9);c.lineTo(-2,0);c.lineTo(-6,9);c.closePath();c.stroke();c.fill();c.restore();

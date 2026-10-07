@@ -8,13 +8,16 @@
 function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
   try{var a=document.createElement('a');a.href=u;if(a.host!==location.host)return false;}catch(e){return false;}
   return !/vk-bridge|sdk\.js/.test(u);}
-addEventListener('error',function(e){if(done||!own(e.target))return;done=true;
+addEventListener('error',function(e){if(done||!own(e.target))return;fail();},true);
+/* главы данными (07.10): файлы движка глав загрузились, но не выполнились (обрыв посреди файла) — то же самое */
+addEventListener('load',function(){if(!done&&(typeof THEME_ADD!=='function'||typeof BEH!=='object'||typeof BK!=='object'||typeof BAL!=='object'||typeof renderMap!=='function'||typeof META_RUN!=='function'))fail();});
+function fail(){if(done)return;done=true;
   if(n<2){try{sessionStorage.setItem(K,n+1);}catch(x){}setTimeout(function(){location.reload();},700+n*1500);return;}
   var ru=/^(ru|be|kk|uk|uz)/i.test(navigator.language||'ru')||/[?&](vk_app_id|vk)=/.test(location.search);
   function show(){var d=document.createElement('div');d.id='ldfail';d.setAttribute('style','position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#1c2b3a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px/1.4 system-ui,sans-serif;text-align:center;padding:24px');
     d.innerHTML='<div style="max-width:320px">'+(ru?'Не получилось загрузить игру. Проверьте интернет и попробуйте ещё раз.':'The game failed to load. Check your connection and try again.')+'</div><button type="button" style="margin-top:18px;font:700 18px system-ui,sans-serif;padding:12px 28px;border:0;border-radius:14px;background:#4caf50;color:#fff">'+(ru?'Обновить':'Reload')+'</button>';
     d.querySelector('button').onclick=function(){try{sessionStorage.removeItem(K);}catch(x){}location.reload();};(document.body||document.documentElement).appendChild(d);}
-  if(document.body)show();else addEventListener('DOMContentLoaded',show);},true);
+  if(document.body)show();else addEventListener('DOMContentLoaded',show);}
 addEventListener('load',function(){setTimeout(function(){if(!done)try{sessionStorage.removeItem(K);}catch(x){}},3000);});})();
 </script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -295,7 +298,21 @@ setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.dis
 <script src="js/art.js"></script>
 <script src="js/data.js"></script>
 <script src="js/en.js"></script>
+<script src="js/beh.js"></script>
+<script src="js/bk.js"></script>
+<!-- темы (главы данными): при сборке tools/thpack.sh заменяет блок одной строкой js/th.js (только темы из THEMES_ON) -->
+<script src="js/th.js"></script>
+<script src="js/meta-art.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/meta-tro.js"></script>
+<script src="js/meta-slava.js"></script>
+<script src="js/meta-pet.js"></script>
+<script src="js/meta-wpn.js"></script>
+<script src="js/meta-terem.js"></script>
+<script src="js/meta-dvor.js"></script>
+<script src="js/bal.js"></script>
 <script src="js/game.js"></script>
+<script src="js/map.js"></script>
 <script src="js/ui.js"></script>
 </body>
 </html>

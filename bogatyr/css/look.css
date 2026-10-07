@@ -214,6 +214,8 @@ html.lk button.skin{font-size:13.5px!important;flex:1 0 86px!important;width:aut
 html.lk [style*="rgba(255,90,90,.18)"]{background:linear-gradient(135deg,#ffe6dc,#eaf1ff)!important}
 
 /* ================= узкие и низкие экраны ================= */
+/* низкий экран: пояснение уровня сложности под рядом прячем — панель над «Выступить» не должна закрывать карту */
+@media (max-height:760px){html.lk #chSel .difnote{display:none}}
 @media (max-width:340px){
  html.lk .title{font-size:19px}html.lk .title small{font-size:12.5px}html.lk .topbar{padding-left:8px;padding-right:8px}html.lk .topbar .ibtn{width:44px;height:44px}html.lk .pill{font-size:16px;padding:4px 10px 4px 6px;min-height:42px}
  html.lk nav{padding-left:3px;padding-right:3px;gap:2px}html.lk nav button{font-size:13px;letter-spacing:-.3px;padding-left:0;padding-right:0}html.lk nav button.go{font-size:13px;flex:0 0 64px}html.lk nav button img{width:26px;height:26px}
@@ -276,3 +278,87 @@ html.lk body.lite .confetti{display:none}
 html.lk.th-palekh{--ink:#f6e7c0;--ink2:#d8c28a;--parch:#1b1612;--parch2:#120e0b;--paper:#241c16;--paperB:#c9a03a;--paperSh:#000;--wood:#c9a03a;--woodD:#6b4f12;
  --woodBg:linear-gradient(180deg,#201812,#120e0b);--woodT:#f0d68a;--rib:linear-gradient(180deg,#c22a1c,#8a160e);--menuBg:#120e0b;--cv-font:"BgF",serif;--cv-pill:rgba(20,14,10,.85);--cv-pillT:#f6e7c0}
 */
+
+/* ================= M-map (A22 MAP): полоса 3 глав выбранной земли + строка «Босс · Сила · Логово» ================= */
+html.lk .mstrip{display:flex;margin:0 0 6px}
+html.lk .mcard{flex:1 1 0;min-width:0;min-height:52px;margin:0 3px;padding:3px 3px;border-radius:14px;background:var(--parch2);border:2.5px solid var(--wood);box-shadow:0 3px 0 var(--lip);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;position:relative}
+html.lk .mcard:first-child{margin-left:0}html.lk .mcard:last-child{margin-right:0}
+html.lk .mcard b{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html.lk .mcard i{font-style:normal}html.lk .mcard .mst{font-size:15px;letter-spacing:1px;color:#e0a92e;margin-top:2px}html.lk .mcard .mst u{text-decoration:none;color:rgba(110,67,31,.35)}
+html.lk .mcard .mlk{font-size:14px;font-weight:700;color:var(--ink2);margin-top:2px}html.lk .mcard .mdf{font-size:13.5px;margin-left:2px;letter-spacing:0}
+html.lk .mcard.on{background:var(--paper);border-color:#e0a92e;box-shadow:0 0 0 2.5px #ffcf5a,0 3px 0 var(--lip)}
+html.lk .mcard.done b{color:var(--cOk)}
+html.lk .mcard.lock{background:rgba(253,240,207,.7);opacity:.85}html.lk .mcard.soon{background:rgba(253,240,207,.45);border-style:dashed;opacity:.8;box-shadow:none}
+html.lk .minfo{background:var(--parch);border:2px solid var(--wood);border-radius:14px;box-shadow:0 3px 0 var(--lip);padding:4px 10px;margin:0 0 8px;color:var(--ink);cursor:pointer}
+html.lk .minfo span{display:block;font-size:14.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.lk .minfo b{font-size:16px;font-weight:800}html.lk .minfo em{font-style:normal;font-weight:800;color:var(--cBad)}
+html.lk .minfo .mpw{font-size:14.5px;font-weight:800}html.lk .minfo .mpw.ok{color:var(--cOk)}html.lk .minfo .mpw.low{color:var(--cGold)}
+html.lk .minfo .mhook{font-style:italic;color:var(--ink2);white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+html.lk body.lite .mcard,html.lk body.lite .minfo{box-shadow:none}html.lk body.lite .mcard.on{box-shadow:0 0 0 2.5px #ffcf5a}
+/* низкий экран: пояснение уровня сложности под рядом прячем — панель над «Выступить» не должна закрывать карту */
+@media (max-height:760px){html.lk #chSel .difnote{display:none}}
+@media (max-width:340px){html.lk .mcard b{font-size:14px}html.lk .minfo span,html.lk .minfo .mpw{font-size:13.5px}}
+/* M-slava — «Слава богатыря», таланты, «Сказ месяца» (js/meta-slava.js) */
+html.lk .slTabs{display:flex;gap:6px;margin:6px 0 4px}html.lk .slTabs .btn{flex:1;min-width:0;padding:6px 4px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
+html.lk .slTabs .btn img{width:22px;height:22px}html.lk .slTabs.top .btn{font-size:15px}
+html.lk .slHead .slNote,html.lk .slItems .slNote{margin:6px 2px 0;font-size:13.5px;line-height:1.35;color:var(--ink2)}
+html.lk .slItems{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 10px}html.lk .slIt{display:inline-flex;align-items:center;gap:4px;font-size:15px;font-weight:700}html.lk .slIt img{width:24px;height:24px}
+html.lk .slItems .slNote{width:100%}
+html.lk .slStep{padding:6px 10px}html.lk .slStep .ic{width:36px;height:36px}html.lk .slStep.got{opacity:.6}html.lk .slStep.lock{opacity:.75}html.lk .slStep.ready{box-shadow:0 0 0 2px var(--goldB) inset}
+html.lk .slN{flex:none;width:30px;height:30px;border-radius:50%;background:var(--goldBg);color:var(--cGold);font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center}
+html.lk .slTal .ic{width:40px;height:40px}html.lk .slTal.on{box-shadow:0 0 0 2px var(--goldB) inset}html.lk .slTal.lock{opacity:.6}html.lk .slTal i{font-style:normal;color:var(--cBad)}
+html.lk .slR{display:inline;font-size:13px;color:var(--cGold);margin-left:4px}html.lk .slPlus{flex:none;min-width:52px}
+html.lk .slFork{margin:10px 4px 2px;font-size:13px;font-weight:800;color:var(--cInfo)}html.lk .slOr{text-align:center;font-size:13px;font-weight:800;color:var(--ink2);margin:-2px 0}
+html.lk .slUd{text-align:center;padding:8px}html.lk .slUd b,html.lk .slUd span{display:block}html.lk .slUd.on{box-shadow:0 0 0 2px var(--goldB) inset}
+html.lk .slSagaHd{display:grid;grid-template-columns:34px 1fr 1fr;gap:6px;margin:12px 0 4px;font-size:14px;text-align:center}
+html.lk .slSagaRow{display:grid;grid-template-columns:34px 1fr 1fr;gap:6px;align-items:stretch;margin:4px 0}html.lk .slSagaRow .slN{align-self:center}
+html.lk .slCell{position:relative;display:flex;align-items:center;gap:4px;padding:5px 6px;border-radius:12px;background:var(--paper);box-shadow:0 0 0 1.5px var(--paperB) inset;font-size:12.5px;line-height:1.2;min-width:0}
+html.lk .slCell img{width:28px;height:28px;flex:none}html.lk .slCell span{min-width:0;overflow-wrap:anywhere}html.lk .slCell i{position:absolute;right:4px;top:2px;font-style:normal;font-size:12px}
+html.lk .slCell.got{opacity:.55}html.lk .slCell.lock{opacity:.7}html.lk .slCell.ready{box-shadow:0 0 0 2px var(--goldB) inset}
+html.lk .slRes{margin:4px 0;font-size:14.5px}
+html.lk .slCard .bar{margin-top:4px}
+@media (max-width:370px){html.lk .slTabs:not(.top) .btn img{display:none}html.lk .slTabs .btn{font-size:13.5px;padding:6px 2px}}
+/* M-wpn — «Оружие земель» (js/meta-wpn.js) */
+.wpn-c .t span.wpn-evo{display:block;margin-top:6px;font-size:12px;line-height:1.45;opacity:.9}
+.wpn-c .t span.wpn-evo img{vertical-align:-3px}
+.wpn-lock img.ic{filter:grayscale(1) brightness(.45)}
+.wpn-lock .t b{opacity:.75}
+i.wpn-new{font-style:normal;font-size:11px;padding:1px 6px;border-radius:8px;background:var(--cBad,#c2410c);color:#fff;vertical-align:2px}
+.wpn-c .btn{min-height:44px;white-space:nowrap}
+.wpn-res{margin-top:6px;font-size:14px;line-height:1.4}
+.wpn-res img{vertical-align:-8px}
+.wpn-act{margin-top:8px;text-align:right}
+.wpn-act .btn{width:auto;display:inline-block;padding:8px 16px}
+/* M-terem — Терем богатыря (js/meta-terem.js) */
+html.lk .tm-cv{width:100%;display:block;border-radius:12px;border:2px solid var(--wood);margin:4px 0 8px;background:#9ad06a}
+html.lk .tm-prog{margin:0 2px 8px;font-size:15px;color:var(--ink)}html.lk .tm-prog .bar{margin-top:4px}
+html.lk .tm-tip{font-size:15px;line-height:1.35;color:var(--ink)}
+html.lk .tm-sec{font-weight:900;font-size:18px;margin:14px 4px 6px;color:var(--ink)}
+html.lk .tm-cs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+html.lk .tm-cs .btn{flex:1 1 30%;min-width:88px;min-height:44px;padding:4px 6px;font-size:14.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;white-space:normal}
+html.lk .tm-cs .btn span{font-size:13px;opacity:.85}html.lk .tm-cs .btn.tm-lock{opacity:.6}
+html.lk .tm-dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(0,0,0,.35);margin-bottom:2px}
+html.lk .tm-cn{font-size:17px;display:block}
+html.lk .tm-steps{display:flex;flex-wrap:wrap;gap:4px 6px;margin:2px 0 8px}
+html.lk .tm-steps span{font-size:13.5px;padding:2px 8px;border-radius:10px;background:rgba(110,67,31,.1);color:var(--ink2)}
+html.lk .tm-steps span.ok{background:var(--okBg);color:var(--cOk)}html.lk .tm-steps span.cur{background:var(--goldBg);color:var(--cGold);font-weight:800;box-shadow:0 0 0 1.5px var(--goldB) inset}
+html.lk .tm-next{display:flex;align-items:center;gap:8px;flex-wrap:wrap}html.lk .tm-next .t{flex:1 1 160px;min-width:0}html.lk .tm-next .t b{display:block;font-size:15.5px}html.lk .tm-next .t span{font-size:14.5px;color:var(--ink2)}
+html.lk .tm-next .btn{flex:none;min-height:46px}
+html.lk .tm-prs{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:3px}
+html.lk .tm-pr{display:inline-flex;align-items:center;gap:3px;font-weight:800;font-size:15px;color:var(--ink)}html.lk .tm-pr img{width:22px;height:22px}html.lk .tm-pr.no{color:var(--cBad)}
+html.lk .tm-vc{display:flex;gap:6px;margin-top:6px}html.lk .tm-vc .btn{flex:1;min-width:0;min-height:46px;padding:4px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:14.5px}
+html.lk .tm-sw{display:inline-block;width:20px;height:20px;border-radius:50%;border:2px solid rgba(0,0,0,.4);flex:none}
+html.lk .tm-ds{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+html.lk .tm-d{background:var(--parch);border:2px solid var(--wood);border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;color:var(--ink)}
+html.lk .tm-d.own{border-color:var(--okB);background:var(--okBg)}html.lk .tm-d>img{width:52px;height:52px}html.lk .tm-d b{font-size:14.5px;line-height:1.15}
+html.lk .tm-d .btn{min-height:44px;padding:4px 10px;font-size:14.5px;width:100%;margin-top:auto}html.lk .tm-d .tm-prs{justify-content:center}
+html.lk .tm-ev{font-size:13.5px;color:var(--ink2);line-height:1.2}
+
+/* M-dvor (meta-all) — «Двор»: карточки меты одной плиткой-меню (js/meta-dvor.js) */
+html.lk .card.dvor{padding:8px 8px 6px}html.lk .dvH{display:block;font-size:16px;font-weight:800;margin:0 2px 6px}
+html.lk .dvGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+html.lk .dvT{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:64px;padding:5px 2px;border-radius:12px;background:var(--paper);border:2px solid var(--paperB);color:var(--ink);font:inherit;cursor:pointer}
+html.lk .dvT img{width:36px;height:36px;object-fit:contain}html.lk .dvT span{font-size:13.5px;font-weight:800;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.lk .dvT.next{border-color:var(--goldB);box-shadow:0 0 0 1.5px var(--goldB) inset}
+html.lk .dvT.next::after{content:'';position:absolute;right:5px;top:5px;width:10px;height:10px;border-radius:50%;background:#e2452f;box-shadow:0 0 0 2px var(--paper)}
+@media (max-width:340px){html.lk .dvT span{font-size:12.5px}html.lk .dvT img{width:32px;height:32px}}

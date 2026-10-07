@@ -9,11 +9,16 @@ const PAY_ITEMS={
   skins_fest:{perm:1,vk:11,ic:'🎉',name:'Праздничные облики',desc:'Масленичный, Новогодний и Купальский облики для всех 9 богатырей. Только внешний вид',done:'Праздничные облики — во вкладке «Богатыри»!',
     en:{name:'Holiday outfits',desc:'Maslenitsa, New Year and Kupala outfits for all 9 heroes. Looks only',done:'Holiday outfits are on the “Heroes” tab!'}},
   mead:{perm:1,vk:7,ic:'🍯',name:'Чаша мёда мастеру',desc:'Поддержать автора: золотая рамка «Меценат» у портретов богатырей',done:'Спасибо, меценат! Мёд пьём за твоё здоровье',
-    en:{name:'A cup of mead for the maker',desc:'Support the author: a golden “Patron” frame on hero portraits',done:'Thank you, patron! We drink mead to your health'}}
+    en:{name:'A cup of mead for the maker',desc:'Support the author: a golden “Patron” frame on hero portraits',done:'Thank you, patron! We drink mead to your health'}},
+  // M-slava: «Сказ месяца» — на ОДИН сказ (не perm: выдача через give → slSagaBuy, привязка к номеру сказа в S.slava.ss.b). meta:1 — не в общем списке покупок, кнопка только в окне Сказа (VK)
+  saga_pass:{vk:30,meta:1,ic:'🔥',name:'«Удалая» дорожка Сказа',desc:'Верхняя дорожка «Сказа месяца» на текущий сказ',done:'«Удалая» дорожка — твоя до конца сказа!',give(){if(typeof slSagaBuy==='function')slSagaBuy('saga_pass');},
+    en:{name:'Daring track of the Tale',desc:'Upper track of the “Tale of the Month” for the current tale',done:'The Daring track is yours until the end of the tale!'}},
+  saga_pass10:{vk:60,meta:1,ic:'🔥',name:'«Удалая» + 10 ступеней',desc:'Верхняя дорожка «Сказа месяца» на текущий сказ и сразу +10 ступеней',done:'«Удалая» твоя, +10 ступеней Сказа!',give(){if(typeof slSagaBuy==='function')slSagaBuy('saga_pass10');},
+    en:{name:'Daring + 10 steps',desc:'Upper track of the “Tale of the Month” for the current tale and +10 steps right away',done:'Daring is yours, +10 Tale steps!'}}
 };
 // английские name/desc/done (поле en) — наложением js/i18n.js: applyLang() ставит нужный язык
 for(const id in PAY_ITEMS)if(PAY_ITEMS[id].en)trData(PAY_ITEMS[id],PAY_ITEMS[id].en);
-const PAY_TEST={no_ads:99,skins_fest:79,mead:49}; // цены только для ?paytest=1; настоящие — в консоли
+const PAY_TEST={no_ads:99,skins_fest:79,mead:49,saga_pass:59,saga_pass10:99}; // цены только для ?paytest=1; настоящие — в консоли
 function payAdd(n){S.gold=(+S.gold||0)+n;ern('buy',n);} // золото не продаём — нужно только общему модулю
 function payFlush(){cloudFlush();}
 function payPause(on){if(!adShowing)setMuted(on);}
@@ -57,7 +62,7 @@ const PAY={on:false,p:null,v:null,list:[],busy:false,
   give(id){const it=PAY_ITEMS[id];
     if(it.perm){if(!payObj(S.buy))S.buy={};S.buy[id]=1;
       if(it.bonus){if(!payObj(S.buyB))S.buyB={};if(!S.buyB[id]){S.buyB[id]=1;payAdd(it.bonus);}}}
-    else payAdd(it.n||0);
+    else if(!it.meta)payAdd(it.n||0);
     if(it.give)it.give();},
   // при запуске и «Восстановить покупки»: постоянные — выдать, если флага нет; расходуемые — довыдать и отметить
   async restore(){let got=0;
@@ -102,7 +107,7 @@ const PAY={on:false,p:null,v:null,list:[],busy:false,
   row(pr){const it=PAY_ITEMS[pr.id],own=it.perm&&PAY.own(pr.id),txt='<span>'+it.ic+' '+payEsc(it.name)+'<br><small>'+payEsc(it.desc)+'</small></span>';
     return own?'<div class="'+PAY_ROW+' pown">'+txt+'<i>куплено</i></div>':'<button class="'+PAY_ROW+' pbuy" data-pid="'+payEsc(pr.id)+'">'+txt+'<b>'+PAY.price(pr)+'</b></button>';},
   // список товаров (ids — только эти, по порядку каталога); owned=false — без уже купленных
-  html(ids,owned){const L=PAY.list.filter(pr=>(!ids||ids.indexOf(pr.id)>=0)&&(owned!==false||!(PAY_ITEMS[pr.id].perm&&PAY.own(pr.id))));
+  html(ids,owned){const L=PAY.list.filter(pr=>(!ids?!PAY_ITEMS[pr.id].meta:ids.indexOf(pr.id)>=0)&&(owned!==false||!(PAY_ITEMS[pr.id].perm&&PAY.own(pr.id))));
     return L.length?'<div class="pay"><h3>Покупки</h3>'+L.map(PAY.row).join('')+'</div>':'';},
   bind(root){(root||document).querySelectorAll('.pbuy').forEach(b=>b.onclick=()=>{try{(SND.tap||SND.click)();}catch(e){}PAY.buy(b.dataset.pid);});}
 };
