@@ -442,6 +442,7 @@ function fixSave(){for(const f of NUMOBJ)if(!isObj(S[f]))S[f]={};if(!isObj(S.see
   for(const f of NUMS.concat(['adW','lossRow']))if(typeof S[f]!=='number'||!isFinite(S[f])||S[f]<0)S[f]=0;
   if(S.lossLv!=null&&(typeof S.lossLv!=='number'||!isFinite(S.lossLv)))delete S.lossLv;
   if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=60;if(!Array.isArray(S.bad))S.bad=[];S.bad=S.bad.filter(x=>typeof x==='string').slice(-300);
+  if(S.music!=null&&typeof S.music!=='boolean')S.music=S.music===1; // музыка: только true — включена (по умолчанию выключена)
   if(S.streak!=null&&!isObj(S.streak))delete S.streak;
   if(S.lg!=null&&!isObj(S.lg))delete S.lg;if(S.lcur!=null&&!isObj(S.lcur))delete S.lcur;if(S.dlc!=null&&!isObj(S.dlc))delete S.dlc;
   if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};
@@ -714,13 +715,14 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'viktorina',gv:'v3-100711',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'viktorina',gv:'v3-100720',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (pl — пройдено уровней, cn — монеты, bt — облако хоть раз отдавало сохранение: метка устройства viktorina-cl) — после облака, не позже 2,5 с
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('viktorina-cl')?1:0;}catch(e){}STAT.progress({pl:+S.lvl||0,cn:+S.coins||0,bt:bt});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound===false?0:1,calm:S.calm===true?1:0});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
-  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}}
+  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false||S.music===true)acWake();}catch(e){}}
+  try{musTick();}catch(e){}} // музыка: замолчать сразу, а не через 300 мс
 const YG={
   start(){try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
   stop(){try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.stop();}catch(e){}}
@@ -1091,13 +1093,40 @@ function sdkDone(){window.__sdkDone=true;if(window.__demo)return;
   if(!G&&!modalOn&&onScr('scr-menu'))openMenu();
   if(!duelIncoming()&&!G&&!modalOn&&onScr('scr-menu'))maybeStreak();}
 
-/* ================= звук (синтез, без музыки) ================= */
+/* ================= звук (синтез) и музыка (записанный трек — блок «музыка» ниже) ================= */
 let AC=null,muted=false,acUnlocked=false;
 function acWake(){if(AC&&AC.state!=='running'){try{const p=AC.resume();p&&p.catch&&p.catch(()=>{});}catch(e){}}}
 function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&!muted)acWake();return AC;}
 function unlockAudio(){if(S.sound===false||muted)return;const a=ac();if(!a)return;
   if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}}
 ['touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true}));
+/* ---- музыка (07.10): записанный трек по кругу в меню и в игре ----
+   audio/hepcats.m4a — «Hep Cats», Kevin MacLeod (incompetech.com), CC BY 4.0 (выбор владельца 07.10.2026): подпись в «Об игре» НЕ удалять.
+   По умолчанию ВЫКЛЮЧЕНА (S.music===true — включена; ⚙ → «🎵 Музыка»). Файл не запрашивается, пока музыка выключена и пока игрок не коснулся экрана.
+   Потоком, как в «Покере» и «Гастрономе»: <audio loop> → createMediaElementSource → GainNode (трек 4 минуты в память не распаковывается).
+   Тихо (MUS_VOL): игрок читает вопрос и думает; звуки игры поверх слышны.
+   Молчит, пока есть любая причина паузы setPause (ad / hide / sdk / pay) и при скрытой вкладке: musTick ставит элемент на паузу, AC.suspend глушит выход.
+   iOS: элемент создаётся и первый раз запускается только в жесте (musPrime — касание/клик/клавиша и сам выключатель). От S.sound не зависит. */
+const MUSF='audio/hepcats.m4a',MUS_VOL=.14;
+const MUS={el:null,g:null,ok:0,bad:0};
+function musOn(){return S.music===true&&!muted&&!document.hidden;}
+function musEl(){if(MUS.el||MUS.bad)return MUS.el;const a0=ac();if(!a0)return null;
+  try{const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');a.addEventListener('error',()=>{MUS.bad=1;});a.src=MUSF;
+    try{const src=a0.createMediaElementSource(a),g=a0.createGain();g.gain.value=MUS_VOL;src.connect(g).connect(a0.destination);MUS.g=g;}catch(e){a.volume=MUS_VOL;}
+    MUS.el=a;}catch(e){MUS.bad=1;}
+  return MUS.el;}
+function musPlay(){const a=MUS.el;if(!a||MUS.bad)return;
+  try{if(MUS.g&&AC){const t=AC.currentTime,g=MUS.g.gain;g.cancelScheduledValues(t);g.setValueAtTime(.0001,t);g.linearRampToValueAtTime(MUS_VOL,t+.6);}}catch(e){}
+  try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok=1;if(!musOn())a.pause();},()=>{});else MUS.ok=1;}catch(e){}}
+// в жесте: создать элемент (тут и начинается загрузка файла) и запустить
+function musPrime(){if(!musOn())return;ac();const a=musEl();if(a&&a.paused)musPlay();}
+function musTick(){const a=MUS.el;
+  if(!musOn()){if(a&&!a.paused){try{a.pause();}catch(e){}}return;}
+  if(!a||MUS.bad||!MUS.ok)return; // первый запуск — только из жеста (musPrime)
+  if(AC&&AC.state!=='running'){acWake();return;}
+  if(a.paused)musPlay();}
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,musPrime,{capture:true,passive:true}));
+setInterval(musTick,300);
 function tone(type,f1,f2,dur,vol){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02);}
 const SND={
   pick(){tone('sine',520,560,.09,.045);},
@@ -1929,6 +1958,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','
   if(G&&!G.over)YG.stop();
   modal(`<h2>${L('Настройки','Settings')}</h2>
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
+    <button class="set" id="stMus"><span>🎵 ${L('Музыка','Music')}</span>${on(S.music===true)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stBig"><span>🔎 ${L('Очень крупный шрифт','Extra large text')}<br><small>${L('вопросы и ответы ещё крупнее','bigger questions and answers')}</small></span>${on(!!S.big)}</button>
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('без конфетти и лишнего движения','no confetti or extra motion')}</small></span>${on(calm())}</button>
@@ -1939,6 +1969,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','
   if($('stSoc'))$('stSoc').onclick=openSocial;
   if($('stStat'))$('stStat').onclick=()=>{STAT.setEnabled(!STAT.enabled());SND.tap();openSettings();};
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();STAT.cfg({snd:S.sound===false?0:1});if(S.sound){unlockAudio();SND.tap();}openSettings();};
+  $('stMus').onclick=()=>{S.music=S.music!==true;save();if(S.music)musPrime();else musTick();openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stBig').onclick=()=>{S.big=!S.big;save();applyLook();openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Enabled in system settings'));return;}S.calm=!S.calm;save();applyLook();openSettings();};
@@ -1961,6 +1992,7 @@ function openAbout(){STAT.screen('about');
   modal(`<h2>${L('Об игре','About')}</h2><p class="about">${L('«Дворовая викторина» — вопросы с четырьмя ответами на лавочке у подъезда. Ведущий — дворник Михалыч, подсказывают соседи и баба Зина.','«Yard Quiz» — four-answer questions on the yard bench.')}</p>
     <p class="about">${L('Больше ','Over ')}${Math.floor(QS.length/100)*100}${L(' вопросов по 15 темам. Каждый проверен дважды: факт, единственный верный ответ, опечатки. Нашли ошибку — нажмите «⚑ Ошибка в вопросе?» после ответа.',' questions in 15 topics, each checked twice.')}</p>
     <p class="about">${L('Соседи и баба Зина — персонажи игры, а не живые люди. Их подсказки честные: иногда они ошибаются. Картинки и звуки нарисованы и собраны прямо в игре.','Characters are fictional; their hints are honest and sometimes wrong.')}</p>
+    <p class="about" id="abMus">${L('Музыка: “Hep Cats” — Kevin MacLeod (incompetech.com), CC BY 4.0','Music: “Hep Cats” — Kevin MacLeod (incompetech.com), CC BY 4.0')}</p>
     ${PLAT==='vk'&&!OK?'<p class="about"><b>'+L('Благодарности.','Credits.')+'</b> VK Bridge — © V Kontakte, LLC, '+L('лицензия MIT.','MIT license.')+'</p>':''}
     <div class="row">${PAY.on?'<button class="btn noenter" id="abPay">↻ '+L('Восстановить покупки','Restore purchases')+'</button>':''}<button class="btn" id="abBack">← ${L('Назад','Back')}</button></div>`);
   if($('abPay'))$('abPay').onclick=()=>PAY.again();
@@ -2053,7 +2085,7 @@ if(!/[?&]demo=/.test(location.search)&&!(S.games>0)&&!duelIn){openTopics(true);i
   else openMenu();})();
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
-window.__test={get G(){return G;},get S(){return S;},QS,QI,BYT,TK,startLadder,startDaily,startDuel,answer,reveal,next,renderQ,pickQ,seededSet,fifty,askHelper,useLife,finishLadder,finishDay,finishDuel,
+window.__test={get G(){return G;},get S(){return S;},get MUS(){return MUS;},musTick,setPause,QS,QI,BYT,TK,startLadder,startDaily,startDuel,answer,reveal,next,renderQ,pickQ,seededSet,fifty,askHelper,useLife,finishLadder,finishDay,finishDuel,
   helpDue,insured,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,openMenu,openTopics,seen,markSeen,bGet,bSet,bOr,duelLink,parseDuel,set VK(v){VK=v;},get VK(){return VK;},PAY};
 </script>
 <script src="js/themes.js"></script>

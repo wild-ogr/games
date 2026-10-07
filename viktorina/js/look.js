@@ -79,6 +79,7 @@ var IC={
  home:'<path d="M5 24 L24 7 l19 17" fill="none" stroke="var(--i2)" stroke-width="4.5" '+RND+'/><path d="M10 22 v20 h28 v-20 L24 10z" '+S1+'/><rect x="20" y="29" width="8" height="13" rx="1.5" '+S3+'/>',
  mail:'<rect x="5" y="11" width="38" height="27" rx="4" '+S1+'/><path d="M7 14 l17 13 l17 -13" fill="none" stroke="var(--i3)" stroke-width="3" '+RND+'/>',
  sound:'<path d="M6 18 h8 l11 -9 v30 l-11 -9 h-8z" '+S1+'/><path d="M31 18 q4 6 0 12 M36 13 q8 11 0 22" fill="none" stroke="var(--i2)" stroke-width="3.4" stroke-linecap="round"/>',
+ music:'<path d="M18 34 v-23 l20 -5 v23" fill="none" stroke="var(--i2)" stroke-width="3.6" '+RND+'/><path d="M18 17 l20 -5" fill="none" stroke="var(--i2)" stroke-width="3.6" '+RND+'/><ellipse cx="12.5" cy="35" rx="6.5" ry="5" '+S1+'/><ellipse cx="32.5" cy="30" rx="6.5" ry="5" '+S1+'/>',
  vib:'<rect x="15" y="6" width="18" height="36" rx="4" '+S1+'/><rect x="18" y="10" width="12" height="24" rx="2" '+S3+'/><path d="M9 16 l-4 4 l4 4 l-4 4 l4 4 M39 16 l4 4 l-4 4 l4 4 l-4 4" fill="none" stroke="var(--i2)" stroke-width="2.6" '+RND+'/>',
  zoom:'<circle cx="20" cy="20" r="13" '+S3+' stroke="var(--i1)" stroke-width="4"/><path d="M30 30 l12 12" stroke="var(--i2)" stroke-width="6" stroke-linecap="round"/><path d="M14 20 h12 M20 14 v12" stroke="var(--i1)" stroke-width="3" stroke-linecap="round"/>',
  leaf:'<path d="M8 40 q0 -30 32 -32 q2 30 -28 32z" '+S1+'/><path d="M8 40 q12 -14 24 -24" fill="none" stroke="var(--i3)" stroke-width="2.6" stroke-linecap="round"/>',
@@ -91,7 +92,7 @@ var IC={
 // Эмодзи → значок. Лица соседа и Зины — головы перерисованных персонажей (face:<id>)
 var MAP={'💰':'coin','⚙':'gear','←':'back','→':'next','▶':'play','↻':'again','⭐':'star','🎁':'gift','✓':'tick','✅':'okc','✗':'cross','❌':'noc','⚔':'duel','🔥':'fire',
  '🎲':'all','🥉':'m1','🥈':'m2','🥇':'m3','🏅':'medal','📅':'cal','📺':'tv','👥':'friends','📊':'stat','📲':'phone','📣':'horn','🏆':'cup','⚑':'rep','🙋':'face:kolya','🏳':'flag',
- '❓':'help','ℹ':'info','½':'half','👵':'face:zina','📤':'share','👍':'thumb','🔟':'ten','💡':'bulb','🚫':'ban','🔒':'lock','🏠':'home','📨':'mail','🔊':'sound','📳':'vib',
+ '❓':'help','ℹ':'info','½':'half','👵':'face:zina','📤':'share','👍':'thumb','🔟':'ten','💡':'bulb','🚫':'ban','🔒':'lock','🏠':'home','📨':'mail','🔊':'sound','🎵':'music','📳':'vib',
  '🔎':'zoom','🌿':'leaf','🛒':'cart','🔁':'repeat','⌨':'kbd','🎨':'palette','🎮':'games','🔔':'bell',
  '📻':'ussr','🎬':'kino','🗺':'geo','🌍':'world','🌲':'nature','🥟':'kitchen','📖':'lang','🏰':'history','⚽':'sport','🚗':'tech','🚀':'space','🥕':'dacha','📚':'lit','🎻':'art','🔬':'sci'};
 function ic(k,cls){if(k.indexOf('face:')===0)return face(k.slice(5),cls);

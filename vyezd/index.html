@@ -552,7 +552,8 @@ var ICO={
 '🌿':p('M4 20C4 9 10 4 20 4c0 10-5 16-16 16z',G)+p('M4.5 19.5C9 15 12 12 16 8',null,st('#2f9e3f',1.8)),
 '🌐':c(12,12,9.4,'#dcebff',st(B,1.8))+p('M2.8 12h18.4M12 2.6c-3.4 3-3.4 15.8 0 18.8M12 2.6c3.4 3 3.4 15.8 0 18.8',null,st(B,1.6)),
 '🛒':p('M2 4h3l2.6 10.5h9.800L20 7H6.2',null,st(K,2.4))+c(9,19,1.9,K)+c(16.5,19,1.9,K),
-'❓':c(12,12,9.8,B)+p('M9 9.5a3 3 0 115 2.300c-1.200.9-2 1.500-2 2.900',null,st(W,2.4))+c(12,17.6,1.4,W)
+'❓':c(12,12,9.8,B)+p('M9 9.5a3 3 0 115 2.300c-1.200.9-2 1.500-2 2.900',null,st(W,2.4))+c(12,17.6,1.4,W),
+'🎵':p('M9 17.2V5.4l10-2.2v11.6',null,st(K,2.2))+p('M9 9.4l10-2.2',null,st(K,2.2))+c(6.4,17.4,3.1,P)+c(16.4,15,3.1,P)
 };
 var keys=[],css='';for(var k in ICO){keys.push(k);css+='.ei-'+keys.length+'{background-image:url("data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'+ICO[k]+'</svg>').replace(/'/g,'%27').replace(/"/g,'%22')+'")}';}
 var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);
@@ -672,7 +673,7 @@ let S={unlocked:1,stars:{},garage:[],daily:{},levelsDone:0};
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 // защита от сохранений неожиданной формы (ручная правка, старая версия): не даём им сломать игру и слияние
-function fixSave(){if(!isObj(S.stars))S.stars={};if(!isObj(S.daily))S.daily={};if(!Array.isArray(S.garage))S.garage=[];if(!isObj(S.chest))S.chest={};if(!isObj(S.paint))S.paint={};if(!isObj(S.yard))S.yard={};for(const f of ['gp','dw','dec','sets'])if(!isObj(S[f]))S[f]={}; // boost: подарочные краски, недели заданий дня, уют двора, наборы
+function fixSave(){if(!isObj(S.stars))S.stars={};if(!isObj(S.daily))S.daily={};if(!Array.isArray(S.garage))S.garage=[];if(!isObj(S.chest))S.chest={};if(!isObj(S.paint))S.paint={};if(!isObj(S.yard))S.yard={};for(const f of ['gp','dw','dec','sets'])if(!isObj(S[f]))S[f]={};if(S.music!=null&&typeof S.music!=='boolean')S.music=S.music===1; /* музыка: только true — включена (по умолчанию выключена) */ // boost: подарочные краски, недели заданий дня, уют двора, наборы
   
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(typeof S.levelsDone!=='number')S.levelsDone=0;if(typeof S.adW!=='number'||!isFinite(S.adW))S.adW=0;if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
   if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
@@ -932,7 +933,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v22-100620',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v22-100720',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: настройки сеанса; прогресс на входе — после чтения облака, но не позже 2,5 с (bt — облако хоть раз отдало сохранение: метка устройства, не в сохранении)
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -942,7 +943,8 @@ function ern(s,n){if(n>0)STAT.earn(s,n);} // STAT v1.2: откуда монет�
 // причины паузы (реклама, свёрнуто, пауза площадки): снимаем паузу, только когда ушли все — а не «вслепую» при возврате
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
-  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
+  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false||S.music===true)acWake();}catch(e){}}
+  try{musTick();}catch(e){} // музыка: замолчать сразу, а не через 300 мс
   if(!paused&&typeof kick==='function')kick();}
 const YG={
   on:false, // без повторов: окна во дворе зовут stop/start, а прежние места — тоже
@@ -1448,6 +1450,32 @@ function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)
 function unlockAudio(){if(S.sound===false||muted)return;const a=ac();if(!a)return;
   if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}}
 ['touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true}));
+/* ---- музыка (07.10): записанный трек по кругу на карте и во дворе ----
+   audio/riley.m4a — «Life of Riley», Kevin MacLeod (incompetech.com), CC BY 4.0 (выбор владельца 07.10.2026): подпись в «Об игре» (#abMus) НЕ удалять.
+   По умолчанию ВЫКЛЮЧЕНА (S.music===true — включена; ⚙ → «🎵 Музыка»). Файл не запрашивается, пока музыка выключена и пока игрок не коснулся экрана.
+   Потоком, как в Покере и «Гастрономе»: <audio loop> → createMediaElementSource → GainNode (трек 4 минуты в память не распаковывается).
+   Молчит, пока есть любая причина паузы setPause (ad / hide / sdk) и при скрытой вкладке: musTick ставит элемент на паузу, AC.suspend глушит выход.
+   iOS: элемент создаётся и первый раз запускается только в жесте (musPrime — касание/клик/клавиша и сам выключатель). От S.sound и S.calm не зависит. */
+const MUSF='audio/riley.m4a',MUS_VOL=.16;
+const MUS={el:null,g:null,ok:0,bad:0};
+function musOn(){return S.music===true&&!muted&&!document.hidden;}
+function musEl(){if(MUS.el||MUS.bad)return MUS.el;const a0=ac();if(!a0)return null;
+  try{const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');a.addEventListener('error',()=>{MUS.bad=1;});a.src=MUSF;
+    try{const src=a0.createMediaElementSource(a),g=a0.createGain();g.gain.value=MUS_VOL;src.connect(g).connect(a0.destination);MUS.g=g;}catch(e){a.volume=MUS_VOL;}
+    MUS.el=a;}catch(e){MUS.bad=1;}
+  return MUS.el;}
+function musPlay(){const a=MUS.el;if(!a||MUS.bad)return;
+  try{if(MUS.g&&AC){const t=AC.currentTime,g=MUS.g.gain;g.cancelScheduledValues(t);g.setValueAtTime(.0001,t);g.linearRampToValueAtTime(MUS_VOL,t+.6);}}catch(e){}
+  try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok=1;if(!musOn())a.pause();},()=>{});else MUS.ok=1;}catch(e){}}
+/* в жесте: создать элемент (тут и начинается загрузка файла) и запустить */
+function musPrime(){if(!musOn())return;ac();const a=musEl();if(a&&a.paused)musPlay();}
+function musTick(){const a=MUS.el;
+  if(!musOn()){if(a&&!a.paused){try{a.pause();}catch(e){}}return;}
+  if(!a||MUS.bad||!MUS.ok)return; /* первый запуск — только из жеста (musPrime) */
+  if(AC&&AC.state!=='running'){acWake();return;}
+  if(a.paused)musPlay();}
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,musPrime,{capture:true,passive:true}));
+setInterval(musTick,300);
 // атака 6 мс — без щелчка в начале звука
 function tone(type,f1,f2,dur,vol){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02);}
 const NZ={};function noiseBuf(a,dur){const k=Math.round(dur*100);if(NZ[k]&&NZ[k].sampleRate===a.sampleRate)return NZ[k];const n=a.createBuffer(1,Math.max(1,Math.floor(a.sampleRate*dur)),a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);return NZ[k]=n;}
@@ -3168,6 +3196,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?`<i>${L('вкл','
   // язык — только на Яндексе (VK — всегда по-русски); выбор запоминается на устройстве
   modal(`<h2>${L('Настройки','Settings')}</h2>
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
+    <button class="set" id="stMus"><span>🎵 ${L('Музыка','Music')}</span>${on(S.music===true)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stCalm"><span>🌿 ${L('Меньше движения','Less motion')}<br><small>${L('без тряски, мигалок и пульсации','no shaking, flashing or pulsing')}</small></span>${on(calm())}</button>
     ${STAT.available()?`<button class="set" id="stStat"><span>📊 ${L('Анонимная статистика','Anonymous statistics')}<br><small>${STAT.note()}</small></span>${on(STAT.enabled())}</button>`:''}
@@ -3178,6 +3207,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?`<i>${L('вкл','
   modalRe=openSettings;
   if($('stLang'))$('stLang').onclick=()=>{const l=LANG==='en'?'ru':'en';try{localStorage.setItem(LANG_KEY,l);}catch(e){}LANG_MAN=l;SND.tap();setLang(l);};
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
+  $('stMus').onclick=()=>{S.music=S.music!==true;save();if(S.music)musPrime();else musTick();openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Turned on in your device settings (“reduce motion”)'));return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   if($('stShop')){$('stShop').onclick=openShop;PAY.bind($('mcard'));PAY.re=openSettings;}
@@ -3218,6 +3248,7 @@ function openAbout(){STAT.screen('about');
   modal(`<h2>${L('Об игре','About')}</h2><p class="about">${L('«Выезд со двора» — головоломка про тесный двор: выпусти все машины по стрелкам и не устрой аварию. Машины, дворы, кот и голуби нарисованы прямо в игре, звуки тоже собраны кодом.','“Yard Escape: Parking Jam” is a puzzle about a crowded Russian courtyard: get every car out along its arrow without a crash. The cars, yards, cat and pigeons are all drawn by the game itself, and the sounds are made in code too.')}</p>
     ${PLAT==='vk'&&!OK?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
     ${OK&&OK_GROUP?`<p class="about" id="abSup"><b>${L('Поддержка.','Support.')}</b> ${L('Вопросы и пожелания — в группе «Игры во дворе» в Одноклассниках.','Questions and feedback — in the “Yard Games” group on OK.')}<br><a class="btn noenter" id="abGrp" href="${OK_GROUP_LINK}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;text-decoration:none;color:inherit">${L('Открыть группу поддержки','Open the support group')}</a></p>`:''}
+    <p class="about" id="abMus">${L('Музыка: “Life of Riley” — Kevin MacLeod (incompetech.com), CC BY 4.0','Music: “Life of Riley” — Kevin MacLeod (incompetech.com), CC BY 4.0')}</p>
     <p class="about">${L('На ПК: Esc — назад, Enter — главная кнопка окна, H — подсказка, R — заново, +/− — приблизить.','On PC: Esc — back, Enter — main button, H — hint, R — restart, +/− — zoom.')}</p>
     <div class="row">${PAY.on?`<button class="btn" id="abPay">${L('↻ Восстановить покупки','↻ Restore purchases')}</button>`:''}<button class="btn" id="abBack">${L('← Назад','← Back')}</button></div>`);
   modalRe=openAbout;
@@ -3317,7 +3348,7 @@ SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(
     b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Договорились! Часто дёргать не буду.','Deal! I will not bother you often.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}});updMore(); /* okGroup в SOC не передаём: в ОК VKWebAppJoinGroup с номером группы ОК ничего не делает (проверено вживую 06.10) — группа открывается ссылкой в «Об игре» */
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
-window.__test={DAILY_T,dailyTier,cam,birdsInit,scare,streakState,showStreak,claimStreak,dayKey,LEVELS,DAILY,genLevel,depth,get G(){return G;},tapCell:(x,y)=>tapAt(ox+(x+.5)*cs,oy+(y+.5)*cs),canExit,startLevel,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,get S(){return S;},set VK(v){VK=v;},get VK(){return VK;}};
+window.__test={get MUS(){return MUS;},musTick,setPause,DAILY_T,dailyTier,cam,birdsInit,scare,streakState,showStreak,claimStreak,dayKey,LEVELS,DAILY,genLevel,depth,get G(){return G;},tapCell:(x,y)=>tapAt(ox+(x+.5)*cs,oy+(y+.5)*cs),canExit,startLevel,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,get S(){return S;},set VK(v){VK=v;},get VK(){return VK;}};
 </script>
 </body>
 </html>

@@ -783,6 +783,7 @@ function fixSave(){for(const f of NUMOBJ)if(!isObj(S[f]))S[f]={};if(!isObj(S.fre
   for(const f of ['best','games','wins','done','adW','lossRow','adN','rsT','lrN','lrI'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;
   if(typeof S.rk!=='number'||!isFinite(S.rk))S.rk=rankOf(starsTot()); /* старое сохранение: звание по уже набранным звёздам, без награды задним числом */
   if(S.dwk!=null&&!isObj(S.dwk))delete S.dwk;
+  if(S.music!=null&&typeof S.music!=='boolean')S.music=S.music===1; // музыка: только true — включена (по умолчанию выключена)
   /*K2*/if(S.q!=null&&!(isObj(S.q)&&Array.isArray(S.q.l)&&Array.isArray(S.q.p)))delete S.q;if(S.dlc!=null&&!isObj(S.dlc))delete S.dlc;if(typeof S.ydd!=='number'||!isFinite(S.ydd))S.ydd=0;
   if(S.lv[100]&&S.unlocked<101)S.unlocked=101; /*K2: прошёл 100 уровней в старой версии — открыта «Улица Мира»*/
   if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=100;if(typeof S.theme!=='string'||!THB[S.theme])S.theme='yard';
@@ -1037,7 +1038,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'kirpichiki',gv:'v7-100711',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'kirpichiki',gv:'v7-100720',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl уровни/задание дня/бесконечная, ad ролики и ×2, gift подарок за вход, chest сундуки глав и посылки сезона, buy покупки,
    quest поручения/звания/кладовка/неделя/кубки); progress — после облака, но не позже 2,5 с: pl — уровней со звёздами, cn — монеты, bt — облако хоть раз отдало
    сохранение (метка устройства kirpichiki-cl, в сохранение не пишется); cfg — тема, звук, спокойный режим. */
@@ -1051,7 +1052,8 @@ let stfN=0,stfR=0;function statTick(){stfR=0;if(!G||document.hidden||stfN>=3600|
 function statTickOn(){if(!stfR&&stfN<3600)stfR=requestAnimationFrame(statTick);}
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
-  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
+  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false||S.music===true)acWake();}catch(e){}}
+  try{musTick();}catch(e){} // музыка: замолчать сразу, а не через 300 мс
   if(!paused&&typeof kick==='function')kick();}
 const YG={
   start(){try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
@@ -1435,13 +1437,39 @@ async function initSDK(){
   if(G&&!G.st.over&&!modalOn&&$('scr-game').classList.contains('on'))YG.start();
 }
 
-/* ================= звук: короткие «восьмибитные» эффекты синтезом, музыки нет ================= */
+/* ================= звук: короткие «восьмибитные» эффекты синтезом; музыка — записанный трек (блок «музыка» ниже) ================= */
 let AC=null,muted=false,acUnlocked=false;
 function acWake(){if(AC&&AC.state!=='running'){try{const p=AC.resume();p&&p.catch&&p.catch(()=>{});}catch(e){}}}
 function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&!muted)acWake();return AC;}
 function unlockAudio(){if(S.sound===false||muted)return;const a=ac();if(!a)return;
   if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}}
 ['touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true}));
+/* ---- музыка (07.10): записанный трек по кругу в меню и в игре ----
+   audio/cheery.m4a — «Cheery Monday», Kevin MacLeod (incompetech.com), CC BY 4.0 (выбор владельца 07.10.2026): подпись в «Об игре» (#abMus) НЕ удалять.
+   По умолчанию ВЫКЛЮЧЕНА (S.music===true — включена; ⚙ → «🎵 Музыка»). Файл не запрашивается, пока музыка выключена и пока игрок не коснулся экрана.
+   Потоком, как в «Покере»/«Гастрономе»: <audio loop> → createMediaElementSource → GainNode.
+   Молчит, пока есть любая причина паузы setPause (ad / hide / sdk / pay) и при скрытой вкладке: musTick ставит элемент на паузу, AC.suspend глушит выход.
+   iOS: элемент создаётся и первый раз запускается только в жесте (musPrime — касание/клик/клавиша и сам выключатель). От S.sound не зависит. */
+const MUSF='audio/cheery.m4a',MUS_VOL=.16;
+const MUS={el:null,g:null,ok:0,bad:0};
+function musOn(){return S.music===true&&!muted&&!document.hidden;}
+function musEl(){if(MUS.el||MUS.bad)return MUS.el;const a0=ac();if(!a0)return null;
+  try{const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');a.addEventListener('error',()=>{MUS.bad=1;});a.src=MUSF;
+    try{const src=a0.createMediaElementSource(a),g=a0.createGain();g.gain.value=MUS_VOL;src.connect(g).connect(a0.destination);MUS.g=g;}catch(e){a.volume=MUS_VOL;}
+    MUS.el=a;}catch(e){MUS.bad=1;}
+  return MUS.el;}
+function musPlay(){const a=MUS.el;if(!a||MUS.bad)return;
+  try{if(MUS.g&&AC){const t=AC.currentTime,g=MUS.g.gain;g.cancelScheduledValues(t);g.setValueAtTime(.0001,t);g.linearRampToValueAtTime(MUS_VOL,t+.6);}}catch(e){}
+  try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok=1;if(!musOn())a.pause();},()=>{});else MUS.ok=1;}catch(e){}}
+// в жесте: создать элемент (тут и начинается загрузка файла) и запустить
+function musPrime(){if(!musOn())return;ac();const a=musEl();if(a&&a.paused)musPlay();}
+function musTick(){const a=MUS.el;
+  if(!musOn()){if(a&&!a.paused){try{a.pause();}catch(e){}}return;}
+  if(!a||MUS.bad||!MUS.ok)return; // первый запуск — только из жеста (musPrime)
+  if(AC&&AC.state!=='running'){acWake();return;}
+  if(a.paused)musPlay();}
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,musPrime,{capture:true,passive:true}));
+setInterval(musTick,300);
 function tone(type,f1,f2,dur,vol){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02);}
 const NZ={};function noiseBuf(a,dur){const k=Math.round(dur*100);if(NZ[k]&&NZ[k].sampleRate===a.sampleRate)return NZ[k];const n=a.createBuffer(1,Math.max(1,Math.floor(a.sampleRate*dur)),a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);return NZ[k]=n;}
 function noise(dur,vol,freq,type){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime,s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();f.type=type||'lowpass';f.frequency.value=freq;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.004);s.buffer=noiseBuf(a,dur);s.connect(f).connect(g).connect(a.destination);s.start(t);}
@@ -2698,6 +2726,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','
   if(G&&!G.st.over)YG.stop();
   modal(`<h2>${L('Настройки','Settings')}</h2><div class="sets">
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
+    <button class="set" id="stMus"><span>🎵 ${L('Музыка','Music')}</span>${on(S.music===true)}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     ${/*K1*/LK.on()?`<button class="set" id="stRetro"><span>🕹 ${L('Карманная 90-х','90s handheld')}<br><small>${L('жёлтая карманная игра и ЖК-экран, как в 90-е','yellow handheld with an LCD, like in the 90s')}</small></span>${on(THEME.cur()==='retro')}</button>`:/*/K1*/`<button class="set" id="stRetro"><span>🕹 ${L('Ретро-экран','Retro screen')}<br><small>${L('серо-зелёный экран и пиксельные кирпичики, как в 90-е','grey-green screen and pixel bricks, like in the 90s')}</small></span>${on(theme().id==='retro')}</button>`}
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('без тряски, осколков и конфетти','no shaking, debris or confetti')}</small></span>${on(calm())}</button>
@@ -2708,6 +2737,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','
     ${SOC.ok()?'<button class="set" id="stSoc"><span>👥 '+(OK?'Друзья<br><small>позвать друзей в игру</small>':'Друзья и игры<br><small>позвать, поделиться, ещё игры</small>')+'</span><i class="go">›</i></button>':''}
     <div class="row"><button class="btn noenter" id="stHow">❓ ${L('Как играть','How to play')}</button><button class="btn noenter" id="stAbout">ℹ️ ${L('Об игре','About')}</button><button class="btn green" id="stClose">${L('Готово','Done')}</button></div>`);
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
+  $('stMus').onclick=()=>{S.music=S.music!==true;save();if(S.music)musPrime();else musTick();openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   /*K1*/const back0=()=>S.th0g&&THEME.owned(S.th0g)&&S.th0g!=='retro'&&S.th0g!=='classic'?S.th0g:'g';const so=$('stOld');if(so)so.onclick=()=>{SND.tap();if(THEME.cur()==='classic')THEME.set(S.thPrev&&S.thPrev!=='classic'&&THEME.owned(S.thPrev)?S.thPrev:back0());else{S.thPrev=THEME.cur();THEME.set('classic');}openSettings();};
   if(LK.on())$('stRetro').onclick=()=>{SND.tap();THEME.set(THEME.cur()==='retro'?back0():'retro');openSettings();};else/*/K1*/
@@ -2741,6 +2771,7 @@ function openAbout(){STAT.screen('about');
     <p class="about"><b>${L('Честная раздача.','Fair deals.')}</b> ${L('Фигуры выпадают случайно. Если три фигуры набора никак не поставить на поле, игра пересдаёт их (до трёх раз) — нарочно «подлых» наборов не бывает. Когда ходов нет, игра говорит об этом сразу.','Pieces are random. If a set cannot be placed at all, it is re-dealt (up to three times). When there are no moves, the game says so right away.')}</p>
     <p class="about">${L('Персонажи — герои игры, а не живые игроки. В бесконечной игре помощников нет, поэтому рекорды у всех честные; монетами рекорд не купить.','Characters are game characters, not real players. Endless mode has no helpers, so records are fair.')}</p>
     ${PLAT==='vk'&&!OK?'<p class="about"><b>'+L('Благодарности.','Credits.')+'</b> VK Bridge — © V Kontakte, LLC, '+L('лицензия MIT.','MIT license.')+'</p>':''}
+    <p class="about" id="abMus">${L('Музыка: “Cheery Monday” — Kevin MacLeod (incompetech.com), CC BY 4.0','Music: “Cheery Monday” — Kevin MacLeod (incompetech.com), CC BY 4.0')}</p>
     <p class="about">${/*K1*/L('Шрифты Rubik и Manrope — лицензия SIL Open Font License 1.1.','Fonts Rubik and Manrope — SIL Open Font License 1.1.')/*/K1*/}</p>
     <p class="about">${L('На ПК: Esc — назад, Enter — главная кнопка окна, 1–3 — выбрать фигуру, стрелки — куда, Enter — поставить, H — подсказка.','On PC: Esc — back, Enter — main button, 1–3 — pick a piece, arrows — where, Enter — place, H — hint.')}</p>
     <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ '+L('Восстановить покупки','Restore purchases')+'</button>':''}<button class="btn" id="abBack">← ${L('Назад','Back')}</button></div>`);
@@ -3115,7 +3146,7 @@ SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(
   ntf:{t:n=>ntfText(n),b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Договорились! Часто звать не буду.','Deal! I will not call you often.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}});updMore();
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
-window.__test={/*K1*/THEME:window.THEME,LK:window.LK,/*/K1*/openSocial,hideModal,get G(){return G;},get S(){return S;},get LY(){return LY;},startLevel,startDaily,startEndless,doPlace,botMove,render,layout,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,
+window.__test={get MUS(){return MUS;},musTick,setPause,/*K1*/THEME:window.THEME,LK:window.LK,/*/K1*/openSocial,hideModal,get G(){return G;},get S(){return S;},get LY(){return LY;},startLevel,startDaily,startEndless,doPlace,botMove,render,layout,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,
   openShop,openMap,openMenu,levelCfg,dailyCfg,/*K2*/openDream,dreamBuy,dreamAd,yardGive,yardGiveSet,YARD_PAY,dreamTick,dreamBg,DREAM,openQuests,qToday,qEv,openDailyCal,monthCnt,cupChip,tmrwTxt,openPantry,boostClick,useBomb,showLose,levelWon,say,phr,pieceTL,wouldClear,adReset(){lastAdT=0;},set VK(v){VK=v;},get VK(){return VK;},PAY,VARS,canPlace};
 </script>
 </body>
