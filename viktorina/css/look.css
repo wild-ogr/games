@@ -236,7 +236,7 @@ html.lk .ad small{font-size:16px}
 /* окно итогов — праздник: лучи за окном, ведущий над карточкой, ряд из 10 ступенек */
 html.lk #modal.rs{background:var(--scrim)}
 html.lk #rays{display:none}
-html.lk #modal.rs #rays{display:block;position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:.9}
+html.lk #modal.rs #rays{display:block;position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:.9;overflow:hidden}
 html.lk #rays svg{width:100%;height:100%}
 html.lk #mcard.res{margin-top:64px;overflow:visible;position:relative}
 html.lk #mcard.res>.av:first-child{width:128px;height:140px;margin:-104px auto 2px}

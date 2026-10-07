@@ -85,13 +85,14 @@ var IC={
  cart:'<path d="M4 8 h6 l5 22 h22 l5 -16 h-29" fill="none" stroke="var(--i1)" stroke-width="3.6" '+RND+'/><path d="M14 14 h27 l-4 13 h-20z" '+S2+'/><circle cx="18" cy="38" r="3.5" '+S1+'/><circle cx="34" cy="38" r="3.5" '+S1+'/>',
  repeat:'<path d="M8 22 v-4 a6 6 0 0 1 6 -6 h22 M30 6 l6 6 l-6 6 M40 26 v4 a6 6 0 0 1 -6 6 h-22 M18 42 l-6 -6 l6 -6" fill="none" stroke="var(--i1)" stroke-width="4" '+RND+'/>',
  kbd:'<rect x="3" y="12" width="42" height="25" rx="4" '+S1+'/><g '+S3+'><rect x="8" y="17" width="5" height="4" rx="1"/><rect x="16" y="17" width="5" height="4" rx="1"/><rect x="24" y="17" width="5" height="4" rx="1"/><rect x="32" y="17" width="8" height="4" rx="1"/><rect x="8" y="24" width="8" height="4" rx="1"/><rect x="19" y="24" width="5" height="4" rx="1"/><rect x="27" y="24" width="5" height="4" rx="1"/><rect x="35" y="24" width="5" height="4" rx="1"/><rect x="13" y="30" width="22" height="3.5" rx="1.5"/></g>',
+ bell:'<path d="M24 6 q-12 1 -12 15 v8 l-5 7 h34 l-5 -7 v-8 q0 -14 -12 -15z" '+S1+'/><path d="M19 39 q5 6 10 0z" '+S2+'/><circle cx="24" cy="5.5" r="2.6" '+S2+'/><path d="M16 21 q0 -8 6 -10" fill="none" stroke="var(--i3)" stroke-width="2.4" stroke-linecap="round"/>',
  palette:'<path d="M24 5 a19 19 0 1 0 0 38 q4 0 4 -4 q0 -3 -2 -5 q-2 -3 2 -5 h7 q9 0 9 -9 q0 -15 -20 -15z" '+S3+' stroke="var(--il)" stroke-width="2.6" stroke-linejoin="round"/><circle cx="14" cy="22" r="3.6" '+S2+'/><circle cx="19" cy="13" r="3.6" '+S1+'/><circle cx="29" cy="12" r="3.6" fill="var(--coin1)"/><circle cx="14" cy="32" r="3.6" fill="var(--ok)"/>'
 };
 // Эмодзи → значок. Лица соседа и Зины — головы перерисованных персонажей (face:<id>)
 var MAP={'💰':'coin','⚙':'gear','←':'back','→':'next','▶':'play','↻':'again','⭐':'star','🎁':'gift','✓':'tick','✅':'okc','✗':'cross','❌':'noc','⚔':'duel','🔥':'fire',
  '🎲':'all','🥉':'m1','🥈':'m2','🥇':'m3','🏅':'medal','📅':'cal','📺':'tv','👥':'friends','📊':'stat','📲':'phone','📣':'horn','🏆':'cup','⚑':'rep','🙋':'face:kolya','🏳':'flag',
  '❓':'help','ℹ':'info','½':'half','👵':'face:zina','📤':'share','👍':'thumb','🔟':'ten','💡':'bulb','🚫':'ban','🔒':'lock','🏠':'home','📨':'mail','🔊':'sound','📳':'vib',
- '🔎':'zoom','🌿':'leaf','🛒':'cart','🔁':'repeat','⌨':'kbd','🎨':'palette','🎮':'games',
+ '🔎':'zoom','🌿':'leaf','🛒':'cart','🔁':'repeat','⌨':'kbd','🎨':'palette','🎮':'games','🔔':'bell',
  '📻':'ussr','🎬':'kino','🗺':'geo','🌍':'world','🌲':'nature','🥟':'kitchen','📖':'lang','🏰':'history','⚽':'sport','🚗':'tech','🚀':'space','🥕':'dacha','📚':'lit','🎻':'art','🔬':'sci'};
 function ic(k,cls){if(k.indexOf('face:')===0)return face(k.slice(5),cls);
   return '<svg class="ic'+(cls?' '+cls:'')+'" viewBox="0 0 48 48" aria-hidden="true" focusable="false">'+(IC[k]||'')+'</svg>';}
