@@ -279,7 +279,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'bogatyr',gv:'v23-100813',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+STAT.init({g:'bogatyr',gv:'v23-100823',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
