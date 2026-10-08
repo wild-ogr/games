@@ -109,7 +109,7 @@ const BIZ={
     k2:{k:'bar',o:[['jr','Бариста-стажёры','Trainee baristas',{f:70e3,d:1}],['pro','Опытные бариста','Experienced baristas',{f:120e3,d:1.25}]],def:'jr'}},
   wash:{seg:'serv',ico:'🚿',n:'Мойка самообслуживания',en:'Self-service car wash',cap:5e6,days:30,life:96,hand:.5,rent:60e3,staff:45e3,mw:45e3,R:420e3,v:.25,sd:0,st:'small',max:5,need:{cap:3e6},
     sl:{k:'pr',min:25,max:45,def:35}},
-  tire:{seg:'serv',ico:'🛞',n:'Шиномонтаж',en:'Tyre service',cap:1.2e6,days:14,life:72,hand:1,rent:50e3,staff:0,mw:65e3,R:343e3,v:.6,sd:0,st:'small',max:4,need:{cap:1.5e6},
+  tire:{seg:'serv',ico:'🔩',n:'Шиномонтаж',en:'Tyre service',cap:1.2e6,days:14,life:72,hand:1,rent:50e3,staff:0,mw:65e3,R:343e3,v:.6,sd:0,st:'small',max:4,need:{cap:1.5e6},
     knob:{k:'stock',o:[['s0','Шины к сезону: не берём','Season tyres: none',{S:0}],['s1','На 0,5 млн','For 0.5 m',{S:5e5}],['s2','На 1,5 млн','For 1.5 m',{S:1.5e6}]],def:'s0'}},
   sto:{seg:'serv',ico:'🛠',n:'Автосервис на 3 поста',en:'Car service, 3 bays',cap:4.5e6,days:30,life:96,hand:1,rent:150e3,staff:0,mw:80e3,R:1.15e6,v:.433,sd:5,st:'small',max:3,need:{cap:4e6},
     knob:{k:'pct',o:[['p40','Мастерам 40 %','Mechanics 40%',{p:.4,d:.85,drt:-.05}],['p45','45 %','45%',{p:.45,d:1,drt:0}],['p50','50 %','50%',{p:.5,d:1.06,drt:.05}]],def:'p45'}},
@@ -167,8 +167,10 @@ const BASE_WQ=3000,BASE_WD=.15,BASE_STOR=40;
 const RIVALS=[{id:'beav',n:'Бобров и Ко',en:'Beaver & Co'},{id:'sib',n:'СибНеруд',en:'SibNerud'},{id:'kam',n:'Камень-Урал',en:'Stone-Ural'}];
 // пороги глав (калибровка 28.09 по tools/sim-rags.js): «Сеть» — 10 млн; «Карьер» — 115 млн (было 80, потом 100; 28.09 ночь: +8 малых дел и 10 видов подработки ускорили путь); «Недра» — 400 млн, партнёр доливает до 800, не больше 400
 // (спецификация 1.3.3: «если 300 + доливка — слишком легко: порог 400, доливка не больше 400»; с рабочими кредитами недра наступали на 144-м мес.)
-// M17: «Сеть» стала быстрее (управляющий за долю, налог по выбору, уровни) — «Карьер» с 300 млн (было 140), «Недра» с 700 млн (было 400; партнёр доливает до 800), чтобы недра остались на 7-м реальном дне (tools/sim.sh)
-const OOO_EQ=8e6,QUARRY_EQ=300e6,NEDRA_EQ=700e6,NEDRA_CAP=800e6,PARTNER_MAX=400e6;
+// M17: «Сеть» стала быстрее (управляющий за долю, налог по выбору, уровни) — «Карьер» с 300 млн (было 140), «Недра» с 700 млн (было 400; партнёр доливает до 800 — с M47b вносит 15 % капитала), чтобы недра остались на 7-м реальном дне (tools/sim.sh)
+const OOO_EQ=8e6,QUARRY_EQ=300e6,NEDRA_EQ=700e6,NEDRA_CAP=800e6,PARTNER_MAX=400e6,PARTNER_K=.15;
+// M47b: взнос партнёра — 15 % вашего капитала (доля партнёра ≈ 13 %), не больше PARTNER_MAX. Было «долить до NEDRA_CAP» — кто пришёл с бо́льшим капиталом, получал меньше живых денег (701 млн → 99 млн, 760 → 40 млн). NEDRA_CAP оставлен для старых ссылок.
+function partnerAmt(W,Eq){Eq=Eq===undefined?E.equity(W):Eq;return Math.min(PARTNER_MAX,Math.max(0,Math.round(Eq*PARTNER_K/1e5)*1e5));}
 // 💎 за главы (один раз на игрока; game.js добавляет их к своим достижениям)
 const BIZ_ACH={z_gig1:1,z_rt48:2,z_ip:3,z_biz1:3,z_quit:3,z_mgr1:3,z_ooo:5,z_chain:5,z_truck:2,z_opi:5,z_quarry:8,z_nedra:10};
 
@@ -285,13 +287,15 @@ function autoOk(W,t){const M=W.me;return t!=='resale'&&t!=='flyer'&&(M.n[t]||0)>
 function autoPay(W,t){return autoK(lvl(W,t));}
 function gigAuto(W,t,on){if(!W.me||!GIGS[t])return 'no';if(on&&!autoOk(W,t))return 'req';W.me.auto[t]=!!on;return 'ok';}
 // M38 (a45): авто «Взять лучший» — то же, что кнопка «✋ Взять лучший» / «🛌 взять выходной», раз в день; включает игрок (W.me.ab=1),
-// открывается после 3 выполненных заказов, работает только онлайн и только в главе «Карьера» (симуляторы не включают — их вывод как раньше)
-function abOk(W){const M=W.me;return !!M&&W.st==='gig'&&(M.ng|0)>=3;}
+// открывается после 3 выполненных заказов, работает только онлайн (симуляторы не включают — их вывод как раньше)
+// M47 (владелец, бета-11: «включил, выключил — и больше не видел»): везде, где есть доска заказов (главы 1–2, stI ≤ 1), а не только в «Карьере»;
+// со своим делом одна рука остаётся свободной — для дел хозяина (как у постоянных клиентов)
+function abOk(W){const M=W.me;return !!M&&!W.ned&&stI(W)<=1&&(M.ng|0)>=3;}
 function abBest(W){const M=W.me,ok=M.board.filter(g=>g.t!=='resale'&&gigCanTake(W,g)==='ok'),d=g=>g.pay/Math.max(1,g.days||1);
   return ok.filter(g=>d(g)>=1000).sort((a,b)=>d(b)-d(a)||b.pay/b.e-a.pay/a.e)[0]||null;}
 function abSet(W,on){if(on&&!abOk(W))return 'req';if(!W.me)return 'no';if(on)W.me.ab=1;else delete W.me.ab;return 'ok';}
-function abDay(W){const M=W.me;if(!M||!M.ab||!abOk(W)||M.rest>0||M.out>0)return 0;let n=0;
-  for(let k=0;k<4;k++){const g=abBest(W);if(!g)break;if(gigTake(W,g.id)!=='ok')break;n++;}
+function abDay(W){const M=W.me;if(!M||!M.ab||!abOk(W)||M.rest>0||M.out>0)return 0;let n=0;const keep=W.ip&&W.biz.length&&E.ownHands?1:0;   // M47
+  for(let k=0;k<4;k++){if(hands(W).free<1+keep)break;const g=abBest(W);if(!g)break;if(gigTake(W,g.id)!=='ok')break;n++;}
   if(!n&&!M.gigs.length&&hands(W).free>0&&M.board.some(g=>gigCanTake(W,g)==='en'))gigRest(W);
   return n;}
 function gigRest(W){const M=W.me;if(!M||M.rest>0)return 'no';M.rest=1;return 'ok';}
@@ -437,8 +441,10 @@ function bizMgr(W,id,on){const b=W.biz.find(x=>x.id===id);if(!b||!BIZ[b.t].mw)re
 function bizAudit(W,id,free){const b=W.biz.find(x=>x.id===id);if(!b||!b.mgr)return null;if(!free){if(W.cash<AUDIT)return 'cash';cost(W,AUDIT,'adm','adm',BIZ[b.t].seg);}
   const r={th:rnd0(b.th||0),hon:b.hon,ok:(b.th||0)<1000};b.aud=W.m;return r;}
 function bizFire(W,id){const b=W.biz.find(x=>x.id===id);if(!b||!b.mgr)return 'no';b.hon=1+Math.floor(R(W)*5);b.th=0;return 'ok';}   // сменить управляющего
+const SELL_K=1.2;   // M47a: потолок цены продажи точки — вложено (открытие + уровни) × 1,2 (churn-проверка: «продать и открыть такую же» не выгоднее, чем держать)
 function bizSellPrice(W,b){if(typeof b==='string')b=W.biz.find(x=>x.id===b);if(!b)return 0;const bk=bizBook(b);if(b.st==='b')return rnd0(bk*.9);
-  const h=b.pm.slice(-6),avg=h.length?h.reduce((a,x)=>a+x,0)/h.length:0;const p=rnd0(bk*(.6+.075*(b.rt-1))+Math.max(0,avg)*8*(b.rt/5));
+  const h=b.pm.slice(-6),avg=h.length?h.reduce((a,x)=>a+x,0)/h.length:0;let p=rnd0(bk*(.6+.075*(b.rt-1))+Math.max(0,avg)*8*(b.rt/5));
+  p=Math.min(p,rnd0(Math.max(bk,b.g||0)*SELL_K));   // M47a: не дороже вложенного (открытие + уровни) × SELL_K — иначе «продать и открыть такую же» выгоднее, чем держать
   if(b.mkS!=null&&W.m<b.mkS)return Math.max(p,rnd0(bk));   // M39: самосвал без хозяина после обновления — 3 месяца по балансовой цене
   if(BIZ[b.t].veh&&b.at&&b.at!=='mkt')return Math.max(p,rnd0(bk*.75));   // машина у хозяина: польза в его прибыли — цена от остаточной
   return p;}
@@ -574,6 +580,11 @@ function opiAuto(W,id,lim){const p=W.opi.find(x=>x.id===id);if(!p||p.st!=='auc')
 // кредит под ставку: проектный (тело — после строек), чтобы ставка не остановила начатое
 function opiLoan(W,a){return E.projLoan(W,a,Math.max(30,opiBuildDays(W)));}
 // «куда вложить»: лицензии без стройки, расширения, улучшение сети — по окупаемости; mo — через сколько месяцев хватит своих (null — не видно)
+// M47b (аудит гл.4 №10): главное решение главы — гранитный карьер. Пока своего (лицензии/стройки/работающего) нет, а участок под щебень
+// в перечне или на торгах — {id, nm, d (дней до торгов, 0 — идут), fair (¼ оценки), cap, g (₽/мес), pay}; иначе null
+function gravKey(W){if(W.ned||W.st!=='quarry')return null;if(W.biz.some(b=>b.t==='gravpit')||W.opi.some(p=>p.g==='grav'&&p.own==='you'))return null;
+  const ps=W.opi.filter(p=>p.g==='grav'&&(p.st==='list'||p.st==='auc')).sort((a,b)=>(a.st==='auc'?-1:a.day)-(b.st==='auc'?-1:b.day));const p=ps[0];if(!p)return null;
+  const B=BIZ.gravpit,f=pitFore(W,null,'gravpit');return {id:p.id,nm:p.nm,d:p.st==='auc'?0:Math.max(0,p.day-W.t),fair:rnd0(p.V*OPI_ADV),cap:B.cap,g:f.e,pay:f.pay};}
 function invAdv(W){const o=[],F=opiFree(W),flow=E.buildFlow(W),when=sh=>sh<=0?0:flow>0?Math.ceil(sh/flow):null;
   for(const p of W.opi)if(p.own==='you'&&p.st==='lic'&&!W.biz.some(b=>b.pid===p.id)){const t=p.g==='sand'?'sandpit':'gravpit',B=BIZ[t],f=pitFore(W,null,t),pl=E.buildPlan(W,B.cap,B.days);
     o.push({k:'pit',id:p.id,t,nm:p.nm,c:B.cap,g:f.e,pay:f.pay,ok:pl.ok,kind:pl.kind,short:pl.short,mo:when(pl.short)});}
@@ -581,7 +592,7 @@ function invAdv(W){const o=[],F=opiFree(W),flow=E.buildFlow(W),when=sh=>sh<=0?0:
   if(E.lvGain){const by={};for(const b of W.biz){if(b.st!=='w'||SMALL.indexOf(b.t)<0)continue;let g=null;try{g=E.lvGain(W,b);}catch(e){}if(g&&g.g>0&&g.pay<=PTA_PAY){const x=by[b.t]||(by[b.t]={k:'net',t:b.t,c:0,g:0,n:0});x.c+=g.x.c;x.g+=g.g;x.n++;}}
     const ts=Object.keys(by);if(ts.length){const x={k:'net',t:ts.sort((a,b)=>by[b].g-by[a].g)[0],ts,c:0,g:0,n:0};for(const t of ts){x.c+=by[t].c;x.g+=by[t].g;x.n+=by[t].n;}   // вся сеть — одной строкой
       x.c=rnd0(x.c);x.g=rnd0(x.g);x.pay=Math.ceil(x.c/Math.max(1,x.g));const sh=Math.max(0,x.c-F.free);x.ok=sh<=0;x.kind=x.ok?'ok':'no';x.short=sh;x.mo=when(sh);o.push(x);}}
-  o.sort((a,b)=>(a.pay||999)-(b.pay||999));return {o,free:F.free,flow};}
+  o.sort((a,b)=>(a.pay||999)-(b.pay||999));return {o,free:F.free,flow,key:gravKey(W)};}
 // почему Людмила советует именно этот вариант события карьера: 'ev' — дешевле/выгоднее по расчёту; 'cash' — на выгодный нет денег сейчас; 'build' — деньги нужны стройке
 function qeWhy(W,e){if(!e||!e.a)return null;let i0=0;e.a.forEach((o,i)=>{if(o.ev<e.a[i0].ev)i0=i;});if(i0===e.r)return {k:'ev',best:i0};
   const o=e.a[i0],b=W.biz.find(x=>x.id===e.id),duty=bizDuty(W),rest=E.buildRest(W),free=rnd0(W.cash-duty-rest);
@@ -591,9 +602,9 @@ function pitPlan(W,pid){const p=W.opi.find(x=>x.id===pid);if(!p)return null;cons
 function nedraReq(W){const eq=E.equity(W),pit=W.biz.some(b=>PITS.indexOf(b.t)>=0&&b.st==='w'&&(b.wm||0)>=6);
   return {eq:eq>=NEDRA_EQ,pit,od:W.m-W.odLast>6,eqv:eq,st:W.st==='quarry'};}
 function nedraOk(W){const q=nedraReq(W);return q.eq&&q.pit&&q.od&&q.st;}
-// переход в «Недра»: партнёр (фонд «Сибирский капитал») доливает капитал до 800 млн (не больше 500 млн) — ДДС «взнос в капитал»;
+// переход в «Недра»: партнёр вносит 15 % вашего капитала (M47b, partnerAmt; не больше PARTNER_MAX = 400 млн) — ДДС «взнос в капитал»;
 // налог — ОСНО 25 %; создаётся мир недр (участки, боты, металлы); обучение недр — для первого холдинга
-function bizGoNedra(W){if(!nedraOk(W))return {err:'req'};const Eq=E.equity(W),a=Math.min(PARTNER_MAX,Math.max(0,NEDRA_CAP-Eq));
+function bizGoNedra(W){if(!nedraOk(W))return {err:'req'};const Eq=E.equity(W),a=partnerAmt(W,Eq);
   W.taxm='osno';W.lossCF=0;W.tut=W.hold===1;E.initNedra(W,{cap:a,pa:1});W.partner={a,sh:Math.round(Eq/(Eq+a)*100)/100,m:W.m};W.st='nedra';W.me&&(W.me.gigs=[],W.me.board=[]);
   ach(W,'z_nedra');news(W,'biz',{k:'stage',st:'nedra'});return {partner:a,sh:W.partner.sh};}
 
@@ -617,11 +628,11 @@ function bizDay(W,off,out){if(W.d===0)cpReg();const M=W.me;if(!M){if(!W.biz.leng
     // один постоянный клиент каждого вида = одна рука: новый заказ — только когда прежний такой же (от клиента) закончен
     // (баг 28.09: репетитор идёт 4 дня, а клиент брал новый каждый день — занимал все свободные руки)
     // M17: со своим делом одна рука остаётся свободной — для дел хозяина (постоянные клиенты её не занимают)
-    if(!off)abDay(W);   // M38: «Брать лучший заказ автоматически» (только онлайн, глава 1)
+    if(!off)abDay(W);   // M38: «Брать лучший заказ автоматически» (только онлайн; M47 — главы 1–2, где есть доска заказов)
     const keep=W.ip&&W.biz.length&&E.ownHands?1:0;
     for(const t in M.auto){if(!M.auto[t]||!autoOk(W,t)||!gigSeason(W,t))continue;if(M.gigs.some(g=>g.auto&&g.t===t))continue;if(hands(W).free<1+keep||M.en<=40||M.rest>0||M.out>0)break;
       const g=mkGig(W,t);g.auto=1;M.board.push(g);if(gigTake(W,g.id)!=='ok')M.board=M.board.filter(x=>x!==g);}
-    if(W.st==='mid'&&E.equity(W)>=QUARRY_EQ&&quarrySale(W)&&W.ch>=50){W.st='quarry';opiGen(W);opiSpread(W);news(W,'biz',{k:'stage',st:'quarry'});out.push({k:'stage',st:'quarry'});}
+    if(W.st==='mid'&&E.equity(W)>=QUARRY_EQ&&quarrySale(W)&&W.ch>=50&&(W.d<=1||E.equity(W)-whsPad(W,'f')>=QUARRY_EQ)){   /* M47a (Ф11): в середине месяца — с учётом аренды/зарплат/налога, которые спишутся 30-го */W.st='quarry';opiGen(W);opiSpread(W);news(W,'biz',{k:'stage',st:'quarry'});out.push({k:'stage',st:'quarry'});}
     // торги ОПИ: пришёл срок — торги; прошло 10 дней — решают без игрока
     // M30 (решение владельца 02.10): торги ждут игрока — во время офлайн-автопилота не открываются и не кончаются
     for(const p of W.opi){if(off){if(p.st==='auc')p.end++;continue;}
@@ -671,10 +682,12 @@ function whsSale(W,B,a,dd,bad){if(!a)return;if(dd){pl(W,'rev',a);sgAdd(W,B.seg,a
     if(lr)lr.a+=a;else W.rec.push(ct?{a,due:W.t+dd,bad,tx:1}:{a,due:W.t+dd,bad});}else inc(W,a,B.seg,true);}
 function stockDays(b){const B=BIZ[b.t];if(b.t==='shaw'){const o=opt(B,'knob',b.k.meat);return o.sd;}
   if(b.t==='whs')return E.optSd?E.optSd(b):B.sd;if(B.knob&&(b.t==='kiosk'||B.gen)){const o=opt(B,'knob',b.k[B.knob.k]);return o.sd||B.sd;}return B.sd;}
+// M47a: закупка товара точек на смене месяца — запас под новый сезон (шиномонтаж весной/осенью и т. п.) минус то, что уже лежит; для запаса ptUpRes
+function stkUp(W){const m1=(month(W)+1)%12;let s=0;for(const b of W.biz){const B=BIZ[b.t];if(!B||b.st!=='w'||!B.sd||b.t==='whs'||b.t==='flow')continue;const x=econ(W,b,null,m1,true);s+=Math.max(0,x.vc/DAYS*stockDays(b)-(b.stk||0));}return rnd0(s);}
 function restock(W,b,target){const need=rnd0(target-b.stk);if(need<=0)return;const a=Math.min(need,Math.max(0,W.cash-(b.t==='whs'?whsPad(W):1000)));if(a<=0){if(b.t==='whs')b.lack=W.t;return;}if(a<need&&b.t==='whs')b.lack=W.t;pay(W,a,'supp');b.stk+=a;}
 // M30: «подушка» склада — обязательные платежи ближайшего закрытия месяца (постоянные точек, жизнь, ООО, опердиректора, кредиты и овердрафт, налог как в прошлом месяце) + 10 %.
 // Ниже неё склад товар не докупает: продаёт меньше, но месяц закрывается без овердрафта (было: тратил всё до 1 000 ₽).
-function whsPad(W){let f=(LIFE[W.st]||38e3)+(W.ooo?ACC_OOO:0);for(const b of W.biz)if(b.st==='w'){const B=BIZ[b.t];f+=PITS.indexOf(b.t)>=0?B.staff+(B.rent||0):econ(W,b,null,null,true).f;}
+function whsPad(W,o){let f=(LIFE[W.st]||38e3)+(W.ooo?ACC_OOO:0);for(const b of W.biz)if(b.st==='w'){const B=BIZ[b.t];f+=PITS.indexOf(b.t)>=0?B.staff+(B.rent||0):econ(W,b,null,null,true).f;}
   for(const t in W.opd)if(W.opd[t])f+=OPD_WAGE;if(!W.ned)for(const l of W.loans)f+=l.a*l.r/12+Math.min(l.a,E.loanPay(l));
   const rp=W.reps[W.reps.length-1];if(!W.ned)f+=Math.max(rp&&rp.pl?rp.pl.tax||0:0,taxEst(W));   // налог: как в прошлом месяце или прикидка этого (в декабре — итог года с минимумом 1 %)
   // что придёт до закрытия: маржа остальных точек за оставшиеся дни (прогноз без шума) и пачки покупателей со сроком до конца месяца — с запасом 20 %
@@ -682,6 +695,7 @@ function whsPad(W){let f=(LIFE[W.st]||38e3)+(W.ooo?ACC_OOO:0);for(const b of W.b
   for(const b of W.biz)if(b.st==='w'&&b.t==='whs'){const x=econ(W,b,null,null,true);f+=(x.log||0)/DAYS*left;}   // M39: доставка опта (свои газели и наёмные) платится каждый день до закрытия
   for(const b of W.biz)if(b.st==='w'&&b.t!=='whs'&&PITS.indexOf(b.t)<0&&!(b.down>0)){const x=econ(W,b,null,null,true);inf+=Math.max(0,x.rev-x.vc-(x.log||0)-(x.risk||0))/DAYS*left;}
   for(const r of W.rec)if(r.due<=W.t+left)inf+=r.a*(1-(r.bad||0));
+  if(o==='f')return rnd0(f);   // M47a: только обязательные платежи до закрытия (без поступлений) — для запаса ptUpRes
   return Math.max(1000,rnd0((f-inf*.8)*1.1));}
 // M30: сколько на самом деле стоит склад: вход + товар на запас + деньги, которые сидят у покупателей при этой отсрочке; честная окупаемость
 // M39: kd — вид опта (без b — тот, что откроем); ko — другие ручки ({mk, sd}); прогноз — с нынешними газелями опта (b) или без них
@@ -1009,11 +1023,12 @@ function bizAdvise(W){const o=[];const M=W.me;if(!M)return o;const h=hands(W);
     const best=M.board.filter(g=>g.t!=='resale'&&gigCanTake(W,g)==='ok'&&dd(g)>=1000).sort((a,b)=>dd(b)-dd(a)||b.pay/b.e-a.pay/a.e)[0];if(best)o.push({k:'z_gig',pri:60,a:{id:best.id,pay:best.pay}});}
   if(!W.ip&&!W.reg&&W.cash>=BIZ.vend.cap*.7)o.push({k:'z_ip',pri:65});
   if(W.ip&&!W.biz.length&&W.cash>=BIZ.vend.cap+bizRes(W,'vend'))o.push({k:'z_vend',pri:66});
-  {const sn={};for(const b of W.biz)if(b.st==='w'&&!sn[b.t]&&!(BIZ[b.t].veh&&b.at&&b.at!=='mkt')&&!(b.t==='tk'&&bizForecast(W,b,b.k).prof>0)&&b.pm.length>=2&&b.pm.slice(-2).every(x=>x<0)){sn[b.t]=1;o.push({k:'z_loss',pri:55,a:{id:b.id,bt:b.t}});}}   // одна фраза на вид точки
+  {const sn={};for(const b of W.biz)if(b.st==='w'&&!sn[b.t]&&!(BIZ[b.t].veh&&b.at&&b.at!=='mkt')&&b.pm.length>=2&&b.pm.slice(-2).every(x=>x<0)&&!(b.t==='tk'&&(E.tkFore?E.tkFore(W,b).prof:bizForecast(W,b,b.k).prof)>0)){sn[b.t]=1;o.push({k:'z_loss',pri:55,a:{id:b.id,bt:b.t}});}}   // одна фраза на вид точки
   // управляющий «съедает» прибыль точки: с ним прогноз в минусе, а без него — в плюсе (и рука есть)
   for(const b of W.biz)if(b.st==='w'&&b.mgr&&!W.opd[b.t]){const x=mgrProf(W,b);if(x&&x.mgr<0&&x.self>0){o.push({k:'z_mgrloss',pri:52,a:{id:b.id,bt:b.t,mgr:rnd0(x.mgr),self:rnd0(x.self)}});break;}}
   if(W.ooo===0&&W.ip){const q=oooReq(W);if(q.eq&&q.pts&&q.mgr&&q.ch&&!W.reg)o.push({k:'z_ooo',pri:62});}
   for(const p of W.opi)if(p.st==='auc')o.push({k:'z_opi',pri:80,a:{id:p.id}});
+  if(W.st==='quarry'&&!W.opi.some(p=>p.st==='auc')){const k=gravKey(W);if(k)o.push({k:'z_grav',pri:35,a:k});}   // M47b: подсказка про гранитный карьер
   if(nedraOk(W))o.push({k:'z_nedra',pri:90});
   if(E.ownAdvise)E.ownAdvise(W,o);   // M17: событие, налог, улучшение, насыщение, свободная рука
   // M30 (баг: было W.cash<0 — днём так не бывает, совет не появлялся никогда): долг покупателей есть, а денег меньше «подушки», склад полупустой или был овердрафт
@@ -1226,10 +1241,10 @@ const CP_SRC=[
     for(let d=1;d<=n;d++){const t=W.t+d;o.push({t,a:-rnd0(x.vc/DAYS),ru:'Склад закупает товар',en:'Warehouse buys stock',k:'supp'});if(!dd)o.push({t,a:rnd0(x.rev/DAYS),ru:'Продажи склада',en:'Warehouse sales',k:'sales'});else if(d>dd)o.push({t,a:rnd0(x.rev/DAYS*(1-bad)),ru:'Покупатели склада платят',en:'Warehouse buyers pay',k:'rec'});}}return o;}},
   {id:'tax_close',ru:'Налог (с оплаченного)',en:'Tax (on cash received)',f:(W,n)=>{const d=DAYS-W.d;if(d>n)return [];const a=taxEst(W);return a?[{t:W.t+d,a:-a,ru:'Налог с оплаченного',en:'Tax on cash received',k:'tax'}]:[];}}];
 // (в реестр ECON.cpSrc не кладём: календарь cash видит склад и налог через «тень» — встроенные источники whs/tax в js/cash.js)
-Object.assign(E,{VEND_USED,vendFirst,capOf,abOk,abDay,abSet,CP_SRC,taxEst,EVS,MGR_SH,MGR_MIN,mgrCut,mgrSh,TAX_GAP,taxNext,bizCost:cost,bizInc:inc,bizPlc:plc,bizSg:sgAdd,bizOpt:opt,hol,OPI_ADV,bizDuty,bizRes,bizObl,CR_BIZ,urgentGigOk,urgentGig,bizSpeedOk,bizSpeed,breathOk,breath,PROMO_K,PROMO_D,AD_SPD,gigX2Ok,gigX2,dealChkOk,dealChk,bizPromoOk,bizPromo,bizAdSpeedOk,bizAdSpeed,objAdSpeedOk,objAdSpeed,expressOk,express,conExtOk,conExt,mgrProf,chInfo,CH_OOO,lessons,lessonDone,GIGS,GL2,EQ,BIZ,BL,SMALL,MID,PITS,STAGES,LIFE,CITY,AGG,RIVALS,BIZ_ACH,NEDRA_EQ,NEDRA_CAP,PARTNER_MAX,JOB_PAY,AUDIT,OPD_WAGE,VEND_SELF,VEND_OP,VEND_SAT,vendOps,vendSpot,OOO_EQ,QUARRY_EQ,DE_MAX,
+Object.assign(E,{VEND_USED,vendFirst,capOf,abOk,abDay,abSet,CP_SRC,taxEst,EVS,MGR_SH,MGR_MIN,mgrCut,mgrSh,TAX_GAP,taxNext,bizCost:cost,bizInc:inc,bizPlc:plc,bizSg:sgAdd,bizOpt:opt,hol,OPI_ADV,bizDuty,bizRes,bizObl,CR_BIZ,urgentGigOk,urgentGig,bizSpeedOk,bizSpeed,breathOk,breath,PROMO_K,PROMO_D,AD_SPD,gigX2Ok,gigX2,dealChkOk,dealChk,bizPromoOk,bizPromo,bizAdSpeedOk,bizAdSpeed,objAdSpeedOk,objAdSpeed,expressOk,express,conExtOk,conExt,mgrProf,chInfo,CH_OOO,lessons,lessonDone,GIGS,GL2,EQ,BIZ,BL,SMALL,MID,PITS,STAGES,LIFE,CITY,AGG,RIVALS,BIZ_ACH,NEDRA_EQ,NEDRA_CAP,PARTNER_MAX,PARTNER_K,partnerAmt,gravKey,JOB_PAY,AUDIT,OPD_WAGE,VEND_SELF,VEND_OP,VEND_SAT,vendOps,vendSpot,OOO_EQ,QUARRY_EQ,DE_MAX,
   bizInit,bizMigrate,bizDay,bizClose,bizTax,bizBal,bizLoanLimit,bizLoanRate,bizAdvise,
   hands,lvl,lvlNext,LV_N,LV_MAX,payAt,autoK,autoPay,gigSeason,gigHi,gigOpt,HAND_CR,EN_CR,EN_STEP,hx,ex,enMax,gigOk,gigCanTake,gigTake,gigRest,gigAuto,autoOk,eqBuy,jobQuit,jobBack,jobBackOk,regIP,regOOO,oooReq,taxSet,taxOk,taxCmp,
-  bizEcon:econ,bizForecast,whsPad,whsNeed,whsState,factorPick,cashTax,defKnob,bizNeed,bizCan,bizOpen,bizKnob,bizMgr,bizAudit,bizFire,bizSell,bizSellPrice,bizBook,opdHire,cityOpen,cityPts,knobFore,bizKnobCity,bizOpenN,openNFore,factor,slFore,afacSet,afacNeed,afacDay,chainN,chainDisc,
+  bizEcon:econ,bizForecast,whsPad,stkUp,whsNeed,whsState,factorPick,cashTax,defKnob,bizNeed,bizCan,bizOpen,bizKnob,bizMgr,bizAudit,bizFire,bizSell,bizSellPrice,bizBook,opdHire,cityOpen,cityPts,knobFore,bizKnobCity,bizOpenN,openNFore,factor,slFore,afacSet,afacNeed,afacDay,chainN,chainDisc,
   MILES,bizMiles,LUX,LUXS,LUX0,LUX_SET,luxOf,luxMig,luxNeed,luxCh,luxCush,luxState,luxBuy,luxUse,luxCur,
   PTA_PAY,ptUpAll,ptUpAllMax,advSig,FS_EQ,FS_NC,fsOf,fsNew,fsTake,fsNo,NS_K,netOffer,netSell,netCloseLoss,PC_PEN,PC_MAX,pcOf,pcFore,pcNew,pcTake,pcNo,pcBuyP,pcTrSpare,pcPitSpare,TRUCK_T,OWN_T,HIRE_T,
   SEA,BASE_WQ,BASE_WD,BASE_STOR,optFree,quarrySale,opiFree,opiLim,opiAuto,opiLoan,opiBuildDays,invAdv,qeWhy,microLoan,cardLimit,cardTake,chWord,ipMonths,opiBid,opiPass,pitBuild,pitPlan,pitFore,pitUp,pitUpInfo,pitQ,pitFix,pitSea,qzOf,qeAns,qeNew,qeOpts,QE_K,PIT_UP,PIT_STOR,pitVal,opiSpread,opiFeed,pcPitOpp,nedraReq,nedraOk,bizGoNedra,goal,stI:stI,season});

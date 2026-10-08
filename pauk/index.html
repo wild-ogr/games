@@ -863,7 +863,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Имя игры — по сборке (BUILD_GAME → GID): Косынка — kosynka, Паук — pauk, Ячейка — yacheyka. Раздача = «уровень» (STAT.lvl в startDeal/resumeDeal)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v3-100712',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v3-100813',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (сыграно раскладов, монеты, было ли облачное сохранение) — после облака или через 2,5 с; баланс; настройки
 let statPr=0,statBt=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:played(),cn:+S.coins||0,bt:statBt});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0,th:S.th||'day'});
@@ -2525,7 +2525,7 @@ function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen(
 function adOpen(){setPause('ad',true);YG.stop();}
 // игра снова «идёт» для GameplayAPI, только если раздача на экране и поверх нет окна
 function adClose(){setPause('ad',false);if(inPlay())YG.start();}
-const AD_FAIL='Реклама сейчас недоступна — загляни чуть позже',VK_REAL=/[?&]vk_app_id=/.test(location.search),
+const AD_FAIL='Реклама сейчас недоступна — загляни чуть позже',AD_CLOSED='Ролик закрыт до конца — награды нет',VK_REAL=/[?&]vk_app_id=/.test(location.search),
   AD_LOCAL=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname); // заглушка рекламы — только на маке; на площадке без SDK награду даром не даём
 // межэкранная: не раньше чем через AD_GAP после ЛЮБОЙ рекламы (и за награду тоже) и после запуска; первая — не раньше AD_FROM-й раздачи
 let lastAdT=Date.now(),AD_GAP=180000;const AD_FROM=2;
@@ -2541,6 +2541,7 @@ let lastAdT=Date.now(),AD_GAP=180000;const AD_FROM=2;
    Тот же приём — во всех играх (журнал hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ»). Здесь «ролик готов» — adVidReady (adReady занято правилом межэкранной), как в «Дураке». */
 const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAd,#mX2,#mAdCoins,#mAdTh';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+function adShut(e){const d=e&&e.error_data||{};return +d.error_code===4;} // код VK 4 — игрок сам закрыл ролик раньше конца
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
 function adSoon(){return 'Ролик будет через несколько секунд — кнопка загорится, когда он загрузится';}
 /* pre (05.10, пачка 2; образец — «Выезд», hobby-analytics/release-h/preload/preload-sample.md, раздел «ОБРАЗЕЦ»): ролик за награду подгружаем ЗАРАНЕЕ и помним ответ.
@@ -2658,7 +2659,7 @@ function showRewarded(cb0,onFail0,late0){
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(adShut(e)?AD_CLOSED:AD_FAIL);adPreload('err');}
         onFail();adDim();});}; // adDim — если onFail открыл окно с кнопкой рекламы
     go();return;}
   if(!ysdk){if(AD_LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail','nosdk');toast(AD_FAIL);onFail();}return;}
@@ -2667,7 +2668,7 @@ function showRewarded(cb0,onFail0,late0){
   const lateY=f=>{if(!adBusy)adClose();f();};
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
-      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast('Досмотри видео до конца, чтобы получить награду');onFail();}},
+      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(AD_CLOSED);onFail();}},
     onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
       adClose();stat('err','');toast(AD_FAIL);adCool();onFail();adDim();}}});
 }

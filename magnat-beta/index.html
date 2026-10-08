@@ -36,6 +36,7 @@ setTimeout(function(){document.body.classList.add('ready');},12000);})();</scrip
     </div>
     <div class="h2">
       <div class="hcash"><small data-en="Money">Деньги</small><b id="hCash">—</b><span id="hMon"></span></div>
+      <button class="hbtn noenter" id="psBtn" title="Пауза" style="display:none">⏸</button>
       <div class="hmon"><div class="mbar"><i id="hBar"></i></div><small id="hLeft"></small></div>
     </div>
   </header>
@@ -69,6 +70,7 @@ setTimeout(function(){document.body.classList.add('ready');},12000);})();</scrip
 <script src="js/art.js"></script>
 <script src="js/savepack.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/music.js"></script><!-- M47e: фоновая музыка (3 трека по кругу, audio/m1-3.m4a) -->
 <script src="js/themes.js"></script>
 <script>/* «Ролики дня» — общий модуль QUEST (hobby-analytics/quest, вставляет quest-sync.sh; правки только там). Подключение — js/game.js (ladder) */
 /*QUEST*/
@@ -246,6 +248,7 @@ var QUEST=(function(){
 <script src="js/friends-ui.js"></script>
 <script src="js/realty-ui.js"></script>
 <script src="js/cash-ui.js"></script><!-- M30: 📅 Календарь денег — вид (CASHUI) -->
+<script src="js/rb-ui.js"></script><!-- M48rb: разорение с откатом назад (окно выбора, совет «к санации близко») -->
 <script src="js/phone-ui.js"></script>
 <script src="js/gloss.js"></script><!-- M38 (a45): словарик — нажатие на термин -->
 <script src="js/stat-hooks.js"></script>

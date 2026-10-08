@@ -19,7 +19,8 @@ const SEG={gig:['Подработка и зарплата','Side jobs & wage'],r
 const NAMED={life:['Жизнь героя (еда, жильё, мелочи)','Living costs (food, rent, everyday)'],ipf:['Взносы ИП (пенсия и медицина)','Sole-trader contributions (pension, health)'],acc:['Бухгалтер ООО','LLC accountant'],
   job:['Зарплата на складе (основная работа)','Warehouse wage (main job)'],office:['Офис холдинга','Holding office'],wag:['Вагоны','Wagons'],fr:['Друзья: совместные дела, займы, подарки','Friends: joint ventures, loans, gifts'],
   re:['Недвижимость','Real estate'],own:['Маркетинг, события, дела хозяина','Marketing, events, owner errands'],pen:['Штрафы по контрактам','Contract penalties'],tax:['Налог','Tax'],od:['Овердрафт (нет денег на закрытии)','Overdraft (no cash at month end)'],
-  ev:['События месяца','Events of the month'],san:['Санация: банк продал имущество','Restructuring: the bank sold assets'],eq:['Имущество для работы','Work equipment'],resale:['Товар для перепродажи','Stock for resale'],
+  ev:['События месяца','Events of the month'],dv:['Дивиденды по акциям прошлых холдингов','Dividends from your past holdings’ shares'],   /* M47c */
+ san:['Санация: банк продал имущество','Restructuring: the bank sold assets'],eq:['Имущество для работы','Work equipment'],resale:['Товар для перепродажи','Stock for resale'],
   rec:['Нам должны покупатели (опт с отсрочкой)','Owed by buyers (wholesale on credit)'],_:['Прочее (без подробностей)','Other (no details)'],_rl:['Раньше в этом месяце — до перезапуска игры','Earlier this month — before the game restarted'],
   cash:['Деньги на счёте','Cash in the account']};
 const ACT={bizOpen:['Открытие точек','Opening outlets'],vehAdd:['Покупка машин (газели опта, самосвалы базы)','Buying vehicles (wholesale vans, yard trucks)'],vehDel:['Продажа машин','Selling vehicles'],optUp:['Улучшения опта, стройбазы и ТК','Wholesale, yard and haulage upgrades'],vehTO:['ТО машин','Vehicle service'],ptUp:['Улучшения точек','Outlet upgrades'],ptUpAll:['Улучшения точек','Outlet upgrades'],ptUpAllMax:['Улучшения точек','Outlet upgrades'],mxAct:['Решения по делам (уборка, смены, помощники, акции)','Business decisions (cleaning, shifts, helpers, promos)'],pcTake:['Подряды стройбазы','Building-yard contracts'],fsTake:['Продажа точек федеральной сети','Selling outlets to a national chain'],breath:['Второе дыхание','Second wind'],mkRun:['Реклама и маркетинг','Advertising & marketing'],edStart:['Учёба героя','Owner’s courses'],
@@ -75,8 +76,8 @@ function tagInfo(w,tag,rep){let m;
   return {g:'_',gn:T(NAMED._),n:T(NAMED._)};}
 
 /* ---------------- данные раскрытия ---------------- */
-const PLS={rev:1,cogs:-1,fix:-1,log:-1,adm:-1,expl:-1,dep:-1,oth:1,int:-1,tax:-1,jv:1};
-const PLC={marg:['rev','cogs'],ebitda:['rev','cogs','fix','log','adm','expl'],ebt:['rev','cogs','fix','log','adm','expl','dep','oth','int'],net:['rev','cogs','fix','log','adm','expl','dep','oth','int','tax','jv']};
+const PLS={rev:1,cogs:-1,fix:-1,log:-1,adm:-1,expl:-1,dep:-1,oth:1,int:-1,tax:-1,jv:1,dv:1};   // M47c: dv — дивиденды
+const PLC={marg:['rev','cogs'],ebitda:['rev','cogs','fix','log','adm','expl'],ebt:['rev','cogs','fix','log','adm','expl','dep','oth','int'],net:['rev','cogs','fix','log','adm','expl','dep','oth','int','tax','jv','dv']};   // M47c: dv
 function curDt(w){return w.mon?(E.dtOf?E.dtOf(w):w.mon.dt):null;}
 function repDt(rep){const w=Wd();return rep.cur?curDt(w):rep.dt;}
 function repBd(rep){const w=Wd();if(rep.cur)return E.balDt(w);return rep.bd;}
@@ -131,6 +132,7 @@ const WHAT={
   'pl:oth':['Разовые доходы и расходы: штрафы, поломки, подарки, продажа точек (плюс — если продали дороже, чем она числилась).','One-off income and costs: fines, breakdowns, gifts, selling outlets (a plus if sold above book value).'],
   'pl:tax':['Налог зависит от формы дела: самозанятый — 4 % с доходов, ИП на УСН — 6 % с доходов или 15 % с прибыли, ООО в «Недрах» — 25 % с прибыли. Ниже — расчёт этого месяца по шагам.','Tax depends on the business form: self-employed — 4% of income, sole trader on simplified tax — 6% of income or 15% of profit, LLC in “Mining” — 25% of profit. Below — this month’s calculation step by step.'],
   'pl:log':['Доставка товара: свои и наёмные грузовики, железная дорога, вагоны.','Delivery: own and hired trucks, rail, wagons.'],
+  'pl:dv':['После IPO у вас остались акции прошлых холдингов: каждый месяц они платят дивиденды — часть своей прибыли. Налог удержан у источника, поэтому строка идёт после налога. С каждым новым IPO дивидендов больше.','After an IPO you keep shares in your past holdings: every month they pay dividends — part of their profit. Tax is withheld at source, so this line comes after tax. Each new IPO adds more.'],   /* M47c */
   'pl:jv':['Ваша доля прибыли в совместных делах с друзьями. Налог с неё платит само дело.','Your share of profit in joint ventures with friends. The venture pays tax on it itself.'],
   'pl:int':['Плата банку за деньги в долг — по каждому кредиту.','What the bank charges for borrowed money — by loan.'],
   'pl:marg':['Выручка минус стоимость товара. Ниже — сколько оставляет каждая точка до аренды и зарплат.','Revenue minus cost of goods. Below — what each outlet keeps before rent and wages.'],

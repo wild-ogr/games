@@ -76,7 +76,8 @@ function warnHtml(w,p,full){const g=p.gaps[0];if(!g||g.d>45)return '';let h=`<di
   return h+'</div>';}
 
 // M34 (u4): «стройка встанет через N дней» — отдельной карточкой наверху вкладки «Карьер» (та же модель и те же кнопки-решения)
-function haltSoon(w){w=w||W();if(!w)return '';const p=plan(w);const g=p&&p.gaps[0];if(!g||g.k!=='halt'||g.now||g.d>30)return '';return `<div class="card cp-today" id="cpHaltSoon">${warnHtml(w,p)}${(g.fix||[]).length?'':`<p class="cp-mut" style="padding:0 16px 12px;font-size:16px">${esc(T('Банк больше не даёт. Что можно: продать часть сети или лишние самосвалы, не начинать новое — стройка продолжится, когда придут деньги.','The bank won’t lend more. Options: sell part of the network or spare trucks, start nothing new — construction resumes once money comes in.'))}</p>`}</div>`;}
+function haltSoon(w){w=w||W();if(!w)return '';return lz('h',w,haltSoon0);}
+function haltSoon0(w){const p=plan(w);const g=p&&p.gaps[0];if(!g||g.k!=='halt'||g.now||g.d>30)return '';return `<div class="card cp-today" id="cpHaltSoon">${warnHtml(w,p)}${(g.fix||[]).length?'':`<p class="cp-mut" style="padding:0 16px 12px;font-size:16px">${esc(T('Банк больше не даёт. Что можно: продать часть сети или лишние самосвалы, не начинать новое — стройка продолжится, когда придут деньги.','The bank won’t lend more. Options: sell part of the network or spare trucks, start nothing new — construction resumes once money comes in.'))}</p>`}</div>`;}
 // M34: календарь — стройки отдельной строкой над лентой: сколько в день, сколько за период, последний платёж
 function buildSum(w,p,n){const by={};for(const x of p.items)if(x.d<=n&&x.k==='build'){const k=x.src+'|'+x.ru;const o=by[k]||(by[k]={ru:x.ru,en:x.en,a:0,d1:x.d,d2:x.d,n:0});o.a+=x.a;o.d2=Math.max(o.d2,x.d);o.d1=Math.min(o.d1,x.d);o.n++;}
   const ks=Object.keys(by);if(!ks.length)return '';return `<div class="card"><div class="bz-lab">🏗 ${esc(T('Идёт стройка','Construction in progress'))}</div>`+ks.map(k=>{const o=by[k],dd=Math.max(1,o.d2-o.d1+1);
@@ -88,7 +89,16 @@ function nearest(w,p){// ближайшее крупное: не каждодн�
   for(const x of p.items){if(!LUMP(x.k)||x.k==='od')continue;const kk=x.d+'|'+x.k;by[kk]=(by[kk]||0)+x.a;}
   const ks=Object.keys(by).map(s=>{const [d,k]=s.split('|');return {d:+d,k,a:by[s]};}).filter(x=>Math.abs(x.a)>=thr).sort((a,b)=>a.d-b.d||Math.abs(b.a)-Math.abs(a.a));return ks[0]||null;}
 function nearTxt(w,n){if(!n)return '';const s=S1(n.a);const nm=n.k==='rec'?T('от покупателей','from buyers'):n.k==='job'?T('зарплата','wages'):lc(kN(n.k));return T(`${s} ${nm} ${dLab(w,n.d)}`,`${s} ${nm} on the ${dLab(w,n.d)}`);}
-function todayLine(w){w=w||W();if(!w)return '';const p=plan(w);if(!p||!p.eom)return '';const e=p.eom,n=nearest(w,p);
+/* M47d (аудит-4 №8): смена игрового дня — это тень денег на 35–45 дней модели (самое тяжёлое на слабом телефоне). Если с прошлого показа прошли только дни
+   (тот же мир, не было действий игрока — E.cpGen), строки «Сегодня»/карты (todayLine, monthTail, mapCard, haltSoon) сразу берут прошлый вид, а тень считается
+   отдельной задачей через 30 мс, потом экран перерисовывается (UI.refresh('day') — сама перерисовка лёгкая). Касание не ждёт тень. */
+let LZ=null;
+function lz(k,w,f){if(LZ&&LZ.W===w&&LZ.g===E.cpGen&&LZ.t!==w.t&&(k in LZ.h)&&E.cpHas&&!E.cpHas(w,35)){lzGo(w);return LZ.h[k];}
+  const h=f(w);if(!LZ||LZ.W!==w||LZ.g!==E.cpGen||LZ.t!==w.t)LZ={W:w,g:E.cpGen,t:w.t,h:{},q:LZ&&LZ.q};LZ.h[k]=h;return h;}
+function lzGo(w){if(LZ.q)return;LZ.q=1;const go=()=>{if(LZ)LZ.q=0;if(W()!==w)return;try{if(window.UI&&UI.refresh)UI.refresh('day');}catch(e){console.error(e);}};
+  if(E.cpWarm)E.cpWarm(w,go);else setTimeout(()=>{try{plan(w);}catch(e){}go();},30);}   // тень — кусками в фоне (cash.js cpWarm), потом перерисовка
+function todayLine(w){w=w||W();if(!w)return '';return lz('t',w,todayLine0);}
+function todayLine0(w){const p=plan(w);if(!p||!p.eom)return '';const e=p.eom,n=nearest(w,p);
   const neg=e.own<0;const val=neg?T(`≈ ${M(e.own)}`,`≈ ${M(e.own)}`):`≈ ${M(e.own)}`;
   let h=`<div class="card cp-today" id="cpToday"><button class="cp-line noenter" data-cash="open"><span class="cp-ic">💰</span><span class="f1"><b>${esc(T('К 30-му','By the 30th'))} <span class="${neg?'cp-neg':'cp-pos'}">${esc(nb(val))}</span></b>${n?`<small>${esc(T('ближайшее: ','next: ')+nb(nearTxt(w,n)))}</small>`:''}</span><span class="chev">›</span></button>`;
   h+=warnHtml(w,p);
@@ -104,10 +114,12 @@ function monthRows(w,p){const cf=w.mon&&w.mon.cf||{};let inn=0,out=0;for(const k
   if(fin)h+=row('📅',T('Ещё придёт до 30-го','Still to come by the 30th'),li(plus),S1(fin),'good');
   if(fout)h+=row('🧾',T('Ещё спишется до 30-го','Still to go out by the 30th'),li(minus),M(fout),'bad');
   return h;}
-function monthTail(w){w=w||W();if(!w)return '';const p=plan(w);if(!p||!p.eom)return '';const e=p.eom;
+function monthTail(w){w=w||W();if(!w)return '';return lz('m',w,monthTail0);}
+function monthTail0(w){const p=plan(w);if(!p||!p.eom)return '';const e=p.eom;
   return `<div class="cp-mt">${monthRows(w,p)}<button class="mt cp-tot noenter" data-cash="open"><span>${esc(T('К 30-му останется ≈','Left by the 30th ≈'))}</span><b class="${e.own>=0?'good':'bad'}">${esc(nb(M(e.own)))}</b></button>${e.own<0?`<p class="cp-mut">${esc(T('Минус банк закроет овердрафтом — это долг под высокий процент.','The bank will cover the minus with an overdraft — an expensive debt.'))}</p>`:''}</div>`;}
 // «Недра»: на карте — строка + «Этот месяц» одной карточкой
-function mapCard(w){w=w||W();if(!w)return '';const p=plan(w);if(!p||!p.eom)return '';
+function mapCard(w){w=w||W();if(!w)return '';return lz('c',w,mapCard0);}
+function mapCard0(w){const p=plan(w);if(!p||!p.eom)return '';
   return todayLine(w)+`<div class="card bz-month cp-mc"><div class="mh"><span class="bz-lab">💰 ${esc(T('Этот месяц','This month'))} · ${esc(T('день ','day '))}${w.d+1}${esc(T(' из ',' of '))}30</span></div><div class="mrs">${monthTail(w)}</div></div>`;}
 
 /* ---------------- Финансы → 📅 Деньги на 30 дней ---------------- */
@@ -127,9 +139,11 @@ function chartSvg(w,p,n){const d=p.byDay.slice(0,n);if(!d.length)return '';const
   return s+'</svg>';}
 // одна строка ленты (вид за день или за отрезок) с раскрытием «откуда»
 let RID=0;
-function rowHtml(k,a,list,lbl){const id='cpr'+(++RID);const det=list.slice().sort((x,y)=>Math.abs(y.a)-Math.abs(x.a));
-  const dh=det.length>1||det.length===1&&det[0].t!==lbl?`<div class="cp-det" id="${id}" hidden>`+det.slice(0,12).map(x=>`<div><span>${esc(x.t)}</span><b class="${x.a>=0?'cp-pos':'cp-neg'}">${esc(nb(S1(x.a)))}</b></div>`).join('')+(det.length>12?`<div class="cp-mut">${esc(T('и ещё ','and ')+(det.length-12))}</div>`:'')+'</div>':'';
-  return `<button class="cp-r noenter" ${dh?`data-cash="tg" data-id="${id}"`:'data-cash="nop"'}><span class="cp-ic">${kI(k)}</span><span class="f1">${esc(lbl)}${dh?' <i class="cp-more">▸</i>':''}</span><b class="${a>=0?'cp-pos':'cp-neg'}">${esc(nb(S1(a)))}</b></button>${dh}`;}
+// M48: раскрытые строки помним по смыслу (вид|подпись) — перерисовка (смена дня, догрузка тени cpWarm → UI.refresh) их больше не сворачивает
+const OPN=new Set();
+function rowHtml(k,a,list,lbl){const id='cpr'+(++RID),ok=k+'|'+lbl,op=OPN.has(ok);const det=list.slice().sort((x,y)=>Math.abs(y.a)-Math.abs(x.a));
+  const dh=det.length>1||det.length===1&&det[0].t!==lbl?`<div class="cp-det" id="${id}"${op?'':' hidden'}>`+det.slice(0,12).map(x=>`<div><span>${esc(x.t)}</span><b class="${x.a>=0?'cp-pos':'cp-neg'}">${esc(nb(S1(x.a)))}</b></div>`).join('')+(det.length>12?`<div class="cp-mut">${esc(T('и ещё ','and ')+(det.length-12))}</div>`:'')+'</div>':'';
+  return `<button class="cp-r noenter" ${dh?`data-cash="tg" data-id="${id}" data-k="${esc(ok)}"`:'data-cash="nop"'}><span class="cp-ic">${kI(k)}</span><span class="f1">${esc(lbl)}${dh?` <i class="cp-more">${op?'▾':'▸'}</i>`:''}</span><b class="${a>=0?'cp-pos':'cp-neg'}">${esc(nb(S1(a)))}</b></button>${dh}`;}
 function srcList(its,byK){const o={};for(const x of its){const kk=byK?x.k:x.src+'|'+x.k;const y=o[kk]||(o[kk]={t:byK?kN(x.k):T(x.ru,x.en),a:0});y.a+=x.a;}return Object.keys(o).map(k=>o[k]).filter(x=>x.a);}
 // «всплеск» каждодневного вида (первая закупка склада, крупная стройка) — тоже отдельной строкой: сумма за день > 4 × обычного дня этого вида
 function spikes(p,n){const dk={};for(const x of p.items)if(x.d<=n&&DK[x.k]){const o=dk[x.k]||(dk[x.k]={});o[x.d]=(o[x.d]||0)+x.a;}const sp={};
@@ -173,7 +187,7 @@ function recLine(w,big){w=w||W();if(!w||!w.rec||!w.rec.length)return '';let s=0;
   return `<div class="cp-rec"><b>🧾 ${esc(T('У покупателей ','Buyers owe ')+nb(M(s)))}</b><small>${esc(T('придут по датам (минус 1–3 % безнадёжных):','due by date (minus 1–3% bad debts):'))}</small><ul>${li}</ul>${big?'':`<button class="btn sm noenter" data-cash="open">📅 ${esc(T('Деньги на 30 дней','Money for 30 days'))}</button>`}</div>`;}
 
 /* ---------------- календарь телефона ---------------- */
-function calDates(w){w=w||W();if(!w)return [];const p=plan(w,60);if(!p)return [];const o=[];let turn=0;for(const x of p.items)if(x.d<=30)turn+=Math.abs(x.a);const thr=Math.max(5000,turn*.04);
+function calDates(w){w=w||W();if(!w)return [];const p=plan(w,45);/* M47d: календарю хватает 45 дней (дальше 45 он ничего не берёт) — общая тень с «Сегодня» короче */if(!p)return [];const o=[];let turn=0;for(const x of p.items)if(x.d<=30)turn+=Math.abs(x.a);const thr=Math.max(5000,turn*.04);
   const by={};for(const x of p.items){if(x.d>45||!LUMP(x.k)||x.k==='od')continue;const kk=x.d+'|'+(x.a>0?'+':'-');const y=by[kk]||(by[kk]={d:x.d,a:0,ks:{}});y.a+=x.a;y.ks[x.k]=(y.ks[x.k]||0)+x.a;}
   for(const kk in by){const y=by[kk];if(Math.abs(y.a)<thr)continue;const ks=Object.keys(y.ks).sort((a,b)=>Math.abs(y.ks[b])-Math.abs(y.ks[a])).slice(0,3).map(k=>lc(kN(k))).join(', ');
     o.push({d:y.d,ru:(y.a>0?'Придёт ':'Спишется ')+FMT.money(Math.abs(y.a))+': '+ks,en:(y.a>0?'In: ':'Out: ')+FMT.money(Math.abs(y.a))+' — '+ks,w:y.a>0?'lud':'elv',imp:y.a<0&&Math.abs(y.a)>Math.max(0,w.cash)*.5,key:'cp'+kk});}
@@ -202,7 +216,7 @@ function buyWarn(w,act,args){w=w||W();if(!w)return null;const k=w.t+'|'+w.cash+'
   BW.k=k;BW.v=v;return v;}
 
 /* ---------------- открыть «Финансы → Деньги на 30 дней» ---------------- */
-function open(){try{if(typeof hideModal==='function'&&typeof modalOn!=='undefined'&&modalOn)hideModal();}catch(e){}
+function open(){OPN.clear();try{if(typeof hideModal==='function'&&typeof modalOn!=='undefined'&&modalOn)hideModal();}catch(e){}
   try{if(window.PHONE&&PHONE.isOpen)PHONE.close();}catch(e){}
   try{UI.go('fin');const el=document.getElementById('scr-fin');if(el&&window.FIN)FIN.renderFin(el,'cash');}catch(e){console.error(e);}}
 function rerender(){const el=document.getElementById('cpFin');if(el&&el.offsetParent){const html=finHtml();const d=document.createElement('div');d.innerHTML=html;const nw=d.firstElementChild;if(nw)el.replaceWith(nw);}}
@@ -221,7 +235,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   e.stopPropagation();try{SND.tap();}catch(x){}
   if(a==='open')open();
   else if(a==='openc'){try{delete S.pendRep;save();}catch(x){}open();}
-  else if(a==='tg'){const d=document.getElementById(b.dataset.id);if(d){d.hidden=!d.hidden;const i=b.querySelector('.cp-more');if(i)i.textContent=d.hidden?'▸':'▾';}}
+  else if(a==='tg'){const d=document.getElementById(b.dataset.id);if(d){d.hidden=!d.hidden;const ok=b.dataset.k;if(ok){if(d.hidden)OPN.delete(ok);else OPN.add(ok);}const i=b.querySelector('.cp-more');if(i)i.textContent=d.hidden?'▸':'▾';}}
   else if(a==='h'){H=+b.dataset.v===60?60:30;rerender();}
   else if(a==='fix')doFix(+b.dataset.g||0,+b.dataset.i||0,+b.dataset.n||35);},true);
 if(window.GAME&&GAME.on){GAME.on('change',()=>E.cpReset());GAME.on('day',()=>{rerender();});}

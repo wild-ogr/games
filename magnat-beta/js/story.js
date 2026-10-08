@@ -401,6 +401,9 @@ function scenesDay(W,F){
   // сюжетные сцены: одна обычная в очереди, между ответами ≥ 30 дней; большие (встречи, крах Бориса) — без паузы
   // большие сцены (кроме встреч, IPO и событий глав — BIG_FREE) не толпятся: одна неотвеченная (моложе 60 дней) и не чаще раза в BIG_GAP дней
   const bigBusy=F.q.some(x=>x.big&&!BIG_FREE[x.k]&&x.k!=='reu'&&x.k!=='ipo'&&W.t-x.t<60)||W.t-F.lb<BIG_GAP;
+  // «первая выручка» — только пока точек немного (старое сохранение с сетью её не получит). M47a: проверка ДО цикла сцен — иначе цикл в том же проходе
+  // успевал положить first1 в очередь, и защита её пропускала (аудит гл.3, Ф1); в «Сети» уже стоящая в очереди — убираем
+  if(F.dn.first1===undefined&&(W.biz||[]).length>3){if(!F.q.some(x=>x.k==='first1')||W.st==='mid'||W.ned){F.q=F.q.filter(x=>x.k!=='first1');F.dn.first1=W.t;}}
   for(const k of ORDER){const s=SC[k];if(F.dn[k]!==undefined&&!s.rep)continue;if(F.q.some(x=>x.k===k))continue;
     if(!s.big&&(F.q.some(x=>!x.big&&x.k!=='rq')||W.t-F.ls<30))continue;
     if(s.big&&!BIG_FREE[k]&&bigBusy)continue;
@@ -411,8 +414,6 @@ function scenesDay(W,F){
     if(!s.big)break;}
   // глава прошла, а сцена не успела (кредитка в «Сети», ларёк Бориса в «Недрах») — больше не нужна
   if(F.dn.owl1===undefined&&F.rags&&si(W)>=2)F.dn.owl1=W.t;
-  // «первая выручка» — только пока точек немного (старое сохранение с сетью её не получит)
-  if(F.dn.first1===undefined&&(W.biz||[]).length>3&&!F.q.some(x=>x.k==='first1'))F.dn.first1=W.t;
   if(F.rags&&W.ned){for(const k of ['beav1','beav2','bars1','beav3','vit3','bars2','owl2','beav4','bars3','tpt1','tpt2','part','first1','bars5','beav6','owlno','vitno','beavno','barsno','partyno'])if(F.dn[k]===undefined&&!F.q.some(x=>x.k===k))F.dn[k]=W.t;
     if(!F.part)F.part='owl';if(F.dn.tpt1!==undefined)F.bear.met=1;
     // неотвеченный выбор партнёра к моменту входа в недра — по умолчанию фонд Сони (как в окне главы 5)

@@ -518,8 +518,8 @@ function plRows(p){const E1=E.ebitdaOf(p),N=E.netOf(p),ea=earlyW();
     ['i',ea?L('Жизнь, взносы, бухгалтер','Living costs, contributions, accountant'):L('Офис и управление','Office & management'),-p.adm,'adm'],['i',L('Геологоразведка','Exploration'),-p.expl,'expl'],
     ['b','EBITDA',E1,'ebitda'],['i',L('Амортизация ОС и лицензий','Depreciation & amortisation'),-p.dep,'dep'],
     ['i',L('Прочие доходы и расходы (штрафы, аварии, возмещения, продажа активов)','Other income & expenses (penalties, accidents, refunds, asset sales)'),p.oth,'oth'],
-    ['i',L('Проценты по кредитам','Interest on loans'),-p.int,'int'],['s',L('Прибыль до налога','Profit before tax'),N+p.tax-(p.jv||0),'ebt'],
-    ['i',ea?L('Налог (НПД или УСН)','Tax (self-employed or simplified)'):L('Налог на прибыль 25 %','Income tax 25%'),-p.tax,'tax'],...(p.jv?[['i',L('Доля в прибыли совместных дел (без налога)','Share of joint-venture profit (tax-free)'),p.jv,'jv']]:[]),['b',L('Чистая прибыль','Net profit'),N,'net']];}
+    ['i',L('Проценты по кредитам','Interest on loans'),-p.int,'int'],['s',L('Прибыль до налога','Profit before tax'),N+p.tax-(p.jv||0)-(p.dv||0),'ebt'],   /* M47c: dv — дивиденды, после налога */
+    ['i',ea?L('Налог (НПД или УСН)','Tax (self-employed or simplified)'):L('Налог на прибыль 25 %','Income tax 25%'),-p.tax,'tax'],...(p.dv?[['i',L('Дивиденды по акциям прошлых холдингов (налог удержан)','Dividends from your past holdings (tax withheld)'),p.dv,'dv']]:[]),...(p.jv?[['i',L('Доля в прибыли совместных дел (без налога)','Share of joint-venture profit (tax-free)'),p.jv,'jv']]:[]),['b',L('Чистая прибыль','Net profit'),N,'net']];}
 function bsRows(b,o){const has=k=>!!(b[k]||o&&o[k]);return [['h',L('Активы','Assets'),null],['i',L('Деньги','Cash'),b.cash,'cash'],['i',L('Запасы (на складах и в пути, по себестоимости)','Inventory (in stock and in transit, at cost)'),b.inv,'inv'],
   ['i',L('Незавершённое строительство','Construction in progress'),b.cip,'cip'],['i',L('Основные средства (остаточная стоимость)','Fixed assets (net book value)'),b.fa,'fa'],['i',L('Лицензии (нематериальные активы)','Licences (intangible assets)'),b.lic,'lic'],
   ...[['rec',L('Нам должны (покупатели)','Receivables')],['re',L('Недвижимость (по цене покупки)','Investment property (at cost)')],['jv',L('Вложения в совместные дела','Investments in joint ventures')],['lend',L('Займы друзьям','Loans to friends')]].filter(x=>has(x[0])).map(x=>['i',x[1],b[x[0]]||0,x[0]]),
@@ -613,7 +613,7 @@ function finSum(w,el){const wide=isWide(el),r=w.reps[w.reps.length-1],p=w.reps[w
   const K=kpi('np',L('Чистая прибыль','Net profit'),net,p?dArrow(net-E.netOf(p.pl),true,L('к прошлому месяцу','vs last month')):'',sparkSvg(hs.map(x=>x.np),kw),true)
     +kpi('cash',L('Деньги на счёте','Cash in the bank'),R.c1,p?dArrow(R.c1-p.c1,null):'',sparkSvg(hs.map(x=>x.cash),kw))
     +kpi('debt',L('Долг банку','Bank debt'),debt,p?dArrow(debt-p.bal.debt,false,calm):(debt<=0?`<span class="f-eq">${calm}</span>`:''),sparkSvg(hs.map(x=>x.debt),kw))
-    +kpi('val',!w.ned&&!w.ip&&w.st==='gig'?L('Накоплено','Savings'):L('Стоимость компании','Company value'),R.bal.E,p&&p.bal.E>0?`<span class="${R.bal.E>=p.bal.E?'f-up':'f-dn'}">${R.bal.E>=p.bal.E?'▲ +':'▼ −'}${FMT.pct(Math.abs(R.bal.E/p.bal.E-1),1)}</span>`:'',sparkSvg(hs.map(x=>x.eq),kw));
+    +kpi('val',!w.ned&&!w.ip&&w.st==='gig'?L('Накоплено','Savings'):/*M47b*/cur?L('Стоимость компании сейчас','Company value now'):L('Стоимость компании на 1 '+monGen(R.m+1),'Company value on '+MON_EN[(R.m+1)%12].slice(0,3)+' 1'),R.bal.E,p&&p.bal.E>0?`<span class="${R.bal.E>=p.bal.E?'f-up':'f-dn'}">${R.bal.E>=p.bal.E?'▲ +':'▼ −'}${FMT.pct(Math.abs(R.bal.E/p.bal.E-1),1)}</span>`:'',sparkSvg(hs.map(x=>x.eq),kw));
   const kp=`<div class="f-kpis">${K}</div>`;
   let say='';try{const m=ADV.month(R);say=m.t;}catch(e){}
   const say1=sayBox(say||L('Первый месяц — присматриваемся. Итоги подведём при закрытии.','The first month — we’re getting our bearings. Results at month end.'),net>0?'happy':net<0&&R.pl.rev>0?'worry':'calm');
@@ -687,14 +687,15 @@ function loanOver(a,n,k,rate,g){const i=rate/12;g=grOf(n,g);const m=n-g;return a
 // шаг суммы кредита — от лимита: до 3 млн — 10 тыс., до 30 млн — 100 тыс., дальше — 1 млн (не мельче шага банка ECON.loanUnit)
 function loanStep(w,max){const lu=E.loanUnit?E.loanUnit(w):1e6;return Math.max(lu,max<3e6?1e4:max<3e7?1e5:1e6);}
 function loanCard(w,l){const i=Math.round(l.a*l.r/12),b=Math.min(l.a,Math.round(E.loanPay(l)));
-    const nm=l.k==='mort'?L('Ипотека','Mortgage'):l.k==='fr'?L('Займ друга, без процентов','Loan from a friend, interest-free'):l.k==='od'?L('Овердрафт','Overdraft'):l.san?L('Кредит санации','Restructured loan'):l.k==='eq'?L('Кредит, равными долями','Loan, equal principal'):L('Кредит, аннуитет','Loan, annuity');
+    const nm=l.frp?L('Льготный заём ФРП (3 %, первые 2 года — только проценты)','IDF soft loan (3%, interest-only for 2 years)'):l.k==='mort'?L('Ипотека','Mortgage'):l.k==='fr'?L('Займ друга, без процентов','Loan from a friend, interest-free'):l.k==='od'?L('Овердрафт','Overdraft'):l.san?L('Кредит санации','Restructured loan'):l.k==='eq'?L('Кредит, равными долями','Loan, equal principal'):L('Кредит, аннуитет','Loan, annuity');
     return `<div class="f-card"><b>${nm}</b><div class="f-kv"><span>${L('Остаток долга','Outstanding')}</span><b>${FMT.money(l.a)}</b><span>${L('Ставка','Rate')}</span><b>${FMT.pct(l.r,1)}</b>
       <span>${L('Осталось','Remaining')}</span><b>${l.n} ${pl(l.n,'месяц','месяца','месяцев','month','months')}</b>
       <span>${L('Платёж в конце месяца','Payment at month end')}</span><b>${FMT.money(i+b)}</b><span class="f-mut">${L('проценты + долг','interest + principal')}</span><b class="f-mut">${FMT.money(i)} + ${FMT.money(b)}</b></div>
       ${l.gr>0?`<div class="f-mut">${L('Отсрочка долга ещё','Principal grace for')} ${l.gr} ${pl(l.gr,'месяц','месяца','месяцев','month','months')} — ${L('платим только проценты.','interest only.')}</div>`:''}
       ${l.k==='od'?`<div class="f-mut">${L('Овердрафт гасится целиком в конце месяца.','An overdraft is repaid in full at month end.')}</div>`:''}
       <button class="btn noenter" data-a="repay" data-id="${l.id}"${w.cash<=0?' disabled':''}>${L('Погасить досрочно…','Repay early…')}</button></div>`;}
-function finBank(w){let h='';const o=E.loanOffer(w);let dB=0;for(const l of w.loans)if(l.k!=='mort'&&l.k!=='fr')dB+=l.a;const lim=dB+o.max;
+function finBank(w){let h='';const o=E.loanOffer(w);let dB=0;for(const l of w.loans)if(l.k!=='mort'&&l.k!=='fr'&&!l.frp)dB+=l.a;   /* M47c: ФРП не банк */
+  const lim=dB+o.max;
   // полоса «взято X из лимита Y» и кредитная история (главы 1–4: нужна 50 для ООО, с кредитом растёт вдвое быстрее)
   // M30: один «лимит» вместо двух чисел рядом; отсрочка 6 мес. по умолчанию, если идёт стройка (кредит берут на неё)
   const bld=w.ned&&w.obj.some(o=>o.st==='b'||o.up);if(!st.lgU){st.lg=bld?6:0;if(bld&&!st.lnU)st.ln=36;}

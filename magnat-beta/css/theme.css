@@ -81,7 +81,7 @@ p{margin:6px 0}
 .hbtn{min-width:48px;height:48px;border-radius:14px;background:var(--hd-btn);color:var(--hd-ink);font-weight:600;font-size:17px;margin-left:8px;padding:0 12px;white-space:nowrap;flex:none;display:inline-flex;align-items:center;justify-content:center}
 .hbtn svg{width:26px;height:26px}
 /* M41: подпись у кнопки скорости («скорость ×1», «пауза ⏸») и у чисел шапки в «Без значков» */
-#spdBtn{flex-direction:column;line-height:1;padding:0 6px}#spdBtn .hb-cap{display:block;font-size:14px;font-weight:600;color:var(--hd-ink);margin-bottom:2px}#spdBtn b{font-size:17px}
+#spdBtn,#psBtn{flex-direction:column;line-height:1;padding:0 6px}#psBtn .hb-cap{display:block;font-size:14px;font-weight:600;color:inherit;margin-bottom:2px}#psBtn b{font-size:17px}#hdr .h2 #psBtn{margin:0 10px 0 0;align-self:flex-end}#psBtn.on0{background:var(--accent);color:var(--on-accent)}   /* M47: своя пауза — отдельная кнопка */#spdBtn .hb-cap{display:block;font-size:14px;font-weight:600;color:var(--hd-ink);margin-bottom:2px}#spdBtn b{font-size:17px}
 body.noico #crBtn[data-w]::before,body.noico #rkBtn[data-w]::before{content:attr(data-w);font-size:14px;font-weight:500;margin-right:4px}
 .hbtn:active{opacity:.75}
 .h2{display:flex;align-items:flex-end;margin-top:6px}
@@ -93,7 +93,7 @@ body.noico #crBtn[data-w]::before,body.noico #rkBtn[data-w]::before{content:attr
 .hmon{flex:1;min-width:0;padding-bottom:3px}
 .hmon small{display:block;font-size:14px;color:var(--hd-mut);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px}
 .mbar{height:4px;border-radius:4px;background:var(--track);overflow:hidden}
-.mbar i{display:block;height:100%;width:0;background:var(--accent);border-radius:4px}
+.mbar i{display:block;height:100%;width:100%;transform:translateX(-100%);background:var(--accent);border-radius:4px}   /* M47d: полоса месяца — сдвигом (без пересчёта вёрстки), ui.js hdr */
 #hdr.stop .mbar i{background:var(--muted)}
 #advMin{width:48px;min-width:48px;padding:0;border-radius:50%;background:var(--icbg);overflow:hidden}
 #advMin svg{width:100%;height:100%;display:block}
@@ -184,13 +184,24 @@ button.card{display:block}button.card.regc{display:flex}
   .hmon small{margin-top:4px}}
 /* M41: «Крупный шрифт» на телефоне — деньги и ★ одной строкой, полоса месяца с «день N из 30» — своей строкой на всю ширину (ничего не обрезается) */
 @media (max-width:699px){
-  html.bigf #hdr .h2{flex-wrap:wrap}
-  html.bigf .hcash{flex:1 1 auto}
-  html.bigf .hmon{flex:1 1 100%;max-width:none;margin-top:4px}
-  html.bigf .hmon small{text-align:left;margin-top:2px}
   html.bigf #hdr .hbtn{min-width:44px;margin-left:4px;padding:0 6px}html.bigf #spdBtn{padding:0 4px}
   html.bigf #nav button{font-size:13px;letter-spacing:-.3px}
   html.bigf #nav button span{padding:0}}
+@media (max-width:380px){html.bigf #spdBtn .hb-cap{display:none}#psBtn .hb-cap{display:none}#psBtn b{font-size:20px}#hdr .h2 #psBtn{margin-right:8px}}
+/* M47: телефон — полоса месяца уступает место деньгам (подпись дня hLeftFit сама короче), ⏸ без подписи */
+@media (min-width:361px) and (max-width:699px){html:not(.bigf) #hdr:not(.w2) .hmon{flex:0 1 110px;min-width:64px}html:not(.bigf) #hdr:not(.w2) .hcash{flex:1 1 0}html:not(.bigf) #psBtn .hb-cap{display:none}html:not(.bigf) #psBtn b{font-size:20px}}   /* M47h: ширина денег не зависит от их шрифта (было flex-basis auto + shrink 6 у полосы — подгонка fitCash «плавала» на 2 px), полоса 110 px, уступает до 64 */
+/* M47: ≤ 360 px — деньги и ★ первой строкой, ⏸ и полоса месяца второй (иначе деньги не влезают даже мелким шрифтом) */
+/* M47h: перенос второй строки шапки — ≤ 360 px, крупный шрифт на телефоне, #hdr.w2 (ui.js fitCash: иначе сумма < 24 px). 1-я строка — деньги и ★, явный разрыв #hBr, 2-я — [×1] ⏸ и полоса месяца.
+   Раньше разрыв держался на «деньги = 100 % − 96 px»: без ★ (гл.1) ⏸ вставала к деньгам, а полоса месяца (flex-basis 0) оставалась в 1-й строке шириной 0 — число дня «1…» */
+.hbr{display:none}#hdr .h2 #spdBtn{margin:0 8px 0 0;align-self:flex-end}
+@media (max-width:699px){
+  html.bigf #hdr .h2,#hdr.w2 .h2{flex-wrap:wrap}
+  html.bigf .hcash,#hdr.w2 .hcash{flex:1 1 0;min-width:0}
+  html.bigf #hdr .hbr,#hdr.w2 .hbr{display:block;flex:0 0 100%;height:0;margin:0}
+  html.bigf .hmon,#hdr.w2 .hmon{flex:1 1 0;min-width:0;max-width:none;margin-top:4px}
+  html.bigf #hdr .h2 #psBtn,html.bigf #hdr .h2 #spdBtn,#hdr.w2 .h2 #psBtn,#hdr.w2 .h2 #spdBtn{margin-top:4px}
+  html.bigf .hmon small,#hdr.w2 .hmon small{text-align:left;margin-top:2px}}
+@media (max-width:360px){#hdr .h2{flex-wrap:wrap}.hcash{flex:1 1 0;min-width:0}#hdr .hbr{display:block;flex:0 0 100%;height:0;margin:0}.hmon{flex:1 1 0;min-width:0;max-width:none;margin-top:4px}#hdr .h2 #psBtn,#hdr .h2 #spdBtn{margin-top:4px}.hmon small{text-align:left}}
 /* низкий телефон (SE, 360×640): те же две строки, плотнее */
 @media (max-width:420px){.hbtn{padding:0 10px;margin-left:6px}}
 @media (max-height:699px) and (max-width:699px){
@@ -372,7 +383,7 @@ button:not([disabled]):active,[data-a]:active,[data-b]:active,.tap:active{filter
 .btn:not([disabled]):active,.set:active,.sw:active,.pick button:not([disabled]):active,.chip:active,.bz-li:active,.gr .gi:active,.pbar>button:active,.hbtn:active,.qty button:active{transform:scale(.97)}
 #nav button:active svg{transform:scale(.88)}#nav button svg{transition:transform .08s}
 @media (hover:hover){button:not([disabled]):hover,[data-a]:hover,[data-b]:hover{filter:brightness(.97)}}
-.mbar i{transition:width .5s linear}
+.mbar i{transition:transform .5s linear}
 #mcard:focus{outline:none}
 /* окна: на телефоне — нижний лист (выезд снизу, «ручка», свайп вниз закрывает, кнопки внизу в зоне большого пальца) */
 .modal.on{animation:dimIn .2s ease-out}
@@ -468,7 +479,11 @@ body.calm .flyc,body.calm .flyt,body.calm .salute{display:none}body.calm .pulse,
 #rdP{position:fixed;left:50%;transform:translateX(-50%);top:120px;z-index:60;display:none;align-items:center;gap:10px;max-width:calc(100vw - 32px);box-sizing:border-box;
   padding:6px 6px 6px 14px;border-radius:999px;background:var(--card);color:var(--ink);box-shadow:var(--sh2);border:1.5px solid var(--accent);font-size:15px;font-weight:600;white-space:nowrap}
 #rdP.on{display:flex}
-#rdP span{white-space:normal;line-height:1.2;min-width:0}
+#rdP span{white-space:nowrap;line-height:1.2;min-width:0}   /* M47: коротко, одной строкой */
+@supports not (inset:0){#rdP span{margin-right:10px}}
 #rdP button{flex:none;min-height:44px;padding:0 14px;border:0;border-radius:999px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:700;cursor:pointer}
 body.mon #rdP{display:none!important}
 #spdBtn.au,#spdBtn.au .hb-cap{background:var(--accent);color:var(--on-accent)}#spdBtn.au .hb-cap{background:none}   /* M46: авто-пауза — «▶ дальше» */
+/* M47b (аудит гл.5 №15): тост — над нижним меню (было «на месте меню» и закрывало подписи вкладок); при открытом окне и в широкой раскладке (меню сбоку) — как раньше, у нижнего края */
+@media (max-width:899px){.toast{bottom:calc(74px + env(safe-area-inset-bottom))}#modal.on~.toast{bottom:calc(10px + env(safe-area-inset-bottom))}}
+@media (max-width:370px){#nav button span{padding:0;letter-spacing:-.6px}}   /* M47b: «Логистика» целиком на 360 px */

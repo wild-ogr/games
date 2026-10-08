@@ -22,11 +22,13 @@ function halts(W){const o=[];for(const x of W.obj||[]){if(x.st==='b'&&x.halt)o.p
 
 /* ---------------- тень: прогон копии мира ---------------- */
 // apply(C) — «что если»: действие игрока на копии до прогона (кнопки-решения считают свой итог так же)
-function shadow(W,days,apply){const C=cl(W);const tg0=E.tg(''),ts0=E.ts(''),in0=E.cpIn;E.cpIn=true;const flows=[],dd=[],odIds={},cons={};let err=null,a0=null;
-  for(const l of C.loans||[])if(l.k==='od')odIds[l.id]=1;
+// M47d: тень можно считать порциями (shInit → shRun(st, до какого дня) … → shEnd) — для подсчёта в фоне по нескольку дней за задачу (cpWarm); итог тот же
+function shInit(W,days,apply){const st={C:cl(W),days,apply,i:1,flows:[],dd:[],odIds:{},lns:{},err:null,a0:null};for(const l of st.C.loans||[])if(l.k==='od')st.odIds[l.id]=1;return st;}
+function shRun(st,upto){const C=st.C,flows=st.flows,dd=st.dd,odIds=st.odIds,lns=st.lns,days=Math.min(st.days,upto);if(st.i>days||st.err)return;
+  const tg0=E.tg(''),ts0=E.ts(''),in0=E.cpIn;E.cpIn=true;
   try{
-    if(apply){const c0=C.cash;const r=apply(C);a0={res:r,da:C.cash-c0};}
-    for(let i=1;i<=days;i++){const M=C.mon,c0=C.cash,b=snapC(M.dt&&M.dt.c),t1=C.t+1;
+    if(st.apply){const ap=st.apply;st.apply=null;const c0=C.cash;const r=ap(C);st.a0={res:r,da:C.cash-c0};}
+    for(let i=st.i;i<=days;i++){st.i=i+1;const M=C.mon,c0=C.cash,b=snapC(M.dt&&M.dt.c),t1=C.t+1;
       let due=0;for(const x of C.rec||[])if(x.due<=t1)due+=x.a;
       const cd={};for(const c of C.cons||[])cd[c.id]=[c.done,c.p,c.g];
       const out=E.tick(C,false)||[];const cl0=out.find(e=>e&&e.k==='close');const fl=[];
@@ -35,11 +37,12 @@ function shadow(W,days,apply){const C=cl(W);const tg0=E.tg(''),ts0=E.ts(''),in0=
       let s=0;for(const f of fl)s+=f.a;const res=C.cash-c0-s;if(res)fl.push({d:i,t:C.t,cf:'oth',tag:'?',a:res,cl:cl0?1:0});
       // контракты: сколько из продаж товара — отгрузка по контракту (цена контракта × отгружено за день)
       const con={};for(const c of C.cons||[]){const x=cd[c.id];if(x&&c.done>x[0])con[c.g]=(con[c.g]||0)+rnd0((c.done-x[0])*c.p);}
-      for(const l of C.loans||[])if(l.k==='od')odIds[l.id]=1;
+      for(const l of C.loans||[]){if(l.k==='od')odIds[l.id]=1;lns[l.id]=l;}   // M47d: lns — все кредиты, что были в тени (короткий план из длинной тени)
       for(const f of fl)flows.push(f);
       dd.push({d:i,t:C.t,m:C.m,dm:C.d,cash:C.cash,od:odSum(C),rec:recSum(C),due,con,cl:cl0?1:0,halt:halts(C),rep:cl0?cl0.rep:null});}
-  }catch(e){err=e;}finally{E.tg(tg0);E.ts(ts0);E.cpIn=in0;}
-  return {flows,days:dd,odIds,W1:C,err,a0};}
+  }catch(e){st.err=e;}finally{E.tg(tg0);E.ts(ts0);E.cpIn=in0;}}
+function shEnd(st){return {flows:st.flows,days:st.dd,odIds:st.odIds,W1:st.C,err:st.err,a0:st.a0,lns:st.lns};}
+function shadow(W,days,apply){const st=shInit(W,days,apply);shRun(st,days);return shEnd(st);}
 
 /* ---------------- подписи ---------------- */
 function regC(c){const R=E.REGS&&E.REGS[c];return R?L2(R.city,R.ce):L2('','');}
@@ -47,8 +50,8 @@ function bizName(W,id){const b=(W.biz||[]).find(x=>x.id===id);const B=b&&E.BIZ&&
   const many=(W.cities||[]).length>1;return L2(B.ico+' '+B.n+(many&&c.ru?' · '+c.ru:''),B.ico+' '+B.en+(many&&c.en?' · '+c.en:''));}
 function objName(W,id){const o=(W.obj||[]).find(x=>x.id===id);const O=o&&E.OBJ[o.t];if(!O)return null;const c=regC(o.r);return L2(O.n+(c.ru?' · '+c.ru:''),O.en+(c.en?' · '+c.en:''));}
 function goodName(g){const G=E.GOODS[g];return G?L2(G.n,G.en):L2(g,g);}
-function loanOf(W,P,id){return (W.loans||[]).find(l=>l.id===id)||(P.sh.W1.loans||[]).find(l=>l.id===id)||null;}
-function loanName(l){if(!l)return L2('Кредит','Loan');if(l.k==='od')return L2('Овердрафт банка','Bank overdraft');if(l.card)return L2('Кредитная карта','Credit card');
+function loanOf(W,P,id){return (W.loans||[]).find(l=>l.id===id)||(P.sh.W1.loans||[]).find(l=>l.id===id)||(P.sh.lns&&P.sh.lns[id])||null;}
+function loanName(l){if(!l)return L2('Кредит','Loan');if(l.frp)return L2('Заём ФРП','IDF loan');   /* M47c */if(l.k==='od')return L2('Овердрафт банка','Bank overdraft');if(l.card)return L2('Кредитная карта','Credit card');
   if(l.k==='mort')return L2('Ипотека','Mortgage');if(l.k==='fr')return L2('Заём у друга','Loan from a friend');if(l.san)return L2('Кредит после санации','Post-rescue loan');return L2('Кредит банка','Bank loan');}
 
 /* ---------------- источники (реестр) ---------------- */
@@ -134,7 +137,7 @@ function key(W,days){let b=0;for(const x of W.biz||[])b+=(x.k?JSON.stringify(x.k
   return [W.t,W.cash,W.nid,days,(W.biz||[]).length,(W.obj||[]).length,(W.loans||[]).length,(W.rec||[]).length,(W.cons||[]).length,(W.routes||[]).length,b,o,W.taxm,W.st].join('|');}
 function cashPlan(W,days,o){days=Math.max(1,Math.min(120,days|0||60));o=o||{};
   const ck=CACHE[days];if(!o.apply&&!o.nocache&&ck&&ck.W===W&&ck.k===key(W,days))return ck.p;
-  const sh=shadow(W,days,o.apply);const pool=sh.flows.slice(),items=[];
+  const sh=o.apply?shadow(W,days,o.apply):shadowFor(W,days);const pool=sh.flows.slice(),items=[];
   const P={W0:W,sh,flows:pool,days,
     take(pred){const out=[];for(let i=0;i<pool.length;i++){const f=pool[i];if(f&&pred(f)){out.push(f);pool[i]=null;}}return out;},
     item(f,k,ru,en,src){return {d:f.d,t:f.t,a:f.a,k,ru,en,src:src==null?f.tag:src,cf:f.cf,cl:f.cl?1:0};}};
@@ -157,7 +160,28 @@ function cashPlan(W,days,o){days=Math.max(1,Math.min(120,days|0||60));o=o||{};
   p.gaps=gapsOf(W,p,sh,o);
   if(!o.apply&&!o.nocache){if(Object.keys(CACHE).length>3)CACHE={};CACHE[days]={W,k:key(W,days),p};}
   return p;}
-function cpReset(){CACHE={};}
+function cpReset(){CACHE={};SHC=null;WARM=null;E.cpGen=(E.cpGen|0)+1;}
+// M47d: посчитать общую тень в фоне — по дню модели, пока задача короче CP_MS (в «Недрах» на слабом телефоне — 1 день ≈ 50–70 мс), потом cb(). Мир ушёл вперёд / было действие — бросаем
+// (cb всё равно зовём — потребитель досчитает как обычно). Так смена дня не держит экран: тень идёт кусками между касаниями.
+const CP_MS=25;let WARM=null;const pnow=()=>typeof performance!=='undefined'?performance.now():Date.now();
+function cpWarm(W,cb,d){const k=key(W,0),n=Math.min(120,Math.max(35,SHN,SHP,d|0));const done=()=>{if(cb)try{cb();}catch(e){if(root.console)try{console.error(e);}catch(_){}}};
+  if(SHC&&SHC.W===W&&SHC.k===k&&SHC.n>=n){setTimeout(done,0);return;}
+  if(WARM&&WARM.W===W&&WARM.k===k&&WARM.st.days>=n){WARM.cbs.push(done);return;}
+  const old=WARM&&WARM.W===W&&WARM.k===k?WARM.cbs:[];if(old.length)WARM.cbs=[];   // идёт тень короче, чем нужно, — начинаем длиннее, её ждущих берём с собой
+  const me={W,k,st:shInit(W,n),cbs:old.concat([done])};WARM=me;
+  const fin=()=>{for(const f of me.cbs)f();};
+  const step=()=>{if(WARM!==me){fin();return;}if(key(W,0)!==k){WARM=null;fin();return;}
+    const t0=pnow();do shRun(me.st,me.st.i);while(me.st.i<=n&&!me.st.err&&pnow()-t0<CP_MS);if(me.st.i>n||me.st.err){WARM=null;SHC={W,k,n,sh:shEnd(me.st)};fin();return;}setTimeout(step,0);};
+  setTimeout(step,0);}
+// M47d: есть ли готовый план (без пересчёта) — «Сегодня» может показать вчерашний и досчитать отдельной задачей
+function cpHas(W,days){const ck=CACHE[days];if(ck&&ck.W===W&&ck.k===key(W,days))return true;return !!(SHC&&SHC.W===W&&SHC.n>=days&&SHC.k===key(W,0));}   // план или готовая тень (план из неё — лёгкий)
+/* M47d (аудит-4 №8, слабый телефон): «Сегодня» (35 дней) и календарь телефона (60) каждый игровой день гоняли ДВЕ тени (95 дней модели) — теперь одна:
+   тень на самый длинный из недавно спрошенных сроков, короче — её начало (модель детерминирована: случайность — W.rs в копии мира, начало совпадает до рубля).
+   Кэш — по тому же ключу key(W) без срока, сброс — cpReset (любое действие игрока). */
+let SHC=null,SHN=0,SHP=0,SHT=-1;   // SHN — самый длинный срок, спрошенный в этот игровой день, SHP — во вчерашний (длинное окно «Финансы → 60 дней» не держится вечно)
+function shadowFor(W,days){const k=key(W,0);if(W.t!==SHT){SHT=W.t;SHP=SHN;SHN=0;}if(days>SHN)SHN=days;
+  if(!(SHC&&SHC.W===W&&SHC.k===k&&SHC.n>=days)){const n=Math.min(120,Math.max(days,SHN,SHP));SHC={W,k,n,sh:shadow(W,n)};}
+  const sh=SHC.sh;WARM=null;return SHC.n===days?sh:Object.assign({},sh,{flows:sh.flows.filter(f=>f.d<=days),days:sh.days.slice(0,days)});}
 
 /* ---------------- разрывы: когда не хватит, почему, что сделать ---------------- */
 const sumK=(its,ks,d1,sg)=>{let s=0;for(const x of its)if(x.d<=d1&&ks.indexOf(x.k)>=0&&(!sg||sg*x.a>0))s+=x.a;return s;};
@@ -229,5 +253,5 @@ function cpAdv(W,o){const p=cashPlan(W,35);const g=p.gaps[0];if(!g||g.d>40)retur
 advWrap('bizAdvise');advWrap('advise');
 
 E.cpSrc=SRC;
-Object.assign(E,{cashPlan,cpReset,cpWhatIf:whatIf,cpShadow:shadow,cpClone:cl,cpWhs:whsGap,cpAdvOn:false});
+Object.assign(E,{cashPlan,cpReset,cpHas,cpWarm,cpGen:0,cpWhatIf:whatIf,cpShadow:shadow,cpClone:cl,cpWhs:whsGap,cpAdvOn:false});
 })(typeof window!=='undefined'?window:this);

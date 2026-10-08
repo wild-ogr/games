@@ -49,7 +49,7 @@ const EVN={
     adv:(W,a)=>W.routes.length||W.obj.some(o=>o.st==='w'&&E.OBJ[o.t].in)?0:1,
     run:(W,a,i)=>{if(i!==0)return 'ok';if(W.cash<a.c)return 'cash';tagged('wag',()=>pay(W,a.c,'wag'));W.wag.n+=a.n;W.wag.g+=a.c;news(W,'wagons',{n:a.n});return 'ok';}},
   plant:{ok:W=>!!plantOf(W),mk:W=>{const x=plantOf(W),cap=rnd0(E.OBJ[x.t].capex*.75),m=margin(W,x.t,x.r,null);return {t:x.t,r:x.r,c:cap,m:rnd0(m),pb:m>0?Math.ceil(cap/m):99};},n:2,def:1,
-    adv:(W,a)=>a.pb<=30&&(W.cash+E.loanOffer(W).max)>=a.c*.6?0:1,
+    adv:(W,a)=>a.pb<=30&&(W.cash+E.loanOffer(W).max)>=a.c*.6&&!W.obj.some(o=>o.st==='b'&&E.OBJ[o.t].in)&&E.buildPlan(W,a.c*(1-FRP_K),E.OBJ[a.t].mo*E.DAYS).kind!=='no'?0:1,   // M47c: не советовать второй завод, пока строится первый, и когда не хватит даже с проектным кредитом
     run:(W,a,i)=>{if(i!==0)return 'ok';if(W.cash<a.c*.2)return 'cash';const r=E.build(W,a.t,a.r);if(r!=='ok')return r;const o=W.obj[W.obj.length-1];o.cost=a.c;o.ev=1;const cut=Math.min(30,o.left-30);if(cut>0){o.left-=cut;o.tot-=cut;}o.ab=true;return 'ok';}},
   union:{ok:W=>myMines(W).length>=2&&!(nx(W).un>W.m),mk:W=>{let f=0;for(const o of myMines(W))f+=E.objFix(o);const ms=myMines(W);let e=0;for(const o of ms){const p=E.plotById(W,o.plot);if(p&&p.dep)e+=Math.max(0,margin(W,o.t,o.r,o.vc)+E.objFix(o));}
       return {x:rnd0(f*UN_K),tot:rnd0(f*UN_K*UN_MO),loss:rnd0(e/ms.length/3*.35+f*.02)};},n:2,def:0,
@@ -78,6 +78,19 @@ const EVN={
   town:{ok:W=>E.REG.some(r=>W.plots[r].some(p=>p.st==='hid'))&&!nx(W).fav,mk:W=>({c:Math.max(10e6,rnd0(Math.max(0,E.equity(W))*.003/1e6)*1e6)}),n:2,def:1,
     adv:(W,a)=>W.cash>a.c*8?0:1,
     run:(W,a,i)=>{if(i!==0)return 'ok';if(W.cash<a.c)return 'cash';tagged('ev',()=>{pay(W,a.c,'oth');pl(W,'oth',-a.c);});nx(W).fav=1;return 'ok';}}};
+// M47c: события про заводы передела (вторая половина главы): долгий заказ на продукцию передела с надбавкой (офтейк) и своя подстанция (постоянные завода −15 %)
+Object.assign(EVN,{
+  ord:{ok:W=>!!ordOf(W),mk:W=>{const g=ordOf(W),cap=prodCap(W,g),mo3=3,q=Math.max(500,Math.round(cap*mo3*.85/100)*100),src=W.obj.find(o=>o.st==='w'&&E.OBJ[o.t].out===g),p=rnd0(E.price(W,src?src.r:'ural',g)*NRR(W,1.12,1.16));
+      return {g,q,p,days:E.DAYS*mo3,cap,k:Math.round((p/E.price(W,src?src.r:'ural',g)-1)*100),add:rnd0((p-E.price(W,src?src.r:'ural',g))*q)};},n:2,def:1,
+    adv:(W,a)=>prodCap(W,a.g)*3>=a.q*1.05?0:1,
+    run:(W,a,i)=>{if(i!==0)return 'ok';const id='c'+(W.nid++);W.cons.push({id,g:a.g,q:a.q,p:a.p,days:a.days,pen:.2,b:'Госзаказ: «Мостострой»',be:'State order: Bridgebuild',exp:W.t,urg:false,end:W.t+a.days,done:0,ot:1});news(W,'contract',{g:a.g,q:a.q,p:a.p});return 'ok';}},
+  sub:{ok:W=>!!subOf(W),mk:W=>{const o=subOf(W),f=E.objFix(o),sv=rnd0(f*SUB_K),c=Math.max(10e6,rnd0(sv*NRR(W,10,14)/1e6)*1e6);return {o:o.id,t:o.t,r:o.r,sv,c,pb:Math.ceil(c/Math.max(1,sv))};},n:2,def:1,
+    adv:(W,a)=>a.pb<=18&&W.cash>=a.c*2?0:1,
+    run:(W,a,i)=>{if(i!==0)return 'ok';const o=W.obj.find(x=>x.id===a.o);if(!o)return 'no';if(W.cash<a.c)return 'cash';tagged(o.id,()=>pay(W,a.c,'capex'));o.g+=a.c;o.ek=1-SUB_K;news(W,'nevsub',{t:o.t,r:o.r,c:a.c});return 'ok';}}});
+Object.assign(EV_BIG,{sub:6});
+const SUB_K=.15;
+function ordOf(W){const gs=['roll','wire','steel','cu','lumber','pig','cucon'].filter(g=>prodCap(W,g)>0&&!W.cons.some(c=>c.g===g));return gs.length?gs[0]:null;}
+function subOf(W){return W.obj.find(o=>o.st==='w'&&!o.off&&E.OBJ[o.t].in&&!o.ek)||null;}
 const NEV=Object.keys(EVN);
 // передел, который окупается своим сырьём: лесопилка у своей лесозаготовки, обогатительная у медного рудника, домна на Урале при своей руде и угле
 function plantOf(W){const has=t=>W.obj.some(o=>o.t===t),at=t=>{const o=W.obj.find(x=>x.t===t&&x.st==='w');return o?o.r:null;};
@@ -92,9 +105,12 @@ function geoOf(W){const ms=myMines(W).map(o=>({o,p:E.plotById(W,o.plot)})).filte
 function expOf(W){const gs=['coal','ore','wood','lumber','pig','steel','cucon'].filter(g=>prodCap(W,g)>=2000&&!W.cons.some(c=>c.g===g));return gs.length?gs[0]:null;}
 function refiLoans(W){return W.loans.filter(l=>(l.k==='ann'||l.k==='eq')&&!l.san&&l.a>=20e6&&l.r>W.key+.025);}
 // крупные траты (передел, наводка, доразведка, вагоны) — не чаще раза в 9 мес., мелкие решения — раз в 3 мес.
-function evNew(W){const X=nx(W);if(X.ev||mo(W)<2||W.m-X.lm<1)return;if(NR(W)>=EV_P)return;
+// M47c: со 2-й трети главы (8-й месяц) — ещё одно событие в середине месяца, только пока игрок в игре (онлайн): решений больше там, где их мало
+// M47c (решение владельца 08.10 «реже»): второе событие — не раньше 30 игр. дней после прошлого (≈ 5 мин при ×1), т. е. окно с выбором не чаще раза в ~5 мин
+const EV_MID=.7,EV_MID_MO=8,EV_MID_GAP=30;
+function evNew(W,mid){const X=nx(W);if(X.ev||mo(W)<2)return;if(mid){if(mo(W)<EV_MID_MO||W.t-(X.lt||0)<EV_MID_GAP||NR(W)>=EV_MID)return;}else{if(W.m-X.lm<1)return;if(NR(W)>=EV_P)return;}
   const ks=NEV.filter(k=>(X.dn[k]==null||W.m-X.dn[k]>=(EV_BIG[k]||EV_GAP))&&EVN[k].ok(W));if(!ks.length)return;const k=ks[Math.floor(NR(W)*ks.length)];
-  X.ev={id:'v'+(W.nid++),k,t:W.t,x:W.t+ND,a:EVN[k].mk(W)};X.lm=W.m;X.dn[k]=W.m;}
+  X.ev={id:'v'+(W.nid++),k,t:W.t,x:W.t+ND,a:EVN[k].mk(W)};X.lm=W.m;X.lt=W.t;X.dn[k]=W.m;}
 // ответ: i — вариант; auto — решила Людмила (по умолчанию)
 function nedAns(W,i,auto){const X=nx(W),e=X.ev;if(!e)return 'no';const D=EVN[e.k];if(!D)return 'no';i=i|0;if(i<0||i>=D.n)return 'no';
   const r=D.run(W,e.a,i);if(r!=='ok'&&!auto)return r;X.ev=null;X.last={k:e.k,i:r==='ok'?i:D.def,auto:!!auto,m:W.m,a:e.a,t:W.t};X.n++;news(W,'nev',{k:e.k,i,auto:auto?1:0});return 'ok';}
@@ -109,6 +125,17 @@ function scrapOk(W,oid){const o=W.obj.find(x=>x.id===oid);if(!o||o.st!=='w'||!E.
 function scrap(W,oid){const x=scrapOk(W,oid);if(!x)return 'no';const {o,p,bk,lb,pr}=x;E.dtName(W,o.id,o.t+'.'+o.r);
   tagged(o.id,()=>{recv(W,pr,'asale');pl(W,'oth',pr-bk-lb);});p.lic=null;p.own=null;p.st='empty';W.obj=W.obj.filter(y=>y!==o);news(W,'scrap',{t:o.t,r:o.r,pr});return 'ok';}
 
+/* ---------------- M47c: льготный заём Фонда развития промышленности (ФРП) — только на заводы передела ----------------
+   До 50 % цены завода (строящегося или уже работающего — фонд берёт и модернизацию), 3 % годовых, 5 лет, первые 2 года — только проценты; один заём на завод; вне лимита банка (фонд — не банк).
+   Окупаемость завода на свои деньги становится сравнимой с рудником — передел становится целью главы, а не только «после 2 млрд». */
+const FRP_K=.5,FRP_R=.03,FRP_N=60,FRP_GR=24;
+function frpOk(W,oid){if(!on(W))return null;const o=W.obj.find(x=>x.id===oid);if(!o||o.frp||!E.OBJ[o.t]||!E.OBJ[o.t].in)return null;if(o.st!=='b'&&o.st!=='w')return null;
+  const a=Math.floor(o.cost*FRP_K/1e6)*1e6;if(a<10e6)return null;const bank=E.loanOffer(W).rate;
+  return {o,a,r:FRP_R,n:FRP_N,gr:FRP_GR,int:rnd0(a*FRP_R/12),bank,sv:rnd0(a*(bank-FRP_R)*FRP_GR/12)};}
+function frpLoan(W,oid){const x=frpOk(W,oid);if(!x)return 'no';const l={id:'l'+(W.nid++),a:x.a,a0:x.a,r:FRP_R,n:FRP_N,n0:FRP_N,k:'ann',gr:FRP_GR,frp:1,fo:x.o.id};W.loans.push(l);
+  tagged(l.id,()=>recv(W,x.a,'loan'));x.o.frp=1;news(W,'frp',{a:x.a,t:x.o.t,r:x.o.r});return 'ok';}
+function frpList(W){return on(W)?W.obj.filter(o=>frpOk(W,o.id)).map(o=>o.id):[];}
+
 /* ---------------- соперник с отрицательным капиталом — банкротство ---------------- */
 function botsMonth(W){for(const b of W.bots){if(E.botValue(W,b)>=0)continue;const sold=[];
   while(b.as.length>1&&E.botValue(W,b)<0){b.as.sort((x,y)=>x.g-y.g);const a=b.as.shift();b.cash+=a.g*.6;sold.push(a.t);
@@ -120,25 +147,32 @@ function botsMonth(W){for(const b of W.bots){if(E.botValue(W,b)>=0)continue;cons
 function nedDay(W,off,out){if(!on(W))return;cpHook();const X=nx(W);
   // доплата профсоюзу (+8 % к постоянным рудников) — по дням, до налога
   if(X.un>W.m&&X.ux>0)tagged('ev',()=>{const d=rnd0(X.ux/E.DAYS);pay(W,d,'fix');pl(W,'fix',d);});
-  // без ответа ND дней — решает Людмила (офлайн — так же)
+  // без ответа ND дней — решает Людмила. M47c: пока игрока нет (офлайн), событие ждёт его — как торги ОПИ в «Карьере»: решения — игроку, не автопилоту
+  if(X.ev&&off)X.ev.x=Math.max(X.ev.x,W.t+ND);
   if(X.ev&&W.t>=X.ev.x)nedAns(W,EVN[X.ev.k].def,true);
+  if(!off&&W.d===15)evNew(W,true);
   // «город помог»: следующий найденный нами участок — лицензия без торгов по стартовой цене
   if(X.fav)for(const a of W.auc)if(a.finder==='you'&&!a.done&&!a.lead){const p=E.plotById(W,a.p);W.auc=W.auc.filter(y=>y!==a);a.done=true;p.st='found';p.direct=a.st;X.fav=0;news(W,'nevfav',{r:p.r,g:p.dep.g,pr:a.st});break;}}
-function nedClose(W,M,off){if(!on(W))return;E.nedPlots(W);E.nedBots(W);evNew(W);}
+function nedClose(W,M,off){if(!on(W))return;E.nedPlots(W);E.nedBots(W);evNew(W);
+  // M47c: дивиденды по акциям прошлых холдингов (W.dv ₽/мес., econ.js ipoDv) — прочий доход, налог удержан у источника
+  if(W.dv>0){if(typeof M.pl.dv!=='number')M.pl.dv=0;tagged('dv',()=>{recv(W,W.dv,'oth');pl(W,'dv',W.dv);});
+    const X=nx(W);if(!X.dvS){X.dvS=1;news(W,'dvpay',{a:W.dv});}}}
 // советы Людмилы: событие ждёт ответа; передел своим сырьём окупается быстро; выработанный рудник можно продать
 const adv0=E.advise;
 E.advise=function(W){const o=adv0.apply(this,arguments);if(!on(W))return o;const X=nx(W);
   if(X.ev)o.push({k:'nev',pri:58,a:{k:X.ev.k}});
   if(!W.obj.some(x=>x.st==='b'&&E.OBJ[x.t].in)){const x=plantOf(W);if(x){const m=margin(W,x.t,x.r,null),c=E.OBJ[x.t].capex,pb=m>0?Math.ceil(c/m):99;if(pb<=30)o.push({k:'chain',pri:41,a:{t:x.t,r:x.r,pb,m:rnd0(m)}});}}
   for(const ob of W.obj)if(scrapOk(W,ob.id)&&ob.off)o.push({k:'scrap',pri:44,a:{t:ob.t,r:ob.r}});
+  {const f=frpList(W)[0];if(f){const x=frpOk(W,f);o.push({k:'frp',pri:47,a:{o:f,t:x.o.t,r:x.o.r,a:x.a,sv:x.sv}});}}   // M47c: льготный заём ФРП на завод
   // «честный совет про заводы» не про передел со скидкой (событие «завод-банкрот»): он окупается быстрее
   const pi=o.findIndex(x=>x.k==='plant');if(pi>=0){const pb=W.obj.find(x=>x.st==='b'&&E.OBJ[x.t]&&E.OBJ[x.t].in&&x.t!=='sawmill');if(pb&&pb.ev)o.splice(pi,1);}
   o.sort((a,b)=>b.pri-a.pri);return o;};
 // календарь денег (ветка cash, js/cash.js грузится позже): свои потоки — источник ECON.cpSrc; доплата профсоюзу (тег ev, статья fix), штраф/фильтры, комиссия банка
 let cpReg=false;
 function cpHook(){if(cpReg||!Array.isArray(E.cpSrc))return;cpReg=true;
-  E.cpSrc.unshift((W,days,P)=>P.take(f=>f.tag==='ev'&&f.cf==='fix').map(f=>P.item(f,'fix','Доплата горнякам (профсоюз)','Miners’ pay rise (union)','union')));}
+  E.cpSrc.unshift((W,days,P)=>P.take(f=>f.tag==='ev'&&f.cf==='fix').map(f=>P.item(f,'fix','Доплата горнякам (профсоюз)','Miners’ pay rise (union)','union')));
+  E.cpSrc.unshift((W,days,P)=>P.take(f=>f.tag==='dv').map(f=>P.item(f,'oth','Дивиденды по акциям прошлых холдингов','Dividends from your past holdings','dv')));}   // M47c
 cpHook();
 function nedMig(W,fx){if(W.n5){nx(W);if(typeof W.n5m!=='number')W.n5m=W.m;}}
-Object.assign(E,{nedPlots:plotsMonth,nedBots:botsMonth,NEV,EVN,ND,NP_MAX,nedDay,nedClose,nedAns,nedAdv,nedAuto,nedMig,scrap,scrapOk,SCRAP_K,nedMargin:margin,plantOf});
+Object.assign(E,{nedPlots:plotsMonth,nedBots:botsMonth,NEV,EVN,ND,NP_MAX,nedDay,nedClose,nedAns,nedAdv,nedAuto,nedMig,scrap,scrapOk,SCRAP_K,nedMargin:margin,plantOf,frpOk,frpLoan,frpList,FRP_K,FRP_R,FRP_N,FRP_GR});
 })(typeof window!=='undefined'?window:this);

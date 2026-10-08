@@ -93,15 +93,15 @@ function taskProg(t){const c=Math.max(0,GAME.taskCur(t));if(t.pct)return FMT.pct
   if(t.k==='sold')return FMT.money(Math.min(c,t.need))+' / '+FMT.money(t.need);return Math.min(c,t.need)+' / '+t.need;}
 const QTX={np:['Спокойный квартал: прибыль больше нуля','A calm quarter: profit above zero'],eq:['Стоимость компании +6 % за квартал','Company value +6% this quarter'],
   rev:['Выручка на 10 % больше прошлого квартала','Revenue 10% above last quarter'],expl:['Разведать 2 участка','Explore 2 plots'],lic:['Новая лицензия на участок','A new plot licence'],
-  build:['Начать стройку нового объекта','Start building a new site'],debt:['Снизить долг на 20 %','Cut debt by 20%']};
+  build:['Начать стройку нового объекта','Start building a new site'],plant:['Начать стройку завода передела (свой чугун, сталь, прокат, медь или доска)','Start building a processing plant (own iron, steel, rolled steel, copper or lumber)'],debt:['Снизить долг на 20 %','Cut debt by 20%']};
 function qProg(g){const x=g.o[g.p],v=GAME.qgCur(g);switch(x.k){case 'np':return (v>0?'+':'')+FMT.money(v);case 'eq':return FMT.pct(v,1)+' / '+FMT.pct(x.need);
   case 'rev':return FMT.pct(v)+' / '+FMT.pct(x.need);case 'debt':return FMT.pct(Math.max(0,v))+' / '+FMT.pct(x.need);default:return Math.max(0,v)+' / '+x.need;}}
 function qFrac(g){const x=g.o[g.p],v=GAME.qgCur(g);if(x.k==='np')return v>0?1:0;return Math.max(0,Math.min(1,v/(x.need||1)));}
-const PK={geo:['Геолог','Geologist','Разведка дешевле на 15 % и быстрее на 10 %','Exploration 15% cheaper and 10% faster'],
-  bank:['Связи в банке','Bank connections','Ставка по кредитам ниже на 1 п.','Loan rate 1 pt lower'],
-  logi:['Логист','Logistician','Ж/д тариф ниже на 10 %','Rail tariff 10% lower'],
-  brig:['Своя бригада','Own crew','Стройка быстрее на 10 %','Construction 10% faster'],
-  vert:['Свой передел','Own processing','Заводы: постоянные расходы −10 %, переработка −20 %','Plants: fixed costs −10%, processing −20%'],
+const PK={geo:['Геолог','Geologist','Разведка дешевле на 20 % и быстрее на 15 % за уровень','Exploration 20% cheaper and 15% faster per level'],   // M47c: эффекты ×1,5, уровни за доли
+  bank:['Связи в банке','Bank connections','Ставка по кредитам ниже на 1,5 п. за уровень','Loan rate 1.5 pt lower per level'],
+  logi:['Логист','Logistician','Ж/д тариф ниже на 15 % за уровень','Rail tariff 15% lower per level'],
+  brig:['Своя бригада','Own crew','Стройка быстрее на 15 % за уровень','Construction 15% faster per level'],
+  vert:['Свой передел','Own processing','Заводы передела: постоянные −15 %, переработка −25 % за уровень','Processing plants: fixed costs −15%, processing −25% per level'],
   heir:['Наследство','Legacy','Ещё один участок без торгов в начале холдинга','One more plot without an auction at the start of a holding']};
 const pkName=k=>T(PK[k][0],PK[k][1]),pkDesc=k=>T(PK[k][2],PK[k][3]);
 function mileTxt(m){return T(m.ru,m.en);}
@@ -179,8 +179,8 @@ function boostCard(){const W=GAME.W;if(!W||!W.ned)return '';
   if(!ad()||!GAME.boostOk())return '';const wt=GAME.adWait&&GAME.adWait('bst')>0;   // M31: пауза места вместо 1 в день
   const bn=Math.max(1,Math.round((E.boostD?E.boostD(W):90)/30));
   return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">🤝 ${T(`Людмила может договориться с покупателями: +10 % к цене продаж на ${bn} ${bn===1?'месяц':bn<5?'месяца':'месяцев'}`,`Lyudmila can strike a deal with buyers: +10% on sale prices for ${bn} ${bn===1?'month':'months'}`)}${wt?'<br><small>📺 '+GAME.adTxt('bst')+'</small>':''}</span><button class="mt-btn noenter" data-mt="boost"${wt?' disabled':''}>📺 ${T('+10 % за рекламу','+10% for an ad')}</button></div></div>`;}
-function perkCard(){if(!Array.isArray(S.pkP)||!S.pkP.length)return '';
-  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">⭐ <b>${T('Доля основателя','Founder’s share')}</b>: ${T('выберите улучшение навсегда','choose a permanent upgrade')}</span><button class="mt-btn ac noenter" data-mt="perks">${T('Выбрать','Choose')}</button></div></div>`;}
+function perkCard(){const po=GAME.perkOffer?GAME.perkOffer():S.pkP;if(!Array.isArray(po)||!po.length)return '';const f=GAME.fsFree?GAME.fsFree():0;
+  return `<div class="mt-card"><div class="mt-row"><span class="mt-f1">⭐ <b>${T('Доли основателя','Founder shares')}</b>: ${T(`свободно ${f} — вложите в улучшения навсегда`,`${f} free — invest them in permanent upgrades`)}</span><button class="mt-btn ac noenter" data-mt="perks">${T('Вложить','Invest')}</button></div></div>`;}
 // запасной вариант, если окно главы не показало предложение (META.starterHtml): один раз — карточка на «Сегодня» до конца этого захода
 let starterSess=false;
 function starterCard(){const W=GAME.W;if(!W||W.st!=='small'||!starterOk()||S.ask&&S.ask.starterC||shopOn())return '';
@@ -289,18 +289,30 @@ function openCos(){snd('tap');const kinds=[['emb',T('Эмблема (перед 
       if(GAME.cosBuy(id)==='ok'){snd('coin');toast(T('Готово: ','Done: ')+cosName(c));}}
     else{GAME.cosSel(k,id||'');snd('tap');}applyCos();openCos();});
   $m('mtClose').onclick=close;}
-function perkBtns(){if(!Array.isArray(S.pkP)||!S.pkP.length)return '';return S.pkP.map(k=>{const l=(S.pk&&S.pk[k])||0;return `<button class="mt-btn mt-opt noenter" data-pk="${k}">${esc(pkName(k))}${l?` · ${T('ур.','lvl')} ${l+1}`:''}<small>${esc(pkDesc(k))}</small></button>`;}).join('');}
-function openPerks(){if(!Array.isArray(S.pkP)||!S.pkP.length){openPrestige();return;}snd('win');
-  let h=`<h2>⭐ ${T('Доля основателя','Founder’s share')}</h2><p class="about">${T('Холдинг на бирже — а опыт остаётся с вами. Выберите одно улучшение: оно будет работать во всех следующих холдингах.','The holding is public — and the experience stays with you. Choose one upgrade: it will work in all your future holdings.')}</p>`;
-  for(const k of S.pkP){const l=(S.pk&&S.pk[k])||0;h+=`<button class="mt-btn mt-opt noenter" data-pk="${k}">${esc(pkName(k))}${l?` · ${T('ур.','lvl')} ${l+1}`:''}<small>${esc(pkDesc(k))}</small></button>`;}
-  h+=`<div class="row"><button class="btn noenter" id="mtLater" data-esc="1">${T('Решу позже','Decide later')}</button></div>`;
-  modal(h);modalRe=openPerks;$m('mcard').querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{if(GAME.perkPick(b.dataset.pk)==='ok'){snd('coin');salute();toast('⭐ '+pkName(b.dataset.pk));openPrestige();}});
+/* M47c: доли основателя — очки улучшений. «было → станет» — по текущему миру (что изменит следующий уровень) */
+const pct=x=>FMT.pct?FMT.pct(x,1):Math.round(x*1000)/10+' %';
+function pkNow(k){const W=GAME.W,l=(S.pk&&S.pk[k])||0,X=E.PK_X||{};if(!W||!X.geo)return '';const r=W.home&&E.REGS[W.home]?W.home:'kuz';
+  try{if(k==='geo'){const c=E.explCost(W,r),d=E.explDays(W),c2=c*(1-X.geo*(l+1))/(1-X.geo*l),d2=Math.max(6,Math.round(d*(1-X.geoD*(l+1))/(1-X.geoD*l)));return T(`Разведка: ${FMT.money(c)} → ${FMT.money(c2)}, ${d} → ${d2} дн.`,`Exploration: ${FMT.money(c)} → ${FMT.money(c2)}, ${d} → ${d2} days`);}
+    if(k==='brig'){const d=n=>Math.max(30,Math.round(90*(1-X.brig*n)));return T(`Угольный разрез строится: ${d(l)} → ${d(l+1)} дн.`,`A coal pit takes: ${d(l)} → ${d(l+1)} days`);}
+    if(k==='bank'){const o=E.loanOffer(W).rate;return T(`Ставка банка сейчас: ${pct(o)} → ${pct(Math.max(.04,o-X.bank))}`,`Bank rate now: ${pct(o)} → ${pct(Math.max(.04,o-X.bank))}`);}
+    if(k==='logi'){const t=E.tariff(W,'kuz','ural'),t2=t*(1-X.logi*(l+1))/(1-X.logi*l);return T(`Кузбасс → Урал: ${FMT.num(Math.round(t))} → ${FMT.num(Math.round(t2))} ₽/т`,`Kuzbass → Urals: ${FMT.num(Math.round(t))} → ${FMT.num(Math.round(t2))} ₽/t`);}
+    if(k==='vert'){const f=E.OBJ.furnace.fix;return T(`Доменная печь, постоянные: ${FMT.money(f*(1-X.vertF*l))} → ${FMT.money(f*(1-X.vertF*(l+1)))} в мес.`,`Blast furnace fixed costs: ${FMT.money(f*(1-X.vertF*l))} → ${FMT.money(f*(1-X.vertF*(l+1)))} a month`);}
+    if(k==='heir')return T('В начале каждого холдинга — ещё один участок без торгов','One more plot without an auction at the start of every holding');}catch(e){}return '';}
+function pkBtn(k){const l=(S.pk&&S.pk[k])||0,c=E.perkCost?E.perkCost(k,l):null,f=GAME.fsFree?GAME.fsFree():0,ok=c!=null&&c<=f;
+  return `<button class="mt-btn mt-opt noenter" data-pk="${k}"${ok?'':' disabled'}>${esc(pkName(k))} · ${c==null?T('максимум','maxed'):T('ур.','lvl')+' '+(l+1)+' · '+c+' '+T(c%10===1&&c%100!==11?'доля':c%10>=2&&c%10<=4&&(c%100<10||c%100>=20)?'доли':'долей',c===1?'share':'shares')}<small>${esc(pkDesc(k))}</small>${c!=null?`<small>${esc(pkNow(k))}</small>`:''}</button>`;}
+function perkBtns(){const po=GAME.perkOffer?GAME.perkOffer():S.pkP;if(!Array.isArray(po)||!po.length)return '';const f=GAME.fsFree?GAME.fsFree():0;return `<p class="st-hint">⭐ ${T(`Свободных долей: <b>${f}</b>`,`Free shares: <b>${f}</b>`)}</p>`+Object.keys(E.PERKS).map(pkBtn).join('');}
+function openPerks(){snd('win');const f=GAME.fsFree?GAME.fsFree():0;
+  let h=`<h2>⭐ ${T('Доли основателя','Founder shares')}</h2><p class="about">${T(`Опыт остаётся с вами: вложите доли в улучшения — они работают во всех следующих холдингах (и в этом — сразу). Свободных долей: <b>${f}</b>. Не хватает — доли копятся до следующего IPO.`,`The experience stays with you: invest shares in upgrades — they work in all future holdings (and in this one right away). Free shares: <b>${f}</b>. Not enough — shares carry over to the next IPO.`)}</p>`;
+  h+=Object.keys(E.PERKS).map(pkBtn).join('');
+  h+=`<div class="row"><button class="btn noenter" id="mtLater" data-esc="1">${T('Готово','Done')}</button></div>`;
+  modal(h);modalRe=openPerks;$m('mcard').querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{if(GAME.perkPick(b.dataset.pk)==='ok'){snd('coin');salute();toast('⭐ '+pkName(b.dataset.pk));openPerks();}else snd('no');});
   $m('mtLater').onclick=close;}
-function openPrestige(){snd('tap');const pk=S.pk||{},ks=Object.keys(E.PERKS).filter(k=>pk[k]>0),fame=Array.isArray(S.fame)?S.fame:[];
-  let h=`<h2>⭐ ${T('Доля основателя','Founder’s share')}</h2><p class="about">${T('Доли основателя за все IPO','Founder shares from all IPOs')}: <b>${S.fs||0}</b> · IPO: <b>${fame.length}</b>. ${T('Следующая планка IPO','Next IPO bar')}: <b>${FMT.money(E.IPO_EQ)}</b>.</p><div class="mt-card">`;
-  if(!ks.length)h+=`<p>${T('Улучшений пока нет — они появятся после первого IPO.','No upgrades yet — they come after your first IPO.')}</p>`;
+function openPrestige(){snd('tap');const pk=S.pk||{},ks=Object.keys(E.PERKS).filter(k=>pk[k]>0),fame=Array.isArray(S.fame)?S.fame:[],W=GAME.W,f=GAME.fsFree?GAME.fsFree():0;
+  let h=`<h2>⭐ ${T('Доли основателя','Founder shares')}</h2><p class="about">${T('Доли основателя за все IPO','Founder shares from all IPOs')}: <b>${S.fs||0}</b> (${T('свободно','free')} <b>${f}</b>) · IPO: <b>${fame.length}</b>. ${T('Следующая планка IPO','Next IPO bar')}: <b>${FMT.money(E.IPO_EQ)}</b>.</p>`
+    +(W&&W.dv>0?`<p class="about">📈 ${T(`Дивиденды по акциям прошлых холдингов: <b>${FMT.money(W.dv)}</b> в месяц.`,`Dividends from your past holdings: <b>${FMT.money(W.dv)}</b> a month.`)}</p>`:'')+`<div class="mt-card">`;
+  if(!ks.length)h+=`<p>${T('Улучшений пока нет — доли появятся после первого IPO.','No upgrades yet — shares come after your first IPO.')}</p>`;
   for(const k of ks)h+=`<div class="mt-mile"><span>${esc(pkName(k))}<br><small class="mt-mut">${esc(pkDesc(k))}</small></span><b>${T('ур.','lvl')} ${pk[k]}/${E.PERKS[k].max}</b></div>`;
-  h+=`</div><div class="row">${Array.isArray(S.pkP)&&S.pkP.length?`<button class="btn accent noenter" id="mtPk">${T('Выбрать улучшение','Choose an upgrade')}</button>`:''}<button class="btn" id="mtClose" data-esc="1">${T('Закрыть','Close')}</button></div>`;
+  h+=`</div><div class="row">${(S.fs||0)>0?`<button class="btn accent noenter" id="mtPk">${T('Вложить доли','Invest shares')}</button>`:''}<button class="btn" id="mtClose" data-esc="1">${T('Закрыть','Close')}</button></div>`;
   modal(h);modalRe=openPrestige;if($m('mtPk'))$m('mtPk').onclick=openPerks;$m('mtClose').onclick=close;}
 function close(){hideModal();refresh();try{window.uiRefresh&&window.uiRefresh();}catch(e){}}
 function bindModal(){}
@@ -311,8 +323,13 @@ function starterBody(){const pr=PAY.item('starter');return `<div class="mt-row">
 // для окна главы «Своё дело» (biz-ui): html предложения или '' (показывается один раз: S.ask.starter)
 function starterHtml(){if(!starterOk()||S.ask&&S.ask.starter)return '';if(!S.ask)S.ask={};S.ask.starter=Date.now();try{save();}catch(e){}css();return `<div class="mt-card">${starterBody()}</div>`;}
 // строка для окна IPO: доли основателя сейчас и следующая планка
-function ipoHtml(){if(!window.GAME||!GAME.W)return '';const W=GAME.W,nx=E.ipoEq({rep:Math.min(5,(W.rep||0)+1)});
-  return `<p>⭐ ${T('Доля основателя, если выйти сейчас','Founder shares if you go public now')}: <b>${GAME.ipoShares()}</b>. ${T('После IPO — выбор одного улучшения навсегда. Планка следующего IPO','After the IPO — pick one permanent upgrade. The next IPO bar')}: <b>${FMT.money(nx)}</b>.</p>`;}
+// M47c: «выйти позже, но дороже» — сколько долей и дивидендов сейчас и что прибавит рост
+function ipoHtml(){if(!window.GAME||!GAME.W)return '';const W=GAME.W,nx=E.ipoEq({rep:Math.min(5,(W.rep||0)+1)}),sh=GAME.ipoShares(),dv=GAME.ipoDv?GAME.ipoDv():0,ch=E.chainSegs?E.chainSegs(W).length:0,U=E.SH_UNIT||150e6;
+  const v=GAME.value(),next=Math.ceil((sh+1)/(1+(E.SH_CHAIN||.1)*ch))*U;
+  return `<p>⭐ ${T(`<abbr class="gl" data-gl="fshare">Доли основателя</abbr>, если выйти сейчас: <b>${sh}</b> (1 доля — за каждые ${FMT.money(U)} стоимости${ch?`, +${ch*10} % за заводы передела`:', +10 % за каждое направление с заводом передела'}). Их вкладывают в улучшения навсегда: первый уровень — 4–6 долей.`,`Founder shares if you go public now: <b>${sh}</b> (1 share per ${FMT.money(U)} of value${ch?`, +${ch*10}% for processing plants`:', +10% for each line with a processing plant'}). They buy permanent upgrades: level 1 costs 4–6 shares.`)}</p>`
+    +(next>v?`<p>${T(`Ещё доля — при стоимости ≈ ${FMT.money(next)}. Выйти позже, но дороже — тоже решение.`,`One more share at a value of about ${FMT.money(next)}. A later but richer IPO is a choice too.`)}</p>`:'')
+    +(dv>0?`<p>📈 ${T(`Акции этого холдинга останутся у вас: <abbr class="gl" data-gl="divd">дивиденды</abbr> ≈ <b>${FMT.money(dv)}</b> в месяц пойдут в новый холдинг (четверть годовой прибыли в год).`,`You keep shares in this holding: dividends of about <b>${FMT.money(dv)}</b> a month will flow into the new holding (a quarter of the yearly profit per year).`)}</p>`:'')
+    +`<p>${T('Планка следующего IPO','The next IPO bar')}: <b>${FMT.money(nx)}</b>.</p>`;}
 
 /* ---------- действия ---------- */
 function act(a,inModal,btn){const re=()=>{if(inModal&&modalOn&&modalRe===openPlan)openPlan();refresh();};

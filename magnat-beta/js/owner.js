@@ -81,7 +81,11 @@ function ptUp(W,id){const r=ptUpOk(W,id);if(r!=='ok')return r;const b=W.biz.find
   news(W,'biz',{k:'lvup',bt:b.t,n:x.n});return 'ok';}
 // M32: «⏫ До максимума» — все следующие уровни точки подряд, на какие хватает денег без ухода ниже запаса
 // (запас — больший из bizRes «перед покупкой» и подушки whsPad: обязательные платежи до закрытия минус поступления). plan — только посчитать: {n, c, to, max, res, left}
-function ptUpRes(W){return Math.max(E.bizRes?E.bizRes(W):0,E.whsPad?E.whsPad(W):0);}
+// M47a (аудит гл.3, Ф3): в ООО (гл.3+) запас — подушка whsPad (платежи до закрытия минус 80 % того, что придёт) + закупка товара под сезон и не меньше четверти обязательных платежей
+// месяца (на плохой месяц); раньше bizRes = 1,5 × платежей месяца без учёта выручки — в начале месяца «занимал» почти все деньги. Главы 1–2 — как было.
+const UP_SAFE=.25;
+function ptUpRes(W){if(!E.whsPad)return E.bizRes?E.bizRes(W):0;if(!(W.ooo||W.st==='mid')||W.ned)return Math.max(E.bizRes?E.bizRes(W):0,E.whsPad(W));
+  return Math.max(10e3,E.whsPad(W)+(E.stkUp?E.stkUp(W):0),Math.ceil(E.whsPad(W,'f')*UP_SAFE/5000)*5000);}   // + закупка товара под новый сезон на смене месяца
 function ptUpMax(W,id,plan){const b=W.biz.find(x=>x.id===id),a=b&&LV[b.t];if(!a||b.st!=='w'||W.ned)return plan?null:'no';
   let l=b.lv||1,c=0,n=0;const res=ptUpRes(W),free=W.cash-res;while(l<LV_MAX&&c+a[l-1][3]<=free){c+=a[l-1][3];l++;n++;}
   if(plan)return {n,c,to:l,max:l>=LV_MAX,res,left:LV_MAX-(b.lv||1)};if(!n)return (b.lv||1)>=LV_MAX?'max':'cash';
@@ -171,7 +175,7 @@ function edOk(W,k){const x=ED[k];if(!x||W.ned||!W.me)return 'no';const O=ow(W);i
   if(x.need&&!O.ed[x.need])return 'need';if(x.ip&&!W.ip)return 'ip';if(E.stI(W)<x.st)return 'stage';if(E.hands(W).free<1)return 'hand';if(W.cash<x.c)return 'cash';return 'ok';}
 function edStart(W,k){const r=edOk(W,k);if(r!=='ok')return r;const x=ED[k];cost(W,x.c,'adm','adm',null);ow(W).j.push({id:'j'+(W.nid++),k:'edu',a:k,left:x.d,d:x.d,e:ED_E});return 'ok';}
 // обучение персонала точки: sell — продавцы (розница, +6 % покупателей), mast — мастера (услуги: ⭐ +0,4 и +5 % к цене). Точка 5–7 дней работает на 80 %
-const ST={sell:{ico:'🗣',d:5,seg:'retail'},mast:{ico:'🧑‍🔧',d:7,seg:'serv'}};
+const ST={sell:{ico:'🗣',d:5,seg:'retail'},mast:{ico:'👨‍🔧',d:7,seg:'serv'}};
 function stCost(W,b,k){const B=E.BIZ[b.t];return k==='sell'?Math.max(15e3,rnd0((B.staff||40e3)*.5/1000)*1000):clamp(rnd0(B.cap*.025/1000)*1000,40e3,120e3);}
 function stOk(W,id,k){const b=W.biz.find(x=>x.id===id),x=ST[k];if(!b||!x||b.st!=='w'||W.ned)return 'no';const B=E.BIZ[b.t];if(B.seg!==x.seg||!B.hand)return 'no';
   if(k==='sell'?b.tr:b.ms)return 'done';if(b.trn>W.t)return 'busy';if(W.cash<stCost(W,b,k))return 'cash';return 'ok';}
@@ -179,7 +183,7 @@ function stTrain(W,id,k){const r=stOk(W,id,k);if(r!=='ok')return r;const b=W.biz
 
 /* ---------------- дела хозяина ---------------- */
 // d — дней, e — ⚡ в день, sc — на что: type (вид точек), pt (точка), mpt (точка с управляющим), fr (друг); cd — откат, мес.; c — ₽
-const JOBS={neg:{ico:'🤝',d:3,e:15,sc:'type',cd:3},spot:{ico:'📍',d:5,e:10,sc:'type'},stand:{ico:'🧍',d:5,e:10,sc:'mpt'},check:{ico:'🔍',d:2,e:15,sc:'pt',cd:3},
+const JOBS={neg:{ico:'🤝',d:3,e:15,sc:'type',cd:3},spot:{ico:'📍',d:5,e:10,sc:'type'},stand:{ico:'🚶',d:5,e:10,sc:'mpt'},check:{ico:'🔍',d:2,e:15,sc:'pt',cd:3},
   fly:{ico:'📄',d:2,e:15,sc:'pt',c:1000},visit:{ico:'☕',d:1,e:0,sc:'fr',cd:1}};
 const FRIENDS=['owl','beav','bars','vit'];
 function jobKey(k,a){return k+':'+a;}

@@ -183,6 +183,13 @@ function tkVal(W,t,v,dir,m){const dm=tkDem(W,t);if(dir==='mkt')return v.t==='van
 function tkPlan(W,m){const t=tkOf(W);if(!t||t.st!=='w')return;m=m==null?W.m%12:m;const pool=W.biz.filter(v=>v.at===t.id&&isVeh(v.t));for(const v of pool)v.go='';
   const dirs=W.biz.filter(o=>(o.t==='whs'||o.t==='base')&&o.st==='w').map(o=>o.id).concat(['mkt','snow']);
   for(const v of pool){let best='',bv=0;for(const d of dirs){const x=tkVal(W,t,v,d,m);if(x>bv+1){bv=x;best=d;}}v.go=best;}}
+// M47a: прогноз ТК в среднем за год — как будет на деле: при «распределяет Людмила» по каждому месяцу машины ставятся заново (зимой самосвалы — на снег),
+// плюс польза хозяевам (их наёмные машины, которые заменяют машины ТК, за вычетом водителя/содержания). → {prof, hz, sn — месяцев со снегом}; направления машин после расчёта — как были
+function tkFore(W,t){t=t||tkOf(W);if(!t)return {prof:0,hz:0};const pool=W.biz.filter(v=>v.at===t.id&&isVeh(v.t)),keep=pool.map(v=>v.go);let prof=0,hz=0;
+  let sn=0;try{for(let m=0;m<12;m++){if(t.auto&&t.st==='w')tkPlan(W,m);prof+=E.bizEcon(W,t,t.k,m,true).prof;if(pool.some(v=>v.go==='snow'&&SNOW_M.indexOf(m)>=0))sn++;
+      for(const v of pool){if(v.st!=='w'||v.down>0||!v.go||v.go==='mkt'||v.go==='snow')continue;const val=tkVal(W,t,v,v.go,m),c=v.t==='van'?VAN_OWN:TRUCK_STAFF;if(val>c)hz+=val-c;}}}
+  finally{pool.forEach((v,i)=>{v.go=keep[i];});}
+  return {prof:rnd0(prof/12),hz:rnd0(hz/12),sn};}
 function tkAuto(W,on){const t=tkOf(W);if(!t)return 'no';t.auto=on?1:0;if(on)tkPlan(W);return 'ok';}
 // вручную: ещё одну машину типа vt в направление dir (из стоящих) или убрать одну оттуда (станет стоять); ручной режим включается сам
 function tkGo(W,dir,vt,d){const t=tkOf(W);if(!t)return 'no';const pool=W.biz.filter(v=>v.at===t.id&&v.t===vt);
@@ -326,7 +333,7 @@ if(E.bizAdvise&&!E.bizAdvise.__opt){const a0=E.bizAdvise;E.bizAdvise=function(W)
 Object.assign(E,{OPTK,OPT_KD,OSEA,UP1,MKD,LINKS,LINK_UP2,VAN_OWN,VAN_HIRE,VAN_CAP,TRUCK_STAFF,VAN_MAX,TRUCK_MAX,LINK_CAP,TOT_CAP,LINK_FAR,OPT_KEEP35,
   // M44
   UP3,UP4,MAN,TK_UP,TK_HIRE,TK_HIRE_T,TK_BRK,TK_BRK_T,tkOn,TK_EQ,TK_VAN_R,TK_TR_R,TK_SNOW_R,TK_TV,SNOW_M,TK_MAX,SH2_K,SH2_F,WMS_K,CT_K,CT_MK,CT_DD,CT_BAD,CT_PEN,PRE,PRE_D,WR_M,WR_BRK,WR_AUTO,BRK_P,TO_C,REP_C,LINK_RK,
-  optLim,optLoad,linkRk,upList,optCt,ctFore,optPre,optPreUse,baseMan,fleetTk,tkOf,tkCan,tkEcon,tkVal,tkPlan,tkAuto,tkGo,tkFree,vehTake,tkGather,gazelToTk,baseSnow,vehTO,toCost,vehIdle,vehMonth,optNeed,needPts,
+  optLim,optLoad,linkRk,upList,optCt,ctFore,optPre,optPreUse,baseMan,fleetTk,tkOf,tkCan,tkEcon,tkVal,tkPlan,tkFore,tkAuto,tkGo,tkFree,vehTake,tkGather,gazelToTk,baseSnow,vehTO,toCost,vehIdle,vehMonth,optNeed,needPts,
   optEcon,optSd,optKd:kdOf,optKnobs:knobs,optOf,optCars,optFore,optUp,optUpInfo,optClose,optMigrate,fleet,fleetN,fleetGain,baseTrucks,isVeh,isOwner,vehCan,vehAdd,vehDel,vehTo,vehUse,
   linkOf,linkDisc,linkSum,linkHint});
 })(typeof window!=='undefined'?window:this);

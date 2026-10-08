@@ -43,7 +43,8 @@ function morphKids(a,b){const bn=Array.prototype.slice.call(b.childNodes);
   while(a.childNodes.length>bn.length)a.removeChild(a.lastChild);}
 function morphHTML(el,html){const t=document.createElement('div');t.innerHTML=html;morphKids(el,t);}
 window.morphHTML=morphHTML;
-const put=(el,h)=>{if(el.firstChild){try{morphHTML(el,h);return;}catch(e){console.error(e);}}el.innerHTML=h;};
+const put=(el,h)=>{if(el.firstChild&&el.__h===h&&el.__f===el.firstChild)return;el.__h=h;   // M47d: та же разметка и экран никто не переписал — не разбираем заново (карта «Недр» — сотни узлов SVG каждый день)
+  if(el.firstChild){try{morphHTML(el,h);el.__f=el.firstChild;return;}catch(e){console.error(e);}}el.innerHTML=h;el.__f=el.firstChild;};
 
 /* ================= значки (свои SVG: не зависят от эмодзи старых телефонов) ================= */
 const SV=(vb,body)=>`<svg viewBox="${vb}" aria-hidden="true">${body}</svg>`;
@@ -187,8 +188,8 @@ function advText(x){if(hasAdv('text')){try{const t=ADV.text(x,w());if(t&&typeof 
     ok:L('Месяц прибыльный. Всё идёт по плану.','A profitable month. All according to plan.'),
     meh:L('Пока без прибыли — в начале это нормально: стройка окупится.','No profit yet — normal at the start: construction pays off later.')};
   return T[x.k]||'';}
-const WHY_GO={z_cash:()=>{if(window.CASHUI)CASHUI.open();},z_factor:()=>{if(window.CASHUI)CASHUI.open();},full:x=>go('reg',x.a.r),input:()=>go('obj'),depleted:()=>go('obj'),halt:()=>go('obj'),cash:()=>go('fin'),od:()=>goFin('bank')(),san:()=>go('fin'),lev:()=>go('fin'),loss:()=>go('fin'),
-  nev:()=>{if(window.NEDUI)NEDUI.open();},chain:x=>go('reg',x.a.r),scrap:()=>go('obj'),
+const WHY_GO={z_ruin:()=>{if(window.CASHUI)CASHUI.open();},   /* M48rb */z_cash:()=>{if(window.CASHUI)CASHUI.open();},z_factor:()=>{if(window.CASHUI)CASHUI.open();},full:x=>go('reg',x.a.r),input:()=>go('obj'),depleted:()=>go('obj'),halt:()=>go('obj'),cash:()=>go('fin'),od:()=>goFin('bank')(),san:()=>go('fin'),lev:()=>go('fin'),loss:()=>go('fin'),
+  nev:()=>{if(window.NEDUI)NEDUI.open();},chain:x=>go('reg',x.a.r),scrap:()=>go('obj'),frp:x=>{if(window.NEDUI&&NEDUI.frpOpen)NEDUI.frpOpen(x.a.o);},   /* M47c */
   grow:()=>go('fin'),ok:()=>go('fin'),meh:()=>go('fin'),auc:()=>{const a=w().auc[0];if(a)go('reg',a.r);else go('map');},myauc:()=>go('map'),cons:()=>go('market'),up:()=>go('market'),down:()=>go('market'),idle:()=>go('map'),lazy:()=>go('map')};
 function whyTxt(o){const y=o.why||'';if(!y)return '';
   if(y.indexOf('in:')===0){const g=y.slice(3);return L('нет '+(GEN[g]||NM.good(g)),'no '+low(NM.good(g)));}
@@ -216,7 +217,7 @@ function buildNav(){const n=$$('nav'),on=TABS_ON(),fr=frNavOn(on),key=on.join()+
     +(fr?`<button data-fr="1" class="nav-fr" aria-label="${L('Друзья','Friends')}">${FR_ICO}<span>${L('Друзья','Friends')}</span></button>`:'');
   {const b=n.querySelector('[data-fr]');if(b)b.onclick=()=>{snd('tap');if(window.PHONE&&PHONE.isOpen&&innerWidth<900)PHONE.close();FRUI.open('nav');};}
   // телефон на узком экране закрывает весь экран: другая вкладка меню сначала закрывает его (на широком он сбоку — не трогаем)
-  n.querySelectorAll('button[data-tab]').forEach(b=>b.onclick=()=>{snd('tap');if(b.dataset.tab!=='phone'&&window.PHONE&&PHONE.isOpen&&innerWidth<900)PHONE.close();const dt=!!b.querySelector('.dot');go(b.dataset.tab);
+  n.querySelectorAll('button[data-tab]').forEach(b=>b.onclick=()=>{snd('tap');if(b.dataset.tab!=='phone'&&window.PHONE&&PHONE.isOpen&&innerWidth<900)PHONE.close();if(b.dataset.tab===cur&&BZ()&&BZ().retap)try{if(BZ().retap(cur))return;}catch(e){}   /* M47a: активная вкладка из карточки — к списку */const dt=!!b.querySelector('.dot');go(b.dataset.tab);
     if(dt&&BZ()&&BZ().dotGo)setTimeout(()=>{try{BZ().dotGo(b.dataset.tab);}catch(e){}},120);});}   // M46: точка на вкладке ведёт прямо к тому, что её зажгло
 let cur='map',curReg='kuz',hlSel=null,hlTut=false,hlScroll=false;const Q=[];const watch={};
 
@@ -285,25 +286,51 @@ function refresh(ev){if(!w())return;if(ev==='day'&&ptrDown&&Date.now()-ptrDown<5
 const COMPACT=()=>window.innerHeight<700&&window.innerWidth<700;
 // сумма в шапке не обрезается: если не влезает — шрифт меньше (до 17 px)
 // узкий телефон и много кнопок справа: название главы/холдинга не показываем обрезанным «Хо…» (деньги и так видны)
-function hnameFit(){const hn=document.querySelector('#hdr .hname');if(!hn)return;if(window.innerWidth>=700){hn.classList.remove('tiny');return;}let bw=0;
-  document.querySelectorAll('#hdr .h1 .hbtn').forEach(b=>{if(b.offsetParent!==null)bw+=b.offsetWidth+8;});hn.classList.toggle('tiny',window.innerWidth-28-bw<74);}
-let fitW=0;function fitCash(c){fitW=window.innerWidth;c.style.fontSize='';let fs=parseFloat(getComputedStyle(c).fontSize)||30,n=0;while(c.scrollWidth>c.clientWidth+1&&fs>17&&n++<14){fs-=1.5;c.style.fontSize=fs+'px';}}
-function hdr(){const W=w();if(!W)return;hnameFit();
-  {const ch=BZ()&&BZ().hname(W);$$('hName').textContent=ch?ch:holdName(W)+' ✎';}spdBtnUpd();
-  $$('hDate').textContent=FMT.date(W.m);
-  const c=$$('hCash'),ct=M(W.cash);if(!cashHold&&cashShown==null&&(c.textContent!==ct||fitW!==window.innerWidth)){c.textContent=ct;fitCash(c);}else if(!cashHold&&c.scrollWidth>c.clientWidth+1)fitCash(c);c.classList.toggle('neg',W.cash<0);
+// M47h: по факту, а не по порогу — 1) кнопки 1-й строки не влезают (320 px + крупный шрифт, «Плакат») → #spdBtn во 2-ю строку перед ⏸ (#hdr.sp2);
+// 2) название главы не влезает целиком → .tiny (оно уходит к строке дня, hLeftFit). Считается только при смене ключа (M47d), всегда от исходного положения — без качелей.
+const hThK=()=>{const m=(document.body&&document.body.className||'').match(/\b(th-[\w-]+|noico|early1)\b/g);return m?m.join(' '):'';};
+function h2Order(){const h2=document.querySelector('#hdr .h2'),hm=h2&&h2.querySelector('.hmon');if(!hm)return;   // M47h: [деньги, ★, разрыв #hBr, ×1 (если внизу), ⏸, полоса]
+  let br=$$('hBr');if(!br){br=document.createElement('i');br.id='hBr';br.className='hbr';}
+  const sb=$$('spdBtn'),q=[br,sb&&sb.parentNode===h2?sb:null,$$('psBtn')].filter(Boolean);let ref=hm;
+  for(let i=q.length-1;i>=0;i--){const e=q[i];if(e.parentNode!==h2||e.nextElementSibling!==ref)h2.insertBefore(e,ref);ref=e;}}
+// M47h: значки icons.js (⏸, 💎) подменяются позже подгонки — ширины меняются без смены ключа. Дёшево (только чтение готовой вёрстки): название «Кар…» или кнопка за левым краем → пересчёт
+function hOff(hn,h1){if(window.innerWidth>=700)return false;const b=hn.querySelector('b');if(b&&!hn.classList.contains('tiny')&&b.scrollWidth>b.clientWidth+1)return true;
+  const f=[...h1.querySelectorAll('.hbtn')].find(e=>e.offsetParent!==null);return !!f&&f.getBoundingClientRect().left<h1.getBoundingClientRect().left-0.5;}
+function hnameFit(){const hn=document.querySelector('#hdr .hname'),hd=$$('hdr'),sb=$$('spdBtn'),h1=hn&&hn.parentNode;if(!hn||!hd||!h1)return;
+  {let k=window.innerWidth+'|'+(S.bigF|0)+'|'+document.documentElement.className+'|'+hThK()+'|'+(($$('hName')||{}).textContent||'');document.querySelectorAll('#hdr .h1 .hbtn,#spdBtn').forEach(b=>{k+='|'+b.className+b.style.display+b.textContent;});
+   if(hnameFit.k===k&&(hnameFit.f===k||!hOff(hn,h1)))return;if(hnameFit.k===k)hnameFit.f=k;hnameFit.k=k;}   // M47h: перепроверка — не больше одного раза на ключ   // M47d: пересчёт только при смене ширины/кнопок шапки (было — чтение offsetWidth всех кнопок каждые 0,5 с)
+  if(sb&&sb.parentNode!==h1)h1.insertBefore(sb,hn.nextSibling);hd.classList.remove('sp2');hn.classList.remove('tiny');
+  if(window.innerWidth>=700){h2Order();return;}
+  const fst=()=>{const b=[...h1.querySelectorAll('.hbtn')].find(b=>b.offsetParent!==null);return b?b.getBoundingClientRect().left-h1.getBoundingClientRect().left:0;};
+  if(sb&&sb.offsetParent!==null&&fst()<-0.5){hd.classList.add('sp2');const h2=document.querySelector('#hdr .h2');if(h2)h2.appendChild(sb);}
+  h2Order();
+  const b=hn.querySelector('b');if(!b||b.clientWidth<40||b.scrollWidth>b.clientWidth+1)hn.classList.add('tiny');}
+let fitW=0;const fitK=()=>window.innerWidth+'|'+(S.bigF|0)+'|'+document.documentElement.className+'|'+hThK()+'|'+((($$('hdr')||{}).classList||{contains:()=>0}).contains('sp2')?1:0);   // M47h: + тема (шрифт цифр) и ×1 во 2-й строке   // M47d: ключ подгонки суммы (ширина, крупный шрифт, вид)
+function fitCash1(c){c.style.fontSize='';let fs=parseFloat(getComputedStyle(c).fontSize)||30,n=0;while(c.scrollWidth>c.clientWidth+1&&fs>17&&n++<14){fs-=1.5;c.style.fontSize=fs+'px';}return fs;}
+// M47h: на 361–699 px без крупного шрифта сумма делит строку с ★, ⏸ и полосой месяца — «8,37 млрд ₽» ужималась до 16,5 px. Меньше 24 px → #hdr.w2 (деньги и ★ своей строкой).
+// Решение — только при смене ширины/вида/длины суммы (не каждый день): от исходного вида без переноса.
+function fitCash(c){fitW=fitK();fitCash.t=c.textContent;const hd=$$('hdr'),k2=fitW+'|'+c.textContent.length;
+  if(hd&&fitCash.k2!==k2){fitCash.k2=k2;const iw=window.innerWidth,ph=iw>360&&iw<700&&!(S.bigF|0);hd.classList.remove('w2');if(ph&&fitCash1(c)<24)hd.classList.add('w2');}
+  fitCash1(c);}
+try{document.fonts&&document.fonts.addEventListener('loadingdone',()=>{fitW=0;fitCash.k2=0;hnameFit.k=0;hLeftFit.k=0;});}catch(e){}   // M47h: шрифт темы догрузился — ширины другие, шапку подогнать заново (по ключу этого не видно)
+function hdr(){const W=w();if(!W)return;hnameFit();const cOv=(()=>{const c=$$('hCash');if(!c||c.clientWidth<=0||c.scrollWidth<=c.clientWidth+1)return '';const o=fitK()+c.textContent+'|'+c.clientWidth;return fitCash.o===o?'':o;})();   // M47h: сумма вылезла после подгонки (значок ⏸/★ догрузился) — подогнать снова
+  // M47d (аудит-4 №7, слабый телефон): в шапку пишем только изменившееся — запись того же текста будила icons.js и пересчёт вёрстки каждые 0,5 с
+  const tx=(e,t)=>{if(e&&e.textContent!==String(t))e.textContent=t;};
+  {const ch=BZ()&&BZ().hname(W);tx($$('hName'),ch?ch:holdName(W)+' ✎');}spdBtnUpd();
+  tx($$('hDate'),FMT.date(W.m));
+  const c=$$('hCash'),ct=M(W.cash);if(!cashHold&&cashShown==null&&(c.textContent!==ct||fitW!==fitK())){c.textContent=ct;fitCash(c);}else if(!cashHold&&(fitW!==fitK()||c.textContent!==fitCash.t||cOv)){if(cOv)fitCash.k2=0;fitCash(c);if(cOv)fitCash.o=c.scrollWidth>c.clientWidth+1?cOv:'';}   // повтор не помог (уже 17 px) — больше не дёргаемc.classList.toggle('neg',W.cash<0);
   const run=GAME.running(),fr=Math.min(1,(W.d+GAME.dayFrac())/E.DAYS);
-  $$('hBar').style.width=(fr*100).toFixed(1)+'%';
+  {const b=$$('hBar'),t='translateX('+(fr*100-100).toFixed(1)+'%)';if(b.style.transform!==t)b.style.transform=t;}   // M47d: сдвиг вместо width (анимация width = вёрстка каждый кадр)
   $$('hdr').classList.toggle('stop',!run);
-  $$('hMon').textContent=FMT.date(W.m);hLeftFit(W,run);
-  const cr=$$('crCnt');if(cr)cr.textContent=GAME.cr();}
+  tx($$('hMon'),FMT.date(W.m));hLeftFit(W,run);
+  const cr=$$('crCnt');if(cr)tx(cr,GAME.cr());}
 // M46 (владелец, бета-10: «день наверху — не видно число»): на 400 px «Своё дело · ⏸ июл 28 · день 1 из 30» резалось многоточием до «д…».
 // Число дня — главное: пробуем подписи от длинной к короткой и берём первую, что влезает целиком (название главы и месяц — только если есть место).
 function hLeftFit(W,run){const e=$$('hLeft');if(!e)return;const d=W.d+1,N=E.DAYS,p=run?'':'⏸ ',nar=window.innerWidth<700;
   const hn0=document.querySelector('#hdr .hname'),chN=hn0&&hn0.classList.contains('tiny')&&BZ()&&BZ().hname(W);   // на узком название главы не влезает в шапку — пишем его у дня (аудит M3)
   const full=L('день ','day ')+d+L(' из ',' of ')+N,sh=L('день ','day ')+d+'/'+N,mo=FMT.mon(W.m)+' · ',c=chN?chN+' · ':'';
   const v=nar?[c+p+mo+full,c+p+mo+sh,c+p+full,c+p+sh,p+mo+sh,p+full,p+sh,p+d+'/'+N]:[c+p+full,c+p+sh,p+full,p+sh];
-  const key=v[0]+'|'+window.innerWidth+'|'+(($$('hCash')||{}).textContent||'')+'|'+(S.bigF|0)+'|'+document.documentElement.className+'|'+document.body.classList.contains('noico')+'|'+(($$('spdBtn')||{}).textContent||'');
+  const key=v[0]+'|'+window.innerWidth+'|'+(($$('hCash')||{}).textContent||'')+'|'+(S.bigF|0)+'|'+document.documentElement.className+'|'+document.body.classList.contains('noico')+'|'+(($$('spdBtn')||{}).textContent||'')+'|'+(($$('hdr')||{}).className||'').replace(/\bstop\b/,'')+'|'+hThK();   // M47h: + перенос строки (w2/sp2) и тема
   const over=()=>e.clientWidth>0&&e.scrollWidth>e.clientWidth+1;let i=hLeftFit.k===key?v.indexOf(e.dataset.v):-1;
   if(i>=0&&!over())return;i=i<0?0:i+1;hLeftFit.k=key;   // ⏸ icons.js меняет на значок позже (шире) — поэтому проверка ещё раз через 80 мс и шаг к более короткой подписи
   for(;i<v.length;i++){e.textContent=v[i];e.dataset.v=v[i];if(!over())break;}
@@ -396,7 +423,7 @@ function plotTile(W,p){const no=plotNo(p);let c='plot',h='';const d=p.dep;
     case 'empty':c+=' empty';h=`<div class="pn">${no}</div><div class="pt">${L('Пусто','Empty')}</div><p style="font-size:15px">${L('Полезного не нашли','Nothing useful found')}</p>`;break;
     case 'found':{c+=' wide mine';const V=E.depVal(W,p.r,d);
       h=`<div class="pn">${no} · ${L('найдено','found')}</div><div class="flex" style="margin:4px 0"><span class="ico">${gIco(d.g)}</span><div class="f1" style="margin-left:10px"><div class="pt" style="margin:0">${NM.good(d.g)}</div></div></div>`+depFacts(W,p)+
-        `<div class="tip">${L(`Оценка участка — <b>${M(V)}</b>. Выгодно, если лицензия не дороже ~0,6 оценки (≈ ${M(V*.6)}).`,`Plot estimate: <b>${M(V)}</b>. Worth it if the licence costs no more than ~0.6 of that (≈ ${M(V*.6)}).`)}</div>`;
+        `<div class="tip">${L(`Оценка участка — <b>${M(V)}</b>: столько рудник заработает после налога сверх стройки. Выгодно, если лицензия не дороже ~0,6 оценки (≈ ${M(V*LIC_K)}).`,`Plot estimate: <b>${M(V)}</b> — what the mine earns after tax beyond its construction cost. Worth it if the licence costs no more than ~0.6 of that (≈ ${M(V*LIC_K)}).`)} <span style="font-size:15px">${licWhy()}</span></div>`;
       if(p.direct)h+=`<button class="btn green noenter" data-a="buyD" data-id="${p.id}">${L('Купить лицензию без торгов','Buy the licence directly')}<small>${M(p.direct)}</small></button>
         <button class="btn sm noenter" data-a="passD" data-id="${p.id}">${L('Отказаться (выставить на торги)','Decline (put up for auction)')}</button>`;
       break;}
@@ -409,6 +436,7 @@ function plotTile(W,p){const no=plotNo(p);let c='plot',h='';const d=p.dep;
         if(!o){c+=' wide';const t=E.MINE_OF[d.g],cap=E.capexOf(W,t,p.r,p.id),mo=W.tut&&t==='coalpit'&&!W.obj.length?1:E.OBJ[t].mo;
           h=`<div class="pn">${no} · ${L('ваша лицензия','your licence')}</div><div class="flex" style="margin:4px 0"><span class="ico">${oIco(t)}</span><div class="f1" style="margin-left:10px"><div class="pt" style="margin:0">${NM.good(d.g)}</div></div></div>`+depFacts(W,p)+
           `<p style="font-size:16px">${L(`Выпуск — ${FMT.qty(E.OBJ[t].cap,d.g)} в месяц, постоянные расходы — ${M(E.OBJ[t].fix)} в месяц.`,`Output: ${FMT.qty(E.OBJ[t].cap,d.g)} a month, fixed costs ${M(E.OBJ[t].fix)} a month.`)}</p>
+          <p style="font-size:16px;margin:4px 0">${foreTxt(objFore(W,t,p.r,cap,d))}</p>
           <button class="btn green noenter" data-a="bmine" data-id="${p.id}">${L('Построить','Build')}: ${low(NM.obj(t))}<small>${M(cap)} · ${mons(mo)}</small></button>`;}
         else h=`<div class="pn">${no} · ${L('ваш','yours')}</div><div class="flex"><span class="ico">${oIco(o.t)}</span></div><div class="pt">${NM.obj(o.t)}</div>
           ${o.st==='b'?`<p style="font-size:15px;margin:2px 0">${o.halt?L('стройка стоит — нет денег','stopped — no money'):L('строится, ещё ','building, ')+days(o.left)+L('',' left')}</p><div class="bar"><i style="width:${((o.tot-o.left)/o.tot*100).toFixed(0)}%"></i></div>`+spdBtn(o)
@@ -420,6 +448,22 @@ function depFacts(W,p){const d=p.dep;return `<div class="facts"><span>${L('За�
   <span>${L('Добыча обойдётся','Mining cost')}</span><b>${FMT.num(d.vc)} ₽/${NM.unit(d.g)}</b>
   <span>${L('Цена на месте','Local price')}</span><b>${ppu(p.r,d.g)}</b>
   <span>${L('Стройка здесь','Build cost here')}</span><b>${d.cm>1.005?L('дороже на ','+')+FMT.pct(d.cm-1):L('обычная','standard')}</b></div>`;}
+const OFF_WIN_MS=10*60e3;   // M47b: окно «Пока вас не было» — только от 10 минут отлучки (M48: и всегда, если можно продлить смену — s.more > 0)
+// M47b (аудит №18): одно правило лицензии на обе главы — «оценка» везде = сколько объект заработает после налога сверх стройки;
+// в «Карьере» предел ¼ (участки на торгах каждые пару месяцев), в «Недрах» ~0,6 (участков мало, разведка уже оплачена) — и только если хватит на стройку
+const LIC_K=.6;
+function licWhy(){return L('В «Карьере» мы шли до четверти: там новые участки на торгах каждые пару месяцев. В недрах участков мало, а разведка уже оплачена — поэтому до 0,6. Но только если после лицензии хватит денег на стройку (с проектным кредитом).','In the Quarry chapter we went up to a quarter: new plots came up every couple of months. In mining plots are few and the survey is already paid for — so up to 0.6. But only if there is money left for construction (with a project loan).');}
+// M47b (аудит гл.5 №3–4): прогноз нового рудника/завода — прибыль в месяц до налога и окупаемость, с учётом того, что свой выпуск собьёт цену
+// (как econ.js mkDay: цель цены ∝ 1 − 0,8·(s30/V − p0); свой выпуск q в месяц добавляет q к s30)
+function mkDrop(W,g,q){const K=W.mk&&W.mk[g];if(!K||!K.V)return 1;const tg=x=>Math.min(1.6,Math.max(.55,1-.8*(x/K.V-(K.p0||0))));const a=tg(K.s30||0);return a>0?tg((K.s30||0)+q)/a:1;}
+function objFore(W,t,r,cost,dep){const O=E.OBJ[t];if(!O||!O.out)return null;const g=O.out,f=mkDrop(W,g,O.cap),p=E.price(W,r,g);let c;
+  if(dep)c=dep.vc;else{const ec=facEcon(W,t,r);if(!ec)return null;c=ec.c;}
+  const pa=p*f,m=Math.round((pa-c)*O.cap-O.fix);return {g,p,pa,c,drop:1-f,m,pay:m>0?Math.ceil(cost/m):0};}
+function foreTxt(fo){if(!fo)return '';const u=NM.unit(fo.g),dr=fo.drop>=.03?L(` — своя добыча собьёт цену на ${FMT.pct(fo.drop)}`,` — your own output will push the price down by ${FMT.pct(fo.drop)}`):'';
+  let h=`📈 ${L('Будет приносить','Will earn')} <b class="${fo.m>0?'good':'bad'}">≈ ${fo.m>0?'':'−'}${M(Math.abs(fo.m))} ${L('в месяц','a month')}</b> ${L('до налога','before tax')}${fo.m>0?(fo.pay>120?L(', окупится больше чем за 10 лет',', pays back in over 10 years'):L(`, окупится ≈ за <b>${mons(fo.pay)}</b> после пуска`,`, pays back in ≈ <b>${mons(fo.pay)}</b> after launch`)):''}. <span style="font-size:15px">${L(`Цена после пуска ≈ ${FMT.num(Math.round(fo.pa))} ₽/${u} (сейчас ${FMT.num(Math.round(fo.p))})${dr}, себестоимость ${FMT.num(Math.round(fo.c))} ₽/${u}.`,`Price after launch ≈ ${FMT.num(Math.round(fo.pa))} ₽/${u} (now ${FMT.num(Math.round(fo.p))})${dr}; cost ${FMT.num(Math.round(fo.c))} ₽/${u}.`)}</span>`;
+  if(fo.m<=0)h+=`<br>⚠ <b>${L('В убыток по нынешним ценам — лучше строить другое.','A loss at today’s prices — better build something else.')}</b>`;
+  else if(fo.pay>60)h+=`<br>⚠ <b>${fo.drop>=.05?L('Окупится дольше 5 лет: рынок насыщен — выгоднее другое.','Pays back in over 5 years: the market is saturated — something else pays better.'):L('Окупится дольше 5 лет: прибыль слишком мала — выгоднее другое.','Pays back in over 5 years: the margin is too thin — something else pays better.')}</b>`;
+  return h;}
 function rReg(){const W=w(),r=curReg,el=$$('scr-reg'),st=regStats(W,r),full=st.st/st.cap;
   let h=`<div class="rh"><button class="back" data-a="back">← ${L('Карта','Map')}</button><h2>${NM.reg(r)}<small>${NM.city(r)} · ${L('в недрах чаще','mostly')} ${topGoods(r,2).map(g=>low(NM.good(g))).join(', ')}</small></h2></div>`;
   h+=`<div class="card hero">${scene(r)}</div>`;
@@ -493,13 +537,15 @@ function pjLine(W){const p=pjOffer(W,0);if(!p)return '';return `<div class="tip"
   ${p.a?`<button class="btn blue noenter w" data-a="pjl" style="margin-top:8px">🏦 ${L('Проектный кредит','Project loan')} ${M(p.a)}<small>${L(`36 мес., первые 6 — только проценты ≈ ${M(p.int)} в мес.`,`36 mo, first 6 interest only ≈ ${M(p.int)} a month`)}</small></button>`:`<p class="mut" style="font-size:15px">${L('Лимит банка исчерпан — продайте запасы или законсервируйте убыточное.','The bank limit is used up — sell stock or mothball loss-makers.')}</p>`}</div>`;}
 function pjGo(){const W=w(),p=pjOffer(W,0);if(!p||!p.a){snd('no');tst(L('Банк больше не даёт — лимит исчерпан','The bank won’t lend more — limit reached'));return;}
   if(pjTake(p)==='ok'){snd('coin');tst(L('Проектный кредит на счёте: ','Project loan received: ')+M(p.a));}else{snd('no');tst(L('Банк отказал: лимит исчерпан','The bank declined: limit reached'));}}
-function spendOk(cost,mo,what,fn,nf){const W=w(),cash=W.cash;
+function spendOk(cost,mo,what,fn,nf,fo){const W=w(),cash=W.cash;   // fo — M47b: прогноз objFore (прибыль/окупаемость) строкой в окне
   // в обучении окно не нужно, только если денег хватает на стройку и на конец месяца (M30: раньше обучение молча вело в кассовый разрыв)
-  if((tutStep()&&!(mo?pjOffer(W,cost,mo*30):buildGap(W,0))&&cost<=cash)||(cost<=cash*.3&&cost<=cash&&!(mo&&pjOffer(W,cost,mo*30))))return fn();
+  const foBad=fo&&(fo.m<=0||fo.pay>60);   // M47b: плохой прогноз — окно с предупреждением даже для небольшой траты
+  if((tutStep()&&!foBad&&!(mo?pjOffer(W,cost,mo*30):buildGap(W,0))&&cost<=cash)||(cost<=cash*.3&&cost<=cash&&!foBad&&!(mo&&pjOffer(W,cost,mo*30))))return fn();
   const left=cash-cost,fm=fixM(W),mm=left>0?Math.floor(left/fm):0,add=nf?`${L(' После пуска добавится ещё ',' After launch, add ')}${M(nf)}${L(' в месяц.',' a month.')}`:'';
   const bd=mo?Math.max(30,mo*30):0,pj=mo?pjOffer(W,cost,bd):null;
   modal(`<h2>💰 ${L('Крупная трата','A big spend')}</h2>
     <p>${what}: <b>${M(cost)}</b>${mo?L(` — платится каждый день понемногу, около ${M(cost/bd)} в день, ${mons(mo)}. Начать можно, если на счёте есть хотя бы ${M(cost*.2)}.`,` — paid a little every day, about ${M(cost/bd)} a day, for ${mons(mo)}. You can start with at least ${M(cost*.2)} in the account.`):'.'}</p>
+    ${fo?`<p class="${fo.m<=0||fo.pay>60?'tip':''}" style="margin:6px 0">${foreTxt(fo)}</p>`:''}
     ${pj?`<div class="tip">⚠ ${L(`Денег не хватит примерно на <b>${M(pj.gap)}</b>: банк велит держать ${M(E.duty(W))} на конец месяца, и без денег стройка встанет на полпути.`,`You’ll be about <b>${M(pj.gap)}</b> short: ${M(E.duty(W))} must stay for month end, and without cash the build stops halfway.`)}${pj.a?' '+L(`Проектный кредит ${M(pj.a)}: 3 года, первые 6 месяцев — только проценты (≈ ${M(pj.int)} в месяц).`,`A project loan of ${M(pj.a)}: 3 years, first 6 months interest only (≈ ${M(pj.int)} a month).`):''}</div>`:''}
     <div class="tiles"><div class="tile"><span>${L('Сейчас на счёте','In the account')}</span><b>${M(cash)}</b></div><div class="tile ${left<0||pj?'neg':mm<2?'neg':'pos'}"><span>${left<0||pj?L('Не хватит','Short by'):L('Останется','Left over')}</span><b>${M(pj?pj.gap:Math.abs(left))}</b></div></div>
     <div class="say">${face(left<0||mm<2?'worry':'calm')}<div><p>${left<0?L('Денег не хватит: стройка встанет, а если деньги кончатся совсем — банк даст овердрафт под высокий процент. Надёжнее сначала взять кредит.','Not enough money: construction will stall, and if cash runs out the bank gives an expensive overdraft. Safer to take a loan first.')
@@ -521,12 +567,12 @@ function openFac(r){const W=w();let h=`<h2>🏭 ${L('Завод','Plant')} ${reg
       <span>${L('Выпуск в месяц','Output a month')}</span><b>${FMT.qty(O.cap,O.out)} ${LANG==='en'?low(NM.good(O.out)):GEN[O.out]}</b>`;
     else h+=`<span>${L('Вместимость','Capacity')}</span><b>+${FMT.num(O.stor)} ${L('мест','units')}</b>`;
     h+=`<span>${L('Стройка','Build')}</span><b>${M(cap)} · ${mons(O.mo)}</b><span>${L('Постоянные','Fixed costs')}</span><b>${M(O.fix)} ${L('в мес.','a month')}</b></div>`;
-    if(ec)h+=`<p style="font-size:16px;margin:4px 0">${L('По нынешним ценам','At today’s prices')}: ${L('продажа','sell')} ${rub(ec.p)}, ${L('сырьё (покупка на месте) и передел','inputs (bought locally) and processing')} ${rub(ec.c)} → <b class="${ec.m>=0?'good':'bad'}">${ec.m>=0?'+':''}${M(ec.m)} ${L('в месяц','a month')}</b></p>`;
+    if(ec)h+=`<p style="font-size:16px;margin:4px 0">${L('Сырьё (покупка на месте) и передел','Inputs (bought locally) and processing')}: ${rub(ec.c)} ${L('на','per')} 1 ${NM.unit(O.out)}<br>${foreTxt(objFore(W,t,r,cap))}</p>`;   // M47b
     h+=`<button class="btn ${ok?'green':''} w noenter" data-fac="${t}"${ok?'':' disabled'}>${ok?L('Построить','Build'):L('Не хватает денег','Not enough money')}<small>${M(cap)}</small></button></div>`;}
   h+=`<div class="row"><button class="btn" id="fClose" data-esc>${L('Закрыть','Close')}</button></div>`;
   modal(h);try{modalRe=()=>openFac(r);}catch(e){}
   $$('fClose').onclick=()=>{snd('tap');closeM();};
-  document.querySelectorAll('#mcard [data-fac]').forEach(b=>b.onclick=()=>{const t=b.dataset.fac;hideModal();spendOk(E.capexOf(w(),t,r),E.OBJ[t].mo,NM.obj(t),()=>{const res=act('build',t,r,null);if(res==='ok'){snd('build');tst(L('Стройка началась: ','Construction started: ')+low(NM.obj(t)));tutRoute(t,r);}setTimeout(nextQ,60);},E.OBJ[t].fix);});}
+  document.querySelectorAll('#mcard [data-fac]').forEach(b=>b.onclick=()=>{const t=b.dataset.fac;hideModal();spendOk(E.capexOf(w(),t,r),E.OBJ[t].mo,NM.obj(t),()=>{const res=act('build',t,r,null);if(res==='ok'){snd('build');tst(L('Стройка началась: ','Construction started: ')+low(NM.obj(t)));tutRoute(t,r);}setTimeout(nextQ,60);},E.OBJ[t].fix,objFore(w(),t,r,E.capexOf(w(),t,r)));});}
 
 /* ================= объекты ================= */
 // «Объекты»: компактные строки (значок, название, состояние) — подробности открываются нажатием; фильтр «⚠ проблемы», проблемные — первыми
@@ -654,7 +700,7 @@ function onClick(e){const b=e.target.closest('[data-a]');if(!b||b.disabled)retur
     case 'buyD':{const p=E.plotById(W,id);spendOk(p.direct,0,L('Лицензия','Licence'),()=>{const r=act('buyDirect',id);if(r==='ok'){snd('coin');tst(L('Лицензия ваша!','The licence is yours!'));}});break;}
     case 'passD':act('passDirect',id);tst(L('Участок выставлен на торги','The plot is up for auction'));break;
     case 'auc':openAuc(id);break;
-    case 'bmine':{const p=E.plotById(W,id),t=E.MINE_OF[p.dep.g];spendOk(E.capexOf(W,t,p.r,id),W.tut&&t==='coalpit'&&!W.obj.length?1:E.OBJ[t].mo,NM.obj(t),()=>{const r=act('build',t,p.r,id);if(r==='ok'){snd('build');tst(L('Стройка началась: ','Construction started: ')+low(NM.obj(t)));tutCip(id);}},E.OBJ[t].fix);break;}
+    case 'bmine':{const p=E.plotById(W,id),t=E.MINE_OF[p.dep.g];spendOk(E.capexOf(W,t,p.r,id),W.tut&&t==='coalpit'&&!W.obj.length?1:E.OBJ[t].mo,NM.obj(t),()=>{const r=act('build',t,p.r,id);if(r==='ok'){snd('build');tst(L('Стройка началась: ','Construction started: ')+low(NM.obj(t)));tutCip(id);}},E.OBJ[t].fix,objFore(W,t,p.r,E.capexOf(W,t,p.r,id),p.dep));break;}
     case 'bfac':openFac(curReg);break;
     case 'up':{const o=W.obj.find(x=>x.id===id);spendOk(E.upCost(W,o),Math.ceil(E.OBJ[o.t].mo/2)+1,L('Модернизация','Upgrade'),()=>{const r=act('upgrade',id);if(r==='ok'){snd('build');tst(L('Модернизация началась','Upgrade started'));}},E.OBJ[o.t].fix*.3);break;}
     case 'spd':{const o=W.obj.find(x=>x.id===id);crAsk(GAME.CR.speed,(o?NM.obj(o.t)+': ':'')+L('готово на 15 дней раньше','done 15 days sooner'),()=>{const r=GAME.speedBuild(id);if(r==='cr')crNo();else if(r==='ok'){snd('build');tst(L('Ускорили: на 15 дней раньше','Sped up: 15 days sooner'));}});break;}
@@ -688,7 +734,7 @@ function openClose(rep){if(BZ()&&BZ().openClose&&BZ().openClose(rep))return;cons
   if(tutOn()&&!S.tut.c1){S.tut.c1=1;save();tut+=`<p>${L(`Это первый отчёт. <b>Выручка</b> — сколько получили за проданное. <b>Затраты</b> — добыча, зарплаты, перевозки, офис, проценты и налог. <b>Прибыль</b> = выручка − затраты. <b>Деньги на конец</b> отличаются от прибыли: стройка тратит деньги, но расходом не считается — это вложение в имущество.`,`This is your first report. <b>Revenue</b> is what we got for sales. <b>Costs</b> are mining, wages, freight, office, interest and tax. <b>Profit</b> = revenue − costs. <b>Cash at month end</b> differs from profit: construction spends cash but isn’t an expense — it’s an investment in assets.`)}</p><p>${L(`Баланс сошёлся: имущество = долги + капитал, расхождение — ${rub(rep.bal.diff)}. У меня всегда так.`,`The balance sheet balances: assets = debt + equity, difference ${rub(rep.bal.diff)}. Always, with me.`)}</p>`;}
   if(tutOn()&&rep.m%12===11&&!S.tut.year){S.tut.year=1;save();tut+=`<p><b>${L('Первый год позади!','The first year is behind us!')}</b> ${L('Вы прошли весь путь: разведка, лицензия, стройка, продажи, отчёты. Дальше — сами: растите, стройте заводы, а при стоимости от '+M(E.IPO_EQ)+' — IPO.','You’ve walked the whole path: exploration, licence, construction, sales, reports. Now it’s up to you: grow, build plants and at '+M(E.IPO_EQ)+' of value — IPO.')}</p>`;}
   const tile=(t,v,c)=>`<div class="tile ${c||''}"><span>${t}</span><b>${M(v)}</b></div>`;
-  modal(`<h2>${L('Закрытие месяца','Month closed')}: ${LANG==='en'?FMT.date(rep.m):low(FMT.date(rep.m))}</h2><p class="mut" style="text-align:center;margin-top:-6px;font-size:15px">${L('Людмила Санна свела отчёты','Lyudmila Sanna has closed the books')}</p>
+  modalH(`<h2>${L('Закрытие месяца','Month closed')}: ${LANG==='en'?FMT.date(rep.m):low(FMT.date(rep.m))}</h2><p class="mut" style="text-align:center;margin-top:-6px;font-size:15px">${L('Людмила Санна свела отчёты','Lyudmila Sanna has closed the books')}</p>
     <div class="chero"><div class="mut">${net>=0?L('Чистая прибыль за месяц','Net profit for the month'):L('Убыток за месяц','Loss for the month')}</div><div class="cbig ${net>=0?'up':'dn'}">${net>0?'+':''}${M(net)}</div>${dn!=null?`<div class="mut">${dn>=0?'▲':'▼'} ${L(`на ${M(Math.abs(dn))} ${dn>=0?'больше':'меньше'}, чем в ${MPREP[pr0.m%12]}`,`${M(Math.abs(dn))} ${dn>=0?'more':'less'} than in ${FMT.date(pr0.m).split(' ')[0]}`)}</div>`:''}</div>
     <div class="clist"><div><span>${L('Выручка','Revenue')}</span><b>${M(p.rev)}</b></div><div><span>${L('Затраты','Costs')}</span><b>${M(cost)}</b></div><div><span>${L('Деньги на конец','Cash at month end')}</span><b class="${rep.c1<0||(!window.CASHUI&&odA)?'dn':''}">${M(rep.c1)}</b></div></div>
     ${window.CASHUI?CASHUI.closeOd(rep):odA?`<p class="bad" style="font-size:16px;margin-top:4px">⚠ ${L(`Из них ${M(odA)} — овердрафт банка под ${FMT.pct(W.key+.08,1)} годовых: своих денег не хватило. Вернуть — в конце следующего месяца.`,`Of this, ${M(odA)} is a bank overdraft at ${FMT.pct(W.key+.08,1)} a year: our own cash ran out. It is repaid at the end of next month.`)}</p>`:''}
@@ -733,7 +779,7 @@ function openOffline(s){if(BZ()&&BZ().offline(s))return;const W=w(),mo=s.months|
   h+=`<p class="mut" style="font-size:16px">${L(`Смена управляющего — ${GAME.shiftH()} ч`,`The manager’s shift is ${GAME.shiftH()} h`)}${canPay?L(', с «Управляющим» — '+GAME.SHIFT_MGR_H+' ч',', with the “Manager” — 8 h'):''}.</p>`;
   h+=`${window.STORYUI&&STORYUI.awayHtml?STORYUI.awayHtml():''}<div class="row">${more>0&&mgrOwn()?`<button class="btn accent noenter" id="oExtM">⏱ ${L('Продлить смену','Extend the shift')}<small>+${days(more)} · ${L('управляющий','manager')}</small></button>`:more>0&&adOk()?`<button class="btn accent noenter" id="oExt">📺 ${L('Продлить смену за рекламу','Extend the shift for an ad')}<small>+${days(more)}</small></button>`:''}
     <button class="btn green" id="oOk">${L('К делам','Back to work')}</button>${canPay?`<button class="btn noenter" id="oShop">🛒 ${L('Управляющий на '+GAME.SHIFT_MGR_H+' ч',GAME.SHIFT_MGR_H+'-hour manager')}</button>`:''}</div>`;
-  modal(h);try{modalRe=()=>openOffline(s);}catch(e){}
+  modalH(h);try{modalRe=()=>openOffline(s);}catch(e){}
   $$('oOk').onclick=()=>{snd('tap');closeM();if(!s.ext&&BZ()&&BZ().offAd)BZ().offAd();};
   if($$('oExt'))$$('oExt').onclick=()=>{if(adHold('shift'))return;hideModal();STAT.place('shift');showRewarded(()=>{shiftStat('ad');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);},()=>setTimeout(nextQ,60));};
   if($$('oExtM'))$$('oExtM').onclick=()=>{snd('tap');hideModal();shiftStat('mgr');const r=GAME.extendShift();if(!r)setTimeout(nextQ,60);};   // M36: с «Управляющим» — без ролика
@@ -745,19 +791,20 @@ function shiftStat(k){if(k==='ad')S.shAd=(S.shAd|0)+1;try{STAT.ev('shift',k==='a
 window.mgrOwn=mgrOwn;window.shiftStat=shiftStat;
 /* ================= окно: торги ================= */
 function openAuc(aid){const W=w(),a=E.aucById(W,aid);if(!a||a.done){tst(L('Торги уже закончились','The auction is over'));return;}
-  const p=E.plotById(W,a.p),left=Math.max(0,a.end-W.t),lim=a.V*.6,next=a.lead?a.pr+a.step:a.pr;
+  const p=E.plotById(W,a.p),left=Math.max(0,a.end-W.t),lim=a.V*LIC_K,next=a.lead?a.pr+a.step:a.pr;
   const lead=a.lead==='you'?L('вы','you'):a.lead?NM.bot(a.lead):L('пока никого','no one yet');
   const bots=a.bots.map(b=>`<span><i style="background:${botCol(b.id)}"></i>${esc(NM.bot(b.id))}</span>`).join('');
   const over=next>lim,mt=E.MINE_OF[a.g],mc=mt?E.capexOf(W,mt,a.r,a.p):0,after=W.cash-next;
-  const warn=a.lead==='you'||!mc?'':after<mc*.2?`<div class="tip" style="border-color:var(--bad)">⚠️ ${L(`После ставки останется ${M(after)} — на стройку рудника (${M(mc)}, сразу нужно ${M(mc*.2)}) не хватит. Понадобится кредит.`,`After this bid you’d have ${M(after)} — not enough to build the mine (${M(mc)}, ${M(mc*.2)} up front). You’ll need a loan.`)}</div>`
+  const bpA=mc&&a.lead!=='you'&&E.buildPlan?E.buildPlan(W,mc+next,E.OBJ[mt].mo*30):null;   // M47b: лицензия + стройка — хватит ли даже с проектным кредитом
+  const warn=a.lead==='you'||!mc?'':bpA&&bpA.kind==='no'?`<div class="tip" style="border-color:var(--bad)">⚠️ ${L(`После ставки ${M(next)} на стройку рудника (${M(mc)}) не хватит даже с проектным кредитом — стройка встанет. Выше не поднимайте.`,`After a ${M(next)} bid there won’t be enough for the mine (${M(mc)}) even with a project loan — construction would stall. Don’t go higher.`)}</div>`:after<mc*.2?`<div class="tip" style="border-color:var(--bad)">⚠️ ${L(`После ставки останется ${M(after)} — на стройку рудника (${M(mc)}, сразу нужно ${M(mc*.2)}) не хватит. Понадобится кредит.`,`After this bid you’d have ${M(after)} — not enough to build the mine (${M(mc)}, ${M(mc*.2)} up front). You’ll need a loan.`)}</div>`
     :after<mc?`<div class="tip">${L(`После ставки останется ${M(after)}: на рудник (${M(mc)}) хватит на начало стройки, остальное — из выручки или кредита.`,`After this bid you’d have ${M(after)}: enough to start the mine (${M(mc)}), the rest from revenue or a loan.`)}</div>`:'';
   const msg=aucMsg[aid]?`<div class="tip">${aucMsg[aid]}</div>`:'';
-  modal(`<h2>🔨 ${L('Торги','Auction')}: ${NM.good(a.g)}</h2>
+  modalH(`<h2>🔨 ${L('Торги','Auction')}: ${NM.good(a.g)}</h2>
     <p class="mut" style="text-align:center;margin-top:-4px">${NM.reg(a.r)} · ${plotNo(p)} · ${L('до конца','ends in')} ${days(left)}</p>
     <div class="bidp"><span class="mut">${L('Текущая цена','Current price')}</span><b class="pr">${M(a.pr)}</b><span>${L('Лидер','Leader')}: <b>${esc(lead)}</b></span></div>${msg}
     ${depFacts(W,p)}
     <div class="lbl" style="text-align:center">${L('Кто торгуется','Bidders')}</div><div class="who">${bots||`<span>${L('соперников нет','no rivals')}</span>`}</div>
-    <div class="say">${face(over?'worry':'calm')}<div><p>${L(`Оценка участка — ${M(a.V)}. Разумный предел — около 0,6 оценки: <b>${M(lim)}</b>. Дороже — рудник будет окупаться слишком долго.`,`The plot is estimated at ${M(a.V)}. A sensible limit is about 0.6 of that: <b>${M(lim)}</b>. Higher, and the mine takes too long to pay off.`)}</p></div></div>
+    <div class="say">${face(over?'worry':'calm')}<div><p>${L(`Оценка участка — ${M(a.V)} (столько рудник заработает после налога сверх стройки). Разумный предел — около 0,6 оценки: <b>${M(lim)}</b>. Дороже — рудник будет окупаться слишком долго.`,`The plot is estimated at ${M(a.V)} (what the mine earns after tax beyond construction). A sensible limit is about 0.6 of that: <b>${M(lim)}</b>. Higher, and the mine takes too long to pay off.`)} ${licWhy()}</p></div></div>
     <div class="row">${a.lead==='you'?`<p class="good" style="text-align:center;margin:0"><b>${L('Вы лидируете!','You’re leading!')}</b> ${L('Если никто не перебьёт до конца торгов — лицензия ваша.','If nobody outbids you by the end, the licence is yours.')}</p><button class="btn green noenter" id="aPass">✅ ${L('Забрать лицензию за ','Take the licence for ')}${M(a.pr)}</button>`
       :`<button class="btn ${over?'':'accent'} noenter" id="aUp">${a.lead?L('Поднять до ','Raise to '):L('Вступить: ','Bid: ')}${M(next)}${over?`<small>${L('дороже разумного предела','above the sensible limit')}</small>`:''}</button>${a.lead?`<button class="btn noenter" id="aPass">${L('Пас — выйти из торгов','Pass — leave the auction')}</button>`:''}`}
     ${warn}<button class="btn" id="aLater" data-esc>${L('Решить позже','Decide later')}</button></div>`);
@@ -1091,17 +1138,27 @@ function openRename(){const W=w();modal(`<h2>✎ ${L('Название холд�
 
 /* ================= скорость времени: ⏸ / ×1 / ×2 (GAME.setSpeed, если есть) ================= */
 function spdNow(){try{return typeof GAME.speed==='function'?GAME.speed():1;}catch(e){return 1;}}
-function spdBtnUpd(){const b=$$('spdBtn');if(!b)return;const ok=typeof GAME.setSpeed==='function';b.style.display=ok?'':'none';if(!ok)return;
+function spdBtnUpd(){try{if(typeof rdUi==='function')rdUi();}catch(e){}const b=$$('spdBtn');if(!b)return;const ok=typeof GAME.setSpeed==='function';b.style.display=ok?'':'none';if(!ok)return;
   const v=spdNow(),au=v!==0&&!modalOn&&!GAME.running();   // M46: авто-пауза («читаю», совет) — на кнопке «▶ дальше»: одно нажатие запускает время
-  const bt=au?'▶':v===0?'⏸':v===2?'×2':'×1',bh=`<small class="hb-cap">${au?L('дальше','resume'):v===0?L('пауза','paused'):L('скорость','speed')}</small><b>${bt}</b>`;if(b.innerHTML!==bh)b.innerHTML=bh;   // M41: «×1» с подписью «скорость» (игрок 45+ не понимал значка)
-  b.classList.toggle('on2',v===2);b.classList.toggle('on0',v===0);
-  b.classList.toggle('au',au);b.setAttribute('aria-label',au?L('Время стоит — нажмите, чтобы пошло','Time is paused — tap to run'):v===0?L('Время стоит — нажмите, чтобы пошло','Time is paused — tap to run'):v===2?L('Быстрее вдвое','Double speed'):L('Обычная скорость','Normal speed'));}
+  const bt=au?'▶':v===4?'×4':v===2?'×2':'×1',bh=`<small class="hb-cap">${au?L('дальше','resume'):L('скорость','speed')}</small><b>${bt}</b>`;   // M47: пауза — на своей кнопке #psBtn
+ if(b.innerHTML!==bh)b.innerHTML=bh;   // M41: «×1» с подписью «скорость» (игрок 45+ не понимал значка)
+  b.classList.toggle('on2',v>=2);b.classList.remove('on0');
+  {const p=$$('psBtn');if(p){p.style.display='';h2Order();   // во второй строке, рядом с полосой месяца (после ★); M47h: + разрыв строки и ×1, если он внизу
+    const ph=`<small class="hb-cap">${v===0?L('дальше','resume'):L('пауза','pause')}</small><b>${v===0?'▶':'⏸'}</b>`;if(p.innerHTML!==ph)p.innerHTML=ph;p.classList.toggle('on0',v===0);
+    p.setAttribute('aria-label',v===0?L('Пауза. Нажмите — время пойдёт','Paused. Tap to run time'):L('Поставить на паузу','Pause'));}}   // M47
+  b.classList.toggle('au',au);b.setAttribute('aria-label',au?L('Время стоит — нажмите, чтобы пошло','Time is paused — tap to run'):v===0?L('Время стоит — нажмите, чтобы пошло','Time is paused — tap to run'):v===4?L('Быстрее вчетверо (тест)','4× speed (test)'):v===2?L('Быстрее вдвое','Double speed'):L('Обычная скорость','Normal speed'));}
 // M46: одно нажатие ВСЕГДА запускает время: стоит авто-пауза («читаю», совет, словарик) — снимаем её, скорость не трогаем; стоит своя ⏸ — ×1 и тоже снимаем авто-паузы
 function spdCycle(){if(typeof GAME.setSpeed!=='function')return;const v=spdNow(),rs=()=>{try{return typeof resumeNow==='function'?resumeNow():GAME.running();}catch(e){return GAME.running();}};
-  if(v!==0&&!GAME.running()){const ok=rs();snd('tap');spdBtnUpd();hdr();tst(ok?L('▶ Время идёт','▶ Time is running'):L('Время стоит, пока открыта подсказка — закройте её','Time stands while a tip is open — close it'),1500);return;}
-  if(v===0){GAME.setSpeed(1);rs();snd('tap');spdBtnUpd();hdr();tst(L('▶ Обычная скорость','▶ Normal speed'),1500);return;}
-  const n=v===1?2:0;GAME.setSpeed(n);snd('tap');spdBtnUpd();hdr();
-  tst(n===0?L('⏸ Время остановлено','⏸ Time paused'):n===2?L('⏩ Время идёт вдвое быстрее','⏩ Double speed'):L('▶ Обычная скорость','▶ Normal speed'),1500);}
+  const why=()=>{let t='';try{t=typeof pauseReason==='function'?pauseReason():'';}catch(e){}return t||L('Время пока стоит','Time is stopped for now');};
+  if(v!==0&&!GAME.running()){const ok=rs();snd('tap');spdBtnUpd();hdr();tst(ok?L('▶ Время идёт','▶ Time is running'):why(),ok?1500:2600);return;}
+  if(v===0){GAME.setSpeed(1);const ok=rs();snd('tap');spdBtnUpd();hdr();tst(ok?L('▶ Время идёт','▶ Time is running'):why(),ok?1500:2600);return;}
+  // M47 (аудит гл.1–2): кнопка скорости — только ×1 ⇄ ×2 (раньше третье нажатие ставило ⏸ и игрок «застревал»); пауза — отдельная кнопка #psBtn
+  const n=v===1?2:v===2&&typeof BETA!=='undefined'&&BETA?4:1;GAME.setSpeed(n);snd('tap');spdBtnUpd();hdr();   // M47: в бете ×1→×2→×4→×1
+  tst(n===4?L('⏩ ×4 — тестовая скорость','⏩ ×4 — test speed'):n===2?L('⏩ Время идёт вдвое быстрее','⏩ Double speed'):L('▶ Обычная скорость','▶ Normal speed'),1500);}
+// M47: своя пауза — отдельной кнопкой ⏸ рядом со скоростью; при паузе на ней «▶ дальше»
+function psClick(){if(typeof GAME.setSpeed!=='function')return;const v=spdNow();snd('tap');
+  if(v===0){GAME.setSpeed(1);let ok=true;try{ok=typeof resumeNow==='function'?resumeNow():GAME.running();}catch(e){}spdBtnUpd();hdr();let t='';try{t=ok?'':(typeof pauseReason==='function'?pauseReason():'');}catch(e){}tst(t||L('▶ Время идёт','▶ Time is running'),t?2600:1500);return;}
+  GAME.setSpeed(0);spdBtnUpd();hdr();tst(L('⏸ Пауза — время остановлено. «▶» — продолжить','⏸ Paused — time stopped. “▶” — continue'),1800);}
 
 /* ================= крупный шрифт (S.big) ================= */
 function applyBig(){document.body.classList.toggle('big',!!S.big);}
@@ -1119,13 +1176,15 @@ function init(){
   $$('btnSet').onclick=()=>{snd('tap');try{openSettings();}catch(e){}};
   $$('main').addEventListener('click',onClick);applyBig();modalWatch();try{navObs();}catch(e){}
   const hn=document.querySelector('.hname');if(hn){hn.style.cursor='pointer';hn.onclick=()=>{if(BZ()&&BZ().hname(w()))return;snd('tap');openRename();};}
-  if($$('spdBtn'))$$('spdBtn').onclick=spdCycle;
+  if($$('spdBtn'))$$('spdBtn').onclick=spdCycle;if($$('psBtn'))$$('psBtn').onclick=psClick;   // M47
   {const hm=document.querySelector('#hdr .hmon');if(hm)hm.addEventListener('click',()=>{if(!GAME.running()&&!modalOn)spdCycle();});}   // M46: нажатие на «⏸ день N» — тоже «продолжить»
   $$('advMin').innerHTML=face('calm');$$('advMin').onclick=advOpen;
   GAME.on('change',()=>refresh('change'));GAME.on('day',()=>refresh('day'));
   GAME.on('close',rep=>{refresh('close');showQ(()=>openClose(rep));});
-  GAME.on('offline',s=>{liveSync();const sh=()=>{if(Date.now()-lastIn<1200){setTimeout(sh,700);return;}showQ(()=>openOffline(s));};sh();});
-  GAME.on('day',onDayLive);GAME.on('ipo',liveSync);
+  // M47b (аудит №11): короткая отлучка (< 10 мин, без закрытия месяца и построек) — тихий тост вместо окна «Пока вас не было» (окно снова стоит время)
+  GAME.on('offline',s=>{liveSync();if(s&&!s.ext&&!(s.more>0)&&(s.el||0)<OFF_WIN_MS&&!(s.months>0)&&!(s.built&&s.built.length)&&!(s.ev&&s.ev.length)&&!(s.auc&&s.auc.length)){tst('⏱ '+L(`Пока вас не было: ${days(s.days||0)} · деньги ${M(s.cash0)} → ${M(s.cash1)}`,`While you were away: ${days(s.days||0)} · cash ${M(s.cash0)} → ${M(s.cash1)}`));return;}
+    const sh=()=>{if(Date.now()-lastIn<1200){setTimeout(sh,700);return;}showQ(()=>openOffline(s));};sh();});
+  GAME.on('day',onDayLive);GAME.on('ipo',liveSync);GAME.on('rollback',liveSync);   // M48rb
   GAME.on('found',onFound);GAME.on('built',onBuilt);GAME.on('auc',onAuc);GAME.on('cr',onCr);
   GAME.on('upgraded',oid=>{const o=w().obj.find(x=>x.id===oid);snd('build');if(o)tst(L('Модернизация завершена: ','Upgrade finished: ')+low(NM.obj(o.t)));});
   GAME.on('ipo',()=>{hlSel=null;refresh();});
@@ -1159,7 +1218,7 @@ function back(){navIntent('back');if($$('adv').classList.contains('on')){advHide
   document.addEventListener('pointerdown',e=>{x0=-1;if(e.clientX<24&&!(typeof modalOn!=='undefined'&&modalOn)&&!e.target.closest('#modal,#phone,.ph-body')){x0=e.clientX;y0=e.clientY;t0=Date.now();}},{passive:true});
   document.addEventListener('pointerup',e=>{if(x0<0)return;const dx=e.clientX-x0,dy=Math.abs(e.clientY-y0);x0=-1;if(dx>80&&dy<60&&Date.now()-t0<800){snd('tap');back();}},{passive:true});
   document.addEventListener('pointercancel',()=>{x0=-1;},{passive:true});})();
-window.UI={hdr,fly,salute,pulse:pulseEl,tweenNum,face,TAB_DEF,buildNav,init,refresh,go,back,restartTut,idleTest:()=>{lastIn=0;lastIdle=0;idleWait=0;idleTick();return advCur&&advCur.key;},show:t=>go(t),openRegion:r=>go('reg',r),render,openHow,openAuc,openClose,openOffline,openIpo,openFac,openRoute,adv:advShow,advOpen,tutStep,
+window.UI={objFore,hdr,fly,salute,pulse:pulseEl,tweenNum,face,TAB_DEF,buildNav,init,refresh,go,back,restartTut,idleTest:()=>{lastIn=0;lastIdle=0;idleWait=0;idleTick();return advCur&&advCur.key;},show:t=>go(t),openRegion:r=>go('reg',r),render,openHow,openAuc,openClose,openOffline,openIpo,openFac,openRoute,adv:advShow,advOpen,tutStep,
   navSync,navKey,navIntent,navMem:()=>NAV,
   get cur(){return cur;},get reg(){return curReg;}};
 init();

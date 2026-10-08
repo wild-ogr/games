@@ -93,6 +93,7 @@ const OFP={'b:brAd':'breath','b:urgAd':'urg','b:gx2':'x2','b:gchk':'chk','b:prom
   'a:conext':'conext','ra:chkAd':'rechk','ra:boost':'reboost','mt:x2':'planx2','mt:giftx2':'planx2','mt:passgx2':'passx2','mt:passx2':'passx2','mt:boost':'boost','mt:lad':'ladder',
   'id:ladFlat':'ladder','id:crAd':'ladder','id:shAd':'ladder','id:rwX2':'rw','id:oExt':'shift','id:bzOx':'shift'};
 function ofKey(b){const d=b.dataset||{};for(const k of ['a','b','ra','mt'])if(d[k])return OFP[k+':'+d[k]]||null;if(b.id&&OFP['id:'+b.id])return OFP['id:'+b.id];
+  if(d.cb&&String(d.cb).indexOf('x2:')===0)return 'rw_rk';   // M47: ×2 за звание в «Новое» Кабинета
   if(d.thbuy||d.th&&String(d.th).indexOf('buy:')===0)return 'theme';return null;}
 let ofSeen={};
 setInterval(()=>{if(document.hidden||typeof adBtns!=='function')return;const now={};try{const q=adBtns();for(let i=0;i<q.length;i++){if(!q[i].offsetParent)continue;const p=ofKey(q[i]);if(p)now[p]=1;}}catch(e){}
@@ -102,4 +103,20 @@ try{const H=window.BIZUI&&BIZUI.h;if(H&&typeof H.modalYes==='function'&&!H.__st)
   H.modalYes=function(title,text,yes,fn,no){let dn=0;const mark=a=>{if(dn)return;dn=1;STAT.ev('cfm',{k:'opt',a});};STAT.ev('cfm',{k:'opt',a:'show'});
     const r=m0.call(this,title,text,yes,function(){mark('yes');return fn.apply(this,arguments);},no);
     try{const b=document.getElementById('bzYN');if(b)b.addEventListener('click',()=>mark('no'));}catch(e){}return r;};}}catch(e){}
+// M47d (аудит-4 №18): игровая пауза — сколько и почему время холдинга стоит при открытой вкладке (жалоба «пауза» — по цифрам, а не догадками).
+// tpz {why, s, n}: причина, секунд за последние ~30 с, отрезков ≥ 5 с. why: win — окно; read/gl/advb/tut/pro/broken — GAME.hold; ad/pay/sdk — пауза площадки;
+// spd — своя ⏸. Свёрнутая вкладка — не здесь (модуль сам шлёт pause). Длинная остановка режется по 30 с — сумма s верная.
+(function(){let cur='',t0=0;const acc={};
+  const why=()=>{const w=W();if(!w||document.hidden)return '';try{if(GAME.running())return '';}catch(e){return '';}
+    if(typeof modalOn!=='undefined'&&modalOn)return 'win';
+    if(GAME.hold&&GAME.hold.size)return Array.from(GAME.hold)[0];
+    if(typeof paused!=='undefined'&&paused){try{return Array.from(pauseWhy).filter(x=>x!=='hide')[0]||'';}catch(e){return 'plat';}}
+    return 'spd';};
+  const end=now=>{if(cur&&t0){const s=(now-t0)/1000;if(s>=5){const a=acc[cur]||(acc[cur]={s:0,n:0});a.s+=s;a.n++;}}cur='';t0=0;};
+  const flush=()=>{for(const k in acc){STAT.ev('tpz',{why:k,s:Math.round(acc[k].s),n:acc[k].n});delete acc[k];}};
+  setInterval(()=>{const now=Date.now(),y=why();if(y!==cur){end(now);if(y){cur=y;t0=now;}}},1000);
+  setInterval(()=>{const now=Date.now();if(cur&&now-t0>=5000){const c=cur;end(now);cur=c;t0=now;}flush();},30000);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){end(Date.now());flush();}});
+  window.addEventListener('pagehide',()=>{end(Date.now());flush();});
+  window.__tpz=()=>({cur,t0,acc});})();
 })();

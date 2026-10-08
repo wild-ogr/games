@@ -86,7 +86,7 @@ function RR(W,a,b){return a+(b-a)*R(W);}
 function pick(W,o){let s=0;for(const k in o)s+=o[k];let x=R(W)*Math.max(1,s),acc=0;for(const k in o){acc+=o[k];if(x<acc)return k;}return null;}
 
 /* ---------------- мир ---------------- */
-function emptyMon(W){return {c0:W.cash,pl:{rev:0,cogs:0,fix:0,log:0,adm:0,expl:0,dep:0,oth:0,int:0,tax:0,jv:0},
+function emptyMon(W){return {c0:W.cash,pl:{rev:0,cogs:0,fix:0,log:0,adm:0,expl:0,dep:0,oth:0,int:0,tax:0,jv:0,dv:0},
   cf:{sales:0,supp:0,prod:0,fix:0,log:0,adm:0,expl:0,oth:0,int:0,tax:0,capex:0,lic:0,wag:0,asale:0,jvin:0,div:0,lend:0,loan:0,repay:0,eqin:0,drw:0},prod:{},sold:{},bought:{},rev:{},cg:{},sg:{}};}
 function newDeposit(W,r,force){const g=force||pick(W,Object.assign({},REGS[r].p,{_:.2}));if(!g||g==='_')return null;const d=DEP[g],q=R(W);
   return {g,res:rnd0(RR(W,d.res[0],d.res[1])/1000)*1000,vc:rnd0((d.vc[0]+(d.vc[1]-d.vc[0])*q)/10)*10,cm:Math.round(RR(W,1,1.3)*100)/100};}
@@ -96,9 +96,10 @@ function freshMk(W){for(const g of GL){W.mk[g]={i:1,tg:1,s30:0,p0:0,sh:0,shT:0,V
 function newWorld(o){o=o||{};const seed=(o.seed>>>0)||((Math.random()*4e9)>>>0)||7;const rags=!!o.rags;
   const W={v:1,fv:FMT_V,seed,rs:seed,t:0,m:o.m0||0,d:0,rep:o.rep||0,hold:o.hold||1,tut:rags?false:o.tut!==false,
     cash:0,cap:0,ret:0,lossCF:0,inv:{},tr:[],obj:[],nid:1,plots:{},auc:[],loans:[],wag:{n:0,g:0,dep:0,busy:[]},
-    mk:{},own:{},key:.16,auto:{},routes:[],offers:[],cons:[],bots:[],ev:[],news:[],hist:[],reps:[],od:0,odM:0,san:0,ach:{},stat:{sold:0,built:0,expl:0},
+    mk:{},own:{},key:.16,auto:{},routes:[],offers:[],cons:[],bots:[],ev:[],news:[],hist:[],reps:[],od:0,odM:0,san:0,rbg:0,ach:{},stat:{sold:0,built:0,expl:0},
     st:rags?'gig':'nedra',ned:false,home:o.home||'kuz',me:null,biz:[],rec:[],taxm:rags?'npd':'osno',ch:rags?0:60,les:{},partner:null,
     pk:Object.assign({},o.pk||{}),bst:0,bstN:0,qg:null,lx:{},use:{},drw:0};
+  if(o.dv>0)W.dv=rnd0(o.dv);   // M47c: дивиденды по акциям прошлых холдингов, ₽ в месяц (платит nedra.js при закрытии месяца)
   freshMk(W);
   for(const r of REG){W.inv[r]={};W.auto[r]={};for(const g of GL){W.inv[r][g]={q:0,v:0};W.auto[r][g]=true;}W.plots[r]=[];}
   W.mon=emptyMon(W);
@@ -128,9 +129,18 @@ function initNedra(W,o){o=o||{};W.ned=true;W.st='nedra';freshMk(W);W.bots=[];W.a
   news(W,'start',o.pa?{c,pa:1}:{c});   // pa — это взнос партнёра при входе в «Недра» (не уставный капитал нового холдинга)
   return W;}
 /* ---------------- престиж: «Доля основателя» (улучшения навсегда, W.pk — копия S.pk игрока на момент создания мира) ----------------
-   geo — разведка −15 % цены и −10 % срока за уровень; bank — ставка −1 п. (недра); logi — ж/д тариф −10 %; brig — стройка −10 % срока;
-   vert — заводы на своём переделе: постоянные −10 %, переработка −20 %; heir — ещё один участок «наследства» в начале холдинга */
-const PERKS={geo:{max:3},bank:{max:3},logi:{max:3},brig:{max:3},vert:{max:3},heir:{max:2}};
+   M47c: улучшения покупаются за доли основателя (c — цена уровня 1, 2, 3 в долях; game.js perkBuy), эффект ×1,5 к прежнему:
+   geo — разведка −20 % цены и −15 % срока за уровень; bank — ставка −1,5 п. (недра); logi — ж/д тариф −15 %; brig — стройка −15 % срока;
+   vert — заводы передела: постоянные −15 %, переработка −25 %; heir — ещё один участок «наследства» в начале холдинга */
+const PERKS={geo:{max:3,c:[5,8,12]},bank:{max:3,c:[5,8,12]},logi:{max:3,c:[4,6,9]},brig:{max:3,c:[5,8,12]},vert:{max:3,c:[4,6,9]},heir:{max:2,c:[6,10]}};
+const PK_X={geo:.2,geoD:.15,bank:.015,logi:.15,brig:.15,vertF:.15,vertV:.25};
+function perkCost(k,lv){const P=PERKS[k];return P&&lv<P.max?P.c[lv]:null;}
+/* M47c: доли основателя за IPO = 1 доля на 150 млн стоимости (2,2 млрд → 14), +10 % за каждое направление с работающим заводом передела
+   (лес, сталь, медь — «биржа ценит полный цикл»); дивиденды по оставшимся акциям — 25 % годовой прибыли холдинга в год, ежемесячно, навсегда */
+const SH_UNIT=150e6,SH_CHAIN=.1,DV_K=.25;
+function chainSegs(W){const s={};for(const o of W&&W.obj||[])if(o.st==='w'&&!o.off&&OBJ[o.t]&&OBJ[o.t].in)s[OBJ[o.t].seg]=1;return Object.keys(s);}
+function ipoShares(W,v){v=v==null?equity(W):v;const n=chainSegs(W).length;return Math.max(1,Math.floor(Math.max(0,v)/SH_UNIT*(1+SH_CHAIN*n)));}
+function ipoDv(W){const h=(W.hist||[]).slice(-12);let np=0;for(const x of h)np+=x.np;return rnd0((W.dv||0)+Math.max(0,np)*DV_K/12);}
 function pkL(W,k){const x=W&&W.pk&&W.pk[k];return typeof x==='number'&&x>0?Math.min(x,PERKS[k]?PERKS[k].max:0):0;}
 // участок «наследства»: хороший уголь/руда в родном регионе (или любом), найден, лицензия без торгов за 25–35 % оценки
 function legacy(W){const home=W.home&&W.plots[W.home]?W.home:'kuz',regs=[home].concat(REG.filter(r=>r!==home));
@@ -140,7 +150,7 @@ function legacy(W){const home=W.home&&W.plots[W.home]?W.home:'kuz',regs=[home].c
     if(!best)continue;p.dep=best;p.st='found';p.leg=1;p.direct=Math.max(1e6,rnd0(depVal(W,r,best)*RR(W,.25,.35)/1e6)*1e6);news(W,'found',{p:p.id,r,g:best.g,leg:1});return p;}
   return null;}
 // применить улучшения к уже стоящим объектам (после выбора в окне IPO) и к новым (build)
-function applyPerks(W){const l=pkL(W,'vert');for(const o of W.obj){const O=OBJ[o.t];if(!O||!O.in)continue;o.fk=l?1-.1*l:undefined;if(!o.fk)delete o.fk;o.vc=rnd0((O.vc||0)*(1-.2*l));}}
+function applyPerks(W){const l=pkL(W,'vert');for(const o of W.obj){const O=OBJ[o.t];if(!O||!O.in)continue;o.fk=l?1-PK_X.vertF*l:undefined;if(!o.fk)delete o.fk;o.vc=rnd0((O.vc||0)*(1-PK_X.vertV*l));}}
 // планка IPO растёт с репутацией (номер холдинга): 2,2 → 2,6 → 3,2 → 4 → 5 → 6 млрд
 const IPO_BAR=[2.2e9,2.6e9,3.2e9,4e9,5e9,6e9];
 function ipoEq(W){const r=W&&typeof W.rep==='number'?W.rep:0;return IPO_BAR[Math.max(0,Math.min(IPO_BAR.length-1,r))];}
@@ -157,7 +167,7 @@ function boost(W){if(!boostOk(W))return 'no';const d=boostD(W);W.bst=W.t+d;W.bst
 const FMT_V=6;   // M39: 5 — опт по видам (b.kd), машины у хозяина (b.at), W.lnk; M44: 6 — износ машин (wr), смены/закупка к сезону опта, ТК
 function migrate(W){const fx=[];if(!W||typeof W!=='object')throw new Error('мир пуст');
   const num=(o,k,d)=>{if(typeof o[k]!=='number'||!isFinite(o[k])){o[k]=d;fx.push(k);}};
-  for(const k of ['t','m','d','cash','cap','ret','lossCF','od','odM','san','rep','hold','nid'])num(W,k,k==='hold'||k==='nid'?1:0);
+  for(const k of ['t','m','d','cash','cap','ret','lossCF','od','odM','san','rep','hold','nid','rbg'])num(W,k,k==='hold'||k==='nid'?1:0);   // M48rb: rbg — сколько раз мир откатывали (облако)
   num(W,'key',.16);if(typeof W.rs!=='number')W.rs=(W.seed>>>0)||7;
   for(const k of ['obj','tr','auc','loans','routes','offers','cons','bots','ev','news','hist','reps'])if(!Array.isArray(W[k])){W[k]=[];fx.push(k);}
   for(const k of ['inv','plots','mk','auto','ach','stat','own'])if(!W[k]||typeof W[k]!=='object'||Array.isArray(W[k])){W[k]={};fx.push(k);}
@@ -216,7 +226,7 @@ function dtMove(W,s,k,from,parts){const d=W.mon.dt&&W.mon.dt[s]&&W.mon.dt[s][k];
   const ks=Object.keys(parts),v=ks.map(t=>tot*parts[t]/wsum),fl=v.map(x=>Math.trunc(x));let rest=tot-fl.reduce((a,b)=>a+b,0);
   const ord=ks.map((t,i)=>i).sort((a,b)=>Math.abs(v[b]-fl[b])-Math.abs(v[a]-fl[a]));for(let j=0;rest!==0&&j<ord.length*2;j++){const i=ord[j%ord.length],st=rest>0?1:-1;fl[i]+=st;rest-=st;}
   delete d[from];ks.forEach((t,i)=>{if(fl[i])d[t]=(d[t]||0)+fl[i];});}
-function netOf(p){return p.rev-p.cogs-p.fix-p.log-p.adm-p.expl-p.dep+p.oth-p.int-p.tax+(p.jv||0);}   // jv — доля прибыли совместных дел (story.js), без налога
+function netOf(p){return p.rev-p.cogs-p.fix-p.log-p.adm-p.expl-p.dep+p.oth-p.int-p.tax+(p.jv||0)+(p.dv||0);}   // jv — доля прибыли совместных дел (story.js), без налога; M47c: dv — дивиденды по акциям прошлых холдингов (налог удержан у источника)
 function ebitdaOf(p){return p.rev-p.cogs-p.fix-p.log-p.adm-p.expl;}
 function invTake(W,r,g,q){const s=W.inv[r][g];if(q>=s.q-1e-9){const v=s.v;s.q=0;s.v=0;return v;}const v=rnd0(s.v*q/s.q);s.q-=q;s.v-=v;return v;}
 function invAdd(W,r,g,q,v){const s=W.inv[r][g];s.q+=q;s.v+=rnd0(v);}
@@ -289,8 +299,8 @@ function depVal(W,r,dep){if(!dep)return 0;const O=OBJ[MINE_OF[dep.g]],m=GOODS[de
   const n=Math.min(120,dep.res/O.cap),i=(W.key+.06)/12,af=(1-Math.pow(1+i,-n))/i;return Math.max(3e6,E*af-O.capex*dep.cm);}
 function depValOld(W,r,dep){if(!dep)return 0;const O=OBJ[MINE_OF[dep.g]],m=GOODS[dep.g].p*REGS[r].k[dep.g]-dep.vc,E=m*O.cap-O.fix;
   return Math.max(3e6,E*12-O.capex*dep.cm*.5);}
-function explCost(W,r){return rnd0(REGS[r].ex*(1-.1*W.rep)*(1-.15*pkL(W,'geo')));}
-function explDays(W){return Math.max(6,Math.round(EXPL_DAYS*(1-.1*W.rep)*(1-.1*pkL(W,'geo'))));}
+function explCost(W,r){return rnd0(REGS[r].ex*(1-.1*W.rep)*(1-PK_X.geo*pkL(W,'geo')));}
+function explDays(W){return Math.max(6,Math.round(EXPL_DAYS*(1-.1*W.rep)*(1-PK_X.geoD*pkL(W,'geo'))));}
 function plotById(W,id){for(const r of REG)for(const p of W.plots[r])if(p.id===id)return p;return null;}
 function explore(W,pid,fast,free){const p=plotById(W,pid);if(!p||p.st!=='hid')return 'no';const c=free?0:explCost(W,p.r);if(W.cash<c)return 'cash';
   if(W.obj.length===0&&!W.ach.expl&&p.tut)fast=fast||6;
@@ -347,7 +357,8 @@ function canBuild(W,t,r,pid){const O=OBJ[t];if(!O)return 'no';
   const c=capexOf(W,t,r,pid);if(W.cash<c*.2)return 'cash';return 'ok';}
 function build(W,t,r,pid){const ok=canBuild(W,t,r,pid);if(ok!=='ok')return ok;const O=OBJ[t],p=pid?plotById(W,pid):null;
   let mo=O.mo;if(W.tut&&t==='coalpit'&&!W.obj.length)mo=1; // первый разрез — по упрощённой схеме
-  const bd=Math.max(DAYS,Math.round(mo*DAYS*(1-.1*pkL(W,'brig'))));
+  else if(W.n5&&W.rep>0&&!W.tut&&O.dep&&!W.obj.length)mo=1;   // M47c: «команда переходит с вами» — первая стройка нового холдинга за месяц
+  const bd=Math.max(DAYS,Math.round(mo*DAYS*(1-PK_X.brig*pkL(W,'brig'))));
   const o={id:'o'+(W.nid++),t,r,plot:pid||null,st:'b',cost:capexOf(W,t,r,pid),paid:0,left:bd,tot:bd,g:0,dp:0,lv:0,vc:p&&p.dep?p.dep.vc:(O.vc||0),sp:0};
   W.obj.push(o);if(O.in&&pkL(W,'vert'))applyPerks(W);W.stat.built++;news(W,'build',{o:o.id,t,r});return 'ok';}
 function upCost(W,o){return rnd0(OBJ[o.t].capex*UP_COST*(o.lv+1)*(o.plot?(plotById(W,o.plot).dep||{cm:1}).cm:1));}
@@ -384,14 +395,14 @@ function projLoanAmt(W,short,cost){const u=W.ned?1e6:1e5,m=cost?buildLoanMax(W,c
 // проектный кредит: 36 мес., тело не платится стройку + 3 мес. (не больше 12); cost — под какую стройку (лимит банка учитывает 70 % её цены)
 function projLoan(W,a,days,cost){if(cost)W._pjX=cost;let r;try{r=takeLoan(W,a,36,'ann',Math.min(12,Math.ceil((days||DAYS)/DAYS)+3));}finally{delete W._pjX;}if(r==='ok')W.loans[W.loans.length-1].pj=1;return r;}
 function objCap(o){return OBJ[o.t].cap*(1+UP_CAP*o.lv);}
-function objFix(o){return OBJ[o.t].fix*(1+UP_FIX*o.lv)*(o.off?.3:1)*(o.fk||1);}
+function objFix(o){return OBJ[o.t].fix*(1+UP_FIX*o.lv)*(o.off?.3:1)*(o.fk||1)*(o.ek||1);}   // M47c: ek — своя подстанция завода (событие sub, nedra.js)
 function autoBuy(W,oid,on){const o=W.obj.find(x=>x.id===oid);if(o&&OBJ[o.t].in)o.ab=!!on;}
 function mothball(W,oid,on){const o=W.obj.find(x=>x.id===oid);if(o&&o.st==='w'&&o.t!=='store'){o.off=!!on;news(W,on?'off':'on',{o:o.id,t:o.t,r:o.r});}}
 
 /* ---------------- логистика ---------------- */
 function km(a,b){if(a===b)return 0;return KM[[a,b].sort().join('-')]||3000;}
 function transitDays(W,a,b){let d=Math.ceil(km(a,b)/650)+1;for(const e of W.ev)if(e.k==='flood'&&(e.r===a||e.r===b))d+=3;return d;}
-function tariff(W,a,b){let t=250+1.05*km(a,b);for(const e of W.ev)if(e.k==='tariff')t*=1.05;return t*(1-.1*pkL(W,'logi'));}
+function tariff(W,a,b){let t=250+1.05*km(a,b);for(const e of W.ev)if(e.k==='tariff')t*=1.05;return t*(1-PK_X.logi*pkL(W,'logi'));}
 function rentRate(W){let r=RENT;for(const e of W.ev)if(e.k==='wagons')r*=1.5;return r;}
 function wagFree(W){let b=0;for(const x of W.wag.busy)b+=x.n;return Math.max(0,W.wag.n-b);}
 function freightCost(W,a,b,q){const n=Math.ceil(q/WAG_T),own=Math.min(n,wagFree(W));const rented=q*Math.max(0,n-own)/n;return {c:rnd0(q*tariff(W,a,b)+rented*rentRate(W)),own};}
@@ -408,10 +419,10 @@ function buyWagons(W,n){const c=n*WAG_COST;if(W.cash<c)return 'cash';const t0=tg
 function ebitda3(W){const h=W.reps.slice(-3);if(!h.length)return 0;let s=0;for(const x of h)s+=ebitdaOf(x.pl);return s/h.length;}
 function loanLimit(W){if(!W.ned&&root.ECON.bizLoanLimit)return root.ECON.bizLoanLimit(W);const e=Math.max(0,ebitda3(W))*12,eq=Math.max(0,equity(W));let pj=0;for(const o of W.obj){if(o.st==='b')pj+=o.cost-o.paid;if(o.up)pj+=o.up.cost-o.up.paid;}pj+=W._pjX||0;
   return Math.max(0,Math.min(Math.max(300e6,3.5*e)+.7*pj,1.5*eq));}
-function loanRate(W){if(!W.ned&&root.ECON.bizLoanRate)return root.ECON.bizLoanRate(W);const e=Math.max(1,ebitda3(W)*12),lev=debtOf(W)/e;return clamp(W.key+.03+.01*Math.max(0,Math.min(5,lev-1))-.005*W.rep-.01*pkL(W,'bank'),.04,.4);}
+function loanRate(W){if(!W.ned&&root.ECON.bizLoanRate)return root.ECON.bizLoanRate(W);const e=Math.max(1,ebitda3(W)*12),lev=debtOf(W)/e;return clamp(W.key+.03+.01*Math.max(0,Math.min(5,lev-1))-.005*W.rep-PK_X.bank*pkL(W,'bank'),.04,.4);}
 function loanUnit(W){return W.ned?1e6:1e4;}
 // лимит банка: ипотека (realty.js) и займы друзей (story.js) кредит бизнесу не уменьшают; поручительство Сони — лимит ×1,3, ставка −1 п. п.
-function loanOffer(W){const g=root.ECON.storyGuar&&root.ECON.storyGuar(W);const lim=loanLimit(W)*(g?g.lim:1),u=loanUnit(W);let d=0;for(const l of W.loans)if(l.k!=='mort'&&l.k!=='fr')d+=l.a;
+function loanOffer(W){const g=root.ECON.storyGuar&&root.ECON.storyGuar(W);const lim=loanLimit(W)*(g?g.lim:1),u=loanUnit(W);let d=0;for(const l of W.loans)if(l.k!=='mort'&&l.k!=='fr'&&!l.frp)d+=l.a;   // M47c: заём ФРП (nedra.js) — не банковский, лимит банка не ест
   const o={max:Math.max(0,(W.ned?rnd0:Math.floor)((lim-d)/u)*u),rate:loanRate(W)};if(g){o.rate=Math.max(.01,o.rate+g.dr);o.gu=1;}return o;}
 function takeLoan(W,a,n,kind,grace){const o=loanOffer(W),u=loanUnit(W);a=Math.min(rnd0(a/u)*u,o.max);if(a<u)return 'limit';grace=Math.max(0,Math.min(12,grace|0,n-6));
   W.loans.push({id:'l'+(W.nid++),a,a0:a,r:o.rate,n,n0:n,k:kind==='eq'?'eq':'ann',gr:grace});if(o.gu&&root.ECON.storyGuarUse)root.ECON.storyGuarUse(W,W.loans[W.loans.length-1]);const t0=tg(W.loans[W.loans.length-1].id);recv(W,a,'loan');tg(t0);news(W,'loan',{a,r:o.rate,n});return 'ok';}
@@ -545,7 +556,7 @@ function event(W,off){if(R(W)>.3)return null;const tot=EVENTS.reduce((a,e)=>a+e.
   a.k=E.k;news(W,'ev',a);return a;}
 
 /* ---------------- закрытие месяца ---------------- */
-function close(W,off){const M=W.mon;TG='';TS='';const bz=!!root.ECON.bizClose&&(!W.ned||W.biz.length>0||W.rec.length>0);
+function close(W,off){const M=W.mon,san0=W.san|0;TG='';TS='';const bz=!!root.ECON.bizClose&&(!W.ned||W.biz.length>0||W.rec.length>0);
   // точки, подработка, жизнь, дебиторка, кредитная история (js/biz.js) — до постоянных расходов и налога
   if(bz)root.ECON.bizClose(W,M,off);
   TG='fr';TS='';if(root.ECON.storyClose)root.ECON.storyClose(W,M,off);
@@ -569,6 +580,7 @@ function close(W,off){const M=W.mon;TG='';TS='';const bz=!!root.ECON.bizClose&&(
     else news(W,'cdone',{g:c.g,q:c.q});W.cons=W.cons.filter(x=>x!==c);}
   // санация (только при игроке): второй месяц подряд нужен овердрафт
   TG='san';let san=null;if(W.ned&&W.cash<0&&od&&W.odM>=2&&!off){const e=ebitda3(W)*12,dt=debtOf(W);if((e<=0||dt>4*e)&&dt>.25*Math.max(1,equity(W)))san=sanation(W);}
+  if(!san&&(W.san|0)>san0){const n=W.news.slice().reverse().find(x=>x.k==='san');san={sold:n&&n.a&&n.a.sold||[],debt:n&&n.a&&n.a.debt||0,biz:1};}   // M48rb: санация глав 1–4 (biz.js bizSan) — тоже в отчёте (rep.san)
   // налог на прибыль: 25 %, убыток прошлых лет уменьшает базу не больше чем наполовину
   TG='tax';const p=M.pl,ebt=p.rev-p.cogs-p.fix-p.log-p.adm-p.expl-p.dep+p.oth-p.int;let tax=0;
   const lc0=W.lossCF;let use=0;if(ebt<0)W.lossCF+=-ebt;else if(ebt>0){use=Math.min(W.lossCF,ebt*LOSS_CAP);W.lossCF-=use;tax=rnd0((ebt-use)*TAX);}
@@ -671,7 +683,8 @@ function snap(W){const b=bal(W);return {t:W.t,m:W.m,cash:W.cash,eq:b.E,debt:b.de
 function offline(W,days){const s0=snap(W),prod={},sold={},ev=[],built=[],sg={};let closes=0,rev=0,np=0,gigs=0,gigNet=0;
   for(let i=0;i<days;i++){const out=tick(W,true);for(const e of out){if(e.k==='close'){closes++;rev+=e.rep.pl.rev;np+=netOf(e.rep.pl);for(const g in e.rep.prod)prod[g]=(prod[g]||0)+e.rep.prod[g];for(const g in e.rep.sold)sold[g]=(sold[g]||0)+e.rep.sold[g];if(e.rep.ev)ev.push(e.rep.ev);
         for(const k in e.rep.sg||{}){const x=sg[k]||(sg[k]={rev:0,e:0});x.rev+=e.rep.sg[k].rev;x.e+=e.rep.sg[k].e;}}
-      else if(e.k==='built'||e.k==='upgraded'||e.k==='bizopen')built.push(e.o||e.id);else if(e.k==='gig'){gigs++;gigNet+=e.net||0;}}}
+      else if(e.k==='built'||e.k==='upgraded'||e.k==='bizopen')built.push(e.o||e.id);else if(e.k==='gig'){gigs++;gigNet+=e.net||0;}}
+    if(root.ECON.offSnap&&out.some(e=>e.k==='close'))try{root.ECON.offSnap(W);}catch(x){}}   // M48rb: снимок на начало месяца (game.js, откат при разорении)
   // предложения, торги за время отсутствия: торги решились без игрока (это видно в новостях)
   const s1=snap(W);rev=s1.sold-s0.sold;np=s1.eq-s0.eq;return {days,months:closes,prod,sold,rev,np,ev,built,sg,gigs,gigNet,cash0:s0.cash,cash1:s1.cash,eq0:s0.eq,eq1:s1.eq,debt0:s0.debt,debt1:s1.debt,auc:W.news.filter(n=>n.t>s0.t&&(n.k==='lost'||n.k==='won'||n.k==='nobid'))};}
 
@@ -681,7 +694,7 @@ root.ECON={FMT_V,buildRes,buildRest,buildFlow,buildPlan,buildHalt,projLoanAmt,pr
   km,transitDays,tariff,rentRate,wagFree,freightCost,ship,addRoute,delRoute,buyWagons,
   loanOffer,loanLimit,loanRate,takeLoan,repay,loanPay,ebitda3,duty,acceptOffer,urgent,urgentOk,reserve,stockR,storR,
   netOf,ebitdaOf,sumCF,metrics,advise,botValue,ipoReady,offline,snap,R,
-  PERKS,pkL,legacy,applyPerks,IPO_BAR,ipoEq,BOOST_K,BOOST_D,BOOST_GAP,boostOn,boostOk,boost,boostD,
+  PERKS,pkL,legacy,applyPerks,IPO_BAR,ipoEq,PK_X,perkCost,SH_UNIT,SH_CHAIN,DV_K,chainSegs,ipoShares,ipoDv,BOOST_K,BOOST_D,BOOST_GAP,boostOn,boostOk,boost,boostD,
   tg,ts,dtMove,balDt,dtName,DT_KEEP,dtOf:W=>W.mon.dt||dtNew(W.mon),
   _:{pay,recv,pl,news,R,RR,RN,pick,rnd0,clamp,invAdd,invTake,emptyMon,objFix,ebitda3}};
 // E.IPO_EQ — планка текущего мира (интерфейс берёт её как число); без игры (симулятор) — базовая 2,2 млрд

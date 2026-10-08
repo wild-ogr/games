@@ -35,7 +35,7 @@ let S={w:null,cr:20,crE:{},adW:0,ask:{},tut:{},fame:[]};
 function wIn(o){if(isObj(o)&&isObj(o.w)&&o.w.$pk===1){try{o.w=PACK.unpack(o.w);}catch(e){try{localStorage.setItem('magnat-backup-'+Date.now(),JSON.stringify(o));}catch(x){}o.w=null;}}return o;}
 function sOut(){return isObj(S.w)&&typeof PACK!=='undefined'?Object.assign({},S,{w:PACK.packSafe(S.w)}):S;}
 try{const r=localStorage.getItem(SKEY);if(r){let o=null;try{o=wIn(JSON.parse(r));}catch(e){}if(isObj(o))S=Object.assign(S,o);else try{localStorage.setItem('magnat-backup-'+Date.now(),r);}catch(e){}}}catch(e){}   // сейв не читается — кладём копию рядом, а не теряем молча (игра начнётся заново, облако может вернуть мир)
-const OBJF=['crE','ask','tut','cos','pk','psG','psT','wall','lxE','lxc','col','colG','thU','adT','wS','lxSeen'];   // M43: wS — увиденное на Стене, lxSeen — показанные вещи в продаже (объединение = «прочитано по максимуму»)   // M31: adT — пауза мест рекламы (мс последнего ролика), берём позднее   // M27: thU — открытые темы оформления (js/themes.js), объединение
+const OBJF=['rbN','rbHi','crE','ask','tut','cos','pk','psG','psT','wall','lxE','lxc','col','colG','thU','adT','wS','lxSeen'];   // M43: wS — увиденное на Стене, lxSeen — показанные вещи в продаже (объединение = «прочитано по максимуму»)   // M31: adT — пауза мест рекламы (мс последнего ролика), берём позднее   // M27: thU — открытые темы оформления (js/themes.js), объединение
    // M8: стена почёта, вещи, украшения вещей, наборы — объединение // cos — украшения за 💎, pk — улучшения «Доли основателя» (объединение, берём больший уровень); psG/psT — «Путёвка председателя» (день начала / сколько взято по ключу покупки)
 // защита от сохранений неожиданной формы (ручная правка, старая версия)
 function fixSave(){for(const f of OBJF)if(!isObj(S[f]))S[f]={};
@@ -311,7 +311,7 @@ const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':
 // бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta3' (бета-1 — 'beta1', бета-2 — 'beta2'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta11':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta12':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 /* STAT v1.2 (M44): «монеты» статистики в Магнате — 💎 (S.cr): cn в start, cb в pause, earn по источникам (js/stat-hooks.js, GAME 'cr'; покупки — payAdd).
    progress — после облака или готовности SDK, но не позже 2,5 с (statProg; pl — глава 1–5, bt — облако хоть раз отдавало сохранение: метка устройства magnat-cl) */
 STAT.bal(S.cr|0);
@@ -327,12 +327,16 @@ function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paus
   if(paused)YG.stop();else if(!modalOn)YG.start();}
 // GameplayAPI Яндекса: «игра идёт» = время холдинга течёт (нет окна, паузы, рекламы)
 const YG={on:false,
-  start(){if(YG.on||paused||modalOn)return;YG.on=true;try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
+  start(){if(YG.on||!ygRun())return;YG.on=true;try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
   stop(){if(!YG.on)return;YG.on=false;try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.stop();}catch(e){}}
 };
+// M47d (аудит-4 №14): «игра идёт» для Яндекса = время холдинга фактически течёт (GAME.running(): своя ⏸, «читаю», словарик, обучение — тоже стоп);
+// до запуска мира — как раньше (нет окна и паузы площадки). hold/скорость меняются без вызова YG — поэтому раз в секунду сверяем
+function ygRun(){try{if(typeof GAME!=='undefined'&&GAME.running&&GAME.W)return GAME.running();}catch(e){}return !paused&&!modalOn;}
+setInterval(()=>{if(ysdk)ygRun()?YG.start():YG.stop();},1000);
 // какой мир новее: сначала номер холдинга (после IPO — новый мир с маленьким w.t), потом игровые дни
 const wGen=o=>isObj(o)&&isObj(o.w)?(o.rst|0)*1000+(typeof o.w.hold==='number'?o.w.hold:Array.isArray(o.fame)?o.fame.length:0):-1;
-const wDays=o=>isObj(o)&&isObj(o.w)&&typeof o.w.t==='number'?o.w.t:-1;
+const wDays=o=>isObj(o)&&isObj(o.w)&&typeof o.w.t==='number'?o.w.t+(o.w.rbg|0)*1e7:-1;   // M48rb: мир после отката (w.rbg — сколько откатов) новее «ушедшего дальше» мира до отката
 // слияние облака с локальным: мир — где больше холдинг/дней (при равенстве — новее ts), 💎 — облачные + изменение на устройстве,
 // fame — объединение по hold, «за что дали» — объединение, покупки — payMerge, настройки — из более нового
 function mergeSave(d,ref){if(!isObj(d))return;wIn(d);
@@ -352,11 +356,13 @@ function mergeSave(d,ref){if(!isObj(d))return;wIn(d);
   if(typeof d.maxT==='number')S.maxT=Math.max(S.maxT||0,d.maxT);
   if(typeof d.st0==='number'&&d.st0>0)S.st0=S.st0>0?Math.min(S.st0,d.st0):d.st0;   // M28: первый запуск — самый ранний с любого устройства
   if(typeof d.rst==='number')S.rst=Math.max(S.rst||0,d.rst);
-  for(const f of ['rk','rkG','udN','adTot','wsV'])if(typeof d[f]==='number')S[f]=Math.max(S[f]|0,d[f]);   // звание не падает и на другом устройстве
+  for(const f of ['rk','rkG','udN','adTot','wsV','svIn'])if(typeof d[f]==='number')S[f]=Math.max(S[f]|0,d[f]);   // звание не падает и на другом устройстве
+  if(typeof d.rkX2d==='number')S.rkX2d=Math.max(+S.rkX2d||0,d.rkX2d);   // M47: ×2 за звание — закрытое предложение (досмотр/замена) не возвращается с другого устройства
+  if(isObj(d.rkX2)&&(!isObj(S.rkX2)||(+d.rkX2.t||0)>(+S.rkX2.t||0)))S.rkX2=d.rkX2;if(isObj(S.rkX2)&&(+S.rkX2.t||0)<=(+S.rkX2d||0))S.rkX2=null;
   if(typeof d.adW==='number')S.adW=Math.max(S.adW||0,d.adW);
   if(typeof d.lbB==='number')S.lbB=Math.max(S.lbB||0,d.lbB);
   if(typeof QUEST!=='undefined'&&isObj(d.quest)){if(!isObj(S.quest))S.quest=d.quest;else QUEST.merge(d.quest);}   // «Ролики дня»: тот же день — максимумы
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|w|cr|crE|ask|tut|fame|adCr|adR|adT|adF|maxT|st0|adW|lbB|wk|lastT|offMore|freeM|buy|buyB|payT|payV|soc|stc|quest|rk|rkG|udN|adTot|thU|wall|lxE|lxc|col|colG|ph|wN|rwNew|lxSeen|wS|wsV)$/.test(k))S[k]=d[k]; // флажки и настройки (M43: «новое» телефона и ★ — не отсюда: ph едет с миром, wS/lxSeen — объединение, wN считается, rwNew — своё)
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|w|cr|crE|ask|tut|fame|adCr|adR|adT|adF|maxT|st0|adW|lbB|wk|lastT|offMore|freeM|buy|buyB|payT|payV|soc|stc|quest|rk|rkG|udN|adTot|thU|wall|lxE|lxc|col|colG|ph|wN|rwNew|lxSeen|wS|wsV|rkX2|rkX2d|svIn|svQ|rbN|rbHi)$/.test(k))S[k]=d[k]; // флажки и настройки (M43: «новое» телефона и ★ — не отсюда: ph едет с миром, wS/lxSeen — объединение, wN считается, rwNew — своё)
   SOC.merge(d.soc);STAT.merge(d.stc); // соц-предложения VK (модуль держит ссылку на S.soc) и отметки статистики — сливаем, а не заменяем
   payMerge(d);}
 // M43: «прочитано» телефона — максимум из двух устройств, если это тот же холдинг (S.ph.wk); a — основа (едет с выбранным миром), b — другое
@@ -583,8 +589,8 @@ async function initVK(){
     // на маке (?vk=1, без vk_app_id) мост вне VK не ответит никогда — не ждём 20 с (иначе покупки/облако/onSdkReady появлялись только через 20 с)
     await vkSend('VKWebAppInit',{},VK_REAL?20000:2500);VK=window.vkBridge;vkFitInit();SOC.ready();socMoreUpd(); // «Друзья и игры», «Ещё игры» — только VK с мостом
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
-      if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
-      else if(t==='VKWebAppViewRestore')setPause('hide',false);});
+      if(t==='VKWebAppViewHide'){setPause('vkh',true);cloudFlush();}   // M47: свой ключ (не общий со сворачиванием вкладки); касание игры снимает (см. inAt)
+      else if(t==='VKWebAppViewRestore')setPause('vkh',false);});
     await cloudLoad();
     adPreload(); // adfix: подгрузка ролика за награду; «не готов» — переспросим в фоне
   }catch(e){VK=null;}
@@ -646,7 +652,15 @@ function stubAd(cb){const ad=$('ad'),tEl=$('adT');adOpen();
 function adOpen(){setPause('ad',true);}
 function adClose(){setPause('ad',false);}
 const VK_REAL=/[?&]vk_app_id=/.test(location.search);
+// M47d (аудит-4 №6): настоящий Яндекс — домен игр Яндекса (app-….games.s3.yandex.net, yandex.*, playhop.com) или страница внутри него. Если там SDK нет
+// (блокировщик рекламы, сбой сети, YaGames.init не ответил) — награду за заглушку НЕ даём, как VK_REAL; заглушка — только на маке, LAN, github.io (бета).
+// Проверка на маке: ?yareal=1 (без /sdk.js — как с блокировщиком).
+const YA_RE=/(^|\.)(yandex\.(ru|net|com|by|kz|uz|az|com\.tr|com\.am|com\.ge|co\.il|fr|lt|lv|ee|md|tj|tm)|playhop\.com)$/;
+const YA_REAL=PLAT==='yandex'&&((LOCAL||STAT_LAN)?/[?&]yareal=1/.test(location.search):(()=>{try{if(YA_RE.test(location.hostname)||/[?&]app-id=/.test(location.search))return true;
+  const a=location.ancestorOrigins;if(a)for(let i=0;i<a.length;i++)if(YA_RE.test(new URL(a[i]).hostname))return true;}catch(e){}return false;})());
 const adFail=()=>L('Реклама сейчас недоступна — загляните чуть позже','Ads are unavailable right now — please try a bit later');
+const adClosed=()=>L('Ролик закрыт до конца — награды нет','The video was closed early — no reward');   // 08.10: код VK 4 / Яндекс onClose без награды — игрок закрыл сам, это не поломка
+function adUser(e){const d=e&&e.error_data||{};return +d.error_code===4;}
 // межэкранная: только по кнопке «Продолжить» в окне закрытия месяца (зовёт интерфейс), при adDue() и adReady();
 // «долг» S.adW — закрытий месяца онлайн с прошлого показа (S.adW++ делает game.js), обнуляется только после настоящего показа
 let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=2;
@@ -687,7 +701,7 @@ function showRewarded(cb0,onFail0){
   if(adBusy)return;
   if(adHold()){if(onFail0)onFail0();adDim();return;} // onFail мог перерисовать окно — сразу гасим заново открытые кнопки
   STAT.adReq('rew'); // STAT v1.2: нажатие → ms в итоговом ad (место STAT.place живёт до итога)
-  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},135000);
+  adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{const st=adBusy;adBusy=false;adWait(0);if(st)adClose();},135000);   // M47: площадка не вызвала закрытие — снимаем и паузу 'ad'
   if(adRewLeft()<=0){adBusy=false;toast(L('Ролики за награду на сегодня закончились — завтра будут снова','No more reward videos today — back tomorrow'));onFail0&&onFail0();return;}
   let paid=false;const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();adRewLeft();S.adR.n=(S.adR.n|0)+1;S.adTot=(S.adTot|0)+1;if(AD_REW_DAY&&S.adR.n===AD_REW_DAY)STAT.ev('adcap',{});try{save();}catch(e){}adInCb++;try{cb0();}finally{adInCb--;}},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
   if(PLAT==='apk'){const A=apkAds();if(A&&A.rewarded){adOpen();A.rewarded(ok=>{adClose();STAT.ad('rew',ok?'ok':'fail','apk');if(ok)cb();else{toast(adFail());onFail();}});}else if(!APK_REAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail','noapk');toast(adFail());onFail();}return;}
@@ -697,16 +711,16 @@ function showRewarded(cb0,onFail0){
         if(r&&r.result){STAT.ad('rew','ok',tries?'retry':'');adPreload();cb();}else{STAT.ad('rew','fail','noresult');toast(adFail());adPreload();onFail();}
       },e=>{
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload();setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
-        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e));toast(adFail());adPreload();}
+        adClose();if(adNoFill(e)){STAT.ad('rew','none',adErrCode(e));toast(adSoon());adCool();}else{STAT.ad('rew','err',adErrCode(e));toast(adUser(e)?adClosed():adFail());adPreload();}
         onFail();adDim();});};
     go();return;}
-  if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
+  if(!ysdk){if(YA_REAL){STAT.ad('rew','fail',sdkDone?'nosdk':'early');toast(sdkDone?adFail():adStill());onFail();adDim();return;}STAT.ad('rew','ok','stub');stubAd(cb);return;}   // M47d: Яндекс без SDK — без награды (до готовности SDK — «ещё загружается»)
   let got=false;
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
-    onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(L('Досмотрите видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
+    onClose:()=>{adClose();STAT.ad('rew',got?'ok':'skip');if(got)cb();else{toast(adClosed());onFail();}},
     onError:()=>{adClose();STAT.ad('rew','err');toast(adFail());adCool();onFail();adDim();}}});
 }
-function adPlat(){return !(PLAT==='vk'&&!VK&&VK_REAL)&&!(PLAT==='apk'&&APK_REAL&&!apkAds());}   // площадка умеет рекламу (мост/SDK)
+function adPlat(){return !(PLAT==='vk'&&!VK&&VK_REAL)&&!(YA_REAL&&!ysdk&&sdkDone)&&!(PLAT==='apk'&&APK_REAL&&!apkAds());}   // площадка умеет рекламу (мост/SDK)
 // общий дневной предел роликов за награду: 0 — нет предела (решение владельца 01.10: убрали 20 в день). M31: и у мест дневных лимитов нет — паузы мест GAME.adWait (game.js AD_GAP), лесенка + бонус-ролики. S.adR — счёт роликов дня (для STAT)
 const AD_REW_DAY=0;
 function adRewLeft(){const d=payDay();if(!S.adR||typeof S.adR!=='object'||S.adR.d!==d)S.adR={d:d,n:0};return AD_REW_DAY?Math.max(0,AD_REW_DAY-(S.adR.n|0)):999;}
@@ -727,7 +741,7 @@ function showInterstitial(cb0){
   if(PLAT==='apk'){const A=apkAds();if(A&&A.interstitial){adOpen();A.interstitial(ok=>{adClose();cb(!!ok);});}else if(!APK_REAL)stubAd(cb);else cb0();return;}
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nosdk');cb0();}else stubAd(cb);return;}
   if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();cb(!!(r&&r.result));},e=>{adClose();if(adNoFill(e))cb(false);else cb(false,'err',adErrCode(e));});return;}
-  if(!ysdk){stubAd(cb);return;}
+  if(!ysdk){if(YA_REAL){STAT.ad('int','none','nosdk');cb0();}else stubAd(cb);return;}   // M47d: как VK без моста
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false,'err');}}});
 }
 // удалённая настройка Яндекса (флаги консоли). Границы жёсткие: межэкранная — не чаще раза в 2 закрытия месяца и раза в 180 с;
@@ -1008,9 +1022,13 @@ let modalOn=false,modalRe=null; // modalRe — функция, которая п
 // M38 (a45, игрок 45+): тост — не дольше 2 с, на месте нижнего меню (не поверх читаемого текста), при открытом окне — в очередь
 // (покажется после закрытия; ответ на своё нажатие в окне — сразу, внизу); очередь — не больше 3, одинаковые не повторяются
 let tapT=0;try{document.addEventListener('pointerdown',()=>{tapT=Date.now();},{passive:true,capture:true});}catch(e){}
+const TOAST_MIN=1200;   // M48: тост виден не меньше 1,2 с, если за ним очередь
 function toast(t,ms){if(LANG==='en'&&TOAST_EN[t])t=TOAST_EN[t];const e=$('toast');if(!e||!t)return;
   if(modalOn&&Date.now()-tapT>700){const q=toast.q||(toast.q=[]);const i=q.indexOf(t);if(i>=0)q.splice(i,1);q.push(t);if(q.length>3)q.shift();return;}
-  e.textContent=t;e.classList.add('on');clearTimeout(toast._t);toast.at=Date.now();
+  // M48: другой тост не перебивает показанный раньше чем через TOAST_MIN — ждёт в очереди (было: итог первого заказа «+1 200 ₽» виден 0,1 с — его сразу накрывали «Звание», «+1 💎», «Новое фото»)
+  const age=Date.now()-(toast.at||0);if(e.classList.contains('on')&&toast.base!==t&&age<TOAST_MIN){const q=toast.q||(toast.q=[]);const i=q.indexOf(t);if(i>=0)q.splice(i,1);q.push(t);if(q.length>4)q.shift();clearTimeout(toast._w);toast._w=setTimeout(()=>toastNext(1),TOAST_MIN-age+30);return;}
+  if(e.classList.contains('on')&&toast.base===t){toast.n=(toast.n|0)+1;e.textContent=t+' ×'+toast.n;}else{toast.base=t;toast.n=1;e.textContent=t;}   // M47: одинаковые тосты подряд склеиваем («×3»)
+  e.classList.add('on');clearTimeout(toast._t);toast.at=Date.now();if(toast.q&&toast.q.length&&!modalOn){clearTimeout(toast._w);toast._w=setTimeout(()=>toastNext(1),TOAST_MIN+30);}
   const d=ms&&ms<2000?ms:2000;toast._t=setTimeout(()=>{e.classList.remove('on');if(toast.q&&toast.q.length)setTimeout(toastNext,350);},d);}
 function toastNext(cut){if(modalOn||!toast.q||!toast.q.length)return;const e=$('toast');if(e&&e.classList.contains('on')){if(!(cut===1&&Date.now()-(toast.at||0)>=1000))return;clearTimeout(toast._t);}toast(toast.q.shift());}   // M44: после закрытия окна старый тост (висел над окном ≥ 1 с) уступает очереди — ждущий не стоит лишние 1–2 с
 // окно = нижний лист на телефоне (css: .modal/#mcard); role=dialog, фокус внутрь окна и обратно
@@ -1022,32 +1040,49 @@ let mFocus=null;
 // M46 (владелец, бета-10: «постоянно включает паузу»): пауза «читаю» — мягкая. Короткая прокрутка (к кнопке, по списку) время НЕ останавливает;
 // пауза — только если человек листает дольше READ_ARM (серия касаний с промежутками < READ_GAP), держится READ_MS после последнего листания
 // и не дольше READ_MAX подряд (потом время идёт, пока не будет READ_GAP без листания). Пока стоит — заметная плашка «⏸ Пауза — вы читаете · ▶ Продолжить»
-// (#rdP под шапкой); «Продолжить» снимает паузу и не ставит её READ_OFF. В ⚙ — «⏸ Пауза, пока листаю» (S.readP=false — выключить).
+// (#rdP под шапкой); «Продолжить» снимает паузу и не ставит её READ_OFF. В ⚙ — «⏸ Пауза, пока листаю». M47: по умолчанию ВЫКЛ (S.readP===true — включено).
 const READ_MS=4000,READ_ARM=3500,READ_GAP=5000,READ_MAX=20000,READ_OFF=60000;
 const RD={s0:0,last:0,on0:0,off:0,t:null};
 function rdHold(){try{return !!(window.GAME&&GAME.hold&&GAME.hold.has('read'));}catch(e){return false;}}
-function rdUi(){let b=$('rdP');const on=rdHold()&&!modalOn&&!document.hidden;
+// M47: плашка и при своей ⏸ (кнопка скорости) — видно, что время стоит, и «▶ Продолжить» снимает одним нажатием
+function rdOwn(){try{return !!(window.GAME&&GAME.W&&GAME.speed()===0);}catch(e){return false;}}
+function rdUi(){let b=$('rdP');const own=rdOwn(),on=(rdHold()||own)&&!modalOn&&!document.hidden;
   if(!on){if(b)b.classList.remove('on');return;}
   if(!b){b=document.createElement('div');b.id='rdP';b.setAttribute('role','status');document.body.appendChild(b);}
-  const h=`<span>⏸ ${L('Пауза — вы читаете','Paused — you’re reading')}</span><button class="noenter" id="rdGo">▶ ${L('Продолжить','Continue')}</button>`;if(b.dataset.l!==LANG){b.innerHTML=h;b.dataset.l=LANG;$('rdGo').onclick=rdGo;}
+  const h=`<span>⏸ ${own?L('Пауза','Paused'):L('Пауза: читаете','Paused: reading')}</span><button class="noenter" id="rdGo">▶ ${L('Продолжить','Continue')}</button>`,hk=LANG+(own?'o':'r');if(b.dataset.l!==hk){b.innerHTML=h;b.dataset.l=hk;$('rdGo').onclick=rdGo;}
   try{const r=$('hdr').getBoundingClientRect();b.style.top=Math.max(0,Math.round(r.bottom)+6)+'px';}catch(e){}b.classList.add('on');}
 function rdOff(){clearTimeout(RD.t);RD.t=null;try{GAME.hold.delete('read');}catch(e){}rdUi();try{window.UI&&UI.hdr&&UI.hdr();}catch(e){}}
-function rdGo(e){if(e){e.preventDefault();e.stopPropagation();}resumeNow();try{SND.tap();}catch(x){}}
+function rdGo(e){if(e){e.preventDefault();e.stopPropagation();}try{if(GAME.speed()===0)GAME.setSpeed(1);}catch(x){}resumeNow();try{SND.tap();}catch(x){}}
 // M46 (владелец: «пауза включается — её не снимешь»): кнопка скорости ×1/×2 при авто-паузе меняла скорость, а «читаю» держало время (и ставилось снова от
 // следующего листания) — время не шло. resumeNow() — снять все мягкие авто-паузы («читаю», совет Людмилы, словарик) и не ставить «читаю»,
 // пока игрок сам не откроет окно (modal после касания). Зовут: кнопка скорости, «▶ Продолжить», нажатие на строку дня в шапке.
 function resumeNow(){RD.off=Infinity;clearTimeout(RD.t);RD.t=null;try{GAME.hold.delete('read');GAME.hold.delete('advb');}catch(e){}
+  if(!document.hidden){if(pauseWhy.has('vkh'))setPause('vkh',false);if(pauseWhy.has('hide'))setPause('hide',false);}   // M47: вкладка видна — «скрыта» снимаем
   try{if(window.GLOSS&&GLOSS.isOpen())GLOSS.hide();}catch(e){}rdUi();try{window.UI&&UI.hdr&&UI.hdr();}catch(e){}
   try{return GAME.running();}catch(e){return false;}}
 (function(){let inT=0;const mark=()=>{inT=Date.now();};
   try{for(const ev of ['touchmove','wheel','keydown'])document.addEventListener(ev,mark,{passive:true,capture:true});
-    document.addEventListener('scroll',()=>{const now=Date.now();if(now-inT>1200||S.readP===false)return;let G=null;try{G=GAME;}catch(e){}if(!G||!G.hold)return;
+    document.addEventListener('scroll',()=>{const now=Date.now();if(now-inT>1200||S.readP!==true)return;   // M47: по умолчанию выкл. (включить — ⚙)
+      let G=null;try{G=GAME;}catch(e){}if(!G||!G.hold)return;
       if(now-RD.last>READ_GAP){RD.s0=now;if(!G.hold.has('read'))RD.on0=0;}RD.last=now;   // новая серия листания
       if(now<RD.off||now-RD.s0<READ_ARM)return;   // «Продолжить» нажали недавно / листает недолго — время идёт
       if(!G.hold.has('read')){if(RD.on0&&now-RD.on0>=READ_MAX)return;RD.on0=now;G.hold.add('read');try{window.UI&&UI.hdr&&UI.hdr();}catch(e){}}
       else if(now-RD.on0>=READ_MAX){rdOff();return;}   // не залипает: 20 с подряд — хватит
       rdUi();clearTimeout(RD.t);RD.t=setTimeout(rdOff,READ_MS);},{passive:true,capture:true});}catch(e){}})();
-let mCloseT=0;function winCalm(){const g=window.__winGap!=null?window.__winGap:(window.__chk?0:5000);return !modalOn&&Date.now()-mCloseT>=g;}
+let mCloseT=0;function winCalm(){const g=window.__winGap!=null?window.__winGap:(window.__chk?0:5000);return !modalOn&&Date.now()-mCloseT>=g&&Date.now()-tapT>=700&&Date.now()-inAt>=700;}   // M47: окно игры — не под пальцем (касание < 0,7 с назад — подождать)
+// M47 (владелец, бета-11, вариант «а»): окно, которое открыл игрок, время НЕ останавливает. Держат время только окна modal(html,{hold:1}):
+// закрытие месяца, «Пока вас не было», решения (события «Нужно ваше решение», торги, вопросы недр, сцены с выбором), сломанный сейв.
+// Держит до hideModal (цепочка окон из такого окна — тоже держит), но не дольше HOLD_IDLE без касаний (игру оставили открытой — время идёт).
+// modalOn остаётся «окно открыто» (Enter, winCalm, тосты, пуши); GAME.running() смотрит modalHolds().
+const HOLD_IDLE=60000;let modalHold=false,mHoldT=0,inAt=0;
+try{for(const ev of ['pointerdown','keydown','wheel','touchstart'])document.addEventListener(ev,()=>{inAt=Date.now();
+  if(!document.hidden){if(pauseWhy.has('vkh'))setPause('vkh',false);if(pauseWhy.has('hide'))setPause('hide',false);}},{passive:true,capture:true});}catch(e){}   // игрок трогает игру — она видна: «скрыта» не залипает (VK)
+// M47: почему время стоит — честно, словами (тост кнопок скорости/паузы)
+function pauseReason(){try{if(document.hidden)return '';if(pauseWhy.has('ad'))return L('Идёт реклама — время продолжится после неё','An ad is playing — time resumes after it');if(pauseWhy.has('pay'))return L('Идёт оплата — время продолжится после неё','Payment in progress — time resumes after it');
+  if(pauseWhy.has('sdk'))return L('Площадка поставила игру на паузу — продолжится сама','The platform paused the game — it resumes by itself');if(modalHolds())return L('Время стоит, пока открыто это окно — ответьте или закройте его','Time stands while this window is open — answer or close it');
+  if(GAME.hold.has('pro')||GAME.hold.has('advb')||GAME.hold.has('tut'))return L('Людмила Санна ждёт ваш шаг — нажмите подсвеченную кнопку','Lyudmila Sanna is waiting for your step — tap the highlighted button');if(GAME.hold.has('broken'))return L('Сначала решите, что делать с сохранением','First decide what to do with the save');}catch(e){}return '';}
+function modalH(h){return modal(h,{hold:1});}   // окно, которое держит время (см. выше)
+function modalHolds(){return modalOn&&modalHold&&Date.now()-Math.max(inAt,mHoldT)<HOLD_IDLE;}
 /* M37: память прокрутки окон. Цепочка окон одного показа (до hideModal + 0,6 с) — стек {s:подпись, y, my, n}; подпись — data-nav или заголовок h2 + выбранная вкладка + начало первого абзаца (без цифр).
    Новое окно с подписью из стека — это «назад» (или перерисовка того же окна): позиция, где был; иначе — вперёд, сверху. Вложенные прокрутки (.lb и т. п.) — тоже. */
 let mNav=[],mNavT=0;
@@ -1068,10 +1103,11 @@ function mPlace(m,c){const s=mSig(c);let i=-1;if(s)for(let j=mNav.length-1;j>=0;
   if(i<0){mNav.push({s,y:0,my:0,n:{}});if(mNav.length>20)mNav.shift();c.scrollTop=0;m.scrollTop=0;return;}
   const e=mNav[i];mNav.length=i+1;scrollPin(c,e.y);if(e.my)scrollPin(m,e.my);else m.scrollTop=0;
   for(const k in e.n){const p=k.split('|'),x=c.querySelectorAll(p[0])[+p[1]];if(x){x.scrollLeft=e.n[k][0];x.scrollTop=e.n[k][1];}}}
-function hideModal(){if(modalOn){try{mKeep();}catch(e){}mNavT=Date.now();}const m=$('modal');if(m)m.classList.remove('on');modalOn=false;document.body.classList.remove('mon');mCloseT=Date.now();modalRe=null;YG.start();setTimeout(()=>toastNext(1),400);
+function hideModal(){if(modalOn){try{mKeep();}catch(e){}mNavT=Date.now();}const m=$('modal');if(m)m.classList.remove('on');modalOn=false;modalHold=false;document.body.classList.remove('mon');mCloseT=Date.now();modalRe=null;YG.start();setTimeout(()=>toastNext(1),400);
   try{const c=$('mcard');if(c)c.style.transform='';if(mFocus&&document.contains(mFocus)&&mFocus.focus)mFocus.focus({preventScroll:true});}catch(e){}mFocus=null;}
-function modal(html){if(RD.off===Infinity&&Date.now()-tapT<700)RD.off=0;   // M46: игрок сам открыл окно — «читаю» снова можно
-  PAY.re=null;modalRe=null;const m=$('modal'),c=$('mcard');if(!m||!c)return;const was=modalOn;if(!was)mFocus=document.activeElement;
+function modal(html,o){if(RD.off===Infinity&&Date.now()-tapT<700)RD.off=0;   // M46: игрок сам открыл окно — «читаю» снова можно
+  PAY.re=null;modalRe=null;const m=$('modal'),c=$('mcard');if(!m||!c)return;const was=modalOn;
+  if(!was)modalHold=false;if(o&&o.hold){if(!modalHold)mHoldT=Date.now();modalHold=true;}   /* M47 */if(!was)mFocus=document.activeElement;
   try{if(was)mKeep();else if(Date.now()-mNavT>600)mNav=[];}catch(e){mNav=[];}
   c.innerHTML=html;c.style.transform='';m.classList.add('on');m.classList.toggle('re',was);modalOn=true;document.body.classList.add('mon');try{mPlace(m,c);}catch(e){c.scrollTop=0;m.scrollTop=0;}YG.stop();
   try{c.setAttribute('role','dialog');c.setAttribute('aria-modal','true');const h=c.querySelector('h2');if(h){if(!h.id)h.id='mTitle';c.setAttribute('aria-labelledby',h.id);}else c.removeAttribute('aria-labelledby');c.tabIndex=-1;c.focus({preventScroll:true});}catch(e){}}
@@ -1090,7 +1126,40 @@ function setLang(l){l=normLang(l);if(IS_VK)l='ru';if(l===LANG)return;LANG=l;appl
   if(modalOn&&modalRe)modalRe();}
 
 /* ================= настройки, покупки, «Об игре» ================= */
-function openSave(){const code=(()=>{try{return btoa(unescape(encodeURIComponent(JSON.stringify(sOut()))));}catch(e){return '';}})();
+/* M47d: код переноса. Было: base64(JSON) целиком → правка «в блокноте» давала любые 💎 и покупки (аудит-4 №3).
+   Теперь код «MG2.<подпись>.<base64>» (подпись — хеш с солью, svSig); старый код (просто base64) тоже принимаем.
+   Из кода берём мир и прогресс; покупки (buy/buyB/payT/payV, путёвка psG/psT) — никогда: они придут с площадки (PAY.restore/payMerge);
+   💎 — только с подписанного кода и только на «новое» устройство (svFresh: здесь ещё не загружали код, не начинали заново, нет прошлых холдингов, мир < 60 дней) — max(здесь, в коде);
+   иначе 💎 остаются как на этом устройстве. Счётчики роликов/подарков дня — как на этом устройстве. Неподписанный код: только мир (+ то, что едет с миром) —
+   звания, наборы, вещи, украшения, улучшения за 💎 — здешние, а награды за то, что в мире уже достигнуто, при первой проверке не платятся (S.svQ → game.js checkAch). */
+const SV_PRE='MG2.';
+function svSig(b){let h1=0x6d47a3c1,h2=0x1b873593;const s='магнат·M47d·'+b.length+'·'+b;   // соль + длина + сам код
+  for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return (h2>>>0).toString(36)+'x'+(h1>>>0).toString(36);}
+function svMake(){try{const b=btoa(unescape(encodeURIComponent(JSON.stringify(sOut()))));return SV_PRE+svSig(b)+'.'+b;}catch(e){return '';}}
+// разобрать код → {d, sig:true|false} или null (подпись не сошлась / мусор)
+function svRead(t){t=String(t||'').replace(/\s+/g,'');let b=t,sig=false;
+  if(t.indexOf(SV_PRE)===0){const i=t.indexOf('.',SV_PRE.length);if(i<0)return null;b=t.slice(i+1);if(svSig(b)!==t.slice(SV_PRE.length,i))return null;sig=true;}
+  let d=null;try{d=wIn(JSON.parse(decodeURIComponent(escape(atob(b)))));}catch(e){return null;}
+  return isObj(d)&&isObj(d.w)&&d.w.v===1?{d,sig}:null;}
+function svFresh(){return !(S.svIn>0)&&!(S.rst>0)&&!(Array.isArray(S.fame)&&S.fame.length)&&!(isObj(S.w)&&(S.w.t|0)>=60);}
+// собрать новое сохранение: L — здешнее (S), d — из кода
+function svApply(L,d,sig){const N=sig?Object.assign({},d):Object.assign({},L);
+  if(!sig){N.w=d.w;for(const f of ['wk','lastT','offMore','freeM','ph','adD','gift','fame','tut','rst'])if(f in d)N[f]=d[f];   // то, что едет с миром (как в mergeSave)
+    N.rst=Math.max(L.rst|0,d.rst|0);}
+  // 💎: подписанный код на новом устройстве — больше из двух; иначе — здешние
+  const lc=typeof L.cr==='number'&&isFinite(L.cr)?L.cr:0,dc=typeof d.cr==='number'&&isFinite(d.cr)?Math.max(0,Math.floor(d.cr)):0;
+  N.cr=sig&&svFresh()?Math.max(lc,dc):lc;
+  // покупки и всё, что даёт 💎/подарок по счётчику дня, — только здешнее
+  for(const f of ['buy','buyB','payT','payV','psG','psT','adCr','adR','adF','adT','quest','pl','plW','wkR','rkX2','rkX2d','rwNew','svIn','st0','sound','vib','calm','lang','th','readP','soc','stc'])
+    if(f in L)N[f]=L[f];else delete N[f];
+  // «за что уже дали» — объединение (лишнее только мешает получить 💎 ещё раз); звания и счётчики — не ниже здешних
+  N.crE=Object.assign({},isObj(d.crE)?d.crE:{},isObj(L.crE)?L.crE:{});
+  for(const f of ['rk','rkG','adTot','udN'])if(typeof L[f]==='number'||typeof N[f]==='number')N[f]=Math.max(L[f]|0,sig?N[f]|0:0);
+  if(!sig)N.svQ=1;else delete N.svQ;   // неподписанный: награды за уже достигнутое в мире — без 💎 (game.js)
+  N.svIn=nowMs();return N;}
+function openSave(){const code=svMake();
   modal(`<h2>💾 ${L('Сохранение','Save')}</h2><p class="about">${L('Игра сохраняется сама на этом устройстве'+(PLAT==='apk'?'':' и в облаке площадки')+'. Чтобы перенести холдинг на другое устройство — скопируйте код и вставьте его там.','The game saves itself on this device'+(PLAT==='apk'?'':' and in the platform cloud')+'. To move your holding to another device, copy the code and paste it there.')}</p>
     <textarea id="svCode" rows="4" style="width:100%;font-size:14px;border-radius:12px;padding:8px" readonly>${code}</textarea>
     <div class="row"><button class="btn noenter" id="svCopy">📋 ${L('Скопировать','Copy')}</button></div>
@@ -1098,8 +1167,9 @@ function openSave(){const code=(()=>{try{return btoa(unescape(encodeURIComponent
     <textarea id="svIn" rows="3" style="width:100%;font-size:14px;border-radius:12px;padding:8px" placeholder="${L('вставьте код','paste the code')}"></textarea>
     <div class="row"><button class="btn noenter" id="svLoad">⬆️ ${L('Загрузить','Load')}</button><button class="btn" id="svBack" data-esc>${L('← Назад','← Back')}</button></div>`);
   $('svCopy').onclick=()=>{const t=$('svCode');t.select();try{navigator.clipboard?navigator.clipboard.writeText(t.value).then(()=>toast(L('Код скопирован','Code copied'))):document.execCommand('copy');}catch(e){}};
-  $('svLoad').onclick=()=>{let d=null;try{d=wIn(JSON.parse(decodeURIComponent(escape(atob($('svIn').value.trim())))));}catch(e){}
-    if(!isObj(d)||!isObj(d.w)||d.w.v!==1){toast(L('Код не подходит — проверьте, что скопирован целиком','The code doesn’t fit — make sure it was copied in full'));return;}
+  $('svLoad').onclick=()=>{const r=svRead($('svIn').value);   // M47d: подпись, мир и прогресс — без 💎 и покупок из кода
+    if(!r){toast(L('Код не подходит — проверьте, что скопирован целиком','The code doesn’t fit — make sure it was copied in full'));return;}
+    const d=svApply(S,r.d,r.sig);try{STAT.ev('svin',{s:r.sig?1:0,c:(d.cr|0)-(S.cr|0)});}catch(e){}
     S=d;fixSave();S.ts=nowMs();try{localStorage.setItem(SKEY,JSON.stringify(sOut()));}catch(e){}cloudFlush();
     // до перезагрузки игра не должна перезаписать загруженное (game.js при уходе со страницы кладёт в S.w старый мир и сохраняет)
     const keep=JSON.stringify(sOut());save=function(){try{localStorage.setItem(SKEY,keep);}catch(e){}};cloudReady=false;location.reload();};
@@ -1126,9 +1196,10 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
     <button class="set" id="stBig"><span>🔠 ${L('Крупный шрифт','Large text')}<br><small>${L('весь текст и кнопки крупнее','all text and buttons bigger')}</small></span><i${(S.bigF|0)?'':' class="off"'}>${[L('обычный','normal'),L('крупнее','larger'),L('ещё крупнее','largest')][S.bigF|0]}</i></button>
     ${BETA?`<button class="set" id="stFb"><span>✉️ ${L('Написать отзыв','Send feedback')}<br><small>${L('тестовая версия — нам важно ваше мнение','test version — your opinion matters')}</small></span><i class="go">›</i></button>`:''}
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
+    ${window.MUSIC?MUSIC.setHtml(on):''}<!-- M47e: 🎵 Музыка (js/music.js) -->
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('меньше анимации и движения','less animation and motion')}</small></span>${on(calm())}</button>
-    <button class="set" id="stReadP"><span>⏸ ${L('Пауза, пока листаю','Pause while I scroll')}<br><small>${L('время стоит, пока вы долго читаете экран','time stops while you read a long screen')}</small></span>${on(S.readP!==false)}</button>
+    <button class="set" id="stReadP"><span>⏸ ${L('Пауза, пока листаю','Pause while I scroll')}<br><small>${L('время стоит, пока вы долго читаете экран','time stops while you read a long screen')}</small></span>${on(S.readP===true)}</button>
     <button class="set" id="stNoIco"><span>🔤 ${L('Без значков','No icons')}<br><small>${L('слова вместо значков: «силы 60» вместо «⚡ 60»','words instead of icons: “energy 60” instead of “⚡ 60”')}</small></span>${on(!!S.noIco)}</button>
     ${IS_VK?'':`<button class="set" id="stLang"><span>🌐 Язык / Language</span><i>${LANG==='en'?'EN':'RU'}</i></button>`}
     ${window.THEME?`<button class="set" id="stTheme"><span>🎨 ${L('Оформление','Themes')}<br><small>${L('сейчас: ','now: ')}${(THEME.list().filter(t=>t.cur)[0]||{name:''}).name}</small></span><i class="go">›</i></button>`:''}
@@ -1145,9 +1216,10 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
     <div class="row"><button class="btn green" id="stClose">${L('Готово','Done')}</button></div>`);   // M41: внизу окна — одна кнопка (при крупном шрифте три кнопки закрывали полэкрана)
   modalRe=openSettings;
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
+  if(window.MUSIC)MUSIC.bind(openSettings);   // M47e
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stBig').onclick=()=>{S.bigF=((S.bigF|0)+1)%3;save();applyA11y();openSettings();};
-  $('stReadP').onclick=()=>{S.readP=S.readP===false;save();if(S.readP===false)rdOff();openSettings();};   // M46
+  $('stReadP').onclick=()=>{S.readP=S.readP!==true;save();if(!S.readP)rdOff();openSettings();};   // M46; M47: по умолчанию выкл.
   $('stNoIco').onclick=()=>{S.noIco=!S.noIco;save();applyA11y();try{window.uiRefresh&&window.uiRefresh();}catch(e){}openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Turned on in your device settings (“reduce motion”)'));return;}S.calm=!S.calm;save();applyCalm();openSettings();};
   if($('stLang'))$('stLang').onclick=()=>{const l=LANG==='en'?'ru':'en';LANG_MAN=l;try{localStorage.setItem(LANG_KEY,l);}catch(e){}setLang(l);};
@@ -1204,6 +1276,7 @@ function openAbout(){
     <p class="about">${L('«Из ларька в магнаты: бизнес» — экономическая стратегия «из грязи в князи»: от подработки и первого ларька — к сети, карьеру, горнорудному холдингу и IPO. Точки и сети, торги за лицензии, заводы и железная дорога, рынок, кредиты, недвижимость, друзья из 11 «Б» и отчёты главбуха.','“From Kiosk to Tycoon: Business Sim” is a rags-to-riches economic strategy: from side jobs and your first kiosk to a chain, a quarry, a mining holding and an IPO. Shops and chains, licence auctions, plants and railways, the market, loans, real estate, school friends and your chief accountant’s reports.')}</p>
     <p class="about">${L('Все компании, персонажи и события вымышлены, совпадения случайны. Соперники — боты игры, а не живые игроки.','All companies, characters and events are fictional; any resemblance is coincidental. Rivals are game bots, not real players.')}</p>
     <p class="about">${L('В игре нет ставок и азарта. Рубли в игре — только игровые: их нельзя купить, вывести или передать. Кристаллы 💎 немного ускоряют дела (это чуть сказывается и на рейтинге недели), но само место в рейтинге не продаётся.','There is no betting or gambling. In-game rubles are play money only: they can’t be bought, withdrawn or transferred. Crystals 💎 speed things up a little (which slightly shows in the weekly leaderboard), but a place in it isn’t sold.')}</p>
+    ${window.MUSIC?MUSIC.aboutHtml():''}<!-- M47e: подпись CC BY треков — не удалять -->
     ${PLAT==='vk'?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
     <p class="about">${L('Цены товаров близки к рынку России 2026 года, а мощности, стоимость и сроки стройки заводов упрощены под игру: время сжато, месяц идёт несколько минут.','Commodity prices are close to the Russian market of 2026, while plant capacities, construction costs and times are simplified for the game: time is compressed, a month lasts a few minutes.')}</p>
     <p class="about">${L('На компьютере: Esc — закрыть окно, Enter — главная кнопка окна.','On a computer: Esc closes a window, Enter presses its main button.')}</p>

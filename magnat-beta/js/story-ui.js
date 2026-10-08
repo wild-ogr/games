@@ -524,7 +524,8 @@ function css(){if(document.getElementById('st-css'))return;const s=document.crea
 @supports not (inset:0){.st-four>.st-av,.st-photo>.st-av{margin:4px}}
 #stBtn{position:relative}#stBtn em{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:var(--bad);color:#fff;font-size:14px;font-style:normal;line-height:20px;padding:0 5px}
 `;document.head.appendChild(s);}
-function open(html,re){css();modal(html);try{modalRe=re||null;}catch(e){}}
+let gHold=0;   // M47: сцену с вопросом открыла игра сама (next) — окно держит время (modal hold); открытые игроком — нет
+function open(html,re){css();modal(html,gHold?{hold:1}:undefined);try{modalRe=re||null;}catch(e){}}
 function close(){try{hideModal();}catch(e){}}
 function bind(sel,fn){const c=document.getElementById('mcard');if(!c)return;c.querySelectorAll(sel).forEach(b=>b.addEventListener('click',()=>fn(b)));}
 const SPEND={beav3:'abd',vit3:'a',bars2:'a',bear1:'a',vit4:'a',beav5:'a',owl3:'a',lud3:'a'};
@@ -570,6 +571,11 @@ const PH={owl:[['Считаю: ты догонишь. А я считаю точ�
   bear:[['Не одноклассник, но за ним следят все.','Not a classmate, but everyone keeps an eye on him.'],['Не одноклассник, но за ним следят все.','Not a classmate, but everyone keeps an eye on him.']]};
 const PH0={owl:['Я в банке, выдаю кредиты таким, как вы будете.','I’m at a bank, lending to people like you’ll become.'],beav:['Открою ларёк, через год — сеть, вот увидите.','I’ll open a kiosk, a chain in a year — you’ll see.'],
   bars:['Карьер «Сосновый лог», смены по 12 часов.','Pine Hollow quarry, 12-hour shifts.'],vit:['Таксую. Подкину вам заказов!','Driving a taxi. I’ll send some jobs your way!'],bear:['','']};
+// M47b (аудит гл.5 №13): в «Недрах» друзья — владельцы компаний; реплики не про ларёк и такси ([0] — друг впереди вас, [1] — позади)
+const PHN={owl:[['Мои разрезы пока впереди. Ничего личного — только цифры.','My pits are ahead for now. Nothing personal — just numbers.'],['Мой фонд в тебя вложился — и не прогадал.','My fund invested in you — and got it right.']],
+  beav:[['Мой лес и лесопилки в Карелии! Ну что, {v}, отстаёшь?','My timber and sawmills in Karelia! Well, {v}, falling behind?'],['Ничего, лес растёт быстро — догоню.','No matter, timber grows fast — I’ll catch up.']],
+  bars:[['Посчитал — повезло мне с рудой на Урале.','Did the maths — I got lucky with ore in the Urals.'],['Молодец. Мой ГОК своё ещё наверстает.','Well done. My mine will make up its ground.']],
+  vit:[['Кто бы мог подумать — мои вагоны возят пол-Кузбасса!','Who’d have thought — my wagons haul half of Kuzbass!'],['Возить твой уголь — одно удовольствие.','Hauling your coal is a pleasure.']]};
 // рост к прошлой встрече: при росте больше ×10 — «в N раз», иначе проценты; с нуля — «с нуля»
 function grow(v,pv){if(!(pv>0))return v>0?`<span class="up">▲ ${T('с нуля','from zero')}</span>`:'';
   if(v>=pv){const k=v/pv;return `<span class="up">▲ ${k>=10?T(`в ${Math.round(k).toLocaleString('ru')} раз`,`×${Math.round(k).toLocaleString('en')}`):'+'+pct(k-1)}</span>`;}
@@ -583,7 +589,7 @@ function openReunion(qid){const w=W();if(!w||!w.fr)return false;const q=w.fr.q.f
   let h=`<h2>🥂 ${T(`Встреча выпускников «${y} лет»`,`${y}-year class reunion`)}</h2><p class="st-sub">${T('Кафе «Юность», школа № 41, 11 «Б»','Youth Café, School No. 41, class 11B')} · ${window.FMT?FMT.date(w.m):''}</p>`;
   h+=`<p class="st-sub"><b>${first?T('«Через 10 лет — посмотрим, кто дальше!»','“Ten years from now — let’s see who’s come furthest!”'):T('Кто из нас дальше?','Who’s ahead?')}</b></p><table class="st-tb">`;
   rows.forEach((x,i)=>{const pv=h0.p&&h0.p[x.id];const ar=!first&&pv!==undefined?grow(x.v,pv):'';
-    const ph=x.id==='you'?'':first?T(PH0[x.id][0],PH0[x.id][1]):(()=>{const p=PH[x.id]||PH.vit,z=p[i<me?0:1];return T(z[0],z[1]).replace('{v}',hv());})();
+    const ph=x.id==='you'?'':first&&!w.ned?T(PH0[x.id][0],PH0[x.id][1]):(()=>{const p=(w.ned?PHN[x.id]:0)||PH[x.id]||PH.vit,z=p[i<me?0:1];return T(z[0],z[1]).replace('{v}',hv());})();
     h+=`<tr${x.id==='you'?' class="me"':''}><td class="n">${i+1}</td><td>${pic(x.id,i<me?'happy':'calm',40)}</td><td><b>${esc(x.id==='you'?T('Вы','You'):nk(x.id))}</b>${ph?`<span class="ph">${en()?'“':'«'}${esc(ph)}${en()?'”':'»'}</span>`:''}</td><td class="v">${money(x.v)}<br>${ar}</td></tr>`;});
   h+='</table>';
   // переходящий кубок: у кого сейчас и кто заберёт по итогам вечера
@@ -753,12 +759,13 @@ function openIpoScene(qid){const w=W();const q=w&&w.fr&&w.fr.q.find(x=>x.id===qi
       +FRS.map(id=>`<div class="st-row st-line">${pic(id,(F[id]&&F[id].tr>=41)?'happy':'calm',36)}<p class="st-say st-f"><b>${esc(nk(id))}:</b> ${esc(ipoLine(F,id))}</p></div>`).join('')
       +(b?`<div class="st-row st-line">${pic('bear','calm',36)}<p class="st-hint st-f">${esc(b)}</p></div>`:'')+`</details>`
       +(F.tp.anchor===1&&!F.tp.paid?`<p class="st-toast">+10 💎 ${T('премия за размещение','listing bonus')}</p>`:'')
-      +(pk?`<h3 style="margin:12px 0 4px">⭐ ${T('Доля основателя','Founder’s share')}</h3><p class="st-hint">${T('Опыт остаётся с вами: выберите одно улучшение — оно будет работать во всех следующих холдингах.','The experience stays with you: choose one upgrade — it works in all your future holdings.')}</p>${pk}`
+      +(pk?`<h3 style="margin:12px 0 4px">⭐ ${T('Доли основателя','Founder shares')}</h3><p class="st-hint">${T('Опыт остаётся с вами: вложите доли в улучшения — они работают во всех следующих холдингах. Остаток копится.','The experience stays with you: invest your shares in upgrades — they work in all future holdings. The rest carries over.')}</p>${pk}${picked?`<p class="st-hint" style="text-align:center">⭐ ${T('Уже взято','Taken')}: <b>${esc(picked)}</b></p>`:''}`   /* M47c: доли — очки, можно несколько улучшений */
         :picked?`<p class="st-hint" style="text-align:center">⭐ ${T('Улучшение выбрано','Upgrade chosen')}: <b>${esc(picked)}</b></p>`:'')
+      +((r=>r&&r.dv>0?`<p class="st-hint" style="text-align:center">📈 ${T(`Акции холдинга №${r.hold} остаются у вас: дивиденды ≈ ${money(r.dv)} в месяц пойдут в новый холдинг.`,`You keep shares in Holding No. ${r.hold}: dividends of about ${money(r.dv)} a month flow into the new holding.`)}</p>`:'')(Array.isArray(S.fame)?S.fame[S.fame.length-1]:null))   /* M47c */
       +`<p class="st-hint" style="text-align:center">${T('Фото — в «Зале славы». Людмила Санна не скрывает слёз.','The photo goes to the Hall of Fame. Lyudmila Sanna doesn’t hide her tears.')}</p>`
       +(typeof socBragHtml==='function'?socBragHtml('ipo'):'')+`<div class="row"><button class="btn w accent noenter" data-ok="1">${T('Спасибо всем!','Thank you all!')}</button></div>`;
     open(h,draw);
-    bind('[data-pk]',el=>{const k=el.dataset.pk;if(GAME.perkPick(k)==='ok'){snd('coin');picked=window.META&&META.pkName?META.pkName(k):k;try{toast('⭐ '+picked);}catch(e){}draw();}});
+    bind('[data-pk]',el=>{const k=el.dataset.pk;if(GAME.perkPick(k)==='ok'){snd('coin');{const n=window.META&&META.pkName?META.pkName(k):k;picked=picked?picked+', '+n:n;}try{toast('⭐ '+picked);}catch(e){}draw();}});
     bind('[data-ok]',()=>{if(F.tp.anchor===1&&!F.tp.paid){F.tp.paid=1;try{GAME.addCr(10,'anchor');}catch(e){}}answer(q,'a');});}
   draw();return true;}
 
@@ -779,7 +786,9 @@ function teaser(w){w=w||W();const F=w&&w.fr;if(!F||!F.v)return null;const m=w.m,
   const c=[];const add=(id,ru,e2,mood)=>c.push({w:id,tx:T(ru,e2),mood:mood||'happy'});
   try{if(w.ned&&E.ipoReady&&E.ipoReady(w))add('lud','Завтра — колокол на бирже? Я уже погладила блузку.','Tomorrow — the exchange bell? I’ve already ironed my blouse.','wow');}catch(e){}
   try{if(F.rags&&!w.ned&&E.nedraOk&&E.nedraOk(w))add('lud','Роснедра вот-вот пришлют письмо. Я держу ручку наготове.','The subsoil agency is about to send a letter. I have my pen ready.','wow');}catch(e){}
-  if(F.rags&&!w.ned&&w.st==='quarry'&&F.dn.bars2===undefined)add('bars','Пётр обещал утром сказать, выставят ли «Сосновый лог» на торги.','Pyotr promised to tell you in the morning whether Pine Hollow goes to auction.','calm');
+  // M47b (аудит гл.4 №12): только пока «Сосновый лог» ещё ждёт торгов (не на торгах, не наш и не ушёл) — иначе фраза устарела
+  const slog=(w.opi||[]).find(p=>p.nm&&p.nm[0]==='Сосновый лог'),slogW=!slog||slog.st==='list'&&slog.own!=='you';
+  if(F.rags&&!w.ned&&w.st==='quarry'&&F.dn.bars2===undefined&&slogW)add('bars','Пётр обещал утром сказать, выставят ли «Сосновый лог» на торги.','Pyotr promised to tell you in the morning whether Pine Hollow goes to auction.','calm');
   if(F.dn.bars2!==undefined&&F.bars.opi&&w.t-F.dn.bars2<90)add('bars','Пётр обещал показать проект разреза — он уже в столе.','Pyotr promised to show you the pit design — it’s already in his drawer.','calm');
   if(F.rags&&!w.ned&&st>=2&&F.dn.tpt1===undefined&&mmv>=70)add('vit','Витя что-то темнит про какого-то Топтыгина из Москвы — спросите завтра.','Vitya is hiding something about some Toptygin from Moscow — ask him tomorrow.','worry');
   try{if(w.ned&&w.hold===1&&F.dn.tpt4===undefined&&E.equity(w)>=(E.IPO_EQ||2.2e9)*.5)add('lud','Говорят, Топтыгин интересуется вашими акциями. Завтра узнаем зачем.','They say Toptygin is interested in your shares. We’ll find out why tomorrow.','worry');}catch(e){}
@@ -811,9 +820,11 @@ function calmNow(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(type
 // Без телефона — окном и обычные сцены/просьбы, по одной.
 function next(){const w=W();if(!w||!w.fr||!calmNow())return;
   // IPO — кульминация: три кадра сразу после окна биржи, без очереди
+  gHold=1;try{next0(w);}finally{gHold=0;}}
+function next0(w){
   {const q=w.fr.q.find(x=>x.k==='ipo'&&!shown[x.id]);if(q){shown[q.id]=Date.now();bigT=Date.now();phSeen(q.id);openIpoScene(q.id);return;}}
-  // закрытую крестиком большую сцену показываем снова через 10 минут (сцены Людмилы и Топтыгина в телефоне видны не всегда)
-  const fresh=x=>!shown[x.id]||(x.big&&Date.now()-shown[x.id]>600000);
+  // M47 (au4): закрытую крестиком большую сцену окном больше не повторяем — она остаётся в телефоне / «Друзьях» (было: снова через 10 минут)
+  const fresh=x=>!shown[x.id];
   if(hasPhone()){if(Date.now()-bigT<180000)return;const q=w.fr.q.find(x=>x.big&&fresh(x));if(!q)return;shown[q.id]=Date.now();bigT=Date.now();big(q.id);return;}
   const q=w.fr.q.find(fresh);if(!q)return;shown[q.id]=Date.now();if(q.big)big(q.id);else openAsk(q.id);}
 function badge(){const b=document.getElementById('stBtn');if(!b||!W())return;let n=0;try{n=W().fr?W().fr.q.length:0;}catch(e){}const e=b.querySelector('em');if(n){if(e)e.textContent=n;else b.insertAdjacentHTML('beforeend','<em>'+n+'</em>');}else if(e)e.remove();}

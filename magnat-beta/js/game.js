@@ -60,38 +60,85 @@ function isoWeek(ms){const d=new Date(ms);const t=new Date(Date.UTC(d.getFullYea
   const y=t.getUTCFullYear(),w=Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);return y+'-W'+(w<10?'0':'')+w;}
 function value(){return W?E.equity(W):0;}
 function weekUpd(){const k=isoWeek(nowMs());if(!S.wk||typeof S.wk!=='object'||S.wk.k!==k){if(S.wk&&typeof S.wk==='object'&&S.wk.k&&W&&GAME.wkClose)GAME.wkClose(S.wk);const v=value();S.wk={k,base:v,carry:0,b0:v};}else if(typeof S.wk.b0!=='number')S.wk.b0=S.wk.base;}
+// M47d: мир загружен неподписанным кодом переноса (shell.js svApply) — первая проверка отмечает достигнутое в нём без 💎 (вехи, достижения, звания, наборы)
+let svQ=!!S.svQ;
 function checkAch(){if(!W)return;if(!S.crE||typeof S.crE!=='object')S.crE={};
   for(const k in ACH){let got=!!W.ach[k];if(k==='profit')got=W.hist.some(h=>h.np>0);if(k==='year')got=W.m>=12;
-    if(got&&!S.crE[k]){S.crE[k]=1;S.cr=(S.cr||0)+ACH[k];emit('cr',ACH[k],k);}}
-  checkMiles();if(GAME.wallSync){GAME.wallSync();GAME.colSync();GAME.rankSync();}}
+    if(got&&!S.crE[k]){S.crE[k]=1;if(svQ)continue;S.cr=(S.cr||0)+ACH[k];emit('cr',ACH[k],k);}}
+  checkMiles();if(GAME.wallSync){GAME.wallSync();GAME.colSync();GAME.rankSync();}
+  if(svQ){svQ=false;S.svQ=0;}}
 function persist(force){S.w=W;const n=Date.now();if(force||n-saveT>4000){saveT=n;save();}}
+/* ================= M48rb: разорение с откатом назад (решение владельца 08.10) =================
+   Снимки мира на начало месяца (после закрытия) — последние RB_N, ТОЛЬКО на этом устройстве: localStorage 'magnat-rb' (в облако не идут:
+   3 снимка большого мира ≈ +100 тыс. знаков, у Яндекса предел записи ~200 КБ). Снимок — упакованный (savepack) мир без reps/hist/news
+   (их при откате берём из текущего мира: месяцы до снимка). Свой у каждого холдинга (wid), при входе в «Недра»/IPO/сбросе — с нуля.
+   Санация (econ sanation / biz bizSan) случилась при закрытии → событие 'ruin' вместо 'close': окно js/rb-ui.js «🏦 Санация / ↩ Вернуться».
+   Откатывается только мир W. 💎, покупки, награды (S.crE, звания, стена), рейтинг недели, реклама дня, статистика — в S, не трогаются.
+   Защита от фарма: S.rbHi[wid] — самый дальний день холдинга; 💎 «по ходу времени» (годовое закрытие, цель квартала, пари/встречи друзей)
+   за уже прожитые дни второй раз не даются (rbReplay); уроки (W.les) переносятся в восстановленный мир. Первый откат за холдинг — даром (S.rbN[wid]). */
+const RB_KEY='magnat-rb',RB_N=3,RB_CR=25,RB_REPLAY={yearclose:1,quarter:1,pari:1,reunion:1,anchor:1};let RB=null;
+function rbObj(k){if(!S[k]||typeof S[k]!=='object'||Array.isArray(S[k]))S[k]={};return S[k];}
+function rbLoad(){if(RB)return RB;let o=null;try{o=JSON.parse(localStorage.getItem(RB_KEY)||'null');}catch(e){}RB=o&&typeof o==='object'&&Array.isArray(o.s)?o:{id:'',s:[]};return RB;}
+function rbStore(){try{localStorage.setItem(RB_KEY,JSON.stringify(RB));}catch(e){}}   // нет места — снимки живут в памяти до перезагрузки
+function rbClear(){rbLoad();RB.id=wid();RB.s=[];rbStore();}
+function rbHiUpd(){if(!W)return;const h=rbObj('rbHi'),k=wid();if(W.t>(h[k]||0))h[k]=W.t;}
+function rbReplay(){if(!W||!S.rbHi||typeof S.rbHi!=='object')return false;return W.t<=(S.rbHi[wid()]||0);}
+function rbSnap(){if(!W||typeof PACK==='undefined')return;const R=rbLoad(),id=wid();if(R.id!==id){R.id=id;R.s=[];}
+  const o=Object.assign({},W);delete o.reps;delete o.hist;delete o.news;let w;try{w=JSON.stringify(PACK.packSafe(o));}catch(e){return;}
+  R.s=R.s.filter(x=>x&&x.t<W.t&&x.m<W.m);R.s.push({m:W.m,t:W.t,c:Math.round(W.cash),d:Math.round(E.debtOf(W)),e:Math.round(E.equity(W)),w});
+  while(R.s.length>RB_N)R.s.shift();rbStore();}
+// снимки, к которым можно вернуться: этот холдинг, не дальше RB_N месяцев назад, раньше «сейчас»; новые — первыми
+function rbList(){if(!W)return [];const R=rbLoad();if(R.id!==wid())return [];return R.s.filter(x=>x&&x.t<W.t&&x.m<W.m&&x.m>=W.m-RB_N).slice().reverse().map(x=>({m:x.m,t:x.t,cash:x.c,debt:x.d,eq:x.e,back:W.m-x.m}));}
+function rbFree(){return !((S.rbN&&S.rbN[wid()])|0);}
+// 08.10 владелец: цена растёт — 1-й даром, 2-й 25 💎, 3-й 50, 4-й 75…; ролик вместо 💎 — только за 2-й (цена 25)
+function rbPrice(){return RB_CR*((S.rbN&&S.rbN[wid()])|0);}
+function rbAdOk(){const p=rbPrice();return p>0&&p<=RB_CR;}
+// вернуть мир к снимку t; pay — 'free'|'ad'|'cr' (оплату проверяет интерфейс; 💎 списываются здесь)
+function rbGo(t,pay){const R=rbLoad();if(R.id!==wid())return null;const i=R.s.findIndex(x=>x&&x.t===t);const x=R.s[i];if(!x||!(x.t<W.t))return null;
+  if(pay==='free'&&!rbFree())return null;let w2;try{w2=PACK.unpack(JSON.parse(x.w));}catch(e){return null;}if(!w2||!valid(Object.assign({},w2,{reps:[]})))return null;
+  if(pay==='ad'&&!rbAdOk())return null;if(pay==='cr'&&!GAME.spend(rbPrice(),'rollback'))return 'cr';
+  w2.reps=(W.reps||[]).filter(r=>r.m<x.m);w2.hist=(W.hist||[]).filter(h=>h.m<x.m);w2.news=(W.news||[]).filter(n=>n.t<=x.t);
+  if(W.les){const l=w2.les||(w2.les={});for(const k in W.les)l[k]=Math.max(l[k]||0,W.les[k]);}   // уроки — знания, а не мир
+  const back=W.m-x.m;rbHiUpd();try{E.migrate(w2);}catch(e){return null;}
+  w2.rbg=(W.rbg|0)+1;W=S.w=w2;acc=0;R.s=R.s.slice(0,i+1);rbStore();   // w.rbg — облако берёт этот мир, а не «ушедший дальше» (shell.js wDays)
+  const n=rbObj('rbN');n[wid()]=(n[wid()]|0)+1;delete S.rbP;delete S.pendRep;S.lastT=nowMs();   // офлайн — от «сейчас»
+  try{if(typeof STAT!=='undefined')STAT.ev('rb',{m:back,pay:pay});}catch(e){}
+  GAME.hold.delete('rb');persist(true);try{cloudFlush();}catch(e){}emit('rollback',{m:x.m,back,pay});emit('change');return 'ok';}
+// принять санацию: снимок «после», дальше — обычное окно закрытия месяца
+function rbAccept(){const p=S.rbP;delete S.rbP;GAME.hold.delete('rb');rbSnap();persist(true);const rep=p&&W&&W.reps.find(r=>r.m===p.m);if(rep)emit('close',rep);emit('change');}
+function rbPending(){const p=S.rbP;if(!p||!W)return null;if(p.h!==wid()||p.t!==W.t){delete S.rbP;return null;}const rep=W.reps.find(r=>r.m===p.m);if(!rep){delete S.rbP;return null;}return rep;}
 function onClose(rep,off){if(!off)S.adW=(S.adW||0)+1;
-  if((rep.m+1)%12===0&&rep.m>=11){S.cr=(S.cr||0)+2;emit('cr',2,'yearclose');}
+  if((rep.m+1)%12===0&&rep.m>=11&&!rbReplay()){S.cr=(S.cr||0)+2;emit('cr',2,'yearclose');}   // M48rb: за прожитый до отката год — второй раз нет
   metaClose(rep,off);checkAch();weekUpd();persist(true);
   if(!off&&typeof LB!=='undefined'&&LB.submit){try{LB.submit();}catch(e){}}}
-function handle(out,off){for(const e of out){
-  if(e.k==='close'){onClose(e.rep,off);if(!off)emit('close',e.rep);}
+function handle(out,off,ruin){for(const e of out){
+  if(e.k==='close'){onClose(e.rep,off);if(off)continue;
+    // M48rb: санация в этом закрытии и есть куда вернуться — сначала выбор (js/rb-ui.js), окно месяца — после «🏦 Санация»
+    if(ruin&&subs.ruin&&subs.ruin.length&&rbList().length){S.rbP={m:e.rep.m,t:W.t,h:wid()};GAME.hold.add('rb');emit('ruin',e.rep);}
+    else{emit('close',e.rep);rbSnap();}}
   else if(e.k==='own'){emit('own',e);if(e.w==='visit')emit('ownVisit',{fr:e.a,off:!!off,r:e.fr||null});}   // M17: дела хозяина (js/owner.js); ownVisit — хук для модуля друзей: «сходил в гости к другу» (fr — owl|beav|bars|vit)
   else if(!off){if(e.k==='found')emit('found',e.p);else if(e.k==='built')emit('built',e.o);else if(e.k==='upgraded')emit('upgraded',e.o);else if(e.k==='auc')emit('auc',e.a,e.res);else if(e.k==='gig')emit('gig',e);}}}
-function dayStep(){let out;try{out=E.tick(W,false);}catch(e){broken(e);return;}handle(out,false);persist();emit('day');}
+function dayStep(){let out;const s0=W.san|0;try{out=E.tick(W,false);}catch(e){broken(e);return;}handle(out,false,(W.san|0)>s0);rbHiUpd();persist();emit('day');}   // M48rb: рост W.san — санация (оба пути)
 // сломанное сохранение: не затираем молча — копия в резерв, окно «исправить / начать заново»
 let brokenOn=false;
 function broken(e){if(brokenOn)return;brokenOn=true;GAME.hold.add('broken');try{console.warn('magnat: мир не грузится',e);}catch(x){}
   try{localStorage.setItem('magnat-backup-'+Date.now(),JSON.stringify(S));}catch(x){}
   const show=()=>{if(typeof modal!=='function')return setTimeout(show,300);
-    modal(`<h2>${L('Не удалось загрузить сохранение','Could not load your save')}</h2><p class="about">${L('После обновления игры сохранение прочиталось не полностью. Копия отложена в резерв — ничего не потеряно.','After the game update your save was not read completely. A backup copy is kept — nothing is lost.')}</p>
+    modalH(`<h2>${L('Не удалось загрузить сохранение','Could not load your save')}</h2><p class="about">${L('После обновления игры сохранение прочиталось не полностью. Копия отложена в резерв — ничего не потеряно.','After the game update your save was not read completely. A backup copy is kept — nothing is lost.')}</p>
       <div class="row"><button class="btn green" id="brFix">🔧 ${L('Попробовать исправить','Try to repair')}</button><button class="btn noenter" id="brNew">${L('Начать заново','Start over')}</button></div>`);
     document.getElementById('brFix').onclick=()=>{try{E.migrate(W);E.tick(W,false);brokenOn=false;GAME.hold.delete('broken');hideModal();persist(true);emit('change');}catch(x){toast(L('Не получилось — можно начать заново','That didn’t work — you can start over'));}};
     document.getElementById('brNew').onclick=()=>{W=S.w=newPlayer();S.tut={};brokenOn=false;GAME.hold.delete('broken');hideModal();persist(true);emit('change');};};
   show();}
 function dayBase(){return (W&&DAY_ST[W.st])||DAY_MS0;}
-function spd(){const v=S.spd;return v===0||v===2?v:1;}
-function loop(){const now=performance.now(),dt=Math.min(3000,now-lastRT)*(spd()===2?2:1);lastRT=now;if(!W)return;
+// M47: ×4 — только в бете (тест владельца и друзей), в выпуске S.spd=4 читается как ×1
+function spd4(){return typeof BETA!=='undefined'&&!!BETA;}
+function spd(){const v=S.spd;return v===0||v===2||v===4&&spd4()?v:1;}
+function loop(){const now=performance.now(),dt=Math.min(3000,now-lastRT)*(spd()||1);lastRT=now;if(!W)return;
   if(!document.hidden){const t=nowMs();S.lastT=t;S.maxT=Math.max(S.maxT||0,t);}
   if(GAME.running()){acc+=dt;let dm=dayBase();while(acc>=dm&&GAME.running()){acc-=dm;dayStep();dm=dayBase();}}}
 function shiftMs(){return typeof PAY!=='undefined'&&PAY.own&&PAY.own('manager')?SHIFT_MGR:SHIFT;}
 function runOffline(el){const cap=shiftMs(),use=Math.min(el,cap),days=Math.floor(use/OFF_DAY_MS);if(days<1)return null;
-  let sum;try{sum=E.offline(W,days);}catch(e){broken(e);return null;}checkAch();weekUpd();sum.el=el;sum.cap=cap;
+  let sum;try{E.offSnap=rbSnap;sum=E.offline(W,days);}catch(e){broken(e);return null;}finally{E.offSnap=null;}rbHiUpd();checkAch();   // M48rb: снимок на начало каждого месяца и в офлайнеweekUpd();sum.el=el;sum.cap=cap;
   S.offMore=Math.floor(Math.min(Math.max(0,el-cap),cap)/OFF_DAY_MS);sum.more=S.offMore;S.lastT=nowMs();persist(true);emit('offline',sum);emit('change');return sum;}
 function offlineCheck(){if(offDone||!W)return;offDone=true;const now=nowMs(),last=S.lastT||0;
   if(S.maxT&&now<S.maxT-60000){S.lastT=now;return;}         // часы перевели назад — ничего не начисляем
@@ -100,16 +147,17 @@ function offlineCheck(){if(offDone||!W)return;offDone=true;const now=nowMs(),las
 document.addEventListener('visibilitychange',()=>{if(!W)return;if(!document.hidden){lastRT=performance.now();const now=nowMs(),el=now-(S.lastT||now);
   if(S.maxT&&now<S.maxT-60000){S.lastT=now;return;}if(el>=60000)runOffline(el);S.lastT=now;}else persist(true);});
 
-const GAME={get DAY_MS(){const b=dayBase();return spd()===2?b/2:b;},get DAY_BASE(){return dayBase();},OFF_DAY_MS,
-  speed:spd,setSpeed(v){S.spd=v===0||v===2?v:1;persist(true);emit('change');},CR,AD_CR,AD_CR_MAX,hold:new Set(),
+const GAME={get DAY_MS(){const b=dayBase();return b/(spd()||1);},get DAY_BASE(){return dayBase();},OFF_DAY_MS,
+  speed:spd,setSpeed(v){S.spd=v===0||v===2||v===4&&spd4()?v:1;persist(true);emit('change');},CR,AD_CR,AD_CR_MAX,hold:new Set(),
   get W(){return W;},
   on(n,f){(subs[n]=subs[n]||[]).push(f);},emit,
-  start(){if(!valid(S.w))S.w=newPlayer();W=S.w;
+  start(){if(!valid(S.w))S.w=newPlayer();W=S.w;if(S.spd===0)S.spd=1;   // M47: своя ⏸ не переживает перезагрузку (время не стоит «навсегда»)
+   
     try{pkSync();const fx=E.migrate(W);if(fx.length)try{console.info('magnat: сохранение обновлено',fx.join(','));}catch(e){}E.check(W);E.bal(W);}catch(e){broken(e);}weekUpd();checkAch();lastRT=performance.now();
     if(!timer)timer=setInterval(loop,250);
     if(window.__sdkDone)offlineCheck();else setTimeout(offlineCheck,1500);
     persist(true);emit('change');},
-  running(){return !!W&&spd()!==0&&!(typeof paused!=='undefined'&&paused)&&!(typeof modalOn!=='undefined'&&modalOn)&&!document.hidden&&GAME.hold.size===0;},
+  running(){return !!W&&spd()!==0&&!(typeof paused!=='undefined'&&paused)&&!(typeof modalHolds==='function'?modalHolds():(typeof modalOn!=='undefined'&&modalOn))&&!document.hidden&&GAME.hold.size===0;},   // M47: окно игрока время не держит
   dayFrac(){return Math.min(1,acc/dayBase());},
   // проверки и снимки: прокрутить n дней «онлайн» сразу (события приходят как обычно)
   fast(n){for(let i=0;i<n;i++)dayStep();},
@@ -122,7 +170,8 @@ const GAME={get DAY_MS(){const b=dayBase();return spd()===2?b/2:b;},get DAY_BASE
       try{r=E[name](W,...a);}finally{if(E.tg)E.tg(t0);}}
     checkAch();persist(true);emit('change',name,r,a);return r;},
   cr(){return S.cr||0;},
-  addCr(n,why){S.cr=(S.cr||0)+n;persist(true);emit('cr',n,why);emit('change');},
+  addCr(n,why){if(RB_REPLAY[why]&&rbReplay()){persist(true);emit('change');return;}   // M48rb: 💎 «по ходу времени» за прожитые до отката дни — один раз
+    S.cr=(S.cr||0)+n;persist(true);emit('cr',n,why);emit('change');},
   spend(n,k){if((S.cr||0)<n)return false;S.cr-=n;persist(true);emit('cr',-n,'spend');if(typeof STAT!=='undefined')STAT.ev('spend',{k:k||'?',c:n});return true;}, // k — на что (для статистики)
   speedBuild(oid){const o=W.obj.find(x=>x.id===oid);if(!o||o.sp||!(o.st==='b'||o.up))return 'no';if(!GAME.spend(CR.speed,'speed'))return 'cr';E.speed(W,oid);persist(true);emit('change');return 'ok';},
   instantExpl(pid){const p=E.plotById(W,pid);if(!p||p.st!=='exp')return 'no';if(!GAME.spend(CR.expl,'expl'))return 'cr';E.speedExpl(W,pid);persist(true);emit('found',pid);emit('change');return 'ok';},
@@ -152,19 +201,20 @@ const GAME={get DAY_MS(){const b=dayBase();return spd()===2?b/2:b;},get DAY_BASE
   ipoReady(){return !!W&&E.ipoReady(W);},
   doIpo(){if(!GAME.ipoReady())return null;weekUpd();const v=value();if(!Array.isArray(S.fame))S.fame=[];
     const rec={hold:W.hold,m:W.m,eq:v,rep:W.rep,t:nowMs()};S.fame.push(rec);S.wk.carry=(S.wk.carry||0)+v-S.wk.base;
-    rec.fs=GAME.ipoShares();S.fs=(S.fs||0)+rec.fs;if(!S.pk||typeof S.pk!=='object')S.pk={};S.pkP=perkOffer();
+    fsMig();rec.fs=GAME.ipoShares();S.fs=(S.fs||0)+rec.fs;if(!S.pk||typeof S.pk!=='object')S.pk={};const dv=E.ipoDv?E.ipoDv(W):0;rec.dv=dv;rec.ch=E.chainSegs?E.chainSegs(W).length:0;S.pkP=perkOffer();   // M47c: доли — очки улучшений; дивиденды по акциям старого холдинга
     const lx0=Object.assign({},W.lx||{}),use0=Object.assign({},W.use||{});   // вещи — у героя: переезжают в новый холдинг (в новый баланс не попадают — уже оплачены)
-    W=S.w=E.newWorld({rep:Math.min(5,W.rep+1),hold:W.hold+1,m0:W.m,tut:false,pk:S.pk});W.lx=lx0;W.use=use0;S.wk.base=value();
-    S.cr=(S.cr||0)+20;emit('cr',20,'ipo');persist(true);emit('ipo',rec);emit('change');return rec;},
+    W=S.w=E.newWorld({rep:Math.min(5,W.rep+1),hold:W.hold+1,m0:W.m,tut:false,pk:S.pk,dv});W.lx=lx0;W.use=use0;S.wk.base=value();
+    S.cr=(S.cr||0)+20;emit('cr',20,'ipo');rbClear();persist(true);emit('ipo',rec);emit('change');return rec;},
   // переход «Карьер → Недра» (глава 5): взнос партнёра, ОСНО, мир недр, обучение недр для первого холдинга
   // «Начать игру заново» (настройки): резерв → новый мир; 💎, покупки, зал славы остаются; номер сброса S.rst побеждает старый мир в облаке
   reset(mode){try{localStorage.setItem('magnat-backup-'+Date.now(),JSON.stringify(S));}catch(e){}
     const pk=S.pk&&typeof S.pk==='object'?S.pk:{};W=S.w=mode==='nedra'?E.newWorld({tut:true,pk}):mode==='rags'&&E.bizInit?E.newWorld({rags:true,pk}):newPlayer();
     S.rst=(S.rst||0)+1;S.tut={};S.offMore=0;delete S.freeM;delete S.pendRep;S.lastT=nowMs();acc=0;S.wk={k:isoWeek(nowMs()),base:value(),carry:0,b0:value()};
-    try{if(GAME.rankSync)GAME.rankSync();}catch(e){}persist(true);try{cloudFlush();}catch(e){}emit('change');emit('reset');return W;},   // звание — сразу по ★ и главе нового мира, не ждать первого действия
+    delete S.rbP;rbClear();try{if(GAME.rankSync)GAME.rankSync();}catch(e){}persist(true);try{cloudFlush();}catch(e){}emit('change');emit('reset');return W;},   // звание — сразу по ★ и главе нового мира, не ждать первого действия
   goNedra(){if(!W||W.ned||!E.bizGoNedra)return null;const r=E.bizGoNedra(W);if(!r||r.err)return r;
-    if(W.tut){S.tut={};}checkAch();weekUpd();if(S.wk)S.wk.carry=(S.wk.carry||0)-(r.partner||0);persist(true);emit('nedra',r);emit('change');return r;},
+    if(W.tut){S.tut={};}rbClear();checkAch();weekUpd();if(S.wk)S.wk.carry=(S.wk.carry||0)-(r.partner||0);persist(true);emit('nedra',r);emit('change');return r;},
   stage(){return W?(W.st||'nedra'):'nedra';},
+  rb:{N:RB_N,get CR(){return rbPrice();},adOk:rbAdOk,list:rbList,free:rbFree,go:rbGo,accept:rbAccept,pending:rbPending,snap:rbSnap,replay:rbReplay,clear:rbClear},   // M48rb: откат при разорении (js/rb-ui.js)
   shiftH(){return shiftMs()/3600e3;},
   SHIFT_H:SHIFT/3600e3,SHIFT_MGR_H:SHIFT_MGR/3600e3,
   isoWeek};
@@ -227,35 +277,42 @@ function planClaim(i){const p=PL(),t=planTasksNow()[i];if(!t||t.ok==='got'||!tas
 /* вехи глав: достигнута — W.ach['ms_'+k]; награда один раз на игрока (S.crE) — 💎 и украшение за последнюю веху главы */
 function checkMiles(){if(!W||!E.bizMiles)return;const i=E.stI(W);   // в «Недрах» — свои вехи (MILES.nedra), вехи прошлых глав bizMiles в мире недр не считает
   for(const st of E.STAGES.slice(0,Math.max(0,i)+1)){for(const m of E.bizMiles(W,st)){if(!m.done)continue;const k='ms_'+m.k;
-    if(!W.ach[k])W.ach[k]=1;if(S.crE[k])continue;S.crE[k]=1;S.cr=(S.cr||0)+m.cr;if(m.cos)cosGive(m.cos);emit('cr',m.cr,'mile');emit('mile',m);}}}
+    if(!W.ach[k])W.ach[k]=1;if(S.crE[k])continue;S.crE[k]=1;if(svQ)continue;S.cr=(S.cr||0)+m.cr;if(m.cos)cosGive(m.cos);emit('cr',m.cr,'mile');emit('mile',m);}}}
 /* цели квартала (недра): в начале квартала совет директоров предлагает 3 цели — игрок выбирает одну (развилка «спокойно / рискованно»).
    Итог — при закрытии 3-го месяца квартала: выполнено — 💎 и строчка в новостях. W.qg = {q, o:[{k,need,cr}], p (выбранная, −1), b (база), st:'pick'|'run'|'ok'|'fail'} */
-const QG={np:{cr:2},eq:{cr:3},rev:{cr:3},expl:{cr:2},lic:{cr:3},build:{cr:3},debt:{cr:3}};   // M8 §3.6 (решение владельца 30.09): вдвое меньше — это был самый щедрый и незаметный кран 💎 в «Недрах»
+const QG={np:{cr:2},eq:{cr:3},rev:{cr:3},expl:{cr:2},lic:{cr:3},build:{cr:3},debt:{cr:3},plant:{cr:3}};   // M47c: plant — завод передела   // M8 §3.6 (решение владельца 30.09): вдвое меньше — это был самый щедрый и незаметный кран 💎 в «Недрах»
 function qRev(W,q){let s=0,n=0;for(const r of W.reps)if(Math.floor(r.m/3)===q){s+=r.pl.rev;n++;}return n?s:0;}
 function qNet(W,q){let s=0;for(const r of W.reps)if(Math.floor(r.m/3)===q)s+=E.netOf(r.pl);return s;}
 function qgNew(q){const o=[{k:'np',need:0}],pool=[{k:'eq',need:.06}];const pr=qRev(W,q-1),debt=E.debtOf(W);
   if(pr>0)pool.push({k:'rev',need:1.1,base:pr});pool.push({k:'expl',need:2});pool.push({k:'lic',need:1});
   if(W.cash>=250e6||E.REG.some(r=>W.plots[r].some(p=>p.own==='you'&&p.st==='lic'&&!W.obj.some(x=>x.plot===p.id))))pool.push({k:'build',need:1});
   if(debt>50e6)pool.push({k:'debt',need:.2});
+  if(E.plantOf&&W.n5&&E.plantOf(W)){o.splice(1,0,{k:'plant',need:1});}   // M47c: «полный цикл» — цель квартала всегда в выборе, когда есть свой завод на своём сырье
   while(o.length<3&&pool.length){const i=Math.floor(Math.random()*pool.length);o.push(pool.splice(i,1)[0]);}
   for(const x of o)x.cr=QG[x.k].cr;return {q,o,p:-1,b:null,st:'pick'};}
-function qgBase(g){return {eq:E.equity(W),expl:W.stat.expl,lic:TM.lic(W),build:W.stat.built,debt:E.debtOf(W)};}
+function qgBase(g){return {eq:E.equity(W),expl:W.stat.expl,lic:TM.lic(W),build:W.stat.built,debt:E.debtOf(W),plant:plantsN()};}
+function plantsN(){return W?W.obj.filter(o=>E.OBJ[o.t]&&E.OBJ[o.t].in).length:0;}   // M47c
 function qgCur(g){if(!g||g.p<0||!W)return 0;const x=g.o[g.p],b=g.b||{};
   switch(x.k){case 'np':return qNet(W,g.q)+(Math.floor(W.m/3)===g.q?E.netOf(W.mon.pl):0);case 'eq':return b.eq>0?E.equity(W)/b.eq-1:0;
     case 'rev':return x.base>0?(qRev(W,g.q)+(Math.floor(W.m/3)===g.q?W.mon.pl.rev:0))/x.base:0;case 'expl':return W.stat.expl-b.expl;case 'lic':return TM.lic(W)-b.lic;
-    case 'build':return W.stat.built-b.build;case 'debt':return b.debt>0?1-E.debtOf(W)/b.debt:0;}return 0;}
+    case 'build':return W.stat.built-b.build;case 'plant':return plantsN()-(b.plant||0);case 'debt':return b.debt>0?1-E.debtOf(W)/b.debt:0;}return 0;}
 function qgOk(g){const x=g.o[g.p],v=qgCur(g);return x.k==='np'?v>0:v>=x.need-1e-9;}
 function qgPick(i){const g=W&&W.qg;if(!g||g.st!=='pick'||!g.o[i])return 'no';g.p=i;g.b=qgBase(g);g.st='run';persist(true);emit('change');return 'ok';}
 function metaClose(rep,off){const p=PL();p.c.close++;if(E.netOf(rep.pl)>0)p.c.prof++;
   if(!W||!W.ned)return;const q=Math.floor(rep.m/3),end=(rep.m+1)%3===0;let g=W.qg;
-  if(g&&g.q===q&&end&&g.st==='run'){const ok=qgOk(g);g.st=ok?'ok':'fail';if(ok){const n=g.o[g.p].cr;S.cr=(S.cr||0)+n;emit('cr',n,'quarter');}
+  if(g&&g.q===q&&end&&g.st==='run'){const ok=qgOk(g);g.st=ok?'ok':'fail';if(ok&&!rbReplay()){const n=g.o[g.p].cr;S.cr=(S.cr||0)+n;emit('cr',n,'quarter');}   // M48rb
     W.news.push({t:W.t,m:W.m,k:'qgoal',a:{ok:ok?1:0,g:g.o[g.p].k,cr:ok?g.o[g.p].cr:0}});if(W.news.length>40)W.news.shift();emit('qgoal',g);}
   if(!g||g.q<(end?q+1:q))W.qg=qgNew(end?q+1:q);}
-/* «Доля основателя»: при IPO — доли √(капитал/1 млрд)×10 (почёт, в зал славы) и выбор 1 из 3 улучшений навсегда (E.PERKS) */
-function perkOffer(){const pk=S.pk||{},ids=Object.keys(E.PERKS).filter(k=>(pk[k]||0)<E.PERKS[k].max),o=[];
-  while(o.length<3&&ids.length)o.push(ids.splice(Math.floor(Math.random()*ids.length),1)[0]);return o.length?o:null;}
-function perkPick(id){if(!Array.isArray(S.pkP)||S.pkP.indexOf(id)<0||!E.PERKS[id])return 'no';if(!S.pk||typeof S.pk!=='object')S.pk={};
-  S.pk[id]=Math.min(E.PERKS[id].max,(S.pk[id]||0)+1);S.pkP=null;if(W){W.pk=Object.assign({},S.pk);if(id==='heir'&&W.ned)E.legacy(W);E.applyPerks(W);}
+/* «Доля основателя» (M47c): при IPO — доли = стоимость / 150 млн (+10 % за каждое направление с работающим заводом передела, E.ipoShares);
+   доли — очки: уровень улучшения стоит E.perkCost(k, ур.) долей (5/8/12 и т. п.), свободные доли копятся (S.fs — всего, S.fsU — потрачено).
+   S.pkP — улучшения, на которые сейчас хватает долей (для карточки «выберите улучшение» и окна IPO); null — не на что. */
+function perkLvCost(pk){let c=0;for(const k in pk||{}){const P=E.PERKS[k];if(!P||!P.c)continue;for(let i=0;i<Math.min(P.max,pk[k]|0);i++)c+=P.c[i];}return c;}
+// старые сейвы (до M47c: одно улучшение за IPO, доли — только почёт): уже взятые улучшения остаются, потрачено = min(доли, их цена)
+function fsMig(){if(typeof S.fsU!=='number'){S.fsU=Math.min(S.fs||0,perkLvCost(S.pk));}}
+function fsFree(){fsMig();return Math.max(0,(S.fs||0)-S.fsU);}
+function perkOffer(){if(!E.perkCost)return null;const pk=S.pk||{},f=fsFree(),o=Object.keys(E.PERKS).filter(k=>{const c=E.perkCost(k,pk[k]||0);return c!=null&&c<=f;});return o.length?o:null;}
+function perkPick(id){if(!E.PERKS[id]||!E.perkCost)return 'no';if(!S.pk||typeof S.pk!=='object')S.pk={};const c=E.perkCost(id,S.pk[id]||0);if(c==null)return 'max';if(c>fsFree())return 'fs';
+  S.fsU+=c;S.pk[id]=(S.pk[id]||0)+1;S.pkP=perkOffer();if(W){W.pk=Object.assign({},S.pk);if(id==='heir'&&W.ned)E.legacy(W);E.applyPerks(W);}
   persist(true);emit('perk',id);emit('change');return 'ok';}
 /* украшения за 💎 (только вид): эмблема перед названием холдинга, цвет вывесок, рамка портрета Людмилы Санны.
    cr — цена в 💎 (0 — не продаётся: награда, календарь, покупка); lv — входит в покупку «Вывески и цвета сети» (livery) */
@@ -297,7 +354,7 @@ Object.assign(GAME,{handLv:()=>pkLv('hand'),enLv:()=>pkLv('enx'),handNext:()=>{c
   regLv:()=>pkLv('reg'),regNext:()=>{const l=pkLv('reg');return E.REG_CR&&l<E.REG_CR.length?E.REG_CR[l]:0;},buyReg:()=>buyPk('reg',E.REG_CR),pkSync});
 Object.assign(GAME,{planRerollOk,planReroll,plan:()=>{const p=PL();planTasksNow();return p;},CAL,CAL7_CR,planGift,planX2,planX2Ok,planClaim,taskCur,taskDone,
   miles:st=>W&&E.bizMiles?E.bizMiles(W,st):[],qgPick,qgCur,qgOk,
-  ipoShares(){return Math.max(1,Math.floor(Math.sqrt(Math.max(0,value())/1e9)*10));},perkOffer,perkPick,
+  ipoShares(){return E.ipoShares?E.ipoShares(W,value()):Math.max(1,Math.floor(Math.sqrt(Math.max(0,value())/1e9)*10));},ipoDv(){return W&&E.ipoDv?E.ipoDv(W):0;},fsFree,perkOffer,perkPick,
   COS,cosHas,cosBuy,cosSel,cosCur,cosGive,eta,etaTxt,
   boostOk:()=>!!W&&E.boostOk(W),boostOn:()=>!!W&&E.boostOn(W)});
 /* ================= M8: вещи героя, Кабинет — Стена почёта, звание магната (★), наборы, итоги недели =================
@@ -376,13 +433,14 @@ function rkLockTxt(j){const c=rkLock(j);if(!c||!RK[j]||stars().n<RK[j].s)return 
 function rankOf(n){let i=0;for(let j=0;j<RK.length;j++)if(n>=RK[j].s&&!rkLock(j))i=j;else if(n>=RK[j].s)break;return i;}
 // звание не падает: S.rk = max; новое — событие rank (окно награды — cab-ui, очередь REWQ)
 function rankSync(){const n=stars().n,i=Math.max(rankOf(n),S.rk|0);if(typeof S.rkG!=='number')S.rkG=0;   // старые игроки: награды за звания, заработанные до обновления, приходят одним окном
-  if(i>(S.rk|0)){const was=S.rk|0;S.rk=i;emit('rank',i,was);try{STAT.ev('rank',{n:i+1,s:stN(),d:realDay()});}catch(e){}}else if(S.rk==null)S.rk=i;return i;}
+  if(i>(S.rk|0)&&svQ){S.rk=i;S.rkG=Math.max(S.rkG|0,i);}   // M47d: тихо — см. svQ
+  else if(i>(S.rk|0)){const was=S.rk|0;S.rk=i;emit('rank',i,was);try{STAT.ev('rank',{n:i+1,s:stN(),d:realDay()});}catch(e){}}else if(S.rk==null)S.rk=i;return i;}
 function realDay(){const t0=S.t0||(S.t0=nowMs());return Math.round((nowMs()-t0)/864e5*10)/10;}
 // выдать награды званий (S.rkG+1 … S.rk): 💎 (×2 за ролик — отдельно) и украшения; вернёт {cr, cos:[…], lv:[…]}
 function rkClaim(){const out={cr:0,cos:[],lv:[]};for(let i=(S.rkG|0)+1;i<=(S.rk|0);i++){const r=RK[i];out.lv.push(i);if(r.cr)out.cr+=r.cr;if(r.cos){cosGive(r.cos);out.cos.push(r.cos);}}
   S.rkG=Math.max(S.rkG|0,S.rk|0);if(out.cr)GAME.addCr(out.cr,'rew');else{persist(true);emit('change');}return out;}
 // наборы: собраны все вещи набора хоть раз (S.lxE)
-function colSync(){if(!E.LUX_SET)return [];const col=so('col'),lxE=so('lxE'),nw=[];for(const k in E.LUX_SET)if(!col[k]&&E.LUX_SET[k].every(id=>lxE[id])){col[k]=1;nw.push(k);
+function colSync(){if(!E.LUX_SET)return [];const col=so('col'),lxE=so('lxE'),nw=[];for(const k in E.LUX_SET)if(!col[k]&&E.LUX_SET[k].every(id=>lxE[id])){col[k]=1;if(svQ){so('colG')[k]=1;continue;}nw.push(k);
     if(k==='patron')wallAdd('g_patron');try{STAT.ev('col',{k});}catch(e){}}
   if(nw.length)emit('col',nw);return nw;}
 function colClaim(k){const c=COL[k];if(!c||!(S.col&&S.col[k])||(S.colG&&S.colG[k]))return 0;so('colG')[k]=1;if(c.cos)cosGive(c.cos);if(k==='auto')so('lxc').plate=1;
@@ -451,6 +509,6 @@ Object.assign(GAME,{LAD,LAD_FLAT,LAD_FLAT_GAP,lad,ladWatch,flatWatch,ladLabel,la
 questInit();
 window.GAME=GAME;window.FMT=FMT;window.NM=NM;
 // облако подменило S (другое устройство) — берём его мир
-window.onCloud=function(){questInit();if(valid(S.w)&&S.w!==W){try{E.migrate(S.w);}catch(e){}W=S.w;acc=0;}else if(W)S.w=W;try{pkSync();}catch(e){}emit('change');};
+window.onCloud=function(){questInit();if(S.spd===0)S.spd=1;   /* M47: своя ⏸ из облака не возвращается */if(valid(S.w)&&S.w!==W){try{E.migrate(S.w);}catch(e){}W=S.w;acc=0;}else if(W)S.w=W;try{pkSync();}catch(e){}emit('change');};
 window.onSdkReady=function(){offlineCheck();};
 })();

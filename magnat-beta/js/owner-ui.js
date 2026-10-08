@@ -214,7 +214,7 @@ function evBar(W,cur){let el=$$('owEvBar');const O=W&&W.ow,v=O&&O.ev;const show=
 function evRemind(W){const O=W&&W.ow,v=O&&O.ev;if(!v||W.ned||v.rem||!EVN[v.k])return;const left=v.exp-W.t;if(left>3||left<1)return;
   if(typeof modalOn!=='undefined'&&modalOn)return;if(typeof winCalm==='function'&&!winCalm())return;if(typeof paused!=='undefined'&&paused)return;v.rem=1;
   const x=EVN[v.k],a=v.a||{},op=x[2](a),b=W.biz.find(y=>y.id===v.id);snd('alert');
-  modal(`<h2>📰 ${L('Нужно ваше решение','Your decision is needed')}</h2><div class="say">${face('worry')}<div><p>${L(`Осталось ${days(left)}. Если не ответите, я выберу «${esc(op[v.def])}».`,`${days(left)} left. If you don’t answer, I’ll pick “${esc(op[v.def])}”.`)}</p></div></div>
+  modalH(`<h2>📰 ${L('Нужно ваше решение','Your decision is needed')}</h2><div class="say">${face('worry')}<div><p>${L(`Осталось ${days(left)}. Если не ответите, я выберу «${esc(op[v.def])}».`,`${days(left)} left. If you don’t answer, I’ll pick “${esc(op[v.def])}”.`)}</p></div></div>
     <div class="card ow-ev">${b?`<div class="bz-lab">${bico(b.t)} ${esc(bn(b.t))}</div>`:''}<b style="display:block;font-size:19px;margin:4px 0">${esc(x[0](a))}</b><p class="bz-note" style="color:var(--ink2);font-size:16px">${esc(x[1](a,v.bt))}</p></div>
     <div class="row"><button class="btn green noenter" data-ow="ev" data-i="0">${esc(op[0])}</button><button class="btn noenter" data-ow="ev" data-i="1">${esc(op[1])}</button></div>
     <div class="row"><button class="btn" id="owEvLater" data-esc>${L('Решу позже','I’ll decide later')}</button></div>`);
@@ -246,11 +246,18 @@ function jobOptions(W){const o=[],O=W.ow||{};const add=(k,a,val,ds)=>{const r=E.
   for(const f of E.FRIENDS)add('visit',f,2000,L(`${T(FRN[f])}: +15 ⚡ отдыха, друг рад встрече`,`${T(FRN[f])}: +15 ⚡ of rest, your friend is glad to see you`));
   return o.sort((a,b)=>(a.r==='ok'?0:1)-(b.r==='ok'?0:1)||b.val-a.val);}
 const JWHY={hand:()=>L('нет свободного времени','no free hand'),en:()=>L('мало сил','low energy'),cd:()=>L('недавно было','done recently'),on:()=>L('уже идёт','already on'),cash:()=>L('не хватает денег','not enough money'),rest:()=>L('выходной','day off'),out:()=>L('больничный','sick leave')};
+// M47a (Ф13): какую точку отдать управляющему, чтобы освободить время, — где потеря прибыли меньше всего → {b, loss}
+function jobFree(W){let best=null;for(const b of W.biz){const B=E.BIZ[b.t];if(!B||b.st!=='w'||b.mgr||!B.mw||!B.hand||(W.opd&&W.opd[b.t]))continue;let x=null;try{x=E.mgrProf(W,b);}catch(e){}if(!x)continue;
+    const loss=Math.max(0,x.self-x.mgr);if(!best||loss<best.loss)best={b,loss};}return best;}
 function openJobs(){const W=w();if(!W)return;const o=jobOptions(W),H=E.hands(W);
   let h=`<h2>✋ ${L('Чем занять свободное время?','What should the hand do?')}</h2><p class="bz-note" style="margin-top:0">${L(`Свободно на ${H.free} ${pl(H.free,'дело','дела','дел','','')}. Силы: ${Math.round(W.me.en)} ⚡. Людмила сложила дела по пользе.`,`Free hands: ${H.free}. Energy: ${Math.round(W.me.en)} ⚡. Lyudmila sorted the tasks by benefit.`)}</p><div class="card ow-list">`;
   for(const x of o.slice(0,9)){const J=E.JOBS[x.k];h+=`<div class="ow-row"><span class="ow-ic">${J.ico}</span><span class="f1"><b>${esc(T(JN[x.k]))}</b><small>${esc(x.ds)}</small><small>✋ 1 · ${days(J.d)}${J.e?' · ⚡ '+J.e+L(' в день',' a day'):''}${x.r!=='ok'?' · '+(JWHY[x.r]?JWHY[x.r]():''):''}</small></span><button class="btn sm noenter${x.r==='ok'?' green':''}" data-ow="job" data-k="${x.k}" data-a="${x.a}"${x.r!=='ok'?' disabled':''}>${L('Начать','Start')}</button></div>`;}
   if(!o.length)h+=`<p class="bz-note">${L('Пока нечем: откройте точку.','Nothing yet: open an outlet.')}</p>`;
-  h+=`</div><p class="bz-note">${L('Заказы и подработка — как раньше, во вкладке «Заказы».','Side jobs are still in the Orders tab.')}</p><div class="row"><button class="btn" id="owJC" data-esc>${L('Закрыть','Close')}</button></div>`;
+  h+=`</div>${stI()<=1?`<p class="bz-note">${L('Заказы и подработка — как раньше, во вкладке «Заказы».','Side jobs are still in the Orders tab.')}</p>`:''}<div class="row">`;   // M47a (Ф13): вкладка «Заказы» есть только в главах 1–2
+  // M47a (Ф13): всё время занято точками — первой строкой «как освободить»: управляющий там, где он дешевле всего обойдётся
+  if(H.free<=0&&o.length){const fr=jobFree(W);if(fr){const nm=window.BIZUI&&BIZUI.h&&BIZUI.h.ptName?BIZUI.h.ptName(W,fr.b):bn(fr.b.t);
+    h=h.replace('<div class="card ow-list">',`<div class="card ow-list"><div class="ow-row"><span class="ow-ic">🧑‍💼</span><span class="f1"><b>${L('Освободить время','Free up a hand')}</b><small>${esc(L(`Нанять управляющего в «${nm}»: прибыль точки меньше на ~${Mr(fr.loss)}/мес — а дело ниже может дать больше.`,`Hire a manager at “${nm}”: the outlet earns ~${Mr(fr.loss)}/mo less — a task below may bring more.`))}</small></span><button class="btn sm green noenter" data-ow="jfree" data-id="${fr.b.id}">${L('Нанять','Hire')}</button></div>`);}else{const no=Object.keys(W.opd||{}).filter(t=>W.opd[t]).length;if(no)h=h.replace('<div class="card ow-list">',`<div class="card ow-list"><div class="ow-row"><span class="ow-ic">🧑‍💼</span><span class="f1"><b>${L('Освободить время','Free up a hand')}</b><small>${esc(L(`Ваше время занято опердиректорами: ${no} ${pl(no,'сеть','сети','сетей','chain','chains')}, по делу на каждую. Освободить дело можно в «Сети»: кнопка «Опердиректор» покажет, где он выгоден меньше всего.`,`Your hands are taken by ops directors: ${no} ${pl(no,'сеть','сети','сетей','chain','chains')}, one hand each. To free one, open Network: the “Ops director” button shows where he pays off least.`))}</small></span><button class="btn sm noenter" data-ow="jnet">${L('К сетям','To chains')}</button></div>`);}}
+  h+=`<button class="btn" id="owJC" data-esc>${L('Закрыть','Close')}</button></div>`;
   modal(h);try{modalRe=openJobs;}catch(e){}$$('owJC').onclick=()=>{snd('tap');hideModal();};}
 const EWHY={done:()=>L('пройден','completed'),busy:()=>L('сначала закончите текущий курс','finish the current course first'),need:()=>L('сначала «Управление персоналом»','first “People management”'),ip:()=>L('нужно ИП','needs sole-trader status'),stage:()=>L('с главы «Своё дело»','from “My business”'),hand:()=>L('нет свободного времени','no free hand'),cash:()=>L('не хватает денег','not enough money')};
 function openEdu(){const W=w();if(!W)return;const O=W.ow||{};let h=`<h2>🎓 ${L('Учёба','Study')}</h2>${tip('ed')}<p class="bz-note" style="margin-top:0">${L('Курс занимает 1 дело вашего времени и 5 ⚡ в день, пока идёт. Сразу — один курс.','A course takes 1 hand and 5 ⚡ a day while it runs. One course at a time.')}</p><div class="card ow-list">`;
@@ -310,6 +317,8 @@ function onClick(e){const b=e.target.closest('[data-ow]');if(!b||b.disabled)retu
     case 'more':{MORE[b.dataset.k]=!MORE[b.dataset.k];snd('tap');GAME.emit('change');break;}
     case 'jobs':snd('tap');openJobs();break;
     case 'edu':snd('tap');openEdu();break;
+    case 'jnet':{snd('tap');hideModal();try{UI.go('net');}catch(x){}break;}   // M47a (Ф13)
+    case 'jfree':{const r=act('bizMgr',b.dataset.id,true);if(r==='ok'){snd('coin');toast(L('Управляющий нанят — ваше время свободно','Manager hired — a hand is free'),2200);if(modalOn)openJobs();}else if(MSG[r]){snd('no');toast(MSG[r]());}break;}   // M47a (Ф13)
     case 'job':{const r=act('jobStart',b.dataset.k,b.dataset.a);if(r==='ok'){snd('coin');toast('✋ '+T(JN[b.dataset.k])+' — '+days(E.JOBS[b.dataset.k].d),2200);stat('job',{j:b.dataset.k});if(modalOn){hideModal();}}else if(MSG[r]){snd('no');toast(MSG[r]());}break;}
     case 'jstop':{if(act('jobStop',b.dataset.id)==='ok')snd('tap');break;}
     case 'ed':{const r=act('edStart',b.dataset.k);if(r==='ok'){snd('coin');toast('🎓 '+T(EDN[b.dataset.k])+' — '+days(E.ED[b.dataset.k].d),2400);stat('edu',{c:b.dataset.k});hideModal();}else if(MSG[r]){snd('no');toast(MSG[r]());}break;}
@@ -330,7 +339,7 @@ function init(){css();document.addEventListener('click',e=>{if(e.target.closest(
     else if(e.w==='fly')t='📄 '+L('Листовки розданы — покупателей больше на 2 недели','Flyers handed out — more customers for 2 weeks');
     else if(e.w==='visit')t='☕ '+L(`Посидели с другом: +15 ⚡`,`Time with a friend: +15 ⚡`)+(FRN[e.a]?' · '+T(FRN[e.a]):'');
     else if(e.w==='staff')t='🎓 '+(b?bn(b.t)+': ':'')+L('персонал обучен','the staff are trained');
-    else if(e.w==='stand')t='🧍 '+L('Смена за прилавком закончилась','Your counter shift is over');
+    else if(e.w==='stand')t='🚶 '+L('Смена за прилавком закончилась','Your counter shift is over');
     if(t)try{toast(t,3200);}catch(x){}});}
 window.OWNUI={init,evBar,evRemind,evCard,ownCard,eduCard,pasRow,ptCards,ptRows,bizCards,catLine,passport,openIP,openJobs,openEdu,closeLines,tip,MSG};
 if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);

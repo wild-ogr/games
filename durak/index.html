@@ -1190,7 +1190,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'durak',gv:'v2-100710',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'durak',gv:'v2-100813',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl партии/расклад/задачка, ad ролики и ×2, gift гостинцы лавочки, chest сундуки, buy покупки, quest достижения);
    progress — после облака, но не позже 2,5 с: pl — побед всего, cn — монеты, bt — облако хоть раз отдало сохранение (метка устройства durak-cl, в сохранение не пишется);
    cfg — стол (th), звук, спокойный режим. Покадрового цикла нет (переходы CSS) — STAT.frame() не зовём. */
@@ -1599,7 +1599,7 @@ function buzz(ms){try{if(touched&&S.vib!==false&&navigator.vibrate)navigator.vib
 function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen();let n=3;tEl.textContent=n;const it=setInterval(()=>{n--;tEl.textContent=n;if(n<=0){clearInterval(it);ad.classList.remove('on');adClose();cb();}},600);}
 function adOpen(){setPause('ad',true);YG.stop();}
 function adClose(){setPause('ad',false);if(G&&!G.s.over&&!modalOn&&$('scr-game').classList.contains('on'))YG.start();}
-const AD_FAIL='Реклама сейчас недоступна — загляни чуть позже',VK_REAL=/[?&]vk_app_id=/.test(location.search);
+const AD_FAIL='Реклама сейчас недоступна — загляни чуть позже',AD_CLOSED='Ролик закрыт до конца — награды нет',VK_REAL=/[?&]vk_app_id=/.test(location.search);
 // межэкранная: не раньше AD_GAP после ЛЮБОЙ рекламы и после запуска, с 3-й партии (S.games ≥ 2), «долг» S.adW — партий с прошлого показа
 let lastAdT=Date.now(),lastRewT=0,AD_GAP=180000,AD_EVERY=2,AD_COINS=30,X2_ON=true;
 let adBusy=false;
@@ -1612,6 +1612,7 @@ let adBusy=false;
    Один приём во всех играх: hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ». */
 const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAdCoins,#rX2,#rHelp,#mMemo,#cX2,#sX2',AD_BTN_RE=null;let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+function adShut(e){const d=e&&e.error_data||{};return +d.error_code===4;} // код VK 4 — игрок сам закрыл ролик раньше конца
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
 function adSoon(){return 'Ролик будет через несколько секунд — кнопка загорится, когда он загрузится';}
 function adBtns(){const o=[];try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++){const b=q[i];if(!AD_BTN_RE||b.hasAttribute('data-adoff')||(AD_BTN_RE.test(b.textContent)&&!/без реклам|no ads/i.test(b.textContent)))o.push(b);}}catch(e){}return o;}
@@ -1719,7 +1720,7 @@ function showRewarded(cb0,onFail0,late0){
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе */
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(adShut(e)?AD_CLOSED:AD_FAIL);adPreload('err');}
         onFail();adDim();});}; /* adDim — окно с кнопкой могло открыться заново */
     go();return;}
   /* Яндекс без SDK: заглушка — только при локальном запуске (AD_LOCAL); на площадке награду даром не даём (и кнопок нет — adOk) */
@@ -1728,7 +1729,7 @@ function showRewarded(cb0,onFail0,late0){
   const lateY=f=>{if(!adBusy)adClose();f();}; /* поздние колбэки Яндекса: ролик мог поставить паузу — снимаем, если не идёт другой */
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
-      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast('Досмотри видео до конца, чтобы получить награду');onFail();}},
+      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(AD_CLOSED);onFail();}},
     onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
       adClose();stat('err','');toast(AD_FAIL);adCool();onFail();adDim();}}});
 }

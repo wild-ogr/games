@@ -685,7 +685,7 @@ function wrapBack(){const ob=window.__back;if(ob&&ob.__ph)return;const f=functio
 
 /* ---------------- опрос ---------------- */
 let lastT=-1;
-function poll(){const w=W();if(!w)return;try{P();if(w.t!==lastT){lastT=w.t;service();remind();}}catch(e){console.error(e);}
+function poll(){const w=W();if(!w)return;try{P();if(w.t!==lastT){lastT=w.t;service();const rm=()=>{try{if(W()===w)remind();}catch(e){console.error(e);}};if(window.ECON&&ECON.cpWarm)ECON.cpWarm(w,rm,45);else setTimeout(rm,0);}}catch(e){console.error(e);}   // M47d: напоминания «Завтра: …» (тень денег) — отдельной задачей, не в смене дня
   badge();if(isOn){const n=nav[nav.length-1];if(n.v!=='call')render(true);}renderEmbed();}
 function start(){ensure();btn();tabSetup();wrapBack();
   if(window.GAME&&GAME.on){GAME.on('day',poll);GAME.on('change',poll);GAME.on('close',poll);GAME.on('offline',poll);GAME.on('ipo',()=>{lastT=-1;poll();});GAME.on('reset',()=>{lastT=-1;close();poll();});}
