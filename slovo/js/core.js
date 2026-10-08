@@ -361,7 +361,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Игра только на русском — lang:'ru' (window.LANG от Яндекса интерфейс не меняет).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v2.4-100715',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v2.4-100813',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе — после облака (что позже), но не дольше 2,5 с (иначе модуль сам отправит start без полей через 3 с).
 // pl — пройдено уровней, cn — монет, bt — облако хоть раз отдавало сохранение (S.cl — метка на устройстве, ставит cloudLoad)
 let statPr=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:+S.lv||0,cn:+S.coins||0,bt:S.cl?1:0});}
@@ -380,6 +380,7 @@ function inPlay(){return !!(typeof G!=='undefined'&&G&&!G.won&&!paused&&$('game'
 // на локальном компьютере (разработка) реклама — заглушка; на площадке без SDK/моста — «недоступна», без награды
 const LOCAL=/^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname)&&!/[?&]vk_app_id=/.test(location.search);
 const AD_FAIL='Реклама сейчас недоступна — загляни чуть позже';
+const AD_CLOSED='Ролик закрыт до конца — награды нет'; // код VK 4 / Яндекс onClose без onRewarded: игрок сам закрыл ролик раньше конца
 const VK_REAL=/[?&]vk_app_id=/.test(location.search); // настоящий VK (не ?vk=1 на маке): заглушек покупок нет
 // можно ли предлагать ролик за награду: есть SDK/мост (или заглушка на своём компьютере). В VK без моста кнопок «за рекламу» нет
 const adsOk=()=>!!(VK||ysdk||LOCAL);
@@ -773,6 +774,7 @@ function adClose(){setPause('ad',false);setTimeout(()=>{if(inPlay())YG.start();}
    AD_BTN_SEL: общего класса у рекламных кнопок нет — перечислены по id; новая кнопка «за рекламу» — добавь её сюда. #btnGift гаснет только как «Подарок дня» (ghost), «Гостинец» (gold) — без рекламы. */
 const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAd,#jfX2:not([disabled]),#mX2:not([disabled]),#mChX2:not([disabled]),#mFix,#btnGift.adg,.thad,#mBox:not([disabled]),#lgAd:not([disabled])';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+function adShut(e){const d=e&&e.error_data||{};return +d.error_code===4;} // код VK 4 — игрок сам закрыл ролик раньше конца
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
 function adSoon(){return 'Ролик будет через несколько секунд — кнопка загорится, когда он загрузится';}
 /* pre (05.10): ролик за награду подгружаем ЗАРАНЕЕ и помним ответ. VKWebAppCheckNativeAds не только отвечает «есть/нет», но и просит VK загрузить ролик,
@@ -891,8 +893,8 @@ function showRewarded(cb0,onFail0,late0){
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
-        st=1;adClose();const nf=adNoFill(e);if(nf){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
-        onFail(nf?'none':'err');adDim();});};
+        st=1;adClose();const nf=adNoFill(e),sh=!nf&&adShut(e);if(nf){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(sh?AD_CLOSED:AD_FAIL);adPreload('err');}
+        onFail(nf?'none':sh?'skip':'err');adDim();});}; // код 4 — как «закрыл сам» (skip): без подарка «ролик не пришёл»
     go();return;}
   if(!VK&&!ysdk){if(LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',PLAT==='vk'?'nobridge':'nosdk');toast(AD_FAIL);onFail('nosdk');}return;} // мост/SDK не ответили — награду даром не даём
   let got=false;adWatch(rel);
@@ -900,7 +902,7 @@ function showRewarded(cb0,onFail0,late0){
   const lateY=f=>{if(!adBusy)adClose();f();};
   try{ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
-      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast('Досмотри ролик до конца — тогда награда твоя');onFail('skip');}},
+      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(AD_CLOSED);onFail('skip');}},
     onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
       adClose();stat('err','');toast(AD_FAIL);adCool();onFail('err');adDim();}}});}
   catch(e){if(st)return;st=1;adUnwatch();adClose();stat('err','throw');toast(AD_FAIL);adCool();onFail('err');adDim();} // r3: SDK бросил исключение — кнопки не залипают, награды нет, игра идёт
@@ -927,9 +929,10 @@ function maybeInterstitial(cb){
       .then(fin,fin);return;} // не .finally: в старых WebView его нет
   if(!ysdk){STAT.ad('int','show','stub');stubAd(done);return;} // свой компьютер — заглушка
   // страховка (r3, 07.10): SDK не ответил за 8 с / реклама открылась и не закрылась за 2 мин / исключение — идём дальше, пауза снята; поздний onOpen/onClose только ставят/снимают паузу
-  let fin=0,wd=0;const end=(r,c)=>{if(fin)return;fin=1;clearTimeout(wd);STAT.ad('int',r,c);if(r!=='show')lastInter=prev;adClose();done();};
+  // 07.10 (проверка черновика): площадка открыла рекламу (onOpen), но ответила «не показано»/ошибкой (заглушка Яндекса при незагруженном рекламном скрипте) — игрок окно видел, паузу засчитываем, иначе реклама на каждом переходе
+  let fin=0,wd=0,opened=0;const end=(r,c)=>{if(fin)return;fin=1;clearTimeout(wd);STAT.ad('int',r,c);if(r!=='show'&&!opened)lastInter=prev;adClose();done();};
   wd=setTimeout(()=>end('err','wd'),8000);
-  try{ysdk.adv.showFullscreenAdv({callbacks:{onOpen:()=>{clearTimeout(wd);adOpen();if(!fin)wd=setTimeout(()=>end('err','wd2'),120000);},
+  try{ysdk.adv.showFullscreenAdv({callbacks:{onOpen:()=>{opened=1;clearTimeout(wd);adOpen();if(!fin)wd=setTimeout(()=>end('err','wd2'),120000);},
     onClose:shown=>{if(fin){adClose();return;}if(shown!==false)end('show');else end('none','nofill');},
     onError:()=>{if(fin){adClose();return;}end('err','sdk');}}});}catch(e){end('err','throw');}
 }

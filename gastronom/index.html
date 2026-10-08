@@ -911,7 +911,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
 // (на маке — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (STAT.optOut)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'gastronom',gv:'v13-100622',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'gastronom',gv:'v13-100813',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: настройки сеанса (cfg), вход (start: pl — пройдено уровней, cn — монет, bt — было ли сохранение в облаке; после облака, но не позже 2,5 с),
    баланс (bal → cb в pause), откуда монеты (ern → earn: lvl, ad, gift, chest, buy, quest) */
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
@@ -2335,7 +2335,7 @@ function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen(
 function adOpen(){setPause('ad',true);YG.stop();}
 // игра снова «идёт» для GameplayAPI, только если уровень на экране и поверх нет окна
 function adClose(){setPause('ad',false);if(G&&!G.over&&!modalOn&&$('scr-game').classList.contains('on'))YG.start();}
-const AD_FAIL_T=()=>L('Реклама сейчас недоступна — загляните чуть позже','Ads aren\'t available right now — try again a bit later'),VK_REAL=/[?&]vk_app_id=/.test(location.search);
+const AD_FAIL_T=()=>L('Реклама сейчас недоступна — загляните чуть позже','Ads aren\'t available right now — try again a bit later'),AD_CLOSED_T=()=>L('Ролик закрыт до конца — награды нет','The video was closed early — no reward'),VK_REAL=/[?&]vk_app_id=/.test(location.search);
 let lastAdT=Date.now(); // межэкранная — не чаще раза в 60 с (и не в первую минуту после запуска)
 // за награду — по желанию игрока; награда только после успешного просмотра; пока ролик идёт, повторные нажатия не запускают второй
 /* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
@@ -2349,6 +2349,7 @@ let lastAdT=Date.now(); // межэкранная — не чаще раза в 
    Один приём во всех играх: hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ». Здесь «ролик готов» — adVidReady (имя adReady занято правилом межэкранной). */
 const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='.btn.rw,[data-q]',AD_BTN_RE=/📺/,AD_BTN_NOT={btnQuest:1,mQuest:1,shQ:1};let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} /* код VK, иначе причина словами — в статистику */
+function adShut(e){const d=e&&e.error_data||{};return +d.error_code===4;} // код VK 4 — игрок сам закрыл ролик раньше конца
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
 function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
 /* кнопки, которые показывают ролик: класс rw и кнопки роликов в «Заданиях» (QUEST) — с 📺; «Ролики дня»/«Задания» только открывают окно — их не гасим */
@@ -2469,7 +2470,7 @@ function showRewarded(cb0,onFail0,late0){
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adVidOn=0;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него) */
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL_T());adPreload('err');}
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(adShut(e)?AD_CLOSED_T():AD_FAIL_T());adPreload('err');}
         onFail();adDim();});}; /* adDim после onFail: окно могло перерисоваться — гасим и новую кнопку сразу */
     go();return;}
   if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
@@ -2477,7 +2478,7 @@ function showRewarded(cb0,onFail0,late0){
   const lateY=f=>{if(!adBusy)adClose();f();}; /* поздние колбэки Яндекса: ролик мог поставить паузу — снимаем, если не идёт другой */
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
     onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
-      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(L('Досмотрите видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
+      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(AD_CLOSED_T());onFail();}},
     onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
       adClose();stat('err','');toast(AD_FAIL_T());adCool();onFail();adDim();}}});
 }

@@ -1176,7 +1176,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Турнир / раздача дня / турнир недели / учебная раздача — «уровень» STAT: lvl в newGame/resumeLive, end в finishGame (win/lose/draw) и leaveGame (quit).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'holdem',gv:'v2-100720',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'holdem',gv:'v2-100813',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: progress — после облака, но не позже 2,5 с: pl — турниров сыграно, cn — спички, bt — облако хоть раз отдавало сохранение
    (метка устройства holdem-cl, в сохранение не пишется); cfg — настройки сеанса: th — выбранный стол, snd, calm */
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('holdem-cl')?1:0;}catch(e){}
@@ -1614,6 +1614,7 @@ function adOpen(){setPause('ad',true);YG.stop();}
 function adClose(){setPause('ad',false);if(G&&!modalOn&&$('scr-game').classList.contains('on'))YG.start();}
 const VK_REAL=/[?&]vk_app_id=/.test(location.search);
 const AD_FAIL=()=>L('Реклама сейчас недоступна — загляни чуть позже','Ads are unavailable right now — try again a bit later');
+const AD_CLOSED=()=>L('Ролик закрыт до конца — награды нет','The video was closed early — no reward'); // код VK 4 / Яндекс onClose без onRewarded
 /* межэкранная — только между турнирами: по кнопке «Дальше/Ещё раз» в окне итогов (не после вылета игрока; раз в AD_EVERY=2 турнира), не раньше AD_GAP после ЛЮБОЙ рекламы и после запуска,
    со 2-го турнира (S.tours ≥ 2), «долг» S.adW — турниров с прошлого показа (AD_EVERY) */
 let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=2;
@@ -1629,6 +1630,7 @@ let adBusy=false;
    Один приём во всех играх: hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ». Отличие имён: в образце adReady() — здесь adVidReady() (adReady занято межэкранной). */
 const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAdM,#gX2';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+function adShut(e){const d=e&&e.error_data||{};return +d.error_code===4;} // код VK 4 — игрок сам закрыл ролик раньше конца
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
 function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
 function adBtns(){try{return document.querySelectorAll(AD_BTN_SEL);}catch(e){return [];}}
@@ -1744,7 +1746,7 @@ function showRewarded(cb0,onFail0,late0){
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} /* ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него) */
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL());adPreload('err');}
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(adShut(e)?AD_CLOSED():AD_FAIL());adPreload('err');}
         onFail();adDim();});}; /* adDim после onFail: отказ заново открывает окно — его кнопку гасим сразу */
     go();return;}
   /* Яндекс без SDK: заглушка — только при локальном запуске (AD_LOCAL); в настоящем Яндексе награду даром не даём (и кнопок нет — adOk) */
@@ -1754,7 +1756,7 @@ function showRewarded(cb0,onFail0,late0){
   const lateY=f=>{if(!adBusy)adClose();f();};
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:()=>{if(st===2&&!adBusy)return;adOpen();},onRewarded:()=>{got=true;},
     onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
-      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(L('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
+      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(AD_CLOSED());onFail();}},
     onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
       adClose();stat('err','');toast(AD_FAIL());adCool();onFail();}}});
 }
