@@ -14,23 +14,24 @@ function fitModal(){const m=$('mBody');if(!m||!$('modal').classList.contains('on
 function hideModal(){$('modal').classList.remove('on');}
 function on(id,fn){const el=$(id);if(el)el.onclick=e=>{SND.click();fn(e);};}
 // кнопка «… за рекламу»: STAT — показана (offer, раз за сеанс на место) и место ролика перед showRewarded (place)
-function adOn(id,p,fn){if($(id))STAT.offer(p);on(id,e=>{STAT.place(p);fn(e);});}
+function adOn(id,p,fn){const b=$(id);if(b&&/^(x2|away)/.test(p)){b.setAttribute('data-pre',p);if(adPre()){b.style.display='none';adMark();}} // OB:META1 ×2 — только когда ролик подгружен (adMark)
+  if(b&&b.style.display!=='none')STAT.offer(p);on(id,e=>{STAT.place(p);fn(e);});}
 function ic(key,px){return iconURL(key,px||96);}
 function swordImg(){return '<img src="'+ic('swords',48)+'" alt="">';}
 function starsTotal(){let n=0;for(const k in S.stars)n+=S.stars[k];return n;}
 function starsSpent(){let n=0;for(const t of TW_ORDER)for(const [k,c] of FORGE_ORDER[t])if(fHas(t,k))n+=c;for(const x of FORGE_EXTRA)for(let i=0;i<forgeN(x.k);i++)n+=x.cost[i];return n;}
 function starsFree(){return starsTotal()-starsSpent();}
 function lvKey(c,l){return c+'-'+l;}
-function lvOpen(c,l){if(c===0&&l===0)return true;if(l>0)return !!S.stars[lvKey(c,l-1)];return !!S.stars[lvKey(c-1,5)];}
+function lvOpen(c,l){return chLvOpen(c,l);}   // OB:CH: по CH_ORDER + «в главе уже есть звёзды — открыта» (js/ch-engine.js)
 function chOpen(c){return lvOpen(c,0);}
-function chStars(c){let n=0;for(let l=0;l<6;l++)n+=S.stars[lvKey(c,l)]||0;return n;}
+function chStars(c){let n=0;for(let l=0;l<chLvN(c);l++)n+=S.stars[lvKey(c,l)]||0;return n;}
 // красная точка — только там, где правда ждёт дело, и не на открытой вкладке (раньше горели все четыре сразу — аудит 14)
 function setPills(){forgeGuard();STAT.bal(Math.floor(+S.gold||0));$('pGold').textContent=fmtNum(S.gold);$('pStar').textContent=starsFree();const cur=G?'':curTab;
-  $('navF').classList.toggle('dot',cur!=='Forge'&&canForge());$('navV').classList.toggle('dot',cur!=='Village'&&(afkGold()>=afkReadyAt()||giftReady()));
+  $('navF').classList.toggle('dot',cur!=='Forge'&&canForge());$('navV').classList.toggle('dot',cur!=='Village'&&afkGold()>=afkReadyAt()); // OB:META1 без гостинца
   $('navM').classList.toggle('dot',cur!=='Map'&&(dqClaimable()||!!loginAvail()));$('navS').classList.toggle('dot',cur!=='Siege'&&eventsReady());}
 // звёзд потрачено больше, чем есть (кузница пришла из облака с другого устройства) — сбрасываем кузницу, звёзды возвращаются
 function forgeGuard(){if(starsFree()>=0)return;S.forge={};S.forgeT=nowMs();save();toast(Lg('Кузница сброшена — звёзды вернулись','Forge reset — your stars are back'));}
-function forgeCan(t,k){const need=FORGE_T[k].need;return !fHas(t,k)&&(!need||fHas(t,need));}
+function forgeCan(t,k){const need=FORGE_T[k].need;return !fHas(t,k)&&(!need||fHas(t,need))&&!forgeLocked(k);}   // OB:CH: ступени Кузницы II заперты до своей главы
 function canForge(){const f=starsFree();for(const t of TW_ORDER)for(const [k,c] of FORGE_ORDER[t])if(forgeCan(t,k)&&c<=f)return true;return false;}
 
 /* ---------- вкладки ---------- */
@@ -41,61 +42,72 @@ function toMenu(tab){const won=!!(G&&G.win&&!G.endless);if(G&&!G.over)STAT.end('
   if(!loginOffer()&&won)setTimeout(retOffer,700);}
 
 /* ================= КАРТА ================= */
-const MAPPOS=[[.26,.84],[.72,.74],[.3,.63],[.72,.52],[.28,.41],[.72,.3],[.3,.19],[.66,.08]];
+// OB:CH: точки глав — по CH_ORDER (зигзаг снизу вверх); при 8 главах — прежние места; больше глав — карта выше (mapK)
+const MAPPOS8=[[.26,.84],[.72,.74],[.3,.63],[.72,.52],[.28,.41],[.72,.3],[.3,.19],[.66,.08]];
+function mapK(){return Math.max(1,(CH_ORDER.length-1)/7);}
+function mapPos(){const n=CH_ORDER.length,a=[];CH_ORDER.forEach((c,k)=>{a[c]=n===8?MAPPOS8[k]:[k%2?.71:.28+(k%4===2?.03:0),.87-k*(.8/(n-1))];});return a;}
 const mapCache={};
 function artCanvas(key,px){const id=key+'@'+px;return mapCache[id]||(mapCache[id]=drawArt(key,px));}
 function renderMap(){const el=$('tabMap');
-  let first=0;for(let c=0;c<CH.length;c++)if(chOpen(c))first=c;if(mapSel==null||!chOpen(mapSel))mapSel=first;
-  el.innerHTML='<div id="tdBox"></div><div id="glBox"></div><div id="chHead"></div><div class="mapcols"><canvas id="mapCv"></canvas><div class="mapside"><div id="chCard"></div><div id="dqBox"></div></div></div>';renderToday();renderGoal();drawMap();renderChCard();renderQuests();
+  let first=CH_ORDER[0];for(const c of CH_ORDER)if(chOpen(c))first=c;if(mapSel==null||!chOpen(mapSel))mapSel=first;
+  el.innerHTML='<div id="tdBox"></div><div id="glBox"></div><div id="chHead"></div><div class="mapcols"><canvas id="mapCv"></canvas><div class="mapside"><div id="chCard"></div><div id="dqBox"></div></div></div>';renderToday();renderGoal();drawMap();renderChCard();renderQuests();META_HK('MAP',el);   // OB:SLAVA MAP — плашки «Слава» и «Соседние заставы» под «Сегодня» · OB:CH порядок глав
   $('mapCv').onclick=e=>{const r=e.target.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
-    let best=-1,bd=.012;MAPPOS.forEach((p,i)=>{const d=(p[0]-x)**2+((p[1]-y)*1.3)**2;if(d<bd){bd=d;best=i;}});
-    if(best>=0){SND.click();if(!chOpen(best)){toast(Lg('Сначала освободи «'+CH[best-1].name+'»','First free “'+CH[best-1].name+'”'));return;}mapSel=best;S.lastCh=best;drawMap();renderChCard();}};}
-function drawMap(cvm,W,d){cvm=cvm||$('mapCv');if(!cvm)return;const fixed=!!W;W=W||cvm.clientWidth||340;const H=Math.round(fixed?W*1.2:innerWidth>=880?Math.max(300,Math.min(W*1.2,innerHeight-190)):Math.min(W*1.2,Math.max(250,innerHeight*.44)));d=d||Math.min(2.5,window.devicePixelRatio||1);cvm.width=W*d;cvm.height=H*d;cvm.style.height=H+'px';
+    let best=-1,bd=.012;mapPos().forEach((p,i)=>{if(!p)return;const d=(p[0]-x)**2+((p[1]-y)*1.08*r.height/r.width)**2;/* OB:FIX1 по настоящим пропорциям карты */if(d<bd){bd=d;best=i;}});
+    if(best>=0){SND.click();if(!chOpen(best)){const pv=CH[chPrev(best)];toast(Lg('Сначала освободи «'+pv.name+'»','First free “'+pv.name+'”'));return;}mapSel=best;S.lastCh=best;drawMap();renderChCard();}};}
+/* OB:FIX1 (08.10) компьютер (от 880 px): карта глав — целиком по высоте окна, без прокрутки (раньше 11 глав растягивали её в mapK раз выше окна,
+   и нижние главы — в т. ч. текущая — уходили за край). Высота — от верха холста до низа окна (рамка 5+5, отступ 14, низ вкладки 22). */
+// раскладка меню «как на компьютере» (столбец слева): от 880 px или окно-«альбом» от 760×520 (VK на компьютере 800–1000 px) — то же условие, что в CSS
+const MENU_WIDE_MQ='(min-width:880px),(min-width:760px) and (min-height:520px) and (orientation:landscape)';
+function menuWide(){try{return matchMedia(MENU_WIDE_MQ).matches;}catch(e){return innerWidth>=880;}}
+function mapFitH(cvm,W){const tb=$('tabMap'),top=cvm.getBoundingClientRect().top+(tb?tb.scrollTop:0);return Math.round(Math.max(300,Math.min(W*1.2*mapK(),innerHeight-top-48)));}
+function drawMap(cvm,W,d){cvm=cvm||$('mapCv');if(!cvm)return;const fixed=!!W;W=W||cvm.clientWidth||340;const fitM=!fixed&&menuWide(),H=fitM?mapFitH(cvm,W):Math.round((fixed?W*1.2:Math.min(W*1.2,Math.max(250,innerHeight*.44)))*mapK()),MP=mapPos();d=d||Math.min(2.5,window.devicePixelRatio||1);cvm.width=W*d;cvm.height=H*d;cvm.style.height=H+'px';
   const g=cvm.getContext('2d');g.setTransform(d,0,0,d,0,0);
   const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#d8c090');bg.addColorStop(1,'#ecdcae');g.fillStyle=bg;g.fillRect(0,0,W,H);
   const R0=mulberry(42);
-  for(let c=0;c<CH.length;c++){const [px,py]=MAPPOS[c],x=px*W,y=py*H;const q=g.createRadialGradient(x,y,0,x,y,W*.42);q.addColorStop(0,rgba(CH[c].ground.base,.95));q.addColorStop(.55,rgba(CH[c].ground.base,.55));q.addColorStop(1,rgba(CH[c].ground.base,0));g.fillStyle=q;g.fillRect(0,0,W,H);}
-  for(let c=0;c<CH.length;c++){const [px,py]=MAPPOS[c];for(let i=0;i<7;i++){const key=CH[c].decor[i%CH[c].decor.length];if(key==='d_pond'||key==='d_lava')continue;const a=R0()*TAU,rr=W*(.13+R0()*.14),x=px*W+Math.cos(a)*rr,y=py*H+Math.sin(a)*rr*.6;
+  for(const c of CH_ORDER){const [px,py]=MP[c],x=px*W,y=py*H;const q=g.createRadialGradient(x,y,0,x,y,W*.42);q.addColorStop(0,rgba(CH[c].ground.base,.95));q.addColorStop(.55,rgba(CH[c].ground.base,.55));q.addColorStop(1,rgba(CH[c].ground.base,0));g.fillStyle=q;g.fillRect(0,0,W,H);}
+  for(const c of CH_ORDER){const [px,py]=MP[c];for(let i=0;i<7;i++){const key=CH[c].decor[i%CH[c].decor.length];if(key==='d_pond'||key==='d_lava')continue;const a=R0()*TAU,rr=W*(.13+R0()*.14),x=px*W+Math.cos(a)*rr,y=py*H+Math.sin(a)*rr*.6;
       if(x<10||x>W-10)continue;const s=artCanvas(key,64),sz=W*.085;g.drawImage(s,x-sz/2,y-sz/2,sz,sz);}}
   // река Смородина поперёк
-  g.strokeStyle='rgba(60,130,190,.55)';g.lineWidth=W*.03;g.lineCap='round';g.beginPath();g.moveTo(0,H*.62);g.bezierCurveTo(W*.3,H*.58,W*.6,H*.66,W,H*.6);g.stroke();
+  {const ry=CH_ORDER.length===8?.62:(MP[2][1]+MP[3][1])/2,k=mapK();g.strokeStyle='rgba(60,130,190,.55)';g.lineWidth=W*.03;g.lineCap='round';g.beginPath();g.moveTo(0,H*ry);g.bezierCurveTo(W*.3,H*(ry-.04/k),W*.6,H*(ry+.04/k),W,H*(ry-.02/k));g.stroke();}
   // дорога
-  const pts=MAPPOS.map(p=>[p[0]*W,p[1]*H]);let done=0;for(let c=0;c<CH.length;c++)if(S.stars[lvKey(c,5)])done=c+1;
-  const seg=(i)=>{const [a,b]=[pts[i],pts[i+1]];g.beginPath();g.moveTo(a[0],a[1]);g.quadraticCurveTo((a[0]+b[0])/2+(i%2?-1:1)*W*.12,(a[1]+b[1])/2,b[0],b[1]);};
-  for(let i=0;i<pts.length-1;i++){seg(i);g.setLineDash(i<done?[]:[7,7]);g.lineWidth=i<done?5:3.5;g.strokeStyle=i<done?'#c0392b':'rgba(90,60,30,.6)';g.stroke();}g.setLineDash([]);
+  const pts=[];for(const c of CH_ORDER)pts[c]=[MP[c][0]*W,MP[c][1]*H];const P2=CH_ORDER.map(c=>pts[c]);let done=0;CH_ORDER.forEach((c,k)=>{if(S.stars[lvKey(c,5)])done=k+1;});
+  const seg=(i)=>{const [a,b]=[P2[i],P2[i+1]];g.beginPath();g.moveTo(a[0],a[1]);g.quadraticCurveTo((a[0]+b[0])/2+(i%2?-1:1)*W*.12,(a[1]+b[1])/2,b[0],b[1]);};
+  for(let i=0;i<P2.length-1;i++){seg(i);g.setLineDash(i<done?[]:[7,7]);g.lineWidth=i<done?5:3.5;g.strokeStyle=i<done?'#c0392b':'rgba(90,60,30,.6)';g.stroke();}g.setLineDash([]);
   g.textAlign='center';g.textBaseline='middle';
-  for(let c=0;c<CH.length;c++){const [x,y]=pts[c],open=chOpen(c),sel=c===mapSel,r=Math.min(W*.085,H*.068);
+  for(const c of CH_ORDER){const [x,y]=pts[c],open=chOpen(c),sel=c===mapSel,r=Math.min(W*.085,H*(fitM?.058:.068/mapK()));/* OB:FIX1 */
     if(sel){const q=g.createRadialGradient(x,y,r*.6,x,y,r*1.8);q.addColorStop(0,'rgba(255,230,120,.9)');q.addColorStop(1,'rgba(255,230,120,0)');g.fillStyle=q;g.beginPath();g.arc(x,y,r*1.8,0,TAU);g.fill();}
     g.beginPath();g.arc(x,y+3,r,0,TAU);g.fillStyle='rgba(0,0,0,.25)';g.fill();
     const q=g.createRadialGradient(x-r*.3,y-r*.4,2,x,y,r);q.addColorStop(0,shade(CH[c].mc,.35));q.addColorStop(1,shade(CH[c].mc,-.35));
     g.beginPath();g.arc(x,y,r,0,TAU);g.fillStyle=open?q:'#6a6a78';g.fill();g.lineWidth=3.5;g.strokeStyle=open?'#f0c24a':'#4a4a58';g.stroke();
     const s=open?artCanvas(CH[c].boss,128):silhouette(CH[c].boss);g.save();g.beginPath();g.arc(x,y,r-2,0,TAU);g.clip();g.drawImage(s,x-r*1.15,y-r*1.1,r*2.3,r*2.3);g.restore();
     if(!open){g.font='900 '+(r*.8)+'px system-ui';g.fillText('🔒',x,y);}
-    const lbl=(c+1)+'. '+CH[c].name;const fs=Math.round(r*.45);g.font='900 '+fs+'px system-ui,sans-serif';g.lineWidth=fs*.3;g.strokeStyle='rgba(255,248,230,.95)';g.strokeText(lbl,x,y+r+fs*.8);g.fillStyle='#3a2410';g.fillText(lbl,x,y+r+fs*.8);
-    if(open&&chStars(c)){const st=chStars(c)+'/18 ★';g.font='800 '+Math.round(fs*.85)+'px system-ui';g.textAlign='left';g.strokeStyle='rgba(255,248,230,.95)';g.strokeText(st,x+r*1.05,y-r*.2);g.fillStyle='#a0501a';g.fillText(st,x+r*1.05,y-r*.2);g.textAlign='center';}
-    if(S.stars[lvKey(c,5)]){g.font='900 '+Math.round(r*.7)+'px system-ui';g.fillText('✅',x+r*.75,y-r*.75);}}
+    const lbl=chNum(c)+'. '+CH[c].name;const fs=Math.round(Math.max(r*.45,fitM?11.5:0));g.font='900 '+fs+'px system-ui,sans-serif';g.lineWidth=fs*.3;g.strokeStyle='rgba(255,248,230,.95)';g.strokeText(lbl,x,y+r+fs*.8);g.fillStyle='#3a2410';g.fillText(lbl,x,y+r+fs*.8);
+    if(open&&chStars(c)){const st=chStars(c)+'/'+3*chLvN(c)+' ★';g.font='800 '+Math.round(fs*.85)+'px system-ui';g.textAlign='left';g.strokeStyle='rgba(255,248,230,.95)';g.strokeText(st,x+r*1.05,y-r*.2);g.fillStyle='#a0501a';g.fillText(st,x+r*1.05,y-r*.2);g.textAlign='center';}
+    if(S.stars[lvKey(c,5)]){g.font='900 '+Math.round(r*.7)+'px system-ui';g.fillText('✅',x+r*.75,y-r*.75);}
+    if(typeof difWon==='function'&&difWon(c,'s')){g.font='900 '+Math.round(r*.62)+'px system-ui';g.fillText(difWon(c,'h')?'🔥':'⚔',x-r*.8,y-r*.75);}}   // OB:DIF глава пройдена на Сложном/Адском
   const v=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);v.addColorStop(0,'rgba(80,40,10,0)');v.addColorStop(1,'rgba(80,40,10,.35)');g.fillStyle=v;g.fillRect(0,0,W,H);}
-function renderChCard(){if(!$('chCard'))return;const c=mapSel,ch=CH[c];let nl=0;for(let l=0;l<6;l++)if(lvOpen(c,l)&&!S.stars[lvKey(c,l)]){nl=l;break;}else if(lvOpen(c,l))nl=l;
-  const hd='<div class="row"><img class="ic" src="'+ic(ch.boss)+'" style="width:44px;height:44px"><div class="t"><b>'+(c+1)+'. '+ch.name+'</b><span>'+ch.sub+'</span></div>'+
-    '<button class="btn" id="playNext">'+swordImg()+(S.stars[lvKey(c,nl)]?Lg('Ещё','Again'):Lg('Играть','Play'))+'</button></div>';
+function renderChCard(){if(!$('chCard'))return;const c=mapSel,ch=CH[c],dm=difOf(c),LN=chLvN(c),nl=difNextLv(c,dm);   // OB:DIF уровни и звёзды — выбранного режима главы · OB:CH Логово
+  const hd='<div class="row"><img class="ic" src="'+ic(ch.boss)+'" style="width:44px;height:44px"><div class="t"><b>'+chNum(c)+'. '+ch.name+'</b><span>'+ch.sub+'</span></div>'+
+    '<button class="btn" id="playNext">'+swordImg()+(difStars(c,nl,dm)?Lg('Ещё','Again'):Lg('Играть','Play'))+(dm!=='n'?' '+difIcon(dm):'')+'</button></div>'+(difAny()&&chOpen(c)?difRowHTML(c):'');
   // look1: на телефоне шапка главы с «Играть» стоит над картой глав (видна в первом экране и на 320×568), плитки уровней — под картой
-  const up=LK&&innerWidth<880&&$('chHead');if($('chHead'))$('chHead').innerHTML=up?'<div class="card chh">'+hd+'</div>':'';
-  let h='<div class="card">'+(up?'':hd)+'<div class="lvls">';
+  const up=LK&&!menuWide()&&$('chHead');if($('chHead'))$('chHead').innerHTML=up?'<div class="card chh">'+hd+'</div>':'';
+  let h='<div class="card">'+(up?'':hd)+'<div class="lvls'+(dm!=='n'?' dif-'+dm:'')+'">';
   let nextSet=false;
-  for(let l=0;l<6;l++){const open=lvOpen(c,l),st=S.stars[lvKey(c,l)]||0,next=open&&!st&&!nextSet;if(next)nextSet=true;
-    h+='<button class="lvl th'+(l===5?' boss':'')+(open?'':' lock')+(next?' next':'')+'" data-l="'+l+'" style="background-image:url('+lvThumb(c,l)+')">'+(S.crown[lvKey(c,l)]?'<i class="cr">👑</i>':'')+'<span class="n">'+(l===5?'☠':l+1)+'</span><span>'+ch.levels[l]+'</span><span class="st3">'+
+  for(let l=0;l<LN;l++){const open=difLvOpen(c,l,dm),st=difStars(c,l,dm),next=open&&!st&&!nextSet;if(next)nextSet=true;   // OB:DIF звёзды режима · OB:CH 7-й уровень — Логово
+    h+='<button class="lvl th'+(l>=5?' boss':'')+(open?'':' lock')+(next?' next':'')+'" data-l="'+l+'" style="background-image:url('+lvThumb(c,l)+')">'+(S.crown[lvKey(c,l)]?'<i class="cr">👑</i>':'')+'<span class="n">'+(l===6?'🔥':l===5?'☠':l+1)+'</span><span>'+ch.levels[l]+'</span><span class="st3">'+
       [0,1,2].map(i=>'<img src="'+ic(i<st?'star':'star0',40)+'">').join('')+'</span></button>';}
   h+='</div></div>';$('chCard').innerHTML=h;
   on('playNext',()=>openIntro(c,nl));
-  for(const b of document.querySelectorAll('.lvl'))b.onclick=()=>{SND.click();const l=+b.dataset.l;if(!lvOpen(c,l)){toast(Lg('Сначала пройди предыдущий уровень','Beat the previous level first'));return;}openIntro(c,l);};}
+  for(const b of document.querySelectorAll('.lvl'))b.onclick=()=>{SND.click();const l=+b.dataset.l;if(!difLvOpen(c,l,difOf(c))){toast(l===6?Lg('Логово откроется после босса главы','The Lair opens after the chapter boss'):Lg('Сначала пройди предыдущий уровень','Beat the previous level first'));return;}openIntro(c,l);};
+  for(const el of[$('chCard'),$('chHead')])if(el)difRowBind(el,c,'map',renderChCard);}
 
 // миниатюра уровня (boost): настоящая карта уровня — дорога, река, места — фоном плитки; у босса — его портрет. Рисуется один раз
 function lvThumb(c,l){const id='th'+c+'-'+l;if(mapCache[id])return mapCache[id];const W=150,H=110,cvs=document.createElement('canvas');cvs.width=W;cvs.height=H;
-  try{const g=cvs.getContext('2d'),m=levelMap(c,l),th=CH[c],k=W/WW,oy=-(WH*k-H)/2;g.fillStyle=th.ground.base;g.fillRect(0,0,W,H);g.setTransform(k,0,0,k,0,oy);g.lineJoin='round';g.lineCap='round';
+  try{const g=cvs.getContext('2d'),m=levelMap(c,l),th=CH[c],k=W/PW,oy=-(PH*k-H)/2;/* OB:VIS миниатюра — всегда «стоя» */g.fillStyle=th.ground.base;g.fillRect(0,0,W,H);g.setTransform(k,0,0,k,0,oy);g.lineJoin='round';g.lineCap='round';
     if(m.river>=0){g.fillStyle='#3a8ac0';g.fillRect(0,m.river*CELL,WW,CELL);}
     for(const [w,col] of[[40,th.road.edge],[30,th.road.fill]])for(const P of m.paths){g.beginPath();g.moveTo(P.xs[0],P.ys[0]);for(let i=4;i<P.xs.length;i+=4)g.lineTo(P.xs[i],P.ys[i]);g.lineWidth=w;g.strokeStyle=col;g.stroke();}
     for(const sp of m.spots){g.beginPath();g.arc(sp.x,sp.y,11,0,TAU);g.fillStyle='rgba(60,36,14,.55)';g.fill();}
-    g.setTransform(1,0,0,1,0,0);if(l===5)g.drawImage(artCanvas(th.boss,128),W-84,H-92,96,96);
+    g.setTransform(1,0,0,1,0,0);if(l>=5)g.drawImage(artCanvas(th.boss,128),W-84,H-92,96,96);
     if(!LK){const q=g.createLinearGradient(0,0,0,H);q.addColorStop(0,'rgba(14,16,34,.5)');q.addColorStop(1,'rgba(14,16,34,.74)');g.fillStyle=q;g.fillRect(0,0,W,H);}
     return mapCache[id]=cvs.toDataURL('image/jpeg',.82);}catch(e){return mapCache[id]='';}}
 /* ---------- boost: «Сегодня» — что ждёт игрока (вход, задания, казна, испытание дня, Босс недели); золотым — где есть что забрать ---------- */
@@ -107,8 +119,9 @@ function renderToday(){const box=$('tdBox');if(!box)return;if(!S.wins){box.inner
   if(S.stars['0-5']){const d=dchToday();if(d&&!d.tried&&!d.res)a.push({id:'dch',hot:1,t:Lg('⚔ Испытание дня','⚔ Daily challenge')});
     const m=wkMine();if(!m.got)a.push({id:'wk',hot:!m.runs,t:Lg('👑 Босс недели','👑 Boss of the Week')});}
   else a.push({id:'lock',hot:0,t:Lg('🔒 Испытания — после босса главы','🔒 Trials — after the chapter boss')});
+  META_HK('TODAY',a); // OB:META1 розетка меты: свои фишки {id,hot,t,fn}
   box.innerHTML='<div class="chips">'+a.map(c=>'<button class="chip'+(c.hot?' hot':'')+'" data-td="'+c.id+'">'+c.t+'</button>').join('')+'</div>';
-  for(const b of box.querySelectorAll('[data-td]'))b.onclick=()=>{SND.click();const k=b.dataset.td;
+  for(const b of box.querySelectorAll('[data-td]'))b.onclick=()=>{SND.click();const k=b.dataset.td;{const c=a.find(x=>x.id===k);if(c&&c.fn){c.fn();return;}} // OB:META1 фишка модуля меты
     if(k==='login'){if(!loginOffer())toast(Lg('Сегодня награда взята. Завтра за вход: +','Today’s reward is taken. Tomorrow’s login reward: +')+fmtGold(loginTomorrow()));}
     else if(k==='dq'){const q=$('dqBox');if(q)q.scrollIntoView({block:'center'});}
     else if(k==='afk')openTab('Village');else if(k==='dch'||k==='wk')openTab('Siege');
@@ -130,8 +143,8 @@ function bannersHTML(){const n=bnCount(),nx=BN_SETS.find(q=>q[0]>n);
       (own?(up?'<span class="tag ok">'+Lg('Реет над воротами','Flying over the gate')+'</span>':'<button class="btn" data-bu="'+i+'">'+Lg('Поднять','Raise')+'</button>')
         :!open?'<span class="note">'+Lg('🔒 Освободи «'+CH[i].name+'»','🔒 Free “'+CH[i].name+'”')+'</span>'
         :'<button class="btn gold" data-bb="'+i+'" '+(S.gold<b.cost?'disabled':'')+'><img src="'+ic('ingot',40)+'">'+fmtNum(b.cost)+'</button>'+(S.gold<b.cost?(S.goal==='b:'+b.id?'<span class="tag ok">'+Lg('🎯 Копим на него','🎯 Saving for it')+'</span>':'<button class="btn ghost" data-bg="'+i+'">'+Lg('🎯 Копить на него','🎯 Save for it')+'</button>'):''))+'</div>';});
-  return h+'</div>';}
-function bannersBind(el){
+  return h+'</div>'+(typeof xbnHTML==='function'?xbnHTML():'');}   // OB:SLAVA знамёна-награды (Сказ, ступени турнира)
+function bannersBind(el){if(typeof xbnBind==='function')xbnBind(el);   // OB:SLAVA
   for(const b of el.querySelectorAll('[data-bu]'))b.onclick=()=>{SND.click();S.bn=BANNERS[+b.dataset.bu].id;save();renderVillage();};
   for(const b of el.querySelectorAll('[data-bg]'))b.onclick=()=>{SND.click();S.goal='b:'+BANNERS[+b.dataset.bg].id;save();toast(Lg('Цель на карте: ','Goal on the map: ')+BANNERS[+b.dataset.bg].n);renderVillage();};
   for(const b of el.querySelectorAll('[data-bb]'))b.onclick=()=>{const i=+b.dataset.bb,d=BANNERS[i];if(bnOwn(i)||!bnOpen(i)||S.gold<d.cost)return;S.gold-=d.cost;STAT.ev('spend',{k:'bn:'+d.id,c:d.cost});S.bns[d.id]=1;S.bn=d.id;if(S.goal==='b:'+d.id)S.goal='';
@@ -140,26 +153,28 @@ function bannersBind(el){
 
 /* ---------- окно перед боем ---------- */
 function levelEnemies(c,l){const set=new Set();for(const w of mkWaves(c,l))for(const g of w.g)set.add(g.t);return [...set];}
-function openIntro(c,l){STAT.screen('intro');const ch=CH[c],en=levelEnemies(c,l),st=S.stars[lvKey(c,l)]||0;S.introSeen[lvKey(c,l)]=1;   // реплика уже в окне — в бою речью не повторяем
+function openIntro(c,l){STAT.screen('intro');if(!difLvOpen(c,l,difOf(c))){S.dfc[c]='n';if(mapSel===c)renderChCard();}const dm=difOf(c),ch=CH[c],en=levelEnemies(c,l),st=difStars(c,l,dm);S.introSeen[lvKey(c,l)]=1;   // реплика уже в окне — в бою речью не повторяем
   const news=[];for(const t in TW_UNLOCK){const u=TW_UNLOCK[t];if(u[0]===c&&u[1]===l)news.push({ic:'ti_'+t+'_1',n:TW[t].n,a:TW[t].about});}
   if(BRANCH_UNLOCK[0]===c&&BRANCH_UNLOCK[1]===l)news.push({ic:'ti_arch_4a',n:Lg('Мастера','Masters'),a:Lg('Заставы 3-го уровня теперь можно улучшить в одну из двух веток.','Level 3 outposts can now be upgraded into one of two branches.')});
   for(const k in SPELL_UNLOCK){const u=SPELL_UNLOCK[k];if(u[0]===c&&u[1]===l)news.push({ic:k==='thunder'?'sp_thunder':'sp_cat',n:SPELLS[k].n,a:SPELLS[k].about});}
-  const nw=LEVEL_WAVES[l]+(c>=4?1:0);
-  let h='<h3>'+(l===5?'☠ ':'')+ch.levels[l]+'</h3><p class="sub">'+Lg('Глава ','Chapter ')+(c+1)+' · '+ch.name+' · '+nw+' '+plw(nw,'волна','волны','волн','wave','waves')+(st?Lg(' · лучший итог: ',' · best: ')+'★'.repeat(st):'')+'</p>';
+  const nw=LEVEL_WAVES[l]+chWaveBonus(c);
+  let h='<h3>'+(l===6?'🔥 ':l===5?'☠ ':'')+ch.levels[l]+(dm!=='n'?' '+difIcon(dm):'')+'</h3><p class="sub">'+Lg('Глава ','Chapter ')+chNum(c)+' · '+ch.name+' · '+nw+' '+plw(nw,'волна','волны','волн','wave','waves')+(st?Lg(' · лучший итог: ',' · best: ')+'★'.repeat(st):'')+'</p>';
+  if(difAny())h+=difRowHTML(c);   // OB:DIF ряд режимов главы (вместо Сказка/Быль/Богатырская) — сразу под заголовком
   h+='<div class="say"><img src="'+ic('voevoda')+'"><div><b class="who">'+VOEV()+'</b>'+ch.intro[l]+'</div></div>';
-  if(news.length){h+='<div style="font-weight:900;margin:8px 2px 2px;color:#ffe7a0">'+Lg('Новое!','New!')+'</div>';for(const n of news)h+='<div class="enl"><img src="'+ic(n.ic)+'"><div><b>'+n.n+'</b>'+n.a+'</div></div>';}
+  if(news.length&&dm==='n'){h+='<div style="font-weight:900;margin:8px 2px 2px;color:#ffe7a0">'+Lg('Новое!','New!')+'</div>';for(const n of news)h+='<div class="enl"><img src="'+ic(n.ic)+'"><div><b>'+n.n+'</b>'+n.a+'</div></div>';}
   const newEn=en.filter(t=>!S.seen[t]&&!EN[t].boss);
   if(newEn.length){h+='<div style="font-weight:900;margin:8px 2px 2px;color:#ffe7a0">'+Lg('Новая нечисть','New monsters')+'</div>';for(const t of newEn)h+='<div class="enl"><img src="'+ic(EN[t].art||t)+'"><div><b>'+EN[t].n+(EN[t].fly?Lg(' · летает',' · flies'):'')+'</b>'+EN[t].about+'</div></div>';}
   h+='<div class="ens" data-fit="1">'+en.filter(t=>!newEn.includes(t)).map(t=>'<div><img src="'+ic(EN[t].art||t)+'">'+EN[t].n+'</div>').join('')+'</div>';
-  h+='<div style="font-weight:900;margin:10px 2px 0;color:#ffe7a0">'+Lg('Сложность','Difficulty')+(S.crown[lvKey(c,l)]?Lg(' · 👑 корона взята',' · 👑 crown won'):'')+'</div>'+diffSegHTML();
+  {const pw=chPw(c,l);if(pw){const p=powerNow(),low=p<pw;h+='<div class="goal" data-fit="3">'+Lg('⚔ Сила застав: <b>'+p+'</b> · советуем от <b>'+pw+'</b>','⚔ Outpost power: <b>'+p+'</b> · we suggest <b>'+pw+'</b>+')+(low?Lg(' — загляни в кузницу и деревню, станет легче.',' — visit the forge and the village, it’ll get easier.'):'')+'</div>';}}   // OB:CH: порог силы (только подсказка, ничего не запирает)
   h+='<div class="btns stick"><button class="btn big" id="goBtn">'+swordImg()+Lg(' В бой!',' To battle!')+'</button><button class="btn ghost" id="backBtn">'+Lg('Назад','Back')+'</button></div>';
-  showModal(h,'intro');diffSegBind();on('goBtn',()=>startLevel(c,l));on('backBtn',hideModal);}
+  showModal(h,'intro');difRowBind($('modal'),c,'intro',()=>{const k=difOf(c);if(mapSel===c)renderChCard();openIntro(c,difLvOpen(c,l,k)?l:difNextLv(c,k));});on('goBtn',()=>startLevel(c,l));on('backBtn',hideModal);}
+/* OB:DIF прежний переключатель Сказка/Быль/Богатырская — не используется (режимы — js/dif.js) */
 function diffSegHTML(){const d=diffNow();return '<div class="seg" id="dfSeg">'+DIFF.map((x,i)=>'<button data-df="'+i+'" class="'+(i===d?'on':'')+'">'+x.n+'</button>').join('')+'</div><p class="note" id="dfTxt" data-fit="2" style="margin:0 2px">'+DIFF[d].d+'</p>';}
 function diffSegBind(){for(const b of document.querySelectorAll('[data-df]'))b.onclick=()=>{SND.click();S.diff=+b.dataset.df;save();
   for(const x of document.querySelectorAll('[data-df]'))x.classList.toggle('on',x===b);const t=$('dfTxt');if(t)t.textContent=DIFF[S.diff].d;};}
 
 /* ================= БОЙ: запуск ================= */
-function startLevel(c,l){hideModal();if(G&&!G.win){boostRefund(.5);save();}S.lastCh=c;mapSel=c;const g=newBattle({ci:c,li:l});enterBattle();{const p=pityCoins(c,l);if(p)setTimeout(()=>toast(Lg('Подмога воеводы: +'+coinsTxt(p)+' на старте','Commander’s aid: +'+coinsTxt(p)+' at the start')),600);}
+function startLevel(c,l){hideModal();if(G&&!G.win){boostRefund(.5);save();}S.lastCh=c;mapSel=c;const g=newBattle({ci:c,li:l});enterBattle();{const p=difOf(c)==='n'?pityCoins(c,l):0;if(p)setTimeout(()=>toast(Lg('Подмога воеводы: +'+coinsTxt(p)+' на старте','Commander’s aid: +'+coinsTxt(p)+' at the start')),600);}
   const k=lvKey(c,l);
   if(g.tut===1){S.introSeen[k]=1;save();setTimeout(()=>{if(G&&G.tut===1)voice(Lg('Нечисть лезет из леса! Нажми на мигающее место у дороги и выбери стрельцов.','Monsters are coming out of the forest! Tap the blinking spot by the road and pick the archers.'),VOEV(),'voevoda',30);},500);}
   else if(!S.introSeen[k]){S.introSeen[k]=1;save();voice(CH[c].intro[l],VOEV(),'voevoda',8);}}
@@ -239,7 +254,8 @@ function ringBuild(){const s=G.map.spots[ringI],p=toScreen(s.x,s.y),el=$('ring')
   for(const b of el.querySelectorAll('.rbt'))b.onpointerdown=e=>{e.stopPropagation();ringTap(b.dataset.id);};
   const t=G.tw[ringI];if(!ringSel)G.preview=t?{x:t.x,y:t.y,r:t.st.rng}:null;if(t&&!ringSel)showInfoTower(t);else if(!ringSel)$('info').classList.remove('on');else infoSel();
   if(LK&&!VIEW.wide){const e=$('info'),hC=e.classList.contains('on')?e.offsetHeight:0,ot=Math.max(0,VIEW.top+6+hC-(cy-R-46)),ob=Math.max(0,cy+R+46-(VIEW.H-VIEW.bot-6-hC));e.classList.toggle('low',ob<=ot);}
-  else $('info').classList.toggle('low',cy<VIEW.H*.5);}
+  else $('info').classList.toggle('low',cy<VIEW.H*.5);
+  visRingFit(p,cx,cy,R);}   // OB:VIS кольцо не налезает на карточку (js/vis.js)
 function ringRefresh(){const sig=ringItems().map(i=>i.id+i.no).join();if(sig!==ringSig)ringBuild();}
 function ringTap(id){const t=G.tw[ringI],s=G.map.spots[ringI];SND.click();
   // 🎯 — сразу следующая цель по кругу (без второго нажатия: ничего не стоит и не ломается); новые заставы этого вида в бою берут её же
@@ -327,7 +343,7 @@ function initInput(){
     const d=/^Digit([1-6])$/.exec(e.code);if(d&&ringI>=0){const it=ringItems()[+d[1]-1];if(it)ringTap(it.id);}});
 }
 function openPause(){if(!G||G.over)return;STAT.screen('pause');G.paused=true;closeRing();YG.stop();
-  const q=(a,b)=>Lg('«'+a+'»','“'+a+'”'),mode=G.wk?Lg('Босс недели: ','Boss of the Week: ')+EN[CH[G.ci].boss].n:G.rule?Lg('Испытание дня: ','Daily challenge: ')+q((DCH_RULES.find(r=>r.k===G.rule)||{}).n):G.endless?'':Lg('Сложность: ','Difficulty: ')+q(DIFF[G.diff].n);
+  const q=(a,b)=>Lg('«'+a+'»','“'+a+'”'),mode=G.dly?Lg('Застава дня','Outpost of the day')+(G.rule?': '+q((DCH_RULES.find(r=>r.k===G.rule)||{}).n):''):G.wk?Lg('Босс недели: ','Boss of the Week: ')+EN[CH[G.ci].boss].n:G.rule?Lg('Испытание дня: ','Daily challenge: ')+q((DCH_RULES.find(r=>r.k===G.rule)||{}).n):G.endless?'':Lg('Режим: ','Mode: ')+difName(G.dif||'n');   // OB:DIF · OB:META1 Застава дня
   const oo=v=>v?Lg('Вкл','On'):Lg('Выкл','Off');
   showModal('<h3>'+Lg('Передышка','Breather')+'</h3>'+(mode?'<p class="sub" style="margin-bottom:4px;color:#ffe7a0">'+mode+'</p>':'')+'<p class="sub" data-fit="1">'+pick(TIPS)+'</p>'+
     '<div class="tg">'+Lg('Звуки','Sounds')+' <button class="btn '+(S.sound?'green':'ghost')+'" id="pSnd">'+oo(S.sound)+'</button></div>'+
@@ -335,7 +351,7 @@ function openPause(){if(!G||G.over)return;STAT.screen('pause');G.paused=true;clo
     '<div class="tg">'+Lg('Тряска экрана','Screen shake')+' <button class="btn '+(S.shake?'green':'ghost')+'" id="pShk">'+oo(S.shake)+'</button></div>'+
     '<div class="btns"><button class="btn big" id="pGo">'+Lg('Продолжить','Continue')+'</button><button class="btn ghost" id="pRe">'+Lg('Начать заново','Restart')+'</button><button class="btn ghost" id="pExit">'+Lg('На карту','To the map')+'</button></div>','pause');
   on('pGo',()=>{hideModal();G.paused=false;YG.start();});
-  on('pRe',()=>{const e=G.endless,c=G.ci,l=G.li,wk=G.wk,rule=G.rule;hideModal();if(wk)startWeekly();else if(rule)startDaily();else if(e)startEndless();else startLevel(c,l);});
+  on('pRe',()=>{const e=G.endless,c=G.ci,l=G.li,wk=G.wk,rule=G.rule,dl=G.dly;hideModal();if(dl)dlyStart();else if(wk)startWeekly();else if(rule)startDaily();else if(e)startEndless();else startLevel(c,l);});
   on('pExit',()=>{const b=$('pExit');if(!b.dataset.ok&&G&&G.started){b.dataset.ok=1;b.textContent=Lg('Точно выйти? Бой не засчитается','Really leave? The battle won’t count');return;}
     if(G&&G.endless&&G.wave>1){G.paused=false;G.quit=true;G.lives=0;defeat();hideModal();return;}toMenu('Map');});
   on('pSnd',()=>{S.sound=S.sound?0:1;save();G.paused=false;openPause();});
@@ -348,7 +364,7 @@ function boostOut(){HUDC.hot=null;}
 function fmtBoostS(s){s=Math.max(0,Math.round(s));return s>=3600?Math.floor(s/3600)+Lg(' ч ','h ')+String(Math.floor(s%3600/60)).padStart(2,'0'):s>=600?Math.floor(s/60)+Lg(' мин',' min'):Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function openBoostOffer(empty){STAT.screen('boost');const wasG=G&&!G.over&&!G.paused;if(wasG){G.paused=true;YG.stop();}
   const close=()=>{hideModal();if(wasG&&G){G.paused=false;YG.start();}if(!G&&curTab==='Village')renderVillage();};
-  showModal('<h3>'+Lg('⏩ Время ускорения','⏩ Speed-up time')+'</h3><p class="sub">'+Lg((empty?'Запас пуст. ':'')+'Скорость ×1 и ×1,5 — бесплатно всегда. ×2 — победа возвращает потраченное; ×3 — тратит запас (2 секунды за секунду боя).',(empty?'The reserve is empty. ':'')+'Speed ×1 and ×1.5 are always free. ×2 — a victory gives back what you spent; ×3 — uses the reserve (2 seconds per second of battle).')+'</p>'+
+  showModal('<h3>'+Lg('⏩ Время ускорения','⏩ Speed-up time')+'</h3><p class="sub">'+Lg((empty?'Запас пуст. ':'')+'Скорость ×1 и ×1,5 — бесплатно всегда. ×2 тратит запас (секунду за секунду боя), ×3 — 2 секунды. Победа добавляет запас: +1 мин и +30 с за каждую звезду сверх первой, за босса — вдвое.',(empty?'The reserve is empty. ':'')+'Speed ×1 and ×1.5 are always free. ×2 uses the reserve (a second per second of battle), ×3 — 2 seconds. A victory adds to the reserve: +1 min and +30 s for each star beyond the first, double for a boss.')+'</p>'+
     '<div class="card treasury" style="text-align:center"><b style="font-size:20px">'+Lg('Запас: ','Reserve: ')+fmtBoost(S.boost)+'</b><br><span class="note">'+Lg('Пополняется за победы (+1 мин и больше), раз в день бесплатно и за рекламу. Максимум — ','Refills with victories (+1 min or more), once a day for free, and for ads. Maximum — ')+fmtBoost(BOOST_CAP)+'.</span></div>'+
     '<div class="btns">'+(S.boost<BOOST_CAP-60&&adOk()?'<button class="btn ad big" id="bAd">'+Lg('🎬 +10 мин за рекламу','🎬 +10 min for an ad')+'</button>':'')+'<button class="btn ghost" id="bNo">'+(empty?(payX2()?Lg('Играть на ×2','Play at ×2'):Lg('Играть на ×1,5','Play at ×1.5')):Lg('Закрыть','Close'))+'</button></div>');
   adOn('bAd','boost',()=>showRewarded(()=>{boostAdd(600);save();SND.up();toast(Lg('+10 минут ускорения!','+10 minutes of speed-up!'));if(G&&!G.over)G.speed=Math.max(G.speed,2);close();},null,
@@ -362,7 +378,7 @@ function dailyBoost(){const d=dayKey();if(S.boostDay!==d){S.boostDay=d;if(S.boos
 function afterAd(ok,fn){if(!ok||!interReady()){if(ok)adWhy();fn();return;}  // STAT v1.2: положена, но не показана — ad int none gap|cap|nosdk
   for(const b of document.querySelectorAll('#modal button'))b.disabled=true;
   toast(Lg('Реклама через секунду…','Ad in a second…'));setTimeout(()=>showInterstitial(fn),1000);}
-function starsFor(){const lost=G.maxLives-G.lives;return lost<=2?3:lost<=10?2:1;}
+function starsFor(){if(G.dif==='s'||G.dif==='h')return difStarsFor();const lost=G.maxLives-G.lives;return lost<=2?3:lost<=10?2:1;}   // OB:DIF Сложный/Адский — по доле жизней
 /* «Лучшая застава» и кто сколько сделал (урон без «перебора», проданные заставы тоже считаются) */
 function bestTwHTML(){if(!G)return '';const L=G.tw.filter(Boolean).concat(G.gone||[]).filter(t=>t.dmgd>0);if(!L.length)return '';
   const tot=L.reduce((a,t)=>a+t.dmgd,0),best=L.reduce((a,t)=>t.dmgd>a.dmgd?t:a),nm=t=>t.lvl===4?TW[t.type].br[t.br-1].n:TW[t.type].n+' · '+lvLbl(t.lvl);
@@ -382,17 +398,19 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
   for(const t of G.tw.concat(G.gone||[]))if(t&&t.kills>(S.bestTw||0))S.bestTw=t.kills;
   const dq0=dqDone();dqAdd('build',(G.built||0)-P.built);dqAdd('ups',(G.ups||0)-P.ups);dqAdd('spells',(G.spells||0)-P.spells);dqAdd('kills',dK);
   P.kills=G.kills;P.kt=Object.assign({},G.kt);P.built=G.built||0;P.ups=G.ups||0;P.spells=G.spells||0;
-  if(G.wk){weekEnd(dq0);achAfter();return;}
-  if(G.rule){dchEnd(win,dq0);achAfter();return;}
+  META_HK('END',G,win); // OB:META1 розетка меты (после «ещё попытки» зовётся ещё раз — считать приростом)
+  if(G.wk){weekEnd(dq0);META_HK('WIN',G,win);achAfter();return;}   // OB:SLAVA WIN — строки меты в окне итогов (Слава, место среди соседей, трофеи)
+  if(G.dly){dlyEnd(dq0);META_HK('WIN',G,win);achAfter();return;} // OB:META1 «Застава дня» (js/meta-dly.js)
+  if(G.rule){dchEnd(win,dq0);META_HK('WIN',G,win);achAfter();return;}
   if(G.endless){const waves=Math.max(0,G.wave-1),rec=waves>P.best0;S.endBest=Math.max(S.endBest||0,waves);if(P.n===1)S.endRuns++;
     // золото и ускорение — за весь забег; после «ещё попытки» доплачиваем только разницу
-    const total=siegeGold(waves),reward=total-P.gold,x2=total-P.x2;P.gold=total;
-    dqAdd('siege',waves-P.waves);S.gold+=reward;ern('lvl',reward);const bref=boostRefund(1);G.win=true;boostAdd(Math.min(120,5*waves)-Math.min(120,5*P.waves));P.waves=waves;save();LB.set('endless',S.endBest);
+    const total=Math.round(siegeGold(waves)*(G.sgK||1)),reward=total-P.gold,x2=total-P.x2;P.gold=total;   // OB:ENDG G.sgK — золото осады за день (js/endg.js sgK)
+    dqAdd('siege',waves-P.waves);S.gold+=reward;ern('lvl',reward);const bref=boostRefund(1);G.win=true;const sbst=Math.min(120,5*waves)-Math.min(120,5*P.waves);boostAdd(sbst);P.waves=waves;save();LB.set('endless',S.endBest);
     // «Ещё попытка за рекламу» — один раз за забег, с 2-й волны, если игрок не сам вышел
     const cont=!G.contUsed&&!G.quit&&G.wave>=2&&adOk();
     showModal('<h3>'+Lg('Осада окончена','The siege is over')+'</h3><p class="sub">'+(rec?Lg('🏆 Новый рекорд! Летописец записал.','🏆 New record! The chronicler wrote it down.'):Lg('Нечисть прорвалась. Но и мы ей бока намяли!','The monsters broke through. But we gave them a good beating!'))+'</p>'+
       '<div class="stats"><div><b>'+waves+'</b>'+Lg('волн отбито','waves held')+'</div><div><b>'+S.endBest+'</b>'+Lg('рекорд','record')+'</div><div><b>'+G.kills+'</b>'+Lg('одолели','defeated')+'</div></div>'+bestTwHTML()+
-      '<div class="card treasury" style="text-align:center"><b>+'+fmtGold(total)+'</b>'+(P.n>1?'<br><span style="font-size:13px">'+Lg('за весь забег','for the whole run')+'</span>':'')+(bref>=1?'<br><span style="font-size:13px">'+BREF()+fmtBoost(bref)+'</span>':'')+'</div>'+
+      '<div class="card treasury" style="text-align:center"><b>+'+fmtGold(total)+'</b>'+(P.n>1?'<br><span style="font-size:13px">'+Lg('за весь забег','for the whole run')+'</span>':'')+(typeof sgNote==='function'?sgNote():'')+(sbst>=1?'<br><span style="font-size:13px">'+Lg('⏩ Ускорение: +','⏩ Speed-up: +')+fmtBoost(sbst)+'</span>':'')+'</div>'+
       dqNote(dq0)+'<div class="btns stick">'+(cont?'<button class="btn ad big" id="rCont">'+Lg('🎬 Ещё попытка за рекламу (+10 ❤, забег продолжится)','🎬 One more try for an ad (+10 ❤, the run goes on)')+'</button>':'')+
       (x2>0&&goldWanted()&&adOk()?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить за рекламу: ещё +','🎬 Double for an ad: +')+fmtNum(x2)+'</button>':'')+(LB.vkOk()?'<button class="btn ghost" id="rVkLb">🏆 Рекорды друзей</button>':'')+'<button class="btn'+(cont?'':' big')+'" id="rAgain">'+Lg('Ещё раз','Play again')+'</button><button class="btn ghost" id="rMap">'+Lg('В меню','Menu')+'</button></div>');
     on('rVkLb',()=>LB.vkFriends(S.endBest));
@@ -403,35 +421,38 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
     {let x2d=0;const bt=$('rX2'),pay=()=>{x2d=1;const v=Math.max(0,total-P.x2);S.gold+=v;ern('ad',v);P.x2=Math.max(P.x2,total);save();if(bt&&bt.parentNode)bt.parentNode.removeChild(bt);return v;};
     adOn('rX2','x2s',()=>showRewarded(()=>{if(x2d)return;toast('+'+fmtGold(pay())+'');},null,
       ()=>{if(x2d)return '';const v=pay();SND.coin();setPills();return v>0?Lg('удвоено: +','doubled: +')+fmtGold(v):'';}));} /* поздний зачёт (adt): всегда, один раз */
-    on('rAgain',()=>afterAd(true,startEndless));on('rMap',()=>afterAd(true,()=>toMenu('Siege')));achAfter();return;}
+    on('rAgain',()=>afterAd(true,startEndless));on('rMap',()=>afterAd(true,()=>toMenu('Siege')));META_HK('WIN',G,win);achAfter();return;}
   const c=G.ci,l=G.li,key=lvKey(c,l);
-  if(win){const st=starsFor(),prev=S.stars[key]||0,first=!prev;S.stars[key]=Math.max(prev,st);S.wins++;if(S.lose)delete S.lose[key];
-    const crownNew=G.diff===2&&!S.crown[key];if(G.diff===2)S.crown[key]=1;
+  const dm=G.dif||'n',dmN=dm==='n';   // OB:DIF режим боя: звёзды Сложного/Адского — S.dst, золото ×DIF[dm].gold
+  if(win){const st=starsFor(),prev=difStars(c,l,dm),first=!prev;difPut(c,l,dm,st);S.wins++;if(S.lose&&dmN)delete S.lose[key];if(!dmN)delete DIF_LOSE[dm+key];
+    const crownNew=false,dUp=l===5&&first&&dm!=='h'?(dmN?'s':'h'):'';
     dqAdd('win',1);if(st===3)dqAdd('star3',1);const lg=S.login?0:loginFirst();   // первый день серии входов засчитываем с первой победой
-    const reward=winGold(c,l,st,first);S.gold+=reward;ern('lvl',reward);const bst=(60+30*(st-1))*(l===5?2:1);const bref=boostRefund(1);boostAdd(bst);save();
+    const reward=Math.round(winGold(c,l,st,first)*(DIF[dm]||DIF.n).gold);S.gold+=reward;ern('lvl',reward);const bst=(60+30*(st-1))*(l===5?2:1);const bref=boostRefund(1);boostAdd(bst);save();
     const lines=Lg(['Отбились! Нечисть бежит, роняя тапки.','Победа! Воевода доволен и даже улыбнулся.','Застава устояла! Тётушка Яга печёт пироги.','Славно! Про нас сложат былину. Короткую.'],
       ['We held them off! The monsters flee, losing their slippers.','Victory! The commander is pleased and even smiled.','The outpost stands! Auntie Yaga is baking pies.','Glorious! They’ll write an epic about us. A short one.']);
-    const next=l<5?[c,l+1]:c<CH.length-1?[c+1,0]:null;
+    const nx=chNext(c),next=l<5?[c,l+1]:dmN&&nx!=null?[nx,0]:null;   // OB:CH: следующая глава — по CH_ORDER; Логово не запирает · OB:DIF на ⚔/🔥 — дальше по главе
     // после первой победы — один ясный шаг: Частокол в деревне (строкой и кнопкой во втором ряду; главная кнопка одна — «Дальше»)
     const hintWall=S.wins===1&&!S.village.wall&&S.gold>=BLD.find(b=>b.id==='wall').cost[0];
     const x2b=goldWanted()&&adOk()&&!(c===0&&l<3);   // первые три уровня — без рекламных кнопок (решение владельца 03.10)
-    showModal('<h3>'+(l===5?Lg('Глава освобождена!','Chapter liberated!'):Lg('Победа!','Victory!'))+'</h3><div class="bigstars">'+[0,1,2].map(i=>'<img src="'+ic(i<st?'star':'star0',128)+'">').join('')+'</div>'+
-      '<p class="sub" data-fit="4">'+(l===5?Lg('Босс повержен! '+CH[c].name+' '+({m:'свободен',n:'свободно',f:'свободна',p:'свободны'})[CH[c].g]+'. '+(c<CH.length-1?'':'Тридевятое царство спасено! Ура!'),'Boss defeated! '+CH[c].name+' is free. '+(c<CH.length-1?'':'The Thrice-Nine Kingdom is saved! Hooray!')):st===3?pick(lines):st===2?Lg('Кое-кто просочился. Для трёх звёзд — не больше двух.','A few slipped through. For three stars — no more than two.'):Lg('Еле устояли! Для трёх звёзд в город должно пройти не больше двух.','That was close! For three stars, no more than two may reach the city.'))+'</p>'+
+    showModal('<h3>'+(l===5?Lg('Глава освобождена!','Chapter liberated!'):Lg('Победа!','Victory!'))+(dmN?'':' '+difIcon(dm))+'</h3><div class="bigstars">'+[0,1,2].map(i=>'<img src="'+ic(i<st?'star':'star0',128)+'">').join('')+'</div>'+
+      '<p class="sub" data-fit="4">'+(l===5?Lg('Босс повержен! '+CH[c].name+' '+({m:'свободен',n:'свободно',f:'свободна',p:'свободны'})[CH[c].g]+'. '+(c!==chLast()?'':'Тридевятое царство спасено! Ура!'),'Boss defeated! '+CH[c].name+' is free. '+(c!==chLast()?'':'The Thrice-Nine Kingdom is saved! Hooray!')):l===6?Lg('Логово взято! Ярая сила повержена.','The Lair is taken! The raging foe is down.'):st===3?pick(lines):!dmN?(st===2?Lg('Кое-кто просочился. Для трёх звёзд на этом режиме — потеряй не больше '+difLeak3()+' ❤.','A few slipped through. For three stars on this mode, lose no more than '+difLeak3()+' ❤.'):Lg('Еле устояли! Для трёх звёзд на этом режиме — потеряй не больше '+difLeak3()+' ❤.','That was close! For three stars on this mode, lose no more than '+difLeak3()+' ❤.')):st===2?Lg('Кое-кто просочился. Для трёх звёзд — не больше двух.','A few slipped through. For three stars — no more than two.'):Lg('Еле устояли! Для трёх звёзд в город должно пройти не больше двух.','That was close! For three stars, no more than two may reach the city.'))+'</p>'+
       (crownNew?'<p class="sub" style="color:#ffe7a0;font-weight:800">'+Lg('👑 Корона «Богатырской» — теперь она на этом уровне навсегда!','👑 The “Heroic” crown — it stays on this level forever!')+'</p>':'')+
       '<div class="card treasury rew" style="text-align:center"><b>+'+fmtGold(reward)+''+(first?Lg(' (первая победа ×2)',' (first victory ×2)'):'')+' <span style="white-space:nowrap">· ⏩ +'+fmtBoost(bst)+'</span></b>'+(bref>=1?'<br><span style="font-size:13px">'+BREF()+fmtBoost(bref)+'</span>':'')+(lg?'<br><span class="note">'+Lg('🎁 За вход: +'+lg+' сегодня','🎁 Daily bonus: +'+lg+' today')+'</span>':'')+'</div>'+
-      goalHTML(next,c,hintWall)+tomorrowHTML()+(hintWall?'<div class="goal" data-fit="3">'+Lg('🏠 Золота хватает на <b>Частокол</b> в деревне: +1 жизнь в каждом бою.','🏠 You have enough gold for the <b>Palisade</b> in the village: +1 life in every battle.')+'</div>':'')+
+      difUpHTML(c,dUp)+goalHTML(next,c,hintWall)+tomorrowHTML()+(hintWall?'<div class="goal" data-fit="3">'+Lg('🏠 Золота хватает на <b>Частокол</b> в деревне: +1 жизнь в каждом бою.','🏠 You have enough gold for the <b>Palisade</b> in the village: +1 life in every battle.')+'</div>':'')+
       '<div class="stats" data-fit="5"><div><b>'+G.kills+'</b>'+Lg('одолели','defeated')+'</div><div><b>'+G.leaks+'</b>'+Lg('прорвалось','got through')+'</div><div><b>'+fmtTime(G.t)+'</b>'+Lg('время','time')+'</div></div>'+bestTwHTML()+dqNote(dq0)+
       '<div class="btns stick">'+
       (next?'<button class="btn big" id="rNext">'+Lg('Дальше: ','Next: ')+CH[next[0]].levels[next[1]]+' ▸</button>':'<button class="btn big" id="rMap">'+Lg('На карту','To the map')+'</button>')+
       (x2b?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить золото за рекламу: ещё +','🎬 Double the gold for an ad: +')+fmtNum(reward)+(needB(reward)?Lg(' — хватит на «'+needB(reward)+'»',' — enough for “'+needB(reward)+'”'):'')+'</button>':'')+
+      (dUp?'<button class="btn ghost" id="rUp">'+(dUp==='s'?Lg('⚔ Попробовать Сложный','⚔ Try Hard'):Lg('🔥 Попробовать Адский','🔥 Try Hell'))+'</button>':'')+
       '<div class="btns h" style="margin-top:0">'+(hintWall?'<button class="btn ghost" id="rWall">'+Lg('🏠 В деревню','🏠 To the village')+'</button>':'<button class="btn ghost" id="rAgain">'+Lg('Ещё раз','Play again')+'</button>')+(next?'<button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button>':'')+'</div></div>','win');
-    {let x2d=0;const bt=$('rX2'),pay=()=>{x2d=1;S.gold+=reward;ern('ad',reward);save();if(bt&&bt.parentNode)bt.parentNode.removeChild(bt);};
+    {let x2d=0;const bt=$('rX2'),pay=()=>{x2d=1;S.gold+=reward;ern('ad',reward);META_HK('X2',G,reward);save();if(bt&&bt.parentNode)bt.parentNode.removeChild(bt);};
     adOn('rX2','x2',()=>showRewarded(()=>{if(x2d)return;pay();toast('+'+fmtGold(reward)+'');},null,
       ()=>{if(x2d)return '';pay();SND.coin();setPills();return Lg('удвоено: +','doubled: +')+fmtGold(reward);}));} /* поздний зачёт (adt): всегда, один раз */
     // межэкранная — только тут, при уходе с экрана победы, и со 2-й главы (после Соловья)
     const ia=c>=1;
     on('rNext',()=>afterAd(ia,()=>{toMenu('Map');mapSel=next[0];renderMap();if(!$('modal').classList.contains('on'))openIntro(next[0],next[1]);}));
     on('rWall',()=>afterAd(ia,()=>{toMenu('Village');const w=document.querySelector('[data-b="wall"]');if(w){w.classList.add('hl');w.scrollIntoView({block:'center'});}}));
+    on('rUp',()=>afterAd(ia,()=>{difSet(c,dUp,'res');toMenu('Map');mapSel=c;renderMap();if(!$('modal').classList.contains('on'))openIntro(c,0);}));   // OB:DIF
     on('rAgain',()=>afterAd(ia,()=>startLevel(c,l)));on('rMap',()=>afterAd(ia,()=>{toMenu('Map');if(canForge())toast(Lg('Есть звёзды для кузницы!','You have stars for the forge!'));}));
     // VK: одно предложение за сессию (модуль SOC) — строкой и кнопкой ПОД кнопками окна победы; диалог VK — только по нажатию игрока
     /* ntf (06.10): вопрос воеводы про напоминания VK идёт тем же путём (SOC.offer вернёт k:'ntf') и ставится СРАЗУ при открытии окна. Пока модуль хочет
@@ -452,11 +473,11 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
         b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_'+(o.k||'ret')});const r=o.run();
           if(o.k==='ntf'){const d=m.querySelector('.soc-o');if(d)d.remove();Promise.resolve(r).then(y=>{if(y&&o.ok)toast(o.ok);}).catch(()=>{});}};}
       if(!(o&&o.k==='ntf')&&m.classList.contains('rc')){m.classList.remove('rc');fitModal();}}catch(e){}}
-    if(l===5&&c===CH.length-1)setTimeout(()=>toast(Lg('Тридевятое царство спасено! Осада и Босс недели ждут.','The Thrice-Nine Kingdom is saved! The Siege and the Boss of the Week await.')),800);
-  }else{const cons=loseGold(c,G.wave);S.gold+=cons;ern('lvl',cons);S.lose=S.lose||{};S.lose[key]=(S.lose[key]||0)+1;const pity=pityCoins(c,l);const bref=boostRefund(.5);save();
+    if(l===5&&c===chLast())setTimeout(()=>toast(Lg('Тридевятое царство спасено! Осада и Босс недели ждут.','The Thrice-Nine Kingdom is saved! The Siege and the Boss of the Week await.')),800);
+  }else{const cons=loseGold(c,G.wave);S.gold+=cons;ern('lvl',cons);S.lose=S.lose||{};if(dmN)S.lose[key]=(S.lose[key]||0)+1;else DIF_LOSE[dm+key]=(DIF_LOSE[dm+key]||0)+1;const pity=dmN?pityCoins(c,l):0;const bref=boostRefund(.5);save();
     const lines=Lg(['Нечисть прорвалась в город и съела все пирожки. Все!','Ворота не выдержали. Воевода чешет бороду: «Строить надо больше!»','Прорвались, окаянные! Ничего — отстроимся и всыплем им.'],
       ['The monsters broke into the city and ate all the pies. ALL of them!','The gates gave way. The commander scratches his beard: “We need to build more!”','They got through, the rascals! Never mind — we’ll rebuild and give them what for.']);
-    const nw=G.waves.length,held=Math.max(0,G.wave-1),soft=Math.round((1-novK(c,l))*100),lb=G.leakedBoss;
+    const nw=G.waves.length,held=Math.max(0,G.wave-1),soft=dmN?Math.round((1-novK(c,l))*100):0,lb=G.leakedBoss;
     // новичку (первые три уровня) главная кнопка — «Начать заново», ролик — второй строкой; дальше — как было
     const early=c===0&&l<3,cont=!early&&!G.contUsed&&G.wave>=2&&adOk(),contB=cont?'<button class="btn ad'+(early?'':' big')+'" id="rCont">'+Lg('🎬 Ещё попытка за рекламу (+10 ❤','🎬 One more try for an ad (+10 ❤')+(G.boss&&G.boss.boss&&!G.boss.dead||lb?Lg(', босс назад',', boss pushed back'):'')+')</button>':'',
       againB='<button class="btn big" id="rAgain">'+Lg('Начать заново','Restart')+(pity?Lg(' (подмога +'+coinsTxt(pity)+')',' (aid +'+coinsTxt(pity)+')'):'')+'</button>';
@@ -467,13 +488,14 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
       (bref>=1?'<p class="sub" data-fit="2">'+BREF()+fmtBoost(bref)+Lg(' (половина потраченного на ×2)',' (half of what you spent on ×2)')+'</p>':'')+'<div class="stats" data-fit="2"><div><b>'+(G.wave)+'/'+nw+'</b>'+Lg('волна','wave')+'</div><div><b>'+G.kills+'</b>'+Lg('одолели','defeated')+'</div><div><b>+'+cons+'</b>'+plw(cons,'золотой','золотых','золотых','gold','gold')+'</div></div>'+bestTwHTML()+
       dqNote(dq0)+'<div class="btns stick">'+(early?againB+contB:contB+againB)+
       // два поражения подряд — ненавязчиво предложить полегче (звёзды те же)
-      (S.lose[key]>=2&&G.diff>0?'<button class="btn ghost" id="rEasy">'+Lg('Полегче: сыграть на «'+DIFF[G.diff-1].p+'»','Easier: play on “'+DIFF[G.diff-1].p+'”')+'</button>':'')+'<button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button></div>','lose');
+      (!dmN&&DIF_LOSE[dm+key]>=2?'<button class="btn ghost" id="rEasy">'+Lg('Сыграть на Обычном','Play on Normal')+'</button>':'')+'<button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button></div>','lose');
     {const g=G,cb_=$('rCont');adOn('rCont','cont',()=>showRewarded(()=>{hideModal();continueBattle();voice(Lg('Второе дыхание! Кот Баюн усыпил нечисть — строй скорее!','Second wind! Bayun the Cat put the monsters to sleep — build, quick!'),VOEV(),'voevoda',5);},null,
     /* поздний зачёт (adt): тот же бой и окно поражения ещё открыто → бой продолжается; иначе золото по цене ролика (у попытки цены в золоте нет) */
     ()=>{if(G!==g||!G.over||G.contUsed||!cb_||!document.body.contains(cb_)||!$('modal').classList.contains('on'))return adLateCoins();
       hideModal();continueBattle();voice(Lg('Второе дыхание! Кот Баюн усыпил нечисть — строй скорее!','Second wind! Bayun the Cat put the monsters to sleep — build, quick!'),VOEV(),'voevoda',5);return Lg('бой продолжается!','the battle goes on!');}));}
     on('rAgain',()=>startLevel(c,l));on('rMap',()=>toMenu('Map'));
-    on('rEasy',()=>{S.diff=G.diff-1;save();startLevel(c,l);toast(Lg('Сложность: «'+DIFF[S.diff].n+'». Поменять — в окне перед боем','Difficulty: “'+DIFF[S.diff].n+'”. Change it in the window before a battle'));});}
+    on('rEasy',()=>{difSet(c,'n','lose');startLevel(c,l);toast(Lg('Режим главы: Обычный. Поменять — в окне перед боем','Chapter mode: Normal. Change it in the window before a battle'));});}
+  META_HK('WIN',G,win);   // OB:SLAVA WIN
   achAfter();
 }
 /* ---------- boost 02.10: «Дальше» и «Завтра» в итогах, причина поражения ---------- */
@@ -482,7 +504,7 @@ function unlockAt(c,l){const a=[];for(const t in TW_UNLOCK){const u=TW_UNLOCK[t]
   for(const k in SPELL_UNLOCK){const u=SPELL_UNLOCK[k];if(u[0]===c&&u[1]===l)a.push(Lg('новые чары — ','new spell — ')+SPELLS[k].n);}
   if(BRANCH_UNLOCK[0]===c&&BRANCH_UNLOCK[1]===l)a.push(Lg('мастера — две ветки у застав 3-го уровня','masters — two branches for level 3 outposts'));
   if(LEAD.at[c+'-'+l])a.push(Lg('вожак — ','a leader — ')+LEAD.n[LEAD.at[c+'-'+l]]);
-  if(l===5)a.push(Lg('босс главы — ','the chapter boss — ')+EN[CH[c].boss].n);return a;}
+  if(l===5)a.push(Lg('босс главы — ','the chapter boss — ')+EN[CH[c].boss].n);if(l===6)a.push(Lg('Логово — ярый босс','the Lair — a raging boss'));return a;}
 function goalHTML(next,c,noForge){let t;
   if(!next)t=Lg('Осада на Калиновом мосту и Босс недели — на вкладке «Испытания».','The Siege at Kalinov Bridge and the Boss of the Week — in the “Trials” tab.');
   else{const u=unlockAt(next[0],next[1]),left=5-next[1],nm=CH[next[0]].levels[next[1]];
@@ -492,7 +514,7 @@ function goalHTML(next,c,noForge){let t;
   return '<div class="goal"><b>'+Lg('🎯 Дальше:','🎯 Next:')+'</b> '+t+'</div>';}
 function loginTomorrowDay(){const L=S.login,x=loginAvail();const n=L&&L.day===dayKey()?L.n:x&&x.cont?(L.n||0)+1:1;return n%7+1;}
 function tomorrowHTML(){const a=[];
-  if(S.login){const d=loginTomorrowDay();a.push(Lg('день '+d+' из 7 за вход: +'+fmtGold(loginTomorrow()),'login day '+d+' of 7: +'+fmtGold(loginTomorrow()))+(d===7?Lg(' и +10 мин ⏩',' and +10 min ⏩'):''));}
+  if(S.login)a.push(loginTmrText()); // OB:META1 вход 30 дней (js/meta-ret.js)
   a.push(Lg('казна накопит до '+fmtGold(afkRate()*afkCapH()),'the treasury piles up to '+fmtGold(afkRate()*afkCapH())));
   a.push(Lg('новые задания дня','new daily quests'));if(S.stars['0-5'])a.push(Lg('новое испытание дня','a new daily challenge'));
   return '<div class="goal tmr" data-fit="2"><b>'+Lg('📅 Завтра:','📅 Tomorrow:')+'</b> '+a.join(' · ')+'</div>';}
@@ -501,6 +523,7 @@ function loseWhy(){const tws=G.tw.filter(Boolean),empty=G.map.spots.length-tws.l
   const n=Math.min(empty,Math.floor(G.coins/cheap)),canUp=tws.some(t=>t.lvl<3&&G.coins>=upCost(t)),air=tws.filter(t=>t.st.air).length;
   if(n>=1&&tws.length<=4)return Lg('В кошельке осталось '+coinsTxt(G.coins)+' — хватило бы ещё на '+n+' '+plw(n,'заставу','заставы','застав')+'. Монеты за нечисть для того и нужны: ставь заставы прямо во время боя!','You had '+coinsTxt(G.coins)+' left — enough for '+n+' more '+(n===1?'outpost':'outposts')+'. That’s what monster coins are for: build outposts right in the middle of the battle!');
   if(n>=1||canUp)return Lg('В кошельке осталось '+coinsTxt(G.coins)+'. Трать сразу: новая застава на свободном месте или улучшение — над заставой горит стрелка ▲.','You had '+coinsTxt(G.coins)+' left. Spend them right away: a new outpost on a free spot or an upgrade — look for the ▲ arrow above an outpost.');
+  {const up=typeof difUpTip==='function'?difUpTip():'';if(up)return up;}   // OB:DIF «прокачай X»: свободные звёзды кузницы / золото на постройку
   if((G.leakFly||0)>=G.leaks*.4&&G.leaks>0&&air<3)return Lg('Прорвались летучие. Пушка, изба и дуб их не достают — летучих бьют только стрельцы и колдун. Поставь их побольше.','The flyers got through. The cannon, the hut and the oak can’t reach them — only archers and the sorcerer hit flyers. Build more of those.');
   if(G.leakedBoss)return Lg('Босс дошёл до ворот. Ставь заставы вдоль всей дороги, улучшай их и бей по боссу Громом Перуна.','The boss reached the gate. Line the whole road with outposts, upgrade them and strike the boss with Perun’s Thunder.');
   if(tws.length>=4&&tws.every(t=>t.lvl===1))return Lg('Все заставы 1-го уровня. Улучшай: нажми на заставу со стрелкой ▲ — второй уровень бьёт почти вдвое сильнее.','All your outposts are level 1. Upgrade them: tap an outpost with the ▲ arrow — level 2 hits almost twice as hard.');
@@ -520,7 +543,7 @@ function weekEnd(dq0){const w=G.wk.w,b=CH[G.ci].boss,kill=!!G.wkKill;let pct=G.w
     '<div class="card treasury" style="text-align:center"><b>+'+fmtGold(reward)+'</b>'+(prize?'<br><b>'+Lg('Награда недели: +'+fmtGold(prize)+' и +10 мин ⏩','Weekly reward: +'+fmtGold(prize)+' and +10 min ⏩')+'</b>':'')+(bref>=1?'<br><span style="font-size:13px">'+BREF()+fmtBoost(bref)+'</span>':'')+'</div>'+dqNote(dq0)+
     '<div class="btns stick">'+(reward>0&&goldWanted()&&adOk()?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить за рекламу: ещё +','🎬 Double for an ad: +')+fmtNum(reward)+'</button>':'')+(LB.ok()&&PLAT!=='vk'?'<button class="btn ghost" id="rWkLb">'+Lg('🏆 Таблица недели','🏆 Weekly leaderboard')+'</button>':'')+
     '<button class="btn big" id="rAgain">'+Lg('Ещё раз','Play again')+'</button><button class="btn ghost" id="rMap">'+Lg('В меню','Menu')+'</button></div>');
-  {let x2d=0;const bt=$('rX2'),pay=()=>{x2d=1;S.gold+=reward;ern('ad',reward);save();if(bt&&bt.parentNode)bt.parentNode.removeChild(bt);};
+  {let x2d=0;const bt=$('rX2'),pay=()=>{x2d=1;S.gold+=reward;ern('ad',reward);META_HK('X2',G,reward);save();if(bt&&bt.parentNode)bt.parentNode.removeChild(bt);};
   adOn('rX2','x2w',()=>showRewarded(()=>{if(x2d)return;pay();toast('+'+fmtGold(reward));},null,
     ()=>{if(x2d)return '';pay();SND.coin();setPills();return Lg('удвоено: +','doubled: +')+fmtGold(reward);}));} /* поздний зачёт (adt): всегда, один раз */
   on('rWkLb',()=>afterAd(kill,()=>{lbSeg='weekly';toMenu('Siege');setTimeout(()=>{const x=$('lbBox');if(x)x.scrollIntoView({block:'center'});},60);}));
@@ -545,27 +568,32 @@ function renderForge(){const el=$('tabForge'),free=starsFree();
   /* look1: перекомпоновка под крупный текст — застава сворачивается (заголовок: сколько выковано и можно ли ковать сейчас),
      внутри — пять ступеней строками: название, что даёт, цена. Раскрыта первая застава, где хватает звёзд (дальше — как оставил игрок) */
   if(!FGO.set){FGO.set=1;const f=TW_ORDER.find(t=>FORGE_ORDER[t].some(([k,c])=>forgeCan(t,k)&&c<=free));if(f)FGO[f]=1;}
-  for(const t of TW_ORDER){const d=TW[t],u=TW_UNLOCK[t],open=chOpen(u[0])&&(u[0]>0||lvOpen(0,u[1]));const own=FORGE_ORDER[t].filter(([k])=>fHas(t,k)).length,canN=FORGE_ORDER[t].filter(([k,c])=>forgeCan(t,k)&&c<=free).length;
-    h+='<details class="card fgc" data-fg="'+t+'"'+(FGO[t]?' open':'')+'><summary><img class="ic" src="'+ic('ti_'+t+'_3',112)+'" alt=""'+(open?'':' style="filter:brightness(0) opacity(.4)"')+'><span class="t"><b>'+d.n+'</b><span>'+(own<5?Lg('Выковано '+own+' из 5','Forged '+own+' of 5'):Lg('Всё выковано!','All forged!'))+'</span>'+
-      '<span class="pips">'+FORGE_ORDER[t].map((q,i)=>'<i class="'+(i<own?'on':'')+'"></i>').join('')+'</span></span><u'+(canN?' class="can"':'')+'>'+(canN?Lg('Ковать','Forge'):own<5?Lg('Ступени','Steps'):'✓')+'</u></summary>'+
-      '<div class="tiers">'+FORGE_ORDER[t].map(([k,c])=>{const f=k==='sp'?FORGE_SP[t]:FORGE_T[k],has=fHas(t,k),can=forgeCan(t,k);
-        return '<button class="'+(has?'on':can&&c<=free?'can':'')+'" data-t="'+t+'" data-k="'+k+'"><span><b>'+f.n+'</b><small>'+forgeShort(t,k)+'</small></span><i>'+(has?'✓':(can?'★ '+c:'🔒'))+'</i></button>';}).join('')+'</div></details>';}
+  for(const t of TW_ORDER){const d=TW[t],u=TW_UNLOCK[t],open=chOpen(u[0])&&(u[0]>0||lvOpen(0,u[1]));const NF=FORGE_ORDER[t].length,own=FORGE_ORDER[t].filter(([k])=>fHas(t,k)).length,canN=FORGE_ORDER[t].filter(([k,c])=>forgeCan(t,k)&&c<=free).length;
+    h+='<details class="card fgc" data-fg="'+t+'"'+(FGO[t]?' open':'')+'><summary><img class="ic" src="'+ic('ti_'+t+'_3',112)+'" alt=""'+(open?'':' style="filter:brightness(0) opacity(.4)"')+'><span class="t"><b>'+d.n+'</b><span>'+(own<NF?Lg('Выковано '+own+' из '+NF,'Forged '+own+' of '+NF):Lg('Всё выковано!','All forged!'))+'</span>'+
+      '<span class="pips">'+FORGE_ORDER[t].map((q,i)=>'<i class="'+(i<own?'on':'')+'"></i>').join('')+'</span></span><u'+(canN?' class="can"':'')+'>'+(canN?Lg('Ковать','Forge'):own<NF?Lg('Ступени','Steps'):'✓')+'</u></summary>'+
+      '<div class="tiers">'+FORGE_ORDER[t].map(([k,c])=>{const f=forgeInfo(t,k),has=fHas(t,k),can=forgeCan(t,k),lk=forgeLocked(k);   // OB:CH: Кузница II — подзаголовок и замок до своей главы
+        return (k===FORGE2_FIRST?'<div class="note f2h">'+Lg('Кузница II — ','Forge II — ')+(lk?Lg('откроется после главы «'+CH[FORGE_T[k].lock].name+'»','opens after “'+CH[FORGE_T[k].lock].name+'”'):Lg('медные мастера','copper masters'))+'</div>':'')+
+          '<button class="'+(has?'on':can&&c<=free?'can':'')+'" data-t="'+t+'" data-k="'+k+'"><span><b>'+f.n+'</b><small>'+forgeShort(t,k)+'</small></span><i>'+(has?'✓':(can?'★ '+c:'🔒'))+'</i></button>';}).join('')+'</div></details>';}
   h+='</div><h2>'+Lg('Чары и запасы','Spells and supplies')+'</h2><div class="g2">';
   for(const x of FORGE_EXTRA){const n=forgeN(x.k),max=x.cost.length;
+    if(x.k==='bul')h+='</div><h2>'+Lg('Кузница III — булатные мастера','Forge III — damascus masters')+'</h2><p class="sub">'+(fxLocked(x)?Lg('Откроется после главы «'+CH[x.lock].name+'»: ступени на все заставы сразу.','Opens after “'+CH[x.lock].name+'”: steps for all outposts at once.'):Lg('Ступени на все заставы сразу.','Steps for all outposts at once.'))+'</p><div class="g2">';   // OB:MERGE Кузница III
+    if(fxLocked(x)){h+='<div class="card"><div class="row"><img class="ic" src="'+ic(x.ic)+'" style="filter:brightness(0) opacity(.4)"><div class="t"><b>'+x.n+'</b><span>'+x.d[0]+'</span></div><span class="tag">🔒</span></div></div>';continue;}
     h+='<div class="card"><div class="row"><img class="ic" src="'+ic(x.ic)+'"><div class="t"><b>'+x.n+'</b><span>'+(n<max?Lg('Дальше: ','Next: ')+x.d[n]:Lg('Всё выковано!','All forged!'))+'</span><div class="pips">'+x.cost.map((_,i)=>'<i class="'+(i<n?'on':'')+'"></i>').join('')+'</div></div>'+
       (n<max?'<button class="btn gold" data-f="'+x.k+'" '+(free<x.cost[n]?'disabled':'')+'><img src="'+ic('star',40)+'">'+x.cost[n]+'</button>':'<span class="tag ok">'+Lg('Готово','Done')+'</span>')+'</div></div>';}
-  h+='</div><button class="btn ghost big" id="fReset" style="margin-top:6px">'+Lg('Сбросить кузницу','Reset the forge')+'</button>';
+  h+='</div>'+(typeof bgsHTML==='function'?bgsHTML():'')+'<button class="btn ghost big" id="fReset" style="margin-top:6px">'+Lg('Сбросить кузницу','Reset the forge')+'</button>';
   el.innerHTML=h;
   for(const d of el.querySelectorAll('[data-fg]'))d.addEventListener('toggle',()=>{FGO[d.getAttribute('data-fg')]=d.open?1:0;});
-  for(const b of el.querySelectorAll('[data-k]'))b.onclick=()=>{const t=b.dataset.t,k=b.dataset.k,f=k==='sp'?FORGE_SP[t]:FORGE_T[k],c=FORGE_ORDER[t].find(q=>q[0]===k)[1];
-    if(fHas(t,k)){toast(f.n+': '+f.d);return;}if(!forgeCan(t,k)){toast(Lg('Сначала «'+FORGE_T[FORGE_T[k].need].n+'»','First “'+FORGE_T[FORGE_T[k].need].n+'”'));return;}
+  for(const b of el.querySelectorAll('[data-k]'))b.onclick=()=>{const t=b.dataset.t,k=b.dataset.k,f=forgeInfo(t,k),c=FORGE_ORDER[t].find(q=>q[0]===k)[1];
+    if(fHas(t,k)){toast(f.n+': '+f.d);return;}if(forgeLocked(k)){toast(Lg('Кузница II откроется после главы «'+CH[FORGE_T[k].lock].name+'»','Forge II opens after “'+CH[FORGE_T[k].lock].name+'”'));return;}if(!forgeCan(t,k)){toast(Lg('Сначала «'+FORGE_T[FORGE_T[k].need].n+'»','First “'+FORGE_T[FORGE_T[k].need].n+'”'));return;}
     if(starsFree()<c){toast(f.n+' ('+f.d+Lg(') — нужно звёзд: ',') — stars needed: ')+c);return;}const p0=powerNow(),d0=forgeSnap(t);fT(t)[k]=1;STAT.ev('spend',{k:'f:'+t+'.'+k,c:c,v:'st'});S.forgeT=nowMs();save();SND.up();toast(TW[t].n+': '+forgeDiff(t,d0,f.d)+powerToast(p0));renderForge();setPills();};
   for(const b of el.querySelectorAll('[data-f]'))b.onclick=()=>{const k=b.dataset.f,n=forgeN(k);const x=FORGE_EXTRA.find(q=>q.k===k);const cost=x.cost[n];
-    if(starsFree()<cost)return;const p0=powerNow();S.forge[k]=n+1;STAT.ev('spend',{k:'fx:'+k+(n+1),c:cost,v:'st'});S.forgeT=nowMs();save();SND.up();toast(x.n+': '+x.d[n]+powerToast(p0));renderForge();setPills();};
+    if(starsFree()<cost||fxLocked(x))return;const p0=powerNow();S.forge[k]=n+1;STAT.ev('spend',{k:'fx:'+k+(n+1),c:cost,v:'st'});S.forgeT=nowMs();save();SND.up();toast(x.n+': '+x.d[n]+powerToast(p0));renderForge();setPills();};
+  if(typeof endgForgeBind==='function')endgForgeBind(el);   // OB:ENDG богатырские ступени и вход в «Мастерство»
   on('fReset',()=>{if(!starsSpent())return;S.forge={};S.forgeT=nowMs();save();toast(Lg('Кузница сброшена — звёзды вернулись','Forge reset — your stars are back'));renderForge();setPills();});}
 
 /* ---------- boost: видимый рост силы — «было → стало» в кузнице и деревне, число «Сила застав» ---------- */
-function forgeShort(t,k){return k==='dmg1'?Lg('урон +10%','damage +10%'):k==='dmg2'?Lg('урон +15%','damage +15%'):k==='rng'?Lg('дальность +10%','range +10%'):k==='cheap'?Lg('цена −10%','cost −10%'):
+function forgeShort(t,k){if(FORGE_T[k]&&FORGE_T[k].lock!=null)return forgeShort2(t,k);   // OB:CH: Кузница II
+  return k==='dmg1'?Lg('урон +10%','damage +10%'):k==='dmg2'?Lg('урон +15%','damage +15%'):k==='rng'?Lg('дальность +10%','range +10%'):k==='cheap'?Lg('цена −10%','cost −10%'):
   ({arch:Lg('крит 15%','crit 15%'),pushka:Lg('взрыв +25%','blast +25%'),izba:Lg('лужа +1,5 с','pool +1.5 s'),mag:Lg('+1 цель','+1 target'),dub:Lg('оглуш. +0,3 с','stun +0.3 s')})[t];}
 // «Сила застав» — одно число, растёт с каждой покупкой в кузнице и деревне (только для наглядности, на бой не влияет)
 function powerNow(){let n=100+3*starsSpent();for(const b of BLD)n+=4*(S.village[b.id]||0);return n;}
@@ -578,7 +606,7 @@ function forgeDiff(t,a,def){const b=forgeSnap(t),f=v=>dnum(String(Math.round(v*1
 function bldDelta(id,l){const p=n=>n+'%';
   return ({wall:[Lg('жизней в бою','lives per battle'),20+l+3*forgeN('lives'),21+l+3*forgeN('lives')],fair:[Lg('монет на старте','starting coins'),'+'+25*l,'+'+25*(l+1)],
     range:[Lg('урон застав','outpost damage'),'+'+p(4*l),'+'+p(4*l+4)],smith:[Lg('цены застав','outpost prices'),'−'+p(4*l),'−'+p(4*l+4)],herb:[Lg('перезарядка чар','spell cooldown'),'−'+p(8*l),'−'+p(8*l+8)],
-    mint:[Lg('казна в час','treasury per hour'),afkRate(),afkRate()+10],barn:[Lg('казна вмещает, ч','treasury holds, h'),afkCapH(),afkCapH()+2]})[id];}
+    mint:[Lg('казна в час','treasury per hour'),afkRate(),afkRateAt(1,0)],kop:[Lg('казна в час','treasury per hour'),afkRate(),afkRateAt(0,1)],dubl:[Lg('чары сильнее','spells stronger'),'+'+p(10*l),'+'+p(10*l+10)],mel:[Lg('золото за победы','gold for victories'),'+'+p(10*l),'+'+p(10*l+10)],arsn:[Lg('урон застав','outpost damage'),'+'+p(8*l),'+'+p(8*l+8)],barn:[Lg('казна вмещает, ч','treasury holds, h'),afkCapH(),afkCapH()+2]})[id];}
 
 /* ================= ДЕРЕВНЯ ================= */
 function giftReady(){return S.runs>0&&nowMs()-(S.gift||0)>4*3600e3;}
@@ -601,6 +629,7 @@ function renderVillage(){const el=$('tabVillage');const giftAmt=giftGold();
       (g>=10?'<button class="btn gold" id="afkTake">'+Lg('Забрать','Collect')+'</button>':'')+'</div></div>';}
   h+='<div class="blds rows">';
   for(const b of BLD){const l=S.village[b.id]||0,max=b.cost.length,cost=b.cost[l];
+    if(b.ch!=null&&!S.stars[b.ch+'-5']){h+='<div class="card bld brow"><img src="'+ic(b.ic,112)+'" alt="" style="filter:grayscale(1) opacity(.5)"><div class="t"><b>'+b.name+'</b><span>'+b.about+'</span><em class="delta">'+Lg('🔒 Откроется после главы «'+CH[b.ch].name+'»','🔒 Opens after “'+CH[b.ch].name+'”')+'</em></div></div>';continue;}   // OB:CH: постройка новой темы
     const dl=l<max?bldDelta(b.id,l):null;h+='<div class="card bld brow'+(l?' has':'')+'"><img src="'+ic(b.ic,112)+'" alt=""><div class="t"><b>'+b.name+'</b><span>'+b.about+'</span>'+(dl?'<em class="delta">'+dl[0]+': '+dl[1]+' → <b>'+dl[2]+'</b></em>':'')+
       '<div class="pips">'+Array.from({length:max},(_,i)=>'<i class="'+(i<l?'on':'')+'"></i>').join('')+'</div></div>'+
       (l>=max?'<span class="tag ok">'+Lg('Готово','Done')+'</span>':'<button class="btn gold" data-b="'+b.id+'" '+(S.gold<cost?'disabled':'')+'><img src="'+ic('ingot',40)+'">'+fmtNum(cost)+'</button>')+'</div>';}
@@ -608,28 +637,20 @@ function renderVillage(){const el=$('tabVillage');const giftAmt=giftGold();
   h+=bannersHTML();
   h+=cosmeticsHTML();
   // все предложения за рекламу — одной карточкой ниже построек; за золото — только пока золоту есть куда идти (goldWanted)
-  const g=afkGold(),bst=S.afkBoost&&S.afkBoost.day===dayKey()?S.afkBoost.n:0,offers=[],gw=goldWanted()&&adOk();
-  if(g>=10&&gw)offers.push('<button class="btn ad" id="afkX2">'+Lg('🎬 Казна ×2 за рекламу: +','🎬 Treasury ×2 for an ad: +')+fmtGold(g*2)+'</button>');
-  // «+2 часа казны» — только когда это ощутимо (с Мытным двором), иначе награда за рекламу смешная
-  if(gw&&bst<2&&afkRate()*2>=40)offers.push('<button class="btn ad" id="afkBoost">'+Lg('🎬 +2 часа казны за рекламу: +','🎬 +2 treasury hours for an ad: +')+fmtGold(afkRate()*2)+' ('+(2-bst)+Lg(' из 2)',' of 2)')+'</button>');
-  if(gw&&giftReady())offers.push('<button class="btn ad" id="giftBtn">'+Lg('🎬 Гостинец Яги за рекламу: +','🎬 Yaga’s treat for an ad: +')+fmtGold(giftAmt)+'</button>');
+  /* OB:META1 (07-stats п.6, 03-meta §6): вечные «Казна ×2», «+2 часа казны» и «Гостинец Яги» за рекламу убраны — их жали в ~1 % показов.
+     Казна ×2 за ролик — теперь один раз при входе, в окне «Пока тебя не было…» (js/meta-ret.js). Тут осталось только ускорение за ролик */
+  const offers=[];
   if(adOk())offers.push('<button class="btn ad" id="vBoost">'+Lg('🎬 +10 мин ускорения за рекламу','🎬 +10 min of speed-up for an ad')+'</button>');
-  if(offers.length)h+='<h2>'+Lg('Подарки','Gifts')+'</h2><div class="card gift"><div class="row" style="margin-bottom:8px"><img class="ic" src="'+ic('tetka')+'"><div class="t"><b>'+Lg('По желанию — за короткую рекламу','Optional — for a short ad')+'</b><span>'+
-    (needV()?Lg('До «'+needV().n+'» не хватает '+fmtGold(needV().d)+'. ','You need '+fmtGold(needV().d)+' more for “'+needV().n+'”. '):'')+(!gw?Lg('Всё куплено — золото пусть копится на новые затеи.','Everything is bought — let the gold pile up for new ideas.'):S.runs>0&&!giftReady()?Lg('Тётушка печёт пироги: гостинец через '+Math.ceil((4*3600e3-(nowMs()-S.gift))/3600e3)+' ч','Auntie is baking pies: next treat in '+Math.ceil((4*3600e3-(nowMs()-S.gift))/3600e3)+' h'):Lg('Реклама не обязательна — всё можно заработать в боях.','Ads are optional — you can earn everything in battle.'))+'</span></div></div><div class="btns" style="margin-top:0">'+offers.join('')+'</div></div>';
+  if(offers.length)h+='<h2>'+Lg('Ускорение','Speed-up')+'</h2><div class="card gift"><div class="row" style="margin-bottom:8px"><img class="ic" src="'+ic('tetka')+'"><div class="t"><b>'+Lg('По желанию — за короткую рекламу','Optional — for a short ad')+'</b><span>'+
+    Lg('Реклама не обязательна — всё можно заработать в боях.','Ads are optional — you can earn everything in battle.')+'</span></div></div><div class="btns" style="margin-top:0">'+offers.join('')+'</div></div>';
   el.innerHTML=h;
   {const c=$('vilCv');if(c)drawVillage(c,c.clientWidth||Math.min(520,el.clientWidth||340),Math.round(Math.min(170,Math.max(120,(c.clientWidth||340)*.36))));}
-  cosmeticsBind();bannersBind(el);
+  cosmeticsBind();bannersBind(el);META_HK('VIL',el); // OB:META1 розетка меты: своя карточка в деревне
   const takeAfk=m=>{const g=afkGold();if(g<=0)return;afkTk={t:S.afkT,g:g,m:m};S.gold+=g*m;ern('chest',g);ern('ad',g*(m-1));S.afkT=nowMs();save();SND.coin();toast('+'+fmtGold(g*m)+Lg(' из казны',' from the treasury'));renderVillage();setPills();};
   on('vBoost',()=>openBoostOffer());
-  on('afkTake',()=>takeAfk(1));{const t0=S.afkT;adOn('afkX2','afk2',()=>showRewarded(()=>takeAfk(2),null,()=>afkLate(t0)));}
-  {const hb=()=>{const bst=S.afkBoost&&S.afkBoost.day===dayKey()?S.afkBoost.n:0;const amt=afkRate()*2;S.afkBoost={day:dayKey(),n:bst+1};S.gold+=amt;ern('ad',amt);save();SND.coin();return amt;};
-    adOn('afkBoost','afkh',()=>showRewarded(()=>{toast('+'+fmtGold(hb()));renderVillage();setPills();},null,
-      ()=>{const a=hb();vilRe();return Lg('+2 часа казны: +','+2 treasury hours: +')+fmtGold(a);}));} /* поздний зачёт (adt): всегда, в счёт двух в день */
-  adOn('giftBtn','gift',()=>showRewarded(()=>{S.gold+=giftAmt;ern('ad',giftAmt);S.gift=nowMs();save();SND.up();toast(Lg('Тётушка Яга: «Кушай, воевода!» +','Auntie Yaga: “Eat up, commander!” +')+fmtGold(giftAmt));renderVillage();setPills();},null,
-    /* поздний зачёт (adt): гостинец ещё готов → выдаём; уже взят другим роликом → ничего */
-    ()=>{if(!giftReady())return '';const a=giftGold();S.gold+=a;ern('ad',a);S.gift=nowMs();save();SND.up();vilRe();return Lg('гостинец Яги: +','Yaga’s treat: +')+fmtGold(a);}));
+  on('afkTake',()=>takeAfk(1)); // OB:META1 казна ×2 / +2 часа / гостинец за рекламу убраны из деревни
   for(const b of el.querySelectorAll('[data-b]'))b.onclick=()=>{const bd=BLD.find(x=>x.id===b.dataset.b),l=S.village[bd.id]||0,cost=bd.cost[l];if(S.gold<cost)return;
-    const dl=bldDelta(bd.id,l),p0=powerNow();S.gold-=cost;STAT.ev('spend',{k:'b:'+bd.id+(l+1),c:cost});S.village[bd.id]=l+1;save();SND.build();renderVillage();setPills();vilAnim(bd.id,bd.name+(l?': '+lvLbl(l+1):Lg(' построен'+({wall:'',herb:'а',range:'о',smith:'а',fair:'а'}[bd.id]||'')+'!',' built!')));
+    const dl=bldDelta(bd.id,l),p0=powerNow();S.gold-=cost;STAT.ev('spend',{k:'b:'+bd.id+(l+1),c:cost});S.village[bd.id]=l+1;save();SND.build();renderVillage();setPills();vilAnim(bd.id,bd.name+(l?': '+lvLbl(l+1):Lg(' построен'+({wall:'',herb:'а',range:'о',smith:'а',fair:'а',kop:'а',mel:'а'}[bd.id]||'')+'!',' built!')));
     toast(bd.name+' — '+dl[0]+': '+dl[1]+' → '+dl[2]+powerToast(p0));};}
 // купил постройку — она «вырастает» на картинке деревни с искрами (вместо сухого тоста); картинка — сверху вкладки
 function vilAnim(id,txt){const c=$('vilCv');if(!c){toast(txt);return;}const W=c.clientWidth,H=parseFloat(c.style.height)||c.clientHeight,t0=performance.now();
@@ -641,36 +662,40 @@ function fbCard(){if(!skinFb()&&!(typeof payHere==='function'&&payHere()&&PAY.it
   const on=TW_ORDER.some(t=>skinOf(t)==='firebird');
   return '<div class="card"><div class="row"><img class="ic" src="'+ic('ti_arch_3~firebird',112)+'" alt=""><div class="t"><b>'+Lg('🔥 Облик «Жар-птица»','🔥 “Firebird” look')+'</b><span>'+Lg('Огненные перья на всех заставах. Только вид — сила та же.','Fiery feathers on every outpost. Looks only — same strength.')+'</span></div></div>'+
     (skinFb()?'<button class="btn" id="fbAll" style="width:100%;margin-top:8px">'+(on?Lg('Снять со всех застав','Remove from all outposts'):Lg('Надеть на все заставы','Put on all outposts'))+'</button>':payHtml(['skins_firebird']))+'</div>';}
+// OB:META1 облики — награды (вход, праздники): какие показывать роду заставы t — все, кроме праздничных, которых нет и праздник не идёт
+function skinsVis(t){return SKINS.filter(k=>!k.fest||S.skins[t+'.'+k.id]||typeof FEST!=='undefined'&&FEST.on(k.fest));}
 function cosmeticsHTML(){
   if(!vilDone()){let n=0;for(const b of BLD)n+=b.cost.length-(S.village[b.id]||0);
-    return fbCard()+'<div class="card" style="text-align:center"><b>'+Lg('🎨 Облики застав и украшения','🎨 Outpost looks and decorations')+'</b><br><span class="note">'+Lg('Откроются, когда деревня будет отстроена: осталось '+n+' '+plural(n,'улучшение','улучшения','улучшений')+'. Только для красоты — сил не прибавляют.','Unlock when the village is fully built: '+n+' '+(n===1?'upgrade':'upgrades')+' to go. Just for beauty — they add no strength.')+'</span></div>';}
+    return fbCard()+'<div class="card" style="text-align:center"><b>'+Lg('🎨 Украшения деревни','🎨 Village decorations')+'</b><br><span class="note">'+Lg('Украшения и «Золочёный» облик за золото откроются, когда деревня будет отстроена: осталось '+n+' '+plural(n,'улучшение','улучшения','улучшений')+'. Только для красоты — сил не прибавляют.','Decorations and the “Gilded” look for gold unlock when the village is fully built: '+n+' '+(n===1?'upgrade':'upgrades')+' to go. Just for beauty — they add no strength.')+'</span></div>'+skinsHTML();}   // OB:SLAVA облики — награды, видны и до полной деревни
   let h='<h2>'+Lg('Украшения деревни','Village decorations')+'</h2><p class="sub">'+Lg('Только для красоты — видно на картинке деревни.','Just for beauty — you’ll see them in the village picture.')+'</p><div class="blds">';
   for(const d of DECO){const has=S.deco[d.id];
     h+='<div class="card bld'+(has?' has':'')+'"><img src="'+ic('dc_'+d.id,112)+'" alt=""><b>'+d.n+'</b>'+(has?'<span class="tag ok">'+Lg('Стоит','Built')+'</span>':'<button class="btn gold" data-dc="'+d.id+'" '+(S.gold<d.cost?'disabled':'')+'><img src="'+ic('ingot',40)+'">'+fmtNum(d.cost)+'</button>')+'</div>';}
-  h+='</div><h2>'+Lg('Облики застав','Outpost looks')+'</h2><p class="sub">'+Lg('Наряд для всех застав одного рода — в бою и на значках. Сила та же.','An outfit for every outpost of one kind — in battle and on the icons. Same strength.')+'</p>';
-  for(const t of TW_ORDER){const cur=skinOf(t),own=SKINS.filter(k=>S.skins[t+'.'+k.id]).length;
-    h+='<div class="card"><div class="row"><img class="ic" src="'+ic('ti_'+t+'_3'+(cur?'~'+cur:''),112)+'" alt=""><div class="t"><b>'+TW[t].n+'</b><span>'+(cur?Lg('Облик: ','Look: ')+skinName(cur):Lg('Обычный облик','Standard look'))+Lg(' · куплено ',' · owned ')+own+Lg(' из ',' of ')+SKINS.length+'</span></div><button class="btn" data-sk="'+t+'">'+Lg('Выбрать','Choose')+'</button></div></div>';}
+  return h+'</div>'+skinsHTML();}
+// OB:META1+SLAVA облики застав — отдельным блоком (награды: вход, праздники, Слава — data.js SKINS.get/fame)
+function skinsHTML(){if(!S.wins&&!TW_ORDER.some(t=>SKINS.some(k=>S.skins[t+'.'+k.id])))return '';let h='<h2>'+Lg('Облики застав','Outpost looks')+'</h2><p class="sub">'+Lg('Наряд для всех застав одного рода — в бою и на значках. Сила та же. Облики — награды за Славу воеводы, вход и праздники.','An outfit for every outpost of one kind — in battle and on the icons. Same strength. Looks are rewards for the Commander’s Fame, logins and holidays.')+'</p>';
+  for(const t of TW_ORDER){const cur=skinOf(t),vs=skinsVis(t),own=vs.filter(k=>S.skins[t+'.'+k.id]).length;
+    h+='<div class="card"><div class="row"><img class="ic" src="'+ic('ti_'+t+'_3'+(cur?'~'+cur:''),112)+'" alt=""><div class="t"><b>'+TW[t].n+'</b><span>'+(cur?Lg('Облик: ','Look: ')+skinName(cur):Lg('Обычный облик','Standard look'))+Lg(' · есть ',' · owned ')+own+Lg(' из ',' of ')+vs.length+'</span></div><button class="btn" data-sk="'+t+'">'+Lg('Выбрать','Choose')+'</button></div></div>';}
   return h;}
 function cosmeticsBind(){
   const fa=$('fbAll');if(fa)fa.onclick=()=>{SND.click();const on=TW_ORDER.some(t=>skinOf(t)==='firebird');for(const t of TW_ORDER)if(on){if(S.skin[t]==='firebird')S.skin[t]='';}else S.skin[t]='firebird';save();renderVillage();};
-  if(typeof PAY!=='undefined'&&PAY.on)PAY.bind($('tabVillage'));
+  if(typeof PAY!=='undefined'&&PAY.on){payPl='vil';PAY.bind($('tabVillage'));}
   for(const b of document.querySelectorAll('[data-dc]'))b.onclick=()=>{const d=DECO.find(x=>x.id===b.dataset.dc);if(!d||S.deco[d.id]||S.gold<d.cost)return;
     S.gold-=d.cost;STAT.ev('spend',{k:'d:'+d.id,c:d.cost});S.deco[d.id]=1;save();SND.build();toast(d.n+Lg(' — красота!',' — lovely!'));renderVillage();setPills();};
   for(const b of document.querySelectorAll('[data-sk]'))b.onclick=()=>{SND.click();openSkins(b.dataset.sk);};}
 function openSkins(t){STAT.screen('skins');
-  const cur=skinOf(t),opts=[{id:'',n:Lg('Обычный','Standard'),about:Lg('как построили','as built'),cost:0}].concat(SKINS),fb=skinFb()||typeof payHere==='function'&&payHere()&&!!PAY.item('skins_firebird');
+  const cur=skinOf(t),opts=[{id:'',n:Lg('Обычный','Standard'),about:Lg('как построили','as built'),cost:0}].concat(skinsVis(t)),fb=skinFb()||typeof payHere==='function'&&payHere()&&!!PAY.item('skins_firebird');
   if(fb)opts.push(SKIN_FB);
   showModal('<h3>'+TW[t].n+Lg(': облик',': look')+'</h3><p class="sub">'+Lg('Только внешний вид: сила заставы не меняется. Есть у тебя: ','Looks only: the outpost’s strength doesn’t change. You have: ')+fmtGold(S.gold)+'.</p><div class="blds">'+
     opts.map(k=>{const has=!k.id||(k===SKIN_FB?skinFb():S.skins[t+'.'+k.id]),on=k.id===cur;
       if(k===SKIN_FB&&!has)return '<div class="card bld pv"><img src="'+ic('ti_'+t+'_3~firebird',112)+'" alt=""><b>'+k.n+'</b><span>'+k.about+Lg(' — покупка',' — purchase')+'</span>'+payHtml(['skins_firebird'])+'</div>';
       return '<div class="card bld pv'+(on?' has':'')+'"><img src="'+ic('ti_'+t+'_3'+(k.id?'~'+k.id:''),112)+'" alt=""><b>'+k.n+'</b><span>'+k.about+'</span>'+
-        (on?'<span class="tag ok">'+Lg('Надет','On')+'</span>':has?'<button class="btn" data-sw="'+k.id+'">'+Lg('Надеть','Wear')+'</button>':'<button class="btn gold" data-sb="'+k.id+'" '+(S.gold<k.cost?'disabled':'')+'><img src="'+ic('ingot',40)+'">'+fmtNum(k.cost)+'</button>')+'</div>';}).join('')+
+        (on?'<span class="tag ok">'+Lg('Надет','On')+'</span>':has?'<button class="btn" data-sw="'+k.id+'">'+Lg('Надеть','Wear')+'</button>':k.cost&&!k.get&&vilDone()?'<button class="btn gold" data-sb="'+k.id+'" '+(S.gold<k.cost?'disabled':'')+'><img src="'+ic('ingot',40)+'">'+fmtNum(k.cost)+'</button>':'<span class="note">🎁 '+skinHow(k)+(k.cost&&!k.get?Lg(' или за золото — когда деревня отстроена',' or for gold — once the village is fully built'):'')+'</span>')+'</div>';}).join('')+   // OB:META1+SLAVA облики-награды (вход/праздник/Слава) не продаются; «Золочёный» — ещё и за золото
     '</div><div class="btns"><button class="btn ghost" id="skClose">'+Lg('Закрыть','Close')+'</button></div>');
   for(const b of document.querySelectorAll('[data-sw]'))b.onclick=()=>{SND.click();S.skin[t]=b.dataset.sw;save();openSkins(t);renderVillage();};
-  for(const b of document.querySelectorAll('[data-sb]'))b.onclick=()=>{const k=SKINS.find(x=>x.id===b.dataset.sb);if(!k||S.gold<k.cost)return;
+  for(const b of document.querySelectorAll('[data-sb]'))b.onclick=()=>{const k=SKINS.find(x=>x.id===b.dataset.sb);if(!k||k.get||S.gold<k.cost)return; // OB:META1 облики-награды не продаются
     S.gold-=k.cost;STAT.ev('spend',{k:'s:'+t+'.'+k.id,c:k.cost});S.skins[t+'.'+k.id]=1;S.skin[t]=k.id;save();SND.up();toast(TW[t].n+Lg(': облик «'+k.n+'»',': “'+k.n+'” look'));openSkins(t);renderVillage();setPills();};
   on('skClose',()=>{hideModal();renderVillage();});
-  if(typeof PAY!=='undefined'&&PAY.on){PAY.bind($('mBody'));PAY.re=()=>openSkins(t);}}
+  if(typeof PAY!=='undefined'&&PAY.on){payPl='skin';PAY.bind($('mBody'));PAY.re=()=>openSkins(t);}}
 
 /* ================= ИСПЫТАНИЯ: Босс недели, испытание дня, осада, летопись ================= */
 let lbSeg='weekly';
@@ -707,12 +732,13 @@ function renderSiege(){const el=$('tabSiege'),open=!!S.stars['0-5'];
   h+='</div><div><h2>'+Lg('Бесконечная осада','Endless siege')+'</h2><p class="sub">'+Lg('Калинов мост. Нечисть идёт без конца, с каждой волной злее, каждые 10 волн — босс. Сколько продержишься?','Kalinov Bridge. Monsters keep coming, each wave nastier, a boss every 10 waves. How long can you hold?')+'</p>';
   h+='<div class="card"><div class="row"><img class="ic" src="'+ic('b_siege')+'" alt=""><div class="t"><b>'+Lg('Рекорд: ','Record: ')+(S.endBest||0)+' '+plw(S.endBest||0,'волна','волны','волн','wave','waves')+'</b><span>'+Lg('Золото за каждую волну. Жизни, кузница и деревня работают и тут.','Gold for every wave. Lives, the forge and the village work here too.')+'</span></div></div>'+
     '<div class="btns">'+(open?'<button class="btn big" id="endGo">'+swordImg()+Lg(' На Калинов мост',' To Kalinov Bridge')+'</button>':lockBtn)+'</div></div>';
-  const crowns=Object.keys(S.crown||{}).length;
-  h+='</div><div><h2>'+Lg('Летопись','Chronicle')+'</h2><div class="stats"><div><b>'+starsTotal()+'</b>'+Lg('звёзд','stars')+'</div><div><b>'+fmtNum(S.kills)+'</b>'+Lg('нечисти','monsters')+'</div><div><b>'+S.wins+'</b>'+Lg('побед','wins')+'</div>'+(crowns?'<div><b>👑 '+crowns+'</b>'+Lg('корон','crowns')+'</div>':'')+(S.dchN?'<div><b>'+S.dchN+'</b>'+Lg(plural(S.dchN,'испытание','испытания','испытаний')+' дня',S.dchN===1?'daily challenge':'daily challenges')+'</div>':'')+'</div>'+chronicleBtns()+'</div></div>';
+  const crowns=difStarsN('s'),hells=difStarsN('h');   // OB:DIF звёзды ⚔/🔥 (короны «Богатырской» перенесены в Сложный)
+  h+='</div><div><h2>'+Lg('Летопись','Chronicle')+'</h2><div class="stats"><div><b>'+starsTotal()+'</b>'+Lg('звёзд','stars')+'</div><div><b>'+fmtNum(S.kills)+'</b>'+Lg('нечисти','monsters')+'</div><div><b>'+S.wins+'</b>'+Lg('побед','wins')+'</div>'+(crowns?'<div><b>⚔ '+crowns+'</b>'+Lg('звёзд Сложного','Hard stars')+'</div>':'')+(hells?'<div><b>🔥 '+hells+'</b>'+Lg('звёзд Адского','Hell stars')+'</div>':'')+(S.dchN?'<div><b>'+S.dchN+'</b>'+Lg(plural(S.dchN,'испытание','испытания','испытаний')+' дня',S.dchN===1?'daily challenge':'daily challenges')+'</div>':'')+'</div>'+chronicleBtns()+'</div></div>';
   if(PLAT==='vk'&&LB.vkOk()){h+='<h2>Рекорды друзей</h2><div class="card"><p class="sub" style="margin:0 0 8px">Кто из друзей дольше держит Калинов мост?</p><button class="btn ghost big" id="vkLb">🏆 Таблица друзей</button></div>';}
   if(PLAT!=='vk'){h+='<h2>'+Lg('Рекорды Руси','Records of Rus')+'</h2>'+(LB.ok()?'<div class="seg"><button data-lb="weekly" class="'+(lbSeg==='weekly'?'on':'')+'">'+Lg('Босс недели','Boss of the Week')+'</button><button data-lb="endless" class="'+(lbSeg==='endless'?'on':'')+'">'+Lg('Осада','Siege')+'</button></div>':'')+
     '<div class="card" id="lbBox"><p class="sub" style="margin:0">'+(LB.ok()?Lg('Загружаем…','Loading…'):Lg('Общая таблица рекордов работает в Яндекс Играх.','The shared leaderboard works on Yandex Games.'))+'</p></div>';}
-  el.innerHTML=h;achAfter();on('endGo',startEndless);on('wkGo',startWeekly);on('dchGo',startDaily);on('vkLb',()=>LB.vkFriends(S.endBest||0));chronicleBind();
+  el.innerHTML=h;META_HK('SIEGE',el);achAfter();on('endGo',startEndless); // OB:META1 крючок SIEGE — своя карточка во вкладке «Испытания»
+ on('wkGo',startWeekly);on('dchGo',startDaily);on('vkLb',()=>LB.vkFriends(S.endBest||0));chronicleBind();
   for(const b of el.querySelectorAll('[data-lb]'))b.onclick=()=>{SND.click();lbSeg=b.dataset.lb;for(const x of el.querySelectorAll('[data-lb]'))x.classList.toggle('on',x===b);loadLB();};
   if(LB.ok()&&PLAT!=='vk')loadLB();}
 const esc=t=>String(t==null?'':t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
@@ -776,18 +802,17 @@ function openSettings(){STAT.screen('settings');const oo=v=>v?Lg('Вкл','On'):
   // STAT: выключатель анонимной статистики (строки нет, пока модуль молчит — мак, headless)
   (STAT.available()?'<div class="tg" style="border:0;padding-bottom:0">'+Lg('📊 Анонимная статистика','📊 Anonymous statistics')+' <button class="btn '+(STAT.enabled()?'green':'ghost')+'" id="sStat">'+oo(STAT.enabled())+'</button></div><p class="sub" style="margin:2px 0 8px;font-size:14px">'+STAT.note()+'</p>':'')+
   (LK&&LOOK.list().filter(t=>LOOK.owned(t.id)).length>1?'<div class="tg" style="border:0;padding-bottom:0">'+Lg('Оформление','Look')+'</div><div class="seg">'+LOOK.list().filter(t=>LOOK.owned(t.id)).map(t=>'<button data-th="'+t.id+'" class="'+(LOOK.cur()===t.id?'on':'')+'">'+Lg(t.ru,t.en)+'</button>').join('')+'</div>':'')+
-  '<div class="tg" style="border:0;padding-bottom:0">'+Lg('Сложность кампании','Campaign difficulty')+'</div>'+diffSegHTML()+
   '<p class="sub" style="margin-top:12px">'+Lg('Тридевятая оборона: защита башен.<br>Реклама за награду — по желанию. Между боями иногда бывает короткая реклама.','Thrice-Nine Defense: fairy-tale tower defense.<br>Rewarded ads are optional. A short ad sometimes plays between battles.')+'</p>'+
   (SOC.ok()?'<button class="btn ghost" id="sSoc" style="width:100%;margin-top:8px;justify-content:center">👥 '+(OK?'Друзья':'Друзья и игры')+' ›</button>':'')+
   '<div class="btns stick"><button class="btn ghost" id="sCred">'+Lg('🎻 Благодарности','🎻 Credits')+'</button><button class="btn big" id="sOk">'+Lg('Готово','Done')+'</button></div>');
   for(const b of document.querySelectorAll('[data-lang]'))b.onclick=()=>{SND.click();setLang(b.dataset.lang,true);openSettings();};
   for(const b of document.querySelectorAll('[data-th]'))b.onclick=()=>{SND.click();LOOK.set(b.dataset.th);openSettings();};
   on('sSnd',()=>{S.sound=S.sound?0:1;save();openSettings();});on('sMus',()=>{S.music=S.music?0:1;save();musicSync();openSettings();});on('sOk',hideModal);
-  on('sShk',()=>{S.shake=S.shake?0:1;save();openSettings();});on('sStat',()=>{STAT.toggle();openSettings();});on('sCred',openCredits);on('sSoc',openSocial);diffSegBind();
+  on('sShk',()=>{S.shake=S.shake?0:1;save();openSettings();});on('sStat',()=>{STAT.toggle();openSettings();});on('sCred',openCredits);on('sSoc',openSocial);
   // покупки Яндекса (js/pay.js) — только в меню; нет платежей — раздела нет
   if(typeof payHere==='function'&&payHere()){STAT.screen('shop');const c=document.createElement('div');  // STAT v1.2: покупки — в ⚙ (своего магазина нет)
     c.innerHTML=payHtml()+'<button class="btn ghost" id="payRe" style="width:100%;margin-top:4px">'+Lg('↻ Восстановить покупки','↻ Restore purchases')+'</button>';
-    const b=$('mBody').querySelector('.btns');b.parentNode.insertBefore(c,b);PAY.bind(c);PAY.re=openSettings;on('payRe',()=>PAY.again());}}
+    const b=$('mBody').querySelector('.btns');b.parentNode.insertBefore(c,b);payPl='set';PAY.bind(c);PAY.re=openSettings;on('payRe',()=>PAY.again());}}
 
 /* ================= благодарности: музыка чужая, подпись авторов обязательна по лицензии =================
    Ссылок нет: правила площадок запрещают кликабельные ссылки; адреса автора и лицензии — обычным текстом (так требует CC BY). */
@@ -817,10 +842,11 @@ function renderQuests(){const box=$('dqBox');if(!box)return;if(!S.wins){box.inne
   for(let i=0;i<D.list.length;i++){const q=D.list[i],Q=QUESTS.find(x=>x.k===q.k),ok=q.n>=q.goal;
     h+='<div class="qrow"><div class="t"><b>'+Q.n+': '+fmtNum(q.goal)+'</b><div class="bar"><i style="width:'+Math.round(q.n/q.goal*100)+'%"></i></div><span>'+fmtNum(q.n)+' / '+fmtNum(q.goal)+'</span></div>'+
       (q.got?'<span class="tag ok">✓</span>':'<button class="btn gold" data-q="'+i+'" '+(ok?'':'disabled')+'><img src="'+ic('ingot',40)+'">'+questGold(Q)+'</button>')+'</div>';}
-  if(!D.bonus)h+='<div class="qrow"><div class="t"><b>'+Lg('Все три задания','All three quests')+'</b><span>'+Lg('Сундук дня: +5 мин ускорения','Daily chest: +5 min of speed-up')+'</span></div><button class="btn gold" id="dqBonus" '+(D.list.every(q=>q.got)?'':'disabled')+'>'+Lg('⏩ +5 мин','⏩ +5 min')+'</button></div>';
+  if(!D.bonus)h+=dlyChestRow(D); // OB:META1 сундук дня с серией (js/meta-ret.js)
   h+='<span class="note">'+Lg('Новые задания — завтра.','New quests tomorrow.')+'</span></div>';box.innerHTML=h;
   for(const b of box.querySelectorAll('[data-q]'))b.onclick=()=>{const q=D.list[+b.dataset.q],Q=QUESTS.find(x=>x.k===q.k);if(q.got||q.n<q.goal)return;q.got=1;const g=questGold(Q);S.gold+=g;ern('quest',g);save();SND.coin();toast(Lg('Задание дня: +','Daily quest: +')+fmtGold(g));renderQuests();setPills();};
-  on('dqBonus',()=>{if(D.bonus||!D.list.every(q=>q.got))return;D.bonus=1;boostAdd(DQ_BONUS);save();SND.up();toast(Lg('Сундук дня: +5 мин ускорения','Daily chest: +5 min of speed-up'));renderQuests();setPills();});}
+  on('dqBonus',()=>{if(D.bonus||!D.list.every(q=>q.got))return;D.bonus=1;dlyChestOpen();renderQuests();setPills();});} // OB:META1 сундук дня (js/meta-ret.js)
+// OB:META1 вход 30 дней: loginAvail/loginGive/loginFirst/loginTomorrow/loginTomorrowDay/loginOffer ПЕРЕОПРЕДЕЛЕНЫ в js/meta-ret.js (грузится после ui.js)
 function dayDiff(a,b){const p=s=>{const x=s.split('-').map(Number);return new Date(x[0],x[1]-1,x[2]).getTime();};return Math.round((p(b)-p(a))/864e5);}
 // что можно забрать сегодня: {idx — день серии 0..6, cont — серия продолжается}; null — уже забрано или серия ещё не начата
 function loginAvail(){const L=S.login;if(!L||!L.day)return null;const d=dayKey();if(L.day===d)return null;const gap=dayDiff(L.day,d),cont=gap>=1&&gap<=2;return {idx:cont?(L.n||0)%7:0,cont};}
@@ -854,7 +880,7 @@ function silhouette(key){const id='sil:'+key;if(mapCache[id])return mapCache[id]
   const g=c.getContext('2d');g.drawImage(s,0,0);g.globalCompositeOperation='source-in';g.fillStyle='rgba(0,0,0,.45)';g.fillRect(0,0,128,128);return mapCache[id]=c;}
 
 /* ================= запуск ================= */
-function onSaveMerged(){if(LK)LOOK.sync();if(!G){openTab(curTab);loginOffer();}}
+function onSaveMerged(){if(LK)LOOK.sync();if(!G){openTab(curTab);if(!loginOffer())META_HK('MENU');}} // OB:META1 MENU — окно модуля меты после облака
 // язык сменился (js/lang.js): меню и HUD перерисовать; окна перерисовывает тот, кто сменил (настройки)
 function onLang(){for(const k in HUDC)delete HUDC[k];if(typeof cv==='undefined'||!cv)return;if(G)hudTick(true);else if($('menu'))openTab(curTab);}
 function onReady(){
@@ -876,7 +902,7 @@ function onReady(){
     dailyBoost();openTab('Map');$('loading').style.display='none';
     // новичок — сразу в первый бой, без окна и стены текста (разблокировка звука — в core.js, на любое касание)
     if(!S.tut){S.tut=1;save();setTimeout(()=>{if(!G)startLevel(0,0);},250);}
-    else if(!loginOffer()&&afkGold()>=afkReadyAt())toast(Lg('В казне накопилось ','Your treasury has piled up ')+fmtGold(afkGold())+'!');};
+    else if(!loginOffer()&&!META_HK('MENU')&&afkGold()>=afkReadyAt())toast(Lg('В казне накопилось ','Your treasury has piled up ')+fmtGold(afkGold())+'!');};
   go();
   window.addEventListener('orientationchange',()=>setTimeout(()=>window.dispatchEvent(new Event('resize')),300));
   requestAnimationFrame(loop);
@@ -887,10 +913,18 @@ function onReady(){
 /* STAT: покупки — обёртка снаружи общего модуля PAY (сам модуль не меняем). Все товары постоянные: «ok» — флаг появился после покупки.
    v1.2: buy {i, r:try|ok|cancel|fail, v: голоса из PAY_ITEMS (= hobby-pay/catalog.json)}; отказ игрока (VK код 4, success:false, cancel/closed/denied) — cancel, остальные ошибки — fail */
 function payWhy(e){const d=e&&e.error_data||{},s=String(d.error_reason||d.error_msg||(e&&(e.message||e.code||e.error_type))||e||'');return +d.error_code===4||/cancel|close|denied|reject|user/i.test(s)?'cancel':'fail';}
-{const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);const had=PAY.own(id);let why='';const v=(PAY_ITEMS[id]||{}).vk|0,o=PAY.v,p=PAY.p,ov=o&&o.order,pp=p&&p.purchase;
-  if(ov)o.order=function(){return Promise.resolve(ov.apply(o,arguments)).then(r=>{if(!r||!r.success)why='cancel';return r;},e=>{why=payWhy(e);throw e;});};
-  if(pp)try{p.purchase=function(){return Promise.resolve(pp.apply(p,arguments)).catch(e=>{why=payWhy(e);throw e;});};}catch(e){}
+/* OB:FINAL аудит STAT покупок: p — место (set ⚙ / vil деревня / skin окно обликов), показ карточки товара buy{r:'show'} (раз за сеанс на товар+место),
+   n — номер попытки этого товара за сеанс (повтор после отказа/ошибки) */
+let payPl='set';const payShown={},payTry={};
+{const bd0=PAY.bind;PAY.bind=function(root){const pl=payPl,r=bd0.apply(PAY,arguments);try{(root||document).querySelectorAll('.pbuy').forEach(b=>{const id=b.dataset.pid,k=id+'|'+pl;
+    const oc=b.onclick;b.onclick=function(){payPl=pl;return oc&&oc.apply(this,arguments);};
+    if(!payShown[k]){payShown[k]=1;STAT.ev('buy',{i:id,r:'show',v:(PAY_ITEMS[id]||{}).vk|0,p:pl});}});}catch(e){}return r;};}
+function payCode(e){const d=e&&e.error_data||{};return String(d.error_code||d.error_reason||(e&&(e.error_type||e.code||e.message))||'').slice(0,16);}   // OB:FINAL код ошибки площадки → buy.c
+{const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on||((PAY_ITEMS[id]||{}).perm&&PAY.own(id)))return b0.call(PAY,id);const had=PAY.own(id);let why='',wc='';const v=(PAY_ITEMS[id]||{}).vk|0,o=PAY.v,p=PAY.p,ov=o&&o.order,pp=p&&p.purchase;
+  if(ov)o.order=function(){return Promise.resolve(ov.apply(o,arguments)).then(r=>{if(!r||!r.success)why='cancel';return r;},e=>{why=payWhy(e);wc=payCode(e);throw e;});};
+  if(pp)try{p.purchase=function(){return Promise.resolve(pp.apply(p,arguments)).catch(e=>{why=payWhy(e);wc=payCode(e);throw e;});};}catch(e){}
   const back=()=>{if(ov)o.order=ov;if(pp)try{p.purchase=pp;}catch(e){}};
-  STAT.ev('buy',{i:id,r:'try',v:v});
-  return Promise.resolve(b0.call(PAY,id)).then(()=>{back();STAT.ev('buy',{i:id,r:!had&&PAY.own(id)?'ok':why||'fail',v:v});},e=>{back();STAT.ev('buy',{i:id,r:'fail',v:v});throw e;});};}
-initSDK();
+  const pl=payPl,n=payTry[id]=(payTry[id]|0)+1;STAT.ev('buy',{i:id,r:'try',v:v,p:pl,n:n});
+  return Promise.resolve(b0.call(PAY,id)).then(()=>{back();const ok=!had&&PAY.own(id),q={i:id,r:ok?'ok':why||'fail',v:v,p:pl,n:n};if(!ok&&wc)q.c=wc;STAT.ev('buy',q);},e=>{back();const q={i:id,r:'fail',v:v,p:pl,n:n},c=wc||payCode(e);if(c)q.c=c;STAT.ev('buy',q);throw e;});};}
+// OB:META1 запуск — после ВСЕХ скриптов страницы (js/meta-*.js грузятся после ui.js и должны успеть встать в META_MODS)
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initSDK);else initSDK();

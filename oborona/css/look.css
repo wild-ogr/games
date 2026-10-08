@@ -355,7 +355,7 @@ html.lk .panel div[style*="font-weight:900"]{font-size:17px}
 @supports not (inset:0){html.lk .btns>*+*{margin-top:10px}html.lk .btns.h>*+*{margin-top:0;margin-left:10px}html.lk .stats>*{margin:3px}html.lk .lvls>*{margin:3px}html.lk .blds>*{margin:4px}html.lk .seg>*+*{margin-left:4px}html.lk #hud>*+*{margin-left:4px}html.lk .days>*{margin:3px}html.lk .bgrid>*{margin:3px}}
 
 /* ================= широкий экран: меню — столбцом слева (как в макете), вкладка шире ================= */
-@media (min-width:880px){
+@media (min-width:880px),(min-width:760px) and (min-height:520px) and (orientation:landscape){
  html.lk #menu{max-width:1180px;margin:0 auto;box-shadow:0 0 0 3px var(--woodD),0 0 0 8px var(--wood),0 0 0 10px var(--woodD)}
  html.lk .topbar{height:66px;padding:0 20px}html.lk .title{font-size:24px}html.lk .title small{font-size:14px}
  html.lk #menu>.tabs{border:0;background:none;margin-left:230px;margin-right:0;width:calc(100% - 230px)}

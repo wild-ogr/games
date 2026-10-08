@@ -29,6 +29,8 @@ function fromSave(){var id='';try{id=S.th||'';}catch(e){}try{var m=/[?&]theme=([
 
 /* ---------- значки (24×24, линия currentColor). Общие с «Богатырём» — те же рисунки; свои для «Обороны»: ff, crown, home, medal, pal, heart, wing ---------- */
 var IC={
+ /* OB:VIS значки боя */
+ pause:'<path d="M7 4.5h3.2v15H7zM13.8 4.5H17v15h-3.2z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>',
  coin:'<circle cx="12" cy="12" r="9" fill="#ffc93a" stroke="#a8650c" stroke-width="1.6"/><circle cx="12" cy="12" r="5.2" fill="none" stroke="#a8650c" stroke-width="1.4"/>',
  swords:'<path d="M4 4l11 11M20 4L9 15M13 17l4 4M11 17l-4 4M14.5 13.5l3 3M9.5 13.5l-3 3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
  star:'<path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.5 6.1 20.7l1.2-6.6L2.5 9.5l6.6-.9z" fill="currentColor" stroke="#a8650c" stroke-width="1.2" stroke-linejoin="round"/>',
@@ -66,14 +68,14 @@ var IC={
 };
 function I(k){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+IC[k]+'</svg>';}
 var MAP={'🎬':'film','🏆':'cup','⚔':'swords','🎁':'gift','🔒':'lock','🔥':'fire','👥':'users','📖':'book','⚙':'gear','🎲':'dice','☠':'skull','💪':'arm','📅':'cal','🎻':'note','🔔':'bell','↻':'redo','🛡':'shield','💰':'coin',
- '🎯':'goal','⭐':'star','★':'star','📲':'phone','📣':'horn','📊':'bars','📤':'share','✓':'ok','✅':'ok','🚫':'ban','⏩':'ff','👑':'crown','🏠':'home','🏅':'medal','🎨':'pal','❤':'heart','✈':'wing'};
+ '🎯':'goal','⭐':'star','★':'star','📲':'phone','📣':'horn','📊':'bars','📤':'share','✓':'ok','✅':'ok','🚫':'ban','⏩':'ff','👑':'crown','🏠':'home','🏅':'medal','🎨':'pal','❤':'heart','✈':'wing','❚❚':'pause'};
 var keys=Object.keys(MAP).sort(function(a,b){return b.length-a.length;});
 var RE=new RegExp('('+keys.map(function(x){return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}).join('|')+')\uFE0F?','g');
 var SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,'LK-I':1,'LK-T':1,OPTION:1,TITLE:1,CANVAS:1};
 /* в бою значки не меняем: ни панель/кольцо/справка поверх поля, ни окна посреди боя (пауза, «время ускорения»). Итоги боя (G.over) — уже вне боя */
 function inBattle(){try{return document.body.classList.contains('run')&&typeof G!=='undefined'&&!!G&&!G.over;}catch(e){return false;}}
-function skipEl(n){for(var p=n.parentNode;p&&p.nodeType===1;p=p.parentNode){if(SKIP[p.nodeName]||p.namespaceURI==='http://www.w3.org/2000/svg')return true;var id=p.id;if(id==='hud'||id==='hudB'||id==='ring'||id==='info'||id==='voice'||id==='ad'||id==='adWait'||id==='loading')return true;}return false;}
-function swapText(t){if(!t.parentNode)return;var s=t.nodeValue;if(!s)return;RE.lastIndex=0;if(!RE.test(s))return;RE.lastIndex=0;if(skipEl(t)||inBattle())return;
+function skipEl(n){for(var p=n.parentNode;p&&p.nodeType===1;p=p.parentNode){if(SKIP[p.nodeName]||p.namespaceURI==='http://www.w3.org/2000/svg')return true;var id=p.id;if(id==='voice'||id==='ad'||id==='adWait'||id==='loading')return true;if(id==='hud'||id==='hudB'||id==='ring'||id==='info')return 2;}return false;}   // OB:VIS панель боя, кольцо и карточка заставы — тоже своими значками (и посреди боя)
+function swapText(t){if(!t.parentNode)return;var s=t.nodeValue;if(!s)return;RE.lastIndex=0;if(!RE.test(s))return;RE.lastIndex=0;var sk=skipEl(t);if(sk===true||(sk!==2&&inBattle()))return;
   var par=t.parentNode,fr=document.createDocumentFragment(),last=0,mm;
   while((mm=RE.exec(s))){var k=MAP[mm[1]];if(!k)continue;var pre=s.slice(last,mm.index),el=document.createElement('lk-i');el.className='i-'+k;el.innerHTML=I(k)+'<lk-t>'+mm[0]+'</lk-t>';last=mm.index+mm[0].length;
     if(pre)fr.appendChild(document.createTextNode(pre));fr.appendChild(el);}

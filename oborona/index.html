@@ -236,7 +236,7 @@ details summary{cursor:pointer;font-weight:800;font-size:14px;color:#ffe7a0;padd
 .power{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;padding:7px 12px;border-radius:12px;background:linear-gradient(90deg,rgba(179,38,30,.35),rgba(179,38,30,.08));border:1px solid rgba(230,184,90,.4);font-weight:800;font-size:14px;color:#ffe9b0}.power b{font-size:19px;color:#fff3d0}
 @supports not (inset:0){.chips>*+*{margin-left:6px}}
 /* ---------- boost: раскладка для компьютера (от 880 px: ПК, окно VK 911 px, планшет в альбоме). На телефоне всё как было ---------- */
-@media (min-width:880px){
+@media (min-width:880px),(min-width:760px) and (min-height:520px) and (orientation:landscape){
   #menu>.topbar,#menu>.tabs,#menu>nav{max-width:1120px}
   #menu>.tabs{border-left:2px solid rgba(217,164,65,.55);border-right:2px solid rgba(217,164,65,.55);background:rgba(10,12,28,.25)}
   .tab{padding-left:22px;padding-right:22px}
@@ -293,6 +293,7 @@ nav{border-top:2px solid #d9a441}
 </style>
 <!-- look1: вид «Живая сказка» (как в «Богатыре»). Встроенный CSS выше — запас, если файл не загрузился -->
 <link rel="stylesheet" href="css/look.css">
+<link rel="stylesheet" href="css/vis.css">
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
@@ -357,7 +358,49 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/art.js"></script>
 <script src="js/data.js"></script>
 <script src="js/en.js"></script>
+<script src="js/ch-engine.js"></script>
+<script src="js/ch-med-art.js"></script>
+<script src="js/ch-med.js"></script>
+<script src="js/ch-luk-art.js"></script>
+<script src="js/ch-luk.js"></script>
+<script src="js/ch-vihr-art.js"></script>
+<script src="js/ch-vihr.js"></script>
+<script src="js/ch-lairs.js"></script>
+<script src="js/ch-forge3.js"></script> <!-- OB:MERGE Кузница III и Оружейная палата -->
+<script src="js/dif.js"></script> <!-- OB:DIF режимы сложности -->
 <script src="js/game.js"></script>
+<script src="js/vis.js"></script>
+<script src="js/fx.js"></script>
+<!-- OB:SLAVA мета: трофеи глав, Слава воеводы, «Соседние заставы» (до ui.js — их крючки нужны с первого показа меню) -->
+<script src="js/meta-trf.js"></script>
+<script src="js/meta-slava.js"></script>
+<script src="js/meta-tour.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/meta-ret.js"></script>
+<script src="js/fest.js"></script>
+<script src="js/meta-fest.js"></script>
+<script src="js/meta-dly.js"></script>
+<script src="js/mg-core.js"></script> <!-- OB:MG0 мини-игры: оболочка «Дозорной избы»; игры js/mg-*.js — строками ниже -->
+<script src="js/mg-art.js"></script>
+<script src="js/mg-izba.js"></script>
+<script src="js/mg-podkop.js"></script>
+<script src="js/mg-igla.js"></script>
+<script src="js/mg-zg-data.js"></script>
+<script src="js/mg-zagadki.js"></script>
+<script src="js/mga-kit.js"></script> <!-- OB:MGA общий набор мини-игр MGA -->
+<script src="js/mg-chast.js"></script> <!-- OB:MGA №2 Починка частокола -->
+<script src="js/mg-opol.js"></script> <!-- OB:MGA №8 Набор ополчения -->
+<script src="js/mg-kotel.js"></script> <!-- OB:MGA №14 Котёл тётушки Яги -->
+<script src="js/mg-bkit.js"></script> <!-- OB:MGB набор сцены мини-игр №3, №11, №12 -->
+<script src="js/mg-pushka.js"></script>
+<script src="js/mg-tiles.js"></script>
+<script src="js/mg-ckit.js"></script> <!-- OB:MGC набор для игр №4, №6, №9 -->
+<script src="js/mg-dozor.js"></script>
+<script src="js/mg-lovlya.js"></script>
+<script src="js/mg-nabat.js"></script>
+<script src="js/mg-dkit.js"></script> <!-- OB:MGD набор рисования мини-игр №7 и №13 -->
+<script src="js/mg-razv.js"></script> <!-- OB:MGD №7 Разведка тропы -->
+<script src="js/mg-nabeg.js"></script> <!-- OB:MGD №13 Набег на логово -->
+<script src="js/endg.js"></script> <!-- OB:ENDG мастерство и богатырские ступени (после всех: оборачивает costMul/spellCd/goldWanted) -->
 </body>
 </html>

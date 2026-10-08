@@ -181,7 +181,7 @@ langReg(BLD,{
   herb:{name:'Herbalist’s Hut',about:'Spells recharge 8% faster'},
   wall:{name:'Palisade',about:'+1 life in every battle'}});
 langReg(SKINS,{spring:{n:'Spring',about:'flowers on the roofs'},fair:{n:'Fairground',about:'a garland of bunting'},
-  winter:{n:'Winter',about:'snow caps and icicles'},gold:{n:'Gilded',about:'gilding and sparkles'}});
+  winter:{n:'Winter',about:'snow caps and icicles'},gold:{n:'Gilded',about:'gilding and sparkles'},night:{n:'Midnight',about:'moonlight and marsh lights'}}); // OB:META1 night
 langReg(BANNERS,{les:{n:'Banner of the Deep Forest'},bolo:{n:'Banner of the Dismal Swamp'},pole:{n:'Banner of the Wild Field'},kosh:{n:'Banner of Koschei’s Realm'},gory:{n:'Banner of the Frozen Mountains'},more:{n:'Banner of the Sea Kingdom'},ogon:{n:'Banner of the Fire Land'},trid:{n:'Standard of the Thrice-Nine Kingdom'}});
 langReg(DECO,{well:{n:'Sweep Well'},flags:{n:'Fair Bunting'},kot:{n:'Bayun on the Fence'},swing:{n:'Swing'},carousel:{n:'Carousel'},fire:{n:'Midsummer Bonfire'}});
 langReg(SKIN_FB,{n:'Firebird',about:'fiery feathers'});
@@ -245,7 +245,8 @@ langReg(ACH,{
   b_karach:{n:'The Thaw',d:'Defeat: Karachun'},b_morcar:{n:'Lord of the Waters',d:'Defeat: The Sea Tsar'},
   b_tugar:{n:'Firefighter',d:'Defeat: Tugarin Zmey'},b_liho:{n:'Let Likho Lie',d:'Defeat: Likho One-Eye'},
   ch8:{n:'Liberator of Rus',d:'Free all 8 chapters'},st72:{n:'Sharp Commander',d:'Collect 72 stars'},st144:{n:'All the Stars',d:'Three stars on all 48 levels'},
-  cr1:{n:'Heroic Strength',d:'Beat a level on “Heroic”'},cr12:{n:'Crown after Crown',d:'Collect 12 crowns'},cr48:{n:'Tsar Commander',d:'Collect crowns on all 48 levels'},
+  cr1:{n:'Heroic Strength',d:'Beat a level on ⚔ Hard'},cr12:{n:'Crown after Crown',d:'Beat 12 levels on ⚔ Hard'},cr48:{n:'Tsar Commander',d:'Beat 48 levels on ⚔ Hard'},
+  hl1:{n:'Through the Blaze',d:'Beat a level on 🔥 Hell'},hl12:{n:'Fireproof',d:'Beat 12 levels on 🔥 Hell'},hl48:{n:'Terror of the Inferno',d:'Beat 48 levels on 🔥 Hell'},
   end20:{n:'Steadfast',d:'Hold off 20 siege waves'},end40:{n:'Unbreakable',d:'Hold off 40 siege waves'},
   wk1:{n:'Terror of the Week',d:'Defeat the Boss of the Week'},wk4:{n:'Regular',d:'Defeat the Bosses of 4 different weeks'},
   dch1:{n:'Challenger',d:'Complete a daily challenge'},dch7:{n:'Seasoned Challenger',d:'Complete 7 daily challenges'},

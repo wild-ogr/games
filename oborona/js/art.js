@@ -9,13 +9,30 @@ function mkCanvas(w,h){const c=document.createElement('canvas');c.width=Math.max
 function artTint(key,base,col){ART[key]={size:ART[base].size,base,tint:col};}
 function tintCanvas(c,col){const t=mkCanvas(c.width,c.height),g=t.getContext('2d');g.drawImage(c,0,0);g.globalCompositeOperation='color';g.fillStyle=col;g.fillRect(0,0,t.width,t.height);
   g.globalCompositeOperation='destination-in';g.drawImage(c,0,0);return t;}
-function drawArt(key,px){const a=artGet(key),k=px/a.size,c=mkCanvas(px,px),g=c.getContext('2d');
-  if(a.tint)return tintCanvas(drawArt(a.base,px),a.tint);if(a.skin)return skinCanvas(drawArt(a.base,px),a.skin,k);g.setTransform(k,0,0,k,px/2,px/2);g.lineJoin='round';g.lineCap='round';a.fn(g);return c;}
+/* OB:FIX1 (08.10) рисунок может выходить за свой квадрат size (флажок, орёл, колпак мага, крона дуба, перья Соловья) — раньше это срезалось.
+   artBox(key) — настоящие границы рисунка в мировых единицах (меряется один раз, объединение с квадратом); drawArtK — холст по этим границам.
+   drawArt(key,px) — квадрат px (для <img> и меню): рисунок целиком, если вылезает — чуть мельче и по центру своих границ. */
+function artBox(key){const a=artGet(key);if(!a)return null;if(a.bx)return a.bx;if(a.tint||a.skin)return a.bx=artBox(a.base);
+  const z=a.size,h=z/2,K=Math.max(1,Math.min(2,100/z)),N=Math.ceil(z*3*K),c=mkCanvas(N,N),g=c.getContext('2d',{willReadFrequently:true});let x0=-h,y0=-h,x1=h,y1=h;
+  try{g.setTransform(K,0,0,K,N/2,N/2);g.lineJoin='round';g.lineCap='round';a.fn(g);const d=new Uint32Array(g.getImageData(0,0,N,N).data.buffer),A=i=>(d[i]>>>24)>6;   // альфа — старший байт (little-endian)
+    const row=y=>{for(let x=0,o=y*N;x<N;x++)if(A(o+x))return true;return false;},col=(x,ya,yb)=>{for(let y=ya;y<=yb;y++)if(A(y*N+x))return true;return false;};
+    let Y0=0;while(Y0<N&&!row(Y0))Y0++;if(Y0<N){let Y1=N-1;while(Y1>Y0&&!row(Y1))Y1--;let X0=0;while(X0<N-1&&!col(X0,Y0,Y1))X0++;let X1=N-1;while(X1>X0&&!col(X1,Y0,Y1))X1--;
+      const m=(v,e)=>Math.abs(v)>h+.5?v+e:0;x0=Math.min(x0,m((X0-N/2)/K,-1));y0=Math.min(y0,m((Y0-N/2)/K,-1));x1=Math.max(x1,m((X1+1-N/2)/K,1));y1=Math.max(y1,m((Y1+1-N/2)/K,1));}}catch(e){}   // вылез больше чем на полъединицы — берём с запасом 1
+  return a.bx={x0,y0,w:x1-x0,h:y1-y0};}
+function drawArtK(key,k,b){const a=artGet(key);if(a.tint)return tintCanvas(drawArtK(a.base,k,b),a.tint);if(a.skin)return skinCanvas(drawArtK(a.base,k,b),a.skin,k);
+  const c=mkCanvas(b.w*k,b.h*k),g=c.getContext('2d');g.setTransform(k,0,0,k,-b.x0*k,-b.y0*k);g.lineJoin='round';g.lineCap='round';a.fn(g);return c;}
+function artFit(key){const a=artGet(key),b0=artBox(key),b={x0:b0.x0,y0:b0.y0,w:b0.w,h:Math.min(b0.y0+b0.h,a.size/2)-b0.y0},L=Math.max(b.w,b.h);   // низ не расширяем: портреты (тётка, воевода) нарочно по пояс
+  return {x0:b.x0+b.w/2-L/2,y0:b.y0+b.h/2-L/2,w:L,h:L};}
+function drawArt(key,px){const b=artFit(key);return drawArtK(key,px/b.w,b);}
+// нарисовать спрайт (spr) так, чтобы его квадрат size лёг в квадрат sz с центром (x,y) — вылезающие части видны целиком
+function sprPut(g,s,x,y,sz,im){const f=sz/s.s,b=s.b;g.drawImage(im||s.c,x+b.x0*f,y+b.y0*f,b.w*f,b.h*f);}
+// то же для рисунка без кэша спрайтов (деревня, ориентиры на карте боя): px на единицу = k
+function artPut(g,key,x,y,sz,dpr){const a=artGet(key),b=artBox(key),f=sz/a.size,c=drawArtK(key,f*(dpr||1),b);g.drawImage(c,x+b.x0*f,y+b.y0*f,b.w*f,b.h*f);}
 /* спрайты боя рисуются лениво, при первом показе (и заранее — для текущего уровня, sprWarm), плотность k ≤ 2,5.
    Иконки меню (ti_*, hp_*, b_* и др.) в боевой набор не попадают — они идут через iconURL.
    Белая «вспышка попадания» — тоже лениво и только у тех, кто её показывает (нечисть). */
 function buildSprites(k){SPR_K=k;for(const key in SPR)delete SPR[key];}
-function spr(key){let s=SPR[key];if(s)return s;const a=artGet(key);if(!a)return null;return SPR[key]={c:drawArt(key,Math.ceil(a.size*SPR_K)),f:null,s:a.size};}
+function spr(key){let s=SPR[key];if(s)return s;const a=artGet(key);if(!a)return null;const b=artBox(key);return SPR[key]={c:drawArtK(key,SPR_K,b),f:null,s:a.size,b};}   // OB:FIX1 холст по границам рисунка (b)
 function sprFlash(s){if(!s.f){const c=s.c,f=mkCanvas(c.width,c.height),fg=f.getContext('2d');fg.drawImage(c,0,0);fg.globalCompositeOperation='source-atop';fg.fillStyle='rgba(255,255,255,.55)';fg.fillRect(0,0,f.width,f.height);s.f=f;}return s.f;}
 function sprWarm(keys){for(const k of keys)spr(k);}
 // свечение: один раз нарисованный круг-градиент на цвет вместо createRadialGradient на каждую частицу
@@ -611,6 +628,16 @@ function skinCanvas(c,skin,k){const W=c.width,H=c.height,g=c.getContext('2d');le
     for(let i=0;i<5;i++){const [x,y]=E[Math.floor(R()*E.length)],r=(1.6+R()*1.4)*k;g.fillStyle='rgba(255,250,210,.95)';
       g.beginPath();g.moveTo(x,y-r);g.quadraticCurveTo(x,y,x+r*.35,y);g.quadraticCurveTo(x,y,x,y+r);g.quadraticCurveTo(x,y,x-r*.35,y);g.quadraticCurveTo(x,y,x,y-r);g.fill();
       g.beginPath();g.moveTo(x-r*.7,y);g.quadraticCurveTo(x,y,x,y-r*.25);g.quadraticCurveTo(x,y,x+r*.7,y);g.quadraticCurveTo(x,y,x,y+r*.25);g.closePath();g.fill();}}
+  else if(skin==='night'){ // OB:META1 «Полуночный» — награда праздника hw26: лунная синева, серебро по кромкам, болотные огоньки
+    const t=mkCanvas(W,H),tg=t.getContext('2d');tg.drawImage(c,0,0);tg.globalAlpha=.5;tg.globalCompositeOperation='color';tg.fillStyle='#4a4ab8';tg.fillRect(0,0,W,H);
+    tg.globalAlpha=1;tg.globalCompositeOperation='destination-in';tg.drawImage(c,0,0);g.clearRect(0,0,W,H);g.drawImage(t,0,0);
+    g.globalCompositeOperation='source-atop';g.fillStyle='rgba(20,16,60,.18)';g.fillRect(0,0,W,H);g.globalCompositeOperation='source-over';
+    g.fillStyle='rgba(220,230,255,.85)';for(const [x,y] of E.filter((p,i)=>i%2===0)){g.beginPath();g.arc(x,y,.75*k,0,TAU);g.fill();}
+    for(let i=0;i<5;i++){const [x,y]=E[Math.floor(R()*E.length)],r=(1.3+R()*.8)*k,col=R()<.5?'#9aff8a':'#ffe27a';
+      const gr=g.createRadialGradient(x,y-r*1.6,0,x,y-r*1.6,r*2.4);gr.addColorStop(0,col);gr.addColorStop(.35,col+'aa');gr.addColorStop(1,col+'00');g.fillStyle=gr;
+      g.beginPath();g.arc(x,y-r*1.6,r*2.4,0,TAU);g.fill();g.fillStyle='#ffffff';g.beginPath();g.arc(x,y-r*1.6,r*.45,0,TAU);g.fill();}
+    {const mx=x0+(x1-x0)*.86,my=y0+(y1-y0)*.1,mr=2.6*k;g.save();g.beginPath();g.arc(mx,my,mr,0,TAU);g.clip();   // месяц-серп (без стирания рисунка)
+      g.fillStyle='#fff6c8';g.beginPath();g.rect(0,0,W,H);g.arc(mx+mr*.55,my-mr*.25,mr*.85,0,TAU);g.fill('evenodd');g.restore();}}
   else if(skin==='firebird'){ // покупка «Жар-птица» (js/pay.js): огненная перекраска с объёмом + языки пламени и перья на верхних кромках
     const t=mkCanvas(W,H),tg=t.getContext('2d');tg.drawImage(c,0,0);tg.globalAlpha=.48;tg.globalCompositeOperation='color';tg.fillStyle='#e8502a';tg.fillRect(0,0,W,H);
     tg.globalAlpha=1;tg.globalCompositeOperation='destination-in';tg.drawImage(c,0,0);g.clearRect(0,0,W,H);g.drawImage(t,0,0);
@@ -652,12 +679,12 @@ const DECO_POS={well:[.22,.8],flags:[.5,.2],kot:[.72,.81],swing:[.38,.8],carouse
 const VIL_GHOST={};
 function vilGhost(key,px){const id=key+'@'+px;if(VIL_GHOST[id])return VIL_GHOST[id];const s=drawArt(key,px),c=mkCanvas(px,px),g=c.getContext('2d');
   g.drawImage(s,0,0);g.globalCompositeOperation='source-in';g.fillStyle='rgba(255,255,255,.42)';g.fillRect(0,0,px,px);return VIL_GHOST[id]=c;}
-function drawVillage(cv,W,H,an){const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+'px';
+function drawVillage(cv,W,H,an){if(typeof visVillage==='function')return visVillage(cv,W,H,an);/* OB:VIS сцена деревни — js/vis.js */const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+'px';
   const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.lineJoin='round';g.lineCap='round';
   const sk=g.createLinearGradient(0,0,0,H);sk.addColorStop(0,'#8ec9f0');sk.addColorStop(1,'#d8efff');g.fillStyle=sk;g.fillRect(0,0,W,H);
   g.fillStyle='#8fcf6a';g.beginPath();g.moveTo(0,H*.42);g.quadraticCurveTo(W*.3,H*.26,W*.6,H*.4);g.quadraticCurveTo(W*.85,H*.5,W,H*.36);g.lineTo(W,H);g.lineTo(0,H);g.fill();
   g.fillStyle='#6fb44e';g.beginPath();g.moveTo(0,H*.62);g.quadraticCurveTo(W*.5,H*.5,W,H*.64);g.lineTo(W,H);g.lineTo(0,H);g.fill();
-  const put=(key,x,y,sz)=>{const c=drawArt(key,Math.ceil(sz*dpr));g.drawImage(c,x*W-sz/2,y*H-sz/2,sz,sz);};
+  const put=(key,x,y,sz)=>artPut(g,key,x*W,y*H,sz,dpr);   // OB:FIX1 рисунок целиком
   const items=[];for(const b of BLD){const l=S.village[b.id]||0,p=VIL_POS[b.id]||[.5,.5];
     if(!l){const sz=.3*H,c=vilGhost(b.ic,Math.ceil(sz*dpr));items.push([p[1],null,p[0],sz,c]);continue;}
     let sz=(.26+.05*l)*H;if(an&&an.id===b.id){const q=an.q;sz*=q<.5?.4+q*1.5:1.15-.15*Math.min(1,(q-.5)*2);}items.push([p[1],b.ic,p[0],sz]);}

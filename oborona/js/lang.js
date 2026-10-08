@@ -47,6 +47,7 @@ function langFromSdk(l){if(LANG_VK||LANG_Q||langSaved()||!l)return;setLang(normL
 // общий модуль покупок (js/pay.js) пишет по-русски — переводим его строки на выходе, сам модуль не трогаем
 const LANG_TOAST={'Покупка зачислена':'Purchase credited','Готово! Спасибо за покупку':'Done! Thanks for your purchase',
   'Покупка не состоялась':'Purchase failed','Покупки проверены — всё на месте':'Purchases checked — all in place',
-  'Реклама сейчас недоступна, попробуй позже':'Ads are unavailable right now, try later'};
+  'Реклама сейчас недоступна, попробуй позже':'Ads are unavailable right now, try later',
+  'Ролик закрыт до конца — награды нет':'The video was closed early — no reward'};
 function langToast(s){return LANG==='en'&&LANG_TOAST[s]||s;}
 function payHtml(ids,owned){const h=PAY.html(ids,owned);return LANG==='en'?h.replace('<h3>Покупки</h3>','<h3>Purchases</h3>').replace(/<i>куплено<\/i>/g,'<i>owned</i>'):h;}

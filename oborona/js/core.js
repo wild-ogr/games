@@ -32,12 +32,14 @@ const SKEY='oborona-v1';
 const SHOT=/[?&]shot/.test(location.search);
 function freshSave(){return {v:1,ts:0,gold:0,stars:{},forge:{},village:{},afkT:0,afkBoost:null,sound:1,music:1,shake:REDUCED?0:1,
   boost:900,boostDay:'',endBest:0,endRuns:0,runs:0,wins:0,kills:0,seen:{},introSeen:{},tut:0,lastCh:0,gift:0,lose:{},
-  dq:null,login:null,ret:{},diff:1,crown:{},bk:{},ach:{},wk:null,dch:null,dchN:0,skins:{},skin:{},deco:{},bns:{},bn:'',bnSet:0,goal:'',th:''};}
+  dq:null,login:null,ret:{},diff:1,crown:{},bk:{},ach:{},wk:null,dch:null,dchN:0,skins:{},skin:{},deco:{},bns:{},bn:'',bnSet:0,goal:'',th:'',dst:{},dfc:{}};}
 // поля-объекты могли прийти битыми (ручная правка, старая версия) — чиним
 function fixSave(){for(const k of['stars','forge','village','seen','introSeen','lose','ret','crown','bk','ach','skins','skin','deco','bns'])if(!S[k]||typeof S[k]!=='object'||Array.isArray(S[k]))S[k]={};
   if(!S.afkT)S.afkT=Date.now();if(S.boost==null||isNaN(S.boost))S.boost=900;if(S.shake==null)S.shake=REDUCED?0:1;
   if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];
-  if(typeof S.th!=='string')S.th='';}   // look1: выбранная тема оформления ('' — основная)
+  if(typeof S.th!=='string')S.th='';   // look1: выбранная тема оформления ('' — основная)
+  if(typeof difFix==='function')difFix();   // OB:DIF звёзды режимов S.dst, выбор S.dfc, миграция корон (js/dif.js)
+  if(typeof META_HK==='function')META_HK('FIX',S);}   // OB:META1 розетка меты: починка своих ключей модулей (при самой первой загрузке META_HK ещё нет — модуль чинит сам)
 let S=freshSave();
 try{const r=!SHOT&&localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 fixSave();
@@ -78,6 +80,8 @@ function mergeProgress(d,L,newer){const base=newer?d:L,other=newer?L:d;const o=O
   const da=obj(o.dch),dd=obj(other.dch);if(dd.day&&(!da.day||dd.day>da.day))o.dch=dd;else if(da.day&&da.day===dd.day)o.dch=Object.assign({},da,{res:Math.max(+da.res||0,+dd.res||0),tried:Math.max(+da.tried||0,+dd.tried||0)});
   SOC.merge(d.soc);o.soc=L.soc; // соц-предложения VK: модуль держит ссылку на старый объект S.soc — сливаем в него и оставляем его
   if(typeof payMerge==='function'){payMerge(L,o);payMerge(d,o);} // покупки (js/pay.js): купленное — объединение
+  if(typeof difMerge==='function')difMerge(o,other); // OB:DIF звёзды режимов — максимум, выбор режима — из основы
+  if(typeof META_HK==='function')META_HK('MERGE',other,o); // OB:META1 розетка меты: свои ключи модулей — максимум/объединение (other — вторая сторона, o — итог)
   if(newer){const db=d.boost!=null?d.boost:900;
     o.gold=Math.max(0,(+d.gold||0)+((+L.gold||0)-BOOT.gold));o.boost=Math.min(7200,Math.max(0,db+((L.boost!=null?L.boost:900)-BOOT.boost)));}
   return o;}
@@ -321,7 +325,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v2.0-100621',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v3.0-100822',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
@@ -708,6 +712,9 @@ function adOpen(){setPause('ad',1);YG.stop();}
 // после рекламы «игра идёт» — только если бой идёт и не открыта пауза или окно (окно само вызовет start при закрытии)
 function adClose(){lastAdT=Date.now();setPause('ad',0);if(G&&!G.over&&!G.paused&&!paused&&!$('modal').classList.contains('on'))YG.start();musicSync();}
 const AD_FAIL='Реклама сейчас недоступна, попробуй позже';
+// код 4 VK (и onClose без onRewarded в Яндексе) — игрок сам закрыл ролик раньше конца: честно, не «реклама сломана» (решение владельца 08.10, hobby-analytics/release-h/attention-0810.md)
+function adSkipTxt(){return Lg('Ролик закрыт до конца — награды нет','The video was closed early — no reward');}
+function adUserClosed(e){const d=e&&e.error_data||{};return +d.error_code===4;}
 // пока ролик идёт, повторные нажатия не запускают второй (и не дают двойную награду)
 let adBusy=false;
 /* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
@@ -751,7 +758,11 @@ function adAns(ok){const t=Date.now();
 function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];let seen=false,old=[];try{old=document.querySelectorAll('[data-adwait]');}catch(e){}
   for(let i=0;i<q.length;i++)q[i].setAttribute('data-adwait','1');
   for(let i=0;i<old.length;i++){const b=old[i];if(q.indexOf(b)<0){b.removeAttribute('data-adwait');if(!on&&b.offsetParent)seen=true;}}
-  if(on)adMarkT=setTimeout(adMark,1000);return seen;}
+  /* OB:META1 (07-stats п.6): «×2» при коде 20 жали впустую до 31 раза подряд — если VK ответил «ролика нет» (adSt<0), кнопки ×2 (data-pre, ставит adOn)
+     прячем, пока ролик не подгрузится (pre: при pr=1 — 69 успехов на 1 отказ, при pr=0 — одни отказы); стало «есть» — кнопка появляется сама */
+  const pre=adPre();try{const P=document.querySelectorAll('[data-pre]');for(let i=0;i<P.length;i++){const b=P[i];if(pre)b.style.display='none';else if(b.style.display==='none'){b.style.display='';STAT.offer(b.getAttribute('data-pre'));}}}catch(e){}
+  if(on||pre)adMarkT=setTimeout(adMark,1000);return seen;}
+function adPre(){return !!(VK&&adSt<0);} // OB:META1: VK сказал «ролика нет» — кнопки ×2 спрятаны до «есть»
 // вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз
 function adBackChk(tick){if(!VK||adBusy||adHid())return;
   if(adSt<1){if(tick!==1)adPreload('back');else if(Date.now()-adAskT>AD_STEP_MAX+2*AD_ASK_MIN)adPreload();return;} // по таймеру — только страховка, шаги не сбрасываем
@@ -838,7 +849,7 @@ function showRewarded(cb0,onFail0,late0){
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else if(adUserClosed(e)){stat('err',adErrCode(e));toast(adSkipTxt());adPreload('err');}else{stat('err',adErrCode(e));toast(AD_FAIL);adPreload('err');}
         onFail();adDim();});}; // adDim: колбэк мог заново открыть окно с кнопкой — гасим её сразу
     go();return;}
   if(!ysdk){if(LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail','nosdk');toast(AD_FAIL);onFail();}return;}
@@ -847,7 +858,7 @@ function showRewarded(cb0,onFail0,late0){
   const lateY=f=>{if(!adBusy)adClose();f();};
   try{ysdk.adv.showRewardedVideo({callbacks:{onOpen:()=>{if(st===2&&!adBusy)return;adOpen();},onRewarded:()=>{got=true;},
     onClose:()=>{if(st===2){lateY(()=>{if(got)lateOk();else adLateEnd(rec,'skip','late');});return;}if(st)return;st=1;adUnwatch();
-      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(Lg('Досмотри видео до конца, чтобы получить награду','Watch the video to the end to get the reward'));onFail();}},
+      adClose();stat(got?'ok':'skip','');if(got)cb();else{toast(adSkipTxt());onFail();}},
     onError:()=>{if(st===2){lateY(()=>adLateEnd(rec,'err','late'));return;}if(st)return;st=1;adUnwatch();
       adClose();stat('err','');toast(AD_FAIL);adCool();onFail();}}});}
   catch(e){if(st)return;st=1;adUnwatch();adClose();STAT.ad('rew','err','throw');toast(AD_FAIL);onFail();}

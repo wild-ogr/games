@@ -214,7 +214,7 @@ const CH=[
 const HP_MUL=[1,1.75,2.7,3.3,5.1,6.6,8.2,10];
 const GOLD_MUL=HP_MUL.map(h=>+(1.8*Math.pow(h,.8)).toFixed(2));
 const START_COINS=[240,300,380,460,540,620,700,780];
-const LEVEL_WAVES=[6,7,8,9,10,11];
+const LEVEL_WAVES=[6,7,8,9,10,11,12];   // OB:CH: 7-й — «Логово»
 // точечная поправка здоровья нечисти на «стенах» (аудит сложности 26.09): составы волн и зёрна те же
 // 1-3 ×0,85 (boost 02.10): «стена» 9-й минуты для невнимательного новичка — лешие с заживлением; умелым и так ★3
 const LEVEL_FIX={'0-2':.85,'2-3':.9,'3-3':.85,'4-5':.9,'5-2':.8};
@@ -253,32 +253,41 @@ const BLD=[
   {id:'herb',name:'Изба знахарки',ic:'b_herb',about:'Чары перезаряжаются на 8% быстрее',cost:[200,800,2000]},
   {id:'wall',name:'Частокол',ic:'b_wall',about:'+1 жизнь в каждом бою',cost:[100,350,900,1900,3500]}
 ];
-function afkRate(){return 8+10*(S.village.mint||0)+3*Math.min(8,chaptersDone());}
+function afkRate(){return afkRateAt(0,0);}
+// OB:CH: Самоцветная копь (постройка темы «Медной горы») — казна +15% за уровень; dm/dk — «если построить ещё» (для «было → стало»)
+function afkRateAt(dm,dk){return Math.round((8+10*((S.village.mint||0)+dm)+3*Math.min(8,chaptersDone()))*(1+.15*((S.village.kop||0)+dk)));}
 function afkCapH(){return 4+2*(S.village.barn||0);}
 function afkGold(){const h=Math.max(0,Math.min(afkCapH(),(nowMs()-S.afkT)/3600e3));return Math.floor(h*afkRate());}
 /* ---------- награды золотом (одни формулы для игры и для бота/симуляции tools/econ.js) ---------- */
-function winGold(c,l,st,first){return Math.round((40+25*c+6*l)*[0,1,1.25,1.5][st]*(first?2:1));}
-function loseGold(c,wave){return Math.round(8*wave*(1+c*.3));}
-function siegeGold(waves){return 10*waves+Math.round(waves*waves*.3);}
-function giftGold(){return 40+30*chaptersDone();}
+function winGold(c,l,st,first){return Math.round((40+25*chEco(c)+6*Math.min(5,l))*[0,1,1.25,1.5][st]*(first?2:1)*(1+.1*(S.village.mel||0)));}   // OB:CH: новые главы — как «полглавы» после предыдущей (chEco); Ветряная мельница +10%
+function loseGold(c,wave){return Math.round(8*wave*(1+chEco(c)*.3));}   // OB:CH
+function siegeGold(waves){const k=Math.min(1,.5+.0625*Math.min(8,chaptersDone()));return Math.round((10*waves+waves*waves*.3)*k);}   // OB:ECO ранняя осада ≈ повтор, не больше новой главы (k: 1 глава 0,56 … 8+ глав 1; осада, Застава дня, волны Босса недели)
+function giftGold(){return 40+30*Math.min(8,chaptersDone());}   // OB:CH: «счёт глав» в наградах — не выше 8
 // подмога после поражений: +15% стартовых монет за каждое поражение подряд на этом уровне (до +45%), сбрасывается победой
 function pityCoins(c,l){const n=Math.min(3,(S.lose&&S.lose[c+'-'+l])||0);return Math.round(START_COINS[c]*.15*n);}
 /* мягкий старт (boost 02.10, диагностика hobby-analytics/release-d): только главы 1–2 кампании, не «Богатырская», не испытания.
    Самый первый бой (ещё ни одной победы) — нечисть слабее (NOV.first): три заставы «как сказал воевода» должны побеждать.
    «Боевой дух»: каждое поражение подряд на уровне — нечисть в следующей попытке слабее на NOV.step (до NOV.max), победа сбрасывает (S.lose).
    Менять — только с прогоном моделей новичка (release-d/oborona-tests/t_noob.py) и campaign(). */
-const NOV={first:.7,step:.1,max:.3,ch:2};
+const NOV={first:.7,step:.1,max:.3,ch:999};   // OB:DIF «боевой дух» — во всех главах Обычного (решение владельца 08.10: «Сказку» убрали); было ch:2
 function novK(c,l){if(c>=NOV.ch)return 1;const n=(S.lose&&S.lose[c+'-'+l])||0;let k=1-Math.min(NOV.max,NOV.step*n);if(c===0&&l===0&&!S.wins)k=Math.min(k,NOV.first);return k;}
 // казна «полна» для точки и тоста: от ёмкости (у новичка казна вмещает всего 32)
 function afkReadyAt(){return Math.min(50,Math.round(afkRate()*afkCapH()*.6));}
 /* ---------- облики застав и украшения деревни: только внешний вид, силы не дают (решение владельца 27.09, hobby-analytics/12 п. 3).
    Открываются, когда деревня отстроена целиком (41 620 золотых): золоту снова есть куда идти. Всего 37 500 + 17 500 = 55 000.
    Облик надевается на все заставы этого рода (S.skin[застава]); куплено — S.skins['застава.облик'], украшения — S.deco. ---------- */
+/* OB:META1+SLAVA (решение владельца 08.10): облики больше не продаются — это награды, купленное остаётся; за золото — только «Золочёный» (после отстройки деревни).
+   get: 'login14'/'login30' — вход 14/30 дней (js/meta-ret.js), 'ny' — Новый год (позже), 'hw26' — праздник «Ночь нечисти» (js/meta-fest.js; fest — виден только в праздник или если уже есть);
+   fame — уровень Славы (js/meta-slava.js), на котором облик выдаётся на все роды застав; что пришло раньше — то и даёт облик */
 const SKINS=[
-  {id:'spring',n:'Весенний',about:'цветы на кровлях',cost:1000},
-  {id:'fair',n:'Ярмарочный',about:'гирлянда флажков',cost:1500},
-  {id:'winter',n:'Зимний',about:'снежные шапки и сосульки',cost:2000},
-  {id:'gold',n:'Золочёный',about:'позолота и искры',cost:3000}];
+  {id:'spring',n:'Весенний',about:'цветы на кровлях',cost:1000,get:'login14',fame:5},
+  {id:'fair',n:'Ярмарочный',about:'гирлянда флажков',cost:1500,get:'login30',fame:12},
+  {id:'winter',n:'Зимний',about:'снежные шапки и сосульки',cost:2000,get:'ny',fame:20},
+  {id:'gold',n:'Золочёный',about:'позолота и искры',cost:3000,fame:30},
+  {id:'night',n:'Полуночный',about:'лунный свет и болотные огоньки',cost:0,get:'hw26',fest:'hw26'}];
+function skinHow(k){const a=({login14:Lg('награда: 14 дней входа подряд','reward: 14 days of logins in a row'),login30:Lg('награда: 30 дней входа подряд','reward: 30 days of logins in a row'),
+  ny:Lg('подарок на Новый год','a New Year gift'),hw26:Lg('награда праздника: одолей 1000 нечисти','holiday reward: defeat 1,000 monsters')})[k.get]||'',f=k.fame?Lg('⭐ Слава, ур. '+k.fame,'⭐ Fame, lvl '+k.fame):'';
+  return a&&f?a+Lg(' или ',' or ')+f:a||f;}
 const DECO=[
   {id:'well',n:'Колодец-журавль',cost:1500},
   {id:'flags',n:'Ярмарочные флажки',cost:2000},
@@ -299,10 +308,10 @@ const BANNERS=[
   {id:'ogon',n:'Знамя Огненной земли',cost:2500,c1:'#b82a1e',c2:'#ffb03a',em:[5,.45]},
   {id:'trid',n:'Стяг Тридевятого царства',cost:3200,c1:'#8a1616',c2:'#ffd84a',em:[12,.75]}];
 const BN_SETS=[[3,600],[5,1200],[8,1800]];   // сколько знамён → секунд ускорения
-function bnOpen(i){return chaptersDone()>i;}
+function bnOpen(i){const c=BANNERS[i].ch!=null?BANNERS[i].ch:i;return !!S.stars[c+'-5'];}   // OB:CH: знамя главы — когда освобождена именно она
 function bnOwn(i){return !!(S.bns&&S.bns[BANNERS[i].id]);}
 function bnCount(){let n=0;for(let i=0;i<BANNERS.length;i++)if(bnOwn(i))n++;return n;}
-function bnNow(){const i=BANNERS.findIndex(b=>b.id===S.bn);return i>=0&&bnOwn(i)?BANNERS[i]:null;}
+function bnNow(){const i=BANNERS.findIndex(b=>b.id===S.bn);return i>=0&&bnOwn(i)?BANNERS[i]:typeof xbnNow==='function'?xbnNow():null;}   // OB:SLAVA знамёна-награды (Сказ, ступени турнира) — XBN в meta-slava.js
 // знамя: древко от (x,y) вверх на h, полотнище с «ласточкиным хвостом»; ph — фаза колыхания
 function drawBanner(g,x,y,h,b,ph){const w=h*.62,fh=h*.44,ty=y-h,k=Math.sin(ph||0)*h*.03;
   g.lineCap='round';g.lineJoin='round';g.strokeStyle='#5a3a1a';g.lineWidth=Math.max(1.4,h*.06);g.beginPath();g.moveTo(x,y);g.lineTo(x,ty-h*.06);g.stroke();
@@ -311,7 +320,7 @@ function drawBanner(g,x,y,h,b,ph){const w=h*.62,fh=h*.44,ty=y-h,k=Math.sin(ph||0
   const cx=x+w*.4,cy=ty+fh/2+k*.4,R=fh*.3,n=b.em[0];g.fillStyle=b.c2;g.beginPath();
   if(!n)g.arc(cx,cy,R*.8,0,Math.PI*2);else for(let i=0;i<n*2;i++){const a=-Math.PI/2+i*Math.PI/n,r=i%2?R*b.em[1]:R;g.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}
   g.closePath();g.fill();}
-function vilDone(){return BLD.every(b=>(S.village[b.id]||0)>=b.cost.length);}
+function vilDone(){return BLD.every(b=>b.ch!=null||(S.village[b.id]||0)>=b.cost.length);}   // OB:CH: постройки новых тем облики не запирают
 // облик «Жар-птица» — покупка Яндекса skins_firebird (js/pay.js): на все роды застав сразу, без отстроенной деревни
 const SKIN_FB={id:'firebird',n:'Жар-птица',about:'огненные перья'};
 function skinFb(){return typeof PAY!=='undefined'&&PAY.own('skins_firebird');}
@@ -319,7 +328,7 @@ function skinOf(t){const k=S.skin&&S.skin[t];return k==='firebird'?(skinFb()?k:'
 function skinName(id){return id==='firebird'?SKIN_FB.n:(SKINS.find(k=>k.id===id)||{n:''}).n;}
 // сколько золота ещё можно потратить (постройки + облики + украшения)
 function goldSink(){let n=0;for(const b of BLD)for(let l=S.village[b.id]||0;l<b.cost.length;l++)n+=b.cost[l];
-  for(const t of TW_ORDER)for(const k of SKINS)if(!(S.skins&&S.skins[t+'.'+k.id]))n+=k.cost;
+  for(const t of TW_ORDER)for(const k of SKINS)if(!k.get&&!(S.skins&&S.skins[t+'.'+k.id]))n+=k.cost; // OB:META1 облики-награды золото не тянут
   for(const d of DECO)if(!(S.deco&&S.deco[d.id]))n+=d.cost;
   for(let i=0;i<BANNERS.length;i++)if(!bnOwn(i))n+=BANNERS[i].cost;return n;}
 // реклама за золото («Удвоить», «Казна ×2», «+2 часа», «Гостинец») нужна, только пока золоту есть куда идти
@@ -356,7 +365,7 @@ const AIM_BY={arch:['first','strong','near','fly'],mag:['first','strong','near',
 const DIFF=[{n:'Сказка',p:'Сказке',hp:.75,d:'Нечисть слабее на четверть. Для отдыха и для младших воевод. Звёзды — те же.'},
   {n:'Быль',p:'Были',hp:1,d:'Обычная сила нечисти — так задумано.'},
   {n:'Богатырская',p:'Богатырской',hp:1.2,d:'Нечисть крепче на пятую часть. За победу — корона 👑 на уровне.'}];
-function diffNow(){const d=+S.diff;return d===0||d===2?d:1;}
+function diffNow(){return 1;}   // OB:DIF «Сказки» и «Богатырской» больше нет: сложность — режим главы (js/dif.js), здоровье всегда от «Были»
 
 /* ---------- Босс недели ----------
    Один из 8 боссов по кругу (одинаково у всех игроков), своя карта недели. 9 волн нечисти его главы, в 9-й — босс, в 2,5 раза крепче обычного.
@@ -365,7 +374,7 @@ function diffNow(){const d=+S.diff;return d===0||d===2?d:1;}
 // сила босса и монеты на старте подобраны ботом (27.09): с полной прокачкой все 8 боссов падают за 3,5–4 мин, новичок снимает 5–80%
 const WEEK_WAVES=9,WEEK_BOSS_HP=2.5,WEEK_COINS=700,WEEK_SCORE=1e5;
 function weekNo(t){const d=new Date(t||nowMs());return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5+3)/7);}   // недели с понедельника
-function weekCh(w){return ((w==null?weekNo():w)*3)%CH.length;}
+function weekCh(w){return CH_WEEK[((w==null?weekNo():w)*3)%CH_WEEK.length];}   // OB:CH: Босс недели — только старые 8 глав
 function weekLeftH(){const d=new Date(nowMs()),dow=(d.getDay()+6)%7,end=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7-dow);return Math.ceil((end-d)/3600e3);}
 function weekReward(){return 150+50*Math.min(8,chaptersDone());}
 // очки: 0…9999 — снятое здоровье босса в сотых долях процента; 10000…19999 — победа (чем быстрее, тем больше)
@@ -433,8 +442,9 @@ const LORE={
 };
 // порядок в книге: нечисть по главам (как встречается), подмога боссов, потом боссы
 const BOOK=(()=>{const a=[];for(const c of CH)for(const t of c.en)if(!a.includes(t))a.push(t);for(const t of['kot','snowb'])a.push(t);for(const c of CH)a.push(c.boss);a.push('egg');return a;})();
-function bookWhere(id){const ch=i=>' ('+Lg('глава ','chapter ')+i+')';if(id==='kot')return EN.yaga.n+ch(2);if(id==='snowb')return CH[4].name+ch(5);if(id==='egg')return CH[3].name+ch(4);
-  const i=CH.findIndex(c=>c.boss===id||c.en.includes(id));return i<0?'':CH[i].name+ch(i+1);}
+function bookWhere(id){const ch=i=>' ('+Lg('глава ','chapter ')+chNum(i)+')';if(id==='kot')return EN.yaga.n+ch(1);if(id==='snowb')return CH[4].name+ch(4);if(id==='egg')return CH[3].name+ch(3);   // OB:CH: номер — по порядку
+  if(EN[id]&&EN[id].ch!=null)return CH[EN[id].ch].name+ch(EN[id].ch);
+  const i=CH.findIndex(c=>c.boss===id||c.en.includes(id));return i<0?'':CH[i].name+ch(i);}
 function bookTip(id){const d=EN[id],t=[];
   if(d.boss)return id==='kosh'?Lg('Жми на яйцо пальцем, когда появится, — и бей всеми заставами.','Tap the egg as soon as it appears — and hit it with every outpost.'):Lg('Чары Перуна и заставы на «сильного» — по боссу. Кот Баюн усыпит его ненадолго.','Perun’s Thunder and outposts set to “strongest” — all at the boss. Bayun the Cat puts it to sleep for a moment.');
   if(id==='egg')return Lg('Жми пальцем и бей заставами — пока цело, Кощей бессмертен.','Tap it and hit it with outposts — while it is whole, Koschei cannot die.');
@@ -447,13 +457,15 @@ function bookTip(id){const d=EN[id],t=[];
   if(d.ab==='heal')t.push(Lg('лечит соседей — бей первым','heals its neighbors — take it out first'));
   if(d.ab==='hop')t.push(Lg('прыгает вперёд — ставь заставы и у ворот','hops ahead — put outposts near the gate too'));
   if(d.ab==='split')t.push(Lg('рассыпается на снежки — бей по площади','splits into snowballs — use splash damage'));
+  if(CHX.tip[d.ab])t.push(CHX.tip[d.ab]());   // OB:CH
   if(d.ab==='rage')t.push(Lg('раненый бежит вдвое быстрее — кисель и дуб его держат','runs twice as fast when hurt — jelly and the oak hold it back'));
   if(!t.length)t.push(d.spd>=55?Lg('быстрый — ставь заставы вдоль длинной дороги','fast — line the long stretch of road with outposts'):Lg('обычный: годится любая застава','ordinary: any outpost will do'));
   const s=t.join('; ');return s[0].toUpperCase()+s.slice(1)+'.';}
 function bookKnown(id){return !!((S.seen||{})[id]||(S.bk||{})[id]||(S.bossKill||{})[id]);}
 
 /* ---------- достижения: награда — золото, выдаётся сразу (achCheck после боя и при открытии «Испытаний») ---------- */
-function crownsN(){return Object.keys(S.crown||{}).length;}
+function crownsN(){return typeof difCount==='function'?difCount('s'):Object.keys(S.crown||{}).length;}   // OB:DIF уровней на ⚔ Сложном (короны «Богатырской» перенесены туда)
+function hellN(){return typeof difCount==='function'?difCount('h'):0;}
 const ACH=[
   {id:'k500',n:'Первый почин',d:'Одолей 500 нечисти',goal:500,v:()=>S.kills||0,r:100},
   {id:'k5k',n:'Гроза нечисти',d:'Одолей 5 000 нечисти',goal:5000,v:()=>S.kills||0,r:400},
@@ -461,15 +473,18 @@ const ACH=[
   .concat(CH.map((c,i)=>({id:'b_'+c.boss,n:['Соловья — в клетку','Не в печь!','Три головы долой','Игла сломана','Оттепель','Владыка вод','Огнеборец','Лихо не буди'][i],
     d:'Победи: '+EN[c.boss].n,goal:1,v:()=>(S.bossKill||{})[c.boss]?1:0,r:100+25*i})))
   .concat([
-  {id:'ch8',n:'Освободитель Руси',d:'Освободи все 8 глав',goal:8,v:()=>chaptersDone(),r:1000},
+  {id:'ch8',n:'Освободитель Руси',d:'Освободи все 8 глав',goal:8,v:()=>chaptersDoneOld(),r:1000},   // OB:CH: старые 8
   {id:'st72',n:'Меткий воевода',d:'Собери 72 звезды',goal:72,v:()=>starsTotal(),r:300},
   {id:'st144',n:'Все звёзды',d:'Три звезды на всех 48 уровнях',goal:144,v:()=>starsTotal(),r:1500},
-  {id:'cr1',n:'Богатырская сила',d:'Пройди уровень на «Богатырской»',goal:1,v:crownsN,r:200},
-  {id:'cr12',n:'Корона к короне',d:'Собери 12 корон',goal:12,v:crownsN,r:800},
-  {id:'cr48',n:'Царь-воевода',d:'Собери короны всех 48 уровней',goal:48,v:crownsN,r:3000},
-  {id:'end20',n:'Стойкий',d:'Отбей 20 волн осады',goal:20,v:()=>S.endBest||0,r:300},
-  {id:'end40',n:'Несгибаемый',d:'Отбей 40 волн осады',goal:40,v:()=>S.endBest||0,r:1000},
-  {id:'wk1',n:'Гроза недели',d:'Одолей Босса недели',goal:1,v:()=>S.wkN||0,r:300},
+  {id:'cr1',n:'Богатырская сила',d:'Пройди уровень на ⚔ Сложном',goal:1,v:crownsN,r:200},
+  {id:'cr12',n:'Корона к короне',d:'Пройди 12 уровней на ⚔ Сложном',goal:12,v:crownsN,r:800},
+  {id:'cr48',n:'Царь-воевода',d:'Пройди 48 уровней на ⚔ Сложном',goal:48,v:crownsN,r:3000},
+  {id:'hl1',n:'Сквозь пекло',d:'Пройди уровень на 🔥 Адском',goal:1,v:hellN,r:400},   // OB:DIF
+  {id:'hl12',n:'Огнеупорный',d:'Пройди 12 уровней на 🔥 Адском',goal:12,v:hellN,r:1500},
+  {id:'hl48',n:'Гроза пекла',d:'Пройди 48 уровней на 🔥 Адском',goal:48,v:hellN,r:5000},
+  {id:'end20',n:'Стойкий',d:'Отбей 20 волн осады',goal:20,v:()=>S.endBest||0,r:150},
+  {id:'end40',n:'Несгибаемый',d:'Отбей 40 волн осады',goal:40,v:()=>S.endBest||0,r:500},
+  {id:'wk1',n:'Гроза недели',d:'Одолей Босса недели',goal:1,v:()=>S.wkN||0,r:150},
   {id:'wk4',n:'Завсегдатай',d:'Одолей Боссов 4 разных недель',goal:4,v:()=>S.wkN||0,r:1000},
   {id:'dch1',n:'Испытатель',d:'Пройди испытание дня',goal:1,v:()=>S.dchN||0,r:100},
   {id:'dch7',n:'Бывалый испытатель',d:'Пройди 7 испытаний дня',goal:7,v:()=>S.dchN||0,r:500},
@@ -491,3 +506,22 @@ const TIPS=[
   'Кот Баюн усыпляет всех. Боссов — ненадолго: они храпят, но просыпаются быстро.',
   'Ускорение ×2 — для смелых. Пауза — для мудрых.'
 ];
+
+/* ================= OB:META1 — «розетка» меты (перенос из Богатыря data.js:581, 08.10.2026) =================
+   Вся новая мета живёт в своих файлах js/meta-<id>.js и входит в игру через крючки:
+     META_MODS.push({id:'ret', FIX(S){}, MERGE(x,o){}, RUN(G){}, KILL(e,src){}, END(G,win){}, ST(st,type){}, FRAME(dt,G){}, DRAW(c,G){},
+                     VIL(el){}, TODAY(a){}, MENU(){}, X2(G,v){}});
+   Вызовы в движке (поиск «META_HK('»): core.js — FIX (fixSave), MERGE (mergeProgress: x — вторая сторона, o — итог);
+   game.js — RUN (newBattle), ST (tstat: поправки характеристик заставы), KILL (killEnemy), FRAME (update), DRAW (render, мировые координаты);
+   ui.js — END (onBattleEnd, может звать дважды: после «ещё попытки»), VIL (renderVillage: дописать карточку в el), TODAY (renderToday: a — список фишек
+   {id,hot,t,fn}), MENU (меню показано после запуска/облака — модуль может открыть своё окно и вернуть true; тогда остальные молчат), X2 (удвоение за ролик).
+   Также глобальная META_<k> (одна, как «Подворье» Богатыря) — зовётся первой. Нет функции — ничего; ошибка модуля — console.warn (до 5 раз), игра идёт дальше.
+   Выключить всю мету — META_ON=false. Свои ключи сейва — с префиксом своей темы (S.dly*, S.login*, S.away*, S.fest*, S.sl*…), свои глобальные имена — с префиксом.
+   При самой первой загрузке fixSave() зовётся до этого файла — модуль чинит свои ключи сам при загрузке. */
+let META_ON=true;
+function META_HK(k,a,b){if(!META_ON)return;const f=window['META_'+k];let r;
+  if(typeof f==='function')try{r=f(a,b);}catch(x){META_ERR(k,x);}
+  for(const m of META_MODS)if(typeof m[k]==='function')try{const q=m[k](a,b);if(r===undefined)r=q;}catch(x){META_ERR(m.id+'.'+k,x);}
+  return r;}
+const META_MODS=[];
+function META_ERR(k,x){META_HK.n=(META_HK.n||0)+1;if(META_HK.n<=5)console.warn('meta '+k+': '+(x&&x.message||x));}

@@ -1,0 +1,22 @@
+/* OB:VIS (08.10) — вид боя: поле «лёжа» (body.rot, js/vis.js) и мелочи боя. Старые WebView: без inset, min()/max(), aspect-ratio */
+/* поле лёжа: вход нечисти — слева, ворота — справа; реплика воеводы — внизу посередине (между чарами и «Волна раньше»), а не на входе */
+body.rot.wide #voice,html.lk body.rot.wide #voice{left:50%;right:auto;transform:translateX(-50%);top:auto;bottom:12px;width:470px;max-width:60vw}
+/* карточка заставы рядом с кольцом на низком экране — без описания и строки цели (видно в полном виде, когда кольцо закрыто не нужно) */
+#info.tight .ih span,#info.tight .inote,html.lk #info.tight .ih span,html.lk #info.tight .inote{display:none}
+/* подписи веток мастеров в кольце — до двух строк, не налезают друг на друга */
+#ring .rbt u,html.lk #ring .rbt u{white-space:normal;width:max-content;max-width:92px;text-align:center;line-height:1.05;bottom:100%;top:auto;margin-bottom:3px}
+#ring .rbt u,html.lk #ring .rbt u{max-width:74px}
+html.lk #ring .rbt.lock u,html.lk #ring .rbt u{font-size:13.5px}
+/* подпись цели (🎯) — под кнопкой: сверху она закрывала цену ветки мастеров */
+#ring .rbt.aim u,html.lk #ring .rbt.aim u{bottom:auto;top:100%;margin:3px 0 0}
+/* шапка меню на узком экране (360 px): «Тридевятая / оборона» в две строки целиком — ширина по самому длинному слову, не обрезается звездой */
+@media (min-width:341px) and (max-width:400px){html.lk .topbar .title{font-size:15.5px;letter-spacing:-.2px;flex:none;width:-webkit-min-content;width:min-content}
+ html.lk .topbar .pill{white-space:nowrap;font-size:17px;padding:3px 9px 3px 5px}html.lk .topbar .pill img{width:24px;height:24px}html.lk .topbar{gap:5px;padding-left:8px;padding-right:8px}}
+/* OB:FIX1 окно-«альбом» 760–879 px (VK на компьютере): меню столбцом, как на ПК, но столбец уже */
+@media (max-width:879px) and (min-width:760px) and (min-height:520px) and (orientation:landscape){
+ html.lk #menu>.tabs{margin-left:176px;width:calc(100% - 176px)}html.lk #menu>nav{width:176px;padding:12px 8px}
+ html.lk nav button{font-size:14.5px;padding:0 16px 0 6px;min-height:56px}html.lk nav button img{width:30px;height:30px;margin-right:8px}html.lk nav button.dot::after{right:8px;top:22px}
+ html.lk .tab{padding:12px 14px 18px}.mapcols #mapCv,html.lk .mapcols #mapCv{flex-basis:46%;width:46%;margin-right:12px}
+ html.lk .g2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+/* постройки деревни в два столбца не влезают уже ~960 px (карточка ≥323 px) — один столбец */
+@media (max-width:959px){html.lk .blds.rows{grid-template-columns:minmax(0,1fr)}}
