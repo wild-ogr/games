@@ -299,3 +299,5 @@ html.lk body.low .rz .rays{animation:none}
 html.lk body.nb #hint:empty{background:none;border:0;box-shadow:none}
 html.lk body.nb .toast{background:var(--pnS2)}
 html.lk body.low .card,html.lk body.low #catch.on{animation-duration:.01s}
+/* RB:UX гнёзда (mapSlots/resultSlots/dailySlots) */
+.slots:empty{display:none}.slots{display:flex;flex-direction:column;gap:8px;margin:8px 0}.slots .slot>*{width:100%}

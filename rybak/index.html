@@ -300,6 +300,7 @@ button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;fon
 /*/FB1*/
 </style>
 <link rel="stylesheet" href="css/look.css"><link rel="stylesheet" href="css/themes.css"><script src="js/look.js"></script><!--LK: вид «Стекло и свет» и темы (rlook)-->
+<script src="js/places.js"></script><script src="js/places-art.js"></script><!--RB:NORTH: реестр рыб и мест, пейзажи новых мест (до игры)-->
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
@@ -311,7 +312,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <div id="app">
   <section id="scr-map" class="screen on">
     <header class="mh"><div class="logo" id="logo">🎣 Рыбалка с Петровичем</div><div class="hdr-r"><button class="icon" id="btnSet" aria-label="Настройки" data-en-aria="Settings">⚙️</button><button class="pill" id="mCoins" aria-label="Монеты" data-en-aria="Coins">💰&nbsp;<span id="coinCnt">0</span></button></div></header>
-    <div class="mapwrap" id="mapWrap"><div id="goalB"></div><div class="rankb" id="rankB"></div><div class="plcs" id="plcs"></div></div>
+    <div class="mapwrap" id="mapWrap"><div id="goalB"></div><div id="mapSlotsB" class="slots"></div><div class="rankb" id="rankB"></div><div class="plcs" id="plcs"></div></div>
     <nav class="mnav"><div class="nrow"><button id="btnDaily" class="btn accent" data-en="📅 Daily task">📅 Задание дня</button><button id="btnWeek" class="btn blue" data-en="🏆 Contest">🏆 Турнир недели</button></div>
       <div class="nrow"><button id="btnAlb" class="btn sq" aria-label="Альбом рыб" data-en-aria="Fish album">🐟<small data-en="Album">Альбом</small></button><button id="btnShop" class="btn sq" aria-label="Снасти и наживка" data-en-aria="Tackle shop">🎣<small data-en="Tackle">Снасти</small></button><button id="btnStreak" class="btn sq" aria-label="Подарок дня" data-en-aria="Daily gift">🎁<small data-en="Gift">Подарок</small></button><button id="btnMore" class="btn sq noenter" style="display:none" aria-label="Ещё игры во дворе" data-en-aria="More games">🎲<small data-en="Games">Игры</small></button></div></nav>
   </section>
@@ -373,73 +374,15 @@ const TACKLE={
 const TK_KEYS=['rod','line','reel'];
 const TOURN_TK={rod:2,line:2,reel:2};
 // stage1: нормативы турнира недели (граммы за 5 забросов: 🥉 / 🥈 / 🥇) — по модели CHK=tourn tools/check.sh (квантили 40/75/92 % игроков)
-const TOURN_NORM=[[1800,2900,3900],[1400,3500,5800],[3700,9200,19700],[4600,8200,11600],[1800,3700,5900],[3500,5300,7700],[1000,4900,12700],[9800,12800,15300]];
+const TOURN_NORM=PLACES.map(p=>p.tn); // RB:NORTH: числа — в записи места js/places.js
 // stage1: «Трофейная стена» — цена чучела рекордной рыбы (g — граммы рекорда), re — обновить чучело (полцены). Легенды — 8000
 function mntCost(id,g,re){const f=fishOf(id);if(!f)return 0;const pi=f.leg?PLACES.findIndex(p=>p.leg===id):PLACES.findIndex(p=>p.fish.indexOf(id)>=0);
-  const b=f.leg?8000:Math.max(400,Math.round(30*price(f,g/1000,pi)/50)*50);return re?Math.max(200,Math.round(b/100)*50):b;}
+  const b=f.leg?(f.mnt||8000)/*RB:NORTH: Царь-рыба — своя цена*/:Math.max(400,Math.round(30*price(f,g/1000,pi)/50)*50);return re?Math.max(200,Math.round(b/100)*50):b;}
 function tourTier(pi,g){const n=TOURN_NORM[pi]||TOURN_NORM[0];return g>=n[2]?2:g>=n[1]?1:g>=n[0]?0:-1;} // −1 — участник, 0 бронза, 1 серебро, 2 золото // турнир недели — у всех одинаковая «казённая» снасть
 
 /* стиль борьбы: [сила рывка, пауза от, до (с), длина рывка от, до] */
 const STY={calm:[1.4,3,5,.6,1],dart:[2,1.2,2.6,.4,.8],deep:[1.65,2,4,1,2],jump:[2.2,1.5,3,.5,1]};
-/* рыбы. w — вес от/до (кг), r — как часто, pb+pk·w — цена в монетах, s — сила, st — манера, b — на что берёт (множитель), t — время суток,
-   bite — как клюёт (dip — топит, lay — кладёт набок, drag — уводит), lk — рисунок [форма, спина, бок, брюхо, плавники, узор], f — байка */
-const FISH={
-  rotan:{n:'Ротан',en:'Rotan',w:[.03,.3],r:5,pb:1,pk:10,s:.8,st:'calm',b:{worm:1.5,blood:1,live:.4},lk:['bull','#3b3a2a','#6b6a4a','#b8b08a','#4a4a36','mottle'],f:'Съест всё, что шевелится. Кот Васька его уважает.'},
-  karas:{n:'Карась',en:'Crucian carp',w:[.05,1.2],r:6,pb:2,pk:8,s:.7,st:'calm',b:{worm:1,dough:1.6,corn:.8,maggot:.8},t:{morning:1.3,evening:1.3},lk:['deep','#5f6f60','#c9d2c8','#eef1ea','#8a8f7a','scale'],f:'Любит тину и тёплую воду. Жарить — в сметане, на чугунной сковородке.'},
-  karasz:{n:'Золотой карась',en:'Golden crucian',w:[.1,1.5],r:3,pb:3,pk:9,s:.75,st:'calm',b:{worm:1,dough:1.6,corn:1},lk:['deep','#6b4a18','#c99a3a','#f0d98a','#8a5a1a','scale'],f:'Желаний не исполняет — проверено дедом Митяем.'},
-  plotva:{n:'Плотва',en:'Roach',w:[.05,.8],r:6,pb:2,pk:9,s:.7,st:'dart',b:{worm:1,maggot:1.6,dough:1,blood:1},lk:['std','#3d5566','#c6d0d6','#eef2f4','#d8452a','scale'],f:'Красные глаза и плавники — плотву ни с кем не спутаешь.'},
-  okun:{n:'Окунь',en:'Perch',w:[.05,1.5],r:5,pb:2,pk:10,s:1,st:'dart',b:{worm:1.3,blood:1,live:1.3,spoon:1.8},t:{day:1.2,night:.3},lk:['perch','#3d5a2a','#93a65a','#e8e2b8','#e0662a','stripes'],f:'Полосатый разбойник. Ходит стаями — где один, там и десяток.'},
-  lin:{n:'Линь',en:'Tench',w:[.2,2.5],r:2,pb:4,pk:10,s:.9,st:'deep',b:{worm:1.3,dough:1,corn:.8},t:{morning:1.5,day:.6},lk:['std','#2f4a24','#6f8a3a','#c9c98a','#3a5a2a','none'],f:'Говорят, слизь линя лечит других рыб. Сам линь молчит.'},
-  karp:{n:'Карп',en:'Carp',w:[.8,8],r:.8,pb:8,pk:9,s:1.25,st:'deep',b:{corn:2,dough:1.3,worm:.4},lk:['deep','#4a3a1c','#b8903a','#ecd9a0','#6a4a20','bigscale'],f:'Пруд у дачи копали ещё в колхозе — и карпа тогда же запустили.'},
-  peskar:{n:'Пескарь',en:'Gudgeon',w:[.02,.08],r:5,pb:1,pk:40,s:.5,st:'calm',b:{worm:1.5,blood:1},lk:['std','#5a5a48','#a9a88c','#e6e2cc','#8a8a70','dots'],f:'Тот самый премудрый пескарь. Всю жизнь осторожничал — а на червя клюнул.'},
-  ukleyka:{n:'Уклейка',en:'Bleak',w:[.02,.1],r:6,pb:1,pk:30,s:.5,st:'dart',b:{maggot:1.8,dough:1,worm:.6},lk:['slim','#4a6a7a','#dfe8ee','#f8fbfc','#b8c4c8','none'],f:'Серебристая мелочь, клюёт без остановки. Кот доволен.'},
-  ersh:{n:'Ёрш',en:'Ruffe',w:[.02,.15],r:4,pb:1,pk:25,s:.6,st:'calm',b:{worm:1.5,blood:1.6},lk:['perch','#4a4430','#8f8456','#d8d0a8','#6a6040','dots'],f:'Колючий, как ёжик. Зато уха из ершей — самая наваристая.'},
-  golavl:{n:'Голавль',en:'Chub',w:[.2,3],r:2,pb:3,pk:8,s:1.1,st:'dart',b:{worm:1,maggot:1,dough:.6,spoon:1},lk:['std','#2f3e36','#b8bcae','#eceee6','#8a3a2a','bigscale'],f:'Лобастый и осторожный: увидит рыбака на берегу — не клюнет.'},
-  yaz:{n:'Язь',en:'Ide',w:[.3,3],r:2,pb:3,pk:8,s:1,st:'dart',b:{worm:1,maggot:1.3,corn:.8},lk:['std','#3a4a50','#c8c2a8','#ecead8','#c85a3a','scale'],f:'Золотистый, степенный. Любит тихие плёсы у кустов.'},
-  shuka:{n:'Щука',en:'Pike',w:[.5,12],r:1.6,pb:4,pk:6,s:1.2,st:'dart',b:{live:2.5,spoon:2,worm:.15},t:{morning:1.3,night:.4},bite:'drag',lk:['long','#3a4a22','#7a8a3a','#e0dca8','#6a6a2a','spots'],f:'Щучья челюсть — на удачу. У Петровича над дверью висит.'},
-  nalim:{n:'Налим',en:'Burbot',w:[.3,5],r:1,pb:4,pk:7,s:.9,st:'deep',b:{worm:1.3,live:1.5,blood:1},t:{night:3,evening:1.3,day:.2,morning:.5},lk:['eel','#3a3424','#6a5f3a','#c8bc92','#4a4230','mottle'],f:'Единственная пресноводная треска. Любит холод и ночь.'},
-  gustera:{n:'Густера',en:'White bream',w:[.1,.6],r:5,pb:2,pk:12,s:.7,st:'calm',b:{worm:1,maggot:1.3,blood:1.2,dough:1},bite:'lay',lk:['deep','#51606a','#cfd6da','#f2f4f5','#9aa4aa','scale'],f:'Ходит стаей: поймал одну — жди ещё.'},
-  lesh:{n:'Лещ',en:'Bream',w:[.3,6],r:3,pb:3,pk:8,s:.85,st:'deep',b:{worm:1,blood:1.5,dough:1.2,corn:1},bite:'lay',lk:['deep','#4a4630','#b8a878','#e8dcb8','#5a5238','scale'],f:'Поплавок не топит, а кладёт набок — это лещ! Подсекай.'},
-  chehon:{n:'Чехонь',en:'Sabre carp',w:[.1,.8],r:3,pb:2,pk:12,s:.8,st:'dart',b:{maggot:1.3,worm:1,spoon:.6},lk:['slim','#5a6a78','#dde4ea','#f6f8f9','#b0b8c0','none'],f:'Сабля-рыба. Вяленую чехонь на Волге любят не меньше воблы.'},
-  vobla:{n:'Вобла',en:'Caspian roach',w:[.1,.5],r:5,pb:2,pk:14,s:.7,st:'dart',b:{worm:1,maggot:1.3,dough:1},lk:['std','#4a5058','#c9ced2','#eef0f2','#c86a4a','scale'],f:'Та самая вобла. На газетке, на лавочке, с разговорами.'},
-  sudak:{n:'Судак',en:'Zander',w:[.5,9],r:1.3,pb:5,pk:9,s:1.1,st:'dart',b:{live:2.5,spoon:1.2,worm:.2},t:{evening:1.6,night:1.8,day:.5},bite:'drag',lk:['perch2','#4a5040','#9a9a80','#e8e6d6','#6a6a58','bars'],f:'Клыкастый и строгий. Берёт в сумерках.'},
-  zhereh:{n:'Жерех',en:'Asp',w:[.5,6],r:1.2,pb:5,pk:9,s:1.35,st:'jump',b:{spoon:2.5,live:1.4},t:{morning:1.4,day:1.1,night:.2},lk:['std','#3a4a58','#bcc4ca','#eef0f2','#8a6a5a','none'],f:'Бьёт мальков хвостом, как веслом. Сильный и резкий.'},
-  sazan:{n:'Сазан',en:'Wild carp',w:[1,15],r:1.2,pb:8,pk:8,s:1.35,st:'deep',b:{corn:2.5,dough:1.3,worm:.5},lk:['deep','#3a3018','#a88a3a','#e8d49a','#5a4218','bigscale'],f:'Дикий карп. Тянет, как буксир.'},
-  som:{n:'Сом',en:'Wels catfish',w:[3,60],r:.5,pb:10,pk:5,s:1.3,st:'deep',b:{live:2,worm:.6},t:{night:3,evening:1.4,day:.2},bite:'drag',lk:['cat','#2c2e26','#4c4e40','#b8b49a','#2c2e26','mottle'],f:'Хозяин омута. Говорят, утку может проглотить.'},
-  ryapushka:{n:'Ряпушка',en:'Vendace',w:[.03,.2],r:5,pb:1,pk:30,s:.6,st:'dart',b:{blood:1.5,maggot:1.3,worm:.7},lk:['slim','#3a5a70','#d0dae2','#f2f6f8','#9ab0bc','none'],f:'Северная селёдочка. Копчёная — объедение.'},
-  snetok:{n:'Снеток',en:'Smelt fry',w:[.005,.02],r:4,pb:1,pk:100,s:.4,st:'calm',b:{blood:1.5,maggot:1},lk:['slim','#8a9aa2','#e2e8ea','#f8fafa','#c0c8cc','none'],f:'Крошечный, почти прозрачный. Сушёный снеток — псковская классика.'},
-  koryushka:{n:'Корюшка',en:'Smelt',w:[.02,.1],r:5,pb:1,pk:40,s:.5,st:'dart',b:{blood:1.3,maggot:1.3,worm:1},lk:['slim','#4a7a6a','#d8e4dc','#f4f8f6','#aac0b4','none'],f:'Пахнет свежим огурцом! Весной за ней весь Питер на берегу.'},
-  sig:{n:'Сиг',en:'Whitefish',w:[.3,3],r:2,pb:4,pk:11,s:.95,st:'dart',b:{blood:1.6,maggot:1.2,worm:.7},lk:['salmon','#3a4e5e','#c8d2d8','#eef2f4','#9aa8b0','none'],f:'Благородная северная рыба. Рот маленький — подсекай нежно.'},
-  paliya:{n:'Палия',en:'Arctic char',w:[.5,5],r:1,pb:6,pk:12,s:1.15,st:'deep',b:{live:1.5,spoon:1.8,worm:.5},lk:['salmon','#3a4a3a','#8a9a7a','#e89a5a','#d8703a','dots'],f:'Ладожский голец с оранжевым брюхом. Живёт на глубине.'},
-  losos:{n:'Лосось',en:'Salmon',w:[1.5,10],r:.6,pb:10,pk:10,s:1.4,st:'jump',b:{spoon:2.5,live:1.2},lk:['salmon','#3a4e62','#c4ccd4','#f0f2f4','#7a8a98','xspots'],f:'Прыгает над водой свечкой. Держи крепче!'},
-  omul:{n:'Омуль',en:'Omul',w:[.2,1.5],r:5,pb:3,pk:14,s:.9,st:'dart',b:{blood:1.5,maggot:1.3,worm:1},lk:['salmon','#2f4a5e','#c2ced8','#eef2f6','#8aa0b0','none'],f:'Байкальский омуль — тот самый, про которого поют.'},
-  harius:{n:'Хариус',en:'Grayling',w:[.2,1.8],r:3,pb:3,pk:14,s:1,st:'jump',b:{maggot:1.3,worm:1,spoon:1.5},lk:['grayling','#3a4658','#9aa2b2','#e2e4ea','#7a4a8a','dots'],f:'Спинной плавник — как парус, переливается радугой.'},
-  lenok:{n:'Ленок',en:'Lenok',w:[.5,5],r:1.5,pb:5,pk:12,s:1.15,st:'dart',b:{spoon:2,live:1.3,worm:.6},lk:['salmon','#4a4a3a','#b09a6a','#e8d8b0','#9a6a4a','xspots'],f:'Сибирская форель. Любит быструю холодную воду.'},
-  taimen:{n:'Таймень',en:'Taimen',w:[3,40],r:.35,pb:15,pk:7,s:1.45,st:'jump',b:{live:1.5,spoon:2},lk:['long2','#3a3a38','#9a6a5a','#e0c8b0','#b04a3a','xspots'],f:'Сибирский царь-рыба. Отпускают его с поклоном.'},
-  amur:{n:'Белый амур',en:'Grass carp',w:[2,25],r:.8,pb:10,pk:6,s:1.35,st:'deep',b:{corn:2,dough:1.3},lk:['std','#4a5a3a','#b8b890','#e8e8d0','#7a7a5a','bigscale'],f:'Ест траву, как корова. Весит порой не меньше телёнка.'},
-  tolstolob:{n:'Толстолобик',en:'Bighead carp',w:[3,30],r:.7,pb:10,pk:5,s:1.2,st:'deep',b:{dough:2,corn:1},lk:['deep2','#6a7078','#c8ccd0','#eeeff0','#9aa0a6','none'],f:'Лоб широкий, глаза внизу. Фотографируется неохотно.'},
-  zmeegolov:{n:'Змееголов',en:'Snakehead',w:[1,8],r:1,pb:6,pk:9,s:1.25,st:'dart',b:{live:2,spoon:1.5},lk:['eel2','#3a4228','#7a8050','#d0c8a0','#4a4a30','mottle'],f:'Может дышать воздухом и переползать по траве. Честно.'},
-  verhoglyad:{n:'Верхогляд',en:'Topmouth culter',w:[.5,7],r:1.2,pb:5,pk:9,s:1.2,st:'jump',b:{spoon:2,live:1.5},lk:['slim','#4a5a6a','#d0d8de','#f2f4f6','#9aa8b0','none'],f:'Рот смотрит вверх — отсюда и имя.'},
-  kaluga:{n:'Калуга',en:'Kaluga sturgeon',w:[20,150],r:.15,pb:40,pk:3,s:1.5,st:'deep',b:{live:2},rel:1,lk:['sturgeon','#4a5058','#8a929a','#e8e8e0','#5a6068','plates'],f:'Самая большая пресноводная рыба России. Сфотографировался — и отпусти: она в Красной книге.'},
-  skripun:{n:'Косатка-скрипун',en:'Squeaker catfish',w:[.05,.4],r:5,pb:1,pk:25,s:.7,st:'calm',b:{worm:1.5,blood:1},lk:['cat2','#6a5a2a','#c8a84a','#ecdca0','#8a7a3a','mottle'],f:'Скрипит, когда вытащишь. Не обижайся — это он так здоровается.'},
-  kizhuch:{n:'Кижуч',en:'Coho salmon',w:[2,7],r:2,pb:6,pk:9,s:1.35,st:'jump',b:{spoon:2.2,live:1.2,worm:.3},lk:['salmon','#2f4660','#c0c8d2','#eef0f4','#5a6a80','xspots'],f:'Серебристый лосось. Прыгает так, что брызги до берега.'},
-  nerka:{n:'Нерка',en:'Sockeye',w:[1.5,4],r:2,pb:6,pk:11,s:1.25,st:'jump',b:{spoon:1.8,worm:.6,maggot:.6},lk:['salmon','#2a5a3a','#c8302a','#e8b0a0','#2a4a30','none'],f:'Красная рыба в прямом смысле: к нересту краснеет целиком.'},
-  chavycha:{n:'Чавыча',en:'Chinook',w:[5,30],r:.5,pb:15,pk:8,s:1.45,st:'jump',b:{spoon:2,live:1.5},lk:['salmon','#2f4a58','#b8c0c8','#eceff2','#4a5a68','xspots'],f:'Королевский лосось. Самый крупный из тихоокеанских.'},
-  golets:{n:'Голец',en:'Dolly Varden',w:[.5,4],r:2.5,pb:4,pk:10,s:1.05,st:'dart',b:{worm:1,spoon:1.5,maggot:1},lk:['salmon','#3a4e48','#8aa098','#f0a070','#e07a4a','dots'],f:'Пятнистый, с оранжевым брюшком. Самая частая рыба Камчатки.'},
-  mikizha:{n:'Микижа',en:'Rainbow trout',w:[.5,5],r:1.5,pb:5,pk:11,s:1.3,st:'jump',b:{spoon:1.8,worm:.8,maggot:.8},lk:['salmon','#3a5040','#a8b0a0','#e8e0d8','#8a7a70','rainbow'],f:'Камчатская радужная форель — с розовой полосой по боку.'},
-  kundzha:{n:'Кунджа',en:'White-spotted char',w:[.5,6],r:1.5,pb:5,pk:10,s:1.2,st:'dart',b:{spoon:1.6,live:1.3,worm:.7},lk:['salmon','#3a4a52','#9aa8b0','#e8ecee','#7a8a92','bigdots'],f:'Белые пятна крупные, как горох. Хищница, но красавица.'}
-};
-/* рыбы-легенды: одна на место, клюёт только на свою наживку в своё время суток (подсказка — в карточке места) */
-const LEG={
-  boris:{n:'Карп Борис',en:'Boris the Carp',w:[12,16],pb:300,pk:0,s:1.4,st:'deep',bait:'corn',tod:['morning'],lk:['deep','#6a4a10','#e0b030','#f8e8a0','#a06a10','bigscale'],f:'Живёт в пруду с 1987 года. Дед Митяй ловил его трижды — и трижды отпускал.'},
-  marfa:{n:'Щука Марфа',en:'Marfa the Pike',w:[14,18],pb:350,pk:0,s:1.45,st:'dart',bait:'live',tod:['morning','evening'],bite:'drag',lk:['long','#2f3e1c','#6a7a2a','#e8e2a8','#5a5a20','spots'],f:'Утаскивала утят и блёсны всей деревни. Сдалась только тебе.'},
-  kuzmich:{n:'Сом Кузьмич',en:'Kuzmich the Catfish',w:[80,110],pb:450,pk:0,s:1.35,st:'deep',bait:'live',tod:['night'],bite:'drag',lk:['cat','#23251e','#43453a','#c0bca0','#23251e','mottle'],f:'Хозяин волжского омута. Усы — как у председателя колхоза.'},
-  general:{n:'Лещ Генерал',en:'The General Bream',w:[7,9],pb:350,pk:0,s:1.2,st:'deep',bait:'blood',tod:['evening'],bite:'lay',lk:['deep','#3a3620','#c0a860','#f0e0b0','#4a4228','scale'],f:'Лещ-лапоть. Ходит по Селигеру важно, как на параде.'},
-  varyag:{n:'Лосось Варяг',en:'Varyag the Salmon',w:[14,18],pb:450,pk:0,s:1.5,st:'jump',bait:'spoon',tod:['morning'],lk:['salmon','#2e4258','#d0d8e0','#f4f6f8','#6a7a88','xspots'],f:'Приходит с Ладоги раз в год. Прыгает выше лодки.'},
-  batyushka:{n:'Таймень Батюшка',en:'Father Taimen',w:[45,55],pb:500,pk:0,s:1.5,st:'jump',bait:'spoon',tod:['evening'],lk:['long2','#34302e','#b0604a','#e8d0b8','#c04a30','xspots'],f:'Ему, говорят, лет сто. Отпускай с поклоном — так положено.'},
-  tsaritsa:{n:'Калуга Царица',en:'Tsaritsa Kaluga',w:[160,200],pb:600,pk:0,s:1.45,st:'deep',bait:'live',tod:['night','morning'],rel:1,lk:['sturgeon','#3e444c','#8a929a','#f0f0e8','#50565e','plates'],f:'Старше всех рыбаков на Амуре. Фото на память — и обратно в реку.'},
-  korol:{n:'Чавыча Король',en:'King Chinook',w:[38,45],pb:550,pk:0,s:1.55,st:'jump',bait:'spoon',tod:['morning','day'],lk:['salmon','#27404e','#c0c8d0','#f2f4f6','#40505e','xspots'],f:'Камчатский король. Медведи на берегу завидуют.'}
-};
+/* рыбы, легенды и места — реестр js/places.js (FISH_DB → FISH, LEG, PLACES). RB:NORTH */
 for(const k in LEG){LEG[k].leg=1;LEG[k].id=k;}
 for(const k in FISH)FISH[k].id=k;
 /* находки: иногда вместо рыбы (юмор, в альбом — раздел «Находки») */
@@ -451,17 +394,6 @@ const JUNK={
   bell:{n:'Велосипедный звонок',en:'Bicycle bell',ic:'🔔',f:'Дзинь! Работает. Велосипеда рядом не нашлось.'}
 };
 const JUNK_P=.03;
-/* места: p — цена «путёвки» в монетах, fish — кто водится, leg — легенда, look — пейзаж, rec — с какой ступени лески/удочки здесь спокойно (подсказка на карте) */
-const PLACES=[
-  {id:'prud',rec:0,n:'Пруд у дачи',en:'Dacha pond',reg:'Подмосковье',regE:'Moscow region',p:0,pm:1,fish:['rotan','karas','karasz','plotva','okun','lin','karp'],leg:'boris',look:'dacha'},
-  {id:'rechka',rec:1,n:'Речка у деревни',en:'Village stream',reg:'Тверская область',regE:'Tver region',p:200,pm:1,fish:['peskar','ukleyka','ersh','plotva','golavl','yaz','shuka','nalim'],leg:'marfa',look:'birch'},
-  {id:'volga',rec:2,n:'Волга',en:'The Volga',reg:'под Астраханью',regE:'near Astrakhan',p:700,pm:1,fish:['gustera','vobla','chehon','lesh','sudak','zhereh','sazan','som'],leg:'kuzmich',look:'volga'},
-  {id:'seliger',rec:2,n:'Селигер',en:'Lake Seliger',reg:'Тверская область',regE:'Tver region',p:2000,pm:2.3,fish:['snetok','ryapushka','okun','lesh','lin','shuka','sudak','nalim'],leg:'general',look:'lake'},
-  {id:'ladoga',rec:2,n:'Ладожское озеро',en:'Lake Ladoga',reg:'Карелия',regE:'Karelia',p:3500,pm:3.0,fish:['koryushka','ryapushka','okun','sig','sudak','paliya','losos'],leg:'varyag',look:'rocks'},
-  {id:'baikal',rec:3,n:'Байкал',en:'Lake Baikal',reg:'Иркутская область',regE:'Irkutsk region',p:5500,pm:3.25,fish:['omul','harius','sig','okun','lenok','shuka','taimen'],leg:'batyushka',look:'baikal'},
-  {id:'amur',rec:3,n:'Амур',en:'The Amur',reg:'Хабаровский край',regE:'Khabarovsk',p:8000,pm:1.95,fish:['skripun','sazan','verhoglyad','zmeegolov','amur','tolstolob','kaluga'],leg:'tsaritsa',look:'amur'},
-  {id:'kamchatka',rec:3,n:'Камчатка',en:'Kamchatka',reg:'река Камчатка',regE:'Kamchatka river',p:11000,pm:2.5,fish:['golets','mikizha','kundzha','nerka','kizhuch','chavycha'],leg:'korol',look:'kamch'}
-];
 /* ---- долгие цели (boost, 02.10): всё за игровые монеты, на клёв и турнир не влияет ----
    DECOR: k:'f' — поплавок (выбранный — S.flt), k:'s' — украшение берега (куплено — S.dec, спрятано — S.decOff).
    Наборы альбома: все виды места — SET_R[место], все трофеи места — вдвое (S.sets: sp0…, tr0…), забирает игрок в альбоме.
@@ -483,7 +415,7 @@ const DECOR=[
   {id:'house',k:'s',ic:'🏠',n:'Домик рыбака',en:'Fishing cabin',p:10000,d:'С печкой и окошком. Мечта!',de:'With a stove and a window. A dream!'}
 ];
 const DEC={};DECOR.forEach(d=>DEC[d.id]=d);
-const SET_R=[60,100,160,220,280,340,400,480];
+const SET_R=PLACES.map(p=>p.set); // RB:NORTH
 function setReward(kind,pi){return SET_R[pi]*(kind==='tr'?2:1);}
 // набор собран? alb — S.alb
 function setDone(alb,kind,pi){return PLACES[pi].fish.every(id=>alb[id]&&(kind==='sp'||alb[id].tr));}
@@ -507,9 +439,11 @@ function biteMul(tod,wx){return TOD_M[tod]*WX_M[wx];}
 // кто клюнет: df — доля дальности заброса (0 — у берега, 1 — максимум удочки). Вернёт {f,w} или {junk} или null (на эту наживку здесь не берут)
 function baitWorks(pi,bait){return PLACES[pi].fish.some(id=>(FISH[id].b[bait]||0)>0);}
 // A2: o — необязательные условия {z точка, dp глубина, way способ, mo месяц, px давление, lv ступень навыка, easy}; без o (турнир, старые проверки) — всё как в stage1
-function fishW(pi,bait,tod,wx,df,o){return PLACES[pi].fish.map(id=>{const f=FISH[id],big=f.w[1]>2.5;let x=f.r*(f.b[bait]||0)*(f.t&&f.t[tod]!=null?f.t[tod]:1)*(big?(.45+df*1.1):(1.2-df*.4));if(wx==='rain'&&f.b.live)x*=1.2;if(o)x*=a2Mul(f,o,tod,wx)*(PFX[pi][id]||1);return x;});}
+function fishW(pi,bait,tod,wx,df,o){return PLACES[pi].fish.map(id=>{const f=FISH[id],big=f.w[1]>2.5;let x=f.r*(f.b[bait]||0)*(f.t&&f.t[tod]!=null?f.t[tod]:1)*(big?(.45+df*1.1):(1.2-df*.4));if(wx==='rain'&&f.b.live)x*=1.2;if(o)x*=a2Mul(f,o,tod,wx)*(PFX[pi][id]||1);if(typeof MG_BAIT_MULT==='function')x*=MG_BAIT_MULT(pi,id); /*RB:NORTH: крючок «Прикормки» MGB (без модуля — 1, в турнире — 1)*/return x;});}
 function pickFish(pi,bait,tod,wx,df,R,o){const P=PLACES[pi];
+  if(o&&o.tsar&&P.tsar){const T=LEG[P.tsar];if(bait===T.bait&&T.tod.indexOf(tod)>=0&&df>.55&&R()<(T.p||1/8))return {f:T,w:Math.round((T.w[0]+(T.w[1]-T.w[0])*R())*1000)/1000};} // RB:NORTH: Царь-рыба главы (o.tsar — открыта и сегодня ещё не выходила)
   const L=LEG[P.leg];if(L&&bait===L.bait&&L.tod.indexOf(tod)>=0&&df>.55&&R()<1/30)return {f:L,w:Math.round((L.w[0]+(L.w[1]-L.w[0])*R())*1000)/1000};
+  if(o&&P.evf.length){const e=evPick(pi,bait,tod,R);if(e)return e;} // RB:NORTH: праздничная рыба (только в праздник, не в турнире)
   let tot=0;const ws=fishW(pi,bait,tod,wx,df,o);for(const x of ws)tot+=x;
   if(tot<=0)return null;
   if(R()<(o&&o.z==='snag'?JUNK_P*3:JUNK_P)&&bait!=='spoon'){const ks=Object.keys(JUNK);return {junk:ks[Math.floor(R()*ks.length)]};}
@@ -521,7 +455,7 @@ function pickFish(pi,bait,tod,wx,df,R,o){const P=PLACES[pi];
 function waitTime(tod,wx,R){return clamp((2.2+R()*4.6)/biteMul(tod,wx),1.6,9);}
 // окно подсечки (с)
 function hookWin(f,calm,o){const b0=f.leg?.75:f.w[1]>2.5?.85:1;if(!o)return b0+(calm?.5:0);
-  const bt=o.way==='led'?1.2:(BITE_T[f.bite]||BITE_T.dip).w*(f.leg?.9:1);return (o.easy?Math.max(b0,bt):bt)+(calm?.5:0)+.03*((o.lv||1)-1);} // A2: окно по виду поклёвки и навыку
+  const bt=o.way==='led'?(o.otv?1:1.2)/*RB:NORTH: отвес*/:(BITE_T[f.bite]||BITE_T.dip).w*(f.leg?.9:1);return (o.easy?Math.max(b0,bt):bt)+(calm?.5:0)+.03*((o.lv||1)-1);} // A2: окно по виду поклёвки и навыку
 
 /* вываживание. Мелочь (сила рыбы меньше трети прочности снасти) идёт к берегу сама — палец только ускоряет.
    Крупная: палец держит — подматываем (натяжение растёт), отпустил — леска свободнее, но рыба уходит дальше.
@@ -567,7 +501,7 @@ function botFight(f,w,d,tk,calm,skill,R,easy,o){const ft=a2Fight(fightNew(f,w,d,
     res=fightStep(ft,f,hold,dt,R,tk);}
   return {res,t:ft.t,small:ft.small};}
 function botCast(pi,bait,tod,wx,tk,calm,skill,R,dist,o){
-  const maxd=TACKLE.rod.dist[tk.rod]*(o&&o.way==='led'?LED_D:1),d=dist!=null?dist:maxd*(.55+.45*R()),df=d/maxd;let wt=waitTime(tod,wx,R);if(o){const raw=wt*waitK(pi,bait,tod,wx,df,o);if(raw>A2_WMAX&&R()>A2_WMAX/raw)return {kind:'quiet',t:3+A2_WMAX};wt=Math.min(A2_WMAX,raw);}let t=1+wt;
+  const maxd=TACKLE.rod.dist[tk.rod]*(o&&o.way==='led'&&!o.otv?LED_D:1),d=dist!=null?dist:maxd*(.55+.45*R()),df=d/maxd;let wt=waitTime(tod,wx,R);if(o){const raw=wt*waitK(pi,bait,tod,wx,df,o);if(raw>A2_WMAX&&R()>A2_WMAX/raw)return {kind:'quiet',t:3+A2_WMAX};wt=Math.min(A2_WMAX,raw);}let t=1+wt;
   const pk=pickFish(pi,bait,tod,wx,df,R,o);if(!pk)return {kind:'none',t:t+6};
   if(pk.junk)return {kind:'junk',junk:pk.junk,t:t+3};
   const f=pk.f,react=.55-.25*skill+(R()-.5)*.25;t+=1.5;
@@ -580,45 +514,21 @@ function botCast(pi,bait,tod,wx,tk,calm,skill,R,dist,o){
 const ZONES={open:{ic:'💧',n:'Чистая вода',en:'Open water'},weed:{ic:'🌿',n:'Трава',en:'Weeds'},pit:{ic:'🕳',n:'Яма',en:'Deep hole'},snag:{ic:'🌳',n:'Коряжник',en:'Snags'},edge:{ic:'〰',n:'Бровка',en:'Drop-off'}};
 const ZK=['weed','pit','snag','edge'];
 // точки на воде у каждого места: x — доля ширины экрана, d — метры от берега (дальние — только с удочкой подлиннее)
-const PZ=[
-  [{k:'weed',x:.42,d:5},{k:'snag',x:.82,d:7},{k:'pit',x:.6,d:12}],
-  [{k:'weed',x:.4,d:5},{k:'edge',x:.8,d:9},{k:'snag',x:.4,d:13},{k:'pit',x:.72,d:16}],
-  [{k:'weed',x:.4,d:6},{k:'snag',x:.82,d:9},{k:'edge',x:.5,d:15},{k:'pit',x:.74,d:21}],
-  [{k:'weed',x:.4,d:6},{k:'snag',x:.82,d:10},{k:'edge',x:.42,d:15},{k:'pit',x:.72,d:22}],
-  [{k:'weed',x:.4,d:6},{k:'snag',x:.82,d:11},{k:'edge',x:.42,d:15},{k:'pit',x:.72,d:23}],
-  [{k:'snag',x:.42,d:7},{k:'edge',x:.8,d:12},{k:'weed',x:.46,d:16},{k:'pit',x:.7,d:24}],
-  [{k:'weed',x:.4,d:6},{k:'snag',x:.82,d:10},{k:'edge',x:.46,d:15},{k:'pit',x:.74,d:22}],
-  [{k:'snag',x:.42,d:7},{k:'weed',x:.82,d:9},{k:'edge',x:.44,d:14},{k:'pit',x:.72,d:22}]];
+const PZ=PLACES.map(p=>p.pz); // RB:NORTH
 const DEPTHS=['top','mid','bot'],DEP_N={top:['Поверху','Near the top','⬆'],mid:['В полводы','Mid-water','↔'],bot:['У дна','On the bottom','⬇']};
-const LED_AT=[1,1,1,1,0,0,1,0],LED_D=1.3,LED_P=400; // донка: где есть, во сколько раз дальше заброс, цена
+const LED_AT=PLACES.map(p=>p.led),/*RB:NORTH*/LED_D=1.3,LED_P=400; // донка: где есть, во сколько раз дальше заброс, цена
 function WAYS(pi){return LED_AT[pi]?['float','led']:['float'];}
 /* вид поклёвки: n — сколько «проб» (от, до), g — пауза между ними (с), w — окно подсечки (с). Рисунок — A1 (лупа), здесь — логика */
 const BITE_T={shake:{n:[2,4],g:[.25,.5],w:.8},dip:{n:[0,2],g:[.6,1.5],w:1},lift:{n:[0,1],g:[.6,1.2],w:.75},lay:{n:[0,1],g:[.8,1.6],w:1.3},drag:{n:[0,2],g:[.6,1.4],w:1.4},dive:{n:[0,0],g:[.5,1],w:.6},dance:{n:[3,5],g:[.3,.6],w:.8}};
 /* привычки рыб: «точки (трава яма коряжник бровка) · глубина (поверху полводы дно) · месяцы янв…дек · время (утро день вечер ночь) ·
    погода (ясно облачно дождь ветер туман) · давление (растёт высокое падает низкое) · поклёвка»
    точки/глубина/время/погода/давление: 0 ×.1 · 1 ×.3 · 2 ×.6 · 3 ×1 · 4 ×1.6 · 5 ×2.4 · 6 ×3.2; месяцы: 1 ×.03 · 2 ×.06 · 3 ×.15 · 4 ×.35 · 5 ×.65 · 6 ×1 · 7 ×1.35 · 8 ×1.75 · 9 ×2.2 (0 не используется) */
-const A2F={
-  rotan:'5241 234 334566776543 3333 33333 3333 dip',karas:'5121 135 334578875433 4241 43233 4422 lift',karasz:'5121 135 334578875433 4241 53233 4422 lift',
-  plotva:'4224 253 556765556765 4332 34343 4332 dip',okun:'4245 253 556556677765 3431 34433 3352 dip',lin:'6131 115 223468875322 5231 24433 3422 lift',
-  karp:'3423 135 445568886554 4143 24334 4322 drag',peskar:'1125 115 445666666544 3431 43333 3333 shake',ukleyka:'2115 521 334578886433 3531 53123 5421 shake',
-  ersh:'1532 115 776554445677 3334 23343 3342 dance',golavl:'2245 442 445678876654 4441 52232 5321 dive',yaz:'3243 343 446765567654 4342 34343 4332 dip',
-  shuka:'5142 252 553376447986 4131 04423 2152 drag',nalim:'1542 015 986432223589 1135 13434 2234 dip',gustera:'2534 135 445677666544 3343 33333 4422 lay',
-  lesh:'1524 015 445667777644 2134 24353 3423 lay',chehon:'1115 531 334687667643 4431 53123 5421 dive',vobla:'3224 243 447975445654 4332 43233 4422 dip',
-  sudak:'1465 135 665466667887 1043 14245 2152 drag',zhereh:'1126 541 223467887532 5420 42152 4422 dive',sazan:'4432 125 334568886543 4532 52142 4432 drag',
-  som:'2532 024 333457887533 1035 13425 2252 drag',ryapushka:'1324 352 666555566787 4331 34433 3433 shake',snetok:'2324 352 777864445667 3432 34433 3433 shake',
-  koryushka:'1325 352 667994334566 4341 34433 4332 dance',sig:'1524 135 887654456788 4232 24334 3433 lift',paliya:'1422 135 333456778864 3433 23334 3343 dip',
-  losos:'1235 352 223457887543 5241 24524 2244 dive',omul:'1424 253 666555567876 4243 34433 3433 dance',harius:'1236 541 444577678754 4441 52232 4321 dive',
-  lenok:'1255 343 334577678643 4242 24433 3342 dip',taimen:'1434 134 444445556754 3052 14423 2252 dive',amur:'6221 252 222358997422 4243 52233 4422 lift',
-  tolstolob:'2532 252 222357997422 3432 43333 4422 lay',zmeegolov:'6141 342 222368986322 4441 53222 4332 drag',verhoglyad:'2215 531 223467887532 4531 42152 4422 dive',
-  kaluga:'2422 124 334575457753 2035 13324 2253 drag',skripun:'2442 115 334578876433 2235 23433 3333 dance',kizhuch:'1235 442 222234589842 5242 24524 2244 dive',
-  nerka:'1325 343 222248985322 4341 34433 3333 dip',chavycha:'1424 134 222379853222 4243 24423 2343 drag',golets:'2235 144 666666677766 4342 34433 3333 dip',
-  mikizha:'1246 442 555666667765 5241 34423 3342 dive',kundzha:'1434 144 333576545653 4342 24433 3342 drag'};
+const A2F={};for(const id in FISH)if(FISH[id].hab)A2F[id]=FISH[id].hab; // RB:NORTH: привычки — поле hab в реестре js/places.js
 // поправка вида на месте (с A2): на Ладоге судак только на юге, на Камчатке кунджа реже и т. п.
-const PFX=[{},{shuka:.6},{},{},{sudak:.35,sig:1.8},{},{kaluga:.5},{kundzha:.45}];
+const PFX=PLACES.map(p=>p.pfx||{}); // RB:NORTH
 const A2SC=[.1,.3,.6,1,1.6,2.4,3.2],A2MS=[.03,.03,.06,.15,.35,.65,1,1.35,1.75,2.2];
 for(const id in A2F){const p=A2F[id].split(' '),f=FISH[id],dg=(s,i)=>A2SC[+s[i]],o4=(s,ks)=>{const o={};ks.forEach((k,i)=>o[k]=dg(s,i));return o;};
   f.a2={z:o4(p[0],ZK),d:o4(p[1],DEPTHS),m:p[2].split('').map(c=>A2MS[+c]),t:o4(p[3],['morning','day','evening','night']),w:o4(p[4],['sun','cloud','rain','wind','fog']),p:o4(p[5],['rise','high','fall','low'])};f.bite=p[6];}
-{const LB={boris:'drag',marfa:'drag',kuzmich:'drag',general:'lay',varyag:'dive',batyushka:'dive',tsaritsa:'drag',korol:'drag'};for(const k in LB)LEG[k].bite=LB[k];}
 // давление: волна по дням (как wxOf — одинаковая у всех, по дате и месту): растёт / высокое / падает / низкое
 const PXS=['rise','high','fall','low'],PXW={fall:.9,low:1.12,rise:.95,high:1.03};
 function pxVal(dn,pi){const a=pi*1.7+.3;return Math.sin(dn*2*Math.PI/7.3+a)+.6*Math.sin(dn*2*Math.PI/3.1+a*2.3);}
@@ -634,10 +544,10 @@ function a2Mul(f,o,tod,wx){const a=f.a2;if(!a)return 1;let x=a.t[tod]*a.w[wx];co
   return x;}
 // ожидание поклёвки: чем активнее рыба на эту наживку здесь и сейчас (точка, глубина, сезон, время, погода, давление) — тем чаще клюёт;
 // «мёртвый» час — до ×2,2 дольше. PMW[место][месяц] — выравнивание дохода по месяцам (подбирает модель: CHK=mono tools/check.sh calib)
-const PMW=[[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1]];
+const PMW=PLACES.map(p=>p.pmw||[1,1,1,1,1,1,1,1,1,1,1,1]); // RB:NORTH: числа — pmw в записи места
 const A2_WMAX=18; // ждать не дольше 18 с: «мёртвый час» — после 18 с тишины поплавок вытаскиваем, заброс не сгорает (на 9-й секунде Петрович подскажет, где берёт)
 function waitK(pi,bait,tod,wx,df,o){if(!o)return 1;let a=0,b=0;for(const x of fishW(pi,bait,tod,wx,df,o))a+=x;for(const x of fishW(pi,bait,tod,wx,df,null))b+=x;
-  return (b>0&&a>0?clamp(b/a,.75,6):6)*(o.mo!=null&&PMW[pi]?PMW[pi][o.mo]:1)*(o.way==='led'?1.15:1);}
+  return (b>0&&a>0?clamp(b/a,.75,6):6)*(o.mo!=null&&PMW[pi]?PMW[pi][o.mo]:1)*(o.way==='led'?(o.otv?OTV_W:1.15):1);}
 // размер: в яме и коряжнике, на донке — крупнее, в траве — мельче (поправка к степени в pickFish)
 function szK(o){return ({pit:-.2,snag:-.15,edge:-.05,weed:.1}[o.z]||0)+(o.way==="led"?-.15:0);}
 // навык рыбака: ступени 1…10 по опыту (поймал мелочь +1, крупную +2, трофей/легенду +3), отдельно поплавок и донка
@@ -658,7 +568,7 @@ function pbFacts(f,c){const b=a2Best(f);if(!b)return 1;let x=1;if(b.z.indexOf(c.
 function bitN(x){let n=0;for(const b of PB_BITS)if(x&b)n++;return n;}
 // звёзды места 0…5: доля известных фактов о рыбах места (pb — S.pb: «место.вид» → биты)
 function pbStars(pb,pi){const P=PLACES[pi];let n=0;for(const id of P.fish)n+=bitN((pb&&pb[pi+'.'+id])||0);return Math.floor(5*n/(P.fish.length*PB_BITS.length)+1e-9);}
-const PB_R=[30,50,80,110,140,170,200,240]; // монет за каждую новую звезду места
+const PB_R=PLACES.map(p=>p.pbr); // RB:NORTH // монет за каждую новую звезду места
 // заказы соседей: 2 в день, от даты и открытых мест (кто, какая рыба — в сезоне, где, сколько штук, награда сверху цены)
 const ORD_WHO=7;
 function ordGen(dn,open,mo){const R=rng(dn*7919+31),ps=[];for(let i=0;i<PLACES.length;i++)if(open[i])ps.push(i);const out=[],used={};
@@ -679,16 +589,17 @@ const STREAK_A3=[10,10,15,15,20,25,40]; // как STREAK подарка дня (
 // Посылка — одна за каждый календарный день срока; не забранные копятся и остаются после конца срока
 const CLUB_D=30;
 function a3Dn(t){const d=new Date(t);return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5);}
-function clubCalc(b,now){const ts=[];for(const k in b||{}){const v=+b[k];if(v>0)ts.push(v);}ts.sort((a,c)=>a-c);
-  let end=0,av=0;for(const t of ts){const st=Math.max(t,end);end=st+CLUB_D*864e5;if(now>=st)av+=Math.min(CLUB_D,a3Dn(Math.min(now,end-1))-a3Dn(st)+1);}
+// RB:SHOP (08.10): ключ покупки на «w» — «Клуб на 7 дней» (club7), остальные — 30 дней
+function clubCalc(b,now){const ts=[];for(const k in b||{}){const v=+b[k];if(v>0)ts.push([v,String(k).charAt(0)==='w'?7:CLUB_D]);}ts.sort((a,c)=>a[0]-c[0]);
+  let end=0,av=0;for(const q of ts){const t=q[0],D=q[1],st=Math.max(t,end);end=st+D*864e5;if(now>=st)av+=Math.min(D,a3Dn(Math.min(now,end-1))-a3Dn(st)+1);}
   return {n:ts.length,end,on:now<end,left:now<end?Math.ceil((end-now)/864e5):0,av};}
 // сезон по настоящему месяцу (0 — январь). Событие «Золотая осень» — октябрь и ноябрь: осенний улов (виды — общие с A2, сезонность клёва у A2)
 // boost1: жерех заменён ряпушкой — у A2 жерех в ноябре почти не клюёт (×0,15), ряпушка осенью в сезоне (Селигер: окт ×1,75, ноя ×1,35)
 const A3EV={aut:{mo:[9,10],set:['okun','shuka','nalim','golavl','sudak','ryapushka','sig','harius']}};
 function a3EvOf(mo){for(const k in A3EV)if(A3EV[k].mo.indexOf(mo)>=0)return k;return '';}
 // план рыбака на месяц: 10 целей; tp — дальнее место в начале месяца, ev — идёт событие
-function a3MonthGoals(tp,ev){return [{ty:'dd',n:8},{ty:'f',n:[40,50,60,70,80,80,80,80][tp]},{ty:'tr',n:tp<1?2:3},{ty:'dt',n:8},{ty:'tn',n:2},
-  {ty:'mo',n:4},{ty:'ni',n:3},{ty:'bg',n:4,kg:[1,1,2,2,3,3,4,4][tp]},ev?{ty:'sea',n:6}:{ty:'bk',n:3},{ty:'ml',n:8}];}
+function a3MonthGoals(tp,ev){return [{ty:'dd',n:8},{ty:'f',n:PLACES[tp].mf}/*RB:NORTH*/,{ty:'tr',n:tp<1?2:3},{ty:'dt',n:8},{ty:'tn',n:2},
+  {ty:'mo',n:4},{ty:'ni',n:3},{ty:'bg',n:4,kg:PLACES[tp].mbg},ev?{ty:'sea',n:6}:{ty:'bk',n:3},{ty:'ml',n:8}];}
 const A3_MP_ALL=8; // целей плана для вещи месяца
 /*/A3*/
 /*/LOGIC*/
@@ -707,10 +618,10 @@ function a2WaitK(){return G&&G.o&&G.fl?waitK(G.pi,G.bait,G.cond.tod,G.cond.wx,G.
 function a2Lv(way){return lvOf((S.xp&&S.xp[way==='led'?'d':'f'])||0);}
 function a2Led(){return !!(G&&G.o&&G.o.way==='led');}
 function a2O(){return G&&G.o?Object.assign({},G.o,{z:G.fl&&G.fl.z||'open'}):undefined;}
-function a2DK(){return a2Led()?LED_D:1;}
+function a2DK(){return a2Led()&&!G.o.otv?LED_D:1;}
 // начало рыбалки: условия A2 (в турнире — нет)
-function a2Start(){if(!G)return;if(G.tourn){G.o=null;return;}const pi=G.pi,way=S.way==='led'&&S.own.led&&LED_AT[pi]?'led':'float';
-  G.o={dp:S.dp||'mid',way,mo:moNow(),px:pxOf(dayNum(),pi),lv:a2Lv(way),easy:pi<STRICT_FROM};
+function a2Start(){if(!G)return;if(G.tourn){G.o=null;return;}const pi=G.pi,way=S.way==='led'&&wayOwn(pi)?'led':'float'; /*RB:NORTH: на море второй способ — отвес*/
+  G.o={dp:S.dp||'mid',way,mo:moNow(),px:pxOf(dayNum(),pi),lv:a2Lv(way),easy:pi<STRICT_FROM,otv:PLACES[pi].boat?1:0};
   if(!S.tips.fbZ&&(S.sessions||0)>=1&&PZ[pi]){S.tips.fbZ=1;S.tips.a2z=1; /* boost1: не в первой рыбалке; FB1: «кидай куда хочешь», точки — подсказка */save();later(()=>say('mit',L('Кидай куда хочешь! Только у травы берёт одна рыба, на яме — другая, у коряг — хищник. Где что — кнопка «🔍 Что под водой?».','Cast anywhere you like! But one fish bites by the weeds, another in the hole, predators by the snags. Tap «🔍 What\'s underwater?» to see.'),7500),S.tips.intro?900:7200);}}
 function a2HudTxt(){if(!G||!G.o)return '';return (G.o.way==='led'?'🔔 '+L('донка','ledger'):DEP_N[G.o.dp][2]+' '+L(DEP_N[G.o.dp][0],DEP_N[G.o.dp][1]).toLowerCase())+' ▾';}
 // активность клёва на месте (для значков 🐟): лучшая наживка, чистая вода, текущий месяц и давление; 1 — как раньше
@@ -770,14 +681,14 @@ function a2Quiet(){G.quiet=0;G.phase='aim';G.used--;S.casts--;const b=BAIT[G.bai
 function a2Tick(dt){if(!G||!G.fl)return;const f=G.fl;f.shake=Math.max(0,(f.shake||0)-dt*2.5);if(G.phase!=='bite'&&G.phase!=='nibble')f.lift=Math.max(0,(f.lift||0)-dt*1.5);
   if(G.o&&G.phase==='wait'&&!G.pk&&G.t>9&&!G.a2q&&!G.tourn){G.a2q=1;const tp=a2TipFor(G.pi,G.cond.tod,G.cond.wx);say('petr',L('Тишина… ','Quiet… ')+tp.txt,6000);}}
 /* ---- окно «Наживка»: способ (поплавок/донка) и глубина ---- */
-function a2BaitHtml(){if(!G||!G.o)return '';const pi=G.pi,led=G.o.way==='led',can=LED_AT[pi],own=!!S.own.led;
+function a2BaitHtml(){if(!G||!G.o)return '';const pi=G.pi,led=G.o.way==='led',can=LED_AT[pi],own=wayOwn(pi);/*RB:NORTH*/
   const wb=(k,ic,t,on,dis,sub)=>`<button class="btn a2w${on?' green':''}" data-a2way="${k}"${dis?' disabled':''}>${ic} ${t}${sub?'<small>'+sub+'</small>':''}</button>`;
   let h=`<div class="a2sec">${L('Чем ловим','Method')}</div><div class="a2r">${wb('float','🎣',L('Поплавок','Float'),!led)}${wb('led','🔔',L('Донка','Ledger'),led,!can||!own,!own?L('купить в «Снасти»','in the shop'):!can?L('здесь не ставят','not here'):L('дальше, у дна','far, on the bottom'))}</div>`;
   if(!led)h+=`<div class="a2sec">${L('Глубина поплавка','Float depth')}</div><div class="a2r">${DEPTHS.map(d=>`<button class="btn a2d${G.o.dp===d?' green':''}" data-a2dp="${d}">${DEP_N[d][2]} ${L(DEP_N[d][0],DEP_N[d][1])}</button>`).join('')}</div>`;
   else h+=`<p class="about a2n">${L('Донка всегда лежит на дне: лещ, сом, налим, сазан, карп. Блесну на донку не ставят.','The ledger lies on the bottom. No spoon on a ledger.')}</p>`;
   return h+`<div class="a2sec">${L('Наживка','Bait')}</div>`;}
 function a2BaitBind(){const mc=$('mcard');mc.querySelectorAll('[data-a2dp]').forEach(b=>b.onclick=()=>{S.dp=G.o.dp=b.dataset.a2dp;save();SND.tap();updHud();openBait();});
-  mc.querySelectorAll('[data-a2way]').forEach(b=>b.onclick=()=>{const w=b.dataset.a2way;if(w==='led'&&!(S.own.led&&LED_AT[G.pi]))return;S.way=G.o.way=w;G.o.lv=a2Lv(w);if(w==='led'&&G.bait==='spoon'){G.bait=S.sel='worm';}save();SND.tap();updHud();openBait();});
+  mc.querySelectorAll('[data-a2way]').forEach(b=>b.onclick=()=>{const w=b.dataset.a2way;if(w==='led'&&!wayOwn(G.pi))return;/*RB:NORTH*/S.way=G.o.way=w;G.o.lv=a2Lv(w);if(w==='led'&&G.bait==='spoon'){G.bait=S.sel='worm';}save();SND.tap();updHud();openBait();});
   if(a2Led())mc.querySelectorAll('[data-b="spoon"]').forEach(b=>b.disabled=true);}
 /* ---- улов: заказ, Книга места, навык. Возвращает монеты сверху (они уже в c — карточка и G.earned их видят) ---- */
 function a2OnCatch(f,w,tags,bx){if(!G||G.tourn||!G.o||f.leg&&!FISH[f.id])return a2Xp(f,w,tags);let add=0;const pi=G.pi;
@@ -836,7 +747,7 @@ const BITE_N={shake:['дрожит мелко','tiny shakes'],dip:['притап
 function a2SkillHtml(){if(!isObj(S.xp))S.xp={};const row=(k,ic,t)=>{const xp=S.xp[k]||0,l=lvOf(xp),nx=XPL[l];return `<div class="ach ${l>1?'done':''}"><span class="ai">${ic}</span><span><b>${t}: ${L('ступень','level')} ${l}/10</b><small>${nx!=null?L('до следующей','next')+': '+(nx-xp)+' '+L('опыта','xp'):L('высшая ступень!','top level!')} · ${L('подсечка','strike')} +${((l-1)*.03).toFixed(2).replace('.',LANG==='en'?'.':',')} ${L('с','s')}, ${L('леска терпит','line holds')} +${(l-1)*4}%${l>=3?' · '+L('чутьё: узнаёшь рыбу по поклёвке','you can tell the fish by its bite'):''}</small></span></div>`;};
   return `<div class="a2sec">🎣 ${L('Навык рыбака (растёт от улова; в турнире не действует)','Angler skill (grows with every catch; off in contests)')}</div>${row('f','🎣',L('Поплавок','Float'))}${S.own.led?row('d','🔔',L('Донка','Ledger')):''}`;}
 /* ---- магазин: донка ---- */
-function a2ShopHtml(){const own=!!S.own.led,places=PLACES.filter((p,i)=>LED_AT[i]).map(p=>LANG==='en'?nm(p):P_SH[PLACES.indexOf(p)]);
+function a2ShopHtml(){const own=!!S.own.led,places=PLACES.filter((p,i)=>LED_AT[i]&&!p.boat/*RB:NORTH*/).map(p=>LANG==='en'?nm(p):P_SH[PLACES.indexOf(p)]);
   return `<div class="sect">${L('Второй способ ловли','A second method')}</div><div class="ti lktk lkdk"><span class="ic lkart">${window.LOOK?LOOK.art('donka'):'🔔'}</span><div class="tx"><b>${L('Донка с колокольчиком','Ledger rod with a bell')}</b></div>${own?'<span class="have">✓</span>':`<button class="btn ${S.coins>=LED_P?'green':''} buy" data-a2led="1">${coinsTxt(LED_P)}</button>`}<small class="ds">${L('Забрасывает на треть дальше, лежит на дне. Клюёт — звенит колокольчик. Лещ, сом, налим, сазан, карп. Где: ','Casts a third further, lies on the bottom, a bell rings on a bite. Where: ')}${places.join(', ')}. ${L('Выбирается в окне наживки.','Choose it in the bait window.')}</small></div>`;}
 function a2ShopBind(list){list.querySelectorAll('[data-a2led]').forEach(b=>b.onclick=()=>{if(S.own.led)return;if(S.coins<LED_P){notEnough(LED_P);return;}S.coins-=LED_P;S.own.led=1;S.way='led';STAT.ev('spend',{k:'ledger',c:LED_P});save();openShop('t');
   newItem(L('ДОНКА!','LEDGER!'),L('Донка с колокольчиком','Ledger rod'),window.LOOK?lkPic('donka'):'🔔',L('В окне наживки выбери «Донка»: закинешь дальше, на самое дно. Зазвенел колокольчик — жми!','Pick «Ledger» in the bait window. When the bell rings — tap!'),LANG==='en'?null:['Петрович','Донка — дело стариковское: сиди, чай пей, колокольчик слушай.']);});}
@@ -1140,7 +1051,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v3-100813',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v6-100822',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -1565,7 +1476,7 @@ const SND={
   tick(){tone('square',1400,1300,.025,.012);}
 };
 let touched=false;['pointerdown','keydown'].forEach(t=>document.addEventListener(t,()=>{touched=true;},{capture:true,passive:true}));
-function buzz(ms){try{if(touched&&S.vib!==false&&navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
+function buzz(ms){try{if(touched&&S.vib!==false&&navigator.vibrate&&!(navigator.userActivation&&!navigator.userActivation.hasBeenActive))navigator.vibrate(ms);}catch(e){}} // RB:MGPC без «Blocked call to navigator.vibrate» до первого касания
 /* праздник: конфетти, звёзды, монеты поверх всего (холст #fx). В спокойном режиме и на паузе — ничего. Цикл кадров живёт, пока есть частицы */
 const FX={ps:[],raf:0,last:0,
   burst(x,y,n,kind,pow){if(typeof calm==='function'&&calm()||paused||window.__noFx)return;const c=document.getElementById('fx'),r=c.parentNode.getBoundingClientRect(),dp=typeof lowDp==='function'?lowDp():Math.min(2,window.devicePixelRatio||1);if(typeof LOW!=='undefined'&&LOW)n=Math.ceil(n/3);
@@ -1776,8 +1687,8 @@ function updCoins(){STAT.bal(+S.coins||0);try{payScale();}catch(e){}for(const id
 function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
 // stage1 (аудит release-f №2–3): ценность покупок и ролика «+💰» растёт с прогрессом — ступень = самое дальнее открытое место.
 // TRIP_C — средний заработок за рыбалку на месте (модель CHK=econ, снасти 4). Сундук за голос выгоднее кошелька, ящик наживки — тоже (наживка + монеты)
-const TRIP_C=[30,85,190,230,265,317,373,434],WALLET=[400,400,800,1000,1200,1500,1800,2000],CHEST=[1300,1300,3000,3600,4200,5200,6200,7000],BAITBOX=[40,40,40,50,60,70,85,100];
-function topPlace(){let t=0;PLACES.forEach((p,i)=>{if(S.open[i])t=i;});return t;}
+const TRIP_C=PLACES.map(p=>p.trip),WALLET=PLACES.map(p=>p.wal),CHEST=PLACES.map(p=>p.chest),BAITBOX=PLACES.map(p=>p.bbox); // RB:NORTH: числа — в записи места js/places.js
+function topPlace(){return topOpen(S.open);} // RB:NORTH: дальнее по порядку открытия PLACE_ORD
 function payScale(){const t=topPlace(),w=WALLET[t],c=CHEST[t],b=BAITBOX[t],s=PAY_ITEMS.coins_s,l=PAY_ITEMS.coins_l,x=PAY_ITEMS.bait_box,bc=Math.round(w/2);
   s.n=w;s.name='Кошелёк рыбака: '+w+' 💰';s.en='Wallet: '+w+' coins';s.done='+'+w+' 💰 — спасибо!';
   l.n=c;l.name='Сундук рыбака: '+c+' 💰';l.en='Chest: '+c+' coins';l.done='+'+c+' 💰 — спасибо!';
@@ -1945,11 +1856,14 @@ function payStubVK(){const K='paytestvk',rd=()=>{try{return JSON.parse(localStor
 // STAT: покупки за деньги — обёртка снаружи общего модуля PAY (сам модуль не трогаем): попытка и итог с id товара
 // STAT v1.2: buy {i, r: try|ok|cancel|fail, v: цена в голосах из PAY_ITEMS (= hobby-pay/catalog.json)}; fail — ошибка моста/SDK, cancel — отказ игрока (раньше — 'no')
 {const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;
-  const it=PAY_ITEMS[id],v=it&&it.vk||0;let why='';STAT.ev('buy',{i:id,r:'try',v:v});
-  const cls=e=>{const d=e&&e.error_data||{},m=String(d.error_reason||d.error_msg||e&&e.message||e||'');return +d.error_code===4||/cancel|closed?|denied|abort|user/i.test(m)?'cancel':'fail';};
-  const wrap=(o,k,ok)=>{if(!o||typeof o[k]!=='function')return null;const f=o[k];o[k]=function(){return Promise.resolve(f.apply(o,arguments)).then(r=>{if(ok&&!ok(r))why='cancel';return r;},e=>{why=cls(e);throw e;});};return ()=>{o[k]=f;};};
+  const it=PAY_ITEMS[id],v=it&&it.vk||0;let why='',ec=null,em='';/*MERGE STAT: p — место покупки, n — номер попытки товара за сеанс (js/statx.js)*/const sx=o=>{try{if(window.statBuyX)window.statBuyX(o);}catch(e){}return o;};STAT.ev('buy',sx({i:id,r:'try',v:v}));
+  // RB:SHOP (08.10): при отмене/ошибке — код и текст ошибки площадки (c — error_code VK, m — error_reason/описание/тип, ≤40 знаков; личных данных в них нет)
+  const cls=e=>{const d=e&&e.error_data||{},m=String(d.error_reason||d.error_msg||e&&e.message||e||'');
+    ec=d.error_code!=null?+d.error_code:e&&e.code!=null&&isFinite(+e.code)?+e.code:null;em=String(d.error_reason||d.error_description||d.error_msg||e&&e.error_type||e&&e.message||(typeof e==='string'?e:'')).slice(0,40);
+    return +d.error_code===4||/cancel|closed?|denied|abort|user/i.test(m)?'cancel':'fail';};
+  const wrap=(o,k,ok)=>{if(!o||typeof o[k]!=='function')return null;const f=o[k];o[k]=function(){return Promise.resolve(f.apply(o,arguments)).then(r=>{if(ok&&!ok(r)){why='cancel';em='nosuccess';}return r;},e=>{why=cls(e);throw e;});};return ()=>{o[k]=f;};};
   const un=[wrap(PAY.v,'order',r=>r&&r.success),wrap(PAY.p,'purchase')];
-  return Promise.resolve(b0.call(PAY,id)).then(()=>{un.forEach(u=>u&&u());STAT.ev('buy',{i:id,r:payOk===id?'ok':why||'cancel',v:v});});};}
+  return Promise.resolve(b0.call(PAY,id)).then(()=>{un.forEach(u=>u&&u());const ok=payOk===id,o={i:id,r:ok?'ok':why||'cancel',v:v};if(!ok){if(ec!=null&&isFinite(ec))o.c=ec;if(em)o.m=em;}STAT.ev('buy',sx(o));});};}
 // Яндекс: таблицы week (неделя·100000 + граммы) и day — «Рыбалка дня» ((день−20000)·100000 + граммы: влезает в int32 до 2100 г.)
 async function lbEntry(n){try{if(ysdk.leaderboards&&ysdk.leaderboards.getPlayerEntry)return await ysdk.leaderboards.getPlayerEntry(n);
   const lb=await ysdk.getLeaderboards();return await lb.getLeaderboardPlayerEntry(n);}catch(e){return null;}}
@@ -2046,7 +1960,7 @@ function rgba(a,al){const A=hx(a);return 'rgba('+A[0]+','+A[1]+','+A[2]+','+al+'
 const SKY={morning:['#86b6e6','#ffd0a3'],day:['#4d93d9','#cde9f7'],evening:['#4b4f8f','#ff9e5e'],night:['#0a1330','#2a3a66']};
 const LIGHT={morning:.93,day:1,evening:.74,night:.36};
 const WXG={sun:0,cloud:.35,rain:.55,wind:.12,fog:.45},WXC={sun:'#9aa6ae',cloud:'#9aa6ae',rain:'#7a8791',wind:'#a8b4bc',fog:'#c9d0d4'};
-const WATER={dacha:'#3f8a78',birch:'#3f8488',volga:'#4a86a0',lake:'#357a94',rocks:'#346a86',baikal:'#1f86b4',amur:'#5a8474',kamch:'#2f6f8c'};
+const WATER={};PLACES.forEach(p=>{WATER[p.look]=p.water;}); // RB:NORTH
 // палитра сцены: небо с учётом погоды, свет, дымка
 function pal(look,tod,wx){const sk=SKY[tod],k=WXG[wx],gc=tod==='night'?'#1c2433':WXC[wx];
   const top=mixH(sk[0],gc,k),bot=mixH(sk[1],gc,k*.9),li=LIGHT[tod]*(1-k*.25);
@@ -2056,10 +1970,10 @@ function pal(look,tod,wx){const sk=SKY[tod],k=WXG[wx],gc=tod==='night'?'#1c2433'
   return {top,bot,li,tint,far,water1:mixH(tint(w0),bot,.3),water2:shadeH(tint(w0),.62),tod,wx,look};}
 
 /* ================= рисунок рыбы (кодом): форма, окраска, узор, плавники ================= */
-const SHAPES={std:[.3,0],deep:[.46,0],deep2:[.36,0],slim:[.22,0],perch:[.34,1],perch2:[.26,1],long:[.19,0],long2:[.21,0],salmon:[.27,0],grayling:[.26,2],eel:[.16,0],eel2:[.18,0],cat:[.21,0],cat2:[.23,0],bull:[.33,0],sturgeon:[.18,0]};
+const SHAPES={std:[.3,0],deep:[.46,0],deep2:[.36,0],slim:[.22,0],perch:[.34,1],perch2:[.26,1],long:[.19,0],long2:[.21,0],salmon:[.27,0],grayling:[.26,2],eel:[.16,0],eel2:[.18,0],cat:[.21,0],cat2:[.23,0],bull:[.33,0],sturgeon:[.18,0],flat:[.5,0],cod:[.27,0]}; // RB:NORTH: flat (камбала, палтус), cod (треска, пикша, навага) — рисунок в js/places-art.js FISH_ART
 function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 // (x,y) — центр, L — длина, смотрит влево; sil — силуэт (ещё не пойман)
-function drawFish(g,lk,x,y,L,sil){const sh=lk[0],sp=SHAPES[sh]||SHAPES.std,h=sp[0]*L/2,n=x-L/2,xt=x+L*.3,xe=x+L/2,
+function drawFish(g,lk,x,y,L,sil){if(window.FISH_ART&&FISH_ART[lk[0]])return FISH_ART[lk[0]](g,lk,x,y,L,sil); /*RB:NORTH*/const sh=lk[0],sp=SHAPES[sh]||SHAPES.std,h=sp[0]*L/2,n=x-L/2,xt=x+L*.3,xe=x+L/2,
     cat=sh==='cat'||sh==='cat2',stu=sh==='sturgeon',eel=sh==='eel'||sh==='eel2',bigHead=sh==='bull'||sh==='deep2'||cat;
   const tailH=h*(eel?.7:stu?1.1:1.05),ped=h*(eel?.55:.3);
   g.save();g.lineJoin='round';
@@ -2179,6 +2093,7 @@ function paintFar(g,W,H,hz,P,R){const u=Math.min(W,H)/100,f=P.far,lit=P.tod==='n
       g.fillStyle=f('#f2f4f8');g.beginPath();g.moveTo(vx-vw*.12,vb-vh);g.lineTo(vx+vw*.12,vb-vh);g.lineTo(vx+vw*.34,vb-vh*.62);g.lineTo(vx+vw*.16,vb-vh*.7);g.lineTo(vx,vb-vh*.58);g.lineTo(vx-vw*.18,vb-vh*.7);g.lineTo(vx-vw*.32,vb-vh*.62);g.closePath();g.fill();
       g.fillStyle=rgba(mixH(P.bot,'#ffffff',.3),.55);for(let i=0;i<5;i++){g.beginPath();g.arc(vx+i*u*3,vb-vh-u*(2+i*2.3),u*(2+i*.7),0,7);g.fill();}
       mountains(g,W,hz,u*9,f('#4a5a5e'),null,R,7);treeLine(g,W,hz,u*1.5,u*2,f('#2f4f38'),R);break;}
+    default:if(window.FAR_ART&&FAR_ART[P.look])FAR_ART[P.look](g,W,H,hz,P,R,u,f,lit); // RB:NORTH: пейзажи новых мест — js/places-art.js
   }}
 // фон сцены (без анимации): небо, берег, отражение, вода. thumb — для карточки места (без ближнего берега)
 function paintBg(g,W,H,geo,pi,P,thumb){const R=rng(pi*131+7),hz=geo.hz,u=Math.min(W,H)/100;
@@ -2267,7 +2182,7 @@ function say(who,txt,ms){if(LANG==='en'||!G)return;const now=Date.now(),busy=say
 function hint(t,big){const e=$('hint');e.textContent=t||'';e.classList.toggle('big',!!big);}
 
 /* ================= старт рыбалки ================= */
-const P_SH=['Пруд','Речка','Волга','Селигер','Ладога','Байкал','Амур','Камчатка']; // короткие названия для шапки на 320 px
+const P_SH=PLACES.map(p=>p.sh); // RB:NORTH // короткие названия для шапки на 320 px
 function curTk(){return G&&G.tourn?TOURN_TK:S.tk;}
 function baitCnt(id){const b=BAIT[id];return b.free?Infinity:b.perm?(hasSpoon()?Infinity:0):(S.bait[id]||0);}
 function hasSpoon(){return !!(S.own.spoon||PAY.own('starter'));}
@@ -2425,13 +2340,13 @@ function raysCanvas(leg){const c=document.createElement('canvas');c.width=c.heig
 function nextCast(){if(!G||G.over)return;$('catch').classList.remove('on');$('catch').classList.remove('big');G.fl=null;G.pk=null;G.ft=null;G.hold=false;
   if(G.used>=G.max+G.extra){endSession();return;}
   G.phase='aim';updHud();hint(L('Коснись воды — заброс','Tap the water to cast'));
-  if(G.tipFirst){G.tipFirst=0;say('mit',L('Молодец! Пять забросов — и домой, а то жена заругает. Рыбу продаём, монеты — на снасти.',''),6000);}}
+  if(G.tipFirst){G.tipFirst=0;say('mit',G.max<5?L('Молодец! Ещё пару забросов — и домой, а то жена заругает. Рыбу продаём, монеты — на снасти.',''):L('Молодец! Пять забросов — и домой, а то жена заругает. Рыбу продаём, монеты — на снасти.',''),6000); /* RB:UX: первая рыбалка — 3 заброса */}}
 
 /* ================= конец рыбалки: звонок жены, итоги ================= */
 function more3Price(g){let s=0;(g.catch||[]).forEach(c=>{if(!c.lost)s+=c.c||0;});return Math.max(adCoins(),Math.round(3*s/Math.max(1,g.used||5)));}
 function endSession(){G.phase='done';hint('');const g=G;
   // одна рекламная просьба за концовку: «ещё 3 заброса» — через рыбалку и не когда следом межэкранная; «×2» — только если про забросы не спрашивали
-  const canExtra=!G.tourn&&!G.extra&&adOk()&&(S.sessions||0)>=2&&(S.sessions||0)%2===0&&!interSoon();if(canExtra)G.adAsked=1;
+  const canExtra=!G.tourn&&!G.extra&&adOk()&&(S.sessions||0)>=3&&(S.sessions||0)%2===0&&!interSoon(); /* RB:UX: не в первых 3 рыбалках (было >=2) */if(canExtra)G.adAsked=1;
   SND.phone();buzz([100,80,100]);
   modal(`<h2>📞 ${L('Звонит жена','Your wife is calling')}</h2><p class="quote"><b>${L('Жена','Wife')}</b>${esc(L(pick(PH.wife),'Dinner is getting cold! Come home!'))}</p>
     <div class="row">${canExtra?`<button class="btn accent noenter" id="eMore">📺 ${L('Ещё 3 заброса за рекламу','3 more casts for an ad')}</button>`:''}<button class="btn green" id="eHome">🏠 ${L('Иду-иду!','Coming!')}</button></div>`);
@@ -2465,10 +2380,10 @@ function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;if(S.s
   const legS=fish.some(c=>fishOf(c.id).leg);G.nfull=!!(bonus||legS||recS); /*ntf: окно с праздником — без вопроса про напоминания*/
   const head=fish.length?(legS?L('Легендарный улов! ✨','Legendary catch! ✨'):recS?L('Рекорд рыбалки! 🏅','Record trip! 🏅'):kg>=5?L('Богатый улов!','Great catch!'):L('Улов','Your catch')):L('Сегодня не клевало','No luck today');
   modal(`<h2 id="rWin">${head}</h2>${rows?'<table class="ctab">'+rows+'</table>':'<p>'+L('Бывает и так. Зато воздух какой!','It happens. But what fresh air!')+'</p>'}
-    <p class="coins-won">${L('Всего','Total')} ${kgTxt(kg)} · <span id="rCoins">+${coinsTxt(G.earned)}</span></p>${G.bon.length?'<p class="brk">'+[[L('улов','catch'),G.earned-G.bon.reduce((s,b)=>s+b[1],0)]].concat(G.bon).map(b=>b[0]+' '+b[1]).join(' + ')+'</p>':''}${info}
+    <p class="coins-won">${L('Всего','Total')} ${kgTxt(kg)} · <span id="rCoins">+${coinsTxt(G.earned)}</span></p>${G.bon.length?'<p class="brk">'+[[L('улов','catch'),G.earned-G.bon.reduce((s,b)=>s+b[1],0)]].concat(G.bon).map(b=>b[0]+' '+b[1]).join(' + ')+'</p>':''}${info}<div id="rSlots" class="slots">${slotsHtml(resultSlots,{g:G,fish,kg},SLOT_MAX.result)}</div>
     <div class="row">${x2?`<button class="btn accent noenter x2" id="rX2">📺 ×2 ${L('монеты за рекламу','coins for an ad')} (+${coinsTxt(G.earned)})</button>`:''}
     <div class="row2"><button class="btn" id="rMap">🗺 ${L('Карта','Map')}</button><button class="btn green" id="rAgain">🎣 ${L('Ещё раз','Again')}</button></div></div>`);
-  const g=G;$('mcard').querySelectorAll('.lkfi').forEach(e=>{try{e.appendChild(fishImg(e.dataset.f,120));}catch(er){}}); //LK: рыбы в итогах — картинками
+  const g=G;slotsBind($('rSlots'),resultSlots,{g,fish,kg}); /* RB:UX гнёзда */$('mcard').querySelectorAll('.lkfi').forEach(e=>{try{e.appendChild(fishImg(e.dataset.f,120));}catch(er){}}); //LK: рыбы в итогах — картинками
   if($('rX2')){STAT.offer('x2');$('rX2').onclick=()=>{if(g.x2||adHold('x2'))return;const bt=$('rX2');bt.disabled=true;STAT.place('x2');showRewarded(()=>{if(g.x2)return;g.x2=1;setCoins(S.coins+ern('ad',g.earned));SND.coin();toast('+'+coinsTxt(g.earned));
     if(bt.parentNode)bt.parentNode.removeChild(bt);const rc=$('rCoins');if(rc)rc.textContent='+'+coinsTxt(g.earned*2)+' (×2)';},()=>{bt.disabled=false;},
     /* поздний зачёт (adt): ×2 — всегда, один раз (тот же флаг g.x2); кнопку и сумму правим, только если итоги этой рыбалки ещё на экране */
@@ -2481,7 +2396,7 @@ function afterRes(g,where){hideModal();const go=()=>{if(where==='goal')goalGo();
 // ближайшая цель для монет: следующая ступень снасти / путёвка; когда всё куплено — украшения берега (самое дешёвое)
 function goalNext(){const o=[];
   for(const k of TK_KEYS){const l=S.tk[k];if(l<4)o.push({p:TACKLE[k].p[l+1],s:TACKLE[k].ic+' '+L(TACKLE[k].lv[l+1][0],TACKLE[k].lv[l+1][1]),go:'t',k});}
-  const np=PLACES.findIndex((p,i)=>!S.open[i]);if(np>0&&S.open[np-1])o.push({p:PLACES[np].p,s:'🎫 '+L('Путёвка: ','Trip: ')+nm(PLACES[np]),go:'p',i:np});
+  const np=nextPlace(S.open);/*RB:NORTH*/if(np>0)o.push({p:PLACES[np].p,s:'🎫 '+L('Путёвка: ','Trip: ')+nm(PLACES[np]),go:'p',i:np});
   if(!o.length)for(const d of DECOR)if(!S.dec[d.id])o.push({p:d.p,s:(d.ic||'🎣')+' '+nm(d),go:'d',k:d.id});
   if(!o.length)for(const id in S.alb){if(!S.gild[id]&&fishOf(id))o.push({p:gildPrice(id),s:'🖼 '+L('Золотая рамка: ','Golden frame: ')+nm(fishOf(id)),go:'g',k:id});
     if(mntCan(id))o.push({p:mntPrice(id),s:'🏆 '+L('Чучело: ','Mount: ')+nm(fishOf(id)),go:'m',k:id});}
@@ -2869,7 +2784,7 @@ function a1Life(g,t){const A=a1S();if(A.low)return;const u=GEO.u;
 /* ---------- 4) фото трофея: кадр рисуется заново из параметров (S.ph хранит только {id,w,pi,tod,wx,d,k}), альбом «📷 Фото», «В историю» (только VK) ---------- */
 const PH_MAX=24,A1_MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'],A1_MON_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function a1PhDate(d){const t=new Date(d*864e5),m=t.getUTCMonth(),dd=t.getUTCDate(),y=t.getUTCFullYear();return LANG==='en'?A1_MON_EN[m]+' '+dd+', '+y:dd+' '+A1_MON[m]+' '+y;}
-const A1_PK={leg:['ЛЕГЕНДА','LEGEND'],tr:['ТРОФЕЙ','TROPHY'],rec:['РЕКОРД','RECORD'],new:['НОВАЯ РЫБА','NEW FISH']};
+const A1_PK={rb:['КРАСНАЯ КНИГА','RED BOOK']/*RB:NORTH для MGC*/,leg:['ЛЕГЕНДА','LEGEND'],tr:['ТРОФЕЙ','TROPHY'],rec:['РЕКОРД','RECORD'],new:['НОВАЯ РЫБА','NEW FISH']};
 // кадр 4:5: сверху снимок места (тот же пейзаж, время и погода), Петрович с рыбой, кот смотрит; снизу поле «полароида» с подписью. Легенда — золотая рамка
 function a1PhotoDraw(c,p){const W=c.width,H=c.height,g=c.getContext('2d'),f=fishOf(p.id);if(!f)return c;const leg=!!f.leg,m=Math.round(W*.045),pw=W-2*m,ph=pw;
   if(leg){const gg=g.createLinearGradient(0,0,W,H);gg.addColorStop(0,'#f7df8c');gg.addColorStop(.5,'#d9a531');gg.addColorStop(1,'#f3d37a');g.fillStyle=gg;}else g.fillStyle='#fbf8f0';g.fillRect(0,0,W,H);
@@ -3121,15 +3036,26 @@ function updDots(){const d=dailyTask();$('btnDaily').innerHTML=L('📅 Зада�
   const want=[['btnStreak',!streakState().claimed&&(S.caught||0)>=1],['btnAlb',anySetReady()],['btnShop',TK_KEYS.every(k=>!S.tk[k])&&TK_KEYS.some(k=>S.coins>=TACKLE[k].p[1])]];let n=0;
   for(const id of ['btnDaily','btnWeek'])setDot(id,false);
   for(const w of want){const on=w[1]&&n<2;if(on)n++;setDot(w[0],on);}}
+// RB:UX — ГНЁЗДА. Другие потоки кладут сюда свои плашки/кнопки, UX рисует их на главном экране (mapSlots), в итогах рыбалки (resultSlots), в окне «Цели» на вкладке «День» (dailySlots).
+// Регистрация (из своего js/<поток>.js): slotAdd(mapSlots,{id:'fest',pri:50,when:ctx=>true,html:ctx=>'<button class="btn" data-a="go">…</button>',bind:(el,ctx)=>{el.querySelector('[data-a=go]').onclick=…}});
+// pri — больше = выше; when/bind — по желанию; повторная регистрация с тем же id заменяет старую. Ошибка в одной плашке не ломает экран.
+// ctx: карта — {}; итоги — {g,fish,kg} (g — завершённая рыбалка); цели дня — {d} (dailyTask()). Не больше SLOT_MAX штук.
+var mapSlots=[],resultSlots=[],dailySlots=[],SLOT_MAX={map:9,result:2,daily:3};
+function slotAdd(list,o){if(!list||!o||!o.id)return;const i=list.findIndex(x=>x.id===o.id);if(i>=0)list.splice(i,1);list.push(o);list.sort((a,b)=>(b.pri||0)-(a.pri||0));}
+function slotPick(list,ctx,max){const r=[];for(const o of list){if(r.length>=max)break;try{if(o.when&&!o.when(ctx))continue;const h=o.html(ctx);if(h)r.push([o,h]);}catch(e){}}return r;}
+function slotsHtml(list,ctx,max){return slotPick(list,ctx,max).map(x=>'<div class="slot" data-slot="'+esc(x[0].id)+'">'+x[1]+'</div>').join('');}
+function slotsBind(root,list,ctx){if(!root)return;root.querySelectorAll('.slot[data-slot]').forEach(el=>{const o=list.find(x=>x.id===el.dataset.slot);if(o&&o.bind)try{o.bind(el,ctx);}catch(e){}});}
+function slotsFill(el,list,ctx,max){if(!el)return;el.innerHTML=slotsHtml(list,ctx,max);slotsBind(el,list,ctx);}
 function openMap(){G=null;STAT.once('menu');STAT.screen('map');STAT.once('ready',{ms:Math.round(performance.now())});show('scr-map');updCoins();updDots();const r=rankOf(S.caught);
   $('goalB').innerHTML=goalHtml();if($('goalBtn'))$('goalBtn').onclick=goalGo;
   $('rankB').innerHTML=`<button id="rankBtn">🏅 ${L(r[1],r[2])} · ${L('поймано','caught')}: ${S.caught}</button>`;$('rankBtn').onclick=openRank;a2MapCard(); //A2
+  slotsFill($('mapSlotsB'),mapSlots,{},SLOT_MAX.map); // RB:UX гнёзда
   const wrap=$('plcs');wrap.innerHTML='';const tod=window.__todForce||todOf(hourNow());
-  PLACES.forEach((p,i)=>{const open=!!S.open[i],prev=i===0||!!S.open[i-1],cond=condFor(i,tod),m=a2BiteM(i,cond.tod,cond.wx),sp=p.fish.filter(id=>S.alb[id]).length;
+  PLACE_ORD.forEach(i=>{const p=PLACES[i],pv=prevPlace(i)/*RB:NORTH: порядок открытия*/,open=!!S.open[i],prev=pv<0||!!S.open[pv],cond=condFor(i,tod),m=a2BiteM(i,cond.tod,cond.wx),sp=p.fish.filter(id=>S.alb[id]).length;
     const b=document.createElement('button');b.className='plc'+(open?'':' lock')+(!open&&prev&&S.coins>=p.p?' new':'');b.appendChild(placeThumb(i,THUMB_C));
     const d=document.createElement('div');d.className='pi';
     d.innerHTML=`<b>${esc(nm(p))}</b>`+(open?`<small class="fc">${WX_IC[cond.wx]} ${L(TOD_N[tod][0],TOD_N[tod][1])} · ${L('клёв','bite')} ${biteIcons(m)}</small><small>🐟 ${L('Виды','Species')}: ${sp}/${p.fish.length}${setsReady(i).length?' · 🎁':''}</small>${a2PlcLine(i)}${legHint(i)}${weakFor(i)?`<small class="wr">⚠️ ${L('Снасть слабовата','Tackle is too weak')}</small>`:''}`
-      :`<small>${esc(L(p.reg,p.regE))}</small><span class="pr${S.coins>=p.p&&prev?'':' no'}">${prev?'🎫 '+L('Путёвка','Trip')+' '+coinsTxt(p.p):'🔒 '+L('после «','after «')+esc(nm(PLACES[i-1]))+'»'}</span>${prev&&S.coins<p.p?`<span class="gbar"><i style="width:${Math.round(S.coins/p.p*100)}%"></i></span>`:''}`);
+      :`<small>${esc(L(p.reg,p.regE))}</small><span class="pr${S.coins>=p.p&&prev?'':' no'}">${prev?'🎫 '+L('Путёвка','Trip')+' '+coinsTxt(p.p):'🔒 '+L('после «','after «')+esc(nm(PLACES[pv]))+'»'}</span>${prev&&S.coins<p.p?`<span class="gbar"><i style="width:${Math.round(S.coins/p.p*100)}%"></i></span>`:''}`);
     b.appendChild(d);b.onclick=()=>{SND.tap();open?pickTime(i):buyPlace(i);};wrap.appendChild(b);});
   // подарок дня — при первом за день выходе на карту (после облака; если следом открылось другое окно — maybeStreak сам отступит)
   if(window.__sdkDone)setTimeout(maybeStreak,0);}
@@ -3138,7 +3064,7 @@ function pickTime(i){const P=PLACES[i],now=todOf(hourNow()),lg=LEG[P.leg];
     <div class="row">${TODS.map(t=>{const c=condFor(i,t),lt=!S.legs[P.leg]&&(S.visit[i]||0)>=3&&lg.tod.indexOf(t)>=0;
     return `<button class="btn${t===now?' green':''}" data-t="${t}">${WX_IC[c.wx]} ${L(TOD_N[t][0],TOD_N[t][1])}${t===now?' <small>('+L('сейчас','now')+')</small>':''} · ${biteIcons(a2BiteM(i,t,c.wx))}${lt?' ✨':''}${a2TodWho(i,t,c.wx)}</button>`;}).join('')}${a2PickExtra(i)}<button class="btn" id="mCancel">${L('Назад','Back')}</button></div>`);
   $('mcard').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>startFish(i,{tod:b.dataset.t}));$('mCancel').onclick=hideModal;a2PickBind(i);}
-function buyPlace(i){const P=PLACES[i];if(i>0&&!S.open[i-1]){toast(L('Сначала открой «'+P.n+'» по порядку: «'+PLACES[i-1].n+'»','Unlock «'+nm(PLACES[i-1])+'» first'));return;}
+function buyPlace(i){const P=PLACES[i],pv=prevPlace(i);/*RB:NORTH*/if(pv>=0&&!S.open[pv]){toast(L('Сначала открой «'+P.n+'» по порядку: «'+PLACES[pv].n+'»','Unlock «'+nm(PLACES[pv])+'» first'));return;}
   if(S.coins<P.p){notEnough(P.p);return;}
   modal(`<h2>🎫 ${esc(nm(P))}</h2><p>${esc(L(P.reg,P.regE))}. ${L('Путёвка','Trip')}: <b>${coinsTxt(P.p)}</b></p><p>${L('Там водятся','Fish there')}: ${P.fish.map(id=>esc(nm(FISH[id]).toLowerCase())).join(', ')}.</p>${i===1&&!S.tips.rlg&&S.tk.line<1?`<p class="goal tipl">🎁 ${L('К путёвке — подарок от Петровича: '+TACKLE.line.lv[1][0].toLowerCase()+'. На речке щука, тонкую порвёт.','A gift from Petrovich with the trip: '+TACKLE.line.lv[1][1].toLowerCase()+'. There are pike in the stream — a thin line will snap.')}</p>`:''}
     <div class="row"><button class="btn green buy" id="bpOk">🎫 ${L('Купить путёвку','Buy the trip')}</button><button class="btn" id="mCancel">${L('Позже','Later')}</button></div>`);
@@ -3277,7 +3203,7 @@ function fishInfo(id){const f=fishOf(id),a=S.alb[id],got=!!a,leg=!!f.leg;
     if($('scr-alb').classList.contains('on')){const y=$('alList').scrollTop;openAlb();$('alList').scrollTop=y;}fishInfo(id);toast('🖼 '+nm(f)+': '+L('золотая рамка!','golden frame!'),2200);};}
 
 /* ================= задание дня, турнир недели ================= */
-const KG_T=[1.2,3,5,4,3.5,4,8,8],DAILY_C=40;
+const KG_T=PLACES.map(p=>p.kgT),/*RB:NORTH*/DAILY_C=40;
 function dailyTask(){const k=todayKey();if(isObj(S.dtask)&&S.dtask.k===k)return S.dtask;
   const R=rng(+k*7+3),opens=PLACES.map((p,i)=>i).filter(i=>S.open[i]),pi=opens[Math.min(opens.length-1,Math.floor(Math.pow(R(),.6)*opens.length))],ty=['sp','kg','n'][Math.floor(R()*3)];
   const d={k,ty,pi,prog:0,done:S.daily[k]?1:0};
@@ -3303,7 +3229,7 @@ function openDaily(){STAT.screen('daily');const d=dailyTask(),wn=weekDone(),days
     <p>${WEEK_R.map(x=>L('за ','for ')+x[0]+' — +'+coinsTxt(x[1])).join(', ')}. ${L('Всего выполнено дней','Days completed in total')}: ${days}</p>
     <div class="row">${d.done?'':`<button class="btn green" id="dGo">🎣 ${L('Поехали','Let\'s go')}</button>`}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   if($('dGo'))$('dGo').onclick=()=>startFish(d.pi);$('mCancel').onclick=hideModal;}
-function weekPlace(w){return (w==null?weekNum():w)%PLACES.length;}
+function weekPlace(w){return (w==null?weekNum():w)%TOURN_PL;} // RB:NORTH: только места главы I
 // stage1: турнир недели — до конца недели (на карте), нормативы 🥉🥈🥇 (TOURN_NORM по модели), награда в начале новой недели: кубок в альбом + монеты по результату
 function weekLeft(){return 7-((dayNum()+3)%7);} // дней до конца недели, считая сегодня
 function weekLeftTxt(){const n=weekLeft();return n<=1?L('последний день','last day'):(LANG==='en'?'':'до конца — ')+n+' '+pl(n,'день','дня','дней','day left','days left');}
@@ -3324,7 +3250,7 @@ function weekClaim(){const w=weekPending();if(!w)return false;const pi=weekPlace
 // «Рыбалка дня» — только Яндекс (таблица day без своего сервера): одно место и время на день у всех, казённая снасть, 1 попытка бесплатно + 1 за ролик
 function dayOn(){return PLAT==='yandex';}
 function dayIdx(){return dayNum()-20000;}
-function dayPlace(){return (dayNum()*5+3)%PLACES.length;}
+function dayPlace(){return (dayNum()*5+3)%TOURN_PL;} // RB:NORTH
 function dayTod(){return TODS[(dayNum()*3+1)%4];}
 function dayState(){const d=dayNum();if(!isObj(S.dayT)||S.dayT.d!==d)S.dayT={d,n:0,ad:0,best:0};return S.dayT;}
 function dayStart(ad){const s=dayState();if(ad){if(s.ad||s.n<1)return;s.ad=1;}else if(s.n>=1)return;s.n++;save();startFish(dayPlace(),{tourn:'day',tod:dayTod()});}
@@ -3359,7 +3285,7 @@ const ACH=[
   {id:'n500',ic:'🐠',n:'Пятьсот!',e:'Five hundred',d:'Поймать 500 рыб',r:200,ok:()=>S.caught>=500},
   {id:'cat',ic:'🐈',n:'Друг кота',e:'Cat\'s friend',d:'Угостить кота Ваську 20 раз',r:40,ok:()=>(S.cat||0)>=20},
   {id:'junk',ic:'👢',n:'Кладоискатель',e:'Treasure hunter',d:'Найти все 5 находок',r:50,ok:()=>Object.keys(S.junk).length>=5},
-  {id:'places',ic:'🗺',n:'Путешественник',e:'Traveller',d:'Порыбачить на всех 8 водоёмах',r:150,ok:()=>PLACES.every((p,i)=>S.visit[i])},
+  {id:'places',ic:'🗺',n:'Путешественник',e:'Traveller',d:'Порыбачить на всех водоёмах главы I',r:150,ok:()=>PLACES.every((p,i)=>p.ch!==1||S.visit[i])}/*RB:NORTH*/,
   {id:'streak7',ic:'📅',n:'Седьмой подарок',e:'7th gift',d:'Забрать подарок 7-го дня',r:50,ok:()=>false},
   {id:'dec3',ic:'🏡',n:'Обустроился',e:'Settled in',d:'3 украшения берега или поплавка',r:50,ok:()=>decCount()>=3},
   {id:'decall',ic:'🏰',n:'Берег мечты',e:'Dream shore',d:'Все украшения и поплавки',r:300,ok:()=>decCount()>=DECOR.length},
@@ -3470,6 +3396,7 @@ $('fBack').onclick=()=>{if(!G)return openMap();if(G.over){G=null;return openMap(
   $('qStay').onclick=hideModal;$('qGo').onclick=()=>{hideModal();G.quit=1;if(G.phase==='fight'||G.phase==='reel'||G.phase==='bite'||G.phase==='nibble'){G.catch.push({miss:1});}$('catch').classList.remove('on');finish();};};
 /* ---- клавиатура на ПК ---- */
 document.addEventListener('keydown',e=>{const k=e.key;if(e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on'))return;
+  if(window.MG&&MG.busy&&MG.busy())return; // RB:MGPC мини-игра или Двор на экране — клавиши у них (js/mg-core.js)
   if(modalOn){if(e.repeat)return;
     if(k==='Escape'){const b=['socClose','socBack','mCancel','lbClose','sClose','stClose','abBack','sOk','niOk','rMap','hBack','qStay','eHome'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
@@ -3688,7 +3615,7 @@ function a3Offer(need){if(!PAY.on||inGame()||!a3Wall()||S.ofr===todayKey())retur
   PAY.bind(d);PAY.re=()=>{hideModal();if($('scr-shop').classList.contains('on'))openShop(shopTab);else if(!G)openMap();};try{STAT.ev('mod',{m:'offer',a:'show',k:o.id});}catch(e){}};}
 
 /* ---- 1) цели дня: задание дня (stage1, S.dtask) + 2 новых (S.gd) + «ведро дня» за все три ---- */
-const A3_BIG=[.8,1,2,2,2.5,3,4,4];
+const A3_BIG=PLACES.map(p=>p.big); // RB:NORTH
 function a3Tasks(){const k=todayKey();if(S.gd.k===k&&S.gd.t.length===2)return S.gd;
   const R=rng(+k*11+5),opens=PLACES.map((p,i)=>i).filter(i=>S.open[i]),d1=dailyTask(),t=[{ty:'n',n:8,p:0}],r=R();
   if(r<.34)t.push({ty:'tod',tod:TODS[Math.floor(R()*4)],n:1,p:0});
@@ -3821,7 +3748,7 @@ function a3Rq(x){const r=x.rq;if(!r)return null;const o=Object.assign({},r),t=to
   if(o.ty==='gst'&&S.open[2])return null;
   if(o.pi==='least'){let b=-1,bv=1e9;PLACES.forEach((p,i)=>{if(S.open[i]&&(S.visit[i]||0)<bv){bv=S.visit[i]||0;b=i;}});o.pi=Math.max(0,b);}
   if(o.f==='top'){const c=PLACES[t].fish.filter(id=>FISH[id].r>=2&&(FISH[id].b.worm||0)>=.5);o.f=(c.length?c:PLACES[t].fish).sort((a,b)=>FISH[b].r-FISH[a].r)[0];}
-  if(o.ty==='kg')o.kg=[1,1,2,3,3,4,5,5][t];return o;}
+  if(o.ty==='kg')o.kg=PLACES[t].rqkg;/*RB:NORTH*/return o;}
 function a3RqTxt(r){if(!r)return '';const fn=id=>esc(nm(FISH[id]).toLowerCase());
   return r.ty==='pl'?L('«'+esc(nm(PLACES[r.pi]))+'»: рыбалок с уловом — '+r.n,'Trips with a catch at '+esc(nm(PLACES[r.pi]))+': '+r.n):r.ty==='gst'?L('Съездить с Петровичем на Волгу','Go to the Volga with Petrovich')
   :r.ty==='tourn'?L('Сходить на турнир недели','Enter the weekly contest'):r.ty==='sp'?L('Поймать: '+fn(r.f)+' — '+r.n+' шт.','Catch '+r.n+' × '+fn(r.f)):r.ty==='kg'?L('Рыба тяжелее '+a3Kg(r.kg),'A fish over '+a3Kg(r.kg))
@@ -3899,13 +3826,13 @@ openDaily=function(tab){if(tab==='d'||tab==='w'||tab==='m')a3Tab=tab;STAT.screen
     h+=row('📅',dailyText(d)+(d.ty==='sp'?' ('+Math.min(d.n,d.prog||0)+'/'+d.n+')':''),L('задание дня','daily task'),d.done,'+'+coinsTxt(a3T1C()));
     for(const t of g.t)h+=row('🎯',a3TaskTxt(t)+(t.n>1?' ('+Math.min(t.n,t.p||0)+'/'+t.n+')':''),'',t.d,'+'+coinsTxt(a3TaskC()));
     h+=row('🎁',L('Ведро дня — за все три','Day bucket — for all three'),coinsTxt(a3BucketC())+' + 5 '+L('шт. лучшей наживки','best bait'),g.b,n+'/3');
-    const fo=a3Fore(dayNum()+1);if(fo)h+=`<p class="goal tmr">🔮 ${L('Прогноз Петровича на завтра','Petrovich\'s forecast for tomorrow')}: ${a3ForeTxt(fo)}</p>`;}
+    const fo=a3Fore(dayNum()+1);h+='<div id="dSlots" class="slots">'+slotsHtml(dailySlots,{d},SLOT_MAX.daily)+'</div>'; /* RB:UX гнёзда */if(fo)h+=`<p class="goal tmr">🔮 ${L('Прогноз Петровича на завтра','Petrovich\'s forecast for tomorrow')}: ${a3ForeTxt(fo)}</p>`;}
   else if(a3Tab==='w'){const wn=weekDone(),days=Object.keys(S.daily).filter(k=>/^\d+$/.test(k)).length;
     h+=`<p class="goal">${L('Неделя заданий','Weekly tasks')}: ${wn} / 7</p><div class="wkp">${[1,2,3,4,5,6,7].map(i=>{const r=WEEK_R.find(x=>x[0]===i);return '<i class="'+(i<=wn?'on':'')+(r?' gf':'')+'">'+(r?'🎁':i<=wn?'✓':i)+'</i>';}).join('')}</div>`;
     WEEK_R.forEach((x,i)=>{h+=row('🎁',L('Заданий дня за неделю: ','Daily tasks this week: ')+x[0],'',wn>=x[0],'+'+coinsTxt(a3Week(i,tr)));});
     h+=`<p class="about">${L('Неделя — с понедельника. Награды растут вместе с тобой: чем дальше места открыты, тем больше. Всего выполнено дней','Weeks start on Monday. Rewards grow as you unlock farther places. Days completed in total')}: ${days}</p>`;}
   else{const m=a3Mp(),gs=a3MpGoals(),dn=Object.keys(m.g).length,mo=new Date(nowMs()).getMonth(),it=MP_IT[mo],ev=a3Ev();
-    h+=`<p class="goal">${ev==='aut'?'🍂 '+L('Золотая осень · ',''):''}${L('План рыбака на '+MON_N[mo][0],'Angler\'s plan for '+MON_N[mo][1])}: <b>${dn}/10</b></p><p class="about">${L('За каждую цель','Each goal')} +${coinsTxt(a3MpC())}. ${L('За '+A3_MP_ALL+' целей','For '+A3_MP_ALL+' goals')} — ${it?L('поплавок «'+XIT[it].n+'»','the «'+XIT[it].en+'» float'):'+'+coinsTxt(a3C(tr,A3R.monthAll[0],A3R.monthAll[1]))}${m.it?' ✓':''}${it?'<span id="dIt" style="display:inline-block;vertical-align:middle;margin-left:6px"></span>':''}</p>`;
+    h+=`<p class="goal">${ev==='aut'?'🍂 '+L('Золотая осень · ','Golden autumn · '):''}${L('План рыбака на '+MON_N[mo][0],'Angler\'s plan for '+MON_N[mo][1])}: <b>${dn}/10</b></p><p class="about">${L('За каждую цель','Each goal')} +${coinsTxt(a3MpC())}. ${L('За '+A3_MP_ALL+' целей','For '+A3_MP_ALL+' goals')} — ${it?L('поплавок «'+XIT[it].n+'»','the «'+XIT[it].en+'» float'):'+'+coinsTxt(a3C(tr,A3R.monthAll[0],A3R.monthAll[1]))}${m.it?' ✓':''}${it?'<span id="dIt" style="display:inline-block;vertical-align:middle;margin-left:6px"></span>':''}</p>`;
     gs.forEach((g2,i)=>{const v=Math.min(g2.n,a3MpVal(g2));h+=row('🗓',a3MpTxt(g2),'',!!m.g[i],v+'/'+g2.n);});
     if(ev){const s=a3Sea(),set=A3EV[ev].set,k=Object.keys(s.got).length;h+=`<div class="sect" style="margin-top:12px">🍂 ${L('Осенний улов','Autumn catch')}: ${k}/${set.length} · ${L('до 30 ноября','until 30 November')}</div><p class="about">${set.map(id=>(s.got[id]?'✓ ':'')+esc(nm(FISH[id]))).join(' · ')}</p>
       <p class="about">${A3R.sea.map(x=>x[0]+' — +'+coinsTxt(a3C(tr,x[1],60))).join(', ')}${L(' и корзина грибов на берег',' and a basket of mushrooms')}${s.rw[set.length]?' ✓':''}</p>`;}}
@@ -3913,7 +3840,7 @@ openDaily=function(tab){if(tab==='d'||tab==='w'||tab==='m')a3Tab=tab;STAT.screen
     <div class="row">${a3Tab==='d'&&!d.done?`<button class="btn green" id="dGo">🎣 ${L('Поехать','Let\'s go')}: ${esc(nm(PLACES[d.pi]))}</button>`:''}<button class="btn noenter" id="dFore">📅 ${clubOn()?L('Прогноз на неделю','7-day forecast'):L('Прогноз на завтра','Tomorrow\'s forecast')}</button><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   $('mcard').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{SND.tap();openDaily(b.dataset.t);});
   const di=$('dIt');if(di){const c=a3Icon(MP_IT[new Date(nowMs()).getMonth()]);c.style.width='48px';c.style.height='53px';c.style.borderRadius='10px';di.appendChild(c);}
-  if($('dGo'))$('dGo').onclick=()=>startFish(d.pi);$('dFore').onclick=()=>openFore(()=>openDaily());$('mCancel').onclick=hideModal;};
+  slotsBind($('dSlots'),dailySlots,{d}); /* RB:UX гнёзда */if($('dGo'))$('dGo').onclick=()=>startFish(d.pi);$('dFore').onclick=()=>openFore(()=>openDaily());$('mCancel').onclick=hideModal;};
 $('btnDaily').onclick=()=>openDaily();
 
 /* ---- итоги: «что завтра» = прогноз Петровича + письмо ---- */
@@ -3938,7 +3865,7 @@ function a3MapLines(){let box=$('a3Map');if(!box){box=document.createElement('di
   else if(c.n)h+=`<button class="a3m off noenter" id="a3Cl">🎫 ${L('Продлить Клубную карту','Renew the Club card')}${pc?' · 📦 '+L('посылка ждёт','a parcel waits'):''}</button>`;
   box.innerHTML=h;$('a3Ev').onclick=()=>{SND.tap();openDaily('m');};if($('a3Cl'))$('a3Cl').onclick=()=>{SND.tap();pc?openMail():openCoins();};
   // «≈ N дней улова» у следующего закрытого места
-  const np=PLACES.findIndex((p,i)=>!S.open[i]),card=np>0&&S.open[np-1]?$('plcs').children[np]:null;
+  const np=nextPlace(S.open),card=np>0?$('plcs').children[PLACE_ORD.indexOf(np)]:null; // RB:NORTH
   if(card&&S.coins<PLACES[np].p){const pi=card.querySelector('.pi');if(pi&&!pi.querySelector('.a3d')){const sm=document.createElement('small');sm.className='a3d';const k=a3DaysTo(PLACES[np].p);sm.textContent='≈ '+k+' '+pl(k,'день','дня','дней','day','days')+' '+L('улова','of fishing');pi.appendChild(sm);}}}
 
 /* ---- магазин, вкладка «Берег»: клубный поплавок, «Русские промыслы» (за голоса), вещи сезона (получить целями; прошёл сезон — за монеты) ---- */
@@ -4093,7 +4020,7 @@ function fbSpecHtml(){if(!fbSpecOn())return `<p class="about" style="margin:12px
   return `<div class="sect">⭐ ${L('Особое — покупки','Special — purchases')}</div><p class="about" style="margin:4px 2px 8px;color:#3d4a52;font-weight:700">${L('Здесь можно купить '+cur+': Клубную карту, наборы и монеты. Всё необязательно — игра проходится и без покупок.','You can buy '+cur+': the Club card, kits and coins. All optional — the game can be finished without buying.')}</p>`+a3ClubHtml()+payHtml(ids.filter(x=>x!=='club30'));}
 {const os=openShop;openShop=function(tab,hl){if((tab||shopTab)==='p'){shopTab='p';STAT.screen('shop');show('scr-shop');updCoins();
     $('shTabs').querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b.dataset.k==='p');b.onclick=()=>{SND.tap();openShop(b.dataset.k);};});
-    const list=$('shList');list.innerHTML=fbSpecHtml();if(fbSpecOn()){PAY.bind(list);PAY.re=()=>openShop('p');}list.scrollTop=0;try{STAT.ev('mod',{m:'spec',a:'open'});}catch(e){}return;}
+    const list=$('shList');list.innerHTML=fbSpecHtml();if(fbSpecOn()){PAY.bind(list);PAY.re=()=>openShop('p');}list.scrollTop=0;try{STAT.ev('mod',{m:'spec',a:'open',k:window.statSrc?window.statSrc():''});/*MERGE STAT: k — чем открыли витрину*/}catch(e){}return;}
   os(tab,hl);
   // во «Снастях» и «Наживке» — вместо длинного списка покупок внизу одна строка-переход в «Особое»
   const list=$('shList');if(!list||shopTab==='d')return;list.querySelectorAll('.pay').forEach(e=>e.parentNode&&e.parentNode.removeChild(e));
@@ -4189,6 +4116,27 @@ window.__test={get G(){return G;},curTk:()=>curTk(),openMail:()=>openMail(),a3Cl
   set VK(v){VK=v;},get VK(){return VK;},set adGap(v){AD_GAP=v;},PAY,FISH,LEG,PLACES,BAITS,ACH,dailyTask,checkAch,landed};
 Object.assign(window.__test,{a2Orders,openOrders,openBook,a2Start,a2O,a2ZoneAt,pxOf,lvOf,ordGen,PZ,a2Who}); //A2
 </script>
+<script src="js/north.js"></script><!--RB:NORTH: главы, Царь-рыба, письма Севера-->
+<script src="js/mg-art.js"></script><script src="js/mg-core.js"></script><script src="js/mg-dvor.js"></script><!--RB:MG0 мини-игры: оболочка «Двор Петровича»; игры js/mg-<id>.js — каждая своей строкой НИЖЕ этой-->
+<script src="js/mg-baiki.js"></script><!--RB:MG0 №1 Байки Петровича-->
+<script src="js/mg-akit.js"></script><!--RB:MGA набор рисования мини-игр MGA-->
+<script src="js/mg-bait.js"></script><!--RB:MGA №2 Наживка дня (id nazh)-->
+<script src="js/mg-grib.js"></script><!--RB:MGA №12 Грибы (id griby)-->
+<script src="js/mg-chist.js"></script><!--RB:MGA №5 Чистка с Васькой (id chist)-->
+<script src="js/mg-uha.js"></script><!-- RB:MGB мини-игра №3 «Уха у костра» -->
+<script src="js/mg-prik.js"></script><!-- RB:MGB мини-игра №7 «Прикормка по рецепту» + крючок клёва MG_BAIT_MULT -->
+<script src="js/mg-art-mgd.js"></script><!--RB:MGD рисунки игр MGD-->
+<script src="js/mg-spor.js"></script>
+<script src="js/mg-boroda.js"></script>
+<script src="js/mg-rynok.js"></script>
+<script src="js/mg-domino.js"></script>
 <script src="js/themes.js"></script><!--LK: темы оформления-->
+<script src="js/mg-mgc-art.js"></script><script src="js/mg-versha.js"></script><script src="js/mg-raki.js"></script><script src="js/mg-foto.js"></script><!-- RB:MGC мини-игры: верша, ночные раки, фото (общий рисунок mg-mgc-art.js) -->
+<link rel="stylesheet" href="css/ui.css"><script src="js/ui-home.js"></script><script src="js/ui-first.js"></script><script src="js/ui-catch.js"></script><!--RB:UX новый главный экран и вид экранов-->
+<link rel="stylesheet" href="css/ui-album.css"><script src="js/ui-album.js"></script><!--RB:UX журнал рыбака и трофейная стена-->
+<link rel="stylesheet" href="css/ui-win.css"><script src="js/ui-win.js"></script><!--RB:UX-win окна в виде «Стекло и свет»-->
+<link rel="stylesheet" href="css/shop.css"><script src="js/fest.js"></script><script src="js/shop.js"></script><script src="js/fest-ryb.js"></script><script src="js/away.js"></script><script src="js/evstat.js"></script><!--RB:SHOP витрина, праздники FEST, «пока тебя не было», статистика забросов-->
+<link rel="stylesheet" href="css/meta.css"><script src="js/meta-core.js"></script><script src="js/meta-league.js"></script><script src="js/meta-sci.js"></script><script src="js/meta-map.js"></script><script src="js/meta-omens.js"></script><script src="js/meta-cat.js"></script><!--RB:META лиги, Наука Петровича, Карта России, приметы, кот Васька (js/meta-*.js)-->
+<script src="js/statx.js"></script><!--MERGE STAT: недостающие события статистики (показ/место покупок, «не хватает монет», первые минуты, бонусы рыбалки, Север)-->
 </body>
 </html>

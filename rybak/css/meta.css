@@ -1,0 +1,136 @@
+/* МЕТА (поток META, 08.10.2026): лиги, Наука Петровича, Карта России, приметы, кот Васька. Всё — на переменных вида «Стекло и свет» (css/look.css).
+   Шрифт ≥17 px, кнопки ≥48 px (правила проекта). */
+.ic.mi{width:1.15em;height:1.15em;vertical-align:-.22em;fill:none;stroke:currentColor;stroke-width:var(--icw,1.8);stroke-linecap:round;stroke-linejoin:round}
+.ic.mi .d{fill:var(--icf,none)}
+html.lk .ic.mi .d{fill:rgba(255,255,255,.14)}
+#mcard.mtw{max-width:430px}
+#mcard.mtwide{max-width:760px}
+.mth{display:flex;align-items:center;gap:10px;text-align:left;margin:2px 0 6px}
+.mth .mtti{width:34px;height:34px;flex:none;color:var(--gold,#e0a81e)}
+.mth h2{margin:0;font-size:22px;line-height:1.15}
+.mth small{display:block;font-size:17px;color:var(--tx2,#556)}
+.mtw .about{font-size:17px}
+
+/* слот на главном экране / в итогах */
+.mtslot{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:8px 14px;border-radius:var(--r,18px);text-align:left;cursor:pointer;
+  background:var(--pn,rgba(255,255,255,.9));border:1px solid var(--pnB,rgba(0,0,0,.1));color:var(--tx,#223);font:inherit;box-shadow:var(--sh,none);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.mtslot>svg:first-child,.mtslot>.mtico{flex:none}
+.mtslot .mtst{flex:1;min-width:0}
+.mtslot .mtst b{display:block;font-size:18px;font-weight:600}
+.mtslot .mtst small{display:block;font-size:17px;color:var(--tx2,#556);line-height:1.25}
+.mtslot>.ic:last-child,.mtslot>lk-i:last-child{opacity:.7}
+
+/* лига */
+.lgscene{position:relative;margin:-6px -4px 8px;border-radius:18px;overflow:hidden;min-height:132px;background:#2f5d74}
+.lgscene canvas{display:block}
+.lgsb{position:absolute;right:8px;top:6px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.4))}
+.lgbadge{flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+.lgface{flex:none;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.lgt{display:flex;flex-direction:column;gap:4px;margin:8px 0;text-align:left}
+.lgr{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:14px;background:var(--in,rgba(0,0,0,.04));border:1px solid transparent}
+.lgr .lgp{width:22px;text-align:center;font-size:18px;flex:none}
+.lgr .lgn{flex:1;min-width:0}
+.lgr .lgn b{display:block;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lgr .lgn small{display:block;font-size:17px;color:var(--tx3,#778);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lgr .lgg{font-style:normal;font-weight:600;font-size:17px;flex:none}
+.lgr.up{background:var(--okBg,#e6f6ee)}
+.lgr.down{background:rgba(255,120,100,.14)}
+.lgr.me{border-color:var(--acc1,#ffcf7a);box-shadow:0 0 0 1px var(--acc1,#ffcf7a) inset}
+.lgzt.up{color:var(--ok,#2a8a5a)!important}
+.lgzt.down{color:var(--bad,#c0392b)!important}
+.btn.lgwk{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin:6px 0 8px;min-height:56px}
+.btn.lgwk span{flex:1}.btn.lgwk b{display:block;font-size:17px}.btn.lgwk small{display:block;font-size:17px;opacity:.85}
+.lgres{display:flex;align-items:center;gap:10px;text-align:left;margin:8px 0;padding:8px 12px;border-radius:16px;background:var(--in,rgba(0,0,0,.05))}
+.lgres b{display:block;font-size:18px}.lgres small{display:block;font-size:17px;color:var(--tx2,#556)}
+.lgres.up{background:var(--okBg,#e6f6ee)}
+
+@media (max-width:360px){.lgr .lgn small{display:none}}
+.mtslot>svg.ic,.btn.lgwk>svg.ic{width:22px;height:22px;flex:none;opacity:.7}
+.btn svg.ic.mi{width:22px;height:22px}
+
+/* Наука Петровича */
+.scscene{margin:-6px -4px 8px;border-radius:18px;overflow:hidden;min-height:128px;background:#2a1c10}
+.scscene canvas{display:block}
+.mtslot .scbig,.mtslot .mtico{width:40px;height:40px;color:var(--gold,#e0a81e)}
+.mtslot.hot{border-color:var(--warnB,#e0a81e);box-shadow:0 0 0 1px var(--warnB,#e0a81e) inset,var(--sh,none)}
+.scrank{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:16px;background:var(--in,rgba(0,0,0,.05));text-align:left}
+.scrank b{font-size:21px}.scrank small{font-size:17px;color:var(--tx2,#556)}
+.scclaim{width:100%;margin:8px 0}
+.scsec{text-align:left;font-size:18px;margin:12px 0 6px}
+.scfree{color:var(--ok,#2a8a5a)}
+.scsk{display:flex;align-items:center;gap:10px;padding:8px 10px;margin:5px 0;border-radius:16px;background:var(--in,rgba(0,0,0,.05));text-align:left}
+.scsk .scic{width:44px;height:44px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,210,122,.12);color:var(--gold,#c08a1e)}
+.scsk .scic svg{width:30px;height:30px}
+.scsk.got .scic{background:rgba(255,210,122,.28)}
+.scsk .scx{flex:1;min-width:0}.scsk .scx b{display:block;font-size:17px}.scsk .scx small{display:block;font-size:17px;color:var(--tx2,#556);line-height:1.25}
+.scpip{display:flex;gap:4px;margin-top:4px}.scpip i{width:22px;height:8px;border-radius:4px;background:var(--inB,rgba(0,0,0,.12))}.scpip i.on{background:var(--gold,#e0a81e)}
+.btn.scup{min-width:56px;min-height:48px;padding:0 10px;flex:none}
+.scmax{font-size:20px;color:var(--ok,#2a8a5a);flex:none;padding:0 8px}
+.scpts{display:flex;flex-direction:column;gap:2px;text-align:left}
+.scpt{display:flex;justify-content:space-between;font-size:17px;padding:3px 4px;border-bottom:1px dashed var(--inB,rgba(0,0,0,.1))}
+.mtslot.scin{margin:6px 0 10px}
+
+/* Карта России */
+.rubox{margin:4px -4px 6px;border-radius:16px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.rumap{display:block}
+.rureg{cursor:pointer;transition:opacity .2s}
+.rureg.sel{stroke:#fff;stroke-width:3}
+.rucards{display:flex;flex-direction:column;gap:8px;text-align:left}
+#mcard.mtwide .rucards{display:grid;grid-template-columns:1fr 1fr}
+.rucard{display:flex;gap:10px;padding:10px;border-radius:16px;background:var(--in,rgba(0,0,0,.05));border:1px solid transparent}
+.rucard.gold{background:linear-gradient(135deg,rgba(255,215,110,.28),rgba(255,215,110,.08));border-color:rgba(255,215,110,.6)}
+.rucard.sel{border-color:var(--acc1,#ffcf7a)}
+.rucard .rumed{flex:none}.rumed.on{filter:drop-shadow(0 0 6px rgba(255,210,90,.7))}
+.ruc{flex:1;min-width:0}.ruc b{display:block;font-size:18px}.ruc small{display:block;font-size:17px;color:var(--tx2,#556);line-height:1.25}
+.ruc .rumn{color:var(--gold,#a87a10)}
+.rufish{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.rufi{width:44px;height:30px;border-radius:8px;border:2px solid;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;opacity:.55}
+.rufi.on{opacity:1;background:rgba(255,255,255,.14)}
+.rufi canvas{width:40px;height:auto;max-height:26px}
+.rugo{width:100%;margin-top:8px}
+
+/* приметы */
+.omb{text-align:left;margin:10px 0 6px}
+.omh{display:flex;align-items:center;gap:6px;font-size:18px;margin:12px 0 6px;text-align:left}
+.omh svg{width:24px;height:24px;color:var(--gold,#c08a1e)}
+.omr{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;margin:5px 0;border-radius:14px;background:var(--in,rgba(0,0,0,.05));text-align:left}
+.omr .omic{flex:none;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--gold,#c08a1e)}
+.omr .omic svg,.omr .omic lk-i{width:24px;height:24px}
+.omr b{display:block;font-size:17px;font-weight:500;font-style:italic;line-height:1.3}
+.omr small{display:block;font-size:17px;color:var(--tx3,#778);margin-top:2px}
+.omr.om-m{opacity:.85}
+.omall{width:100%;margin-top:6px}
+.omscene{margin:-6px -4px 8px;border-radius:18px;overflow:hidden;min-height:120px;background:#0e1a33}
+.omscene canvas{display:block}
+
+/* кот Васька */
+.catscene{margin:-6px -4px 8px;border-radius:18px;overflow:hidden;min-height:230px;background:#f2b37a}
+.catscene canvas{display:block}
+.catico{width:44px;height:44px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#ffe1b0,#e8a868)}
+.catgift{width:100%;margin:8px 0}
+#catTreat{flex:1}
+.catit{display:flex;align-items:center;gap:10px;padding:8px 10px;margin:5px 0;border-radius:14px;background:var(--in,rgba(0,0,0,.05));text-align:left}
+.catit .catx{flex:1}.catit b{display:block;font-size:17px}.catit small{display:block;font-size:17px;color:var(--tx2,#556)}
+.catit .btn.buy{min-height:48px;flex:none}
+.catgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cattl{display:flex;flex-direction:column;align-items:center;padding:6px 4px 8px;border-radius:14px;background:var(--in,rgba(0,0,0,.05));border:2px solid transparent;color:var(--tx,#223);font:inherit;cursor:pointer;min-height:48px}
+.cattl canvas{width:100%;max-width:92px;height:auto}
+.cattl b{font-size:17px;font-weight:600;line-height:1.15;margin-top:2px}
+.cattl small{font-size:17px;color:var(--tx3,#778);line-height:1.15}
+.cattl.own{background:rgba(255,210,122,.14)}
+.cattl.on{border-color:var(--acc1,#ffcf7a)}
+.cattl.free{border-color:var(--ok,#2a8a5a);border-style:dashed}
+@media (max-width:360px){.catgrid{grid-template-columns:repeat(2,1fr)}}
+
+/* ряд плиток META на главном экране */
+.mtrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mttile{min-width:0}
+.mttile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:96px;padding:8px 4px;border-radius:var(--r,18px);
+  background:var(--pn,rgba(255,255,255,.9));border:1px solid var(--pnB,rgba(0,0,0,.1));color:var(--tx,#223);font:inherit;cursor:pointer;box-shadow:var(--sh,none);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);text-align:center}
+.mttile .mttic{height:40px;display:flex;align-items:center;justify-content:center;color:var(--gold,#c08a1e)}
+.mttile .mttic svg{width:34px;height:34px}
+.mttile .mttic .catico{width:40px;height:40px}
+.mttile b{font-size:17px;font-weight:600;line-height:1.1}
+.mttile small{font-size:17px;color:var(--tx2,#556);line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mttile.hot{border-color:var(--warnB,#e0a81e)}
+.mttile .mtdot{position:absolute;top:8px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--dot,#ff8f4f)}
+@media (max-width:340px){.mttile small{display:none}}

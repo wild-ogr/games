@@ -1,0 +1,61 @@
+/* RB:SHOP — витрина «Магазин ₽» (js/shop.js). Цвета — переменные вида «Стекло и свет» (css/look.css), темы их переопределяют. Шрифт ≥ 17 px. */
+.vt{padding:2px 0 18px}
+.vt-head{display:flex;gap:12px;align-items:center;margin:4px 2px 6px}
+.vt-head p{margin:0;font-size:17px;line-height:1.35;color:var(--tx2,#33414a)}
+.vt-head b{color:var(--tx,#111)}
+.vt-p{flex:none;width:52px;height:52px;border-radius:50%;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.vt-p svg{width:100%;height:100%;display:block}
+.vt-sh{margin:16px 0 4px}
+.vt-sh>h3{margin:0 2px 8px;font-size:19px;font-weight:700;color:var(--tx,#111);text-shadow:var(--txSh,none)}
+.vt-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px}
+.vt-c{position:relative;display:flex;flex-direction:column;align-items:stretch;padding:10px 10px 12px;border-radius:20px;cursor:pointer;
+ background:var(--pnS,rgba(20,32,44,.86));border:1px solid var(--pnB,rgba(255,255,255,.2));box-shadow:var(--sh,0 6px 18px rgba(0,0,0,.18)),inset 0 1px 0 var(--pnH,rgba(255,255,255,.1));color:var(--tx,#fff)}
+.vt-c.vt-hot{border-color:var(--gold,#ffd27a);box-shadow:0 0 0 1px var(--gold,#ffd27a),var(--sh,0 6px 18px rgba(0,0,0,.18))}
+.vt-c.vt-w{grid-column:1/-1}
+@media (min-width:560px){.vt-c.vt-w{flex-direction:row;align-items:center;gap:12px}
+ .vt-c.vt-w .vt-a{width:96px;height:96px;margin:0;flex:none}
+ .vt-c.vt-w .vt-t{flex:1;min-width:0}
+ .vt-c.vt-w .vt-buy,.vt-c.vt-w .vt-own{align-self:center;flex:none;min-width:150px;margin-top:0}}
+.vt-a{width:100%;height:96px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center}
+.vt-a svg{width:96px;height:96px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+.vt-em{font-size:56px;line-height:1}
+.vt-t{display:flex;flex-direction:column;gap:3px;flex:1}
+.vt-t b{font-size:17px;line-height:1.25}
+.vt-t small{font-size:17px;line-height:1.3;color:var(--tx3,rgba(255,255,255,.66))}
+.vt-t em,.vt-gn{font-style:normal;font-weight:700;font-size:17px;line-height:1.3;color:var(--gold,#ffd27a)}
+.vt-tag{position:absolute;top:-9px;left:12px;z-index:1;font-style:normal;font-size:15px;font-weight:700;padding:2px 10px;border-radius:12px;
+ background:linear-gradient(140deg,var(--acc1,#ffcf7a),var(--acc2,#ff8f4f));color:var(--accT,#3b1c00);box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.vt-buy{margin-top:10px;min-height:48px;border-radius:24px;border:0;font:inherit;font-size:18px;font-weight:800;cursor:pointer;padding:6px 14px;
+ background:linear-gradient(140deg,var(--acc1,#ffcf7a),var(--acc2,#ff8f4f));color:var(--accT,#3b1c00);box-shadow:var(--accSh,0 6px 18px rgba(255,140,70,.35)),inset 0 1px 0 rgba(255,255,255,.45)}
+.vt-buy:active{transform:translateY(1px);box-shadow:none}
+.vt-own{margin-top:10px;min-height:48px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--ok,#6be3b0)}
+/* клуб: шапка, сравнение, две кнопки */
+.vt-club{display:flex;gap:12px;align-items:center;padding:12px;border-radius:20px;background:var(--pnS,rgba(20,32,44,.86));border:1px solid var(--gold,#ffd27a)}
+.vt-club .vt-a{width:96px;height:96px;margin:0;flex:none}
+.vt-club .vt-t b{font-size:19px}
+.vt-ok{margin:8px 2px 0;font-size:17px;font-weight:700;color:var(--ok,#6be3b0)}
+.vt-cmp{width:100%;margin:10px 0 4px;border-collapse:separate;border-spacing:0;font-size:17px;border-radius:16px;overflow:hidden;background:var(--pnS,rgba(20,32,44,.86));color:var(--tx,#fff)}
+.vt-cmp th,.vt-cmp td{padding:8px 8px;text-align:center;border-bottom:1px solid var(--pnB,rgba(255,255,255,.14));line-height:1.25}
+.vt-cmp td:first-child{text-align:left;color:var(--tx2,rgba(255,255,255,.84))}
+.vt-cmp tr:last-child td{border-bottom:0}
+.vt-cmp th{font-size:17px;font-weight:700}
+.vt-cmp th small{display:block;font-weight:600;font-size:15px;color:var(--tx3,rgba(255,255,255,.66))}
+.vt-cmp .vt-k{background:rgba(255,210,122,.12)}
+.vt-y{color:var(--ok,#6be3b0);font-size:20px}.vt-n{color:var(--tx3,rgba(255,255,255,.5))}
+.vt-two{display:flex;gap:10px;flex-wrap:wrap}
+.vt-two .vt-buy{flex:1 1 150px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
+.vt-two .vt-buy span{font-size:15px;font-weight:700;opacity:.85}
+.vt-b2:not(.vt-best){background:var(--sec,rgba(255,255,255,.14));color:var(--tx,#fff);box-shadow:inset 0 0 0 1px var(--secB,rgba(255,255,255,.28))}
+.vt-fine{margin:8px 2px 0;font-size:17px;line-height:1.35;color:var(--tx3,rgba(255,255,255,.66))}
+.vt-end{margin-top:16px}
+.vt-sh>.vt-g{margin-top:10px}
+/* окно «перед VK» и строка перед межэкранной */
+.vt-pre{text-align:center}
+.vt-pre .vt-a{height:120px}.vt-pre .vt-a svg{width:120px;height:120px}
+.vt-pre h2{margin:4px 0 6px}
+.vt-pre .vt-vk{text-align:left}
+.vt-ia{display:flex;gap:12px;align-items:flex-start}.vt-ia .quote{margin:0}
+.vt-trl{width:100%;margin-top:6px}
+.vt-mx{margin:8px 0}
+/* ПК: шире и в 3–4 колонки */
+@media (min-width:900px){.vt-list .vt-g{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.vt-club{max-width:none}.vt-cmp{max-width:720px}}
