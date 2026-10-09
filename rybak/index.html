@@ -832,16 +832,17 @@ const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512005219424'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 /*STAT*/
-/* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.3 (08.10.2026; v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
-   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
+   08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с). */
 var STAT=(function(){
-  var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=13,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -1025,7 +1026,7 @@ var STAT=(function(){
     while(Q.length)pend.push(pack());keep();beacon();}
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
-      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
+      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
       var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
@@ -1051,12 +1052,17 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v6-100822',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v7-100911',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
-let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('rybak-cl')?1:0;}catch(e){}STAT.progress({pl:+S.sessions||0,cn:+S.coins||0,bt:bt});}
+let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('rybak-cl')?1:0;}catch(e){}STAT.progress({pl:+S.sessions||0,cn:+S.coins||0,bt:bt});statPrg();}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);
+/* fix0910: prg — прохождение для дашборда (02-dash-progress.md): op — открыто водоёмов (из 14), tk — снасти rod·100+line·10+reel (ступени 0…4),
+   al — видов в альбоме, lg — легенд. Шлётся сразу после progress, в конце рыбалки — только если изменилось, и в новом сеансе (после 30 мин в фоне). */
+let statPrgK='',statHidT=0;function statPrg(){try{const tk=S.tk||{},o={op:Object.keys(S.open||{}).filter(i=>S.open[i]).length,tk:(tk.rod|0)*100+(tk.line|0)*10+(tk.reel|0),al:spCount(),lg:Object.keys(S.legs||{}).length},k=JSON.stringify(o);
+  if(k===statPrgK)return;statPrgK=k;STAT.ev('prg',o);}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){statHidT=Date.now();return;}if(statPr&&statHidT&&Date.now()-statHidT>30*60e3){statPrgK='';statPrg();}});
 const tutS={};function statTut(s){if(tutS[s])return;tutS[s]=1;STAT.ev('tut',{s:s});} // обучение новичка: 1 первая рыбалка, 2 заброс, 3 поклёвка, 4 первая рыба, 5 рыбалка закончена
 let ysdk=null,YP=null,VK=null,paused=false;
 const pauseWhy=new Set();
@@ -2191,7 +2197,7 @@ function startFish(pi,opt){opt=opt||{};hideModal();
   G={pi,tourn:opt.tourn?(opt.tourn==='day'?'day':'week'):false,cond,used:0,max:5,extra:0,catch:[],phase:'aim',t:0,fl:null,pk:null,ft:null,hold:false,earned:0,bon:[],over:false,ripples:[],parts:[],cat:{t:0},petr:{t:0,next:8+Math.random()*10,fl:0},R:Math.random,ptime:0,spook:0,lostN:0};
   if(G.tourn){G.bait='worm';}else{if(baitCnt(S.sel)<=0||!baitWorks(pi,S.sel))S.sel='worm';G.bait=S.sel;}
   a2Start();if(a2Led()&&G.bait==='spoon')G.bait=S.sel='worm'; //A2
-  S.visit[pi]=(S.visit[pi]||0)+1;save();
+  S.visit[pi]=(S.visit[pi]||0)+1;G.fv=!G.tourn&&!opt.guest&&S.visit[pi]===1;save(); // fix0910: fv — первый выезд сюда (f:1 в STAT end)
   show('scr-fish');layout();G.phase='aim';
   const P=PLACES[pi];$('fTitle').textContent=(G.tourn==='day'?'📅 ':G.tourn?'🏆 ':'')+(GEO.W<360&&LANG!=='en'?P_SH[pi]:nm(P));
   $('fSub').textContent=WX_IC[G.cond.wx]+' '+(G.tourn==='day'?L('Рыбалка дня','Daily'):G.tourn?L('Турнир','Contest'):L(TOD_N[tod][0],TOD_N[tod][1])+(GEO&&GEO.W>=400?' · '+L(WX_N[G.cond.wx][0],WX_N[G.cond.wx][1]).toLowerCase():''));
@@ -2291,7 +2297,7 @@ function offerBack(pk){if(!G||G.over||G.phase!=='lost'){if(G&&!G.over)nextCast()
     <p>${L('Петрович знает старый приём — можно ещё раз подвести её к берегу. Один раз за рыбалку.','Petrovich knows an old trick — one more chance to land it. Once per trip.')}</p>
     <div class="row"><button class="btn accent noenter" id="obAd">📺 ${L('Вернуть рыбу за рекламу','Get it back for an ad')}</button><button class="btn" id="obNo">${L('Ладно, дальше','Never mind')}</button></div>`);
   const im=fishImg(f.id,220,true);im.className='fish';$('obImg').appendChild(im);
-  $('obNo').onclick=()=>{hideModal();G.back='no';nextCast();};
+  $('obNo').onclick=()=>{hideModal();if(G!==g||!G||G.over)return;G.back='no';nextCast();}; // fix0910: окно «Сошла!» могло пережить выход на карту (G=null) — Uncaught TypeError :2294
   $('obAd').onclick=()=>{if(adHold('back'))return;hideModal();STAT.place('back');showRewarded(()=>backGot(pk),()=>{if(G&&!G.over){G.back='no';nextCast();}},
     /* поздний зачёт (adt): та же рыбалка, игрок ждёт заброса и нет окон — рыба возвращается; иначе монеты по полной цене этой рыбы */
     ()=>{if(G!==g||G.over||G.phase!=='aim'||modalOn||!$('scr-fish').classList.contains('on'))return adLateCoins(price(pk.f,pk.w,g.pi));
@@ -2371,7 +2377,8 @@ function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;if(S.s
   let bonus='';if(!S.tips.bonus&&fish.length&&!G.tourn){S.tips.bonus=1;S.coins+=ern('gift',FIRST_BONUS);G.earned+=FIRST_BONUS;G.bon.push([L('подарок Митяя','gift'),FIRST_BONUS]);
     bonus=`<p class="quote"><b>${L('Дед Митяй','Grandpa Mityai')}</b>${L('С почином! Держи '+coinsTxt(FIRST_BONUS)+' на новую леску — тонкую крупная рыба рвёт.','Well done! Here are '+coinsTxt(FIRST_BONUS)+' for a stronger line.')}</p>`;}
   save();checkAch();updCoins();
-  STAT.end(G.quit?'quit':'win',{n:fish.length,g:g1,c:G.earned,lo:G.catch.filter(c=>c.lost).length,bk:G.back==='ok'?1:0});
+  {const ep={};if(!G.quit&&G.fv)ep.f=1;ep.n=fish.length;ep.g=g1;ep.c=G.earned;ep.lo=G.catch.filter(c=>c.lost).length;if(G.back==='ok')ep.bk=1; // fix0910: f:1 — первая рыбалка на этом водоёме; bk только 1 (в событии не больше 8 полей)
+  STAT.end(G.quit?'quit':'win',ep);statPrg();}
   const rows=G.catch.map(c=>c.miss?'':c.junk?`<tr><td>${JUNK[c.junk].ic} ${esc(nm(JUNK[c.junk]))}</td><td>+${c.c||1}</td></tr>`:c.lost?`<tr class="lost"><td>${esc(nm(fishOf(c.id)))} — ${c.res==='break'?L('оборвал','snapped'):L('сошла','got away')}</td><td>—</td></tr>`:`<tr><td><span class="lkfi" data-f="${c.id}"></span>${fishOf(c.id).leg?'✨ ':''}${esc(nm(fishOf(c.id)))}${c.bk?' <small>📺</small>':''}</td><td>${kgTxt(c.w)} · +${c.p!=null?c.p:c.c}${c.bx?'<small class="cx">'+c.bx.split(' · ').map(x=>'<span>'+x+'</span>').join(' · ')+'</small>':''}</td></tr>`).join('');
   const x2=X2_ON&&adOk()&&!G.tourn&&!G.adAsked&&(S.sessions||0)>=3&&G.earned>=10&&!(adDue()&&adReady());
   // плашки под уловом — не больше двух, по важности: подарок Митяя, турнир, «хватает на…», задание выполнено, набор в альбоме, «завтра», «копим на…», задание, кот
@@ -2865,7 +2872,7 @@ function a1AlbPhotos(){const box=$('alList'),l=Array.isArray(S.ph)?S.ph.slice().
 // уровни выровнены по средней громкости записей (water −28, birds −25, wind −29, остальные −17…−18 дБ) к ≈ −34 дБ — тихий фон под звуки игры
 // boost1: было ≈ −34 дБ — на динамике телефона не слышно совсем; теперь ≈ +8 дБ (≈ −26 дБ), пики держит компрессор шины
 const AMB_F={water:1.25,birds:.9,crickets:.33,frogs:.33,rain:.4,wind:.55,reel:1};
-const AMB={buf:{},raw:{},ld:{},fail:{},retry:{},src:{},g:null,lv:0,el:{},dec:0,ext:'m4a'};
+const AMB={buf:{},raw:{},ld:{},fail:{},retry:{},src:{},g:null,lv:0,el:{},dec:0,ext:'m4a'};const AMB_RETRY=[0,4000,15000]; // fix0910: паузы перед повтором загрузки звука (мс)
 // boost1: браузер без AAC (часть Chromium-сборок на Android) — запасной формат Ogg Opus (audio/*.ogg); сначала m4a, не разобрал — ogg
 try{const t=document.createElement('audio');if(t.canPlayType&&!t.canPlayType('audio/mp4; codecs="mp4a.40.2"')&&t.canPlayType('audio/ogg; codecs="opus"'))AMB.ext='ogg';}catch(e){}
 function ambWant(){const o={};if(S.amb===false||!sndOn()||!touched||!G||G.over||!$('scr-fish').classList.contains('on'))return o;const tod=G.cond.tod,wx=G.cond.wx;o.water=1;
@@ -2873,8 +2880,11 @@ function ambWant(){const o={};if(S.amb===false||!sndOn()||!touched||!G||G.over||
 function ambLoad(n){if(AMB.buf[n]||AMB.ld[n]||(AMB.fail[n]||0)>=3||performance.now()<(AMB.retry[n]||0)||!AC)return;AMB.ld[n]=1;const ext=AMB.ext;
   (AMB.raw[n]?Promise.resolve(AMB.raw[n]):fetch('audio/'+n+'.'+ext).then(r=>{if(!r.ok)throw new Error('http '+r.status);return r.arrayBuffer();}).then(ab=>AMB.raw[n]=ab))
     .then(ab=>new Promise((ok,no)=>{const p=AC.decodeAudioData(ab.slice(0),ok,()=>no({dec:1}));if(p&&p.catch)p.catch(()=>no({dec:1}));}))
-    .then(b=>{AMB.ld[n]=0;AMB.buf[n]=b;})
-    .catch(e=>{AMB.ld[n]=0;const why=e&&e.dec?'dec_'+ext:e&&e.message&&/^http/.test(e.message)?e.message.replace(' ','_'):'fetch';ambWhy(why);
+    .then(b=>{AMB.ld[n]=0;AMB.buf[n]=b;AMB.fail[n]=0;}) // fix0910: удалось — счёт неудач с нуля (буфер снова грузится после смены сцены)
+    .catch(e=>{AMB.ld[n]=0;const why=e&&e.dec?'dec_'+ext:e&&e.message&&/^http/.test(e.message)?e.message.replace(' ','_'):'fetch';
+      // fix0910: сеть/сервер (не 404 и не «не разобрал») — тихий повтор через 4 и 15 с; в STAT и на резерв <audio> — только после 3-й неудачи
+      if(!(e&&e.dec)&&e&&e.message!=='http 404'){const k=(AMB.fail[n]||0)+1;if(k<3){AMB.fail[n]=k;AMB.retry[n]=performance.now()+AMB_RETRY[k];return;}}
+      ambWhy(why);
       if(e&&e.message==='http 404'){for(const k in AMB_F)AMB.fail[k]=3;return;}
       if(e&&e.dec&&ext==='m4a'){if(AMB.ext==='m4a'){AMB.ext='ogg';AMB.raw={};AMB.fail={};AMB.retry={};}else delete AMB.raw[n];return;}
       // boost1: не разобрал и запасной формат или загрузка не прошла (браузер режет fetch медиа — напр. Adblock Browser) — сразу резерв <audio loop>
@@ -3131,7 +3141,7 @@ function openBait(){if(!G)return;if(G.tourn){toast(L('В турнире у вс�
   modal(`<h2>${L('Наживка','Bait')}</h2>${a2BaitHtml()}${BAITS.map(b=>{const c=baitCnt(b.id),w=baitWorks(G.pi,b.id);return `<button class="bait${G.bait===b.id?' on':''}" data-b="${b.id}" ${c>0?'':'disabled'}><span class="ic">${b.ic}</span><span>${esc(nm(b))} <em class="ok" style="font-style:normal;${w?'':'color:#a33'}">${w?L('здесь клюёт','bites here'):L('здесь не берут','no takers here')}</em><small>${esc(L(b.d,b.de))}</small></span><i>${c===Infinity?'∞':c}</i></button>`;}).join('')}
     <div class="row"><button class="btn noenter" id="bShop">🎣 ${L('Купить наживку','Buy bait')}</button><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   $('mcard').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{S.sel=G.bait=b.dataset.b;save();SND.tap();updHud();hideModal();});a2BaitBind();
-  $('bShop').onclick=()=>{hideModal();if(G.used>0){toast(L('Сначала закончи рыбалку','Finish the trip first'));return;}G=null;openShop('b');};$('mCancel').onclick=hideModal;}
+  $('bShop').onclick=()=>{hideModal();if(G&&G.used>0){toast(L('Сначала закончи рыбалку','Finish the trip first'));return;}G=null;openShop('b');};$('mCancel').onclick=hideModal;}
 $('baitBtn').onclick=openBait;
 
 /* ================= альбом рыб ================= */
@@ -3393,7 +3403,7 @@ $('btnDaily').onclick=openDaily;$('btnWeek').onclick=openWeek;
 $('fBack').onclick=()=>{if(!G)return openMap();if(G.over){G=null;return openMap();}
   if(G.used===0&&G.phase==='aim'){YG.stop();G=null;openMap();return;}
   modal(`<h2>${L('Домой?','Head home?')}</h2><p>${L('Улов сохранится, рыбалка закончится.','Your catch is kept, the trip ends.')}</p><div class="row"><button class="btn green" id="qStay">🎣 ${L('Ещё посижу','Stay')}</button><button class="btn" id="qGo">🏠 ${L('Домой','Home')}</button></div>`);
-  $('qStay').onclick=hideModal;$('qGo').onclick=()=>{hideModal();G.quit=1;if(G.phase==='fight'||G.phase==='reel'||G.phase==='bite'||G.phase==='nibble'){G.catch.push({miss:1});}$('catch').classList.remove('on');finish();};};
+  $('qStay').onclick=hideModal;$('qGo').onclick=()=>{hideModal();if(!G||G.over)return openMap();G.quit=1;if(G.phase==='fight'||G.phase==='reel'||G.phase==='bite'||G.phase==='nibble'){G.catch.push({miss:1});}$('catch').classList.remove('on');finish();};};
 /* ---- клавиатура на ПК ---- */
 document.addEventListener('keydown',e=>{const k=e.key;if(e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on'))return;
   if(window.MG&&MG.busy&&MG.busy())return; // RB:MGPC мини-игра или Двор на экране — клавиши у них (js/mg-core.js)
