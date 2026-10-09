@@ -22,7 +22,8 @@
      fix(st)/merge(a,b) — починка/слияние своего S.mg[id] (по умолчанию: числа — максимум, остальное — из более свежего по полю t).
    Сохранение: S.mg = {v, d (день), p:{id:заходов с наградой сегодня}, dv (доля Р за сегодня), dd:{id,n,ad}, rec:{id:лучший}, cnt:{id:всего}, pt (очки Книги),
      lv (выдан уровень Книги), sk (облик двора), <id>:{…своё}}. Облако — максимум.
-   Статистика: STAT.ev('mg',{id,s,t,ad,tr,dl}).
+   Статистика: STAT.ev('mg',{id,s,t,ad,tr,dl,c,src}); src — откуда вход: yard (Двор), day (мини-игра дня в «Целях»), win (Перекур в итогах рыбалки) — upd0910.
+   play(id,{src, back}) — back(): куда вернуться после игры вместо Двора.
    Стенд: ?mg=<id> (сразу игра), ?mg=dvor (двор), &train=1 &calm=1 &bot=good &day=20261012 &save=1 (иначе сохранение не пишется), &all=1 (всё открыто).
    Подключение игры — одна строка в index.html сразу после строки mg-core.js: <script src="js/mg-<id>.js"></script> */
 (function(){
@@ -154,11 +155,11 @@ function play(id,opt){opt=opt||{};var g=REG[id];if(!g)return false;css();if(CUR)
   var bar=mkEl('div','mg-bar','<button class="mg-x" type="button" aria-label="'+L('Выйти','Exit')+'">'+ic('close')+'</button>'+(train?'<span class="mg-tag">'+L('Тренировка','Practice')+'</span>':delo?'<span class="mg-tag gold">'+L('Дело дня','Task of the day')+'</span>':''));
   lay.appendChild(bar);appEl().appendChild(lay);pcMark();lay.classList.toggle('pc',pcOn());
   lay.addEventListener('mousedown',function(e){var b=e.target&&e.target.closest&&e.target.closest('button');if(b)e.preventDefault();}); // RB:MGPC кнопка не держит фокус — пробел/Enter не жмут её второй раз
-  var C={g:g,id:id,lay:lay,el:el,raf:0,res:[],delo:delo,train:train,adRun:!!opt.adRun,bot:opt.bot||'',noBack:!!opt.noBack,over:false,cb:opt.cb,keys:[],keysUp:[],pause:false,t0:Date.now()};CUR=C;
+  var C={g:g,id:id,lay:lay,el:el,raf:0,res:[],delo:delo,train:train,adRun:!!opt.adRun,bot:opt.bot||'',noBack:!!opt.noBack,back:opt.back||null,src:opt.src||'yard',over:false,cb:opt.cb,keys:[],keysUp:[],pause:false,t0:Date.now()};CUR=C;
   bar.querySelector('.mg-x').onclick=function(){if(C.bot)return;askQuit(C);};
   var host=mkHost(C);C.host=host;
   var o={calm:calmOn(),seed:seedOf(k,id),day:k,train:train,R:R(),lvl:topPlaceS(),delo:delo,bot:C.bot,lang:typeof LANG!=='undefined'?LANG:'ru',rec:(m.rec[id]||0)};C.o=o;
-  try{STAT.screen&&STAT.screen('mg_'+id);if(!C.bot)STAT.ev('mg',{id:id,a:'go',dl:delo?1:0,tr:train?1:0,ad:C.adRun?1:0});}catch(e){} /*MERGE STAT: старт захода*/
+  try{STAT.screen&&STAT.screen('mg_'+id);if(!C.bot)STAT.ev('mg',{id:id,a:'go',dl:delo?1:0,tr:train?1:0,ad:C.adRun?1:0,src:C.src});}catch(e){} /*MERGE STAT: старт захода*/
   try{g.run(host,o);}catch(e){try{console.error(e);}catch(x){}closeGame(true);toast(L('Игра не запустилась','The game failed to start'));}
   return true;}
 function topPlaceS(){try{return topPlace();}catch(e){return 0;}}
@@ -202,12 +203,12 @@ function mkHost(C){var rs=[];var H={el:C.el,
 function onWinResize(){if(!CUR)return;for(var i=0;i<(CUR.rs||[]).length;i++)try{CUR.rs[i]();}catch(e){}}
 window.addEventListener('resize',function(){clearTimeout(onWinResize._t);onWinResize._t=setTimeout(onWinResize,60);});
 function closeGame(silent){var C=CUR;if(!C)return;C.over=true;cancelAnimationFrame(C.raf);if(C.lay&&C.lay.parentNode)C.lay.parentNode.removeChild(C.lay);CUR=null;
-  if(C.cb)try{C.cb(C.result||null);}catch(e){}if(!silent&&!C.bot&&!C.noBack)backToDvor();}
+  if(C.cb)try{C.cb(C.result||null);}catch(e){}if(!silent&&!C.bot){if(C.back){try{C.back();}catch(e){}}else if(!C.noBack)backToDvor();}} // upd0910: back — куда вернуться (цели дня), иначе Двор
 // RB:MGPC окно «Выйти?» = пауза игры (host.paused); why='pause' — свернули/ушёл фокус: «Пауза» и «Продолжить»
 function askQuit(C,why){if(C.over||C.lay.querySelector('.mg-ask'))return;var ps=why==='pause';C.pause=true;
   for(var hk in (C.held||{}))for(var ui=C.keysUp.length-1;ui>=0;ui--)try{C.keysUp[ui](hk,{type:'keyup',key:hk,synthetic:1,preventDefault:function(){}});}catch(x){} C.held={}; // зажатое — отпустить
   var d=mkEl('div','mg-ask','<div class="mg-pn"><div class="mg-h">'+(ps?L('Пауза','Paused'):L('Выйти из игры?','Leave the game?'))+'</div><p>'+(ps?L('Игра ждёт тебя.','The game is waiting for you.')+' ':'')+L(C.train?'Тренировка не засчитается.':'Если выйти — заход не потратится, можно сыграть заново.',C.train?'Practice won\'t count.':'If you leave, this run won\'t count.')+'</p><div class="mg-row"><button class="mg-btn" data-a="no">'+(ps?L('Продолжить','Continue'):L('Остаться','Stay'))+kc('Enter')+'</button><button class="mg-btn sec" data-a="yes">'+L('Выйти','Leave')+'</button></div></div>');
-  C.lay.appendChild(d);d.onclick=function(e){var a=e.target.closest&&e.target.closest('[data-a]');if(!a)return;try{SND.tap();}catch(x){}d.parentNode.removeChild(d);C.pause=false;if(a.getAttribute('data-a')==='yes'){try{STAT.ev('mg',{id:C.id,q:1});}catch(x){}closeGame(false);}};}
+  C.lay.appendChild(d);d.onclick=function(e){var a=e.target.closest&&e.target.closest('[data-a]');if(!a)return;try{SND.tap();}catch(x){}d.parentNode.removeChild(d);C.pause=false;if(a.getAttribute('data-a')==='yes'){try{STAT.ev('mg',{id:C.id,q:1,src:C.src||'yard'});}catch(x){}closeGame(false);}};}
 function saySay(C,t,who){var b=C.lay.querySelector('.mg-say');if(!b){b=mkEl('div','mg-say');C.lay.appendChild(b);}
   b.innerHTML=(who?'<b>'+who+'</b>':'')+'<span></span>';b.querySelector('span').textContent=t;b.classList.add('on');clearTimeout(b._t);b._t=setTimeout(function(){b.classList.remove('on');},3200);}
 function flyCoins(C,n,x,y){if(calmOn())return;var e=C.lay,cw=e.clientWidth,ch=e.clientHeight;x=x==null?cw/2:x;y=y==null?ch/2:y;
@@ -240,7 +241,7 @@ function finishGame(C,res){C.over=true;cancelAnimationFrame(C.raf);var id=C.id,m
     var x=res.extra||{};if(x.give&&!w.capped)try{x.give();}catch(e){}else if(x.give&&w.capped&&x.giveCapped)try{x.giveCapped(w.fx);}catch(e){}
     out.loot=giveLoot(x,w.k*(w.capped?w.fx:1));
     out.lvUp=bookCheck();}
-  try{STAT.ev('mg',{id:id,s:sc,t:t,ad:C.adRun?1:0,tr:C.train?1:0,dl:C.delo?1:0,c:out.coins||0});}catch(e){}
+  try{STAT.ev('mg',{id:id,s:sc,t:t,ad:C.adRun?1:0,tr:C.train?1:0,dl:C.delo?1:0,c:out.coins||0,src:C.src||'yard'});}catch(e){}
   try{if(out.lvUp&&!C.bot)STAT.ev('mg',{a:'lvup',lv:out.lvUp.lv});}catch(e){} /*MERGE STAT: Книга двора — новый уровень*/
   if(!C.bot)mgSave();C.out=out;
   if(C.bot){var cb=C.cb;C.cb=null;closeGame(true);if(cb)cb(out);return;}
@@ -273,7 +274,7 @@ function showResult(C,res,out){var x=res.extra||{},g=C.g,lay=C.lay;C.el.classLis
     if(k==='ok'){closeGame(false);}
     else if(k==='x2'){var got=out.loot;a.disabled=true;C.host.ad('x2').then(function(ok){if(!ok){a.disabled=false;return;}a.style.visibility='hidden';
       giveLoot(lootObj(got),1);mgSave();try{STAT.ev('mg',{id:C.id,a:'x2'});}catch(e){}var gn=d.querySelector('.mg-gain');if(gn)gn.innerHTML=gainHtml(got.map(function(g){return [g[0],g[1]*2];}),out);try{SND.coin();}catch(e){}});}
-    else if(k==='ad'){C.host.ad('more').then(function(ok){if(ok){var id=C.id;closeGame(true);play(id,{delo:true,adRun:true});}});}};}
+    else if(k==='ad'){C.host.ad('more').then(function(ok){if(ok){var id=C.id;closeGame(true);play(id,{delo:true,adRun:true,src:C.src,back:C.back,noBack:C.noBack});}});}};}
 
 /* ---------- Двор: временный список (сцена — ниже, mgDvor) ---------- */
 function gainHtml(loot,out){return (loot&&loot.length?lootTxt(loot):'')+(out.coins>0?'<span class="mg-gc">'+coinSvg()+'<b>+'+out.coins+'</b></span>':'')+'<span class="mg-gp">'+ic('book')+'<b>+'+out.pt+'</b> '+L('в Книгу двора','to the Yard Book')+'</span>';}
@@ -418,7 +419,7 @@ if(STAND){(function w(n){if(REG[STAND]||REG[ALIAS[STAND]]||STAND==='dvor')standG
 W0.MG_REG=MG_REG;W0.mgBot=mgBot;W0.MG_RW=MG_RW;W0.MG_LIST=MG_LIST;
 // бонусы мини-игр (Уха +%, прикормка…) — только в обычной рыбалке: в турнире недели и «Рыбалке дня» не действуют
 function buffOk(){try{return !(typeof G!=='undefined'&&G&&G.tourn);}catch(e){return true;}}
-W0.MG={buffOk:buffOk,reg:REG,list:MG_LIST,by:MG_BY,play:play,close:closeGame,isOpen:isOpen,openHint:openHint,dvorOpen:dvorOpen,leftToday:leftToday,deloId:deloId,deloState:deloState,todo:todo,
+W0.MG={buffOk:buffOk,reg:REG,list:MG_LIST,by:MG_BY,play:play,close:closeGame,isOpen:isOpen,openHint:openHint,dvorOpen:dvorOpen,leftToday:leftToday,deloId:deloId,deloState:deloState,todo:todo,playsToday:playsToday,rw:rw,
   day:mgDay,fix:mgFix,merge:mgMerge,save:mgSave,R:R,seedOf:seedOf,dKey:dKey,wday:wday,lvlOf:lvlOf,lvlPts:lvlPts,BOOK_GIFT:BOOK_GIFT,SKINS:SKINS,DELO:DELO,ic:ic,IC:MG_IC,css:css,STAR:MG_STAR,get cur(){return CUR;},
   pc:pcOn,kc:kc,keycap:keycap,busy:busy,askQuit:askQuit,amb:AMB_SC,ambScene:ambScene};
 })();

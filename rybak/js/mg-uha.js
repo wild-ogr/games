@@ -524,5 +524,5 @@ if(typeof resultSlots!=='undefined'&&Array.isArray(resultSlots))resultSlots.push
   when:ctx=>slotOk(ctx&&ctx.g),
   html:ctx=>{css();return `<div class="mgu-slot"><span class="si">${POT_IC}</span><span class="st"><b>${T_('Сварить уху Митяю','Cook soup for Mityai')}</b><small>${T_('+10–30 % к улову','+10–30 % to the catch')}</small></span><button class="btn accent noenter" type="button">${T_('Варить','Cook')}</button></div>`;},
   bind:(el,ctx)=>{const b=el.querySelector('button');if(!b)return;b.onclick=()=>{const g=ctx.g;LAST.g=g;LAST.paid=0;snd('tap');
-    MG.play(ID,{noBack:true,cb:()=>{if(!g.uha)return;el.innerHTML=`<div class="mgu-slot"><span class="si">${POT_IC}</span><span class="st"><b>${T_('Уха сварена!','Soup is ready!')}</b><small>${LAST.paid?T_('Митяй заплатил ','Mityai paid ')+'+'+coinsTxt(LAST.paid):T_('Митяй доволен','Mityai is happy')}</small></span></div>`;}});};}});
+    MG.play(ID,{noBack:true,src:'win',cb:()=>{if(!g.uha)return;el.innerHTML=`<div class="mgu-slot"><span class="si">${POT_IC}</span><span class="st"><b>${T_('Уха сварена!','Soup is ready!')}</b><small>${LAST.paid?T_('Митяй заплатил ','Mityai paid ')+'+'+coinsTxt(LAST.paid):T_('Митяй доволен','Mityai is happy')}</small></span></div>`;}});};}});
 })();

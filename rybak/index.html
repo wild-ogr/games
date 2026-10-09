@@ -753,9 +753,21 @@ function a2ShopBind(list){list.querySelectorAll('[data-a2led]').forEach(b=>b.onc
   newItem(L('ДОНКА!','LEDGER!'),L('Донка с колокольчиком','Ledger rod'),window.LOOK?lkPic('donka'):'🔔',L('В окне наживки выбери «Донка»: закинешь дальше, на самое дно. Зазвенел колокольчик — жми!','Pick «Ledger» in the bait window. When the bell rings — tap!'),LANG==='en'?null:['Петрович','Донка — дело стариковское: сиди, чай пей, колокольчик слушай.']);});}
 /*/A2*/
 
-/* ================= язык: пока игра русская; английский — заготовка (строки L('рус','eng')), включается только на маке ?lang=en ================= */
+/* ================= язык (upd0910, по образцу Выезда v17): строки L('рус','eng').
+   VK/ОК — всегда русский. Яндекс — выбор игрока в ⚙ (localStorage rybak-lang) > язык Яндекса (ysdk.environment.i18n.lang, запоминается в rybak-lang-a)
+   > ?lang= > язык браузера; ru/be/kk/uk/uz → русский, остальное → английский. На маке ?lang=en|ru главнее всего.
+   Язык Яндекса приходит после загрузки SDK: если он другой, а игрок ещё не начал рыбалку — одна перезагрузка (langSdk), иначе — со следующего запуска. ================= */
 const IS_LOCAL=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
-let LANG=IS_LOCAL&&/[?&]lang=en/.test(location.search)?'en':'ru';
+const RU_LANGS=['ru','be','kk','uk','uz'],normLang=l=>RU_LANGS.indexOf(String(l||'').slice(0,2).toLowerCase())>=0?'ru':'en';
+const LANG_VK=/[?&](vk_app_id|vk)=/.test(location.search),LANG_Q=(/[?&]lang=([a-zA-Z-]+)/.exec(location.search)||[])[1]||'';
+let LANG_MAN=null,LANG_AUTO=null;try{const v=localStorage.getItem('rybak-lang'),a=localStorage.getItem('rybak-lang-a');if(v==='ru'||v==='en')LANG_MAN=v;if(a==='ru'||a==='en')LANG_AUTO=a;}catch(e){}
+let LANG=LANG_VK?'ru':LANG_Q&&IS_LOCAL?normLang(LANG_Q):LANG_MAN||LANG_AUTO||(IS_LOCAL?'ru':normLang(LANG_Q||navigator.language||'ru')); // на маке без ?lang — русский, как раньше
+// язык Яндекса: запомнить; другой и рыбалка не начата — перезагрузить один раз (sessionStorage — защита от круга)
+function langSdk(sl){if(!sl||LANG_VK||LANG_MAN||(LANG_Q&&IS_LOCAL))return;const l=normLang(sl);try{localStorage.setItem('rybak-lang-a',l);}catch(e){}
+  if(l===LANG)return;let once=0;try{once=+sessionStorage.getItem('rybak-lang-r')||0;sessionStorage.setItem('rybak-lang-r','1');}catch(e){once=1;}
+  if(!once&&(!(S.casts>0)||(!G&&!modalOn))){try{STAT.ev('mod',{m:'lang',a:'sdk',k:l});}catch(e){}location.reload();}}
+// выбор в ⚙ (только Яндекс): запомнить и перезагрузить — все тексты соберутся заново
+function langSet(l){if(LANG_VK)return;try{localStorage.setItem('rybak-lang',l);}catch(e){}try{save();cloudFlush&&cloudFlush();}catch(e){}setTimeout(()=>location.reload(),150);}
 const L=(ru,en)=>LANG==='en'&&en?en:ru;
 function plural(n,a,b,c){n=Math.abs(n)%100;const k=n%10;return n>10&&n<20?c:k>1&&k<5?b:k===1?a:c;}
 function pl(n,r1,r2,r5,e1,eN){return LANG==='en'?(n===1?e1:eN):plural(n,r1,r2,r5);}
@@ -832,7 +844,7 @@ const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512005219424'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 /*STAT*/
-/* ===== STAT v1.3 (08.10.2026; v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
@@ -840,9 +852,10 @@ const OK_LINK='https://ok.ru/game/512005219424'; // ссылка на игру �
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
    05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
-   08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с). */
+   08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
 var STAT=(function(){
-  var V=1,SV=13,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=14,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -928,6 +941,8 @@ var STAT=(function(){
   function progress(o){o=o||{};prog={};if(o.pl!==undefined)prog.pl=+o.pl||0;if(o.cn!==undefined){prog.cn=+o.cn||0;if(cb===undefined)cb=prog.cn;}
     if(o.bt!==undefined)prog.bt=o.bt?1:0;rel();}
   function bal(n){if(typeof n==='number'&&isFinite(n))cb=n;}
+  // v1.4: STAT.pl(n) — прогресс изменился (уровень пройден и т. п.): событий не шлёт, уходит полем pl в pause и в start следующего сеанса
+  function setPl(n){n=+n;if(!isFinite(n))return;prog=prog||{};prog.pl=n;}
 
   // --- уровни: STAT.lvl(5,'daily',{n:3}) в начале, STAT.use('hint') по ходу, STAT.end('win',{st:3}) в конце; STAT.move() — каждый ход ---
   function lvlStart(l,m,x){if(lvl)lvlEnd('quit');lvl={l:l,m:m||'',t:Date.now(),h:0,u:0,x:{}};var p={l:l},k,n=0;if(m)p.m=m;
@@ -1022,7 +1037,7 @@ var STAT=(function(){
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
-    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
+    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();if(prog&&prog.pl!==undefined)p.pl=prog.pl;ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
@@ -1045,14 +1060,14 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v7-100911',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v8-100916',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -1433,6 +1448,7 @@ async function initSDK(){
       ysdk.on&&ysdk.on('game_api_pause',()=>setPause('sdk',true));
       ysdk.on&&ysdk.on('game_api_resume',()=>setPause('sdk',false));
       try{ysdk.getFlags&&ysdk.getFlags().then(applyFlags).catch(()=>{});}catch(e){}
+      try{langSdk(ysdk.environment&&ysdk.environment.i18n&&ysdk.environment.i18n.lang);}catch(e){} // upd0910: язык Яндекса
       try{YP=await timeLim(ysdk.getPlayer({scopes:false}),8000);await cloudLoad();}catch(e){}
     }catch(e){ysdk=null;}
   }
@@ -1938,7 +1954,15 @@ function lowTick(ms){if(LOW||LOW_Q==='0')return;if(lowSkip>0){lowSkip--;return;}
 {const w=lowGuess();if(w)lowOn(w);}
 let G=null,modalOn=false;
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(id!=='scr-fish')stopLoop();}
-function toast(t,ms,low){const e=$('toast');e.textContent=t;if(!low&&$('catch')&&$('catch').classList.contains('on'))low=true; /* boost1: над карточкой улова — внизу, не на заголовке */const fg=!(low||modalOn)&&!!(G&&G.ft&&(G.phase==='fight'||G.phase==='reel'));e.classList.toggle('low',!!(low||modalOn));e.classList.toggle('fgt',fg);e.classList.add('on');clearTimeout(toast._t);
+// upd0910: английский для тостов общего модуля PAY и сообщений товаров (done) — модуль PAY не меняем, переводим на выходе
+const TOAST_EN={'Покупка зачислена':'Purchase added','Готово! Спасибо за покупку':'Done! Thank you for your purchase','Покупка не состоялась':'The purchase did not go through',
+  'Покупки проверены — всё на месте':'Purchases checked — everything is in place','🎫 Неделя в Клубе рыбаков — добро пожаловать!':'🎫 A week in the Anglers\' Club — welcome!',
+  '🌙 Ночной набор — на вкладке «Берег»':'🌙 Night kit — see the «Shore» tab','🎁 «Большой улов» — всё уже у тебя!':'🎁 «Big catch» — it\'s all yours!',
+  '🧭 Глава «Север» открыта — Петрович уже собирает рюкзак!':'🧭 The «North» chapter is open — Petrovich is packing!','Наживка в ящике — спасибо!':'Bait is in the box — thank you!',
+  '🎫 Добро пожаловать в Клуб рыбаков!':'🎫 Welcome to the Anglers\' Club!','🚗 Волга открыта — поехали!':'🚗 The Volga is open — let\'s go!','☕ Петрович: «Спасибо, сосед!»':'☕ Petrovich: «Thanks, neighbour!»',
+  '🎨 Новые поплавки — на вкладке «Берег»':'🎨 New floats — see the «Shore» tab','🎨 Новое оформление включено!':'🎨 New look is on!'};
+function toastEn(t){if(LANG!=='en'||typeof t!=='string')return t;if(TOAST_EN[t])return TOAST_EN[t];const m=/^\+(\d+)\s💰 — спасибо!$/.exec(t);if(m)return '+'+m[1]+' 💰 — thank you!';const k=/^(.*?)(\s\+\d+\s💰)$/.exec(t);return k&&TOAST_EN[k[1]]?TOAST_EN[k[1]]+k[2]:t;}
+function toast(t,ms,low){t=toastEn(t);const e=$('toast');e.textContent=t;if(!low&&$('catch')&&$('catch').classList.contains('on'))low=true; /* boost1: над карточкой улова — внизу, не на заголовке */const fg=!(low||modalOn)&&!!(G&&G.ft&&(G.phase==='fight'||G.phase==='reel'));e.classList.toggle('low',!!(low||modalOn));e.classList.toggle('fgt',fg);e.classList.add('on');clearTimeout(toast._t);
   let d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);if(String(t).split(/\s+/).length>5)d=Math.max(d,4000); // boost1: длиннее 5 слов — не меньше 4 с
   toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 function hideModal(){$('modal').classList.remove('on');modalOn=false;if(G&&!G.over)kick();}
@@ -2378,7 +2402,7 @@ function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;if(S.s
     bonus=`<p class="quote"><b>${L('Дед Митяй','Grandpa Mityai')}</b>${L('С почином! Держи '+coinsTxt(FIRST_BONUS)+' на новую леску — тонкую крупная рыба рвёт.','Well done! Here are '+coinsTxt(FIRST_BONUS)+' for a stronger line.')}</p>`;}
   save();checkAch();updCoins();
   {const ep={};if(!G.quit&&G.fv)ep.f=1;ep.n=fish.length;ep.g=g1;ep.c=G.earned;ep.lo=G.catch.filter(c=>c.lost).length;if(G.back==='ok')ep.bk=1; // fix0910: f:1 — первая рыбалка на этом водоёме; bk только 1 (в событии не больше 8 полей)
-  STAT.end(G.quit?'quit':'win',ep);statPrg();}
+  STAT.end(G.quit?'quit':'win',ep);statPrg();if(STAT.pl)STAT.pl(+S.sessions||0);} // upd0910: STAT v1.4 — pl в pause = рыбалок всего на конец захода
   const rows=G.catch.map(c=>c.miss?'':c.junk?`<tr><td>${JUNK[c.junk].ic} ${esc(nm(JUNK[c.junk]))}</td><td>+${c.c||1}</td></tr>`:c.lost?`<tr class="lost"><td>${esc(nm(fishOf(c.id)))} — ${c.res==='break'?L('оборвал','snapped'):L('сошла','got away')}</td><td>—</td></tr>`:`<tr><td><span class="lkfi" data-f="${c.id}"></span>${fishOf(c.id).leg?'✨ ':''}${esc(nm(fishOf(c.id)))}${c.bk?' <small>📺</small>':''}</td><td>${kgTxt(c.w)} · +${c.p!=null?c.p:c.c}${c.bx?'<small class="cx">'+c.bx.split(' · ').map(x=>'<span>'+x+'</span>').join(' · ')+'</small>':''}</td></tr>`).join('');
   const x2=X2_ON&&adOk()&&!G.tourn&&!G.adAsked&&(S.sessions||0)>=3&&G.earned>=10&&!(adDue()&&adReady());
   // плашки под уловом — не больше двух, по важности: подарок Митяя, турнир, «хватает на…», задание выполнено, набор в альбоме, «завтра», «копим на…», задание, кот
@@ -3355,6 +3379,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','
     <button class="set" id="stAmb"><span>🐦 ${L('Звуки природы','Nature sounds')}<br><small>${L('вода, птицы, сверчки, дождь','water, birds, crickets, rain')}</small></span>${on(S.amb!==false)}</button>
     <button class="set" id="stLoupe"><span>🔍 ${L('Лупа поплавка','Float zoom')}<br><small>${L('крупный поплавок при дальнем забросе','a big float view on long casts')}</small></span><i${S.loupe===2?' class="off"':''}>${a1LoupeTxt()}</i></button>
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('вываживание мягче, подсекать можно дольше, без тряски','gentler fights, longer bite window, no shaking')}</small></span>${on(calm())}</button>
+    ${PLAT==='yandex'&&!LANG_VK?'<button class="set" id="stLang"><span>🌐 '+L('Язык','Language')+'<br><small>Русский / English</small></span><i class="go">'+(LANG==='en'?'English':'Русский')+'</i></button>':''}
     ${STAT.available()?'<button class="set" id="stStat"><span>📊 '+L('Анонимная статистика','Anonymous statistics')+'<br><small>'+STAT.note()+'</small></span>'+on(STAT.enabled())+'</button>':''}
     ${SOC.ok()?'<button class="set" id="stSoc"><span>👥 '+(OK?'Друзья<br><small>позвать друзей в игру</small>':'Друзья и игры<br><small>позвать, поделиться, ещё игры</small>')+'</span><i class="go">›</i></button>':''}
     ${PAY.on&&!inGame()?payHtml(['no_ads'],false)+'<button class="set" id="stShop"><span>🛒 '+L('Все покупки','All purchases')+'<br><small>'+L('монеты, набор рыбака, наживка','coins, kits, bait')+'</small></span><i class="go">›</i></button>':''}
@@ -3363,6 +3388,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stAmb').onclick=()=>{S.amb=S.amb===false;save();SND.tap();openSettings();};$('stLoupe').onclick=()=>{S.loupe=((S.loupe||0)+1)%3;save();SND.tap();openSettings();}; // A1
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Enabled in your device settings'));return;}S.calm=!S.calm;save();applyCalm();if(G&&G.ft&&!G.ft.small&&G.pk&&G.pk.f){const n=fightNew(G.pk.f,G.pk.w,G.ft.D0,curTk(),calm(),G.R,G.ft.easy);G.ft.calm=n.calm;G.ft.cap=n.cap;G.ft.bmax=n.bmax;G.ft.gear=n.gear;}openSettings();};
+  if($('stLang'))$('stLang').onclick=()=>{SND.tap();STAT.ev('mod',{m:'lang',a:'set',k:LANG==='en'?'ru':'en'});langSet(LANG==='en'?'ru':'en');}; // upd0910
   if($('stSoc'))$('stSoc').onclick=openSocial;const sst=$('stStat');if(sst)sst.onclick=()=>{STAT.setEnabled(!STAT.enabled());SND.tap();openSettings();};
   if($('stShop')){$('stShop').onclick=openCoins;PAY.bind($('mcard'));PAY.re=openSettings;}
   $('stAbout').onclick=openAbout;$('stHow').onclick=openHow;$('stClose').onclick=()=>{hideModal();if(G&&!G.over&&$('scr-fish').classList.contains('on'))YG.start();};}
@@ -3773,7 +3799,7 @@ function a3MailProgress(g,fish,o){const M=S.mail,sp0=g.a3sp||[];
     else if(r.ty==='ses'){if(o.n)d=1;}else if(r.ty==='cat'){if(!g.tourn&&fish.some(c=>c.w<.25&&!fishOf(c.id).leg))d=1;}
     else if(r.ty==='new')d=fish.filter((c,i,a)=>FISH[c.id]&&sp0.indexOf(c.id)<0&&a.findIndex(z=>z.id===c.id)===i).length;else if(r.ty==='tr')d=o.tr;
     else if(r.ty==='n')d=o.n;else if(r.ty==='n1'){if(o.n>=r.n)d=r.n;}else if(r.ty==='leg')d=fish.filter(c=>fishOf(c.id).leg).length;
-    if(d){M.pr[id]=(M.pr[id]||0)+d;if(a3RqDone(id))toast('✉ '+L('Просьба выполнена','Request done')+' ('+FROM[LETTERS[id].fr][1]+') — '+L('награда в почте','reward in the mail'),3200,true);}}}
+    if(d){M.pr[id]=(M.pr[id]||0)+d;if(a3RqDone(id))toast('✉ '+L('Просьба выполнена','Request done')+' ('+L(FROM[LETTERS[id].fr][1],FROM[LETTERS[id].fr][2])+') — '+L('награда в почте','reward in the mail'),3200,true);}}}
 function a3RwC(x){return x.rw&&x.rw.c?a3C(a3Trip(),x.rw.c*A3R.letter,30):0;}
 function a3RwTxt(x){const w=x.rw||{},a=[];if(w.c)a.push('+'+coinsTxt(a3RwC(x)));if(w.b)a.push(BAIT[w.b[0]].ic+' '+esc(nm(BAIT[w.b[0]]))+' +'+w.b[1]);if(w.line)a.push('🧵 '+L('леска покрепче','a stronger line'));if(w.hint)a.push('✨ '+L('подсказка про легенду','a legend hint'));return a.join(' · ');}
 // доставить письмо дня (после первого улова; одно в календарный день)
@@ -4147,6 +4173,6 @@ Object.assign(window.__test,{a2Orders,openOrders,openBook,a2Start,a2O,a2ZoneAt,p
 <link rel="stylesheet" href="css/ui-win.css"><script src="js/ui-win.js"></script><!--RB:UX-win окна в виде «Стекло и свет»-->
 <link rel="stylesheet" href="css/shop.css"><script src="js/fest.js"></script><script src="js/shop.js"></script><script src="js/fest-ryb.js"></script><script src="js/away.js"></script><script src="js/evstat.js"></script><!--RB:SHOP витрина, праздники FEST, «пока тебя не было», статистика забросов-->
 <link rel="stylesheet" href="css/meta.css"><script src="js/meta-core.js"></script><script src="js/meta-league.js"></script><script src="js/meta-sci.js"></script><script src="js/meta-map.js"></script><script src="js/meta-omens.js"></script><script src="js/meta-cat.js"></script><!--RB:META лиги, Наука Петровича, Карта России, приметы, кот Васька (js/meta-*.js)-->
-<script src="js/statx.js"></script><!--MERGE STAT: недостающие события статистики (показ/место покупок, «не хватает монет», первые минуты, бонусы рыбалки, Север)-->
+<script src="js/mg-path.js"></script><!--upd0910: мини-игры на пути — «Мини-игра дня» в Целях, «Перекур» в итогах--><script src="js/statx.js"></script><!--MERGE STAT: недостающие события статистики (показ/место покупок, «не хватает монет», первые минуты, бонусы рыбалки, Север)-->
 </body>
 </html>
