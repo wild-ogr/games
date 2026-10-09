@@ -132,7 +132,7 @@ function forgeN(k){const v=(S.forge||{})[k];return typeof v==='number'?v:0;}
 function fT(type){let v=(S.forge||{})[type];if(typeof v==='number'){const o={};FORGE_ORDER[type].slice(0,v).forEach(([k])=>o[k]=1);S.forge[type]=v=o;}if(!v||typeof v!=='object'){S.forge=S.forge||{};S.forge[type]=v={};}return v;}
 function fHas(type,k){const v=S.forge&&S.forge[type];if(typeof v==='number')return !!fT(type)[k];return !!(v&&v[k]);}
 /* o: {ci,li} — уровень кампании; {endless:true} — осада; {week:N} — Босс недели; rule — правило испытания дня; diff — сложность (иначе из настроек) */
-function newBattle(o){
+function newBattle(o){hmk('nb');
   if(typeof cloudApply==='function')cloudApply(true);
   const wk=o.week!=null,endless=!!o.endless||wk,ci=wk?weekCh(o.week):o.ci,rule=o.rule||null;
   const map0=o.dly?genMap(o.dly.seed,{minLen:30,maxLen:40,spots:12,river:!!o.dly.river,side:!!o.dly.side}):wk?weekMap(o.week):endless?endlessMap():levelMap(ci,o.li),map=visRot()?rotMap(map0):map0;WW=map.rot?PH:PW;WH=map.rot?PW:PH;   // OB:META1 o.dly — «Застава дня» (js/meta-dly.js) · OB:VIS поле лёжа
@@ -203,7 +203,7 @@ function peekWave(){if(!G||G.wave>=waveCount())return null;if(!G.endless)return 
 // кто в волне: вид, летает ли, в броне ли, вожак/босс — для кнопки «Волна раньше» и окна по касанию черепа
 function waveWho(w){const out=[];if(!w)return out;for(const g of w.g){if(out.some(o=>o.t===g.t&&!o.lead===!g.lead))continue;const d=EN[g.t];
   out.push({t:g.t,n:g.n,fly:!!d.fly,arm:isArmored(g.t),boss:!!d.boss,lead:!!g.lead});}return out;}
-function callWave(){if(!G||G.over)return;if(G.wave>=waveCount())return;
+function callWave(){if(!G||G.over)return;hmk('wv');if(G.wave>=waveCount())return;
   let bonus=0;if(G.nextT>0){bonus=Math.round(G.nextT*(1+G.ci*.15)*(G.endless?1.5:1));G.coins+=bonus;if(bonus>0)toast(Lg('Смелость в цене: +','Courage pays: +')+coinsTxt(bonus));}
   const w=G.endless?peekWave():G.waves[G.wave];G.wave++;G.started=true;G.nextT=-1;
   if(G.dchPrize&&G.wave===1&&S.dch&&!S.dch.tried){S.dch.tried=1;save();} // испытание дня: попытка — с первой волны (выход до неё награду не сжигает)
@@ -622,7 +622,7 @@ function render(){if(!G||!bgCv)return;const c=ctx;
   c.textAlign='center';c.textBaseline='middle';const fN=wfs(CVL?16:13),fL=wfs(CVL?14.5:12);c.lineWidth=CVL?3.6:3;c.lineJoin='round';c.strokeStyle=CVL?CVL.num:'rgba(20,10,10,.7)';
   for(const n of G.nums){const a=n.t<.7?1:1-(n.t-.7)/.3;c.globalAlpha=a;c.font=cvF(CVL?800:900,Math.round((typeof n.v==='string'&&n.v.length>4?fL:fN)*fxNumK(n)*10)/10);
     c.strokeText(n.v,n.x,n.y-n.t*18);c.fillStyle=n.col;c.fillText(n.v,n.x,n.y-n.t*18);}c.globalAlpha=1;
-  for(const b of G.bub)drawBubble(b);
+  {const bb=bubPick();if(bb)drawBubble(bb);}   // одна реплика за раз (09.10): список G.bub не трогаем — от него зависит случайность боя
   worldT();META_HK('DRAW',c,G);c.globalAlpha=1; // OB:META1 розетка меты: мировые координаты
   // прицел молнии
   if(G.aim&&G.aimPt){const p=G.aimPt,r=SPELLS.thunder.r*(forgeN('thunder')>=2?1.2:1);c.strokeStyle='rgba(160,220,255,.9)';c.fillStyle='rgba(140,200,255,.15)';c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();c.arc(p.x,p.y,r,0,TAU);c.fill();c.stroke();c.setLineDash([]);}
@@ -673,9 +673,19 @@ function drawEnemy(e){if(e.under){chDrawUnder(e);return;}   // OB:CH: под з�
     if(CVL){c.fillStyle=CVL.stroke;rr(c,e.x-w/2-1.5,yy-4.5,w+3,9,4);c.fill();c.fillStyle=col;rr(c,e.x-w/2,yy-3,w*Math.max(0,e.hp/e.max),6,3);c.fill();}   // look1: полоска 6 px с тёмной каймой (было 3 в подложке 5)
     else{c.fillStyle='rgba(20,10,10,.65)';rr(c,e.x-w/2-1,yy-1,w+2,5,2.5);c.fill();c.fillStyle=col;rr(c,e.x-w/2,yy,w*Math.max(0,e.hp/e.max),3,1.5);c.fill();}}
 }
+/* реплики на экране (09.10, бэклог «пузыри за краем»): видна ОДНА — босса/вожака, иначе самая свежая; пузырь целиком в окне —
+   между верхней панелью (#hud) и нижней (#hudB), по бокам — в пределах холста. Хвостик — только если говорящий прямо под пузырём. */
+let bubZ={t:-1e9,top:0,bot:0};
+function bubZone(){const n=performance.now();if(n-bubZ.t<500)return bubZ;let top=VIEW.top,bot=VIEW.H-VIEW.bot;
+  try{const a=$('hud').getBoundingClientRect(),b=$('hudB').getBoundingClientRect();if(a.height)top=Math.max(top,a.bottom+4);if(b.height)bot=Math.min(bot,b.top-4);}catch(e){}
+  bubZ={t:n,top,bot:Math.max(bot,top+60)};return bubZ;}
+function bubPick(){let best=null,bp=-1;for(const b of G.bub){if(b.t>=b.dur||(b.e.dead&&!b.e.fixed))continue;const pr=b.e.boss||b.e.lead?1:0;if(pr>=bp){best=b;bp=pr;}}return best;}
 function drawBubble(b){const c=ctx,e=b.e,x=e.x,y=e.y-(e.r||10)*2.6-(e.fly?18:0)-(e.boss?e.r*.8:0);const q=b.t/b.dur,a=q<.1?q/.1:q>.85?(1-q)/.15:1;
-  const fs=wfs(CVL?16:13.5);c.globalAlpha=a;c.font=cvF(CVL?700:800,fs);if(b.fs!==fs){b.fs=fs;b.w=c.measureText(b.s).width+fs;}const w=b.w,h=fs*1.7;const bx=clamp(x-w/2,-VIEW.ox/VIEW.s+4,(VIEW.W-VIEW.ox)/VIEW.s-w-4),by=Math.max(y-h,(VIEW.top+(G.boss&&!G.boss.dead?(CVL?46:40):4)-VIEW.oy)/VIEW.s);
-  c.fillStyle=CVL?CVL.bub:'rgba(255,255,255,.95)';c.beginPath();c.moveTo(x-4,by+h-1);c.lineTo(x,by+h+5);c.lineTo(x+4,by+h-1);c.fill();rr(c,bx,by,w,h,h/2);c.fill();if(CVL){c.strokeStyle=CVL.bubE;c.lineWidth=1.3;c.stroke();}
+  const fs=wfs(CVL?16:13.5);c.globalAlpha=a;c.font=cvF(CVL?700:800,fs);if(b.fs!==fs){b.fs=fs;b.w=c.measureText(b.s).width+fs;}const w=b.w,h=fs*1.7,Z=bubZone();
+  const bx=clamp(x-w/2,-VIEW.ox/VIEW.s+4,(VIEW.W-VIEW.ox)/VIEW.s-w-4);
+  const by=Math.max(Math.min(y-h,(Z.bot-VIEW.oy)/VIEW.s-h-6),(Z.top+(G.boss&&!G.boss.dead?(CVL?46:40):0)-VIEW.oy)/VIEW.s);
+  const tx=clamp(x,bx+h/2,bx+w-h/2),tail=y-(by+h)>-2&&y-(by+h)<24;
+  c.fillStyle=CVL?CVL.bub:'rgba(255,255,255,.95)';c.beginPath();if(tail){c.moveTo(tx-4,by+h-1);c.lineTo(tx,by+h+5);c.lineTo(tx+4,by+h-1);c.fill();}rr(c,bx,by,w,h,h/2);c.fill();if(CVL){c.strokeStyle=CVL.bubE;c.lineWidth=1.3;c.stroke();}
   c.fillStyle=CVL?CVL.bubT:'#2a1a14';c.textAlign='center';c.textBaseline='middle';c.fillText(b.s,bx+w/2,by+h/2+.5);c.globalAlpha=1;}
 // поверх карты: полоса босса, баннер волны, индикатор следующей волны
 function drawOverlay(){const c=ctx,d=VIEW.dpr;c.setTransform(d,0,0,d,0,0);const W=VIEW.W;
@@ -730,7 +740,7 @@ function fmtBoost(s){s=Math.max(0,Math.round(s));const h=Lg(' ч ','h '),m=Lg(' 
 /* ================= цикл ================= */
 /* шаги расчёта: не больше 4 за кадр (на ×3 шаг длиннее) — слабый телефон не уходит в «спираль» тормозов.
    Кадр рисуем, только пока бой идёт: под паузой, окном и после окончания эффектов — один раз и стоп */
-function loop(t){requestAnimationFrame(loop);const dt=Math.min(1/20,(t-lastT)/1000||0);lastT=t;if(!G)return;
+function loop(t){requestAnimationFrame(loop);hangTick(t);const dt=Math.min(1/20,(t-lastT)/1000||0);lastT=t;if(!G)return;
   const live=!paused&&!G.paused&&!G.over;if(live)STAT.frame(); // STAT v1.2: плавность — только идущий бой
   // открыто кольцо выбора: ×2/×3 не идут (запас не тратится — значит, и ускорения нет); «Вечное ×2» — ×2
   if(live){const x2f=typeof payX2==='function'&&payX2(),sp=ringI>=0&&G.speed>=2?(x2f?2:1):G.speed,rem=dt*sp,n=Math.min(4,Math.max(1,Math.ceil(rem*60-1e-6)));if(rem>1e-4)for(let i=0;i<n;i++)update(rem/n);

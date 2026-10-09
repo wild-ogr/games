@@ -6,7 +6,7 @@ const LK=!!(window.LOOK&&LOOK.on);   // look1: вид «Живая сказка�
 const VOEV=()=>Lg('Воевода Потап','Commander Potap');
 const lvLbl=n=>Lg(n+' ур.','lv '+n);
 const BREF=()=>Lg('⏩ Ускорение: возвращено ','⏩ Speed-up refunded: ');
-function showModal(html,kind){if(typeof PAY!=='undefined')PAY.re=null;$('mBody').innerHTML=html;$('mBody').setAttribute('data-w',kind||'');$('mBody').classList.remove('rc');$('modal').classList.add('on');if(LK)$('toast').classList.remove('on');$('mBody').scrollTop=0;fitModal();}
+function showModal(html,kind){hmk('m:'+(kind||''));if(typeof PAY!=='undefined')PAY.re=null;$('mBody').innerHTML=html;$('mBody').setAttribute('data-w',kind||'');$('mBody').classList.remove('rc');$('modal').classList.add('on');if(LK)$('toast').classList.remove('on');$('mBody').scrollTop=0;fitModal();}
 /* look1: окно ужимается под экран — необязательные блоки помечены data-fit (меньше число — убирается раньше); строка SOC под кнопками в счёт не идёт */
 function fitModal(){const m=$('mBody');if(!m||!$('modal').classList.contains('on'))return;const L=Array.from(m.querySelectorAll('[data-fit]'));if(!L.length)return;for(const e of L)e.style.display='';
   const over=()=>{const so=m.querySelector('.soc-o:not(.ntf)');return m.scrollHeight-(so?so.offsetHeight+14:0)-m.clientHeight;}; /* вопрос про напоминания (.ntf) в счёт идёт: он должен быть на экране */
@@ -35,7 +35,7 @@ function forgeCan(t,k){const need=FORGE_T[k].need;return !fHas(t,k)&&(!need||fHa
 function canForge(){const f=starsFree();for(const t of TW_ORDER)for(const [k,c] of FORGE_ORDER[t])if(forgeCan(t,k)&&c<=f)return true;return false;}
 
 /* ---------- вкладки ---------- */
-function openTab(t){curTab=t;STAT.once('menu');STAT.once('ready',{ms:Math.round(performance.now())});STAT.screen(t.toLowerCase());for(const s of document.querySelectorAll('.tab'))s.classList.toggle('on',s.id==='tab'+t);
+function openTab(t){curTab=t;hmk('t:'+t);STAT.once('menu');STAT.once('ready',{ms:Math.round(performance.now())});STAT.screen(t.toLowerCase());for(const s of document.querySelectorAll('.tab'))s.classList.toggle('on',s.id==='tab'+t);
   for(const b of document.querySelectorAll('nav button'))b.classList.toggle('on',b.dataset.tab===t);
   ({Map:renderMap,Forge:renderForge,Village:renderVillage,Siege:renderSiege})[t]();setPills();}
 function toMenu(tab){const won=!!(G&&G.win&&!G.endless);if(G&&!G.over)STAT.end('quit',{w:Math.max(0,G.wave-1)});if(G&&!G.win){boostRefund(.5);save();}G=null;cloudApply();document.body.classList.remove('run');closeRing();hideModal();$('voice').classList.remove('on');musicMode('menu');openTab(tab||curTab);
@@ -257,7 +257,7 @@ function ringBuild(){const s=G.map.spots[ringI],p=toScreen(s.x,s.y),el=$('ring')
   else $('info').classList.toggle('low',cy<VIEW.H*.5);
   visRingFit(p,cx,cy,R);}   // OB:VIS кольцо не налезает на карточку (js/vis.js)
 function ringRefresh(){const sig=ringItems().map(i=>i.id+i.no).join();if(sig!==ringSig)ringBuild();}
-function ringTap(id){const t=G.tw[ringI],s=G.map.spots[ringI];SND.click();
+function ringTap(id){const t=G.tw[ringI],s=G.map.spots[ringI];if(!s||(!t&&!id.startsWith('b_'))){closeRing();return;}SND.click();   // fix0910: кольцо от уже исчезнувшей заставы (сбой iOS ui.js:266, t.type)
   // 🎯 — сразу следующая цель по кругу (без второго нажатия: ничего не стоит и не ломается); новые заставы этого вида в бою берут её же
   if(id==='aim'&&t&&AIM_BY[t.type]){const L=AIM_BY[t.type];t.aim=L[(L.indexOf(t.aim||'first')+1)%L.length];G.aimDef=G.aimDef||{};G.aimDef[t.type]=t.aim;ringSel=null;ringBuild();return;}
   if(ringSel!==id&&!(G.tut===1&&id.startsWith('b_')&&towerUnlocked(id.slice(2))&&G.coins>=buildCost(id.slice(2)))){ringSel=id;
@@ -389,7 +389,7 @@ function bestTwHTML(){if(!G)return '';const L=G.tw.filter(Boolean).concat(G.gone
   return Object.keys(by).length>1?'<details class="besttw" data-fit="1"><summary>'+head+'</summary>'+rows+'</details>':'<div class="besttw one" data-fit="1">'+head+'</div>';}
 function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('on');
   // STAT: итог боя (после «ещё попытки» — второй итог с режимом cont); w — отбито волн, st — звёзды, lk — прорвалось; осада всегда кончается lose
-  {const o={w:Math.max(0,win&&!G.endless?G.wave:G.wave-1),lk:G.leaks};if(win&&!G.endless&&!G.wk)o.st=starsFor();if(G.wk)o.k=G.wkKill?1:0;STAT.end(win?'win':G.quit?'quit':'lose',o);
+  {const o={w:Math.max(0,win&&!G.endless?G.wave:G.wave-1),lk:G.leaks};if(win&&!G.endless&&!G.wk)o.st=starsFor();if(G.wk)o.k=G.wkKill?1:0;if(win&&!G.endless&&!G.wk&&!G.dly&&!G.rule&&!difStars(G.ci,G.li,G.dif||'n'))o.f=1;STAT.end(win?'win':G.quit?'quit':'lose',o);
    if(win&&!G.endless&&!G.wk&&!S.wins)STAT.ev('tut',{s:4});}
   // бой может кончиться дважды («ещё попытка» после поражения) — счётчики и задания пополняем только приростом
   const P=G.paid||(G.paid={kills:0,kt:{},built:0,ups:0,spells:0,n:0,best0:S.endBest||0,gold:0,waves:0,x2:0}),dK=G.kills-P.kills;
@@ -424,7 +424,7 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
     on('rAgain',()=>afterAd(true,startEndless));on('rMap',()=>afterAd(true,()=>toMenu('Siege')));META_HK('WIN',G,win);achAfter();return;}
   const c=G.ci,l=G.li,key=lvKey(c,l);
   const dm=G.dif||'n',dmN=dm==='n';   // OB:DIF режим боя: звёзды Сложного/Адского — S.dst, золото ×DIF[dm].gold
-  if(win){const st=starsFor(),prev=difStars(c,l,dm),first=!prev;difPut(c,l,dm,st);S.wins++;if(S.lose&&dmN)delete S.lose[key];if(!dmN)delete DIF_LOSE[dm+key];
+  if(win){const st=starsFor(),prev=difStars(c,l,dm),first=!prev;difPut(c,l,dm,st);statPl();S.wins++;if(S.lose&&dmN)delete S.lose[key];if(!dmN)delete DIF_LOSE[dm+key];
     const crownNew=false,dUp=l===5&&first&&dm!=='h'?(dmN?'s':'h'):'';
     dqAdd('win',1);if(st===3)dqAdd('star3',1);const lg=S.login?0:loginFirst();   // первый день серии входов засчитываем с первой победой
     const reward=Math.round(winGold(c,l,st,first)*(DIF[dm]||DIF.n).gold);S.gold+=reward;ern('lvl',reward);const bst=(60+30*(st-1))*(l===5?2:1);const bref=boostRefund(1);boostAdd(bst);save();

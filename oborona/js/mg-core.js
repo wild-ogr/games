@@ -197,8 +197,9 @@ function MG_OPEN(id,opt){opt=opt||{};const g=MG.by[id]||mgG(+id);if(!g){toast(Lg
   qb.onclick=()=>{try{SND.click();}catch(e){}if(fin){MG_CLOSE();return;}MG_QUIT_ASK(host);};
   const onRs=()=>{for(const f of rs)try{f(host.w,host.h);}catch(e){console.error(e);}};
   window.addEventListener('resize',onRs);
-  MG.cur={id:g.id,g,host,o,opt,onRs,qs,t0:Date.now(),ad:mode==='day2'?1:0};
-  try{STAT.screen('mg_'+g.id);STAT.ev('mg',{a:'go',id:g.id,m:mode,lv:o.lvl});}catch(e){}   // OB:FINAL STAT: старт мини-игры (вид захода day/day2/sit/week/fest/train)
+  const src=String(opt.src||opt.from||'');   // 09.10 STAT: откуда пришли — izba (изба), day (строка «Дело дня» в заданиях), win (окно победы «Передышка»), lose (Частокол после поражения), lair (Разведка)
+  MG.cur={id:g.id,g,host,o,opt,onRs,qs,t0:Date.now(),ad:mode==='day2'?1:0,src};hmk('mg:'+g.id);
+  try{STAT.screen('mg_'+g.id);STAT.ev('mg',{a:'go',id:g.id,m:mode,lv:o.lvl,src});}catch(e){}   // OB:FINAL STAT: старт мини-игры (вид захода day/day2/sit/week/fest/train)
   try{g.run(host,o);}catch(e){console.error(e);if(typeof META_ERR!=='undefined')try{META_ERR('mg-'+g.id,e);}catch(x){}MG_CLOSE();toast(Lg('Игра не запустилась','The game failed to start'));}
   return host;}
 /* ✕ во время игры: «Выйти? Заход не засчитается» */
@@ -207,7 +208,7 @@ function MG_QUIT_ASK(host){const c=MG.cur;if(!c||c.host!==host){host.quit();retu
   v.innerHTML='<div class="panel"><h3>'+Lg('Выйти из игры?','Leave the game?')+'</h3><p class="sub" style="text-align:center">'+(rw?Lg('Заход не засчитается — сыграть можно будет снова.','This run won’t count — you can play again.'):Lg('Рекорд этой попытки не запишется.','This attempt’s score won’t be saved.'))+'</p>'+
     '<div class="btns"><button class="btn big" data-k="go">'+Lg('Продолжить','Continue')+'</button><button class="btn ghost" data-k="out">'+Lg('Выйти','Leave')+'</button></div></div>';
   host.root.appendChild(v);v.querySelector('[data-k=go]').onclick=()=>{SND.click();v.remove();host.hold=false;};
-  v.querySelector('[data-k=out]').onclick=()=>{SND.click();try{STAT.ev('mg',{a:'quit',id:c.id});}catch(e){}host.quit();};}
+  v.querySelector('[data-k=out]').onclick=()=>{SND.click();try{STAT.ev('mg',{a:'quit',id:c.id,src:c.src||''});}catch(e){}host.quit();};}
 function MG_CLOSE(){const c=MG.cur;if(!c)return;MG.cur=null;for(const f of c.qs)try{f();}catch(e){}
   window.removeEventListener('resize',c.onRs);const r=$('mgHost');if(r)r.remove();try{STAT.screen(typeof curTab!=='undefined'?String(curTab).toLowerCase():'menu');}catch(e){}}
 
@@ -235,7 +236,7 @@ function MG_FIN(g,o,r,opt){const c=MG.cur,n=g.num|0,rw=MG_RW[n]||{tr:[0,0,0,0],s
     if(n===2)z.chp=null;
     out.items=out.items.concat(dzClaim());}
   out.lv1=dzLv(z.x);dzTouch();save();
-  try{STAT.ev('mg',{id:g.id,score:r.score,tier:r.tier,ad:c&&c.ad?1:0,train:train?1:0,m:o.mode,rec:rec?1:0});}catch(e){}
+  try{STAT.ev('mg',{id:g.id,score:r.score,tier:r.tier,ad:c&&c.ad?1:0,train:train?1:0,m:o.mode,rec:rec?1:0,src:c&&c.src||''});}catch(e){}
   if(typeof MG_FIN_UI==='function')return MG_FIN_UI(g,o,out,opt);
   MG_CLOSE();toast(mgName(g)+': '+r.score);}
 

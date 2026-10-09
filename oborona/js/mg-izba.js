@@ -213,8 +213,8 @@ function MG_FIN_UI(g,o,r,opt){const c=MG.cur,host=c&&c.host;if(!host){MG_CLOSE()
     if(k==='ok'){fin();if(opt.battle&&!$('dzIzba'))try{toMenu('Map');}catch(e){}}
     else if(k==='battle'){const bt=opt.battle;MG_CLOSE();dzClose();try{startLevel(bt.c,bt.l);}catch(e){console.warn(e);}}
     else if(k==='alt'){const sb=S.mgBuf;if(sb){sb.c=0;sb.ts=Date.now();}const q=mgTrf(MG_RW[8].alt||2);save();try{STAT.ev('mg',{a:'alt',id:g.id});}catch(e){}x.disabled=true;x.textContent=q?'+'+q.n+' '+trfName(q.id)+' ✓':'✓';const bf=v.querySelector('.mgRw .buf');if(bf)bf.remove();}
-    else if(k==='again'){MG_CLOSE();MG_OPEN(g.id,{train:true,from:opt.from});}};}
-  if($('mgAgain'))adOn('mgAgain','mg_more',()=>showRewarded(()=>{MG_CLOSE();MG_OPEN(g.id,{mode:'day2',from:opt.from});},null,dzLateMore));}
+    else if(k==='again'){MG_CLOSE();MG_OPEN(g.id,{train:true,from:opt.from,src:opt.src});}};}
+  if($('mgAgain'))adOn('mgAgain','mg_more',()=>showRewarded(()=>{MG_CLOSE();MG_OPEN(g.id,{mode:'day2',from:opt.from,src:opt.src});},null,dzLateMore));}
 
 /* поздний «досмотрел» (adt): «Ещё заход» — сразу ½ награды трофеями (игры уже нет на экране); плотники — +3 ❤ */
 function dzLateMore(){const z=DZ();if(z.d.a)return '';z.d.a=1;const q=mgTrf(1);dzTouch();save();return q?'+1 '+trfName(q.id):'';}
@@ -229,7 +229,10 @@ function dzVIL(el){try{if(!el||!S.wins)return;dzCss();const open=mgIzbaOpen(),D=
   const cv=d.querySelector('canvas'),W=d.clientWidth||cvv&&cvv.clientWidth||340,H=Math.round(Math.max(130,Math.min(170,W*.36)));dzCv(cv,W,H);cv.style.width='100%';dzScene(cv,{tile:1,still:1,t:0});
   if(open)d.onclick=()=>{try{SND.click();}catch(e){}MG_IZBA();};}catch(e){console.warn('dz vil',e);}}
 /* «Сегодня» на карте: фишка, когда в избе что-то ждёт */
-function dzTODAY(a){try{if(!mgIzbaOpen()||!dzHot())return;const D=dzDayState();a.push({id:'dzr',hot:1,t:Lg('🔔 ','🔔 ')+(D.n&&!D.played?mgNameN(D.n):Lg('Дозорная изба','Watch Hut')),fn:MG_IZBA});}catch(e){}}
+function dzTODAY(a){try{if(!mgIzbaOpen()||!dzHot())return;const D=dzDayState();
+  // 09.10: «Дело дня» не сыграно — фишка сразу после «Заданий» и запускает игру одним нажатием (src:'day'); иначе — изба в конце ряда, как было
+  if(D.n&&!D.played&&mgAvail(D.n)){const i=a.findIndex(x=>x.id==='dq');a.splice(i>=0?i+1:a.length,0,{id:'dzr',hot:1,t:'🎲 '+Lg('Дело дня: ','Deed of the day: ')+mgNameN(D.n),fn:()=>dzPlay(D.n,'day',{},{src:'day'})});return;}
+  a.push({id:'dzr',hot:1,t:Lg('🔔 ','🔔 ')+Lg('Дозорная изба','Watch Hut'),fn:MG_IZBA});}catch(e){}}
 /* сундук дня (meta-ret CHEST): «Дело дня» сыграно — +1 трофей в сундук (4-е, необязательное задание) */
 function dzCHEST(o){try{const D=dzDayState();if(!D.n||!D.played||!o)return;const q=mgTrf(1);if(q&&Array.isArray(o.txt))o.txt.push('<img src="'+ic(trfIc(q.id),40)+'" width="20" height="20" style="vertical-align:middle" alt=""> +1 '+Lg('за «Дело дня»','for the Deed of the day'));}catch(e){}}
 if(typeof META_MODS!=='undefined')META_MODS.push({id:'dzrui',VIL:dzVIL,TODAY:dzTODAY,CHEST:dzCHEST});
@@ -239,7 +242,7 @@ if(typeof META_MODS!=='undefined')META_MODS.push({id:'dzrui',VIL:dzVIL,TODAY:dzT
   const card=box.querySelector('.card');if(!card)return;const r=document.createElement('div');r.className='qrow';
   r.innerHTML='<img src="'+mgIc(D.n,72)+'" style="width:36px;height:36px;flex:none" alt=""><div class="t"><b>'+Lg('Дело дня: ','Deed of the day: ')+mgNameN(D.n)+'</b><span>'+Lg('по желанию · +1 трофей в сундук дня','optional · +1 trophy in the daily chest')+'</span></div>'+
     (D.played?'<span class="tag ok">✓</span>':'<button class="btn gold" id="dqDz">'+Lg('Играть','Play')+'</button>');
-  const at=card.querySelector('.note');if(at)card.insertBefore(r,at);else card.appendChild(r);on('dqDz',()=>{dzPlay(D.n,'day',{},{});});}catch(e){console.warn('dz quests',e);}};}
+  const hd=card.querySelector('b');if(hd&&hd.nextSibling)card.insertBefore(r,hd.nextSibling);else card.appendChild(r);on('dqDz',()=>{dzPlay(D.n,'day',{},{src:'day'});});}catch(e){console.warn('dz quests',e);}};}
 
 /* ---------- красная точка на «Деревне» ---------- */
 {const sp0=typeof setPills==='function'?setPills:null;if(sp0)setPills=function(){sp0.apply(this,arguments);try{const cur=typeof G!=='undefined'&&G?'':curTab;if(cur!=='Village'&&dzHot())$('navV').classList.add('dot');}catch(e){}};}
@@ -252,12 +255,34 @@ if(typeof META_MODS!=='undefined')META_MODS.push({id:'dzrui',VIL:dzVIL,TODAY:dzT
     const bx=document.querySelector('#mBody .btns.stick')||document.querySelector('#mBody .btns');if(!bx||$('rChast'))return r;
     const b=document.createElement('button');b.className='btn ghost';b.id='rChast';b.style.whiteSpace='normal';b.innerHTML='<img src="'+ic('mg_i2',48)+'" style="width:26px;height:26px" alt=""> '+Lg('Залатать частокол (+2 ❤)','Patch the palisade (+2 ❤)');
     const mp=$('rMap');if(mp&&mp.parentNode===bx)bx.insertBefore(b,mp);else bx.appendChild(b);if(typeof fitModal==='function')fitModal();
-    const go=()=>{hideModal();dzPlay(2,'sit',{c,l},{battle:{c,l}});};
+    const go=()=>{hideModal();dzPlay(2,'sit',{c,l},{battle:{c,l},src:'lose'});};
     b.onclick=()=>{try{SND.click();}catch(e){}if(!adOk()){go();return;}
       const w=document.createElement('div');w.className='btns h';w.style.marginTop='0';w.innerHTML='<button class="btn" style="white-space:normal" id="rChG">'+Lg('🪵 Залатать самому','🪵 Patch it myself')+'</button><button class="btn ad" style="white-space:normal" id="rChA">'+Lg('🎬 Плотники за рекламу: +3 ❤','🎬 Carpenters for an ad: +3 ❤')+'</button>';
       b.replaceWith(w);if(typeof fitModal==='function')fitModal();on('rChG',go);
       adOn('rChA','mg_carp',()=>showRewarded(()=>{const z2=DZ();mgBufAdd({h:MG_RW.livesAd});z2.d.c++;z2.chp=null;dzTouch();save();try{SND.build();STAT.ev('mg',{a:'carp'});}catch(e){}
         w.innerHTML='<p class="sub" style="margin:4px">'+Lg('Плотники залатали частокол: +3 ❤ в следующем бою!','The carpenters patched the palisade: +3 ❤ next battle!')+'</p>';},null,dzLateCarp));};}catch(e){console.warn('dz lose',e);}return r;};}
+
+/* ---------- окно победы: «Передышка» (09.10, решение владельца — мини-игры на пути игрока) ----------
+   Раз в 3–4 победы в кампании (счётчик на устройстве `oborona-pv`) — строка «Передышка: сыграть в «…»?» с одной кнопкой «Сыграть» и ✕.
+   Предлагаем только то, за что сегодня ещё есть награда в обычных лимитах: «Дело дня» (mode 'day'), иначе первая несыгранная ежедневная (MG_DAILY, 'daily').
+   Нечего предложить — молчим. Не в первых 3 победах (там подсказки новичку), не рядом с вопросом про напоминания (.soc-o.ntf).
+   Строка data-fit="6" — на низком экране прячется последней (после «лучшей заставы», плашек и т. п.); спрятана — показ не засчитан. STAT: mg {a:'pv', id, r:show|go|skip}, вход — src:'win'. */
+function dzPvPick(){if(!mgIzbaOpen())return null;const D=dzDayState();if(D.n&&!D.played&&mgAvail(D.n))return {n:D.n,mode:'day'};const L=dzDailyTodo();return L.length?{n:L[0],mode:'daily'}:null;}
+function dzPvN(v){try{if(v==null)return +localStorage.getItem('oborona-pv')||0;localStorage.setItem('oborona-pv',String(v));}catch(e){}return 0;}
+{const be1=typeof onBattleEnd==='function'?onBattleEnd:null;if(be1)onBattleEnd=function(win){const g0=typeof G!=='undefined'&&G,camp=win&&mgCampaign(g0);
+  const r=be1.apply(this,arguments);try{if(!camp||SHOT||(S.wins|0)<4)return r;const k=dzPvN()+1,need=3+(Math.floor(Date.now()/864e5)%2);dzPvN(k);if(k<need)return r;
+    const m=$('mBody');if(!m||m.querySelector('.soc-o.ntf')||$('dzPv'))return r;const pk=dzPvPick();if(!pk)return r;
+    const bx=m.querySelector('.btns.stick')||m.querySelector('.btns');if(!bx)return r;const id=(mgG(pk.n)||{}).id||pk.n;
+    const d=document.createElement('div');d.className='goal dzpv';d.id='dzPv';d.setAttribute('data-fit','6');
+    d.innerHTML='<div style="display:flex;align-items:center;gap:8px;text-align:left"><img src="'+mgIc(pk.n,72)+'" style="width:34px;height:34px;flex:none" alt=""><span style="flex:1;min-width:0">'+Lg('Передышка: сыграть в «','A breather: play “')+mgNameN(pk.n)+Lg('»?','”?')+'</span>'+
+      '<button class="btn gold" id="dzPvGo" style="flex:none;width:auto;min-width:0;padding:6px 12px;margin:0">'+Lg('Сыграть','Play')+'</button>'+
+      '<button class="btn ghost" id="dzPvX" aria-label="'+Lg('Не сейчас','Not now')+'" style="flex:none;width:auto;min-width:0;padding:6px 10px;margin:0">✕</button></div>';   // fitModal сбрасывает display у data-fit — раскладка во внутреннем блоке
+    bx.parentNode.insertBefore(d,bx);if(typeof fitModal==='function')fitModal();
+    if(d.style.display==='none'||!d.offsetHeight){d.remove();return r;}   // не влезло — не показываем и не засчитываем
+    dzPvN(0);try{STAT.ev('mg',{a:'pv',id,r:'show'});}catch(e){}
+    $('dzPvGo').onclick=()=>{try{STAT.ev('mg',{a:'pv',id,r:'go'});}catch(e){}hideModal();if(typeof toMenu==='function')toMenu('Map');dzPlay(pk.n,pk.mode,{},{src:'win'});};
+    $('dzPvX').onclick=()=>{try{SND.click();STAT.ev('mg',{a:'pv',id,r:'skip'});}catch(e){}d.remove();if(typeof fitModal==='function')fitModal();};
+  }catch(e){console.warn('dz pv',e);}return r;};}
 
 /* ---------- окно перед боем: «Дозор приготовил…» и Разведка перед Логовом ---------- */
 {const oi0=typeof openIntro==='function'?openIntro:null;if(oi0)openIntro=function(c,l){const r=oi0.apply(this,arguments);try{const bx=document.querySelector('#mBody .btns.stick');if(!bx)return r;
@@ -265,7 +290,7 @@ if(typeof META_MODS!=='undefined')META_MODS.push({id:'dzrui',VIL:dzVIL,TODAY:dzT
   if(l===6&&DZ().lr[c]&&MG.by.razv&&MG.by.razv.waves){try{const ws=MG.by.razv.waves(c);if(ws&&ws.length){const d=document.createElement('div');d.className='goal';d.id='dzWaves';d.setAttribute('data-fit','4');   // OB:FINAL Разведка → состав волн Логова
     d.innerHTML='<b>'+Lg('Разведано: ','Scouted: ')+'</b>'+ws.map((w,i)=>'<span style="white-space:nowrap;display:inline-flex;align-items:center;gap:1px;margin-right:6px">'+(i+1)+':'+w.slice(0,3).map(e=>'<img src="'+ic(e.art,40)+'" style="width:20px;height:20px'+(e.lead||e.boss?';filter:drop-shadow(0 0 2px #e8433a)':'')+'" alt="">'+(e.n>1?'×'+e.n:'')).join('')+'</span>').join('');bx.parentNode.insertBefore(d,bx);}}catch(e){console.warn('dz waves',e);}}
   if(l===6&&mgAvail(7)&&!DZ().lr[c]&&!S.stars[c+'-6']){const sb=document.createElement('button');sb.className='btn gold';sb.id='goRazv';sb.style.whiteSpace='normal';sb.innerHTML='<img src="'+ic('mg_i7',48)+'" style="width:26px;height:26px" alt=""> '+Lg('Разведка тропы (+2 трофея)','Scout the trail (+2 trophies)');
-    const gb=$('goBtn');if(gb&&gb.nextSibling)bx.insertBefore(sb,gb.nextSibling);else bx.appendChild(sb);sb.onclick=()=>{hideModal();dzPlay(7,'sit',{lair:c},{onQuit:()=>openIntro(c,l),back:()=>openIntro(c,l)});};}
+    const gb=$('goBtn');if(gb&&gb.nextSibling)bx.insertBefore(sb,gb.nextSibling);else bx.appendChild(sb);sb.onclick=()=>{hideModal();dzPlay(7,'sit',{lair:c},{onQuit:()=>openIntro(c,l),back:()=>openIntro(c,l),src:'lair'});};}
   if(typeof fitModal==='function')fitModal();}catch(e){console.warn('dz intro',e);}return r;};}
 /* после разведки — снова окно Логова */
 {const fu0=MG_FIN_UI;MG_FIN_UI=function(g,o,r,opt){fu0(g,o,r,opt);if(g.num===7&&opt&&opt.back){const v=$('mgHost');if(!v)return;for(const x of v.querySelectorAll('[data-k=ok]'))x.onclick=()=>{try{SND.click();}catch(e){}MG_CLOSE();opt.back();};}};}

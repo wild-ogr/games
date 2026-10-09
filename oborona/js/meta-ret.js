@@ -61,7 +61,13 @@ function dlyChestRow(D){const st=dlyStreak(),ok=D.list.every(q=>q.got),g=dlyGold
 function dlyChestOpen(){const st=dlyStreak(),g=dlyGold(st.n),o={gold:g,streak:st.n,txt:[]};S.dlyS={d:dayKey(),n:st.n};
   META_HK('CHEST',o);S.gold+=o.gold;ern('chest',o.gold);boostAdd(DQ_BONUS);save();SND.up();
   try{STAT.ev('mod',{m:'ret',a:'chest',n:st.n});}catch(e){}
-  toast(Lg('Сундук дня: +','Daily chest: +')+fmtGold(o.gold)+Lg(' и +5 мин ⏩',' and +5 min ⏩')+(o.txt.length?' · '+o.txt.join(' · '):'')+(st.n>1?Lg(' · серия '+st.n+' дн.',' · streak '+st.n+' d'):''));}
+  // 09.10 (бэклог «сундук дня тостом»): окошко с одной кнопкой вместо тоста — строки модулей (o.txt, напр. трофей «Дела дня» с картинкой) показываются как есть, а не HTML-текстом
+  showModal('<h3>'+Lg('Сундук дня','Daily chest')+'</h3><div class="bigstars"><img src="'+ic('chest',96)+'" alt="" style="width:72px;height:72px"></div>'+
+    '<div class="rew"><b>+'+fmtGold(o.gold)+'</b>'+Lg(' · ⏩ +5 мин',' · ⏩ +5 min')+'</div>'+
+    (o.txt.length?'<div class="goal" style="text-align:center">'+o.txt.join('<br>')+'</div>':'')+
+    (st.n>1?'<p class="sub">'+Lg('Серия: '+st.n+' '+plural(st.n,'день','дня','дней')+' подряд','Streak: '+st.n+' days in a row')+'</p>':'')+
+    '<div class="btns"><button class="btn gold big" id="chOk">'+Lg('Забрать','Collect')+'</button></div>','chest');
+  on('chOk',()=>{SND.click();hideModal();});}
 
 /* ---------- «Пока тебя не было, казна собрала…» ---------- */
 let awayShown=false;

@@ -323,7 +323,7 @@ html.lk .panel div[style*="font-weight:900"]{font-size:17px}
  html.lk .title{font-size:17px}
 }
 @media (max-width:340px){
- html.lk .title{font-size:15px}html.lk .topbar{padding-left:7px;padding-right:7px;gap:5px}html.lk .pill{font-size:16px;padding:3px 8px 3px 5px;min-height:40px}html.lk .pill img{width:22px;height:22px}
+ html.lk .title{font-size:14px;letter-spacing:-.3px}html.lk .topbar{padding-left:7px;padding-right:7px;gap:5px}html.lk .pill{font-size:16px;padding:3px 8px 3px 5px;min-height:40px}html.lk .pill img{width:22px;height:22px}
  html.lk .topbar.more .title{display:none}html.lk .topbar.more .pill:first-of-type{margin-left:auto}html.lk .topbar.more{justify-content:flex-end}
  html.lk nav{padding-left:2px;padding-right:2px;gap:2px}html.lk nav button{font-size:14.5px;letter-spacing:-.4px}html.lk .rb.spd small{font-size:12px}
  html.lk .tab{padding-left:7px;padding-right:7px}html.lk .card{padding:9px 9px}

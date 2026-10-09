@@ -50,11 +50,11 @@ const BOOT={ts:S.ts||0,gold:S.gold||0,boost:S.boost!=null?S.boost:900};
 let cloudLoaded=false,cloudPending=null,cloudT=0,cloudLast=0,cloudDirty=false;
 // VK пишет всё сохранение кусками (5–6 вызовов) — в бою не чаще раза в минуту, в меню — раз в 15 с; при сворачивании — сразу
 function cloudGap(){return PLAT==='vk'?(typeof G!=='undefined'&&G&&!G.over?60000:15000):5000;}
-function save(){if(SHOT)return;S.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
+function save(){if(SHOT)return;hmk('save');S.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
   cloudDirty=true;if(!cloudLoaded||cloudPending||cloudT)return;
   cloudT=setTimeout(()=>{cloudT=0;cloudSave();},Math.max(3000,cloudLast+cloudGap()-Date.now()));}
 function cloudFlush(){if(cloudT){clearTimeout(cloudT);cloudT=0;}if(cloudDirty)cloudSave(true);}
-function cloudSave(flush){if(!cloudLoaded||cloudPending||SHOT)return;cloudLast=Date.now();cloudDirty=false;
+function cloudSave(flush){hmk('cs');if(!cloudLoaded||cloudPending||SHOT)return;cloudLast=Date.now();cloudDirty=false;
   try{if(YP)YP.setData(S,!!flush).catch(()=>{cloudDirty=true;});else if(PLAT==='vk'&&VK)vkSaveCloud();}catch(e){cloudDirty=true;}}
 /* слияние облака d с сохранением L. Звёзды, кузница, деревня, «виденное», счётчики — по максимуму/объединению всегда.
    newer (облако новее запуска): основа — облако, золото и ускорение = облако + заработанное тут с запуска;
@@ -105,16 +105,18 @@ const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test
 const OK_LINK='https://ok.ru/game/512005500650'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 let ysdk=null,YP=null,VK=null,paused=false,muted=false;
 /*STAT*/
-/* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
-   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
+   08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
 var STAT=(function(){
-  var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=14,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -200,6 +202,8 @@ var STAT=(function(){
   function progress(o){o=o||{};prog={};if(o.pl!==undefined)prog.pl=+o.pl||0;if(o.cn!==undefined){prog.cn=+o.cn||0;if(cb===undefined)cb=prog.cn;}
     if(o.bt!==undefined)prog.bt=o.bt?1:0;rel();}
   function bal(n){if(typeof n==='number'&&isFinite(n))cb=n;}
+  // v1.4: STAT.pl(n) — прогресс изменился (уровень пройден и т. п.): событий не шлёт, уходит полем pl в pause и в start следующего сеанса
+  function setPl(n){n=+n;if(!isFinite(n))return;prog=prog||{};prog.pl=n;}
 
   // --- уровни: STAT.lvl(5,'daily',{n:3}) в начале, STAT.use('hint') по ходу, STAT.end('win',{st:3}) в конце; STAT.move() — каждый ход ---
   function lvlStart(l,m,x){if(lvl)lvlEnd('quit');lvl={l:l,m:m||'',t:Date.now(),h:0,u:0,x:{}};var p={l:l},k,n=0;if(m)p.m=m;
@@ -294,11 +298,11 @@ var STAT=(function(){
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
-    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
+    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();if(prog&&prog.pl!==undefined)p.pl=prog.pl;ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
-      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
+      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
       var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
@@ -317,7 +321,7 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
@@ -325,13 +329,33 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v3.0-100822',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v3.1-100916',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0,pl=0;try{bt=localStorage.getItem('oborona-cl')==='1'?1:0;}catch(e){}
-  for(const k in S.stars)if(S.stars[k]>0)pl++;statCfg();STAT.progress({pl:pl,cn:Math.floor(+S.gold||0),bt:bt});STAT.bal(Math.floor(+S.gold||0));}
+  pl=statPlN();statCfg();STAT.progress({pl:pl,cn:Math.floor(+S.gold||0),bt:bt});STAT.bal(Math.floor(+S.gold||0));statPrg();}
+/* STAT v1.4 (09.10): pl — уровней кампании со звёздами на Обычном; STAT.pl после каждой победы → поле pl в pause/start.
+   prg — разово после загрузки сохранения: p — сила (powerNow), st — Σ звёзд Обычного, sd — Σ звёзд ⚔/🔥 (S.dst), v — Σ уровней деревни */
+function statPlN(){let pl=0;for(const k in S.stars)if(S.stars[k]>0)pl++;return pl;}
+function statPl(){try{STAT.pl(statPlN());}catch(e){}}
+function statPrg(){try{let sd=0,v=0;for(const k in S.dst||{})sd+=+S.dst[k]||0;for(const k in S.village||{})v+=+S.village[k]||0;
+  STAT.ev('prg',{p:typeof powerNow==='function'?Math.round(powerNow()):0,st:typeof starsTotal==='function'?starsTotal():0,sd:sd,v:v});}catch(e){}}
 setTimeout(statProg,2500);
+/* HANG (09.10): подвисание > 1 с — где игра стояла. Меряем промежуток между кадрами браузера в общем цикле (loop в game.js зовёт hangTick
+   на каждом кадре — и в меню, и в бою, и в мини-играх). Не считаем: свёрнута/без фокуса (и 1,5 с после возврата), ролик на экране (adW),
+   первый кадр после паузы цепочки. Событие hang {ms, sc — где (b — бой, b_end — итоги боя, mg_<id>, вкладка меню; +':'+окно), l — уровень,
+   wv — волна, en — нечисти на поле, sp — скорость, mk — что игра делала прямо перед остановкой (метки hmk), bt — секунд от запуска}. Не больше 5 за сеанс. */
+let hngP=0,hngX=0,hngN=0;const hngM=[];
+function hmk(s){const t=performance.now();hngM.push([t,s]);if(hngM.length>6)hngM.shift();}
+function hngBrk(){hngX=performance.now()+1500;hngP=0;}
+document.addEventListener('visibilitychange',hngBrk);window.addEventListener('blur',hngBrk);window.addEventListener('focus',hngBrk);
+function hangTick(t){const p=hngP;hngP=t;if(!p||document.hidden||t<hngX||p<hngX||(typeof adW!=='undefined'&&adW)||hngN>=5)return;const d=t-p;if(d<1000||d>60000)return;hngN++;
+  try{const mc=typeof MG!=='undefined'&&MG.cur,md=$('modal')&&$('modal').classList.contains('on')?($('mBody').getAttribute('data-w')||'m'):'';
+    const sc=(mc?'mg_'+mc.id:G?(G.over?'b_end':'b'):String(typeof curTab!=='undefined'?curTab:'menu').toLowerCase())+(md?':'+md:'');
+    const mk=hngM.filter(m=>m[0]>=p-50).map(m=>m[1]).join(',')||(hngM.length?'~'+hngM[hngM.length-1][1]:'');
+    const o={ms:Math.round(d),sc:sc,mk:mk,bt:Math.round(t/1000)};if(G){o.l=typeof statLv==='function'?statLv():'';o.wv=G.wave;o.en=(G.en||[]).filter(e=>!e.dead).length;o.sp=G.speed;}
+    STAT.ev('hang',o);}catch(e){}}
 function ern(s,n){if(n>0)STAT.earn(s,Math.round(n));}
 /* причины паузы: реклама, сворачивание, пауза площадки, VK свернул окно. Снимаем, только когда ушли все —
    возврат из фона не включает звук посреди рекламы */
@@ -977,43 +1001,55 @@ const SND={
 
 /* ================= музыка: записанные треки (audio/*.m4a, моно), авторы — в «Благодарностях» (ui.js, openCredits) =================
    Меню, деревня, кузница — «Market Day»; бой — «Zombies also love to play the fool»; пока жив босс — «Brave Soldiers».
-   Web Audio: fetch → decodeAudioData → AudioBufferSourceNode с loop (петля без щелчка). Раскрытым (PCM) в памяти держим
-   только нужный сейчас трек (моно, ~30 МБ на самый длинный); сжатый файл (≤1,3 МБ) храним, чтобы не качать заново.
-   Сеть не ответила — ещё 2 попытки через 20 с; не раскодировался — больше не пробуем. До загрузки — тишина.
-   musTick() раз в 200 мс сам включает, меняет (кроссфейд ~1 с) и глушит (S.music, реклама, сворачивание);
-   после паузы трек продолжается с того же места. Громкость — MUS_VOL × MUS_TV (Market Day на 7 дБ громче остальных). */
+   ПОТОКОМ (09.10, было Web Audio с раскрытием в память ~30 МБ): два элемента <audio loop> → createMediaElementSource → свой GainNode → шина mus
+   (образец — Покер deee321 / Гастроном). Два — чтобы смена трека шла кроссфейдом ~1 с. Файл в память не распаковывается.
+   iOS: элементы создаются и первый раз запускаются только в жесте (musPrime — касание/клик/клавиша; тихий wav), дальше их можно включать из musTick.
+   Если запуск всё же не разрешён (NotAllowed) — повторим на следующем жесте. Тихий <audio> и audioSession в <head> (бесшумный режим iPhone) — не трогать.
+   Файл не загрузился — ещё 2 попытки через 20 с, дальше трек молчит. window.NO_MUSIC (архив без audio/ для хостинга VK) — треки не просим вовсе (нет 404).
+   musTick() раз в 200 мс сам включает, меняет и глушит (S.music, реклама/пауза площадки — muted/paused, сворачивание);
+   после паузы трек продолжается с того же места, смена трека — с начала. Громкость — MUS_VOL × MUS_TV (Market Day на 7 дБ громче остальных). */
 const MUSF={market:'audio/market.m4a',battle:'audio/battle.m4a',boss:'audio/boss.m4a'},MUS_VOL=.3,MUS_TV={market:.45,battle:1,boss:.85};
-const MUS={mode:'menu',buf:{},ab:{},ld:{},fail:{},cur:null,src:null,g:null,t0:0,off:0,v:0,fade:0,pos:{}};
+const MUS_SIL='data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
+const MUS={mode:'menu',el:[],cur:-1,fail:{},retry:{},blk:0};
 function musPref(){return MUS.mode!=='battle'?'market':typeof G!=='undefined'&&G&&G.boss&&!G.boss.dead?'boss':'battle';}
-function musWant(){if(!S.music||muted||paused||document.hidden)return null;return musPref();}
+function musWant(){if(window.NO_MUSIC||!S.music||muted||paused||document.hidden)return null;const n=musPref();
+  if((MUS.fail[n]||0)>=3||performance.now()<(MUS.retry[n]||0))return null;return n;}
 function musicMode(m){MUS.mode=m;musTick();}
 function musicSync(){musTick();}
 function musicStop(){musTick();}
-// края трека: пропускаем тишину кодека в начале/конце, чтобы на стыке петли не было паузы
-function musEdges(b){const sr=b.sampleRate,n=b.length,lim=Math.min(n>>1,sr*2),th=.002,chs=[];for(let c=0;c<b.numberOfChannels;c++)chs.push(b.getChannelData(c));
-  const loud=i=>chs.some(d=>Math.abs(d[i])>th);let i0=0,i1=n-1;while(i0<lim&&!loud(i0))i0++;while(i1>n-lim&&!loud(i1))i1--;
-  b._ls=i0<lim?i0/sr:0;b._le=i1>n-lim?(i1+1)/sr:b.duration;}
-function musLoad(n){const l=MUS.ld[n];if(MUS.buf[n]||!AC||l===1||(l&&performance.now()<l))return;MUS.ld[n]=1;
-  const dec=ab=>new Promise((ok,no)=>{const p=AC.decodeAudioData(ab.slice(0),ok,no);if(p&&p.catch)p.catch(no);});
-  const get=MUS.ab[n]?Promise.resolve(MUS.ab[n]):fetch(MUSF[n]).then(r=>{if(!r.ok)throw new Error('http '+r.status);return r.arrayBuffer();}).then(ab=>MUS.ab[n]=ab);
-  get.then(ab=>dec(ab).then(b=>{musEdges(b);if(musPref()===n)MUS.buf[n]=b;MUS.ld[n]=0;},()=>{MUS.ld[n]=Infinity;}))   // не раскодировался — не мучаем
-    .catch(()=>{MUS.fail[n]=(MUS.fail[n]||0)+1;MUS.ld[n]=MUS.fail[n]>=3?Infinity:performance.now()+20000;});}
-function musPos(){const b=MUS.buf[MUS.cur]||MUS.src.buffer,L=b._le-b._ls;return b._ls+((MUS.off-b._ls)+(AC.currentTime-MUS.t0))%L;}
-function musStart(n,v,fade){const a=AC,b=MUS.buf[n],t=a.currentTime,s=a.createBufferSource(),g=a.createGain();
-  s.buffer=b;s.loop=true;s.loopStart=b._ls;s.loopEnd=b._le;const off=MUS.pos[n]!=null?MUS.pos[n]:b._ls;delete MUS.pos[n];
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+fade);s.connect(g).connect(BUS.mus);s.start(t,off);
-  Object.assign(MUS,{cur:n,src:s,g,t0:t,off,v,fade:t+fade});}
-function musStop(fade,keep){const a=AC,s=MUS.src,g=MUS.g,t=a.currentTime;if(keep)MUS.pos[MUS.cur]=musPos();else delete MUS.pos[MUS.cur];
-  MUS.src=MUS.g=MUS.cur=null;if(a.state!=='running'){try{s.stop();}catch(e){}try{g.disconnect();}catch(e){}return;}
-  try{g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+fade);s.stop(t+fade+.05);}catch(e){}
-  setTimeout(()=>{try{g.disconnect();}catch(e){}},fade*1000+400);}
-function musTick(){if(!AC)return;const n=musWant(),run=AC.state==='running';
-  if(n){musLoad(n);if(!run&&!muted)AC.resume().catch(()=>{});}
-  if(MUS.src&&(MUS.cur!==n||!run))musStop(n?1:.4,!n||MUS.cur===n);   // смена трека — с начала; пауза/выключено — запомним место
-  if(!MUS.src&&n&&run&&MUS.buf[n])musStart(n,MUS_VOL*(MUS_TV[n]||1),1);
-  // лишние раскрытые треки выгружаем (играющий при кроссфейде держит свой буфер сам, пока не доиграет)
-  const keep=S.music?musPref():null;for(const k in MUS.buf)if(k!==keep&&k!==MUS.cur)delete MUS.buf[k];
-}
+function musVol(n){return MUS_VOL*(MUS_TV[n]||1);}
+// громкость слота: плавно (AC идёт и есть GainNode) или сразу
+function musGain(o,v,fade){o.v=v;if(o.g&&AC){try{const t=AC.currentTime,g=o.g.gain;g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.linearRampToValueAtTime(v,t+fade);return;}catch(e){}}
+  try{o.a.volume=Math.max(0,Math.min(1,v));}catch(e){}}
+function musPlay(o){try{const p=o.a.play();if(p&&p.then)p.then(()=>{MUS.blk=0;if(!o.on)o.a.pause();},e=>{if(e&&e.name==='NotAllowedError')MUS.blk=1;});}catch(e){}}
+function musOff(o,fade){if(!o.on)return;o.on=0;musGain(o,0,fade);clearTimeout(o.tm);
+  const run=AC&&AC.state==='running'&&o.g;if(!run){try{o.a.pause();}catch(e){}return;}
+  o.tm=setTimeout(()=>{if(!o.on)try{o.a.pause();}catch(e){}},fade*1000+80);}
+function musOn(o,n,fade){clearTimeout(o.tm);
+  if(o.n!==n){o.n=n;o.a.src=MUSF[n];try{o.a.load();}catch(e){}}
+  o.on=1;if(o.g&&AC)try{o.g.gain.setValueAtTime(o.v||0,AC.currentTime);}catch(e){}musGain(o,musVol(n),fade);if(o.a.paused)musPlay(o);}
+// в жесте: создать оба элемента (тихий wav — «разрешение» iOS) или повторить запрет на запуск
+function musPrime(){if(window.NO_MUSIC)return;
+  if(!MUS.el.length){const a0=ac();if(!a0||!BUS)return;
+    for(let i=0;i<2;i++){const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');let g=null;
+      try{const s=a0.createMediaElementSource(a);g=a0.createGain();g.gain.value=0;s.connect(g).connect(BUS.mus);}catch(e){g=null;}
+      const o={a,g,n:null,on:0,v:0,tm:0};
+      a.addEventListener('error',()=>{const n=o.n;if(!n||!a.src||a.src.indexOf(MUSF[n])<0)return;o.n=null;o.on=0;
+        MUS.fail[n]=(MUS.fail[n]||0)+1;MUS.retry[n]=performance.now()+20000;try{a.removeAttribute('src');a.load();}catch(e){}});
+      a.src=MUS_SIL;musPlay(o);MUS.el.push(o);}}
+  else if(MUS.blk){const o=MUS.el[MUS.cur];if(o&&o.on&&o.a.paused)musPlay(o);}
+  musTick();}
+function musTick(){if(!MUS.el.length)return;const n=musWant(),run=AC&&AC.state==='running';
+  if(n&&!run&&!muted&&AC){try{AC.resume().catch(()=>{});}catch(e){}}
+  const cur=MUS.el[MUS.cur];
+  if(!n||!run){for(const o of MUS.el)musOff(o,.4);return;}   // выключено/пауза: элементы на паузе, место запомнят сами
+  if(cur&&cur.n===n){if(!cur.on)musOn(cur,n,.6);else if(cur.a.paused&&!MUS.blk)musPlay(cur);return;}
+  // смена трека: новый — в свободный элемент (с начала), старый — затихает
+  const i=MUS.el.findIndex(o=>o.n===n),k=i>=0?i:(MUS.cur===0?1:0),o=MUS.el[k];
+  for(const x of MUS.el)if(x!==o)musOff(x,1);
+  if(i>=0&&!o.on){try{o.a.currentTime=0;}catch(e){}}
+  MUS.cur=k;musOn(o,n,1);}
+for(const t of['touchend','click','keydown'])document.addEventListener(t,musPrime,{capture:true,passive:true});
 setInterval(musTick,200);
 
 /* ================= тост ================= */
