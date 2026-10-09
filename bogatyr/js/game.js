@@ -605,7 +605,7 @@ function pickup(p){const H=G.hero;
     if(p.k==='loaf'){const h=G.st.maxHp*.5;H.hp=Math.min(G.st.maxHp,H.hp+h);G.hpLock=Math.max(G.hpLock||0,H.hp);SND.heal();addNum(H.x,H.y-30,h,'#6aff8a');heroSay(L('Каравай — всему голова!','A loaf a day keeps monsters away!'));}
     if(p.k==='pot'){const v=Math.max(1,Math.round(3*G.ch.gold));for(let i=0;i<12;i++){drop('coin',p.x+rand(-50,50),p.y+rand(-50,50),v);G.picks[G.picks.length-1].mag=true;}SND.chest();vib(30);}}
   if(p.k==='chest'){tutEvent('chest');G.q.chests++;G.paused=true;IN.on=false;SND.chest();heroSay(pick(PH.chest));openChest(p.v>=2);}}
-function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dead?clamp(G.boss.hp/G.boss.max,0,1):null;G.paused=true;IN.on=false;YG.stop();musicPlay(null);tipHide();
+function endRun(win){if(G.over)return;G.over=true;G.fw=win&&!G.endless&&!G.daily&&!G.weekly&&!S.done[G.chi]?1:0; /* upd0910: первая победа в главе (любая сложность) → f:1 в end */G.bossLeft=G.boss&&!G.boss.dead?clamp(G.boss.hp/G.boss.max,0,1):null;G.paused=true;IN.on=false;YG.stop();musicPlay(null);tipHide();
   G.bestNew=[];for(const t in G.meet){if(!S.meet[t]&&EN[t]){S.meet[t]=1;G.bestNew.push(t);}}for(const t in G.kt)S.bk[t]=(S.bk[t]||0)+G.kt[t];
   // награда: монеты из похода + за нечисть (1 за 40) + за время (3×глава за минуту) + за босса; множители — глава (ECO.chk), жадность, проклятие, испытание
   const mul=(G.curse?curseMul(G.curse).gold:1)*(G.wk.gold||1)*ecoChk(chTier(G.chi))*(ECO.dif[G.dif]||1)*(G.rep?ECO.difR:1)*(G.short?ECO.early:1), /* fix-v23: первое прохождение мест 1–4 (лесенка) — ×ECO.early */parts=[['coins',G.gold*G.goldMul*G.st.gold],['kills',G.kills*ECO.kill*G.st.gold*(G.short?G.short.kill:1)],['time',(G.short?G.t*RUN_BOSS_T/G.short.boss:G.t)/60*ECO.time*chTier(G.chi)*G.st.gold],['boss',win?100*G.ch.gold:0],['loot',(G.loot||0)*G.goldMul*G.st.gold]];
@@ -629,8 +629,8 @@ function endRun(win){if(G.over)return;G.over=true;G.bossLeft=G.boss&&!G.boss.dea
   S.gold+=G.reward;ern('lvl',G.reward);META_HK('END',G,win); // золото похода — сразу в кошелёк и в сохранение (openResult → save), ×2/×3 за рекламу доплачивает разницу
   // статистика: итог похода (выход с привала — quit); t — игровые секунды, k — нечисть, lv — уровень богатыря, hr — богатырь
   // STAT v1.2: сеча (бесконечный режим) — l:'inf' (как в lvl) и w — круг (волна); у quit модуль добавляет idle — тогда без lv (в событии не больше 8 полей)
-  {const q=G.quit,x={};if(G.endless){if(!G.weekly)x.l='inf';x.w=G.cyc+1;}x.t=Math.floor(G.t);x.k=G.kills;x.hr=G.heroId;if(!q)x.lv=G.hero.lvl;
-  STAT.end(q?'quit':win?'win':'lose',x);}
+  {const q=G.quit,x={};if(G.fw)x.f=1;if(G.endless){if(!G.weekly)x.l='inf';x.w=G.cyc+1;}x.t=Math.floor(G.t);x.k=G.kills;x.hr=G.heroId;if(!q)x.lv=G.hero.lvl;
+  STAT.end(q?'quit':win?'win':'lose',x);statPrg();}
   win?SND.win():SND.lose();openResult(win);}
 
 /* ================= отрисовка ================= */

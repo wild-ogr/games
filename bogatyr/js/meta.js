@@ -168,7 +168,7 @@ function openYard(fromIntro){const y=Y();if(!y)return;if(!y.in){yardIntro();retu
   for(const b of $('mBody').querySelectorAll('[data-yk]'))b.onclick=()=>{yBake(b.dataset.yk);re();};
   for(const b of $('mBody').querySelectorAll('[data-yg]'))b.onclick=()=>{yBag(b.dataset.yg);re();};
   onAd('yAdBake','bake',()=>{const k0=y.ov&&y.ov.k;showRewarded(()=>{if(yBakeNow()){SND.chest();}if(modalHas($('yBack')))re();},null,
-    ()=>{const yy=Y();if(!yy||!yy.ov||yy.ov.k!==k0||!yBakeNow())return '';if(modalHas($('yBack')))re();else lateRe();return L('печь готова: ','oven is done: ')+DISHES[k0].name;});});
+    ()=>{const yy=Y();if(!yy||!yy.ov||yy.ov.k!==k0||!yBakeNow())return adLateGold(); /* upd0910: печь успела сама — золото */if(modalHas($('yBack')))re();else lateRe();return L('печь готова: ','oven is done: ')+DISHES[k0].name;});});
   clearInterval(yardT);yardT=setInterval(yardTick,1000);
   if(fromIntro)toast(L('Репа посажена! Поспеет через 2 мин','Turnips planted! Ready in 2 min'));}
 function closeYard(){clearInterval(yardT);yardT=0;hideModal();if(typeof curTab!=='undefined'&&curTab==='Village'&&!G)try{renderVillage();}catch(e){}}

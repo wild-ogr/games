@@ -31,12 +31,12 @@ function VIL(el){try{if(!el||!zabOpen()||!ZAB.list.length)return;const z=ZB(),nw
   d.innerHTML='<div class="row"><img class="ic" src="'+ic('zb_tent',96)+'"><div class="t"><b>'+L('🎪 Забавы','🎪 Fun & Games')+'</b><span>'+(nw?L('Новое! Ярмарка забав открыта','New! The fair is open'):status())+'</span></div><button class="btn gold" id="zabGo">'+L('Открыть','Open')+'</button></div>';
   const ids=['tmCard','wpnCard','petCard','slCard','troCard','yardCard'];let after=null;for(const id of ids){const c=el.querySelector('#'+id);if(c&&c.parentNode===el){after=c;break;}}
   if(after)el.insertBefore(d,after.nextSibling);else{const cv=el.querySelector('#village');if(cv&&cv.nextSibling)el.insertBefore(d,cv.nextSibling);else el.appendChild(d);}
-  on('zabGo',()=>zabScreen());}catch(e){zabErr('vil',e);}}
+  on('zabGo',()=>{window.ZAB_SRC='menu';zabScreen();});}catch(e){zabErr('vil',e);}}
 /* «Дела на сегодня»: одна строка */
 function TODAY(TL){try{if(!zabOpen()||!ZAB.list.length)return;const c=chestsN(),n=dayPick();
-  if(c)TL.push({k:'zab',ic:'chest',t:L('Три сундука старосты','The elder’s three chests'),s:L('Логово взято — выбери награду','Lair taken — choose your reward'),ready:true,b:L('Выбрать','Choose'),always:1,fn:()=>{hideModal();zabScreen();}});
-  else if(n)TL.push({k:'zab',ic:icK(n),t:L('Забава дня готова','Today’s game is ready'),s:zabNameN(n),ready:true,b:L('Играть','Play'),always:1,fn:()=>{hideModal();zabPlay(n);}});
-  else TL.push({k:'zab',ic:'zb_tent',t:L('Забавы','Fun & Games'),s:status(),ready:false,b:L('Открыть','Open'),always:1,fn:()=>{hideModal();zabScreen();}});}catch(e){zabErr('today',e);}}
+  if(c)TL.push({k:'zab',ic:'chest',t:L('Три сундука старосты','The elder’s three chests'),s:L('Логово взято — выбери награду','Lair taken — choose your reward'),ready:true,b:L('Выбрать','Choose'),always:1,fn:()=>{window.ZAB_SRC='day';hideModal();zabScreen();}});
+  else if(n)TL.push({k:'zab',ic:icK(n),t:L('Забава дня готова','Today’s game is ready'),s:zabNameN(n),ready:true,b:L('Играть','Play'),always:1,fn:()=>{window.ZAB_SRC='day';hideModal();zabPlay(n);}});
+  else TL.push({k:'zab',ic:'zb_tent',t:L('Забавы','Fun & Games'),s:status(),ready:false,b:L('Открыть','Open'),always:1,fn:()=>{window.ZAB_SRC='day';hideModal();zabScreen();}});}catch(e){zabErr('today',e);}}
 function CHIPS(a){try{if(!zabOpen()||!ZAB.list.length)return;if(chestsN())a.push('<i class="hot">🎪 '+L('сундуки','chests')+'</i>');else if(readyList().length)a.push('<i class="hot">🎪 '+L('забава','fun')+'</i>');}catch(e){}}
 const MOD={id:'zabui',VIL,TODAY,CHIPS};
 if(typeof META_MODS!=='undefined'){const i=META_MODS.findIndex(m=>m&&m.id==='dvor');if(i>=0)META_MODS.splice(i,0,MOD);else META_MODS.push(MOD);}
@@ -55,6 +55,18 @@ function zabPlay(n,train){const g=zabG(n);if(!g)return;const z=ZB();if(!train&&!
   if(g.kind==='after'&&!train){const s=z.lr[0];ctx={slot:s,land:CAMP_S[s]&&CAMP_S[s].th};}
   ZAB_OPEN(g.id,{train,mode,ctx,back:()=>zabScreen()});}
 window.zabPlay=zabPlay;
+/* upd0910 (решение владельца 09.10): приглашение в итогах победы — «Передохнуть: сыграть в …?» раз в 3–4 похода главы.
+   Счётчик походов главы с открытыми Забавами — localStorage bogatyr-zinv (только это устройство, не облако); показ — на победе, когда с прошлого показа ≥3 походов
+   и есть забава с наградой на сегодня (dayPick). Окно занято важным (новый богатырь/облик, кузница, конец кампании) — не показываем и счётчик не сбрасываем.
+   Награды — обычные (одна сила забав на поход — zabBufAdd). STAT: zab {a:'see'|'no', id, src:'win'}, вход — go с src:'win'. */
+const ZINV_N=3;
+function zabInvite(ok){try{if(!zabOpen()||!ZAB.list.length)return 0;let c=0;try{c=+localStorage.getItem('bogatyr-zinv')||0;}catch(e){}c++;
+  const n=ok&&c>=ZINV_N?dayPick():0;if(n)c=0;try{localStorage.setItem('bogatyr-zinv',String(c));}catch(e){}
+  if(n)zabEv('see',{id:zabG(n).id,src:'win'});return n;}catch(e){zabErr('inv',e);return 0;}}
+function zabInviteHTML(n){const g=zabG(n);if(!g)return '';return '<div class="tutbox zabinv" id="rZabBox"><img src="'+ic(icK(n),72)+'" alt=""><div><b>'+L('🎪 Передохнуть: сыграть в ','🎪 Take a break: play ')+qt(zabNameN(n))+'?</b><br><small>'+L('Награда за сегодня ещё не взята — пара минут отдыха от сечи','Today’s reward is still waiting — a couple of minutes’ break')+'</small>'+
+  '<div class="zinvb"><button class="btn gold" id="rZab">'+L('Сыграть','Play')+'</button><button class="btn ghost" id="rZabNo">'+L('Не сейчас','Not now')+'</button></div></div></div>';}
+window.zabInvite=zabInvite;window.zabInviteHTML=zabInviteHTML;
+window.zabInviteNo=n=>{try{zabEv('no',{id:(zabG(n)||{}).id,src:'win'});}catch(e){}};
 
 /* ---------- экран «Забавы» ---------- */
 let scrT=0;

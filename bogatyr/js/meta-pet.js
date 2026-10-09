@@ -231,7 +231,7 @@ function openPets(){const p=P();if(!p)return;petSync();STAT.screen('pet');
   for(const b of $('mBody').querySelectorAll('[data-dl]'))b.onclick=()=>{SND.click();petUI.th=b.dataset.dl;re();};
   for(const b of $('mBody').querySelectorAll('[data-dn]'))b.onclick=()=>{SND.click();petUI.n=+b.dataset.dn;re();};
   onAd('dzAd','patrol2',()=>{const t0=p.dz&&p.dz.t;showRewarded(()=>{dzTake(true);if(modalHas($('petBack')))re();},null,
-    ()=>{const q=P();if(!q||!q.dz||q.dz.t!==t0||dzLeft()>0)return '';const t=dzTake(true);if(modalHas($('petBack')))re();else lateRe();return t;});});
+    ()=>{const q=P();if(!q||!q.dz||q.dz.t!==t0||dzLeft()>0)return adLateGold(); /* upd0910: дозор уже забран/другой — золото, а не пусто */const t=dzTake(true);if(modalHas($('petBack')))re();else lateRe();return t;});});
   clearInterval(petT);petT=setInterval(petTick,1000);}
 function closePets(){clearInterval(petT);petT=0;hideModal();if(typeof curTab!=='undefined'&&curTab==='Village'&&!G)try{renderVillage();}catch(e){}}
 function petTick(){const p=P();if(!p||!$('modal').classList.contains('on')||$('mBody').getAttribute('data-w')!=='pet'||!$('petBack')){clearInterval(petT);petT=0;return;}

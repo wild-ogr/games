@@ -325,10 +325,10 @@ const SKINS=[
   {id:'firebird',hero:'iva',name:'Жар-птичник',price:20000,pal:{body:'#e6b53a',hair:'#c0392b',belt:'#c0392b'}}
 ];
 // праздничные облики — покупка Яндекса «skins_fest» (js/pay.js): те же рисунки, другие цвета; для каждого богатыря из его же ключей палитры
-const FEST=[['maslen','Масленичный',{body:'#e0332a',cloak:'#f2b233',helm:'#f4d35e',rim:'#e0332a',cap:'#f2b233',fur:'#f7e0a3',kok:'#f4c430',belt:'#f2b233',boots:'#8a2a1a'}],
+const FEST_PAL=[['maslen','Масленичный',{body:'#e0332a',cloak:'#f2b233',helm:'#f4d35e',rim:'#e0332a',cap:'#f2b233',fur:'#f7e0a3',kok:'#f4c430',belt:'#f2b233',boots:'#8a2a1a'}],
   ['newyear','Новогодний',{body:'#2a5fc2',cloak:'#dfeaf7',helm:'#e8f0f8',rim:'#ffffff',cap:'#2a5fc2',fur:'#ffffff',kok:'#6ab8ff',belt:'#ffffff',boots:'#dfe8f0'}],
   ['kupala','Купальский',{body:'#3a9a4a',cloak:'#f4f0e0',helm:'#7cc36a',rim:'#f4d03f',cap:'#f4d03f',fur:'#a8d86e',kok:'#f47ab0',belt:'#e0332a',boots:'#5a3a1a'}]];
-for(const h in HERO_ART)for(const [id,name,P] of FEST){const pal={};for(const k in P)if(typeof HERO_ART[h][k]==='string'&&HERO_ART[h][k][0]==='#')pal[k]=P[k];SKINS.push({id,hero:h,name,pay:'skins_fest',pal});}
+for(const h in HERO_ART)for(const [id,name,P] of FEST_PAL){const pal={};for(const k in P)if(typeof HERO_ART[h][k]==='string'&&HERO_ART[h][k][0]==='#')pal[k]=P[k];SKINS.push({id,hero:h,name,pay:'skins_fest',pal});}
 // облик есть: получен (S.skins) или куплен праздничный набор
 function skinHas(key){const sk=SKINS.find(k=>k.hero+'@'+k.id===key);return !!(S.skins||{})[key]||!!(sk&&sk.pay&&typeof PAY!=='undefined'&&PAY.own(sk.pay));}
 function skinKey(hero){const s=(S.skin||{})[hero];return s&&skinHas(hero+'@'+s)?hero+'@'+s:hero;}

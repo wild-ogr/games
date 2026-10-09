@@ -270,7 +270,7 @@ function troHub(seg){const t=TR();if(!t||!troOpen())return;if(seg)troSeg=seg;tro
   for(const b of B.querySelectorAll('[data-tt]'))b.onclick=()=>{SND.click();troBth=b.dataset.tt;re();};
   for(const b of B.querySelectorAll('[data-tbi]'))b.onclick=()=>{SND.click();if(typeof openBeast==='function'){openBeast(b.dataset.tbi);const ok=$('bOk');if(ok)ok.onclick=()=>{SND.click();troHub();};}};
   onAd('trPdAd','peddler',()=>showRewarded(()=>{if(troPdNew())SND.chest();if(modalHas($('trBack')))re();},null,
-    ()=>{if(!troPdNew())return '';if(modalHas($('trBack')))re();else lateRe();return L('коробейник привёз новый товар','the peddler brought new goods');}));
+    ()=>{if(!troPdNew())return adLateGold();if(modalHas($('trBack')))re();else lateRe();return L('коробейник привёз новый товар','the peddler brought new goods');}));
   clearInterval(troT);troT=setInterval(troTick,1000);}
 function troClose(){clearInterval(troT);troT=0;hideModal();if(typeof curTab!=='undefined'&&curTab==='Village'&&!G)try{renderVillage();}catch(e){}}
 function troTick(){const t=TR();if(!t||!$('modal').classList.contains('on')||$('mBody').getAttribute('data-w')!=='tro'||!$('trBack')){clearInterval(troT);troT=0;return;}

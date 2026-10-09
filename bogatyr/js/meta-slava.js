@@ -253,9 +253,9 @@ function openSlava(seg){const s=SL();if(!s)return;if(seg)slSeg=seg;STAT.screen(s
   for(const b of $('mBody').querySelectorAll('[data-slt]'))b.onclick=()=>{talAdd(b.dataset.slt);re();};
   on('slBuy1',()=>PAY.buy('saga_pass'));on('slBuy2',()=>PAY.buy('saga_pass10'));if(typeof PAY!=='undefined')PAY.re=re;
   onAd('slSagaAd2','saga2',()=>showRewarded(()=>{if(sagaBonus()){SND.coin();toast('+'+SAGA_AD.bonus+L(' очков Сказа',' Tale points'));}if(modalHas($('slBack')))re();},null,
-    ()=>{if(!sagaBonus())return '';if(modalHas($('slBack')))re();else lateRe();return '+'+SAGA_AD.bonus+L(' очков Сказа',' Tale points');}));
+    ()=>{if(!sagaBonus())return adLateGold();if(modalHas($('slBack')))re();else lateRe();return '+'+SAGA_AD.bonus+L(' очков Сказа',' Tale points');}));
   onAd('slSagaAd','saga',()=>showRewarded(()=>{if(sagaAd())SND.chest();if(modalHas($('slBack')))re();},null,
-    ()=>{if(!sagaAd())return '';if(modalHas($('slBack')))re();else lateRe();return L('Удалая дорожка открыта на сегодня','Daring track open for today');}));}
+    ()=>{if(!sagaAd())return adLateGold();if(modalHas($('slBack')))re();else lateRe();return L('Удалая дорожка открыта на сегодня','Daring track open for today');}));}
 function closeSlava(){slRes=0;hideModal();if(typeof curTab!=='undefined'&&curTab==='Village'&&!G)try{renderVillage();}catch(e){}}
 
 /* ---------- крючки (META_MODS) ---------- */

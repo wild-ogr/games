@@ -362,3 +362,11 @@ html.lk .dvT img{width:36px;height:36px;object-fit:contain}html.lk .dvT span{fon
 html.lk .dvT.next{border-color:var(--goldB);box-shadow:0 0 0 1.5px var(--goldB) inset}
 html.lk .dvT.next::after{content:'';position:absolute;right:5px;top:5px;width:10px;height:10px;border-radius:50%;background:#e2452f;box-shadow:0 0 0 2px var(--paper)}
 @media (max-width:340px){html.lk .dvT span{font-size:12.5px}html.lk .dvT img{width:32px;height:32px}}
+
+/* upd0910: приглашение в Забавы в итогах победы (js/zab-screen.js zabInviteHTML) */
+html.lk .tutbox.zabinv{display:flex;align-items:flex-start;text-align:left;margin-top:8px}
+html.lk .tutbox.zabinv>img{width:44px;height:44px;flex:0 0 44px;margin-right:10px;border-radius:10px}
+html.lk .tutbox.zabinv small{font-weight:500;color:var(--mut)}
+html.lk .tutbox.zabinv .zinvb{display:flex;margin-top:8px}
+html.lk .tutbox.zabinv .zinvb .btn{flex:1;min-height:44px;margin:0}
+html.lk .tutbox.zabinv .zinvb .btn+.btn{margin-left:8px}

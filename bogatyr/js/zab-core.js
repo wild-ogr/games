@@ -217,7 +217,7 @@ function ZAB_OPEN(id,opt){opt=opt||{};const g=ZAB.by[id]||zabG(+id);if(!g){toast
     onResize(fn){rs.push(fn);},onQuit(fn){qs.push(fn);},
     adOk(){if(ZAB.cur&&ZAB.cur.host===host&&ZAB.cur.ad)return false;try{return adOk();}catch(e){return false;}},   // одна просьба на заход: ролик уже досмотрен — больше не просим
     offer(){if(!fin&&ZAB.cur&&ZAB.cur.host===host)ZAB.cur.asked=1;try{STAT.offer('zab_'+g.id);}catch(e){}},   // игра показала свою кнопку ролика → ядро в итогах «Ещё попытку» не предлагает
-    ad(kind){if(!fin&&ZAB.cur&&ZAB.cur.host===host)ZAB.cur.asked=1;return new Promise(res=>{let ok=false;try{STAT.place('zab_'+g.id);showRewarded(()=>{if(ZAB.cur)ZAB.cur.ad=1;ok=true;res(true);},()=>res(false),()=>{if(!ok&&ZAB.cur)ZAB.cur.ad=1;return '';});}catch(e){res(false);}});},
+    ad(kind){if(!fin&&ZAB.cur&&ZAB.cur.host===host)ZAB.cur.asked=1;return new Promise(res=>{let ok=false;try{STAT.place('zab_'+g.id);showRewarded(()=>{if(ZAB.cur)ZAB.cur.ad=1;ok=true;res(true);},()=>res(false),()=>{if(ok)return '';if(ZAB.cur)ZAB.cur.ad=1;return adLateGold();} /* upd0910: забава уже пошла без ролика — за досмотр золото, как везде */);}catch(e){res(false);}});},
     store(){const z=ZB();if(!z.g[g.id])z.g[g.id]={ts:0};return z.g[g.id];},
     touch(){const z=ZB();if(z.g[g.id])z.g[g.id].ts=Date.now();zabTouch();save();},
     done(r){if(fin)return;fin=true;ZAB_FIN(g,o,r||{},opt);},
@@ -231,7 +231,7 @@ function ZAB_OPEN(id,opt){opt=opt||{};const g=ZAB.by[id]||zabG(+id);if(!g){toast
   window.addEventListener('resize',onRs);
   ZAB.cur={id:g.id,g,host,o,opt,onRs,qs,t0:Date.now(),ad:mode==='day2'?1:0};
   if(!ZB().s[g.id]){ZB().s[g.id]=1;zabTouch();}
-  try{STAT.screen('zab_'+g.id);zabEv('go',{id:g.id,m:mode,lv:o.lvl});}catch(e){}
+  try{STAT.screen('zab_'+g.id);ZAB.src=String(opt.src||(mode==='kiln'?'pech':window.ZAB_SRC||'menu'));zabEv('go',{id:g.id,m:mode,lv:o.lvl,src:ZAB.src});}catch(e){}
   try{if(typeof musicDuck==='function')musicDuck(true);}catch(e){}
   try{g.run(host,o);}catch(e){console.error(e);zabErr('run-'+g.id,e);ZAB_CLOSE();toast(L('Забава не запустилась','The game failed to start'));}
   return host;}
@@ -241,7 +241,7 @@ function ZAB_QUIT_ASK(host){const c=ZAB.cur;if(!c||c.host!==host){host.quit();re
   v.innerHTML='<div class="panel"><h3>'+L('Выйти из забавы?','Leave the game?')+'</h3><p class="sub" style="text-align:center">'+(rw?L('Попытка не засчитается — сыграть можно будет снова.','This try won’t count — you can play again.'):L('Это была тренировка — наград и так нет.','It was practice — there are no rewards anyway.'))+'</p>'+
     '<div class="btns"><button class="btn big" data-k="go">'+L('Продолжить','Continue')+'</button><button class="btn ghost" data-k="out">'+L('Выйти','Leave')+'</button></div></div>';
   host.root.appendChild(v);v.querySelector('[data-k=go]').onclick=()=>{try{SND.click();}catch(e){}v.remove();host.hold=false;};
-  v.querySelector('[data-k=out]').onclick=()=>{try{SND.click();}catch(e){}zabEv('quit',{id:c.id});host.quit();};}
+  v.querySelector('[data-k=out]').onclick=()=>{try{SND.click();}catch(e){}zabEv('quit',{id:c.id,src:ZAB.src});host.quit();};}
 function ZAB_CLOSE(){const c=ZAB.cur;if(!c)return;ZAB.cur=null;for(const f of c.qs)try{f();}catch(e){}
   window.removeEventListener('resize',c.onRs);const r=$('zabHost');if(r)r.remove();try{if(typeof musicDuck==='function')musicDuck(false);}catch(e){}
   try{STAT.screen(typeof curTab!=='undefined'?String(curTab).toLowerCase():'menu');}catch(e){}}
@@ -266,7 +266,7 @@ function ZAB_FIN(g,o,r,opt){const c=ZAB.cur,n=g.num|0,rw=ZAB_RW[n]||{sl:[0,0,0,0
     if(g.kind==='week'&&typeof zabWeekTick==='function')zabWeekTick(g);
     if(typeof g.after==='function')try{const more=g.after(r,out,o);if(Array.isArray(more))out.items=out.items.concat(more);}catch(e){zabErr('after-'+g.id,e);}}
   zabTouch();save();
-  zabEv('end',{id:g.id,score:r.score,tier:r.tier,train:train?1:0,ad:c&&c.ad?1:0,m:o.mode,rec:rec?1:0});
+  zabEv('end',{id:g.id,score:r.score,tier:r.tier,ad:c&&c.ad?1:0,m:o.mode,rec:rec?1:0,src:ZAB.src}); /* upd0910: train убран (это m:'train'), вместо него src — откуда вошли: day «Дела на сегодня», win приглашение в итогах победы, menu плитка/экран, pech печь */
   if(typeof zabFinUI==='function')return zabFinUI(g,o,out,opt);
   ZAB_CLOSE();toast(zabName(g)+': '+r.score);}
 /* окно итогов (поверх игры): ступень звёздами, очки, награды; «Ещё попытка за рекламу» — одна просьба, если ступень < 3, игра в окне ролик не брала, раз в день */

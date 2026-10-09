@@ -59,16 +59,18 @@ function fixSave(){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v);
 fixSave();
 const BOOT={ts:S.ts||0,fresh:!S.ts}; // что было на этом устройстве при запуске
 /*STAT*/
-/* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
-   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
+   08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
 var STAT=(function(){
-  var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=14,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -154,6 +156,8 @@ var STAT=(function(){
   function progress(o){o=o||{};prog={};if(o.pl!==undefined)prog.pl=+o.pl||0;if(o.cn!==undefined){prog.cn=+o.cn||0;if(cb===undefined)cb=prog.cn;}
     if(o.bt!==undefined)prog.bt=o.bt?1:0;rel();}
   function bal(n){if(typeof n==='number'&&isFinite(n))cb=n;}
+  // v1.4: STAT.pl(n) — прогресс изменился (уровень пройден и т. п.): событий не шлёт, уходит полем pl в pause и в start следующего сеанса
+  function setPl(n){n=+n;if(!isFinite(n))return;prog=prog||{};prog.pl=n;}
 
   // --- уровни: STAT.lvl(5,'daily',{n:3}) в начале, STAT.use('hint') по ходу, STAT.end('win',{st:3}) в конце; STAT.move() — каждый ход ---
   function lvlStart(l,m,x){if(lvl)lvlEnd('quit');lvl={l:l,m:m||'',t:Date.now(),h:0,u:0,x:{}};var p={l:l},k,n=0;if(m)p.m=m;
@@ -248,11 +252,11 @@ var STAT=(function(){
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
-    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
+    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();if(prog&&prog.pl!==undefined)p.pl=prog.pl;ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
-      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
+      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
       var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
@@ -271,7 +275,7 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
@@ -279,15 +283,22 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'bogatyr',gv:'v23-100823',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+STAT.init({g:'bogatyr',gv:'v24-100914',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
 let statPr=false;
 function statProg(cl){if(cl)try{localStorage.setItem('bogatyr-cl','1');}catch(e){}if(statPr)return;statPr=true;let bt=0;try{bt=localStorage.getItem('bogatyr-cl')?1:0;}catch(e){}
   STAT.progress({pl:Object.keys(S.done||{}).length,cn:Math.floor(S.gold||0),bt:bt});STAT.bal(Math.floor(S.gold||0));
-  const c={snd:S.sound?1:0,calm:S.calm?1:0};try{if(window.LOOK&&LOOK.cur)c.th=String(LOOK.cur());}catch(e){}STAT.cfg(c);}
+  const c={snd:S.sound?1:0,calm:S.calm?1:0};try{if(window.LOOK&&LOOK.cur)c.th=String(LOOK.cur());}catch(e){}STAT.cfg(c);statPrg();}
 setTimeout(()=>statProg(0),2500);
+/* upd0910 (STAT v1.4): STAT.pl — пройдено глав сейчас (уходит в pause/start); prg — прокачка одним событием (02-dash-progress.md):
+   p сила богатыря (powerNow), r Σ званий, a Σ оружейной, f Σ кузни, v Σ деревни, h открыто богатырей. Сразу после progress, после похода/трат — только если изменилось, и в новом сеансе (после 30 мин в фоне) */
+function statSum(o){let n=0;for(const k in o||{})n+=+o[k]||0;return n;}
+let statPrgK='',statHidT=0;
+function statPrg(){try{STAT.pl(Object.keys(S.done||{}).length);if(!statPr)return;const o={p:typeof powerNow==='function'?powerNow():0,r:statSum(S.rank),a:statSum(S.armory),f:statSum(S.forge),v:statSum(S.village),h:HEROES.filter(heroOpen).length},k=JSON.stringify(o);
+  if(k===statPrgK)return;statPrgK=k;STAT.ev('prg',o);}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){statHidT=Date.now();return;}if(statPr&&statHidT&&Date.now()-statHidT>30*60e3){statPrgK='';statPrg();}});
 let loginMerge=false,cloudBase=S.gold||0,cloudReady=false,cloudPending=null,cloudT=0,cloudLast=0,cloudBusy=false;
 const CLOUD_GAP=PLAT==='vk'?15000:3500; // VK — не чаще раза в 15 с; Яндекс — лимит 100 записей за 5 мин
 function save(){S.ts=Date.now();STAT.bal(Math.floor(S.gold||0));try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}cloudQueue();}
@@ -891,40 +902,32 @@ function noise(d,v,freq,q,det){if(!S.sound||muted||!volS())return;const a=ac();i
 
 /* ---------- музыка: записанные треки (audio/*.m4a, моно), авторы — в «Благодарностях» (ui.js, openCredits) ----------
    musicPlay('menu'|'run'|'boss'|null): меню и деревня — «Market Day», поход — «Zombies also love to play the fool», босс — «Brave Soldiers».
-   Web Audio: fetch → decodeAudioData → AudioBufferSourceNode с loop (петля без щелчка) → шина BUS.mus (громкость S.vm, S.sound, musicDuck).
-   Память: раскодирован только ТЕКУЩИЙ трек (≈12–32 МБ, моно); остальные лежат сжатыми (≈0,5–1,3 МБ) и раскодируются при смене.
-   Не загрузился — ещё 2 попытки через 20 с; не раскодировался (браузер не умеет AAC) — больше не пробуем, тишина.
+   Поток <audio loop> → Web Audio (см. upd0910 ниже) → шина BUS.mus (громкость S.vm, S.sound, musicDuck). До 09.10 был decodeAudioData (12–32 МБ в памяти).
    musTick() сам включает, меняет (кроссфейд ~1 с) и глушит (реклама/сворачивание → AC.suspend); после паузы трек продолжается с того же места.
    Поменять трек — MUSF (файл) и MUSK (какой экран какой трек); общий уровень — MUS_LVL, по трекам — MUS_TRK. */
 const MUSF={market:'audio/market.m4a',battle:'audio/battle.m4a',boss:'audio/boss.m4a'},MUSK={menu:'market',run:'battle',boss:'boss'},MUS_LVL=.5;
 const MUS_TRK={market:.45,battle:1,boss:.85}; // Market Day записан громче на ~7 дБ
-const MUS={want:null,buf:{},raw:{},ld:{},fails:{},retry:{},cur:null,src:null,g:null,t0:0,off:0,v:0,fade:0,pos:{}};
+/* upd0910: поток вместо decodeAudioData (образец — Гастроном/Покер): <audio loop> → createMediaElementSource → GainNode трека → BUS.mus.
+   Браузер декодирует понемногу — в памяти не 12–32 МБ раскодированного трека, а только буфер потока. Пауза (реклама, сворачивание, AC.suspend) —
+   элемент на паузе, потом продолжает с того же места. iOS: каждый <audio> надо один раз запустить в жесте — musPrime() из обработчика касаний (ui.js).
+   NO_MUSIC (архив для хостинга VK без audio/) — элементы не создаём, запросов нет. Ошибка загрузки (404 и т. п.) — больше не просим ни один трек. */
 function musicPlay(name){MUS.want=name;}
-// края трека: пропускаем тишину кодека в начале/конце, чтобы на стыке петли не было паузы
-function musEdges(b){const sr=b.sampleRate,n=b.length,lim=Math.min(n>>1,sr*2),th=.002,chs=[];for(let c=0;c<b.numberOfChannels;c++)chs.push(b.getChannelData(c));
-  const loud=i=>chs.some(d=>Math.abs(d[i])>th);let i0=0,i1=n-1;while(i0<lim&&!loud(i0))i0++;while(i1>n-lim&&!loud(i1))i1--;
-  b._ls=i0<lim?i0/sr:0;b._le=i1>n-lim?(i1+1)/sr:b.duration;}
-function musLoad(n){if(window.NO_MUSIC||MUS.buf[n]||!AC||MUS.ld[n]||(MUS.fails[n]||0)>=3||performance.now()<(MUS.retry[n]||0))return;MUS.ld[n]=1;
-  (MUS.raw[n]?Promise.resolve(MUS.raw[n]):fetch(MUSF[n]).then(r=>{if(!r.ok)throw new Error('http '+r.status);return r.arrayBuffer();}).then(ab=>MUS.raw[n]=ab))
-    .then(ab=>new Promise((ok,no)=>{const p=AC.decodeAudioData(ab.slice(0),ok,()=>no({dec:1}));if(p&&p.catch)p.catch(()=>no({dec:1}));}))
-    .then(b=>{musEdges(b);MUS.ld[n]=0;if(MUSK[MUS.want]===n)MUS.buf[n]=b;})   // пока грузился, экран сменился — не держим
-    .catch(e=>{MUS.ld[n]=0;if(e&&e.message==='http 404'){for(const k in MUSF)MUS.fails[k]=3;return;} // треков нет (сборка без музыки) — больше не просим
-      MUS.fails[n]=(MUS.fails[n]||0)+(e&&e.dec?3:1);MUS.retry[n]=performance.now()+20000;});}
-function musPos(){const b=MUS.buf[MUS.cur],len=b._le-b._ls;return b._ls+((MUS.off-b._ls)+(AC.currentTime-MUS.t0))%len;}
-function musStart(n,v,fade){const a=AC,b=MUS.buf[n],t=a.currentTime,s=a.createBufferSource(),g=a.createGain();
-  s.buffer=b;s.loop=true;s.loopStart=b._ls;s.loopEnd=b._le;const off=MUS.pos[n]!=null?MUS.pos[n]:b._ls;delete MUS.pos[n];
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+fade);s.connect(g).connect(BUS.mus);s.start(t,off);
-  Object.assign(MUS,{cur:n,src:s,g,t0:t,off,v,fade:t+fade});}
-function musStop(fade,keep){const a=AC,s=MUS.src,g=MUS.g,t=a.currentTime;if(keep&&MUS.buf[MUS.cur])MUS.pos[MUS.cur]=musPos();else delete MUS.pos[MUS.cur];
-  MUS.src=MUS.g=MUS.cur=null;if(a.state!=='running'){try{s.stop();}catch(e){}try{g.disconnect();}catch(e){}return;}
-  try{g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+fade);s.stop(t+fade+.05);}catch(e){}
-  setTimeout(()=>{try{g.disconnect();}catch(e){}},fade*1000+400);}
-function musTick(){if(!AC||!BUS)return;const on=!!(S.sound&&volM()),n=on?MUSK[MUS.want]||null:null,run=AC.state==='running'&&!muted;
-  if(n)musLoad(n);
-  if(MUS.src&&(MUS.cur!==n||!run))musStop(1,MUS.cur===n||!on);   // смена трека — с начала; пауза/выключено — запомним место
-  if(!MUS.src&&n&&run&&MUS.buf[n])musStart(n,MUS_LVL*(MUS_TRK[n]||1),1);
-  for(const k in MUS.buf)if(k!==n&&k!==MUS.cur)delete MUS.buf[k]; // в памяти — только нужный трек (доигрывающий хвост держит сам источник)
-}
+const MUS={want:null,el:{},g:{},ok:{},bad:{},tm:{},cur:null};
+function musEl(n){if(window.NO_MUSIC||!AC||!BUS||!MUSF[n])return null;if(MUS.el[n]||MUS.bad[n])return MUS.el[n]||null;
+  try{const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');a.addEventListener('error',()=>{for(const k in MUSF)MUS.bad[k]=1;if(MUS.cur===n)MUS.cur=null;});a.src=MUSF[n];
+    const src=AC.createMediaElementSource(a),g=AC.createGain();g.gain.value=0;src.connect(g).connect(BUS.mus);MUS.el[n]=a;MUS.g[n]=g;}catch(e){MUS.bad[n]=1;}
+  return MUS.el[n]||null;}
+function musFade(n,to,dur){const g=MUS.g[n];if(!g||!AC)return;try{const t=AC.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(to,t+dur);}catch(e){}}
+function musGo(n){const a=musEl(n);if(!a)return;try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok[n]=1;},()=>{});else MUS.ok[n]=1;}catch(e){}}
+// в жесте (касание/клик): «разрешить» все треки на iOS — запустить беззвучно (громкость трека 0) и сразу остановить ненужные
+function musPrime(){if(!AC||!BUS||!S.sound||!volM()||muted)return;for(const n in MUSF){const a=musEl(n);if(!a||MUS.ok[n])continue;
+  try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok[n]=1;if(MUS.cur!==n)a.pause();},()=>{});}catch(e){}}}
+function musTick(){if(!AC||!BUS)return;const on=!!(S.sound&&volM())&&!muted&&!document.hidden,n=on?MUSK[MUS.want]||null:null;
+  if(!n||AC.state!=='running'){for(const k in MUS.el){const a=MUS.el[k];if(!a.paused){musFade(k,0,.05);a.pause();}}MUS.cur=null;return;} // пауза — место трека сохраняется само
+  if(MUS.cur===n){const a=MUS.el[n];if(a&&a.paused)musGo(n);return;}
+  const old=MUS.cur;if(old&&MUS.el[old]){musFade(old,0,1);const a=MUS.el[old];clearTimeout(MUS.tm[old]);MUS.tm[old]=setTimeout(()=>{if(MUS.cur!==old){a.pause();try{a.currentTime=0;}catch(e){}}},1100);} // смена трека — старый с начала
+  if(!musEl(n)){MUS.cur=null;return;}
+  MUS.cur=n;clearTimeout(MUS.tm[n]);musGo(n);musFade(n,MUS_LVL*(MUS_TRK[n]||1),1);}
 setInterval(musTick,200);
 const SNDT={};
 function thr(k,ms){const n=performance.now();if(SNDT[k]&&n-SNDT[k]<ms)return false;SNDT[k]=n;return true;}
