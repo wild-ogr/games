@@ -1,0 +1,177 @@
+/* MGA (буст 09.10): вид затей №4–7 «Буква за буквой», «Угадай год», «Хронология», «Пары» — стиль «Дворовое шоу» (цвета — переменные look.css, без lk — запасные).
+   Все классы .vma-… (приставка помощника MGA). Цели нажатия ≥ 48 px, текст ≥ 16 px; body.big — «Очень крупный шрифт». Без grid/aspect-ratio/inset (старые WebView). */
+.vma{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:stretch;
+ font-family:KF,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink,#233247);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.vma *{box-sizing:border-box}
+.vma button{font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
+/* шапка: ведущий + название + реплика (справа место под кнопку выхода оболочки) */
+.vma-top{display:flex;align-items:flex-end;gap:8px;min-height:78px;flex:none}
+.vma-who{width:72px;height:78px;flex:none;border-radius:16px 16px 0 0;overflow:hidden;position:relative}
+.vma-who svg{width:100%;height:100%;display:block}
+.vma-hd{flex:1;min-width:0;padding-bottom:4px}
+.vma-ttl{display:inline-block;background:var(--go,#ff7a1a);color:#fff;font-weight:900;font-size:16px;line-height:1.1;padding:5px 11px;border:var(--bd2,2px solid #233247);border-radius:10px;box-shadow:var(--sh2,0 3px 0 #233247);
+ transform:rotate(-1.5deg);margin-bottom:6px;letter-spacing:.2px}
+.vma-say{position:relative;background:var(--card,#fffaf0);color:var(--card-ink,#233247);border:var(--bd2,2px solid #233247);border-radius:14px;box-shadow:var(--sh2,0 3px 0 #233247);
+ font-size:16px;line-height:1.25;font-weight:600;padding:7px 11px;min-height:40px}
+.vma-say:before{content:"";position:absolute;left:-9px;bottom:10px;width:14px;height:14px;background:inherit;border-left:var(--bd2,2px solid #233247);border-bottom:var(--bd2,2px solid #233247);transform:rotate(45deg)}
+.vma-say b{color:var(--acc-ink,#e8590c)}
+.vma-pop{animation:vmaPop .3s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes vmaPop{0%{transform:scale(.94)}100%{transform:none}}
+.vma-prog{display:flex;justify-content:center;gap:7px;padding:9px 0 6px;flex:none;min-height:30px}
+.vma-prog:empty{display:none}
+.vma-prog i{width:15px;height:15px;border-radius:50%;background:var(--pan,#fffdf6);border:2px solid var(--o,#233247);display:block;transition:transform .2s}
+.vma-prog i.cur{background:var(--gold,#ffcf40);transform:scale(1.25)}
+.vma-prog i.ok{background:var(--ok,#2fa84f)}.vma-prog i.mid{background:var(--gold,#ffcf40)}.vma-prog i.no{background:var(--no,#e5484d)}
+.vma-main>:first-child{margin-top:auto}.vma-main>:last-child{margin-bottom:auto}
+.vma-main{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:2px 2px 6px}
+.vma-foot{flex:none;padding-top:6px}
+/* кнопки */
+.vma-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:var(--bd,2.5px solid #233247);border-radius:var(--r,18px);box-shadow:var(--sh,0 4px 0 #233247);
+ background:var(--btn,#fffdf6);color:var(--btn-ink,#233247);font-size:20px;font-weight:800;padding:6px 14px;line-height:1.15}
+.vma-btn:active{transform:translateY(3px);box-shadow:var(--sha,0 1px 0 #233247)}
+.vma-btn[disabled]{opacity:.5;transform:none;box-shadow:var(--sh,0 4px 0 #233247)}
+.vma-go{background:var(--go,#ff7a1a);color:var(--go-ink,#fff)}
+.vma-row{display:flex;gap:8px}.vma-row>*{flex:1}
+.vma-kc{display:none;font-size:13px;font-weight:700;line-height:1;padding:3px 6px;border-radius:6px;background:rgba(35,50,71,.14);color:inherit;opacity:.85;margin-left:4px;vertical-align:middle;white-space:nowrap}
+.vma-pcm .vma-kc{display:inline-block}
+.vma-pch{position:absolute;left:50%;bottom:70px;transform:translateX(-50%);background:var(--toast,#233247);color:#fff;font-size:16px;font-weight:700;
+ padding:8px 14px;border-radius:12px;white-space:nowrap;z-index:5;transition:opacity .5s;pointer-events:none}
+.vma-pch.vma-out{opacity:0}
+/* карточка-пояснение после хода */
+.vma-note{background:var(--card,#fffaf0);border:var(--bd2,2px solid #233247);border-radius:14px;padding:9px 12px;font-size:16px;line-height:1.3;color:var(--card-mut,#4d5868);margin-top:10px;animation:vmaUp .35s ease-out both}
+.vma-note b{color:var(--card-ink,#233247)}
+@keyframes vmaUp{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+.vma-hint{font-size:16px;line-height:1.3;font-weight:600;color:var(--q-ink2,#3c4a5c);text-align:center;padding:0 4px}
+.vma-hint small{display:block;font-size:14px;font-weight:700;color:var(--q-meta,#9a6a1c);text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px}
+
+/* ===== №4 «Буква за буквой»: верёвка с бельём, прищепки ===== */
+.vma-line{position:relative;padding:22px 0 4px;margin:0 -4px}
+.vma-line:before{content:"";position:absolute;left:0;right:0;top:15px;height:3px;background:var(--o,#233247);border-radius:2px;opacity:.75}
+.vma-pins{display:flex;justify-content:center;gap:10px;position:absolute;left:0;right:0;top:3px;height:24px}
+.vma-pin{width:11px;height:24px;border-radius:3px;background:var(--i2,#ff7a1a);border:2px solid var(--o,#233247);transition:transform .7s cubic-bezier(.5,0,.9,.5),opacity .7s}
+.vma-pin:nth-child(2n){background:var(--day,#3f8fe0)}.vma-pin:nth-child(3n){background:var(--gold,#ffcf40)}
+.vma-pin.off{transform:translateY(140px) rotate(160deg);opacity:0}
+.vma-cloth{display:flex;justify-content:center;gap:5px;padding-top:12px}
+.vma-cl{width:34px;height:46px;flex:none;border:2px solid var(--o,#233247);border-radius:4px 4px 10px 10px;background:#fff;display:flex;align-items:center;justify-content:center;
+ font-size:25px;font-weight:900;color:var(--q-ink,#1b2433);box-shadow:0 3px 0 rgba(35,50,71,.35);transform-origin:50% 0;position:relative}
+.vma-cl:nth-child(3n+1){background:#ffe0e6}.vma-cl:nth-child(3n+2){background:#dff0ff}.vma-cl:nth-child(3n){background:#fff6cf}
+.vma-cl:before{content:"";position:absolute;top:-9px;left:50%;margin-left:-3px;width:6px;height:12px;background:var(--o,#233247);border-radius:2px;opacity:.6}
+.vma-cl.on{animation:vmaSwing .6s ease-out}
+.vma-cl.miss{color:var(--no,#e5484d)}
+@keyframes vmaSwing{0%{transform:rotate(-14deg) scale(1.08)}40%{transform:rotate(9deg)}70%{transform:rotate(-4deg)}100%{transform:none}}
+.vma-kb{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.vma-k{width:calc(20% - 5px);max-width:66px;min-height:52px;border:var(--bd2,2px solid #233247);border-radius:12px;background:var(--ans,#fff);color:var(--ans-ink,#1b2433);
+ font-size:24px;font-weight:900;box-shadow:var(--sh2,0 3px 0 #233247);padding:0}
+.vma-k:active{transform:translateY(2px);box-shadow:var(--sha,0 1px 0 #233247)}
+.vma-k.ok{background:var(--ok,#2fa84f);color:#fff}
+.vma-k.no{background:var(--dim,#ebe6d8);color:var(--dim-ink,#8d8a80);border-color:var(--dim-bd,#c9c3b2);box-shadow:none;text-decoration:line-through}
+.vma-k[disabled]{cursor:default}
+.vma-shake{animation:vmaShake .35s}
+@keyframes vmaShake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+
+/* ===== №5 «Угадай год»: отрывной календарь и барабан ===== */
+.vma-cal{position:relative;background:#fff;border:var(--bd,2.5px solid #233247);border-radius:12px 12px 16px 16px;box-shadow:var(--sh,0 4px 0 #233247);margin-top:10px;overflow:hidden;flex:none}
+.vma-cal:before{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:repeating-linear-gradient(90deg,var(--o,#233247) 0 6px,transparent 6px 14px);opacity:.25}
+.vma-calh{background:var(--no,#e5484d);color:#fff;font-weight:900;font-size:15px;letter-spacing:1px;text-transform:uppercase;text-align:center;padding:16px 8px 6px;border-bottom:var(--bd2,2px solid #233247)}
+.vma-ev{font-size:20px;line-height:1.28;font-weight:700;color:var(--q-ink,#1b2433);text-align:center;padding:12px 14px 6px}
+.vma-ctx{font-size:15px;line-height:1.3;color:var(--card-mut,#4d5868);text-align:center;padding:0 14px 12px;font-weight:500}
+.vma-ctx:before{content:"к вопросу: ";font-weight:700}
+.vma-drum{display:flex;justify-content:center;gap:6px;margin:12px 0 4px;flex:none}
+.vma-dc{display:flex;flex-direction:column;align-items:center;width:66px}
+.vma-dc button{width:100%;min-height:48px;border:var(--bd2,2px solid #233247);background:var(--pan,#fffdf6);color:var(--ink,#233247);font-size:22px;font-weight:900;box-shadow:var(--sh2,0 3px 0 #233247);padding:0;line-height:1}
+.vma-dc button:first-child{border-radius:14px 14px 4px 4px}.vma-dc button:last-child{border-radius:4px 4px 14px 14px}
+.vma-dc button:active{transform:translateY(2px);box-shadow:var(--sha,0 1px 0 #233247)}
+.vma-dg{width:100%;height:68px;margin:6px 0;border:var(--bd,2.5px solid #233247);border-radius:10px;background:var(--q-bg,#fffaf0);display:flex;align-items:center;justify-content:center;
+ font-size:46px;font-weight:900;color:var(--q-ink,#1b2433);overflow:hidden;font-variant-numeric:tabular-nums;box-shadow:inset 0 8px 10px -6px rgba(0,0,0,.25),inset 0 -8px 10px -6px rgba(0,0,0,.25)}
+.vma-dg span{display:block}
+.vma-dg.up span{animation:vmaRollU .18s ease-out}.vma-dg.dn span{animation:vmaRollD .18s ease-out}
+@keyframes vmaRollU{0%{transform:translateY(60%);opacity:.2}100%{transform:none;opacity:1}}
+@keyframes vmaRollD{0%{transform:translateY(-60%);opacity:.2}100%{transform:none;opacity:1}}
+.vma-dc.sel .vma-dg{border-color:var(--go,#ff7a1a);box-shadow:0 0 0 3px var(--go,#ff7a1a)}
+.vma-yr{font-size:15px;text-align:center;color:var(--muted,#5a6676);font-weight:600;min-height:20px}
+.vma-res{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;font-size:20px;font-weight:900;flex-wrap:wrap}
+.vma-was{font-size:18px;font-weight:700;color:var(--muted,#5a6676)}
+.vma-res .vma-big{font-size:34px;color:var(--ok-d,#1d7a36)}
+.vma-tag{display:inline-block;padding:4px 10px;border-radius:10px;border:2px solid var(--o,#233247);font-size:17px;font-weight:900;background:var(--gold,#ffcf40);color:var(--gold-ink,#3b2a00)}
+.vma-tag.ok{background:var(--ok,#2fa84f);color:#fff}.vma-tag.no{background:var(--dim,#ebe6d8);color:var(--dim-ink,#8d8a80);border-color:var(--dim-bd,#c9c3b2)}
+
+/* ===== №6 «Хронология»: стенгазета, карточки по порядку ===== */
+.vma-paper{background:var(--card,#fffaf0);border:var(--bd,2.5px solid #233247);border-radius:6px;box-shadow:var(--sh,0 4px 0 #233247);padding:8px;display:flex;flex-direction:column;gap:8px;margin-top:4px;position:relative}
+.vma-paper:before{content:"СТЕНГАЗЕТА «ДВОР»";display:block;text-align:center;font-weight:900;font-size:14px;letter-spacing:1.5px;color:var(--no,#e5484d);padding-bottom:2px;border-bottom:2px dashed var(--line,#e6dcc4)}
+.vma-ev4{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:62px;text-align:left;border:var(--bd2,2px solid #233247);border-radius:12px;background:#fff;color:var(--q-ink,#1b2433);
+ box-shadow:var(--sh2,0 3px 0 #233247);padding:7px 10px 7px 8px;font-size:17px;line-height:1.22;font-weight:700;transition:transform .35s cubic-bezier(.3,1.3,.5,1),background .2s}
+.vma-ev4:active{transform:translateY(2px);box-shadow:var(--sha,0 1px 0 #233247)}
+.vma-ev4 .n{flex:none;width:40px;height:40px;border-radius:50%;border:2px dashed var(--dim-bd,#c9c3b2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:var(--dim-ink,#8d8a80)}
+.vma-ev4.on .n{border:2px solid var(--o,#233247);background:var(--go,#ff7a1a);color:#fff;animation:vmaPop .3s cubic-bezier(.2,1.6,.4,1) both}
+.vma-ev4 .t{flex:1;min-width:0}
+.vma-ev4 .c{display:block;font-size:14px;font-weight:500;color:var(--card-mut,#4d5868);margin-top:2px}
+.vma-ev4 .y{flex:none;font-size:22px;font-weight:900;padding:2px 8px;border-radius:8px;border:2px solid var(--o,#233247);background:var(--gold,#ffcf40);color:var(--gold-ink,#3b2a00);display:none}
+.vma-chk .vma-ev4.good{background:#e3f6e6}.vma-chk .vma-ev4.bad{background:#fde4e4}
+.vma .vma-chk .vma-ev4 .n{width:66px;height:40px;border-radius:12px;font-size:20px;border:2px solid var(--o,#233247);color:#fff;animation:vmaPop .3s cubic-bezier(.2,1.6,.4,1) both}
+.vma-chk .vma-ev4.good .n{background:var(--ok,#2fa84f)}.vma-chk .vma-ev4.bad .n{background:var(--no,#e5484d)}
+
+/* ===== №7 «Пары»: карточки на лавочке ===== */
+.vma-kind{text-align:center;font-size:16px;font-weight:800;color:var(--hd-ink,#1d3350);margin:2px 0 8px}
+.vma-kind span{display:inline-block;padding:4px 12px;border-radius:10px;background:var(--pan,#fffdf6);border:2px solid var(--o,#233247)}
+.vma-grid{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-content:flex-start;flex:none}
+.vma-cd{position:relative;width:calc(33.333% - 5px);min-height:66px;border:0;background:none;padding:0;-webkit-perspective:600px;perspective:600px}
+.vma-cd>i{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;text-align:center;border:var(--bd2,2px solid #233247);border-radius:12px;
+ -webkit-backface-visibility:hidden;backface-visibility:hidden;transition:transform .38s ease;font-style:normal;padding:4px 5px;line-height:1.16;overflow:hidden;-webkit-hyphens:auto;hyphens:auto;word-break:break-word}
+.vma-cd .bk{background:var(--day,#3f8fe0);box-shadow:var(--sh2,0 3px 0 #233247);
+ background-image:radial-gradient(circle at 50% 50%,rgba(255,255,255,.22) 0 22%,transparent 23%),repeating-linear-gradient(45deg,rgba(255,255,255,.12) 0 6px,transparent 6px 12px)}
+.vma-cd .bk b{color:#fff;font-size:26px;font-weight:900;opacity:.9}
+.vma-cd .fc{transform:rotateY(180deg);background:#fff;color:var(--q-ink,#1b2433);font-size:15px;font-weight:700;box-shadow:var(--sh2,0 3px 0 #233247)}
+.vma-cd .fc.r{background:#fff6cf;font-weight:800}
+.vma-cd.up .bk{transform:rotateY(-180deg)}.vma-cd.up .fc{transform:none}
+.vma-cd.got .fc{background:#e3f6e6;border-color:var(--ok-d,#1d7a36);box-shadow:0 3px 0 var(--ok-d,#1d7a36)}
+.vma-cd.got{animation:vmaPop .35s cubic-bezier(.2,1.6,.4,1)}
+.vma-cd.miss .fc{background:#fde4e4}
+.vma-cd.foc .bk,.vma-cd.foc .fc{box-shadow:0 0 0 3px var(--go,#ff7a1a)}
+.vma-cd .num{position:absolute;right:4px;top:3px;z-index:2;font-size:12px;font-weight:800;color:#fff;opacity:.85;display:none}
+.vma-pcm .vma-cd .num{display:block}
+.vma-cd.up .num{display:none}
+.vma-moves{text-align:center;font-size:16px;font-weight:700;color:var(--muted,#5a6676);padding:6px 0 0}
+.vma-list{display:flex;flex-direction:column;gap:6px}
+.vma-list div{background:#e3f6e6;border:2px solid var(--ok-d,#1d7a36);border-radius:10px;padding:6px 10px;font-size:16px;font-weight:600;line-height:1.25}
+.vma-list b{font-weight:800}
+
+/* ПК / широкие окна */
+@media (min-width:700px){
+ .vma-cd{width:calc(25% - 6px);min-height:84px}
+ .vma-cd .fc{font-size:16px}
+ .vma-cl{width:42px;height:54px;font-size:30px}
+}
+@media (max-width:350px){
+ .vma-who{width:58px;height:68px}.vma-top{min-height:68px}
+ .vma-cl{width:29px;height:42px;font-size:22px}.vma-cloth{gap:3px}
+ .vma-dc{width:60px}.vma-dg{font-size:40px;height:60px}
+ .vma-ev{font-size:18px}
+ .vma-cd .fc{font-size:14px}
+}
+@media (max-height:600px){
+ .vma-top{min-height:64px}.vma-who{height:64px;width:58px}
+ .vma-dg{height:56px;font-size:38px;margin:4px 0}.vma-dc button{min-height:46px}
+ .vma-ev{font-size:18px;padding-top:8px}.vma-calh{padding-top:14px}
+ .vma-ev4{min-height:56px;font-size:16px}
+}
+/* подгонка VMA.fit: t1 — мельче шапка, t2 — без названия и плотнее поле, t3 — без ведущего */
+.vma-t1 .vma-top{min-height:60px}.vma-t1 .vma-who{width:54px;height:60px}.vma-t1 .vma-ttl{font-size:15px;padding:3px 9px;margin-bottom:4px}
+.vma-t1 .vma-say{min-height:0;padding:5px 10px}.vma-t1 .vma-prog{padding:5px 0 3px;min-height:22px}.vma-t1 .vma-prog i{width:13px;height:13px}
+.vma-t2 .vma-ttl{display:none}.vma-t2 .vma-cal{margin-top:4px}.vma-t2 .vma-calh{padding:10px 8px 4px;font-size:14px}.vma-t2 .vma-ev{font-size:18px;padding:8px 10px 4px}
+.vma-t2 .vma-dg{height:52px;font-size:36px;margin:3px 0}.vma-t2 .vma-drum{margin-top:8px}.vma-t2 .vma-dc button{min-height:48px}
+.vma-t2 .vma-ev4{min-height:52px;font-size:16px;padding:5px 8px}.vma-t2 .vma-ev4 .n{width:34px;height:34px;font-size:19px}.vma-t2 .vma-paper{gap:6px;padding:6px}
+.vma-t2 .vma-line{padding-top:18px}.vma-t2 .vma-cloth{padding-top:8px}
+.vma-t3 .vma-who{display:none}.vma-t3 .vma-top{min-height:0}.vma-t3 .vma-say:before{display:none}
+/* «Очень крупный шрифт» из ⚙ */
+body.big .vma-say,body.big .vma-hint,body.big .vma-note{font-size:19px}
+body.big .vma-ev{font-size:23px}body.big .vma-ctx{font-size:17px}
+body.big .vma-ev4{font-size:19px}body.big .vma-ev4 .c{font-size:16px}
+body.big .vma-cd .fc{font-size:17px}body.big .vma-k{font-size:27px}
+/* спокойный режим — без раскачки */
+.vma-calm *{animation:none!important;transition:none!important}
+/* старые WebView без flex-gap (как в look.css: признак — нет inset) */
+@supports not (inset:0){
+ .vma-kb>*,.vma-grid>*{margin:3px}.vma-kb,.vma-grid{margin:-3px}
+ .vma-row>*+*,.vma-drum>*+*,.vma-cloth>*+*,.vma-pins>*+*,.vma-prog>*+*,.vma-top>*+*,.vma-res>*+*{margin-left:7px}
+ .vma-paper>*+*,.vma-list>*+*{margin-top:7px}
+}

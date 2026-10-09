@@ -1,0 +1,27 @@
+/* ui-fx.css — эффекты ответа (поток UX) */
+.fxCoin{position:absolute;z-index:60;width:28px;height:28px;pointer-events:none;font-size:22px;line-height:28px;text-align:center}
+.fxCoin svg{width:100%;height:100%;display:block}
+@keyframes fxBump{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
+@keyframes fxShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+.fxBump{animation:fxBump .45s ease-out}
+.fxShake{animation:fxShake .42s ease-in-out}
+.fxBadge{position:absolute;left:50%;top:22%;z-index:55;transform:translate(-50%,0);pointer-events:none;font:900 30px/1.1 KF,system-ui,sans-serif;color:#fff;background:#ff7a1a;border:3px solid #233247;border-radius:18px;padding:8px 18px;box-shadow:0 5px 0 #233247;white-space:nowrap;animation:fxBadge 1.6s ease-out forwards}
+.fxBadge.safe{background:#2fa84f}
+.fxBadge lk-i{width:36px!important;height:36px!important;vertical-align:-6px}
+@keyframes fxBadge{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}25%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px) scale(1)}}
+@media (prefers-reduced-motion:reduce){.fxBump,.fxShake,.fxBadge{animation:none!important}.fxBadge{display:none}}
+/* цена вопроса на плашке (qSlots) */
+.qprice{display:inline-block;min-width:64px;padding:2px 12px;border-radius:8px;background:#ffcf40;color:#3b2a00;font:900 18px/1.2 KF,system-ui,sans-serif;text-align:center;border:2px solid #233247;box-shadow:0 2px 0 #233247}
+html.lk #scr-game .qslots{position:absolute;top:-17px;left:50%;transform:translateX(-50%) rotate(-2deg);margin:0;z-index:2}
+html.lk #scr-game .qcard.hasQs::before{display:none}
+html.lk #scr-game .qcard.hasQs{margin-top:8px}
+html.lk .fit3 .qcard.hasQs .qslots{top:-12px}html.lk .fit3 .qprice{font-size:15px;padding:0 8px}
+/* табло дня и дуэли в строке #ladInfo */
+#ladInfo.vsOn{display:flex;gap:10px;align-items:center}
+#ladInfo.vsOn .vs{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;font-weight:800}
+.vsb{display:block;flex:1;min-width:30px;height:9px;border-radius:6px;background:rgba(35,50,71,.15);overflow:hidden}
+.vsb span{display:block;height:100%;background:#2fa84f;transition:width .5s}
+.vsb.yard span{background:#3f8fe0}.vsb.foe span{background:#7b4fb8}
+html.lk #ladInfo.vsOn .vs{background:var(--pan);border:var(--bd2);border-radius:12px;padding:3px 10px;color:var(--ink);font-size:16px}
+html.lk #ladInfo.vsOn .vs b{font-size:19px}
+@media (min-width:880px){html.lk #ladInfo.vsOn{flex-direction:column;align-items:stretch;gap:6px}html.lk #ladInfo.vsOn .vs{flex:none}}

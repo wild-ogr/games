@@ -1,0 +1,101 @@
+/* car.css — «Карьера знатока», «Сегодня во дворе», серия 30 дней, заначка, финал района (поток CAR буста 09.10).
+   Работает в обоих видах: «Классика» — простые цвета; новый вид (html.lk) — переменные темы из css/look.css. Шрифт не меньше 15 px (45+). */
+.td-box{text-align:left}
+.td-head{display:flex;align-items:center;gap:12px;margin:0 0 10px}
+.td-ring{--p:0;flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:15px;color:#233247;
+  background:radial-gradient(closest-side,#fff 74%,transparent 76%),conic-gradient(#2fa84f calc(var(--p)*1%),#e3ddcc 0)}
+.td-ring b{font-size:22px}
+.td-ht b{display:block;font-size:19px;line-height:1.2}
+.td-ht small{display:block;font-size:14px;color:#5a6676;line-height:1.25;margin-top:2px}
+.td-list{display:flex;flex-direction:column;gap:7px}
+.td-c{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:7px 10px;border-radius:14px;background:#fff;border:2px solid #d9d2bf;text-align:left;font:inherit;color:#233247;cursor:pointer}
+.td-c.ok{background:#e4f6e7;border-color:#9fd8aa}
+.td-ic{font-size:24px;flex:none;width:30px;text-align:center}
+.td-n{flex:1;min-width:0}
+.td-n b{display:block;font-size:17px;line-height:1.2}
+.td-n small{display:block;font-size:14px;color:#5a6676;line-height:1.25}
+.td-ck{flex:none;font-size:22px;font-weight:900;color:#9aa3ad}
+.td-c.ok .td-ck{color:#2fa84f}
+.td-seal{margin:10px 0 8px;font-weight:700;font-size:15px;text-align:center;color:#3a4656}
+.td-chest{width:100%}
+.td-row{display:flex;gap:8px}
+.td-mini{flex:1;min-height:52px;padding:6px 8px;border-radius:14px;background:#f6efdd;border:2px solid #d9d2bf;font:inherit;font-weight:800;font-size:15px;color:#233247;text-align:left;line-height:1.2;cursor:pointer}
+.td-mini small{display:block;font-weight:600;font-size:13px;color:#5a6676}
+.td-mini.hot{background:#fff0c9;border-color:#ffb02e}
+.td-car{display:block;width:100%;margin-top:8px;padding:8px 10px;border-radius:12px;background:#eef3fb;border:2px solid #c9d6ea;font:inherit;font-size:14px;color:#233247;text-align:left;line-height:1.3;cursor:pointer}
+.td-car.hot{background:#ffe7e7;border-color:#e5484d}
+.td-modal{margin:-4px 0 6px}
+/* вопрос дня */
+.td-sub{font-size:14px;color:#5a6676;margin:0 0 6px}
+.td-q{font-size:19px;font-weight:700;line-height:1.3;margin:6px 0 10px}
+.td-as,.cf-as{display:flex;flex-direction:column;gap:8px}
+.td-a,.cf-a{width:100%;text-align:left;justify-content:flex-start;font-size:17px;min-height:50px}
+/* задания */
+.td-task{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:8px 4px;border-bottom:1px dashed #d9d2bf}
+.td-task>span:first-child{font-size:20px;flex:none}
+.td-task b{display:block;font-size:16px;line-height:1.25}
+.td-task small{display:block;font-size:14px;color:#5a6676}
+.td-task .bar{display:block;height:6px;border-radius:3px;background:#e3ddcc;margin-top:5px;overflow:hidden}
+.td-task .bar i{display:block;height:100%;background:#2fa84f}
+.td-task.done b{color:#2b7a3f}
+/* серия 30 дней — 6 в ряд */
+.streak.ser30 .sd{width:15.5%;font-size:14px;padding:4px 1px}
+.streak.ser30 .sd small{display:block;font-size:12px}
+/* карьера */
+.car-who{margin:0 0 4px}
+.car-map{display:flex;flex-direction:column;gap:6px;margin:8px 0;text-align:left}
+.car-d{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:#f6efdd;border:2px solid #d9d2bf}
+.car-d.done{background:#e4f6e7;border-color:#9fd8aa}
+.car-d.cur{background:#fff0c9;border-color:#ffb02e}
+.car-d.lock{opacity:.7}
+.car-di{font-size:26px;flex:none}
+.car-dn b{display:block;font-size:16px}
+.car-dn small{display:block;font-size:14px;color:#5a6676;line-height:1.3}
+.car-ranks{display:flex!important;flex-wrap:wrap;gap:4px;margin-top:4px}
+.car-ranks i{font-style:normal;font-size:13px;padding:2px 6px;border-radius:8px;background:#fff;border:1px solid #d9d2bf}
+.car-ranks i.on{background:#2fa84f;border-color:#2fa84f;color:#fff}
+.car-strip{display:flex;align-items:center;gap:10px;width:100%;padding:6px 10px;border-radius:14px;background:#fff;border:2px solid #d9d2bf;font:inherit;color:#233247;text-align:left;margin:4px 0 8px}
+.car-fr{position:relative;flex:none;width:52px;height:52px;border-radius:50%;overflow:hidden;background:#f1ede2;border:4px solid var(--f1,#b98a55);box-shadow:0 0 0 2px var(--f2,#7a5530),0 0 10px var(--fg,transparent)}
+.car-fr svg{width:100%;height:100%}
+.car-t{flex:1;min-width:0}.car-t b{display:block;font-size:16px}.car-t small{display:block;font-size:13px;color:#5a6676}
+.car-bar{display:block;height:7px;border-radius:4px;background:#e3ddcc;margin:4px 0 2px;overflow:hidden}.car-bar i{display:block;height:100%;background:#ff7a1a}
+.car-fin{display:block;font-style:normal;font-weight:800;color:#c0392b;font-size:14px}
+.car-gain{font-weight:800}
+/* финал района (свой матч) */
+.cf-h{font-size:19px;margin:0 0 6px}
+.cf-sc{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:12px;background:#1c3f8f;color:#ffd23f;font-weight:800;font-size:16px;margin:4px 0 8px}
+.cf-sc b{font-size:20px;font-variant-numeric:tabular-nums}
+.cf-p{font-size:14px;color:#5a6676;margin:0 0 4px}
+.cf-q{font-size:19px;font-weight:700;line-height:1.3;margin:4px 0 10px}
+.cf-a.cf-ok{background:#2fa84f!important;color:#fff!important}
+.cf-a.cf-no{background:#e5484d!important;color:#fff!important}
+.cf-tail{margin-top:8px}.cf-tail p{margin:4px 0;font-weight:700}
+/* плитки ленты */
+.car-tfin .hsI{animation:carPulse 1.6s ease-in-out infinite}
+@keyframes carPulse{50%{transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.car-tfin .hsI{animation:none}}
+
+/* новый вид «Дворовое шоу» */
+html.lk .td-ring{color:var(--ink);background:radial-gradient(closest-side,var(--pan) 72%,transparent 74%),conic-gradient(var(--ok) calc(var(--p)*1%),var(--set) 0);border:var(--bd2);box-shadow:var(--sh2)}
+html.lk .td-ht small,html.lk .td-n small,html.lk .td-mini small,html.lk .td-task small,html.lk .car-dn small,html.lk .car-t small,html.lk .td-sub,html.lk .cf-p{color:var(--muted)}
+html.lk .td-c,html.lk .car-strip{background:var(--pan);border:var(--bd2);box-shadow:var(--sh2);color:var(--ink)}
+html.lk .td-c:active,html.lk .td-mini:active,html.lk .td-car:active{transform:translateY(2px);box-shadow:var(--sha)}
+html.lk .td-c.ok{background:#d6f2da}
+html.lk .td-mini{background:var(--set);border:var(--bd2);box-shadow:var(--sh2);color:var(--ink)}
+html.lk .td-mini.hot{background:var(--pan2)}
+html.lk .td-car{background:#e3eefc;border:var(--bd2);box-shadow:var(--sh2);color:var(--ink)}
+html.lk .td-car.hot{background:#ffe1e1}
+html.lk .car-d{background:var(--set);border:var(--bd2)}
+html.lk .car-d.done{background:#d6f2da}
+html.lk .car-d.cur{background:var(--pan2)}
+html.lk .car-ranks i{border:1.5px solid #233247}
+html.lk .car-ranks i.on{background:var(--ok)}
+html.lk .cf-sc{border:var(--bd2);box-shadow:var(--sh2);font-family:Manrope,Rubik,sans-serif}
+html.lk .td-task{border-bottom-color:#c9c1aa}
+html.lk.th-tele .td-ring{color:#fff}
+html.lk.th-tele .td-c,html.lk.th-tele .td-mini,html.lk.th-tele .td-car,html.lk.th-tele .car-strip{color:var(--ink)}
+@media (max-width:359px){.td-n b{font-size:16px}.td-n small{font-size:13px}.td-ring{width:50px;height:50px}.streak.ser30 .sd{font-size:13px}}
+.car-help{text-align:left;font-size:15px;line-height:1.35;margin:6px 0}
+.car-of{flex:none;width:40px;height:40px;margin-left:auto;order:3}
+.car-of svg{width:40px;height:40px}
+.car-d .car-dn{flex:1}

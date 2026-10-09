@@ -1,0 +1,24 @@
+/* ui-main.css — поток UX (буст 09.10): гнёзда главного, нижняя панель, плашка вопроса. Пустые гнёзда не видны. */
+.hslots:empty,.navbar:empty,.qslots:empty{display:none}
+.qslots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:-2px 0 6px}
+.navbar{display:flex}
+lk-nw{white-space:nowrap}
+/* ===== ПК: подписи клавиш (только мышь без сенсора — html.pc) ===== */
+#answers{counter-reset:ka}
+#answers .ans{counter-increment:ka}
+html.pc #answers .ans:not([disabled])::after{content:counter(ka);flex:none;margin-left:auto;min-width:24px;height:26px;padding:0 6px;border:2px solid #233247;border-radius:7px;background:#fff;color:#233247;font:900 13px/22px KF,system-ui,sans-serif;box-shadow:0 2px 0 #233247;text-align:center;opacity:.8}
+html.pc #btnNext::after{content:"Enter";display:inline-block;vertical-align:middle;margin-left:10px;padding:0 6px;height:24px;border:2px solid #233247;border-radius:7px;background:#fff;color:#233247;font:900 12px/20px KF,system-ui,sans-serif;box-shadow:0 2px 0 #233247}
+/* ===== ПК / VK-окно: игра на всю ширину, крупнее ===== */
+@media (min-width:880px){
+ html.lk #app{max-width:none;box-shadow:none}
+ html.lk #scr-game .gh,html.lk #scr-topics .gh{max-width:1500px;margin:0 auto;width:100%;padding-left:24px;padding-right:24px}
+ html.lk #scr-game .gbody{max-width:1500px;margin:0 auto;width:100%;padding-left:32px;gap:30px}
+ html.lk #scr-game .qtext{font-size:30px;line-height:1.25}
+ html.lk #scr-game .ans{min-height:70px;font-size:22px}
+ html.lk #scr-game .ans i{width:40px;height:40px;font-size:20px}
+ html.lk #scr-game .say .sb{font-size:20px}
+ html.lk #scr-game .qx{font-size:18px}
+}
+@media (min-width:880px) and (max-height:760px){
+ html.lk #scr-game .qtext{font-size:26px}html.lk #scr-game .ans{min-height:58px;font-size:20px}html.lk #scr-game .ans i{width:34px;height:34px}html.lk #scr-game .say .sb{font-size:18px}
+}

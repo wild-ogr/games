@@ -15,7 +15,8 @@ var THEMES=[
   ds:['Летний двор, флажки, Михалыч в полный рост, крупные таблички с тёмным контуром. Основной вид игры','Summer yard, bunting, big outlined signs. The main look']},
  {id:'tele',ru:'Телестудия',en:'TV studio',dark:1,prev:{bg:'#1a2666',hd:'#22307a',card:'#fff6dc',ink:'#1b1f3a',ans:'#2c3f9e',acc:'#f2a900',line:'#f4c542'},unlock:{t:'pay',pay:'th_tele'},
   ds:['Вечерняя телеигра: синяя студия, прожекторы, табло в лампочках, золото','An evening TV quiz: blue studio, spotlights, a light-bulb board, gold']},
- {id:'doska',ru:'Школьная доска',en:'School board',prev:{bg:'#2c5847',hd:'#2c5847',card:'#2c5847',ink:'#f8f5ea',ans:'#fdfbf3',acc:'#ffcf40',line:'#f8f5ea'},unlock:{t:'ads',n:15},
+ {id:'doska',ru:'Школьная доска',en:'School board',prev:{bg:'#2c5847',hd:'#2c5847',card:'#2c5847',ink:'#f8f5ea',ans:'#fdfbf3',acc:'#ffcf40',line:'#f8f5ea'},unlock:{t:'car',d:3,n:15},   // решение владельца 09.10: за карьеру (район «Квартал») или 15 роликов — что раньше
+ 
   ds:['Вопрос мелом на доске, ответы — листки из тетради, красная ручка учителя','The question in chalk, answers on notebook paper, the teacher’s red pen']},
  {id:'classic',ru:'Классика',en:'Classic',prev:{bg:'#b9e2c8',hd:'#ffffff',card:'#fffdf7',ink:'#2d3436',ans:'#ffffff',acc:'#e8590c',line:'#cfc8b8'},unlock:{t:'free'},
   ds:['Прежний вид игры: светлые плашки, портреты в кружках, знакомые значки','The previous look: light tiles, round portraits, familiar icons']}
@@ -26,17 +27,21 @@ var LOCAL=/^(localhost|127\.0\.0\.1|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+
 var FORCE=(function(){var m=/[?&]theme=([a-z0-9_]+)/.exec(location.search);return LOCAL&&m&&get(m[1])?m[1]:'';})();
 function get(id){for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===id)return THEMES[i];return null;}
 function thU(){if(!S.thU||typeof S.thU!=='object'||Array.isArray(S.thU))S.thU={};return S.thU;}
-function prog(T){var u=T.unlock;if(u.t==='ads'){var h=Math.min(u.n,S.adTot||0);return {have:h,need:u.n,txt:Lx(h+' из '+u.n+' роликов',h+' of '+u.n+' videos')};}return null;}
+function carD(){try{return window.CAR&&CAR.rank?(+CAR.rank().d||0):0;}catch(e){return 0;}}
+function carN(d){try{return CAR.DIST[d].n;}catch(e){return 'Квартал';}}
+function prog(T){var u=T.unlock;if(u.t==='car')return {have:Math.min(carD(),u.d),need:u.d,txt:Lx('район «'+carN(u.d)+'» в карьере','career district «'+carN(u.d)+'»')};if(u.t==='ads'){var h=Math.min(u.n,S.adTot||0);return {have:h,need:u.n,txt:Lx(h+' из '+u.n+' роликов',h+' of '+u.n+' videos')};}return null;}
 function earned(T){var u=T.unlock;
   if(u.t==='free')return true;if(thU()[T.id])return true;
   if(u.t==='pay')return !!(typeof PAY!=='undefined'&&PAY.own&&PAY.own(u.pay));
   if(u.t==='ads')return (S.adTot||0)>=u.n;
+  if(u.t==='car')return carD()>=u.d||(S.adTot||0)>=u.n;
   return false;}
 function owned(id){var T=get(id);if(!T)return false;if(FORCE===id)return true;return earned(T);}
 function how(T){var u=T.unlock;
   if(u.t==='free')return Lx('бесплатно','free');
   if(u.t==='pay'){var it=typeof PAY_ITEMS!=='undefined'&&PAY_ITEMS[u.pay];return PLAT==='vk'?(it?it.vk+' '+Lx('голосов','votes'):''):Lx('покупка','purchase');}
   if(u.t==='ads')return Lx('за '+u.n+' роликов','for '+u.n+' videos');
+  if(u.t==='car')return Lx('за район «'+carN(u.d)+'» в карьере','for the «'+carN(u.d)+'» career district');
   return '';}
 function cur(){var id=FORCE||S.th||'dvor';return owned(id)?id:'dvor';}
 function apply(){var id=cur();if(window.LK)LK.setCls(id);rerender();}
@@ -48,7 +53,7 @@ function rerender(){try{
  }catch(e){}}
 function set(id){if(!owned(id))return false;if(!FORCE){S.th=id;try{save();}catch(e){}}apply();try{STAT.ev('mod',{m:'theme',a:'set',k:id});}catch(e){}return true;}
 // выдать заработанное (ролики) — навсегда; тост один раз
-function check(silent){var got=[];for(var i=0;i<THEMES.length;i++){var T=THEMES[i];if(T.unlock.t!=='ads'||thU()[T.id])continue;if(earned(T)){thU()[T.id]=1;got.push(T);}}
+function check(silent){var got=[];for(var i=0;i<THEMES.length;i++){var T=THEMES[i];if((T.unlock.t!=='ads'&&T.unlock.t!=='car')||thU()[T.id])continue;if(earned(T)){thU()[T.id]=1;got.push(T);}}
   if(got.length){try{save();}catch(e){}if(!silent)try{toast('🎨 '+Lx('Открыто оформление','New look unlocked')+': «'+Lx(got[0].ru,got[0].en)+'». ⚙ → '+Lx('Оформление','Looks'),4200);}catch(e){}}
   return got;}
 function bought(payId){for(var i=0;i<THEMES.length;i++){var T=THEMES[i];if(T.unlock.t==='pay'&&T.unlock.pay===payId){thU()[T.id]=1;set(T.id);return true;}}return false;}
@@ -70,7 +75,7 @@ function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen(
     if(T.id===c)btn='<span class="th-on">✓ '+Lx('Включено','On')+'</span>';
     else if(own)btn='<button class="btn green noenter" data-th="set:'+T.id+'">'+Lx('Включить','Use')+'</button>';
     else if(u.t==='pay')btn=canBuy(T)?'<button class="btn accent noenter" data-th="buy:'+T.id+'">'+Lx('Купить','Buy')+' · '+PAY.price(PAY.item(u.pay))+'</button>':'<span class="th-lk">🔒 '+Lx('покупка сейчас недоступна','not available now')+'</span>';
-    else if(u.t==='ads')btn=(typeof adOk==='function'&&adOk())?'<button class="btn accent noenter" id="thAd" data-th="buy:'+T.id+'">📺 '+Lx('Ролик','Video')+' · '+pr.have+' '+Lx('из','of')+' '+pr.need+'</button>':'<span class="th-lk">🔒 '+pr.txt+'</span>';
+    else if(u.t==='ads')btn=(typeof adOk==='function'&&adOk()&&typeof AD_EXTRA!=='undefined'&&AD_EXTRA)?'<button class="btn accent noenter" id="thAd" data-th="buy:'+T.id+'">📺 '+Lx('Ролик','Video')+' · '+pr.have+' '+Lx('из','of')+' '+pr.need+'</button>':'<span class="th-lk">🔒 '+pr.txt+'</span>';
     h+='<div class="thc'+(T.id===c?' on':'')+(own?'':' lock')+'">'+swatch(T)+'<div class="thc-b"><b>'+Lx(T.ru,T.en)+(own?'':' 🔒')+'</b><small>'+Lx(T.ds[0],T.ds[1])+'</small>'+
       (pr&&!own?'<span class="gbar"><i style="width:'+Math.round(pr.have/pr.need*100)+'%"></i></span>':'')+'<div class="thc-f">'+btn+'</div></div></div>';}
   modal('<h2>🎨 '+Lx('Оформление','Looks')+'</h2><p>'+Lx('Меняется только вид: вопросы, монеты и успехи — те же.','Only the look changes: questions, coins and progress stay the same.')+'</p><div class="thg">'+h+'</div><div class="row"><button class="btn" id="mCancel">'+Lx('Назад','Back')+'</button></div>');
@@ -101,5 +106,7 @@ function themeRow(id,after){var T=get(cur()),b=document.createElement('button');
 {var fx=fixSave;fixSave=function(){fx.apply(this,arguments);thU();if(typeof S.adTot!=='number'||!(S.adTot>=0)||!isFinite(S.adTot))S.adTot=0;if(S.th!=null&&!get(S.th))delete S.th;};fixSave();}
 var r=document.getElementById('rays');if(r&&window.LK&&!r.innerHTML)r.innerHTML=LK.rays();
 apply();check(true);
+// карьера (CAR грузится позже): после очков карьеры проверить «за район» — тост об открытии один раз
+setTimeout(function(){try{if(window.CAR)['add','onAnswer','seal'].forEach(function(k){var f=CAR[k];if(typeof f!=='function'||f._th)return;CAR[k]=function(){var r=f.apply(this,arguments);try{check();}catch(e){}return r;};CAR[k]._th=1;});check(true);}catch(e){}},0);
 try{STAT.cfg({th:cur()});}catch(e){} // STAT v1.2: тема сеанса → событие cfg
 })();

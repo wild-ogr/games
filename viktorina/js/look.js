@@ -21,6 +21,59 @@ var S1='fill="var(--i1)"',S2='fill="var(--i2)"',S3='fill="var(--i3)"',LN='fill="
   ST1='stroke="var(--i1)" stroke-width="2.6"',RND='stroke-linecap="round" stroke-linejoin="round"';
 function medal(c1,c2,r1,r2){return '<path d="M14 4 h8 l4 16 h-8z" fill="'+r1+'"/><path d="M34 4 h-8 l-4 16 h8z" fill="'+r2+'"/><circle cx="24" cy="31" r="13" fill="'+c1+'" stroke="'+c2+'" stroke-width="2.6"/><path d="M24 23 l2.5 5 l5.5 .8 l-4 3.9 l1 5.5 l-5 -2.6 l-5 2.6 l1 -5.5 l-4 -3.9 l5.5 -.8z" fill="'+c2+'"/>';}
 var IC={
+ bow:'<path d="M24 22 l-16 -10 v20z M24 22 l16 -10 v20z" '+S2+'/><path d="M22 24 l-6 18 l5 -3 l3 4 M26 24 l6 18 l-5 -3 l-3 4" '+S2+'/><circle cx="24" cy="22" r="5" '+S1+'/>',
+ hat:'<rect x="13" y="8" width="22" height="26" rx="3" '+S1+'/><rect x="13" y="26" width="22" height="5" '+S2+'/><rect x="4" y="34" width="40" height="6" rx="3" '+S1+'/>',
+ pic:'<rect x="5" y="7" width="38" height="34" rx="3" '+S2+'/><rect x="10" y="12" width="28" height="24" '+S3+' '+ST1+'/><path d="M10 34 l9 -10 l6 6 l4 -4 l9 8" fill="#2fa84f"/><circle cx="31" cy="18" r="3" fill="var(--coin1)"/>',
+ mleaf:'<path d="M24 4 l4 9 l8 -3 l-2 9 l9 3 l-8 6 l3 7 l-10 -2 l-4 9 l-4 -9 l-10 2 l3 -7 l-8 -6 l9 -3 l-2 -9 l8 3z" fill="#e58a2b" '+ST1+' stroke-linejoin="round"/><path d="M24 20 v24" '+LN+'/>',
+ snowman:'<circle cx="24" cy="33" r="11" '+S3+' '+ST1+'/><circle cx="24" cy="15" r="8" '+S3+' '+ST1+'/><path d="M24 15 l7 2 l-7 1z" fill="#ff8a3d"/><circle cx="21" cy="13" r="1.4" fill="var(--il)"/><circle cx="27" cy="13" r="1.4" fill="var(--il)"/><path d="M15 6 h18 l-3 -4 h-12z" '+S1+'/>',
+ pancake:'<ellipse cx="24" cy="34" rx="19" ry="7" '+S2+'/><ellipse cx="24" cy="28" rx="18" ry="6.5" fill="#f2c46b" '+ST1+'/><ellipse cx="24" cy="22" rx="17" ry="6" fill="#f7d58c" '+ST1+'/><path d="M17 20 q7 -4 14 0" stroke="var(--coin1)" stroke-width="2.6" fill="none"/>',
+ bouquet:'<path d="M24 26 l-7 18 h14z" '+S1+'/><circle cx="16" cy="16" r="6" '+S2+'/><circle cx="32" cy="16" r="6" '+S2+'/><circle cx="24" cy="10" r="6" fill="#ff8ab0" '+ST1+'/><circle cx="24" cy="22" r="6" fill="#ff8ab0" '+ST1+'/>',
+ sun:'<circle cx="24" cy="24" r="10" fill="var(--coin1)" '+ST1+'/><path d="M24 3 v6 M24 39 v6 M3 24 h6 M39 24 h6 M9 9 l4 4 M35 35 l4 4 M39 9 l-4 4 M13 35 l-4 4" '+LN+'/>',
+ shoot:'<path d="M30 8 l3 7 l7 1 l-5 5 l1 7 l-6 -3 l-6 3 l1 -7 l-5 -5 l7 -1z" fill="var(--coin1)" '+ST1+' stroke-linejoin="round"/><path d="M20 22 l-14 14 M16 18 l-8 8 M24 26 l-8 8" '+LN+'/>',
+ fount:'<path d="M6 36 h36 v4 q0 3 -3 3 h-30 q-3 0 -3 -3z" '+S1+'/><rect x="21" y="18" width="6" height="18" '+S1+'/><path d="M24 18 q-12 -10 -16 12 M24 18 q12 -10 16 12 M24 18 v-12" stroke="#5fb3ff" stroke-width="3" fill="none" stroke-linecap="round"/>',
+ pflag:'<path d="M12 4 v40" '+LN+'/><path d="M13 7 h24 l-6 8 l6 8 h-24z" '+S2+'/>',
+ ticket:'<path d="M5 14 h38 v6 q-4 0 -4 4 q0 4 4 4 v6 h-38 v-6 q4 0 4 -4 q0 -4 -4 -4z" '+S2+'/><path d="M30 14 v20" stroke="var(--i3)" stroke-width="2" stroke-dasharray="3 3"/><path d="M17 20 l2 3.5 l4 .5 l-3 2.5 l1 4 l-4 -2 l-4 2 l1 -4 l-3 -2.5 l4 -.5z" '+S3+'/>',
+ masks:'<path d="M5 9 q10 -4 20 0 v12 q0 11 -10 11 q-10 0 -10 -11z" '+S3+' '+ST1+'/><path d="M10 25 q5 4 10 0" '+LN+'/><path d="M23 17 q10 -4 20 0 v12 q0 11 -10 11 q-10 0 -10 -11z" '+S2+'/><path d="M28 36 q5 -4 10 0" '+LN+'/>',
+ muscle:'<path d="M8 38 q-2 -14 6 -22 l4 -9 h8 l-2 8 h-6 l2 6 q10 -6 18 2 q6 8 -2 15 z" '+S2+'/>',
+ abc:'<rect x="4" y="10" width="40" height="28" rx="5" '+S3+' '+ST1+'/><path d="M9 32 l5 -14 l5 14 M11 28 h6 M23 18 v14 h4 q4 0 4 -4 q0 -3 -4 -3 h-4 M23 18 h3 q3.5 0 3.5 3.5 q0 3.5 -3.5 3.5 M42 20 q-2 -2 -5 -2 q-4 0 -4 7 q0 7 4 7 q3 0 5 -2" '+LN+'/>',
+ basket:'<path d="M14 20 q0 -14 10 -14 q10 0 10 14" '+LN+'/><path d="M5 20 h38 l-5 22 h-28z" '+S2+'/><path d="M9 28 h30 M16 20 l2 22 M24 20 v22 M32 20 l-2 22" stroke="var(--i3)" stroke-width="2"/>',
+ news:'<rect x="5" y="8" width="34" height="34" rx="3" '+S3+' '+ST1+'/><path d="M39 16 h4 v22 q0 4 -4 4" '+LN+'/><rect x="10" y="13" width="24" height="7" '+S1+'/><path d="M10 26 h11 M10 31 h11 M10 36 h11" '+LN+'/><rect x="25" y="25" width="9" height="12" '+S2+'/>',
+ cards:'<rect x="6" y="10" width="22" height="30" rx="3" transform="rotate(-12 17 25)" '+S3+' '+ST1+'/><rect x="20" y="8" width="22" height="30" rx="3" transform="rotate(10 31 23)" '+S3+' '+ST1+'/><path d="M31 17 q-4 -4 -6 0 q-2 4 6 9 q8 -5 6 -9 q-2 -4 -6 0z" '+S2+'/>',
+ monocle:'<circle cx="24" cy="24" r="19" fill="var(--coin1)" '+ST1+'/><circle cx="17" cy="20" r="2.5" fill="var(--il)"/><circle cx="31" cy="20" r="6" fill="none" '+ST1+'/><circle cx="31" cy="20" r="1.8" fill="var(--il)"/><path d="M37 22 v14 M16 33 h14" '+LN+'/>',
+ pencil:'<g transform="rotate(45 24 24)"><rect x="18" y="2" width="12" height="32" '+S2+'/><path d="M18 34 h12 l-6 11z" '+S3+' '+ST1+'/><path d="M22 41 h4 l-2 4z" fill="var(--il)"/><rect x="18" y="2" width="12" height="6" '+S1+'/></g>',
+ city:'<rect x="4" y="18" width="12" height="24" '+S1+'/><rect x="17" y="6" width="14" height="36" '+S2+'/><rect x="32" y="14" width="12" height="28" '+S1+'/><path d="M21 12 h2 M25 12 h2 M21 18 h2 M25 18 h2 M21 24 h2 M25 24 h2 M21 30 h2 M25 30 h2 M8 24 h4 M8 30 h4 M36 20 h4 M36 26 h4 M36 32 h4" stroke="#ffd24a" stroke-width="2.6"/>',
+ pin:'<path d="M24 4 a12 12 0 0 1 12 12 c0 10 -12 26 -12 26 s-12 -16 -12 -26 a12 12 0 0 1 12 -12z" '+S2+'/><circle cx="24" cy="16" r="4.5" '+S3+'/>',
+ clip:'<rect x="8" y="8" width="32" height="36" rx="4" '+S2+'/><rect x="13" y="13" width="22" height="26" '+S3+'/><rect x="17" y="4" width="14" height="8" rx="2" '+S1+'/><path d="M17 21 h14 M17 27 h14 M17 33 h9" '+LN+'/>',
+ tea:'<path d="M8 18 h26 v12 q0 12 -13 12 q-13 0 -13 -12z" '+S3+' '+ST1+'/><path d="M34 22 q8 0 8 6 q0 6 -9 6" '+LN+'/><path d="M16 4 q-3 4 0 8 M22 4 q-3 4 0 8 M28 4 q-3 4 0 8" '+LN+'/><rect x="8" y="23" width="26" height="4" '+S2+'/>',
+ nnew:'<path d="M24 3 l5 6 l7 -2 l1 7 l7 2 l-3 7 l5 5 l-6 4 l1 7 l-7 0 l-3 7 l-7 -4 l-7 4 l-3 -7 l-7 0 l1 -7 l-6 -4 l5 -5 l-3 -7 l7 -2 l1 -7 l7 2z" '+S2+'/><path d="M14 29 v-9 l6 9 v-9 M28 20 h-5 v9 h5 M23 24.5 h4 M31 20 l1.5 9 l2 -6 l2 6 l1.5 -9" stroke="var(--i3)" stroke-width="2" fill="none" stroke-linejoin="round"/>',
+ tack:'<path d="M14 6 h20 l-3 4 v10 l7 7 h-28 l7 -7 v-10z" '+S2+'/><path d="M24 27 v17" '+LN+'/>',
+ scroll:'<path d="M12 8 h24 q5 0 5 5 v26 q0 4 -4 4 h-26 q4 0 4 -4 v-26 q0 -5 -5 -5z" '+S3+' '+ST1+'/><path d="M7 8 q-4 0 -4 4 q0 3 4 3 h5" '+LN+'/><path d="M17 17 h17 M17 23 h17 M17 29 h12" '+LN+'/><circle cx="32" cy="36" r="4" '+S2+'/>',
+ order:'<path d="M14 4 h8 l4 14 h-8z" '+S1+'/><path d="M34 4 h-8 l-4 14 h8z" '+S2+'/><path d="M24 18 l5 6 l7 -1 l-2 7 l5 5 l-7 2 l-1 7 l-7 -3 l-7 3 l-1 -7 l-7 -2 l5 -5 l-2 -7 l7 1z" fill="var(--coin1)" '+ST1+' stroke-linejoin="round"/><circle cx="24" cy="32" r="4" '+S2+'/>',
+ rosette:'<path d="M24 4 l4 4 l6 -1 l1 6 l5 3 l-2 5 l3 5 l-5 3 l-1 6 l-6 -1 l-4 4 l-4 -4 l-6 1 l-1 -6 l-5 -3 l3 -5 l-2 -5 l5 -3 l1 -6 l6 1z" '+S2+'/><circle cx="24" cy="24" r="8" '+S3+' '+ST1+'/>',
+ crown:'<path d="M5 16 l9 8 l10 -14 l10 14 l9 -8 l-4 24 h-30z" fill="var(--coin1)" '+ST1+' stroke-linejoin="round"/><rect x="9" y="36" width="30" height="6" rx="2" '+S2+'/><circle cx="24" cy="27" r="3" '+S2+'/>',
+ shake:'<path d="M3 20 l9 -8 l8 4 l6 -3 l9 -1 l10 8 l-8 10 l-8 6 q-3 2 -5 0 l-12 -8z" '+S3+' '+ST1+' stroke-linejoin="round"/><path d="M20 16 l-5 7 q3 3 7 0 l6 -6 l9 9 M22 30 l4 4 M18 27 l4 4" '+LN+'/>',
+ snow:'<path d="M24 4 v40 M7 14 l34 20 M41 14 l-34 20 M19 6 l5 5 l5 -5 M19 42 l5 -5 l5 5 M6 20 l7 -1 l-3 -6 M42 28 l-7 1 l3 6 M42 20 l-7 -1 l3 -6 M6 28 l7 1 l-3 6" stroke="#5fb3ff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+ letter:'<rect x="5" y="11" width="38" height="27" rx="4" '+S3+' '+ST1+'/><path d="M7 13 l17 13 l17 -13" '+LN+'/><path d="M24 31 q-6 -5 -3 -8 q2 -2 3 1 q1 -3 3 -1 q3 3 -3 8z" '+S2+'/>',
+ smile:'<circle cx="24" cy="24" r="19" fill="var(--coin1)" '+ST1+'/><circle cx="17" cy="19" r="2.6" fill="var(--il)"/><circle cx="31" cy="19" r="2.6" fill="var(--il)"/><path d="M14 27 q10 12 20 0" '+LN+'/>',
+ candle:'<rect x="17" y="18" width="14" height="25" rx="2" '+S3+' '+ST1+'/><path d="M24 4 q6 6 0 12 q-6 -6 0 -12z" fill="#ff8a3d" '+ST1+'/><path d="M24 16 v2" '+LN+'/><path d="M12 43 h24" '+LN+'/>',
+ apple:'<path d="M24 14 q-6 -4 -11 -1 q-8 5 -5 17 q3 12 10 12 q3 0 6 -2 q3 2 6 2 q7 0 10 -12 q3 -12 -5 -17 q-5 -3 -11 1z" '+S2+'/><path d="M24 14 q0 -6 4 -9" '+LN+'/><path d="M26 9 q6 -5 10 0 q-6 4 -10 0z" fill="#2fa84f" '+ST1+'/>',
+ sprout:'<path d="M24 44 v-22" stroke="#2fa84f" stroke-width="3"/><path d="M24 24 q-16 2 -16 -12 q14 -2 16 12z M24 20 q14 2 16 -12 q-14 -2 -16 12z" fill="#2fa84f" '+ST1+'/><path d="M10 44 h28" '+LN+'/>',
+ vhs:'<rect x="5" y="12" width="38" height="24" rx="3" '+S1+'/><rect x="11" y="17" width="26" height="11" rx="2" '+S3+'/><circle cx="17" cy="22.5" r="3.5" '+S2+'/><circle cx="31" cy="22.5" r="3.5" '+S2+'/><path d="M14 36 l3 -5 h14 l3 5" '+S3+'/>',
+ school:'<path d="M12 16 q0 -9 12 -9 q12 0 12 9 v22 q0 4 -4 4 h-16 q-4 0 -4 -4z" '+S1+'/><path d="M18 9 q0 -5 6 -5 q6 0 6 5" '+LN+'/><rect x="16" y="24" width="16" height="11" rx="3" '+S2+'/><path d="M16 28 h16" stroke="var(--il)" stroke-width="2"/>',
+ mic:'<rect x="17" y="4" width="14" height="22" rx="7" '+S2+'/><path d="M17 13 h14 M17 18 h14" stroke="var(--i3)" stroke-width="2"/><path d="M11 21 q0 12 13 12 q13 0 13 -12" '+LN+' fill="none"/><rect x="21.5" y="33" width="5" height="7" '+S1+'/><rect x="14" y="40" width="20" height="4" rx="2" '+S1+'/>',
+ party:'<path d="M8 42 l9 -26 l17 17z" '+S2+'/><path d="M12 31 l7 7 M15 23 l10 10" stroke="var(--i3)" stroke-width="2.4"/><path d="M27 13 q4 -6 10 -3 M33 21 q5 -1 8 3" '+LN+' fill="none"/><circle cx="25" cy="6" r="2.5" '+S1+'/><circle cx="41" cy="13" r="2.5" '+S2+'/><circle cx="39" cy="31" r="2.5" '+S1+'/>',
+ hammer:'<g transform="rotate(-30 24 26)"><rect x="21" y="16" width="6" height="28" rx="2.5" '+S3+' '+ST1+'/><path d="M9 8 h26 q5 0 5 5 v1 h-5 v4 h-26z" '+S1+'/></g>',
+ cat:'<path d="M10 20 l1 -13 l9 8 h8 l9 -8 l1 13 q2 18 -14 18 q-16 0 -14 -18z" '+S2+'/><circle cx="18" cy="24" r="2.4" fill="var(--il)"/><circle cx="30" cy="24" r="2.4" fill="var(--il)"/><path d="M22 30 h4 l-2 2.5z" fill="var(--il)"/><path d="M6 28 l9 1 M6 33 l9 -1 M42 28 l-9 1 M42 33 l-9 -1" '+LN+'/>',
+ car2:'<path d="M6 30 l4 -12 q2 -5 7 -5 h14 q5 0 7 5 l4 12 v8 h-36z" '+S1+'/><rect x="13" y="17" width="22" height="9" rx="2" '+S3+'/><circle cx="14" cy="32" r="3" '+S2+'/><circle cx="34" cy="32" r="3" '+S2+'/><rect x="8" y="38" width="6" height="5" rx="1.5" '+S1+'/><rect x="34" y="38" width="6" height="5" rx="1.5" '+S1+'/>',
+ thread:'<rect x="12" y="6" width="24" height="5" rx="2" '+S3+' '+ST1+'/><rect x="12" y="37" width="24" height="5" rx="2" '+S3+' '+ST1+'/><rect x="15" y="11" width="18" height="26" '+S2+'/><path d="M15 16 h18 M15 21 h18 M15 26 h18 M15 31 h18" stroke="var(--i3)" stroke-width="1.6" opacity=".8"/><path d="M33 24 q10 2 8 14" '+LN+' fill="none"/>',
+ puzzle:'<path d="M8 14 h10 q-2 -7 6 -7 q8 0 6 7 h10 v10 q-7 -2 -7 6 q0 8 7 6 v6 h-32z" '+S1+'/><path d="M8 28 h10 q-2 6 6 6 q8 0 6 -6" stroke="var(--i3)" stroke-width="2.2" fill="none"/>',
+ worker:'<path d="M8 30 q0 -18 16 -18 q16 0 16 18z" '+S2+'/><rect x="4" y="29" width="40" height="6" rx="3" '+S2+'/><rect x="21" y="8" width="6" height="14" rx="2" '+S3+' '+ST1+'/><path d="M14 26 q0 -8 6 -11 M34 26 q0 -8 -6 -11" stroke="var(--i3)" stroke-width="2" fill="none"/>',
+ mush:'<path d="M5 24 q2 -18 19 -18 q17 0 19 18z" '+S2+'/><circle cx="15" cy="16" r="3" '+S3+'/><circle cx="27" cy="12" r="2.5" '+S3+'/><circle cx="34" cy="19" r="2.5" '+S3+'/><path d="M17 24 h14 l2 14 q0 4 -4 4 h-10 q-4 0 -4 -4z" '+S3+' '+ST1+'/>',
+ train:'<rect x="10" y="6" width="28" height="30" rx="7" '+S1+'/><rect x="14" y="11" width="20" height="10" rx="2" '+S3+'/><circle cx="17" cy="29" r="2.5" '+S2+'/><circle cx="31" cy="29" r="2.5" '+S2+'/><path d="M14 36 l-5 7 M34 36 l5 7 M11 41 h26" '+LN+'/>',
+ pumpkin:'<path d="M24 12 q-18 -2 -18 15 q0 14 18 14 q18 0 18 -14 q0 -17 -18 -15z" '+S2+'/><path d="M24 12 q-7 10 0 29 M24 12 q7 10 0 29" stroke="var(--il)" stroke-width="2" fill="none"/><path d="M24 12 q0 -5 4 -7" '+LN+'/>',
+ tree:'<path d="M24 4 l8 11 h-4 l9 11 h-5 l10 12 H6 l10 -12 h-5 l9 -11 h-4z" fill="#2fa84f" '+ST1+' stroke-linejoin="round"/><rect x="21" y="38" width="6" height="6" '+S2+'/><circle cx="20" cy="22" r="2" '+S2+'/><circle cx="28" cy="30" r="2" '+S2+'/><circle cx="24" cy="4" r="2.5" fill="var(--coin1)" '+ST1+'/>',
+ shield:'<path d="M24 4 l16 6 v12 q0 14 -16 22 q-16 -8 -16 -22 v-12z" '+S1+'/><path d="M24 12 l3 6 l6 1 l-4.5 4 l1 6 l-5.5 -3 l-5.5 3 l1 -6 l-4.5 -4 l6 -1z" fill="var(--coin1)" '+ST1+'/>',
+ tulip:'<path d="M24 26 v18" stroke="#2fa84f" stroke-width="3"/><path d="M24 36 q-8 -8 -12 -4 q4 6 12 6 M24 36 q8 -8 12 -4 q-4 6 -12 6" fill="#2fa84f" '+ST1+'/><path d="M14 10 l5 5 l5 -9 l5 9 l5 -5 v10 q0 8 -10 8 q-10 0 -10 -8z" '+S2+'/>',
  ussr:'<rect x="6" y="15" width="36" height="24" rx="5" '+S1+'/><circle cx="17" cy="27" r="7" '+S3+'/><circle cx="17" cy="27" r="2.5" '+S1+'/><rect x="28" y="21" width="10" height="3" rx="1.5" '+S3+'/><rect x="28" y="27" width="10" height="3" rx="1.5" '+S3+'/><circle cx="33" cy="34.5" r="2" '+S2+'/><path d="M30 15 L40 5" '+LN+'/><circle cx="40" cy="5" r="2" '+S2+'/>',
  kino:'<rect x="6" y="18" width="36" height="23" rx="4" '+S1+'/><path d="M6 18 L40 8 l1.5 5 L7.5 23z" '+S2+'/><path d="M13 16 l4 5 M22 13.5 l4 5 M31 11 l4 5" stroke="var(--i3)" stroke-width="3"/><path d="M21 25 v10 l9 -5z" '+S3+'/>',
  geo:'<path d="M6 12 l12 -4 l12 4 l12 -4 v28 l-12 4 l-12 -4 l-12 4z" '+S3+' '+ST1+' stroke-linejoin="round"/><path d="M18 8 v28 M30 12 v28" stroke="var(--i1)" stroke-width="2" opacity=".5"/><path d="M24 15 a6 6 0 0 1 6 6 c0 5 -6 10 -6 10 s-6 -5 -6 -10 a6 6 0 0 1 6 -6z" '+S2+'/><circle cx="24" cy="21" r="2.2" '+S3+'/>',
@@ -91,9 +144,13 @@ var IC={
 };
 // Эмодзи → значок. Лица соседа и Зины — головы перерисованных персонажей (face:<id>)
 var MAP={'💰':'coin','⚙':'gear','←':'back','→':'next','▶':'play','↻':'again','⭐':'star','🎁':'gift','✓':'tick','✅':'okc','✗':'cross','❌':'noc','⚔':'duel','🔥':'fire',
+ '🎀':'bow','🎩':'hat','🖼':'pic','🍂':'mleaf','🍁':'mleaf','⛄':'snowman','☃':'snowman','🥞':'pancake','💐':'bouquet','☀':'sun','🌠':'shoot','✉':'mail','⛲':'fount','🚩':'pflag',
+ '🎟':'ticket','🎫':'ticket','🎭':'masks','💪':'muscle','🔤':'abc','🧺':'basket','📰':'news','🃏':'cards','🧐':'monocle','🔍':'zoom','✏':'pencil','🏙':'city','📍':'pin','📋':'clip',
+ '☕':'tea','🆕':'nnew','📌':'tack','📜':'scroll','🎖':'order','🏵':'rosette','👑':'crown','🤝':'shake','❄':'snow','💌':'letter','😄':'smile','🕯':'candle','🍎':'apple','🌱':'sprout',
  '🎲':'all','🥉':'m1','🥈':'m2','🥇':'m3','🏅':'medal','📅':'cal','📺':'tv','👥':'friends','📊':'stat','📲':'phone','📣':'horn','🏆':'cup','⚑':'rep','🙋':'face:kolya','🏳':'flag',
  '❓':'help','ℹ':'info','½':'half','👵':'face:zina','📤':'share','👍':'thumb','🔟':'ten','💡':'bulb','🚫':'ban','🔒':'lock','🏠':'home','📨':'mail','🔊':'sound','🎵':'music','📳':'vib',
  '🔎':'zoom','🌿':'leaf','🛒':'cart','🔁':'repeat','⌨':'kbd','🎨':'palette','🎮':'games','🔔':'bell',
+ '📼':'vhs','🎒':'school','🎤':'mic','🎉':'party','🔨':'hammer','🐈':'cat','🚘':'car2','🧵':'thread','🧩':'puzzle','👷':'worker','📱':'phone','🍄':'mush','🚆':'train','🎃':'pumpkin','🎄':'tree','🛡':'shield','🌷':'tulip',
  '📻':'ussr','🎬':'kino','🗺':'geo','🌍':'world','🌲':'nature','🥟':'kitchen','📖':'lang','🏰':'history','⚽':'sport','🚗':'tech','🚀':'space','🥕':'dacha','📚':'lit','🎻':'art','🔬':'sci'};
 function ic(k,cls){if(k.indexOf('face:')===0)return face(k.slice(5),cls);
   return '<svg class="ic'+(cls?' '+cls:'')+'" viewBox="0 0 48 48" aria-hidden="true" focusable="false">'+(IC[k]||'')+'</svg>';}
@@ -115,9 +172,16 @@ var NEW={
   hat:'<path d="M56 70 q44 -20 88 0 v-18 q-44 -22 -88 0z" fill="#fff" '+s2+'/><path d="M58 54 q-14 -26 12 -34 q10 -18 30 -8 q20 -10 30 8 q26 8 12 34 q-42 -16 -84 0z" fill="#fff" '+s2+'/>',
   bodyX:'<path d="M100 160 V220" stroke="#d5d5d5" stroke-width="2.4"/><circle cx="108" cy="182" r="3" fill="#c8c8c8"/><circle cx="108" cy="202" r="3" fill="#c8c8c8"/><path d="M80 152 l20 18 l20 -18" fill="#e9534f" '+s+'/>',
   face:'<circle cx="48" cy="126" r="4.5" fill="#f5b72d"/><circle cx="152" cy="126" r="4.5" fill="#f5b72d"/>'};},
- kolya:function(s){return{body:'#2f5fa6',brow:'#5b3a29',
+ kolya:function(s){ // 09.10 (решение владельца): Коля ≠ Толик «Карбюратор» из Покера — свои приметы: очки в чёрной оправе, вязаная жилетка с карандашом, кляссер с марками
+  var al='<g transform="rotate(-9 50 200)"><rect x="16" y="168" width="70" height="58" rx="5" fill="#2e6b4a" '+s+'/><rect x="22" y="174" width="58" height="46" rx="2" fill="#1f4f36"/>'+
+   '<g stroke="#fff" stroke-width="1.6" stroke-dasharray="2 1.6"><rect x="26" y="178" width="14" height="17" fill="#e5484d"/><rect x="44" y="178" width="14" height="17" fill="#3f8fe0"/><rect x="62" y="178" width="14" height="17" fill="#ffcf40"/>'+
+   '<rect x="26" y="200" width="14" height="17" fill="#2fa84f"/><rect x="44" y="200" width="14" height="17" fill="#ff8a1f"/></g><path d="M51 205 l4 -5 l4 5 z" fill="#fff"/><circle cx="33" cy="186" r="3" fill="#fff" opacity=".8"/></g>';
+  return{body:'#7fa8d6',brow:'#5b3a29',
   hat:'<path d="M48 78 q2 -50 54 -52 q50 2 52 44 q-52 -10 -106 8z" fill="#6b5b4a" '+s+'/><path d="M48 78 q52 -18 106 -8 q18 4 24 14 q-64 -12 -130 -6z" fill="#51443a" '+s+'/>',
-  bodyX:'<path d="M80 152 l20 20 l20 -20" fill="#e3e9f0" '+s+'/><path d="M66 164 v56 M134 164 v56" stroke="#1f4275" stroke-width="9"/>',
+  bodyX:'<path d="M80 152 l20 20 l20 -20" fill="#e3e9f0" '+s+'/><path d="M40 166 q22 -12 44 -10 l16 28 l16 -28 q22 -2 44 10 l8 54 H32z" fill="#8a6a45" '+s+'/>'+
+   '<g fill="#6f5434"><circle cx="100" cy="196" r="3.4"/><circle cx="100" cy="210" r="3.4"/></g><path d="M52 176 q20 -6 36 -2 M112 174 q16 -4 36 2" stroke="#a7865d" stroke-width="2.4" fill="none"/>'+
+   '<rect x="132" y="170" width="20" height="14" rx="2" fill="#6f5434"/><path d="M138 172 v-16" stroke="#ffcf40" stroke-width="4" stroke-linecap="round"/><path d="M138 156 v-3" stroke="#e5484d" stroke-width="4" stroke-linecap="round"/>'+al,
+  glasses:'<g fill="rgba(210,230,255,.3)" stroke="#222" stroke-width="3.6"><rect x="65" y="92" width="32" height="22" rx="6"/><rect x="103" y="92" width="32" height="22" rx="6"/></g><path d="M97 101 h6 M65 99 l-15 -4 M135 99 l15 -4" stroke="#222" stroke-width="3.6" fill="none"/>',
   under:'<path d="M72 128 q14 -9 28 -2 q14 -7 28 2 q-7 12 -28 7 q-21 5 -28 -7z" fill="#5b3a29" '+s+'/>'};},
  mityai:function(s){return{old:1,body:'#fff',brow:'#c2c6cd',
   hair:'<path d="M50 104 q-6 -24 8 -36 q-2 18 5 30z M150 104 q6 -24 -8 -36 q2 18 -5 30z" fill="#d9dde3" '+s+'/>',
@@ -149,9 +213,11 @@ function bustInner(id,m){var o=(NEW[id]||NEW.mihalych)(OUT()),st=OUT();
   (o.old?'<path d="M64 112 q5 3 10 2 M136 112 q-5 3 -10 2 M80 76 q20 -5 40 0" stroke="'+sk2+'" stroke-width="2.4" fill="none" stroke-linecap="round"/>':'')+
   brows+eyes+(o.glasses||'')+'<path d="M100 104 q-9 18 -3 22 q5 3 11 -1 q3 -3 -1 -8" fill="'+sk2+'" opacity=".9"/>'+(o.under||'')+mouth+(o.face||'')+(o.hat||'');}
 var BC={};
-function who(id,m){m=m||'norm';var k=thId()+':'+id+':'+m;if(BC[k])return BC[k];
+function who(id,m){m=m||'norm';if(id==='zina'&&window.ZINA_ART)return ZINA_ART.bust(m,OUT());if(window.KIN&&KIN.ids[id])return KIN.bust(id,m); // Валя — из «Гастронома», Митяй — из «Рыбалки» (js/look-kin.js) // Зина — общий облик из игры «Баба Зина» (js/look-zina.js), id градиентов свои у каждой вставки
+ var k=thId()+':'+id+':'+m;if(BC[k])return BC[k];
  return BC[k]='<svg viewBox="0 0 200 220" class="bust" data-pv="'+id+'/'+m+'" preserveAspectRatio="xMidYMax meet" aria-hidden="true">'+bustInner(id,m)+'</svg>';}
-function face(id,cls){var k=thId()+':f:'+id;if(!BC[k])BC[k]=bustInner(id,'norm');
+function face(id,cls){if(id==='zina'&&window.ZINA_ART)return ZINA_ART.face(OUT(),cls);if(window.KIN&&KIN.ids[id])return KIN.face(id,cls);
+ var k=thId()+':f:'+id;if(!BC[k])BC[k]=bustInner(id,'norm');
  return '<svg class="ic face'+(cls?' '+cls:'')+'" viewBox="34 6 132 150" aria-hidden="true" focusable="false">'+BC[k]+'</svg>';}
 
 /* ---------- сцены (фон-место темы) ---------- */
@@ -201,9 +267,13 @@ var IHC={};
 function iconHtml(k){return IHC[k]||(IHC[k]=ic(k));}
 function fixText(n){var v=n.nodeValue;if(!v)return;RE.lastIndex=0;if(!RE.test(v))return;if(skip(n.parentNode))return;
  RE.lastIndex=0;var f=document.createDocumentFragment(),last=0,m;
- while((m=RE.exec(v))){if(m.index>last)f.appendChild(document.createTextNode(v.slice(last,m.index)));
-  var key=MAP[m[0].replace('\uFE0F','')];var i=document.createElement('lk-i');i.setAttribute('data-k',key);i.innerHTML=iconHtml(key);f.appendChild(i);
-  var t=document.createElement('lk-t');t.textContent=m[0];f.appendChild(t);last=m.index+m[0].length;}
+ while((m=RE.exec(v))){var pre=v.slice(last,m.index),key=MAP[m[0].replace('\uFE0F','')],box=f,nw=null;
+  // буст 09.10 (как Рыбалка BL1): число + монета + знак после неё — одной неразрывной обёрткой <lk-nw> («40 💰.», «(+30 💰)» не рвутся на 320 px)
+  if(key==='coin'){var a=/([^\s\u00A0]{1,14})[ \u00A0]?$/.exec(pre);nw=document.createElement('lk-nw');if(a&&/\d/.test(a[1])){nw.appendChild(document.createTextNode(a[1]+'\u00A0'));pre=pre.slice(0,a.index);}box=nw;}
+  if(pre)f.appendChild(document.createTextNode(pre));
+  var i=document.createElement('lk-i');i.setAttribute('data-k',key);i.innerHTML=iconHtml(key);box.appendChild(i);
+  var t=document.createElement('lk-t');t.textContent=m[0];box.appendChild(t);last=m.index+m[0].length;
+  if(nw){var z=/^[)\].,!?:;»…]+/.exec(v.slice(last));if(z){nw.appendChild(document.createTextNode(z[0]));last+=z[0].length;RE.lastIndex=last;}f.appendChild(nw);}}
  if(last<v.length)f.appendChild(document.createTextNode(v.slice(last)));
  if(n.parentNode)n.parentNode.replaceChild(f,n);}
 function scan(root){if(!root)return;if(root.nodeType===3){fixText(root);return;}if(root.nodeType!==1)return;
