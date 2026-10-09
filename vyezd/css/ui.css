@@ -1,0 +1,157 @@
+/* ui.css — поток UX буста «Наш двор»: подсказка первого хода, главный экран, окна победы/поражения, нижняя панель. */
+/* ---- подсказка первого хода (ui-tut.js) ---- */
+.uxtut{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:3;--r:40px}
+.uxtut .uxring{position:absolute;left:calc(var(--r)*-1);top:calc(var(--r)*-1);width:calc(var(--r)*2);height:calc(var(--r)*2);border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 3px rgba(255,194,51,.85),0 0 18px rgba(255,194,51,.7);animation:uxPulse 1.4s ease-out infinite}
+.uxtut .uxring.r2{animation-delay:.7s}
+.uxtut .uxhand{position:absolute;left:-6px;top:calc(var(--r)*.25);width:64px;height:64px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3));animation:uxTap 1.2s ease-in-out infinite;transform-origin:30% 10%}
+.uxtut.loud .uxhand{animation-duration:.6s}
+.uxtut .uxhand svg{width:100%;height:100%;display:block}
+@keyframes uxPulse{0%{transform:scale(.55);opacity:1}100%{transform:scale(1.35);opacity:0}}
+@keyframes uxTap{0%,100%{transform:translate(0,12px) rotate(-8deg)}45%{transform:translate(0,0) rotate(-8deg) scale(.92)}}
+.tip.uxtip{display:flex!important;align-items:center;gap:10px;text-align:left;padding:8px 12px}
+.tip.uxtip[style*="none"]{display:none!important}
+.tip.uxtip .uxsh{flex:0 0 48px;width:48px;height:48px;border-radius:50%;background:#ffe9d6;overflow:hidden;display:block}
+.tip.uxtip .uxsh svg{width:100%;height:100%;display:block}
+.tip.uxtip .uxtx b{display:block;color:#c0392b;font-size:13px;font-weight:800}
+.tip.uxtip.uxbig{font-size:18px;box-shadow:0 0 0 4px #ffc233,0 8px 18px rgba(20,60,90,.2)}
+body.calm .uxtut .uxring,body.calm .uxtut .uxhand{animation:none}
+
+/* ---- главный экран «Наш двор» (ui-home.js) ---- */
+html.uxh #scr-map .mnav{display:none}
+html.uxh #scr-map #mapSide{padding-bottom:70px}
+.uxhome{display:none;flex-direction:column;height:100%;background:linear-gradient(#bfe8f6,#e9f7ff 22%,#fdf6e8 60%,#f6ead2)}
+.uxhome.on{display:flex}
+.hBody{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:0 12px 6px}
+.hColA,.hColB{display:flex;flex-direction:column;gap:8px}
+.hColB{margin-top:8px}
+.hHouseW{position:relative;display:flex;justify-content:center}
+.hHouse{display:block;width:100%;max-height:34vh;min-height:150px;overflow:visible}
+.hHouse .hRes{cursor:pointer}
+.hHouse .hRes:hover rect,.hHouse .hRes:focus rect{filter:brightness(1.06)}
+.hHouse .hRes:focus{outline:none}
+.hHouse .hBadge{animation:hBadge 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes hBadge{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.hBub{position:absolute;width:210px;background:#fff;border-radius:14px;padding:8px 10px;font-size:14px;line-height:1.3;box-shadow:0 6px 18px rgba(20,60,90,.25);transform:translateY(-100%) scale(.9);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:5}
+.hBub b{display:block;color:#c0392b;font-size:12px}
+.hBub.on{opacity:1;transform:translateY(-100%) scale(1)}
+.hLight{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 8px;background:#fffaf0;border-radius:14px;padding:6px 12px;box-shadow:0 2px 0 rgba(120,80,30,.12);font-size:14px;color:var(--ink2)}
+.hLight .hlI{grid-row:1/3;font-size:20px}
+.hLight b{color:var(--ink)}
+.hsP{display:block;height:7px;border-radius:9px;background:#efe3cf;overflow:hidden;margin-top:4px}
+.hsP b{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#ffcf57,#ffb020)}
+.hPrava{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#fde3e8,#f9d2dc);border:2px solid #e8a5b5;border-radius:14px;padding:6px 10px;cursor:pointer;color:#5a2a36}
+.hPrava .hpPh{flex:0 0 40px;height:46px;background:#fff;border:1px solid #d99aab;border-radius:4px;overflow:hidden;display:block}
+.hPrava .hpSv{width:100%;height:100%;display:block}
+.hPrava .hpB{flex:1;min-width:0}
+.hPrava small{display:block;font-size:10px;letter-spacing:.06em;font-weight:800;color:#a14a5e}
+.hPrava b{display:block;font-size:16px;color:#3c1a24}
+.hPrava em{display:block;font-style:normal;font-size:12px;color:#7a4652;margin-top:2px}
+.hPrava .hsP{background:#f2c2cd}.hPrava .hsP b{background:linear-gradient(90deg,#e0566f,#c0392b)}
+.hPrava .hpSt{text-align:center;font-size:11px;font-weight:700;color:#a14a5e}.hPrava .hpSt b{font-size:20px;color:#3c1a24}
+.hMy{position:relative;display:flex;align-items:center;gap:10px;height:62px;border-radius:14px;padding:0 12px;cursor:pointer;background:linear-gradient(#8fd06e,#7cc35b);box-shadow:inset 0 -3px 0 rgba(0,0,0,.08)}
+.hMy::before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:116px;border-radius:8px;background:#c9cdd2;box-shadow:inset 0 0 0 2px #e9ecef}
+.hMy .hMyCar{position:relative;width:110px;height:46px;flex:0 0 110px}
+.hMy .hMyT{position:relative;display:flex;flex-direction:column;color:#123d12}
+.hMy .hMyT b{font-size:16px}.hMy .hMyT small{font-size:12.5px;opacity:.85}
+.hFeedH{margin:2px 2px 0;font-size:16px;color:var(--ink)}
+.hFeedH small{font-weight:500;color:var(--ink2);font-size:13px}
+.hFeed{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.hFeed .hs{flex:0 0 168px;scroll-snap-align:start}
+.hsT{position:relative;display:flex;align-items:flex-start;gap:8px;width:100%;height:100%;min-height:74px;text-align:left;background:#fffdf7;border:0;border-radius:16px;padding:9px 10px;box-shadow:0 3px 0 rgba(120,80,30,.13),0 6px 14px rgba(20,60,90,.08);font:inherit;color:var(--ink);cursor:pointer}
+.hsT.hot{box-shadow:0 0 0 2px #ffc233,0 3px 0 rgba(120,80,30,.13)}
+.hsT .hsI{font-size:24px;line-height:1;flex:0 0 auto}
+.hsT .hsB{flex:1;min-width:0;display:flex;flex-direction:column}
+.hsT .hsB b{font-size:14.5px;line-height:1.2}
+.hsT .hsB small{font-size:12.5px;color:var(--ink2);margin-top:2px;line-height:1.25}
+.hsT .hsTag{position:absolute;right:8px;top:-7px;font-style:normal;font-size:11px;font-weight:800;background:#ff5a6e;color:#fff;border-radius:9px;padding:1px 7px}
+.hGo{position:sticky;bottom:0;z-index:2;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62px;margin-top:4px}
+.hGo b{font-size:20px;font-weight:800}.hGo small{font-size:13px;opacity:.9;font-weight:600}
+.unav{display:flex;gap:4px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:#fffaf0;box-shadow:0 -2px 10px rgba(20,60,90,.1);flex:0 0 auto;position:relative;z-index:3}
+.unB{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;border-radius:14px;padding:5px 0 4px;font:inherit;font-size:12.5px;font-weight:700;color:var(--ink2);cursor:pointer;min-height:50px}
+.unB .unI{font-size:22px;line-height:1.1}
+.unB.on{background:#ffeccc;color:var(--ink)}
+.unB .unDot{position:absolute;top:5px;right:calc(50% - 20px);width:10px;height:10px;border-radius:50%;background:#ff5a6e;box-shadow:0 0 0 2px #fffaf0}
+#scr-map .unav{position:absolute;left:0;right:0;bottom:0}
+#scr-map.on{padding-bottom:0}
+html.uxh #scr-map .map-scroll{padding-bottom:70px}
+@media (max-height:600px){.hHouse{max-height:30vh;min-height:120px}.hMy{height:52px}.hMy .hMyCar{height:38px}.hsT{min-height:64px}.hGo{min-height:54px}.hGo b{font-size:18px}.hPrava em{display:none}.unB{min-height:44px;font-size:11.5px}.unB .unI{font-size:19px}}
+@media (max-height:560px){.hYard{display:none!important}}
+/* ПК: окно VK 920×800, 1280×800 — две колонки (дом слева, лента и кнопка справа) */
+.uxhome.wide .hBody{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,1fr);gap:18px;padding:6px 22px 10px;overflow:hidden}
+.uxhome.wide .hColA{min-height:0}
+.uxhome.wide .hColB{margin-top:0;min-height:0}
+.uxhome.wide .hHouse{max-height:none;height:auto;max-height:52vh}
+.uxhome.wide .hFeed{flex-direction:column;overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:0;scroll-snap-type:none}
+.uxhome.wide .hFeed .hs{flex:0 0 auto}
+.uxhome.wide .hsT{min-height:62px}
+.uxhome.wide .hGo{position:static;min-height:70px}
+.uxhome.wide .unav{max-width:520px;margin:0 auto 10px;border-radius:20px;box-shadow:0 4px 16px rgba(20,60,90,.12)}
+.uxhome.wide .hFeedH{font-size:18px}
+.uxhome:not(.wide) .hTopB{display:none}
+/* телефон: лента «Сегодня» должна быть видна без прокрутки */
+.uxhome:not(.wide) .hLight{grid-template-columns:auto auto 1fr;padding:5px 10px;font-size:13px}
+.uxhome:not(.wide) .hLight .hlI{grid-row:auto;font-size:16px}
+.uxhome:not(.wide) .hLight .hsP{margin-top:0}
+.uxhome:not(.wide) .hHouse{max-height:30vh}
+@media (max-height:760px){.uxhome:not(.wide) .hYard{display:none!important}.uxhome:not(.wide) .hPrava{padding:4px 8px}.uxhome:not(.wide) .hPrava .hpPh{flex-basis:32px;height:38px}.uxhome:not(.wide) .hPrava b{font-size:15px}}
+@media (max-height:680px){.uxhome:not(.wide) .hPrava em,.uxhome:not(.wide) .hPrava small{display:none}.uxhome:not(.wide) .hHouse{max-height:27vh;min-height:110px}.hFeedH{font-size:15px}}
+@media (max-width:340px){.hHead .pill{padding:5px 7px;font-size:13px}.hFeed .hs{flex-basis:150px}}
+.uxhome.wide .unav{max-width:600px}.uxhome.wide .unB{flex-direction:row;justify-content:center;gap:6px;font-size:15px}
+
+/* ---- окно победы (ui-win.js) ---- */
+.wTop{display:flex;justify-content:center;gap:8px;margin:-6px 0 4px}
+.wTop .wTp{width:52px;height:52px;border-radius:14px;background:#cfe9ff;box-shadow:0 0 0 3px #fff,0 3px 8px rgba(20,60,90,.2);overflow:hidden;display:block;animation:wClap .5s ease-in-out 3 alternate}
+.wTop .wTp:nth-child(2){background:#ffe3b3}.wTop .wTp:nth-child(3){background:#d8f0c8}
+.wTop svg{width:100%;height:100%;display:block}
+@keyframes wClap{from{transform:translateY(0)}to{transform:translateY(-5px) rotate(-3deg)}}
+.big-stars.pop>*,.big-stars.pop>var{display:inline-block;animation:wStar .45s cubic-bezier(.3,1.6,.5,1) both}
+.big-stars.pop>:nth-child(2){animation-delay:.25s}.big-stars.pop>:nth-child(3){animation-delay:.5s}
+@keyframes wStar{from{transform:scale(0) rotate(-40deg);opacity:0}to{transform:scale(1);opacity:1}}
+.wSay{display:flex;gap:10px;align-items:center;background:#eef6ff;border-radius:14px;padding:6px 10px;margin:8px 0;text-align:left}
+.wSay .wSp{flex:0 0 42px;height:42px;border-radius:50%;background:#fff;overflow:hidden;display:block}.wSay svg{width:100%;height:100%;display:block}
+.wSay p{margin:0;font-size:14.5px;line-height:1.3}.wSay b{display:block;font-size:12px;color:#c0392b}
+.wTmr{border:2px dashed #e7c88f;border-radius:14px;padding:6px 10px;margin:8px 0;text-align:left;font-size:14px;line-height:1.3}
+.wTmr b{display:block;font-size:14px}
+body.calm .wTop .wTp,body.calm .big-stars.pop>*{animation:none}
+.hMy .hMyNo{display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#8f969c;border:2px dashed #9aa1a7;border-radius:8px;margin-left:2px;width:104px;height:38px;flex-basis:104px}
+.hGo{overflow:hidden}
+.hGo .hGoCar{position:absolute;left:-40px;top:50%;margin-top:-14px;font-size:24px;font-style:normal;opacity:0}
+.hGo.drive .hGoCar{animation:hDrive .38s ease-in forwards}
+.hGo.drive b,.hGo.drive small{opacity:.6}
+@keyframes hDrive{0%{left:-40px;opacity:1}100%{left:110%;opacity:1}}
+.uxhome.wide .hGo{position:relative}
+
+/* ---- Ночная смена (ui-night.js) ---- */
+.uxhome.night{background:linear-gradient(#1b2347,#3a3566 30%,#6b4f6e 62%,#3d4a3a)}
+.uxhome.night .hHead .logo,.uxhome.night .hFeedH{color:#f3ecff}
+.uxhome.night .hFeedH small{color:#c9c0e6}
+.uxhome.night .unav{background:#2b2848}.uxhome.night .unB{color:#c9c0e6}.uxhome.night .unB.on{background:#45406e;color:#fff}
+.hsT.night{background:linear-gradient(135deg,#2b3157,#4a3f72);color:#fff3cf;box-shadow:0 0 0 2px #ffd36b,0 3px 0 rgba(0,0,0,.25)}
+.hsT.night .hsB small{color:#e6dcff}
+.uxhome.night .unI{filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff)}
+
+/* ---- Лавка тёти Вали (ui-shop.js) ---- */
+.uxshop{background:linear-gradient(#bfe8f6,#fdf6e8 30%,#f6ead2)}
+.lvBody{flex:1;min-height:0;overflow-y:auto;padding:4px 12px 12px;-webkit-overflow-scrolling:touch}
+.lvKiosk{position:relative;background:#2f8f6b;border-radius:16px 16px 12px 12px;padding:30px 12px 10px;margin:4px 0 10px;box-shadow:0 4px 0 #1f6b4f}
+.lvAwn{position:absolute;left:-4px;right:-4px;top:-2px;height:26px;border-radius:12px 12px 6px 6px;background:repeating-linear-gradient(90deg,#e74c3c 0 22px,#fff6e6 22px 44px);box-shadow:0 3px 0 rgba(0,0,0,.15)}
+.lvWin{display:flex;gap:10px;align-items:center;background:#d8f0ff;border:4px solid #fff6e6;border-radius:10px;padding:6px 10px}
+.lvV{flex:0 0 64px;width:64px;height:64px;display:block;border-radius:50%;background:#fff;overflow:hidden}.lvV svg{width:100%;height:100%;display:block}
+.lvWin p{margin:0;font-size:15px;line-height:1.3}.lvWin b{display:block;color:#c0392b;font-size:12.5px}
+.lvSign{margin-top:8px;text-align:center;color:#fff6e6;font-weight:800;font-size:12px;letter-spacing:.08em}
+.lvShelf{background:#fffdf7;border-radius:16px;padding:10px 12px;margin-bottom:10px;box-shadow:0 3px 0 rgba(120,80,30,.13)}
+.lvShelf h3{margin:0 0 6px;font-size:16px}
+.lvNote{margin:0 0 8px;font-size:14px;color:var(--ink2)}
+.lvShelf .btn{width:100%}
+.lvGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lvItem{display:flex;flex-direction:column;align-items:center;gap:2px;border:2px dashed #e1c99b;background:#fff;border-radius:14px;padding:6px 4px;font:inherit;color:var(--ink);cursor:pointer}
+.lvItem.own{border:2px solid #9ad38a;background:#f3fbef}
+.lvItem .lvIc{width:56px;height:46px}
+.lvItem b{font-size:12.5px;line-height:1.15;text-align:center}.lvItem small{font-size:12px;color:var(--ink2)}
+@media (min-width:860px) and (min-height:600px) and (min-aspect-ratio:1/1){.lvBody{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-content:start;padding:8px 22px}.lvKiosk{grid-column:1/3}.uxshop .unav{max-width:600px;margin:0 auto 10px;border-radius:20px}.uxshop .unB{flex-direction:row;justify-content:center;gap:6px;font-size:15px}.lvGrid{grid-template-columns:repeat(3,1fr)}}
+/* значок в тёмном тосте: тёмный контур значков не виден на тёмном фоне — светлая подложка (лупа была «белой точкой») */
+.toast var.ei{background-color:#fff;border-radius:7px;box-shadow:0 0 0 2px #fff;margin:0 4px}
+/* vy-merge: в панели 6 кнопок (Двор, Маршрут, Гаражи MG0, Мой двор YARD, Гараж, Лавка) — на узком телефоне ужимаем подписи, чтобы Лавка не выпадала */
+.unav .unT{white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:420px){.unav{gap:2px;padding-left:4px;padding-right:4px}.unB{font-size:11px;min-width:0}.unB .unI{font-size:20px}}
+@media (max-width:340px){.unB{font-size:10px;letter-spacing:-.2px}.unB .unI{font-size:18px}}

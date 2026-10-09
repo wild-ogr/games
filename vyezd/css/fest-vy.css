@@ -1,0 +1,48 @@
+/* Праздники во дворе — оформление «Выезда» (поток FEST, js/fest-vy.js). Без inset: (старые WebView). */
+/* плашка праздника над картой / в гнезде главного */
+#fvBanW{display:flex;flex-direction:column}
+.fvBan{width:auto;border:0;cursor:pointer;font:inherit}
+.fvBan .fvI{font-size:24px;line-height:1;flex:none}
+.fvBan small{display:block;font-size:12.5px;font-weight:700;opacity:.8;margin-top:1px}
+.tday.fvBan.fvHw{background:linear-gradient(135deg,#3b3270,#1d1838);color:#f6ecd6;box-shadow:0 3px 0 #0f0c22}
+.tday.fvBan.fvHw.hot{background:linear-gradient(135deg,#5a4aa6,#2a2350);color:#fff3d8;box-shadow:0 3px 0 #15112e,0 0 0 2px #f0a64a inset}
+.tday.fvBan.fvNy{background:linear-gradient(135deg,#e8f4ff,#bfe0ff);color:#163a5c;box-shadow:0 3px 0 #7fa8cc}
+.tday.fvBan.fvNy.hot{background:linear-gradient(135deg,#ff6b6b,#d42f36);color:#fff;box-shadow:0 3px 0 #8f1c22}
+.tday.fvBan.fvGift{background:linear-gradient(#fff0b8,#ffd36e);color:#3a2206}
+/* окно праздника */
+.fvE h2,.fvW h2{margin-bottom:2px}
+.fvSub{margin:0 0 6px!important;font-size:13.5px;font-weight:700;color:#6b5a8a}
+.fvNy .fvSub{color:#2b6aa6}
+.fvHero{position:relative;border-radius:16px;margin:6px 0 4px;padding:6px 8px 4px;background:radial-gradient(ellipse at 70% 30%,#4b3f8a,#1d1838 70%);color:#f3e9d2;font-size:13px;font-weight:800}
+.fvHero canvas{display:block;width:100%;height:76px}
+.fvHero span{display:block;margin-top:2px}
+.fvNy .fvHero{background:linear-gradient(#bfe0ff,#eef7ff);color:#163a5c}
+.fvG{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0 2px}
+.fvG.many{grid-template-columns:repeat(6,1fr);gap:5px}
+.fvT{border:0;border-radius:12px;padding:6px 2px 5px;font:inherit;cursor:pointer;background:#efeadb;color:#57606f;box-shadow:0 3px 0 #d3ccb8;min-width:0}
+.fvT b{display:block;font-size:18px;line-height:1.1}
+.fvT small{display:block;font-size:10.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#d68910}
+.fvT.lock small{color:#8a939c}
+.fvT.lock{cursor:default;opacity:.75}
+.fvHw .fvT.open{background:linear-gradient(#5a4aa6,#2a2350);color:#fff3d8;box-shadow:0 3px 0 #15112e}
+.fvHw .fvT.done{background:linear-gradient(#3b3270,#262044);color:#f3e9d2;box-shadow:0 3px 0 #15112e}
+.fvNy .fvT.open{background:linear-gradient(#ff7b7b,#d42f36);color:#fff;box-shadow:0 3px 0 #8f1c22}
+.fvNy .fvT.done{background:linear-gradient(#e8f4ff,#bfe0ff);color:#163a5c;box-shadow:0 3px 0 #7fa8cc}
+.fvT.open small{color:#ffe28a}
+.fvT.nx{outline:3px solid #f0a64a;outline-offset:1px}
+.fvG.many .fvT b{font-size:16px}.fvG.many .fvT small{font-size:9.5px}
+.fvCarNew{background:radial-gradient(ellipse at 70% 30%,#4b3f8a,#1d1838 70%);color:#f3e9d2}.fvCarNew p{color:#f3e9d2!important;font-weight:700}.fvNy .fvCarNew p{color:#163a5c!important}
+.fvNy .fvCarNew{background:linear-gradient(#bfe0ff,#eef7ff);color:#163a5c}
+.fvCarNew canvas{display:block;width:100%;height:70px}
+/* гараж */
+.fvGar h3{margin:6px 0 0}
+.gcard.fvCard.own{background:linear-gradient(#fbf6ff,#efe8ff)}
+/* баба Шура на «Ёлочном базаре» — мишура на платке */
+.fvNy .shura .pf{position:relative;box-shadow:0 2px 0 #d9c7a3,0 0 0 3px #ffd23f}
+/* зима (FEST zima: с 15.11) — карта в снегу; снег сверху — частицы FEST */
+body.fv-winter #app{background:linear-gradient(#cfe4f4,#eef6fc 30%,#f2f7fc 62%,#dce8f3)}
+body.fv-winter .mnav{background:rgba(255,255,255,.55)}
+body.fv-winter .reg .region span{box-shadow:0 2px 0 rgba(0,0,0,.08),0 -3px 0 #fff}
+/* гнездо для UX: снег на крыше пятиэтажки главного экрана — класс fv-snowroof на элементе крыши (видно только зимой) */
+.fv-snowroof{position:relative}
+body.fv-winter .fv-snowroof:before{content:'';position:absolute;left:-2px;right:-2px;top:-7px;height:10px;border-radius:8px 8px 4px 4px;background:#fff;box-shadow:0 2px 0 rgba(150,175,205,.5);pointer-events:none}

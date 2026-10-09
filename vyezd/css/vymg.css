@@ -1,0 +1,117 @@
+/* vy-mg0 — оболочка мини-игр «Перекур у Толика» (css/vymg.css). Классы игр MGA/MGB/MGC — со своими префиксами vya-/vyb-/vyc-. */
+#vymgHost{position:absolute;left:0;top:0;right:0;bottom:0;z-index:25;display:flex;flex-direction:column;background:#f4ead2;color:#2b2a26;
+  background-image:linear-gradient(180deg,#bfe6f7 0,#e9f5e0 46%,#f4ead2 100%);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#toast{z-index:60}
+.vymg-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;padding-top:max(8px,env(safe-area-inset-top));background:#2c5aa0;color:#fff;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);min-height:52px;position:relative;z-index:2}
+.vymg-ic{font-size:22px;line-height:1}
+.vymg-nm{flex:1 1 auto;font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vymg-top{flex:0 0 auto;font-weight:800;font-size:15px;background:rgba(255,255,255,.18);border-radius:999px;padding:4px 10px}
+.vymg-top:empty{display:none}
+.vymg-xb{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:20px;font-weight:900;cursor:pointer}
+.vymg-xb:active{background:rgba(255,255,255,.35)}
+.vymg-el{position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto}
+.vymg-cv{position:absolute;left:0;top:0;display:block;touch-action:none}
+/* реплика персонажа */
+.vymg-say{display:flex;align-items:flex-end;gap:10px;margin:0 0 10px;text-align:left}
+.vymg-av{flex:0 0 auto;width:64px;height:64px;border-radius:16px;overflow:hidden;background:#e3e9f2;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.vymg-av svg{width:100%;height:100%;display:block}
+.vymg-sb{position:relative;flex:1 1 auto;margin:0;background:#fff;border-radius:14px;padding:8px 12px;font-size:15px;line-height:1.35;box-shadow:0 2px 0 rgba(0,0,0,.1)}
+.vymg-sb .vymg-who{display:block;font-size:12px;color:#2c5aa0;text-transform:uppercase;letter-spacing:.03em;margin-bottom:1px}
+.vymg-sb::before{content:"";position:absolute;left:-7px;bottom:12px;border:7px solid transparent;border-right-color:#fff;border-left:0}
+/* набор для игр */
+.vymg-card{background:#fffdf6;border-radius:16px;padding:14px;box-shadow:0 3px 0 rgba(0,0,0,.12);margin:10px}
+.vymg-q{font-size:20px;font-weight:800;line-height:1.3;text-align:center}
+.vymg-opts{display:flex;flex-direction:column;gap:8px;margin:10px}
+.vymg-opt{min-height:56px;border:0;border-radius:14px;background:#fff;font:inherit;font-size:17px;font-weight:700;box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;color:#2b2a26}
+.vymg-opt.sel{background:#ffe9a8}.vymg-opt.ok{background:#bfeab0}.vymg-opt.no{background:#f7c2bd}
+.vymg-hint{font-size:13px;color:#5a5a52;text-align:center;margin:6px 10px}
+.vymg-kc{display:inline-block;min-width:22px;padding:1px 6px;border-radius:6px;background:#fff;border:1px solid #b7b2a2;border-bottom-width:3px;font:700 12px/1.4 inherit;color:#2b2a26}
+.vymg-big{width:132px;height:132px;border-radius:50%;border:0;background:radial-gradient(circle at 40% 35%,#ffd86b,#f2a900);box-shadow:0 6px 0 #b77d00,0 10px 18px rgba(0,0,0,.2);
+  font:inherit;font-size:18px;font-weight:900;color:#3a2206;cursor:pointer;touch-action:none}
+.vymg-big.on{transform:translateY(4px);box-shadow:0 2px 0 #b77d00,0 4px 8px rgba(0,0,0,.2)}
+.vymg-dots{display:flex;gap:6px;justify-content:center;margin:6px}
+.vymg-dots i{width:12px;height:12px;border-radius:50%;background:#d8d2c0;font-style:normal}
+.vymg-dots i.ok{background:#47b04b}.vymg-dots i.no{background:#e5484d}.vymg-dots i.cur{background:#f2a900}
+/* окна поверх игры: «Выйти?» и итог */
+.vymg-veil{position:absolute;left:0;top:0;right:0;bottom:0;z-index:5;display:flex;align-items:center;justify-content:center;background:rgba(20,30,40,.5);padding:14px;overflow:auto}
+.vymg-panel{width:100%;max-width:400px;max-height:100%;overflow:auto;background:#fffaf0;border-radius:20px;padding:16px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.vymg-panel h2{margin:4px 0 6px;font-size:22px}
+.vymg-panel p{margin:6px 0}
+.vymg-btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.vymg-btns .btn{width:100%;min-height:52px}
+.vymg-btns small{font-weight:600;opacity:.75}
+.vymg-stars{font-size:34px;line-height:1;margin:4px 0}
+.vymg-st{display:inline-block;filter:grayscale(1);opacity:.3;transform:scale(.8)}
+.vymg-st.on{filter:none;opacity:1;animation:vymgPop .45s both}
+@keyframes vymgPop{0%{transform:scale(.2)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.vymg-sc{font-weight:700;color:#5a5a52}
+.vymg-rws{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.vymg-rw{border-radius:12px;padding:8px 10px;font-weight:800;font-size:16px;background:#fff2c4}
+.vymg-rw.p{background:#dfeaf7;color:#1d3f73;font-weight:700;font-size:15px}
+.vymg-rw.r{background:#e7f6df}
+.vymg-rw.t{background:#dcebff;color:#1d3f73}
+.vymg-note{font-size:13px;color:#6a675c}
+.vymg-xpb{display:flex;flex-direction:column;gap:4px;margin:8px 0 0;font-size:13px;font-weight:700;color:#1d3f73}
+.vymg-bar{display:block;height:10px;border-radius:999px;background:#dfe3ea;overflow:hidden}
+.vymg-bar i{display:block;height:100%;background:linear-gradient(90deg,#4f8fc0,#2c5aa0);border-radius:999px}
+.vymg-list a{color:#2c5aa0;font-weight:700}
+@media (prefers-reduced-motion:reduce){.vymg-st.on{animation:none}}
+@media (max-height:600px){.vymg-av{width:48px;height:48px}.vymg-panel{padding:12px}.vymg-stars{font-size:28px}.vymg-btns .btn{min-height:46px}}
+.vymg-intro{position:absolute;left:0;top:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(20,30,40,.28)}
+.vymg-intro .vymg-panel{text-align:left}
+.vymg-intro .vymg-btns{margin-top:10px}
+.vymg-float{position:absolute;left:0;right:0;display:flex;justify-content:center;pointer-events:none;z-index:2}
+.vymg-float>*{pointer-events:auto}
+.vymg-msg{position:absolute;left:50%;transform:translateX(-50%);z-index:3;background:rgba(255,255,255,.95);border-radius:14px;padding:8px 14px;font-weight:800;font-size:17px;box-shadow:0 3px 0 rgba(0,0,0,.12);white-space:nowrap;pointer-events:none;transition:opacity .25s}
+/* MG0: свои игры (vy0-) */
+.vy0-strip{position:absolute;left:8px;top:8px;display:flex;align-items:center;gap:4px;z-index:2;pointer-events:none}
+.vy0-shot{width:64px;border:4px solid #fff;border-bottom-width:10px;box-shadow:0 2px 6px rgba(0,0,0,.25);transform:rotate(-3deg);background:#ddd}
+.vy0-strip b{font-size:12px;color:#f2a900;margin-right:4px;text-shadow:0 1px 0 #fff}
+/* Перекур в окне победы */
+.vy0-pk{display:flex;align-items:center;gap:10px;margin:8px 0 2px;padding:8px 10px;border-radius:14px;background:#fff4d6;border:2px solid #f2c45a;text-align:left}
+.vy0-pkav{flex:0 0 auto;width:46px;height:46px;border-radius:12px;overflow:hidden;background:#e3e9f2}
+.vy0-pkav svg{width:100%;height:100%;display:block}
+.vy0-pkb{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.vy0-pkb b{font-size:15px}.vy0-pkb small{font-size:12.5px;color:#5a5a52}
+.vy0-pk .vy0-pkgo{flex:0 0 auto;min-height:44px;padding:0 14px;margin:0;width:auto;background:#2fa84f;color:#fff;border:0;border-radius:12px;font-weight:800;box-shadow:0 3px 0 #1f7a37}
+/* плитки на карте (если UX ещё не дал своего вида) */
+.vy0-mrow{display:flex;gap:8px;margin:8px 10px}
+.vy0-mrow .hsT{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;text-align:left;border:0;border-radius:14px;background:#fff;padding:8px 10px;min-height:56px;box-shadow:0 3px 0 rgba(0,0,0,.12);font:inherit;color:#2b2a26;cursor:pointer;position:relative}
+.vy0-mrow .hsI{font-size:22px}.vy0-mrow .hsB{display:flex;flex-direction:column;min-width:0;flex:1}.vy0-mrow .hsB b{font-size:14px}
+.vy0-mrow .hsB small{font-size:12px;color:#6a675c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vy0-mrow .hsP{display:block;height:6px;border-radius:9px;background:#dfe3ea;margin-top:3px;overflow:hidden}.vy0-mrow .hsP b{display:block;height:100%;background:#4f8fc0}
+.vy0-mrow .hsTag{position:absolute;right:6px;top:4px;font-style:normal}
+.vy0-day.done{opacity:.75}
+/* мастерская Толика */
+.vy0-cab{background:linear-gradient(180deg,#dfeaf4,#f4ead2);overflow:hidden}
+.vy0-ch{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#2c5aa0;color:#fff;min-height:52px}
+.vy0-ch b{flex:1;font-size:17px}.vy0-ch .pill{background:rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-weight:800}
+.vy0-back{width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:22px;font-weight:900;cursor:pointer}
+.vy0-cb{flex:1 1 auto;overflow-y:auto;padding:12px 12px 24px;max-width:720px;width:100%;margin:0 auto;box-sizing:border-box}
+.vy0-car{background:#fffdf6;border-radius:16px;padding:10px;box-shadow:0 3px 0 rgba(0,0,0,.1);text-align:center}
+.vy0-ccv{width:100%;height:150px;display:block}
+.vy0-cn{display:flex;flex-direction:column;gap:2px;margin:4px 0}.vy0-cn b{font-size:18px}.vy0-cn small{color:#1d3f73;font-weight:700}
+.vy0-parts{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:6px}
+.vy0-parts i{width:26px;height:26px;border-radius:7px;background:#e6e2d6;color:#8a8576;font:700 11px/26px inherit;font-style:normal;text-align:center}
+.vy0-parts i.ok{background:#4f8fc0;color:#fff}.vy0-parts i.cur{background:#ffd86b;color:#3a2206;box-shadow:0 0 0 2px #f2a900}
+.vy0-built{font-weight:700;color:#2f7a3a;margin:6px 0 0}
+.vy0-dayc{display:flex;align-items:center;gap:10px;margin:12px 0;padding:10px;border-radius:16px;background:#fff4d6;border:2px solid #f2c45a}
+.vy0-dayc>span:nth-child(2){flex:1;display:flex;flex-direction:column;min-width:0}.vy0-dayc small{color:#6a675c;font-size:12.5px}
+.vy0-dayc .btn{width:auto;min-height:48px;padding:0 16px;margin:0}
+.vy0-gi{font-size:26px;flex:0 0 auto}
+.vy0-h{font-size:15px;margin:14px 2px 8px;color:#4a473e}
+.vy0-shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.vy0-g{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:0;border-radius:14px;background:#fff;padding:10px;min-height:96px;box-shadow:0 3px 0 rgba(0,0,0,.1);font:inherit;color:#2b2a26;cursor:pointer}
+.vy0-g b{font-size:14px;line-height:1.2}.vy0-g small{font-size:12px;color:#6a675c;line-height:1.25}
+.vy0-g.lock{opacity:.6;cursor:default}
+.vy0-pk.sm{padding:4px 8px;margin:4px 0}.vy0-pk.sm .vy0-pkav,.vy0-pk.sm small{display:none}.vy0-pk.sm .vy0-pkgo{min-height:40px}
+@media (max-height:640px){.vy0-pkav{width:38px;height:38px}.vy0-pkb small{font-size:12px}}
+.vy0-pkn{display:none;font-weight:600}.vy0-pk.sm .vy0-pkn{display:inline}
+/* KEYS: подсказки клавиш (только ПК — разметку ставит vymgPC()), выбранная стрелками кнопка окна */
+.vymg-khd{flex:0 0 auto;font-size:11px;opacity:.8;white-space:nowrap}.vymg-khd .vymg-kc{min-width:0;padding:0 4px;font-size:10px;margin-left:4px}
+@media (max-width:640px){.vymg-khd{display:none}}
+.vymg-kn{margin-left:6px;font-size:11px;opacity:.75;vertical-align:middle;padding:0 5px;min-width:0}
+.vymg-btns .btn.vymg-kf{outline:3px solid #f2a900;outline-offset:2px}
+.vy0-khd{font-size:11px;opacity:.85;white-space:nowrap}.vy0-khd .vymg-kc{padding:0 4px;font-size:10px;margin-left:4px;min-width:0}@media (max-width:640px){.vy0-khd{display:none}}
+.vy0-g.vy0-kf,.vy0-dgo.vy0-kf{outline:3px solid #f2a900;outline-offset:2px}

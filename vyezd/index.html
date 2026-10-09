@@ -4,6 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <script>window.__se=[];addEventListener('error',function(e){var t=e.target,s=window.__se;if(s&&s.length<10)s.push(t&&t.tagName?[2,t.src||t.href||'',t.tagName]:[1,e.message,e.filename,e.lineno]);},true);</script> <!-- STAT v1.2: ранние ошибки и незагрузившиеся файлы — до всех скриптов -->
+<script>/* vy-tech: предохранитель загрузки (образец Викторины/Рыбалки, 05.10): свой файл js/*.js или css/*.css не загрузился → перезагрузка до 2 раз;
+   не помогло — внизу плашка «Обновить» (её можно закрыть). Новые модули необязательны: игра работает и без них (вызовы через window.X&&…). */
+(function(){var K='vy-ldfail',n=0,done=false;try{n=+sessionStorage.getItem(K)||0;}catch(e){}
+function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
+  try{var a=document.createElement('a');a.href=u;if(a.host!==location.host)return false;}catch(e){return false;}
+  return !/vk-bridge|sdk\.js/.test(u);}
+addEventListener('error',function(e){if(done||!own(e.target))return;done=true;
+  if(n<2){try{sessionStorage.setItem(K,n+1);}catch(x){}setTimeout(function(){location.reload();},700+n*1500);return;}
+  var ru=/[?&](vk_app_id|vk)=/.test(location.search)||!/^en/i.test((navigator.language||'ru')+'')&&!/[?&]lang=en/.test(location.search);
+  function show(){var d=document.createElement('div');d.id='ldfail';d.setAttribute('style','position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;background:#1c2b3a;color:#fff;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font:600 15px/1.35 system-ui,sans-serif;text-align:center;padding:12px;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.3)');
+    d.innerHTML='<span>'+(ru?'Часть игры не загрузилась. Проверьте интернет.':'Part of the game failed to load. Check your connection.')+'</span><button type="button" style="font:700 15px system-ui,sans-serif;padding:8px 18px;border:0;border-radius:10px;background:#4caf50;color:#fff">'+(ru?'Обновить':'Reload')+'</button><button type="button" aria-label="x" style="font:700 15px system-ui,sans-serif;padding:8px 12px;border:0;border-radius:10px;background:#3a4b5c;color:#fff">✕</button>';
+    var b=d.querySelectorAll('button');b[0].onclick=function(){try{sessionStorage.removeItem(K);}catch(x){}location.reload();};b[1].onclick=function(){d.parentNode&&d.parentNode.removeChild(d);};
+    (document.body||document.documentElement).appendChild(d);}
+  if(document.body)show();else addEventListener('DOMContentLoaded',show);},true);
+addEventListener('load',function(){setTimeout(function(){if(!done)try{sessionStorage.removeItem(K);}catch(x){}},3000);});})();
+</script>
+<script src="js/ui-core.js"></script>
+<link rel="stylesheet" href="css/ui.css"> <!-- vy-ux -->
+<script src="js/ui-who.js"></script><script src="js/ui-home.js"></script> <!-- vy-ux: жильцы и главный экран «Наш двор» (до основного скрипта: запуск сразу на главный) --> <!-- vy-ux: гнёзда и роутер экранов (договор — шапка файла); нет файла — игра как раньше -->
 <title>Выезд со двора</title>
 <style>
 :root{--ink:#2d3436;--accent:#ff7a45;--accent2:#ffb347;--muted:#95a5a6;--card:#fffdf7}
@@ -464,6 +483,7 @@ if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB
 if(a&&!document.hidden)a.play().catch(function(){});}
 ['touchend','click','keydown'].forEach(function(e){document.addEventListener(e,on,{capture:true,passive:true});});
 document.addEventListener('visibilitychange',function(){if(!a)return;if(document.hidden)a.pause();else a.play().catch(function(){});});})();</script>
+<link rel="stylesheet" href="css/myyard.css"><!-- vy-yard: Мой двор, Автоальбом, гараж Толика, лига -->
 </head>
 <body>
 <div id="bg"></div>
@@ -471,7 +491,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   <section id="scr-map" class="screen on">
     <header class="mh"><div class="logo"><span class="lc">🚗 </span><span data-en="Yard Escape&lt;small class=&quot;lsub&quot;&gt;Parking Jam&lt;/small&gt;">Выезд со двора</span></div><div class="hdr-r"><button class="icon snd" id="btnSet" aria-label="Настройки" data-en-aria="Settings">⚙️</button><div class="pill">⭐ <span id="totStars">0</span></div><button class="pill" id="mCoins">💰 <span id="coinCnt">0</span></button></div></header>
     <div id="mapReg"></div>
-    <div class="map-scroll" id="mapScroll"><div class="route" id="mapList"></div><div class="soon"><span data-en="Keep going — the yards never end!">Проходи дальше — дворы не кончаются!</span></div></div>
+    <div class="map-scroll" id="mapScroll"><div id="mapSlots" class="mslots"></div><div class="route" id="mapList"></div><div class="soon"><span data-en="Keep going — the yards never end!">Проходи дальше — дворы не кончаются!</span></div></div>
     <button id="mToday" class="tday noenter" style="display:none"></button>
     <div class="gside" id="mapSide"></div>
     <nav class="mnav"><button id="btnDaily" class="btn accent">📅 Задание дня</button><button id="btnGarage" class="btn">🅿️ <span data-en="Garage">Гараж</span> <span id="garCnt"></span></button><button id="btnStreak" class="btn sq" aria-label="Серия дней" data-en-aria="Daily streak">🎁<small>Подарок</small></button><button id="btnMore" class="btn sq noenter" style="display:none" aria-label="Ещё игры во дворе" data-en-aria="More yard games">🎲<small data-en="Games">Игры</small></button></nav>
@@ -572,6 +592,7 @@ function boot(){try{fix(document.body);if(window.MutationObserver)new MutationOb
 if(document.body)boot();else document.addEventListener('DOMContentLoaded',boot);
 })();</script>
 
+<script src="js/lvl-regions.js"></script><script src="js/lvl-diff.js"></script><script src="js/lvl-hz.js"></script><script src="js/lvl-modes.js"></script> <!-- vy-lvl: регионы VYREG и слой трудности (без них игра работает по-старому) -->
 <script>
 'use strict';
 /* ================= данные ================= */
@@ -601,7 +622,9 @@ const CITIES_EN=['Kaliningrad','Pskov','Veliky Novgorod','Tver','Moscow','Vladim
 const WORLD_EN=['Minsk','Almaty','Tashkent','Bishkek','Tbilisi','Yerevan','Baku','Istanbul','Dubai','Delhi','Beijing','Seoul','Tokyo','Bangkok','Cairo','Rome','Paris','Berlin','London','New York'];
 const REGIONS=[{from:0,name:'Центр и Поволжье',en:{name:'Central Russia & the Volga'}},{from:10,name:'Урал и Сибирь',en:{name:'The Urals & Siberia'}},{from:20,name:'Дальний Восток',en:{name:'The Far East'}},
   {from:30,name:'Вокруг света',en:{name:'Around the World'}},{from:50,name:'Бесконечные дворы',en:{name:'Endless Yards'}}];
-const levelName=i=>i<30?L(CITIES[i],CITIES_EN[i]):i<50?L(WORLD[i-30],WORLD_EN[i-30]):L('Двор №','Yard #')+(i+1);
+/* vy-lvl: 16 именных регионов VYREG (дворы 51–210) вместо «Бесконечных дворов»; бесконечные — с 211-го */
+if(window.VYREG){const e=REGIONS.pop();VYREG.forEach(r=>REGIONS.push({from:r.from-1,name:r.name,en:{name:r.en},vy:r.id}));REGIONS.push({from:VYREG.last,name:e.name,en:e.en});}
+const levelName=i=>i<30?L(CITIES[i],CITIES_EN[i]):i<50?L(WORLD[i-30],WORLD_EN[i-30]):(window.VYREG&&VYREG.yardName(i,LANG==='en'))||L('Двор №','Yard #')+(i+1); /* vy-lvl: дворы 51–210 — имена из VYREG */
 const isBoss=i=>i%10===9;
 // сложность растёт плавно: размер двора, плотность, длина машин, препятствия, доля «свободных с начала»
 function levelParams(i){
@@ -620,6 +643,8 @@ function levelParams(i){
     amb:i>=5&&(i%3===2||boss),     // скорая: выпустить за N ходов
     police:i>=11&&(i%4===3||boss)}; // полиция: мигалка разгоняет всех, кто может уехать
 }
+/* vy-lvl: новые регионы (дворы 51+) — свои параметры (js/lvl-diff.js); дворы 1–50 не меняются */
+const levelParams0=levelParams;levelParams=function(i){const p=levelParams0(i);try{return window.LVLD?LVLD.params(i,p):p;}catch(e){return p;}};
 const LEVELS=CITIES.map((_,i)=>levelParams(i));
 // точечная замена зерна (аудит 06): убрать ранний пик на 7-м, «пила» 11–20, боссы 30/40 — пики, 42/48 не выше босса 50.
 // Подобрано прогоном генератора (индекс = 0,5·машин + 2·глубина + 0,5·цепочка − 0,7·свободных + скорая/босс)
@@ -633,7 +658,7 @@ const DAILY=levelParams(20);
 // задание (то же зерно дня, тот же выбор «лучшее из 3 зёрен» по трудности target); рейтинг считает дни, а не очки — честность не страдает.
 // Ступень: пройдено дворов <12 → как двор 9 (6×8, ~12 машин, индекс ~19); <20 → как двор 15 (7×9, ~16 машин, ~27); дальше — как было (двор 21, ~30)
 const DAILY_T=[{lv:8,target:19},{lv:14,target:27},{lv:20,target:30}];
-function dailyTier(){const u=S.unlocked||1;return u<13?0:u<21?1:2;}
+function dailyTier(){if(window.LVLM&&LVLM.dayOne)return 1; /* vy-lvl: двор дня — один на всех (ступень «как двор 15») */const u=S.unlocked||1;return u<13?0:u<21?1:2;}
 // гараж — долгая цель: машина за двор №3,6,9,15,21,27,36,45,54,72 (промежутки 3→6→9→18); все номера кратны 3 и не боссы —
 // там и так была бы межуровневая реклама, поэтому число межуровневых за 60 дворов не выросло (9)
 const CAR_AT=[3,6,9,15,21,27,36,45,54,72];
@@ -673,10 +698,11 @@ let S={unlocked:1,stars:{},garage:[],daily:{},levelsDone:0};
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 // защита от сохранений неожиданной формы (ручная правка, старая версия): не даём им сломать игру и слияние
-function fixSave(){if(!isObj(S.stars))S.stars={};if(!isObj(S.daily))S.daily={};if(!Array.isArray(S.garage))S.garage=[];if(!isObj(S.chest))S.chest={};if(!isObj(S.paint))S.paint={};if(!isObj(S.yard))S.yard={};for(const f of ['gp','dw','dec','sets'])if(!isObj(S[f]))S[f]={};if(S.music!=null&&typeof S.music!=='boolean')S.music=S.music===1; /* музыка: только true — включена (по умолчанию выключена) */ // boost: подарочные краски, недели заданий дня, уют двора, наборы
+function fixSave(){if(!isObj(S.stars))S.stars={};if(!isObj(S.daily))S.daily={};if(!Array.isArray(S.garage))S.garage=[];if(!isObj(S.chest))S.chest={};if(!isObj(S.paint))S.paint={};if(!isObj(S.yard))S.yard={};for(const f of ['gp','dw','dec','sets','lvR','lvI','lvF'])if(!isObj(S[f]))S[f]={}; /* vy-lvl: lvR/lvI/lvF — режимы */if(S.music!=null&&typeof S.music!=='boolean')S.music=S.music===1; /* музыка: только true — включена (по умолчанию выключена) */ // boost: подарочные краски, недели заданий дня, уют двора, наборы
   
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(typeof S.levelsDone!=='number')S.levelsDone=0;if(typeof S.adW!=='number'||!isFinite(S.adW))S.adW=0;if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
-  if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
+  if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};
+  if(window.UI)UI.saveFix(S);} /* vy-ux: свои поля потоков — saveHook */
 fixSave();
 // «точка отсчёта» с облаком: какое сохранение и сколько монет было общим у устройства и облака (при запуске, после слияния и после записи).
 // Монеты, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным — не теряются и не возвращаются
@@ -714,16 +740,18 @@ const OK_LINK='https://ok.ru/game/512004864050'; // ссылка на игру �
 const OK_GROUP=70000058939568,OK_GROUP_LINK='https://ok.ru/group/'+OK_GROUP; /* группа поддержки в ОК «Игры во дворе» (правила ОК, п. 1.6): «Наше сообщество» в «Друзьях» (SOC okGroup) и строка в «Об игре»; 0 — спрятано */
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
-/* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
-   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
+   08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
 var STAT=(function(){
-  var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=14,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -809,6 +837,8 @@ var STAT=(function(){
   function progress(o){o=o||{};prog={};if(o.pl!==undefined)prog.pl=+o.pl||0;if(o.cn!==undefined){prog.cn=+o.cn||0;if(cb===undefined)cb=prog.cn;}
     if(o.bt!==undefined)prog.bt=o.bt?1:0;rel();}
   function bal(n){if(typeof n==='number'&&isFinite(n))cb=n;}
+  // v1.4: STAT.pl(n) — прогресс изменился (уровень пройден и т. п.): событий не шлёт, уходит полем pl в pause и в start следующего сеанса
+  function setPl(n){n=+n;if(!isFinite(n))return;prog=prog||{};prog.pl=n;}
 
   // --- уровни: STAT.lvl(5,'daily',{n:3}) в начале, STAT.use('hint') по ходу, STAT.end('win',{st:3}) в конце; STAT.move() — каждый ход ---
   function lvlStart(l,m,x){if(lvl)lvlEnd('quit');lvl={l:l,m:m||'',t:Date.now(),h:0,u:0,x:{}};var p={l:l},k,n=0;if(m)p.m=m;
@@ -903,11 +933,11 @@ var STAT=(function(){
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
-    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
+    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();if(prog&&prog.pl!==undefined)p.pl=prog.pl;ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
-      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
+      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
       var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
@@ -926,18 +956,18 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v22-100813',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v23-100920',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: настройки сеанса; прогресс на входе — после чтения облака, но не позже 2,5 с (bt — облако хоть раз отдало сохранение: метка устройства, не в сохранении)
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
-  STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});STAT.progress({pl:Math.max(0,(S.unlocked||1)-1),cn:+S.coins||0,bt:bt});STAT.bal(+S.coins||0);}
+  STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});STAT.progress({pl:Math.max(0,(S.unlocked||1)-1),cn:+S.coins||0,bt:bt});STAT.bal(+S.coins||0);try{if(window.STATVY)STATVY.prg();}catch(e){}} /* vy-tech: разовое prg (js/stat-vy.js) */
 setTimeout(statProg,2500);
 function ern(s,n){if(n>0)STAT.earn(s,n);} // STAT v1.2: откуда монеты (lvl, ad, gift, chest, buy, quest)
 // причины паузы (реклама, свёрнуто, пауза площадки): снимаем паузу, только когда ушли все — а не «вслепую» при возврате
@@ -956,16 +986,17 @@ const YG={
 function mergeSave(d,ref){if(!isObj(d))return;
   const dt=typeof d.ts==='number'?d.ts:0,rt=ref==null?BOOT_TS:ref,newer=dt>rt;
   if(typeof d.unlocked==='number')S.unlocked=Math.max(S.unlocked,d.unlocked);if(typeof d.levelsDone==='number')S.levelsDone=Math.max(S.levelsDone||0,d.levelsDone);
-  for(const f of ['stars','daily','chest','yard','gp','dw','dec','sets'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
+  for(const f of ['stars','daily','chest','yard','gp','dw','dec','sets','lvR','lvI'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(Array.isArray(d.garage))for(const i of d.garage)if(typeof i==='number'&&!S.garage.includes(i))S.garage.push(i);
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(k!=='soc'&&k!=='stc'&&(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|chest|yard|gp|dw|dec|sets|garage|coins|streak|buy|buyB|payT|payV|soc|stc)$/.test(k)))S[k]=d[k]; // флажки (звук, подсказки)
+  for(const k in d)if(k!=='soc'&&k!=='stc'&&!(window.UI&&UI.owns(k))&&(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|chest|yard|gp|dw|dec|sets|garage|coins|streak|buy|buyB|payT|payV|soc|stc|lvR|lvI)$/.test(k)))S[k]=d[k]; // флажки (звук, подсказки) /* vy-ux: поля потоков (UI.onSave с keys/prefix) сливает их хозяин */
   payMerge(d); // покупки — объединение
   if(isObj(d.stc))STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
   if(isObj(d.soc))SOC.merge(d.soc); // «Друзья и игры»: сливаем в тот же объект S.soc (модуль держит на него ссылку)
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
     if(!isObj(a))S.streak={day:b.day||0,last:b.last||0,cyc:b.cyc||0};
-    else{const m=giftCnt(b)>giftCnt(a)?b:a;S.streak={day:m.day||0,last:Math.max(a.last||0,b.last||0),cyc:m.cyc||0};}}}
+    else{const m=giftCnt(b)>giftCnt(a)?b:a;S.streak={day:m.day||0,last:Math.max(a.last||0,b.last||0),cyc:m.cyc||0};}}
+  if(window.UI)UI.saveMerge(S,d,newer);} /* vy-ux: слияние своих полей потоков — saveHook */
 // ответ площадки с ограничением по времени: не ответила — считаем сбоем (облако повторим позже, cloudBusy снимется в finally)
 function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);}
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
@@ -1300,7 +1331,7 @@ async function initVK(){
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
       else if(t==='VKWebAppViewRestore'){setPause('hide',false);if(typeof adBack==='function')adBack();setTimeout(adBackChk,300);}});
-    adPreload('boot'); // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
+    adPreload('boot');setTimeout(vkIntLoad,4000); /* vy-tech: межэкранная — спросить заранее */ // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
     await cloudLoad();
   }catch(e){VK=null;}
   if(!OK)PAY.init(); // покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1). ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
@@ -1447,9 +1478,9 @@ function acWake(){if(AC&&AC.state!=='running'){try{const p=AC.resume();p&&p.catc
 function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&!muted)acWake();return AC;}
 // разблокировка на iOS: resume() и пустой буфер прямо в жесте (touchend/click/keydown, не pointerdown); обработчик не снимаем —
 // после звонка или сворачивания первое же касание снова оживит звук
-function unlockAudio(){if(S.sound===false||muted)return;const a=ac();if(!a)return;
-  if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}}
-['touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true}));
+function unlockAudio(e){if(S.sound===false||muted)return;const a=ac();if(!a)return;
+  if(!acUnlocked&&!(e&&e.type==='pointerdown'&&a.state!=='running')){ /* vy-tech: pointerdown только будит контекст (Android); iOS отпирает на touchend/click */try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}}
+['pointerdown','touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true})); // vy-tech: + pointerdown — Android Chrome будит звук с первого касания (как Рыбалка)
 /* ---- музыка (07.10): записанный трек по кругу на карте и во дворе ----
    audio/riley.m4a — «Life of Riley», Kevin MacLeod (incompetech.com), CC BY 4.0 (выбор владельца 07.10.2026): подпись в «Об игре» (#abMus) НЕ удалять.
    По умолчанию ВЫКЛЮЧЕНА (S.music===true — включена; ⚙ → «🎵 Музыка»). Файл не запрашивается, пока музыка выключена и пока игрок не коснулся экрана.
@@ -1546,7 +1577,7 @@ function tint(v,c){const lt=lum(c)>165;v.dc=c;v.dl=lt;v.rf=shade(c,lt?-.07:.2);v
 // прямоугольник в осях машины: центр (cx,cy), «вперёд» (fx,fy) — всегда вдоль осей экрана, поэтому холст не поворачиваем; u — вдоль, v — поперёк
 function vbox(g,cx,cy,fx,fy,u0,u1,v0,v1,r,fill){const ax=cx+u0*fx-v0*fy,ay=cy+u0*fy+v0*fx,bx=cx+u1*fx-v1*fy,by=cy+u1*fy+v1*fx;
   rrect(g,Math.min(ax,bx),Math.min(ay,by),Math.abs(bx-ax),Math.abs(by-ay),r);g.fillStyle=fill;g.fill();}
-function drawVehicle(ctx,v,s,toPx,cs,fx){(LOOK.veh||vehSummer)(ctx,v,s,toPx,cs,fx);}
+function drawVehicle(ctx,v,s,toPx,cs,fx){if(window.VYCARS&&VYCARS.yardVeh(ctx,v,s,toPx,cs,fx))return;/* vy-art: модели-спрайты js/art-cars.js */(LOOK.veh||vehSummer)(ctx,v,s,toPx,cs,fx);}
 /* «Летний двор»: машина сверху. Прямая (легковая, фургон, автобус) — кузов одним скруглённым прямоугольником;
    гнутая — гибкая лента ровной толщины со скруглёнными поворотами, с кабиной (стекло, фары) в голове и стоп-сигналами в хвосте.
    Рисуется по той же дорожке v.track, что и раньше, — движение не менялось. Только заливки: без теней-размытий и фильтров. */
@@ -1652,15 +1683,17 @@ const toPx=([x,y])=>[ox+(x+.5)*cs,oy+(y+.5)*cs];
 const cam={z:1,x:0,y:0,tw:null};
 const rnd=(a,b)=>a+Math.random()*(b-a);
 
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(window.UI)UI.shown(id);} /* vy-ux: UI.cur по видимому экрану */
 // тост живёт не меньше 2,5 с и дольше для длинного текста (кроме коротких служебных, например «Реклама через секунду…»)
 function toast(t,ms){if(LANG==='en'&&TOAST_EN[t])t=TOAST_EN[t];const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
   const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 
-function startLevel(idx,daily){
-  const DT=DAILY_T[dailyTier()],p=daily?levelParams(DT.lv):levelParams(idx);let seed=daily?todaySeed():levelSeed(idx),lv=genLevel(p,seed);
+function startLevel(idx,daily,o){ /* vy-lvl: o={mode:'rush'|'ice'|'fest', p, seed} — режим двора; FEST передаёт свои p и зерно */
+  const DT=DAILY_T[dailyTier()],fest=!!(o&&o.mode==='fest'),p=o&&o.p?o.p:daily?levelParams(DT.lv):levelParams(idx);let seed=o&&o.seed!=null?o.seed:daily?todaySeed():levelSeed(idx),lv=genLevel(p,seed);
   // задание дня: из трёх зёрен дня берём то, чья трудность ближе к цели ступени (иначе день ото дня разброс вдвое)
   if(daily){const tg=DT.target;let bi=Math.abs(lvIndex(lv,p)-tg);for(let k=1;k<3;k++){const s2=seed*3+k,l2=genLevel(p,s2),d2=Math.abs(lvIndex(l2,p)-tg);if(d2<bi){bi=d2;lv=l2;seed=s2;}}}
+  /* vy-lvl: слой трудности (скорая, полиция, машины без стрелки) — раскладка та же; js/lvl-diff.js */
+  try{if(!fest){if(window.LVLD&&!window.__demo&&!daily)LVLD.harden(lv,p,idx,seed);if(window.LVLD&&!window.__demo)LVLD.apply(lv,p,idx,seed,daily?'daily':((o&&o.mode)||''));if(window.LVLH&&!window.__demo&&!daily)LVLH.make(lv,p,idx,seed);}}catch(e){}
   const R=rng(seed+99);
   // случайные цвета берём как раньше (тот же порядок вызовов R), потом отдельным шагом разводим соседей
   const base=lv.vehicles.map(v=>{const pal=PAL[Math.min(5,v.cells.length)],col=pal[Math.floor(R()*pal.length)];return{col,apD:.15+v.cells[0][1]*.035+R()*.08};});
@@ -1670,15 +1703,16 @@ function startLevel(idx,daily){
     Object.assign(veh,{id:i,s:0,state:'idle',t:0,ap:0,apT:0,apD:base[i].apD});return veh;});
   // босс: у одной легковушки нет стрелки — направление видно по фарам (раскладка та же)
   // первый босс (10-й) — со стрелками и лишними ходами для скорой: новичку хватит и большого двора
-  if(p.boss&&!daily&&idx>=19){const c=vs.filter(v=>v.L===2&&!v.kind);if(c.length)c[seed%c.length].noArrow=true;}
+  if(p.boss&&!daily&&idx>=19&&!(lv.noArrow&&lv.noArrow.length)){const c=vs.filter(v=>v.L===2&&!v.kind);if(c.length)c[seed%c.length].noArrow=true;}
+  (lv.noArrow||[]).forEach(i=>{if(vs[i])vs[i].noArrow=true;}); /* vy-lvl */
   if(idx===9&&!daily&&lv.amb)lv.amb.limit+=2;
   const yardCar=window.__demo?-1:placeYardCar(vs,p,daily?todaySeed():idx);
   lookColors(vs,p); // краски темы: соседи разного цвета (после своей машины игрока)
   G={p,idx,daily:!!daily,vs,obst:lv.obst||[],occ:new Array(p.w*p.h).fill(-1),hearts:3,parts:[],shake:0,over:false,hint:-1,hintT:0,winT:0,usedRevive:false,moves:0,
     amb:lv.amb?{id:lv.amb.id,limit:lv.amb.limit,left:lv.amb.limit,done:false}:null,police:lv.police!=null?lv.police:-1,policeT:0,
     bubbles:[],towMode:false,bonus:0,anc:{wins:[],bench:[],lit:[],lamps:[]},
-    tod:todOf(idx,daily),birds:[],birdT:rnd(6,10),cat:{st:'wait',t:rnd(5,10)},soft:!daily&&idx<3,tutorId:-1,pinchT:0,exited:false,
-    combo:0,crashes:0,helps:0,slowT:0,fz:0,focus:-1,fx:0,fy:0,x2:false,yardCar};
+    tod:lv.polar?'night':todOf(idx,daily),birds:[],birdT:rnd(6,10),cat:{st:'wait',t:rnd(5,10)},soft:!daily&&idx<3,tutorId:-1,pinchT:0,exited:false,
+    combo:0,crashes:0,helps:0,slowT:0,fz:0,focus:-1,fx:0,fy:0,x2:false,yardCar,t0:Date.now()}; /* vy-ux: t0 — для yardHook.sec */
   resetGest();
   const T=TOD[G.tod],sg=$('scr-game'),tbg=lookBg(G.tod);sg.style.background=tbg;document.body.style.background=tbg;sg.classList.toggle('dark',!!T.dark);
   cam.z=1;cam.x=cam.y=0;cam.tw=null;updZoomBtn();
@@ -1688,6 +1722,7 @@ function startLevel(idx,daily){
   if(!daily&&idx===4&&!S.towSeen&&!window.__demo){S.towSeen=1;save();setTimeout(()=>{if(G&&!G.daily&&G.idx===4)toast(L('🚚 Появился эвакуатор — увезёт любую машину за '+PRICE.tow+' 💰','🚚 The tow truck is here — it takes away any car for '+PRICE.tow+' 💰'),3500);},1500);}
   vs.forEach(v=>v.cells.forEach(([x,y])=>G.occ[y*p.w+x]=v.id));
   G.obst.forEach(([x,y])=>G.occ[y*p.w+x]=-2);
+  try{if(window.LVLH)LVLH.start(G,lv);}catch(e){G.hz=null;} /* vy-lvl: помехи */
   if(!daily&&idx===0){const f=vs.find(v=>canExit(v,G.occ,p.w,p.h,v.id).free);if(f)G.tutorId=f.id;}
   $('gLevel').textContent=levelTitle();sideUpd();
   updHud();
@@ -1695,21 +1730,24 @@ function startLevel(idx,daily){
   if(tt){tip.textContent=tt;tip.style.display='block';}else tip.style.display='none';
   if(!daily&&idx===3){const hh=$('gHearts');hh.classList.remove('warn');void hh.offsetWidth;hh.classList.add('warn');}
   tipAutoHide();
+  try{if(window.LVLM)LVLM.begin(G,o);else G.mode=daily?'daily':(o&&o.mode)||'n';}catch(e){} /* vy-lvl: режим и регион — до STAT.lvl */
   STAT.lvl(daily?dailyTier()+1:idx+1,daily?'daily':'');STAT.screen('game');STAT.once('ready',{ms:Math.round(performance.now())});
   if(!daily&&idx===0&&!(S.levelsDone>0))STAT.ev('tut',{s:1}); // первые минуты: новичок во дворе 1
+  if(window.UI)UI.emit('yard-start',{idx,daily:!!daily}); /* vy-ux */
   renderHearts();show('scr-game');hideModal();requestAnimationFrame(()=>{layout();birdsInit();
     if(G&&G.yardCar>=0&&Math.random()<.5){const g=G;setTimeout(()=>{if(G===g&&!g.over)sayQuiet(pick('mine').replace('{n}',MODELS[g.yardCar].name),'win');},2600);}
-    if(G&&G.p.w>=8&&G.p.h>=11&&!S.zoomTip&&!window.__demo){S.zoomTip=1;save();G.pinchT=FINE?0:3;toast(FINE?L('Двор большой — покрути колёсико мыши или нажми 🔍 вверху','Big yard — scroll the mouse wheel or press 🔍 at the top'):L('Двор большой — раздвинь пальцы или нажми 🔍 вверху','Big yard — spread two fingers or press 🔍 at the top'),3500);}});YG.start();kick();
+    if(G&&!window.__demo&&cs<SMALL_CS)autoZoom(G); /* vy-ux: мелкая клетка — сразу приближаем к машинам, которые могут уехать */
+    if(G&&G.p.w>=8&&G.p.h>=11&&!S.zoomTip&&!window.__demo&&cs>=SMALL_CS){S.zoomTip=1;save();G.pinchT=FINE?0:3;toast(FINE?L('Двор большой — покрути колёсико мыши или нажми 🔍 вверху','Big yard — scroll the mouse wheel or press 🔍 at the top'):L('Двор большой — раздвинь пальцы или нажми 🔍 вверху','Big yard — spread two fingers or press 🔍 at the top'),3500);}});YG.start();kick();
 }
 // панель слева от двора (только широкое окно компьютера): цель, «завтра», клавиши
 function sideUpd(){const e=$('gSide');if(!e||!G)return;if(window.__demo){e.innerHTML='';return;}
   const goal=G.daily?`<p class="goal">📅 ${L('Задание дня: +','Daily challenge: +')}${DAILY_REWARD} 💰 · ${L('на этой неделе','this week')} ${dailyWeek().n}/7</p>`:winGoal(G.idx);
   e.innerHTML=goal+(S.freeHint&&!G.daily?`<p class="goal">🎁 ${L('Подсказка в этом дворе — бесплатно','Your hint in this yard is free')}</p>`:'')+tmrHtml()
-    +`<p class="keys">${L('H — подсказка · R — заново<br>колёсико — приблизить · Esc — карта','H — hint · R — restart<br>mouse wheel — zoom · Esc — map')}</p>`;}
+    +`<p class="keys">${L('Стрелки — выбрать машину · Пробел — ехать<br>H — подсказка · R — заново · P — пауза<br>колёсико — приблизить · Esc — домой','Arrows — pick a car · Space — drive<br>H — hint · R — restart · P — pause<br>mouse wheel — zoom · Esc — home')}</p>`;}
 function levelTitle(){const tiny=window.innerWidth<350&&G.p.w>=8; // узкий телефон + кнопка 🔍 в шапке — короткий заголовок
   return G.daily?(tiny?L('Задание','Daily'):L('Задание дня','Daily challenge')):(tiny?L('Двор ','Yard '):L('Уровень ','Level '))+(G.idx+1)+(isBoss(G.idx)?' 🔥':'');}
 // плашка-подсказка дворов обучения (текст — по языку; при смене языка перерисовывается)
-function tipFor(idx,daily){if(daily)return '';
+function tipFor(idx,daily){if(daily)return '';if(window.LVLH){const t0=LVLH.tip(idx);if(t0)return t0;} /* vy-lvl */
   if(idx===0)return L('Нажми на машину — она поедет туда, куда смотрит стрелка. Не врежься!','Tap a car — it drives where its arrow points. Don’t crash!');
   if(idx===1)return L('Длинные машины едут змейкой — корпус повторяет путь кабины.','Long vehicles move like a snake — the body follows the cab.');
   if(idx===3)return L('Теперь всё по-настоящему: на двор три ❤️, каждая авария отнимает одно.','Now it’s for real: three ❤️ per yard, and every crash takes one.');
@@ -1723,7 +1761,7 @@ const towTip=()=>L('🚚 Нажми на любую машину — эваку�
 let tipT=0;
 function tipAutoHide(){clearTimeout(tipT);const t=$('tip');if(t.style.display!=='block')return;
   if(G&&!G.daily&&G.idx===0&&!G.exited)return; // 1-й двор: правило висит до первого выезда
-  tipT=setTimeout(()=>{if(!(G&&G.towMode))t.style.display='none';},window.innerHeight<600?3200:4800);}
+  tipT=setTimeout(()=>{if(!(G&&G.towMode))t.style.display='none';},G&&cs<SMALL_CS?2500:window.innerHeight<600?3200:4800);} /* vy-ux: на больших дворах плашка закрывает ряды — убираем через 2,5 с */
 /* ---- своя машина во дворе: одна подходящая по длине машина рисуется моделью из гаража (цвет с покраской, «шашечки» у такси).
    Раскладка, зёрна и R() не трогаются — меняется только цвет одной обычной машины; соседи по цвету проверяются как в spreadColors ---- */
 function placeYardCar(vs,p,key){const yc=yardCars();if(!yc.length)return -1;
@@ -1916,7 +1954,7 @@ function nearCar(px,py){const {w,h}=G.p,fx=(px-ox)/cs,fy=(py-oy)/cs,lim=.35;let 
   for(let y=Math.floor(fy-lim);y<=Math.floor(fy+lim);y++)for(let x=Math.floor(fx-lim);x<=Math.floor(fx+lim);x++){if(x<0||y<0||x>=w||y>=h)continue;const o=G.occ[y*w+x];if(o<0)continue;
     const dx=Math.max(x-fx,0,fx-(x+1)),dy=Math.max(y-fy,0,fy-(y+1)),d=Math.hypot(dx,dy);if(d<bd){bd=d;best=o;}}
   return best;}
-function startExit(v,r,delay){STAT.move();const {w}=G.p;if(!G.exited){G.exited=true;if(!G.daily&&G.idx===0)$('tip').style.display='none';}v.cells.forEach(([x,y])=>G.occ[y*w+x]=-1);v.state='exit';v.t=-(delay||0);v.exitS=r.k+v.L+.9;
+function startExit(v,r,delay){STAT.move();const {w}=G.p;if(!G.exited){G.exited=true;if(!G.daily&&G.idx===0)$('tip').style.display='none';}v.cells.forEach(([x,y])=>G.occ[y*w+x]=-1);if(window.LVLH)LVLH.onExit(v);/* vy-lvl */v.state='exit';v.t=-(delay||0);v.exitS=r.k+v.L+.9;
   if(!G.vs.some(u=>u.state==='idle'||u.state==='bump'))v.last=true; // последняя машина двора
   if(!delay){SND.go();exitFx(v,true);}else v.fxWait=true;
   if(G.hint===v.id){G.hint=-1;const q=G.hintQ||[];while(q.length){const nx=G.vs[q.shift()];if(nx&&nx.state==='idle'){G.hint=nx.id;G.hintT=4;break;}}}
@@ -1938,7 +1976,7 @@ function ambTick(){const a=G.amb;if(!a||a.done)return;const v=G.vs[a.id];if(v.st
   a.left--;if(a.left>0)return;
   a.left=a.limit;G.hearts--;renderHearts();G.shake=5;SND.siren();say(pick('ambLate'),'win');toast(L('🚑 Скорая опоздала! −1 ❤️','🚑 The ambulance was late! −1 ❤️'));
   if(G.hearts<=0&&!G.over){G.over=true;loseLater(700);}}
-function tow(v){const {w}=G.p;G.helps++;v.cells.forEach(([x,y])=>G.occ[y*w+x]=-1);v.state='tow';v.t=0;G.towMode=false;$('gTow').classList.remove('on');
+function tow(v){const {w}=G.p;G.helps++;G.towN=(G.towN||0)+1;/* vy-ux */v.cells.forEach(([x,y])=>G.occ[y*w+x]=-1);if(G.hz&&window.LVLH)LVLH.onExit(v);/* vy-lvl */v.state='tow';v.t=0;G.towMode=false;$('gTow').classList.remove('on');
   SND.tow();say(pick('tow'),'bench');if(G.hint===v.id)G.hint=-1;updHud();}
 /* ================= голуби и кот ================= */
 // голуби клюют на свободных клетках и тротуаре; машина рядом, авария или тап — вспархивают
@@ -2076,6 +2114,7 @@ function confetti(){const cols=['#ff6b6b','#feca57','#48dbfb','#1dd1a1','#ff9ff3
   for(let i=0;i<90;i++){const a=-Math.PI/2+(Math.random()-.5)*1.6,sp=260+Math.random()*380;
     G.parts.push({x:W/2+(Math.random()-.5)*W*.3,y:H*.72,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:cs*.09,life:1.4+Math.random()*.6,max:2,c:cols[i%cols.length],conf:true,rot:Math.random()*6,vr:(Math.random()-.5)*14});}}
 function crash(v){
+  if(G.hz&&window.LVLH&&LVLH.onBump(v))return; /* vy-lvl: бабушка на переходе — не авария */
   G.combo=0;G.crashes++;
   const b=G.vs[v.block];if(b)b.flash=1;G.shake=7;SND.crash();try{if(S.vib!==false&&navigator.vibrate)navigator.vibrate(60);}catch(e){}
   const [dx,dy]=DIRS[v.dir],hp=toPx([v.cells[0][0]+dx*(v.k+.5),v.cells[0][1]+dy*(v.k+.5)]);
@@ -2178,6 +2217,7 @@ function render(){
   // приближение вокруг точки внутри экрана — края двора не открываются
   const world=()=>{ctx.setTransform(dpr,0,0,dpr,0,0);if(G.fz>0){const k=1+.07*G.fz;ctx.translate(G.fx,G.fy);ctx.scale(k,k);ctx.translate(-G.fx,-G.fy);}ctx.translate(sx+cam.x,sy+cam.y);ctx.scale(cam.z,cam.z);};world();
   ctx.drawImage(ground,0,0,W,H);
+  if(window.LVLH)LVLH.draw(ctx,'under',performance.now()/1000); /* vy-lvl: помехи */
   let key=groundV+'|';for(const v of G.vs)key+=isStatic(v)?'1':'0';
   if(key!==carsKey){buildCars();carsKey=key;}
   ctx.drawImage(carsCv,0,0,W,H);
@@ -2193,6 +2233,7 @@ function render(){
       ctx.save();ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineCap='round';ctx.lineWidth=cs*.06;for(const o of [-.25,0,.25]){const px=tp[0]-uy*o*cs,py=tp[1]+ux*o*cs-cs*.1;ctx.beginPath();ctx.moveTo(px+ux*cs*.15,py+uy*cs*.15);ctx.lineTo(px+ux*cs*(.5+Math.abs(o)),py+uy*cs*(.5+Math.abs(o)));ctx.stroke();}ctx.restore();}
     if(v.ap<1){if(v.ap<=0)continue;const x=v.ap-1,e=1+2.7*x*x*x+1.7*x*x,lift=(1-e)*cs*1.6;ctx.save();ctx.globalAlpha=Math.min(1,v.ap*2.5);drawVehicle(ctx,v,v.s,pp=>{const a=toPx(pp);return[a[0],a[1]-lift];},cs,fx);ctx.restore();continue;}
     drawVehicle(ctx,v,v.s,toPx,cs,fx);}
+  kDraw(t); /* KEYS */
   drawCat();
   for(const b of G.birds)if(b.st==='idle')drawBird(b);
   for(const b of G.birds)if(b.st!=='idle')drawBird(b);
@@ -2206,6 +2247,7 @@ function render(){
     ctx.strokeStyle='rgba(255,214,40,.35)';ctx.lineWidth=cs*.5;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();
     ctx.setLineDash([cs*.28,cs*.26]);ctx.lineDashOffset=calm()?0:-t*cs*1.6;ctx.strokeStyle='#ffd628';ctx.lineWidth=cs*.16;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.setLineDash([]);ctx.restore();
     drawVehicle(ctx,v,v.s,toPx,cs,{glow:.55+.35*Math.sin(t*8)});}}
+  if(window.LVLH)LVLH.draw(ctx,'over',t); /* vy-lvl */
   if(G.amb&&!G.amb.done){const v=G.vs[G.amb.id];if(v.state==='idle'||v.state==='bump'){let p=null;for(let k=0;k<v.L;k++){const q=toPx(trackPt(v.track,k+v.s));if(!p||q[1]<p[1])p=q;}const r=cs*.27,urgent=G.amb.left<=2,pl=urgent&&!calm()?1+.12*Math.sin(t*12):1;
     ctx.save();ctx.translate(p[0],p[1]-cs*.62);ctx.scale(pl,pl);ctx.fillStyle=urgent?'#e84118':'#fff';ctx.strokeStyle='#e84118';ctx.lineWidth=cs*.06;ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.fill();ctx.stroke();
     ctx.fillStyle=urgent?'#fff':'#e84118';ctx.font=`900 ${Math.round(r*1.15)}px Rubik,-apple-system,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(G.amb.left,0,r*.06);ctx.restore();}}
@@ -2385,7 +2427,7 @@ function showRewarded(cb0,onFail0,late0){
         st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(adShut(e)?AD_CLOSED_():AD_FAIL_());adPreload('err');}
         onFail();adDim();});}; /* adDim — окно с кнопкой могло открыться заново */
     go();return;}
-  if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
+  if(!ysdk){if(AD_LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',window.__sdkDone?'nosdk':'loading');toast(AD_FAIL_());onFail();}return;} /* vy-tech: Яндекс без SDK — награду даром не даём (заглушка только на маке/LAN, AD_LOCAL; образец Дурака) */
   let got=false;adWatch(rel);
   const lateY=f=>{if(!adBusy)adClose();f();}; /* поздние колбэки Яндекса: ролик мог поставить паузу — снимаем, если не идёт другой */
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
@@ -2396,7 +2438,9 @@ function showRewarded(cb0,onFail0,late0){
 }
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REAL);}
 // кнопки «📺 … за рекламу» есть везде, кроме настоящего VK без моста (там ролик не показать)
-function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
+/* vy-tech: заглушка рекламы — только при локальном запуске; в настоящем Яндексе без SDK кнопок «за рекламу» нет (пока SDK грузится — есть) */
+const AD_LOCAL=/^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|.*\.local|.*\.localhost)$/.test(location.hostname)||location.protocol==='file:';
+function adOk(){if(PLAT==='vk')return !(!VK&&VK_REAL);return !!ysdk||AD_LOCAL||!window.__sdkDone;}
 // «долг» межэкранной: S.adW — побед с прошлого показа; показ положен при S.adW ≥ AD_EVERY. Если сейчас нельзя (босс, новая машина,
 // пауза после рекламы, выход «На карту») — показ не сгорает, а ждёт следующей победы. Обнуляется только после настоящего показа
 function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.unlocked||1)>AD_FROM;}
@@ -2405,10 +2449,16 @@ function showInterstitial(cb0){
   const cb=(shown,c)=>{lastAdT=Date.now();if(shown!==false){lastIntT=lastAdT;STAT.ad('int','show',c);S.adW=0;save();}else if(c!=='err')STAT.ad('int','none','nofill');cb0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nosdk');cb0();}else stubAd(()=>cb(true,'stub'));return;}
   STAT.adReq('int');
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),e=>{if(adNoFill(e))return false;STAT.ad('int','err',adErrCode(e));return 'err';}).then(ok=>{adClose();cb(ok===true,ok==='err'?'err':'');});return;}
-  if(!ysdk){stubAd(()=>cb(true,'stub'));return;}
+  if(VK){adOpen();vkIntOk=null;vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>!!(r&&r.result),e=>{if(adNoFill(e))return false;STAT.ad('int','err',adErrCode(e));return 'err';}).then(ok=>{adClose();cb(ok===true,ok==='err'?'err':'');setTimeout(vkIntLoad,3000);});return;} /* vy-tech: после показа — снова спросить VK про следующий ролик */
+  if(!ysdk){if(AD_LOCAL)stubAd(()=>cb(true,'stub'));else{STAT.ad('int','none','nosdk');cb0();}return;} /* vy-tech: без SDK межэкранной нет (заглушка — только локально) */
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{STAT.ad('int','err','sdk');adClose();cb(false,'err');}}});
 }
+/* vy-tech: предпроверка межэкранной VK (образец Рыбалки): VKWebAppCheckNativeAds заранее; ролика нет → игру не останавливаем
+   (без тоста и паузы), «долг» S.adW не сгорает, в статистике ad {f:int, r:none, c:pre}. Яндекс и мак — как раньше (true). */
+let vkIntOk=null,vkIntT=0;
+function vkIntLoad(){if(!VK||document.hidden)return Promise.resolve(false);vkIntT=Date.now();
+  return vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'},5000).then(r=>(vkIntOk=!!(r&&r.result)),()=>(vkIntOk=false)).then(ok=>{STAT.adChk('int',ok?1:0);return ok;});}
+function intPre(){if(!VK)return true;if(vkIntOk===true)return true;STAT.ad('int','none','pre');if(Date.now()-vkIntT>15000)vkIntLoad();return false;}
 // межэкранная положена («долг» набран, двор обычный), но рано после прошлой (gap) или после ролика за награду (cap)
 function adWhy(){STAT.ad('int','none',Date.now()-lastIntT<AD_GAP?'gap':'cap');}
 function hintChain(id){const {w,h}=G.p,occ=G.occ.slice(),out=[],gone=new Set([id]);let cur=id;
@@ -2431,7 +2481,7 @@ function sos(){if(!G||G.over||G.sosDone||G.soft||modalOn||G.towMode||window.__de
 function lateYard(g){return G===g&&!g.over&&!modalOn&&$('scr-game').classList.contains('on');}
 function lateHint(g){if(!lateYard(g)||hint('late')!==true)return adLateCoins(PRICE.hint);return L('подсказка твоя','here’s your hint');}
 let x2Got={}; /* ×2 сундука/гостинца уже выдано (обычным или поздним зачётом) — второй раз не даём */
-function hint(mode){
+function hint(mode){if(G&&G.mode==='rush')return; /* vy-lvl: в «Час пик» без подсказок */
   if(!G||G.over)return;
   const {w,h}=G.p,cand=G.vs.filter(v=>v.state==='idle'&&canExit(v,G.occ,w,h,v.id).free);
   if(!cand.length)return;
@@ -2452,7 +2502,7 @@ function hint(mode){
 /* ================= монеты ================= */
 // экономика (27.09): двор 6–10 💰, реклама за монеты +30 ≈ 3 двора; подсказка ≈ 4–5 дворов, жизнь ≈ 7–8, эвакуатор ≈ 10 — роскошь; модель — tools/econ-sim.py
 // цель для монет (аудит 12): покраска машины из гаража и «своя машина во дворе» — не бустеры, выиграть ими нельзя
-const PRICE={hint:40,tow:100,life:70,paint:150,yard:250},DAILY_REWARD=20;let AD_COINS=30,AD_EVERY=3,X2_ON=true;
+const PRICE={hint:40,tow:100,life:70,paint:150,yard:250},DAILY_REWARD=20;let AD_COINS=30,AD_EVERY=3,X2_ON=false; /* vy-tech: «×2 за рекламу» убраны (решение владельца 09.10) */
 // серия побед подряд (аудит 14): каждые WSTREAK побед без окна «Машины помяты» — одна бесплатная подсказка (S.freeHint, не копится).
 // econ-sim '{"wstreak":5}': игрок без рекламы покупает подсказок 12,8 → 9,8 за 60 дворов, роликов за награду у «всех» −6%; флаг Яндекса win_streak 3–10
 let WSTREAK=5;
@@ -2462,7 +2512,7 @@ function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(
   if((n=num('price_hint',20,120))!==null)PRICE.hint=n;if((n=num('price_life',30,200))!==null)PRICE.life=n;if((n=num('price_tow',40,300))!==null)PRICE.tow=n;
   if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;
   if((n=num('price_paint',50,600))!==null)PRICE.paint=n;if((n=num('price_yard',50,800))!==null)PRICE.yard=n;if(f.x2==='0'||f.x2==='off')X2_ON=false;if((n=num('win_streak',3,10))!==null)WSTREAK=n;updCoins();}
-function updCoins(){STAT.bal(+S.coins||0);const a=$('gCoins'),b=$('coinCnt'),c=$('garCoins');if(a)a.textContent='💰 '+S.coins;if(b)b.textContent=S.coins;if(c)c.textContent='💰 '+S.coins;
+function updCoins(){STAT.bal(+S.coins||0);if(window.UI)UI.emit('coins',S.coins);/* vy-ux */const a=$('gCoins'),b=$('coinCnt'),c=$('garCoins');if(a)a.textContent='💰 '+S.coins;if(b)b.textContent=S.coins;if(c)c.textContent='💰 '+S.coins;
   // монет не хватает — на кнопке сразу видно, что можно за рекламу
   // (во дворах обучения 1–3 и там, где ролик не показать, — просто цена; подпись короткая, чтобы кнопка не росла в три строки)
   const adLbl=adOk()&&!(G&&!G.daily&&G.idx<3),lim=k=>!!G&&(k==='hint'?(G.adH||0)>=AD_HINT_MAX:(G.adT||0)>=AD_TOW_MAX),sosOn=!!(G&&G.sos>0&&!lim('hint')&&adLbl);
@@ -2496,15 +2546,21 @@ const PAY_ITEMS={
     en:{name:'Wallet: 300 💰',desc:'Enough for about 7 hints',done:'+300 💰 — thank you!'}},
   coins_l:{n:1000,vk:14,ic:'💰',name:'Сейф: 1000 💰',desc:'Выгоднее кошелька',done:'+1000 💰 — спасибо!',
     en:{name:'Safe: 1000 💰',desc:'Better value than the wallet',done:'+1000 💰 — thank you!'}},
-  starter:{perm:1,bonus:500,vk:8,ic:'🎁',name:'Набор водителя',desc:'500 💰 и краска «Золото» для всех машин. Покупается один раз',
-    en:{name:'Driver’s pack',desc:'500 💰 and “Gold” paint for all cars. One-time purchase'}},
+  /* vy-tech (решение владельца 09.10): «Узелок водителя» 5 голосов вместо «Набора водителя» 8 — id прежний (starter): купленное остаётся, сервер vk-pay — тот же товар */
+  starter:{perm:1,bonus:300,vk:5,ic:'🎁',name:'Узелок водителя',desc:'300 💰 и краска «Золото» для всех машин. Покупается один раз',
+    en:{name:'Driver’s bundle',desc:'300 💰 and “Gold” paint for all cars. One-time purchase'}},
   paints:{perm:1,vk:7,ic:'🎨',name:'Особые краски',desc:'Перламутр, хром, красная вишня и мокрый асфальт — для всех машин гаража',
-    en:{name:'Special paints',desc:'Pearl, chrome, cherry red and wet asphalt — for every car in the garage'}}
+    en:{name:'Special paints',desc:'Pearl, chrome, cherry red and wet asphalt — for every car in the garage'}},
+  /* vy-tech: «Сезонный талон» 15 голосов в месяц (решение владельца 09.10). Продаётся, только когда модуль сезона объявил себя (window.VYSEASON.on);
+     выдача — VYSEASON.pass() (поля сохранения — у модуля сезона). Нет модуля → vk:0 → товара нет в списке VK. В консоль Яндекса заводить вместе с модулем. */
+  season:{n:0,get vk(){return window.VYSEASON&&VYSEASON.on?15:0;},ic:'🎟',name:'Сезонный талон',desc:'Вторая дорожка сезона на весь месяц: ещё 500 💰, 30 🔩 и два украшения двора', /* vy-merge: как в js/season.js (ливреи в талоне нет) */
+    give(){try{if(window.VYSEASON&&VYSEASON.pass)VYSEASON.pass();}catch(e){}},
+    en:{name:'Season pass',desc:'A second season track for the whole month: another 500 💰, 30 🔩 and two yard decorations'}}
 };
 // английский для общего модуля PAY (сам модуль не трогаем): надписи его разметки и тосты переводит обёртка
 function payHtml(ids,owned){const h=PAY.html(ids,owned);return LANG==='en'?h.replace('<h3>Покупки</h3>','<h3>Purchases</h3>').replace(/<i>куплено<\/i>/g,'<i>owned</i>'):h;}
 const TOAST_EN={'Покупка зачислена':'Purchase added','Готово! Спасибо за покупку':'Done! Thanks for your purchase','Покупка не состоялась':'The purchase didn’t go through','Покупки проверены — всё на месте':'Purchases checked — everything is in place'};
-const PAY_TEST={no_ads:149,coins_s:39,coins_l:99,starter:59,paints:49}; // цены только для ?paytest=1; настоящие — в консоли
+const PAY_TEST={no_ads:149,coins_s:39,coins_l:99,starter:39,paints:49,season:99}; /* vy-tech: Узелок 39 ян; vy-merge: талон season 99 (модуль сезона YARD есть) */ // цены только для ?paytest=1; настоящие — в консоли
 function payAdd(n){S.coins+=n;ern('buy',n);}
 function payFlush(){cloudFlush();}
 function payPause(on){setPause('pay',on);}
@@ -2675,50 +2731,58 @@ function modal(html){PAY.re=null;modalRe=null;const k=html.slice(0,160);if(!(mod
 // пустая звезда — контуром ☆ (отличается не только цветом)
 function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="e">☆</span>';return s;}
 function win(){
-  G.over=true;YG.stop();SND.win();const st=Math.max(1,G.hearts);let newModel=null,wsGift=false;
+  const uxw=!!(window.UI&&UI.winTop); /* vy-ux: новое окно — жильцы, реплика, «Завтра во дворе», главная кнопка всегда «Следующий двор» на одном месте, без ×2 (решение владельца 09.10) */
+  G.over=true;YG.stop();SND.win();const st=G.mode==='ice'&&window.LVLM?LVLM.iceStars(G):Math.max(1,G.hearts); /* vy-lvl */let newModel=null,wsGift=false;
   const again=G.daily&&(S.daily[todayKey()]||0)>0; // задание дня уже пройдено сегодня — повтор без награды (иначе бесконечные монеты)
   const gift1=streakAuto(); // гостинец 1-го дня — молча, ещё до окна: в окне сразу честная строка «Завтра»
   if(G.daily){S.daily[todayKey()]=Math.max(S.daily[todayKey()]||0,st);}
-  else{const i=G.idx;const first=!S.stars[i];S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);
-    const mi=CAR_AT.indexOf(i+1);if(first&&mi>=0&&MODELS[mi]&&!S.garage.includes(mi)){S.garage.push(mi);newModel=MODELS[mi];}S.levelsDone++;if(S.levelsDone<=3)STAT.ev('tut',{s:2+S.levelsDone});S.adW=(S.adW||0)+1;
+  else if(window.LVLM&&LVLM.win(G,st)){} /* vy-lvl: «Час пик»/«Гололёд» — свои звёзды, прогресс не трогаем */
+  else{if(window.LVLM)LVLM.winN(G);const i=G.idx;const first=!S.stars[i];G.fw=first?1:0; /* vy-tech: первая победа двора → f:1 в end */S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);
+    G.first=first;/* vy-ux */const mi=CAR_AT.indexOf(i+1);if(first&&mi>=0&&MODELS[mi]&&!S.garage.includes(mi)){S.garage.push(mi);newModel=MODELS[mi];}S.levelsDone++;if(S.levelsDone<=3)STAT.ev('tut',{s:2+S.levelsDone});S.adW=(S.adW||0)+1;
     // серия побед подряд (без окна «Машины помяты»): каждые WSTREAK — бесплатная подсказка (не копится больше одной)
     if(!S.freeHint){S.ws=(S.ws||0)+1;if(S.ws>=WSTREAK){S.freeHint=1;S.ws=0;wsGift=true;}}}
-  const reward=again?0:(G.daily?DAILY_REWARD:(4+2*st)*(isBoss(G.idx)?2:1))+G.bonus;S.coins+=reward;ern('lvl',reward);
+  const reward=again?0:(G.daily?DAILY_REWARD:Math.round((4+2*st)*(isBoss(G.idx)?2:1)*(G.mode==='rush'||G.mode==='ice'?1.5:1)))+G.bonus; /* vy-lvl: режимы ×1,5 */S.coins+=reward;ern('lvl',reward);
   // неделя заданий дня: 3, 5 и 7 выполненных за неделю (Пн–Вс) — премия; выдаётся сама, один раз (S.dw[понедельник] — сколько ступеней выдано)
   let wb=0,wbN=0;
   if(G.daily&&!again){const w=dailyWeek();let got=S.dw[w.key]||0;while(got<DWEEK.length&&w.n>=DWEEK[got][0]){wb+=DWEEK[got][1];wbN=DWEEK[got][0];got++;}if(wb){S.dw[w.key]=got;S.coins+=wb;ern('quest',wb);}}
-  STAT.end('win',{st:st,rv:G.stRv||0,hp:G.helps,cr:G.crashes,mv:G.moves});
+  STAT.end('win',{f:G.fw?1:undefined,st:st,cr:G.crashes,mv:G.moves,hp:G.helps||undefined,rv:G.stRv||undefined}); /* vy-tech: f:1 первым (модуль режет после 8 полей), нули hp/rv не шлём */
+  if(!G.daily)STAT.pl(Math.max(0,(S.unlocked||1)-1)); /* vy-tech: STAT v1.4 — пройдено дворов на конец захода */
   const meet=!S.meet&&!G.daily;if(meet)S.meet=1; // знакомство с бабой Шурой — в окне первой победы
   const tip=G.daily?'':winTip();
   save();updCoins();if(reward)setTimeout(()=>SND.coin(),500);
   const hasNext=!G.daily;
   const regionDone=!G.daily&&isBoss(G.idx);
-  const adNext=hasNext&&adDue()&&!regionDone&&!newModel&&adReady();G.adNext=adNext;
-  if(hasNext&&adDue()&&!regionDone&&!newModel&&!adNext&&!(PLAT==='vk'&&!VK&&VK_REAL))adWhy();
+  const adNext0=hasNext&&adDue()&&!regionDone&&!newModel&&adReady(),adNext=adNext0&&intPre();G.adNext=adNext; /* vy-tech: предпроверка — нет ролика VK → без «Реклама через секунду» */
+  if(hasNext&&adDue()&&!regionDone&&!newModel&&!adNext0&&!(PLAT==='vk'&&!VK&&VK_REAL))adWhy();
   // ×2 за рекламу: не во дворах обучения (1–3), не когда следом межэкранная (два ролика подряд), в VK — только с мостом
-  const x2=X2_ON&&!again&&(G.daily||G.idx>=3)&&!adNext&&!(PLAT==='vk'&&!VK&&VK_REAL)&&S.coins<X2_POOR; /* adhelp: ×2 — только при кошельке < X2_POOR, кнопка — после главных */
+  const x2=!uxw&&X2_ON&&!again&&(G.daily||G.idx>=3)&&!adNext&&!(PLAT==='vk'&&!VK&&VK_REAL)&&S.coins<X2_POOR; /* adhelp: ×2 — только при кошельке < X2_POOR, кнопка — после главных */
   const clean=!G.crashes&&!G.helps;
+  /* vy-ux: гнёзда окна победы и итог двора для yardHook */
+  const yInfo=yardEnd('win',st),wctx=Object.assign({},yInfo||{},{coins:reward,newCar:newModel,regionDone,clean}),uiW=window.UI?UI.html(winSlots,wctx,'goal','goal')+UI.html(winSlots,wctx,'extra'):'',uiT=window.UI?UI.html(winSlots,wctx,'tmr'):'';
   // после босса «Дальше» ведёт на карту — там праздник региона; есть напоминание (сундук, задание дня, покраска) — главная кнопка «На карту»
   const toMap=regionDone||!!tip;
   // одна главная (зелёная) кнопка; вторая — ссылкой под ней (UX 18 п.3)
-  const bNext=hasNext&&!regionDone?`<button class="btn${toMap?' sec':' green'}" id="mNext">${L('Дальше →','Next →')}</button>`:'';
-  const bMap=`<button class="btn${toMap||!bNext?' green':' sec'}" id="mMap">${regionDone?L('🗺 Дальше — на карту','🗺 On to the map'):toMap?L('🗺 На карту','🗺 To the map'):L('На карту','To the map')}</button>`;
+  const bNext=hasNext&&!regionDone?`<button class="btn${toMap&&!uxw?' sec':' green'}" id="mNext">${uxw?L('Следующий двор →','Next yard →'):L('Дальше →','Next →')}</button>`:'';
+  const bMap=uxw?`<button class="btn${!bNext?' green':' sec'}" id="mMap">${regionDone?L('🗺 Дальше — новый регион','🗺 On to the new region'):L('🏠 Во двор','🏠 To my yard')}</button>`:`<button class="btn${toMap||!bNext?' green':' sec'}" id="mMap">${regionDone?L('🗺 Дальше — на карту','🗺 On to the map'):toMap?L('🗺 На карту','🗺 To the map'):L('На карту','To the map')}</button>`;
   // «Завтра»: со 2-го двора — строкой; если завтра краска или машина — карточкой с картинкой (не влезает — fitWin заменит строкой)
   const tm=!meet?tmrInfo():null,tmLine=tm?tmrHtml(tm):'',tmCard=tm&&!G.daily&&!newModel&&S.garage.length&&(tm.r.paint||tm.r.car>=0)&&win.tmD!==dayKey(0);if(tmCard)win.tmD=dayKey(0); // карточка с картинкой — раз в день, дальше строкой
   const run=G.daily?dailyRun():0;
-  modal(`<h2>${regionDone?L('Регион пройден! 🏆','Region complete! 🏆'):L('Двор свободен! 🎉','Yard cleared! 🎉')}</h2><div class="big-stars">${starsHtml(st)}</div>
+  modal(`${uxw?UI.winTop(wctx):''}<h2>${regionDone?L('Регион пройден! 🏆','Region complete! 🏆'):L('Двор свободен! 🎉','Yard cleared! 🎉')}</h2><div class="big-stars${uxw?' pop':''}">${starsHtml(st)}</div>
     <p data-fit="1">${G.daily?L('Задание дня выполнено!','Daily challenge done!'):levelName(G.idx)+L(': двор пройден за ',': cleared in ')+G.moves+' '+pl(G.moves,'ход','хода','ходов','move','moves')}</p>
     ${meet?shura(gift1?L('Я баба Шура, старшая по двору. Ловко ты! Держи гостинец — '+gift1+' 💰. И завтра заходи: будет ещё.','I’m Granny Shura, I keep an eye on this yard. Nicely done! Here’s a little gift — '+gift1+' 💰. Come back tomorrow for more.'):L('Я баба Шура, старшая по двору. Ловко ты! Заходи каждый день — у меня для тебя гостинцы.','I’m Granny Shura, I keep an eye on this yard. Nicely done! Drop by every day — I’ve got gifts for you.')):''}
     ${!G.daily&&G.idx===2?`<p data-fit="3"><b>${L('С 4-го двора каждая авария отнимает ❤️ — их три на двор','From yard 4 on, every crash takes a ❤️ — three per yard')}</b></p>`:''}
     <div class="rew">${again?`<p class="goal">${L('Сегодня награда уже получена — новое задание завтра.','Today’s reward is already collected — a new challenge tomorrow.')}</p>`:`<p class="coins-won" id="mWon">+${reward+wb} 💰${G.bonus?` <small>${L('(скорая успела!)','(ambulance made it!)')}</small>`:''}</p>`}${clean?`<p class="clean" data-fit="2">${L('✨ Чисто! Без аварий и подсказок','✨ Flawless! No crashes, no hints')}</p>`:''}</div>
+    ${uxw&&!meet&&!G.daily?UI.winSay(wctx):''}
     ${gift1&&!meet?`<p class="goal gift">🎁 ${L('Гостинец дня от бабы Шуры: +','Today’s gift from Granny Shura: +')}${gift1} 💰</p>`:''}
     ${wb?`<p class="goal gift">📅 ${L(wbN+' '+plural(wbN,'задание','задания','заданий')+' за неделю — премия +'+wb+' 💰',wbN+' dailies this week — bonus +'+wb+' 💰')}</p>`:''}
     ${newModel?`<div class="newcar"><p>${L('Новая машина в гараже:','New car in the garage:')} <b>${newModel.name}</b></p><canvas id="ncv"></canvas></div>`:''}
     ${wsGift?`<p class="goal gift">🔥 ${L(`${WSTREAK} ${plural(WSTREAK,'победа','победы','побед')} подряд — подсказка в следующем дворе бесплатно!`,`${WSTREAK} wins in a row — your next hint is free!`)}</p>`:''}
     ${G.daily?weekHtml()+`<p class="goal" data-fit="4">${L('Всего выполнено дней:','Days completed:')} <b>${LB.days()}</b>${run>1?` · <span class="fire">🔥 ${run} ${L('подряд','in a row')}</span>`:''}</p>`:''}
     ${G.daily||newModel?'':winGoal(G.idx)}${tip?`<p class="goal tipl">${tip}</p>`:''}
-    ${tmCard?`<div class="newcar sm tmrc" id="tmrC"><p><b>${L('Завтра','Tomorrow')}</b> ${tm.r.paint?L('баба Шура подарит краску «'+PAINT[tm.r.paint][1]+'» — и ещё '+tm.r.coins+' 💰','Granny Shura will give you the “'+PAINT[tm.r.paint][1]+'” paint — plus '+tm.r.coins+' 💰'):L('баба Шура подарит машину: '+MODELS[tm.r.car].name+' — и ещё '+tm.r.coins+' 💰','Granny Shura will give you a car: the '+MODELS[tm.r.car].name+' — plus '+tm.r.coins+' 💰')}</p><canvas id="tcv"></canvas></div>`:tmLine}
-    <div class="row">${toMap||!bNext?bMap:bNext}<div class="row2">${!bNext?'':toMap?bNext:bMap}${x2?`<button class="btn x2 x2p noenter" id="mX2">${L('📺 Удвоить за рекламу: +','📺 Double for an ad: +')}${reward}&nbsp;💰</button>`:''}${G.daily&&LB.ok()?`<button class="btn accent noenter" id="mLb">🏆 ${L('Рейтинг','Leaderboard')}</button>`:''}</div></div>`);
+    ${uiW}${uiT}
+    ${tmCard?`<div class="newcar sm tmrc" id="tmrC"><p><b>${L('Завтра','Tomorrow')}</b> ${tm.r.paint?L('баба Шура подарит краску «'+PAINT[tm.r.paint][1]+'» — и ещё '+tm.r.coins+' 💰','Granny Shura will give you the “'+PAINT[tm.r.paint][1]+'” paint — plus '+tm.r.coins+' 💰'):L('баба Шура подарит машину: '+MODELS[tm.r.car].name+' — и ещё '+tm.r.coins+' 💰','Granny Shura will give you a car: the '+MODELS[tm.r.car].name+' — plus '+tm.r.coins+' 💰')}</p><canvas id="tcv"></canvas></div>`:tmLine}${uxw&&!tmLine&&!tmCard&&!uiT&&!meet?UI.winTmr(wctx):''}
+    <div class="row">${uxw?(bNext||bMap):toMap||!bNext?bMap:bNext}<div class="row2">${uxw?(bNext?bMap:''):!bNext?'':toMap?bNext:bMap}${x2?`<button class="btn x2 x2p noenter" id="mX2">${L('📺 Удвоить за рекламу: +','📺 Double for an ad: +')}${reward}&nbsp;💰</button>`:''}${G.daily&&LB.ok()?`<button class="btn accent noenter" id="mLb">🏆 ${L('Рейтинг','Leaderboard')}</button>`:''}</div></div>`);
+  if(window.UI){UI.mountIn($('mcard'),winSlots,wctx);UI.emit('win',wctx);} /* vy-ux */
   socEarly(!!newModel||regionDone);fitWin(tmLine);
   if(G.daily){LB.submit();const b=$('mLb');if(b)b.onclick=LB.show;}
   // награда — только после досмотренного ролика; второй раз за двор не даём
@@ -2734,9 +2798,9 @@ function win(){
   if(!G.daily)setTimeout(streakAfterWin,1500);setTimeout(offerReturn,2200);
   // реклама раз в AD_EVERY побед (долг не сгорает), не после босса/новой машины, не раньше 180 с после любой рекламы; перед показом — предупреждение
   // после «Дальше» кнопки окна гаснут (иначе «На карту» успевает нажаться до межэкранной); переход — только если двор тот же
-  const n=$('mNext');if(n)n.onclick=()=>{document.querySelectorAll('#mcard .btn').forEach(b=>b.disabled=true);const go=()=>{if(G===g)startLevel(g.idx+1);};
+  const n=$('mNext');if(n)n.onclick=()=>{document.querySelectorAll('#mcard .btn').forEach(b=>b.disabled=true);const go=()=>{if(G===g)startLevel(g.idx+1,false,g.mode==='rush'||g.mode==='ice'?{mode:g.mode}:undefined);};
     if(adNext&&adReady()){toast(L('Реклама через секунду…','Ad in a second…'),1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
-  $('mMap').onclick=()=>{const k=regionDone?Math.floor(g.idx/10):-1;hideModal();openMap();if(k>=0)regionParty(k);};
+  $('mMap').onclick=()=>{const k=regionDone?Math.floor(g.idx/10):-1;hideModal();if(uxw&&k<0){if(G===g)G.over=true;UI.go('home');return;}openMap();if(k>=0)regionParty(k);}; /* vy-ux: «Во двор» — на главный */
 }
 // окно не влезает в экран — убираем второстепенные строки по очереди (data-fit: меньше — раньше), карточку «Завтра» меняем на строку
 function fitWin(alt){const mo=$('modal'),c=$('mcard'),tall=()=>mo.scrollHeight>mo.clientHeight+1;if(!tall())return;
@@ -2765,38 +2829,40 @@ function winGoal(idx){const done=S.unlocked-1; // пройдено дворов 
   if(nx){const n=chestStars(t);if(n<nx[0])return `<p class="goal" data-fit="4">🎁 ${L('До сундука:','Chest:')} ${bar(n,nx[0])} ${n}/${nx[0]} ⭐</p>`;}
   return '';}
 function winTip(){
-  for(let k=0;k*10<S.unlocked-1;k++){const nx=CHEST[S.chest[k]||0];if(nx&&chestStars(k)>=nx[0])return L('🎁 Сундук за звёзды готов — забери на карте!','🎁 A star chest is ready — collect it on the map!');}
+  if(!window.TD)for(let k=0;k*10<S.unlocked-1;k++){const nx=CHEST[S.chest[k]||0]; /* vy-car: есть TD — сундук карточкой с «Забрать» прямо в окне победы */if(nx&&chestStars(k)>=nx[0])return L('🎁 Сундук за звёзды готов — забери на «Маршруте»!','🎁 A star chest is ready — collect it on the Route!');} /* vy-ux */
   {const s=SETS.find(x=>setReady(x)&&!winTip.seen[x.id]);if(s){winTip.seen[s.id]=1;return L('🏆 Набор «'+s.name+'» собран — награда ждёт в гараже!','🏆 Set “'+s.name+'” complete — the reward is waiting in the garage!');}}
   if(!S.tipD&&!dailyLocked()){S.tipD=1;return L('📅 Открылось задание дня — оно на карте!','📅 The daily challenge is unlocked — find it on the map!');}
   if(!S.tipP&&S.coins>=PRICE.paint&&S.garage.length&&!Object.keys(S.paint).length){S.tipP=1;return L('🎨 Монет хватает на покраску машины в гараже!','🎨 You have enough coins to paint a car in the garage!');}
   return '';}
 winTip.seen={};
 // праздник региона: после босса карта прокручивается к новому региону, «машинка переезжает», сундук рядом
-function regionParty(k){const from=k*10,next=(k+1)*10,reg=REGIONS.find(r=>r.from===next),old=REGIONS.slice().reverse().find(r=>r.from<=from);
+function regionParty(k){const from=k*10,next=(k+1)*10,MR=mapRegs(),reg=MR.find(r=>r.from===next),old=MR.slice().reverse().find(r=>r.from<=from); /* vy-ux: регионы VYREG */
   let n=0;for(let i=from;i<next;i++)n+=S.stars[i]||0;
   const ch=CHEST[S.chest[k]||0],chReady=ch&&chestStars(k)>=ch[0];
   setTimeout(()=>{const hd=[...document.querySelectorAll('#mapList .region')].find(e=>reg&&e.textContent.indexOf(reg.name)>=0);if(hd)hd.scrollIntoView({block:'center',behavior:calm()?'auto':'smooth'});},50);
   modal(`<h2>${reg?'🗺 '+reg.name+L(' — открыто!',' — unlocked!'):L('🔥 Дворы '+(from+1)+'–'+next+' пройдены!','🔥 Yards '+(from+1)+'–'+next+' cleared!')}</h2>
-    <div class="trip"><div><span>🏁 ${levelName(next-1)}</span><span>${levelName(next)} 📍</span></div><div class="road"><i>🚗</i></div></div>
+    <div class="trip"><div><span>🏁 ${yardName(next-1)}</span><span>${yardName(next)} 📍</span></div><div class="road"><i>🚗</i></div></div>
     <p>${old&&reg?L('«'+old.name+'» пройден','“'+old.name+'” complete'):L('Десяток дворов позади','Ten more yards done')}: ⭐ ${n}/30</p>
     ${chReady?`<p class="goal tipl">${L('🎁 Сундук за звёзды готов — он здесь, на карте!','🎁 A star chest is ready — it’s right here on the map!')}</p>`:''}
-    <div class="row"><button class="btn green" id="rGo">${L('Вперёд:','Onward:')} ${levelName(next)} →</button><button class="btn" id="rStay">${L('Посмотреть карту','View the map')}</button></div>`);
+    <div class="row"><button class="btn green" id="rGo">${L('Вперёд:','Onward:')} ${yardName(next)} →</button><button class="btn" id="rStay">${L('Посмотреть карту','View the map')}</button></div>`);
   SND.win();
   $('rGo').onclick=()=>startLevel(next);$('rStay').onclick=()=>{hideModal();setTimeout(maybeStreak,300);};} // серия дней не теряется за праздником региона
 function lose(){
   if(!G)return;YG.stop();if(!G.daily&&S.ws){S.ws=0;save();} // серия побед подряд обрывается
-  const canPay=S.coins>=PRICE.life;
+  const canPay=S.coins>=PRICE.life&&G.mode!=='rush'; /* vy-lvl: в «Час пик» жизни не продаются */
+  const lctx={idx:G.idx,lv:G.daily?0:G.idx+1,daily:G.daily,moves:G.moves,sec:Math.round((Date.now()-(G.t0||Date.now()))/1000),fails:uiFl[G.daily?-1:G.idx]||0,mode:G.mode||(G.daily?'daily':'n'),region:G.region!=null?G.region:Math.floor(G.idx/10)},uiL=window.UI?UI.html(loseSlots,lctx):''; /* vy-ux: гнёзда окна поражения */
   // не хватает монет — кнопку «за монеты» не показываем (серая выглядела поломкой), остаётся «за рекламу»
-  modal(`<h2>${L('Машины помяты 💥','Cars dented 💥')}</h2>${shura(pick('lose'),'sad')}
-    <div class="row">${G.usedRevive||!adOk()?'':`<button class="btn accent noenter" id="mRev">${L('📺 +1 жизнь за рекламу','📺 +1 life for an ad')}</button>`}${canPay?`<button class="btn coinb noenter" id="mLife">❤️ ${L('+1 жизнь','+1 life')} — ${PRICE.life} 💰</button>`:''}<div class="row2"><button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn" id="mMap2">${L('На карту','To the map')}</button></div></div>`);
-  const revive=()=>{G.stRv=(G.stRv||0)+1;G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();};
+  modal(`<h2>${L('Машины помяты 💥','Cars dented 💥')}</h2>${shura(pick('lose'),'sad')}${uiL}
+    <div class="row">${G.usedRevive||!adOk()||G.mode==='rush'?'':`<button class="btn accent noenter" id="mRev">${L('📺 +1 жизнь за рекламу','📺 +1 life for an ad')}</button>`}${canPay?`<button class="btn coinb noenter" id="mLife">❤️ ${L('+1 жизнь','+1 life')} — ${PRICE.life} 💰</button>`:''}<div class="row2"><button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn" id="mMap2">${L('На карту','To the map')}</button></div></div>`);
+  if(window.UI){UI.mountIn($('mcard'),loseSlots,lctx);UI.emit('lose',lctx);} /* vy-ux */
+  const revive=()=>{G.stRv=(G.stRv||0)+1;G.hearts=1;G.over=false;if(window.LVLM)LVLM.revive(G);renderHearts();hideModal();YG.start();};
   if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);STAT.ev('spend',{k:'life',c:PRICE.life});SND.coin();revive();};
   const r=$('mRev');if(r)STAT.offer('life');if(r)r.onclick=()=>{if(adHold('life'))return;hideModal();STAT.place('life');{const g=G;showRewarded(()=>{G.usedRevive=true;revive();},lose,
     /* adt: жизнь — только тот же двор и открыто окно поражения; иначе монеты по цене жизни */
     ()=>{if(G!==g||!g.over||g.usedRevive||!modalOn||!$('mRe')||!$('mMap2'))return adLateCoins(PRICE.life);g.usedRevive=true;g.stRv=(g.stRv||0)+1;g.hearts=1;g.over=false;renderHearts();hideModal();YG.start();return L('+1 жизнь','+1 life');});}};
-  const lend=()=>STAT.end('lose',{rv:G.stRv||0,hp:G.helps,cr:G.crashes,mv:G.moves});
-  $('mRe').onclick=()=>{lend();G.daily?startLevel(0,true):startLevel(G.idx);};
-  $('mMap2').onclick=()=>{lend();hideModal();openMap();};
+  const lend=()=>{if(window.LVLM)LVLM.fail(G);STAT.end('lose',{rv:G.stRv||0,hp:G.helps,cr:G.crashes,mv:G.moves});yardEnd('lose',0);}; /* vy-ux: yardHook */
+  $('mRe').onclick=()=>{lend();G.daily?startLevel(0,true):startLevel(G.idx,false,G.mode==='rush'||G.mode==='ice'?{mode:G.mode}:undefined);};
+  $('mMap2').onclick=()=>{lend();hideModal();if(!(window.UI&&UI.winTop&&UI.go('home')))openMap();}; /* vy-ux */
 }
 function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<12||h>14)?b:c;}
 const coinsTxt=n=>n+' '+pl(n,'монета','монеты','монет','coin','coins');
@@ -2827,15 +2893,29 @@ const SC_REG=[['birch','tower','izba'],['firs','mount','rig'],['sopka','ship','l
 // «Вокруг света» (дворы 31–50): у городов свои приметы — горы, нефтяная вышка Баку, пагоды, пирамиды, Колизей, башня в Париже, часы в Лондоне
 const SC_CITY={30:'city',31:'mount',32:'palm',33:'mount',34:'mount',35:'mount',36:'rig',37:'city',38:'city',39:'palm',40:'pagoda',41:'pagoda',42:'pagoda',43:'pagoda',44:'pyramid',45:'colos',46:'eiffel',47:'city',48:'clock',49:'city'};
 function scHtml(i){const k=i<30?Math.floor(i/10):i<50?3:4,id=SC_CITY[i]||SC_REG[k][i%3];return '<i class="sc"><svg viewBox="0 0 64 64" aria-hidden="true">'+SCN[id]+'</svg></i>';}
+/* vy-ux: итог двора для гнезда yardHook (STAT, CAR, YARD, MG0) — ровно один раз на попытку (G.uiEnd) */
+const uiFl={}; // поражений подряд на дворе (в этом сеансе)
+function yardEnd(end,st){if(!G||G.uiEnd)return null;G.uiEnd=1;const k=G.daily?-1:G.idx,f=uiFl[k]||0,ok=end==='win'?1:0,tw=G.towN||0;
+  const info={lv:G.daily?0:G.idx+1,idx:G.idx,ok,end,stars:ok?st:0,moves:G.moves,sec:Math.round((Date.now()-(G.t0||Date.now()))/1000),hint:Math.max(0,G.helps-tw),tow:tw,undo:0,crashes:G.crashes,
+    mode:G.mode||(G.daily?'daily':'n'),region:G.region!=null?G.region:Math.floor(G.idx/10),fails:f,daily:!!G.daily,first:!!G.first};
+  uiFl[k]=ok?0:end==='lose'?f+1:f;if(window.UI)UI.yard(info);return info;}
+function leaveYard(){if(G&&!G.over){STAT.end('quit',{mv:G.moves,hp:G.helps});yardEnd('quit',0);} // вышел из двора посреди игры
+  if(G)YG.stop();G=null;resetGest();document.body.style.background='';}
+/* vy-ux: карта как рамка — регионы и названия дворов из VYREG (LVL, js/lvl-regions.js), если он есть; иначе прежние REGIONS/levelName */
+function mapRegs(){if(mapRegs.c&&mapRegs.l===LANG)return mapRegs.c;let o=REGIONS.map((r,k)=>({from:r.from,name:r.name,k}));
+  if(window.VYREG&&VYREG.length&&!REGIONS.some(r=>r.vy)){ /* LVL уже дописал VYREG в REGIONS — берём как есть */o=o.filter(r=>r.from<50);VYREG.forEach(r=>o.push({from:r.from-1,name:LANG==='en'?r.en||r.name:r.name,vy:1}));const e=REGIONS.find(r=>r.from===50);o.push({from:VYREG.last||210,name:e?e.name:L('Бесконечные дворы','Endless Yards')});o.forEach((r,k)=>r.k=k);}
+  mapRegs.l=LANG;return mapRegs.c=o;}
+function yardName(i){let n=null;try{if(window.VYREG&&VYREG.yardName)n=VYREG.yardName(i,LANG==='en');}catch(e){}return n||levelName(i);}
 let tutMap=false;
 function openMap(){STAT.once('menu');STAT.once('ready',{ms:Math.round(performance.now())});STAT.screen('map');
-  if(G&&!G.over)STAT.end('quit',{mv:G.moves,hp:G.helps}); // вышел из двора посреди игры
+  leaveYard(); /* vy-ux: выход из двора — общий для карты и главного экрана */
   if(S.levelsDone===1&&!tutMap){tutMap=true;STAT.ev('tut',{s:6});} // карта после первой победы
-  if(G)YG.stop();G=null;resetGest();document.body.style.background='';const list=$('mapList');list.innerHTML='';let tot=0,sec=list,curNode=null;
+  const list=$('mapList');list.innerHTML='';let tot=0,sec=list,curNode=null;
   const N=Math.max(30,S.unlocked+2);
-  for(let i=0;i<N;i++){const c=levelName(i),un=i<S.unlocked,st=S.stars[i]||0;tot+=st;const cur=un&&!st;
-    const reg=REGIONS.find(r=>r.from===i);if(reg){sec=document.createElement('div');sec.className='reg reg'+REGIONS.indexOf(reg);list.appendChild(sec);
-      const d=document.createElement('div');d.className='region';d.innerHTML='<span>🗺 '+reg.name+'</span>';sec.appendChild(d);}
+  for(let i=0;i<N;i++){const c=yardName(i),un=i<S.unlocked,st=S.stars[i]||0;tot+=st;const cur=un&&!st;
+    const MR=mapRegs(),reg=MR.find(r=>r.from===i);if(reg){sec=document.createElement('div');sec.className='reg reg'+Math.min(reg.k,REGIONS.length-1)+(reg.vy?' regvy':'');list.appendChild(sec);
+      const d=document.createElement('div');d.className='region';d.innerHTML='<span>🗺 '+reg.name+'</span>';sec.appendChild(d);
+      if(window.UI){const ms=document.createElement('div');ms.className='mslots';if(UI.fill(ms,mapSlots,{S,region:Math.floor(i/10),rk:reg.k,reg:window.VYREG&&VYREG.at?VYREG.at(i):null,done:S.unlocked>i+10},'mslot','region'))sec.appendChild(ms);}} /* vy-ux: mapSlots 'region' */
     const row=document.createElement('div');row.className='node-row '+(i%2?'r':'l');
     row.innerHTML=scHtml(i)+`<button class="node ${un?'':'locked'} ${st?'done':''} ${cur?'cur':''} ${isBoss(i)?'boss':''}" ${un?'':'disabled'}>${un?i+1:'🔒'}${isBoss(i)?'<span class="fire">🔥</span>':''}</button><div class="nlabel"><b>${c}</b><span class="st">${un?starsHtml(st).replace(/<span class="e">☆<\/span>/g,'☆'):''}</span></div>`;
     if(un)row.querySelector('button').onclick=()=>startLevel(i);sec.appendChild(row);if(i===S.unlocked-1)curNode=row.querySelector('button');
@@ -2848,6 +2928,7 @@ function openMap(){STAT.once('menu');STAT.once('ready',{ms:Math.round(performanc
   // машинка игрока стоит на дворе, до которого он доехал (своя из «во дворах», иначе последняя из гаража)
   if(curNode&&S.garage.length&&!window.__demo){const yc=yardCars(),mi=yc.length?yc[0]:S.garage[S.garage.length-1],cv2=document.createElement('canvas');cv2.className='mycar';curNode.appendChild(cv2);
     if(MODELS[mi]&&MODELS[mi].len<=3)requestAnimationFrame(()=>drawModel(cv2,MODELS[mi],carColor(mi)));else requestAnimationFrame(()=>drawModel(cv2,MODELS[0],MODELS[0].color));}
+  if(window.UI){UI.fill($('mapSlots'),mapSlots,{S},'mslot','top','top');UI.emit('map');} /* vy-ux: mapSlots 'top' */
   mapRoads();
   const c=list.querySelector('.cur')||curNode;if(c)c.scrollIntoView({block:'center'});mapRegUpd();
 }
@@ -2873,11 +2954,11 @@ const CHEST=[[25,40],[30,60]];
 function chestStars(k){let n=0;for(let i=k*10;i<k*10+10;i++)n+=S.stars[i]||0;return n;}
 function chestRow(k){const n=chestStars(k),got=S.chest[k]||0,d=document.createElement('div');d.className='chest';
   const next=CHEST[got];let html=`<span>🎁 ${L('Дворы','Yards')} ${k*10+1}–${k*10+10}: ⭐ ${n}/30</span>`;
-  if(next&&n>=next[0])html+=`<button class="btn green" data-m="1">${L('Забрать','Collect')} ${next[1]} 💰</button>`+(X2_ON&&adOk()?`<button class="btn" data-m="2">${L('📺 ×2 за рекламу','📺 ×2 for an ad')} (+${next[1]*2} 💰)</button>`:'');
+  if(next&&n>=next[0])html+=`<button class="btn green" data-m="1">${L('Забрать','Collect')} ${next[1]} 💰</button>`; /* vy-car: «📺 ×2 за рекламу» на сундуке убрана (0,6 % нажатий, решение владельца 09.10) */
   else if(next)html+=`<span>${next[0]}⭐ → +${next[1]} 💰</span>`;else html+=`<span>${L('✓ собран','✓ collected')}</span>`;
   d.innerHTML=html;const g0=got;
   // ×2 — только за досмотренный ролик и только если сундук ещё не открыт (второй раз не даём)
-  const open=m=>{const g=S.chest[k]||0,nx=CHEST[g];if(g!==g0||!nx||chestStars(k)<nx[0])return;S.chest[k]=g+1;S.coins+=nx[1]*m;ern('chest',nx[1]);ern('ad',nx[1]*(m-1));save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);
+  const open=m=>{const g=S.chest[k]||0,nx=CHEST[g];if(g!==g0||!nx||chestStars(k)<nx[0])return;S.chest[k]=g+1;try{if(window.STATVY)STATVY.chest('get',k,m,g+1);}catch(e){} /* vy-tech: сундук забрали (с роликом и без) */S.coins+=nx[1]*m;ern('chest',nx[1]);ern('ad',nx[1]*(m-1));save();updCoins();SND.coin();setTimeout(()=>SND.win(),200);
     toast(L('🎁 Сундук открыт: +','🎁 Chest opened: +')+coinsTxt(nx[1]*m)+(m>1?' (×2)':''));coinFx(nx[1]*m,d);
     if(d.parentNode){const nr=chestRow(k);nr.classList.add('pop');d.parentNode.replaceChild(nr,d);}};
   d.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.m==='2'){d.querySelectorAll('button').forEach(x=>x.disabled=true);
@@ -3032,6 +3113,15 @@ function openCar(i,sel){const m=MODELS[i];if(!m||!S.garage.includes(i))return;co
 /* ================= события ================= */
 /* ---- зум и перетаскивание: тап срабатывает при отпускании, если палец почти не сдвинулся ---- */
 function zoomMax(){return Math.max(1.8,Math.min(3.5,76/cs));}
+/* vy-ux: большие дворы на маленьком телефоне (клетка < 28 px, напр. 13×18 на 320–360): при входе приближаем в 1,5–1,7× к свободным машинам
+   (клетка ≈ 34 px — палец не промахивается), «🔍 Весь двор» — показать целиком; 🔍 приближает до клетки ≈ 40 px */
+const SMALL_CS=28;
+function autoZoom(g){const z=Math.max(1.5,Math.min(1.7,34/cs));let sx=0,sy=0,n=0;
+  for(const v of g.vs)if(v.state==='idle'&&canExit(v,g.occ,g.p.w,g.p.h,v.id).free){const c=v.cells[0];sx+=ox+(c[0]+.5)*cs;sy+=oy+(c[1]+.5)*cs;n++;}
+  const cx=n?sx/n:W/2,cy=n?sy/n:H/2,x=Math.min(0,Math.max(W-W*z,W/2-cx*z)),y=Math.min(0,Math.max(H-H*z,H/2-cy*z));
+  const tipOn=$('tip').style.display==='block'; // плашка видна — сначала весь двор с ней 2,5 с, потом приближаем (плашка уходит сама, updZoomBtn)
+  setTimeout(()=>{if(G!==g||g.over||cam.z>1.02)return;camTo(z,x,y);
+    if(!S.zoomTip2){S.zoomTip2=1;save();toast(FINE?L('Двор большой — мы его приблизили. Колёсико мыши — масштаб, «🔍 Весь двор» — целиком','Big yard — we zoomed in. Mouse wheel to zoom, “🔍 Whole yard” to see it all'):L('Двор большой — мы его приблизили. Двигай двор пальцем, «🔍 Весь двор» — показать целиком','Big yard — we zoomed in. Drag to move around, “🔍 Whole yard” to see it all'),3500);}},tipOn?2500:650);}
 function camClamp(){cam.z=Math.max(1,Math.min(zoomMax(),cam.z));cam.x=Math.min(0,Math.max(W-W*cam.z,cam.x));cam.y=Math.min(0,Math.max(H-H*cam.z,cam.y));}
 // «🔍 Весь двор» — когда приближено; «🔍 Приблизить» — на широких дворах (от 8 клеток), чтобы о зуме знали не только по щипку
 function updZoomBtn(){if(cam.z>1.02&&!(G&&G.towMode)){const t=$('tip');if(t.style.display==='block'&&!(G&&!G.daily&&G.idx===0))t.style.display='none';}
@@ -3061,7 +3151,7 @@ function ptrEnd(e){if(!ptrs.has(e.pointerId))return;const p=cvPos(e);ptrs.delete
 cv.addEventListener('pointerup',ptrEnd);cv.addEventListener('pointercancel',ptrEnd);
 cv.addEventListener('wheel',e=>{if(!G)return;e.preventDefault();const p=cvPos(e),dy=e.deltaMode===1?e.deltaY*16:e.deltaY;zoomAt(p.x,p.y,cam.z*Math.exp(-dy*(e.ctrlKey?.01:.0018)));},{passive:false});
 $('zReset').onclick=()=>camTo(1,0,0);
-$('zIn').onclick=()=>{if(!G)return;if(cam.z>1.02||(cam.tw&&cam.tw.z1>1.02)){camTo(1,0,0);return;}const z=Math.min(zoomMax(),2);camTo(z,W/2-W/2*z,H/2-H/2*z);};
+$('zIn').onclick=()=>{if(!G)return;if(cam.z>1.02||(cam.tw&&cam.tw.z1>1.02)){camTo(1,0,0);return;}const z=Math.min(zoomMax(),Math.max(1.3,Math.min(2,40/cs)));camTo(z,W/2-W/2*z,H/2-H/2*z);}; /* vy-ux: до клетки ≈ 40 px */
 /* ---- гостинцы бабы Шуры (решение владельца 03.10): считаются ДНИ ЗАХОДА, ничего не сгорает. Пропустил день — следующий заход даёт следующий по счёту гостинец.
    S.streak={day:1..7 (место в недельной лесенке), last:день последнего гостинца, cyc:сколько недель пройдено}; всего взято — giftN() ---- */
 const STREAK=[10,10,15,15,20,25,40];
@@ -3100,7 +3190,7 @@ function showStreak(){STAT.screen('gift');const st=streakState(),car=streakCar()
   modal(`<h2>${L('Гостинцы бабы Шуры 🎁','Granny Shura’s gifts 🎁')}</h2>${shura(st.claimed?L('Сегодняшний гостинец уже у тебя. Завтра приходи — будет ','Today’s gift is already yours. Come back tomorrow for ')+giftTxt(nx)+'.':L('Заглянешь — с меня гостинец. Пропустишь денёк — ничего не сгорит.','Drop by and there’s a gift. Miss a day — nothing is lost.'))}
     ${n>0?`<p class="goal" data-fit="1">${L('Гостинцев получено:','Gifts collected:')} <b>${n}</b></p>`:''}
     <div class="streak">${cells}</div>
-    <div class="row">${st.claimed?`<button class="btn" id="sClose">${L('Закрыть','Close')}</button>`:`<button class="btn green" id="sGet">${L('Забрать','Collect')} ${giftTxt(r)}</button>${adOk()?`<button class="btn x2p noenter" id="sX2">${L('📺 Удвоить монеты за рекламу: +','📺 Double the coins for an ad: +')}${r.coins}&nbsp;💰</button>`:''}`}</div>`);
+    <div class="row">${st.claimed?`<button class="btn" id="sClose">${L('Закрыть','Close')}</button>`:`<button class="btn green" id="sGet">${L('Забрать','Collect')} ${giftTxt(r)}</button>${''/* vy-car: «📺 Удвоить» гостинца убрана (1,7 %, решение владельца 09.10) */}`}</div>`);
   fitWin();
   if(st.claimed){$('sClose').onclick=hideModal;return;}
   $('sGet').onclick=()=>claimStreak(1);
@@ -3132,7 +3222,7 @@ function updStreakDot(){const b=$('btnStreak');b.innerHTML='🎁<small>'+L('По
 // после победы: гостинец 2-го и следующих дней ждёт на карте (1-й день выдаётся сам — streakAuto)
 function streakAfterWin(){if(window.__demo||(S.levelsDone||0)<1)return;const st=streakState();if(st.claimed)return;
   if(G&&!G.daily&&G.idx<3)return; // дворы 1–3: без тоста поверх поля
-  toast(L('🎁 Гостинец дня ждёт на карте','🎁 Today’s gift is waiting on the map'),3000);}
+  toast(window.UI&&UI.homeRender?L('🎁 Гостинец дня ждёт во дворе у бабы Шуры','🎁 Granny Shura has today’s gift for you'):L('🎁 Гостинец дня ждёт на карте','🎁 Today’s gift is waiting on the map'),3000);} /* vy-ux */
 /* ---- баба Шура — «голос» двора: старшая по двору с лавочки. Портрет рисуется кодом (SVG), настроение: ok | sad ---- */
 function shuraSvg(mood){const mouth=mood==='sad'?'<path d="M25 42q5-3 10 0" stroke="#8a3b2e" stroke-width="2.2" fill="none" stroke-linecap="round"/>':'<path d="M24 39q6 6 12 0" stroke="#8a3b2e" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
   return '<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M6 62q2-17 24-17t24 17z" fill="#7a5c4a"/>'
@@ -3183,10 +3273,11 @@ function updMore(){const b=$('btnMore'),on=SOC.can('more');if(b){b.style.display
 // ⚙ → «Друзья и игры»: кнопки модуля SOC отдельным окном (в настройках окно стало бы выше экрана)
 function openSocial(){STAT.screen('social');STAT.ev('mod',{m:'soc',a:'open'});modal(`<h2>${OK?L('👥 Друзья','👥 Friends'):L('👥 Друзья и игры','👥 Friends & games')}</h2>`+SOC.settingsHtml()+`<div class="row"><button class="btn green" id="socBack">${L('← Назад','← Back')}</button></div>`);
   modalRe=openSocial;$('socBack').onclick=openSettings;SOC.bind($('mcard'),openSocial);}
-$('gBack').onclick=openMap;$('garBack').onclick=openMap;$('btnGarage').onclick=openGarage;
+const goHome=()=>{if(!(window.UI&&UI.go('home')))openMap();}; /* vy-ux: «назад» — на главный «Наш двор» */
+$('gBack').onclick=goHome;$('garBack').onclick=goHome;$('btnGarage').onclick=openGarage;
 function dailyLocked(){return (S.unlocked||1)<7;}
 $('btnDaily').onclick=()=>openDaily();
-$('gRestart').onclick=()=>G&&(G.daily?startLevel(0,true):startLevel(G.idx));
+$('gRestart').onclick=()=>G&&(yardEnd('restart',0),G.daily?startLevel(0,true):startLevel(G.idx,false,G.mode==='rush'||G.mode==='ice'?{mode:G.mode}:undefined)); /* vy-ux: yardHook; vy-lvl: в том же режиме */
 $('gHint').onclick=()=>hint();
 $('gTow').onclick=()=>{if(!G||G.over)return;G.towMode=!G.towMode;$('gTow').classList.toggle('on',G.towMode);const tip=$('tip');
   if(G.towMode){tip.textContent=towTip();tip.style.display='block';}else tip.style.display='none';};
@@ -3274,17 +3365,52 @@ applyLang();
 function applyCalm(){document.body.classList.toggle('calm',calm());}applyCalm();
 $('btnSet').onclick=openSettings;$('gSet').onclick=openSettings;
 /* ---- клавиатура на ПК ---- */
+/* KEYS: выбор машины с клавиатуры. G.kSel — выбранная (id), G.kbd — рамку видно (мышь/палец её прячут) */
+const K_DIR={arrowleft:[-1,0],a:[-1,0],'ф':[-1,0],arrowright:[1,0],d:[1,0],'в':[1,0],arrowup:[0,-1],w:[0,-1],'ц':[0,-1],arrowdown:[0,1],s:[0,1],'ы':[0,1]};
+const kOk=v=>!!(v&&(v.state==='idle'||v.state==='bump')&&v.ap>=1);
+function kCen(v){let x=0,y=0;for(const c of v.cells){x+=c[0];y+=c[1];}return[x/v.cells.length,y/v.cells.length];}
+// кого выбрать первым: машину под пальцем обучения / подсказанную / ближайшую к прежнему месту или к середине двора
+function kFirst(at){const Q=G.vs.filter(v=>v.state==='idle'&&v.ap>=1);if(!Q.length)return -1;
+  if(!at){const h=G.hint>=0&&G.hintT>0?G.vs[G.hint]:null,tu=G.moves===0?G.vs[G.tutorId]:null,t=h||tu;if(t&&t.state==='idle'&&t.ap>=1)return t.id;at=[(G.p.w-1)/2,(G.p.h-1)/2];}
+  let b=Q[0],bd=1e9;for(const v of Q){const c=kCen(v),d=Math.hypot(c[0]-at[0],c[1]-at[1]);if(d<bd){bd=d;b=v;}}return b.id;}
+function kMove(dx,dy){if(!G||G.over)return;const was=G.kbd;G.kbd=1;const cur=G.vs[G.kSel];
+  if(!was||!kOk(cur)){G.kSel=kFirst(cur?G.kPos:null);kick();return;}
+  const [ax,ay]=kCen(cur);let best=-1,bs=1e9;
+  for(const v of G.vs){if(v===cur||v.state!=='idle'||v.ap<1)continue;const [bx,by]=kCen(v),p=(bx-ax)*dx+(by-ay)*dy,o=Math.abs((bx-ax)*dy)+Math.abs((by-ay)*dx);
+    if(p<=.25)continue;const sc=p+o*(o>p*1.5?4:1.6);if(sc<bs){bs=sc;best=v.id;}}
+  if(best>=0){G.kSel=best;G.kPos=kCen(G.vs[best]);}kick();}
+function kGo(){if(!G||G.over)return;const v=G.vs[G.kSel];
+  if(!G.kbd||!kOk(v)){G.kbd=1;G.kSel=kFirst(G.kPos);kick();return;}
+  if(v.state!=='idle')return;G.kPos=kCen(v);const [x,y]=v.cells[0];tapAt(ox+(x+.5)*cs,oy+(y+.5)*cs);}
+// рамка вокруг выбранной (рисуется поверх машин); уехала — рамка сама переходит к ближайшей
+function kDraw(t){if(!G.kbd||G.over)return;let v=G.vs[G.kSel];
+  if(!kOk(v)){G.kSel=kFirst(G.kPos||null);v=G.vs[G.kSel];if(!kOk(v))return;}
+  const xs=v.cells.map(c=>c[0]),ys=v.cells.map(c=>c[1]),line=new Set(xs).size===1||new Set(ys).size===1,pad=cs*.1,a=calm()?.95:.7+.3*Math.sin(t*6);
+  ctx.save();ctx.globalAlpha=a;ctx.lineJoin='round';
+  const box=(x0,y0,x1,y1)=>{const X=ox+x0*cs-pad,Y=oy+y0*cs-pad,Wd=(x1-x0+1)*cs+pad*2,Ht=(y1-y0+1)*cs+pad*2;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(X,Y,Wd,Ht,cs*.22);else ctx.rect(X,Y,Wd,Ht);
+    ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=cs*.2;ctx.stroke();ctx.strokeStyle='#ff9f1a';ctx.lineWidth=cs*.12;ctx.stroke();};
+  if(line)box(Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys));else for(const [x,y] of v.cells)box(x,y,x,y);
+  ctx.restore();}
+function kPause(){if(!inYard()||modalOn)return;
+  modal(`<h2>${L('Пауза','Paused')}</h2><p>${L('Двор подождёт.','The yard will wait.')}</p><div class="row"><button class="btn green" id="pzGo">▶ ${L('Продолжить','Continue')}</button><button class="btn" id="pzRe">↻ ${L('Заново','Restart')}</button><button class="btn" id="pzHome">🏠 ${L('Домой','Home')}</button></div>`);
+  $('pzGo').onclick=()=>hideModal();$('pzRe').onclick=()=>{hideModal();$('gRestart').click();};$('pzHome').onclick=()=>{hideModal();goHome();};}
+cv.addEventListener('pointerdown',()=>{if(G)G.kbd=0;});
 document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on'))return;
   if(modalOn){
-    if(k==='Escape'){const b=['socClose','socBack','mCancel','lbClose','sClose','stClose','abBack','sOk','mMap','mMap2','rStay','hBack'].map($).find(Boolean);if(b){e.preventDefault();b.click();}
+    if((k==='p'||k==='P'||k==='з'||k==='З')&&$('pzGo')){e.preventDefault();$('pzGo').click();return;} /* KEYS: P — снять паузу */
+    if(k==='Escape'){const b=['pzGo','socClose','socBack','mCancel','lbClose','sClose','stClose','abBack','sOk','mMap','mMap2','rStay','hBack'].map($).find(Boolean);if(b){e.preventDefault();b.click();}
       else if(['sGet','sX2','sRes','sNew'].some(id=>$(id))){e.preventDefault();hideModal();}} // окна серии дней: награда останется на карте
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
       const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2):not(.buy):not(.noenter)');if(b){e.preventDefault();b.click();}}
     return;}
-  if($('scr-garage').classList.contains('on')){if(k==='Escape')openMap();return;}
+  if($('scr-garage').classList.contains('on')){if(k==='Escape')goHome();return;} /* vy-ux */
   if(!G||!$('scr-game').classList.contains('on'))return;
-  const c=k.toLowerCase();
-  if(k==='Escape')openMap();
+  const c=k.toLowerCase(),kd=K_DIR[c]; /* KEYS: стрелки/WASD/цфыв — выбор машины, пробел/Enter — ехать, P — пауза, T — эвакуатор */
+  if(kd){e.preventDefault();kMove(kd[0],kd[1]);}
+  else if(k===' '||k==='Enter'){e.preventDefault();kGo();}
+  else if(c==='p'||c==='з'){e.preventDefault();kPause();}
+  else if((c==='t'||c==='е')&&!G.over&&$('gTow').offsetWidth)$('gTow').click();
+  else if(k==='Escape')goHome(); /* vy-ux */
   else if(c==='h'||c==='р')hint();
   else if(c==='r'||c==='к')$('gRestart').click();
   else if(k==='+'||k==='=')zoomAt(W/2,H/2,cam.z*1.4);
@@ -3331,7 +3457,14 @@ document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hide',true);cloudFlush();}else setPause('hide',false);});
 if(document.hidden)setPause('hide',true); // запуск в фоновой вкладке: visibilitychange не придёт, пока её не откроют
 // новичок (ничего не пройдено) попадает сразу во двор 1, карта — после первой победы
-if(!/[?&]demo=/.test(location.search)&&!(S.levelsDone>0)&&S.unlocked===1&&!Object.keys(S.stars).length)startLevel(0);else openMap();
+/* vy-ux: роутер экранов UI.go и доступ модулей к игре (VY) — договор в js/ui-core.js */
+window.__show=show;
+window.VY={get S(){return S;},get G(){return G;},get MODELS(){return MODELS;},save:()=>save(),toast:(t,ms)=>toast(t,ms),modal:h=>{modal(h);return $('mcard');},hide:()=>hideModal(),L:(a,b)=>L(a,b),
+  coins:(n,src)=>{if(!n)return;S.coins+=n;save();updCoins();if(src)coinFx(n,src);},leave:()=>leaveYard(),start:(i,d)=>startLevel(i,d),fit:()=>fitWin(''),get modalOn(){return modalOn;}};
+if(window.UI){const R0={map:()=>openMap(),game:o=>o&&o.daily?startLevel(0,true):startLevel(o&&o.idx!=null?o.idx:S.unlocked-1),garage:o=>{leaveYard();openGarage(o&&o.tab);},shop:()=>openShop(),
+    daily:()=>openDaily(),settings:()=>openSettings(),gift:()=>showStreak(),how:()=>openHow(),about:()=>openAbout(),home:()=>openMap()};
+  for(const k in R0)if(!UI.has(k))UI.screen(k,R0[k]);}
+if(!/[?&]demo=/.test(location.search)&&!(S.levelsDone>0)&&S.unlocked===1&&!Object.keys(S.stars).length)startLevel(0);else if(!(window.UI&&UI.go('home')))openMap();
 // режим для скриншотов карточки: ?demo=N (уровень), ?demo=garage
 (()=>{const d=new URLSearchParams(location.search).get('demo');if(!d)return;window.__demo=true;
   todForce=new URLSearchParams(location.search).get('tod');
@@ -3343,7 +3476,9 @@ if(!/[?&]demo=/.test(location.search)&&!(S.levelsDone>0)&&S.unlocked===1&&!Objec
   save=()=>{};})();
 // VK: мост из js/vk-bridge.min.js (только в VK-сборке). Яндекс: SDK по относительному пути; локально 404 → заглушки рекламы
 // «Друзья и игры» (общий модуль SOC, только VK с мостом): сессии, облако, кнопки
-SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,now:()=>nowMs(),
+/* vy-tech: миссии VK, лента друзей, таблица — события шлёт SOC в функцию vk-pay (?op=vkev); условия и номера миссий — js/vkm-vy.js (VKM_VY_ID). На маке адрес можно подменить ?evurl= */
+const EV_URL=(()=>{const m=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]evurl=([^&#]*)/.exec(location.search);return m?decodeURIComponent(m[1]):'https://functions.yandexcloud.net/d4e7egf62asn7suf30m0?op=vkev';})();
+SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,now:()=>nowMs(),evUrl:EV_URL,evId:c=>typeof VKM_VY_ID==='object'&&VKM_VY_ID[c]||0,
   // ntf (06.10): разрешение на напоминания VK — спрашивает баба Шура, до 3 раз за всё время (1-й, 3-й, 7-й день игрока — правила в модуле SOC), каждый раз свой повод. Наград нет. В ОК, Яндексе и без моста модуль молчит сам
   ntf:{t:n=>ntfText(n),
     b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Договорились! Часто дёргать не буду.','Deal! I will not bother you often.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}});updMore(); /* okGroup в SOC не передаём: в ОК VKWebAppJoinGroup с номером группы ОК ничего не делает (проверено вживую 06.10) — группа открывается ссылкой в «Об игре» */
@@ -3351,5 +3486,46 @@ if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
 window.__test={get MUS(){return MUS;},musTick,setPause,DAILY_T,dailyTier,cam,birdsInit,scare,streakState,showStreak,claimStreak,dayKey,LEVELS,DAILY,genLevel,depth,get G(){return G;},tapCell:(x,y)=>tapAt(ox+(x+.5)*cs,oy+(y+.5)*cs),canExit,startLevel,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,get S(){return S;},set VK(v){VK=v;},get VK(){return VK;}};
 </script>
+<script src="js/art-cars.js" defer></script><script src="js/art-people.js" defer></script><!-- vy-art: машины альбома и модели во дворе; жильцы (VYPEOPLE) -->
+<!-- vy-mg0: мини-игры «Перекур у Толика» (оболочка; игры MGA–MGC — строками ниже vymg-core.js) -->
+<link rel="stylesheet" href="css/vymg.css">
+<script src="js/vymg-core.js" defer></script>
+<!-- vy-mga: мини-игры потока MGA (набор vymg-akit — первым) -->
+<script src="js/vymg-akit.js" defer></script>
+<script src="js/vymg-bagazh.js" defer></script>
+<script src="js/vymg-doroga.js" defer></script>
+<script src="js/vymg-regul.js" defer></script>
+<script src="js/vymg-nomera.js" defer></script>
+<!-- vy-mgb: мини-игры MGB (после js/vymg-core.js; без ядра ничего не делают) -->
+<script defer src="js/vymg-bkit.js"></script>
+<script defer src="js/vymg-otlich.js"></script>
+<script defer src="js/vymg-bayki-data.js"></script>
+<script defer src="js/vymg-bayki.js"></script>
+<script defer src="js/vymg-domino.js"></script>
+<script defer src="js/vymg-sneg.js"></script>
+<!-- vy-mgc: мини-игры потока MGC (набор VYC + 4 игры) -->
+<script src="js/vymg-mgckit.js" defer></script>
+<script src="js/vymg-polomka.js" defer></script>
+<script src="js/vymg-zapravka.js" defer></script>
+<script src="js/vymg-ugaday.js" defer></script>
+<script src="js/vymg-parkeng.js" defer></script><!-- vy-park: движок парковки (VYPE) -->
+<script src="js/vymg-parkovka.js" defer></script>
+<script src="js/vymg-avtodrom.js" defer></script><!-- vy-park: Автодром, финал региона, парковка дня, праздники (VYPARK) -->
+<script src="js/vymg-zavedi.js" defer></script>
+<script src="js/vymg-moyka.js" defer></script>
+<script src="js/vymg-foto.js" defer></script>
+<script src="js/vymg-tolik.js" defer></script>
+<link rel="stylesheet" href="css/vymg-garazhi.css">
+<script src="js/vymg-garazhi.js" defer></script>
+<!-- vy-ux: модули потока UX (после основного скрипта; не загрузились — игра как раньше) -->
+<script defer src="js/ui-tut.js"></script>
+<script defer src="js/ui-win.js"></script>
+<script defer src="js/ui-keys.js"></script> <!-- KEYS: клавиатура на ПК для всех экранов и окон (договор — шапка файла) -->
+<script defer src="js/ui-shop.js"></script><script defer src="js/ui-fx.js"></script><script defer src="js/ui-night.js"></script>
+<!-- vy-car: карьера, «Сегодня во дворе», заказы жильцов (нет файлов — игра как раньше) -->
+<link rel="stylesheet" href="css/car.css"><script src="js/career.js" defer></script><script src="js/today.js" defer></script><script src="js/orders.js" defer></script>
+<script src="js/myyard.js" defer></script><script src="js/album.js" defer></script><script src="js/garage-tolik.js" defer></script><script src="js/league.js" defer></script><script src="js/season.js" defer></script><!-- vy-yard: после основного скрипта; не загрузились — игра как раньше -->
+<link rel="stylesheet" href="css/fest-vy.css"><script defer src="js/fest.js"></script><script defer src="js/fest-vy.js"></script><!-- vy-fest: праздники (модуль FEST + «Чёрная Волга», зима, «Ёлочный базар»); не загрузились — игра как раньше -->
+<script src="js/stat-vy.js" defer></script><script src="js/vkm-vy.js" defer></script> <!-- vy-tech: статистика буста (yard, crash, окна, экраны…) и миссии VK — после основного скрипта; не загрузились — игра как раньше -->
 </body>
 </html>

@@ -1,0 +1,30 @@
+/* vy-mg0 — экран «Гаражи» (мини-игры) */
+.vy0-gzw{max-width:1100px}
+.vy0-gzg{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px;margin-top:10px}
+@media (min-width:700px){.vy0-gzg{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
+.vy0-gz{display:flex;flex-direction:column;background:#fffdf6;border-radius:16px;overflow:hidden;box-shadow:0 3px 0 rgba(0,0,0,.12);cursor:pointer;outline:none;transition:transform .12s}
+.vy0-gz.sel{box-shadow:0 0 0 3px #f2a900,0 3px 0 rgba(0,0,0,.12)}
+html.pc .vy0-gz:not(.lock):hover{transform:translateY(-2px)}
+.vy0-gzd{position:relative;height:96px;display:flex;align-items:center;justify-content:center;
+  background:repeating-linear-gradient(180deg,#8fa3b8 0 9px,#7b90a6 9px 11px);border-bottom:6px solid #5d6f82}
+.vy0-gz.day .vy0-gzd{background:repeating-linear-gradient(180deg,#f2c45a 0 9px,#dfab3c 9px 11px);border-bottom-color:#b8862a}
+.vy0-gzi{font-size:46px;line-height:1;filter:drop-shadow(0 3px 0 rgba(0,0,0,.2))}
+.vy0-gzf{position:absolute;right:6px;bottom:4px;width:40px;height:40px;border-radius:50%;overflow:hidden;background:#e3e9f2;border:2px solid #fff}
+.vy0-gzf svg{width:100%;height:100%;display:block}
+.vy0-gzk{position:absolute;left:6px;top:6px;min-width:20px;height:20px;border-radius:6px;background:rgba(255,255,255,.85);font:800 12px/20px inherit;text-align:center;color:#2b3340}
+.vy0-gznew,.vy0-gzday{position:absolute;right:6px;top:6px;font-style:normal;font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 8px;background:#e5484d;color:#fff}
+.vy0-gzday{background:#fff;color:#a3700f;right:auto;top:auto;left:6px;bottom:6px;z-index:1}
+.vy0-gzb{display:flex;flex-direction:column;gap:3px;padding:8px 10px 10px;flex:1}
+.vy0-gzb b{font-size:15px;line-height:1.2}.vy0-gzb small{font-size:12px;color:#6a675c;line-height:1.25}
+.vy0-gzs{display:flex;align-items:center;gap:1px;font-size:14px;margin-top:2px}.vy0-gzs span{filter:grayscale(1);opacity:.3}.vy0-gzs span.on{filter:none;opacity:1}
+.vy0-gzs i{font-style:normal;font-size:12px;color:#1d3f73;font-weight:700;margin-left:6px}
+.vy0-gzbtn{display:flex;flex-direction:column;gap:6px;margin-top:auto;padding-top:6px}
+.vy0-gzbtn .btn{width:100%;min-height:44px;margin:0;font-size:15px;padding:0 8px}
+.vy0-gz.lock{cursor:default;background:#ece8de}
+.vy0-gz.lock .vy0-gzd{background:repeating-linear-gradient(180deg,#a9a59b 0 9px,#9a968c 9px 11px);border-bottom-color:#7f7b72}
+.vy0-gz.lock .vy0-gzi{filter:brightness(0) opacity(.35)}.vy0-gz.lock .vy0-gzf{filter:grayscale(1) brightness(.4) opacity(.5)}
+.vy0-gzl{color:#5a564c!important;font-weight:700}
+.vy0-gzh{text-align:center;color:#6a675c;font-size:13px;margin:12px 0 0}
+.vy0-gzh .btn{width:auto;display:inline-flex;min-height:44px;padding:0 14px}
+#vy0-navG{position:relative}.vy0-dot{position:absolute;right:6px;top:6px;width:10px;height:10px;border-radius:50%;background:#e5484d;box-shadow:0 0 0 2px #fff}
+.vy0-gzt .hsI{font-size:24px}
