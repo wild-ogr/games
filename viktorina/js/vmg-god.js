@@ -8,7 +8,7 @@ function pts(d){d=Math.abs(d);return d<=2?3:d<=10?2:d<=25?1:0;}
 function pickEv(o){var c=V.take(o,N*3,{},V.yearOf),out=[],old=0,tp={};
   for(var pass=0;pass<2;pass++)c.forEach(function(x){if(out.length>=N||out.indexOf(x)>=0)return;if(out.some(function(e){return e.y===x.y;}))return;
     if(!pass&&((x.y<1700&&old>=1)||(tp[x.t]||0)>=2))return;if(x.y<1700)old++;tp[x.t]=(tp[x.t]||0)+1;out.push(x);});
-  return out;}
+  return V.mark(o,out);}
 var SAY={start:'Год на листке стёрся! Крути цифры — когда это было?',
   p3:['В точку! Как по календарю.','Ну ты голова! Точно.'],p3n:['Почти в точку! Засчитываю.','Год-другой — не беда, молодец!'],p2:['Почти! Совсем рядом.','Близко, близко!'],p1:['Где-то рядом ходишь.','Около того!'],p0:['Нет, это было в другое время.','Эх, промахнулся.']};
 function say1(a,R){return a[Math.floor((R||Math.random)()*a.length)];}

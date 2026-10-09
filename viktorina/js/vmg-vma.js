@@ -58,8 +58,10 @@ VMA.words=function(){return bank('w',VMA.wordOf);};VMA.years=function(){return b
 /* take(o,n,f,card): n карточек через оболочку — o.take (свой круг затей S.vmg.sn, «уже видел» S.seen НЕ трогается, вопросы Викторины дня не берутся,
    в Затее дня — одинаково у всех); без оболочки (sim/проверка) — случайно из всей базы. card(q) → карточка или null. */
 VMA.take=function(o,n,f,card){f=f||{};var t0=f.test;f.test=function(q){return !!card(q)&&(!t0||t0(q));};
-  var qs=o&&typeof o.take==='function'?o.take(n,f):VMA.shuf(db().filter(f.test),o&&o.rnd).slice(0,n);
+  var qs=o&&typeof o.take==='function'?o.take(n,f,{mark:0}):VMA.shuf(db().filter(f.test),o&&o.rnd).slice(0,n);
   return qs.map(card).filter(Boolean);};
+/* FIX1: take берёт с запасом БЕЗ отметки в круге — затея отмечает только то, что реально показала: VMA.mark(o, карточки) */
+VMA.mark=function(o,cards){try{if(o&&typeof o.mark==='function')o.mark(cards||[]);}catch(e){}return cards;};
 
 /* ---------- рамка затеи: ведущий + реплика + полоска хода; main — поле игры; foot — кнопки/клавиатура ---------- */
 VMA.frame=function(host,o,cfg){var el=host.el;el.innerHTML='';var R=document.createElement('div');

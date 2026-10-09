@@ -279,7 +279,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   <div id="toast" class="toast"></div>
 </div>
 <script src="js/topics.js"></script><script src="js/topics-fest.js"></script><!--FEST: праздничные наборы (после данных тем CONTENT)-->
-<script src="js/price.js"></script>
+<script src="js/price-id.js"></script><script src="js/price.js"></script>
 <link rel="stylesheet" href="css/board.css"><script src="js/board.js"></script>
 <script src="js/questions.js" defer onload="window.qBoot&&qBoot()"></script>
 <script>
@@ -326,7 +326,7 @@ function qWait(fn){if(qReady){fn();return;}qQueue=fn;if(window.UI)UI.emit('qwait
 function qBoot(){if(qReady)return;qAdd(window.QDB);if(!QS.length)return;qReady=true;
   if(!S.tcm){S.tcm=1;for(const t of TK){const sc=bits(S.seen[t]).reduce((a,v)=>{for(;v;v&=v-1)a++;return a;},0)+(S.cyc[t]||0)*BYT[t].length;if(sc&&!S.tc[t])S.tc[t]=Math.round(sc*.7);}save();}
   const f=qQueue;qQueue=null;if(window.UI)UI.emit('qready',QS.length);
-  if(f){hideModal();f();}else if(!G&&!modalOn){if(onScr('scr-menu'))openMenu();else if(onScr('scr-topics'))openTopics(true);}}
+  if(f){hideModal();f();}else if(!G&&!modalOn){if(onScr('scr-menu'))openMenu();else if(onScr('scr-topics'))openTopics(true);}else if(!G&&onScr('scr-menu'))uiHome();} // FIX1: под открытым окном (праздник, гостинец) лента главного тоже перерисовывается — иначе праздничные плитки не появлялись
 window.qBoot=qBoot;window.onQDB=(t,arr)=>{qAdd(arr);};
 const DNAME=['',L('лёгкий','easy'),L('средний','medium'),L('трудный','hard')];
 
@@ -755,7 +755,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'viktorina',gv:'v4-100913',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'viktorina',gv:'v5-100916',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (pl — пройдено уровней, cn — монеты, bt — облако хоть раз отдавало сохранение: метка устройства viktorina-cl) — после облака, не позже 2,5 с
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('viktorina-cl')?1:0;}catch(e){}STAT.progress({pl:+S.lvl||0,cn:+S.coins||0,bt:bt});if(window.STATANS)STATANS.prg();} // STATANS.prg — разовое prg (js/stat-ans.js)
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound===false?0:1,calm:S.calm===true?1:0});
@@ -1367,7 +1367,8 @@ function inGame(){return !!(G&&!G.over&&onScr('scr-game'));}
 function openCoins(back){STAT.screen('shop'); // STAT v1.2: окно «Монеты» — это магазин (было 'coins')
   // покупки за деньги — только вне игры; нет платежей — раздела нет совсем
   const buy=PAY.on&&!inGame();
-  modal(`<h2>${L('Монеты','Coins')} 💰</h2><p>${L('У тебя','You have')} ${coinsTxt(S.coins)}. ${L('Монеты дают за ступени лестницы, викторину дня и дуэли. Тратятся на повторные подсказки и вторую попытку.','Coins come from ladder steps, the daily quiz and duels. Spend them on extra hints and second tries.')}</p>${buy?PAY.html(['no_ads','coins_s','coins_l']):''}<div class="row">${AD_EXTRA&&adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} ${L('за рекламу','for an ad')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
+  modal(`<h2>${L('Монеты','Coins')} 💰</h2><p>${L('У тебя','You have')} ${coinsTxt(S.coins)}. ${L('Монеты дают за лестницу, викторину и табло дня, затеи и задания. Тратятся на «Мой двор» (лавочка, качели, киоск и украшения), подсказки и вторую попытку.','Coins come from ladders, the daily quiz and board, mini-games and tasks. Spend them on «My yard», extra hints and second tries.')}${window.YD&&buy&&LANG!=='en'?' Абонемент сезона — в «Двор → Сезон».':''}</p>${buy?PAY.html(['no_ads','coins_s','coins_l']):''}<div class="row">${AD_EXTRA&&adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} ${L('за рекламу','for an ad')}</button>`:''}${window.YD&&!inGame()?`<button class="btn accent noenter" id="mYard">🏠 ${L('Мой двор — потратить','My yard')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`); // FIX1 (аудит 🟠7): Лавка говорит про «Мой двор»
+  if($('mYard'))$('mYard').onclick=()=>{hideModal();UI.go('yard');};
   if(buy){PAY.bind($('mcard'));PAY.re=()=>openCoins(back);}
   if($('mAdCoins'))STAT.offer('coins');if($('mAdCoins'))$('mAdCoins').onclick=()=>{if(adHold('coins'))return;hideModal();STAT.place('coins');const n=AD_COINS;showRewarded(()=>{STAT.earn('ad',n);setCoins(S.coins+n);SND.coin();toast('+'+coinsTxt(n));if(back)back();},w=>{if(w==='wait')openCoins(back);else if(back)back();},
     ()=>{STAT.earn('ad',n);setCoins(S.coins+n);SND.coin();return L('монеты: +','coins: +')+coinsTxt(n);});};
@@ -1549,7 +1550,7 @@ function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');cl
 function hideModal(){$('modal').classList.remove('on','rs');$('mcard').classList.remove('wide2','res');modalOn=false;}
 // look1: окно итогов-праздник — party(): класс res на карточке (ведущий над ней) и rs на подложке (лучи)
 function party(){$('mcard').classList.add('res');$('modal').classList.add('rs');}
-function modal(html){PAY.re=null;if(!/Медали тем|Topic medals/.test(html))$('mcard').classList.remove('wide2');$('mcard').classList.remove('res');$('modal').classList.remove('rs');$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;if(adCoolT)adDim();if(adSt<0)adMark();}
+function modal(html){PAY.re=null;if(!/Медали тем|Topic medals/.test(html))$('mcard').classList.remove('wide2');$('mcard').classList.remove('res');$('mcard').classList.remove('many');$('modal').classList.remove('rs');$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;if(adCoolT)adDim();if(adSt<0)adMark();}
 function nowMs(){const sh=window.DATE_SHIFT||0;/* ?date= на маке — js/topics-fest.js */try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t+sh;}}catch(e){}return Date.now()+sh;}
 function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
 const speed=()=>S.speed==='test'?0:calm()?.5:1; // test — только для автопрогона
@@ -1615,9 +1616,10 @@ function openTopics(bg){STAT.once('ready',{ms:Math.round(performance.now())});ST
 $('tBack').onclick=()=>{SND.tap();openMenu();};
 // «Медали тем» — коллекция из 15: 🥉 любитель / 🥈 знаток / 🥇 мастер темы по верным ответам (в т. ч. из «Всё подряд»); ⭐ — полные лестницы 10/10
 function openMedals(){STAT.screen('medals');const r=window.CAR?[0,CAR.rankName()]:rankOf(S.lvl||0);
-  let rows='';for(const t of TOPICS){const n=tcOf(t.k),nx=tcNext(t.k),top=nx?TCM.find(v=>v>n):TCM[2],w=Math.min(100,Math.round(100*n/top));
-    rows+=`<div class="mdr">${t.ic}<span>${esc(t.n)}${S.tp[t.k]?' <small>⭐'+S.tp[t.k]+'</small>':''}<br><small>${n?n+' '+pl(n,'верный','верных','верных','correct','correct'):L('ещё не играли','not yet')}${nx?' · '+L('до ','next ')+nx.m+' '+nx.need:' · '+L('мастер!','master!')}</small><span class="bar"><i style="width:${w}%"></i></span></span><i>${TMEDAL(n)||'·'}</i></div>`;}
-  $('mcard').classList.add('wide2');modal(`<h2>🏅 ${L('Медали тем','Topic medals')} · ${medalsN()}/15</h2><p>${L('Звание','Rank')}: <b>${esc(r[1])}</b>. ${L('Медаль темы — за верные ответы в ней: 🥉 '+TCM[0]+', 🥈 '+TCM[1]+', 🥇 '+TCM[2]+'. ⭐ — вся лестница 10 из 10.','Medal for correct answers in a topic.')}</p><div class="medals">${rows}</div>
+  let rows='',nT=0;for(const t of TOPICS){const n0=tcOf(t.k);if(!(n0>0||(TK.includes(t.k)&&!t.season)))continue;if(!t.season)nT++; // FIX1 (аудит 🟡12): закрытые по дате и праздничные несыгранные темы не показываем
+    const n=n0,nx=tcNext(t.k),top=nx?TCM.find(v=>v>n):TCM[2],w=Math.min(100,Math.round(100*n/top));
+    rows+=`<div class="mdr">${t.ic}<span>${esc(t.n)}${S.tp[t.k]?' <small>⭐'+S.tp[t.k]+'</small>':''}<br><small>${n?n+' '+pl(n,'верный','верных','верных','correct','correct'):L('ещё не играли','not yet')}${nx?' · '+L('до ','next ')+nx.m+' '+nx.need:' · '+L('мастер!','master!')}</small><span class="bar"><i style="width:${w}%"></i></span></span><i>${TMEDAL(n)||''}</i></div>`;}
+  $('mcard').classList.add('wide2');modal(`<h2>🏅 ${L('Медали тем','Topic medals')} · ${medalsN()}/${nT}</h2><p>${L('Звание','Rank')}: <b>${esc(r[1])}</b>. ${L('Медаль темы — за верные ответы в ней: 🥉 '+TCM[0]+', 🥈 '+TCM[1]+', 🥇 '+TCM[2]+'. ⭐ — вся лестница 10 из 10.','Medal for correct answers in a topic.')}</p><div class="medals">${rows}</div>
     <p class="goal">${L('Лестниц до верха','Full ladders')}: ⭐ ${S.wins||0} · ${L('лучший результат','best')}: ${S.best||0}/10 · ${L('верных ответов','correct')}: ${S.correct||0}</p>
     <div class="row"><button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`);
   $('mCancel').onclick=hideModal;}
@@ -1664,7 +1666,7 @@ function startLadder(topic){if(!qReady)return qWait(()=>startLadder(topic));if(t
   // лёгкий старт: на уровнях 1–3 сначала самые известные вопросы (оценка 5), на 4–10 — первые три ступени из оценок ≥ 4
   for(let j=0;j<rp.length;j++){const d=rp[j],ez=lv<3||hp?(j<5?5:4):lv<10&&j<3?4:0;const q=pickQ(ts,d,used,tu,ez);if(!q)break;used.add(q.i);tu[q.t]=(tu[q.t]||0)+1;qs.push(q.i);}
   if(qs.length<10){toast(L('В этой теме пока мало вопросов','Not enough questions in this topic'));return;}
-  G=newG('lad',qs,{topic,wk:topic===weekTopic(),first:lv===0?1:0,help:hp?1:0,fw:0});S.games++;S.uiTopic=topic;save();
+  G=newG('lad',qs,{topic,wk:topic===weekTopic(),first:lv===0?1:0,help:hp?1:0,fw:0});if(!S.games)S.tips.look=1;S.games++;S.uiTopic=topic;save();
   STAT.lvl(lv+1,'lad');STAT.screen('game');if(S.games<=2)STAT.ev('tut',{s:S.games===1?3:5}); // 3 — первая лестница, 5 — вторая
   G.say=hp?{who:'mihalych',m:'happy',t:L('Два раза не повезло — с кем не бывает! Теперь я страхую: до пятой ступеньки ошибка лестницу не оборвёт, и вопросы дам полегче. Не уверен — жми подсказку внизу.','Two misses — it happens! Now I have your back: up to step 5 a wrong answer will not end the ladder, and the questions are easier. Not sure? Tap a hint below.')}
     :lv===0&&S.games>1?{who:'mihalych',m:'happy',t:L('Попробуем ещё раз. На первом уровне я страхую: до пятой ступеньки ошибка не страшна. Не уверен — жми подсказку внизу.','Let us try again. On level one I have your back: up to step 5 a wrong answer is no big deal. Not sure? Tap a hint below.')}
@@ -1907,6 +1909,7 @@ function finishLadder(kind){if(!G||G.over)return;G.over=true;YG.stop();
     <p class="quote">${esc(line)}</p>${lines.slice(0,4).join('')}${UI.html(resultSlots,rctx)}
     <div class="row" id="mWon">${pass?`<button class="btn accent" id="rNext">▶ ${L('Дальше: уровень ','Next: level ')}${S.lvl+1}</button>`:`<button class="btn accent" id="rAgain">↻ ${L('Ещё раз','Again')}</button>`}
     <div class="row2"><button class="btn" id="rTopic">${L('Другая тема','Other topic')}</button><button class="btn" id="rMenu">🏠 ${L('Меню','Menu')}</button></div></div>`);
+  if($('mcard').querySelectorAll('.goal').length>3)$('mcard').classList.add('many'); // FIX1 (аудит 🟠4–5): много плашек — компактный список, кнопки «липкие»
   UI.mount($('mcard'),resultSlots,rctx);party();socEarly(newRank||carNews||!!(G.newM&&G.newM.length)||(!pass&&helpDue()));fitCard();if(window.UIF)UIF.result();
   const go=f=>()=>{hideModal();between(f);};
   if($('rNext'))$('rNext').onclick=go(openTopics);

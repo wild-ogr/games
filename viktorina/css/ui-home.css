@@ -25,8 +25,8 @@
 
 /* ===================== новый вид «Дворовое шоу» ===================== */
 html.lk .mh .logo{display:none}
-html.lk .me{display:flex;align-items:center;gap:9px;flex:1 1 auto;min-width:0;margin-right:8px;background:var(--pan);border:var(--bd);border-radius:16px;box-shadow:var(--sh2);padding:5px 10px 5px 5px;text-align:left;color:var(--ink)}
-html.lk .me:active{transform:translateY(2px);box-shadow:var(--sha)}
+html.lk .mh .me{display:flex;align-items:center;gap:9px;flex:1 1 auto;min-width:0;margin-right:8px;background:var(--pan);border:var(--bd);border-radius:16px;box-shadow:var(--sh2);padding:5px 10px 5px 5px;text-align:left;color:var(--ink)}
+html.lk .mh .me:active{transform:translateY(2px);box-shadow:var(--sha)}
 html.lk .frm{position:relative;flex:none;width:46px;height:46px;border-radius:50%;border:2.5px solid #233247;overflow:hidden;background:var(--i3)}
 html.lk .frm svg{position:absolute;left:-12%;top:-4%;width:124%;height:124%}
 html.lk .fr-wood{box-shadow:0 0 0 3.5px #b98a55,0 0 0 6px #233247}
@@ -34,7 +34,7 @@ html.lk .fr-bronze{box-shadow:0 0 0 3.5px #d98b4a,0 0 0 6px #233247}
 html.lk .fr-silver{box-shadow:0 0 0 3.5px #cfd8e3,0 0 0 6px #233247}
 html.lk .fr-gold{box-shadow:0 0 0 3.5px var(--gold),0 0 0 6px #233247}
 html.lk .fr-board{box-shadow:0 0 0 3.5px #ffcf40,0 0 0 6px #1f3a66,0 0 10px 6px rgba(255,207,64,.6)}
-html.lk .me .frm{margin:6px}
+html.lk .mh .me .frm{margin:6px}
 html.lk .meT{min-width:0;flex:1}
 html.lk .meT b{display:block;font-size:15.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html.lk .meT small{display:block;font-size:13.5px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -140,7 +140,7 @@ html.lk .nb:active{transform:translateY(2px)}
 html.lk #scr-menu .host{width:auto;height:auto;max-height:none;justify-content:flex-start}
 html.lk .modes #btnDaily{padding-right:12px}
 html.lk #scr-menu .hdr-r{gap:6px}
-@media (max-width:440px){html.lk #scr-menu .mh .icon{width:46px;height:46px}html.lk #scr-menu .pill{min-height:46px;font-size:18px;padding:3px 10px 3px 6px}html.lk .me{padding-right:8px;margin-right:6px}html.lk .meT b{font-size:14.5px}html.lk .meT small{font-size:12.5px}}
+@media (max-width:440px){html.lk #scr-menu .mh .icon{width:46px;height:46px}html.lk #scr-menu .pill{min-height:46px;font-size:18px;padding:3px 10px 3px 6px}html.lk .mh .me{padding-right:8px;margin-right:6px}html.lk .meT b{font-size:14.5px}html.lk .meT small{font-size:12.5px}}
 /* ===================== темы полками ===================== */
 #scr-topics .tgrid{display:block}
 .shelf{margin-top:12px}
@@ -200,3 +200,6 @@ html.lk .fr-month{box-shadow:0 0 0 3.5px #ff8a3d,0 0 0 6px #233247,0 0 0 8px #ff
 html.lk .avp .fr-champ,html.lk .me .fr-champ{animation:uiGlow 2.4s ease-in-out infinite}
 @keyframes uiGlow{50%{filter:brightness(1.15)}}
 @media (prefers-reduced-motion:reduce){html.lk .avp .fr-champ,html.lk .me .fr-champ,.fpk{animation:none}}
+/* FIX1: класс новинки .nw совпал с общим .nw{white-space:nowrap} — название новой темы не переносилось */
+#scr-topics .tp.nw{white-space:normal}
+#scr-topics .tp>b{max-width:100%}

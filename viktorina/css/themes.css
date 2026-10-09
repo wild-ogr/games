@@ -123,3 +123,8 @@ html.lk.th-doska .gbody{padding-bottom:30px}
 html.lk.th-tele .card .quote{background:#fbe9b0;color:#1b1f3a!important}
 html.lk.th-tele .fit3 .qcard{border-width:6px}html.lk.th-doska .fit3 .qcard{padding:5px 9px}
 html.lk.th-tele .fit4 .qcard{border-width:4px;padding:5px 10px}html.lk.th-tele .fit4 .life{min-height:46px}
+/* FIX1 (аудит игрока 🔴): новые блоки (Сегодня, Карьера, Серия, Затеи, Табло, Двор) пишут текст --ink/--muted, а лежат на светлой карточке/панели.
+   На тёмных темах --ink/--muted светлые → внутри СВЕТЛЫХ контейнеров переопределяем их на цвета карточки. «Дворовое шоу» и «Классика» не меняются. */
+html.lk.th-tele .card{--ink:var(--card-ink);--muted:var(--card-mut);--pan:#fffdf6;--pan2:#fff0c9;--line:#e6dcc4;--set:#f6efdd;--dim:#ece6d6;--dim-ink:#5a6070;--dim-bd:#d3cab3;--step:#ece6d6;--step-ink:#3a3f5c;--bd:2px solid #d9b25a;--bd2:2px solid #d9b25a;--sh:0 4px 0 #b99a55;--sh2:0 3px 0 #b99a55;--sha:0 1px 0 #b99a55}
+html.lk.th-doska .card,html.lk.th-doska .me,html.lk.th-doska .hsT,html.lk.th-doska .car-strip,html.lk.th-doska #app.navOn .navbar,html.lk.th-doska .td-c{--ink:var(--card-ink);--muted:var(--card-mut);--dim:#e9e6da;--dim-ink:#5b6577;--dim-bd:#cfd6e2;--step-ink:#3a4766;--i1:#2f5fb5;--i2:#d8343b;--i3:#fff;--il:#22304d}
+html.lk.th-doska .sd.today,html.lk.th-doska .ydtab.on{color:var(--go-ink)} /* FIX1: жёлтая «сегодня»/активная вкладка двора — тёмный текст */

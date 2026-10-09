@@ -116,8 +116,10 @@ function deals(){var d=sd(),t=dk(),dq=false;try{dq=S.daily[t]!=null;}catch(e){}
     a.push({k:'bd',ic:'📺',n:'Табло дня',s:bdd?'сыграно'+(bi&&bi.score!=null?': '+bi.score+(bi.place?' · '+bi.place+'-е место':''):''):'одно табло на весь двор',ok:bdd});}
   else a.push({k:'lv',ic:'🪜',n:'Лестница дня',s:d.m.lv?'уровень пройден':'пройди один уровень',ok:!!d.m.lv});
   var vt=null;try{vt=window.VMG&&VMG.today?VMG.today():null;}catch(e){}
-  if(mg&&vt){var mgd=!!d.m.mg||!!vt.done;a.push({k:'mg',ic:vt.ic||'🧩',n:'Затея дня',s:mgd?'сыграно: '+vt.n:vt.n+(vt.rw?' · до +'+vt.rw+' 💰':''),ok:mgd});}
-  else{var c10=Math.min(10,d.c10||0);a.push({k:'c10',ic:'🎯',n:'Десять верных',s:c10>=10?'есть!':c10+' из 10',ok:c10>=10});}
+  // FIX1 (аудит: итог «2 из 5», главный «1/5»): затея дня открывается в конце первой лестницы и подменяла уже выполненное «Десять верных» — выполненное не отнимаем
+  var c10=Math.min(10,d.c10||0),mgd=!!d.m.mg||!!(vt&&vt.done);
+  if(mg&&vt&&(mgd||c10<10))a.push({k:'mg',ic:vt.ic||'🧩',n:'Затея дня',s:mgd?'сыграно: '+vt.n:vt.n+(vt.rw?' · до +'+vt.rw+' 💰':''),ok:mgd});
+  else a.push({k:'c10',ic:'🎯',n:'Десять верных',s:c10>=10?'есть!':c10+' из 10',ok:c10>=10});
   var td=d.tk.filter(function(x){return x.r;}).length;a.push({k:'tk',ic:'✅',n:'Задания дня',s:td+' из 3',ok:td>=3});
   return a;}
 function count(){return deals().filter(function(x){return x.ok;}).length;}
@@ -214,7 +216,8 @@ function openStash(need){var n=stash(),sh=short(need),ad=false;try{ad=sh&&n>0&&a
     (ad?'<button class="btn" id="tdStAd">📺 Забрать ×2 за рекламу</button>':'')+'<button class="btn" id="mCancel">Закрыть</button></div>');
   if($('tdStTake'))$('tdStTake').onclick=function(){hideModal();takeStash(false);render();};
   if($('tdStAd')){try{STAT.offer('stash');}catch(e){}$('tdStAd').onclick=function(){if(adHold('stash'))return;hideModal();STAT.place('stash');var done=false;
-    var give=function(){if(done)return '';done=true;var a=takeStash(true);render();return 'заначка ×2: +'+coinsTxt(a);};
+    var n0=stash(); // FIX1 (AUD-ADS 3): поздний «досмотрел», а заначку уже забрали обычной кнопкой — даём вторую половину (то, что было ×1), а не «+0»
+    var give=function(){if(done)return '';done=true;var a=0;if(stash()>0)a=takeStash(true);else if(n0>0){a=n0;try{S.coins+=a;STAT.earn('ad',a);updCoins();SND.coin();}catch(e){}save();}render();return a?'заначка ×2: +'+coinsTxt(a):'';};
     showRewarded(function(){give();},function(w){if(w==='wait')openStash(need);},give);};}
   $('mCancel').onclick=function(){hideModal();render();};}
 
@@ -264,7 +267,7 @@ var TILES=[
  {id:'car-tasks',order:3,render:function(){var d=sd(),k=d.tk.filter(function(x){return x.r;}).length;if((S.games||0)<1)return null;var nx=d.tk.filter(function(x){return !x.r;})[0];
    return tile({ic:'✅',t:'Задания: '+k+' из 3',s:nx?tText(nx)+' · '+nx.p+'/'+nx.n:'все сделаны!',cls:k>=3?'':'car-ttk'});},mount:function(el){first(el,openTasks);}},
  {id:'car-stash',order:45,render:function(){var n=stash();if(n<10||(S.games||0)<1)return null;return tile({ic:'💰',t:'Заначка Михалыча',s:n>=C().stash.max?'полная — забирай!':'накопилось '+n+' 💰',tag:'+'+n,cls:n>=C().stash.max?'grn':''});},mount:function(el){first(el,function(){openStash();});}},
- {id:'car-day',order:55,render:function(){var t=today();return tile({ic:'🗓',t:DN[t.wd],s:t.ac,cls:'car-tday'});},mount:function(el){first(el,openToday);}}];
+ {id:'car-day',order:55,render:function(){if((S.lvl||0)<4)return null;/* FIX1: «акцент дня» (Табло дня, Кубок) — когда табло открыто */var t=today();return tile({ic:'🗓',t:DN[t.wd],s:t.ac,cls:'car-tday'});},mount:function(el){first(el,openToday);}}];
 // вопрос дня — сам при первом заходе в меню за день (не новичку и не поверх другого окна)
 function autoQ(){var d=sd();if(d.q||d.ask||(S.games||0)<2)return;setTimeout(function(){try{if(modalOn||!$('scr-menu').classList.contains('on'))return;}catch(e){return;}openQday();},700);}
 function flush(){if(!evq.length)return;var t=evq.join(' · ');evq=[];try{toast(t);}catch(e){}}

@@ -11,7 +11,7 @@ function keysFor(w,R){var u={},a=[];for(var i=0;i<w.length;i++)if(!u[w[i]]){u[w[
   var dec=FREQ.split('').filter(function(c){return !u[c];}),top=V.shuf(dec.slice(0,18),R),rest=V.shuf(dec.slice(18),R);dec=top.concat(rest);
   while(a.length<KEYS&&dec.length)a.push(dec.shift());return a.sort(function(x,y){return ABC.indexOf(x)-ABC.indexOf(y);});}
 function pickWords(o){var out=[],tp={},c=V.take(o,N*3,{d:[1,2]},V.wordOf);
-  c.forEach(function(x){if(out.length<N&&!tp[x.t]){tp[x.t]=1;out.push(x);}});c.forEach(function(x){if(out.length<N&&out.indexOf(x)<0)out.push(x);});return out;}
+  c.forEach(function(x){if(out.length<N&&!tp[x.t]){tp[x.t]=1;out.push(x);}});c.forEach(function(x){if(out.length<N&&out.indexOf(x)<0)out.push(x);});return V.mark(o,out);}
 var SAY={start:['Помоги развесить слово! Жми буквы — какие на верёвке?','Угадай слово по буквам — подсказка на листке.'],
   hit:['Висит!','Есть такая!','Ровненько повесили.','Ой, молодец!'],miss:['Ой, прищепка упала…','Нету такой.','Мимо верёвки!'],
   win3:['Без единой лишней прищепки!','Как по линеечке!'],win:['Отгадал!','Всё развесили!'],fail:['Эх, прищепки кончились. Вот оно какое:','Не беда, вот слово:']};

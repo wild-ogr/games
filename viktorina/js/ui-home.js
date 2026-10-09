@@ -35,9 +35,10 @@
   // ---- реплика Михалыча на главном (только новый вид; в «Классике» — прежняя) ----
   function say(){var lc=lcurOk()?S.lcur:null,t=TK.indexOf(S.uiTopic)>=0?TN[S.uiTopic]:null,ul=S.uiLast,yd=dayKey(-1),td=dayKey(0);
     if(lc)return 'Лестница ждёт: вопрос '+(lc.i+1)+' из 10. Доиграем?';
-    var nw=VT&&VT.list.filter(function(x){return VT.isNew(x.k,Date.now());})[0];
+    var nw=VT&&VT.list.filter(function(x){return VT.isNew(x.k,nowMs());})[0];
     if(nw&&!(S.tips&&S.tips['nw_'+nw.k]))return 'На полке новая тема — «'+nw.n+'»! Загляни в «Темы».';
-    var sn=VT&&VT.seasonNow&&VT.seasonNow(Date.now());if(sn&&TK.indexOf(sn.k)>=0&&BYT[sn.k]&&(BYT[sn.k].length>=10||!qReady))return 'Праздник во дворе: «'+sn.n+'»! Такие вопросы — только эти дни.';
+    var sn=VT&&VT.seasonNow&&VT.seasonNow(nowMs());if(sn&&TK.indexOf(sn.k)>=0&&BYT[sn.k]&&(BYT[sn.k].length>=10||!qReady)){var sN=VT.festName?VT.festName(sn.k):sn.n; // FIX1: время игры (?date=), имя по площадке, сезон — не «праздник»
+      return sn.kind==='sea'?'Сезон во дворе: «'+sN+'»! Вопросы про это — до '+(VT.festTill?VT.festTill(sn.k).replace('до ',''):'конца сезона')+'.':'Праздник во дворе: «'+sN+'»! Такие вопросы — только эти дни.';}
     if(ul&&ul.k===yd&&ul.g>0&&ul.g<10)return 'Вчера ты дошёл до '+ul.g+'-й ступеньки. Сегодня — до верха?';
     if(ul&&ul.k===td&&ul.g===10)return 'Всю лестницу прошёл — вот это знаток! Ещё одну?';
     if(ul&&ul.k===td&&ul.g>=5)return 'Хорошо идёшь! '+(t?'Ещё «'+t.n+'» или другую тему?':'Ещё лестницу?');
@@ -46,14 +47,15 @@
   // ---- встроенные плитки «Сегодня во дворе» ----
   function wkTile(){var k=weekTopic(),t=TN[k];if(!t)return null;return UI.tile({ic:t.ic,t:'Тема недели',s:t.n+' — монеты ×2',tag:'×2',cls:'yel'});}
   var B=[
-    {id:'ux-new',order:5,render:function(){if(!VT)return null;var nw=VT.list.filter(function(x){return VT.isNew(x.k,Date.now());})[0];if(!nw)return null;
+    {id:'ux-new',order:5,render:function(){if(!VT)return null;var nw=VT.list.filter(function(x){return VT.isNew(x.k,nowMs());})[0];if(!nw)return null;
       return UI.tile({ic:nw.ic,t:'Тема «'+nw.n+'»',s:'вышла в понедельник',tag:'новое',cls:'red'});},mount:function(el){el.firstChild.onclick=function(){SND.tap();openTopics();};}},
-    {id:'ux-season',order:6,render:function(){var sn=VT&&VT.seasonNow&&VT.seasonNow(Date.now());if(!sn||TK.indexOf(sn.k)<0)return null;
-      return UI.tile({ic:sn.ic,t:sn.n,s:'только в эти дни',tag:'праздник',cls:'red'});},mount:function(el){el.firstChild.onclick=function(){SND.tap();var sn=VT.seasonNow(Date.now());uiPreTopic(sn.k);};}},
+    {id:'ux-season',order:6,render:function(){if(W.FESTV)return null; // FIX1: плитки праздника и сезона рисует fest-vik.js (fest0/fest1) — эта дублировала «Осень во дворе»
+      var sn=VT&&VT.seasonNow&&VT.seasonNow(nowMs());if(!sn||TK.indexOf(sn.k)<0)return null;
+      return UI.tile({ic:sn.ic,t:sn.n,s:'только в эти дни',tag:'праздник',cls:'red'});},mount:function(el){el.firstChild.onclick=function(){SND.tap();var sn=VT.seasonNow(nowMs());uiPreTopic(sn.k);};}},
     {id:'ux-gift',order:15,render:function(){var g=giftState();if(g.today)return null;return UI.tile({ic:'🎁',t:'Гостинец',s:'от Михалыча — забрать',tag:'+'+g.next,cls:'grn'});},
       mount:function(el){el.firstChild.onclick=function(){SND.tap();showStreak();};}},
     {id:'ux-week',order:60,render:wkTile,mount:function(el){el.firstChild.onclick=function(){SND.tap();uiPreTopic(weekTopic());};}},
-    {id:'ux-soon',order:90,render:function(){if(!VT||!VT.nextLocked)return null;var n=VT.nextLocked(Date.now())[0];if(!n)return null;var t=TN[n.k];
+    {id:'ux-soon',order:90,render:function(){if(!VT||!VT.nextLocked)return null;var n=VT.nextLocked(nowMs())[0];if(!n)return null;var t=TN[n.k];
       return UI.tile({ic:'🔒',t:'Скоро: «'+t.n+'»',s:'откроется '+VT.dateTxt(n.from),cls:'soon'});},mount:function(el){el.firstChild.onclick=function(){SND.tap();openTopics();};}}
   ];
 

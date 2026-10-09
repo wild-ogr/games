@@ -14,7 +14,7 @@ function pickSets(o){var p=V.take(o,ROUNDS*K*3,{},V.yearOf),own=p.filter(functio
     for(var a=0;a<q.length&&s.length<K;a++){if(used[q[a].i])continue;s=[q[a]];var tp={};tp[q[a].t]=1;fill(s,fit,tp);if(s.length<K)fill(s,fit,null);}
     if(s.length<K){s=[];fill(s,function(){return true;},{});fill(s,function(){return true;},null);}
     if(s.length===K){s.forEach(function(x){used[x.i]=1;});sets.push(V.shuf(s,o&&o.rnd));}}
-  return sets;}
+  V.mark(o,[].concat.apply([],sets));return sets;}
 var SAY={start:'Валерка вешает стенгазету, а даты перепутал! Нажимай события <b>от самого раннего</b> к позднему.',
   r6:['Всё по порядку! Хоть в учебник.','Идеально — Валерка в восторге!'],r4:['Почти всё верно!','Неплохо, пара мест поменялась.'],r0:['Перепуталось… Смотри годы.','Ничего, история — дело хитрое.']};
 function say1(a,R){return a[Math.floor((R||Math.random)()*a.length)];}

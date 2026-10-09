@@ -24,7 +24,7 @@ const CSS=
 '.vmb-tr-c.lock .n{background:#fff;color:var(--acc)}'+
 '.vmb-tr-pts>*{white-space:nowrap}@media (max-width:370px){.vmb-tr-pts .w{display:none}}'+
 '.vmb-tr-pts .k{padding:3px 10px;border-radius:10px;background:rgba(255,253,246,.92);border:2px solid var(--o)}'+
-'.vmb-tr-pts{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;font-size:calc(16px*var(--k));color:var(--ink2)}'+
+'.vmb-tr-pts{display:flex;flex-wrap:wrap;row-gap:4px;align-items:center;justify-content:space-between;gap:8px;font-weight:800;font-size:calc(16px*var(--k));color:var(--ink2)}'+
 '.vmb-tr-pts b{display:inline-flex;align-items:center;gap:6px;padding:3px 12px 3px 4px;border-radius:999px;background:var(--gold);border:2px solid var(--o);box-shadow:0 2px 0 var(--o);color:#3b2a00;font-size:calc(17px*var(--k))}'+
 '.vmb-tr-pts b i{width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid var(--o);font:800 14px/20px Manrope,KF,sans-serif;font-style:normal;text-align:center}'+
 '.vmb-tr-a{display:grid;grid-template-columns:1fr 1fr;gap:10px}'+
@@ -36,6 +36,8 @@ const CSS=
 '.vmb-tr-o.ok{background:var(--ok);color:#fff;border-color:var(--o)}'+
 '.vmb-tr-o[disabled]{cursor:default}'+
 '.vmb-tr-more{width:100%}'+
+// FIX1: на узких (320–360) после ответа поле не влезало — в режиме tight прячем сетку вариантов (верный ответ — в карточке ниже) и ужимаем подсказки
+'.vmb.tight .vmb-tr-a.fin{display:none}.vmb.tight .vmb-tr-c{padding:6px 10px;font-size:calc(15.5px*var(--k))}.vmb.tight .vmb-tr-c .n{width:26px;height:26px;line-height:22px;font-size:14px}.vmb.tight .vmb-tr-cl{gap:6px}'+
 '@media (max-width:370px){.vmb-tr-c{font-size:calc(16px*var(--k));padding:8px 10px}.vmb-tr-o{font-size:calc(16.5px*var(--k));min-height:calc(56px*var(--k))}.vmb-tr-a{gap:8px}}'+
 '@media (min-width:760px) and (min-height:520px){.vmb-tr-o{min-height:calc(70px*var(--k));font-size:calc(20px*var(--k))}.vmb-tr-c{font-size:calc(19px*var(--k))}}';
 function css(){if(document.getElementById('vmbTrCss'))return;const s=document.createElement('style');s.id='vmbTrCss';s.textContent=CSS;document.head.appendChild(s);}
@@ -63,11 +65,11 @@ function run(host,o){css();const R=o.rnd||Math.random;
     b.classList.add('no');b.disabled=true;V.shake(b);V.snd(host,'wrong');V.buzz(60);
     if(st.op<3){st.op++;clues();W.say('Не то! Держи ещё подсказку.','sad',head());return;}
     const g=V.$a(W.main,'.vmb-tr-o')[q.ok];g.classList.add('ok');end(false,0);}
-  function end(ok,p){const q=Q[st.i];st.end=1;st.lock=1;for(const b of V.$a(W.main,'.vmb-tr-o'))b.disabled=true;
+  function end(ok,p){const q=Q[st.i];st.end=1;st.lock=1;for(const b of V.$a(W.main,'.vmb-tr-o'))b.disabled=true;const ga=V.$q(W.main,'.vmb-tr-a');if(ga)ga.classList.add('fin');
     st.op=3;clues();W.pip(st.i,ok?'ok':'no');
     W.say(ok?(p===3?'С первой подсказки! Вот это голова!':p===2?'Молодец, угадал!':'Угадал — и это главное!'):'Эх! Это было «'+V.esc(q.a[q.ok])+'».',ok?'happy':'sad',head());
     const last=st.i>=Q.length-1;
-    V.$q(W.main,'.vmb-tr-out').innerHTML='<div class="vmb-note '+(ok?'ok':'no')+'"><b class="h">'+V.esc(q.a[q.ok])+(ok?' — +'+p+' '+(p===1?'очко':'очка'):'')+'</b>'+V.esc(q.x)+'</div>'+
+    V.$q(W.main,'.vmb-tr-out').innerHTML='<div class="vmb-note '+(ok?'ok':'no')+'"><b class="h">'+(ok?'':'Это было: ')+V.esc(q.a[q.ok])+(ok?' — +'+p+' '+(p===1?'очко':'очка'):'')+'</b>'+V.esc(q.x)+'</div>'+
       '<button class="vmb-btn go" id="vmbTrN" style="width:100%;margin-top:10px">'+(last?'Итоги':'Следующая загадка ▸')+' '+V.kc('Enter')+'</button>';
     const n=document.getElementById('vmbTrN');n.onclick=()=>{V.snd(host,'tap');st.i++;W.fit(0);show();};W.fit();
     try{n.scrollIntoView({block:'nearest',behavior:V.calm()?'auto':'smooth'});}catch(e){}}

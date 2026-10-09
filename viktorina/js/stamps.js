@@ -43,9 +43,9 @@ function initSeries(){SER.length=0;
   SER.push({k:'cup',n:'Кубок выходного дня',ic:'🏆',cnt:8,names:['Первый матч','Четвертьфинал','Финалист','Кубок!','Два кубка','Четыре кубка','Семь кубков','Десять кубков'],
     how:function(i){return ['Сыграть первый матч Кубка','Выиграть четвертьфинал','Дойти до финала Кубка','Выиграть Кубок выходного дня','Выиграть Кубок 2 раза','Выиграть Кубок 4 раза','Выиграть Кубок 7 раз','Выиграть Кубок 10 раз'][i];},sell:function(i){return i<2?200:i<4?250:300;}});
   SER.push({k:'hw',n:'Страшилки у подъезда',ic:'🎃',cnt:4,hol:'hw',names:['Тыква','Летучая мышь','Чёрный кот','Привидение'],
-    how:function(i){return ['Зайти во двор в дни «Страшилок у подъезда» (24.10–02.11)','Заходить 3 разных дня «Страшилок»','Заходить 5 разных дней «Страшилок»','Заходить все 7 дней «Страшилок»'][i];},sell:null});
+    how:function(i){return ['Зайти во двор в дни «Страшилок у подъезда» (24.10–02.11)','Заходить 3 разных дня «Страшилок»','Заходить 5 разных дней «Страшилок»','Заходить все 7 дней «Страшилок»'][i];},sell:function(){return 250;}}); // FIX1 (AUD-ECO 4): после праздника — у филателиста по 250
   SER.push({k:'ny',n:'Новогодний двор',ic:'🎄',cnt:4,hol:'ny',names:['Ёлка','Снеговик','Дед Мороз','Бенгальский огонь'],
-    how:function(i){return ['Зайти во двор в «Новогодний двор» (декабрь)','Заходить 5 разных дней «Новогоднего двора»','Заходить 12 разных дней','Заходить 20 разных дней'][i];},sell:null});
+    how:function(i){return ['Зайти во двор в «Новогодний двор» (декабрь)','Заходить 5 разных дней «Новогоднего двора»','Заходить 12 разных дней','Заходить 20 разных дней'][i];},sell:function(){return 250;}});
   (YD.SEASER||[]).forEach(function(s){SER.push(s);});}
 YD.addSeries=function(s){(YD.SEASER=YD.SEASER||[]).push(s);if(SER.length)SER.push(s);};
 YD.ser=function(k){for(var i=0;i<SER.length;i++)if(SER[i].k===k)return SER[i];return null;};
@@ -100,7 +100,10 @@ YD.stampSvg=function(s,i,own,sz){var c=s.col||PAL[(i+(s.k.length*3))%8],w=60,h=7
 
 /* ---------- филателист: витрина дня ---------- */
 YD.kioskLv=function(){return YD.lvl('kiosk');};
-function showcase(){var n=YD.kioskLv()>=3?4:3,miss=[];SER.forEach(function(s){if(!s.sell)return;for(var i=0;i<s.cnt;i++)if(!YD.has(s.k,i))miss.push([s,i]);});
+// FIX1: праздничные марки — на витрине только ПОСЛЕ праздника (в первый раз: hw — после 02.11.2026, ny — после 10.01.2027), не во время
+function holPast(h){if(!h)return true;if(YD.hol()===h)return false;var d=YD.date(),y=d.getFullYear(),md=YD.md();return h==='hw'?(y>2026||md>1102):h==='ny'?(y>2027||(y===2027&&md>110)):true;}
+YD.holPast=holPast;
+function showcase(){var n=YD.kioskLv()>=3?4:3,miss=[];SER.forEach(function(s){if(!s.sell||(s.hol&&!holPast(s.hol)))return;for(var i=0;i<s.cnt;i++)if(!YD.has(s.k,i))miss.push([s,i]);});
   if(!miss.length)return [];var R=rng(YD.dayNo()*7919+31),a=miss.slice();for(var j=a.length-1;j>0;j--){var x=Math.floor(R()*(j+1)),t=a[j];a[j]=a[x];a[x]=t;}
   return a.slice(0,n);}
 function rng(seed){var a=seed>>>0;return function(){a=a+0x6D2B79F5>>>0;var t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
@@ -113,7 +116,7 @@ YD.fix(function(){if(S.stpV!=null&&!(YD.isO(S.stpV)&&Array.isArray(S.stpV.a)))de
 function stampInfo(s,i,back){var own=YD.has(s.k,i),p=s.prog?s.prog(i):null,price=s.sell?s.sell(i):0;
   var h='<h2>'+(s.ic||'📮')+' '+esc(s.n)+'</h2><div class="stbig">'+YD.stampSvg(s,i,own,120)+'</div><p class="sttl"><b>«'+esc(s.names[i])+'»</b> · марка №'+(i+1)+' из '+s.cnt+'</p>';
   h+='<p class="goal">'+(own?'✓ В альбоме. ':'Как получить: ')+esc(s.how(i))+(p&&!own?' <b>('+p[0]+' из '+p[1]+')</b>':'')+'</p>';
-  if(!own&&s.sell)h+='<p class="ydnote">Или у филателиста дяди Коли в киоске «Союзпечать» — когда марка окажется на витрине ('+YD.ct(price)+').</p>';
+  if(!own&&s.sell&&!(s.hol&&!holPast(s.hol)))h+='<p class="ydnote">Или у филателиста дяди Коли в киоске «Союзпечать» — когда марка окажется на витрине ('+YD.ct(price)+').</p>';
   if(s.sea&&i>=6&&!own)h+='<p class="ydnote">Марка верхней дорожки «Абонемента» сезона.</p>';
   try{modal(h+'<div class="row"><button class="btn" id="mCancel">Закрыть</button></div>');}catch(e){return;}
   YD.Q('mCancel').onclick=function(){hideModal();if(back)back();};}

@@ -10,7 +10,7 @@ function pickBoard(o){var R=o&&o.rnd||Math.random,cnt={};V.pairs().forEach(funct
   var kinds=V.shuf(Object.keys(V.KIND).filter(function(k){return (cnt[k]||0)>=P+2;}),R);
   for(var t=0;t<kinds.length;t++){var k=kinds[t],p=V.take(o,P+4,{},function(q){return V.pairOf(q,k);}),out=[],L={},Rr={};
     for(var i=0;i<p.length&&out.length<P;i++){var x=p[i],lk=V.norm(x.l.replace(/^\S+ /,'')).toLowerCase(),rk=V.norm(x.r).toLowerCase();if(L[lk]||Rr[rk])continue;L[lk]=Rr[rk]=1;out.push(x);}
-    if(out.length===P)return {k:k,n:V.KIND[k].n,pairs:out};}
+    if(out.length===P)return {k:k,n:V.KIND[k].n,pairs:V.mark(o,out)};}
   return null;}
 var SAY={start:'Открывай по две карточки — ищи пары!',got:['Пара! Так и держать.','Нашёл! Тётя Валя довольна.','Верно, это пара.'],miss:['Не пара. Запоминай, где что лежит.','Нет, не они. Нажми — перевернём.'],
   win3:'Глаз-алмаз! Все пары за {m} ходов.',win:'Все пары собраны! Ходов: {m}.'};

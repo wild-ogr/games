@@ -25,7 +25,7 @@ var OFF=0;
 YD.dev=/^(localhost|127\.|192\.168\.|10\.)/.test(location.hostname)||location.protocol==='file:'||/[?&]paytest=/.test(location.search);
 (function(){var m=/[?&]date=(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):?(\d{2}))?/.exec(location.search);if(!m||!YD.dev)return;
   var t=new Date(+m[1],+m[2]-1,+m[3],m[4]?+m[4]:12,m[5]?+m[5]:0).getTime();OFF=t-Date.now();})();
-YD.now=function(){var t=Date.now();try{if(typeof nowMs==='function')t=nowMs();}catch(e){}return t+OFF;};
+YD.now=function(){var t=Date.now(),sh=false;try{if(typeof nowMs==='function'){t=nowMs();sh=!!window.DATE_SHIFT;}}catch(e){}return t+(sh?0:OFF);}; // FIX1 (аудит 🟡19): nowMs() уже сдвинут ?date= (DATE_SHIFT) — второй раз не прибавляем
 YD.shifted=function(){return OFF!==0;};
 YD.date=function(){return new Date(YD.now());};
 YD.dayNo=function(t){t=t||YD.now();var d=new Date(t);return Math.floor((t-d.getTimezoneOffset()*60000)/864e5);}; // календарный день (местное время)
@@ -37,6 +37,7 @@ YD.md=function(){var d=YD.date();return (d.getMonth()+1)*100+d.getDate();};     
 // праздничное оформление двора: «Страшилки у подъезда» 24.10–02.11 (как сезонный набор FEST hw), «Новогодний двор» 01.12–10.01
 YD.hol=function(){var md=YD.md();if(md>=1024&&md<=1102)return 'hw';if(md>=1201||md<=110)return 'ny';return '';};
 YD.HOL={hw:{n:'Страшилки у подъезда',ic:'🎃',t:'с 24 октября по 2 ноября'},ny:{n:'Новогодний двор',ic:'🎄',t:'весь декабрь и до 10 января'}};
+try{var hwN=window.VTOP&&VTOP.festName&&VTOP.festName('hw');if(hwN)YD.HOL.hw.n=hwN;}catch(e){} // FIX1: на Яндексе — «Осенний вечер у подъезда», как набор FEST
 
 /* ---------- сохранение: свои поля, починка и слияние облака ---------- */
 var FIX=[],MRG=[],MINE=/^(yd|stp|sea|lga)/;

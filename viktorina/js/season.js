@@ -71,8 +71,15 @@ YD.SEA=SEA;
 function seaOf(id){var m=+String(id).slice(-2);return SEA[m]||SEA[10];}
 function decId(id,slot){return id+'-'+slot;}
 // регистрируем украшения всех 12 сезонов (и для купленных в прошлые годы — тот же id месяца года)
-function regSeason(id){var s=seaOf(id);Object.keys(s.d).forEach(function(slot){var k=decId(id,slot),dd=s.d[slot];if(YD.DEC[k])return;
+function regSeason(id){var s=seaOf(id);regCoin(id);Object.keys(s.d).forEach(function(slot){var k=decId(id,slot),dd=s.d[slot];if(YD.DEC[k])return;
   YD.DEC[k]={n:decName(slot,s),z:SLOT[slot],slot:slot,d:function(){return '<g class="yddec">'+DR[dd[0]](dd[1]||{})+'</g>';}};});}
+// FIX1 (AUD-ECO 4, владелец 09.10): 4 украшения сезона ЗА МОНЕТЫ (сток монет) — те же рисунки сезона, но в других местах двора; цены 300/400/500/600
+var CDEC=[{slot:'small',c:300,n:'Ещё одно у дорожки',tr:'translate(186 66)',z:1},{slot:'sky',c:400,n:'Ещё одно в небе',tr:'translate(-24 2)',z:2},
+  {slot:'wall',c:500,n:'Украшение на фасад',tr:'translate(244 -34)',z:0},{slot:'big',c:600,n:'Большое у клумбы',tr:'translate(250 112)',z:1}];
+function cdecId(id,i){return id+'-m'+i;}
+function regCoin(id){var s=seaOf(id);CDEC.forEach(function(c,i){var k=cdecId(id,i),dd=s.d[c.slot];if(YD.DEC[k]||!dd)return;
+  YD.DEC[k]={n:c.n+' ('+s.n+')',z:c.z,slot:'m'+i,d:function(){return '<g class="yddec" transform="'+c.tr+'">'+DR[dd[0]](dd[1]||{})+'</g>';}};});}
+function coinBuy(i){var id=S.sea.id,c=CDEC[i],k=cdecId(id,i);regCoin(id);if(!c||YD.decOwned().indexOf(k)>=0)return false;if(!YD.spend(c.c,'sea-dec'))return false;YD.addDec(k);YD.save();YD.ev('ss',{s:id,cd:i,c:c.c});return true;}
 function decName(slot,s){return {ban:'Растяжка «'+s.n+'»',small:'Мелочь у лавочки',big:'Большое у подъезда',gar:'Гирлянда на дом',sky:'Над берёзой',wall:'Украшение у двери'}[slot]+' ('+s.n+')';}
 YD.seaId=function(t){return 's'+YD.mon(t);};
 
@@ -161,20 +168,26 @@ function render(el){rollSeason();var s=S.sea,S0=seaOf(s.id),st=stepOf(s.p),ser=s
   h+='<div class="seapr"><div class="seast"><b>'+st+'</b><small>ступень<br>из '+STEPS+'</small></div><div class="seabw"><div class="ydbar"><i style="width:'+(st>=STEPS?100:Math.round((s.p%STEP)/STEP*100))+'%"></i></div><small>'+(st>=STEPS?'Дорожка пройдена! Очков сезона: '+s.p:'до следующей ступени '+(STEP-s.p%STEP)+' '+YD.pl(STEP-s.p%STEP,'очко','очка','очков')+' · сегодня за ответы '+(s.td===YD.dayNo()?s.t:0)+' из '+ANS_CAP)+'</small></div></div>';
   if(canClaim())h+='<div class="row"><button class="btn accent noenter" id="seaAll">🎁 Забрать всё</button></div>';
   // абонемент
-  if(!s.a){var pv=payOn('sea_pass');h+='<div class="seapass"><b>⭐ «Абонемент» сезона</b><small>Верхняя дорожка: 4 украшения двора «'+S0.n+'», облик Михалыча, рамка, 6 марок и 500 💰. Купишь позже — всё набранное откроется сразу.</small>'+
-    (pv?'<button class="btn gold noenter" id="seaBuy">Открыть · '+payPrice('sea_pass')+'</button>':'<small class="seana">Покупка сейчас недоступна.</small>')+'</div>';}
-  else h+='<p class="goal">⭐ «Абонемент» сезона у тебя — верхняя дорожка открыта.</p>';
+  var hideP=!s.a&&!payOn('sea_pass'),lastD=dl<=1; // FIX1 (AUD-ADS 1–2): нет покупок (ОК, Яндекс без товара) — платного не показываем; последний день месяца — не продаём
+  if(!s.a&&!hideP&&lastD)h+='<p class="goal">⭐ «Абонемент» нового сезона «'+seaOf(YD.seaId(new Date(YD.date().getFullYear(),YD.date().getMonth()+1,1).getTime())).n+'» — с 1-го числа.</p>';
+  else if(!s.a&&!hideP){var pv=true;h+='<div class="seapass"><b>⭐ «Абонемент» сезона</b><small>Верхняя дорожка: 4 украшения двора «'+S0.n+'», облик Михалыча, рамка, 6 марок и 500 💰. Купишь позже — всё набранное откроется сразу.</small>'+
+    (pv?'<button class="btn gold noenter" id="seaBuy">Открыть · '+payPrice('sea_pass')+'</button>':'')+'</div>';}
+  else if(s.a)h+='<p class="goal">⭐ «Абонемент» сезона у тебя — верхняя дорожка открыта.</p>';
   // дорожка
-  h+='<div class="seatr"><div class="seatrh"><span></span><b>Всем</b><b>Абонемент</b></div>';
+  // украшения сезона за монеты
+  regCoin(s.id);h+='<div class="ydsets seacd"><h3>🎀 Украшения сезона за монеты</h3>'+CDEC.map(function(c,i){var k=cdecId(s.id,i),own=YD.decOwned().indexOf(k)>=0,can=YD.coins()>=c.c;
+    return '<div class="ydset"><span class="ydsetp">'+decPreview(k)+'</span><span><b>'+esc(YD.DEC[k]?YD.DEC[k].n:c.n)+'</b><small>'+(own?'уже во дворе':'только в этом сезоне')+'</small></span>'+(own?'<i class="seacdok">✓</i>':'<button class="btn '+(can?'accent':'')+' noenter" data-cd="'+i+'"'+(can?'':' aria-disabled="true"')+'>'+YD.ct(c.c)+'</button>')+'</div>';}).join('')+'</div>';
+  h+='<div class="seatr'+(hideP?' nopaid':'')+'"><div class="seatrh"><span></span><b>'+(hideP?'Награды':'Всем')+'</b>'+(hideP?'':'<b>Абонемент</b>')+'</div>';
   for(var i=1;i<=STEPS;i++){var f=FREE[i],p=PAID[i],bit=1<<(i-1),got=st>=i;
     var cell=function(r,paid){if(!r)return '<span class="seac empty"></span>';var taken=(paid?s.q:s.f)&bit,can=got&&!taken&&(!paid||s.a);
       var prev='';if(r.d){regSeason(s.id);var dd=YD.DEC[decId(s.id,r.d)];}
       return '<button class="seac'+(taken?' tk':'')+(can?' can':'')+(paid&&!s.a?' lock':'')+' noenter" data-i="'+i+'" data-u="'+(paid?1:0)+'"'+(can?'':' tabindex="-1"')+'><span>'+(r.s!=null?YD.stampSvg(ser,r.s,true,26):rewIc(r))+'</span><em>'+esc(rewTxt(r,ser))+'</em><i>'+(taken?'✓':can?'Забрать':paid&&!s.a?'🔒':'')+'</i></button>';};
-    h+='<div class="seat'+(got?' got':'')+(i===st+1?' nx':'')+'"><b class="sean">'+i+'</b>'+cell(f,false)+cell(p,true)+'</div>';}
+    h+='<div class="seat'+(got?' got':'')+(i===st+1?' nx':'')+'"><b class="sean">'+i+'</b>'+cell(f,false)+(hideP?'':cell(p,true))+'</div>';}
   h+='</div><p class="ydnote">Очки сезона: верный ответ — 1–5 (по цене вопроса, до '+ANS_CAP+' в день), первый заход дня — 10, лига и кубок — бонусом. Ступень — '+STEP+' очков. Сезон меняется в первый день месяца; незабранное выдаётся само.</p>';
   el.innerHTML=h;
   if(YD.Q('seaAll'))YD.Q('seaAll').onclick=function(){var n=claimAll();if(n){YD.snd('coin');YD.toast('Забрано наград: '+n);try{FX.burst(.5,.3,24,'coin');}catch(e){}}YD.render();};
   if(YD.Q('seaBuy'))YD.Q('seaBuy').onclick=function(){payBuy('sea_pass');};
+  el.querySelectorAll('[data-cd]').forEach(function(b){b.onclick=function(){var i=+b.dataset.cd,c=CDEC[i];if(YD.coins()<c.c){YD.toast('Не хватает монет: нужно '+YD.ct(c.c));return;}if(coinBuy(i)){YD.toast('🎀 Украшение во дворе!');YD.render();}};});
   el.querySelectorAll('.seac.can').forEach(function(b){b.onclick=function(){if(claim(+b.dataset.i,b.dataset.u==='1')){YD.save();YD.snd('coin');YD.render();}};});}
 YD.tab({id:'season',n:'Сезон',ic:'📅',o:30,render:render,sub:function(){return seaOf(S.sea.id).n;},dot:canClaim});
 YD.homeLine({pri:30,f:function(){var s=S.sea;return {ic:seaOf(s.id).ic,t:canClaim()?'Сезон: награда ждёт — забери!':'Сезон «'+seaOf(s.id).n+'»: ступень '+stepOf(s.p)+' из '+STEPS,a:'season'};}});

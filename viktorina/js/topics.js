@@ -40,17 +40,17 @@
     {k:'kitchen',ic:'🥟',n:'Кухня',sh:'Кухня',shelf:'home',from:null},
     {k:'dacha',ic:'🥕',n:'Дача и огород',sh:'Дача',shelf:'home',from:null},
     {k:'dom',ic:'🔨',n:'Дом и ремонт',sh:'Ремонт',shelf:'home',from:'2026-11-30'},
-    {k:'pets',ic:'🐈',n:'Питомцы',sh:'Питомцы',shelf:'home',from:'2026-12-14',off:1},
-    {k:'auto',ic:'🚘',n:'Гараж и дорога',sh:'Гараж',shelf:'home',from:'2026-12-21',off:1},
-    {k:'moda',ic:'🧵',n:'Мода и шитьё',sh:'Мода',shelf:'home',from:'2027-01-25',off:1},
+    {k:'pets',ic:'🐈',n:'Питомцы',sh:'Питомцы',shelf:'home',from:'2026-12-14'},
+    {k:'auto',ic:'🚘',n:'Гараж и дорога',sh:'Гараж',shelf:'home',from:'2026-12-21'},
+    {k:'moda',ic:'🧵',n:'Мода и шитьё',sh:'Мода',shelf:'home',from:'2027-01-25'},
     {k:'tech',ic:'🚗',n:'Техника',sh:'Техника',shelf:'home',from:null},
     // Знания
     {k:'lang',ic:'📖',n:'Язык и поговорки',sh:'Язык',shelf:'know',from:null},
     {k:'lit',ic:'📚',n:'Книги и сказки',sh:'Книги',shelf:'know',from:null},
     {k:'history',ic:'🏰',n:'История',sh:'История',shelf:'know',from:null},
-    {k:'riddle',ic:'🧩',n:'Загадки Михалыча',sh:'Загадки',shelf:'know',from:'2027-01-18',off:1},
-    {k:'job',ic:'👷',n:'Профессии',sh:'Профессии',shelf:'know',from:'2027-01-04',off:1},
-    {k:'net',ic:'📱',n:'Телефоны и компьютеры',sh:'Компьютеры',shelf:'know',from:'2027-01-11',off:1},
+    {k:'riddle',ic:'🧩',n:'Загадки Михалыча',sh:'Загадки',shelf:'know',from:'2027-01-18'},
+    {k:'job',ic:'👷',n:'Профессии',sh:'Профессии',shelf:'know',from:'2027-01-04'},
+    {k:'net',ic:'📱',n:'Телефоны и компьютеры',sh:'Компьютеры',shelf:'know',from:'2027-01-11'},
     {k:'art',ic:'🎻',n:'Музыка и искусство',sh:'Искусство',shelf:'know',from:null},
     {k:'sci',ic:'🔬',n:'Наука и человек',sh:'Наука',shelf:'know',from:null},
     {k:'space',ic:'🚀',n:'Космос',sh:'Космос',shelf:'know',from:null},
@@ -59,7 +59,7 @@
     {k:'world',ic:'🌍',n:'Страны мира',sh:'Страны мира',shelf:'world',from:null},
     {k:'nature',ic:'🌲',n:'Природа',sh:'Природа',shelf:'world',from:null},
     {k:'les',ic:'🍄',n:'Лес, грибы, рыбалка',sh:'Лес',shelf:'world',from:'2026-11-23'},
-    {k:'trip',ic:'🚆',n:'Отпуск и поезда',sh:'Поезда',shelf:'world',from:'2026-12-28',off:1},
+    {k:'trip',ic:'🚆',n:'Отпуск и поезда',sh:'Поезда',shelf:'world',from:'2026-12-28'},
     {k:'sport',ic:'⚽',n:'Спорт',sh:'Спорт',shelf:'world',from:null}];
   // Сезонные/праздничные наборы ведёт поток FEST: файл js/topics-fest.js (грузится ПОСЛЕ topics.js) зовёт VTOP.addSeason({...}).
   // Ключ — только строчные латинские буквы (id вопроса должен подходить под /^[a-z]+-\d+$/), не совпадает с обычными темами.

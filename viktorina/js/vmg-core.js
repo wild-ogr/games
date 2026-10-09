@@ -20,6 +20,7 @@
      train — без наград; seed — зерно (в 'day' одинаково у всех в этот день); rnd() — генератор 0..1 от seed; day — dayKey() (ЧИСЛО ГГГГММДД);
      calm — спокойный режим (без лишнего движения); big — «очень крупный шрифт»; lvl — пройденные уровни (S.lvl); ctx — {topic} для Разминки;
      rw — [0,5,10,15] монеты по ступени (для строки «до +15 💰»);
+     take(n, f, {mark:0}?) — {mark:0}: взять с запасом, НЕ отмечая в круге; потом o.mark(qs) — отметить показанные (вопросы или карточки {i}). Без опции — отмечает все n.
      take(n, f) — n вопросов базы для затеи (СВОЙ круг S.vmg.sn — «уже видел» S.seen НЕ трогается; вопросы сегодняшней Викторины дня не берутся; в 'day' — одинаковые у всех):
        f = {t:'ussr'|['ussr',…] — темы, d:[1,2] — сложность, one:1 — ответ одним словом (o.word), len:[5,9] — длина слова, x:1 — есть пояснение, year:1 — есть год (o.year), test(q)}
        вопрос q = {i:'ussr-001', t, d, q:'текст', a:[верный, 3 неверных той же «породы»], x:'пояснение', s:'источник', e}
@@ -113,7 +114,7 @@ function vmgUnlock(){const z=Z(),L=lads(),first=!Object.keys(z.o).some(k=>z.o[k]
   return 0;}
 /* ближайшие закрытые (для Доски: «откроется через …») */
 function vmgLockTxt(n){const i=VMG_INFO[n],z=Z();if(!i)return '';if(i.lad&&lads()<i.lad){const k=i.lad-lads();return 'ещё '+k+' '+plural(k,'лестница','лестницы','лестниц');}
-  if(i.day&&z.dp<i.day){const k=i.day-z.dp;return 'через '+k+' '+plural(k,'день','дня','дней')+' игры';}return 'скоро';}
+  if(i.day&&z.dp<i.day){const k=i.day-z.dp;return 'через '+k+' '+plural(k,'день','дня','дней')+' игры';}return 'после следующей лестницы';} // FIX1 (аудит 🟡14): условие выполнено — открываются по одной за лестницу
 
 /* ---------- вопросы для затей: свой круг S.vmg.sn ---------- */
 let dayEx={k:0,s:null};
@@ -124,11 +125,15 @@ function vmgPool(f){f=f||{};const ts=f.t?[].concat(f.t):null,ex=dayIds(),ds=f.d?
   return QS.filter(q=>(!ts||ts.indexOf(q.t)>=0)&&(!ds||ds.indexOf(q.d)>=0)&&!ex.has(q.i)&&!(typeof isBad==='function'&&isBad(q))&&(!f.x||q.x&&q.x.length>8)&&(!f.year||vmgYear(q))&&
     (!f.one||(()=>{const w=vmgWord(q);return w&&(!f.len||w.length>=f.len[0]&&w.length<=f.len[1]);})())&&(!f.test||f.test(q)));}
 const snHas=q=>typeof bGet==='function'&&bGet(S.vmg.sn[q.t],q.n);
-function vmgTake(n,f,o){const pool=vmgPool(f),R=o&&o.rnd||Math.random;if(!pool.length)return [];
+function vmgTake(n,f,o,opt){const pool=vmgPool(f),R=o&&o.rnd||Math.random;if(!pool.length)return [];const mk=!(opt&&opt.mark===0);
   if(o&&o.mode==='day'){const a=shuffle(pool.slice().sort((x,y)=>x.i<y.i?-1:1),R);return a.slice(0,n);}   // одинаково у всех
   let fr=pool.filter(q=>!snHas(q));
   if(fr.length<n){const tt=new Set(pool.map(q=>q.t));for(const t of tt)S.vmg.sn[t]='';fr=pool;}                  // круг затей по этим темам — заново
-  const out=shuffle(fr.slice(),R).slice(0,n);for(const q of out)S.vmg.sn[q.t]=bSet(S.vmg.sn[q.t],q.n);touch();return out;}
+  const out=shuffle(fr.slice(),R).slice(0,n);if(mk)vmgMark(out);return out;}
+// FIX1 (просьба MGA): take(n,f,{mark:0}) берёт с запасом, не отмечая; mark(qs) отмечает в круге S.vmg.sn только то, что затея показала (вопросы или карточки с полем i)
+function vmgMark(qs,o){if(o&&o.mode==='day'||!Array.isArray(qs))return 0;let k=0;
+  for(const x of qs){const q=x&&x.i&&typeof QI!=='undefined'?QI[x.i]:null;if(!q||!(q.n>=0))continue;S.vmg.sn[q.t]=bSet(S.vmg.sn[q.t],q.n);k++;}
+  if(k)touch();return k;}
 
 /* ---------- зерно и генератор ---------- */
 function vmgSeed(id,day){let h=2166136261;const s=(day||dayKey(0))+'|vmg|'+id;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
@@ -153,7 +158,7 @@ function VMG_OPEN(id,opt){opt=opt||{};const g=REG.by[id]||REG.by[(VMG_INFO[id]||
   const day=dayKey(0),seed=opt.seed!=null?opt.seed>>>0:mode==='day'?vmgSeed(g.id,day):(Math.random()*4294967296)>>>0;
   const o={id:g.id,num:g.num,mode,train,seed,rnd:rng(seed),day,calm:typeof calm==='function'&&calm(),big:!!S.big,lvl:S.lvl||0,ctx:opt.ctx||{},
     rw:train?[0,0,0,0]:(VMG_RW.per[g.num]||VMG_RW.c),take:null,word:vmgWord,year:vmgYear};
-  o.take=(n,f)=>vmgTake(n,f,o);
+  o.take=(n,f,opt)=>vmgTake(n,f,o,opt);o.mark=qs=>vmgMark(qs,o);
   const host={el,id:g.id,root,get w(){return el.clientWidth;},get h(){return el.clientHeight;},get paused(){return hold||!!root.querySelector('.vmg-veil')||(typeof pauseWhy!=='undefined'&&pauseWhy&&pauseWhy.size>0);},
     set hold(v){hold=!!v;},snd:typeof SND!=='undefined'?SND:{},pc:vmgPC(),
     onResize(f){rs.push(f);},onQuit(f){qs.push(f);},keys(f){keys.push(f);},kc,top(t){top.textContent=t==null?'':String(t);},say:sayH,
@@ -241,6 +246,6 @@ function vmgBot(id,n){const g=REG.by[id];if(!g||!g.sim)return null;n=n||200;cons
 /* ---------- наружу ---------- */
 window.VMG_REG=VMG_REG;window.VMG_OPEN=VMG_OPEN;
 window.VMG={INFO:VMG_INFO,IDS:VMG_IDS,RW:VMG_RW,GR:VMG_GR,REG,open:VMG_OPEN,close:vmgClose,Z,touch,lv:vmgLv,need:vmgNeed,ready:vmgReady,isOpen:vmgOpen,unlock:vmgUnlock,lockTxt:vmgLockTxt,
-  pool:vmgPool,take:vmgTake,word:vmgWord,year:vmgYear,seed:vmgSeed,pc:vmgPC,kc,say:sayH,fix:vmgFix,merge:vmgMerge,fresh:vNew,bot:vmgBot,lads,
+  pool:vmgPool,take:vmgTake,mark:vmgMark,word:vmgWord,year:vmgYear,seed:vmgSeed,pc:vmgPC,kc,say:sayH,fix:vmgFix,merge:vmgMerge,fresh:vNew,bot:vmgBot,lads,
   get cur(){return REG.cur;}};
 })();

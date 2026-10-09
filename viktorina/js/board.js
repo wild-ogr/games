@@ -60,7 +60,7 @@ function lk(){return !!(W.LK&&LK.on&&LK.on());}
 function scan(el){if(lk()&&LK.scan&&el)try{LK.scan(el);}catch(e){}}
 function av(id,m){if(id==='sansan'&&!(W.LK&&LK.who&&LK.who.sansan)&&!(W.LOOK_SANSAN))id='kolya';try{return portrait(id,m||'norm');}catch(e){return '';}}
 function tName(t){var v=W.VTOP&&VTOP.T&&VTOP.T(t);return (TN[t]&&TN[t].n)||(v&&v.n)||t;}
-function tShort(t){var v=W.VTOP&&VTOP.T&&VTOP.T(t);return (v&&v.sh)||(typeof TSH!=='undefined'&&TSH[t])||tName(t);}
+function tShort(t){var v=W.VTOP&&VTOP.T&&VTOP.T(t),fs=W.VTOP&&VTOP.festSh&&VTOP.festSh(t);return fs||(v&&v.sh)||(typeof TSH!=='undefined'&&TSH[t])||tName(t);}
 function tIc(t){var v=W.VTOP&&VTOP.T&&VTOP.T(t);return (TN[t]&&TN[t].ic)||(v&&v.ic)||'❓';}
 function tNew(t){try{return !!(W.VTOP&&VTOP.isNew&&VTOP.isNew(t,nowMs()));}catch(e){return false;}}
 function pOf(q){return W.PRICE?PRICE.pOf(q):.75;}
@@ -96,6 +96,9 @@ function pick5(t,used,ans,R,seeded,mode){var a=[];for(var i=0;i<5;i++){var q=pic
   a.sort(function(x,y){return prOf(x,mode)-prOf(y,mode)||pOf(y)-pOf(x)||(x.i<y.i?-1:1);});return a;}
 function chooseTopics(n,R,seeded,ms){var l=topicList(ms);
   if(seeded){ // табло дня: в праздник/сезон один столбец — из праздничного набора (просьба FEST 03 §3.3; при сведении 09.10)
+    // FIX1 (просьба FEST): в главный день праздника (VTOP.festPeak) — все столбцы из праздничного набора (одинаково у всех: зерно дня)
+    var pk=null;try{pk=W.VTOP&&VTOP.festDay&&VTOP.festDay(ms);if(pk&&!(VTOP.festPeak(pk,ms)&&l.indexOf(pk)>=0&&BYT[pk]&&BYT[pk].length>=n*5+7))pk=null;}catch(e){pk=null;}
+    if(pk){var a=[];for(var i=0;i<n;i++)a.push(pk);return a;}
     var f=null;try{f=W.VTOP&&VTOP.festTop&&VTOP.festTop(ms);}catch(e){f=null;}
     if(f&&l.indexOf(f.k)>=0)return [f.k].concat(shuffle(l.filter(function(x){return x!==f.k;}),R).slice(0,n-1));
     return shuffle(l.slice(),R).slice(0,n);}
@@ -118,6 +121,7 @@ function build(o){
   // случайности соседей — заранее (табло дня одинаково у всех; после перезапуска — те же)
   cells.forEach(function(x){x.u=rv.map(function(){return Math.round(R()*1000)/1000;});});
   var others=topicList(ms).filter(function(t){return tl.indexOf(t)<0;});if(!others.length)others=tl.slice();
+  if(cols>1&&tl.every(function(t){return t===tl[0];}))others=[tl[0]]; // FIX1: праздничное табло дня — Посылка и Финал тоже из набора
   var sp=function(lo){var k=0;do{k=Math.floor(R()*cells.length);}while((k/cols|0)<lo||cells[k].sp);return k;};
   if(!o.noGift){var gi=sp(1),gt=others[Math.floor(R()*others.length)],gq=pickV(gt,500,used,ans,R,seeded,mm)||pickV(tl[0],500,used,ans,R,seeded,mm);
     if(gq){cells[gi].sp='gift';cells[gi].g=gq.i;}}
@@ -329,8 +333,8 @@ function finIntro(){say('Все клетки сыграны! Финал у по�
   var s=$b('scr-board');if(!quiet())s.classList.add('bulbs');snd('safe');setTimeout(function(){finStart();},Math.round(900*spd()));}
 /* ---------- итог ---------- */
 function finish(){if(!B||B.done)return;B.done=1;var s=$b('scr-board');s.classList.remove('bulbs');
-  var place=placeOf(),win=place===1,sc=B.sc,coins=(B.mode==='free'||B.mode==='day')?Math.max(0,Math.floor(sc/50))+(win&&sc>0?20:0):0;
-  S.bdN=(S.bdN||0)+1;if(win)S.bdW=(S.bdW||0)+1;if(B.mode==='free')S.bdBest=Math.max(S.bdBest||0,sc);
+  var place=placeOf(),win=place===1,sc=B.sc,coins=B.mode==='day'?Math.max(0,Math.floor(sc/50))+(win&&sc>0?20:0):B.mode==='free'?Math.max(0,Math.floor(sc/80))+(win&&sc>0?10:0):0; // FIX1 (AUD-ECO 3, владелец 09.10): свободное табло sc/80 и +10 за 1-е место (≈ лестница по 💰/мин); табло дня — как было
+  S.bdN=(S.bdN||0)+1;if(win)S.bdW=(S.bdW||0)+1;if(B.mode==='free'&&!B.onEnd)S.adW=(S.adW||0)+1; // FIX1 (AUD-ECO 2): свободное табло считается как лестница для межэкраннойif(B.mode==='free')S.bdBest=Math.max(S.bdBest||0,sc);
   if(coins){S.coins+=coins;stat(function(){STAT.earn('lvl',coins);});}
   var res={mode:B.mode,score:sc,place:place,win:win,rivals:B.rv.map(function(r){return {id:r.id,n:r.n,sc:r.sc};}),k:B.k,coins:coins};
   stat(function(){STAT.end(win?'win':'lose',{s:sc,pl:place,k:B.mode});});
@@ -348,8 +352,9 @@ function finish(){if(!B||B.done)return;B.done=1;var s=$b('scr-board');s.classLis
   if(win&&!quiet())$b('bdQ').classList.add('rs');
   var cb=B.onEnd;B.onEnd=null;
   var out=function(){$b('bdQ').classList.remove('rs');hideQ();if(cb){try{cb(res);}catch(e){}}else try{openMenu();}catch(e){}};
-  var ag=$b('bdAgain');if(ag)ag.onclick=function(){$b('bdQ').classList.remove('rs');hideQ();startFree(true);};
-  $b('bdMenu').onclick=function(){snd('tap');out();};
+  var btw=function(f){if(!cb&&res.mode==='free'&&typeof between==='function')between(f);else f();}; // FIX1: межэкранная (если положена) — после свободного табло, как после лестницы
+  var ag=$b('bdAgain');if(ag)ag.onclick=function(){$b('bdQ').classList.remove('rs');hideQ();btw(function(){startFree(true);});};
+  $b('bdMenu').onclick=function(){snd('tap');$b('bdQ').classList.remove('rs');hideQ();btw(out);};
   try{UI.emit('board',res);}catch(e){}}
 /* ---------- эффекты ---------- */
 function fly(){if(quiet()||!document.body.animate&&!Element.prototype.animate)return bump();var a=document.querySelector('#bdQc .bdA.ok'),t=$b('bdMe');if(!a||!t)return bump();
@@ -439,7 +444,7 @@ function merge(d){if(!isO(d))return;try{
 
 /* ---------- гнёзда UX: плитка на главном, экраны роутера ---------- */
 function tile(){var k=dayKey(0),d=S.bdDay,dn=d&&d.k===k&&d.s&&d.s.d;
-  if(!open())return UI.tile({ic:'🔒',t:'Табло Михалыча',s:'откроется на 5-м уровне',cls:'lock',go:'board'});
+  if(!open())return (S.lvl||0)>=3?UI.tile({ic:'🔒',t:'Табло Михалыча',s:'откроется на 5-м уровне',cls:'lock',go:'board'}):null; // FIX1: новичку закрытое табло в ленте не показываем (есть большая кнопка)
   return UI.tile({ic:'🏆',t:'Табло Михалыча',s:dn?'табло дня: '+fmt(d.s.sc)+' · сыграть ещё':S.bdCur?'продолжить табло':'табло дня ждёт · 5 тем × 100–500',tag:!S.bdN?'новое':dn?'':'сегодня',cls:'gold',go:'board'});}
 function reg(){var W2=W;if(!Array.isArray(W2.homeSlots))W2.homeSlots=[];W2.homeSlots.push({id:'board',order:30,render:function(){try{return tile();}catch(e){return null;}}});
   if(W2.UI){UI.screen('board',function(o){if(o&&o.mode==='free')return startFree();if(o&&o.mode==='day')return openDay();hub();});UI.screen('bday',function(){openDay();});}}

@@ -32,6 +32,9 @@ var HELLO={
   osen:['Осень во дворе! Листья шуршат, банки закатаны — вопросы про осень.'],
   zima:['Зима во дворе! Горка залита, валенки сушатся — поехали.'],
   vesna:['Весна во дворе! Капель, грачи, кораблики в ручьях — начинаем.']};
+// FIX1: имя набора по площадке (замысел FEST: hw на Яндексе — «Осенний вечер у подъезда») — одно и то же везде: плитка, баннер, «Сегодня», заголовок лестницы
+try{(VTOP.festList||[]).forEach(function(t){var n=VTOP.festName(t.k),sh=VTOP.festSh(t.k);if(TN[t.k]&&n&&n!==TN[t.k].n){TN[t.k].n=n;if(sh)TN[t.k].sh=sh;}});
+  if(VTOP.festName('hw')!=='Страшилки у подъезда')HELLO.hw[0]=VTOP.festName('hw')+'! Фонарь горит, лавочка свободна — садись, начнём.';}catch(e){}
 function name(k){return VTOP.festName(k);}
 function isF(k){return !!(TN[k]&&TN[k].fest);}
 
@@ -72,7 +75,7 @@ resultSlots.push({id:'fest',order:30,render:function(c){if(!c||!isF(c.topic))ret
 if(typeof FEST!=='undefined'){
   // решение владельца 09.10: «Страшилки у подъезда» в Викторине — с 24.10 (как набор hw и двор YARD); общий модуль даёт hw26 с 26.10 —
   // поправляем только в этой игре (строки таблицы FEST.get — по ссылке), общий fest.js не трогаем. Имя — как у набора.
-  try{[['hw26','2026-10-24','2026-11-02'],['hw27','2027-10-24','2027-11-02']].forEach(function(p){var r=FEST.get(p[0]);if(r){r.from=p[1];r.to=p[2];r.ng=r.ng||{};r.ng.viktorina='Страшилки у подъезда';}});}catch(e){}
+  try{[['hw26','2026-10-24','2026-11-02'],['hw27','2027-10-24','2027-11-02']].forEach(function(p){var r=FEST.get(p[0]);if(r){r.from=p[1];r.to=p[2];r.ng=r.ng||{};r.ng.viktorina=VTOP.festName('hw')||'Страшилки у подъезда';}});}catch(e){}
   try{FEST.init(S,{g:'viktorina',plat:PLAT,lang:LANG,save:function(){save();},now:function(){return nowMs();},cls:'btn noenter',
     modal:function(h){modal(h);return D.getElementById('mcard');},close:function(){hideModal();},
     low:function(){try{return typeof calm==='function'&&calm();}catch(e){return false;}},

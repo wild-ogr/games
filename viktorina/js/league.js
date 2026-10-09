@@ -148,7 +148,7 @@ function render(el){roll();var DP=dayPts(S.lgaW),w=S.lgaW,l=S.lgaL||0,d=YD.wday(
     :z==='down'?'Зона вылета: ещё немного верных ответов — и выберешься!'
     :me<=3?'Ты в тройке призёров: '+YD.ct(LG[l].pay[me-1])+' и кубок на полку!':'До тройки призёров — '+(me-3)+' '+YD.pl(me-3,'место','места','мест')+'.';
   h+='<p class="goal lgzt '+(z||'')+'">'+zt+'</p><div class="lgt">'+rows.map(function(r,i){var p=i+1,zz=zone(p,l),b=r.me?null:BOTS[l][r.j];
-    return '<div class="lgr'+(r.me?' me':'')+(zz?' '+zz:'')+'"><b class="lgp">'+p+'</b>'+(r.me?myFace(40):face(b.av,40))+'<span class="lgn"><b>'+(r.me?'Ты':esc(b.n))+'</b><small>'+(r.me?(played?'5 лучших дней недели':'ещё не играл на этой неделе'):'сосед · '+esc(b.h))+'</small></span><i class="lgg">'+(r.s||'—')+'</i></div>';}).join('')+'</div>';
+    return '<div class="lgr'+(r.me?' lgme':'')+(zz?' '+zz:'')+'"><b class="lgp">'+p+'</b>'+(r.me?myFace(40):face(b.av,40))+'<span class="lgn"><b>'+(r.me?'Ты':esc(b.n))+'</b><small>'+(r.me?(played?'5 лучших дней недели':'ещё не играл на этой неделе'):'сосед · '+esc(b.h))+'</small></span><i class="lgg">'+(r.s||'—')+'</i></div>';}).join('')+'</div>';
   h+='<div class="lgdays">'+WD.map(function(n,i){return '<span class="'+(i===d?'on':'')+(i>d?' fu':'')+'"><small>'+n+'</small><b>'+(DP[i]?DP[i]:i<d?'·':'')+'</b></span>';}).join('')+'</div>';
   h+='<p class="ydnote">Очки недели — сумма 5 лучших дней: за каждый верный ответ — его цена (100–500) и счёт табло дня, до '+DAYCAP+' в день; плюс Кубок выходного дня. Итог — в понедельник: 1–2 место — в лигу выше, 7–8 — ниже. Призы: '+LG[l].pay.map(function(c,i){return (i+1)+' место +'+YD.ct(c);}).join(' · ')+'. Соседи — персонажи игры, их очки считает честная модель, одинаковая у всех игроков.</p>';
   h+=cupBlock();

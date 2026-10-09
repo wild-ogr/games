@@ -38,7 +38,11 @@
       if(soon.length)h+='<div class="soonl">🔒 '+L('Скоро на полке: ','Coming soon: ')+soon.map(function(t){return '<span>'+e(t.n)+' <i>'+e(VTOP.dateTxt(t.from))+'</i></span>';}).join(' · ')+'</div>';
       h+='<div class="plank lk-o"></div></div>';});
     return h;}
-  function bind(g){[].forEach.call(g.querySelectorAll('.tp[data-k]'),function(b){b.onclick=function(){SND.tap();var k=b.getAttribute('data-k');
+  // FIX1: длинное название («Кино и мультфильмы», «90-е и нулевые», «Страшилки у подъезда») не вылезает за плитку — шрифт ужимаем до 12px
+  function fit(g){[].forEach.call(g.querySelectorAll('.tp>b'),function(b){b.style.fontSize='';var f=parseFloat(getComputedStyle(b).fontSize)||16,n=0;
+    while(b.scrollWidth>b.clientWidth+1&&f>12&&n++<12){f-=.5;b.style.fontSize=f+'px';}});}
+  var fitT=0;W.addEventListener('resize',function(){clearTimeout(fitT);fitT=setTimeout(function(){var g=document.getElementById('tGrid');if(g&&g.offsetParent)fit(g);},150);});
+  function bind(g){fit(g);[].forEach.call(g.querySelectorAll('.tp[data-k]'),function(b){b.onclick=function(){SND.tap();var k=b.getAttribute('data-k');
       if(k!=='all'&&b.classList.contains('nw')){if(!isObj(S.tips))S.tips={};S.tips['nw_'+k]=1;save();}uiPreTopic(k);};});
     [].forEach.call(g.querySelectorAll('.tp[data-lock]'),function(b){b.onclick=function(){SND.tap();var t=TN[b.getAttribute('data-lock')];
       toast(L('Тема «','Topic «')+t.n+L('» откроется ','» opens ')+VTOP.dateTxt(t.from)+L(' — Михалыч уже пишет вопросы!',''),3000);};});}

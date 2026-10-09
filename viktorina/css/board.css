@@ -51,9 +51,9 @@ html.th-doska #scr-board{--bdB:#2f4a3a;--bdB2:#22372b;--plq:#f4efe2;--plq2:#e0d7
 /* строки (узкий экран, крупный шрифт) */
 .bdGrid.rows{display:flex;flex-direction:column;gap:8px}
 .bdRow{background:var(--bdCard);border:2.5px solid var(--bdO);border-radius:16px;box-shadow:0 3px 0 var(--bdO);padding:7px 7px 8px}
-.bdRn{display:flex;align-items:center;gap:7px;font-weight:900;font-size:17px;margin:0 2px 6px;color:var(--bdInk);line-height:1.15}
+.bdRn{display:flex;align-items:center;gap:7px;font-weight:900;font-size:17px;margin:0 2px 6px;color:var(--card-ink,var(--bdInk));line-height:1.15}
 .bdRn .ti{font-size:22px}.bdRn .tn{min-width:0}
-.bdRn .st{margin-left:auto;font-size:14px;font-weight:700;color:var(--muted,#5a6676);white-space:nowrap}
+.bdRn .st{margin-left:auto;font-size:14px;font-weight:700;color:var(--card-mut,#5a6676);white-space:nowrap}
 .bdRn .tag{margin-left:auto;font-style:normal;font-size:12px;font-weight:900;padding:2px 7px;border-radius:8px;background:#e5484d;color:#fff;border:2px solid var(--bdO)}
 .bdPs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .bdRow .bdCell{min-height:50px;font-size:19px;border-radius:12px;box-shadow:0 3px 0 var(--bdO)}
@@ -185,3 +185,4 @@ body.calm #scr-board *,body.calm .bdFly{animation:none!important;transition:none
 @keyframes bdGlowB{0%{box-shadow:0 0 0 0 rgba(255,207,64,0),0 4px 0 #233247}100%{box-shadow:0 0 0 10px rgba(255,207,64,.6),0 4px 0 #233247}}
 @keyframes bdWave{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(-5deg)}}
 @keyframes bdBulbs{0%{opacity:.95}100%{opacity:.35}}
+/* FIX1: строки табло (.bdRn) лежат на светлой карточке — цвет карточки, а не --ink/--muted (на тёмных темах были белыми) */

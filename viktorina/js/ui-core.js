@@ -36,7 +36,7 @@
   var scr={},ls={};
   function warn(s,e){try{console.warn('UI slot '+s,e);}catch(_){}}
   function list(a){var m={},o=[];for(var i=0;i<a.length;i++){var x=a[i];if(!x)continue;if(typeof x==='function')x={render:x};var k=x.id||('#'+i);if(m[k]!=null)o[m[k]]=x;else{m[k]=o.length;o.push(x);}}
-    return o.filter(Boolean).sort(function(a,b){return (a.order||50)-(b.order||50);});}
+    return o.filter(Boolean).sort(function(a,b){return (a.order!=null?a.order:50)-(b.order!=null?b.order:50);});} // FIX1: order:0 («Финал района») раньше считался 50
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   var UI={
     list:list,
