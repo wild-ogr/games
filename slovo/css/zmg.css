@@ -1,0 +1,96 @@
+/* zb-MG0 — мини-игры «Перемена» (js/zmg-core.js и игры zmg-*.js). Классы — только с префиксом zmg- (игры потоков: zma-/zmb-/zmc-). Без inset:, :has, новых эмодзи. */
+#zmgHost{position:fixed;top:0;left:0;right:0;bottom:0;z-index:32;display:flex;flex-direction:column;background:var(--paper,#fbf7ec);color:var(--ink,#27324a);
+  background-image:linear-gradient(var(--line,#dfe8f2) 1px,transparent 1px),linear-gradient(90deg,var(--line,#dfe8f2) 1px,transparent 1px);background-size:24px 24px;
+  font-family:var(--font,"Trebuchet MS",Arial,sans-serif);-webkit-user-select:none;user-select:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+html.zk #zmgHost{right:auto;bottom:auto;width:calc(100% / var(--zk));height:calc(100% / var(--zk));transform:scale(var(--zk));transform-origin:0 0}
+.zmg-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;background:var(--card,#fff);box-shadow:0 2px 0 var(--edge,#d5d9e3);min-height:52px;box-sizing:border-box}
+.zmg-ic{font-size:24px;line-height:1}
+.zmg-nm{font-size:18px;font-weight:800;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zmg-top{font-size:16px;font-weight:800;color:var(--blue,#1d4fa3);white-space:nowrap}
+.zmg-khd{font-size:12px;color:var(--ink2,#5d6781);white-space:nowrap}
+.zmg-xb{flex:0 0 auto;width:44px;height:44px;border:0;border-radius:50%;background:var(--soft,#f3f6fc);color:var(--ink,#27324a);font-size:20px;font-weight:900;cursor:pointer}
+.zmg-el{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.zmg-cv{position:absolute;left:0;top:0;display:block}
+.zmg-kc{display:inline-block;min-width:18px;padding:1px 5px;border:1px solid var(--edge,#d5d9e3);border-bottom-width:2px;border-radius:5px;background:#fff;color:var(--ink2,#5d6781);
+  font:700 11px/1.3 var(--font,Arial);vertical-align:2px;text-shadow:none}
+.btn .zmg-kn{margin-left:4px;opacity:.85}
+/* реплика ведущего */
+.zmg-say{display:flex;align-items:flex-end;gap:10px;margin:0 0 10px;text-align:left}
+.zmg-av{flex:0 0 auto;width:64px;height:64px;border-radius:50%;overflow:hidden;background:#fff;box-shadow:0 0 0 3px #fff,0 3px 8px rgba(0,0,0,.15)}
+.zmg-av svg{width:100%;height:100%;display:block}
+.zmg-sb{position:relative;margin:0;flex:1 1 auto;background:#fff;border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:16.5px;line-height:1.35;box-shadow:var(--shadow)}
+.zmg-who{display:block;font-size:13px;color:var(--blue,#1d4fa3);margin-bottom:2px}
+/* окна оболочки: вступление, итог, «Выйти?» */
+.zmg-intro,.zmg-veil{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:5;box-sizing:border-box}
+.zmg-veil{background:rgba(20,28,48,.45)}
+.zmg-intro{background:rgba(251,247,236,.6)}
+.zmg-panel{width:100%;max-width:400px;max-height:100%;overflow-y:auto;background:var(--paper,#fbf7ec);border-radius:22px;padding:18px 16px 16px;box-sizing:border-box;text-align:center;
+  box-shadow:0 16px 40px rgba(0,0,0,.28);animation:zmgUp .28s cubic-bezier(.2,1.4,.5,1)}
+.zmg-panel h2{margin:4px 0 6px;font-size:24px}
+.zmg-panel p{margin:6px 0;font-size:16px;line-height:1.4}
+.zmg-hint{font-size:14px!important;color:var(--ink2,#5d6781)}
+.zmg-btns{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.zmg-btns .btn{width:100%}
+.zmg-btns .btn small{font-size:12px;font-weight:600;opacity:.8}
+.btn.sec{background:var(--card,#fff);color:var(--ink,#27324a);text-shadow:none;box-shadow:0 4px 0 var(--edge,#d5d9e3)}
+.zmg-kf{outline:3px solid var(--gold,#f5b72d);outline-offset:2px}
+@keyframes zmgUp{from{transform:translateY(24px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+/* итог */
+.zmg-stars{font-size:34px;letter-spacing:4px;margin:2px 0 4px}
+.zmg-st{display:inline-block;filter:grayscale(1);opacity:.28}
+.zmg-st.on{filter:none;opacity:1;animation:zmgStar .5s both}
+@keyframes zmgStar{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+.zmg-sc{font-weight:800;color:var(--ink2,#5d6781)}
+.zmg-rws{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.zmg-rw{background:#fff;border-radius:12px;padding:7px 10px;font-weight:800;font-size:16px;box-shadow:0 2px 0 var(--edge,#d5d9e3)}
+.zmg-rw.c{color:var(--btnor,#c2410c);font-size:20px}
+.zmg-rw .coin{width:18px;height:18px;vertical-align:-3px}
+.zmg-rw.p{color:var(--red2,#d0342c)}
+.zmg-note{font-size:14px!important;color:var(--ink2,#5d6781)}
+.zmg-xpb{margin:8px 0 2px;font-size:13.5px;color:var(--ink2,#5d6781);display:flex;flex-direction:column;gap:4px}
+.zmg-bar{display:block;height:8px;border-radius:5px;background:var(--track,#eef1f6);overflow:hidden}
+.zmg-bar i{display:block;height:100%;background:var(--red,#e2463b);border-radius:5px}
+@media (prefers-reduced-motion:reduce){.zmg-panel,.zmg-st.on{animation:none}}
+/* загрузка игры */
+.zmg-wait{position:fixed;left:0;top:0;right:0;bottom:0;z-index:33;display:flex;align-items:center;justify-content:center;background:rgba(251,247,236,.92);text-align:center;font-weight:800;font-size:18px}
+.zmg-wait b{display:block;font-size:40px}
+.zmg-wait small{font-weight:600;color:var(--ink2,#5d6781)}
+/* общий набор для игр */
+.zmg-card{background:#fff;border-radius:18px;padding:14px;box-shadow:var(--shadow);margin:10px auto;max-width:440px;width:calc(100% - 24px);box-sizing:border-box}
+.zmg-q{font-size:21px;font-weight:800;line-height:1.35;text-align:center}
+.zmg-opts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px auto;max-width:440px;width:calc(100% - 24px)}
+.zmg-opt{flex:1 1 40%;min-height:56px;border:0;border-radius:16px;background:#fff;color:var(--ink,#27324a);font:800 22px/1.2 var(--font,Arial);box-shadow:0 4px 0 var(--edge,#d5d9e3);cursor:pointer;padding:8px}
+.zmg-opt:active{transform:translateY(2px);box-shadow:0 2px 0 var(--edge,#d5d9e3)}
+.zmg-opt.ok{background:#dff3e3;box-shadow:0 4px 0 var(--green,#34a853)}
+.zmg-opt.no{background:#fde3e1;box-shadow:0 4px 0 var(--red,#e2463b)}
+.zmg-opt.sel{outline:3px solid var(--gold,#f5b72d)}
+.zmg-dots{display:flex;gap:6px;justify-content:center;margin:8px 0}
+.zmg-dots i{width:12px;height:12px;border-radius:50%;background:var(--track,#eef1f6);box-shadow:inset 0 0 0 2px var(--edge,#d5d9e3)}
+.zmg-dots i.ok{background:var(--green,#34a853);box-shadow:none}
+.zmg-dots i.no{background:var(--red,#e2463b);box-shadow:none}
+.zmg-dots i.cur{box-shadow:inset 0 0 0 3px var(--blue,#1d4fa3)}
+.zmg-red{color:var(--red2,#d0342c);font-family:"Comic Sans MS","Segoe Print",cursive;font-weight:700}
+/* окно победы: Перемена / Вечерка (гнездо zone mg) */
+.zmg-pw{display:flex;align-items:center;gap:10px;margin:8px 0 2px;padding:8px 10px;border-radius:16px;background:#fff7d6;box-shadow:0 0 0 2px var(--gold,#f5b72d) inset;text-align:left;cursor:pointer;flex-wrap:wrap}
+.zmg-pav{flex:0 0 auto;width:48px;height:48px;border-radius:50%;overflow:hidden;background:#fff}
+.zmg-pav svg{width:100%;height:100%;display:block}
+.zmg-pt{flex:1 1 150px;min-width:0;display:flex;flex-direction:column;font-size:14px;line-height:1.3}
+.zmg-pt b{font-size:16px}
+.zmg-pw .btn{flex:1 1 100%;margin-top:2px}
+.zmg-pw.small{background:var(--soft,#f3f6fc);box-shadow:none;font-size:14px;cursor:default}
+.zmg-pw.small .btn{flex:0 0 auto;margin:0}
+.zmg-pw.done{background:#e6f4e8;box-shadow:none;cursor:default;font-size:14px;display:block;text-align:center}
+.zmg-pi{font-size:20px}
+/* плитка Красного уголка на главном */
+.zmg-tile{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:56px;border:0;border-radius:16px;background:#fff;color:var(--ink,#27324a);
+  box-shadow:0 4px 0 var(--edge,#d5d9e3);padding:8px 12px;text-align:left;cursor:pointer;font-family:inherit}
+.zmg-ti{font-size:28px}
+.zmg-tt{display:flex;flex-direction:column}
+.zmg-tt b{font-size:17px}
+.zmg-tt small{font-size:13.5px;color:var(--ink2,#5d6781)}
+/* окно «Новая затея!» */
+.zmg-new .zmg-nt{font-size:15px}
+.zmg-new .btns{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.zmg-list a{color:var(--blue,#1d4fa3)}
+.zmg-rw.s{font-weight:600;font-size:14px;color:var(--ink2,#5d6781);background:transparent;box-shadow:none;padding:0 6px}
+@media (max-height:600px){.zmg-pw .zmg-pt span{display:none}.zmg-pav{width:40px;height:40px}.zmg-pw{padding:6px 8px;gap:8px}.zmg-pw .btn{padding:8px 12px}}

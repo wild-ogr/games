@@ -6,15 +6,30 @@
 <script>/* предохранитель загрузки (05.10.2026): свой файл игры не загрузился → перезагрузка до 2 раз, потом окно «Обновить» */
 (function(){var K='ldfail',n=0,done=false;try{n=+sessionStorage.getItem(K)||0;}catch(e){}
 function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
+  /* zb: модули буста (data-zb) и ленивые (data-lazy, ZB.load) — не перезагружаем: игра живёт без них, список — window.__zbmiss */
+  if(t.hasAttribute&&(t.hasAttribute('data-zb')||t.hasAttribute('data-lazy'))){(window.__zbmiss=window.__zbmiss||[]).push(u);return false;}
   try{var a=document.createElement('a');a.href=u;if(a.host!==location.host)return false;}catch(e){return false;}
   return !/vk-bridge|sdk\.js/.test(u);}
-addEventListener('error',function(e){if(done||!own(e.target))return;done=true;
+/* zb-TECH (10.10): файл мог прийти ОБРЕЗАННЫМ (сеть оборвалась) — тогда ошибки загрузки нет, есть ошибка разбора (SyntaxError в своём js/…),
+   и дальше «LEVELS is not defined» (08-behavior: игрок ПК не смог начать). Теперь: ошибка разбора своего файла — тот же путь (перезагрузка ≤2, потом «Обновить»);
+   после всех defer-скриптов нет уровней (LEVELS) — тоже. Что случилось — sessionStorage «ldlog» {n,f,w}, stat-zb.js отправит событие ldf после удачного запуска. */
+function lg(f,w){try{sessionStorage.setItem('ldlog',JSON.stringify({n:n+1,f:String(f||'').replace(/^.*\/(js|css)\//,'$1/').slice(0,40),w:w}));}catch(x){}}
+addEventListener('error',function(e){var t=e.target;if(done)return;
+  if(t&&t.tagName){if(!own(t))return;lg(t.src||t.href,'net');}
+  else{var f=e.filename||'',i,q;if(ld||!/\/js\/[^\/]+\.js(\?|$)/.test(f)||!/SyntaxError/.test(String(e.message||'')))return; /* только до load и только свой файл */
+    try{var a0=document.createElement('a');a0.href=f;if(a0.host!==location.host)return;}catch(x){return;}
+    q=document.getElementsByTagName('script');for(i=0;i<q.length;i++)if(q[i].src===f&&(q[i].hasAttribute('data-zb')||q[i].hasAttribute('data-lazy')))return; /* модули буста живут без перезагрузки */
+    lg(f,'cut');}
+  fail();},true);
+var ld=false;addEventListener('load',function(){ld=true;});
+addEventListener('DOMContentLoaded',function(){if(!done&&typeof LEVELS==='undefined'){lg('js/levels.js','none');fail();}});
+function fail(){if(done)return;done=true;
   if(n<2){try{sessionStorage.setItem(K,n+1);}catch(x){}setTimeout(function(){location.reload();},700+n*1500);return;}
   var ru=!/^en/i.test('ru'/* Зина всегда по-русски (игра только на русском) */)||/[?&](vk_app_id|vk)=/.test(location.search);
   function show(){var d=document.createElement('div');d.id='ldfail';d.setAttribute('style','position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#1c2b3a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px/1.4 system-ui,sans-serif;text-align:center;padding:24px');
     d.innerHTML='<div style="max-width:320px">'+(ru?'Не получилось загрузить игру. Проверьте интернет и попробуйте ещё раз.':'The game failed to load. Check your connection and try again.')+'</div><button type="button" style="margin-top:18px;font:700 18px system-ui,sans-serif;padding:12px 28px;border:0;border-radius:14px;background:#4caf50;color:#fff">'+(ru?'Обновить':'Reload')+'</button>';
     d.querySelector('button').onclick=function(){try{sessionStorage.removeItem(K);}catch(x){}location.reload();};(document.body||document.documentElement).appendChild(d);}
-  if(document.body)show();else addEventListener('DOMContentLoaded',show);},true);
+  if(document.body)show();else addEventListener('DOMContentLoaded',show);}
 addEventListener('load',function(){setTimeout(function(){if(!done)try{sessionStorage.removeItem(K);}catch(x){}},3000);});})();
 </script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -448,6 +463,7 @@ html.zk #toast{font-size:calc(15px * var(--zk));top:calc(70px * var(--zk))}
 .confetti{position:fixed;z-index:29;width:10px;height:14px;pointer-events:none;border-radius:2px}
 </style>
 <link rel="stylesheet" href="css/themes.css">
+<link rel="stylesheet" href="css/zb-view.css"><!-- zb-VIEW: новый вид, всё под html.zbv -->
 <script>/* themes1: купленная тема оформления — до первой отрисовки (владение проверяет js/themes.js). У кого темы нет — ничего не делает */
 (function(){try{var q=location.search,m=/[?&]theme=([a-z0-9_]+)/.exec(q),t=m&&/^(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)$/.test(location.hostname)&&!/[?&]vk_app_id=/.test(q)?m[1]:'';
 if(!t&&!/[?&]shot=/.test(q)){var o=JSON.parse(localStorage.getItem('slovo-v1')||'{}');if(o&&o.th&&((o.thU||{})[o.th]||(o.buy||{})['th_'+o.th]))t=o.th;}
@@ -457,6 +473,8 @@ if(t&&t!=='classic')document.documentElement.className='th-x th-'+t;}catch(e){}}
 (function(){var D=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,k=Math.min(1.3,w/1000,h/660);
   if(w<1200||k<1.1)k=1;k=Math.round(k*100)/100;var on=k>1;D.classList.toggle('zk',on);if(on)D.style.setProperty('--zk',k);else D.style.removeProperty('--zk');}
 fit();addEventListener('resize',fit);})();</script>
+<script>/* zb-VIEW: новый вид «Школа бабы Зины» — класс до первой отрисовки (?view=0 — старый вид; js/zb-view.js не загрузился — zb-core.js снимет) */
+if(!/[?&]view=0(&|$)/.test(location.search))document.documentElement.classList.add('zbv');</script>
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
@@ -469,6 +487,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 
 <!-- ===== меню ===== -->
 <section class="screen on" id="menu">
+  <div id="zbHomeTop"></div><!-- zb: гнёзда главного, зона top (ZB.homeSlots) -->
   <div class="mtop">
     <div style="display:flex;gap:8px"><button class="ibtn" id="btnSnd" title="Звуки">🔊<small>Звук</small></button><button class="ibtn" id="btnMus" title="Музыка">🎵<small>Музыка</small></button><button class="ibtn" id="btnCred" title="Благодарности">ℹ️<small>Об игре</small></button></div>
     <div class="coins"><span class="coin"></span><span class="cc">0</span></div>
@@ -494,6 +513,8 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
     <button class="btn ghost" id="btnGift" style="display:none;font-size:16px;padding:10px 8px"></button>
     <div class="tmr mtmr" id="mTmr" style="display:none"></div>
   </div>
+  <div id="zbHome"></div><!-- zb: гнёзда главного (ZB.homeSlots, кроме top) -->
+  <nav id="zbNav" style="display:none"></nav><!-- zb: нижняя панель (ZB.navSlots) -->
 </section>
 
 <!-- ===== главы ===== -->
@@ -538,6 +559,8 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   </div>
   <div class="grib"><div class="rib" id="gRib"><span id="gSub"></span><span id="gCnt"></span></div></div>
   <div class="zina"><div class="av" id="zAv"></div><div class="say" id="zSay"></div></div>
+  <div id="zbLevel"></div><!-- zb: гнёзда поверх уровня (ZB.levelSlots) -->
+  <div id="zbLvSide"></div><!-- zb-VIEW: гнёзда уровня zone 'side' — боковая колонка ПК -->
   <div id="board"><div id="grid"></div></div>
   <div id="preview"><div class="w"></div><button class="pvb ok" id="pvOk" aria-label="Проверить слово">✔&#xFE0E;</button><button class="pvb" id="pvX" aria-label="Стереть">✕</button></div>
   <div class="wheelwrap" id="wheelWrap">
@@ -562,6 +585,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/levels.js" defer></script>
 <script src="js/defs.js" defer></script>
 <script src="js/vkm.js" defer></script>
+<script src="js/zb-core.js" defer></script><!-- zb: каркас буста «Школа бабы Зины» — до core.js -->
 <script src="js/core.js" defer></script>
 <script src="js/text.js" defer></script>
 <script src="js/game.js" defer></script>
@@ -571,8 +595,64 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/newbie.js" defer></script>
 <script src="js/themes.js" defer></script>
 <script src="js/sosedki.js" defer></script>
-<script src="js/zina.js" defer></script>
-<script src="js/gloss.js" defer></script>
-<script src="js/dict.js" defer></script>
+<!-- zb: модули буста. Каждый поток вставляет СВОИ строки <script src="js/…" defer data-zb></script> сразу под СВОЕЙ меткой (чужие метки не трогать) -->
+<!-- zb:VIEW -->
+<script src="js/zb-view.js" defer data-zb></script>
+<script src="js/zb-home.js" defer data-zb></script>
+<script src="js/zb-path.js" defer data-zb></script>
+<script src="js/zb-win.js" defer data-zb></script>
+<script src="js/zb-keys.js" defer data-zb></script>
+
+<!-- zb:ART -->
+
+<!-- zb:LVL -->
+<script src="js/zb-chapters.js" defer data-zb></script>
+<script src="js/zb-cells.js" defer data-zb></script>
+
+<!-- zb:MODE -->
+<script src="js/zb-mode.js" defer data-zb></script>
+
+<!-- zb:DICT -->
+
+<!-- zb:SCHOOL -->
+<script src="js/zb-school.js" defer data-zb></script>
+<script src="js/zb-today.js" defer data-zb></script>
+<script src="js/zb-back.js" defer data-zb></script>
+<script src="js/zb-migrate.js" defer data-zb></script>
+<script src="js/zb-season.js" defer data-zb></script>
+<script src="js/zb-people.js" defer data-zb></script><!-- zb-CAB: строки CAB — последними под SCHOOL -->
+<script src="js/zb-cab.js" defer data-zb></script>
+
+<!-- zb:NEWBIE -->
+<script src="js/zb-newbie.js" defer data-zb></script>
+
+<!-- zb:ECO -->
+<script src="js/zb-eco.js" defer data-zb></script>
+<script src="js/zb-shop.js" defer data-zb></script>
+
+<!-- zb:MG0 -->
+<script src="js/zmg-core.js" defer data-zb></script>
+
+<!-- zb:MGA -->
+
+<!-- zb:MGB -->
+
+<!-- zb:MGC -->
+
+<!-- zb:FEST -->
+<script src="js/fest.js" defer data-zb></script><script src="js/fest-zb.js" defer data-zb></script>
+
+<!-- zb:TECH -->
+<script src="js/stat-zb.js" defer data-zb></script><!-- zb-TECH: статистика буста (STATZB) — последним из модулей -->
+
+<!-- zb:TEXT -->
+<script src="js/zb-lines.js" defer data-zb></script>
+
+<script src="js/zb-ready.js" defer></script><!-- zb: все модули выполнены → ZB.ready() (до словаря) -->
+<script>/* zb-TECH (10.10): словари — zina.js 40К, gloss.js 94К, dict.js 323К (40 % веса) — грузим ПОСЛЕ первого экрана (DOMContentLoaded: все defer-скрипты
+   выполнены, меню/1-й уровень уже показаны), по порядку (async=false). До них игра живёт: isWord ждёт dictReady() (бонусные слова не засчитываются
+   первые доли секунды), толкование — через typeof GLOSS; не загрузились — ensureDict (core.js) докачивает, перезагрузки страницы нет (data-lazy). */
+(function(){function go(){['js/zina.js','js/gloss.js','js/dict.js'].forEach(function(s){var e=document.createElement('script');e.src=s;e.async=false;e.setAttribute('data-lazy','');document.body.appendChild(e);});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();</script>
 </body>
 </html>

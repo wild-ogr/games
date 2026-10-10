@@ -1,0 +1,166 @@
+/* zb-school.css — «Школа бабы Зины»: дневник «Сегодня у Зины», «5», портфель, табель, линейка, четверти, подарок вернувшемуся, «Зина открыла школу».
+   Поток SCHOOL. Все классы — с префиксом sc- (чужие правила не задеваем). Без inset:, :has, новых эмодзи. */
+.sc-red{font-family:Georgia,"Times New Roman",serif;color:var(--stamp,#d0342c);font-weight:700;font-style:italic}
+.sc-mut{font-size:14px;color:var(--ink2,#5d6781);margin:8px 0}
+.sc-stamp{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border:3px solid var(--stamp,#d0342c);border-radius:50%;
+  font:italic 700 44px/1 Georgia,"Times New Roman",serif;color:var(--stamp,#d0342c);transform:rotate(-12deg);margin:4px auto;background:rgba(255,255,255,.4)}
+.sc-stamp.sm{width:34px;height:34px;font-size:24px;border-width:2px;margin:0;flex:none}
+.sc-stamp.off{opacity:.25;border-style:dashed}
+.sc-pb{display:block;height:6px;border-radius:4px;background:var(--track,#eef1f6);overflow:hidden;margin-top:4px}
+.sc-pb b{display:block;height:100%;background:var(--gold,#f5b72d);border-radius:4px}
+
+/* главный: карточка дневника (зона today) */
+.sc-home{display:block;width:100%;text-align:left;border:0;cursor:pointer;font:inherit;color:var(--ink,#27324a);padding:10px 12px 10px 18px;border-radius:14px;
+  background:var(--card,#fff);box-shadow:var(--shadow);position:relative;overflow:hidden;
+  background-image:linear-gradient(90deg,transparent 9px,var(--margin,#f0b3ad) 9px,var(--margin,#f0b3ad) 11px,transparent 11px)}
+.sc-home.hot{box-shadow:0 0 0 3px var(--gold,#f5b72d),var(--shadow)}
+.sc-hh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sc-hh small{display:block;font-size:11px;letter-spacing:.06em;color:var(--ink2,#5d6781);font-weight:700}
+.sc-hh b{font-size:17px}
+.sc-cnt{font-weight:800;font-size:16px;color:var(--blue,#1d4fa3);background:var(--blue3,#dbe7fb);border-radius:10px;padding:3px 9px;flex:none}
+.sc-chips{display:flex;gap:6px;margin:8px 0 4px}
+.sc-chips i{font-style:normal;flex:1;max-width:46px;height:30px;border-radius:8px;background:var(--soft,#f3f6fc);border:1px dashed var(--edge,#d5d9e3);
+  display:flex;align-items:center;justify-content:center;font-size:17px;filter:grayscale(.6);opacity:.75}
+.sc-chips i.ok{background:#e7f6ea;border:1px solid #9fd3ab;filter:none;opacity:1}
+.sc-hl{display:block;font-size:14px;color:var(--ink2,#5d6781)}
+.sc-home.hot .sc-hl{color:var(--green2,#237a3b);font-weight:700}
+
+/* экран «Дневник» */
+.zb-scr#zb-diary{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sc-scr{max-width:560px;margin:0 auto;padding:12px 12px 90px;box-sizing:border-box}
+.sc-diary{background:var(--paper,#fbf7ec);border-radius:16px;box-shadow:var(--shadow);padding:12px 12px 10px 26px;position:relative;
+  background-image:linear-gradient(90deg,transparent 15px,var(--margin,#f0b3ad) 15px,var(--margin,#f0b3ad) 17px,transparent 17px),
+  repeating-linear-gradient(transparent 0 23px,var(--line,#dfe8f2) 23px 24px)}
+.sc-dh{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;border-bottom:2px solid var(--blue,#1d4fa3);padding-bottom:6px}
+.sc-dh small{display:block;font-size:11px;letter-spacing:.12em;font-weight:800;color:var(--blue,#1d4fa3)}
+.sc-dh b{font-size:15px}
+.sc-date{font:italic 14px Georgia,serif;color:var(--ink2,#5d6781);text-align:right}
+.sc-dt{display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px}
+.sc-dt b{font-size:19px}
+.sc-row{display:flex;align-items:center;gap:8px;width:100%;min-height:52px;border:0;border-bottom:1px dashed var(--edge,#d5d9e3);background:none;
+  font:inherit;color:inherit;text-align:left;cursor:pointer;padding:6px 2px}
+.sc-row:active{background:var(--hl,#fff4c9)}
+.sc-n{width:18px;font-weight:800;color:var(--ink2,#5d6781);flex:none}
+.sc-ic{font-size:20px;width:26px;text-align:center;flex:none}
+.sc-b{flex:1;min-width:0}
+.sc-b b{display:block;font-size:16px}
+.sc-b small{display:block;font-size:13.5px;color:var(--ink2,#5d6781);line-height:1.3}
+.sc-mk{flex:none;width:30px;text-align:center;font-size:20px;color:var(--ink2,#5d6781)}
+.sc-mk .sc-red{font-size:24px}
+.sc-row.ok .sc-b b{color:var(--green2,#237a3b)}
+.sc-seal{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:14.5px}
+.sc-seal.got{color:var(--green2,#237a3b)}
+.sc-take{display:block;width:100%;margin:10px 0}
+.sc-week{display:flex;gap:4px;margin:8px 0}
+.sc-week span{flex:1;text-align:center;background:var(--card,#fff);border:1px solid var(--edge2,#e3e7ee);border-radius:8px;padding:2px 0 3px}
+.sc-week span.now{border-color:var(--blue2,#2f6fd6)}
+.sc-week small{display:block;font-size:11px;color:var(--ink2,#5d6781)}
+.sc-week b{display:block;height:24px;font:italic 700 22px/24px Georgia,serif;color:var(--stamp,#d0342c)}
+.sc-cls{display:block;width:100%;text-align:left;border:0;border-radius:12px;background:var(--card,#fff);padding:8px 12px;margin:6px 0;font:inherit;color:inherit;cursor:pointer;
+  box-shadow:0 1px 3px rgba(39,50,74,.12)}
+.sc-cls span{font-weight:800}
+.sc-cls small{display:block;font-size:13px;color:var(--ink2,#5d6781);margin-top:3px}
+
+/* окно победы */
+.sc-wpf,.sc-wcls{display:flex;align-items:center;gap:10px;background:var(--hl,#fff4c9);border-radius:12px;padding:6px 10px;margin:6px 0;text-align:left}
+.sc-wpf b,.sc-wcls b{display:block;font-size:15px}
+.sc-wpf small,.sc-wcls small{display:block;font-size:13px;color:var(--ink2,#5d6781)}
+.sc-wpf>span:nth-child(2),.sc-wcls>span:nth-child(2){flex:1;min-width:0}
+.sc-wpf.got{opacity:.6}
+.sc-wpf.new .sc-stamp{animation:scPop .5s ease-out}
+.sc-wci{font-size:28px;flex:none}
+.sc-wtake{flex:none;min-height:40px}
+.sc-wl,.sc-wctl{font-size:14px}
+@keyframes scPop{0%{transform:rotate(-12deg) scale(2.2);opacity:0}100%{transform:rotate(-12deg) scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.sc-wpf.new .sc-stamp{animation:none}}
+
+/* портфель, линейка, табель */
+.sc-pf,.sc-cer,.sc-tab{text-align:center}
+.sc-cerz{width:110px;height:110px;margin:2px auto}
+.sc-cerz svg{width:100%;height:100%}
+.sc-card{display:block;margin:8px auto;max-width:300px;border-radius:12px;padding:10px 12px;background:linear-gradient(135deg,#fff8e1,#ffe9b0);border:2px solid #e9c46a;
+  box-shadow:0 2px 0 rgba(0,0,0,.08);transform:rotate(-1.5deg)}
+.sc-card small{display:block;font-size:12px;color:#8a6a1c;letter-spacing:.04em}
+.sc-card b{display:block;font-size:17px;color:#5a4210;margin:3px 0}
+.sc-card span{font-size:13.5px;color:#6b5420}
+.sc-cer.grad .sc-card{background:linear-gradient(135deg,#e8f0ff,#c9dafc);border-color:#6f93d8}
+.sc-cer.grad .sc-card b,.sc-cer.grad .sc-card small,.sc-cer.grad .sc-card span{color:#1d3f80}
+.sc-lad{text-align:left;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:6px 0;padding:2px}
+.sc-st{display:flex;align-items:center;gap:10px;background:var(--card,#fff);border-radius:10px;padding:6px 10px;margin:5px 0;box-shadow:0 1px 2px rgba(39,50,74,.1)}
+.sc-stn{width:32px;height:32px;border-radius:50%;background:var(--blue,#1d4fa3);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+.sc-st.done .sc-stn{background:var(--green,#34a853)}
+.sc-st.now{box-shadow:0 0 0 3px var(--gold,#f5b72d)}
+.sc-st.lock{opacity:.55}
+.sc-stb{flex:1;min-width:0}
+.sc-stb b{display:block;font-size:14.5px}
+.sc-stb small{display:block;font-size:12.5px;color:var(--ink2,#5d6781)}
+.sc-st em{font-style:normal;font-weight:800;color:var(--green2,#237a3b);flex:none}
+.sc-st em.sc-here{color:var(--btnor,#c2410c);font-size:12.5px}
+
+/* поверх уровня: контрольная */
+.sc-ctlbar{display:inline-block;background:var(--hl,#fff4c9);border:1px solid var(--gold,#f5b72d);border-radius:10px;padding:3px 10px;font-size:13.5px;color:var(--ink,#27324a);
+  max-width:100%;box-sizing:border-box}
+
+/* узкий экран */
+@media (max-width:360px){.sc-chips i{height:26px;font-size:15px}.sc-b b{font-size:15px}.sc-stamp{width:54px;height:54px;font-size:36px}}
+@media (max-height:600px){.sc-cerz{width:80px;height:80px}.sc-lad{max-height:44vh}}
+
+/* «Зина открыла школу» и «Опять прогуливал?» */
+.sc-mig{text-align:center}
+.sc-migl{display:flex;flex-direction:column;gap:5px;text-align:left;background:var(--soft,#f3f6fc);border-radius:12px;padding:8px 12px;margin:8px 0;font-size:14.5px}
+.sc-back{margin:4px 0}
+.sc-backs{font-style:italic;margin:4px 0 6px}
+.sc-backw small{font-size:13px;font-weight:600;color:var(--ink2,#5d6781)}
+
+/* четверть: полоса на главном, экран, окно победы */
+.sq-strip{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:12px;padding:6px 12px;font:inherit;color:var(--ink,#27324a);cursor:pointer;text-align:left;
+  background:var(--card,#fff);box-shadow:inset 4px 0 0 var(--sq,#e9a23b),0 1px 3px rgba(39,50,74,.12)}
+.sq-ic{font-size:24px;flex:none}
+.sq-sb{flex:1;min-width:0}
+.sq-sb b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sq-sn{font-weight:800;font-size:17px;flex:none}
+.sq-sn small{font-size:12px;color:var(--ink2,#5d6781)}
+.zb-scr#zb-season{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sq-head{display:flex;align-items:center;gap:12px;border-radius:16px;padding:12px 14px;color:#fff;background:var(--sq,#e9a23b);box-shadow:var(--shadow)}
+.sq-head .sq-ic{font-size:40px}
+.sq-head small{display:block;font-size:11px;letter-spacing:.08em;font-weight:800;opacity:.9}
+.sq-head b{display:block;font-size:20px}
+.sq-head em{display:block;font-style:normal;font-size:13.5px;opacity:.95}
+.sq-bar{position:relative;height:24px;border-radius:12px;background:var(--track,#eef1f6);overflow:hidden;margin:10px 0 2px}
+.sq-bar i{display:block;height:100%;background:var(--gold,#f5b72d)}
+.sq-bar span{position:absolute;left:0;right:0;top:0;line-height:24px;text-align:center;font-size:13px;font-weight:700;color:var(--ink,#27324a)}
+.sq-ab{background:var(--card,#fff);border-radius:12px;padding:8px 12px;margin:8px 0;box-shadow:0 1px 3px rgba(39,50,74,.12)}
+.sq-ab.on{box-shadow:0 0 0 2px var(--gold,#f5b72d)}
+.sq-ab b{display:block}
+.sq-ab small{display:block;font-size:13px;color:var(--ink2,#5d6781)}
+.sq-cols{display:flex;font-size:12px;font-weight:800;color:var(--ink2,#5d6781);letter-spacing:.04em;padding:0 8px 0 42px}
+.sq-cols span{flex:1}
+.sq-st{display:flex;align-items:center;gap:8px;background:var(--card,#fff);border-radius:10px;padding:5px 8px;margin:4px 0;min-height:36px;font-size:13.5px}
+.sq-st.done{background:#eef8f0}
+.sq-st.now{box-shadow:0 0 0 2px var(--gold,#f5b72d)}
+.sq-n{width:26px;height:26px;border-radius:50%;background:var(--blue3,#dbe7fb);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;flex:none}
+.sq-st.done .sq-n{background:var(--green,#34a853);color:#fff}
+.sq-f,.sq-p{flex:1;min-width:0}
+.sq-p{color:#8a6a1c}
+.sq-p.got{color:var(--green2,#237a3b);font-weight:700}
+.sq-win{font-size:13.5px}
+/* открытки классов (музей CAB — ZBS.cardsHtml()) */
+.sc-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.sc-card.sm{margin:0;max-width:none;transform:none;padding:8px 10px}
+.sc-card.sm b{font-size:14.5px}
+.sc-card.lock{background:var(--soft,#f3f6fc);border:2px dashed var(--edge,#d5d9e3);opacity:.7}
+.sc-card.lock b,.sc-card.lock small,.sc-card.lock span{color:var(--ink2,#5d6781)}
+.sc-card.gold{border-color:#d4a017;box-shadow:0 0 0 3px #f5d76e,0 2px 0 rgba(0,0,0,.08)}
+/* «Опять прогуливал?» внутри окна гостинца — компактно; невысокие окна — Зина меньше */
+.sc-back.lite .sc-backs{font-size:14.5px;margin:2px 0 4px}
+.sc-back.lite .sc-backw{font-size:20px;margin:2px 0}
+.sc-backz{width:72px!important;height:72px!important}
+.sc-mig .sc-migl{font-size:14px;gap:3px;padding:6px 10px}
+@media (max-height:820px){.sc-cerz{width:84px;height:84px}}
+@media (max-height:600px){.sc-cerz{width:64px;height:64px}.sc-backz{display:none}}
+@media (min-width:1200px){.sc-lad{max-height:40vh}}
+/* 320×568: окно «Зина открыла школу» без прокрутки — подпись внизу прячем */
+@media (max-height:600px){.sc-migf{display:none}}
+/* ПК/VK (новый вид, две колонки): полоса четверти — под кнопками звука/«Об игре», не поверх; пустое место полосы не ловит нажатия */
+@media (min-width:860px){/* pointer-events полосы #zbHomeTop — в css/zb-view.css (перенесено при сведении) */
+  html.zbv #zbHomeTop .sq-strip{width:100%;margin:0}} /* отступ под кнопки и ширина полосы — у VIEW (css/zb-view.css, сведение) */
