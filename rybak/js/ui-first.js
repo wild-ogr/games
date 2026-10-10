@@ -29,6 +29,7 @@ startFish=function(pi,opt){var r=sf.apply(this,arguments);
 function uiBar(){var scr=$('scr-fish');if(!scr||!G)return;var el=$('uiCast');
   var on=!G.tourn&&(S.sessions||0)<SIMPLE_RES&&!G.over;
   scr.classList.toggle('ui-hasbar',!!on);
+  uiFight();
   if(!on){if(el)el.style.display='none';return;}
   if(!el){el=document.createElement('div');el.id='uiCast';el.className='ui-cast';scr.appendChild(el);}
   var tot=G.max+(G.extra||0),n=Math.min(tot,Math.max(1,G.used+(G.phase==='aim'?1:0))),fish=G.catch.filter(function(c){return c.id&&!c.lost;}).length;
@@ -37,6 +38,9 @@ function uiBar(){var scr=$('scr-fish');if(!scr||!G)return;var el=$('uiCast');
   el.innerHTML='<b>'+L('Заброс','Cast')+' '+n+' '+L('из','of')+' '+tot+'</b><span class="ui-cbar">'+Array.apply(null,{length:tot}).map(function(_,i){return '<i class="'+(i<G.used?'on':'')+'"></i>';}).join('')+'</span>'+(goal?'<small>'+goal+'</small>':'');
   if(window.LOOK&&LOOK.walk)try{LOOK.walk(el);}catch(e){}}
 var uh=updHud;updHud=function(){uh.apply(this,arguments);try{uiBar();}catch(e){}};
+// fix1010b: на время вываживания полоска «Заброс N из M» прячется — иначе ложится прямо на шкалу натяжения лески (рисуется на холсте у верха)
+function uiFight(){try{var s=$('scr-fish');if(s)s.classList.toggle('ui-fight',!!(G&&G.phase==='fight'));}catch(e){}}
+var dh=doHook;doHook=function(){var r=dh.apply(this,arguments);uiFight();return r;};
 // игра могла начать первую рыбалку ещё до загрузки этого файла (bootScreen) — поправить уже идущую
 try{if(G&&!G.over&&!G.tourn&&!(S.sessions>0)&&G.used<FIRST_MAX){G.max=Math.min(G.max,FIRST_MAX);G.uiFirst=1;t0=Date.now();updHud();}}catch(e){}
 
@@ -56,6 +60,7 @@ function offerCalm(why){if(S.uiCalmAsk||calm()||!G||G.tourn||modalOn)return;S.ui
 var lastMiss=0;
 setInterval(function(){try{if(!G||G.over||!$('scr-fish').classList.contains('on'))return;
   var ph=G.phase,quiet=ph==='aim'||ph==='wait'||ph==='miss';
+  uiFight();
   if(G.phase==='fight'||G.phase==='reel'){var sy=$('say');if(sy&&sy.classList.contains('on')&&sayWho==='mit')sy.classList.remove('on');} // облачко не закрывает рыбу
   if(!S.uiCalmAsk&&!calm()&&!G.tourn){var miss=G.catch.filter(function(c){return c.miss;}).length;
     if(miss>lastMiss&&ph==='miss'){lastMiss=miss;setTimeout(function(){if(G&&!G.over&&(G.phase==='aim'||G.phase==='wait'||G.phase==='miss'))offerCalm('miss');},1700);}

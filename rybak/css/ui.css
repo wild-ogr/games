@@ -123,6 +123,7 @@ body.uh-new .uh-nav{justify-content:center}body.uh-new .uh-nb{flex:0 1 160px}
 .ui-cbar{display:flex;gap:6px}.ui-cbar i{width:28px;height:8px;border-radius:4px;background:rgba(255,255,255,.22)}.ui-cbar i.on{background:var(--acc1,#ffcf7a)}
 .ui-cast small{font-size:17px;line-height:1.25;color:var(--gold,#ffd27a);font-weight:600;max-width:320px}
 #scr-fish.ui-hasbar #say{margin-top:58px}
+#scr-fish.ui-fight .ui-cast{opacity:0;visibility:hidden} /* fix1010b: не закрывать шкалу натяжения во время вываживания */
 .ui-offer{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 124px);z-index:6;margin:0 auto;max-width:460px;padding:14px;border-radius:20px;
   background:var(--pnS2,rgba(20,32,44,.94));border:1px solid var(--okB,rgba(107,227,176,.5));box-shadow:var(--sh);color:var(--tx,#fff)}
 .ui-offer p{margin:0 0 10px;font-size:17px;line-height:1.35;color:var(--tx2)}.ui-offer p b{display:block;font-size:20px;color:var(--tx);margin-bottom:4px}

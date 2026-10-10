@@ -1067,7 +1067,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v8-101012',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v8-101016',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -2244,7 +2244,7 @@ function act(x,y){const ph=G.phase;
     doCast(x,y);}
   else if(ph==='nibble'||ph==='wait'&&G.pk)early();
   else if(ph==='wait'){G.hold=true;}
-  else if(ph==='bite')doHook();
+  else if(ph==='bite'){doHook();if(G.phase==='fight'||G.phase==='reel')G.hold=true;} // fix1010b: палец/клавиша, которыми подсекли, сразу тянут (отпустил — pUp/keyup снимут)
   else if(ph==='fight'||ph==='reel')G.hold=true;
   else if(ph==='card')nextCast();}
 function doCast(x,y){const tk=curTk(),maxd=TACKLE.rod.dist[tk.rod]*a2DK();let d=GEO.dOf(y);
@@ -2455,7 +2455,7 @@ function render(){if(!G||!GEO)return;const g=cx,W=GEO.W,H=GEO.H,u=GEO.u,t=G.ptim
     g.strokeStyle='rgba('+cl+','+(.25+R()*.45).toFixed(2)+')';g.lineWidth=Math.max(1,u*.25*(1+k));g.beginPath();g.moveTo(x-w/2,y);g.lineTo(x+w/2,y);g.stroke();}}
   a1Water(g,t);
   // круги на воде и брызги
-  for(const r of G.ripples){g.strokeStyle='rgba(255,255,255,'+(.5*r.life).toFixed(3)+')';g.lineWidth=Math.max(1,u*.25);g.beginPath();g.ellipse(r.x,r.y,r.r+u*.5,(r.r+u*.5)*.32,0,0,7);g.stroke();}
+  for(const r of G.ripples){g.strokeStyle='rgba(255,255,255,'+(.5*r.life).toFixed(3)+')';g.lineWidth=Math.max(1,u*.25);const er=r.r+u*.5;if(!(er>0))continue;/*fix1010b: дождь у горизонта — радиус <0 → IndexSizeError (Android 360×660)*/g.beginPath();g.ellipse(r.x,r.y,er,er*.32,0,0,7);g.stroke();}
   drawPetr(g,t);drawWaterDec(g,t);a2DrawZones(g,t);drawReeds(g,t);
   // рыба на леске, поплавок, леска, удочка
   let end=null,T=0;const ph=G.phase,f=G.fl;
