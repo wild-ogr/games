@@ -152,7 +152,7 @@ weekClaim=function(){var w=weekPending(),r=wc0.apply(this,arguments);
 var ow0=openWeek;
 openWeek=function(){ow0.apply(this,arguments);try{var w=weekNum(),l=S.lgL||0,rows=table(w,l,wDay(),myBest(w)),p=myPlace(rows),mc=$('mcard');
   var b=document.createElement('button');b.className='btn lgwk noenter';b.id='lgWk';b.innerHTML=badge(l,36)+'<span><b>'+lgName(l)+'</b><small>'+L('ты','you are')+' '+p+L('-й из 8 · таблица соседей',' of 8 · neighbours\' board')+'</small></span>'+(window.LOOK?LOOK.I('fwd'):'›');
-  var h2=mc.querySelector('h2');if(h2&&h2.nextSibling)mc.insertBefore(b,h2.nextSibling);else mc.appendChild(b);b.onclick=function(){openLeague(openWeek);};}catch(e){}};
+  var h2=mc.querySelector('h2'),a=h2;while(a&&a.parentNode!==mc)a=a.parentNode;/*fix1010: h2 бывает внутри шапки ui-win — вставка после верхнего блока шапки, а не h2.nextSibling (NotFoundError, строка терялась молча)*/if(a&&a.nextSibling)mc.insertBefore(b,a.nextSibling);else mc.appendChild(b);b.onclick=function(){openLeague(openWeek);};}catch(e){}};
 
 /* ---------- гнёзда UX: главный экран и итоги ---------- */
 function mapLine(){var w=weekNum(),l=S.lgL||0,d=wDay(),rows=table(w,l,d,myBest(w)),p=myPlace(rows),played=myBest(w)>0;

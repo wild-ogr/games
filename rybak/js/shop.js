@@ -199,7 +199,10 @@ function mx(){var a=[];for(var i=0;i<MAILX.length;i++){try{if(MAILX[i].ok())a.pu
   a.forEach(function(x){h+='<div class="a3g rdy" data-mx="'+x.id+'"><span class="ai">'+x.ic+'</span><span>'+x.t+(x.sub?'<small>'+x.sub+'</small>':'')+'</span><button class="btn green noenter" data-mxt="'+x.id+'">'+(x.c&&x.c()?'+'+coinsTxt(x.c()):T('Забрать','Take'))+'</button></div>'+(x.more?x.more():'');});
   var ex=MAILX.filter(function(x){return x.always;}).map(function(x){try{return x.always();}catch(e){return '';}}).join('');
   if(!h&&!ex)return;var d=D.createElement('div');d.className='vt-mx';d.innerHTML=h+ex;
-  var at=card.querySelector('.fbmain');var ref=at?at.nextSibling:card.querySelector('h2').nextSibling;card.insertBefore(d,ref);
+  // fix1010: вставляем рядом с настоящим родителем опоры. Без .fbmain (всё забрано, писем нет) h2 и .fbhead уже лежат в шапке .uw-mh (ui-win mailTidy) —
+  // card.insertBefore(d,h2.nextSibling) падал NotFoundError и строка trial2 терялась. Опора: «Забрать всё»/«Прочитать» → шапка окна → h2; не нашли — перед кнопками внизу.
+  var at=card.querySelector('.fbmain')||card.querySelector('.uw-mh')||card.querySelector('.fbhead')||card.querySelector('h2');
+  if(at&&at.parentNode)at.parentNode.insertBefore(d,at.nextSibling);else{var rw=card.querySelector('.row');if(rw&&rw.parentNode)rw.parentNode.insertBefore(d,rw);else card.appendChild(d);}
   d.querySelectorAll('[data-mxt]').forEach(function(b){b.onclick=function(){var x=MAILX.find(function(z){return z.id===b.dataset.mxt;});if(x){try{x.take(false);}catch(e){}updCoins();SND.coin();}openMail();};});
   MAILX.forEach(function(x){if(x.bind)try{x.bind(d);}catch(e){}});};}
 // пробная посылка клуба: 5-й день игры и дальше, один раз, клуб ни разу не брали, покупки есть (не ОК)

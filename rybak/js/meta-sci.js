@@ -110,7 +110,7 @@ function drawScene(el,r){if(!el)return;var o=M.canv(el,128),g=o.g,W=o.W,H=o.H;
 /* ---------- окно звания игры: вход в Науку ---------- */
 var or0=openRank;openRank=function(){or0.apply(this,arguments);try{var mc=$('mcard'),r=rankAt(points()),b=document.createElement('button');b.className='mtslot scin noenter';
   b.innerHTML=M.MI('sci','mtico scbig')+'<span class="mtst"><b>'+L('Наука Петровича','Petrovich\'s science')+'</b><small>'+esc(L(r.n,r.en))+(free(r)?' · '+L('свободно очков: ','free points: ')+free(r):'')+'</small></span>'+(window.LOOK?LOOK.I('fwd'):'›');
-  var h2=mc.querySelector('h2');if(h2&&h2.nextSibling)mc.insertBefore(b,h2.nextSibling);else mc.appendChild(b);b.onclick=function(){openSci(openRank);};}catch(e){}};
+  var h2=mc.querySelector('h2'),a=h2;while(a&&a.parentNode!==mc)a=a.parentNode;/*fix1010: h2 бывает внутри шапки ui-win — вставка после верхнего блока шапки, а не h2.nextSibling (NotFoundError, строка терялась молча)*/if(a&&a.nextSibling)mc.insertBefore(b,a.nextSibling);else mc.appendChild(b);b.onclick=function(){openSci(openRank);};}catch(e){}};
 
 /* ---------- гнездо главного экрана ---------- */
 M.tile({id:'sci',pri:30,when:function(){return (S.sessions||0)>=3;},ic:function(){return M.MI('sci');},t:function(){return L('Наука','Science');},
