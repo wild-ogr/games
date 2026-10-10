@@ -51,7 +51,7 @@ var POS={
 
 var D=null; // состояние открытого двора
 function css(){M.css();if(document.getElementById('mgDvCss'))return;var s=document.createElement('style');s.id='mgDvCss';s.textContent=DV_CSS;document.head.appendChild(s);}
-function open(){css();if(D)close(true);try{hideModal();}catch(e){}
+function open(){css();if(D)close(true);try{hideModal();}catch(e){}try{window.uiDvorSeen&&uiDvorSeen();}catch(e){} /*fix1010c: точка на кольце «Двор» гаснет, раз заглянул сегодня*/
   var app=document.getElementById('app')||document.body,lay=document.createElement('div');lay.className='mg-dv';
   lay.innerHTML='<canvas class="mg-dvc"></canvas><div class="mg-stns"></div>'+
    '<div class="mg-dtop"><button class="mg-x mg-back" type="button" aria-label="'+L('Назад','Back')+'">'+icn('back')+'</button><div class="mg-ttl"><div class="mg-tn">'+L('Двор Петровича','Petrovich\'s yard')+'</div>'+

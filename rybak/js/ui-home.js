@@ -65,10 +65,13 @@ function todayHtml(){var o=today(),P=PLACES[o.pi],bl=biteLv(o.m),gt=goalTrip(),s
 function ring(p,cls){p=Math.max(0,Math.min(1,p||0));var r=17,c=2*Math.PI*r;
   return '<svg class="uh-ring '+(cls||'')+'" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="'+r+'" class="bg"/><circle cx="22" cy="22" r="'+r+'" class="fg" stroke-dasharray="'+(c*p).toFixed(1)+' '+c.toFixed(1)+'" transform="rotate(-90 22 22)"/></svg>';}
 function ringsHtml(){var n=0;try{n=a3DoneN();}catch(e){}var wl=1;try{wl=weekLeft();}catch(e){}
-  var items=[['uhDaily',ring(n/3,'g'),L('Цели дня','Daily goals'),n+' '+L('из','of')+' 3',n>=3?'':'dot'],
+  // fix1010c: точка = «новое на сегодня», а не «не всё сделано»: горит, пока сегодня не открывал Цели / Двор (S.uiGd / S.uiDd — день).
+  // Раньше горела весь день до 3/3 и всех дел Двора — у игрока на главном экране всегда 2 точки «без повода».
+  var td=dayNum();
+  var items=[['uhDaily',ring(n/3,'g'),L('Цели дня','Daily goals'),n+' '+L('из','of')+' 3',n<3&&S.uiGd!==td?'dot':''],
     ['uhWeek',ring((7-wl)/7,'b'),dayOn()?L('Турниры','Contests'):L('Турнир','Contest'),wl<=1?L('последний день','last day'):(LANG==='en'?'':'ещё ')+wl+' '+pl(wl,'день','дня','дней','day left','days left'),'']];
   var dv=null;if(typeof window.uiDvor==='function'){try{dv=window.uiDvor();}catch(e){dv=null;}}
-  if(dv)items.push(['uhDvor',ring(dv.p,'o'),dv.n||L('Двор','Yard'),dv.sub||'',dv.dot?'dot':'']);
+  if(dv)items.push(['uhDvor',ring(dv.p,'o'),dv.n||L('Двор','Yard'),dv.sub||'',dv.dot&&S.uiDd!==td?'dot':'']);
   else{var dn=0,ev='';try{dn=Object.keys(a3Mp().g).length;ev=a3Ev();}catch(e){}
     var mo=new Date(nowMs()).getMonth();items.push(['uhMonth',ring(dn/10,'o'),ev==='aut'?L('Осень','Autumn'):L('План','Plan'),dn+' '+L('из','of')+' 10','']);}
   return '<div class="uh-rings">'+items.map(function(x){return '<button class="uh-rb noenter" id="'+x[0]+'">'+x[1]+'<span><b>'+x[2]+'</b><small>'+x[3]+'</small></span>'+(x[4]?'<i class="dot"></i>':'')+'</button>';}).join('')+'</div>';}
@@ -124,8 +127,9 @@ function build(){var wrap=$('mapWrap'),scr=$('scr-map');if(!wrap||!scr)return;do
   // картинки мест
   var tod=window.__todForce||todOf(hourNow());
   home.querySelectorAll('[data-th]').forEach(function(el){var i=+el.dataset.th;try{el.appendChild(placeThumb(i,condFor(i,tod)));}catch(e){}});
-  bind(home);[nav,tabs].forEach(function(n){if(n)n.querySelectorAll('[data-nv]').forEach(function(b){b.onclick=function(){nv(b.dataset.nv);};});});
+  bind(home);[nav,tabs].forEach(bindNav);
   if(window.LOOK&&LOOK.walk)try{LOOK.walk(home);LOOK.walk(nav);if(tabs)LOOK.walk(tabs);}catch(e){}}
+function bindNav(n){if(n)n.querySelectorAll('[data-nv]').forEach(function(b){b.onclick=function(){nv(b.dataset.nv);};});}
 function nv(k){if(k==='uhPlaces'){$('mapWrap').scrollTop=0;return;}SND.tap();
   if(k==='uhAlb')openAlb('f');else if(k==='uhTk')openShop('t');else if(k==='uhShop')uiShop();else if(k==='uhMail')openMail();else if(k==='uhMore')SOC.showMore();}
 function bind(home){var o=today();
@@ -134,13 +138,14 @@ function bind(home){var o=today();
   var sp=home.querySelector('.uh-say p');if(sp&&!o.nb)sp.onclick=function(){SND.tap();openFore();};
   var g=$('uhGoal');if(g)g.onclick=function(){goalGo();};
   var tr=$('uhTour');if(tr)tr.onclick=function(){SND.tap();try{S.uiTour=weekNum();save();STAT.ev('mod',{m:'home',a:'tour'});}catch(e){}openWeek();};
-  var a;if((a=$('uhDaily')))a.onclick=function(){SND.tap();openDaily('d');};
+  bindRings();
+  home.querySelectorAll('[data-pl]').forEach(function(b){var i=+b.dataset.pl;b.onclick=function(){SND.tap();S.open[i]?pickTime(i):buyPlace(i);};});}
+function bindRings(){var a;if((a=$('uhDaily')))a.onclick=function(){SND.tap();openDaily('d');};
   if((a=$('uhWeek')))a.onclick=function(){SND.tap();openWeek();};
   if((a=$('uhMonth')))a.onclick=function(){SND.tap();openDaily('m');};
   if((a=$('uhDvor')))a.onclick=function(){SND.tap();try{var d=window.uiDvor();d&&d.open&&d.open();}catch(e){}};
   if((a=$('uhRank')))a.onclick=function(){SND.tap();openRank();};
-  ['uhOrd','uhOrd2'].forEach(function(id){var b=$(id);if(b)b.onclick=function(){SND.tap();openOrders();};});
-  home.querySelectorAll('[data-pl]').forEach(function(b){var i=+b.dataset.pl;b.onclick=function(){SND.tap();S.open[i]?pickTime(i):buyPlace(i);};});}
+  ['uhOrd','uhOrd2'].forEach(function(id){var b=$(id);if(b)b.onclick=function(){SND.tap();openOrders();};});}
 
 // подсказки: старая «это прогноз» (fbMapFore) не нужна — прогноз теперь в «Сегодня»; она могла встать в очередь ещё при загрузке
 var _toast=toast;toast=function(t){if(typeof t==='string'&&t.indexOf(L('Это прогноз Петровича','This is Petrovich'))>=0)return;return _toast.apply(this,arguments);};
@@ -152,6 +157,33 @@ try{$('shBack').onclick=function(){openMap();};$('alBack').onclick=function(){op
 window.addEventListener('resize',function(){var s=$('scr-map');if(s&&s.classList.contains('on')&&$('uiHome'))try{build();}catch(e){}});
 if($('scr-map')&&$('scr-map').classList.contains('on')&&!window.G)try{build();}catch(e){}
 window.uiHomeBuild=build;
+/* fix1010c: точки и счётчики «есть новое» перерисовываются сразу. Раньше нижняя панель (Почта N), кольца и плитки гнёзд
+   строились только в openMap(): прочитал письмо / забрал подарок / закрыл окно — на главном экране висело старое число
+   до следующего захода на карту (и при входе — число без письма дня: панель строилась до его доставки).
+   Теперь: после updDots() (почта зовёт его при каждом показе и закрытии) и после закрытия любого окна — лёгкое обновление
+   без пересборки экрана: панель/вкладки всегда, кольца и гнёзда — когда окна нет. */
+var bdgT=0;
+function badges(){bdgT=0;try{var w=function(n){if(n&&window.LOOK&&LOOK.walk)try{LOOK.walk(n);}catch(e){}};
+  var map=$('scr-map'),onMap=map&&map.classList.contains('on')&&$('uiHome');
+  if(onMap){var nav=$('uhNav');if(nav){nav.innerHTML=navHtml();bindNav(nav);w(nav);}
+    var tabs=$('uhTabs');if(tabs){tabs.innerHTML='<button class="uh-nb on noenter" data-nv="uhPlaces">🗺<small>'+L('Места','Places')+'</small></button>'+navHtml();bindNav(tabs);w(tabs);}
+    if(!modalOn&&!G){var rg=document.querySelector('#uiHome .uh-rings');if(rg){var t=document.createElement('div');t.innerHTML=ringsHtml();var nr=t.firstChild;rg.parentNode.replaceChild(nr,rg);bindRings();w(nr);}
+      var sl=$('mapSlotsB');if(sl&&typeof slotsFill==='function'&&typeof mapSlots!=='undefined')try{slotsFill(sl,mapSlots,{},SLOT_MAX.map);w(sl);}catch(e){}}}
+  [['scr-alb','uhAlb'],['scr-shop','']].forEach(function(x){var sc=$(x[0]);if(!sc||!sc.classList.contains('on')||!sc.querySelector('.uh-sub'))return;
+    var on=x[1]||((sc.querySelector('.uh-sub .uh-nb.on')||{}).dataset||{}).nv||'uhTk';subTabs(x[0],on);});}catch(e){try{console.error(e);}catch(_){}}}
+// повод появляется сам, без окна (донка дозрела, покупки VK/Яндекса подключились позже — пробная посылка, подарок вернувшемуся после облака):
+// раз в 3 с сверить панель с подсчётом и перерисовать, только если изменилось
+function navSig(){return navItems().map(function(x){return x[0]+':'+(x[5]||'')+(x[3]?'•':'');}).join(' ');}
+setInterval(function(){try{var nav=$('uhNav'),map=$('scr-map');if(!nav||!map||!map.classList.contains('on')||G)return;
+  var cur=[].map.call(nav.querySelectorAll('[data-nv]'),function(b){var c=b.querySelector('.uh-cnt');return b.dataset.nv+':'+(c?c.textContent:'')+(!c&&b.querySelector('.dot')?'•':'');}).join(' ');
+  if(cur!==navSig())badgesSoon();}catch(e){}},3000);
+function badgesSoon(){if(!bdgT)bdgT=setTimeout(badges,0);}
+window.uiBadges=badgesSoon;
+function seen(k){try{var t=dayNum();if(S[k]!==t){S[k]=t;save();}}catch(e){}}
+{var od=openDaily;openDaily=function(){seen('uiGd');return od.apply(this,arguments);};}
+window.uiDvorSeen=function(){seen('uiDd');};
+{var ud=updDots;updDots=function(){var r=ud.apply(this,arguments);badgesSoon();return r;};
+ var hm=hideModal;hideModal=function(){var r=hm.apply(this,arguments);badgesSoon();return r;};}
 /* ПК: те же вкладки сверху и в «Альбоме», и в «Снастях» (экран не теряет навигацию) */
 function subTabs(scrId,on){var scr=$(scrId);if(!scr)return;var hdr=scr.querySelector('.gh');if(!hdr)return;var t=hdr.querySelector('.uh-tabs');
   if(!t){t=document.createElement('nav');t.className='uh-tabs uh-sub';var c=hdr.querySelector('.pill');hdr.insertBefore(t,c||null);}
