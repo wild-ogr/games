@@ -1,14 +1,16 @@
 'use strict';
 /* ================= экраны и окна ================= */
-function show(id){STAT.screen(id);document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
+function show(id){STAT.screen(id);if(typeof ZB!=='undefined')ZB.emit('screen',id); /* zb */
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
   if(id!=='game'){stopTutorial();YG.stop();}
   if(id==='game')requestAnimationFrame(()=>{layoutGrid();layoutWheel();});}
 // окно поверх уровня — для Яндекса это пауза геймплея (GameplayAPI.stop); закрыли — hideModal снова start, если идёт игра
-function modal(html){if(typeof PAY!=='undefined')PAY.re=null;$('mcard').innerHTML=html;$('modal').classList.add('on');YG.stop();}
+function modal(html){if(typeof PAY!=='undefined')PAY.re=null;$('mcard').className='mcard';$('mcard').innerHTML=html; /* zb-VIEW: класс окна — заново (лесенка ставит свой) */$('modal').classList.add('on');YG.stop();}
 function hideModal(){$('modal').classList.remove('on');if(typeof introDone==='function')introDone();if(typeof inPlay==='function'&&inPlay())YG.start();}
 
 /* ---------- меню ---------- */
 function openMenu(){
+  if(typeof ZB!=='undefined'&&G&&!G.won&&!G.zbd)ZB.level(zbInfo(G,'quit')); /* zb: ушли из уровня */
   STAT.end('quit'); // ушли в меню посреди уровня (после победы уровня уже нет — ничего не пишет)
   show('menu');updCoins();STAT.once('menu');STAT.once('ready',{ms:Math.round(performance.now())});
   // баба Зина в текущем наряде (перерисовываем, только если сменился)
@@ -26,6 +28,7 @@ function openMenu(){
   const lg=lgDue()&&!lgAuto&&!SHOT;if(lg)lgAuto=true;
   if(!SHOT)setTimeout(()=>{if(!$('menu').classList.contains('on')||$('modal').classList.contains('on'))return;const rc=typeof retDue==='function'&&retDue()?retCard:null;
     if(lg&&lgDue())openLogin(rc);else if(rc)rc();},500);
+  if(typeof ZB!=='undefined'){ZB.refresh();ZB.emit('home');} /* zb: гнёзда главного */
 }
 let lgAuto=false;
 // серия дней на кнопке задания дня: «🔥 3», пока серия жива (решено сегодня или вчера)
@@ -195,8 +198,9 @@ function winModal(g,r,again){
   const {first,reward,dw,isNew}=r,hasDef=!!dw;
   const streakTxt=r.streak?`<p>🔥 Серия: <b>${r.streak} ${plural(r.streak,'день','дня','дней')}</b></p>`:'';
   const last=!g.daily&&first&&g.idx+1>=LEVELS.length,chapDone=!g.daily&&first&&!last&&(g.idx+1)%CH_LEN===0;
+  const lastAll=last&&!(typeof ZBCH!=='undefined'&&ZBCH.total&&g.idx+1<ZBCH.total()); /* zb-VIEW: правда последний (уровни 501+ ещё не подгружены — не последний, «Дальше» → openTheEnd догрузит) */
   // заголовок выбираем один раз — после «Открытка → Назад» он не меняется; не повторяем слова последней реплики («Иди поешь» дважды)
-  const title=r.title||(r.title=last?'Все уровни пройдены!':chapDone?'Глава пройдена!':sayAvoid('win',(zina.h||[]).join(' ')));
+  const title=r.title||(r.title=lastAll?'Все уровни пройдены!':last?'Глава пройдена!':chapDone?'Глава пройдена!':sayAvoid('win',(zina.h||[]).join(' ')));
   // «Дальше»: после нового уровня — следующий; после переигрывания старого — к текущему непройденному
   const nextI=last?-1:g.daily?(S.lv<LEVELS.length?S.lv:-1):first?g.idx+1:S.lv<LEVELS.length?S.lv:-1; // r2: после задания дня — «К уровню N ▶» (в меню — мелкой кнопкой winMenu)
   const ch=chapOf(g.idx),chDone=clamp(S.lv-Math.floor(g.idx/CH_LEN)*CH_LEN,0,CH_LEN);
@@ -212,9 +216,12 @@ function winModal(g,r,again){
   const tmr=light||g.daily?'':tmrHtml();
   const tomorrow=g.daily&&first?`<p style="font-size:14.5px">Завтра: <b>+${ECO.daily(r.streak+1)}</b> ${COIN_I} и серия ${r.streak+1} ${plural(r.streak+1,'день','дня','дней')}.</p>`:'';
   const ask=r.ask!==undefined?r.ask:(r.ask=first&&!(typeof askHold==='function'&&askHold(g))?(typeof nbAsk==='function'?nbAsk(g):pickAsk()):null); // z-new: после задания дня с карточки возврата
+  const zbc={g,r,first,daily:g.daily,idx:g.idx,light,again:!!again},zbw=typeof ZB!=='undefined'&&!(ZB.vw&&window.ZBW)?ZB.html(ZB.winSlots,'',zbc):''; /* zb: гнёзда окна победы (новый вид — ZBW по зонам) */
   const nextTxt=r.chap&&!r.chapSeen?'Дальше ▶':nextI<0?'В меню':nextI===g.idx+1?'Дальше ▶':'К уровню '+(nextI+1)+' ▶';
-  modal(`<div class="${again?'':'win'}"><h2>${title}</h2>
-    ${last?`<p>Все ${LEVELS.length}! Новые главы скоро — баба Зина уже сочиняет. А пока — задание дня каждый день.</p>`:''}
+  /* zb-VIEW: новый вид — «лесенка наград» (js/zb-win.js); те же id кнопок, обработчики ниже общие */
+  if(typeof ZB!=='undefined'&&ZB.vw&&window.ZBW)modal(ZBW.html({g,r,again,title,last,lastAll,hasDef,dw,isNew,reward,money,light,streakTxt,tomorrow,tmr,ask,zbc,nextTxt,chapDone,ch,chDone}));
+  else modal(`<div class="${again?'':'win'}"><h2>${title}</h2>
+    ${lastAll?`<p>Все ${LEVELS.length}! Вот это голова. А задание дня — каждый день новое.</p>`:''}
     ${hasDef?defCardHtml(dw,isNew,true):`<div style="width:110px;height:110px;margin:4px auto">${zinaSVG('happy')}</div>`}
     ${r.exLoud?`<div class="stamp">🏅 ОТЛИЧНИК<small>без подсказок${r.exBonus?' · +'+coinsTxt(r.exBonus):''}</small></div><p class="exsay" style="font-size:15px">${r.exSay||(r.exSay=say('excellent'))}</p>`:''}
     ${r.rankUp?`<p class="rankup">🎓 Новое звание: <b>${r.rankUp}</b>!</p>`:''}
@@ -227,13 +234,17 @@ function winModal(g,r,again){
     ${light||chapDone||last||g.daily||r.dly||ask||(S.wins||0)%5!==1?'':`<div class="goal${goalCan()?' can':''}" id="mGoalW">${ch.e} ${ch.n}: <b>${chDone}/${CH_LEN}</b> · ${goalHtml()}</div>`}
     ${tmr&&!ask?`<p class="tmr">${tmr}</p>`:''}
     ${typeof sosWinHtml==='function'?sosWinHtml(g,r,light):''}
+    ${zbw}
     <div class="btns">
       <button class="btn green" id="mNext">${nextTxt}</button>
       ${r.dly&&!S.daily[todayKey()]?'<button class="btn blue" id="mDly">📅 Сыграть задание дня</button>':''}
       ${r.box==='on'?(r.boxGot?`<button class="btn gold" disabled>✅ ${boxTxt()}</button>`:`<button class="btn gold box" id="mBox">🎬 🧺 Корзинка за рекламу: <span class="nw">${boxTxt()}</span></button>`):''}
       ${ask?(ask.soc?`<div class="soc-o"><span>${ask.soc}</span><button class="btn ghost small" id="mAsk">${ask.t}</button></div>`:`<button class="btn ghost small" id="mAsk">${ask.t}</button>`):''}
     </div></div>`);
+  if(typeof ZB!=='undefined'&&ZB.vw&&window.ZBW)$('mcard').classList.add('zbw-m'); /* zb-VIEW: лесенка — своя ширина/сетка на ПК */
   winMenu(g,r,nextI);
+  if(zbw||(typeof ZB!=='undefined'&&ZB.vw&&window.ZBW))ZB.mount($('mcard'),ZB.winSlots,zbc); /* zb */
+  if(typeof ZB!=='undefined'&&ZB.vw&&window.ZBW)ZB.safe('ZBW.after',()=>ZBW.after(g,r,again)); /* zb-VIEW */
   fitWin();if(typeof sosWinBind==='function')sosWinBind(g,r); // «Соседки» (js/sosedki.js): строка в окне победы
   if(!again){SND.coin();coinBurst($('mRew'),reward);}
   const sh=$('mShare');if(sh)sh.onclick=()=>shareDef(dw,()=>winModal(g,r,true));
@@ -267,13 +278,21 @@ function winMenu(g,r,nextI){const bs=document.querySelector('#mcard .btns');if(!
   b.onclick=()=>{hideModal();SND.tap();if(r.chap&&!r.chapSeen){openChapFinale(g,r,-1);return;}maybeInterstitial(openMenu);};}
 // окно победы не должно прокручиваться: не влезло — убираем второстепенное по очереди (фраза «Отличника», расшифровка монет, цель, шапка карточки, «Завтра»)
 function fitWin(){const m=$('mcard'),w=m.firstElementChild;if(!w)return;const cs=getComputedStyle(m),pad=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);
-  for(const sel of['.exsay','.money','.sosw','.goal','.defcard .tag','.rankup+p','.tmr']){if(w.offsetHeight+pad<=m.clientHeight+1)break;const e=w.querySelector(sel);if(e)e.style.display='none';}}
+  /* zb: гнёзда с data-fit прячем первыми (1 — раньше всех) */
+  const zw=w.classList.contains('zbw'),over=()=>zw?m.scrollHeight>m.clientHeight+1:w.offsetHeight+pad>m.clientHeight+1; /* zb-VIEW: лесенка — по scrollHeight (поля/повороты штампа), на время замера без анимаций (сдвиг «въезда» не в счёт) */
+  if(zw)m.classList.add('zbfit');
+  [].slice.call(w.querySelectorAll('.zbs[data-fit]')).sort((a,b)=>a.dataset.fit-b.dataset.fit).forEach(e=>{if(over())e.style.display='none';});
+  const L=zw?['.exsay','.money','.sosw','.zbw-react','.goal','.zbw-chap small','.defcard .tag','.rankup+p','.week .wt','.tmr','.zbw-chips .jar','.zbw-chap .zdots']: /* zb-VIEW: лесенка */
+    ['.exsay','.money','.sosw','.goal','.defcard .tag','.rankup+p','.tmr'];
+  for(const sel of L){if(!over())break;const e=w.querySelector(sel);if(e)e.style.display='none';}
+  if(zw)m.classList.remove('zbfit');}
 // финал главы на низком экране (320×568: «Открытка» уходила под край): Зина поменьше, потом без «подарок за главу» и без строки о следующей главе (z-merge 07.10)
 function fitChap(){const m=$('mcard');if(!m)return;const over=()=>m.scrollHeight>m.clientHeight+1;if(!over())return;const w=m,z=w.querySelector('.chfin .zz');if(z){z.style.width=z.style.height='76px';}
   for(const sel of['.money','.chnx']){if(!over())break;const e=w.querySelector(sel);if(e)e.style.display='none';}}
 // финал главы (аудит 14): отдельное окно — глава позади, подарок ECO.chap (уже начислен в finishLevel), открытка «Я прошёл главу»
 function openChapFinale(g,r,nextI,again){r.chapSeen=1;
   const c=Math.floor(g.idx/CH_LEN),ch=CHAPTERS[c%CHAPTERS.length],nx=nextI>=0?chapOf(nextI):null,end=!g.daily&&g.idx+1>=LEVELS.length;
+  const zbc={g,r,c,nextI,again:!!again},zbh=typeof ZB!=='undefined'?ZB.html(ZB.chapSlots,'',zbc):''; /* zb: гнёзда праздника главы */
   r.chapSay=r.chapSay||pick(['Двадцать уровней! Я тобой горжусь — пойду соседкам расскажу.','Глава позади! Ставлю пятёрку в журнал и пирожок на стол.','Вот это усидчивость! У меня так только отличники занимались.','Молодец! Кот Ять даже встал с дивана — поздравить.']);
   modal(`<h2>🎉 Глава пройдена!</h2>
     <div class="chfin"><div class="em" style="background:${ch.c}">${ch.e}</div><div class="zz">${zinaSVG('wow')}</div>${nx?`<div class="em nx" style="background:${nx.c}">${nx.e}</div>`:''}</div>
@@ -281,9 +300,11 @@ function openChapFinale(g,r,nextI,again){r.chapSeen=1;
     <p>${r.chapSay}</p>
     <div class="reward big" id="mRew">+${r.chap} <span class="coin"></span></div><p class="money">подарок за главу</p>
     ${nx?`<p class="chnx" style="font-size:14.5px">Дальше — «${nx.n}» ${nx.e}. ${nx.s}</p>`:''}
+    ${zbh}
     <div class="btns"><button class="btn green" id="mGo">${nx||end?'Дальше ▶':'В меню'}</button>
       ${adsOk()&&(r.chx2||typeof adLikely!=='function'||adLikely())?(r.chx2?`<button class="btn gold" disabled>✅ Сундук главы: 💡 +1 и +${r.chap}</button>`:`<button class="btn gold" id="mChX2">🎬 Сундук главы за рекламу: <span class="nw">💡 +1 и +${r.chap} ${COIN_I}</span></button>`):''}
       <button class="btn ghost small" id="mCard">📤 Открытка «Я прошёл главу»</button></div>`);
+  if(zbh)ZB.mount($('mcard'),ZB.chapSlots,zbc); /* zb */
   fitChap();
   if(!again){SND.win();SND.coin();confetti();buzz('win');coinBurst($('mRew'),r.chap);}
   const cx=$('mChX2');if(cx)STAT.offer('chap');if(cx)cx.onclick=()=>{if(r.chx2||cx.disabled)return;cx.disabled=true;STAT.place('chap');
@@ -429,10 +450,10 @@ function bind(){
   if(OK){$('btnRate').textContent='🏅 Успехи';const rt=document.querySelector('#rateS .hdr .t b');if(rt)rt.textContent='Мои успехи';} // ОК: таблицы рейтинга нет (VKWebAppShowLeaderBoardBox) — экран остаётся как «Успехи»: звание и счёт слов
   document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{SND.tap();const t=b.dataset.back;t==='menu'?openMenu():t==='chapters'?openChapters():show(t);});
   $('gSet').onclick=openSettings;
-  $('gBack').onclick=()=>{SND.tap();saveCur();G=null;openMenu();}; // openMenu сам пишет STAT.end('quit')
-  $('hLet').onclick=hintLetter;$('hWord').onclick=hintWord;$('hShuf').onclick=shuffleLetters;$('hJar').onclick=showJar;
+  $('gBack').onclick=()=>{SND.tap();saveCur();if(typeof ZB!=='undefined'&&G&&!G.won&&!G.zbd)ZB.level(zbInfo(G,'quit'));G=null;openMenu();}; // openMenu сам пишет STAT.end('quit'); zb-VIEW: quit-хук до G=null (просьба MODE)
+  $('hLet').onclick=()=>hintLetter();$('hWord').onclick=()=>hintWord();$('hShuf').onclick=()=>shuffleLetters();$('hJar').onclick=()=>showJar(); // zb-VIEW: по имени — обёртки модулей срабатывают и от кнопки
   $('grid').addEventListener('click',cellTap);
-  $('pvOk').onclick=tapSubmit;$('pvX').onclick=tapClear;$('preview').firstElementChild.onclick=()=>{if(G&&G.tap)tapSubmit();};
+  $('pvOk').onclick=()=>tapSubmit();$('pvX').onclick=()=>tapClear();$('preview').firstElementChild.onclick=()=>{if(G&&G.tap)tapSubmit();};
   $('zAv').onclick=()=>{if(G&&G.rid&&!G.won){SND.tap();riddleSay(6);return;}if(G&&!G.won){SND.tap();zina(pick(['Не отвлекайся, внучок!','Я тут, я смотрю.','Подсказку? Кнопки справа.','Ой, щекотно!','Очки не трогай!']),'wow',2.5);}};
   const wh=$('wheel');
   wh.addEventListener('pointerdown',wheelDown);
@@ -455,7 +476,8 @@ function onReady(){
     return Promise.resolve(b0.call(PAY,id)).then(()=>{un.forEach(u=>u&&u());STAT.ev('buy',{i:id,r:payOk===id?'ok':why||'cancel',v:v});});};}
   const q=new URLSearchParams(location.search);
   if(q.has('lv'))startLevel(+q.get('lv')-1);
-  else if(S.lv===0&&!S.tip.tut&&!SHOT){startLevel(0);if(!S.tip.intro)openIntro();} // новичок — знакомство и сразу первый уровень (обучение), меню — потом
+  else if(S.lv===0&&!S.tip.tut&&!SHOT){startLevel(0);if(!S.tip.intro)(typeof ZB!=='undefined'?ZB.on('ready',()=>{if(!S.tip.intro&&!(window.ZBNB&&ZBNB.noIntro()))openIntro();}):openIntro());} /* zb-NEWBIE: знакомство — только если zb-newbie.js выключен/не загрузился */ // новичок — знакомство и сразу первый уровень (обучение), меню — потом
+  else if(typeof ZB!=='undefined'&&ZB.viewOn&&S.lv>0&&S.lv<(ZB.hubFrom||3)&&S.lv<LEVELS.length&&!SHOT)startLevel(S.lv); /* zb-VIEW: «Дом» — с 3-го уровня, до того сразу уровень */
   else openMenu();
 }
 window.__test={vkmCheck,VKM_CNT,openLogin,openIntro,openMenu,jarFull,openChapFinale,coinBurst,applyFlags,freeLeft,maybeInterstitial,AD,PRICE,ECO,startLevel,submit,finishLevel,winModal,openShop,openRating,openDict,drawCard,shareDef,get G(){return G;},S:()=>S,LEVELS,DAILY,layoutGrid,layoutWheel};

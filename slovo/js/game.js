@@ -59,9 +59,10 @@ function todayKey(){const d=new Date(nowMs());return d.getFullYear()*10000+(d.ge
 function dayNum(){const t=nowMs();return Math.floor((t-new Date(t).getTimezoneOffset()*60000)/86400000);}
 
 function startLevel(idx,daily){
+  if(!daily&&idx>=LEVELS.length&&typeof ZBCH!=='undefined'&&idx<ZBCH.total()){ZBCH.load().then(()=>startLevel(idx,daily),()=>{toast('Не удалось загрузить уровень — проверь интернет');openMenu();});return;} /* zb-LVL: уровни 501+ подгружаются по требованию */
   const lv=levelData(idx,daily),key=levelKey(idx,daily);
   G={idx,daily:!!daily,lv,key,words:lv.w.map(([w,x,y,d])=>({w,x,y,d,found:false})),cells:new Map(),bonus:new Set(),
-     letters:lv.l.split(''),sel:[],newDefs:[],combo:0,miss:0,won:false,idleT:0,idleN:0,hintMode:false,hinted:false,tut:!daily&&idx===0&&!S.tip.tut,
+     letters:lv.l.split(''),sel:[],newDefs:[],combo:0,miss:0,won:false,idleT:0,idleN:0,hintMode:false,hinted:false,tut:!daily&&idx===0&&!S.tip.tut,t0:Date.now(),mode:(typeof MD!=='undefined'&&MD.pend)||'', /* zb: t0 — начало попытки, mode — режим (LVL/MODE; zb-MODE: MD.pend) */
      rank0:typeof rankName==='function'?rankName(wordsTotal()):''};
   for(const wd of G.words)for(let i=0;i<wd.w.length;i++){const x=wd.x+(wd.d?0:i),y=wd.y+(wd.d?i:0),k=cellKey(x,y);
     if(!G.cells.has(k))G.cells.set(k,{x,y,ch:wd.w[i],open:false,el:null});}
@@ -104,11 +105,15 @@ function startLevel(idx,daily){
   else zina(say('start'),'norm',3);
   if(G.tut)startTutorial();
   YG.start();
+  if(typeof ZB!=='undefined')ZB.start({l:idx+1,idx,daily:!!daily,mode:G.mode||'',key}); /* zb: начало уровня */
 }
+/* zb: сведения о попытке для ZB.levelHook (ровно раз: win — checkWin, quit — openMenu) */
+function zbInfo(g,end,res){g.zbd=1;return {l:g.idx+1,idx:g.idx,ok:end==='win',end,daily:g.daily,first:!!(res&&res.first),mode:g.mode||'',key:g.key,
+  s:Math.round((Date.now()-(g.t0||Date.now()))/1000),words:g.words.filter(w=>w.found).length,of:g.words.length,bonus:g.bonus.size,hinted:!!g.hinted,miss:g.miss||0,reward:res?res.reward:0};}
 function shortestWord(){return G.words.slice().sort((a,b)=>a.w.length-b.w.length)[0].w;}
 function wordCells(wd){const r=[];for(let i=0;i<wd.w.length;i++)r.push(G.cells.get(cellKey(wd.x+(wd.d?0:i),wd.y+(wd.d?i:0))));return r;}
 function saveCur(){if(!G||G.won||SHOT)return;const o=S.curs[G.key]||{};
-  S.curs[G.key]={open:[...G.cells].filter(([k,c])=>c.open).map(([k])=>k),bonus:[...G.bonus],order:G.letters.join(''),greeted:o.greeted,hinted:G.hinted?1:0,r4:1,t:Date.now()};trimCurs();save();}
+  S.curs[G.key]={open:[...G.cells].filter(([k,c])=>c.open).map(([k])=>k),bonus:[...G.bonus],order:G.letters.join(''),greeted:o.greeted,hinted:G.hinted?1:0,r4:1,t:Date.now(),z:G.zc||undefined};trimCurs();save();} /* zb-LVL: z — новые клетки (js/zb-cells.js) */
 // незаконченные уровни храним по ключу: 5 последних обычных + сегодняшнее задание дня (старые дневные — не нужны)
 function trimCurs(){const tk='D'+todayKey(),ks=Object.keys(S.curs);
   ks.forEach(k=>{if(k[0]==='D'&&k!==tk&&!(G&&G.key===k))delete S.curs[k];}); // задание, начатое до полуночи, не стираем, пока его решают (аудит 18)
@@ -140,14 +145,14 @@ function buildGrid(){
 }
 function layoutGrid(){
   if(!G)return;const b=$('board'),[gw,gh]=G.lv.g;
-  const bw=b.clientWidth-20,bh=b.clientHeight-12,big=!!S.big;
+  const bw=b.clientWidth-20,bh=b.clientHeight-12-(G.zcH||0),big=!!S.big; /* zb-LVL: G.zcH — место под плашки новых клеток внизу поля */
   const csOf=h=>Math.max(Math.min(26,Math.floor(bw/gw)),Math.min(Math.floor(bw/gw),Math.floor(h/gh),($('app').clientHeight>=780?74:62)*(big?1.15:1)|0));
   // низкий экран (≤700): реплика бабы Зины лежит поверх верха поля — оставляем под неё место сверху (аудит 14: закрывала верхний ряд).
   // Клетки ради этого уменьшаем, только если они останутся не мельче 30 px; иначе отдаём сверху сколько есть свободного
   let cs=csOf(bh),pad=0;
   if(isSmallH()){const R=clamp(Math.round($('zSay').getBoundingClientRect().top+52-b.getBoundingClientRect().top),0,90);
     const c2=csOf(bh-R);if(c2>=Math.min(cs,30))cs=c2;pad=clamp(bh-gh*cs,0,R);}
-  b.style.paddingTop=6+pad+'px';
+  b.style.paddingTop=6+pad+'px';b.style.paddingBottom=G.zcH?6+G.zcH+'px':''; /* zb-LVL: поле по центру над плашками клеток */
   const gap=Math.max(2,Math.round(cs*.08));
   const grid=$('grid');grid.style.width=gw*cs+'px';grid.style.height=gh*cs+'px';
   for(const c of G.cells.values()){const s=c.el.style;s.left=c.x*cs+'px';s.top=c.y*cs+'px';s.width=s.height=(cs-gap)+'px';s.fontSize=Math.round(cs*(big?.64:.56))+'px';s.borderRadius=Math.round(cs*.2)+'px';}
@@ -157,11 +162,12 @@ function layoutGrid(){
    уезжает вниз (есть место) или сжимается под неё; реплика спрятана — поле на месте. Клетки остаются нажимаемыми (transform) */
 function gridDodge(){const g=$('grid'),e=$('zSay');if(!g||!e)return;let tf='';
   if(G&&isSmallH()&&e.classList.contains('on')&&e.textContent){const b=$('board'),br=b.getBoundingClientRect(),sb=(e.offsetParent?e.offsetParent.getBoundingClientRect().top:0)+e.offsetTop+e.offsetHeight+6,
-    top=br.top+g.offsetTop,h=g.offsetHeight,bot=br.bottom-4,ov=sb-top;
+    top=br.top+g.offsetTop,h=g.offsetHeight,bot=br.bottom-4-(G.zcH||0),ov=sb-top; /* zb-LVL: не наезжать на плашки клеток */
     if(ov>0&&h>0){if(top+h+ov<=bot)tf='translateY('+ov+'px)';else{const k=Math.max(.55,(bot-sb)/h);tf='translateY('+ov+'px) scale('+k.toFixed(3)+')';}}}
   if(g.style.transform!==tf)g.style.transform=tf;}
 function openCell(c,delay,cls){
   if(c.open)return;c.open=true;
+  if(c.zk&&typeof ZBCELL!=='undefined')ZBCELL.open(c,cls); /* zb-LVL: новые клетки */
   setTimeout(()=>{c.el.textContent=c.ch;c.el.classList.add('open','pop');if(cls)c.el.classList.add(cls);setTimeout(()=>c.el.classList.remove('pop'),400);},delay||0);
 }
 
@@ -256,6 +262,7 @@ function submit(w){
   const wd=G.words.find(x=>x.w===w);
   if(wd){
     if(wd.found){flashPreview(w,'old');SND.old();zina(say('old'),'stern');highlightWord(wd);return;}
+    if(typeof ZBCELL!=='undefined'&&ZBCELL.block(wd))return; /* zb-LVL: посылка с замком */
     foundWord(wd,false);return;
   }
   // словарь не догрузился (плохая сеть) — не «не знаю», а просим повторить; в промахи не считаем (аудит 18)
@@ -267,6 +274,7 @@ function submit(w){
     if(S.jar>=JAR_SIZE){S.jar=0;setTimeout(()=>{addCoins(JAR_PRIZE,'chest');SND.coin();zina(say('jar')+' +'+JAR_PRIZE,'happy');const hj=$('hJar');hj.classList.remove('glow');void hj.offsetWidth;hj.classList.add('glow');
       if(adsOk()&&G&&!G.won&&!$('modal').classList.contains('on'))jarFull(hj);},500);}
     else zina(say('bonus')+defNote(nd),'happy',nd?4.5:3.2);
+    if(typeof ZBCELL!=='undefined')ZBCELL.bonus(w); /* zb-LVL: тайное слово уровня */
     updJar();saveCur();return;
   }
   flashPreview(w,'bad');SND.bad();buzz('bad');G.combo=0;G.miss++;
@@ -332,15 +340,17 @@ function foundWord(wd,byHint){
   updCount();
   if(G.rid===wd){wordCells(wd).forEach(c=>c.el.classList.remove('rid'));G.rid=null;}
   if(G.tut){G.tut=false;S.tip.tut=1;stopTutorial();}
+  if(typeof ZBCELL!=='undefined')ZBCELL.found(wd,byHint); /* zb-LVL */
   saveCur();checkWin();
 }
 function highlightWord(wd){wordCells(wd).forEach((c,i)=>setTimeout(()=>{c.el.classList.add('flash');setTimeout(()=>c.el.classList.remove('flash'),600);},i*50));}
-function checkAutoFound(){for(const wd of G.words)if(!wd.found&&wordCells(wd).every(c=>c.open)){wd.found=true;}updCount();}
+function checkAutoFound(){for(const wd of G.words)if(!wd.found&&wordCells(wd).every(c=>c.open)){wd.found=true;if(typeof ZBCELL!=='undefined')ZBCELL.found(wd,true);}updCount();}
 function checkWin(){
   checkAutoFound();
   if(G.won||!G.words.every(w=>w.found))return;
   G.won=true;YG.stop();const g=G,res=finishLevel(g);lbSubmit();
   STAT.end('win',{f:res.first?1:0,ex:g.hinted?0:1,bw:g.bonus.size});
+  if(typeof ZB!=='undefined'&&!g.zbd)ZB.level(zbInfo(g,'win',res)); /* zb */
   if(res.first&&!g.daily&&(g.idx===0||g.idx===2||g.idx===9))STAT.ev('tut',{s:g.idx===0?4:g.idx===2?5:6}); // первые 10 минут: прошёл 1-й, 3-й, 10-й
   setTimeout(()=>{if(G!==g)return;SND.win();buzz('win');confetti();zinaFace('happy');},450);
   setTimeout(()=>{if(G===g)winModal(g,res);},1300);
@@ -400,8 +410,8 @@ function hintLetter(){
   const closed=[...G.cells.values()].filter(c=>!c.open);if(!closed.length)return;
   const open=(msg,keep)=>{ // keep (r2): даровая подсказка урока/первых уровней не снимает «Отличника»
     // первая закрытая буква самого «пустого» слова — полезнее, чем случайная
-    const ws=G.words.filter(w=>!w.found).sort((a,b)=>wordCells(a).filter(c=>c.open).length/a.w.length-wordCells(b).filter(c=>c.open).length/b.w.length);
-    const c=wordCells(ws[0]).find(c=>!c.open)||closed[0];
+    const ok=c=>!c.open&&!c.lock,ws=G.words.filter(w=>!w.found&&wordCells(w).some(ok)).sort((a,b)=>wordCells(a).filter(c=>c.open).length/a.w.length-wordCells(b).filter(c=>c.open).length/b.w.length);
+    const c=ws.length&&wordCells(ws[0]).find(ok)||closed.find(ok)||closed[0]; /* zb-LVL: клякса Ятя (c.lock) — подсказкой не открывается, пока есть другие */
     if(!keep)G.hinted=true;STAT.use('hint');openCell(c,0,'hint');SND.open();zina(msg||say('hint'),'norm',msg?4.5:0);checkAutoFoundAndWin();saveCur();
   };
   if(learnFree()){S.hintsUsed=(S.hintsUsed||0)+1;open('На первых уровнях подсказываю даром — учись! Дальше — за монетки, но раз в день кот букву принесёт.',1);return;}
@@ -479,8 +489,8 @@ function riddleSay(sec){if(!G||!G.rid)return;zina('Загадка! '+DEFS[G.rid.
    Это подарок, а не подсказка: «Отличник» не снимается, монеты не тратятся. */
 function catHelp(force,nb){if(!G||G.won||G.tut||G.catD||(!G.daily&&G.idx<1))return false;
   const w=S.wins||0;if(!novice()&&!nb&&S.catW!=null&&w-S.catW<7)return false; // nb — застрявший новичок до 25-го (js/newbie.js)
-  const ws=G.words.filter(x=>!x.found).sort((a,b)=>wordCells(a).filter(c=>c.open).length/a.w.length-wordCells(b).filter(c=>c.open).length/b.w.length);
-  const c=ws.length&&wordCells(ws[0]).find(c=>!c.open);if(!c)return false;
+  const ws=G.words.filter(x=>!x.found&&wordCells(x).some(c=>!c.open&&!c.lock)).sort((a,b)=>wordCells(a).filter(c=>c.open).length/a.w.length-wordCells(b).filter(c=>c.open).length/b.w.length);
+  const c=ws.length&&wordCells(ws[0]).find(c=>!c.open&&!c.lock);if(!c)return false; /* zb-LVL: кот под кляксу не лезет */
   if(!novice()&&!nb)S.catW=w;G.catD=1;G.miss=0;save();SND.meow();buzz('word');const g=G;
   const put=()=>{if(G!==g||g.won||c.open)return;openCell(c,0,'cat');SND.open();checkAutoFoundAndWin();saveCur();};
   const from=$('zAv').getBoundingClientRect(),to=c.el.getBoundingClientRect();

@@ -13,7 +13,8 @@ const payShow=it=>!it.pay||owned('o',it)||typeof PAY!=='undefined'&&PAY.on&&!!PA
 function openShop(){
   show('shopS');STAT.screen('shop');updCoins();
   const isZ=shopTab==='zina',list=isZ?OUTFITS:SKINS,cur=isZ?S.outfit:S.skin;
-  let h=`<div class="dhead"><div class="av">${zinaSVG('happy')}</div><p>${isZ?'Полвека в одном платье ходила — хватит! Купи бабушке обновку, а я уж тебе слова подберу.':'Буквы на хорошем блюдце и складываются лучше. Это научный факт — я проверяла.'}</p></div>
+  const tol=typeof zbTolikHead==='function'?zbTolikHead(isZ):''; // zb-ECO: открыт кабинет труда — Толик зовёт в ателье (дешевле, но не сразу)
+  let h=(tol||`<div class="dhead"><div class="av">${zinaSVG('happy')}</div><p>${isZ?'Полвека в одном платье ходила — хватит! Купи бабушке обновку, а я уж тебе слова подберу.':'Буквы на хорошем блюдце и складываются лучше. Это научный факт — я проверяла.'}</p></div>`)+`
    <div class="tabs"><button data-t="zina" class="${isZ?'on':''}">👗 Наряды</button><button data-t="plate" class="${isZ?'':'on'}">🍽️ Блюдца</button></div><div class="shopg">`;
   for(const it of list){if(!payShow(it))continue;const own=owned(isZ?'o':'s',it),sel=cur===it.id;
     const pv=isZ?zinaSVG('norm',it.id)
@@ -25,7 +26,9 @@ function openShop(){
         :it.pay?`<small>В покупке «${PAY_ITEMS[it.pay].name}»</small><button class="btn pbuy" data-pid="${it.pay}">🎁 ${PAY.price(PAY.item(it.pay))}</button>`
         :`<button class="btn${S.coins<it.p?' ghost':''}" data-id="${it.id}" data-p="${it.p}">${it.p} <span class="coin"></span></button>`}</div>`;}
   // покупки за деньги (js/pay.js) — внизу магазина, только если платежи площадки доступны; «чай» — только в «Благодарностях»
-  $('shopList').innerHTML=h+'</div>'+(typeof PAY!=='undefined'&&PAY.on?PAY.html(['no_ads','coins_s','coins_l','starter']):'');if(typeof PAY!=='undefined'&&PAY.on)PAY.bind($('shopList'));
+  const zt=typeof zbShopEntry==='function'?zbShopEntry('shop'):null; // zb-ECO: покупки — одной витриной «Учительская» (js/zb-shop.js)
+  $('shopList').innerHTML=h+'</div>'+(zt!==null?zt:typeof PAY!=='undefined'&&PAY.on?PAY.html(['no_ads','coins_s','coins_l','starter']):'');if(typeof PAY!=='undefined'&&PAY.on)PAY.bind($('shopList'));
+  if(zt)zbShopBind($('shopList'));if(tol)zbTolikBind($('shopList'));
   if(!isZ)for(const it of SKINS){const el=$('pv_'+it.id);applySkin(el,it.id);
     'слово'.split('').forEach((ch,i)=>{const a=-Math.PI/2+i*2*Math.PI/5,e=document.createElement('div');e.className='let';e.textContent=ch;
       Object.assign(e.style,{width:'30px',height:'30px',left:(56+Math.cos(a)*34-15)+'px',top:(56+Math.sin(a)*34-15)+'px',fontSize:'19px'});el.appendChild(e);});}
@@ -37,14 +40,15 @@ function shopSay(t,mood){const p=document.querySelector('#shopList .dhead p'),av
 function buyItem(isZ,id){
   const it=(isZ?outfitOf:skinOf)(id),k=(isZ?'o:':'s:')+id;
   if(!owned(isZ?'o':'s',it)){
-    if(S.coins<it.p){SND.bad();shortModal(it,isZ,id);return;}
+    const p=it.p;
+    if(S.coins<p){SND.bad();shortModal(it,isZ,id);return;}
     SND.tap();
     modal(`<h2>Купить?</h2><div style="width:110px;height:110px;margin:4px auto;position:relative">${isZ?zinaSVG('happy',id):`<div class="mini" id="cfPv" style="width:110px;height:110px"><div class="plate"></div></div>`}</div>
-      <p>«${it.n}» за <b>${it.p}</b> <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>. У тебя ${S.coins}.</p>
+      <p>«${it.n}» за <b>${p}</b> <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>. У тебя ${S.coins}.</p>
       <div class="btns"><button class="btn green" id="mYes">Да, купить</button><button class="btn ghost" id="mNo">Подумаю</button></div>`);
     if(!isZ)applySkin($('cfPv'),id);
     $('mNo').onclick=()=>{hideModal();SND.tap();};
-    $('mYes').onclick=()=>{hideModal();if(S.coins<it.p)return;S.own=S.own||{};S.own[k]=1;addCoins(-it.p);STAT.ev('spend',{k:k,c:it.p});vkmCheck();SND.coin();
+    $('mYes').onclick=()=>{hideModal();if(S.coins<p)return;S.own=S.own||{};S.own[k]=1;addCoins(-p);STAT.ev('spend',{k:k,c:p});vkmCheck();SND.coin();
       if(isZ)S.outfit=id;else S.skin=id;save();openShop();shopSay(say(isZ?'buy':'buyPlate'),'happy');};
     return;
   }
@@ -54,7 +58,24 @@ function buyItem(isZ,id){
 
 // не хватает на облик: предложить монеты за рекламу (ECO.adCoins, не больше ECO.adCoinsDay раз в день)
 function adCoinsLeft(){const d=todayKey();if(!S.adc||S.adc.d!==d)return ECO.adCoinsDay;return Math.max(0,ECO.adCoinsDay-S.adc.n);}
+// zb-ECO (10.10): «+20 за рекламу» (3 раза в день) → «добить монеты до облика»: ролик только по нужде — когда не хватает ≤30 % цены (ZBECO.topUp)
+function shortModalZb(it,isZ,id){
+  const E=window.ZBECO,P=it.p,n=P-S.coins,top=adsOk()?E.topUp(P):0,cn=' <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>';
+  modal(`<h2>Монеток маловато</h2><div style="width:110px;height:110px;margin:4px auto;position:relative">${isZ?zinaSVG('norm',id):`<div class="mini" id="cfPv" style="width:110px;height:110px"><div class="plate"></div></div>`}</div>
+    <p>«${it.n}» — <b>${P}</b>${cn}, у тебя ${S.coins}. Не хватает <b>${n}</b>.</p>
+    ${top?`<p style="font-size:14.5px">Чуть-чуть осталось! Посмотри рекламу — добавлю <b>${top}</b>${cn}, и хватит ровно.</p>`:`<p style="font-size:14.5px">Проходи уровни — накопим!</p>`}
+    <div class="btns">${top?`<button class="btn green zbad" id="mAd">🎬 Добить ${top} за рекламу</button>`:''}<button class="btn ghost" id="mNo">${top?'Потом':'Хорошо'}</button></div>`);
+  if(!isZ)applySkin($('cfPv'),id);
+  $('mNo').onclick=()=>{hideModal();SND.tap();shopSay('Проходи уровни — накопим! Я пока в старом похожу.','norm');};
+  const b=$('mAd');if(b)STAT.offer('top');if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place('top');let got=0;
+    const give=()=>{if(got)return 0;got=1;const k=Math.max(0,P-S.coins);E.topUpTake(k);SND.coin();return k;};
+    showRewarded(()=>{const k=give();hideModal();if(document.querySelector('.screen.on')===$('shopS')){openShop();shopSay(`Держи +${k}! Теперь хватает на «${it.n}» — бери!`,'happy');}},
+      ()=>{b.disabled=false;},
+      ()=>{if(got)return '';const k=give();const mine=$('modal').classList.contains('on')&&document.body.contains(b);if(mine)hideModal();
+        if(mine&&document.querySelector('.screen.on')===$('shopS'))openShop();return 'держи монеты: +'+k;});}; // поздний зачёт (adt)
+}
 function shortModal(it,isZ,id){
+  if(window.ZBECO&&ZBECO.on&&ZBECO.x2===false)return shortModalZb(it,isZ,id);
   const n=it.p-S.coins,left=adsOk()?adCoinsLeft():0,cn=' <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>';
   modal(`<h2>Монеток маловато</h2><div style="width:110px;height:110px;margin:4px auto;position:relative">${isZ?zinaSVG('norm',id):`<div class="mini" id="cfPv" style="width:110px;height:110px"><div class="plate"></div></div>`}</div>
     <p>«${it.n}» — <b>${it.p}</b>${cn}, у тебя ${S.coins}. Не хватает <b>${n}</b>.</p>

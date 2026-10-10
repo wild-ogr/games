@@ -72,7 +72,7 @@ const isObj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
 // монеты и банка — облако + заработанное здесь после последней синхронизации; настройки — из более нового. S меняется на месте.
 function mergeSave(d){if(!isObj(d))return false;const before=canon(noTs(S)),newer=(+d.ts||0)>BOOT.ts;
   S.lvo=lvoOf(S)&&lvoOf(d)?1:0; // z-levels: порядок уровней 1–60 — «прежний» (0) побеждает
-  for(const k in d)if(!(k in S))S[k]=d[k];
+  for(const k in d)if(!(k in S)&&!(typeof ZB!=='undefined'&&ZB.owns(k)))S[k]=d[k]; /* zb: поля модулей буста сливает их хозяин (ZB.onSave) */
   SOC.merge(d.soc); // «Друзья и игры» (VK): сессии — максимум, «сделано» — навсегда
   STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше (S.stc пишет сам модуль)
   for(const k of['lv','found','bonusAll','hintsUsed','plays','bestStreak','wins'])S[k]=Math.max(+S[k]||0,+d[k]||0);
@@ -92,6 +92,7 @@ function mergeSave(d){if(!isObj(d))return false;const before=canon(noTs(S)),newe
   for(const k of['exAll','catW'])if(+d[k]>(+S[k]||0))S[k]=+d[k]; // счётчики «Отличника» и кота Ять
   if(typeof thMerge==='function')thMerge(d,newer); // темы оформления (js/themes.js): открытые — объединение, ролики — максимум, выбранная — из более нового
   if(typeof payMerge==='function')payMerge(d);
+  if(typeof ZB!=='undefined')ZB._merge(d,newer); /* zb: поля модулей буста (js/zb-core.js ZB.onSave) */
   if(typeof sosMerge==='function')sosMerge(d); // «Соседки по подъезду» (js/sosedki.js): неделя, очки, грамоты // покупки (js/pay.js): купленное, бонусы, токены и заказы VK — объединение
   if(newer){
     const js=typeof JAR_SIZE!=='undefined'?JAR_SIZE:0,jp=typeof JAR_PRIZE!=='undefined'?JAR_PRIZE:0;
@@ -122,7 +123,7 @@ function lvoOf(s){return s.lvo===0||s.lvo===1?s.lvo:+s.lv>=8?0:1;}
 function migrate(){S.lvo=lvoOf(S);S.curs=isObj(S.curs)?S.curs:{};if(S.cur&&S.cur.key&&!S.curs[S.cur.key])S.curs[S.cur.key]=Object.assign({t:Date.now()},S.cur);delete S.cur;
   if(!isObj(S.ask))S.ask={};if(!isObj(S.tip))S.tip={};
   for(const k of['payT','payV'])if(S[k]!=null&&!Array.isArray(S[k]))S[k]=[];for(const k of['buy','buyB'])if(S[k]!=null&&!isObj(S[k]))S[k]={};
-  if(typeof thFix==='function')thFix();} // темы оформления: S.th, S.thU, S.adTot (js/themes.js)
+  if(typeof thFix==='function')thFix();if(typeof ZB!=='undefined')ZB._fix();} /* zb: fix модулей буста */ // темы оформления: S.th, S.thU, S.adTot (js/themes.js)
 migrate();
 // src — откуда монеты (STAT v1.2 earn): lvl, ad, gift, chest, buy, quest; траты (n<0) не считаются
 function addCoins(n,src){S.coins=Math.max(0,S.coins+n);if(n>0)STAT.earn(src||'oth',n);save();updCoins();}
@@ -141,16 +142,18 @@ let ysdk=null,YP=null,VK=null,paused=false,muted=false;
 // (перевод часов на телефоне не даёт лишних дней), иначе — часы устройства
 function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
 /*STAT*/
-/* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
-   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
+   08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
 var STAT=(function(){
-  var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=14,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -236,6 +239,8 @@ var STAT=(function(){
   function progress(o){o=o||{};prog={};if(o.pl!==undefined)prog.pl=+o.pl||0;if(o.cn!==undefined){prog.cn=+o.cn||0;if(cb===undefined)cb=prog.cn;}
     if(o.bt!==undefined)prog.bt=o.bt?1:0;rel();}
   function bal(n){if(typeof n==='number'&&isFinite(n))cb=n;}
+  // v1.4: STAT.pl(n) — прогресс изменился (уровень пройден и т. п.): событий не шлёт, уходит полем pl в pause и в start следующего сеанса
+  function setPl(n){n=+n;if(!isFinite(n))return;prog=prog||{};prog.pl=n;}
 
   // --- уровни: STAT.lvl(5,'daily',{n:3}) в начале, STAT.use('hint') по ходу, STAT.end('win',{st:3}) в конце; STAT.move() — каждый ход ---
   function lvlStart(l,m,x){if(lvl)lvlEnd('quit');lvl={l:l,m:m||'',t:Date.now(),h:0,u:0,x:{}};var p={l:l},k,n=0;if(m)p.m=m;
@@ -330,11 +335,11 @@ var STAT=(function(){
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
-    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
+    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();if(prog&&prog.pl!==undefined)p.pl=prog.pl;ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
-      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
+      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
       var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
@@ -353,7 +358,7 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
@@ -361,7 +366,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Игра только на русском — lang:'ru' (window.LANG от Яндекса интерфейс не меняет).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v2.4-100813',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v3.0-101018',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе — после облака (что позже), но не дольше 2,5 с (иначе модуль сам отправит start без полей через 3 с).
 // pl — пройдено уровней, cn — монет, bt — облако хоть раз отдавало сохранение (S.cl — метка на устройстве, ставит cloudLoad)
 let statPr=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:+S.lv||0,cn:+S.coins||0,bt:S.cl?1:0});}
@@ -689,12 +694,15 @@ SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{modal(h)
    Два набора кусков (sva0…, svb0…) по очереди: новый пишем последовательно, по одному, а указатель svn
    («a:кусков:длина:хэш») — последним. Пока новый набор не дописан, старый цел. При чтении сверяем длину и хэш:
    не сошлось — облако «битое», его НЕ считаем пустым и не затираем. Старый формат (svn = число, sv0…) читаем. */
-const VK_CHUNK=900,VK_MAXCH=60,vkSent={};let vkSlot=null,vkBusy=false,vkAgain=false;
+/* zb-TECH (10.10): VK_MAXCH 60 → 120 (≈108 тыс. символов). Игрок на 1500-м с большим словарём (DICT +1500 слов) и годом заданий дня — 30–45 тыс.,
+   у 60 кусков (54 тыс.) запаса почти нет, а сверх предела облако молча не пишется. Ключей: 2×120+1 — далеко до предела VK (1000).
+   Старая сборка (60) облако больше 60 кусков читает как «битое» и НЕ затирает. Не влезло и в 120 — один раз за сеанс STAT cloud {a:'big',n}. */
+const VK_CHUNK=900,VK_MAXCH=120,vkSent={};let vkSlot=null,vkBusy=false,vkAgain=false,vkBig=0;
 function vkHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
 const vkBroken=()=>Object.assign(new Error('broken'),{broken:true});
 async function vkSet(k,v){if(vkSent[k]===v)return;delete vkSent[k];await vkSend('VKWebAppStorageSet',{key:k,value:v},8000);vkSent[k]=v;}
 async function vkSaveCloud(){if(vkBusy){vkAgain=true;return;}vkBusy=true;
-  try{do{vkAgain=false;const str=JSON.stringify(S),n=Math.ceil(str.length/VK_CHUNK);if(n>VK_MAXCH)break;
+  try{do{vkAgain=false;const str=JSON.stringify(S),n=Math.ceil(str.length/VK_CHUNK);if(n>VK_MAXCH){if(!vkBig){vkBig=1;try{STAT.ev('cloud',{a:'big',n:n});}catch(e){}}break;}
       const snap=bootSnap(),slot=vkSlot==='a'?'b':'a';
       for(let i=0;i<n;i++)await vkSet('sv'+slot+i,str.slice(i*VK_CHUNK,(i+1)*VK_CHUNK));
       await vkSet('svn',slot+':'+n+':'+str.length+':'+vkHash(str));vkSlot=slot;synced(snap);
@@ -732,7 +740,7 @@ async function initSDK(){
   if(typeof onReady==='function')onReady();
   if(PLAT==='vk'){
     try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js').catch(function(){return new Promise(function(r){setTimeout(r,1500);}).then(function(){return window.vkBridge||loadScript('js/vk-bridge.min.js?r=2');});});
-      await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;adPreload('boot'); /* pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне */vkFitInit();SOC.ready();if(typeof updMore==='function')updMore();
+      await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;adPreload('boot');setTimeout(vkIntLoad,4000); /* zb-TECH: межэкранная — спросить VK заранее */ /* pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне */vkFitInit();SOC.ready();if(typeof updMore==='function')updMore();
       VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',true);clearTimeout(cloudT);cloudT=0;cloudSave();}else if(t==='VKWebAppViewRestore'){setPause('vk',false);if(typeof adBack==='function')adBack();setTimeout(adBackChk,300);}});
       Promise.resolve(cloudLoad()).then(payInit,payInit);if(typeof askProbe==='function')askProbe();if(typeof updGift==='function')updGift();
     }catch(e){VK=null;}
@@ -772,7 +780,7 @@ function adClose(){setPause('ad',false);setTimeout(()=>{if(inPlay())YG.start();}
    Награда — по-прежнему только за досмотр (result:true / onRewarded) и один раз. Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора.
    Тот же приём — во всех играх (журнал hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ»; эта игра — ads-slovo.md).
    AD_BTN_SEL: общего класса у рекламных кнопок нет — перечислены по id; новая кнопка «за рекламу» — добавь её сюда. #btnGift гаснет только как «Подарок дня» (ghost), «Гостинец» (gold) — без рекламы. */
-const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAd,#jfX2:not([disabled]),#mX2:not([disabled]),#mChX2:not([disabled]),#mFix,#btnGift.adg,.thad,#mBox:not([disabled]),#lgAd:not([disabled])';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAd,#jfX2:not([disabled]),#mX2:not([disabled]),#mChX2:not([disabled]),#mFix,#btnGift.adg,.thad,#mBox:not([disabled]),#lgAd:not([disabled]),.zbad:not([disabled])'; /* zb-TECH: .zbad — общий класс кнопок «за рекламу» всех потоков буста (договор — шапка js/zb-eco.js, с late) */let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
 function adShut(e){const d=e&&e.error_data||{};return +d.error_code===4;} // код VK 4 — игрок сам закрыл ролик раньше конца
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
@@ -788,7 +796,11 @@ function adSoon(){return 'Ролик будет через несколько с
 let AD_STEP=[5000,5000,5000,5000,5000,5000,15000,15000,15000,15000],AD_STEP_MAX=45000,AD_ASK_MIN=3000,AD_FRESH=120000,AD_LOOK_MS=20000;
 let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAskWhy='boot',adMarkT=0,adRdyToastT=0;
 function adBtns(){try{return Array.prototype.slice.call(document.querySelectorAll(AD_BTN_SEL));}catch(e){return [];}}
-function adLikely(){return !(VK&&adSt<0&&adNoN>=2);} // false — VK уже дважды подряд ответил «ролика нет»
+function adLikely(){return !(VK&&adSt<0&&adNoN>=2&&!adWinAsk());} // false — VK уже дважды подряд ответил «ролика нет» (zb-TECH: и свежий вопрос после победы уже ответил)
+/* zb-TECH (10.10): корзинка «ждёт» 182 раза на ~10 досмотров — решение принималось по старому «нет». Теперь на победе (ZB 'level' ok) VK спрашиваем сразу заново
+   (adPreload('win')); пока свежий ответ не пришёл (до 5 с) — считаем, что ролик может быть (кнопку показываем; пришло «нет» — на ней ⏳, нажать можно, как и раньше). */
+function adWinAsk(){return !!adAsking&&adAskWhy==='win'&&Date.now()-adAskT<5000;}
+if(typeof ZB!=='undefined')ZB.on('level',i=>{if(i&&i.ok&&VK&&adSt<1&&!adBusy&&!adW)adPreload('win');});
 function adPreload(why){if(!VK)return;clearTimeout(adChkT);if(typeof why==="string"){adAskWhy=why;adStepN=0;}
   if(document.hidden||PR.has('vk')||adW)return; // свёрнуты или ролик на экране — молчим; вернёмся / ролик закончится — спросим (adBackChk, итог показа)
   const now=typeof why==='string'&&why!=='back'&&why!=='look'; // итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN
@@ -918,16 +930,33 @@ function interDue(){const now=Date.now();
 // STAT v1.2: межэкранная положена (не новичок, без no_ads), но не показана — ad int none: gap — рано после прошлой, cap — рано после ролика за награду, nosdk — нет SDK/моста
 function interWhy(){if(SHOT||(typeof PAY!=='undefined'&&PAY.own('no_ads'))||S.lv<AD.minLv||Date.now()-T0<AD.sess*1000)return;
   const c=!(ysdk||VK||LOCAL)?'nosdk':Date.now()-lastInter<AD.gap*1000?'gap':'cap';STAT.ad('int','none',c);}
+/* zb-TECH (10.10, буст «Школа»): межэкранная VK — предпроверка и пауза после отказов (было: отказ VK → новая попытка на КАЖДОМ переходе, серии до 31 отказа).
+   vkIntLoad() — VKWebAppCheckNativeAds{interstitial} заранее (через 4 с после моста, через 3 с после показа, в фоне на переходе), ответ помним (vkIntOk).
+   На переходе: VK заранее сказал «нет» — игру не останавливаем (без затемнения/паузы), VK не спрашиваем, ad int none c=pre; переспросить — не раньше INT_NO_MS (минута).
+   Два отказа показа подряд (nofill/ошибка) — INT_PAUSE_MS (минута) без запросов вовсе: ad int none c=pause. Ответа «есть/нет» ещё не было — как раньше (пробуем показать).
+   Решение владельца 10.10: «у VK нет ролика → пауза, не спрашиваем снова». Яндекс — без изменений. Числа — let (стенд укорачивает). */
+let INT_NO_MS=60000,INT_PAUSE_MS=60000;
+let vkIntOk=null,vkIntT=0,vkIntBusy=0,intFails=0,intPauseT=0;
+function vkIntLoad(){if(!VK||document.hidden||vkIntBusy)return;vkIntBusy=1;vkIntT=Date.now();
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'},5000).then(r=>!!(r&&r.result),()=>false).then(ok=>{vkIntBusy=0;vkIntOk=ok;vkIntT=Date.now();STAT.adChk('int',ok?1:0);});}
+// true — показывать можно (или ещё не знаем); false — VK сказал «нет» / пауза после отказов: переход без рекламы
+function intPre(){if(!VK)return true;const now=Date.now();
+  if(now<intPauseT){STAT.ad('int','none','pause');return false;}
+  if(vkIntOk===false){STAT.ad('int','none','pre');if(now-vkIntT>=INT_NO_MS)vkIntLoad();return false;}
+  return true;}
+function intRes(ok){if(ok){intFails=0;return;}if(++intFails>=2){intFails=0;intPauseT=Date.now()+INT_PAUSE_MS;}}
 function maybeInterstitial(cb){
   if(interOn){interNext=cb;return;} // реклама уже идёт — второй переход сделаем после неё (последний выбранный)
   S.plays=(S.plays||0)+1;
   if(!interDue()){interWhy();cb();return;}
+  if(!intPre()){cb();return;} /* zb-TECH: VK заранее сказал «нет» / пауза после 2 отказов — игру не останавливаем */
   // показ не состоялся (площадка отказала, нет рекламы) — паузу не засчитываем, попробуем на следующем переходе
   const prev=lastInter;lastInter=Date.now();interOn=true;const done=()=>{interOn=false;const f=interNext||cb;interNext=null;f();};
+  if(!ysdk&&!VK&&!LOCAL){lastInter=prev;interOn=false;STAT.ad('int','none','nosdk');cb();return;} /* zb-TECH: заглушка — только на маке (LOCAL), явно */
   STAT.adReq('int');
-  if(VK){const fin=()=>{adClose();done();};adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{if(r&&r.result)STAT.ad('int','show');else STAT.ad('int','none','nofill');if(!(r&&r.result))lastInter=prev;}).catch(e=>{if(adNoFill(e))STAT.ad('int','none','nofill');else STAT.ad('int','err',adErrCode(e));lastInter=prev;})
+  if(VK){const fin=()=>{adClose();done();setTimeout(vkIntLoad,3000);};adOpen();vkIntOk=null;vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{if(r&&r.result)STAT.ad('int','show');else STAT.ad('int','none','nofill');if(!(r&&r.result))lastInter=prev;intRes(!!(r&&r.result));}).catch(e=>{if(adNoFill(e))STAT.ad('int','none','nofill');else STAT.ad('int','err',adErrCode(e));lastInter=prev;intRes(false);})
       .then(fin,fin);return;} // не .finally: в старых WebView его нет
-  if(!ysdk){STAT.ad('int','show','stub');stubAd(done);return;} // свой компьютер — заглушка
+  if(!ysdk&&LOCAL){STAT.ad('int','show','stub');stubAd(done);return;} // свой компьютер — заглушка (zb-TECH: явный LOCAL)
   // страховка (r3, 07.10): SDK не ответил за 8 с / реклама открылась и не закрылась за 2 мин / исключение — идём дальше, пауза снята; поздний onOpen/onClose только ставят/снимают паузу
   // 07.10 (проверка черновика): площадка открыла рекламу (onOpen), но ответила «не показано»/ошибкой (заглушка Яндекса при незагруженном рекламном скрипте) — игрок окно видел, паузу засчитываем, иначе реклама на каждом переходе
   let fin=0,wd=0,opened=0;const end=(r,c)=>{if(fin)return;fin=1;clearTimeout(wd);STAT.ad('int',r,c);if(r!=='show'&&!opened)lastInter=prev;adClose();done();};
@@ -982,43 +1011,36 @@ const SND={
 // Слушаем всегда (iOS может снова приостановить звук после звонка); при первом разе проигрываем пустой звук — старый приём для iOS
 let unlocked=false;
 function unlockAudio(){if(!S.music&&!S.sound)return;const a=ac();if(!a)return;
-  if(!unlocked){unlocked=true;try{const s=a.createBufferSource();s.buffer=a.createBuffer(1,1,22050);s.connect(a.destination);s.start(0);}catch(e){}}}
+  if(!unlocked){unlocked=true;try{const s=a.createBufferSource();s.buffer=a.createBuffer(1,1,22050);s.connect(a.destination);s.start(0);}catch(e){}}
+  if(typeof musPrime==='function')musPrime();} /* zb-TECH: музыка потоком — <audio> запускаем в жесте (iOS) */
 ['pointerdown','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true,passive:true}));
 
 /* ================= музыка: записанный трек (audio/tea.m4a) =================
-   «Black Tea Rag» (decimnet, CC BY 4.0) — подпись в «Благодарностях» (ui.js, openCredits).
-   Трек моно (в памяти после раскрытия ~18 МБ, а не 35). Web Audio: fetch → decodeAudioData → AudioBufferSourceNode с loop.
-   Грузится лениво, после первого касания; до загрузки — тишина. Сбой сети — ещё 2 попытки (через 20 и 40 с), скачанное
-   заново не качаем; браузер не умеет AAC — больше не пробуем. musTick() раз в 200 мс сам включает/глушит (выключатель,
-   реклама, сворачивание) и помнит место в треке. Поменять трек — MUSF; громкость — MUS_VOL. */
+   «Black Tea Rag» (decimnet, CC BY 4.0) — подпись в «Благодарностях» (ui.js, openCredits). По умолчанию ВКЛ (S.music=1, решение владельца 10.10).
+   zb-TECH (10.10): ПОТОК вместо decodeAudioData (образец — Богатырь v24 upd0910): <audio loop> → createMediaElementSource → GainNode → OUT.
+   Браузер качает и раскрывает трек понемногу — играет, не дожидаясь всего файла, и в памяти не ~18 МБ раскрытого трека, а буфер потока.
+   Элемент создаётся только когда музыка нужна (S.music и звук разблокирован) — у кого музыка выключена, трек не качается.
+   iOS: <audio> надо один раз запустить в жесте — musPrime() из unlockAudio (касание/клик, фаза захвата) и после клика (кнопка 🎵 включила музыку).
+   musTick() раз в 200 мс сам включает/глушит (выключатель, реклама, сворачивание — элемент на паузе, потом с того же места).
+   Ошибка загрузки (404, нет AAC) — больше не просим. window.NO_MUSIC — элемента нет совсем (архив без audio/). Поменять трек — MUSF; громкость — MUS_VOL. */
 const MUSF={tea:'audio/tea.m4a'},MUS_VOL=.2;
-const MUS={buf:{},ld:{},ab:{},tries:{},cur:null,src:null,g:null,t0:0,off:0,v:0,fade:0,pos:{}};
+const MUS={el:null,g:null,ok:0,bad:0,on:0,t:0};
 function musWant(){return S.music&&!muted&&!paused&&!document.hidden?'tea':null;}
-// края трека: пропускаем тишину кодека в начале/конце, чтобы на стыке петли не было паузы
-function musEdges(b){const sr=b.sampleRate,n=b.length,lim=Math.min(n>>1,sr*2),th=.002,chs=[];for(let c=0;c<b.numberOfChannels;c++)chs.push(b.getChannelData(c));
-  const loud=i=>chs.some(d=>Math.abs(d[i])>th);let i0=0,i1=n-1;while(i0<lim&&!loud(i0))i0++;while(i1>n-lim&&!loud(i1))i1--;
-  b._ls=i0<lim?i0/sr:0;b._le=i1>n-lim?(i1+1)/sr:b.duration;}
-// на случай стерео-файла: сводим в моно (вдвое меньше памяти)
-function musMono(b){if(b.numberOfChannels<2)return b;try{const m=AC.createBuffer(1,b.length,b.sampleRate),o=m.getChannelData(0),k=1/b.numberOfChannels;
-  for(let c=0;c<b.numberOfChannels;c++){const d=b.getChannelData(c);for(let i=0;i<d.length;i++)o[i]+=d[i]*k;}return m;}catch(e){return b;}}
-function musLoad(n){const l=MUS.ld[n];if(MUS.buf[n]||!AC||l===1||l===-1||(l&&performance.now()<l))return;MUS.ld[n]=1;let dec=false;
-  (MUS.ab[n]?Promise.resolve(MUS.ab[n]):fetch(MUSF[n]).then(r=>{if(!r.ok)throw new Error('http '+r.status);return r.arrayBuffer();}).then(ab=>(MUS.ab[n]=ab)))
-    .then(ab=>{dec=true;return new Promise((ok,no)=>{const p=AC.decodeAudioData(ab.slice(0),ok,no);if(p&&p.catch)p.catch(no);});})
-    .then(b=>{b=musMono(b);musEdges(b);MUS.buf[n]=b;MUS.ld[n]=0;delete MUS.ab[n];})
-    .catch(()=>{const t=MUS.tries[n]=(MUS.tries[n]||0)+1;if(dec||t>=3){MUS.ld[n]=-1;delete MUS.ab[n];}else MUS.ld[n]=performance.now()+20000*t;});}
-function musPos(){const b=MUS.buf[MUS.cur],L=b._le-b._ls;return b._ls+((MUS.off-b._ls)+(AC.currentTime-MUS.t0))%L;}
-function musStart(n,v,fade){const a=AC,b=MUS.buf[n],t=a.currentTime,s=a.createBufferSource(),g=a.createGain();
-  s.buffer=b;s.loop=true;s.loopStart=b._ls;s.loopEnd=b._le;const off=MUS.pos[n]!=null?MUS.pos[n]:b._ls;delete MUS.pos[n];
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+fade);s.connect(g).connect(OUT);s.start(t,off);
-  Object.assign(MUS,{cur:n,src:s,g,t0:t,off,v,fade:t+fade});}
-function musStop(fade,keep){const a=AC,s=MUS.src,g=MUS.g,t=a.currentTime;if(keep)MUS.pos[MUS.cur]=musPos();else delete MUS.pos[MUS.cur];
-  MUS.src=MUS.g=MUS.cur=null;if(a.state!=='running'){try{s.stop();}catch(e){}try{g.disconnect();}catch(e){}return;}
-  try{g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+fade);s.stop(t+fade+.05);}catch(e){}
-  setTimeout(()=>{try{g.disconnect();}catch(e){}},fade*1000+400);}
-function musTick(){if(!AC)return;const n=musWant(),v=n?MUS_VOL:0,run=AC.state==='running';
-  if(n){musLoad(n);if(!run)AC.resume().catch(()=>{});}
-  if(MUS.src&&(MUS.cur!==n||!v||!run))musStop(MUS.cur!==n&&n?1:.4,true);
-  if(!MUS.src){if(n&&v&&run&&MUS.buf[n])musStart(n,v,1.2);}
-  else if(Math.abs(v-MUS.v)>.001&&AC.currentTime>MUS.fade){MUS.g.gain.setTargetAtTime(v,AC.currentTime,.08);MUS.v=v;}
-}
+function musEl(){if(MUS.el||MUS.bad||window.NO_MUSIC||!AC||!OUT)return MUS.el;
+  try{const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');a.setAttribute('webkit-playsinline','');
+    a.addEventListener('error',()=>{MUS.bad=1;MUS.on=0;try{STAT.ev('mus',{a:'err',c:a.error&&a.error.code||0});}catch(e){}});a.src=MUSF.tea;
+    const src=AC.createMediaElementSource(a),g=AC.createGain();g.gain.value=0;src.connect(g).connect(OUT);MUS.el=a;MUS.g=g;}catch(e){MUS.bad=1;}
+  return MUS.el;}
+function musFade(to,dur){const g=MUS.g;if(!g||!AC)return;try{const t=AC.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(to,t+dur);}catch(e){}}
+function musGo(){const a=MUS.el;if(!a)return;try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok=1;},()=>{});else MUS.ok=1;}catch(e){}}
+// в жесте: «разрешить» элемент на iOS — запустить (громкость 0) и сразу остановить, если музыка сейчас не нужна
+function musPrime(){if(!S.music||!AC||MUS.bad)return;const a=musEl();if(!a)return;if(MUS.ok&&!(musWant()&&a.paused))return;
+  try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok=1;if(!MUS.on)a.pause();},()=>{});}catch(e){}}
+function musTick(){if(!AC)return;const n=musWant(),run=AC.state==='running';
+  if(n&&!run)AC.resume().catch(()=>{});
+  if(!n||!run){if(MUS.on){MUS.on=0;const a=MUS.el;musFade(0,.05);if(a)setTimeout(()=>{if(!MUS.on)a.pause();},80);}return;} // пауза — место в треке остаётся само
+  const a=musEl();if(!a)return;
+  if(!MUS.on){MUS.on=1;MUS.t=Date.now();musGo();musFade(MUS_VOL,1.2);return;}
+  if(a.paused&&Date.now()-MUS.t>3000){MUS.t=Date.now();musGo();}} // iOS не пустил без жеста — пробуем ещё (и musPrime при касании)
 setInterval(musTick,200);
+document.addEventListener('click',musPrime,{passive:true}); // после onclick кнопок: 🎵 включили музыку — запустить в том же жесте (iOS)

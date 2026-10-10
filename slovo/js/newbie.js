@@ -33,7 +33,7 @@ function hintLesson(why){if(S.tip.hl||!hfFree())return;S.tip.hl=1;save();
   zina(pick(['Застрял? Жми 💡 — первая подсказка даром!','Не идёт слово? Нажми 💡 — первую букву отдам даром!']),'happy',8);
   coachOn('Жми — первая даром!');STAT.ev('hint1',{s:'show',l:G.idx+1,w:why});}
 // нажали 💡: первая — даром (вызывается из hintLetter после learnFree)
-function hfTake(open){if(!hfFree())return false;S.tip.hf=1;S.tip.hl=1;S.hintsUsed=(S.hintsUsed||0)+1;save();coachOff();updPrices();
+function hfTake(open){if(!hfFree())return typeof ZBNB!=='undefined'&&ZBNB.zeroTake?ZBNB.zeroTake(open):false; // zb-NEWBIE: при нехватке монет — буква даром раз в N минS.tip.hf=1;S.tip.hl=1;S.hintsUsed=(S.hintsUsed||0)+1;save();coachOff();updPrices();
   STAT.ev('hint1',{s:'take',l:G.idx+1,t:G.nw||0});
   open('Первая — даром, как обещала! Дальше раз в день Ять букву принесёт, а остальное — за монетки.',1);return true;} // 1 — «Отличник» остаётся (r2)
 // счётчик «секунд без нового слова» (только когда идёт игра: нет окна, паузы, свёрнутого окна)
@@ -43,7 +43,13 @@ setInterval(()=>{if(!G||G.won||G.daily||G.tut||paused||document.hidden||!$('game
   if(f!==G.nbF){G.nbF=f;G.nw=0;if(G.nbS)coachOff();G.nbS=0;return;}
   G.nw=(G.nw||0)+1;
   if(G.idx>=2&&G.idx<=4&&!S.tip.hl&&hfFree()&&(G.nw>=(G.idx===4?6:NB.coachS)||G.miss>=NB.coachMiss)){hintLesson(G.nw>=NB.coachS?'idle':G.miss>=NB.coachMiss?'miss':'l5');return;}
-  if(!nbNew())return;
+  const zb=typeof ZBNB!=='undefined'&&ZBNB.on,fast=zb&&ZBNB.fast(),zd=zb&&ZBNB.zeroDue();
+  // zb-NEWBIE: помощь застрявшему всегда — минуту без слова, монет не хватает, буква «при нуле» положена — 💡 мигает «даром»
+  if(!nbNew()){if(zd&&G.nw===60&&!G.nbS){G.nbS=1;coachOn('Жми — даром!');zina('Монеток маловато? Жми 💡 — эту букву подарю.','norm',6);STAT.ev('stk',{l:G.idx+1,a:'zero'});}return;}
+  // zb-NEWBIE: уровни 3–20 впервые — 💡 мигает через 25 с, кот через 40 с и снова каждые 40 с (до 3 раз за уровень)
+  if(fast){if(G.nw===25&&!G.nbS){G.nbS=1;coachOn(hfFree()?'Жми — первая даром!':zd?'Жми — даром!':'');STAT.ev('stk',{l:G.idx+1,a:'blink'});}
+    else if(G.nw>=40&&(G.nbC||0)<3){G.catD=0;if(catHelp(false,true)){G.nbC=(G.nbC||0)+1;G.nw=0;G.nbS=0;coachOff();STAT.ev('stk',{l:G.idx+1,a:'cat',n:G.nbC});}}
+    return;}
   if(G.nw===NB.stuckS&&!G.nbS){G.nbS=1;coachOn(hfFree()?'Жми — первая даром!':'');
     if(!$('zSay').classList.contains('pin'))zina(hfFree()?'Застрял? Жми 💡 — первая подсказка даром!':pick(['Застрял? Подсказка 💡 — справа внизу.','Не стесняйся — жми 💡, открою букву.']),'norm',6);
     STAT.ev('stk',{l:G.idx+1,a:'blink'});}
@@ -70,7 +76,8 @@ const askHold=g=>!g.daily&&retGo&&!S.daily[todayKey()];
 // решавшего задание 3+ мин, вопроса бы не было никогда), а саму межэкранную в этот переход пропускаем (nbNoInt; придёт на следующем).
 // Статистика «показали / согласился» — dask
 let nbNoInt=0;
-function nbAsk(g){const a=pickAsk(!!g.daily);if(!a||!g.daily)return a;nbNoInt=Date.now();STAT.ev('dask',{k:a.k,r:'show',sk:S.streak||0});const run=a.run;
+function nbAsk(g){if(!g.daily&&typeof ZBNB!=='undefined'&&ZBNB.cur&&!ZBNB.turn('ask'))return null; // zb-NEWBIE: дирижёр
+  const a=pickAsk(!!g.daily);if(!a||!g.daily)return a;nbNoInt=Date.now();STAT.ev('dask',{k:a.k,r:'show',sk:S.streak||0});const run=a.run;
   a.run=()=>run().then(ok=>{STAT.ev('dask',{k:a.k,r:ok?'ok':'no'});return ok;},e=>{STAT.ev('dask',{k:a.k,r:'err'});throw e;});return a;}
 // межэкранная после окна задания дня с вопросом — пропускаем один раз (в течение 5 мин после показа вопроса)
 {const mi=maybeInterstitial;maybeInterstitial=function(cb){if(nbNoInt&&Date.now()-nbNoInt<300000){nbNoInt=0;cb();return;}nbNoInt=0;return mi.apply(this,arguments);};}

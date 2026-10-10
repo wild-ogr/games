@@ -19,6 +19,12 @@ const SOSN=[
   {n:'Люся-почтальонка',k:'кв. 1',e:'📮',m:.65,d:[1.2,1.2,1.2,1.2,1.2,.3,.2],t:'Разгадывает между газетами и пенсиями. В выходные отдыхает.'},
   {n:'Нина Аркадьевна',k:'кв. 20',e:'🎵',m:.45,d:[.8,1.4,.6,1.4,.6,1,.6],t:'Поёт в хоре. Слова знает, но больше песенные.'},
   {n:'Барсик с пятого',g:'m',k:'кв. 18',e:'🐈',m:.25,d:[1,1,1,1,1,1,1],t:'Кот. Ходит по газете с кроссвордом — иногда выходит слово.'}];
+/* zb-CAB: дивизионы актового зала (буст «Школа бабы Зины»): o.d — дивизион недели 0..4, меняется в итоге недели (1–2 место — выше,
+   7–8 — ниже), только когда актовый зал открыт (ZBCAB.lv('akt')≥1). Соседки в дивизионе сильнее (SOS_DIVM), призы × ZBCAB.aktMul(). Без ZBCAB — как было. */
+const SOS_DIV=['Подъезд','Двор','Улица','Район','Город'],SOS_DIVM=[1,1.1,1.2,1.32,1.45];
+const sosDivOn=()=>{try{return !!window.ZBCAB&&ZBCAB.lv('akt')>=1;}catch(e){return false;}};
+function sosDiv(o){o=o||S.sos;return sosDivOn()&&isO(o)?Math.max(0,Math.min(4,+o.d||0)):0;}
+const sosDivM=o=>SOS_DIVM[sosDiv(o)]||1;
 let sosLast=null; // что видели в прошлый раз (для строки в окне победы: +очки, кого обошёл) — только в памяти
 
 // случайное число 0…1 из строки (одинаковое у всех и при каждом запуске)
@@ -34,7 +40,7 @@ function sosCum(w,i,t){const st=sosStart(w),en=sosStart(+dayKeyOf(w,-7));if(t<=s
   const ds=sosDays(w,i),sum=ds.reduce((a,b)=>a+b,0)||1,d=new Date(t),j=(d.getDay()+6)%7,h=d.getHours()+d.getMinutes()/60;
   let c=0;for(let k=0;k<j;k++)c+=ds[k];c+=ds[j]*Math.min(1,Math.max(0,(h-8)/15));return Math.min(1,c/sum);}
 // цель соседки на неделю
-const sosGoal=(o,i)=>Math.max(3,Math.round(o.P*SOSN[i].m*(.85+.3*sosRnd(o.w+':T'+i))));
+const sosGoal=(o,i)=>Math.max(3,Math.round(o.P*SOSN[i].m*sosDivM(o)*(.85+.3*sosRnd(o.w+':T'+i)))); /* zb-CAB: ×дивизион */
 // очки соседки к моменту t (только с начала участия игрока — чужой форы нет)
 function sosNb(o,i,t){return Math.max(0,Math.floor(sosGoal(o,i)*(sosCum(o.w,i,t)-sosCum(o.w,i,o.s))));}
 // очки игрока: слова + задания дня этой недели
@@ -62,7 +68,8 @@ function sosTick(){if(!sosOn())return null;const w=sosWeek(),now=nowMs();let o=S
 function sosRoll(o,w,now){const end=sosStart(+dayKeyOf(o.w,-7)),pts=sosPts(o),tb=sosTable(o,end),pl=sosPlace(tb);
   const prev=+dayKeyOf(w,7); // понедельник прошлой недели
   if(o.r&&+o.r.w>(+o.c||0)&&o.r.c>0){addCoins(o.r.c,'quest');o.c=o.r.w;try{STAT.ev('sos',{a:'claim',pl:o.r.pl,c:o.r.c,auto:1});}catch(e){}} // старый итог так и не открыли — монеты всё равно твои
-  if(pts>=SOS.min){const c=pl<=3?SOS.prize[pl-1]:SOS.part;o.r={w:+o.w,pl:pl,pts:pts,c:c,lead:tb[0].i};o.g=isO(o.g)?o.g:{};if(pl<=3)o.g[pl]=(+o.g[pl]||0)+1;}
+  if(pts>=SOS.min){let c=pl<=3?SOS.prize[pl-1]:SOS.part;const dv=sosDiv(o);c=Math.round(c*(window.ZBCAB&&sosDivOn()?ZBCAB.aktMul():1)); /* zb-CAB */
+    o.r={w:+o.w,pl:pl,pts:pts,c:c,lead:tb[0].i};if(sosDivOn()){const nd=Math.max(0,Math.min(4,dv+(pl<=2?1:pl>=7?-1:0)));o.r.dv=nd;o.r.dm=nd-dv;o.d=nd;try{STAT.ev('sos',{a:'div',d:nd,m:nd-dv});}catch(e){}}o.g=isO(o.g)?o.g:{};if(pl<=3)o.g[pl]=(+o.g[pl]||0)+1;}
   else if(o.r&&+o.r.w<=(+o.c||0))delete o.r;
   try{STAT.ev('sos',{a:'res',pl:pl,pts:pts,P:o.P,gap:+o.w===prev?0:1});}catch(e){}
   // темп: прошлая неделя целиком (неполная — пересчитываем на полную); пропустил недели — соседки «сбавили» (вернувшемуся легче)
@@ -74,7 +81,7 @@ function sosMerge(d){const b=d&&d.sos;if(!isO(b))return;let a=S.sos;
   if(!isO(a)||a===b){S.sos=a=Object.assign({},b);}
   else{const c=Math.max(+a.c||0,+b.c||0),g={};for(const k of['1','2','3'])g[k]=Math.max(+(a.g||{})[k]||0,+(b.g||{})[k]||0);
     if(+b.w>+a.w)S.sos=a=Object.assign({},b);
-    else if(+b.w===+a.w){a.p=Math.max(+a.p||0,+b.p||0);a.s=Math.min(+a.s||now0(),+b.s||now0());a.P=Math.max(+a.P||0,+b.P||0)||SOS.P0;}
+    else if(+b.w===+a.w){a.p=Math.max(+a.p||0,+b.p||0);if(+b.d>(+a.d||0))a.d=+b.d; /* zb-CAB */a.s=Math.min(+a.s||now0(),+b.s||now0());a.P=Math.max(+a.P||0,+b.P||0)||SOS.P0;}
     a.c=c;a.g=g;const r=[a.r,b.r].filter(x=>isO(x)&&+x.w>c).sort((x,y)=>y.w-x.w)[0];if(r)a.r=r;else delete a.r;}
   delete a.t;}
 const now0=()=>nowMs();
@@ -113,7 +120,8 @@ function openSosedki(from,back){const o=sosTick();if(!o)return;if(!S.tip.sosv){S
   const g=o.g||{},gr=['1','2','3'].filter(k=>+g[k]).map(k=>['🥇','🥈','🥉'][k-1]+'×'+g[k]).join(' ');
   const rows=tb.map((x,j)=>{const me=x.i<0,nb=SOSN[x.i];
     return `<div class="sosr${me?' me':''}"><span class="sp">${j+1}</span><span class="se">${me?'🏠':typeof sosFace==='function'?sosFace(x.i):nb.e}</span><span class="sn"><b>${me?'Ты и баба Зина':nb.n}</b><small>${me?'кв. 7 · это ты'+(gr?' · '+gr:''):nb.k+' · '+nb.t}</small></span><span class="ss">${!me&&!x.pts?'💤':x.pts}</span></div>`;}).join('');
-  modal(`<div class="sosm"><h2>🏠 Соседки по подъезду</h2>
+  const dvh=sosDivOn()?`<p class="sosh sosdv">🎭 Дивизион <b>«${SOS_DIV[sosDiv(o)]}»</b>${sosDiv(o)<4?' · 1–2 место — в «'+SOS_DIV[sosDiv(o)+1]+'»':''}</p>`:''; /* zb-CAB */
+  modal(`<div class="sosm"><h2>🏠 Соседки по подъезду</h2>${dvh}
     <div class="sosz"><div class="av">${zinaSVG(pl===1&&!zero?'wow':'happy')}</div><p>${zs}</p></div>
     <div class="sost">${rows}<div id="sosLive"></div></div>
     <p class="sosh">Буква — <b>очко</b>, задание дня — <b>+${SOS.daily}</b>. Итоги в понедельник: за 1–3 место <b>${SOS.prize.map(x=>'+'+x).join('/')}</b> ${COIN_I}, остальным +${SOS.part}. <span class="sosp">Соседки — придуманные персонажи бабы Зины.</span></p>
@@ -132,6 +140,7 @@ function sosResult(o,back){const r=o.r,c=+r.c||0,top=r.pl<=3,lead=r.lead!=null&&
     <p>${t}</p>${top?`<div class="sosg">${['🥇','🥈','🥉'][r.pl-1]} Грамота за ${plTxt(r.pl)} · ${r.pts} ${plural(r.pts,'очко','очка','очков')}</div>`:''}
     ${c?`<div class="reward big" id="mRew">+${c} <span class="coin"></span></div>`:''}
     ${plate?`<div class="sosplate"><div class="mini" id="sosPv" style="width:64px;height:64px"><div class="plate"></div></div><p>И блюдце <b>«${SOS_PLATE.n}»</b> — за ${SOS.plate} недели в призёрах! Оно уже в «Обликах».</p></div>`:''}
+    ${r.dv!=null&&r.dm?`<div class="sosg">${r.dm>0?'⬆️ Новый дивизион':'⬇️ Дивизион'}: «${SOS_DIV[r.dv]}»</div>`:''}
     <p class="sosh">Новая неделя уже началась — соседки снова за кроссвордами.</p>
     <div class="btns"><button class="btn green" id="mSosGo">Посмотреть новую неделю</button>${back?'<button class="btn ghost small" id="mSosB">Назад</button>':''}</div></div>`);
   if(c){SND.coin();coinBurst($('mRew'),c);}if(top){try{confetti();}catch(e){}}
