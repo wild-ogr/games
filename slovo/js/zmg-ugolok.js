@@ -16,7 +16,7 @@ function issueHtml(iss,np,full){const N=notes()[iss-1]||{t:ZMG.ISSUES[iss-1]||''
   return '<div class="zmg-gz"><div class="zmg-gzh"><span class="zmg-gze">'+(N.e||'📰')+'</span><div><small>СТЕНГАЗЕТА · выпуск №'+iss+'</small><b>«'+esc(N.t)+'»</b></div><span class="zmg-gzc">'+have+'/'+ZMG.PER_ISS+'</span></div>'+
     '<div class="zmg-gns">'+h+'</div></div>';}
 function prizeTxt(){const p=(ZMG.RW().issue)||{};const a=[];if(p.hb)a.push('💡 +'+p.hb);if(p.c)a.push('+'+p.c+' монет');a.push('открытка');return a.join(' · ');}
-function render(el,opts){opts=opts||{};const z=ZMG.Z(),np=z.np,a=ZMG.noteAt(np),day=ZMG.dayId(),di=day?ZMG.info(day):null,list=Object.keys(ZMG.INFO).map(n=>ZMG.INFO[n]);
+function render(el,opts){opts=opts||{};const z=ZMG.Z(),np=z.np,a=ZMG.noteAt(np),day=ZMG.dayId(),di=day?ZMG.info(day):null,list=Object.keys(ZMG.INFO).map(n=>ZMG.INFO[n]).filter(i=>!(ZMG.isOff&&ZMG.isOff(i.id)));   /* zb2-MGR: выключенные не показываем */
   const dayH=di?'<div class="zmg-ud'+(z.d.z?' done':'')+'"><span class="zmg-pav">'+ZMG.face(di.who,'happy')+'</span><span class="zmg-pt"><b>🎲 Затея дня: '+esc(di.t)+'</b><span>'+
       (z.d.z?'Сыграно сегодня — завтра новая.':(ZMG.zateyaSay&&ZMG.zateyaSay(day)?esc(ZMG.zateyaSay(day))+' ':'')+'Заметка в стенгазету и монеты.')+'</span></span><button class="btn '+(z.d.z?'ghost':'green')+' small" data-g="'+day+'" data-m="'+(z.d.z?'cab':'day')+'">'+(z.d.z?'Ещё раз':'Играть')+'</button></div>'
     :'<div class="zmg-ud done"><span class="zmg-pt"><b>🔔 Перемена откроется '+((+S.lv||0)>=5?'после следующей победы':'на 5-м уровне')+'</b><span>Первым придёт Валерка со своим диктантом.</span></span></div>';
@@ -29,7 +29,7 @@ function render(el,opts){opts=opts||{};const z=ZMG.Z(),np=z.np,a=ZMG.noteAt(np),
   el.innerHTML='<div class="zmg-u"><div class="zmg-uh"><button type="button" class="zmg-ub" aria-label="Назад">←</button><div class="zmg-uht"><b>Красный уголок</b><small>кабинет русского языка · Перемена</small></div></div>'+
     '<div class="zmg-ub2">'+dayH+
     (a.done?'<div class="zmg-gz done"><b>🎉 Все 12 выпусков стенгазеты собраны!</b><p>Баба Зина повесила их в рамочки.</p></div>':issueHtml(a.iss,np)+'<p class="zmg-prz">Собери 10 заметок — приз: '+esc(prizeTxt())+'. Заметок в день — до '+ZMG.RW().nt+'.</p>')+
-    '<h3 class="zmg-uh3">🎲 Игры <small>'+nOpen+' из 15 · тренировка без наград</small></h3><div class="zmg-shelf">'+shelf+'</div>'+
+    '<h3 class="zmg-uh3">🎲 Игры <small>'+nOpen+' из '+list.length+' · тренировка без наград</small></h3><div class="zmg-shelf">'+shelf+'</div>'+
     '<h3 class="zmg-uh3">🗞 Подшивка</h3><div class="zmg-sub">'+sub+'</div></div></div>';
   $(el,'.zmg-ub').onclick=()=>{try{SND.tap();}catch(e){}if(typeof openMenu==='function')openMenu();};
   el.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{try{SND.tap();}catch(e){}const id=b.dataset.g,m=b.dataset.m;

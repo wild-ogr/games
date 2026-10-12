@@ -1,62 +1,10 @@
 'use strict';
-/* zb-MG0 «Перемена» — оболочка мини-игр «Школы бабы Зины» (js/zmg-core.js). Форк vymg-core «Выезда» (10.10.2026).
-   План: hobby-analytics/release-i/zina-boost/05-minigames.md, 00-plan.md п.4. Журнал: zina-boost/logs/MG0.md. Наружу — только ZMG_REG, window.ZMG.
-
-   ===================== ДОГОВОР ДЛЯ ИГР (MGA / MGB / MGC) =====================
-   Файл игры — js/zmg-<id>.js (данные — js/zmg-<id>-data.js), весь код в IIFE, первой строкой: if(typeof ZMG_REG!=='function')return;
-   В index.html строк игр НЕТ: оболочка грузит файл сама (ZB.load) — при первом заходе в игру или заранее, когда игра открыта.
-   Свои имена и CSS-классы — с префиксом потока: zma- (MGA), zmb- (MGB), zmc- (MGC), zm0- (MG0). Глобальных имён не заводить.
-   Регистрация:  ZMG_REG({id:'diktant', run(host,o){…}, deps?:['krug','js/zmg-diktant-data.js'], sim?(o,k)=>({sc,st}), open?()=>bool, bot?})
-     id — из таблицы ZMG.INFO ниже (номер n, название t, ведущий who, значок ic, правило a, длительность s — задаёт оболочка; можно переопределить).
-     deps — что загрузить ДО run: 'krug' (круг букв js/zmg-krug.js) и/или пути к своим файлам данных. Не загрузилось — игра не стартует, тост.
-     open() — необязательно: false, если игра сейчас недоступна (нет данных, не сезон).
-     sim(o,k) — бот баланса: k = умение 0..1 → {sc, st}. ZMG.bot('<id>') — по 200 зёрнам.
-     finWho — кто говорит реплику итога (по умолчанию ведущий who); lines:{good,ok,bad} — свои реплики итога (строка или fn(r)).
-   run(host,o) рисует ТОЛЬКО внутри host.el (шапку со значком, названием, host.top и ✕ рисует оболочка).
-     Игра 30–60 с (Вечерка и Лото — до 2 мин); одно нажатие до начала (host.intro); без таймера-гонки; ошибка не наказывает;
-     кнопки ≥ 48–56 px, шрифт ≥ 17 px; на ПК — клавиатура (буквы, Enter, Backspace, 1–4).
-     host.el — div во всю ширину под шапкой; host.w / host.h — размеры; host.dpr — плотность (≤2).
-     host.intro({text, html?, hint?, btn?, who?}) → Promise — карточка «одно нажатие до начала» (реплика ведущего + «Начать»; Enter/Пробел).
-     host.krug(el, {letters, onWord(w)→'ok'|'bad'|'dup'|true|false, size?, shuffle?}) → круг букв Зины (свайп + нажатия + клавиатура ПК), нужен deps:['krug'].
-     host.words({min,max,n,def,rnd,not}) → слова (существительные) только из пройденных уровней, без ZINA_DENY/ZINA_RUDE, перемешаны o.rnd.
-       def:true — только с толкованием. host.def(w) — толкование (gloss) или шутка Зины (defs); host.joke(w) — шутка или ''.
-     host.cv() → {cv,x,w,h,dpr} холст во весь host.el; host.loop(fn(dt,t)) — кадры (на паузе не зовётся); host.ptr(elem,{down,move,up}) — касания/мышь.
-     host.keys(fn(key,e)) — клавиши ПК (true — съедена; Esc — оболочка); host.kc(lbl) — значок клавиши; host.pc — есть мышь; host.calm — спокойный режим.
-     host.onResize(fn(w,h)); host.onQuit(fn) — убрать свои таймеры (loop/ptr/keys оболочка снимает сама).
-     host.top(text) — строка справа в шапке («3 из 10»); host.say(who,text,mood) → HTML реплики; host.face(who,mood) → SVG-портрет.
-       who: zina yat valerka valya mityai galya semyon lyusya tamara nina vp tolik kolya (ZBP — справочник CAB; пока его нет — свои портреты);
-       mood: norm|happy|sad|wow.
-     host.snd — звуки игры (SND.tap coin bad win old open letter word bonus meow) — сами молчат при выключенном звуке.
-     host.adNeed(kind) → Promise<bool> — ролик «по нужде»: ОДИН за заход (второй — сразу false), кнопку показывать только при host.adOk(),
-       классами `zbad zmg-ad` (гаснет вместе с остальными «за рекламу» — просьба TECH: .zbad в AD_BTN_SEL); поздний досмотр (adt) засчитывается, пока игра на экране. Место STAT — mg_<id>_<kind>.
-     host.fest — тема праздника или null: {id:'halloween'|'ny'|'autumn'|…, t:'Страшилки'} (даёт FEST через ZMG.festFn) — «шкурка» игры.
-     host.finish({sc, st:0..3, h?:подсказок/ошибок, label?:'8 из 10'}) — конец захода: итог, награды, рекорд рисует ОБОЛОЧКА. (host.done — то же.)
-     host.quit() — выйти без итога; host.paused — пауза; host.mem() → свой склад S.zmg.m[<id>] (≤ 1 КБ, числа/строки).
-     host.bot = fn(k) — необязательно: один ход бота (k 0..1) для стенда ZMG.autoplay(k).
-   o = {id, num, mode, train, seed, rnd, day, calm, lvl, ctx, rw, note, fest}
-     mode — откуда пришёл: 'win' (Перемена в окне победы), 'day' (Затея дня — одна раскладка на всех), 'paper' (Вечерка после задания дня),
-       'cab' (Красный уголок — тренировка без наград), 'new' (окно «Новая затея!»), 'fest' (праздник); train — без наград;
-     seed — зерно ('day'/'paper' — одно на всех в этот день); rnd() — 0..1 от seed; day — todayKey() (число ГГГГММДД); lvl — пройдено уровней;
-     rw — монеты по ступени [0,4,7,10] (0 в тренировке); note — {iss, k, t} следующая заметка стенгазеты (для строки «за заметку №7»).
-   Награды считает ОБОЛОЧКА (числа — ZBECO.mg/cap.mg, монеты — ZBECO.give('mg'); запасные — ZMG_RW): монеты 4/7/10 (Вечерка — 10), ≤ 20 💰 в день от всех игр (earn 'mg');
-     заметка стенгазеты: Затея дня ≥1★, Вечерка ≥1★, Перемена 2★+ — не больше 2 в день; 💡 в запас (hbAdd) за 3★ без подсказок в Затее дня или Вечерке — ≤1 в день.
-     Перемен с наградой ≤ 3 в день. Награда за игру — раз в день (повтор — на рекорд). Тренировка — без наград.
-   Сохранение: своих полей в S игра не заводит — только host.mem().
-   Вид (css/zmg.css): .zmg-card (листок), .zmg-q (крупный текст), .zmg-opts > .zmg-opt (.ok/.no/.sel) — варианты ≥ 56 px, .zmg-hint (строка «на компьютере…»),
-     .zmg-dots > i (.ok/.no/.cur), .btn / .btn.green — кнопки игры, .zmg-red — красная ручка учительницы.
-   Стенд: ?zmg=<id>&mode=win|day|cab|paper|fest|new&seed=N&fresh=1 (чистое S.zmg) — игра сразу на весь экран; ?zmg=list — список; ?zmg=ugolok — Красный уголок.
-     В консоли: ZMG.bot('<id>'), ZMG.autoplay(k) — пройти открытую игру ботом (нужен host.bot).
-   STAT: ev 'mg' {a:'open'|'show'|'go'|'end'|'quit'|'skip'|'rw', id, m:вход, l:уровень, sc, st, s:секунд, h, c:монет, nt:заметка, hb, cap:1, tr} — пишет оболочка;
-     ev 'note' {iss, n}; монеты — addCoins(n,'mg').
-   Сохранение S.zmg (владелец — MG0, через ZB.onSave): {o:{id:1} открыта, s:{id:1} «Новая затея» показана, b:{id:рекорд}, n:{id:заходов},
-     d:{k:день, c:монет сегодня, nt:заметок сегодня, hb:💡 сегодня, pk:Перемен с наградой, p:{id:1} награда за игру сегодня, z:Затея дня, v:Вечерка},
-     dp:дней игры, dl:последний день, ol:уровень последнего открытия, od:день открытия по дням, nw:ожидает окна «Новая затея», pc:Перемен показано,
-     np:заметок всего, iss:{номер:1} выпуск собран (приз выдан), m:{id:{…}}, ts}
-   ВЫКЛЮЧЕНИЕ: ZMG_ON=false — весь модуль молчит (игра как раньше); ZMG_OFF=['lovit',…] — эти игры не открываются и не предлагаются.
-   ==========================================================================================================================================================*/
+/* zb-MG0 «Перемена» — оболочка мини-игр «Школы бабы Зины» (js/zmg-core.js). Форк vymg-core «Выезда» (10.10.20 … ШАПКА-ДОГОВОР ЦЕЛИКОМ — docs/heads/zmg-core.txt (вынесена ради веса старта, zb2-MERGE) */
 (function(){
 const ZMG_ON=true;                 // весь модуль мини-игр (false — игра как без буста)
 const ZMG_OFF=[];                  // выключенные игры (не готовы к отсечке 19.10): id
+/* zb2-MGR п.5: «Вечерку» из окна победы убрать (остаётся в делах дня), Перемену в окне победы — только начинавшим. ?off=nopaper — как v3.0 */
+const NOPAPER=!!(window.ZB2&&ZB2.reg('nopaper',{t:'Окно победы без Вечерки; Перемена — только начинавшим',who:'MGR',on:true}));
 if(!ZMG_ON||typeof S==='undefined'||typeof todayKey!=='function'||typeof ZB==='undefined')return;
 const escH=t=>String(t==null?'':t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 const $i=id=>document.getElementById(id);
@@ -81,7 +29,24 @@ const INFO={
   12:{id:'loto',t:'Лото во дворе',who:'mityai',ic:'🎱',a:'Митяй кричит бочонки загадками — закрой ряд',s:90,dp:21},
   13:{id:'filword',t:'Филворд на лавочке',who:'tamara',ic:'🔤',a:'Найди спрятанные слова в поле букв',s:60,dp:14},
   14:{id:'pary',t:'Пары: слово и толкование',who:'vp',ic:'🃏',a:'Найди пары: слово и его толкование',s:45,lv:25},
-  15:{id:'lovit',t:'Ять ловит буквы',who:'yat',ic:'🐈',a:'Лови буквы слова по порядку — лапой!',s:30,dp:5}};
+  15:{id:'lovit',t:'Ять ловит буквы',who:'yat',ic:'🐈',a:'Лови буквы слова по порядку — лапой!',s:30,dp:5},
+  /* zb2-MGR: новые игры. z2 — открывает очередь «Новая затея!»; k — w словесная / l ловкостная; own — поток. Правило a и фразу окна «Новая затея» ns даёт файл игры (ZMG_REG) */
+  16:{id:'zagadala',t:'Зина загадала',who:'zina',ic:'🔠',s:90,z2:1,k:'w',own:'MGW'},
+  17:{id:'muha',t:'Из мухи слона',who:'galya',ic:'🐘',s:90,z2:1,k:'w',own:'MGW'},
+  18:{id:'minutka',t:'Минутка у доски',who:'vp',ic:'⏱',s:60,z2:1,k:'w',own:'MGW'},
+  19:{id:'makulatura',t:'Макулатура',who:'zina',ic:'📦',s:45,z2:1,k:'w',own:'MGR'},
+  20:{id:'shpora',t:'Шпаргалка',who:'vp',ic:'📝',s:45,z2:1,k:'l',own:'MGR'},
+  21:{id:'najdi',t:'Найди Ять',who:'yat',ic:'🔍',s:60,z2:1,k:'l',own:'MGR'},
+  22:{id:'park',t:'Тележка с макулатурой',who:'zina',ic:'🛒',s:60,z2:1,k:'l',own:'LOV'},
+  23:{id:'samolet',t:'Самолётик',who:'valerka',ic:'✈️',s:40,z2:1,k:'l',own:'LOV'},
+  24:{id:'stopka',t:'Стопка учебников',who:'vp',ic:'📚',s:40,z2:1,k:'l',own:'LOV'},
+  25:{id:'skakalka',t:'Скакалка',who:'nina',ic:'🪢',s:40,z2:1,k:'l',own:'LOV'},
+  26:{id:'brys',t:'Брысь со стола!',who:'valya',ic:'🐈',s:30,z2:1,k:'l',own:'LOV'},
+  27:{id:'foto',t:'Фото класса',who:'lyusya',ic:'📷',s:40,z2:1,k:'l',own:'LOV'},
+  28:{id:'kompot',t:'Компот до черты',who:'valya',ic:'🥤',s:40,z2:1,k:'l',own:'LOV'},
+  29:{id:'dezhur',t:'Дежурный',who:'vp',ic:'🧽',s:40,z2:1,k:'l',own:'LOV'},
+  30:{id:'klubok',t:'Клубок Яти',who:'yat',ic:'🧶',s:45,z2:1,k:'l',own:'LOV'},
+  31:{id:'pirozhki',t:'Пирожки на перемене',who:'valya',ic:'🥟',s:30,z2:1,k:'l',own:'LOV'}};
 const IDS={};for(const n in INFO){INFO[n].num=+n;IDS[INFO[n].id]=+n;}
 const infoOf=id=>INFO[IDS[id]]||INFO[id]||null;
 /* Затея дня по дням недели (0 — Вс): Пн Что лишнее, Вт Загадки, Ср Слово из слова, Чт Ять ловит, Пт Барабан, Сб Филворд, Вс Лото; закрыта — ближайшая открытая */
@@ -94,8 +59,8 @@ function RW(){const E=window.ZBECO,m=E&&E.mg;if(!m||typeof m!=='object')return Z
   if(Array.isArray(m.st))r.c=m.st.slice();if(m.vech>=0)r.paper=m.vech;if(m.notesDay>=0)r.nt=m.notesDay;if(m.hbDay>=0)r.hb=m.hbDay;if(m.peremenaDay>=0)r.pk=m.peremenaDay;
   if(E.cap&&E.cap.mg>=0)r.cap=E.cap.mg;if(m.issuePrize&&typeof m.issuePrize==='object')r.issue=m.issuePrize;return r;}
 /* монеты: через ZBECO.give('mg') (потолок дня и STAT earn — у ECO), без ECO — свой потолок */
-function giveCoins(want,z,rw,id){if(want<=0)return 0;const E=window.ZBECO;
-  if(E&&typeof E.give==='function'){const k=E.give('mg',want,'mg')|0;z.d.c+=k;return k;}
+function giveCoins(want,z,rw,id,src){if(want<=0)return 0;const E=window.ZBECO;
+  if(E&&typeof E.give==='function'){const k=E.give(src||'mg',want,'mg')|0;z.d.c+=k;return k;}   /* zb2-MGW: src — подпотолок ('wd' — слово дня) */
   const c=Math.max(0,Math.min(want,rw.cap-z.d.c));if(c>0){z.d.c+=c;try{if(typeof addCoins==='function')addCoins(c,'mg');else S.coins=(+S.coins||0)+c;}catch(e){}}return c;}
 /* стенгазета: 12 выпусков × 10 заметок (тексты — js/zmg-ugolok-data.js; здесь — только названия выпусков) */
 const ISSUES=['Здравствуй, школа!','Золотая осень','Страшилки пионерлагеря','Первый снег','Новогодний утренник','Зимние каникулы',
@@ -146,30 +111,48 @@ const SHOTM=()=>typeof SHOT!=='undefined'&&SHOT;
 /* ---------- подгрузка игр (лениво) ---------- */
 const FILE=id=>'js/zmg-'+id+'.js',DEP={krug:'js/zmg-krug.js'};
 const bad={};   // не загрузилось в этом сеансе
-function loadGame(id){if(REG.by[id])return Promise.resolve(REG.by[id]);if(ZMG_OFF.indexOf(id)>=0)return Promise.reject(new Error('off'));
+function loadGame(id){if(REG.by[id])return Promise.resolve(REG.by[id]);if(isOff(id))return Promise.reject(new Error('off'));
   return ZB.load(FILE(id)).then(()=>{if(!REG.by[id])throw new Error('no reg '+id);return REG.by[id];}).catch(e=>{bad[id]=1;throw e;});}
 function loadDeps(g){const L=(g.deps||[]).map(d=>DEP[d]||d);return Promise.all(L.map(u=>ZB.load(u)));}
 // заранее (в тишине): открытые игры и ближайшая (Диктант с 3-го уровня), чтобы Перемена и Затея дня предлагали только то, что точно есть
-function preload(){const z=Z(),want=[];for(const n in INFO){const i=INFO[n];if(ZMG_OFF.indexOf(i.id)>=0||REG.by[i.id]||bad[i.id])continue;
+function preload(){const z=Z(),want=[];for(const n in INFO){const i=INFO[n];if(isOff(i.id)||REG.by[i.id]||bad[i.id])continue;
     if(z.o[n]||(i.id==='diktant'&&lvl()>=3))want.push(i.id);}
   let p=Promise.resolve();want.forEach(id=>{p=p.then(()=>loadGame(id).catch(()=>{}));});return p;}
 
 /* ---------- открытие игр по прогрессу ---------- */
 function gOk(g){try{return !g.open||g.open()!==false;}catch(e){return false;}}
-const isOff=id=>ZMG_OFF.indexOf(id)>=0;
+const isOff=id=>ZMG_OFF.indexOf(id)>=0||!!(window.ZB2&&ZB2.off(id));   /* zb2-MGR: ?off=<id игры> тоже выключает */
+const isZ2=id=>{const i=infoOf(id);return !!(i&&i.z2);};
 function due(n){const i=INFO[n];if(!i||isOff(i.id))return false;const z=Z(),l=lvl();return i.lv?l>=i.lv:(!!i.dp&&l>=5&&z.dp>=i.dp);}
 const isOpen=id=>{const i=infoOf(id);return !!(i&&!isOff(i.id)&&S.zmg&&S.zmg.o[i.num]);};
 const avail=id=>isOpen(id)&&!!REG.by[id]&&gOk(REG.by[id]);
 let sesDay=0;   // в этом сеансе уже открыли игру по дням
 /* открыть следующую (одну): по уровням — одна за победу, по дням — одна за сеанс и день. Вернёт id или '' */
 function unlock(byLevel){const z=Z(),l=lvl();
-  for(let n=1;n<=15;n++){if(z.o[n]||!due(n))continue;const i=INFO[n];
+  for(let n=1;n<=15;n++){if(z.o[n]||!due(n))continue;const i=INFO[n];   /* 16+ (z2) — очередь «Новая затея!» (zb2-MGR) */
     if(i.lv){if(!byLevel||z.ol>=l)continue;z.o[n]=1;z.ol=l;}
     else{if(sesDay||z.od===z.d.k)continue;z.o[n]=1;z.od=z.d.k;sesDay=1;}
     if(!z.s[n]&&!(i.id==='diktant'))z.nw=i.id;   // Диктант представляет сама Перемена
     touch();save();stEv({a:'open',id:i.id,l});loadGame(i.id).catch(()=>{});return i.id;}
+  if(!byLevel)z2Next();
   return '';}
-function lockTxt(id){const i=infoOf(id),z=Z(),l=lvl();if(!i)return '';if(isOff(i.id))return 'скоро не будет — выключена';
+/* zb2-MGR п.6: очередь «Новая затея!» для 16 новых игр (INFO z2). Одна новая раз в 1–3 дня игры (S.z2g.nq — день игры z.dp последнего открытия,
+   промежуток 1,2,3,1,… по числу открытых S.z2g.nn), только в день, когда старые игры ничего не открыли, с 5-го уровня. Файл игры не загрузился —
+   берём следующую (в этом сеансе). S.z2g — поле zb2-node.js (нет его — очереди нет). Флаг: ?off=mgnew */
+const Z2Q=['zagadala','shpora','makulatura','park','minutka','samolet','muha','stopka','skakalka','najdi','brys','foto','kompot','dezhur','klubok','pirozhki'];
+const Z2ON=!!(window.ZB2&&ZB2.reg('mgnew',{t:'Очередь «Новая затея!» для новых игр',who:'MGR',on:true}));
+/* какие новые игры есть в сборке (файл js/zmg-<id>.js слит): очередь пробует только их — без 404. MERGE/потоки: дописать id при слиянии MGW/LOV */
+const Z2HAVE='makulatura shpora najdi zagadala muha minutka park samolet stopka skakalka brys foto kompot dezhur klubok pirozhki'.split(' ');  /* zb2-MERGE: + слитые игры MGW/LOV */
+let z2Busy=0;
+function z2Next(){const g=S.z2g,z=Z();if(!Z2ON||z2Busy||!g||typeof g!=='object'||lvl()<5||sesDay||z.od===z.d.k)return '';
+  const gap=1+((g.nn|0)%3);if(g.nq&&z.dp-(g.nq|0)<gap)return '';
+  const L=Z2Q.filter(id=>{const i=infoOf(id);return i&&Z2HAVE.indexOf(id)>=0&&!z.o[i.num]&&!isOff(id)&&!bad[id];});if(!L.length)return '';
+  z2Busy=1;const id=L[0],i=infoOf(id);
+  loadGame(id).then(()=>{z2Busy=0;if(z.o[i.num])return;z.o[i.num]=1;z.od=z.d.k;sesDay=1;g.nq=z.dp;g.nn=(g.nn|0)+1;if(!z.s[i.num])z.nw=id;
+    touch();save();stEv({a:'open',id,l:lvl(),q:g.nn});newOffer();},()=>{z2Busy=0;z2Next();});
+  return id;}
+function lockTxt(id){const i=infoOf(id),z=Z(),l=lvl();if(!i)return '';if(isOff(i.id))return 'выключена';
+  if(i.z2)return l<5?'с 5-го уровня':'откроется в свой черёд — по одной новой';   /* zb2-MGR: очередь «Новая затея!» */
   if(i.lv){const a=i.lv-l;return a>0?'после '+i.lv+'-го уровня':'после следующей победы';}
   if(l<5)return 'с 5-го уровня';const b=Math.max(0,i.dp-z.dp);return b>0?'через '+b+' '+pl(b,'день','дня','дней')+' игры':'завтра или после победы';}
 const openList=()=>REG.list.filter(g=>avail(g.id));
@@ -182,7 +165,7 @@ const kc=l=>'<kbd class="zmg-kc">'+escH(l)+'</kbd>';
 /* Портреты: ZMG.faces[who] (подмена) → ZBP.face/bust (справочник героев CAB) → родные: zinaSVG, catSVG, sosFace(i) → запасные бюсты (облик Викторины) */
 const SOSI={vp:0,galya:1,semyon:2,tamara:3,lyusya:4,nina:5};
 const WHO={zina:'Баба Зина',yat:'Кот Ять',valerka:'Валерка',valya:'Тётя Валя',mityai:'Дед Митяй',galya:'Галя с третьего',semyon:'Дед Семён',
-  lyusya:'Люся-почтальонка',tamara:'Тамара из 15-й',nina:'Нина Аркадьевна',vp:'Валентина Петровна',tolik:'Толик',kolya:'Дядя Коля'};
+  lyusya:'Люся-почтальонка',tamara:'Тамара из 15-й',nina:'Нина Аркадьевна',vp:'Валентина Петровна',tolik:'Толик',kolya:'Дядя Коля',mihalych:'Михалыч'};   /* zb2: Михалыч — приёмщик «Тележки» (LOV; портрет — ZMG.faces.mihalych) */
 const whoName=w=>{if(WHO[w])return WHO[w];try{if(window.ZBP&&ZBP.info&&ZBP.info[w]&&ZBP.info[w].name)return ZBP.info[w].name;}catch(e){}return WHO.zina;};
 const BUST={
   valerka:{bg:'#e7f3e4',body:'#2f9e44',brow:'#6b4420',skin:'#f6cfae',
@@ -263,7 +246,7 @@ window.addEventListener('keydown',e=>{const c=REG.cur;if(!c)return;try{if(typeof
 window.addEventListener('keyup',e=>{if(REG.cur)e.stopPropagation();},true);
 
 /* ---------- открыть игру. opt: {mode, ctx, seed, train, back(res|null) — после итога/выхода, next:{t, f(res)} — главная кнопка итога, line — реплика итога} ---------- */
-function open(id,opt){opt=opt||{};const i=infoOf(id);if(!i){toastT('Игра не найдена');return Promise.resolve(null);}
+function open(id,opt){opt=opt||{};if(typeof intMgBack==='function')opt=intMgBack(opt); /* zb2-TECH Р6 */const i=infoOf(id);if(!i){toastT('Игра не найдена');return Promise.resolve(null);}
   if(REG.cur)close();
   const g0=REG.by[i.id];if(g0)return Promise.resolve(start(g0,opt));
   const w=wait(i);
@@ -280,7 +263,7 @@ function start(g,opt){const z=Z(),mode=opt.mode||'cab',train=mode==='cab'||!!opt
   const day=today(),seed=opt.seed!=null?opt.seed>>>0:(mode==='day'||mode==='paper')?seedOf(g.id,day):(Math.random()*4294967296)>>>0;
   const dpr=Math.min(2,window.devicePixelRatio||1),rw=RW(),fest=opt.fest||festNow();
   const o={id:g.id,num:g.num,mode,train,seed,rnd:R(seed),day:+day,calm:typeof CALM==='function'&&!!CALM(),lvl:lvl(),ctx:opt.ctx||{},
-    rw:train?[0,0,0,0]:(g.id==='vecherka'?[0,rw.paper,rw.paper,rw.paper]:rw.c.slice()),note:noteAt(z.np),fest};
+    rw:train||mode==='node'?[0,0,0,0]:(g.id==='vecherka'?[0,rw.paper,rw.paper,rw.paper]:rw.c.slice()),note:noteAt(z.np),fest};
   const isPaused=()=>hold||!!root.querySelector('.zmg-veil')||(typeof PR!=='undefined'&&PR&&PR.size>0)||document.hidden;
   function tick(t){raf=0;if(fin||REG.cur!==cur)return;const dt=Math.min(.05,last?(t-last)/1000:0);last=t;
     if(!isPaused())for(const f of loops)try{f(dt,t/1000);}catch(e){console.error(e);}
@@ -345,9 +328,9 @@ function fin2(g,o,r,opt){const z=Z(),n=g.num,rw=RW();r.score=Math.max(0,Math.rou
   const best=z.b[n]|0,rec=r.score>best&&best>0;if(r.score>best)z.b[n]=r.score;z.n[n]=(z.n[n]|0)+1;
   const out={coins:0,capped:false,note:null,ntCap:false,hb:0,paid:false,rec,issue:null};
   const m=o.mode,day=m==='day'||m==='fest',paper=m==='paper',win=m==='win';
-  const rewarded=!o.train&&(day?!z.d.z:paper?!z.d.v:!z.d.p[n])&&!(win&&z.d.pk>=rw.pk);
+  const rewarded=!o.train&&m!=='node'&&(day?!z.d.z:paper?!z.d.v:!z.d.p[n])&&!(win&&z.d.pk>=rw.pk);   /* zb2-MGR: node — награда уровня (zb2-node.js) */
   if(rewarded&&r.tier>=1){if(day)z.d.z=1;else if(paper)z.d.v=1;else z.d.p[n]=1;out.paid=true;if(win)z.d.pk++;
-    const want=paper?rw.paper:(rw.c[r.tier]||0),c=giveCoins(want,z,rw,g.id);out.capped=c<want;out.coins=c;
+    const want=paper?rw.paper:g.want?Math.max(0,g.want(r,o)|0):(rw.c[r.tier]||0),c=giveCoins(want,z,rw,g.id,g.src);   /* zb2-MGW: g.want/g.src — своя сумма игры */out.capped=c<want;out.coins=c;
     const noteOk=day||paper||(r.tier>=rw.ntPer);
     if(noteOk){if(z.d.nt>=rw.nt)out.ntCap=true;else out.note=giveNote(g.id);}
     if(r.tier===3&&(day||paper)&&!r.h){if(z.d.hb>=rw.hb)out.hbDay=true;else if(typeof hbAdd==='function'&&typeof hbN==='function'&&typeof HB_MAX!=='undefined'&&hbN()>=HB_MAX)out.hbFull=true;
@@ -360,6 +343,18 @@ function fin2(g,o,r,opt){const z=Z(),n=g.num,rw=RW();r.score=Math.max(0,Math.rou
   try{if(ZMG.onEnd)ZMG.onEnd(g,o,r,out);}catch(e){}
   ZB.emit('zmg',{a:'end',id:g.id,mode:m,tier:r.tier,out});if(out.paid)ZB.safe('zmg-today',()=>{if(window.ZBTD&&ZBTD.check)ZBTD.check();else ZB.emit('today');});
   finUI(g,o,r,out,opt);}
+/* «Ещё перемена» (ECO, ZBECO.more/moreLeft/moreTake): перемен с наградой сегодня уже pk — за монеты или ролик ещё одна с наградой (z.d.pk--) */
+function moreOk(){const E=window.ZBECO;try{return !!(E&&typeof E.moreLeft==='function'&&typeof E.moreTake==='function'&&E.moreLeft()>0);}catch(e){return false;}}
+function moreHtml(rwN){const E=window.ZBECO,c=(E.more&&E.more.c)||30,ad=typeof adsOk==='function'&&adsOk();
+  return '<p class="zmg-note">Перемен с наградой сегодня уже '+rwN.pk+'. Ещё одну?</p><div class="zmg-btns zmg-more"><button class="btn sec" data-mo="c"'+((+S.coins||0)<c?' disabled':'')+'>🔔 Ещё перемена за '+c+' <span class="coin"></span></button>'+
+    (ad?'<button class="btn sec zbad zmg-ad" data-mo="ad">🎬 Ещё перемена за рекламу</button>':'')+'</div>';}
+function moreMount(v,g,opt){const again=()=>{const z=Z();z.d.pk=Math.max(0,z.d.pk-1);touch();save();try{if(typeof updCoins==='function')updCoins();}catch(e){}stEv({a:'more',id:g.id});
+    close();open(g.id,{mode:'win',back:opt.back,next:opt.next,ctx:opt.ctx});};
+  v.querySelectorAll('[data-mo]').forEach(b=>b.onclick=()=>{try{SND.tap();}catch(e){}if(b.disabled)return;const E=window.ZBECO;
+    if(b.dataset.mo==='c'){if(E.moreTake(true))again();return;}
+    b.disabled=true;let got=false;try{STAT.place('mg_more');}catch(e){}
+    showRewarded(()=>{if(got)return;got=true;if(E.moreTake(false))again();},()=>{if(!got)b.disabled=false;},
+      ()=>{if(got)return '';got=true;if(!E.moreTake(false))return '';const z=Z();z.d.pk=Math.max(0,z.d.pk-1);touch();save();return 'ещё одна перемена с наградой';});});}
 /* заметка стенгазеты: по порядку (видна заранее), 10 — выпуск собран → приз */
 function giveNote(src){const z=Z(),rw=RW();if(z.np>=ISSUES.length*PER_ISS)return null;const a=noteAt(z.np);z.np++;z.d.nt++;
   const res={n:z.np,iss:a.iss,k:a.k,t:a.t,full:a.k===PER_ISS};try{STAT.ev('note',{iss:a.iss,n:a.k,s:src});}catch(e){}
@@ -375,9 +370,11 @@ function finUI(g,o,r,out,opt){const c=REG.cur;if(!c)return;const root=c.root;
   if(out.note&&out.note.full)rw.push('<div class="zmg-rw t">🎉 Выпуск собран!'+(out.note.prize&&out.note.prize.hb?' 💡 +'+out.note.prize.hb:'')+(out.note.prize&&out.note.prize.c?' · +'+out.note.prize.c+' <span class="coin"></span>':'')+'</div>');
   if(out.hb)rw.push('<div class="zmg-rw t">💡 Подсказка в запас</div>');
   if(out.rec)rw.push('<div class="zmg-rw r">🏆 Новый рекорд!</div>');
-  const notes=[],rwN=RW();
-  if(o.train)notes.push('Тренировка — без наград. Рекорд: '+Math.max(r.score,S.zmg.b[g.num]|0));
+  const notes=[],rwN=RW();let more=false;
+  if(o.mode==='node')notes.push(r.tier?'Урок засчитан — награда как за уровень.':'Чтобы урок засчитался, нужна хоть одна звезда.');   /* zb2-MGR */
+  else if(o.train)notes.push('Тренировка — без наград. Рекорд: '+Math.max(r.score,S.zmg.b[g.num]|0));
   else if(!r.tier)notes.push('Награда — с первой звезды. Попробуй ещё!');
+  else if(!out.paid&&o.mode==='win'&&Z().d.pk>=rwN.pk&&moreOk())more=true;   /* zb2-MGR (просьба ECO): «Ещё перемена» за монеты / рекламу */
   else if(!out.paid)notes.push(o.mode==='win'&&Z().d.pk>=rwN.pk?'Перемен с наградой сегодня уже '+rwN.pk+' — это заход на рекорд.':'Награду за эту игру сегодня уже получил — это заход на рекорд.');
   else{if(out.ntCap)notes.push('Заметок на сегодня хватит ('+rwN.nt+' в день) — завтра ещё.');
     else if(!out.note&&o.mode==='win')notes.push('Заметку в стенгазету дают за две звезды.');
@@ -388,10 +385,10 @@ function finUI(g,o,r,out,opt){const c=REG.cur;if(!c)return;const root=c.root;
   const nx=opt.next||null,v=document.createElement('div');v.className='zmg-veil zmg-res';
   v.innerHTML='<div class="zmg-panel">'+sayH(g.finWho||g.who,escH(typeof line==='function'?line(r):line),r.tier?'happy':'norm')+
     '<h2>'+head+'</h2><div class="zmg-stars">'+st+'</div>'+(r.label?'<p class="zmg-sc">'+escH(r.label)+'</p>':'')+
-    (rw.length?'<div class="zmg-rws">'+rw.join('')+'</div>':'')+notes.map(t=>'<p class="zmg-note">'+escH(t)+'</p>').join('')+bar+
+    (rw.length?'<div class="zmg-rws">'+rw.join('')+'</div>':'')+notes.map(t=>'<p class="zmg-note">'+escH(t)+'</p>').join('')+(more?moreHtml(rwN):'')+bar+
     '<div class="zmg-btns">'+(nx?'<button class="btn green" data-k="nx">'+escH(nx.t)+'</button>':'<button class="btn green" data-k="ok">Готово</button>')+
     '<button class="btn sec" data-k="again"'+(nx?'':' data-esc="1"')+'>↻ Ещё раз'+(o.train||!out.paid?'':' <small>без награды</small>')+'</button>'+(nx?'<button class="btn sec" data-k="ok" data-esc="1">Готово</button>':'')+'</div></div>';
-  root.appendChild(v);veilKc(v);root.querySelector('.zmg-top').textContent='';
+  root.appendChild(v);veilKc(v);root.querySelector('.zmg-top').textContent='';if(more)moreMount(v,g,opt);
   try{if(r.tier===3)SND.win();if(out.coins||out.note)setTimeout(()=>{try{SND.coin();}catch(e){}},500);}catch(e){}
   const res={score:r.score,tier:r.tier,coins:out.coins,note:out.note,hb:out.hb};
   v.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{try{SND.tap();}catch(e){}const k=b.dataset.k;close();
@@ -413,6 +410,8 @@ function perId(){const z=Z();if(avail('diktant')&&!(z.n[IDS.diktant]|0))return '
   L.sort((a,b)=>(z.d.p[a.num]|0)-(z.d.p[b.num]|0)||(z.n[a.num]|0)-(z.n[b.num]|0)||a.num-b.num);return L[0].id;}
 /* должна ли быть Перемена в этом окне победы: 5-й уровень каждой десятки (5, 15, 25…), не задание дня, первая победа, не конец главы/игры */
 function perDue(c){if(!c||c.daily||!c.first||c.again)return false;const r=c.r||{};
+  if(ZB.mgr&&ZB.mgr.nodeLevel&&ZB.mgr.nodeLevel(c))return false;   /* zb2-MGR: уровень уже был игрой (zb2-node) */
+  if(NOPAPER&&!(Z().pc>0||(S.z2g&&S.z2g.r>0)))return false;      /* zb2-MGR п.5: Перемена в окне победы — только тем, кто её хоть раз начинал */
   if(r.chap||(c.idx%10)!==4)return false;if(!perId())return false;
   // дирижёр новичка (NEWBIE 7f78eb2): 5-й уровень зарезервирован за 'mg'; занято — откладываем до следующей Перемены
   try{if(window.ZBNB&&typeof ZBNB.turn==='function'&&!ZBNB.turn('mg',c))return false;}catch(e){}return true;}
@@ -444,7 +443,7 @@ ZB.add(ZB.winSlots,{id:'zmg-per',order:10,zone:'mg',   // без fit: Перем
     el.querySelectorAll('[data-zmg="go"]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();try{SND.tap();}catch(e){}c.paid=Z().d.pk<RW().pk;runPer(c,c.pid);});
     void i;}});
 // Вечерка — после задания дня (вторая страница газеты)
-function paperDue(c){return !!(c&&c.daily&&c.first&&!c.again&&avail('vecherka')&&!Z().d.v);}
+function paperDue(c){return !NOPAPER&&!!(c&&c.daily&&c.first&&!c.again&&avail('vecherka')&&!Z().d.v);}
 ZB.add(ZB.winSlots,{id:'zmg-paper',order:11,zone:'mg',fit:3,
   render(c){if(!paperDue(c))return '';return '<div class="zmg-pw" data-zmg="go" role="button" tabindex="0"><span class="zmg-pav">'+face('lyusya','happy')+'</span><span class="zmg-pt"><b>📰 Люся принесла «Вечерку»</b><span>Кроссворд дня — один на весь подъезд.</span></span><button class="btn ghost small" data-zmg="go">📰 Читать</button></div>';},
   mount(el,c){if(!paperDue(c))return;if(!c.pshown){c.pshown=1;stEv({a:'show',id:'vecherka',m:'paper',l:lvl()});}
@@ -483,9 +482,11 @@ function newOffer(again){clearTimeout(nwT);if(!again)nwN=0;nwT=setTimeout(()=>{c
   if(busy){if(++nwN<20&&!($i('game')&&$i('game').classList.contains('on')))newOffer(true);return;}
   loadGame(id).then(g=>{if(!avail(id))return;if((m&&m.classList.contains('on'))||REG.cur)return;const i=infoOf(id);z.s[i.num]=1;z.nw='';touch();save();
     stEv({a:'show',id,m:'new',l:lvl()});
-    modal('<div class="zmg-new"><h2>Новая затея!</h2>'+sayH(i.who,escH((HG(id)&&HG(id).new)||NEW_SAY[id]||i.a),'happy')+'<p class="zmg-nt"><b>'+i.ic+' '+escH(i.t)+'</b><br>'+escH(i.a)+'</p>'+
-      '<div class="btns"><button class="btn green" id="zmgNewGo">▶ Сыграть</button><button class="btn ghost small" id="zmgNewNo">Потом</button></div></div>');
-    $i('zmgNewGo').onclick=()=>{hideModal();try{SND.tap();}catch(e){}open(id,{mode:'new',back:()=>ZB.refresh()});};
+    modal('<div class="zmg-new"><h2>Новая затея!</h2>'+sayH(i.who,escH((HG(id)&&HG(id).new)||g.ns||NEW_SAY[id]||'Новая затея в Красном уголке — попробуешь?'),'happy')+'<p class="zmg-nt"><b>'+i.ic+' '+escH(i.t)+'</b><br>'+escH(g.a||i.a)+'</p>'+
+      '<div class="btns"><button class="btn green" id="zmgNewGo">▶ '+(i.z2?'Попробовать':'Сыграть')+'</button><button class="btn ghost small" id="zmgNewNo">Потом</button></div></div>');
+    $i('zmgNewGo').onclick=()=>{hideModal();try{SND.tap();}catch(e){}
+      const g2=S.z2g,fast=!!(i.z2&&g2&&typeof g2==='object'&&(g2.nf|0)<3);if(fast){g2.nf=(g2.nf|0)+1;save();}   /* zb2-MGR: первые 3 новые — без вступления (окно и есть вступление) */
+      open(id,{mode:'new',fast,back:()=>ZB.refresh()});};
     $i('zmgNewNo').onclick=()=>{hideModal();try{SND.tap();}catch(e){}stEv({a:'skip',id,m:'new'});};}).catch(()=>{});},1400);}
 const NEW_SAY={vecherka:'Люся-почтальонка: «Свежая «Вечерка»! Кроссворд — каждый день, после задания дня».',splet:'Галя с третьего: «Ой, а что я знаю! Только буквы перепутала — поможешь?»',
   slova:'Зина взяла мел: «Из одного длинного слова — целая тетрадь коротких!»',lishnee:'Зина: «Найди лишнее слово — как лишнюю ложку сахара в чае».',
@@ -530,7 +531,7 @@ function autoplay(k,ms){k=k==null?.85:k;return new Promise(res=>{let n=0;const s
 window.ZMG_REG=ZMG_REG;
 const ZMG=window.ZMG={hosts:HG,hp,hsub,zateyaSay,INFO,IDS,RW,ZMG_RW,WEEK,ISSUES,PER_ISS,REG,OFF:ZMG_OFF,faces:FACES,stand:{},festFn:null,_per:null,
   open,close,load:loadGame,preload,Z,touch,fix:zmgFix,merge:zmgMerge,fresh:zNew,isOpen,avail,unlock,lockTxt,openList,dayId,perId,perDue,
-  winOffer,noteAt,giveNote,ugolok,paperHtml,paperLoad,seed:seedOf,rng:R,pc:isPC,kc,say:sayH,face,whoName,esc:escH,
+  winOffer,noteAt,giveNote,isOff,isZ2,Z2HAVE,Z2Q,ugolok,paperHtml,paperLoad,seed:seedOf,rng:R,pc:isPC,kc,say:sayH,face,whoName,esc:escH,
   words:(f)=>words(f),def:defOf,joke:jokeOf,bot,autoplay,ev:stEv,info:infoOf,
   get cur(){return REG.cur;},get busy(){return !!REG.cur;}};
 })();
