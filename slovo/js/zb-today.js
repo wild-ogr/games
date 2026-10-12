@@ -70,6 +70,7 @@ function onLevel(o){if(!o)return;var t=sd(),key=String(o.key||o.l);
   // диктант: бонусные слова, прирост к уже учтённому на этом уровне
   var b=num(o.bonus),was=num(t.bk[key]);if(b>was){inc('b',b-was);t.bk[key]=b;}
   var x=errand(),g=curG(o);
+  if(o.ok&&o.mode==='fest')mark('lesson'); /* zb2-TECH Б8 */
   if(o.ok){if(!o.daily&&!o.mode)inc('w');if(!o.hinted)inc('nh');
     var ws=g?g.words.filter(function(w){return w.found;}).map(function(w){return w.w;}):[],add=0;
     if(x.e.id==='galya')add=ws.filter(function(w){return w.charAt(0)===x.L;}).length;
@@ -85,7 +86,7 @@ ZB.levelHook.push(onLevel);
 
 /* ---------- пять своих дел ---------- */
 function startNext(){try{var i=Math.min(lvDone(),LEVELS.length-1);hideModal();if(typeof maybeInterstitial==='function')maybeInterstitial(function(){startLevel(i);});else startLevel(i);}catch(e){}}
-function dailyDone(){try{return !!S.daily[dk()];}catch(e){return false;}}
+function dailyDone(){try{return !!S.daily[dk()]||!!sd().m.lesson;}catch(e){return false;}} /* zb2-TECH Б8: праздничный кроссворд — тоже урок дня */
 var OWN=[
  {id:'lesson',order:10,sub:'Урок дня',ic:'📅',t:'Урок дня',done:dailyDone,
    hint:function(){return dailyDone()?'кроссворд дня решён':'кроссворд дня — один на всех';},go:function(){try{openDaily();}catch(e){}}},

@@ -57,7 +57,7 @@ let cloudT=0,cloudReady=false,cloudBusy=false,cloudTry=0,cloudFails=0;
 function save(){if(SHOT)return;S.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}
   if(!cloudT)cloudT=setTimeout(()=>{cloudT=0;cloudSave();},PLAT==='vk'?15000:3000);}
 function cloudSoon(ms){if(SHOT)return;clearTimeout(cloudT);cloudT=setTimeout(()=>{cloudT=0;cloudSave();},ms||1500);}
-function cloudSave(flush){if(SHOT)return;if(!cloudReady){cloudLoad();return;}
+function cloudSave(flush){if(SHOT)return;if(!cloudReady){cloudLoad();return;}if(cloudBusy){cloudSoon(2000);return;} /* zb2-TECH Б9: идёт перечитывание */
   try{if(YP)yaSave(flush);else if(PLAT==='vk'&&VK)vkSaveCloud();}catch(e){}}
 // Яндекс: не больше 100 записей за 5 минут — держим запас (90), лишнее откладываем
 const yaLog=[];let yaT=0;
@@ -71,7 +71,7 @@ const isObj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
 // слияние облака с тем, что на устройстве: прогресс (уровни, словарь, облики, медали, дни) — объединение/максимум;
 // монеты и банка — облако + заработанное здесь после последней синхронизации; настройки — из более нового. S меняется на месте.
 function mergeSave(d){if(!isObj(d))return false;const before=canon(noTs(S)),newer=(+d.ts||0)>BOOT.ts;
-  S.lvo=lvoOf(S)&&lvoOf(d)?1:0; // z-levels: порядок уровней 1–60 — «прежний» (0) побеждает
+  S.lvo=lvoOf(S)&&(lvoOf(d)||(+S.lv||0)>=8&&(+S.lv||0)>=(+d.lv||0))?1:0; // z-levels: «прежний» (0) побеждает; zb2-TECH Б9: здесь 8+ в новом и ≥ облака — новый
   for(const k in d)if(!(k in S)&&!(typeof ZB!=='undefined'&&ZB.owns(k)))S[k]=d[k]; /* zb: поля модулей буста сливает их хозяин (ZB.onSave) */
   SOC.merge(d.soc); // «Друзья и игры» (VK): сессии — максимум, «сделано» — навсегда
   STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше (S.stc пишет сам модуль)
@@ -116,6 +116,12 @@ async function cloudLoad(){if(cloudBusy||cloudReady||SHOT||cloudFails>=4||!(ysdk
     if(!d||canon(noTs(d))!==canon(noTs(S)))save(); // в облаке нет того, что есть на устройстве — дописываем
     if(ch&&typeof onCloud==='function')onCloud();
   }catch(e){cloudFails++;if(cloudFails<4)setTimeout(cloudLoad,11000);}finally{cloudBusy=false;}}
+/* zb2-TECH Б9: из фона ≥ 60 с — перечитать облако (монеты с другого устройства) */
+let cloudHid=0;
+async function cloudRe(){if(!cloudReady||cloudBusy||SHOT||!(YP||PLAT==='vk'&&VK))return;cloudBusy=true;clearTimeout(cloudT);cloudT=0;
+  try{const d=YP?await withTimeout(YP.getData(),10000):await vkLoadCloud();const ch=mergeSave(d);
+    if(ch){try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}if(typeof onCloud==='function')onCloud();}
+    if(isObj(d)&&canon(noTs(d))!==canon(noTs(S)))cloudSoon(500);}catch(e){}finally{cloudBusy=false;}}
 // z-levels (07.10): уровни 1–60 переставлены по трудности (tools/ramp.py). Кто к обновлению прошёл 8+ уровней — S.lvo=0,
 // ему игра показывает прежний порядок (LV_OLD, js/game.js lvIdx): ни повторов, ни пропусков. Новички и стоявшие на 1–7 — S.lvo=1.
 function lvoOf(s){return s.lvo===0||s.lvo===1?s.lvo:+s.lv>=8?0:1;}
@@ -142,7 +148,7 @@ let ysdk=null,YP=null,VK=null,paused=false,muted=false;
 // (перевод часов на телефоне не даёт лишних дней), иначе — часы устройства
 function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
 /*STAT*/
-/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.6 (12.10.2026; v1.5 — 11.10, v1.4 — 09.10, v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
@@ -151,9 +157,13 @@ function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(type
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
    05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
    08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
-   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса.
+   11.10 (v1.5, sv:15): запасной адрес U2 (stat.assortiz.ru/ev), пока основной лежит.
+   12.10 (v1.6, sv:16; Оборона ob2-core, образец Зины zb2-core d41d683): последняя пачка при закрытии (sendBeacon) — на запасной адрес, пока основной в сеансе
+     ни разу не ответил «ОК» или недавно падал (bUrl; sendBeacon отвечает true сразу — пачка в лежащее облако терялась молча);
+     STAT.slow(sc,ms,o) — событие slow «медленный переход» (≥300 мс; sc — экран/переход, ms; не больше 8 за сеанс); в start — mem (ГБ, deviceMemory) и cpu (ядер). */
 var STAT=(function(){
-  var V=1,SV=15,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=16,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,pOk=0,slN=0,SLMAX=8,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -183,6 +193,10 @@ var STAT=(function(){
     return {os:os,dv:touch?(m<600?'m':'t'):'d',sw:Math.round(w/20)*20,sh:Math.round(h/20)*20,
       wv:/; wv\)|VKAndroidApp|com\.vkontakte/.test(ua)||(os==='ios'&&!/Safari\//.test(ua))?1:0,
       br:cv?'c'+cv[1]:sv?'s'+sv[1]:/Firefox\/(\d+)/.test(ua)?'f'+/Firefox\/(\d+)/.exec(ua)[1]:'?'};}
+  // v1.6: память (ГБ, только Chrome/Android) и число ядер — в start
+  function hw(p){try{var m=+navigator.deviceMemory,c=+navigator.hardwareConcurrency;if(m>0)p.mem=m;if(c>0)p.cpu=Math.min(64,Math.round(c));}catch(e){}return p;}
+  // v1.6: STAT.slow('t:map',420,{mk:'…'}) — медленный переход между экранами (≥300 мс), не больше SLMAX за сеанс
+  function slow(sc,ms,o){if(!on||!(ms>=300)||slN>=SLMAX)return;slN++;var p={sc:String(sc||'').slice(0,24),ms:Math.round(ms)},k;for(k in o||{})if(p[k]===undefined)p[k]=o[k];ev('slow',p);}
   function saveSt(){if(O.S){O.S.stc={c:st.c,n:st.n,d:st.d};}ls('stat-'+G,JSON.stringify(st));}
 
   /* STAT.init({g:'gastronom', gv:'v16', plat:PLAT, lang:LANG, url:STAT_URL, now:nowMs, S:S, rate:1}) — README.
@@ -211,7 +225,7 @@ var STAT=(function(){
       vp:scrub(qp('vk_platform').replace(/_ok$/,''),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
     pend=dev&&!O.url?[]:jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[]; // журнал мака очередь не трогает
     // start ждёт STAT.progress() (поля pl, cn, bt), но не дольше 3 с; события до него встанут после
-    sP=['start',sec(),{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)}];
+    sP=['start',sec(),hw({sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)})];slN=0;
     if(prog)rel();else sTm=setTimeout(rel,3000);
     dayMark();saveSt();
     if(se&&se.length){for(i=0;i<se.length;i++){x=se[i];if(x&&x[0]===2)res(x[1],x[2]);else if(x)err(x[1],x[2],x[3],0,{e:1});}}window.__se=[];
@@ -331,15 +345,17 @@ var STAT=(function(){
     var L=urls();
     function go(i){post(L[i],s,function(c,mark){
       var okc=c>=200&&c<300;
-      if(L[i]===O.url){if(okc)pFail=0;else if(c>=500||c===429||!c)pFail=Date.now();}
+      if(L[i]===O.url){if(okc){pFail=0;pOk=1;}else if(c>=500||c===429||!c)pFail=Date.now();}
       if(!okc&&(c>=500||c===429||!c)&&i+1<L.length)return go(i+1);
       delete fly[k];got(b,c,mark);});}
     go(0);}
   function flush(){if(!on||sP)return;while(Q.length)pend.push(pack());keep();
     if(dev&&!O.url){pend=[];keep();return;}
     if(navigator.onLine===false||!pend.length||Date.now()<nextT)return;send(pend[0]);}
+  // v1.6: адрес для sendBeacon — запасной, пока основной в этом сеансе ни разу не ответил «ОК» или падал последние 10 мин
+  function bUrl(){return U2&&(!pOk||(pFail&&Date.now()-pFail<6e5))?U2:O.url;}
   function beacon(){var i,b,ok,left=[];if(dev&&!O.url){pend=[];keep();return;}if(navigator.onLine===false)return;
-    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(urls()[0],JSON.stringify(b)));}catch(e){}
+    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(bUrl(),JSON.stringify(b)));}catch(e){}
       if(!ok||srv)left.push(b);}
     pend=left;keep();if(pend.length&&!srv)send(pend[0]);}
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
@@ -350,7 +366,7 @@ var STAT=(function(){
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
       if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
-      var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
+      var p=hw({sn:st.n,f:0,r:1}),k;slN=0;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
   // облако игры: в mergeSave — STAT.merge(d.stc): раньше установлен, больше сеансов
@@ -368,7 +384,7 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,slow:slow,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
@@ -376,7 +392,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Игра только на русском — lang:'ru' (window.LANG от Яндекса интерфейс не меняет).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v3.0-101112',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v4.0-101222',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе — после облака (что позже), но не дольше 2,5 с (иначе модуль сам отправит start без полей через 3 с).
 // pl — пройдено уровней, cn — монет, bt — облако хоть раз отдавало сохранение (S.cl — метка на устройстве, ставит cloudLoad)
 let statPr=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:+S.lv||0,cn:+S.coins||0,bt:S.cl?1:0});}
@@ -693,7 +709,8 @@ SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{modal(h)
   evUrl:EV_URL,evId:c=>typeof VKM_ID==='object'&&VKM_ID[c]||0,
   now:()=>nowMs(),
   // уведомления: до 3 предложений за всё время — в 1-й, 3-й и 7-й день игрока (NTF_MAX, NTF_DAYS в модуле SOC), каждый раз свой повод
-  ntf:{t:n=>{const dly=S.lv>=10,done=!!(S.daily&&S.daily[todayKey()]);
+  ntf:{t:n=>{if(typeof ZB2N!=='undefined'&&ZB2N.ntfT){const z=ZB2N.ntfT(n);if(z!==null)return z;} /* zb2-NEWB 4.3: вопрос — в конце 1-го дня и после задания дня (askntf) */
+      const dly=S.lv>=10,done=!!(S.daily&&S.daily[todayKey()]);
       if(n<=1)return done?'Напомнить завтра про новое задание дня?':dly?'Напомнить, когда будет новое задание дня?':'Напомнить, когда приготовлю новый гостинец?'; // z-new: сразу после задания дня — «завтра»
       if(n===2)return done&&(S.streak||0)>=2?'Напомнить, чтобы серия не прервалась?':done?'Напомнить завтра про новое задание дня?':'Напомнить о себе, если соскучусь?';
       return 'Напоминать изредка про гостинцы и новые слова?';},
@@ -750,7 +767,7 @@ async function initSDK(){
   if(typeof onReady==='function')onReady();
   if(PLAT==='vk'){
     try{if(!window.vkBridge)await loadScript('js/vk-bridge.min.js').catch(function(){return new Promise(function(r){setTimeout(r,1500);}).then(function(){return window.vkBridge||loadScript('js/vk-bridge.min.js?r=2');});});
-      await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;adPreload('boot');setTimeout(vkIntLoad,4000); /* zb-TECH: межэкранная — спросить VK заранее */ /* pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне */vkFitInit();SOC.ready();if(typeof updMore==='function')updMore();
+      await vkSend('VKWebAppInit',{},20000);VK=window.vkBridge;adPreload('boot');setTimeout(vkIntLoad,4000);intTick(); /* zb2-TECH Р1: фоновый переспрос */ /* zb-TECH: межэкранная — спросить VK заранее */ /* pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне */vkFitInit();SOC.ready();if(typeof updMore==='function')updMore();
       VK.subscribe(e=>{const t=e.detail&&e.detail.type;if(t==='VKWebAppViewHide'){setPause('vk',true);clearTimeout(cloudT);cloudT=0;cloudSave();}else if(t==='VKWebAppViewRestore'){setPause('vk',false);if(typeof adBack==='function')adBack();setTimeout(adBackChk,300);}});
       Promise.resolve(cloudLoad()).then(payInit,payInit);if(typeof askProbe==='function')askProbe();if(typeof updGift==='function')updGift();
     }catch(e){VK=null;}
@@ -942,19 +959,34 @@ function interWhy(){if(SHOT||(typeof PAY!=='undefined'&&PAY.own('no_ads'))||S.lv
   const c=!(ysdk||VK||LOCAL)?'nosdk':Date.now()-lastInter<AD.gap*1000?'gap':'cap';STAT.ad('int','none',c);}
 /* zb-TECH (10.10, буст «Школа»): межэкранная VK — предпроверка и пауза после отказов (было: отказ VK → новая попытка на КАЖДОМ переходе, серии до 31 отказа).
    vkIntLoad() — VKWebAppCheckNativeAds{interstitial} заранее (через 4 с после моста, через 3 с после показа, в фоне на переходе), ответ помним (vkIntOk).
-   На переходе: VK заранее сказал «нет» — игру не останавливаем (без затемнения/паузы), VK не спрашиваем, ad int none c=pre; переспросить — не раньше INT_NO_MS (минута).
+   На переходе: VK заранее сказал «нет» — игру не останавливаем (без затемнения/паузы), VK не спрашиваем, ad int none c=pre; переспрос — в фоне (zb2-TECH Р1, intPoll, раз в 30 с).
    Два отказа показа подряд (nofill/ошибка) — INT_PAUSE_MS (минута) без запросов вовсе: ad int none c=pause. Ответа «есть/нет» ещё не было — как раньше (пробуем показать).
    Решение владельца 10.10: «у VK нет ролика → пауза, не спрашиваем снова». Яндекс — без изменений. Числа — let (стенд укорачивает). */
-let INT_NO_MS=60000,INT_PAUSE_MS=60000;
+let INT_PAUSE_MS=60000;
 let vkIntOk=null,vkIntT=0,vkIntBusy=0,intFails=0,intPauseT=0;
 function vkIntLoad(){if(!VK||document.hidden||vkIntBusy)return;vkIntBusy=1;vkIntT=Date.now();
   vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'},5000).then(r=>!!(r&&r.result),()=>false).then(ok=>{vkIntBusy=0;vkIntOk=ok;vkIntT=Date.now();STAT.adChk('int',ok?1:0);});}
 // true — показывать можно (или ещё не знаем); false — VK сказал «нет» / пауза после отказов: переход без рекламы
 function intPre(){if(!VK)return true;const now=Date.now();
   if(now<intPauseT){STAT.ad('int','none','pause');return false;}
-  if(vkIntOk===false){STAT.ad('int','none','pre');if(now-vkIntT>=INT_NO_MS)vkIntLoad();return false;}
+  if(vkIntOk===false){STAT.ad('int','none','pre');if(!ADBG&&now-vkIntT>=60000)vkIntLoad();return false;} /* zb2-TECH Р1 */
   return true;}
 function intRes(ok){if(ok){intFails=0;return;}if(++intFails>=2){intFails=0;intPauseT=Date.now()+INT_PAUSE_MS;}}
+/* zb2-TECH Р1+Р2 (журнал zina-boost2/logs/TECH.md): «нет» — переспрос в фоне 30 с и за 15 с до конца паузы; ошибка 10 = нет рекламы + пауза */
+const ADBG=typeof ZB2==='undefined'||ZB2.reg('adbg',{t:'Межэкранная: фон, ошибка 10',who:'TECH'});
+if(typeof ZB2!=='undefined')ZB2.reg('int6',{t:'Межэкранная после мини-игры',who:'TECH'});
+let INT_POLL_MS=30000,INT_PRE_MS=15000,INT_E10_MS=180000,INT_TICK_MS=5000,intTickT=0;
+function intWant(){return !!VK&&!SHOT&&!(typeof PAY!=='undefined'&&PAY.own('no_ads'))&&S.lv>=AD.minLv;}
+function intPoll(){if(!VK||document.hidden||interOn||adBusy||vkIntBusy||!intWant())return;const now=Date.now();
+  if(now<intPauseT)return;
+  if(vkIntOk===false&&now-vkIntT>=INT_POLL_MS){vkIntLoad();return;}
+  const due=Math.max(lastInter+AD.gap*1000,lastRew+AD.afterRew*1000,T0+AD.sess*1000,intPauseT);
+  if(now>=due-INT_PRE_MS&&now<due+INT_POLL_MS&&vkIntT<due-INT_PRE_MS)vkIntLoad();}
+function intTick(){if(intTickT||!VK||!ADBG)return;intTickT=setInterval(()=>{try{intPoll();}catch(e){}},INT_TICK_MS);}
+function intErr10(e){return ADBG&&+adErrCode(e)===10;}
+/* zb2-TECH Р6: межэкранная после итога мини-игры (zmg-core open), не для mode 'win' и выхода без итога */
+function intMgBack(opt){const b0=opt&&opt.back;if(typeof b0!=='function'||b0.__zi||opt.mode==='win'||(typeof ZB2!=='undefined'&&ZB2.off('int6')))return opt;
+  const b=function(r){if(r)maybeInterstitial(()=>b0(r));else b0(r);};b.__zi=1;return Object.assign({},opt,{back:b});}
 function maybeInterstitial(cb){
   if(interOn){interNext=cb;return;} // реклама уже идёт — второй переход сделаем после неё (последний выбранный)
   S.plays=(S.plays||0)+1;
@@ -964,7 +996,8 @@ function maybeInterstitial(cb){
   const prev=lastInter;lastInter=Date.now();interOn=true;const done=()=>{interOn=false;const f=interNext||cb;interNext=null;f();};
   if(!ysdk&&!VK&&!LOCAL){lastInter=prev;interOn=false;STAT.ad('int','none','nosdk');cb();return;} /* zb-TECH: заглушка — только на маке (LOCAL), явно */
   STAT.adReq('int');
-  if(VK){const fin=()=>{adClose();done();setTimeout(vkIntLoad,3000);};adOpen();vkIntOk=null;vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{if(r&&r.result)STAT.ad('int','show');else STAT.ad('int','none','nofill');if(!(r&&r.result))lastInter=prev;intRes(!!(r&&r.result));}).catch(e=>{if(adNoFill(e))STAT.ad('int','none','nofill');else STAT.ad('int','err',adErrCode(e));lastInter=prev;intRes(false);})
+  if(VK){const fin=()=>{adClose();done();setTimeout(vkIntLoad,3000);};adOpen();vkIntOk=null;vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{if(r&&r.result)STAT.ad('int','show');else STAT.ad('int','none','nofill');if(!(r&&r.result))lastInter=prev;intRes(!!(r&&r.result));}).catch(e=>{if(intErr10(e)){STAT.ad('int','none','e10');lastInter=prev;intFails=0;intPauseT=Date.now()+INT_E10_MS;vkIntOk=false;vkIntT=Date.now();return;} /* zb2-TECH Р2 */
+        if(adNoFill(e))STAT.ad('int','none','nofill');else STAT.ad('int','err',adErrCode(e));lastInter=prev;intRes(false);})
       .then(fin,fin);return;} // не .finally: в старых WebView его нет
   if(!ysdk&&LOCAL){STAT.ad('int','show','stub');stubAd(done);return;} // свой компьютер — заглушка (zb-TECH: явный LOCAL)
   // страховка (r3, 07.10): SDK не ответил за 8 с / реклама открылась и не закрылась за 2 мин / исключение — идём дальше, пауза снята; поздний onOpen/onClose только ставят/снимают паузу
@@ -976,7 +1009,7 @@ function maybeInterstitial(cb){
     onError:()=>{if(fin){adClose();return;}end('err','sdk');}}});}catch(e){end('err','throw');}
 }
 // модерация Яндекса (1.19.3, справка «Геймплей»): свернули/сменили вкладку — GameplayAPI.stop, вернулись в уровень (не в рекламе, без окна) — start
-document.addEventListener('visibilitychange',()=>{if(document.hidden){setPause('hidden',true);YG.stop();clearTimeout(cloudT);cloudT=0;cloudSave(true);}else{setPause('hidden',false);setTimeout(()=>{if(inPlay())YG.start();},0);}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){cloudHid=Date.now();setPause('hidden',true);YG.stop();clearTimeout(cloudT);cloudT=0;cloudSave(true);}else{if(cloudHid&&Date.now()-cloudHid>=60000)setTimeout(cloudRe,800);cloudHid=0;setPause('hidden',false);setTimeout(()=>{if(inPlay())YG.start();},0);}});
 
 /* ================= звук (синтез, без файлов) ================= */
 // общий выход: регулятор громкости + компрессор (сумма звуков не хрипит)

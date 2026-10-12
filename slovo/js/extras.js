@@ -22,6 +22,7 @@ function openShop(){
     h+=`<div class="item${sel?' sel':''}"><div class="pv">${pv}</div><b>${it.n}</b><small>${it.d}</small>
       ${sel?`<div class="ok">✓ ${isZ?'Надето':'На столе'}</div>`:own?`<button class="btn blue" data-id="${it.id}">Выбрать</button>`
         :it.gift==='sos'&&typeof sosShopTxt==='function'?sosShopTxt() // «Соседки по подъезду» (js/sosedki.js): блюдце за 3 недели в призёрах
+        :it.gift&&window.ZB2CAL&&ZB2CAL.shop(it)?ZB2CAL.shop(it) /* zb2-CAL: наряды календаря, блюдце гостинца — в календаре */
         :it.gift?`<div class="ok" style="color:var(--ink2)">🎁 Седьмой гостинец<br>(${Math.min(lgN(),LOGIN.length)} из ${LOGIN.length})</div>`
         :it.pay?`<small>В покупке «${PAY_ITEMS[it.pay].name}»</small><button class="btn pbuy" data-pid="${it.pay}">🎁 ${PAY.price(PAY.item(it.pay))}</button>`
         :`<button class="btn${S.coins<it.p?' ghost':''}" data-id="${it.id}" data-p="${it.p}">${it.p} <span class="coin"></span></button>`}</div>`;}

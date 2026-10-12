@@ -1,0 +1,93 @@
+/* zb2-newb — стили потока NEWB (буст_в2.0). Всё — под классами html.zn-<флаг> (флаг выключен — правило не действует). */
+
+/* ---------- lv1safe: 1-й уровень ---------- */
+/* 1.5 палец под буквой: кружок касания — прозрачное кольцо вокруг буквы, сам палец ниже буквы (буква видна) */
+html.zn-lv1safe #tutDot>i{left:0!important;top:-11px!important;width:44px!important;height:44px!important;background:transparent!important;border:3px solid rgba(255,138,61,.95)!important;box-shadow:0 0 0 3px rgba(255,255,255,.7)}
+html.zn-lv1safe #tutDot>b{top:30px!important}
+html.zn-lv1safe #tutLine{opacity:.75}
+/* номера 1-2-3 (свои — если zb-newbie.js выключен, у .nbn нет стиля) */
+#wheel .zn-num{position:absolute;right:-4px;top:-4px;min-width:22px;height:22px;border-radius:11px;background:#c2410c;color:#fff;font:800 14px/22px Rubik,system-ui,sans-serif;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.25);pointer-events:none;font-style:normal;text-transform:none}
+/* Зина вписывает слово: буква загорается */
+#wheel .let.zn-sp{background:#ff8a3d!important;color:#fff!important;transform:scale(1.12);transition:transform .2s,background .2s;box-shadow:0 0 0 6px rgba(255,138,61,.35)}
+/* 1.6 бледный фон 1-го уровня: рисунок места бледнее, без падающих листьев и объявлений */
+html.zn-lv1safe.zn-l1 #zbLvBg .art{opacity:.28;filter:saturate(.5)}
+html.zn-lv1safe.zn-l1 #festFx{display:none!important}
+
+/* ---------- walk: подсветка дневника/Школы на Доме ---------- */
+html.zn-walk .zn-hl{position:relative;border-radius:20px;animation:znhl 1.4s ease-in-out 4;box-shadow:0 0 0 4px rgba(255,138,61,.75)}
+@keyframes znhl{50%{box-shadow:0 0 0 9px rgba(255,138,61,.35)}}
+html.zn-walk #btnPlay.zn-hlp{animation:znhl 1.4s ease-in-out 4}
+@media (prefers-reduced-motion:reduce){html.zn-walk .zn-hl,html.zn-walk #btnPlay.zn-hlp{animation:none}}
+
+/* ---------- зоны Дома chips / after (всегда; «Порядок Дома» — журнал NEWB) ---------- */
+html.zbv .zbh-chips{display:flex;gap:8px;align-items:stretch}
+html.zbv .zbh-chips:empty{display:none}
+html.zbv .zbh-chips>.zbs{flex:1 1 0;min-width:0;display:flex}
+html.zbv .zbh-after>.zbs+.zbs{margin-top:10px}
+.zn-chip{display:flex;align-items:center;gap:5px;width:100%;min-height:48px;max-height:52px;padding:5px 7px;background:var(--card,#fff);border-radius:14px;box-shadow:var(--shadow,0 2px 0 rgba(39,50,74,.1));color:var(--ink,#27324a);text-align:left;position:relative;overflow:hidden}
+.zn-chip>i{font-style:normal;font-size:18px;line-height:1;flex:none}
+.zn-chip>span{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+.zn-chip b{font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zn-chip small{font-size:12.5px;color:var(--ink2,#5b6478);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* zb2-MERGE: плашки CAL/ECO/ZAP кладут <b>/<small> прямо в кнопку (без <span>) — сетка: значок слева, строки столбиком справа; метка — внутри плашки */
+.zn-chip{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:6px;align-content:center;font:inherit;border:0;cursor:pointer}
+.zn-chip>i{grid-row:span 3;align-self:center}
+.zn-chip>:not(i){grid-column:2;min-width:0;display:block}
+.zn-chip>b,.zn-chip>small{line-height:1.15}
+.zn-chip{overflow:visible}html.zn-homefit .zn-chip[data-zn-tag]::after{top:-9px;right:4px;font-size:10.5px;padding:3px 6px}
+@media (max-width:859px){html.zbv .zbh-chips>.zbs:nth-child(n+4){display:none}}
+@media (min-width:860px){html.zbv .zbh-chips{flex-wrap:wrap}html.zbv .zbh-chips>.zbs{flex:1 1 30%}}
+
+/* ---------- 3.2 метки на плитках ---------- */
+html.zn-homefit [data-zn-tag]{position:relative}
+html.zn-homefit [data-zn-tag]::after{content:attr(data-zn-tag);position:absolute;right:8px;top:-8px;z-index:3;background:#c2410c;color:#fff;font:800 12.5px/1 Rubik,system-ui,sans-serif;padding:4px 8px;border-radius:999px;box-shadow:0 2px 4px rgba(0,0,0,.2);white-space:nowrap;pointer-events:none}
+
+/* ---------- 3.1 homefit: Дом на телефоне ужат (ширина < 860) ---------- */
+@media (max-width:859px){
+  html.zbv.zn-homefit .zbh-scene{height:150px;border-radius:0 0 22px 22px}
+  html.zbv.zn-homefit .zbh-scene .mtop{top:calc(env(safe-area-inset-top) + 6px);left:40%;right:8px;justify-content:flex-end;gap:6px}
+  html.zbv.zn-homefit .zbh-scene .mtop>div:first-child{gap:5px!important}
+  html.zbv.zn-homefit .zbh-scene .mtop .ibtn{width:36px;height:36px;min-width:36px;font-size:16px;padding:0}
+  html.zbv.zn-homefit .zbh-scene .mtop .coins{padding:4px 10px;font-size:16px}
+  html.zbv.zn-homefit .zbh-hero{left:0;width:40%;height:146px;bottom:0}
+  html.zbv.zn-homefit .zbh-say{left:38%;right:8px;width:auto;top:calc(env(safe-area-inset-top) + 48px);bottom:16px;align-items:center}
+  html.zbv.zn-homefit .zbh-say .mbubble{font-size:13.5px;line-height:1.25;padding:6px 10px;max-height:84px;overflow:hidden}
+  html.zbv.zn-homefit .zbh-say .mbubble::after{left:-8px;bottom:auto;top:50%;margin-top:-6px;border:6px solid transparent;border-right-color:var(--card,#fff);border-left:0}
+  html.zbv.zn-homefit .zbh-chip{display:none} /* 3.6: звание одно — класс в дневнике «Сегодня у Зины» */
+  html.zbv.zn-homefit .zbh-col{margin-top:-10px}
+  html.zbv.zn-homefit .zbh-col>*+*{margin-top:8px}
+  html.zbv.zn-homefit .zbh-col>:empty+*{margin-top:8px}
+  html.zbv.zn-homefit .zbh-ch{padding:7px 12px 7px;border-radius:16px}
+  html.zbv.zn-homefit .zbh-ch .h b{font-size:15px}
+  html.zbv.zn-homefit .zbh-ch .n{font-size:15px}
+  html.zbv.zn-homefit .zbh-ch small{display:none}
+  html.zbv.zn-homefit .zbh-ch .zdots{margin-top:4px}
+  html.zbv.zn-homefit .zbh-play #btnPlay{font-size:21px!important;padding:12px!important;border-radius:18px}
+  html.zbv.zn-homefit .zbh-ch .zdots{flex-wrap:nowrap;overflow:hidden}
+  html.zbv.zn-homefit .zbh-ch .zdots i{width:min(11px,calc((100vw - 70px) / 20 - 4px));height:min(11px,calc((100vw - 70px) / 20 - 4px))}
+}
+/* порядок: старые живые кнопки (Соседки, цель облика, «Завтра…») — ниже «Школы» и карточек after (телефон и ПК) */
+html.zbv.zn-homefit #zbOld{order:5}
+html.zbv.zn-homefit #zbSide{order:6}
+html.zbv.zn-homefit #zbBottom{order:7}
+
+/* ---------- cabgift: ключ от класса русского ---------- */
+.zn-cg h2{margin-bottom:6px}
+.zn-cgs{position:relative;height:150px;margin:4px auto 6px;max-width:300px;border-radius:18px;background:linear-gradient(#e9f1fb,#fbf3e2);overflow:hidden}
+.zn-cgk{position:absolute;left:50%;top:50%;font-size:64px;line-height:1;margin:-34px 0 0 -34px;animation:zncgk 2s ease-in-out both}
+.zn-cgvp{position:absolute;right:8px;bottom:0;width:130px;height:143px;transform:translateX(160px);animation:zncgvp .8s .7s ease-out both}
+.zn-cgvp svg{width:100%;height:100%}
+@keyframes zncgk{0%{transform:scale(.4) rotate(-30deg);opacity:0}30%{transform:scale(1.15) rotate(10deg);opacity:1}100%{transform:translateX(-80px) scale(.8) rotate(0)}}
+@keyframes zncgvp{to{transform:translateX(0)}}
+.zn-cg .zn-cg2{display:none}
+.zn-cg.on .zn-cg2{display:block;animation:zncgin .35s ease-out both}
+.zn-cg.on .zn-cg1{display:none}
+.zn-cg1{font-weight:700;color:var(--ink2)}
+.zn-cgt{font-size:17px}
+.zn-cgw,.zn-cgn{font-size:14.5px}
+@keyframes zncgin{from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){.zn-cgk,.zn-cgvp,.zn-cg.on .zn-cg2{animation:none;transform:none}.zn-cgk{left:30%}}
+
+/* ---------- askntf: окошко «До завтра?» на Доме ---------- */
+.zn-ask .zn-askz{width:96px;height:96px;margin:0 auto 2px}
+.zn-ask .zn-askz svg{width:100%;height:100%}

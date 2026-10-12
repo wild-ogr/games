@@ -44,8 +44,9 @@ function openBack(){var x=due();if(!x)return false;give(x);
   $('scBkOk').onclick=function(){hideModal();try{SND.tap();}catch(e){}};return true;}
 function face(){try{return zinaSVG('wow');}catch(e){return '👵';}}
 // обёртка «Гостинца»: подарок вернувшемуся — внутри того же окна
+function calOwn(){return !!(window.ZB2CAL&&ZB2CAL.owns&&ZB2CAL.owns('back'));} /* zb2-CAL: календарь сам дарит вернувшемуся (ZBECO.cal.back) — тут молчим */
 ZB.on('ready',function(){
-  if(typeof window.openLogin==='function'&&!window.openLogin.zbBack){var ol=window.openLogin;
+  if(!calOwn()&&typeof window.openLogin==='function'&&!window.openLogin.zbBack){var ol=window.openLogin;
     window.openLogin=function(then){var x=due(),r=ol.apply(this,arguments);
       if(x)ZB.safe('back-in',function(){var m=$('mcard'),h=m&&m.querySelector('h2');if(!h||!/Гостинец/.test(h.textContent))return;give(x);
         h.textContent='🎒 Опять прогуливал? Гостинец!';var p=h.parentNode.querySelector('p');var d=document.createElement('div');d.innerHTML=block(x,1);var z=h.nextElementSibling;if(z&&z.querySelector('svg')){z.classList.add('sc-backz');}
@@ -59,7 +60,7 @@ ZB.on('ready',function(){
 function atHome(fn){ZB.on('home',fn);ZB.on('ready',function(){var m=document.querySelector('.screen.on');if(m&&(m.id==='menu'||m.id==='zb-home'))fn();});}
 var t0=0;atHome(function(){clearTimeout(t0);t0=setTimeout(function(){try{if($('modal').classList.contains('on'))return;if(G&&!G.won)return;}catch(e){}
   var lg=false;try{lg=lgDue();}catch(e){}if(lg)return; // гостинец ещё будет — подарок придёт в его окне
-  if(window.ZBMIG&&ZBMIG.pending())return;openBack();stamp();},800);});
+  if(window.ZBMIG&&ZBMIG.pending())return;if(calOwn()){stamp();return;}openBack();stamp();},800);});
 ZB.on('start',stamp);
 window.ZBBACK={due:due,open:openBack,prev:function(){return prev;},fix:function(){fix();}};
 })();

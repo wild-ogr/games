@@ -586,6 +586,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/defs.js" defer></script>
 <script src="js/vkm.js" defer></script>
 <script src="js/zb-core.js" defer></script><!-- zb: каркас буста «Школа бабы Зины» — до core.js -->
+<script src="js/zb2-core.js" defer></script><!-- zb2: каркас «буст_в2.0» (ZB2: флаги новинок, поля S.z2*) — сразу после zb-core.js -->
 <script src="js/core.js" defer></script>
 <script src="js/text.js" defer></script>
 <script src="js/game.js" defer></script>
@@ -647,6 +648,31 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 
 <!-- zb:TEXT -->
 <script src="js/zb-lines.js" defer data-zb></script>
+
+<!-- zb2: модули «буст_в2.0». Каждый поток вставляет СВОИ строки <script src="js/…" defer data-zb></script> сразу под СВОЕЙ меткой (чужие не трогать; мини-игры строк не имеют) -->
+<!-- zb2:ECO -->
+<!-- ECO: js/zb2-goal.js и js/zb2-fair.js грузит zb-eco.js через ZB.load после ZB.ready (вес старта) -->
+
+<!-- zb2:LOV -->
+<script src="js/zmg-rec.js" defer data-zb></script>
+
+<!-- zb2:MGR -->
+<script src="js/zb2-node.js" defer data-zb></script>
+
+<!-- zb2:MGW -->
+<script src="js/zb2-wordday.js" defer data-zb></script>
+
+<!-- zb2:ZAP -->
+<script src="js/zb2-zap.js" defer data-zb></script>
+
+<!-- zb2:CAL -->
+<script src="js/zb2-cal.js" defer data-zb></script>
+
+<!-- zb2:NEWB -->
+<script src="js/zb2-newb.js" defer data-zb></script>
+
+<!-- zb2:TECH -->
+<script src="js/zb2-mail.js" defer data-zb></script><!-- zb2-TECH: форма «Написать бабе Зине» (флаг mail) -->
 
 <script src="js/zb-ready.js" defer></script><!-- zb: все модули выполнены → ZB.ready() (до словаря) -->
 <script>/* zb-TECH (10.10): словари — zina.js 40К, gloss.js 94К, dict.js 323К (40 % веса) — грузим ПОСЛЕ первого экрана (DOMContentLoaded: все defer-скрипты

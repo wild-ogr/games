@@ -174,15 +174,15 @@ function finishLevel(g){
   // «Тетрадь недели»: 5 заданий дня из 7 за неделю (пн–вс) — подарок, раз в неделю
   let week=0;if(g.daily&&first){const wd=weekDays(dk);if(wd.filter(k=>S.daily[k]).length>=WEEK.need&&!(S.wk&&S.wk.w>=wd[0])){S.wk={w:wd[0]};week=WEEK.gift;reward+=week;}}
   // финал главы: подарок за главу один раз (S.chg), отдельно от награды за уровень (×2 за рекламу на него не действует)
-  let chap=0;if(!g.daily&&first&&(g.idx+1)%CH_LEN===0){const c=Math.floor(g.idx/CH_LEN);S.chg=S.chg||{};if(!S.chg[c]){S.chg[c]=1;chap=ECO.chap;}}
+  let chap=0,chapH=0;if(!g.daily&&first&&(g.idx+1)%CH_LEN===0){const c=Math.floor(g.idx/CH_LEN);S.chg=S.chg||{};if(!S.chg[c]){S.chg[c]=1;chap=ECO.chap;chapH=typeof ZB2N!=='undefined'&&ZB2N.chapHint?ZB2N.chapHint(c):0;}} /* zb2-NEWB 2.2: главы 1–3 — 💡×2 вместо монет */
   // «Отличник» громко (печать и фраза) — в первый раз и потом каждый 5-й; остальные — значок у монет
   let exLoud=false;if(exc&&first){S.exAll=(S.exAll||0)+1;exLoud=S.exAll%5===1;}
   if(!g.daily&&first)S.lv=Math.max(S.lv,g.idx+1);
-  delete S.curs[g.key];addCoins(reward+chap,'lvl');save();cloudSoon();
+  delete S.curs[g.key];addCoins(reward+(chapH?0:chap),'lvl');save();cloudSoon();
   const rank1=rankName(wordsTotal()),rankUp=g.rank0&&rank1!==g.rank0?rank1:'';
   if(first)S.wins=(S.wins||0)+1;
   vkmCheck(); // vkev: уровень, очки и миссии VK — модулю SOC (шлёт он сам, молча)
-  return {first,reward,base:reward-exBonus-sbonus-week,dw,isNew,streak,sbonus,exc,exBonus,exLoud,week,chap,dk,rankUp,test:first&&isTest(g.idx,g.daily)};
+  return {first,reward,base:reward-exBonus-sbonus-week,dw,isNew,streak,sbonus,exc,exBonus,exLoud,week,chap,chapH,dk,rankUp,test:first&&isTest(g.idx,g.daily)};
 }
 // w-ads: корзинка бабы Зины (BOX в game.js). Победа в счёт (ok) — +1 к S.box; набралось BOX.every — 'on' (кнопка; счётчик обнуляется сразу — перезапуск окна корзинку не размножит),
 // если ролик, по сведениям площадки, готов (adLikely) и это не конец главы (там своё окно с роликом); не готов — корзинка ждёт следующей победы. Возврат: 'on' | N побед до корзинки | 0
@@ -298,7 +298,7 @@ function openChapFinale(g,r,nextI,again){r.chapSeen=1;
     <div class="chfin"><div class="em" style="background:${ch.c}">${ch.e}</div><div class="zz">${zinaSVG('wow')}</div>${nx?`<div class="em nx" style="background:${nx.c}">${nx.e}</div>`:''}</div>
     <p style="font-weight:800;color:var(--ink);font-size:17px">«${ch.n}» позади!</p>
     <p>${r.chapSay}</p>
-    <div class="reward big" id="mRew">+${r.chap} <span class="coin"></span></div><p class="money">подарок за главу</p>
+    ${r.chapH?`<div class="reward big" id="mRew">💡 ×${r.chapH}</div><p class="money">буквы от Ятя — в запас подсказок</p>`:`<div class="reward big" id="mRew">+${r.chap} <span class="coin"></span></div><p class="money">подарок за главу</p>`} <!-- zb2-NEWB 2.2 -->
     ${nx?`<p class="chnx" style="font-size:14.5px">Дальше — «${nx.n}» ${nx.e}. ${nx.s}</p>`:''}
     ${zbh}
     <div class="btns"><button class="btn green" id="mGo">${nx||end?'Дальше ▶':'В меню'}</button>
@@ -306,7 +306,7 @@ function openChapFinale(g,r,nextI,again){r.chapSeen=1;
       <button class="btn ghost small" id="mCard">📤 Открытка «Я прошёл главу»</button></div>`);
   if(zbh)ZB.mount($('mcard'),ZB.chapSlots,zbc); /* zb */
   fitChap();
-  if(!again){SND.win();SND.coin();confetti();buzz('win');coinBurst($('mRew'),r.chap);}
+  if(!again){SND.win();SND.coin();confetti();buzz('win');if(!r.chapH)coinBurst($('mRew'),r.chap);} /* zb2-NEWB 2.2 */
   const cx=$('mChX2');if(cx)STAT.offer('chap');if(cx)cx.onclick=()=>{if(r.chx2||cx.disabled)return;cx.disabled=true;STAT.place('chap');
     showRewarded(()=>{if(r.chx2)return;r.chx2=1;addCoins(r.chap,'ad');hbAdd(1,'chap');SND.coin();cx.textContent='✅ Сундук главы: 💡 +1 и +'+r.chap;coinBurst(cx,r.chap);},()=>{if(!r.chx2)cx.disabled=false;},
       ()=>{if(r.chx2)return '';r.chx2=1;addCoins(r.chap,'ad');hbAdd(1,'chap');SND.coin();if(document.body.contains(cx)){cx.disabled=true;cx.textContent='✅ Сундук главы: 💡 +1 и +'+r.chap;}return 'сундук главы: 💡 +1 и +'+r.chap;});}; // поздний зачёт (adt)
@@ -464,6 +464,15 @@ function bind(){
   window.addEventListener('resize',()=>{layoutWheel();fitSub();});
   window.addEventListener('orientationchange',()=>setTimeout(()=>layoutWheel(),300));
 }
+// zb2-NEWB 1.3 (флаг walk): на устройстве нет сохранения (BOOT.ts=0), а облако может принести прогресс — ждём его до 2,5 с, Дом прячем;
+// потом решаем: прогресс есть — Дом/текущий уровень, нет — 1-й уровень с обучением. Возвращает true, если ждём (onReady доделает сам).
+let znW=0;const ZN_WAIT=(m=>m?(m[1]==='1'?1500:0):1000)(/[?&]vk_is_app_user=([01])/.exec(location.search)); // мс; 0 — не ждать. zb2-MERGE (решение главного 12.10): VK — ждём облако только у того, кто уже запускал игру (vk_is_app_user=1), новичок VK — не ждёт; где признака нет (Яндекс/ОК) — 1,0 с
+function znWait(){if(znW||!ZN_WAIT||BOOT.ts||typeof ZB2==='undefined'||ZB2.off('walk')||ZB2.off('nbwait')||/[?&](nosdk|lv)=?/.test(location.search))return false;znW=1;
+  const m=$('menu'),t0=Date.now();if(m)m.style.visibility='hidden';let no=0;
+  window.addEventListener('error',e=>{const t=e&&e.target;if(t&&t.src&&/\/sdk\.js|vk-bridge/.test(t.src))no=1;},true); // SDK не загрузился — облака не будет, не ждём
+  const go=()=>{if(m)m.style.visibility='';znW=2;onRoute();};
+  const tick=()=>{if(cloudReady||cloudFails>0||no&&PLAT!=='vk'||Date.now()-t0>=ZN_WAIT){const o={a:'wait',ms:Date.now()-t0,lv:S.lv,c:cloudReady?1:0};if(window.STATZB&&STATZB.z2)STATZB.z2('nb2',o);else if(typeof STAT!=='undefined'&&STAT.ev)STAT.ev('nb2',o);go();}else setTimeout(tick,100);};
+  setTimeout(tick,100);return true;}
 function onReady(){
   bind();updCoins();
   // покупки (STAT): общий модуль PAY не трогаем — оборачиваем снаружи; «ok» — если payAfter получил id этой покупки
@@ -474,8 +483,13 @@ function onReady(){
     const wrap=(o,k,ok)=>{if(!o||typeof o[k]!=='function')return null;const f=o[k];o[k]=function(){return Promise.resolve(f.apply(o,arguments)).then(r=>{if(ok&&!ok(r))why='cancel';return r;},e=>{why=cls(e);throw e;});};return ()=>{o[k]=f;};};
     const un=[wrap(PAY.v,'order',r=>r&&r.success),wrap(PAY.p,'purchase')];
     return Promise.resolve(b0.call(PAY,id)).then(()=>{un.forEach(u=>u&&u());STAT.ev('buy',{i:id,r:payOk===id?'ok':why||'cancel',v:v});});};}
+  onRoute();
+}
+// куда вести при запуске (zb2-NEWB: вынесено из onReady — znWait зовёт ещё раз после облака)
+function onRoute(){
   const q=new URLSearchParams(location.search);
   if(q.has('lv'))startLevel(+q.get('lv')-1);
+  else if(S.lv===0&&!S.tip.tut&&!SHOT&&znWait())return; /* zb2-NEWB 1.3: новое устройство — сначала облако (≤2,5 с), старому игроку обучение не показываем */
   else if(S.lv===0&&!S.tip.tut&&!SHOT){startLevel(0);if(!S.tip.intro)(typeof ZB!=='undefined'?ZB.on('ready',()=>{if(!S.tip.intro&&!(window.ZBNB&&ZBNB.noIntro()))openIntro();}):openIntro());} /* zb-NEWBIE: знакомство — только если zb-newbie.js выключен/не загрузился */ // новичок — знакомство и сразу первый уровень (обучение), меню — потом
   else if(typeof ZB!=='undefined'&&ZB.viewOn&&S.lv>0&&S.lv<(ZB.hubFrom||3)&&S.lv<LEVELS.length&&!SHOT)startLevel(S.lv); /* zb-VIEW: «Дом» — с 3-го уровня, до того сразу уровень */
   else openMenu();

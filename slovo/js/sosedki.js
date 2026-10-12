@@ -1,14 +1,5 @@
 'use strict';
-/* ================= «Соседки по подъезду» (z-sosed, 07.10) — соревнование недели с персонажами =================
-   Офлайн, без сервера, на всех площадках. Соседки — ПЕРСОНАЖИ (так и пишем), их очки — по своему расписанию недели.
-   Очки игрока (решение владельца 07.10): каждая буква найденного слова = 1 очко (кроссворд без подсказки + бонусные; обёртка submit ниже),
-   задание дня этой недели = +SOS.daily. Все «словные» числа SOS — ×4,5 к первой версии (средняя длина найденного слова ≈4,4).
-   Блюдце «Соседское» (SKINS id 'sosed', gift:'sos') — за SOS.plate недель в призёрах (1–3 место). Живая таблица Яндекса «week» — блок «Грамотеи недели» внизу.
-   Неделя — пн–вс по местному времени (ключ — понедельник, weekDays/todayKey из ui.js/game.js; на Яндексе часы сервера через nowMs).
-   Сохранение S.sos={w:неделя, s:начало участия (мс), p:очки-буквы, P:темп, c:последняя забранная неделя,
-     g:{1,2,3}:грамоты, r:{w,pl,pts,c}:итог, ещё не забранный}. Облако — sosMerge (из mergeSave, core.js).
-   Подключения в общих файлах: index.html (скрипт), core.js mergeSave → sosMerge, ui.js openMenu → sosMenu, winModal → sosWinHtml/sosWinBind, fitWin → '.sosw'.
-   Статистика: STAT.ev('sos',{a:'on'|'open'|'res'|'claim', …}) — см. hobby-analytics/stat/README.md. Монеты — STAT.earn 'quest'. */
+/* ================= «Соседки по подъезду» (z-sosed, 07.10) — соревнование недели с персонажами ============== … ШАПКА-ДОГОВОР ЦЕЛИКОМ — docs/heads/sosedki.txt (вынесена ради веса старта, zb2-MERGE) */
 const SOS={from:10,daily:45,min:90,prize:[50,30,20],part:10,P0:900,Pmin:270,Pmax:13500,plate:3};
 // соседки: m — доля «темпа» игрока, d — веса дней пн…вс (характер), e — значок
 const SOSN=[
@@ -22,7 +13,11 @@ const SOSN=[
 /* zb-CAB: дивизионы актового зала (буст «Школа бабы Зины»): o.d — дивизион недели 0..4, меняется в итоге недели (1–2 место — выше,
    7–8 — ниже), только когда актовый зал открыт (ZBCAB.lv('akt')≥1). Соседки в дивизионе сильнее (SOS_DIVM), призы × ZBCAB.aktMul(). Без ZBCAB — как было. */
 const SOS_DIV=['Подъезд','Двор','Улица','Район','Город'],SOS_DIVM=[1,1.1,1.2,1.32,1.45];
-const sosDivOn=()=>{try{return !!window.ZBCAB&&ZBCAB.lv('akt')>=1;}catch(e){return false;}};
+/* zb2-CAL «Соседки вровень» (флаг sosfair): 2 соперницы от темпа игрока (S.sos.R = прошлая неделя × тренд; 1-я неделя — 2 дня ×7), +5…15 % и −2…+8 %; дивизионы всем. Журнал CAL. */
+const SOSF=!!(window.ZB2&&ZB2.reg('sosfair',{t:'Соседки вровень, дивизионы всем, итог в календаре',who:'CAL'})&&!ZB2.off('cal'));
+const SOS_RIV=[[1,0],[3,2],[1,3],[0,2]]; // пары соперниц по неделям: Галя+Валентина Петровна, Тамара+Семён, Галя+Тамара, В.П.+Семён
+const sosRiv=w=>SOS_RIV[Math.floor(sosStart(w)/(7*864e5))%SOS_RIV.length];
+const sosDivOn=()=>{if(SOSF)return true;try{return !!window.ZBCAB&&ZBCAB.lv('akt')>=1;}catch(e){return false;}};
 function sosDiv(o){o=o||S.sos;return sosDivOn()&&isO(o)?Math.max(0,Math.min(4,+o.d||0)):0;}
 const sosDivM=o=>SOS_DIVM[sosDiv(o)]||1;
 let sosLast=null; // что видели в прошлый раз (для строки в окне победы: +очки, кого обошёл) — только в памяти
@@ -40,7 +35,9 @@ function sosCum(w,i,t){const st=sosStart(w),en=sosStart(+dayKeyOf(w,-7));if(t<=s
   const ds=sosDays(w,i),sum=ds.reduce((a,b)=>a+b,0)||1,d=new Date(t),j=(d.getDay()+6)%7,h=d.getHours()+d.getMinutes()/60;
   let c=0;for(let k=0;k<j;k++)c+=ds[k];c+=ds[j]*Math.min(1,Math.max(0,(h-8)/15));return Math.min(1,c/sum);}
 // цель соседки на неделю
-const sosGoal=(o,i)=>Math.max(3,Math.round(o.P*SOSN[i].m*sosDivM(o)*(.85+.3*sosRnd(o.w+':T'+i)))); /* zb-CAB: ×дивизион */
+const sosGoal0=(o,i)=>Math.max(3,Math.round(o.P*SOSN[i].m*sosDivM(o)*(.85+.3*sosRnd(o.w+':T'+i)))); /* zb-CAB: ×дивизион */
+function sosGoal(o,i){const g=sosGoal0(o,i);if(!SOSF||!(+o.R>0))return g;const k=sosRiv(o.w).indexOf(i);if(k<0)return g;
+  return Math.max(g,Math.round(o.R*(k?.98+.1*sosRnd(o.w+':F1'):1.05+.1*sosRnd(o.w+':F0'))));}
 // очки соседки к моменту t (только с начала участия игрока — чужой форы нет)
 function sosNb(o,i,t){return Math.max(0,Math.floor(sosGoal(o,i)*(sosCum(o.w,i,t)-sosCum(o.w,i,o.s))));}
 // очки игрока: слова + задания дня этой недели
@@ -57,6 +54,7 @@ function sosTick(){if(!sosOn())return null;const w=sosWeek(),now=nowMs();let o=S
   if(!isO(o)){o=S.sos={w:w,s:now,p:0,P:SOS.P0,c:0,g:{}};ch=true;try{STAT.ev('sos',{a:'on',lv:S.lv});}catch(e){}}
   if(+o.w<w){sosRoll(o,w,now);ch=true;}
   if('t' in o){delete o.t;ch=true;}
+  if(SOSF&&!(+o.R>0)&&!o.L&&now-(+o.s||now)>=2*864e5){const dd=(now-o.s)/864e5;o.R=Math.round(Math.min(SOS.Pmax,Math.max(SOS.Pmin,sosPts(o)/dd*7)));ch=true;} /* zb2-CAL */
   if(sosPlateDue(o)&&!sosPend(o)){sosPlateGive();ch=true;} // призёр набран (например, из облака), а итог уже забран — блюдце молча
   if(ch)save();return o;}
 // очки за слово: обёртка submit (game.js) — засчитано своё слово (кроссворд или бонусное) → +число букв
@@ -75,13 +73,16 @@ function sosRoll(o,w,now){const end=sosStart(+dayKeyOf(o.w,-7)),pts=sosPts(o),tb
   // темп: прошлая неделя целиком (неполная — пересчитываем на полную); пропустил недели — соседки «сбавили» (вернувшемуся легче)
   const f=Math.max(.25,Math.min(1,(end-Math.max(+o.s||0,sosStart(o.w)))/(7*864e5)));
   let P=+o.P||SOS.P0;P=+o.w===prev?.6*pts/f+.4*P:.6*P;
-  o.P=Math.round(Math.min(SOS.Pmax,Math.max(SOS.Pmin,P)));o.w=w;o.s=now;o.p=0;sosLast=null;}
+  o.P=Math.round(Math.min(SOS.Pmax,Math.max(SOS.Pmin,P)));
+  if(SOSF){const L=+o.w===prev?Math.round(pts/f):0;o.L2=o.L||0;o.L=L;o.R=L?Math.round(L*(o.L2?Math.min(1.3,Math.max(.9,L/o.L2)):1)):0; /* zb2-CAL: соперницы вровень */
+    try{if(window.STATZB&&STATZB.z2)STATZB.z2('sos2',{a:'res',pl:pl,dv:sosDiv(o)});}catch(e){}}
+  o.w=w;o.s=now;o.p=0;sosLast=null;}
 // облако: та же неделя — очки максимум, начало — раньше; новее неделя — главнее; забранное, грамоты — максимум
 function sosMerge(d){const b=d&&d.sos;if(!isO(b))return;let a=S.sos;
   if(!isO(a)||a===b){S.sos=a=Object.assign({},b);}
   else{const c=Math.max(+a.c||0,+b.c||0),g={};for(const k of['1','2','3'])g[k]=Math.max(+(a.g||{})[k]||0,+(b.g||{})[k]||0);
     if(+b.w>+a.w)S.sos=a=Object.assign({},b);
-    else if(+b.w===+a.w){a.p=Math.max(+a.p||0,+b.p||0);if(+b.d>(+a.d||0))a.d=+b.d; /* zb-CAB */a.s=Math.min(+a.s||now0(),+b.s||now0());a.P=Math.max(+a.P||0,+b.P||0)||SOS.P0;}
+    else if(+b.w===+a.w){a.p=Math.max(+a.p||0,+b.p||0);if(+b.d>(+a.d||0))a.d=+b.d; /* zb-CAB */a.s=Math.min(+a.s||now0(),+b.s||now0());a.P=Math.max(+a.P||0,+b.P||0)||SOS.P0;a.R=Math.max(+a.R||0,+b.R||0);a.L=Math.max(+a.L||0,+b.L||0);a.L2=Math.max(+a.L2||0,+b.L2||0);}
     a.c=c;a.g=g;const r=[a.r,b.r].filter(x=>isO(x)&&+x.w>c).sort((x,y)=>y.w-x.w)[0];if(r)a.r=r;else delete a.r;}
   delete a.t;}
 const now0=()=>nowMs();
@@ -105,7 +106,10 @@ function sosWinHtml(g,r,light){if(light)return '';const o=sosTick();if(!o)return
   if(!r.sos){const tb=sosTable(o,nowMs()),pl=sosPlace(tb),pts=sosPts(o),L=sosLast&&sosLast.w===o.w?sosLast:null,d=L?pts-L.pts:0;let pass='';
     if(L){const was=L.tb.slice(0,L.tb.findIndex(x=>x.i<0)).map(x=>x.i),now=tb.slice(sosPlace(tb)).map(x=>x.i);const k=was.find(i=>now.indexOf(i)>=0);if(k!=null)pass=SOSN[k].n;}
     r.sos={pl:pl,d:d,pass:pass,pend:sosPend(o)};sosLast={w:o.w,pts:pts,tb:tb};}
-  const s=r.sos,t=s.pend?'🏆 Итоги недели в подъезде готовы — посмотреть':!S.tip.sosv?'🏠 <b>Соседки по подъезду</b>: соревнуемся, кто больше слов за неделю — посмотри':s.pass?`🏠 ${s.pass} — позади! Ты на <b>${plOn(s.pl)}</b>`:
+  const s=r.sos;if(SOSF&&!s.pend&&S.tip.sosv&&!s.pass){const tb=sosTable(o,nowMs()),pl=sosPlace(tb),pts=sosPts(o),up=pl>1?tb[pl-2]:tb[1];
+    if(up&&up.i>=0){const d=Math.abs(up.pts-pts),nb=SOSN[up.i],ob=nb.g==='m'?'обогнал':'обогнала';
+      swPush();return `<p class="sosw" id="mSos">🏠 ${pl>1?`${nb.n} ${ob} тебя на <b>${d}</b> — ты на ${plOn(pl)}`:`Ты на 1-м месте! ${nb.n} отстаёт на <b>${d}</b>`} ›</p>`;}}
+  const t=s.pend?'🏆 Итоги недели в подъезде готовы — посмотреть':!S.tip.sosv?'🏠 <b>Соседки по подъезду</b>: соревнуемся, кто больше слов за неделю — посмотри':s.pass?`🏠 ${s.pass} — позади! Ты на <b>${plOn(s.pl)}</b>`:
     `🏠 Соседки: ${s.d>0?`<b>+${s.d}</b> ${plural(s.d,'очко','очка','очков')} · `:''}ты на <b>${plOn(s.pl)}</b>`;
   swPush();return `<p class="sosw" id="mSos">${t} ›</p>`;}
 function sosWinBind(g,r){const e=$('mSos');if(e)e.onclick=()=>{SND.tap();openSosedki('win',()=>winModal(g,r,true));};}
@@ -148,6 +152,7 @@ function sosResult(o,back){const r=o.r,c=+r.c||0,top=r.pl<=3,lead=r.lead!=null&&
   $('mSosGo').onclick=()=>{SND.tap();openSosedki('res',back);};const bb=$('mSosB');if(bb)bb.onclick=()=>{SND.tap();back();};
   if($('btnSos'))sosMenu();}
 
+/* zb2-CAL: итог недели в окне календаря (sosCalHtml/sosCalTake) и строка вечера воскресенья — js/zb2-cal-x.js */
 /* ---------- блюдце «Соседское»: за SOS.plate недель в призёрах (1–3 место, не обязательно подряд) ---------- */
 // за монеты не продаётся (gift); в «Обликах» — строка прогресса (sosShopTxt, точечная вставка в openShop, extras.js)
 const SOS_PLATE={id:'sosed',n:'Соседское',gift:'sos',d:'Тарелка с вишнями — соседки передают её по кругу. Достаётся тем, кто три недели в призёрах подъезда.',

@@ -1,40 +1,4 @@
-/* STATZB — статистика буста «Школа бабы Зины» (поток TECH, 10.10.2026; журнал hobby-analytics/release-i/zina-boost/logs/TECH.md).
-   Дополняет общий модуль STAT v1.4 (блок STAT в js/core.js; сам модуль не меняем). Без личных данных: номер уровня и ход игры.
-   Все события ≤ 8 полей, порядок = приоритет (STAT пропускает всё после 8-го), пустые поля не шлём. Файл грузится ПОСЛЕДНИМ из модулей
-   (под меткой <!-- zb:TECH -->); не загрузился — игра и старые события работают как раньше.
-
-   ДОГОВОР СОБЫТИЙ (новое и дополненное; старые события — как были):
-     end   win  {l, r, s, m, h, f, ms, ct, bw, ex} — m: режим ('daily' | G.mode: 'last'|'scan'|'train' | праздник), ms — промахов за попытку (всего,
-                а не подряд), ct:1 — кот Ять помог. При 8+ полях последними отрезаются bw/ex (как и раньше, ex = без подсказок).
-           quit {l, r, s, m, h, idle, fw, tw, ms, ct} — fw — найдено слов кроссворда, tw — всего слов (просьба NEWBIE: мерить 1-й уровень).
-     lvh   {l, fw, tw, ms, s, m} — свернули игру посреди уровня (пишется ДО pause модуля STAT; в pause модуль сам кладёт pl и l).
-     hnt   {l, k, s, n, of, t, m} — каждая подсказка: k = letter | word | cat (кот сам поставил букву); s — откуда: learn (ур. 1–2 даром),
-           nb1 (первая даром новичку), day (буква дня), hb (запас 💡), coins, ad (ролик), adf (ролик не пришёл — даром раз в день), zero (NEWBIE: буква даром при нехватке монет),
-           idle/miss (кот: простой / 3 промаха); n — найдено слов на момент подсказки, of — всего, t — секунда попытки.
-     stk   {l, a:'idle', n, of, t, w, m} — раз за попытку: 40 с игры без нового слова кроссворда (окна/пауза/свёрнуто не считаются);
-           w — длина самого короткого из оставшихся слов. (NEWBIE шлёт свои stk a:'blink'|'cat'|'zero' — разные a.)
-     wbtn  {l, b, m} — первое нажатие в окне победы: next | menu | box | ask | dly | go | … (id кнопки без «m», data-st, в гнезде — zb:<id гнезда>).
-     scr   {n, k, d} — ПОВТОРНЫЙ заход на экран в том же сеансе (первый пишет сам STAT, без k): k — какой по счёту, d — секунд на прошлом экране.
-     mdw   {w, l} — свернули игру с открытым окном w (win/hint/shop/…; '?' — неизвестное окно), l — уровень, если шёл.
-     def   {a:'tap', l, n} — нажали на разгаданное слово (толкование/шутка «Толкового словаря»), n — длина слова.
-     look  {k:'o'|'s', id} — надели наряд (o) / выбрали блюдце (s) (покупка — как раньше spend).
-     unlock {k, id, l} — открытие: k = cls (новый класс, id 1–11, 12 выпускной, 13+ Академия) | chap (новая глава id) | five (пятёрка, id = всего);
-           источники — ZB.emit('class'), ZB.emit('five') (SCHOOL), смена главы ZBCH.of на первой победе.
-     ezb   {mg, mode, cell, buf, cab, cls, season, card, shelf, quest, …} — монеты по источникам буста за заход (общий STAT.earn знает только
-           lvl|ad|gift|chest|buy|quest, остальное кладёт в 'oth' — там они и остаются для итога earn; ezb — расшифровка 'oth'), шлётся при сворачивании.
-     prg   {w, h, cls, ch, f5, sr, cb, sz} — прохождение раз за загрузку (и после перерыва 30 мин, если изменилось): w — всего слов, h — подсказок,
-           cls — класс ZBS.cls(), ch — глава ZBCH, f5 — пятёрок ZBS.five(), sr — серия заданий дня, cb — шагов кабинетов ZBCAB.steps() (0–24),
-           sz — размер сохранения в тыс. символов (бюджет облака VK — 54 тыс.).
-     ldf   {n, f, w} — прошлая загрузка сорвалась и предохранитель перезагрузил игру: n — попытка, f — файл (js/levels.js), w — net (не скачался) |
-           cut (пришёл обрезанным, SyntaxError) | none (после всех файлов нет уровней); шлётся после удачного запуска.
-     cloud {a:'big', n} — (core.js) сохранение не влезает в облако VK (n кусков по 900 > 120), раз за сеанс.
-     mus   {on} — музыка вкл./выкл., раз за сеанс (cfg модуля STAT берёт только th/snd/calm); {a:'err', c} — трек не загрузился (core.js).
-     pl    — STAT.pl(S.lv) после каждой победы (v1.4: поле pl в pause и в start следующего сеанса).
-     perf  — плавность: STAT.frame() раз в 0,5 с, пока открыт уровень или мини-игра (модуль сам меряет кадры браузера).
-   Свои события других потоков (шлют сами, разделы в hobby-analytics/stat/README.md «Зина буст»): md (MODE: режимы — имя совпадает с «окном при
-   сворачивании» Выезда, у Зины md = режимы, окно при сворачивании — mdw), nb (NEWBIE), cab/spend/sos (CAB), mg/note (MG0), ctl (SCHOOL).
-   Вход для других потоков: STATZB.wnd('имя') — назвать своё окно (сразу после modal()); кнопкам окна победы — атрибут data-st="имя".
-   Старый синтаксис (var/function), без ?. ?? .at :has. Выключение — window.STATZB_ON=false до загрузки файла. */
+/* STATZB — статистика буста «Школа бабы Зины» (поток TECH, 10.10.2026; журнал hobby-analytics/release-i/zina- … ШАПКА-ДОГОВОР ЦЕЛИКОМ — docs/heads/stat-zb.txt (вынесена ради веса старта, zb2-MERGE) */
 (function(){
   'use strict';
   if(window.STATZB_ON===false||window.STATZB)return;
@@ -166,5 +130,15 @@
   function boot(){setTimeout(prg,3000);setTimeout(ldf,1500);}
   if(typeof ZB!=='undefined'&&ZB.isReady)boot();else if(typeof ZB!=='undefined'&&ZB.on)ZB.on('ready',boot);else window.addEventListener('load',boot);
 
-  window.STATZB={wnd:wnd,prg:prg,_set:function(o){if(o&&o.stk)STK_S=+o.stk;},_dbg:function(){return {cur:{ms:cur.ms,ct:cur.ct,act:cur.act,stk:cur.stk},pend:pend,wnd:curWnd(),cnt:cnt,prg:prgK,eZ:eZ};}};
+  // zb2-TECH: события новинок; порядок полей = приоритет (≤ 8), поля сверх списка — в конце
+  var Z2={nb2:['a','l','ms'],cal:['a','n','w','f'],sos2:['a','pl','dv'],zap:['a','t','id','s','n','c','ms','lv','f'],wd:['a','n','sr'],
+    share:['id','ok'],node:['a','l','id'],auto:['id','a','l'],rec:['id','sc','pl'],again:['id','n'],cont:['id'],goal:['a','id','n','c'],
+    uchit:['a','f','n'],mail:['a','f','n','l']},z2C={};
+  function z2(n,p){try{n=String(n||'');var ks=Z2[n]||[],o={},q={},k,i,c=0;p=p&&typeof p==='object'?p:{};
+      for(i=0;i<ks.length;i++)if(p.hasOwnProperty(ks[i]))o[ks[i]]=p[ks[i]];
+      for(k in p)if(p.hasOwnProperty(k)&&!o.hasOwnProperty(k))o[k]=p[k];
+      for(k in o)if(o[k]!==undefined&&o[k]!==null&&o[k]!==''&&c<8){q[k]=o[k];c++;}
+      z2C[n]=(z2C[n]||0)+1;ev(n,q);}catch(e){}}
+
+  window.STATZB={z2:z2,ev:ev,Z2:Z2,wnd:wnd,prg:prg,_set:function(o){if(o&&o.stk)STK_S=+o.stk;},_dbg:function(){return {cur:{ms:cur.ms,ct:cur.ct,act:cur.act,stk:cur.stk},pend:pend,wnd:curWnd(),cnt:cnt,prg:prgK,eZ:eZ,z2:z2C};}};
 })();

@@ -1,27 +1,5 @@
 'use strict';
-/* ================= zb-eco — ZBECO: ВСЕ числа экономики буста «Школа бабы Зины» (10.10.2026, поток ECO, ветка zb-eco) =================
-   Договор для всех потоков (logs/COMMON.md, logs/ECO.md). Хозяин — ECO. ИМЕНА полей не меняются; ЧИСЛА ECO может поправить по модели
-   (tools/econ_zb.py) — поэтому чисел у себя не пишите, читайте отсюда В МОМЕНТ ВЫЗОВА (не при загрузке файла: строка zb-eco.js стоит под меткой
-   <!-- zb:ECO --> — модули VIEW/LVL/MODE/SCHOOL/NEWBIE выполняются раньше). Запасной путь до слияния: `var E=window.ZBECO||{}` и своё умолчание.
-   Модуль не загрузился → игра как в main (старые ECO/PRICE в game.js работают сами).
-
-   ПОДСКАЗКИ: ZBECO.letter / ZBECO.word — 35 / 90, НЕ МЕНЯТЬ (живые цены — PRICE в game.js, флаги Яндекса 20–50 / 60–150; ZBECO.price(kind)).
-   ВЫДАЧА МОНЕТ С ПОТОЛКОМ: ZBECO.give(src, n, why) → сколько реально дано (0 — упёрлись в потолок дня). src — ключ ZBECO.cap
-     ('mg' мини-игры, 'mode' режимы (= mode.cap), 'cell' новые клетки, 'today' дела дня, 'bag' портфель, 'back' вернувшемуся, 'buf' столовая, 'cab' кабинеты,
-     'cls' классы, 'season' сезон, 'card' открытки, 'shelf' полки словаря) — нет в cap → без потолка. Пишет S.ecD (по дню), STAT earn.
-     ZBECO.left(src) — сколько ещё можно сегодня. Потолок, кроме cap, у мини-игр — ещё и заметки/💡 (mg.notesDay, mg.hbDay) — считает MG0.
-   КАБИНЕТЫ: ZBECO.cab — 8 строк {id, n, cls (класс открытия), p:[ур.1, ур.2, ур.3]}; ZBECO.cabPrice(id, lv) — цена шага до уровня lv (1–3);
-     ZBECO.cabTotal() — 28 500. Отдачи: bufet (столовая), yat (живой уголок), trud (ателье Толика), akt (лига), lib (полки), muzej (открытки).
-   РЕКЛАМА ПО НУЖДЕ: ZBECO.topUp(price) → сколько монет даст ролик «добить до …» (0 — кнопку не показывать: нехватка > ad.topUpMax цены,
-     или исчерпан ad.topUpDay); ZBECO.topUpTake(n) — зачесть (после досмотра; в late — тоже). Кнопки «за рекламу» — класс `zbad`
-     (просьба TECH: `.zbad:not([disabled])` в AD_BTN_SEL) и всегда с late (CLAUDE.md, adt).
-   «×2 ЗА РОЛИК» УБРАНЫ (решение владельца 10.10): ZBECO.x2 === false. Не рисуйте «×2/ещё за рекламу» в своих окнах.
-   ПОКУПКИ: ZBECO.abonOn()/abonTo() — Абонемент действует; ZBECO.remontLeft()/remontTake() — неистраченные «Ремонты» (CAB); ZBECO.uzelokOn() —
-     Узелок ещё продаётся; события ZB.emit('abon'), ZB.emit('remont'). Портфель дня — ZBECO.bagOf(t) → {c, hb}.
-   ДЕНЬ: ZBECO.day() = todayKey() (часы сервера Яндекса / устройства).
-   ПОЛЯ СОХРАНЕНИЯ ECO: S.ecD {d, <src>: n} — выдано за день; S.ecTop {d, n} — роликов «добить»; S.ecAb {to, n} — Абонемент до (мс), куплено раз;
-     S.ecRm {g, u} — «Ремонт кабинета»: куплено/применено; S.ecSew {id, k, t, p} — заказ у Толика (пишет CAB); S.ecP {d} — бедняцкая буква.
-*/
+/* ================= zb-eco — ZBECO: ВСЕ числа экономики буста «Школа бабы Зины» (10.10.2026, поток ECO, ветка … ШАПКА-ДОГОВОР ЦЕЛИКОМ — docs/heads/zb-eco.txt (вынесена ради веса старта, zb2-MERGE) */
 (function(){
   var DAY=864e5;
   var E=window.ZBECO={v:1,on:true,x2:false,
@@ -78,15 +56,39 @@
     // ---- новичок и застрявший (NEWBIE): монет меньше цены буквы — бесплатная буква раз в every мин, не больше perDay в день ----
     poor:{every:6,below:35,perDay:3},
     // ---- потолки монет В ДЕНЬ по источнику (ZBECO.give); нет ключа — без потолка ----
-    cap:{mg:20,mode:40,cell:30,shelf:60,card:60},
+    // zb2: новое ≤60/день = mg 20 + zap 40; rec/wd — внутри mg (capIn)
+    cap:{mg:20,mode:40,cell:30,shelf:60,card:60, zap:40,rec:10,wd:10,cal:120,fair:0},
+    capIn:{rec:'mg',wd:'mg'},
+    cal:{days:[{c:10},{c:0,hb:1},{c:30,box:'posylka'},{c:20},{c:30},{c:0,hb:1},{c:50,box:'sunduk',part:1}],
+      wk2mul:1.25,back:50,backDays:2,forgive:1,saveAd:1,parts:4},
+    week1:[{k:'penal',c:10,hb:2},{k:'dnevnik',c:20},{k:'posylka',c:20,hb:1},{k:'klyuch',c:30},{k:'zapiska',c:20},{k:'lentochka',c:20,hb:1},{k:'tabel',c:40,part:'bant'}],
+    zap:{short:5,mid:10,chain:10,big:25,chest:40,chest5:80,chestHb:1,midHb:5,swap:20,swapFree:1,
+      sp:{short:1,mid:2,chain:2,big:5,chest:5,chest5:10,candy:1}},
+    node:{asLvl:true},
+    rec:{best:3,medal:[0,10,6,3]},
+    wd:{win:[0,10,10,8,6,5,4]},
     // ---- реклама по нужде (≠ ×2): ----
     ad:{topUpMax:.3,topUpDay:2,       // «добить монеты до кабинета/облика»: нехватка ≤ 30 % цены, не больше 2 раз в день
       mgRun:1},                        // ролик в мини-игре — 1 за заход (MG0 host.adNeed)
     // ---- покупки (PAY_ITEMS в pay.js, витрина «Учительская» — zb-shop.js) ----
     pay:{uzelok:{id:'starter',vk:5,c:300,hb:5,days:3},  // «Узелок новичка» (бывш. «Гостинец от Зины» 8): первые days дней игры
       abon:{id:'abon',vk:15,days:30},                   // «Абонемент в библиотеку» на месяц (платная дорожка сезона — только красота) + season.abon.c
-      remont:{id:'remont',vk:7}}                        // «Ремонт кабинета»: следующий уровень ВИДА одного кабинета (не силы)
+      remont:{id:'remont',vk:7},                        // «Ремонт кабинета»: следующий уровень ВИДА одного кабинета (не силы)
+      portfel:{id:'portfel',vk:10,c:700,hb:5},
+      remontAll:{id:'remont_all',vk:25},
+      hwUzel:{id:'hw_uzel26',vk:10,c:500,hb:5,from:20261024,to:20261102},
+      tiho:{on:false,day:{id:'tiho_d',vk:3,h:24},week:{id:'tiho_w',vk:9,h:168}}},
+    hwShop:{from:20261024,to:20261102,items:[{id:'hw_tykva',t:'o',p:400},{id:'hw_web',t:'s',p:250}]},
+    fair:{n:3,disc:.2,fromLv:20,minP:60,maxP:1500},
+    more:{c:30,ad:1,day:2}
   };
+  // zb2 флаги: cab15 (ур.2 ×1,5, ур.3 ×3), uzelok7 (Узелок 7 дней); cabGift — 1-й кабинет даром (NEWB)
+  var CAB15=true,UZ7=true;
+  E.cabMul=[1,2.5,4];
+  if(window.ZB2&&ZB2.reg('cab15',{t:'Кабинеты: 2-й ур. ×1,5, 3-й ×3',who:'ECO',on:CAB15})){E.cabMul=[1,1.5,3];
+    E.cab.forEach(function(c){var b=c.p[0];c.p=[b,Math.round(b*1.5/5)*5,b*3];});}
+  if(window.ZB2&&ZB2.reg('uzelok7',{t:'Узелок новичка 7 дней + карточка во 2-м классе',who:'ECO',on:UZ7}))E.pay.uzelok.days=7;
+  E.cabGift={id:'russkij',lv:1,win:8,p:0};
   // ---------- помощники ----------
   function S_(){return typeof S!=='undefined'?S:null;}
   E.day=function(){try{return todayKey();}catch(e){var d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}};
@@ -104,12 +106,18 @@
   E.bagOf=function(t){var p=E.school.pf,sun=new Date(t||E.now()).getDay()===0;return {c:sun?p.sun:p.c,hb:sun?p.hb:0};};
   // счётчик дня
   function dayRec(){var s=S_();if(!s)return {};var d=E.day();if(!s.ecD||s.ecD.d!==d)s.ecD={d:d};return s.ecD;}
-  E.left=function(src){var c=E.cap[src];if(!(c>0))return 1e9;return Math.max(0,c-(+dayRec()[src]||0));};
-  E.give=function(src,n,why){n=Math.floor(+n||0);if(n<=0||!S_())return 0;var k=Math.min(n,E.left(src));if(k<=0)return 0;
-    var r=dayRec();r[src]=(+r[src]||0)+k;
+  E.left=function(src){var c=E.cap[src],up=E.capIn&&E.capIn[src],l=c>0?Math.max(0,c-(+dayRec()[src]||0)):1e9;
+    if(up)l=Math.min(l,E.left(up));return l;};
+  E.give=function(src,n,why){n=Math.floor(+n||0);if(n<=0||!S_())return 0;var up=E.capIn&&E.capIn[src];
+    var k=Math.min(n,E.left(src));if(up)k=Math.min(k,E.left(up));if(k<=0)return 0;
+    var r=dayRec();r[src]=(+r[src]||0)+k;if(up)r[up]=(+r[up]||0)+k;
     var st=/^(lvl|ad|gift|chest|buy|quest)$/.test(why||'')?why:(src==='today'||src==='bag'||src==='back'?'quest':src==='buf'?'chest':why||src);
     if(typeof addCoins==='function')addCoins(k,st);else{S.coins=(+S.coins||0)+k;}
     return k;};
+  E.calGift=function(n){n=Math.max(1,Math.floor(+n||1));var d=E.cal.days[(n-1)%7]||{},w=Math.floor((n-1)/7),o={};for(var k in d)o[k]=d[k];
+    if(w>=1&&o.c)o.c=Math.round(o.c*E.cal.wk2mul/5)*5;return o;};
+  E.week1Gift=function(n){return E.week1[Math.max(1,Math.min(7,Math.floor(+n||1)))-1]||{};};
+  E.nodeCoins=function(idx){try{if(typeof ECO!=='undefined'&&ECO.lvl)return Math.max(1,Math.round(+ECO.lvl(idx)||0));}catch(e){}return E.lvlNew;};
   // реклама «добить до цены»
   E.topUp=function(price){var s=S_();if(!s||!(price>0))return 0;var need=price-(+s.coins||0);if(need<=0)return 0;
     if(need>Math.ceil(price*E.ad.topUpMax))return 0;var d=E.day(),t=s.ecTop&&s.ecTop.d===d?+s.ecTop.n||0:0;return t<E.ad.topUpDay?need:0;};
@@ -127,6 +135,15 @@
   // Узелок новичка — продаётся первые pay.uzelok.days дней игры (день первого запуска — S.soc.d0, иначе S.ecF)
   E.newbieDays=function(){var s=S_();if(!s)return 0;var d0=+(s.soc&&s.soc.d0)||+s.ecF||0;if(!d0)return 0;return Math.floor((E.now()-d0)/DAY);};
   E.uzelokOn=function(){var s=S_();if(!s)return false;if(s.buy&&s.buy.starter)return false;if(!(+(s.soc&&s.soc.d0)||+s.ecF))return true;return E.newbieDays()<E.pay.uzelok.days;};
+  E.inDates=function(o){var d=E.day();return !!(o&&d>=o.from&&d<=o.to);};
+  E.hwUzelOn=function(){var s=S_();return E.inDates(E.pay.hwUzel)&&!(s&&s.buy&&s.buy[E.pay.hwUzel.id]);};
+  E.hwShopOn=function(){return E.inDates(E.hwShop);};
+  E.moreLeft=function(){var s=S_();if(!s)return 0;var m=s.z2e&&s.z2e.m;var n=m&&m.d===E.day()?+m.n||0:0;return Math.max(0,E.more.day-n);};
+  E.moreTake=function(byCoins){var s=S_();if(!s||!E.moreLeft())return false;if(byCoins){if((+s.coins||0)<E.more.c)return false;
+      if(typeof addCoins==='function')addCoins(-E.more.c);else s.coins-=E.more.c;try{STAT.ev('spend',{k:'more',c:E.more.c});}catch(e){}}
+    s.z2e=s.z2e||{};var d=E.day();if(!s.z2e.m||s.z2e.m.d!==d)s.z2e.m={d:d,n:0};s.z2e.m.n++;if(typeof save==='function')save();return true;};
+  E.remontAllGive=function(){var s=S_();if(!s)return;s.cbV=s.cbV&&typeof s.cbV==='object'?s.cbV:{};E.cab.forEach(function(c){s.cbV[c.id]=3;});
+    try{ZB.emit('cab',{id:'all',vis:3,by:'remont'});}catch(e){}if(typeof save==='function')save();};
   // ---------- «×2 за ролик» — убраны все пять (решение владельца 10.10; ~1 % нажатий на ~3 800 показов) ----------
   // Чужие файлы не правим: обёртки старых функций (function-объявления — свойства window). ZBECO.x2=true вернёт как было (до перезагрузки).
   // 1) победа: «Корзинка бабы Зины» (ролик раз в 5 побед — заменила ×2 после уровня) → не копится и не предлагается;
@@ -147,6 +164,10 @@
     try{if(typeof updGift==='function')updGift();}catch(e){}}
   x2Install();
   if(window.ZB)ZB.on('ready',function(){x2Install();}); // VIEW мог заменить функции окна позже — обернём новые
+  // zb2: поле S.z2e {g,s,u,ux,m,f} — одно на ECO; zb2-goal/zb2-fair — ZB.load после ready (вес старта)
+  if(window.ZB2&&ZB2.field)ZB2.field('z2e',{def:{g:'',s:0,u:0,ux:0}});
+  if(window.ZB&&ZB.load)ZB.on('ready',function(){setTimeout(function(){['js/zb2-goal.js','js/zb2-fair.js'].forEach(function(f){
+    ZB.load(f).then(function(){ZB.safe('eco:lazy',function(){ZB.refresh();});},function(){});});},0);});
   // ---------- сохранение S.ec* ----------
   if(window.ZB)ZB.onSave({id:'eco',prefix:'ec',
     fix:function(S){if(!S.ecF)S.ecF=Date.now();

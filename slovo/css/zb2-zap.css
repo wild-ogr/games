@@ -1,0 +1,37 @@
+/* zb2-zap — «Записки на холодильнике» (поток ZAP). Подключает js/zb2-zap-ui.js. Классы — только zz-. */
+.zz-fr{margin:8px 0;background:linear-gradient(90deg,#e6ecf1,#f8fbfc 40%,#e1e8ee);border:2px solid #c9d3db;border-radius:16px;padding:8px 8px 10px;position:relative;box-sizing:border-box;max-width:100%}
+.zz-fh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 6px;font-size:13.5px;font-weight:800;color:#3d4b62;margin:0 2px 6px}
+.zz-mags{font-size:15px;letter-spacing:1px;white-space:nowrap}.zz-mags small{font-size:12px;letter-spacing:0;color:#5d6781;font-weight:700;margin-left:3px}
+.zz-notes{display:grid;grid-template-columns:1fr;gap:7px}
+.zz-nt{display:block;width:100%;box-sizing:border-box;border:0;font:inherit;color:#2a2f3a;background:#fff8c9;border-radius:3px;padding:7px 9px 7px 28px;
+  text-align:left;position:relative;box-shadow:1px 2px 0 rgba(0,0,0,.09);transform:rotate(-.5deg);cursor:pointer;min-height:44px;transition:transform .35s,opacity .35s}
+.zz-nt.zz-c2{background:#dff1ff;transform:rotate(.6deg)}.zz-nt.zz-c3{background:#ffe0e6;transform:rotate(-.3deg)}
+.zz-nt:before{content:'';position:absolute;left:8px;top:10px;width:13px;height:13px;border-radius:50%;background:#d8443a;box-shadow:inset -2px -2px 0 rgba(0,0,0,.22)}
+.zz-nt b{display:block;font-size:14px;line-height:1.25;font-weight:700}
+.zz-nt small{display:block;color:#5a6378;font-size:12.5px;margin-top:2px;line-height:1.25}
+.zz-chain{display:block;font-size:12px;color:#8a4b12;font-weight:800;margin-bottom:1px}
+.zz-bar{display:block;height:6px;border-radius:3px;background:rgba(0,0,0,.09);margin-top:4px;overflow:hidden}.zz-bar i{display:block;height:100%;background:#34a853;border-radius:3px}
+.zz-nt.zz-done{outline:2px solid #237a3b;padding-right:104px}
+.zz-fh>span:first-child{white-space:nowrap}
+.zz-take{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:#237a3b;color:#fff;font-style:normal;font-size:12.5px;font-weight:800;border-radius:9px;padding:3px 7px;white-space:nowrap}
+.zz-take:after{content:'';position:absolute;right:-3px;top:-4px;width:10px;height:10px;border-radius:50%;background:#e53935;border:2px solid #fff}
+.zz-nt.zz-fly{transform:translate(40px,-30px) rotate(12deg);opacity:0}
+/* окно записки */
+.mcard.zz-m .zz-card{text-align:center}
+.zz-big{cursor:default;transform:rotate(-1deg);margin:4px auto 8px;max-width:340px;padding:12px 12px 10px 32px}.zz-big b{font-size:16px}
+.zz-rw{margin:6px 0;font-size:15px}
+.zz-card .btns .btn small{display:block;font-size:12px;font-weight:600;opacity:.85}
+/* окно победы */
+.zz-win{margin:6px 0}
+.zz-wfly{background:#e6f5ea;border-radius:8px;padding:5px 8px;font-size:13.5px;text-align:left;margin:3px 0;color:#1f5d33;animation:zzfly 1.6s ease-in 1.2s both}
+.zz-wn{background:#fff8c9;border-radius:8px;padding:6px 8px;font-size:13.5px;text-align:left;margin:4px 0;color:#2a2f3a}
+.zz-wn.zz-new{animation:zzin .5s ease-out 2.4s both}
+@keyframes zzfly{0%{opacity:1;transform:none;text-decoration:none}30%{text-decoration:line-through}100%{opacity:.55;transform:none;text-decoration:line-through}}
+@keyframes zzin{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.zz-wfly,.zz-wn.zz-new{animation:none}.zz-nt{transition:none}}
+.zz-sw{margin:0 0 6px;font-size:13.5px;color:#5a6378}
+.zz-wfly.zz-sum{animation:none;font-weight:700}
+.zz-mags.zz-gold{background:#f5c542;color:#5a3d00;border-radius:9px;padding:1px 7px;font-size:12.5px;letter-spacing:0}
+/* сундук связки */
+.zz-chest{font-size:54px;line-height:1;margin:4px 0}.zz-chm{font-size:44px;line-height:1;margin:6px 0;animation:zzin .5s ease-out both}
+.mcard.zz-m h2{margin:4px 0 6px}

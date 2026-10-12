@@ -5,8 +5,9 @@
              монеты и кнопки звука (.mtop);
      карточка главы — «🥕 Глава 3 · Рынок 6/20», полоска точками, «в конце главы — …» (гнёзда winSlots тут не участвуют);
      «Играть · урок N» (#btnPlay — старая кнопка, её обработчик);
-     zone 'today' (SCHOOL — «Сегодня у Зины»; пусто — свои плитки), старые живые кнопки (#btnSos, #btnGift, #mTmr, #mGoal — переносятся сюда
-     как есть, их обновляет старый код), zone 'school', zone 'side' (ПК — правая колонка), zone 'bottom'.
+     zone 'chips' (zb2-NEWB: ряд маленьких плашек под «Играть» — CAL, ECO, ZAP), zone 'today' (SCHOOL — «Сегодня у Зины»; пусто — свои плитки), старые живые кнопки (#btnSos, #btnGift, #mTmr, #mGoal — переносятся сюда
+     как есть, их обновляет старый код), zone 'school', zone 'after' (zb2-NEWB: карточки ниже края — MGW, LOV), zone 'side' (ПК — правая колонка), zone 'bottom'.
+   Порядок и бюджет высоты на телефоне — журнал NEWB «Порядок Дома» (буст_в2.0, флаг homefit — css/zb2-newb.css).
    Старые кнопки меню (Главы, Задание дня, Словарь, Облики, Рейтинг, Игры) спрятаны стилем — их входы: нижняя панель и «Школа» (ZB.vwMore).
    ZB.viewOn=false — ничего этого нет, #menu старый. */
 (function(){
@@ -19,7 +20,7 @@
     wrap.innerHTML='<div class="zbh-scene" id="zbScene"><div class="zbh-bg" id="zbSceneBg"></div><div class="zbh-veil"></div>'+
         '<div class="zbh-chip" id="zbRank"></div><div class="zbh-say" id="zbSayBox"></div><div class="zbh-hero" id="zbHero"></div></div>'+
       '<div class="zbh-col" id="zbCol"><div class="zbh-chap" id="zbChap"></div><div class="zbh-play" id="zbPlay"></div>'+
-        '<div class="zbh-today" id="zbToday"></div><div class="zbh-old" id="zbOld"></div><div class="zbh-school" id="zbSchool"></div>'+
+        '<div class="zbh-chips" id="zbChips"></div><div class="zbh-today" id="zbToday"></div><div class="zbh-old" id="zbOld"></div><div class="zbh-school" id="zbSchool"></div><div class="zbh-after" id="zbAfter"></div>'+ /* zb2-NEWB: зоны chips и after («Порядок Дома», журнал NEWB) */
         '<div class="zbh-side" id="zbSide"></div><div class="zbh-bottom" id="zbBottom"></div></div>';
     m.insertBefore(wrap,m.firstChild);
     if(top)wrap.insertBefore(top,wrap.firstChild);
@@ -54,7 +55,7 @@
     var ch=$('zbChap');ch.innerHTML=chapHtml();var cb=$('zbChapBtn');if(cb)cb.onclick=function(){if(typeof SND!=='undefined')SND.tap();ZB.go('path');};
     var td=$('zbToday'),th=ZB.html(ZB.homeSlots,'today',ctx);td.innerHTML=th||ownToday();
     if(!th)[].forEach.call(td.querySelectorAll('[data-t]'),function(b){b.onclick=function(){ZB.safe('today',TACT[b.getAttribute('data-t')]);};});
-    var z=['school','side','bottom'],ids={school:'zbSchool',side:'zbSide',bottom:'zbBottom'};
+    var z=['chips','school','after','side','bottom'],ids={chips:'zbChips',school:'zbSchool',after:'zbAfter',side:'zbSide',bottom:'zbBottom'}; /* zb2-NEWB: + chips, after */
     z.forEach(function(k){var e=$(ids[k]);if(e)e.innerHTML=ZB.html(ZB.homeSlots,k,ctx);});
     ZB.mount($('zbHub'),ZB.homeSlots.filter(function(s){return s.zone!=='top';}),ctx);
     var sos=$('btnSos'),old=$('zbOld');if(sos&&old&&sos.parentNode!==old)old.insertBefore(sos,old.firstChild);

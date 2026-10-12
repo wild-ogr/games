@@ -1,7 +1,7 @@
 'use strict';
 /* ================= zb-shop — витрина «Учительская» (10.10.2026, поток ECO, ветка zb-eco) =================
    Одна витрина покупок вместо разрозненных строк (магазин «Облики», ⚙, «Благодарности»): карточки с картинками, цена кнопкой.
-   Товары — PAY_ITEMS (js/pay.js), числа — ZBECO.pay. Узелок новичка — первые 3 дня (ZBECO.uzelokOn), Абонемент — продлевается,
+   Товары — PAY_ITEMS (js/pay.js), числа — ZBECO.pay. Узелок новичка — первые ZBECO.pay.uzelok.days дней (ZBECO.uzelokOn), Абонемент — продлевается,
    Ремонт кабинета — жетон для CAB (ZBECO.remontTake), только если есть что ремонтировать (ZBCAB.canRemont, нет CAB — не продаём).
    Платежей нет (мак без ?paytest, ОК, iOS VK, пустой каталог Яндекса) — витрины и входов в неё нет вовсе (PAY.on=false).
    Входы: низ магазина «Облики» (zbShopEntry в extras.js), гнездо главного ZB.homeSlots id 'uchit' (zone 'bottom'), ZB.go('uchit').
@@ -10,6 +10,9 @@
   var SH=window.ZBSHOP={on:true,from:null};
   function E(){return window.ZBECO||null;}
   function $(id){return document.getElementById(id);}
+  function OKP(){return PLAT!=='vk'||(typeof OK!=='undefined'&&OK);} /* zb2-ECO: голоса — только VK */
+  function dd(n){return ('0'+n%100).slice(-2)+'.'+('0'+Math.floor(n/100)%100).slice(-2);}
+  function uzD(){var n=+(E()&&E().pay.uzelok.days)||3;return n+(n===1?' день':n<5?' дня':' дней');} /* zb2-ECO */
   function payOn(){return SH.on&&typeof PAY!=='undefined'&&PAY.on;}
   function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   // ---------- картинки товаров (свои, 80×80, без внешних файлов) ----------
@@ -27,16 +30,19 @@
   function cabCanRemont(){try{return !!(window.ZBCAB&&ZBCAB.canRemont&&ZBCAB.canRemont());}catch(e){return false;}}
   function list(){var e=E(),L=[];if(!payOn())return L;
     function add(id,extra){var pr=PAY.item(id);if(pr)L.push({id:id,pr:pr,x:extra||{}});}
-    if(e&&e.uzelokOn()&&!PAY.own('starter'))add('starter',{hot:1,note:'только первые 3 дня'});
+    if(e&&e.hwUzelOn&&e.hwUzelOn()&&!OKP())add('hw_uzel26',{hot:1,note:'до '+dd(e.pay.hwUzel.to)}); /* zb2-ECO: П3 только VK */
+    if(e&&e.uzelokOn()&&!PAY.own('starter'))add('starter',{hot:1,note:'только первые '+uzD()});
+    if(e&&e.pay.portfel)add('portfel',{note:'≈ неделя подсказок'}); /* zb2-ECO: П4 */
     add('abon',{note:e&&e.abonOn()?'действует до '+dt(e.abonTo()):'на 30 дней'});
     if(cabCanRemont()||e&&e.remontLeft())add('remont',{note:e&&e.remontLeft()?'не истрачено: '+e.remontLeft():'вид одного кабинета'});
+    if(e&&e.pay.remontAll&&window.ZBCAB&&(cabCanRemont()||PAY.own('remont_all')))add('remont_all',{note:'только красота'}); /* zb2-ECO: П5 */
     add('no_ads');add('coins_s');add('coins_l',{note:'≈ 23 подсказки'});add('tea');
     return L;}
   function dt(ms){var d=new Date(ms);return ('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2);}
   function themeCard(){try{if(typeof THEME==='undefined'||!THEME.open||!payOn())return '';var any=PAY.item('th_kitchen')||PAY.item('th_veranda');if(!any)return '';}catch(e){return '';}
     return '<div class="zt-c"><div class="zt-p">'+PIC.theme+'</div><b>Оформление</b><small>«Кухня бабы Зины», «Веранда» — другой вид игры</small><button class="btn blue small" id="ztTheme">Посмотреть</button></div>';}
   function card(o){var it=PAY_ITEMS[o.id],own=it.perm&&PAY.own(o.id);
-    return '<div class="zt-c'+(o.x.hot?' hot':'')+'"><div class="zt-p">'+(PIC[o.id]||'')+'</div><b>'+esc(it.name)+'</b><small>'+esc(it.desc)+'</small>'+
+    return '<div class="zt-c'+(o.x.hot?' hot':'')+'"><div class="zt-p">'+(PIC[o.id]||(window.ZE_PIC||{})[o.id]||'')+'</div><b>'+esc(it.name)+'</b><small>'+esc(it.desc)+'</small>'+
       (o.x.note?'<i class="zt-n">'+esc(o.x.note)+'</i>':'')+
       (own?'<div class="zt-own">✓ куплено</div>':'<button class="btn green pbuy" data-pid="'+esc(o.id)+'">'+(o.id==='abon'&&E()&&E().abonOn()?'Продлить · ':'Купить · ')+PAY.price(o.pr)+'</button>')+'</div>';}
   function head(){var who=window.ZBP&&ZBP.bust?ZB.safe('zbp',function(){return ZBP.bust('vp','happy');}):'';
@@ -46,7 +52,7 @@
   function render(el){var L=list();
     el.innerHTML='<div class="hdr"><button class="ibtn" id="ztBack">←</button><div class="t"><b>Учительская</b><small>Покупки для школы и для бабы Зины</small></div>'+
       '<div class="coins"><span class="coin"></span><span class="cc">'+(+S.coins||0)+'</span></div></div><div class="scroll" id="ztList">'+head()+
-      (L.length?'<div class="zt-g">'+L.map(card).join('')+themeCard()+'</div>':'<p class="zt-e">Покупки сейчас недоступны — загляни позже.</p>')+
+      (L.length?'<div class="zt-g">'+L.map(card).join('')+themeCard()+'</div>':'<p class="zt-e">Касса закрыта на переучёт: Зина пересчитывает пуговицы.</p>')+
       '<p class="zt-f">Пятёрки, классы, открытки и места в лиге не продаются — только честным трудом.</p></div>';
     $('ztBack').onclick=function(){SND.tap();back();};
     PAY.bind(el);var t=$('ztTheme');if(t)t.onclick=function(){SND.tap();THEME.open();};
@@ -58,11 +64,11 @@
   // низ магазина «Облики»: null — модуль выключен (старый список покупок), '' — платежей нет
   window.zbShopEntry=function(from){if(!SH.on)return null;if(!payOn())return '';
     var u=E()&&E().uzelokOn()&&!PAY.own('starter');
-    return '<button class="prow zt-in" id="ztIn"><span>🏫 Учительская<br><small>'+(u?'Узелок новичка — только первые 3 дня':'Абонемент, без рекламы, монеты')+'</small></span><b>›</b></button>';};
+    return '<button class="prow zt-in" id="ztIn"><span>🏫 Учительская<br><small>'+(u?'Узелок новичка — только первые '+uzD():'Абонемент, без рекламы, монеты')+'</small></span><b>›</b></button>';};
   window.zbShopBind=function(root){var b=root&&root.querySelector('#ztIn');if(b)b.onclick=function(){SND.tap();SH.open('shop');};};
   // главный: строка-кнопка внизу (VIEW раскладывает зону bottom)
   if(window.ZB)ZB.add(ZB.homeSlots,{id:'uchit',order:90,zone:'bottom',
-    render:function(){if(!payOn())return '';var u=E()&&E().uzelokOn()&&!PAY.own('starter');
+    render:function(){if(!payOn())return '';if(window.ZB2GOAL&&ZB2GOAL.card())return ''; /* zb2-ECO: вход — в карточке «Цели» */var u=E()&&E().uzelokOn()&&!PAY.own('starter');
       return '<button type="button" class="btn ghost small zt-home">🏫 Учительская'+(u?' · <b>Узелок 🎁</b>':'')+'</button>';},
     mount:function(el){var b=el.querySelector('.zt-home');if(b)b.onclick=function(){SND.tap();SH.open('home');};}});
   // после покупки — перерисовать витрину (payAfter в pay.js знает только окно и «Облики»)

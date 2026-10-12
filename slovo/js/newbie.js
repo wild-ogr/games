@@ -45,6 +45,11 @@ setInterval(()=>{if(!G||G.won||G.daily||G.tut||paused||document.hidden||!$('game
   if(G.idx>=2&&G.idx<=4&&!S.tip.hl&&hfFree()&&(G.nw>=(G.idx===4?6:NB.coachS)||G.miss>=NB.coachMiss)){hintLesson(G.nw>=NB.coachS?'idle':G.miss>=NB.coachMiss?'miss':'l5');return;}
   const zb=typeof ZBNB!=='undefined'&&ZBNB.on,fast=zb&&ZBNB.fast(),zd=zb&&ZBNB.zeroDue();
   // zb-NEWBIE: помощь застрявшему всегда — минуту без слова, монет не хватает, буква «при нуле» положена — 💡 мигает «даром»
+  // zb2-NEWB 2.1 (флаг ramp): помощь снижается плавно — 21–40: 💡 через 35 с, кот через 60 с ×2; 41–60: 45 с / 90 с ×1 (впервые, не задание дня)
+  const rp=typeof ZB2N!=='undefined'&&ZB2N.ramp?ZB2N.ramp():null;
+  if(rp){if(G.nw===rp.b&&!G.nbS){G.nbS=1;coachOn(hfFree()?'Жми — первая даром!':zd?'Жми — даром!':'');if(!$('zSay').classList.contains('pin'))zina(pick(['Застрял? Подсказка 💡 — справа внизу.','Не стесняйся — жми 💡, открою букву.']),'norm',6);STAT.ev('stk',{l:G.idx+1,a:'blink'});}
+    else if(G.nw>=rp.c&&(G.nbC||0)<rp.n){G.catD=0;if(catHelp(false,true)){G.nbC=(G.nbC||0)+1;G.nw=0;G.nbS=0;coachOff();STAT.ev('stk',{l:G.idx+1,a:'cat',n:G.nbC});}}
+    return;}
   if(!nbNew()){if(zd&&G.nw===60&&!G.nbS){G.nbS=1;coachOn('Жми — даром!');zina('Монеток маловато? Жми 💡 — эту букву подарю.','norm',6);STAT.ev('stk',{l:G.idx+1,a:'zero'});}return;}
   // zb-NEWBIE: уровни 3–20 впервые — 💡 мигает через 25 с, кот через 40 с и снова каждые 40 с (до 3 раз за уровень)
   if(fast){if(G.nw===25&&!G.nbS){G.nbS=1;coachOn(hfFree()?'Жми — первая даром!':zd?'Жми — даром!':'');STAT.ev('stk',{l:G.idx+1,a:'blink'});}

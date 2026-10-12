@@ -1,31 +1,5 @@
 'use strict';
-/* ================= zb-newbie — первые 10 минут новичка (буст «Школа бабы Зины», поток NEWBIE, 10.10.2026) =================
-   Журнал — hobby-analytics/release-i/zina-boost/logs/NEWBIE.md. Старое обучение — js/newbie.js (тот же хозяин).
-   Цель: до 5-го уровня — 70 %+ новичков (было 54 %), «ни одного слова на 1-м» — <12 % (было 24–26 %).
-   Выключить всё — ZBNB.on=false (строка ниже); по частям — ZBNB.f.<часть>=false. Файл не загрузился — игра как раньше.
-
-   1) 1-й уровень (новичок, G.tut): БЕЗ окна-знакомства (ui.js onReady спрашивает ZBNB.noIntro), Зина одной строкой у круга,
-      кнопки «←» и подсказки спрятаны до победы 1-го уровня (класс body.nb1). 5 с без касания — повтор: строка, палец заново,
-      буквы слова пульсируют. Промах — на буквах номера 1-2-3. После первого слова — 6 с без слова → палец на следующее слово.
-   2) Уровни 2–3 (впервые): 12 с без нового слова — палец на самое короткое (раз за уровень). Уровни 3–20 (впервые, S.lv<20):
-      💡 мигает через 25 с, кот Ять ставит букву через 40 с и снова каждые 40 с, до 3 раз (js/newbie.js, ZBNB.fast()).
-      «Передышка»: прошлый уровень (1–20) шёл дольше 150 с — в следующем одна буква открыта с начала (не подсказка, «Отличник» цел).
-      Монет меньше цены буквы, нет буквы дня и запаса — буква даром раз в N минут, не больше M в день (ZBECO.poor {every,below,perDay};
-      нет ZBECO — 6 мин, 3 в день), любой уровень.
-   3) ДИРИЖЁР — правило «одна новинка за победу» (для потоков VIEW, SCHOOL, MG0, CAB, ECO):
-        перед тем как показать НОВОЕ окно/приглашение/строку-новинку после победы, спроси ZBNB.turn('<id>', ctx) → true — показывай,
-        false — отложи до следующей победы (спросишь снова). Не новичок / повтор / задание дня — всегда true.
-        Места по уровням (впервые пройденный уровень N): 3 'gift' (гостинец) · 4 'home' (первый показ Дома/хаба) · 5 'mg' (первая Перемена,
-        Диктант Валерки) · 6 'tmr' + 'ask' («Завтра у Зины» и «Напомнить завтра?») · 10 'daily' (задание дня). На этих победах чужой id —
-        false. На остальных — кто первый спросил, того и победа (например, 'five' — первая «5» в дневник, 'cab', 'chap'). Новичок — до
-        12-го уровня включительно (S.lv<=12 после победы). Свои id не из списка — любые короткие строки.
-        ZBNB.next(id) → номер уровня, на котором id точно получит место (для текста «Перемена — после 5-го уровня»), или 0.
-   4) «Завтра у Зины» — гнездо winSlots (id 'nbtmr', zone 'tmr'): на 6-м уровне впервые и потом на 6-й победе каждого дня; пункты —
-      гостинец, буква от Ятя, задание дня/серия + ZBNB.tmrItems (другие потоки кладут {id, order, t()→html|''} — КОРОТКО, 2–4 слова:
-      «🍲 буфет +30», «🎒 портфель +40»). Одной строкой p.tmr.nbtm (до 4 пунктов). Старую строку «Завтра: …» в том же окне прячет.
-   5) Статистика: nb {a: f1 (первое слово: s сек, m промахов, t касаний, r повторов) | rep | hand | rest | zero | tmr | gate}; stk cat с n.
-   Сохранение: S.nbZ — когда последний раз давали «букву даром при нуле» (облако — более поздняя), S.nbZd {d: день, n: сколько за день}.
-*/
+/* ================= zb-newbie — первые 10 минут новичка (буст «Школа бабы Зины», поток NEWBIE, 10.10.2026) == … ШАПКА-ДОГОВОР ЦЕЛИКОМ — docs/heads/zb-newbie.txt (вынесена ради веса старта, zb2-MERGE) */
 (function(){
 var NB=window.ZBNB={on:true,
   f:{l1:true,hand:true,fast:true,rest:true,zero:true,gate:true,tmr:true,ios:true},
@@ -71,7 +45,8 @@ document.addEventListener('keydown',function(e){if(/^[а-яё]$/i.test(e.key||''
 
 /* ---------- 1-й уровень ---------- */
 function l1Line(){var w=shortestOpen();if(!w)return;
-  zina((st.rep?'':'Я баба Зина! ')+((typeof TOUCH!=='undefined'&&TOUCH)?'Веди пальцем по буквам: ':'Веди мышкой с нажатой кнопкой или печатай: ')+upw(w.w),'happy',99);}
+  var z2=window.ZB2N&&ZB2N.ok('lv1safe'); /* zb2-NEWB 1.6: строка короче */
+  zina((st.rep||z2?'':'Я баба Зина! ')+((typeof TOUCH!=='undefined'&&TOUCH)?(z2?'Веди пальцем: ':'Веди пальцем по буквам: '):'Веди мышкой с нажатой кнопкой или печатай: ')+upw(w.w),'happy',99);}
 function pulse(w,num){var ix=letIdx(w),els=(typeof WH!=='undefined'&&WH.els)||[];
   ix.forEach(function(i,k){var e=els[i];if(!e)return;e.classList.remove('nbp');void e.offsetWidth;e.classList.add('nbp');
     if(num&&!e.querySelector('.nbn')){var b=document.createElement('i');b.className='nbn';b.textContent=k+1;e.appendChild(b);}});}
@@ -119,7 +94,7 @@ setInterval(function(){if(!NB.on||!inGame()||(typeof dragging!=='undefined'&&dra
       if(st.rep===1||st.rep===3)ev({a:'rep',n:st.rep});}
     return;}
   // 1-й уровень после первого слова и уровни 2–3: палец на следующее слово
-  if(on('hand')&&!G.daily&&firstTime()&&G.idx<=2){var lim=G.idx===0?6000:12000,w2=shortestOpen();
+  if(on('hand')&&!G.daily&&firstTime()&&G.idx<=2&&!(G.idx===0&&window.ZB2N&&ZB2N.l1On&&ZB2N.l1On())){ /* zb2-NEWB: 1-й уровень после слова — zb2-newb.js (lv1safe) */var lim=G.idx===0?6000:12000,w2=shortestOpen();
     if(w2&&!st.hand[w2.w]&&now-st.fT>=lim&&now-st.touch>=3000&&!(G.idx>0&&Object.keys(st.hand).length)){
       st.hand[w2.w]=1;hand(w2.w);pulse(w2.w,false);
       zina(G.idx===0?'Ещё слово: '+upw(w2.w)+'!':'Смотри, как я: '+upw(w2.w)+'.','happy',6);ev({a:'hand',l:G.idx+1,w:w2.w.length});}}
@@ -152,7 +127,8 @@ NB.turn=function(id,ctx){var l=NB.cur;if(!on('gate')||!l)return true;
 NB.next=function(id){for(var k in NB.RES)if(NB.RES[k].indexOf(id)>=0)return +k;return 0;};
 
 /* ---------- «Завтра у Зины» ---------- */
-function tmrDue(c){if(!on('tmr')||!c||!c.first||c.daily)return false;var tk=todayKey();
+function tmrDue(c){if(!on('tmr')||!c||!c.first||c.daily)return false;
+  if(window.ZB2CAL&&ZB2CAL.tomorrow&&!(window.ZB2&&ZB2.off('cal')))return false; /* zb2-NEWB: «Завтра у Зины» рисует только CAL (буст_в2.0) */var tk=todayKey();
   if(+S.tip.nbT===tk)return false;
   if(c.idx===5)return NB.turn('tmr',c);
   var n=(S.tip.nbW&&+S.tip.nbW.d===tk)?+S.tip.nbW.n||0:0;return c.idx>5&&n>=6&&NB.turn('tmr',c);}

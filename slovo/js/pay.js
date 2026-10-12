@@ -16,12 +16,19 @@ const PAY_ITEMS={
   // zb-ECO 10.10: «Ремонт кабинета» — следующий уровень ВИДА одного кабинета (не силы); расходуемый жетон S.ecRm, тратит CAB (ZBECO.remontTake)
   remont:{vk:7,ic:'🔨',name:'Ремонт кабинета',desc:'Толик с бригадой за день сделают кабинет «как новенький»: обои, паркет, цветы. Только красота',done:'Бригада Толика выехала! Выбери кабинет',
     give(){if(window.ZBECO)ZBECO.remontGive();}},
+  // zb2-ECO 12.10 (буст_в2.0): П4 «Портфель отличника», П5 «Ремонт всей школы», П3 «Хэллоуинский узелок» (только в даты, витрина — zb-shop.js)
+  portfel:{n:700,vk:10,ic:'🎒',name:'Портфель отличника',desc:'700 монет и 5 подсказок 💡 в запас — выгоднее Копилки',done:'Портфель собран! Подсказки — в запасе',
+    give(){if(typeof hbAdd==='function'&&window.ZBECO)hbAdd(ZBECO.pay.portfel.hb,'buy');}},
+  remont_all:{perm:1,vk:25,ic:'🏛',name:'Ремонт всей школы',desc:'Все 8 кабинетов — «как новенькие»: шторы, паркет, цветы, и табличка «Почётный попечитель». Только красота. Навсегда',done:'Бригада Толика взялась за всю школу! Спасибо, попечитель',
+    give(){if(window.ZBECO&&ZBECO.remontAllGive)ZBECO.remontAllGive();}},
+  hw_uzel26:{perm:1,bonus:500,vk:10,ic:'🎃',name:'Хэллоуинский узелок',desc:'Наряд «Вожатая с фонариком», 500 монет и 5 подсказок 💡. Только на осенних каникулах',done:'Узелок твой! Наряд — в «Нарядах», подсказки — в запасе',
+    give(){if(typeof hbAdd==='function'&&window.ZBECO&&!(S.buyB&&S.buyB.hw_uzel26_hb)){S.buyB=S.buyB||{};S.buyB.hw_uzel26_hb=1;hbAdd(ZBECO.pay.hwUzel.hb,'buy');}}},
   tea:{n:100,vk:4,ic:'☕',name:'Угостить Зину чаем',desc:'Поддержать автора: +100 монет и спасибо от бабы Зины',done:'Зина: «Ох, уважил! Вот тебе 100 монет к чаю»'},
   // темы оформления (js/themes.js, id = th_<id темы>): продаются только в окне «🎨 Оформление», в списках магазина их нет
   th_kitchen:{perm:1,vk:11,ic:'🎨',name:'Оформление «Кухня бабы Зины»',desc:'Обои, окно с геранью и стол со скатертью. Навсегда',done:'Оформление «Кухня бабы Зины» включено!'},
   th_veranda:{perm:1,vk:11,ic:'🎨',name:'Оформление «Веранда. Летний вечер»',desc:'Закат над садом и гирлянда лампочек. Навсегда',done:'Оформление «Веранда» включено!'}
 };
-const PAY_TEST={no_ads:149,coins_s:39,coins_l:99,starter:39,abon:99,remont:59,tea:29,th_kitchen:79,th_veranda:79}; // цены только для ?paytest=1; настоящие — в консоли
+const PAY_TEST={no_ads:149,coins_s:39,coins_l:99,starter:39,abon:99,remont:59,tea:29,portfel:79,remont_all:199,hw_uzel26:79,th_kitchen:79,th_veranda:79}; // цены только для ?paytest=1; настоящие — в консоли
 function payAdd(n){S.coins=Math.max(0,(+S.coins||0)+n);if(n>0&&typeof STAT!=='undefined')STAT.earn('buy',n);} // STAT v1.2: монеты из покупки
 function payFlush(){cloudSave(true);}
 function payPause(on){setPause('pay',on);}

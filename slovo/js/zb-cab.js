@@ -1,26 +1,5 @@
 'use strict';
-/* ================= zb-cab — экран «Школа №7» и 8 кабинетов × 3 уровня (поток CAB, ветка zb-cab, 10.10.2026) =================
-   Журнал: hobby-analytics/release-i/zina-boost/logs/CAB.md. Числа — ТОЛЬКО ZBECO (zb-eco.js, хозяин ECO), читаются в момент вызова;
-   рисунки кабинетов — content/cab/cab-N.js (CAB-1/CAB-2), фасад — content/cab/school.js; грузятся лениво (ZB.load) при входе в школу.
-   Герои — ZBP (js/zb-people.js). Класс игрока — ZBS.cls() (SCHOOL); до слияния — прикидка по пройденным уровням.
-   ВЫКЛЮЧЕНИЕ: window.ZBCAB_ON=false (до загрузки) — модуль ничего не делает, игра как раньше. Отдельный кабинет — OFF ниже
-     (табличка «На ремонте · Кабинет откроется в N классе», без «скоро»).
-   СОХРАНЕНИЕ (ZB.onSave, свои поля S.cb*):
-     S.cbL {id: 0..3}  — уровень кабинета (сила, за монеты);  S.cbV {id: 0..3} — уровень ВИДА от «Ремонта кабинета» (голоса), вид = max(cbL, cbV);
-     S.cbB  — мс: с какого момента копит столовая;  S.cbY — номер дня, когда Ять в последний раз принёс букву;
-     S.cbS  — строка букв полок словаря, за которые уже дали монеты;  S.cbG {глава: 1} — золотые открытки, за которые дали монеты;
-     S.cbN {id: 1} — заходил в кабинет (знакомство героя).  Слияние облака: уровни — max по id; cbB, cbY — max (забранное не дублируется);
-     cbS, cbG, cbN — объединение. Монеты — общим правилом (облако + заработанное с синхронизации).
-     Ателье Толика пишет S.ecSew {id, k:'o'|'s', t: когда готово, p: заплачено} по схеме ECO (поле и слияние — ECO).
-   НАРУЖУ: window.ZBCAB = {
-     ids, on, cls(), lv(id), vis(id), open(id) (класс дорос и кабинет не выключен), price(id) (цена следующего уровня, 0 — максимум),
-     can(id) (хватает монет), up(id) (купить уровень → true), grant(cl) (SCHOOL zb-migrate: ур.1 даром кабинетам до класса cl → [{id,n}]),
-     canRemont() (ECO витрина: есть открытый кабинет с видом < 3),
-     remont(id) (применить купленный «Ремонт кабинета» → true), steps() (уровней всего, 0..24), dot() (есть что забрать/улучшить — для панели),
-     bufet() {n, full, perH}, bufetTake(), yatReady(), yatTake(), go(id?) (экран школы / кабинет), render(el) (школа в чужую рамку),
-     homeHtml() (строка для главного) }
-   СОБЫТИЯ: ZB.emit('cab', {id, lv, vis, by:'coins'|'grant'|'remont'}); статистика STAT.ev('cab', {a:'up'|'remont'|'buf'|'yat'|'sew'|'shelf'|'card', …}).
-*/
+/* ================= zb-cab — экран «Школа №7» и 8 кабинетов × 3 уровня (поток CAB, ветка zb-cab, 10.10.2026) … ШАПКА-ДОГОВОР ЦЕЛИКОМ — docs/heads/zb-cab.txt (вынесена ради веса старта, zb2-MERGE) */
 (function(){
 if(window.ZBCAB_ON===false||!window.ZB)return;
 var OFF={}; // отсечка 19.10: id недоделанных кабинетов → true (табличка «На ремонте»)
@@ -332,7 +311,7 @@ ZB.onSave({id:'cab',prefix:'cb',
     S.cbB=Math.max(+S.cbB||0,+d.cbB||0);S.cbY=Math.max(+S.cbY||0,+d.cbY||0);
     var s=String(S.cbS||''),t=String(d.cbS||'');for(var i=0;i<t.length;i++)if(s.indexOf(t.charAt(i))<0)s+=t.charAt(i);S.cbS=s;}});
 
-window.ZBCAB={ids:IDS,on:true,OFF:OFF,cls:cls,lv:lv,vis:vis,open:opened,price:price,can:can,up:up,grant:grant,remont:remont,canRemont:canRemont,steps:steps,dot:dot,
+window.ZBCAB={perk:perk,/* zb2-ECO: «что даст» для «Цели» */ids:IDS,on:true,OFF:OFF,cls:cls,lv:lv,vis:vis,open:opened,price:price,can:can,up:up,grant:grant,remont:remont,canRemont:canRemont,steps:steps,dot:dot,
   bufet:bufet,bufetTake:bufetTake,yatReady:yatReady,yatTake:yatTake,yatLeft:yatLeft,go:go,render:renderSchool,homeHtml:homeHtml,
   shelves:shelves,shelvesFull:shelvesFull,sewList:sewList,sewStart:sewStart,sewTake:sewTake,sewCur:sewCur,aktMul:function(){return +((N('akt').prizeMul||[])[lv('akt')])||1;},
   _dayNo:dayNo};

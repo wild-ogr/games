@@ -25,6 +25,11 @@ var PAID=[{s:5,id:'stickers',n:'Наклейки в дневник'},{s:10,id:'f
 window.ZBSEA_CFG=CFG;
 if(window.ZB_OFF&&ZB_OFF.school)CFG.on=false; // общий выключатель школы: window.ZB_OFF={school:1} до загрузки
 if(!CFG.on||typeof ZB==='undefined')return;
+/* zb2-CAL seasonbar: шаг в окне победы, замки Абонемента, блюдце-финал (ступень 30; рисунок и «Облики» — zb2-cal-x.js) */
+var BAR=!!(window.ZB2&&ZB2.reg('seasonbar',{t:'Сезон на виду: шаг в окне победы, замки, финал четверти',who:'CAL'})&&!ZB2.off('cal'));
+var FIN={zima:['Морозные узоры','#2a6fc0','#dcebf8'],mart:['Мимоза','#c99a00','#fff3b8'],zvon:['Последний звонок','#237a3b','#d8f0dc'],leto:['Земляничное','#c62828','#fde0e0'],
+  sent:['Букварь','#c2410c','#fde6d0'],osen:['Листопад','#a6501a','#f6dcc2'],ny:['Снежинка','#1d4fa3','#e3eefc']};
+function finId(s){return 'sea_'+s.id;}
 function E(){var z=window.ZBECO,e=z&&(z.school||z.sc);return e&&e.season||{};}
 function give(src,n,why){n=Math.floor(+n||0);if(n<=0)return 0;try{if(window.ZBECO&&typeof ZBECO.give==='function')return ZBECO.give(src,n,why);}catch(e){}try{addCoins(n,why||'quest');}catch(e){}return n;}
 function stepPts(){return num(E().step)||CFG.step;}
@@ -73,11 +78,13 @@ function has(id){var Q=q();if(Q.own[Q.k+':'+id])return true;if(id.indexOf(':')>0
 
 /* ---------- очки и выдача ---------- */
 var news=[];
-function addPts(n,why){if(!(n>0))return;var Q=q();if(lv()<3)return;Q.p+=n;grant();}
+var lastAdd=0;function addPts(n,why){if(!(n>0))return;var Q=q();if(lv()<3)return;Q.p+=n;lastAdd+=n;grant();}
 function lv(){try{return num(S.lv);}catch(e){return 0;}}
 function grant(){var Q=q(),st=steps(),got=[];
   while(Q.s<st){Q.s++;var r=free(Q.s);if(r.c)give('season',r.c,'quest');if(r.hb)try{hbAdd(r.hb,'ss');}catch(e){}
-    if(r.card)Q.own[Q.k+':card'+r.card]=1;got.push({i:Q.s,t:freeTxt(r)});try{STAT.ev('ss',{s:Q.s,a:abon()?1:0});}catch(e){}}
+    if(r.card)Q.own[Q.k+':card'+r.card]=1;
+    if(BAR&&Q.s===CFG.steps){var fs=cur().s;S.own=S.own||{};if(!S.own['s:'+finId(fs)]){S.own['s:'+finId(fs)]=1;got.push({i:Q.s,t:'🍽️ блюдце «'+FIN[fs.id][0]+'»'});}}
+    got.push({i:Q.s,t:freeTxt(r)});try{STAT.ev('ss',{s:Q.s,a:abon()?1:0});}catch(e){}}
   if(abon())while(Q.pa<st){Q.pa++;PAID.forEach(function(x){if(x.s===Q.pa){Q.own[Q.k+':'+x.id]=1;got.push({i:Q.pa,t:'🎟 '+x.n,paid:1});}});}
   if(got.length){news.push.apply(news,got);try{save();}catch(e){}}
   return got;}
@@ -96,8 +103,8 @@ ZB.on('abon',function(){bought();});
 function dm(k){var M=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];return (k%100)+' '+M[Math.floor(k/100)%100-1];}
 function render(el){var c=cur(),Q=q(),st=steps(),sp=stepPts(),into=Q.p-st*sp,h='';
   for(var i=1;i<=CFG.steps;i++){var r=free(i),pd=PAID.filter(function(x){return x.s===i;})[0],done=st>=i;
-    h+='<div class="sq-st'+(done?' done':'')+(i===st+1?' now':'')+'"><span class="sq-n">'+i+'</span><span class="sq-f">'+freeTxt(r)+'</span>'+
-      (pd?'<span class="sq-p'+(has(pd.id)?' got':'')+'">🎟 '+esc(pd.n)+'</span>':'<span class="sq-p empty"></span>')+'</div>';}
+    h+='<div class="sq-st'+(done?' done':'')+(i===st+1?' now':'')+'"><span class="sq-n">'+i+'</span><span class="sq-f">'+freeTxt(r)+(BAR&&i===CFG.steps?' · 🍽️ блюдце «'+esc(FIN[c.s.id][0])+'»':'')+'</span>'+
+      (pd?'<span class="sq-p'+(has(pd.id)?' got':'')+'">'+(BAR&&!has(pd.id)&&!abon()?'🔒 ':'🎟 ')+esc(pd.n)+(BAR&&!has(pd.id)&&!abon()?'<small> · с Абонементом</small>':'')+'</span>':'<span class="sq-p empty"></span>')+'</div>';}
   var ab=abon();
   el.innerHTML='<div class="sc-scr"><div class="sq-head" style="--sq:'+c.s.c+'"><span class="sq-ic">'+c.s.ic+'</span><span><small>ЧЕТВЕРТЬ · '+dm(c.from)+' — '+dm(c.to)+'</small><b>'+esc(c.s.n)+'</b>'+
     '<em>ступень '+st+' из '+CFG.steps+' · ещё '+c.left+' '+pl(c.left,'день','дня','дней')+'</em></span></div>'+
@@ -119,9 +126,13 @@ ZB.add(ZB.homeSlots,{id:'sc-season',order:30,zone:'top',render:function(){if(lv(
   return '<button type="button" class="sq-strip" style="--sq:'+c.s.c+'"><span class="sq-ic">'+c.s.ic+'</span><span class="sq-sb"><b>'+esc(c.s.n)+'</b>'+
     '<i class="sc-pb"><b style="width:'+(st>=CFG.steps?100:Math.round(100*into/sp))+'%"></b></i></span><span class="sq-sn">'+st+'<small>/'+CFG.steps+'</small></span></button>';},
   mount:function(el){var b=el.querySelector('.sq-strip');if(b)b.onclick=function(){try{SND.tap();}catch(e){}open();};}});
-ZB.add(ZB.winSlots,{id:'sc-season',order:40,zone:'extra',fit:1,render:function(){var nn=news.splice(0);if(!nn.length)return '';var c=cur(),last=nn[nn.length-1];
+ZB.add(ZB.winSlots,{id:'sc-season',order:40,zone:'extra',fit:1,render:function(){var nn=news.splice(0),a=lastAdd;lastAdd=0;var c=cur();
+  if(!nn.length){if(!BAR||!a||lv()<3)return '';var st=steps(),sp=stepPts(),into=q().p-st*sp; /* zb2-CAL: шаг полоски четверти */
+    if(st>=CFG.steps)return '';var pd=PAID.filter(function(x){return x.s>st;})[0],nx=st+1;
+    return '<p class="goal sq-win sq-step">'+c.s.ic+' +'+a+' '+pl(a,'очко','очка','очков')+' четверти · до ступени '+nx+': <b>'+(sp-into)+'</b>'+(nx%5===0&&pd&&!abon()?' · 🔒 '+esc(pd.n):'')+'</p>';}
+  var last=nn[nn.length-1];
   return '<p class="goal sq-win">'+c.s.ic+' Ступень '+last.i+' четверти: '+nn.map(function(x){return x.t;}).join(' · ')+'</p>';}});
 
-window.ZBSEA={CFG:CFG,SEAS:SEAS,PAID:PAID,cur:cur,steps:steps,has:has,abon:abon,open:open,buy:buy,bought:bought,addPts:addPts,free:free,
+window.ZBSEA={FIN:FIN,finId:finId,bar:BAR,CFG:CFG,SEAS:SEAS,PAID:PAID,cur:cur,steps:steps,has:has,abon:abon,open:open,buy:buy,bought:bought,addPts:addPts,free:free,
   fix:function(){fix();},prg:function(){return {ss:steps(),ab:abon()?1:0};}};
 })();
