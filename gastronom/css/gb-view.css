@@ -1,0 +1,202 @@
+/* ================= gb-view.css — новый вид «Мой гастроном» (поток VIEW, 11.10.2026) =================
+   Всё — под html.gbv (выключен вид → старые стили v13 как были). Старые WebView: без inset, :has, clamp, aspect-ratio.
+   Общие стили для META/LEAGUE/FEST — раздел «ОБЩЕЕ» внизу (.vw-poster, .vw-stamp, .vw-banner, .vw-neon, .vw-card, .vw-bar, .vw-chip). */
+:root{--vw:0}
+html.gbv{--vw:1}
+
+/* ---------- главный: прежняя карта уходит в «Путь» ---------- */
+html.gbv #mapScroll,html.gbv #scr-map .mnav{display:none}
+html.gbv #scr-map{background:linear-gradient(#f7e9cf,#ead2a8)}
+html.gbv #scr-map .mh{padding-bottom:4px}
+html.gbv .vw-home{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;padding:0 10px 78px;-webkit-overflow-scrolling:touch}
+html.gbv .vw-home>*{flex:0 0 auto}
+html.gbv .vw-home>*+*{margin-top:8px}
+html.gbv .vw-z:empty{display:none}
+.vw-hallbox{position:relative;height:46vh;min-height:210px;max-height:440px;border-radius:16px;overflow:hidden;box-shadow:0 3px 0 rgba(90,50,20,.18),0 6px 16px rgba(0,0,0,.12);background:#f0d6b0}
+.vw-hallbox canvas{display:block;width:100%;height:100%;cursor:pointer}
+.vw-say{position:absolute;background:#fffdf6;border-radius:14px;padding:7px 11px;font-size:15px;line-height:1.3;font-weight:600;color:#3b2a1a;box-shadow:0 3px 10px rgba(0,0,0,.18);pointer-events:none;z-index:2}
+.vw-say:empty{display:none}
+.vw-say:after{content:"";position:absolute;left:-6px;top:14px;width:12px;height:12px;background:#fffdf6;transform:rotate(45deg)}
+.vw-work{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:64px;padding:8px 14px;font-size:22px;line-height:1.15;border-radius:18px}
+.vw-work b{font-weight:900}
+.vw-work small{font-size:14.5px;font-weight:700;opacity:.92;margin-top:2px}
+.btn.big.vw-work{font-size:22px}
+
+/* ---------- вкладки ---------- */
+html.gbv .gbnavs{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;justify-content:space-around;align-items:stretch;background:#fffaf1;box-shadow:0 -2px 10px rgba(0,0,0,.1);border-top:2px solid #e8d6b8;z-index:6;padding:0 max(4px,env(safe-area-inset-left,0px)) env(safe-area-inset-bottom,0px)}
+html.gbv .gbnav{flex:1 1 0;min-width:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:#7a6f64;position:relative;padding:4px 2px;border-radius:12px}
+html.gbv .gbnav b{font-size:25px;line-height:1.05;font-weight:400}
+html.gbv .gbnav span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html.gbv .gbnav.on{color:#b3261e}
+html.gbv .gbnav.on b{transform:translateY(-1px)}
+html.gbv .gbnav .dot{position:absolute;top:6px;right:calc(50% - 22px);width:10px;height:10px;border-radius:50%;background:#e2463b;box-shadow:0 0 0 2px #fff}
+html.gbv #scr-shop .grid,html.gbv #scr-album .grid{padding-bottom:84px}
+html.gbv .gb-scr .vw-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:4px 12px 84px}
+
+/* ---------- карточки колонки ---------- */
+.vw-card{display:block;width:100%;text-align:left;background:#fffaf0;border-radius:16px;padding:10px 12px;box-shadow:0 3px 0 #dcc6a2,0 4px 12px rgba(60,30,10,.1);color:#3b2a1a}
+button.vw-card{font:inherit}
+.vw-card.glow{box-shadow:0 0 0 3px #f0b429,0 3px 0 #dcc6a2,0 4px 14px rgba(240,180,41,.4)}
+.vw-h{font-weight:800;font-size:16.5px;display:flex;align-items:center}
+.vw-s{font-size:14px;color:#5b4a3a;margin:3px 0 6px;font-weight:600}
+.vw-row{display:flex;align-items:center;justify-content:space-between;width:100%;background:#fff;border-radius:12px;padding:9px 11px;margin-top:6px;font-weight:700;font-size:15.5px;box-shadow:0 2px 0 #e2cfae;text-align:left}
+.vw-row small{font-weight:600;color:#7a5a12;margin-left:8px;font-size:13px;white-space:nowrap}
+.vw-row i{font-style:normal;background:#e2463b;color:#fff;border-radius:10px;padding:1px 7px;font-size:12px;margin-left:6px}
+.vw-row.locked{opacity:.6}
+.vw-row.glow{box-shadow:0 0 0 2px #f0b429}
+.vw-row.more{justify-content:center}
+.vw-row.more small{margin-left:6px}
+
+/* ---------- ПК и планшет в альбомной: две колонки ---------- */
+html.gbv-pc .vw-home{display:flex;flex-direction:row;align-items:stretch;overflow:hidden;padding:0 10px 10px}
+html.gbv-pc .vw-home>*+*{margin-top:0}
+html.gbv-pc .vw-l{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+html.gbv-pc .vw-l>*+*{margin-top:8px}
+html.gbv-pc .vw-l .vw-hallbox{flex:1 1 auto;height:auto;max-height:none;min-height:0}
+html.gbv-pc .vw-r{flex:0 0 340px;margin-left:12px;display:flex;flex-direction:column;min-height:0;position:relative;padding-bottom:70px}
+html.gbv-pc .vw-rs{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 2px 8px}
+html.gbv-pc .vw-rs>*+*{margin-top:10px}
+html.gbv-pc .vw-r .gbnavs{border-radius:16px;border:2px solid #e8d6b8;box-shadow:0 2px 8px rgba(0,0,0,.08);height:62px}
+html.gbv-pc .vw-work{min-height:76px;font-size:24px}
+@media (hover:hover){.vw-card:hover,.vw-row:hover{filter:brightness(1.03)}html.gbv .gbnav:hover{background:rgba(179,38,30,.06)}}
+@media (min-width:1200px){html.gbv-pc .vw-r{flex-basis:380px}}
+
+/* ---------- «Касса» (окно победы) ---------- */
+.vw-kassa{text-align:center}
+.vw-kassa .vw-kt{margin:0 0 6px;font-size:28px;line-height:1.05;color:#b3261e;text-shadow:0 2px 0 #ffd77a}
+.vw-rcpt{position:relative;margin:4px 14px 12px;padding:9px 12px 10px;background:#fdfdf8;font-family:"PT Mono",ui-monospace,Menlo,Consolas,monospace;color:#3a3a3a;font-size:13.5px;line-height:1.4;text-align:left;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.vw-rcpt:after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:8px;background:linear-gradient(-45deg,transparent 6px,#fdfdf8 0) 0 0/12px 8px repeat-x,linear-gradient(45deg,transparent 6px,#fdfdf8 0) 0 0/12px 8px repeat-x}
+.vw-rcpt.print{overflow:hidden;animation:vwPrint 1s .15s steps(7) both}
+@keyframes vwPrint{from{max-height:0}to{max-height:400px}}
+.vw-rh{text-align:center;font-weight:700;border-bottom:1px dashed #999;padding-bottom:3px;margin-bottom:3px;font-size:12.5px}
+.vw-ln{display:flex;justify-content:space-between}
+.vw-ln span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
+.vw-tot{border-top:1px dashed #999;margin-top:3px;padding-top:3px;font-size:1.12em}
+.vw-rst{position:absolute;right:-6px;bottom:-4px;font-size:15px;padding:3px 7px}
+.vw-rcpt .vw-stamp.on{animation-delay:.9s}
+.vw-kline{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:14px;padding:8px 12px;margin:4px 0 6px;text-align:left;box-shadow:0 2px 0 #e2cfae}
+.vw-kline b{font-size:16.5px}
+.vw-kline .coins-won{margin:0 0 0 8px;white-space:nowrap}
+.vw-sm{display:block;font-size:15px;letter-spacing:1px;line-height:1.2}
+.vw-kst{color:#f0a400;font-size:15px;margin-left:4px}.vw-kst .e{color:#bdb3a6}
+.step{animation:vwStep .45s both}
+@keyframes vwStep{0%{opacity:0;transform:translateY(14px) scale(.94)}100%{opacity:1;transform:none}}
+.vw-small{font-size:14px!important;margin:4px 0!important}
+.vw-city-g{background:#fff1cf;border-radius:14px;padding:7px 10px;margin:6px 0;text-align:left}
+.vw-city-g .vw-s{margin:2px 0 0;font-size:14.5px}
+.vw-dots{display:flex;justify-content:space-between;align-items:center;padding:0 2px}
+.vw-dots i{width:14px;height:14px;border-radius:50%;background:#e2cfae;box-shadow:inset 0 0 0 2px #cdb38a}
+.vw-dots i.d{background:#2e8b47;box-shadow:none}
+.vw-dots i.c{background:#f0a020;box-shadow:0 0 0 3px #ffe0a0}
+.vw-dots i.r{border-radius:3px;transform:rotate(45deg);background:#c62828;box-shadow:none}
+.vw-dots i.r.d{background:#2e8b47}
+.vw-tmr{background:#fff3c4;border:2px dashed #e0a92b;border-radius:14px;padding:7px 10px;margin:6px 0;font-size:14.5px;line-height:1.3;text-align:left;font-weight:600}
+.vw-krow{margin-top:10px}
+.vw-next{width:100%;font-size:22px}
+.vw-sec{font-size:15.5px;padding:10px 12px}
+.vw-klink{display:block;margin:10px auto 0;background:none;border:0;color:#7a4a26;font-weight:700;font-size:16px;text-decoration:underline;padding:6px 14px}
+.vw-khead{display:flex;align-items:center;justify-content:center;margin:0 0 6px}
+.vw-khead .vw-kt{margin:0;flex:0 1 auto;min-width:0}
+.vw-kcoin{flex:none;margin-left:10px;font-size:16px;padding:5px 10px;transition:transform .2s;background:#fff}
+.vw-measure,.vw-measure *{animation:none!important}
+.vw-kcoin.pop{animation:vwPop .35s}
+@keyframes vwPop{50%{transform:scale(1.18)}}
+.vw-fly{position:fixed;z-index:40;font-size:22px;pointer-events:none;animation:vwFly .95s cubic-bezier(.5,-.3,.6,1) both}
+@keyframes vwFly{0%{transform:translate(0,0) scale(1.1)}100%{transform:translate(var(--dx),var(--dy)) scale(.55);opacity:.35}}
+html.gbv #mcard{max-width:400px}
+.vw-kassa.vw-neon{border-radius:20px;margin:-20px -18px -18px;padding:18px 16px 14px}
+.vw-kassa.vw-neon .vw-kt{color:#ff8a7e;text-shadow:0 0 6px #ff3b30,0 0 16px #ff3b30}
+.vw-kassa.vw-neon .vw-klink{color:#ffd9a0}
+.vw-kassa.vw-neon p{color:#f3dccf}
+.vw-kassa.vw-neon .vw-kline,.vw-kassa.vw-neon .vw-tmr,.vw-kassa.vw-neon .vw-city-g,.vw-kassa.vw-neon .pill,.vw-kassa.vw-neon .chest,.vw-kassa.vw-neon .goal,.vw-kassa.vw-neon .vsay span{color:#3b2a1a}
+@media (max-height:700px){.vw-kassa .vw-kt{font-size:24px}.vw-rcpt{font-size:12.5px;margin-bottom:10px}.vw-klink{margin-top:4px;padding:4px 12px}}
+@media (max-height:600px){.vw-kassa .vw-kt{font-size:22px;margin-bottom:2px}.vw-kline{padding:6px 10px}.vw-krow{margin-top:6px}}
+@media (prefers-reduced-motion:reduce){.step,.vw-rcpt.print,.vw-fly{animation:none}}
+body.calm .step,body.calm .vw-rcpt.print{animation:none}
+
+/* ---------- уровень: гнёзда поверх (не сдвигают раскладку) ---------- */
+html.gbv #gbLevel{position:relative;height:0;z-index:7;pointer-events:none}
+html.gbv #gbLevel .gbl{position:absolute;pointer-events:auto}
+html.gbv #gbLevel .gbl-top{left:50%;top:6px;transform:translateX(-50%);max-width:94%}
+html.gbv #gbLevel .gbl-side{left:8px;top:6px;max-width:46%}
+html.gbv #gbLevel .gbl-board{right:8px;top:6px;max-width:60%}
+.vw-cityin{color:#fff;border-radius:16px;padding:8px 22px 10px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.3);animation:vwCity 3.4s both;white-space:nowrap}
+.vw-cityin small{display:block;font-weight:700;font-size:14px;opacity:.92}
+.vw-cityin b{display:block;font-size:30px;line-height:1.1}
+@keyframes vwCity{0%{opacity:0;transform:translateY(-20px) scale(.9)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+body.calm .vw-cityin{animation:none}
+
+/* ---------- «Путь» по Союзу ---------- */
+html.gbv #gb-path{background:linear-gradient(#dff0d8,#e9efd0 40%,#f3ecd2)}
+.vw-rep{margin:12px 0 6px;border-radius:16px;padding:10px 14px;background:var(--rc,#b3261e);color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.18);cursor:pointer}
+.vw-rep b{display:block;font-size:20px;line-height:1.1}
+.vw-rep small{display:block;font-size:13.5px;font-weight:700;opacity:.92;margin-top:2px}
+.vw-line{position:relative;padding:0 4px}
+html.gbv #gb-path .vw-scroll>*{max-width:620px;margin-left:auto;margin-right:auto}
+.vw-ck{font-style:normal;color:#fff;font-weight:900;font-size:26px}
+.vw-rail{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.vw-st{position:relative;height:84px;display:flex;align-items:center}
+.vw-st.l{padding-left:calc(28% - 26px)}
+.vw-st.r{flex-direction:row-reverse;padding-right:calc(28% - 26px)}
+.vw-stb{position:relative;width:52px;height:52px;border-radius:50%;flex:none;font-size:22px;background:#c9bfae;box-shadow:0 0 0 4px #fff,0 4px 8px rgba(0,0,0,.25);z-index:1}
+.vw-st.done .vw-stb{background:#2e8b47}
+.vw-st.cur .vw-stb{width:62px;height:62px;font-size:26px;background:#f0a020;box-shadow:0 0 0 4px #fff,0 0 0 9px rgba(240,160,32,.35),0 4px 8px rgba(0,0,0,.25)}
+.vw-vh{position:absolute;width:40px;height:40px;right:-30px;top:-22px;border-radius:50%;box-shadow:0 0 0 3px #fff,0 2px 6px rgba(0,0,0,.25)}
+.vw-st.r .vw-vh{right:auto;left:-30px}
+.vw-stl{margin:0 12px;max-width:52%;text-shadow:0 1px 0 #fff;line-height:1.2}
+.vw-st.r .vw-stl{text-align:right}
+.vw-stl b{display:block;font-size:16px;color:#3b2a1a}
+.vw-stl small{display:block;font-size:13px;font-weight:700;color:#8a5a12}
+.vw-st.lock .vw-stl b{color:#8b7f72}
+.vw-lvs{position:relative;z-index:2;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:#fffaf0;border-radius:16px;padding:8px;margin:2px 4px 8px;box-shadow:0 3px 10px rgba(0,0,0,.15)}
+.vw-lv{background:#fff;border-radius:12px;padding:6px 2px;box-shadow:0 2px 0 #e2cfae;display:flex;flex-direction:column;align-items:center;min-height:50px}
+.vw-lv b{font-size:18px}.vw-lv small{font-size:11px;color:#f0a400;min-height:13px}
+.vw-lv.done{background:#e8f5e9}.vw-lv.cur{background:#fff3c4;box-shadow:0 0 0 2px #f0a020}.vw-lv.boss b{color:#c62828}
+.vw-lv[disabled]{opacity:.5}
+@supports not (inset:0){.vw-lvs>*{margin:3px}}
+
+/* ---------- уровень: «Обслужено» смайликами, круглые бустеры ---------- */
+.vw-sv{display:inline-flex;align-items:center;gap:1px;font-size:14px;line-height:1.2;white-space:nowrap}
+.vw-sv i{font-style:normal;opacity:.28;filter:grayscale(1)}
+.vw-sv i.y,.vw-sv i.n{opacity:1;filter:none}
+html.gbv .gf{gap:4px;padding-top:4px;background:linear-gradient(rgba(255,250,240,0),rgba(255,250,240,.6))}
+html.gbv .gf .btn{background:none;box-shadow:none;padding:0 2px 2px;border-radius:12px;justify-content:flex-start}
+html.gbv .gf .btn:active{transform:none}
+html.gbv .gf .btn b{order:1;width:50px;height:50px;border-radius:50%;background:#fffaf0;box-shadow:0 3px 0 #d7bf98,0 4px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-size:23px;transition:transform .08s}
+html.gbv .gf .btn:active b{transform:translateY(2px);box-shadow:0 1px 0 #d7bf98}
+html.gbv .gf .btn small{order:2;margin-top:-9px;position:relative;z-index:1;background:#f6c443;color:#5a3a00;border-radius:10px;padding:1px 7px;font-size:11.5px;font-weight:800;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+html.gbv .gf .btn span{order:3;margin-top:2px;font-size:12.5px;font-weight:700;color:#5b4636}
+html.gbv .gf .btn.off b{opacity:.55}
+html.gbv .gf .btn[data-adwait]::after{top:-2px;right:calc(50% - 32px)}
+html.gbv-pc .gf .btn b,html.gbv .gf.pc .btn b{width:58px;height:58px;font-size:27px}
+@media (min-width:700px){html.gbv .gf .btn b{width:58px;height:58px;font-size:27px}html.gbv .gf .btn span{font-size:14px}}
+@media (max-height:520px){html.gbv .gf .btn{flex-direction:column}html.gbv .gf .btn b{width:40px;height:40px;font-size:19px}}
+
+/* ---------- подсказки клавиш (только с мышью: html.vw-keys) ---------- */
+.vw-kbd{display:none}
+html.vw-keys .vw-kbd{display:inline-block;font:700 11px/1 -apple-system,Segoe UI,Roboto,sans-serif;color:#6b5f52;background:#fff;border:1px solid #cdb892;border-bottom-width:2px;border-radius:5px;padding:2px 4px}
+html.vw-keys .gf .btn{position:relative}
+html.vw-keys .gf .btn .vw-kbd{position:absolute;top:0;right:calc(50% - 38px);order:4}
+html.vw-keys .vw-work{position:relative}
+html.vw-keys .vw-kbd-e{position:absolute;right:10px;top:8px;opacity:.85}
+
+/* ---------- запас без gap/inset ---------- */
+@supports not (inset:0){html.gbv .vw-home>*+*{margin-top:8px}}
+
+/* ================= ОБЩЕЕ для потоков (META, LEAGUE, FEST, MG0) ================= */
+.vw-poster{font-family:"Arial Narrow","Roboto Condensed","Oswald",Impact,-apple-system,sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:.5px;font-stretch:condensed}
+.vw-bar{height:10px;border-radius:6px;background:#ead9bd;overflow:hidden}
+.vw-bar>i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#f0b429,#e07b17);transition:width .9s ease}
+.vw-bar.g>i{background:linear-gradient(90deg,#6cc070,#2e8b47)}
+.vw-chip{display:inline-flex;align-items:center;border-radius:12px;padding:2px 9px;font-size:13px;font-weight:800;background:#fff3c4;color:#6a4a00;white-space:nowrap}
+.vw-stamp{display:inline-block;border:4px double #c62828;color:#c62828;font:900 20px/1.05 "Arial Narrow",Impact,-apple-system,sans-serif;padding:4px 10px;text-align:center;letter-spacing:1px;border-radius:8px;background:rgba(255,255,255,.55);transform:rotate(-9deg);text-transform:uppercase}
+.vw-stamp.on{animation:vwStamp .5s both}
+@keyframes vwStamp{0%{opacity:0;transform:scale(2.6) rotate(-16deg)}70%{opacity:1;transform:scale(.92) rotate(-9deg)}100%{opacity:1;transform:scale(1) rotate(-9deg)}}
+.vw-banner{display:inline-block;position:relative;background:linear-gradient(#d32f2f,#a31515);color:#ffe08a;font-weight:900;padding:8px 14px 14px;clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);text-align:center;box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.vw-banner:before{content:"★";display:block;font-size:1.2em;line-height:1}
+.vw-neon{background:#1d1430 !important;color:#ffe3de}
+.vw-neon h2,.vw-neon .vw-ntitle{color:#ff8a7e;text-shadow:0 0 6px #ff3b30,0 0 14px #ff3b30}
+@media (prefers-reduced-motion:reduce){.vw-stamp.on{animation:none}}
+body.calm .vw-stamp.on{animation:none}
+/* низкий телефон (≤680): «План» одной строкой «📋 План на сегодня 3/5», по нажатию — полный экран плана (запасной путь вида, пока гнездо не рисует ctx.mini само) */
+.gbv-mini .mt-home .mt-chips,.gbv-mini .mt-home .mt-hl{display:none}

@@ -3,6 +3,36 @@
 <head>
 <meta charset="utf-8">
 <script>window.__se=[];addEventListener('error',function(e){var t=e.target,s=window.__se;if(s&&s.length<10)s.push(t&&t.tagName?[2,t.src||t.href||'',t.tagName]:[1,e.message,e.filename,e.lineno]);},true);</script> <!-- STAT v1.2: ранние ошибки и незагрузившиеся файлы (до всех скриптов) -->
+<script>/* gb-TECH (10.10): предохранитель загрузки (образец Зины). Свой обязательный файл (js/gb-core.js, css/…) не скачался или пришёл ОБРЕЗАННЫМ
+   (SyntaxError в своём js/…) → перезагрузка до 2 раз, потом окно «Обновить» (не белый экран). Модули буста (data-gb) и ленивые (GB.load, data-lazy) — НЕ перезагружаем:
+   игра живёт без них (список — window.__gbmiss, STAT gbmiss). Не дошло до готовности (gb-ready.js обрезан) — GB.ready() зовём сами после load.
+   Что случилось — sessionStorage «gbldlog» {n,f,w: net|cut|none}; stat-gb.js шлёт событие ldf после удачного запуска. */
+(function(){var K='gbldfail',n=0,done=false,ld=false;try{n=+sessionStorage.getItem(K)||0;}catch(e){}
+function mine(u){try{var a=document.createElement('a');a.href=u;return a.host===location.host;}catch(e){return false;}}
+/* модуль буста (data-gb), ленивый (data-lazy) или вставленный кодом (GB.load, loadScript — у таких async=true) — не обязательный */
+function opt(t){return t.hasAttribute('data-gb')||t.hasAttribute('data-lazy')||t.tagName==='SCRIPT'&&t.async;}
+function lg(f,w){try{sessionStorage.setItem('gbldlog',JSON.stringify({n:n+1,f:String(f||'').replace(/^.*\/(js|css)\//,'$1/').slice(0,40),w:w}));}catch(x){}}
+function gbm(u,w){(window.__gbmiss=window.__gbmiss||[]).indexOf(u)<0&&window.__gbmiss.push(u+(w?'#'+w:''));}
+addEventListener('error',function(e){var t=e.target;if(done)return;
+  if(t&&t.tagName){if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return;var u=t.src||t.href||'';if(!u||!mine(u)||/vk-bridge|sdk\.js/.test(u))return;
+    if(ld||opt(t))return; /* модуль буста / ленивый — игра живёт без него (__gbmiss пишет gb-core.js) */
+    lg(u,'net');}
+  else{var f=e.filename||'',q,i;if(ld||!/\/js\/[^\/]+\.js(\?|$)/.test(f)||!/SyntaxError/.test(String(e.message||''))||!mine(f))return;
+    q=document.getElementsByTagName('script');for(i=0;i<q.length;i++)if(q[i].src===f&&opt(q[i])){gbm(f,'cut');return;}
+    lg(f,'cut');}
+  fail();},true);
+addEventListener('DOMContentLoaded',function(){if(!done&&typeof GB==='undefined'){lg('js/gb-core.js','none');fail();}});
+addEventListener('load',function(){ld=true;try{if(!done&&window.GB&&!GB.isReady){gbm('js/gb-ready.js','none');GB.ready();}}catch(x){}
+  setTimeout(function(){if(!done)try{sessionStorage.removeItem(K);}catch(x){}},3000);});
+function fail(){if(done)return;done=true;
+  if(n<2){try{sessionStorage.setItem(K,n+1);}catch(x){}setTimeout(function(){location.reload();},700+n*1500);return;}
+  var ru=/[?&](vk_app_id|vk)=/.test(location.search)||!/^en/i.test((/[?&]lang=(\w+)/.exec(location.search)||[])[1]||navigator.language||'ru');
+  function show(){var d=document.createElement('div');d.id='ldfail';d.setAttribute('style','position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#3b2a1a;color:#fffaf0;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px/1.4 system-ui,sans-serif;text-align:center;padding:24px');
+    d.innerHTML='<div style="max-width:320px">'+(ru?'Не получилось загрузить игру. Проверьте интернет и попробуйте ещё раз.':'The game failed to load. Check your connection and try again.')+'</div><button type="button" style="margin-top:18px;font:700 18px system-ui,sans-serif;padding:12px 28px;border:0;border-radius:14px;background:#4caf50;color:#fff">'+(ru?'Обновить':'Reload')+'</button>';
+    d.querySelector('button').onclick=function(){try{sessionStorage.removeItem(K);}catch(x){}location.reload();};(document.body||document.documentElement).appendChild(d);}
+  if(document.body)show();else addEventListener('DOMContentLoaded',show);}
+})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Гастроном №1</title>
 <style>
@@ -187,6 +217,7 @@ button[data-adwait]{position:relative}
 button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;font-size:16px;line-height:1;pointer-events:none}
 @supports not (inset:0){.soc-o>*+*{margin-top:6px}.soc-o.lite>*+*{margin-top:0;margin-left:8px}.vsay>*+*,.goal>*+*{margin-left:10px}.mnav>*+*,.gf>*+*,.gh>*+*,.hdr-r>*+*,.mh>*+*,.bst-ex>*+*,.lbr>*+*,.row2>*+*,.shopad>*+*{margin-left:8px}.streak>*{margin:2px}.row>*+*{margin-top:10px}.node-row>*+*{margin-left:12px}.node-row.r>*+*{margin-left:0;margin-right:12px}.gh-r>*+*{margin-top:3px}.grid>*{margin:6px}}
 </style>
+<link rel="stylesheet" href="css/gb-view.css"> <!-- gb:VIEW стили нового вида (всё под html.gbv) -->
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
@@ -198,12 +229,15 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <div id="app">
   <section id="scr-map" class="screen on">
     <header class="mh"><div class="logo"><span class="lgi">🛒 </span>Гастроном №1</div><div class="hdr-r"><button class="icon" id="btnSet" aria-label="Настройки" data-en-aria="Settings">⚙️</button><div class="pill">⭐ <span id="totStars">0</span></div><button class="pill" id="mCoins">💰 <span id="coinCnt">0</span></button></div></header>
+    <div id="gbHomeTop"></div><!-- gb: гнёзда главного zone top -->
     <div class="map-scroll" id="mapScroll"><div id="mapList"></div></div>
     <nav class="mnav"><button id="btnDaily" class="btn accent">📅 Задание дня</button><button id="btnShop" class="btn">🏪 Магазин</button><button id="btnAlbum" class="btn">⭐ Дефицит</button><button id="btnQuest" class="btn rw" aria-label="Задания дня" data-en-aria="Daily tasks"><span data-en="🎯 Tasks">🎯 Задания</span><i id="qBadge">0/4</i></button><button id="btnMore" class="btn noent" style="display:none" aria-label="Ещё игры во дворе">🎲<small>Игры</small></button></nav>
+    <div id="gbHome"></div><nav id="gbNav" class="gbnavs" style="display:none"></nav><!-- gb: гнёзда главного и вкладки (VIEW перенесёт в зал) -->
   </section>
 
   <section id="scr-game" class="screen">
     <header class="gh"><button class="icon" id="gBack" aria-label="На карту" data-en-aria="To the map">←</button><div class="gt"><div id="gLevel">Уровень 1</div><div id="gCity" class="sub">Москва</div></div><div class="gh-r"><div id="gHearts" class="hearts"></div><button class="pill sm" id="gCoins">💰 0</button></div><button class="icon" id="gSet" aria-label="Настройки" data-en-aria="Settings">⚙️</button></header>
+    <div id="gbLevel"></div><!-- gb: гнёзда поверх уровня -->
     <div class="stage" id="stage"><canvas id="cv"></canvas><div id="tip" class="tip"></div></div>
     <footer class="gf"><button class="btn" id="bUndo"><b>↶</b><span data-en="Undo">Отменить</span><small id="pUndo"></small></button><button class="btn" id="bHint"><b>💡</b><span data-en="Hint">Подсказка</span><small id="pHint"></small></button><button class="btn" id="bMix"><b>🔀</b><span data-en="Shuffle">Смешать</span><small id="pMix"></small></button><button class="btn" id="bTable"><b>➕</b><span data-en="Table">Столик</span><small id="pTable"></small></button></footer>
   </section>
@@ -225,6 +259,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   <div id="toast" class="toast"></div>
 </div>
 
+<script src="js/gb-core.js"></script> <!-- gb: каркас буста «Образцовый» (до основного скрипта; договор — шапка файла) -->
 <script>
 'use strict';
 /*LOGIC*/
@@ -232,36 +267,39 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
    Этот блок не трогает страницу (нет DOM) — tools/check.sh вырезает его из index.html и гоняет в jsc.
    Ячейка витрины — целое число: тип товара (биты 0–7), «оттает после N троек» (биты 8–15), коробка «Дефицит» (бит 16). */
 const BOXF=1<<16,RARE0=200,NRARE=10;
+const GEN_V=2; /* gb: версия генератора уровней. ЗАМОРОЖЕНО: блок LOGIC не правит никто, кроме LVL один раз (GEN_V=2 + tools/freeze.sh make). Сторож — tools/freeze.sh */
 const tOf=c=>c&255,iceOf=c=>(c>>8)&255;
 function rng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 // порядок появления товаров: сначала самые узнаваемые
 const GOOD_ORDER=[1,5,8,4,9,7,2,10,11,3,6,13,14,16,12,15,17,18,19,20,21,22];
-const movable=(st,c)=>c!==0&&!(c&BOXF)&&iceOf(c)<=st.cl;
+const movable=(st,c)=>c!==0&&!(c&BOXF)&&iceOf(c)<=st.cl&&(c<131072||GBOB.mv(c)); /* gb-OBST: биты помех 17–24 (мешок, кот) */
 function mkState(lv){const st={p:[],F:[],cl:0,n:0,x:0};
   for(let i=0;i<lv.S;i++){st.p.push(0);st.F.push(lv.sh[i][0].slice());for(const r of lv.sh[i])for(const c of r)if(c)st.n++;}
+  if(lv.ob)GBOB.init(lv,st); /* gb-OBST */
   return st;}
-function cloneSt(st){return{p:st.p.slice(),F:st.F.map(r=>r.slice()),cl:st.cl,n:st.n,x:st.x};}
+function cloneSt(st){const o={p:st.p.slice(),F:st.F.map(r=>r.slice()),cl:st.cl,n:st.n,x:st.x};if(st.o)o.o=st.o.slice(); /* gb-OBST */return o;}
 // три одинаковых (коробка не в счёт, товар во льду — в счёт)
-function tripleT(r){const a=r[0],b=r[1],c=r[2];if(!a||!b||!c||(a&BOXF)||(b&BOXF)||(c&BOXF))return 0;const t=tOf(a);return tOf(b)===t&&tOf(c)===t?t:0;}
+function tripleT(r){const a=r[0],b=r[1],c=r[2];if(!a||!b||!c||(a&BOXF)||(b&BOXF)||(c&BOXF))return 0;if((a|b|c)>=131072&&!GBOB.tri(a,b,c))return 0; /* gb-OBST */const t=tOf(a);return tOf(b)===t&&tOf(c)===t?t:0;}
 // после хода: тройки исчезают, коробки рядом (эта полка и соседние по номеру) открываются, пустой ряд — подъезжает следующий.
 // Живая игра (lv.live — ставит startLevel и автопрогон «человеком»): если тройку больше не собрать никак (товар заперт в коробках/во льду) —
 // тётя Валя открывает все коробки и «размораживает» лёд (st.x), иначе уровень стал бы непроходимым навсегда (аудит 14).
 // Генератор и решатель уровней флаг не видят — раскладки уровней от этого не меняются
 function settle(lv,st,todo,ev){
   for(;;){
-  while(todo.length){const i=todo.pop(),row=st.F[i],t=tripleT(row);
-    if(t){ev&&ev.push({k:'clear',i,t,cells:row.slice()});row[0]=row[1]=row[2]=0;st.cl++;st.n-=3;
+  while(todo.length){const i=todo.pop(),row=st.F[i],t0=tripleT(row),t=t0&&lv.ob&&!GBOB.ok3(lv,st,i,t0)?0:t0; /* gb-OBST: развесное — только на весах */
+    if(t){ev&&ev.push({k:'clear',i,t,cells:row.slice()});row[0]=row[1]=row[2]=0;st.cl++;st.n-=3;if(lv.ob)GBOB.clear(lv,st,i,t,ev,todo); /* gb-OBST */
       for(let j=i-1;j<=i+1;j++){if(j<0||j>=lv.S)continue;const r=st.F[j];
         for(let s=0;s<3;s++)if(r[s]&BOXF){r[s]&=~BOXF;ev&&ev.push({k:'open',i:j,s,t:tOf(r[s])});if(j!==i)todo.push(j);}}}
     if(!row[0]&&!row[1]&&!row[2]&&st.p[i]<lv.sh[i].length-1){st.p[i]++;const nr=lv.sh[i][st.p[i]];row[0]=nr[0];row[1]=nr[1];row[2]=nr[2];
-      if(st.x)for(let s=0;s<3;s++)row[s]&=255;ev&&ev.push({k:'adv',i});todo.push(i);}}
+      if(st.x)for(let s=0;s<3;s++)row[s]&=255;else if(lv.ob)GBOB.adv(lv,st,i,row); /* gb-OBST */ev&&ev.push({k:'adv',i});todo.push(i);}}
+  if(lv.ob&&GBOB.end(lv,st,todo,ev))continue; /* gb-OBST: подвоз на пустую витрину, обед/уборщица не держат без ходов */
   if(!lv.live||st.x||!st.n||!doomed(lv,st))return;
   st.x=1;let ice=0;for(let i=0;i<lv.S;i++){const r=st.F[i];for(let s=0;s<3;s++){const c=r[s];if(!c)continue;
       if(c&BOXF)ev&&ev.push({k:'open',i,s,t:tOf(c)});else if(iceOf(c)>st.cl)ice=1;r[s]=c&255;}todo.push(i);}
   ev&&ev.push({k:'rescue',ice});}}
 // «вечный тупик»: ни один товар больше не собрать тройкой. Доступны штуки не в коробке и не во льду, кроме рядов за рядом с коробкой/льдом;
 // товар во льду годится как «якорь» (к нему можно подставить две такие же). Если тройки не собрать — лёд не оттает и коробки не откроются никогда
-function doomed(lv,st){if(st.x)return false;const fr={};
+function doomed(lv,st){if(st.x)return false;if(lv.ob)return GBOB.doomed(lv,st); /* gb-OBST */const fr={};
   for(let i=0;i<lv.S;i++){const L=lv.sh[i];
     for(let k=st.p[i];k<L.length;k++){const r=k===st.p[i]?st.F[i]:L[k];let blk=false;
       for(const c of r){if(!c)continue;if(c&BOXF){blk=true;continue;}const t=tOf(c);if(iceOf(c)>st.cl)blk=true;else fr[t]=(fr[t]||0)+1;}
@@ -273,14 +311,14 @@ function doomed(lv,st){if(st.x)return false;const fr={};
     for(const c of r){if(!c)continue;if(c&BOXF){oth++;continue;}if(iceOf(c)>st.cl){ic[tOf(c)]=(ic[tOf(c)]||0)+1;k++;}}
     for(const t in ic)if(k-ic[t]+oth===0&&ic[t]+(fr[t]||0)>=3)return false;}
   return true;}
-function doMove(lv,st,a,sa,b,sb,ev){const c=st.F[a][sa];st.F[a][sa]=0;st.F[b][sb]=c;ev&&ev.push({k:'move',a,sa,b,sb,c});settle(lv,st,[a,b],ev);}
+function doMove(lv,st,a,sa,b,sb,ev){const c=st.F[a][sa],cl0=st.cl;st.F[a][sa]=0;st.F[b][sb]=c;ev&&ev.push({k:'move',a,sa,b,sb,c});settle(lv,st,[a,b],ev);if(lv.ob)GBOB.after(lv,st,ev,st.cl-cl0);} /* gb-OBST: часы помех, кот, подвоз */
 const freeSlot=r=>r[0]===0?0:r[1]===0?1:r[2]===0?2:-1;
 // есть ли вообще ход: двигаемый товар и пустое место на другой полке
-function hasMove(lv,st){const mv=[],em=[];for(let i=0;i<lv.S;i++){const r=st.F[i];if(r.some(c=>movable(st,c)))mv.push(i);if(r.some(c=>!c))em.push(i);}
+function hasMove(lv,st){if(lv.ob)return GBOB.hasMove(lv,st); /* gb-OBST */const mv=[],em=[];for(let i=0;i<lv.S;i++){const r=st.F[i];if(r.some(c=>movable(st,c)))mv.push(i);if(r.some(c=>!c))em.push(i);}
   return mv.some(a=>em.some(b=>b!==a));}
 // ходы с оценкой (для решателя и подсказки): тройка > открыть ряд > пара на чистой полке; разбивать пару и мешать — плохо
-function listMoves(lv,st,want){const out=[],S=lv.S,F=st.F,tg=[];let empt=false;
-  for(let b=0;b<S;b++){const r=F[b];if(freeSlot(r)<0)continue;if(!r[0]&&!r[1]&&!r[2]){if(empt)continue;empt=true;}tg.push(b);}
+function listMoves(lv,st,want){const out=[],S=lv.S,F=st.F,tg=[],ee=lv.ob?{}:null;let empt=false;
+  for(let b=0;b<S;b++){const r=F[b];if(freeSlot(r)<0)continue;if(!r[0]&&!r[1]&&!r[2]){if(ee){const e=GBOB.ek(lv,st,b);if(ee[e])continue;ee[e]=1;}else{if(empt)continue;empt=true;}}tg.push(b);} /* gb-OBST: пустые полки с помехами — своим классом */
   for(let a=0;a<S;a++){const r=F[a],items=(r[0]?1:0)+(r[1]?1:0)+(r[2]?1:0);
     for(let sa=0;sa<3;sa++){const c=r[sa];if(!movable(st,c))continue;if((sa>0&&r[0]===c)||(sa>1&&r[1]===c))continue;
       const t=tOf(c);let cntA=0;for(const x of r)if(x&&!(x&BOXF)&&tOf(x)===t)cntA++;
@@ -294,9 +332,10 @@ function listMoves(lv,st,want){const out=[],S=lv.S,F=st.F,tg=[];let empt=false;
         sc-=120*oth;if(cntA>=2)sc-=150;
         if(want){const w=want.indexOf(t);if(w>=0)sc+=tri?400-50*w:cntB>=1&&oth===0?100:30;}
         out.push([sc,a,sa,b,freeSlot(q)]);}}}
+  if(lv.ob)GBOB.fix(lv,st,out); /* gb-OBST: запрещённые ходы и «ложные тройки» */
   out.sort((x,y)=>y[0]-x[0]);return out;}
 function keyOf(st){let k='';for(let i=0;i<st.F.length;i++){const r=st.F[i];let a=r[0],b=r[1],c=r[2],t;
-    if(a>b){t=a;a=b;b=t;}if(b>c){t=b;b=c;c=t;}if(a>b){t=a;a=b;b=t;}k+=st.p[i]+':'+a+','+b+','+c+';';}return k+st.cl+(st.x?'x':'');}
+    if(a>b){t=a;a=b;b=t;}if(b>c){t=b;b=c;c=t;}if(a>b){t=a;a=b;b=t;}k+=st.p[i]+':'+a+','+b+','+c+';';}return k+st.cl+(st.x?'x':'')+(st.o?'|'+st.o.join(','):'');} /* gb-OBST */
 // поиск в глубину с лучшими ходами первыми; путь — список [a,sa,b,sb] или null (не нашли за limit узлов)
 function solve(lv,st0,limit,want,seen0){const seen=new Set(seen0||[]);seen.add(keyOf(st0));const stack=[{st:cloneSt(st0),mv:listMoves(lv,st0,want),i:0,m:null}];let nodes=0;
   while(stack.length){const f=stack[stack.length-1];
@@ -355,7 +394,7 @@ function playout(lv,R,st0,want,path){const st=st0?cloneSt(st0):mkState(lv);if(!s
   while(st.n>0&&steps++<400){const mv=listMoves(lv,st,want),ok=[];
     for(const m of mv){if(ok.length>=4)break;const s=cloneSt(st);doMove(lv,s,m[1],m[2],m[3],m[4]);const k=keyOf(s);if(!seen.has(k))ok.push([s,k,m]);}
     if(!ok.length)return 0;const x=R(),pk=ok[x<.62||ok.length<2?0:x<.87||ok.length<3?1:Math.floor(R()*ok.length)];
-    st.p=pk[0].p;st.F=pk[0].F;st.cl=pk[0].cl;st.n=pk[0].n;seen.add(pk[1]);if(path)path.push([pk[2][1],pk[2][2],pk[2][3],pk[2][4]]);}
+    st.p=pk[0].p;st.F=pk[0].F;st.cl=pk[0].cl;st.n=pk[0].n;if(pk[0].o)st.o=pk[0].o; /* gb-OBST */seen.add(pk[1]);if(path)path.push([pk[2][1],pk[2][2],pk[2][3],pk[2][4]]);}
   return st.n===0?steps:0;}
 // быстрый поиск короткого решения: несколько «человеческих» попыток, лучшая; не вышло — поиск в глубину
 function solveFast(lv,st,R,want,tries,limit){let best=null;
@@ -380,7 +419,7 @@ function remCounts(lv,st){const m={};for(let i=0;i<lv.S;i++){for(const c of st.F
 function qInit(lv,R){return{left:lv.K,vis:[],served:0,angry:0,R,nx:0};}
 function qFill(lv,st,q,max){max=max||3;if(q.vis.length>=max||q.left<=0)return;const rem=remCounts(lv,st);
   while(q.vis.length<max&&q.left>0){const res={};for(const v of q.vis)res[v.t]=(res[v.t]||0)+1;let best=0,bs=-1e9,bf=0;
-    for(const k in rem){const t=+k;if(t>=RARE0||Math.floor(rem[t]/3)-(res[t]||0)<=0)continue;let sc=0,f=0;
+    for(const k in rem){const t=+k;if(t>=RARE0||Math.floor(rem[t]/3)-(res[t]||0)<=0)continue;if(lv.ob&&GBOB.noAsk(lv,t))continue; /* gb-OBST: стеклотару не просят */let sc=0,f=0;
       for(let i=0;i<lv.S;i++){for(const c of st.F[i])if(c&&tOf(c)===t&&!(c&BOXF)){if(movable(st,c)){sc+=3;f++;}else sc+=1;}
         const L=lv.sh[i],p=st.p[i];if(p+1<L.length)for(const c of L[p+1])if(c&&tOf(c)===t)sc+=1;}
       sc+=q.R()*3;if(res[t])sc-=100;if(sc>bs){bs=sc;best=t;bf=f;}}
@@ -388,10 +427,10 @@ function qFill(lv,st,q,max){max=max||3;if(q.vis.length>=max||q.left<=0)return;co
     // терпение: основа уровня + «глубина» трёх самых доступных штук (ряд сзади, лёд, коробка) + ожидание за теми, кто уже стоит
     const ds=[];for(let i=0;i<lv.S;i++){const L=lv.sh[i];for(let k=st.p[i];k<L.length;k++){const r=k===st.p[i]?st.F[i]:L[k];for(const c of r)if(c&&tOf(c)===best)ds.push(k-st.p[i]+(movable(st,c)?0:1));}}
     ds.sort((a,b)=>a-b);const cost=(ds[0]||0)+(ds[1]||0)+(ds[2]||0);
-    const pat=lv.P+cost*lv.pd+q.vis.length*2;q.vis.push({t:best,pat,max:pat,id:q.nx++});q.left--;}}
+    const pat=lv.P+cost*lv.pd+q.vis.length*2,v={t:best,pat,max:pat,id:q.nx++};if(lv.ob)GBOB.cust(lv,st,q,v,rem,res); /* gb-OBST: склочный, мама с малышом */q.vis.push(v);q.left--;}}
 function qClear(q,t){const k=q.vis.findIndex(v=>v.t===t);if(k<0)return null;const v=q.vis.splice(k,1)[0];q.served++;return v;}
 // терпение тает только от ходов без тройки: пока товар уходит, очередь видит, что дело идёт
-function qTick(q){const gone=[];for(let k=q.vis.length-1;k>=0;k--){const v=q.vis[k];v.pat--;if(v.pat<=0){q.vis.splice(k,1);q.angry++;gone.push(v);}}return gone;}
+function qTick(q){const gone=[];for(let k=q.vis.length-1;k>=0;k--){const v=q.vis[k];v.pat--;if(v.sk)v.pat--; /* gb-OBST: склочный — вдвое быстрее */if(v.pat<=0){q.vis.splice(k,1);q.angry++;gone.push(v);}}return gone;}
 // бот для автопрогона: каждый ход — первый шаг решения с учётом того, кто что ждёт
 // бот ведёт себя как внимательный человек: лучший по оценке ход (с учётом, кто что ждёт), без возвратов в прежние положения;
 // долго без тройки — берёт решение решателя (как «подсказку»); тупик — «отменить ход» назад, пока решатель не найдёт путь (как игрок с кнопкой отмены), и дальше по решению
@@ -463,9 +502,9 @@ const RARE=[
   {n:'Торт с кремом',c:'Коробку с бантиком несли домой бережно, двумя руками.'}];
 const gName=t=>t>=RARE0?RARE[t-RARE0].n:GOODS[t].n;
 // города: по 10 уровней, у каждого свой цвет вывески
-const CITIES=[['Москва','#b3261e'],['Ленинград','#1f5f99'],['Горький','#2e7d32'],['Калинин','#00796b'],['Куйбышев','#d35400'],
-  ['Свердловск','#6a1b9a'],['Новосибирск','#283593'],['Иркутск','#00838f'],['Хабаровск','#8e2436'],['Владивосток','#0277bd']];
-const cityOf=i=>CITIES[Math.floor(i/10)%CITIES.length];
+const CITIES=[['Москва','#b3261e'],['Тула','#1f5f99'],['Рязань','#2e7d32'],['Ярославль','#00796b'],['Казань','#d35400'],
+  ['Пермь','#6a1b9a'],/* gb-TEXT: города без переименований */['Новосибирск','#283593'],['Иркутск','#00838f'],['Хабаровск','#8e2436'],['Владивосток','#0277bd']];
+const cityOf=i=>(window.GB_CITY&&window.GB_CITY(i))||CITIES[Math.floor(i/10)%CITIES.length]; /* gb-LVL: города «Командировки по Союзу» (GBU) */
 // в VK без знака «№» (в каталоге VK он запрещён — не дразним модератора; аудит 18)
 const NUMS=()=>PLAT==='vk'?'номер\u00a0':L('№','No. ');
 const levelTitle=i=>L('Гастроном ','Store ')+NUMS()+(i<100?i%10+1:i+1);
@@ -481,17 +520,17 @@ const PH={
     intel:['Будьте любезны, {a}.','Мне, пожалуйста, {a}.','Не сочтите за труд — {a}.','Позвольте {a}, голубушка.','Мне бы {a}, к чаю с коллегами.'],
     worker:['Мне {a}, и побыстрее — смена!','{N} есть? Давай!','Хозяйка, {a}! С получки беру.','Мне {a}, на всю бригаду.','{N} — и я пошёл!'],
     student:['А {n} есть? На стипендию!','Мне {a}, в общежитие.','Мне {a}. Сессия, сил нет!','Мне {a}, на всю комнату.','Мне {a}, мы в стройотряд!'],
-    veteran:['Мне без очереди, мне положено! {N} есть?','Сынки, я без очереди. Мне {a}.','Ветерану — {a}, будьте добры.'],
+    mama:['Пропустите, я с малышом! Мне {a}.','Мы без очереди — нам {a}, пожалуйста.','{N} есть? А то малыш капризничает.'],
     revizor:['Проверка! Мне {a}.','Контрольная закупка! {N}.','Ревизия! Покажите {a}.']},
   happy:{babka:['Дай бог здоровья!','Спасибо, доченька!','Вот уважила!','Пойду пирог печь!','Золотые руки!'],school:['Ура! Спасибо!','Мама будет рада!','Успел!','Сдачу не потерял!','Спасибо, тётенька!'],
     police:['Вот это порядок!','Благодарю!','Образцовое обслуживание!','Так держать!','Объявляю благодарность!'],
     intel:['Премного благодарен!','Весьма признателен!','Вы просто волшебница!','Чудесно, благодарю!','Сервис как в столице!'],
     worker:['Во, дело!','Спасибо, хозяйка!','Вот это скорость!','Успел до смены!','Мастерски!'],student:['Спасибочки!','Ура, живём!','Будет пир!','Жить можно!','Всё, пошёл учить!'],
-    veteran:['Спасибо, дочка! Уважила.','Вот это по-нашему!','Дай бог здоровья, хозяюшка!'],revizor:['Замечаний нет!','Отметим в отчёте.','Всё по нормативу!']},
+    mama:['Спасибо! Малыш, скажи тёте спасибо!','Выручили, спасибо!','Вот спасибо, успеем домой к кашке!'],revizor:['Замечаний нет!','Отметим в отчёте.','Всё по нормативу!']},
   angry:{babka:['Безобразие! Пойду в соседний.','Не дождалась…','Я на вас в книгу жалоб!','Ноги-то не казённые!'],school:['Ну вот, мама заругает…','Эх, опоздаю!','Уроки ждут…','Пойду домой ни с чем…'],
     police:['Непорядок, товарищи!','Составим протокол… шучу.','Нарушаете, гражданочка!','Служба не ждёт!'],intel:['Однако… сервис.','Зайду в другой раз.','Какое неуважение…','Пожалуй, откланяюсь.'],
     worker:['Эх, опоздаю на смену!','Всё, некогда!','Бригада ждёт!','Ну, я пошёл.'],student:['Ладно, пойду в столовую.','Опять очередь…','На пару опоздаю!','Сессия не ждёт!'],
-    veteran:['Эх, молодёжь…','Не уважили старика.'],revizor:['Запишем в книгу жалоб!','Будет выговор!']},
+    mama:['Ну вот, малыш расплакался…','Мы так долго не можем…'],revizor:['Запишем в книгу жалоб!','Будет выговор!']},
   // зевака: заходит, когда очередь кончилась, ничего не просит
   look:['Я только посмотреть!','Что дают?','Кто последний? Ой, никого!','А колбасу не завозили?','Кто последний за колбасой?','Мне бы только спросить…'],
   valya:{start:['Вас много, а я одна!','Не толпитесь, граждане!','Всем хватит, не волнуйтесь!','Кто крайний? Занимайте!','Не задерживайте очередь!','Товар руками не трогать!',
@@ -507,13 +546,13 @@ const PH={
     rescue:['Ладно уж, открою дефицит!','Эх, для вас — всё открою!'],thaw:['Ладно, всё разморожу и открою!','Всё оттаяло, всё открыто!'],
     // очередь кончилась, а товар ещё есть — тройка уходит «в кассу»
     kassa:['В заказ отложу!','Себе на праздник!','Это в стол заказов.','Отложу для постоянных покупателей.','Пусть полежит под прилавком… шучу!'],
-    veteran:['Ветерану — без очереди!','Пропустите, граждане, ветеран!'],
+    mama:['Маму с малышом — без очереди!','Пропустите, граждане, мама с малышом!'],
     // покупка обстановки: реплика к каждому предмету
     decor:{ficus:'Фикус! Теперь как дома.',clock:'Часы! Обед теперь строго по расписанию.',poster:'Хлеб — всему голова! Правильно говорят.',beads:'Ой, бусы! Прямо как в молодости!',
       scales:'Весы! Теперь всё до грамма.',calendar:'Календарь! Ни одного праздника не пропущу.',pennant:'Лучший магазин района — это мы!',lamps:'Светло-то как стало!',
       radio:'Радиоточка! С утра — зарядка.',kassa:'Касса! Дзынь — и всё по-честному.',lace:'Салфеточки! Красота, как у мамы.',samovar:'Самовар — к чаю! Заходите.',
-      tiles:'Кафель! Чистота — залог здоровья.',frame:'Витрина — как в музее!',cat:'Барсик, брысь с прилавка! Ладно уж, лежи.',neon:'Вывеска горит — весь квартал видит!',
-      panels:'Дубовые панели — солидно!',fridge:'Холодильник! Докторская не заветрится.',ny:'С Новым годом! Мишура, шарики — как в детстве.',birusa:'Бирюса! Тарахтит, зато не подводит.'}}};
+      tiles:'Кафель! Чистота — залог здоровья.',frame:'Витрина — как в музее!',cat:'Пломбир, брысь с прилавка! Ладно уж, лежи.',/* gb-TEXT */neon:'Вывеска горит — весь квартал видит!',
+      panels:'Дубовые панели — солидно!',fridge:'Холодильник! Докторская не заветрится.',ny:'С Новым годом! Мишура, шарики — как в детстве.',birusa:'«Морозец»! Тарахтит, зато не подводит.'/* gb-TEXT */}}};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 // обстановка магазина: покупается за монеты, видна в зале (или на витрине) на каждом уровне.
 // 8 первых — 1070 💰; с ×2 за рекламу (аудит 12) добавлены ещё 10 на 1950 💰 — цель на месяц. Порядок — по цене
@@ -533,8 +572,8 @@ const DECOR=[
   {id:'samovar',n:'Самовар',p:200,d:'Блестит на прилавке. Чайку?'},
   {id:'tiles',n:'Кафель',p:220,d:'Нарядная плитка на стене.'},
   {id:'frame',n:'Резная витрина',p:220,d:'Золочёная резьба по раме витрины.'},
-  {id:'birusa',n:'Холодильник «Бирюса»',p:240,d:'Гудит, как трактор, зато морозит по-настоящему.'},
-  {id:'cat',n:'Кот Барсик',p:250,d:'Спит на прилавке. Мышей не ловит.'},
+  {id:'birusa',n:'Холодильник «Морозец»',p:240,d:'Гудит, как трактор, зато морозит по-настоящему.'},/* gb-TEXT */
+  {id:'cat',n:'Кот Пломбир',p:250,d:'Спит на прилавке. Мышей не ловит.'},/* gb-TEXT */
   {id:'neon',n:'Неоновая вывеска',p:260,d:'«ГАСТРОНОМ» светится красным.'},
   {id:'panels',n:'Дубовые панели',p:280,d:'Стена вокруг витрины обшита деревом.'},
   {id:'fridge',n:'Холодильный прилавок',p:300,d:'За стеклом докторская, сыр и масло.'}];
@@ -566,7 +605,7 @@ const EN_DATA={
     {n:'Crab meat',c:'A tin for a "restaurant-style" salad. Hidden away until the holiday.'},
     {n:'Chewing gum',c:'The whole class collected the wrappers and swapped them at break time.'},
     {n:'Cream cake',c:'The box with a bow was carried home carefully, with both hands.'}],
-  CITIES:['Moscow','Leningrad','Gorky','Kalinin','Kuibyshev','Sverdlovsk','Novosibirsk','Irkutsk','Khabarovsk','Vladivostok'].map(n=>({0:n})), // только название, цвет вывески остаётся
+  CITIES:['Moscow','Tula','Ryazan','Yaroslavl','Kazan','Perm',/* gb-TEXT */'Novosibirsk','Irkutsk','Khabarovsk','Vladivostok'].map(n=>({0:n})), // только название, цвет вывески остаётся
   PH:{
     ask:{babka:['Dearie, I need {a}!','I\'ll have {a}, sweetheart.','{N} for my son-in-law — he\'s an engineer!','The grandkids are coming — give me {a}.','I\'ll have {a}, and no funny business!','What does {a} cost these days? Oh, fine, give it here!'],
       school:['Mum sent me for {a}!','I need {a}! And I mustn\'t lose the change…','I need {a}! And a toffee with the change!','Granny said to get {a}!','I need {a}! I\'m late for school!'],
@@ -574,17 +613,17 @@ const EN_DATA={
       intel:['Would you be so kind — {a}.','I\'d like {a}, please.','If it\'s no trouble — {a}.','May I have {a}, madam?','{N}, please — for tea with my colleagues.'],
       worker:['{N}, and make it snappy — my shift!','Got {a} for me? Hand it over!','Missus, {a}! It\'s payday.','{N} for the whole brigade.','{N} — and I\'m off!'],
       student:['{N} in stock? I\'m on a student grant!','{N} for the dorm, please.','{N}, please. Exams — I\'m running on fumes!','{N} for the whole room.','{N}, please — we\'re off to the summer work brigade!'],
-      veteran:['No queueing for me — I\'m entitled! {N} in stock?','Sonny, I go first. {N}, please.','{N} for a veteran, if you\'d be so kind.'],
+      mama:['Let me through, I have a little one! {N}, please.','We go first — {N}, please.','{N} in stock? The baby is getting fussy.'],
       revizor:['Inspection! {N}, please.','Test purchase! {N}.','Audit! Show me {a}.']},
     happy:{babka:['Bless you, dear!','Thank you, sweetie!','You\'ve made my day!','Off to bake a pie!','Hands of gold!'],school:['Hooray! Thanks!','Mum will be happy!','Made it!','Didn\'t lose the change!','Thank you, auntie!'],
       police:['Now that\'s order!','Much obliged!','Exemplary service!','Keep it up!','You get a commendation!'],
       intel:['Most obliged!','Deeply grateful!','You\'re a magician!','Splendid, thank you!','Service like in the capital!'],
       worker:['That\'s the stuff!','Cheers, missus!','Now that\'s speed!','Made it before my shift!','Masterful!'],student:['Thanks a bunch!','Hooray, we\'ll live!','A feast tonight!','Life is good!','Right, off to study!'],
-      veteran:['Thank you, dear. Much respect.','That\'s the spirit!','Bless you, my dear!'],revizor:['No complaints!','Noted in the report.','All up to standard!']},
+      mama:['Thank you! Say thanks, sweetie!','You saved us, thanks!','Thanks — we\'ll be home in time for porridge!'],revizor:['No complaints!','Noted in the report.','All up to standard!']},
     angry:{babka:['Outrageous! I\'m going next door.','I can\'t wait any longer…','I\'m writing in the complaints book!','My legs aren\'t government issue!'],school:['Oh no, Mum will be cross…','Ugh, I\'ll be late!','Homework is waiting…','Going home empty-handed…'],
       police:['Disorderly, comrades!','I\'ll write you up… just kidding.','A violation, citizen!','Duty won\'t wait!'],intel:['Well… some service.','I\'ll call another time.','How very rude…','I shall take my leave.'],
       worker:['Ugh, I\'ll be late for my shift!','No time, I\'m off!','The brigade is waiting!','Right, I\'m going.'],student:['Fine, I\'ll go to the canteen.','Another queue…','I\'ll be late for class!','Exams won\'t wait!'],
-      veteran:['Eh, young people…','No respect for an old soldier.'],revizor:['Into the complaints book!','There will be a reprimand!']},
+      mama:['Oh no, now the baby is crying…','We can\'t wait that long…'],revizor:['Into the complaints book!','There will be a reprimand!']},
     look:['Just looking!','What are they selling?','Who\'s last in line? Oh, nobody!','Has the sausage come in yet?','Who\'s last for sausage?','I just have a question…'],
     valya:{start:['There\'s lots of you and only one of me!','Don\'t crowd, citizens!','There\'s enough for everyone!','Who\'s last? Get in line!','Don\'t hold up the queue!','Look with your eyes, not your hands!',
         'Step up, don\'t be shy!','No more than two per customer!','Closed for stocktaking… just kidding, come in!','I\'m not an information desk!','Fresh delivery, citizens!'],
@@ -598,12 +637,12 @@ const EN_DATA={
       ice:['Ice cream is in no hurry — it\'ll thaw!'],
       rescue:['Oh, all right, I\'ll open the rare goods!','For you — I\'ll open everything!'],thaw:['Fine, I\'ll thaw and open everything!','All thawed, all open!'],
       kassa:['I\'ll put that aside for an order!','For my own party!','This goes to the order desk.','I\'ll save it for the regulars.','It can wait under the counter… just kidding!'],
-      veteran:['Veterans go first!','Make way, citizens — a veteran!'],
+      mama:['Mums with babies go first!','Make way, citizens — a mum with a baby!'],
       decor:{ficus:'A ficus! Now it feels like home.',clock:'A clock! Lunch break strictly on schedule now.',poster:'Bread is the staff of life! Well said.',beads:'Oh, beads! Just like when I was young!',
         scales:'Scales! Everything to the gram now.',calendar:'A calendar! I won\'t miss a single holiday.',pennant:'Best store in the district — that\'s us!',lamps:'Look how bright it is now!',
         radio:'A radio! Morning exercises at seven sharp.',kassa:'A till! Ding — all fair and square.',lace:'Lace doilies! Pretty, just like Mum\'s.',samovar:'A samovar for tea! Do drop in.',
-        tiles:'Tiles! Cleanliness is the key to health.',frame:'A display case fit for a museum!',cat:'Barsik, off the counter! Oh, fine, stay.',neon:'The sign is lit — the whole block can see it!',
-        panels:'Oak panels — very respectable!',fridge:'A fridge counter! The sausage won\'t dry out.',ny:'Happy New Year! Tinsel and baubles — just like when I was a kid.',birusa:'A Biryusa! It rattles, but it never lets you down.',q_badge:'An Excellent Worker badge! I\'ve dreamed of this all my life.',q_ribbon:'A model store — that\'s us!',q_gold:'A golden sign! People come from the next district to see it.'}}},
+        tiles:'Tiles! Cleanliness is the key to health.',frame:'A display case fit for a museum!',cat:'Plombir, off the counter! Oh, fine, stay.',/* gb-TEXT */neon:'The sign is lit — the whole block can see it!',
+        panels:'Oak panels — very respectable!',fridge:'A fridge counter! The sausage won\'t dry out.',ny:'Happy New Year! Tinsel and baubles — just like when I was a kid.',birusa:'A Morozets! It rattles, but it never lets you down.'/* gb-TEXT */,q_badge:'An Excellent Worker badge! I\'ve dreamed of this all my life.',q_ribbon:'A model store — that\'s us!',q_gold:'A golden sign! People come from the next district to see it.'}}},
   QDECOR:[
     {n:'"Excellent Worker of Trade" badge',d:'For Aunt Valya — for flawless service. Pinned to her coat.'},
     {n:'"Model Store" ribbon',d:'A scarlet ribbon with gold fringe on the counter.'},
@@ -624,8 +663,8 @@ const EN_DATA={
     {n:'Samovar',d:'Gleams on the counter. Tea, anyone?'},
     {n:'Wall tiles',d:'Fancy tiles on the wall.'},
     {n:'Carved display',d:'Gilded carving on the display frame.'},
-    {n:'Biryusa fridge',d:'Hums like a tractor, but really keeps things cold.'},
-    {n:'Barsik the cat',d:'Sleeps on the counter. Doesn\'t catch mice.'},
+    {n:'Morozets fridge',d:'Hums like a tractor, but really keeps things cold.'},/* gb-TEXT */
+    {n:'Plombir the cat',d:'Sleeps on the counter. Doesn\'t catch mice.'},/* gb-TEXT */
     {n:'Neon sign',d:'"GASTRONOM" glows red.'},
     {n:'Oak panels',d:'The wall around the display is panelled in wood.'},
     {n:'Refrigerated counter',d:'Sausage, cheese and butter behind glass.'}]};
@@ -639,7 +678,8 @@ const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 function fixSave(){for(const f of ['stars','daily','decor','tips','ask','chest'])if(!isObj(S[f]))S[f]={};if(!Array.isArray(S.album))S.album=[];
   for(const f of ['streak','adc'])if(S[f]!=null&&!isObj(S[f]))delete S[f];if(typeof S.adW!=='number'||!isFinite(S.adW))S.adW=0;
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;if(typeof S.levelsDone!=='number')S.levelsDone=0;
-  if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=60;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
+  if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=60;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};
+  if(window.GB)GB._fix();} /* gb: поля модулей буста */
 fixSave();
 // «точка отсчёта» с облаком: сколько монет было общим у устройства и облака (при запуске, после слияния и после записи).
 // Монеты, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным — не теряются и не возвращаются
@@ -692,16 +732,18 @@ function langFromSDK(){try{const l=ysdk&&ysdk.environment&&ysdk.environment.i18n
   if(!l||IS_VK||langSaved()||(IS_LOCAL&&langQuery()))return;const n=normLang(l);if(n!==LANG)setLang(n,true);}catch(e){}}
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
-/* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
-   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
+   08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
 var STAT=(function(){
-  var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=15,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -743,6 +785,7 @@ var STAT=(function(){
   function init(o){O=o||{};O.url=String(O.url||'');G=String(O.g||'game').slice(0,16);t0=Date.now();actT=t0;
     cut='';if(/^https?:/i.test(O.url)&&!locU(O.url)){var wd=false;try{wd=navigator.webdriver===true||/HeadlessChrome|PhantomJS|Puppeteer|Playwright/.test(navigator.userAgent||'');}catch(e){}
       cut=wd?'wd':location.protocol==='file:'?'file':locH(location.hostname)?'local':'';if(cut)O.url='';}
+    U2=O.url?String(O.url2!==undefined?O.url2:/^https?:\/\/functions\.yandexcloud\.net\//i.test(O.url)?FB:''):'';
     dev=!O.url&&(O.dev===true||(/[?&]stat=dev/.test(location.search)&&/^(localhost|127\.0\.0\.1|\[::1\])$|\.localhost$|\.test$/.test(location.hostname)));
     var s=jp(ls('stat-'+G))||{},c=O.S&&O.S.stc||{};
     st={c:+s.c||+c.c||0,n:Math.max(+s.n||0,+c.n||0),d:Math.max(+s.d||0,+c.d||0)};
@@ -787,6 +830,8 @@ var STAT=(function(){
   function progress(o){o=o||{};prog={};if(o.pl!==undefined)prog.pl=+o.pl||0;if(o.cn!==undefined){prog.cn=+o.cn||0;if(cb===undefined)cb=prog.cn;}
     if(o.bt!==undefined)prog.bt=o.bt?1:0;rel();}
   function bal(n){if(typeof n==='number'&&isFinite(n))cb=n;}
+  // v1.4: STAT.pl(n) — прогресс изменился (уровень пройден и т. п.): событий не шлёт, уходит полем pl в pause и в start следующего сеанса
+  function setPl(n){n=+n;if(!isFinite(n))return;prog=prog||{};prog.pl=n;}
 
   // --- уровни: STAT.lvl(5,'daily',{n:3}) в начале, STAT.use('hint') по ходу, STAT.end('win',{st:3}) в конце; STAT.move() — каждый ход ---
   function lvlStart(l,m,x){if(lvl)lvlEnd('quit');lvl={l:l,m:m||'',t:Date.now(),h:0,u:0,x:{}};var p={l:l},k,n=0;if(m)p.m=m;
@@ -863,29 +908,38 @@ var STAT=(function(){
   function got(b,s,mark){if(mark){if(!srv)ls('stat-srv','2');srv=true;nm=0;}else if(s>=200&&s<300&&srv&&++nm>=3){srv=false;ls('stat-srv',null);}
     if(s>=500||s===429||!s)return bad();fails=0;nextT=0;drop(b);flush();}
   function bad(){fails++;if(fails>=3)nextT=Date.now()+Math.min(900,90*Math.pow(2,fails-3))*1000;}
-  function send(b){var s=JSON.stringify(b),k=bk(b),t=Date.now();if(fly[k]&&t-fly[k]<3e4)return;fly[k]=t;
-    function fin(c,mark){delete fly[k];got(b,c,mark);}
-    function no(){delete fly[k];bad();}
-    try{if(window.fetch){fetch(O.url,{method:'POST',mode:'cors',body:s,keepalive:s.length<6e4,headers:{'Content-Type':'text/plain'}}).then(function(r){
+  /* v1.5: запасной адрес. Основной — облако Яндекса; если оно не отвечает (сеть, 5xx, 429) — ТА ЖЕ пачка уходит на свой сервер (U2).
+     После сбоя основного 10 минут сразу пробуем запасной первым. Повтор пачки не задваивает (ключ day,g,sk,q,i; INSERT IGNORE). */
+  function post(u,s,done){
+    try{if(window.fetch){fetch(u,{method:'POST',mode:'cors',body:s,keepalive:s.length<6e4,headers:{'Content-Type':'text/plain'}}).then(function(r){
         var h='';try{h=r.headers.get('X-Stat')||'';}catch(e){}
-        return r.text().then(function(x){fin(r.status,h==='2'||/"v"\s*:\s*2/.test(x));},function(){fin(r.status,h==='2');});},no);return;}
-      var x=new XMLHttpRequest();x.open('POST',O.url,true);x.setRequestHeader('Content-Type','text/plain');
-      x.onload=function(){fin(x.status,/x-stat:\s*2/i.test(x.getAllResponseHeaders()||'')||/"v"\s*:\s*2/.test(x.responseText||''));};x.onerror=no;x.send(s);}catch(e){no();}}
+        return r.text().then(function(x){done(r.status,h==='2'||/"v"\s*:\s*2/.test(x));},function(){done(r.status,h==='2');});},function(){done(0,false);});return;}
+      var x=new XMLHttpRequest();x.open('POST',u,true);x.setRequestHeader('Content-Type','text/plain');
+      x.onload=function(){done(x.status,/x-stat:\s*2/i.test(x.getAllResponseHeaders()||'')||/"v"\s*:\s*2/.test(x.responseText||''));};x.onerror=function(){done(0,false);};x.send(s);}catch(e){done(0,false);}}
+  function urls(){return U2?(pFail&&Date.now()-pFail<6e5?[U2,O.url]:[O.url,U2]):[O.url];}
+  function send(b){var s=JSON.stringify(b),k=bk(b),t=Date.now();if(fly[k]&&t-fly[k]<3e4)return;fly[k]=t;
+    var L=urls();
+    function go(i){post(L[i],s,function(c,mark){
+      var okc=c>=200&&c<300;
+      if(L[i]===O.url){if(okc)pFail=0;else if(c>=500||c===429||!c)pFail=Date.now();}
+      if(!okc&&(c>=500||c===429||!c)&&i+1<L.length)return go(i+1);
+      delete fly[k];got(b,c,mark);});}
+    go(0);}
   function flush(){if(!on||sP)return;while(Q.length)pend.push(pack());keep();
     if(dev&&!O.url){pend=[];keep();return;}
     if(navigator.onLine===false||!pend.length||Date.now()<nextT)return;send(pend[0]);}
   function beacon(){var i,b,ok,left=[];if(dev&&!O.url){pend=[];keep();return;}if(navigator.onLine===false)return;
-    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(O.url,JSON.stringify(b)));}catch(e){}
+    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(urls()[0],JSON.stringify(b)));}catch(e){}
       if(!ok||srv)left.push(b);}
     pend=left;keep();if(pend.length&&!srv)send(pend[0]);}
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
-    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
+    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();if(prog&&prog.pl!==undefined)p.pl=prog.pl;ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
-      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
+      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
       var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
@@ -904,14 +958,14 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
 // (на маке — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (STAT.optOut)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'gastronom',gv:'v13-100813',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'gastronom',gv:'v14-101217',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: настройки сеанса (cfg), вход (start: pl — пройдено уровней, cn — монет, bt — было ли сохранение в облаке; после облака, но не позже 2,5 с),
    баланс (bal → cb в pause), откуда монеты (ern → earn: lvl, ad, gift, chest, buy, quest) */
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
@@ -938,7 +992,7 @@ function mergeSave(d,ref){if(!isObj(d))return;
   for(const f of ['stars','daily','decor','tips','chest'])if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(Array.isArray(d.album))for(const i of d.album)if(typeof i==='number'&&!S.album.includes(i))S.album.push(i);
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|decor|tips|chest|album|coins|streak|adc|buy|buyB|payT|payV|soc|quest|qTal|qStat|stc)$/.test(k))S[k]=d[k]; // флажки (звук, вибрация)
+  for(const k in d)if(!(window.GB&&GB.owns(k))&&(!(k in S)||newer&&!/^(ts|unlocked|levelsDone|stars|daily|decor|tips|chest|album|coins|streak|adc|buy|buyB|payT|payV|soc|quest|qTal|qStat|stc)$/.test(k)))S[k]=d[k]; // флажки (звук, вибрация); gb: поля модулей буста сливает их хозяин (GB.onSave)
   payMerge(d); // покупки — объединение
   SOC.merge(d.soc); // соц-предложения VK: сессии — максимум, «сделано» — навсегда
   STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
@@ -947,17 +1001,20 @@ function mergeSave(d,ref){if(!isObj(d))return;
   if(isObj(d.qStat)){if(!isObj(S.qStat))S.qStat={};for(const k in d.qStat)if(isObj(d.qStat[k])){const a=S.qStat[k]||(S.qStat[k]={});for(const f in d.qStat[k])if(typeof d.qStat[k][f]==='number')a[f]=Math.max(a[f]||0,d.qStat[k][f]);}}
   // серия дней — у кого позже последний день; ролики за монеты сегодня — больше из двух (лимит в день не обходится вторым устройством)
   if(isObj(d.streak)){const a=S.streak,b=d.streak;if(!isObj(a)||(b.last||0)>(a.last||0))S.streak=b;else if((b.last||0)===(a.last||0))S.streak={day:Math.max(a.day||0,b.day||0),last:a.last};}
-  if(isObj(d.adc)){const a=S.adc,b=d.adc;if(!isObj(a)||(b.d||0)>(a.d||0))S.adc=b;else if(b.d===a.d)S.adc={d:a.d,n:Math.max(a.n||0,b.n||0)};}}
+  if(isObj(d.adc)){const a=S.adc,b=d.adc;if(!isObj(a)||(b.d||0)>(a.d||0))S.adc=b;else if(b.d===a.d)S.adc={d:a.d,n:Math.max(a.n||0,b.n||0)};}
+  if(window.GB)GB._merge(d,newer);} /* gb */
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
 // ответ VK с ограничением по времени (вне VK мост может не ответить вовсе); VKWebAppInit на слабом телефоне может идти долго — ждём до 20 с
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
 // VK хранит значение до 4096 байт — режем на куски по 1800 символов (сохранение — латиница и цифры).
 // Двойной буфер: новые куски пишутся по очереди в «a0…» или «b0…», а указатель svn="b:5:<длина>" — строго последним;
 // пока новый набор не дописан, старый цел. Запись последовательная (без гонок и частотных ошибок VK)
-const VK_CHUNK=1800,VK_MAXCH=40,vkSent={};let vkCur=null,vkQ=null,vkAgain=false;
+/* gb-TECH (10.10): VK_MAXCH 40 → 120 (≈216 тыс. символов, ключей 2×120+1 из 1000 VK). Тяжёлый игрок буста (1500 уровней, год заданий дня, поля потоков) — ≈22 тыс.
+   (TECH-tools/saves/t_cloud.py), но S.daily растёт без конца (~4,7 тыс./год) — запас как у Зины. Сверх предела облако не пишется — STAT cloud {a:'big',n} раз за сеанс. */
+const VK_CHUNK=1800,VK_MAXCH=120,vkSent={};let vkCur=null,vkQ=null,vkAgain=false,vkBig=0;
 async function vkPut(k,v){if(vkSent[k]===v)return;await vkSend('VKWebAppStorageSet',{key:k,value:v},8000);vkSent[k]=v;}
 function vkSaveCloud(){if(vkQ){vkAgain=true;return vkQ;}
-  vkQ=(async()=>{try{do{vkAgain=false;const str=JSON.stringify(S),ts=S.ts,c=S.coins,n=Math.ceil(str.length/VK_CHUNK),pre=vkCur==='a'?'b':'a';if(n>VK_MAXCH)return;
+  vkQ=(async()=>{try{do{vkAgain=false;const str=JSON.stringify(S),ts=S.ts,c=S.coins,n=Math.ceil(str.length/VK_CHUNK),pre=vkCur==='a'?'b':'a';if(n>VK_MAXCH){if(!vkBig){vkBig=1;try{STAT.ev('cloud',{a:'big',n:n});}catch(e){}}return;}
       for(let i=0;i<n;i++)await vkPut(pre+i,str.slice(i*VK_CHUNK,(i+1)*VK_CHUNK));
       await vkPut('svn',pre+':'+n+':'+str.length);vkCur=pre;BOOT_TS=ts;BOOT_COINS=c;}while(vkAgain);}catch(e){}finally{vkQ=null;}})();
   return vkQ;}
@@ -1438,7 +1495,7 @@ async function initVK(){
     VK.subscribe(e=>{const t=e.detail&&e.detail.type;
       if(t==='VKWebAppViewHide'){setPause('hide',true);cloudFlush();}
       else if(t==='VKWebAppViewRestore'){setPause('hide',false);if(typeof adBack==='function')adBack();setTimeout(adBackChk,300);}});
-    adPreload('boot'); // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
+    adPreload('boot');setTimeout(vkIntLoad,4000); /* gb-TECH: межэкранная — спросить VK заранее */ // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
     await cloudLoad();
   }catch(e){VK=null;updQuest();} /* без моста в настоящем VK — задания молчат */
   if(!OK)PAY.init(); // покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1). ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
@@ -1471,6 +1528,9 @@ function unlockAudio(){if((S.sound===false&&!S.music)||muted)return;const a=ac()
   if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}
   musPrime();}
 ['touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true}));
+/* gb-TECH: Android (27 % VK) — после перетаскивания товара click не приходит, а touchend бывает отменён: будим звук и музыку ещё и на pointerup/pointerdown
+   (без «пустого буфера» и флага acUnlocked — их делает только настоящий жест touchend/click/keydown, иначе iOS останется немым) */
+['pointerdown','pointerup'].forEach(t=>document.addEventListener(t,()=>{if((S.sound===false&&!S.music)||muted)return;if(ac())musPrime();},{capture:true,passive:true}));
 // атака 6 мс — без щелчка в начале звука
 function tone(type,f1,f2,dur,vol,delay){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02);}
 const NZ={};function noiseBuf(a,dur){const k=Math.round(dur*100);if(NZ[k]&&NZ[k].sampleRate===a.sampleRate)return NZ[k];const n=a.createBuffer(1,Math.max(1,Math.floor(a.sampleRate*dur)),a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);return NZ[k]=n;}
@@ -1507,7 +1567,7 @@ const MUSF={main:'audio/main.m4a',rev:'audio/revision.m4a'},MUS_VOL=.22,MUS_TV={
 /* main — Green Salon (Yubatake, CC-BY 4.0), rev — Investigations (Kevin MacLeod, CC-BY 4.0): подписи в «Об игре» не удалять */
 const MUS={el:{},g:{},ok:{},bad:{},tm:{},cur:null};
 function musWant(){const gs=document.getElementById('scr-game');return G&&G.boss&&gs&&gs.classList.contains('on')?'rev':'main';}
-function musEl(n){if(MUS.el[n]||MUS.bad[n]||!AC)return MUS.el[n]||null;
+function musEl(n){if(MUS.el[n]||MUS.bad[n]||!AC||window.NO_MUSIC)return MUS.el[n]||null; /* gb-TECH: NO_MUSIC — архив без audio/ (хостинг VK): трек не просим, 404 нет */
   try{const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');a.addEventListener('error',()=>{MUS.bad[n]=1;});a.src=MUSF[n];
     const src=AC.createMediaElementSource(a),g=AC.createGain();g.gain.value=0;src.connect(g).connect(AC.destination);MUS.el[n]=a;MUS.g[n]=g;}catch(e){MUS.bad[n]=1;}
   return MUS.el[n]||null;}
@@ -1670,8 +1730,8 @@ function drawIce(g,cx,by,s,n){const u=s/100;rrect(g,cx-40*u,by-78*u,80*u,80*u,12
 /* ================= люди: покупатели и тётя Валя (по пояс) =================
    (cx, by) — низ плеч, h — от низа плеч до макушки; mood: 1 доволен, 0 ждёт, -1 сердится; tk — время (моргание, покачивание) */
 const SKIN='#f2c9a7';
-function drawPerson(g,kind,cx,by,h,mood,tk,talk){const u=h/100,bob=Math.sin(tk*2+cx*.01)*1.2*u;by+=bob;const hx=cx,hy=by-60*u;g.save();g.lineCap='round';g.lineJoin='round';
-  const C={babka:'#7d5a44',school:'#f3f3ef',police:'#35557a',intel:'#8a8f94',worker:'#2f4f6f',student:'#1e8f7a',revizor:'#2d3436',valya:'#fbfbfb',veteran:'#5b5146'}[kind];
+function drawPerson(g,kind,cx,by,h,mood,tk,talk){if(kind==='mama')kind='student'; /* gb-OBST: мама с малышом — пока облик студентки; ART дорисует обёрткой drawPerson по kind 'mama' */const u=h/100,bob=Math.sin(tk*2+cx*.01)*1.2*u;by+=bob;const hx=cx,hy=by-60*u;g.save();g.lineCap='round';g.lineJoin='round';
+  const C={babka:'#7d5a44',school:'#f3f3ef',police:'#35557a',intel:'#8a8f94',worker:'#2f4f6f',student:'#1e8f7a',revizor:'#2d3436',valya:'#fbfbfb'}[kind];
   // плечи
   g.beginPath();g.moveTo(cx-38*u,by+12*u);g.lineTo(cx-36*u,by-20*u);g.quadraticCurveTo(cx-34*u,by-36*u,cx-14*u,by-38*u);g.lineTo(cx+14*u,by-38*u);g.quadraticCurveTo(cx+34*u,by-36*u,cx+36*u,by-20*u);g.lineTo(cx+38*u,by+12*u);g.closePath();
   g.fillStyle=lin(g,cx-38*u,0,cx+38*u,0,[shade(C,-.18),C,shade(C,-.08),shade(C,-.28)]);g.fill();
@@ -1692,9 +1752,6 @@ function drawPerson(g,kind,cx,by,h,mood,tk,talk){const u=h/100,bob=Math.sin(tk*2
   else if(kind==='worker'){poly(g,[cx-14*u,by-38*u,cx-4*u,by-24*u,cx,by-36*u],shade(C,.15));poly(g,[cx+14*u,by-38*u,cx+4*u,by-24*u,cx,by-36*u],shade(C,.15));g.fillStyle='#f39c12';g.fillRect(cx-36*u,by-8*u,72*u,4*u);}
   else if(kind==='student'){g.fillStyle='#f1c40f';rrect(g,cx-18*u,by-40*u,36*u,10*u,5*u);g.fill();g.fillStyle='#e67e22';for(let k=0;k<3;k++)g.fillRect(cx-14*u+k*10*u,by-40*u,4*u,10*u);
     g.fillStyle='#f1c40f';g.fillRect(cx+6*u,by-32*u,8*u,24*u);g.fillStyle='#e67e22';g.fillRect(cx+6*u,by-24*u,8*u,3*u);g.fillRect(cx+6*u,by-16*u,8*u,3*u);}
-  // ветеран: пиджак, орденские планки и две медали
-  else if(kind==='veteran'){poly(g,[cx-10*u,by-38*u,cx,by-24*u,cx+10*u,by-38*u],'#f4f4f0');for(let k=0;k<3;k++){g.fillStyle=['#c0392b','#f39c12','#2e86de'][k];g.fillRect(cx-30*u+k*7*u,by-30*u,6*u,4*u);}
-    for(let k=0;k<2;k++){g.fillStyle=k?'#c0392b':'#d35400';g.fillRect(cx-27*u+k*9*u,by-25*u,3.5*u,6*u);ell(g,cx-25.3*u+k*9*u,by-16*u,4.2*u,4.2*u,'#f1c40f');ell(g,cx-25.3*u+k*9*u,by-16*u,2*u,2*u,'#c9950c');}}
   else if(kind==='babka'){poly(g,[cx-10*u,by-38*u,cx,by-30*u,cx+10*u,by-38*u],'#a0785c');for(let k=0;k<3;k++)ell(g,cx+2*u,by-24*u+k*11*u,2*u,2*u,'#3e2a1f');}
   // шея и волосы сзади
   g.fillStyle=shade(SKIN,-.12);g.fillRect(hx-6*u,hy+12*u,12*u,12*u);
@@ -1714,7 +1771,6 @@ function drawPerson(g,kind,cx,by,h,mood,tk,talk){const u=h/100,bob=Math.sin(tk*2
     g.fillStyle='#c0392b';g.fillRect(hx-17*u,hy-15*u,34*u,4*u);ell(g,hx,hy-17*u,3.5*u,3.5*u,'#f1c40f');ell(g,hx,hy-17*u,1.6*u,1.6*u,'#c0392b');}
   else if(kind==='intel'){g.fillStyle='#8d6e63';g.beginPath();g.moveTo(hx-15*u,hy+6*u);g.quadraticCurveTo(hx,hy+26*u,hx+15*u,hy+6*u);g.quadraticCurveTo(hx,hy+14*u,hx-15*u,hy+6*u);g.fill();
     ell(g,hx,hy-14*u,26*u,5*u,'#5d4037');g.beginPath();g.moveTo(hx-15*u,hy-14*u);g.quadraticCurveTo(hx-15*u,hy-32*u,hx,hy-30*u);g.quadraticCurveTo(hx+15*u,hy-32*u,hx+15*u,hy-14*u);g.closePath();g.fillStyle='#6d4c41';g.fill();g.fillStyle='#3e2723';g.fillRect(hx-15*u,hy-19*u,30*u,4*u);}
-  else if(kind==='veteran'){ell(g,hx-15*u,hy-3*u,4*u,7*u,'#d0d0d0');ell(g,hx+15*u,hy-3*u,4*u,7*u,'#d0d0d0');ell(g,hx,hy-14*u,20*u,8*u,'#6d6256');g.fillStyle='#5d5347';g.beginPath();g.ellipse(hx+7*u,hy-10*u,14*u,4*u,.12,0,Math.PI*2);g.fill();}
   else if(kind==='worker'){ell(g,hx,hy-14*u,21*u,9*u,'#6b6b6b');g.fillStyle='#595959';g.beginPath();g.ellipse(hx+8*u,hy-10*u,14*u,4*u,.15,0,Math.PI*2);g.fill();ell(g,hx,hy-19*u,4*u,2*u,'#7d7d7d');
     g.fillStyle='rgba(80,60,50,.35)';for(let k=0;k<10;k++)ell(g,hx-10*u+(k*7%20)*u,hy+11*u+(k*3%6)*u,.8*u,.8*u);}
   else if(kind==='student'){g.beginPath();g.moveTo(hx-18*u,hy);g.quadraticCurveTo(hx-16*u,hy-24*u,hx,hy-22*u);g.quadraticCurveTo(hx+16*u,hy-24*u,hx+18*u,hy);g.quadraticCurveTo(hx+8*u,hy-14*u,hx-18*u,hy);g.fillStyle='#a0522d';g.fill();
@@ -1732,7 +1788,6 @@ function drawPerson(g,kind,cx,by,h,mood,tk,talk){const u=h/100,bob=Math.sin(tk*2
   if(kind==='intel'||kind==='revizor'){g.strokeStyle='#2b2b2b';g.lineWidth=1.6*u;const r=kind==='revizor'?5.5*u:4.8*u;for(const k of[-1,1]){g.beginPath();g.arc(hx+k*6.5*u,ey,r,0,Math.PI*2);g.stroke();}g.beginPath();g.moveTo(hx-1.7*u,ey);g.lineTo(hx+1.7*u,ey);g.stroke();}
   ell(g,hx-10*u,hy+6*u,4*u,2.6*u,'rgba(230,110,100,.35)');ell(g,hx+10*u,hy+6*u,4*u,2.6*u,'rgba(230,110,100,.35)');
   g.strokeStyle=shade(SKIN,-.3);g.lineWidth=1.4*u;g.beginPath();g.moveTo(hx,hy+1*u);g.quadraticCurveTo(hx+2.5*u,hy+5*u,hx-.5*u,hy+6*u);g.stroke();
-  if(kind==='veteran'){g.fillStyle='#c8c8c8';g.beginPath();g.moveTo(hx-9*u,hy+10*u);g.quadraticCurveTo(hx,hy+5*u,hx+9*u,hy+10*u);g.quadraticCurveTo(hx,hy+8.5*u,hx-9*u,hy+10*u);g.fill();}
   if(kind==='police'){g.fillStyle='#5d4037';g.beginPath();g.moveTo(hx-8*u,hy+10*u);g.quadraticCurveTo(hx,hy+6*u,hx+8*u,hy+10*u);g.quadraticCurveTo(hx,hy+9*u,hx-8*u,hy+10*u);g.fill();}
   if(kind==='babka'){g.strokeStyle='rgba(120,80,60,.35)';g.lineWidth=1*u;for(const k of[-1,1]){g.beginPath();g.moveTo(hx+k*11*u,ey+3*u);g.lineTo(hx+k*13*u,ey+5*u);g.stroke();}}
   const my=hy+11*u;g.lineWidth=2*u;g.strokeStyle=kind==='valya'?'#c0392b':'#7a3b2e';
@@ -1821,7 +1876,7 @@ function drawSamovar(g,cx,by,s){const u=s/100,gold=x0=>lin(g,x0-30*u,0,x0+30*u,0
   g.strokeStyle='#fdfbf5';g.lineWidth=2.5*u;g.beginPath();g.moveTo(cx+10*u,by-88*u);g.lineTo(cx+17*u,by-94*u);g.stroke();
   // краник
   g.fillStyle='#b8862b';g.fillRect(cx-2.5*u,by-34*u,5*u,9*u);ell(g,cx,by-25*u,4*u,2*u,'#7a4a12');}
-// кот Барсик спит на прилавке: (cx, by) — низ, s — ширина
+// кот Пломбир спит на прилавке: (cx, by) — низ, s — ширина
 function drawCat(g,cx,by,s){const u=s/100;shadowE(g,cx,by,44*u,u);
   g.strokeStyle='#c46b2b';g.lineWidth=9*u;g.lineCap='round';g.beginPath();g.moveTo(cx+36*u,by-8*u);g.quadraticCurveTo(cx+52*u,by+2*u,cx+18*u,by-2*u);g.stroke();
   ell(g,cx+4*u,by-17*u,40*u,18*u,lin(g,0,by-35*u,0,by,['#f0a257','#d97e36','#b8652a']));
@@ -1832,7 +1887,7 @@ function drawCat(g,cx,by,s){const u=s/100;shadowE(g,cx,by,44*u,u);
   ell(g,hx,hy,16*u,14*u,lin(g,0,hy-14*u,0,hy+14*u,['#f0a257','#d97e36']));ell(g,hx,hy+5*u,8*u,5*u,'#f7d2a6');
   g.strokeStyle='#5a2e10';g.lineWidth=1.8*u;for(const k of[-1,1]){g.beginPath();g.arc(hx+k*6*u,hy-1*u,3.5*u,.15*Math.PI,.85*Math.PI);g.stroke();}
   poly(g,[hx-2*u,hy+3*u,hx+2*u,hy+3*u,hx,hy+5*u],'#c0587a');g.lineCap='butt';}
-// холодильник «Бирюса»: (cx, by) — низ, fh — высота (ширина ≈ 0,44 высоты); двухдверный, хромированные ручки, фирменная табличка
+// холодильник «Морозец» (id birusa; выдуманная марка — gb-TEXT): (cx, by) — низ, fh — высота (ширина ≈ 0,44 высоты); двухдверный, хромированные ручки, фирменная табличка
 function drawBirusa(g,cx,by,fh){const u=fh/100,w=fh*.44,x=cx-w/2,top=by-fh,ch=lin(g,x,0,x+w,0,['#8d959a','#f2f5f6','#9aa2a7']);
   ell(g,cx,by,w*.62,2.6*u,'rgba(0,0,0,.22)');
   g.fillStyle='#3d3833';g.fillRect(x+w*.08,by-3*u,w*.16,3*u);g.fillRect(x+w*.76,by-3*u,w*.16,3*u);
@@ -1840,9 +1895,9 @@ function drawBirusa(g,cx,by,fh){const u=fh/100,w=fh*.44,x=cx-w/2,top=by-fh,ch=li
   g.fillStyle='rgba(255,255,255,.7)';g.fillRect(x+w*.1,top+1.5*u,w*.8,1.6*u);
   const sy=top+fh*.3;g.fillStyle='rgba(70,60,40,.45)';g.fillRect(x+u*.5,sy,w-u,Math.max(1.3,1.8*u)); // щель между морозилкой и камерой
   g.fillStyle=ch;g.fillRect(x+w*.8,top+fh*.06,Math.max(2,w*.07),fh*.17);g.fillRect(x+w*.8,sy+fh*.06,Math.max(2,w*.07),fh*.34);
-  // табличка «БИРЮСА» — синий шильдик на верхней трети нижней двери
+  // табличка «МОРОЗЕЦ» — синий шильдик на верхней трети нижней двери
   const px=x+w*.16,py=sy+fh*.07,pw=w*.5,ph=Math.max(4,fh*.07);rrect(g,px,py,pw,ph,ph*.3);g.fillStyle='#1f5f99';g.fill();
-  const fs=Math.floor(ph*.78);if(fs>=4){g.fillStyle='#fff';g.font='800 '+fs+'px '+FNT;g.textAlign='center';g.textBaseline='middle';g.fillText(L('БИРЮСА','BIRYUSA'),px+pw/2,py+ph*.54);}
+  const fs=Math.floor(ph*.78);if(fs>=4){g.fillStyle='#fff';g.font='800 '+fs+'px '+FNT;g.textAlign='center';g.textBaseline='middle';g.fillText(L('МОРОЗЕЦ','MOROZETS'),px+pw/2,py+ph*.54,pw*.92);}/* gb-TEXT */
   ell(g,x+w*.3,sy+fh*.34,w*.09,w*.09,'#c0392b');rrect(g,x+w*.52,sy+fh*.3,w*.22,w*.18,1.5*u);g.fillStyle='#f4c542';g.fill(); // магнитики на дверце
 }
 // новогодняя гирлянда: провисающие дуги мишуры с лампочками по верху зала и шары на стыках
@@ -1867,7 +1922,7 @@ function drawFridge(q,x0,y,w,h){q.fillStyle=lin(q,0,y,0,y+h,['#dff0f3','#b6d3da'
   q.fillStyle='#e6eef0';q.fillRect(x0,y,w,Math.max(2,h*.05));}
 // статичная часть зала (стена, плитка, вывеска, плакат, фикус) — в отдельный холст; часы, люди и облачка — каждый кадр
 function buildHall(){const R=HALL;if(!R)return;hallCv=hallCv||document.createElement('canvas');hallCv.width=Math.ceil(R.w*dpr);hallCv.height=Math.ceil(R.h*dpr);const g=hallCv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
-  const col=G&&G.daily?'#8e5a2a':cityOf(G?G.idx:0)[1],w=R.w,h=R.h;
+  const col=G&&G.daily?'#8e5a2a':window.GB&&GB.viewOn?GB.lvInfo(G?G.idx:0).col:cityOf(G?G.idx:0)[1],w=R.w,h=R.h; /* gb-VIEW: цвет зала — по республике (GBU) */
   g.fillStyle=lin(g,0,0,0,h,[shade(col,.86),shade(col,.76)]);g.fillRect(0,0,w,h);
   const ty=R.ty,ts=Math.max(12,Math.min(26,R.tall?w*.075:h*.1));
   if(hasDecor('tiles')){for(let y=ty,r=0;y<h;y+=ts,r++)for(let x=-(r%2)*ts/2,c=0;x<w;x+=ts,c++){g.fillStyle=(r+c)%2?'#d9e7f2':'#fdfdfb';g.fillRect(x,y,ts,ts);if((r+c)%4===0){ell(g,x+ts/2,y+ts/2,ts*.18,ts*.18,'#4f86b8');}}
@@ -1909,13 +1964,29 @@ function drawHall(tk){const R=HALL;ctx.drawImage(hallCv,R.x,R.y,R.w,R.h);
 function custX(k){const R=HALL;return R.x+R.cx0+(k+.5)*R.cw;}
 function drawCustomer(c,tk){const R=HALL,mood=c.st==='happy'?1:c.st==='angry'?-1:c.pat<=3?-1:0;let x=c.x,y=R.y+R.base,a=1;
   if(c.st==='happy'||c.st==='angry'){const k=Math.min(1,c.tt/0.9);a=1-Math.max(0,k-.4)/.6;if(c.st==='happy')y-=Math.abs(Math.sin(c.tt*9))*R.ph*.06;}
-  if(c.shake>0)x+=Math.sin(c.shake*50)*3;ctx.globalAlpha=Math.max(0,a);drawPerson(ctx,c.kind,x,y,R.ph,mood,tk,c.talk);ctx.globalAlpha=1;}
+  if(c.shake>0)x+=Math.sin(c.shake*50)*3;ctx.globalAlpha=Math.max(0,a);drawPerson(ctx,c.kind,x,y,R.ph,mood,tk,c.talk);if(c.st==='happy'&&window.GB&&GB.viewOn)drawThanks(c,x,y);ctx.globalAlpha=1;} /* gb-VIEW: уходит с авоськой и «спасибо» */
+// gb-VIEW: терпение — полоской под покупателем (по верхнему краю прилавка): зелёная → жёлтая → красная; ≤3 хода — мигает
+function drawPat(c,tk){const R=HALL,bw=Math.min(R.cw*.72,92),bh=Math.max(7,Math.min(11,R.h*.04)),x=c.x-bw/2,y=R.y+R.cy-bh-6,f=Math.max(0,Math.min(1,c.pat/c.max));
+  ctx.save();if(c.pat<=3&&!calm())ctx.globalAlpha=.7+Math.sin(tk*10)*.3;ctx.fillStyle='rgba(40,20,5,.5)';rrect(ctx,x-2,y-2,bw+4,bh+4,(bh+4)/2);ctx.fill();
+  ctx.fillStyle='#fff';rrect(ctx,x-1,y-1,bw+2,bh+2,(bh+2)/2);ctx.fill();ctx.fillStyle='#e9dcc4';rrect(ctx,x+1,y+1,bw-2,bh-2,(bh-2)/2);ctx.fill();
+  if(f>0){ctx.fillStyle=f>.5?'#2e8b47':c.pat>3?'#e08a00':'#c62828';rrect(ctx,x,y,Math.max(bh,bw*f),bh,bh/2);ctx.fill();}ctx.restore();}
+// gb-VIEW: довольный покупатель уходит с авоськой (в ней — его товар) и говорит «Спасибо!»
+function drawThanks(c,x,y){const R=HALL,u=R.ph/100,bx=x+27*u,by=y-32*u,bw=26*u,bh=28*u,sp=SPR[c.t];
+  if(sp)ctx.drawImage(sp.c,bx-bw*.4,by-bh*.5,bw*.8,bw*.8*sp.c.height/sp.c.width);
+  ctx.strokeStyle='#6d4c2f';ctx.lineWidth=Math.max(1,1.5*u);ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(bx,by-bh*.55,bw*.3,Math.PI,0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(bx-bw*.5,by-bh*.55);ctx.quadraticCurveTo(bx-bw*.56,by+bh*.4,bx,by+bh*.5);ctx.quadraticCurveTo(bx+bw*.56,by+bh*.4,bx+bw*.5,by-bh*.55);ctx.stroke();
+  for(let k=1;k<4;k++){ctx.beginPath();ctx.moveTo(bx-bw*.5+k*bw/4,by-bh*.55);ctx.lineTo(bx-bw*.25+k*bw/8,by+bh*.45);ctx.stroke();}
+  for(let k=1;k<3;k++){const yy=by-bh*.55+k*bh*.35;ctx.beginPath();ctx.moveTo(bx-bw*.5,yy);ctx.lineTo(bx+bw*.5,yy);ctx.stroke();}
+  const fs=Math.max(11,Math.round(Math.min(R.ph*.17,20))),t=L('Спасибо!','Thanks!');ctx.font='800 '+fs+'px -apple-system,Segoe UI,Roboto,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  const tw=ctx.measureText(t).width,ty=Math.max(R.y+fs,y-R.ph*.98);ctx.fillStyle='#fffdf6';rrect(ctx,x-tw/2-7,ty-fs*.78,tw+14,fs*1.56,fs*.6);ctx.fill();ctx.fillStyle='#2e7d32';ctx.fillText(t,x,ty);}
 // облачко над покупателем: нужный товар и сколько ходов он ещё ждёт
 function drawWant(c,tk){if(c.look||c.st!=='wait'&&c.st!=='in')return;const R=HALL,s=R.bs,x=c.x,y=R.y+R.base-R.ph*.86-s*.62;
   const pulse=c.pat<=3&&!calm()?1+Math.sin(tk*8)*.04:1;ctx.save();ctx.translate(x,y);ctx.scale(pulse,pulse);
   ctx.fillStyle='rgba(0,0,0,.18)';rrect(ctx,-s*.55+2,-s*.52+3,s*1.1,s*1.04,s*.22);ctx.fill();
   ctx.fillStyle='#fffdf6';rrect(ctx,-s*.55,-s*.52,s*1.1,s*1.04,s*.22);ctx.fill();poly(ctx,[-s*.12,s*.5,s*.1,s*.5,-s*.02,s*.7],'#fffdf6');
   const sp=SPR[c.t];if(sp)ctx.drawImage(sp.c,-s*.46,-s*.5,s*.92,s*.92*sp.c.height/sp.c.width);
+  if(c.max<90&&window.GB&&GB.viewOn){ctx.restore();drawPat(c,tk);return;} /* gb-VIEW: терпение — полоской под покупателем */
   if(c.max<90){const bc=c.pat>c.max*.5?'#2e8b47':c.pat>3?'#e08a00':'#c62828',br=Math.max(11,s*.26);ell(ctx,s*.5,s*.4,br,br,bc);ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
   ctx.fillStyle='#fff';ctx.font=`900 ${Math.round(br*1.15)}px -apple-system,Segoe UI,Roboto,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(c.pat),s*.5,s*.42);}ctx.restore();}
 
@@ -1929,7 +2000,7 @@ const calm=()=>S.calm===true||RM;
 // таймер уровня: если за это время начат другой уровень или открыта карта — не срабатывает
 function later(f,ms){const g0=G;return setTimeout(()=>{if(G&&G===g0)f();},ms);}
 const ease=x=>x<0?0:x>1?1:1-Math.pow(1-x,3);
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(window.GB)GB.emit('screen',id);} /* gb */
 // тост живёт не меньше 2,5 с и дольше для длинного текста (кроме коротких служебных)
 function toast(t,ms){if(LANG==='en'&&PAY_EN[t])t=PAY_EN[t];const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
   // на уровне — вверху зала, над вывеской (аудит 14: внизу тост закрывал нижнюю полку, куда надо нажать; внизу зала — реплику Вали)
@@ -1959,17 +2030,19 @@ function levelFor(i,daily){const rid=rareFor(),key=(daily?'d'+todaySeed():i)+':'
   if(!LV_CACHE[key])LV_CACHE[key]=daily?genLevel(DAILY_IDX,todaySeed()*13+5,rid):genLevel(i,levelSeed(i),rid);return LV_CACHE[key];}
 const DAILY_IDX=27; // задание дня — по сложности как 28-й уровень (подъём «пилы» третьего города)
 
-function startLevel(idx,daily){hideModal();STAT.lvl(idx+1,daily?'daily':'');STAT.screen('game');STAT.once('ready',{ms:Math.round(performance.now())});if(!daily&&idx===0&&!(S.levelsDone>0))STAT.ev('tut',{s:1}); /* первые минуты: новичок на уровне 1 */const lv0=levelFor(idx,daily);
+function startLevel(idx,daily){if(window.GB&&G)GB._lvEnd('quit'); /* gb: «Заново» посреди уровня */hideModal();STAT.lvl(idx+1,daily?'daily':'');STAT.screen('game');STAT.once('ready',{ms:Math.round(performance.now())});if(!daily&&idx===0&&!(S.levelsDone>0))STAT.ev('tut',{s:1}); /* первые минуты: новичок на уровне 1 */const lv0=levelFor(idx,daily);
   const lv=Object.assign({},lv0,{sh:lv0.sh.map(L=>L.map(r=>r.slice())),live:1}); // live: «вечный тупик» с коробками разруливает settle
   const st=mkState(lv);settle(lv,st,lv.sh.map((_,j)=>j));
   G={idx:daily?DAILY_IDX:idx,daily:!!daily,lv,st,q:qInit(lv,rng((daily?todaySeed():idx)*31+3)),queue:[],hearts:3,moves:0,angry:0,served:0,undo:[],
     fly:[],pops:[],adv:{},opens:[],fx:[],rings:[],fl:[],hide:{},sel:null,drag:null,hint:null,speech:null,valyaMood:0,valyaTalk:0,table:false,over:false,usedRevive:false,freeUndo:true,x2:false,
     newCard:-1,combo:0,t:0,tutor:!daily&&idx===0,won:false,vetOk:false,vetFront:false,lookN:0};
   G.boss=!daily&&isBoss(idx);
-  // ветеран «без очереди» (аудит 14): раз в 4 уровня с 11-го, не в Ревизию и не в задании дня; встаёт первым, за него +5 💰 в конце уровня.
+  // мама с малышом «без очереди» (аудит 14; до 10.10 — ветеран, убран решением владельца): раз в 4 уровня с 11-го, не в Ревизию и не в задании дня; встаёт первым, за него +5 💰 в конце уровня.
   // Раскладку и очередь (что просят, терпение) не меняет — только кто стоит первым
   G.vetId=!daily&&!G.boss&&idx>=7&&idx%4===2&&lv.K>=2?(lv.K>=6?3:1):-1; // 4-й покупатель приходит позже (встаёт вперёд на глазах), на коротком уровне — 2-й
+  if(window.GBMD&&G.idx>=GBMD.BASE)GBMD._g(G); /* gb-MODE: уровень режима (G.mode, Ревизия, своя очередь) — до очереди и хуков */
   qFill(lv,st,G.q);syncQueue(true);
+  if(window.GB)GB._lvStart(); /* gb */
   show('scr-game');tip('');layout();requestAnimationFrame(layout);
   renderHearts();updHud();updCoins();
   // обучение действием: 1-й — перетащить, 2-й — ряд сзади и терпение очереди (числа видны уже здесь); спецтовары — при первой встрече.
@@ -1994,13 +2067,13 @@ function updHud(){if(!G)return;const w=window.innerWidth||400,nar=w<=400,tiny=w<
 function renderHearts(){let s='';for(let i=0;i<3;i++)s+=`<span class="${i<G.hearts?'':'off'}">❤️</span>`;$('gHearts').innerHTML=s;}
 
 /* ---- очередь на экране: покупатели входят справа, довольные уходят влево, обиженные — вправо ---- */
-function kindFor(id){if(G.boss&&id===G.lv.K-1)return'revizor';if(id===G.vetId)return'veteran';return KINDS[(id*5+G.idx*3+(G.daily?2:0))%KINDS.length];}
+function kindFor(id){if(G.boss&&id===G.lv.K-1)return'revizor';if(id===G.vetId)return'mama';return KINDS[(id*5+G.idx*3+(G.daily?2:0))%KINDS.length];}
 function syncQueue(first){const vis=G.q.vis;
-  const vi=vis.findIndex(v=>v.id===G.vetId);if(vi>=0&&!G.vetFront){G.vetFront=true;if(vi>0)vis.unshift(vis.splice(vi,1)[0]);later(()=>say(pick(PH.valya.veteran),'valya'),first?2600:300);}
+  const vi=vis.findIndex(v=>v.id===G.vetId);if(vi>=0&&!G.vetFront){G.vetFront=true;if(vi>0)vis.unshift(vis.splice(vi,1)[0]);later(()=>say(pick(PH.valya.mama),'valya'),first?2600:300);}
   for(const c of G.queue)if(c.st==='wait'||c.st==='in'){const v=vis.find(x=>x.id===c.id);if(v){c.pat=v.pat;c.max=v.max;c.t=v.t;}}
   vis.forEach((v,k)=>{let c=G.queue.find(x=>x.id===v.id&&(x.st==='wait'||x.st==='in'));
     if(!c){c={id:v.id,t:v.t,pat:v.pat,max:v.max,kind:kindFor(v.id),st:first?'wait':'in',tt:0,talk:0,shake:0,x:first?null:HALL?HALL.x+HALL.w+60:9999,slot:k};G.queue.push(c);
-      if(c.kind==='veteran')later(()=>askLine(c),first?4200:1900);else if(!first&&Math.random()<.45)later(()=>askLine(c),450);}
+      if(c.kind==='mama')later(()=>askLine(c),first?4200:1900);else if(!first&&Math.random()<.45)later(()=>askLine(c),450);}
     c.slot=k;});}
 // зевака: заходит, говорит «Я только посмотреть!» и уходит; ничего не просит
 function spawnLook(){if(!G||G.over||!HALL||G.queue.some(c=>c.look))return;G.lookN++;
@@ -2031,7 +2104,7 @@ function hallTall(R){const w=R.w,h=R.h,m=Math.max(6,w*.03),fic=hasDecor('ficus')
 function hallStd(R){
   R.vx=0;R.vw=Math.min(R.w*.24,R.h*.62);R.cx0=R.vw*.78;R.birW=hasDecor('birusa')?Math.max(30,R.w*.12):0;const end=R.w-(hasDecor('ficus')?Math.max(22,R.w*.08):R.w*.02)-R.birW;R.cw=(end-R.cx0)/3;
   // сверху вывеска, под ней облачка, под облачками головы покупателей (по пояс за прилавком)
-  R.sh=Math.max(22,Math.min(R.h*.12,40));R.sy=Math.max(4,R.h*.025);R.bs=Math.min(R.cw*.7,R.h*.27,86);
+  R.sh=Math.max(22,Math.min(R.h*.12,40));R.sy=Math.max(4,R.h*.025);R.bs=window.GB&&GB.viewOn?Math.min(R.cw*.78,R.h*.31,92):Math.min(R.cw*.7,R.h*.27,86); /* gb-VIEW: облачко крупнее (≈50 px на 360) */
   const headTop=R.sy+R.sh+4+R.bs*1.12;R.ph=Math.max(40,Math.min((R.h*.84-headTop)/.86,R.cw*1.15));
   // прилавок, линия покупателей, плитка, стена и Валя (у нас — внизу слева, видна по плечи)
   R.cy=R.h*.8;R.base=R.h*.84;R.ty=R.h*.5;R.ckx=Math.max(26,R.w*.08);R.ckr=Math.max(12,Math.min(R.h*.1,26));R.ckY=R.h*.3;R.posY=R.h*.24;R.posW=Math.min(R.w*.14,70);R.lampL=R.h*.24;R.lampW=Math.max(14,R.h*.09);R.ficH=Math.min(R.h*.72,90);
@@ -2045,7 +2118,7 @@ function layout(){if(!G)return;const r=stage.getBoundingClientRect();if(r.width<
   let tall=false;
   if(land){let hw=Math.round(Math.min(Math.max(W*.34,230),400));tall=H>hw&&H>=380;if(tall)hw=Math.round(Math.min(Math.max(W*.38,240),440));HALL={x:0,y:0,w:hw,h:H};AREA={x:hw+4,y:4,w:W-hw-8,h:H-8};}
   // портрет: при 5+ полках зал ниже — товары крупнее (аудит 14: на телефоне 35–40 px, по бокам витрины пусто)
-  else{const hh=Math.round(Math.max(130,Math.min(H*(G.lv.S>=5&&H>=520?0.27:0.34),250)));HALL={x:0,y:0,w:W,h:hh};AREA={x:4,y:hh+2,w:W-8,h:H-hh-4};}
+  else{const vw=window.GB&&GB.viewOn,hh=Math.round(Math.max(130,Math.min(H*(G.lv.S>=5&&H>=520?(vw?0.29:0.27):(vw?0.35:0.34)),vw?270:250))); /* gb-VIEW: зал чуть выше — облачко заказа крупнее */HALL={x:0,y:0,w:W,h:hh};AREA={x:4,y:hh+2,w:W-8,h:H-hh-4};}
   // подсказка: в альбомной — только над витриной (не закрывает Валю и её реплику)
   const te=$('tip');te.style.left=land?(AREA.x+6)+'px':'';
   // место под подсказку держим до конца уровня и по самой высокой из очереди — иначе витрина прыгала 2↔1 колонка при каждой подсказке (аудит 18)
@@ -2139,6 +2212,10 @@ function afterMove(ev,delay,isMove){let clears=0,rare=-1,lonely=0;
   // очередь кончилась, а товар ещё есть: тройка уходит «в кассу» с репликой Вали, иногда заглядывает зевака (аудит 14: «пустой зал»)
   if(lonely&&G.st.n>0){if(Math.random()<.45)later(()=>{if(G&&!G.speech)say(pick(PH.valya.kassa),'valya');},delay*1000+600);
     if(G.lookN<2&&!G.queue.some(c=>c.look)&&Math.random()<.35)later(spawnLook,delay*1000+900);}
+  // POLISH 11.10 (QA-RU Ф4): очередь обслужена, а товар на полках остался — ясный знак, что уровень не завис (раз за уровень; не в «Приёмке» без покупателей)
+  if(!G.qDone&&G.lv.K>0&&G.q.left<=0&&!G.q.vis.length&&G.st.n>0&&!G.over){G.qDone=1;
+    later(()=>{if(!G||G.over||G.won)return;const t=L('Покупатели обслужены! Осталось убрать остатки с полок — собирайте тройки.','All customers served! Now clear what’s left on the shelves — keep making triples.');
+      say(t,'valya');G.tipQ=[];G.tipOn=false;G.tipCur=null;tip('✅ '+t);},delay*1000+900);}
   if(rare>=0){const isNew=!S.album.includes(rare);if(isNew){S.album.push(rare);G.newCard=rare;save();}
     later(()=>{say(pick(PH.valya.rare),'valya');toast((isNew?L('⭐ Новое в коллекции: ','⭐ New in the collection: '):L('⭐ Дефицит: ','⭐ Rare goods: '))+RARE[rare].n);},delay*1000+500);}
   // терпение тает только от хода без тройки
@@ -2165,7 +2242,7 @@ function updUndo(){$('bUndo').classList.toggle('off',!(G&&G.undo.length));}
 // экономика (аудит 12, 27.09; модель ~/Projects/hobby-analytics/sims/gastronom-econ.py): первая отмена хода на уровне — бесплатно, дальше 10 💰;
 // задание дня 30 💰 + серия дней; +30 💰 за рекламу — не больше AD_DAY раз в день; межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут
 const PRICE={undo:10,hint:30,mix:40,table:60,life:60},DAILY_REWARD=30,AD_FROM=6;
-let AD_COINS=30,AD_DAY=5,AD_EVERY=3,AD_MIN=4,AD_GAP=60000,X2_ON=true;
+let AD_COINS=30,AD_DAY=5,AD_EVERY=3,AD_MIN=4,AD_GAP=60000,X2_ON=false; /* gb-ECO: «×2 за ролик» убран (решение владельца 10.10: 410 показов → 8 досмотров) */
 // удалённая настройка Яндекса (флаги в консоли; нет флага — действуют значения выше). Рамки жёсткие, значение вне рамок не принимается:
 // ad_every 2–6 уровней, ad_minutes 3–8, ad_gap 60–300 с (межэкранная не чаще), ad_coins 10–100, ad_day 1–10, цены бустеров — см. ниже, x2=0 — выключить ×2
 function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
@@ -2473,7 +2550,7 @@ function showRewarded(cb0,onFail0,late0){
         st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(adShut(e)?AD_CLOSED_T():AD_FAIL_T());adPreload('err');}
         onFail();adDim();});}; /* adDim после onFail: окно могло перерисоваться — гасим и новую кнопку сразу */
     go();return;}
-  if(!ysdk){STAT.ad('rew','ok','stub');stubAd(cb);return;}
+  if(!ysdk){if(AD_LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail',window.__sdkDone?'nosdk':'loading');toast(AD_FAIL_T());onFail();}return;} /* gb: Яндекс без SDK — награду даром не даём (заглушка только на маке/LAN, AD_LOCAL; образец Дурака) */
   let got=false;adWatch(rel);
   const lateY=f=>{if(!adBusy)adClose();f();}; /* поздние колбэки Яндекса: ролик мог поставить паузу — снимаем, если не идёт другой */
   ysdk.adv.showRewardedVideo({callbacks:{onOpen:adOpen,onRewarded:()=>{got=true;},
@@ -2485,20 +2562,46 @@ function showRewarded(cb0,onFail0,late0){
 // межэкранная — не чаще раза в AD_GAP после ЛЮБОЙ рекламы (и за награду тоже) и после запуска
 function adReady(){return Date.now()-lastAdT>=AD_GAP&&adOk();}
 // реклама вообще возможна: в настоящем VK без моста — нет (кнопок «за рекламу» не показываем)
-function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
+var AD_LOCAL=/^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|.*\.local|.*\.localhost)$/.test(location.hostname)||location.protocol==='file:';
+function adOk(){if(PLAT==='vk')return !(!VK&&VK_REAL);return !!ysdk||AD_LOCAL||!window.__sdkDone;} /* gb: на Яндексе без SDK кнопок «за рекламу» нет */
 // межэкранная «положена»: не раньше, чем пройден 6-й уровень, и либо AD_EVERY побед с прошлого показа (S.adW, долг не сгорает),
 // либо с прошлой рекламы прошло AD_MIN минут (длинные уровни 60+ идут по 4–6 минут)
 function adDue(){return !PAY.own('no_ads')&&(S.unlocked||1)>AD_FROM&&((S.adW||0)>=AD_EVERY||Date.now()-lastAdT>=AD_MIN*60000);}
 // долг S.adW обнуляется только после настоящего показа (Яндекс wasShown, VK result) — как в «Выезде» (аудит 14)
 /* STAT v1.2: итог межэкранной — show | none nofill (площадка не дала) | none nosdk (нет моста); положена, но рано — adWhy(): gap (после прошлой межэкранной) / cap (после ролика или запуска) */
 let lastIntT=0;
-function adWhy(){STAT.ad('int','none',!adOk()?'nosdk':Date.now()-lastIntT<AD_GAP?'gap':'cap');}
+function adWhy(){const n=Date.now();if(adOk()&&VK&&(n<intPauseT||vkIntOk===false)){intPre();return;} /* gb-TECH: VK заранее «нет» / пауза после 2 отказов */STAT.ad('int','none',!adOk()?'nosdk':n-lastIntT<AD_GAP?'gap':'cap');}
+/* gb-TECH (10.10, буст): межэкранная VK — предпроверка и пауза после отказов (было: nofill 47 % обращений, серии до 31 отказа подряд, 6 раз игрок ждал 60 с).
+   vkIntLoad() — VKWebAppCheckNativeAds{interstitial} заранее (через 4 с после моста, через 3 с после показа, при открытии «Кассы», если ответ старше INT_FRESH), ответ помним (vkIntOk).
+   «Дальше»: VK заранее сказал «нет» — переход сразу, без «Реклама через секунду…», VK не спрашиваем (ad int none c=pre); переспросить — не раньше INT_NO_MS.
+   Два отказа показа подряд (nofill/ошибка) — INT_PAUSE_MS (3 мин, решение владельца) без запросов вовсе: ad int none c=pause. Ошибки VK — с кодом (ad int err c=<код>).
+   Ответа ещё не было — как раньше (пробуем показать). Яндекс — без изменений. Числа — let (стенд укорачивает). */
+let INT_NO_MS=60000,INT_PAUSE_MS=180000,INT_FRESH=60000,INT_WD=15000;
+let vkIntOk=null,vkIntT=0,vkIntBusy=0,intFails=0,intPauseT=0;
+function vkIntLoad(){if(!VK||document.hidden||pauseWhy.has('hide')||vkIntBusy)return;vkIntBusy=1;vkIntT=Date.now();
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'},5000).then(r=>!!(r&&r.result),()=>false).then(ok=>{vkIntBusy=0;vkIntOk=ok;vkIntT=Date.now();STAT.adChk('int',ok?1:0);});}
+// без записи в статистику: можно ли сейчас просить межэкранную (VK не сказал «нет», нет паузы после отказов)
+function intOk(){if(!VK)return true;return Date.now()>=intPauseT&&vkIntOk!==false;}
+// «Касса» открылась и межэкранная может понадобиться — освежить ответ VK заранее (пока игрок смотрит чек)
+function intFresh(){if(VK&&Date.now()>=intPauseT&&(vkIntOk===null||Date.now()-vkIntT>=(vkIntOk?INT_FRESH:INT_NO_MS)))vkIntLoad();}
+// true — показывать можно (или ещё не знаем); false — VK сказал «нет» / пауза после отказов: переход без рекламы (пишет ad int none pre|pause)
+function intPre(){if(!VK)return true;const n=Date.now();
+  if(n<intPauseT){STAT.ad('int','none','pause');return false;}
+  if(vkIntOk===false){STAT.ad('int','none','pre');if(n-vkIntT>=INT_NO_MS)vkIntLoad();return false;}
+  return true;}
+function intRes(ok){if(ok){intFails=0;return;}if(++intFails>=2){intFails=0;intPauseT=Date.now()+INT_PAUSE_MS;}}
 function showInterstitial(cb0){
   const cb=shown=>{lastAdT=Date.now();if(shown){lastIntT=lastAdT;STAT.ad('int','show');S.adW=0;save();}else STAT.ad('int','none','nofill');cb0();};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nosdk');cb0();}else stubAd(()=>cb(true));return;}
+  if(VK&&!intPre()){cb0();return;} /* gb-TECH: VK заранее «нет» / пауза после отказов — игру не останавливаем */
   STAT.adReq('int');
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();cb(!!(r&&r.result));},()=>{adClose();cb(false);});return;}
-  if(!ysdk){stubAd(()=>cb(true));return;}
+  if(VK){adOpen();vkIntOk=null;let fin=0,away=0,wd=0;const onA=()=>{away=1;},onV=()=>{if(document.hidden)away=1;};
+    // gb-TECH: VK молчит, а ролика не видно (окно игры не теряло фокус и не пряталось) — ждём INT_WD мс, не минуту (было: 6 раз «чёрный экран» 60 с)
+    window.addEventListener('blur',onA);document.addEventListener('visibilitychange',onV);wd=setTimeout(()=>{if(!away)end(false,'wd');},INT_WD);
+    const end=(ok,why)=>{if(fin)return;fin=1;clearTimeout(wd);window.removeEventListener('blur',onA);document.removeEventListener('visibilitychange',onV);adClose();intRes(ok);lastAdT=Date.now();
+      if(ok){lastIntT=lastAdT;STAT.ad('int','show');S.adW=0;save();}else if(why)STAT.ad('int','err',why);else STAT.ad('int','none','nofill');cb0();setTimeout(vkIntLoad,3000);};
+    vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>end(!!(r&&r.result)),e=>end(false,adNoFill(e)?'':String(adErrCode(e)||'x')));return;} /* gb-TECH: коды ошибок VK (образец Дурака) */
+  if(!ysdk){if(AD_LOCAL)stubAd(()=>cb(true));else{STAT.ad('int','none','nosdk');cb0();}return;} /* gb: без SDK межэкранной нет (заглушка — только локально) */
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();cb(false);}}});
 }
 
@@ -2736,9 +2839,9 @@ function valyaDraw(){requestAnimationFrame(()=>{const c=$('vsCv');if(!c)return;c
   g.save();g.beginPath();g.arc(w/2,w/2,w/2,0,Math.PI*2);g.clip();g.fillStyle='#f6dcb0';g.fillRect(0,0,w,w);drawPerson(g,'valya',w/2,w*1.3,w*1.12,1,0,0);g.restore();});}
 // окно поверх (💰/⚙ нажали в последнюю секунду) — закрываем его: победа не теряется (аудит 14)
 function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true;YG.stop();SND.win();const st=Math.max(1,3-G.angry),i=G.idx;
-  const vline=pick(PH.valya.win);say(vline,'valya');qEnd(true,st);STAT.end('win',Object.assign({st},stEnd()));
+  const vline=pick(PH.valya.win);say(vline,'valya');qEnd(true,st);STAT.end('win',Object.assign({st},stEnd()));if(window.GB)GB._lvEnd('win',{st:st}); /* gb */
   // задание дня: в первый раз за день — 30 💰 и серия дней; повтор — как обычный уровень
-  let reward=(2*st+Math.ceil(G.served/2))*(G.boss?2:1),sk=null,bonus=0,chest=0;
+  let reward=window.GBECO&&GBECO.on?GBECO.lvlReward(st,G):(2*st+Math.ceil(G.served/2))*(G.boss?2:1),sk=null,bonus=0,chest=0; /* gb-ECO: числа — GBECO.lvl */
   if(G.daily){const first=!S.daily[todayKey()];S.daily[todayKey()]=Math.max(S.daily[todayKey()]||0,st);if(first){QUEST.event('daily');sk=streakWin();reward=DAILY_REWARD+(sk?sk.bonus:0);}}
   else{S.stars[i]=Math.max(S.stars[i]||0,st);S.unlocked=Math.max(S.unlocked,i+2);S.levelsDone++;if(S.levelsDone<=3)STAT.ev('tut',{s:2+S.levelsDone});S.adW=Math.min((S.adW||0)+1,2*AD_EVERY); // потолок: в VK без моста межэкранной нет, долг не копится без конца (аудит 18)
     if(G.vetOk)bonus+=VET_BONUS;
@@ -2749,23 +2852,28 @@ function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true
   S.coins+=reward+bonus;save();updCoins();setTimeout(()=>SND.coin(),500);
   const card=G.newCard,cityDone=!G.daily&&G.boss,cs=G.daily?0:cityStars(Math.floor(i/10)),nd=nextDecor(),canBuy=!G.daily&&nd&&S.coins>=nd.p;
   // межэкранная после «Дальше»: не после Ревизии и новой карточки; решаем сразу — чтобы не предлагать ×2 и оценку перед роликом
-  const adAsk=!G.daily&&!cityDone&&card<0,adNext=adAsk&&adDue()&&adReady();
+  const adAsk=!G.daily&&!cityDone&&card<0,adNext=adAsk&&adDue()&&adReady()&&intOk();if(adAsk&&adDue())intFresh(); /* gb-TECH: VK заранее «нет» — без межэкранной */
   // ×2 за рекламу: не на первых трёх уровнях, не когда следом межэкранная (два ролика подряд), один раз за уровень, в VK — только с мостом
   const x2=X2_ON&&(G.daily||i>=3)&&!adNext&&adOk();
   const nextT=CHEST.slice().reverse().find(x=>cs<x[0]);
-  modal(`<h2>${cityDone?L('Ревизия пройдена! 🏆','Inspection passed! 🏆'):L('Всё продано! 🎉','All sold out! 🎉')}</h2><div class="big-stars">${starsHtml(st)}</div>
+  const gbW=window.GB?GB.winCtx({st,card,first:!!(G.gbInfo&&G.gbInfo.first),busy:adNext||card>=0||cityDone||dOpen||!!chest||!!sk}):null; /* gb: гнёзда «Кассы» */
+  const vwK=window.GB&&GB.viewOn&&GB.kassaHtml?{st,i,reward,bonus,chest,sk,card,cityDone,cs,nextT,dOpen,x2,vline,canBuy,gbW,daily:!!G.daily,served:G.served,angry:G.angry,vet:!!(G.vetOk&&!G.daily),lb:!!(G.daily&&LB.ok())}:null; /* gb-VIEW: «Касса» */
+  modal(vwK?GB.kassaHtml(vwK):`<h2>${cityDone?L('Ревизия пройдена! 🏆','Inspection passed! 🏆'):L('Всё продано! 🎉','All sold out! 🎉')}</h2><div class="big-stars">${starsHtml(st)}</div>
     ${valyaHtml(QQ(vline))}
     <p>${G.daily?L('Задание дня выполнено! Завтра будет новое.','Daily task done! A new one comes tomorrow.'):L('Обслужено покупателей: ','Customers served: ')+G.served+(G.angry?L(', ушли недовольными: ',', left unhappy: ')+G.angry:'')}</p>
     ${cityDone?'<p><b>'+L('Дальше — '+cityOf(i+1)[0]+'!','Next stop: '+cityOf(i+1)[0]+'!')+'</b></p>':''}
     <p class="coins-won" id="mWon">+${reward+bonus} 💰</p>
-    ${G.vetOk&&!G.daily?'<p><small>'+L('🎖 Ветерану — уважение: +','🎖 Respect for the veteran: +')+VET_BONUS+' 💰</small></p>':''}
+    ${G.vetOk&&!G.daily?'<p><small>'+L('👶 Маме с малышом — спасибо: +','👶 Thanks from the mum: +')+VET_BONUS+' 💰</small></p>':''}
     ${chest?`<div class="chest">${L('📜 Грамота «Лучший магазин города»','📜 "Best Store in Town" certificate')}: ${cs}★ — +${chest} 💰</div>`:cityDone&&nextT?`<p><small>${L('📜 Грамота города: соберите '+nextT[0]+'★ (сейчас '+cs+'★)','📜 Town certificate: collect '+nextT[0]+'★ (now '+cs+'★)')} — +${nextT[1]-(S.chest&&S.chest[Math.floor(i/10)]||0)} 💰</small></p>`:''}
     ${sk?'<div id="mStreak">'+streakHtml(sk.day)+'</div>':''}
     ${card>=0?`<div class="newcard"><p>${L('⭐ Новое в коллекции «Дефицит»:','⭐ New in the Rare Goods collection:')} <b>${RARE[card].n}</b></p><canvas id="ncv"></canvas></div>`:''}
     ${dOpen?'<div class="chest">'+L('📅 Открылось задание дня: каждый день +'+DAILY_REWARD+' 💰 и подарок за серию дней!','📅 Daily task unlocked: +'+DAILY_REWARD+' 💰 every day and a gift for a streak!')+'</div>':''}
     ${G.daily?'':goalHtml()}
+    ${gbW?GB.winHtml(gbW):''}
     <div class="row">${G.daily?'':'<button class="btn green big" id="mNext">'+L('Дальше →','Next →')+'</button>'}${x2?`<button class="btn x2b rw" id="mX2">${L('📺 ×2 монеты за рекламу','📺 ×2 coins for an ad')} <span class="nw">(+${reward}&nbsp;💰${bonus?L(' за уровень',' for the level'):''})</span></button>`:''}${sk&&sk.lost&&adOk()?`<button class="btn accent rw" id="mRes">${L('📺 Вернуть серию за рекламу','📺 Restore streak for an ad')} <span class="nw">(${L('день','day')} ${sk.lost+1})</span></button>`:''}${G.daily&&LB.ok()?'<button class="btn accent" id="mLb">'+L('🏆 Рейтинг','🏆 Leaderboard')+'</button>':''}${dOpen?'<button class="btn x2b noent" id="mDaily">'+L('📅 К заданию дня','📅 Go to the daily task')+'</button>':''}${canBuy?'<button class="btn noent" id="mShop">'+L('🏪 Обставить магазин','🏪 Decorate the store')+'</button>':''}<button class="btn" id="mMap">${L('На карту','To the map')}</button></div>`);
   if(card>=0)cardCanvas('ncv',RARE0+card);
+  if(gbW)GB.winMount(gbW); /* gb */
+  if(vwK)GB.kassaAfter(vwK); /* gb-VIEW: примерка окна, монеты в счётчик */
   socEarly(adNext||card>=0||cityDone||dOpen||!!chest||!!sk); /* ntf: вопрос про напоминания — сразу, до первого кадра окна */
   valyaDraw();if(!G.daily)goalDraw();
   if(G.daily){LB.submit();const b=$('mLb');if(b)b.onclick=LB.show;}
@@ -2788,15 +2896,17 @@ function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true
   setTimeout(()=>offerReturn(adNext||!(G===g&&modalOn)),2200);
   // межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут, первая — после 6-го уровня; перед показом — предупреждение.
   // После Ревизии «Дальше» ведёт на карту: новый город открывается на глазах (аудит 14)
-  const n=$('mNext');if(n)n.onclick=()=>{n.disabled=true;const go=cityDone?()=>openMap({city:Math.floor((i+1)/10)}):()=>startLevel(i+1);
-    if(adNext&&adReady()){toast(L('Реклама через секунду…','Ad in a second…'),1200);setTimeout(()=>showInterstitial(go),1000);}else{if(adAsk&&adDue())adWhy();go();}};
+  const n=$('mNext');if(n)n.onclick=()=>{n.disabled=true;const go=cityDone&&!vwK?()=>openMap({city:Math.floor((i+1)/10)}):()=>startLevel(i+1); /* gb-VIEW: после Ревизии — сразу уровень, новый город плашкой в уровне */
+    if(adNext&&adReady()&&intOk()){toast(L('Реклама через секунду…','Ad in a second…'),1200);setTimeout(()=>showInterstitial(go),1000);}else{if(adAsk&&adDue())adWhy();go();}}; /* gb-TECH: intOk */
   const md=$('mDaily');if(md)md.onclick=()=>startLevel(0,true);
   const ms=$('mShop');if(ms)ms.onclick=()=>{hideModal();openShop();};
   $('mMap').onclick=()=>{hideModal();openMap();};}
-function lose(){if(!G)return;YG.stop();SND.stuck();qEnd(false,0);STAT.end('lose',stEnd());const canPay=S.coins>=PRICE.life;
+function lose(){if(!G)return;YG.stop();SND.stuck();qEnd(false,0);STAT.end('lose',stEnd());if(window.GB)GB._lvEnd('lose'); /* gb */const canPay=S.coins>=PRICE.life;const gbL=window.GB?GB.winCtx({rev:!!G.gbRev}):null;
   modal(`<h2>${L('Очередь обиделась 😟','The queue got upset 😟')}</h2><p>${L('Трое покупателей ушли, не дождавшись. Тётя Валя вздыхает: «Бывает…» Попробуем ещё?','Three customers gave up and left. Aunt Valya sighs: "It happens…" Shall we try again?')}</p>
+    ${gbL?GB.loseHtml(gbL):''}
     <div class="row">${canPay?`<button class="btn accent buy" id="mLife">${L('❤️ Ещё попытка','❤️ One more try')} — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent rw" id="mRev">'+L('📺 Ещё попытка за рекламу','📺 One more try for an ad')+'</button>'}<button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn" id="mMap2">${L('На карту','To the map')}</button></div>`);
-  const revive=()=>{STAT.lvl(G.idx+1,'rev');G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();kick();if(!hasMove(G.lv,G.st))stuck();};
+  if(gbL)GB.loseMount(gbL); /* gb */
+  const revive=()=>{if(window.GB)GB._lvRevive(); /* gb */STAT.lvl(G.idx+1,'rev');G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();kick();if(!hasMove(G.lv,G.st))stuck();};
   if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);SND.coin();STAT.ev('spend',{k:'life',c:PRICE.life});revive();};
   const r=$('mRev');if(r){STAT.offer('life');r.onclick=()=>{const g=G;hideModal();STAT.place('life');showRewarded(()=>{G.usedRevive=true;revive();},lose,
     ()=>{if(G===g&&G.over&&modalOn&&$('mRev')&&$('scr-game').classList.contains('on')){G.usedRevive=true;revive();return L('❤️ ещё попытка','❤️ one more try');}return adLateCoins(PRICE.life);});};} /* adt: поздний досмотр — попытка, только если то же окно поражения ещё открыто; иначе монеты по цене попытки */
@@ -2823,7 +2933,7 @@ function stuck(){if(!G||G.over||modalOn)return;SND.stuck();G.nStuck=(G.nStuck||0
 /* ================= карта городов ================= */
 function totalStars(){let n=0;for(const k in S.stars)n+=S.stars[k]||0;return n;}
 // o.city — только что открытый город (после Ревизии): вывеска «загорается», карта показывает его (аудит 14)
-function openMap(o){o=o||{};if(G){YG.stop();STAT.end('quit',stEnd());}STAT.once('menu');STAT.once('ready',{ms:Math.round(performance.now())});STAT.screen('map');if(S.levelsDone===1&&!tutMap){tutMap=true;STAT.ev('tut',{s:6});} /* карта после первой победы */G=null;tip('');hideModal();updQuest();const list=$('mapList');list.innerHTML='';let newEl=null;
+function openMap(o){o=o||{};if(G){YG.stop();STAT.end('quit',stEnd());if(window.GB)GB._lvEnd('quit'); /* gb: после победы/поражения уже был исход — второй раз не придёт */}STAT.once('menu');STAT.once('ready',{ms:Math.round(performance.now())});STAT.screen('map');if(S.levelsDone===1&&!tutMap){tutMap=true;STAT.ev('tut',{s:6});} /* карта после первой победы */G=null;tip('');hideModal();updQuest();const list=$('mapList');list.innerHTML='';let newEl=null;
   const cur=S.unlocked-1,cities=Math.max(1,Math.floor(cur/10)+1);
   for(let c=0;c<=cities&&c<100;c++){const [name,col]=CITIES[c%CITIES.length],from=c*10,open=from<S.unlocked;let cs=0;for(let i=from;i<from+10;i++)cs+=S.stars[i]||0;
     const h=document.createElement('div');h.className='city'+(open?'':' locked');h.style.background=`linear-gradient(${shade(col,.12)},${col})`;
@@ -2847,7 +2957,8 @@ function openMap(o){o=o||{};if(G){YG.stop();STAT.end('quit',stEnd());}STAT.once(
   show('scr-map');const c=list.querySelector('.node.cur');if(c)c.scrollIntoView({block:'center'});
   if(newEl){newEl.scrollIntoView({block:'start'});toast(L('🏙 Открыт новый город: ','🏙 New town unlocked: ')+CITIES[o.city%CITIES.length][0]+'!');SND.till(2);}
   // пока игрок смотрит карту — заранее строим текущий уровень и задание дня (без «зависания» по нажатию)
-  setTimeout(()=>{if(G||!$('scr-map').classList.contains('on'))return;try{levelFor(S.unlocked-1);if(S.unlocked>=7&&!S.daily[todayKey()])levelFor(0,true);}catch(e){}},700);}
+  setTimeout(()=>{if(G||!$('scr-map').classList.contains('on'))return;try{levelFor(S.unlocked-1);if(S.unlocked>=7&&!S.daily[todayKey()])levelFor(0,true);}catch(e){}},700);
+  if(window.GB)GB.home();} /* gb: гнёзда главного */
 $('btnDaily').onclick=()=>{if(S.unlocked<7){toast(L('Задание дня откроется после 6-го уровня','The daily task unlocks after level 6'));return;}startLevel(0,true);};
 $('btnShop').onclick=()=>openShop();$('btnAlbum').onclick=()=>openAlbum();$('btnMore').onclick=()=>{STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();};
 // плитка «Ещё игры» (переход в другую игру) — для статистики
@@ -2943,7 +3054,7 @@ $('shopBack').onclick=openMap;$('albBack').onclick=openMap;
 function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="off">'+L('выкл','off')+'</i>';
   modal(`<h2>${L('Настройки','Settings')}</h2>
     <button class="set" id="stSnd"><span>${L('🔊 Звуки','🔊 Sounds')}</span>${on(S.sound!==false)}</button>
-    <button class="set" id="stMus"><span>${L('🎵 Музыка','🎵 Music')}</span>${on(!!S.music)}</button>
+    ${window.NO_MUSIC?'':`<button class="set" id="stMus"><span>${L('🎵 Музыка','🎵 Music')}</span>${on(!!S.music)}</button>`}
     <button class="set" id="stVib"><span>${L('📳 Вибрация','📳 Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stCalm"><span>${L('🌿 Спокойный режим<br><small>без тряски и пульсации</small>','🌿 Calm mode<br><small>no shaking or pulsing</small>')}</span>${on(calm())}</button>
     ${STAT.available()?'<button class="set" id="stStat"><span>'+L('📊 Анонимная статистика','📊 Anonymous statistics')+'<br><small>'+STAT.note()+'</small></span>'+on(STAT.enabled())+'</button>':''}
@@ -3069,7 +3180,11 @@ setLang(LANG);
   else{S.unlocked=Math.max(S.unlocked,+d||1);startLevel(Math.max(0,Math.min(199,(+d||1)-1)));}})();
 // VK: мост из js/vk-bridge.min.js (только в VK-сборке). Яндекс: SDK по относительному пути; локально 404 → заглушки рекламы
 // SOC: счёт сессий и соц-функции VK (в Яндексе молчит); окна — через modal() игры, Enter их кнопки не жмёт (noent)
-SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noent',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,now:()=>nowMs(),
+/* gb-TECH (10.10): лента друзей, таблица и миссии VK — игра только сообщает модулю SOC «уровень / миссия» (js/vkm-gb.js, список — tools/missions_gb.py),
+   он молча шлёт их в нашу функцию (hobby-pay, ?op=vkev), та — в VK. Только ВКонтакте с мостом; в ОК, Яндексе и на маке без vk_app_id — ни запроса.
+   Номер миссии 0 (не заведена в кабинете) — не отправляется. На маке адрес можно подменить: ?evurl=http://localhost:порт/ */
+const EV_URL=(()=>{const m=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]evurl=([^&#]*)/.exec(location.search);return m?decodeURIComponent(m[1]):'https://functions.yandexcloud.net/d4e7egf62asn7suf30m0?op=vkev';})();
+SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noent',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,now:()=>nowMs(),evUrl:EV_URL,evId:c=>window.VKM_GB?VKM_GB.id(c):0, /* gb-TECH */
   // ntf (06.10): разрешение на напоминания VK — спрашивает тётя Валя, до 3 раз за всё время (1-й, 3-й, 7-й день игрока — правила в модуле SOC), каждый раз свой повод. Наград нет. В ОК, Яндексе и без моста модуль молчит сам
   ntf:{t:n=>ntfText(n),
     b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Договорились! Часто беспокоить не стану.','Deal! I will not bother you often.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}});
@@ -3079,12 +3194,90 @@ QUEST.init(S,{save:()=>save(),toast:t=>toast(t),now:()=>nowMs(),ok:()=>adOk()&&!
   grant:qGrant,cur:n=>n+' 💰',rTxt:r=>r&&r.talon?'🎫 '+L('талон','coupon'):'',cls:'btn noent',
   modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),onChange:()=>updQuest(),log:qLog,
   note:()=>{const nx=QDECOR.find(d=>!hasDecor(d.id));return nx?L('🎫 Талоны ударника — за главный приз. За '+nx.t+' талонов — «'+nx.n+'» (у вас '+(S.qTal||0)+'). В магазине такого не купить!','🎫 Shock-worker coupons come from the big prize. '+nx.t+' coupons get you the '+nx.n+' (you have '+(S.qTal||0)+'). Not sold in the store!'):L('🎫 Все вещи за талоны уже в зале — спасибо за работу!','🎫 All coupon items are already in your store — great work!');},
-  chain:[{t:'play',n:1,r:5},{t:'ad',r:5},{t:'win',n:2,r:10},{t:'play',n:4,r:10},{t:'ad',r:10},{t:'win',n:4,r:15},{t:'chest',r:{talon:1}}],
+  chain:[{t:'play',n:1,r:5},{t:'ad',r:5},{t:'win',n:2,r:10},{t:'play',n:4,r:10},{t:'ad',r:10},{t:'win',n:4,r:15},{t:'chest',r:{talon:1}}].filter(x=>x.t!=='ad'||!(window.GB&&GB.flag('eco'))), /* gb-ECO: без ролика в цепочке (59 показов → 0) */
   ladder:{r:[10,15,25,40,60],gap:120}});
 qReady=true;updQuest();
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
 window.__test={get G(){return G;},get S(){return S;},startLevel,tryMove,layout,render,update,levelFor,solveFast,listMoves,hasMove,useBoost,doUndo,doMix,doTable,doHint,openMap,openShop,openAlbum,mergeSave,set VK(v){VK=v;},get VK(){return VK;},vkSaveCloud,vkLoadCloud,showRewarded,showInterstitial,applyFlags,adDue,adReady,adOk,adCoinsLeft,streakWin,streakNow,dayKey,win,stuck,lose,openCoins,hideModal,get PRICE(){return PRICE;},get AD(){return{AD_EVERY,AD_MIN,AD_GAP,AD_COINS,AD_DAY,X2_ON,lastAdT};},set lastAdT(v){lastAdT=v;}};
 </script>
+
+<!-- ======== gb: модули буста «Образцовый». Строки <script src="js/…" defer data-gb></script> — ТОЛЬКО под своей меткой; порядок меток не менять ======== -->
+<!-- gb:VIEW -->
+<script src="js/gb-view.js" defer data-gb></script>
+<script src="js/gb-hall.js" defer data-gb></script>
+<script src="js/gb-win.js" defer data-gb></script>
+<script src="js/gb-path.js" defer data-gb></script>
+<script src="js/gb-keys.js" defer data-gb></script>
+
+<!-- gb:ECO -->
+<script src="js/gb-eco.js" defer data-gb></script>
+<script src="js/gb-torg.js" defer data-gb></script>
+
+<!-- gb:TEXT -->
+<script src="js/gb-lines.js" defer data-gb></script>
+
+<!-- gb:ART -->
+<script src="js/gb-plombir.js" defer data-gb></script>
+<script src="js/gb-people.js" defer data-gb></script>
+<script src="js/gb-mama.js" defer data-gb></script>
+<script src="js/gb-art-dep.js" defer data-gb></script>
+
+<!-- gb:GOODS -->
+<script src="js/gb-goods-data.js" defer data-gb></script>
+<script src="js/gb-goods-draw.js" defer data-gb></script>
+<script src="js/gb-rare2.js" defer data-gb></script>
+
+<!-- gb:OBST -->
+<script src="js/gb-obst-rules.js" defer data-gb></script>
+<script src="js/gb-obst-draw.js" defer data-gb></script>
+
+<!-- gb:LVL -->
+<script src="js/gb-union.js" defer data-gb></script>
+<script src="js/gb-lvl2-tab.js" defer data-gb></script>
+<script src="js/gb-lvl2.js" defer data-gb></script>
+<script src="js/gb-lvl.js" defer data-gb></script>
+
+<!-- gb:MODE -->
+<link rel="stylesheet" href="css/gb-mode.css"><script src="js/gb-mode-gen.js" defer data-gb></script><script src="js/gb-mode.js" defer data-gb></script>
+
+<!-- gb:META -->
+<link rel="stylesheet" href="css/gb-meta.css">
+<script src="js/gb-meta.js" defer data-gb></script>
+<script src="js/gb-plan.js" defer data-gb></script>
+<script src="js/gb-dep.js" defer data-gb></script>
+<script src="js/gb-book-data.js" defer data-gb></script>
+<script src="js/gb-book.js" defer data-gb></script>
+<script src="js/gb-album.js" defer data-gb></script>
+<script src="js/gb-migrate.js" defer data-gb></script>
+<script src="js/gb-back.js" defer data-gb></script>
+
+<!-- gb:LEAGUE -->
+<link rel="stylesheet" href="css/gb-league.css" data-gb>
+<script src="js/gb-league.js" defer data-gb></script>
+<script src="js/gb-season.js" defer data-gb></script>
+
+<!-- gb:NEWBIE -->
+<script src="js/gb-newbie.js" defer data-gb></script>
+
+<!-- gb:MG0 -->
+<script src="js/gmg-core.js" defer data-gb></script>
+
+<!-- gb:MGA -->
+
+<!-- gb:MGB -->
+
+<!-- gb:MGC -->
+
+<!-- gb:FEST -->
+<link rel="stylesheet" href="css/fest-gb.css"><script src="js/fest.js" defer data-gb></script><script src="js/fest-gb.js" defer data-gb></script><!-- праздники: модуль FEST + «Ночная смена», «Стол заказов»; js/gb-night.js — лениво -->
+
+<!-- gb:TECH -->
+<script src="js/stat-gb.js" defer data-gb></script>
+<script src="js/vkm-gb.js" defer data-gb></script>
+
+<!-- gb:EN -->
+<script src="js/gb-en.js" defer data-gb></script>
+<script src="js/gb-ready.js" defer data-gb></script> <!-- gb: ПОСЛЕДНИМ, не трогать -->
 </body>
 </html>

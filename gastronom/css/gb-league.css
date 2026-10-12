@@ -1,0 +1,69 @@
+/* gb-league.css — «Соцсоревнование района» и «Квартальный план» (поток LEAGUE). Общие стили окна/знамени — VIEW (может перекрыть). Без inset:, без :has */
+.gb-scr{background:#e9d3b0}
+.lgwrap,.qpwrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px 18px;max-width:640px;width:100%;margin:0 auto;box-sizing:border-box}
+.lghead,.qphead,.lgres{display:flex;align-items:center;gap:12px;background:var(--card,#fffaf0);border-radius:18px;padding:10px 12px;box-shadow:0 3px 0 #d9c7a6;margin-bottom:10px;text-align:left}
+.lghead>div,.qphead>div,.lgres>div{flex:1;min-width:0}
+.lghead b,.qphead b,.lgres b{display:block;font-size:18px;line-height:1.2}
+.lghead small b,.qphead small b,.lgres small b{display:inline;font-size:inherit}
+.lghead small,.qphead small,.lgres small{display:block;font-size:14.5px;line-height:1.3;opacity:.85;margin-top:3px}
+.lgres{border:2px solid #e6b36a}.lgres.up{border-color:#2b8a3e}.lgres.down{border-color:#c8401c}
+.lgres .lgfl,.lghall .lgfl{color:#a50d26;font-weight:700;opacity:1}
+.card .lgres{margin:8px 0 4px}
+.lgflag,.lgbadge,.lgshop{flex:none;display:block}
+.lgzt{margin:4px 2px 8px;font-weight:700;font-size:15.5px;text-align:left}
+.lgzt.up{color:#237032}.lgzt.down{color:#a93312}
+.lgt{background:var(--card,#fffaf0);border-radius:18px;padding:4px 6px;box-shadow:0 3px 0 #d9c7a6}
+.lgr{display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid #eadcc0}
+.lgr:last-child{border-bottom:0}
+.lgr.up{background:linear-gradient(90deg,rgba(43,138,62,.13),transparent)}
+.lgr.down{background:linear-gradient(90deg,rgba(200,64,28,.12),transparent)}
+.lgr.lgme{background:#fff3d6;border-radius:12px;box-shadow:inset 0 0 0 2px #e6b36a}
+.lgp{flex:none;width:26px;text-align:center;font-size:17px}
+.lgn{flex:1;min-width:0;text-align:left}
+.lgn b{display:block;font-size:15.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lgn b i{font-style:normal;font-weight:400;opacity:.75}
+.lgn small{display:block;font-size:13px;opacity:.75;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lgg{flex:none;font-style:normal;font-weight:800;font-size:17px;min-width:44px;text-align:right}
+.lgnote,.qpnote{font-size:13.5px;line-height:1.4;opacity:.8;text-align:left;margin:10px 2px 0}
+/* гнездо зала */
+.lghall,.qphall{display:flex;align-items:center;gap:10px;background:var(--card,#fffaf0);border-radius:16px;padding:8px 12px;margin:6px 10px;box-shadow:0 3px 0 #d9c7a6;cursor:pointer;text-align:left;position:relative;-webkit-tap-highlight-color:transparent}
+.lghall:active,.qphall:active{transform:translateY(2px)}
+.lghall>span:not(.lgic),.qphall>span:not(.qpic){flex:1;min-width:0}
+.lghall b,.qphall b{display:block;font-size:15.5px;line-height:1.2}
+.lghall small,.qphall small{display:block;font-size:13px;opacity:.8;line-height:1.25;margin-top:2px}
+.lgic,.qpic{flex:none;font-size:24px;line-height:1}
+.lghall .dot,.qphall .dot{position:absolute;top:6px;right:8px;width:10px;height:10px;border-radius:50%;background:#e5484d}
+.lgflag.hang{margin:-6px 0 -10px;transform-origin:8px 2px;animation:lgwave 3.2s ease-in-out infinite}
+@keyframes lgwave{50%{transform:rotate(-3deg)}}
+@media (prefers-reduced-motion:reduce){.lgflag.hang{animation:none}}
+/* «Касса» */
+.lgwin,.qpwin{font-size:14.5px;font-weight:700;color:#7a3a10;margin:4px 0 0}
+/* «Квартальный план» */
+.qpbar{display:block;height:10px;background:#eadcc0;border-radius:6px;overflow:hidden;margin-top:6px}
+.qpbar i{display:block;height:100%;background:linear-gradient(90deg,#e8b830,#c8401c);border-radius:6px}
+.qpsign{flex:none;display:block}
+.qpprem{background:linear-gradient(#fff6dc,#ffe9b0);border:2px solid #e8b830;border-radius:18px;padding:10px 12px;margin:10px 0;text-align:left}
+.qpprem.on{background:#f3fbef;border-color:#2b8a3e}
+.qpprem>b{display:block;font-size:17px}
+.qpprem>small{display:block;font-size:14px;line-height:1.35;opacity:.85;margin-top:3px}
+.qpprem .pay h3{display:none}
+.qplooks{display:flex;gap:8px;margin-top:8px}
+.qplooks>span{flex:1;min-width:0;background:#fff;border-radius:12px;padding:6px 4px;text-align:center;font-size:12.5px;line-height:1.2;opacity:.65}
+.qplooks>span.own{opacity:1;box-shadow:inset 0 0 0 2px #e8b830}
+.qplooks>span b{display:block;font-size:20px;line-height:1.2}
+.qptrack{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.qpst{display:flex;align-items:center;gap:8px;background:var(--card,#fffaf0);border-radius:12px;padding:5px 8px;font-size:14.5px}
+.qpst>i{flex:none;font-style:normal;font-weight:800;width:28px;height:28px;line-height:28px;border-radius:50%;background:#eadcc0;text-align:center;font-size:13.5px}
+.qpst.done>i{background:#2b8a3e;color:#fff}
+.qpst.nx{box-shadow:inset 0 0 0 2px #e8b830}
+.qpst .qpf,.qpst .qpp{flex:1;min-width:0;text-align:left}
+.qpst .qpp{color:#8a5a10}
+.qpst .qpp.lock{opacity:.5}
+@supports not (inset:0){.lghead>*+*,.qphead>*+*,.lgres>*+*,.lgr>*+*,.lghall>*+*,.qphall>*+*,.qpst>*+*{margin-left:8px}.qplooks>*+*{margin-left:8px}.qptrack>*+*{margin-top:4px}}
+/* POLISH 11.10: дорожка плана — сеткой «талонов» (на ПК — весь квартал на одном экране, объяснение очков видно без долгой прокрутки) */
+.qptrack{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px}
+.qpst{flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px 4px;gap:4px;min-height:64px;box-shadow:0 2px 0 #e3d3b4}
+.qpst .qpf,.qpst .qpp{flex:none;text-align:center}
+.qpst:nth-child(5n){background:#fff1cf}
+.qpst.done{background:#eef7ea}
+@supports not (inset:0){.qptrack>*+*{margin-top:0}.qpst>*+*{margin-left:0;margin-top:4px}}

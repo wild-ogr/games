@@ -1,0 +1,68 @@
+/* gb-mode — режимы магазина (поток MODE). Без inset:, без :has */
+/* уровень режима: запрещённые бустеры и сердца «Часа пик» (смена не обрывается на ушедших) */
+#scr-game[data-mdno~="hint"] #bHint,#scr-game[data-mdno~="mix"] #bMix,#scr-game[data-mdno~="table"] #bTable{display:none}
+#scr-game[data-md="rush"] #gHearts{visibility:hidden}
+/* «Приёмка» — без покупателей: сердца ни к чему, место — названию */
+#scr-game[data-md="priemka"] #gHearts{display:none}
+/* полоса затей — на главном (zone side) и на «Пути» (zone top) */
+.md-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:8px 10px;padding:10px;border-radius:16px;background:rgba(255,250,240,.92);box-shadow:0 3px 10px rgba(0,0,0,.12)}
+.md-chips .md-h{flex:1 1 100%;font-size:16px;color:#7a4a1e}
+.md-chip{display:flex;align-items:center;gap:8px;flex:1 1 150px;min-width:0;text-align:left;background:#fff;border-radius:14px;padding:8px 10px;font:inherit;font-weight:700;font-size:16px;color:var(--ink);box-shadow:0 3px 0 #cdb892;border:0;cursor:pointer}
+.md-chip:active{transform:translateY(2px);box-shadow:0 1px 0 #cdb892}
+.md-chip i{font-style:normal;font-size:24px;line-height:1}
+.md-chip span{min-width:0;display:flex;flex-direction:column;line-height:1.15}
+.md-chip small{font-weight:600;font-size:13px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-chip.off{opacity:.65;filter:saturate(.5)}
+.md-chip.md-all{flex:0 1 auto;justify-content:center;background:#f4e3c3}
+/* экран «Затеи магазина» (POLISH): доска объявлений в зале — деревянная рама, пробка, листки на кнопках */
+#gb-modes{background:linear-gradient(#f7e4b4,#e9d3b0);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.md-scr{max-width:940px;width:100%;margin:0 auto;padding:10px 12px 28px;box-sizing:border-box}
+.md-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.md-board{position:relative;border-radius:14px;padding:12px 12px 10px;background:#d6ab72;
+  background-image:radial-gradient(rgba(120,72,30,.18) 1px,transparent 1.6px),radial-gradient(rgba(255,240,210,.25) 1px,transparent 1.6px);background-size:9px 9px,13px 13px;background-position:0 0,4px 6px;
+  border:10px solid #8a5a33;box-shadow:inset 0 0 0 2px #6e4426,inset 0 3px 10px rgba(0,0,0,.25),0 6px 16px rgba(0,0,0,.18)}
+.md-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"sign va" "say va";gap:8px 6px;align-items:end;margin-bottom:10px}
+.md-sign{grid-area:sign;min-width:0;align-self:start;background:linear-gradient(#2f6b45,#245536);color:#fff3cf;border-radius:8px;padding:9px 12px 8px;border:3px solid #e8c27a;box-shadow:0 4px 0 #173a24,0 6px 12px rgba(0,0,0,.2);text-align:center}
+.md-sign h2{margin:0;font-family:"Arial Narrow","Roboto Condensed","Oswald",Impact,-apple-system,sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:.5px;font-size:24px;line-height:1.1;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.md-sign small{display:block;font-size:13px;font-weight:700;color:#e8c27a;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+.md-va{grid-area:va;width:104px;height:116px;margin:0 0 -10px;align-self:end}
+.md-va svg{width:100%;height:100%;display:block}
+.md-say{grid-area:say;position:relative;background:#fffaf0;border-radius:14px;padding:7px 11px;font-size:15px;font-weight:600;line-height:1.25;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.md-say:after{content:"";position:absolute;right:-8px;bottom:12px;border:8px solid transparent;border-left-color:#fffaf0;border-right:0}
+.md-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;background:#fffaf0;border-radius:10px;padding:6px;margin:0 0 6px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.md-d{display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:7px;padding:4px 1px;min-width:0}
+.md-d b{font-size:13px;text-transform:uppercase;color:#7a4a1e}
+.md-d span{display:flex;flex-wrap:wrap;justify-content:center;gap:1px}
+.md-d.on{background:#c8401c}.md-d.on b{color:#fff}.md-d.on span{background:#fffaf0;border-radius:5px}
+.md-mini{width:17px;height:17px;display:block}
+.md-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-top:8px}
+@media (min-width:720px){.md-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.md-va{width:140px;height:150px}.md-say{font-size:16px}.md-sign h2{font-size:34px;letter-spacing:1px}.md-sign small{font-size:14px}}
+.md-card{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:start;background:#fffaf0;
+  background-image:repeating-linear-gradient(transparent 0 23px,rgba(122,74,30,.08) 23px 24px);border-radius:4px;padding:16px 14px 12px;box-shadow:0 4px 10px rgba(60,30,0,.25);transform:rotate(-.5deg)}
+.md-card:nth-child(even){transform:rotate(.5deg)}
+.md-card:before{content:"";position:absolute;left:50%;top:-6px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff8a6a,#c8401c 60%,#7e200b);box-shadow:0 2px 2px rgba(0,0,0,.35)}
+.md-ph{width:64px;height:64px;border-radius:50%;background:#f4e3c3;box-shadow:inset 0 0 0 3px #e3cfa8;display:flex;align-items:center;justify-content:center}
+.md-pic{width:52px;height:52px;display:block}
+.md-tx{min-width:0;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.md-tx b{font-size:20px;line-height:1.15}
+.md-tx small{font-size:15px;line-height:1.25;opacity:.85}
+.md-tag{display:inline-block;font-size:13px;font-weight:800;border-radius:10px;padding:2px 9px;margin-top:2px;text-transform:uppercase;letter-spacing:.3px}
+.md-tag.td{background:#2b8a3e;color:#fff}.md-tag.wk{background:#2f5f9a;color:#fff}.md-tag.wait{background:#e3cfa8;color:#6e4426}
+.md-ft{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;border-top:1px dashed #d8c3a0;padding-top:8px;margin-top:4px}
+.md-ft small{font-size:15px}
+.md-st{flex:1 1 100%;font-weight:700;color:#7a4a1e}
+.md-pz{flex:1 1 auto;min-width:0;font-weight:700;color:#3b2a1a}
+.md-ft .btn{flex:0 0 auto;margin-left:auto;padding:10px 20px}
+.md-card.off{filter:saturate(.55)}.md-card.off .md-ph{opacity:.75}
+.md-card.lock{background-color:#efe4cf}
+.md-note{margin:12px 2px 0;font-size:14px;font-weight:600;color:#3b2a1a;background:rgba(255,250,240,.75);border-radius:8px;padding:6px 10px;text-align:center}
+@media (max-width:360px){.md-board{border-width:7px;padding:10px 8px}.md-sign h2{font-size:21px}.md-va{width:84px;height:96px}.md-say{font-size:14px}.md-ph{width:52px;height:52px}.md-pic{width:42px;height:42px}.md-tx b{font-size:18px}.md-d b{font-size:11px}.md-mini{width:14px;height:14px}}
+.btn.small{padding:8px 12px;font-size:15px;border-radius:12px}
+/* строки режима в «Кассе» */
+.md-lines p{margin:4px 0;font-weight:700}
+@media (max-width:360px){.md-chip{flex-basis:120px;font-size:15px}}
+@media (max-width:719px){.md-hero{grid-template-areas:"sign sign" "say va"}.md-sign h2{white-space:nowrap}}
+.md-cpic{width:30px;height:30px;display:block}
+/* POLISH: телефон (≤560) — шапка уровня режима без обрезки: название мельче, строка счёта — в две строки */
+@media (max-width:560px){#scr-game[data-md]:not([data-md=""]) #gLevel{font-size:14.5px;text-overflow:clip}
+  #scr-game[data-md]:not([data-md=""]) #gCity{white-space:normal;font-size:12px;line-height:1.15;text-overflow:clip}}

@@ -1,0 +1,100 @@
+/* gb-MG0 — мини-игры «Перерыв» (js/gmg-core.js, «Подсобка» js/gb-podsobka.js, игры gmg-*.js). Классы — только с префиксом gmg- (игры потоков: gma-/gmb-/gmc-, MG0 — gm0-).
+   Без inset:, :has, эмодзи новее Emoji 12. Цвета — тёплые, как в «Гастрономе» (--ink #3b2a1a, --card #fffaf0). */
+#gmgHost{position:fixed;top:0;left:0;right:0;bottom:0;max-width:1100px;margin:0 auto;z-index:32;display:flex;flex-direction:column;color:var(--ink,#3b2a1a);
+  background:#f6e7cc;background-image:linear-gradient(#f6e7cc,#ecd5ae);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-user-select:none;user-select:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+#gmgHost.gmg-adon{z-index:9}
+.gmg-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 8px 6px 14px;background:#8b2a14;color:#fff7e6;box-shadow:0 3px 0 #5f1b0b;min-height:52px;box-sizing:border-box}
+.gmg-ic{font-size:24px;line-height:1}
+.gmg-nm{font-size:18px;font-weight:800;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gmg-top{font-size:16px;font-weight:800;color:#ffd36e;white-space:nowrap}
+.gmg-khd{font-size:12px;opacity:.85;white-space:nowrap}
+.gmg-head .gmg-kc{background:rgba(255,255,255,.15);color:#fff7e6;border-color:rgba(255,255,255,.4)}
+.gmg-xb{flex:0 0 auto;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:20px;font-weight:900;cursor:pointer}
+.gmg-el{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.gmg-cv{position:absolute;left:0;top:0;display:block}
+.gmg-kc{display:inline-block;min-width:18px;padding:1px 5px;border:1px solid #cdb892;border-bottom-width:2px;border-radius:5px;background:#fff;color:#6d5640;
+  font:700 11px/1.3 -apple-system,"Segoe UI",Roboto,sans-serif;vertical-align:2px;text-shadow:none;margin-left:4px}
+.btn .gmg-kn{margin-left:4px;opacity:.85}
+.btn.green .gmg-kc,.btn.accent .gmg-kc{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.5)}
+/* реплика ведущего */
+.gmg-say{display:flex;align-items:flex-end;gap:10px;margin:0 0 10px;text-align:left}
+.gmg-av{flex:0 0 auto;width:64px;height:64px;border-radius:50%;overflow:hidden;background:#fff;box-shadow:0 0 0 3px #fff,0 3px 8px rgba(0,0,0,.15)}
+.gmg-av svg,.gmg-av img,.gmg-pav svg,.gmg-pav img{width:100%;height:100%;display:block}
+.gmg-sb{position:relative;margin:0;flex:1 1 auto;background:#fff;border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:17px;line-height:1.35;box-shadow:0 3px 10px rgba(0,0,0,.1)}
+.gmg-who{display:block;font-size:13px;color:#8b2a14;margin-bottom:2px}
+/* окна оболочки: вступление, итог, «Выйти?» */
+.gmg-intro,.gmg-veil{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:5;box-sizing:border-box}
+.gmg-veil{background:rgba(30,20,10,.5)}
+.gmg-intro{background:rgba(246,231,204,.65)}
+.gmg-panel{width:100%;max-width:400px;max-height:100%;overflow-y:auto;background:var(--card,#fffaf0);border-radius:22px;padding:18px 16px 16px;box-sizing:border-box;text-align:center;
+  box-shadow:0 16px 40px rgba(0,0,0,.28);animation:gmgUp .28s cubic-bezier(.2,1.4,.5,1)}
+.gmg-panel h2{margin:4px 0 6px;font-size:24px}
+.gmg-panel p{margin:6px 0;font-size:16px;line-height:1.4}
+.gmg-hint{font-size:14px!important;color:#6d5640}
+.gmg-btns{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.gmg-btns .btn{width:100%;min-height:52px}
+.gmg-btns .btn small{font-size:12px;font-weight:600;opacity:.8}
+.btn.sec{background:#fff;color:var(--ink,#3b2a1a);text-shadow:none}
+.gmg-kf{outline:3px solid #f29a38;outline-offset:2px}
+@keyframes gmgUp{from{transform:translateY(24px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+/* итог */
+.gmg-stars{font-size:38px;letter-spacing:4px;margin:2px 0 4px;color:#f2a900}
+.gmg-st{display:inline-block;color:#d9cbb3}
+.gmg-st.on{color:#f2a900;animation:gmgStar .5s both}
+@keyframes gmgStar{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+.gmg-sc{font-weight:800;color:#6d5640}
+.gmg-rws{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.gmg-rw{background:#fff;border-radius:12px;padding:7px 10px;font-weight:800;font-size:16px;box-shadow:0 2px 0 #e2d2b4}
+.gmg-rw.c{color:#a93312;font-size:20px}
+.gmg-rw.p{color:#1f5f99;font-size:15px}
+.gmg-rw.t{color:#2b6a35}
+.gmg-note{font-size:14px!important;color:#6d5640}
+@media (prefers-reduced-motion:reduce){.gmg-panel,.gmg-st.on{animation:none}}
+/* загрузка игры */
+.gmg-wait{position:fixed;left:0;top:0;right:0;bottom:0;z-index:33;display:flex;align-items:center;justify-content:center;background:rgba(246,231,204,.92);text-align:center;font-weight:800;font-size:18px}
+.gmg-wait b{display:block;font-size:40px}
+.gmg-wait small{font-weight:600;color:#6d5640}
+/* общий набор для игр */
+.gmg-card{background:#fff;border-radius:18px;padding:14px;box-shadow:0 3px 10px rgba(0,0,0,.1);margin:10px auto;max-width:440px;width:calc(100% - 24px);box-sizing:border-box}
+.gmg-q{font-size:21px;font-weight:800;line-height:1.35;text-align:center}
+.gmg-opts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px auto;max-width:440px;width:calc(100% - 24px)}
+.gmg-opt{flex:1 1 40%;min-height:56px;border:0;border-radius:16px;background:#fff;color:var(--ink,#3b2a1a);font:800 21px/1.2 -apple-system,"Segoe UI",Roboto,sans-serif;box-shadow:0 4px 0 #cdb892;cursor:pointer;padding:8px}
+.gmg-opt:active{transform:translateY(2px);box-shadow:0 2px 0 #cdb892}
+.gmg-opt.ok{background:#dff3e3;box-shadow:0 4px 0 #2b8a3e}
+.gmg-opt.no{background:#fde3e1;box-shadow:0 4px 0 #c8401c}
+.gmg-opt.sel{outline:3px solid #f29a38}
+.gmg-dots{display:flex;gap:6px;justify-content:center;margin:8px 0}
+.gmg-dots i{width:12px;height:12px;border-radius:50%;background:#efe3cc;box-shadow:inset 0 0 0 2px #cdb892}
+.gmg-dots i.ok{background:#2b8a3e;box-shadow:none}
+.gmg-dots i.no{background:#c8401c;box-shadow:none}
+.gmg-dots i.cur{box-shadow:inset 0 0 0 3px #8b2a14}
+/* «Касса»: табличка Перерыва / Завоз (гнездо zone mg) */
+.gmg-pw{display:flex;align-items:center;gap:10px;margin:8px 0 2px;padding:8px 10px;border-radius:16px;background:#fff3cf;box-shadow:0 0 0 2px #e0a33a inset;text-align:left;cursor:pointer;flex-wrap:wrap}
+.gmg-pav{flex:0 0 auto;width:48px;height:48px;border-radius:50%;overflow:hidden;background:#fff}
+.gmg-pt{flex:1 1 150px;min-width:0;display:flex;flex-direction:column;font-size:14px;line-height:1.3}
+.gmg-pt b{font-size:16px}
+.gmg-pt b.gmg-sign{display:inline-block;align-self:flex-start;background:#8b2a14;color:#fff7e6;border-radius:6px;padding:1px 8px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.gmg-pw .btn{flex:1 1 100%;margin-top:2px;padding:10px 12px}
+.gmg-sign i{font-style:normal;white-space:nowrap}.gmg-sign .gmg-ss{display:none}
+.gmg-pw.small{background:#f4ead8;box-shadow:none;font-size:14px;cursor:default}
+.gmg-pw.small .btn{flex:0 0 auto;margin:0;padding:8px 12px;font-size:15px}
+.gmg-pw.done{background:#e6f4e8;box-shadow:none;cursor:default;font-size:14px;display:block;text-align:center}
+.gmg-pi{font-size:20px}
+/* Перерыв в «Кассе» заменяет второстепенное: ×2, «Обставить магазин», полоску цели (05 §4 п.1) */
+#mcard.gmg-per-on #mX2,#mcard.gmg-per-on #mShop,#mcard.gmg-per-on .goal{display:none}
+@media (max-height:700px){.gmg-pw .gmg-pt span{display:none}.gmg-pav{width:38px;height:38px}.gmg-pw{padding:5px 8px;gap:8px;margin-top:5px;flex-wrap:nowrap}
+  .gmg-pw .gmg-pt{flex:0 1 auto}.gmg-pw .btn{flex:1 1 auto;margin:0;padding:8px 10px;font-size:16px;white-space:nowrap}}
+@media (max-height:700px) and (max-width:420px){.gmg-sign .gmg-sl{display:none}.gmg-sign .gmg-ss{display:inline}}
+@media (max-height:700px) and (max-width:360px){.gmg-pw .gmg-pav{display:none}.gmg-pw{flex-wrap:wrap;gap:4px}.gmg-pw .gmg-pt{flex:1 1 100%;text-align:center}.gmg-pt b.gmg-sign{font-size:12px;padding:1px 6px;align-self:center}.gmg-pw .btn{flex:1 1 100%}}
+/* плитка «Подсобки» (правая колонка ПК) */
+.gmg-tile{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:56px;border:0;border-radius:16px;background:#fff;color:var(--ink,#3b2a1a);
+  box-shadow:0 4px 0 #cdb892;padding:8px 12px;text-align:left;cursor:pointer;font-family:inherit}
+.gmg-ti{font-size:28px}
+.gmg-tt{display:flex;flex-direction:column}
+.gmg-tt b{font-size:17px}
+.gmg-tt small{font-size:13.5px;color:#6d5640}
+.gmg-tile .dot{position:absolute;top:6px;right:8px;width:12px;height:12px;border-radius:50%;background:#e03131;box-shadow:0 0 0 2px #fff}
+/* окно «Новая затея!» */
+.gmg-new .gmg-nt{font-size:15px}
+.gmg-list a{color:#1f5f99}

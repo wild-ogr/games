@@ -1,0 +1,51 @@
+/* FEST — праздники «Гастронома №1» (поток FEST, 10.10.2026): плашка на главном, окно праздника, «Касса» праздника, ночь на уровне.
+   Старые WebView: без inset, без :has/:is; flex-gap — с запасным отступом. */
+#gbHomeTop .gbs-fest{padding:0 10px}
+.fsBan{display:flex;align-items:center;width:100%;box-sizing:border-box;margin:6px 0;padding:9px 12px;border:0;border-radius:16px;font:inherit;text-align:left;cursor:pointer;
+  background:linear-gradient(135deg,#ffe7b3,#ffc66b);color:#4a2c12;box-shadow:0 3px 0 rgba(0,0,0,.14)}
+.fsBan .fsI{font-size:28px;line-height:1;margin-right:10px;flex:none}
+.fsBan .fsTx{flex:1;min-width:0;font-size:15px;line-height:1.25}
+.fsBan .fsTx b{font-size:16px}
+.fsBan small{display:block;opacity:.8;font-size:13px;margin-top:2px}
+.fsBan i{font-style:normal;font-size:22px;opacity:.6;margin-left:8px}
+.fsBan.fsHw{background:linear-gradient(135deg,#4b3b78,#241d3d);color:#f6ecd6}
+.fsBan.fsNy{background:linear-gradient(135deg,#e3f1ff,#b8dbff);color:#1d3550}
+.fsBan.fsBab{background:linear-gradient(135deg,#ffe0ea,#ffb7c9);color:#5a1f30}
+.fsBan.hot{animation:fsPulse 2.4s ease-in-out infinite}
+@keyframes fsPulse{0%,100%{box-shadow:0 3px 0 rgba(0,0,0,.14)}50%{box-shadow:0 3px 0 rgba(0,0,0,.14),0 0 0 4px rgba(255,198,107,.55)}}
+body.lite .fsBan.hot{animation:none}
+@media (prefers-reduced-motion:reduce){.fsBan.hot{animation:none}}
+/* окно праздника */
+.fsE h2,.fsW h2{margin:0 0 4px}
+.fsSub{margin:0 0 6px;opacity:.75;font-size:14px}
+.fsG{display:flex;flex-wrap:wrap;justify-content:center;margin:8px 0}
+.fsT{width:58px;height:58px;margin:3px;border:0;border-radius:14px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#fff1cf;color:#4a2c12;box-shadow:0 3px 0 #d9c7a6;padding:0}
+.fsT b{font-size:19px;line-height:1.1}
+.fsT small{font-size:11px;line-height:1.2;white-space:nowrap}
+.fsT.done{background:#ffd76b}
+.fsT.open{background:#fff}
+.fsT.nx{box-shadow:0 3px 0 #d9c7a6,0 0 0 3px #6fbf73}
+.fsT.lock{opacity:.55;cursor:default}
+.fsG.many .fsT{width:50px;height:52px;margin:2px}
+.fsHw .fsT.open,.fsHw .fsT.nx{background:#e9e3ff}
+.fsCds{display:flex;justify-content:center;margin:6px 0}
+.fsCd{width:110px;margin:0 5px;text-align:center}
+.fsCd canvas{width:100%;height:76px;display:block;filter:grayscale(1) brightness(.85);opacity:.7}
+.fsCd.has canvas{filter:none;opacity:1}
+.fsCd small{display:block;font-size:12px;line-height:1.25;margin-top:3px}
+.fsGoal{font-size:14px;margin:6px 0}
+.fsBar{display:inline-block;vertical-align:middle;margin:0 4px}
+.fsBar i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#e2d3b3;margin:0 1px}
+.fsBar i.on{background:#e8a33a}
+.fsPost{display:flex;align-items:center;background:#fff4f7;border-radius:14px;padding:8px 10px;margin:8px 0;text-align:left}
+.fsPost canvas{width:64px;height:64px;flex:none;margin-right:10px}
+.fsPost p{margin:0;font-size:14px;line-height:1.3}
+.fsCard canvas{height:80px}
+/* на уровне общая гирлянда FEST не мешает шапке — своя висит в зале */
+body.fsGame #festFx .fest-gl{display:none}
+/* ночь на уровне: фон экрана вокруг витрины */
+body.fsNightLv #scr-game{background:#1d1b33}
+body.fsNightLv #scr-game .gh #gLevel{color:#ffd98a}
+body.fsNightLv #scr-game .gh #gCity{color:#d9d3f0}
+@media (max-height:640px){.fsT{width:48px;height:48px}.fsT b{font-size:16px}.fsCd canvas{height:60px}.fsE .vsay span{font-size:13px}}
