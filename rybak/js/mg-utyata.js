@@ -1,0 +1,154 @@
+/* rb2-LOVB (13.10.2026) — ловкостная №10 «Утята за мамой» (журнал hobby-analytics/release-i/rybak-boost2/logs/LOVB.md). Идея «змейки» — Клубок Зины (zmg-klubok.js),
+   но плавно, без клеток: утка-мама плывёт сама, ты рулишь; утята, которых подобрала, плывут цепочкой следом. С каждым утёнком мама чуть быстрее.
+   Нельзя врезаться в камыш, в берег и в свою цепочку (с 3-го утёнка): «Кря!» — минус попытка (из 3), полсекунды-другую мама неуязвима. 50 с.
+   Счёт — сколько утят собрала (удар цепочку не рвёт, только попытку отнимает).
+   Управление: палец держать там, куда плыть (мама поворачивает к пальцу); ПК — ← → (A/D, Ф/В) или мышь с зажатой кнопкой. Флаг `lov-utyata`. Объявлена в index.html (MGREC.add).
+   Бот: DEF.bot(level) — без экрана (перебор поворотов на 1 с вперёд), на экране — o.bot. */
+(function(){
+'use strict';
+var ID='utyata';
+if(window.R2&&R2.off('lov-'+ID))return;
+var MD=[8,16,24],TL=50,LIVES=3; // ступени бота (числа рекордов — index.html, MGREC.add)
+function L2(ru,en){return typeof L==='function'?L(ru,en):ru;}
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+function rng(seed){var a=seed>>>0||1;return function(){a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function ang(a){while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a;}
+var TAU=Math.PI*2;
+
+/* ===================== мир (общий для игры и бота) =====================
+   Поле в единицах u = min(W,H)/100: W/u × H/u. Пруд — прямоугольник bx0..bx1, by0..by1 (сверху — полоса под шапку, снизу — берег). */
+function newWorld(W,H,R,calm){var u=Math.min(W,H)/100,st={W:W,H:H,u:u,R:R,calm:!!calm,t:0,lives:LIVES,n:0,inv:0,bx0:3*u,bx1:W-3*u,by0:Math.max(70,H*.12),by1:H-Math.max(24,H*.06),
+  x:W/2,y:H*.62,a:-Math.PI/2,turn:0,path:[],pl:0,reeds:[],loose:[],over:0,ev:''};
+  var nR=W>H*1.1?7:5;for(var i=0;i<nR*20&&st.reeds.length<nR;i++){var r=(6+R()*4)*u,x=st.bx0+r+R()*(st.bx1-st.bx0-2*r),y=st.by0+r+R()*(st.by1-st.by0-2*r);
+    if(Math.hypot(x-st.x,y-st.y)<r+22*u)continue;var ok=true;for(var j=0;j<st.reeds.length;j++)if(Math.hypot(x-st.reeds[j].x,y-st.reeds[j].y)<r+st.reeds[j].r+14*u)ok=false;if(ok)st.reeds.push({x:x,y:y,r:r});}
+  for(var p=0;p<40;p++)st.path.push({x:st.x,y:st.y+p*u});st.pl=0;
+  spawn(st);spawn(st);return st;}
+function free(st,x,y,m){var u=st.u;if(x<st.bx0+m||x>st.bx1-m||y<st.by0+m||y>st.by1-m)return false;for(var i=0;i<st.reeds.length;i++)if(Math.hypot(x-st.reeds[i].x,y-st.reeds[i].y)<st.reeds[i].r+m)return false;return true;}
+function spawn(st){var u=st.u,R=st.R;for(var i=0;i<80;i++){var x=st.bx0+R()*(st.bx1-st.bx0),y=st.by0+R()*(st.by1-st.by0);if(!free(st,x,y,6*u))continue;if(Math.hypot(x-st.x,y-st.y)<20*u)continue;
+    st.loose.push({x:x,y:y,a:R()*TAU,t:R()*5});return;}}
+function speed(st){var u=st.u;return Math.min(36,22+st.n*.7)*u*(st.calm?.8:1);}
+var GAP=6,TURN=3.3;
+// цепочка: утёнок i — на расстоянии (i+1)·GAP·u по следу
+// вся цепочка за один проход по следу
+function chain(st,n){var out=[],P=st.path,acc=0,px=st.x,py=st.y,i=0,d=GAP*st.u;if(!n)return out;
+  for(var k=P.length-1;k>=0&&i<n;k--){var q=P[k],s=Math.hypot(q.x-px,q.y-py);while(i<n&&acc+s>=d*(i+1)){var f=(d*(i+1)-acc)/(s||1);out.push({x:px+(q.x-px)*f,y:py+(q.y-py)*f,a:Math.atan2(py-q.y,px-q.x)});i++;}acc+=s;px=q.x;py=q.y;}
+  while(out.length<n)out.push({x:px,y:py,a:0});return out;}
+function chick(st,i){var d=(i+1)*GAP*st.u,P=st.path,acc=0,px=st.x,py=st.y;for(var k=P.length-1;k>=0;k--){var q=P[k],s=Math.hypot(q.x-px,q.y-py);if(acc+s>=d){var f=(d-acc)/(s||1);return {x:px+(q.x-px)*f,y:py+(q.y-py)*f,a:Math.atan2(py-q.y,px-q.x)};}acc+=s;px=q.x;py=q.y;}return {x:px,y:py,a:0};}
+// шаг: turn −1..1 (влево/вправо); события st.ev: 'pick' | 'crash'
+function step(st,dt,turn){st.ev='';if(st.over)return;var u=st.u;st.t+=dt;st.inv=Math.max(0,st.inv-dt);
+  st.a=ang(st.a+clamp(turn,-1,1)*TURN*dt);var v=speed(st);st.x+=Math.cos(st.a)*v*dt;st.y+=Math.sin(st.a)*v*dt;
+  var last=st.path[st.path.length-1];if(!last||Math.hypot(last.x-st.x,last.y-st.y)>u*.8){st.path.push({x:st.x,y:st.y});var need=Math.ceil((st.n+3)*GAP/.8)+20;if(st.path.length>need)st.path.splice(0,st.path.length-need);}
+  for(var i=st.loose.length-1;i>=0;i--){var l=st.loose[i];l.t+=dt;l.a+=Math.sin(l.t*.9)*dt*.8;var nx=l.x+Math.cos(l.a)*u*2.5*dt,ny=l.y+Math.sin(l.a)*u*2.5*dt;if(free(st,nx,ny,4*u)){l.x=nx;l.y=ny;}else l.a+=Math.PI*.7;
+    if(Math.hypot(l.x-st.x,l.y-st.y)<6.5*u){st.loose.splice(i,1);st.n++;st.ev='pick';spawn(st);if(st.n%5===0&&st.loose.length<3)spawn(st);}}
+  if(st.inv<=0){var hit='';if(!free(st,st.x,st.y,2.6*u))hit='reed';
+    else if(st.n>3){var CH=chain(st,st.n);for(var k=3;k<st.n;k++){var c=CH[k];if(Math.hypot(c.x-st.x,c.y-st.y)<3.8*u){hit='self';break;}}}
+    if(hit){st.lives--;st.inv=1.6;st.ev='crash';st.why=hit;
+      // отскок: разворот от препятствия
+      st.a=ang(st.a+Math.PI*(.75+.2*st.R()));st.x=clamp(st.x,st.bx0+3*u,st.bx1-3*u);st.y=clamp(st.y,st.by0+3*u,st.by1-3*u);
+      for(var j=0;j<st.reeds.length;j++){var rd=st.reeds[j],dd=Math.hypot(st.x-rd.x,st.y-rd.y);if(dd<rd.r+3*u){var k2=(rd.r+3.2*u)/(dd||1);st.x=rd.x+(st.x-rd.x)*k2;st.y=rd.y+(st.y-rd.y)*k2;}}
+      if(st.lives<=0)st.over=1;}}
+  if(st.t>=TL)st.over=1;}
+// автопилот: 7 поворотов, держать 0,9 с на копии мира; цена — до ближайшего утёнка, штраф за удар
+function cpy(st){var o={};for(var k in st)o[k]=st[k];o.path=st.path.slice(-Math.ceil((st.n+3)*GAP/.8)-4);o.loose=st.loose.map(function(l){return {x:l.x,y:l.y,a:l.a,t:l.t};});o.R=function(){return .5;};o.reeds=st.reeds;return o;}
+var TURNS=[-1,-.6,-.25,0,.25,.6,1];
+function pilot(st,lv,R){var err=lv==='bad'?.3:lv==='mid'?.12:0;if(err&&R()<err)return TURNS[(R()*7)|0];
+  var best=1e9,bt=0,u=st.u;
+  for(var i=0;i<TURNS.length;i++){var s=cpy(st),n0=s.n,l0=s.lives,c=0;for(var k=0;k<27&&!s.over;k++){step(s,1/30,TURNS[i]);if(s.ev==='crash'){c+=100-k;break;}}
+    if(s.n>n0)c-=50*(s.n-n0);var dm=1e9;for(var j=0;j<s.loose.length;j++)dm=Math.min(dm,Math.hypot(s.loose[j].x-s.x,s.loose[j].y-s.y));c+=dm/u*.5;
+    // дальше от стен и камыша
+    var m=Math.min(s.x-s.bx0,s.bx1-s.x,s.y-s.by0,s.by1-s.y)/u;if(m<8)c+=(8-m)*2;
+    if(c<best){best=c;bt=TURNS[i];}}
+  return bt;}
+function tierOf(s){return s>=MD[2]?3:s>=MD[1]?2:s>=MD[0]?1:0;}
+function sim(lv,o){o=o||{};var R=rng(o.seed||((Math.random()*1e9)|0)),st=newWorld(360,600,R,o.calm),dt=1/30,hold=0,tr=0;
+  while(!st.over){if(hold<=0){tr=pilot(st,lv||'good',R);hold=lv==='bad'?.3:lv==='mid'?.2:.12;}hold-=dt;step(st,dt,tr);}
+  return {score:st.n,tier:tierOf(st.n)};}
+
+/* ===================== игра ===================== */
+var CSS='.lvu{position:absolute;left:0;top:0;right:0;bottom:0;touch-action:none}'+
+ '.lvu-hud{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;gap:6px;z-index:4;pointer-events:none}'+
+ '.lvu-hud b{padding:7px 12px;border-radius:14px;background:rgba(16,26,36,.6);font:700 17px var(--font,system-ui,sans-serif);color:#fff;white-space:nowrap}'+
+ '.lvu-pop{position:absolute;transform:translate(-50%,0);font:800 26px var(--font,system-ui,sans-serif);color:#ffe27a;text-shadow:0 2px 6px rgba(0,0,0,.6);pointer-events:none;transition:transform .9s ease-out,opacity .9s;z-index:5;white-space:nowrap}';
+function css(){if(document.getElementById('lvuCss'))return;var s=document.createElement('style');s.id='lvuCss';s.textContent=CSS;document.head.appendChild(s);}
+
+function run(host,o){o=o||{};css();
+  var calm=!!o.calm,bot=o.bot||'',R=rng(o.seed?(o.seed^0x68e31da4)+((Math.random()*1e6)|0):(Math.random()*1e9)|0),A=host.art||window.MG_ART;
+  var root=document.createElement('div');root.className='lvu';host.el.appendChild(root);
+  var cv=host.canvas();root.appendChild(cv.c);var g=cv.g;
+  root.insertAdjacentHTML('beforeend','<div class="lvu-hud"><b class="lvu-t"></b><b class="lvu-l"></b><b class="lvu-s"></b></div>');
+  var ht=root.querySelector('.lvu-t'),hl=root.querySelector('.lvu-l'),hs=root.querySelector('.lvu-s');
+  var st=newWorld(cv.W,cv.H,R,calm),T=0,ptr=null,keyL=0,keyR=0,over=false,botT=0,botTurn=0,ripples=[],started=false,hintT=0,BG=null;
+  function say(t){if(!bot)host.say(t,L2('Петрович','Petrovich'));}
+  function hud(){ht.textContent=Math.max(0,Math.ceil(TL-st.t))+' '+L2('с','s');hl.textContent=st.lives>0?new Array(st.lives+1).join('🦆'):'—';hs.textContent='🐤 '+st.n;}
+  function popTxt(t,x,y,col){var d=document.createElement('div');d.className='lvu-pop';d.textContent=t;if(col)d.style.color=col;d.style.left=x+'px';d.style.top=(y-30)+'px';root.appendChild(d);
+    setTimeout(function(){d.style.transform='translate(-50%,-40px)';d.style.opacity='0';},40);setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d);},1000);}
+  function finish(){if(over)return;over=true;
+    host.done({score:st.n,scoreTxt:L2('Утят','Ducklings')+': <b>'+st.n+'</b>',extra:{line:st.lives>0?L2('Всех довела до заводи!','Got them all to the backwater!'):L2('Три раза в камыш — домой!','Three bumps — time to go home!')}});}
+  // ввод: палец/мышь — куда плыть
+  function pos(e){var r=cv.c.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
+  cv.c.addEventListener('pointerdown',function(e){if(e.button>0)return;e.preventDefault();try{cv.c.setPointerCapture(e.pointerId);}catch(x){}ptr=pos(e);started=true;});
+  cv.c.addEventListener('pointermove',function(e){if(ptr)ptr=pos(e);});
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(n){cv.c.addEventListener(n,function(){ptr=null;});});
+  var KL={ArrowLeft:1,a:1,A:1,'ф':1,'Ф':1},KR={ArrowRight:1,d:1,D:1,'в':1,'В':1};
+  host.keys(function(k){if(KL[k]){keyL=1;started=true;return true;}if(KR[k]){keyR=1;started=true;return true;}return false;});
+  host.keysUp(function(k){if(KL[k]){keyL=0;return true;}if(KR[k]){keyR=0;return true;}return false;});
+  host.kbd(L2('<b>←</b> <b>→</b> — поворот (или веди мышью с зажатой кнопкой)','<b>←</b> <b>→</b> — turn (or drag with the mouse)'),8);
+  host.onResize(function(){var kx=cv.W/st.W,ky=cv.H/st.H;st.W=cv.W;st.H=cv.H;var u=Math.min(cv.W,cv.H)/100,ku=u/st.u;st.u=u;
+    st.bx0=3*u;st.bx1=cv.W-3*u;st.by0=Math.max(70,cv.H*.12);st.by1=cv.H-Math.max(24,cv.H*.06);
+    function m(p){p.x*=kx;p.y*=ky;}m(st);st.path.forEach(m);st.loose.forEach(m);st.reeds.forEach(function(r){m(r);r.r*=ku;});BG=null;});
+  host.amb('water');
+  say(o.again?L2('Ещё разок! Собирай малышей.','Once more! Gather the little ones.'):host.pc?L2('Утята разбежались! Веди маму стрелками — собери всех. В камыш не лезь!','The ducklings ran off! Steer with the arrows — gather them all. Mind the reeds!'):L2('Утята разбежались! Держи палец там, куда плыть. В камыш не лезь!','The ducklings ran off! Hold your finger where to swim. Mind the reeds!'));
+  hud();
+  host.loop(function(dt){if(over)return;T+=dt;
+    var n=bot?2:1;for(var s=0;s<n;s++){
+      var turn=0;
+      if(bot){botT-=dt;if(botT<=0){botTurn=pilot(st,bot,R);botT=bot==='bad'?.3:bot==='mid'?.2:.12;}turn=botTurn;}
+      else if(keyL||keyR)turn=(keyR?1:0)-(keyL?1:0);
+      else if(ptr){var want=Math.atan2(ptr.y-st.y,ptr.x-st.x),d=ang(want-st.a);turn=clamp(d*2.2,-1,1);if(Math.hypot(ptr.x-st.x,ptr.y-st.y)<st.u*4)turn=0;}
+      if(!started&&!bot){hud();break;} // ждём первого касания/клавиши — время не идёт
+      step(st,dt,turn);
+      if(st.ev==='pick'){host.snd('coin');popTxt('+1',st.x,st.y);if(st.n===5)say(L2('Пятеро! Мама довольна.','Five! Mama\'s happy.'));else if(st.n===12)say(L2('Целый детсад! Только не запутайся.','A whole kindergarten! Don\'t get tangled.'));}
+      if(st.ev==='crash'){host.snd('bad');try{if(typeof buzz==='function')buzz(50);}catch(e){}popTxt(L2('Кря!','Quack!'),st.x,st.y,'#ff8a6a');
+        if(st.lives>0)say(st.why==='self'?L2('Своих не задень! Утята — не паровоз.','Don\'t bump your own! They\'re not a train.'):L2('Кря! В камыше щука живёт — осторожней.','Quack! A pike lives in the reeds — careful.'));}
+      if(st.over){finish();return;}}
+    if(T-hintT>.15){hintT=T;hud();}
+    if(R()<dt*6)ripples.push({x:st.x,y:st.y,t:0});for(var i=ripples.length-1;i>=0;i--){ripples[i].t+=dt;if(ripples[i].t>1.4)ripples.splice(i,1);}
+    draw();});
+
+  /* ---------- рисунок: пруд сверху, камыш, кувшинки, мама и утята ---------- */
+  function bg(){var W=st.W,H=st.H,u=st.u,c=document.createElement('canvas'),d=cv.dpr;c.width=Math.round(W*d);c.height=Math.round(H*d);var b=c.getContext('2d');b.scale(d,d);
+    b.fillStyle='#6a9d47';b.fillRect(0,0,W,H);
+    var gr=b.createLinearGradient(0,st.by0,0,st.by1);gr.addColorStop(0,'#4f9bb0');gr.addColorStop(1,'#3a7f97');b.fillStyle=gr;
+    var r=8*u;b.beginPath();b.moveTo(st.bx0+r,st.by0);b.arcTo(st.bx1,st.by0,st.bx1,st.by1,r);b.arcTo(st.bx1,st.by1,st.bx0,st.by1,r);b.arcTo(st.bx0,st.by1,st.bx0,st.by0,r);b.arcTo(st.bx0,st.by0,st.bx1,st.by0,r);b.fill();
+    b.strokeStyle='rgba(210,190,130,.8)';b.lineWidth=u*1.2;b.stroke();
+    var RR=rng(5);for(var i=0;i<10;i++){var x=st.bx0+RR()*(st.bx1-st.bx0),y=st.by0+RR()*(st.by1-st.by0);if(!free(st,x,y,4*u))continue;b.fillStyle='rgba(80,140,60,.85)';b.beginPath();b.arc(x,y,u*2.6,.5,TAU-.1);b.lineTo(x,y);b.fill();}
+    st.reeds.forEach(function(rd){b.fillStyle='rgba(40,70,30,.35)';b.beginPath();b.arc(rd.x+u,rd.y+u,rd.r,0,TAU);b.fill();b.fillStyle='#5f8f3a';b.beginPath();b.arc(rd.x,rd.y,rd.r,0,TAU);b.fill();
+      var R2r=rng(Math.round(rd.x*7+rd.y));for(var k=0;k<14;k++){var a=R2r()*TAU,dd=R2r()*rd.r*.85,x2=rd.x+Math.cos(a)*dd,y2=rd.y+Math.sin(a)*dd;b.strokeStyle=k%3?'#7fae4c':'#4a7a2c';b.lineWidth=u*.7;b.beginPath();b.moveTo(x2,y2);b.lineTo(x2+u*(R2r()-.5)*2,y2-u*2.5);b.stroke();
+        if(k%4===0){b.fillStyle='#6b4a2a';b.beginPath();b.ellipse(x2+u*.3,y2-u*2.8,u*.5,u*1.3,0,0,TAU);b.fill();}}});
+    return c;}
+  function duck(x,y,a,s,col,isMama,blink){g.save();g.translate(x,y);g.rotate(a);
+    g.fillStyle='rgba(0,0,0,.15)';g.beginPath();g.ellipse(-s*.1,s*.25,s*1.05,s*.7,0,0,TAU);g.fill();
+    g.fillStyle=col;g.beginPath();g.ellipse(-s*.15,0,s,s*.65,0,0,TAU);g.fill();
+    if(isMama){g.fillStyle='#8a6440';g.beginPath();g.ellipse(-s*.35,0,s*.55,s*.42,0,0,TAU);g.fill();g.fillStyle='#4a6fa8';g.beginPath();g.ellipse(-s*.3,s*.36,s*.28,s*.09,0,0,TAU);g.ellipse(-s*.3,-s*.36,s*.28,s*.09,0,0,TAU);g.fill();
+      g.fillStyle='rgba(60,40,20,.35)';for(var q=0;q<6;q++){g.beginPath();g.arc(-s*.6+q*s*.17,(q%2?.15:-.15)*s,s*.06,0,TAU);g.fill();}}
+    g.fillStyle=isMama?'#7a5634':col;g.beginPath();g.arc(s*.62,0,s*.42,0,TAU);g.fill();
+    g.fillStyle='#f0a030';g.beginPath();g.moveTo(s*.95,-s*.14);g.lineTo(s*1.35,0);g.lineTo(s*.95,s*.14);g.fill();
+    g.fillStyle='#111';g.beginPath();g.arc(s*.72,-s*.2,s*.08,0,TAU);g.arc(s*.72,s*.2,s*.08,0,TAU);g.fill();
+    g.restore();}
+  function draw(){var W=st.W,H=st.H,u=st.u;if(!BG)BG=bg();g.drawImage(BG,0,0,W,H);
+    for(var i=0;i<ripples.length;i++){var r=ripples[i],k=r.t/1.4;g.strokeStyle='rgba(255,255,255,'+(.35*(1-k))+')';g.lineWidth=1.5;g.beginPath();g.arc(r.x,r.y,u*(2+k*7),0,TAU);g.stroke();}
+    // потерявшиеся утята — пищат (кружок-зов)
+    st.loose.forEach(function(l){var p=.5+.5*Math.sin(T*6+l.t);g.strokeStyle='rgba(255,240,150,'+(.25+.35*p)+')';g.lineWidth=2;g.beginPath();g.arc(l.x,l.y,u*(4+p*1.5),0,TAU);g.stroke();duck(l.x,l.y,l.a,u*2.3,'#f6d84a',false);});
+    var CH=chain(st,st.n);for(var j=st.n-1;j>=0;j--){var c=CH[j];duck(c.x,c.y,c.a,u*2.3,'#f6d84a',false);}
+    var fl=st.inv>0&&Math.floor(T*10)%2;if(!fl)duck(st.x,st.y,st.a,u*4,'#a8835a',true);
+    if(ptr&&!bot){g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=2;g.setLineDash([u,u]);g.beginPath();g.moveTo(st.x,st.y);g.lineTo(ptr.x,ptr.y);g.stroke();g.setLineDash([]);g.beginPath();g.arc(ptr.x,ptr.y,u*2,0,TAU);g.stroke();}
+    if(!started&&!bot){var fs=Math.round(Math.max(17,u*4.2));g.font='700 '+fs+'px Golos Text,system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';var tx=host.pc?L2('Нажми ← или →, чтобы поплыть','Press ← or → to start'):L2('Коснись пруда — поплыли!','Touch the pond to start!');
+      var tw=g.measureText(tx).width+fs*1.6;g.fillStyle='rgba(16,26,36,'+(.6+.15*Math.sin(T*4))+')';g.beginPath();g.rect(W/2-tw/2,H*.8-fs,tw,fs*2);g.fill();g.fillStyle='#fff';g.fillText(tx,W/2,H*.8);}
+    try{if(A&&A.petr&&W>H)A.petr(g,W*.06,H*.98,H*.22,T,{arm:'talk',face:'smile',look:1});}catch(e){}}
+  if(window.__lvbTest!==undefined)window.__lvbTest={st:st};}
+
+var DEF={id:ID,n:{ru:'Утята за мамой',en:'Ducklings'},icon:'<path d="M5 14c0-3 3-5 7-5 1-3 5-3 6 0l2 1-2 1c0 4-3 7-7 7s-6-2-6-4z" fill="currentColor" opacity=".35"/><path d="M5 14c0-3 3-5 7-5 1-3 5-3 6 0l2 1-2 1c0 4-3 7-7 7s-6-2-6-4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  kind:'lov',run:run,bot:function(lv,o){return sim(lv,o);},sim:sim};
+(window.MG_REG?window.MG_REG:function(d){(window.MG_PEND=window.MG_PEND||[]).push(d);})(DEF);
+window.LOVB_UTYATA={sim:sim,newWorld:newWorld,step:step,pilot:pilot};
+})();

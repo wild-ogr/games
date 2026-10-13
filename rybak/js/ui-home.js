@@ -54,27 +54,29 @@ function todayHtml(){var o=today(),P=PLACES[o.pi],bl=biteLv(o.m),gt=goalTrip(),s
   var g=null;try{g=goalNext();}catch(e){}var gOk=g&&!gt&&S.coins>=g.p&&!newbie();
   // турнир недели позвать после 3–5 рыбалок, пока в нём не играл на этой неделе (сыгравшие в первый день возвращаются вдвое чаще)
   var tour=false;try{var wk=weekNum();tour=(S.sessions||0)>=3&&(S.sessions||0)<=12&&!(S.week&&S.week.w===wk&&S.week.best>0)&&S.uiTour!==wk&&!gt;}catch(e){}
+  var X=window.R2H;if(X&&X.lay()){tour=false;if(!gt&&!o.nb)say=say.replace(/ (Поехали|Shall we)\?$/,'');} /* rb2-HOME: строки-приглашения нет — точка на кольце «Турнир»; «Поехали?» — уже на кнопке */
   return '<section class="uh-today"><div class="uh-say"><span class="uh-av">'+(window.LOOK&&LOOK.av?LOOK.av('petr'):'')+'</span><p><b class="uh-who">'+L('Петрович','Petrovich')+'</b>'+(gt||o.nb?esc(say):say)+'</p>'
     +(o.nb?'':'<button class="uh-q noenter" id="uhFore" aria-label="'+L('Прогноз Петровича','Forecast')+'">🔮</button>')+'</div>'
     +'<button class="uh-go noenter" id="uhGo"><span class="uh-goi">'+(gt?'🎫':'🎣')+'</span><span><b>'+esc(go)+'</b><small>'+esc(sub)+'</small></span></button>'
     +(tour?'<button class="uh-row uh-tour noenter" id="uhTour"><span>🏆</span><span><b>'+L('Турнир недели','Weekly contest')+'</b> — '+L('у всех одна снасть, попробуй!','same tackle for all, give it a go!')+'</span><i>›</i></button>':'')
-    +(gOk?'<button class="uh-row uh-goal noenter" id="uhGoal"><span>🛒</span><span><b>'+L('Хватает на: ','You can afford: ')+'</b>'+esc(g.s)+'</span><i>›</i></button>':'')
+    +(gOk&&!(X&&X.goalPre())?'<button class="uh-row uh-goal noenter" id="uhGoal"><span>🛒</span><span><b>'+L('Хватает на: ','You can afford: ')+'</b>'+esc(g.s)+'</span><i>›</i></button>':(!gt&&X?X.goalRow():''))
     +'</section>';}
 
 /* ---- кольца ---- */
 function ring(p,cls){p=Math.max(0,Math.min(1,p||0));var r=17,c=2*Math.PI*r;
   return '<svg class="uh-ring '+(cls||'')+'" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="'+r+'" class="bg"/><circle cx="22" cy="22" r="'+r+'" class="fg" stroke-dasharray="'+(c*p).toFixed(1)+' '+c.toFixed(1)+'" transform="rotate(-90 22 22)"/></svg>';}
-function ringsHtml(){var n=0;try{n=a3DoneN();}catch(e){}var wl=1;try{wl=weekLeft();}catch(e){}
+function ringsHtml(){var X=window.R2H,n=0;try{n=a3DoneN();}catch(e){}var wl=1;try{wl=weekLeft();}catch(e){}
   // fix1010c: точка = «новое на сегодня», а не «не всё сделано»: горит, пока сегодня не открывал Цели / Двор (S.uiGd / S.uiDd — день).
   // Раньше горела весь день до 3/3 и всех дел Двора — у игрока на главном экране всегда 2 точки «без повода».
   var td=dayNum();
   var items=[['uhDaily',ring(n/3,'g'),L('Цели дня','Daily goals'),n+' '+L('из','of')+' 3',n<3&&S.uiGd!==td?'dot':''],
-    ['uhWeek',ring((7-wl)/7,'b'),dayOn()?L('Турниры','Contests'):L('Турнир','Contest'),wl<=1?L('последний день','last day'):(LANG==='en'?'':'ещё ')+wl+' '+pl(wl,'день','дня','дней','day left','days left'),'']];
+    ['uhWeek',ring((7-wl)/7,'b'),dayOn()?L('Турниры','Contests'):L('Турнир','Contest'),wl<=1?L('последний день','last day'):(LANG==='en'?'':'ещё ')+wl+' '+pl(wl,'день','дня','дней','day left','days left'),X&&X.tourDot()?'dot':'']];
   var dv=null;if(typeof window.uiDvor==='function'){try{dv=window.uiDvor();}catch(e){dv=null;}}
   if(dv)items.push(['uhDvor',ring(dv.p,'o'),dv.n||L('Двор','Yard'),dv.sub||'',dv.dot&&S.uiDd!==td?'dot':'']);
   else{var dn=0,ev='';try{dn=Object.keys(a3Mp().g).length;ev=a3Ev();}catch(e){}
     var mo=new Date(nowMs()).getMonth();items.push(['uhMonth',ring(dn/10,'o'),ev==='aut'?L('Осень','Autumn'):L('План','Plan'),dn+' '+L('из','of')+' 10','']);}
-  return '<div class="uh-rings">'+items.map(function(x){return '<button class="uh-rb noenter" id="'+x[0]+'">'+x[1]+'<span><b>'+x[2]+'</b><small>'+x[3]+'</small></span>'+(x[4]?'<i class="dot"></i>':'')+'</button>';}).join('')+'</div>';}
+  if(X)items=items.filter(function(x){return X.ring(x[0]);}); /* rb2-HOME: новичку кольца по одному в день */
+  return '<div class="uh-rings">'+items.map(function(x){var nw=X&&X.ringNew(x[0]);return '<button class="uh-rb noenter" id="'+x[0]+'">'+x[1]+'<span><b>'+x[2]+'</b><small>'+x[3]+'</small></span>'+(nw?'<em class="r2h-new">'+L('новое','new')+'</em>':x[4]?'<i class="dot"></i>':'')+'</button>';}).join('')+'</div>';}
 
 /* ---- строки ПК-колонки: звание, заказы ---- */
 function sideRows(){var r=rankOf(S.caught||0),i=RANKS.indexOf(r),nx=RANKS[i+1],p=nx?((S.caught||0)-r[0])/(nx[0]-r[0]):1,h='';
@@ -94,7 +96,7 @@ function tileHtml(i,tod,fo){var p=PLACES[i],open=!!S.open[i],pv=prevOf(i),prev=p
   return '<button class="'+cls+' noenter" data-pl="'+i+'"><span class="uh-th" data-th="'+i+'"></span>'+badge+'<span class="uh-pi">'+h+'</span></button>';}
 function placesHtml(){var tod=window.__todForce||todOf(hourNow()),fo=today(),chs=chapters(),nOpen=PLACES.filter(function(p,i){return S.open[i];}).length,left=0;
   if(!newbie())try{left=a2OrdLeft();}catch(e){}
-  var h='<div class="uh-ph"><span>'+L('Места','Places')+' · '+nOpen+' '+L('из','of')+' '+PLACES.length+'</span>'+(newbie()?'':'<button class="uh-lnk noenter" id="uhOrd">📋 '+L('Заказы соседей','Orders')+(left?': '+left:' ✓')+' ›</button>')+'</div>';
+  var h='<div class="uh-ph"><span>'+L('Места','Places')+' · '+nOpen+' '+L('из','of')+' '+PLACES.length+'</span>'+(newbie()||window.R2H&&!R2H.open('zap')?'':'<button class="uh-lnk noenter" id="uhOrd">📋 '+L('Заказы соседей','Orders')+(left?': '+left:' ✓')+' ›</button>')+'</div>';
   chs.forEach(function(ch){if(chs.length>1)h+='<div class="uh-ch"><b>'+esc(L(ch.n||'',ch.nE||ch.n||''))+'</b>'+(ch.lock?'<small>'+esc(ch.lock)+'</small>':'')+'</div>';
     h+='<div class="uh-grid">'+ch.places.map(function(i){return tileHtml(i,tod,fo);}).join('')+'</div>';});
   return h;}
@@ -115,7 +117,7 @@ function build(){var wrap=$('mapWrap'),scr=$('scr-map');if(!wrap||!scr)return;do
   document.body.classList.toggle('uh-new',newbie());
   var home=$('uiHome');if(!home){home=document.createElement('div');home.id='uiHome';wrap.insertBefore(home,wrap.firstChild);}
   var slots=$('mapSlotsB');
-  home.innerHTML='<div class="uh-l">'+todayHtml()+(newbie()?'':ringsHtml())+'<div id="uhSlots"></div>'+(newbie()?'':'<div class="uh-side">'+sideRows()+'</div>')+'</div><div class="uh-r">'+placesHtml()+'</div>';
+  var X=window.R2H;home.innerHTML='<div class="uh-l">'+todayHtml()+(X&&X.lay()?'<div id="r2hTop"></div>':'')+(newbie()?'':ringsHtml())+'<div id="uhSlots"></div>'+(newbie()?'':'<div class="uh-side">'+sideRows()+'</div>')+'</div><div class="uh-r">'+placesHtml()+'</div>';
   if(slots){$('uhSlots').appendChild(slots);} // гнёзда mapSlots — под кольцами (заполнены старым openMap)
   // шапка: 💰 с «+», вкладки для ПК
   var pill=$('mCoins');if(pill&&!pill.querySelector('.uh-plus')){var pl_=document.createElement('span');pl_.className='uh-plus';pl_.textContent='+';pill.appendChild(pl_);}
@@ -128,7 +130,8 @@ function build(){var wrap=$('mapWrap'),scr=$('scr-map');if(!wrap||!scr)return;do
   var tod=window.__todForce||todOf(hourNow());
   home.querySelectorAll('[data-th]').forEach(function(el){var i=+el.dataset.th;try{el.appendChild(placeThumb(i,condFor(i,tod)));}catch(e){}});
   bind(home);[nav,tabs].forEach(bindNav);
-  if(window.LOOK&&LOOK.walk)try{LOOK.walk(home);LOOK.walk(nav);if(tabs)LOOK.walk(tabs);}catch(e){}}
+  if(window.LOOK&&LOOK.walk)try{LOOK.walk(home);LOOK.walk(nav);if(tabs)LOOK.walk(tabs);}catch(e){}
+  if(X)try{X.after();}catch(e){}}
 function bindNav(n){if(n)n.querySelectorAll('[data-nv]').forEach(function(b){b.onclick=function(){nv(b.dataset.nv);};});}
 function nv(k){if(k==='uhPlaces'){$('mapWrap').scrollTop=0;return;}SND.tap();
   if(k==='uhAlb')openAlb('f');else if(k==='uhTk')openShop('t');else if(k==='uhShop')uiShop();else if(k==='uhMail')openMail();else if(k==='uhMore')SOC.showMore();}
@@ -141,7 +144,7 @@ function bind(home){var o=today();
   bindRings();
   home.querySelectorAll('[data-pl]').forEach(function(b){var i=+b.dataset.pl;b.onclick=function(){SND.tap();S.open[i]?pickTime(i):buyPlace(i);};});}
 function bindRings(){var a;if((a=$('uhDaily')))a.onclick=function(){SND.tap();openDaily('d');};
-  if((a=$('uhWeek')))a.onclick=function(){SND.tap();openWeek();};
+  if((a=$('uhWeek')))a.onclick=function(){SND.tap();try{if(window.R2H)R2H.tourSeen();}catch(e){}openWeek();};
   if((a=$('uhMonth')))a.onclick=function(){SND.tap();openDaily('m');};
   if((a=$('uhDvor')))a.onclick=function(){SND.tap();try{var d=window.uiDvor();d&&d.open&&d.open();}catch(e){}};
   if((a=$('uhRank')))a.onclick=function(){SND.tap();openRank();};

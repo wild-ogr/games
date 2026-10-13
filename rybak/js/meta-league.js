@@ -56,9 +56,9 @@ function botTrips(w,l,j){var k=w+':'+l+':'+j;if(CACHE[k])return CACHE[k];
   var b=BOTS[l][j],R=rng(w*7919+l*104729+j*1299709+17),n=b.a[0]+Math.floor(R()*(b.a[1]-b.a[0]+1)),days=[0,1,2,3,4,5,6],out=[],pi=weekPlace(w);
   for(var i=6;i>0;i--){var x=Math.floor(R()*(i+1)),t=days[i];days[i]=days[x];days[x]=t;}
   M.botting=true;
-  try{for(var q=0;q<n;q++){var tod=TODS[Math.floor(R()*4)],wx=WXS[Math.floor(R()*5)],g=0;
-    for(var c=0;c<5;c++){var r=botCast(pi,'worm',tod,wx,TOURN_TK,false,b.sk,R);if(r&&r.kind==='fish'&&r.f&&!r.f.leg)g+=Math.round(r.w*1000);}
-    out.push({d:days[q],g:g});}}catch(e){}
+  try{for(var q=0;q<n;q++){var tod=TODS[Math.floor(R()*4)],wx=WXS[Math.floor(R()*5)],g=0,cs=[];if(window.r2eBotTod)tod=r2eBotTod(w,tod); /* rb2-EVENT: ночной турнир */
+    for(var c=0;c<5;c++){var r=botCast(pi,'worm',tod,wx,TOURN_TK,false,b.sk,R);if(r&&r.kind==='fish'&&r.f&&!r.f.leg){g+=Math.round(r.w*1000);cs.push(r);}}
+    out.push({d:days[q],g:window.r2eBot?r2eBot(w,cs,g):g});}}catch(e){} /* rb2-EVENT: очки соседей по виду турнира недели (tkr) */
   M.botting=false;out.sort(function(a,c){return a.d-c.d;});return (CACHE[k]=out);}
 // таблица недели w в лиге l на день недели upto (7 — вся неделя): [{me, j, g, last}]
 function table(w,l,upto,myG){var rows=[];
@@ -94,7 +94,7 @@ function face(av,sz){sz=sz||44;var bg=av[0],sk=av[1],hat=av[2],hc=av[3],beard=av
   return '<svg class="lgface" width="'+sz+'" height="'+sz+'" viewBox="0 0 64 64" aria-hidden="true">'+s+'</svg>';}
 var ME_AV=['#ffcf7a','#e8b48e','cap','#e07a3a',0,0,'#5a3a22'];
 function myFace(sz){return face(ME_AV,sz);}
-function g2(g){return g?kgTxt(g/1000):'—';}
+function g2(g){return g?(window.r2eFmt?r2eFmt(null,g):kgTxt(g/1000)):'—';} /* rb2-EVENT: подпись по виду турнира */
 var WDS=[['пн','Mon'],['вт','Tue'],['ср','Wed'],['чт','Thu'],['пт','Fri'],['сб','Sat'],['вс','Sun']];
 
 /* ---------- окно лиги ---------- */

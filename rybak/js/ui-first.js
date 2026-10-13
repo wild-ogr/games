@@ -85,6 +85,7 @@ document.addEventListener('pointerdown',function(e){if(!scrOn())return;var t=e.t
   if(t&&t.closest&&t.closest('#uiOffer,.gh,#uiCast'))return;
   if(!downs[e.pointerId]){downs[e.pointerId]=1;nDown++;}
   // палец на облачке Митяя (и прочих надписях поверх воды) — это касание воды: подсечка/удержание лески
+  if(t!==cv&&G&&!modalOn&&t.closest&&t.closest('#say')&&(G.phase==='wait'||G.phase==='nibble')&&!R2.off('soft')){var s0=$('say');s0.classList.remove('ui-hold','on');say.until=0;return;} /* rb2-FIRSTFIX soft: касание облака Митяя в ожидании только закрывает его — не спугивает рыбу */
   if(t!==cv&&G&&!modalOn){var sy=$('say');if(sy&&sy.classList.contains('ui-hold')){sy.classList.remove('ui-hold');say.until=0;}pDown(e);}},true);
 function up(e){if(downs[e.pointerId]){delete downs[e.pointerId];nDown=Math.max(0,nDown-1);}
   if(e.type==='pointercancel'&&G&&(G.phase==='fight'||G.phase==='reel')){cancels++;G.uiTc=(G.uiTc||0)+1;hint(MOUSE?L('Нажми снова и держи','Press again and hold'):L('Коснись снова и держи','Touch again and hold'),true);}
@@ -105,7 +106,7 @@ function uiResults(g){var card=$('mcard');if(!g||!$('rWin')||!card)return;
   if(g.tourn||(S.sessions||0)>SIMPLE_RES)return;
   var kids=[].slice.call(card.children),cw=card.querySelector('.coins-won'),row=null,i0=kids.indexOf(cw),hid=0;if(i0<0)return;
   for(var i=i0+1;i<kids.length;i++){var k=kids[i];if(k.classList.contains('row')){row=k;break;}
-    if(k.classList.contains('quote')||k.id==='mSocBox'||k.querySelector&&k.querySelector('#mSocBox')||k.hasAttribute('data-trip'))continue;
+    if(k.classList.contains('quote')||k.classList.contains('ui-keep')/* rb2-MGREC: строка «Блинчики» после 1-й рыбалки — не прятать в «Подробнее» */||k.id==='mSocBox'||k.querySelector&&k.querySelector('#mSocBox')||k.hasAttribute('data-trip'))continue;
     if(k.offsetHeight===0&&!k.textContent.trim())continue;k.classList.add('ui-more');hid++;}
   card.classList.add('ui-simple');
   var ra=$('rAgain'),rm=$('rMap');if(ra){ra.classList.add('green','ui-big');ra.innerHTML='🎣 '+L('Ещё раз','Again');}

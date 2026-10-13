@@ -300,7 +300,8 @@ button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;fon
 /*/FB1*/
 </style>
 <link rel="stylesheet" href="css/look.css"><link rel="stylesheet" href="css/themes.css"><script src="js/look.js"></script><!--LK: вид «Стекло и свет» и темы (rlook)-->
-<script src="js/places.js"></script><script src="js/places-art.js"></script><!--RB:NORTH: реестр рыб и мест, пейзажи новых мест (до игры)-->
+<script src="js/places.js"></script><script src="js/places-art.js"></script><script src="js/rb2-water.js"></script><!--rb2-SEASON: водоём месяца (место с датой — в конец PLACES)--><!--RB:NORTH: реестр рыб и мест, пейзажи новых мест (до игры)-->
+<script src="js/rb2-core.js"></script><!--rb2-core: каркас буста 2.0 (R2: флаги, поля S.r2*, гнёзда, окна входа, need) — до игры-->
 <script>/* iPhone: звук в бесшумном режиме. Просим сеанс «воспроизведение» (Safari 17+) и держим тихий <audio> — иначе переключатель «без звука» глушит Web Audio целиком. */
 (function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
@@ -844,7 +845,7 @@ const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512005219424'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 /*STAT*/
-/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.6 (12.10.2026; v1.5 — 11.10, v1.4 — 09.10, v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
@@ -853,9 +854,13 @@ const OK_LINK='https://ok.ru/game/512005219424'; // ссылка на игру �
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
    05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
    08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
-   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса.
+   11.10 (v1.5, sv:15): запасной адрес U2 (stat.assortiz.ru/ev), пока основной лежит.
+   12.10 (v1.6, sv:16; Оборона ob2-core, образец Зины zb2-core d41d683): последняя пачка при закрытии (sendBeacon) — на запасной адрес, пока основной в сеансе
+     ни разу не ответил «ОК» или недавно падал (bUrl; sendBeacon отвечает true сразу — пачка в лежащее облако терялась молча);
+     STAT.slow(sc,ms,o) — событие slow «медленный переход» (≥300 мс; sc — экран/переход, ms; не больше 8 за сеанс); в start — mem (ГБ, deviceMemory) и cpu (ядер). */
 var STAT=(function(){
-  var V=1,SV=15,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=16,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,pOk=0,slN=0,SLMAX=8,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -885,6 +890,10 @@ var STAT=(function(){
     return {os:os,dv:touch?(m<600?'m':'t'):'d',sw:Math.round(w/20)*20,sh:Math.round(h/20)*20,
       wv:/; wv\)|VKAndroidApp|com\.vkontakte/.test(ua)||(os==='ios'&&!/Safari\//.test(ua))?1:0,
       br:cv?'c'+cv[1]:sv?'s'+sv[1]:/Firefox\/(\d+)/.test(ua)?'f'+/Firefox\/(\d+)/.exec(ua)[1]:'?'};}
+  // v1.6: память (ГБ, только Chrome/Android) и число ядер — в start
+  function hw(p){try{var m=+navigator.deviceMemory,c=+navigator.hardwareConcurrency;if(m>0)p.mem=m;if(c>0)p.cpu=Math.min(64,Math.round(c));}catch(e){}return p;}
+  // v1.6: STAT.slow('t:map',420,{mk:'…'}) — медленный переход между экранами (≥300 мс), не больше SLMAX за сеанс
+  function slow(sc,ms,o){if(!on||!(ms>=300)||slN>=SLMAX)return;slN++;var p={sc:String(sc||'').slice(0,24),ms:Math.round(ms)},k;for(k in o||{})if(p[k]===undefined)p[k]=o[k];ev('slow',p);}
   function saveSt(){if(O.S){O.S.stc={c:st.c,n:st.n,d:st.d};}ls('stat-'+G,JSON.stringify(st));}
 
   /* STAT.init({g:'gastronom', gv:'v16', plat:PLAT, lang:LANG, url:STAT_URL, now:nowMs, S:S, rate:1}) — README.
@@ -913,7 +922,7 @@ var STAT=(function(){
       vp:scrub(qp('vk_platform').replace(/_ok$/,''),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
     pend=dev&&!O.url?[]:jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[]; // журнал мака очередь не трогает
     // start ждёт STAT.progress() (поля pl, cn, bt), но не дольше 3 с; события до него встанут после
-    sP=['start',sec(),{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)}];
+    sP=['start',sec(),hw({sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)})];slN=0;
     if(prog)rel();else sTm=setTimeout(rel,3000);
     dayMark();saveSt();
     if(se&&se.length){for(i=0;i<se.length;i++){x=se[i];if(x&&x[0]===2)res(x[1],x[2]);else if(x)err(x[1],x[2],x[3],0,{e:1});}}window.__se=[];
@@ -1033,15 +1042,17 @@ var STAT=(function(){
     var L=urls();
     function go(i){post(L[i],s,function(c,mark){
       var okc=c>=200&&c<300;
-      if(L[i]===O.url){if(okc)pFail=0;else if(c>=500||c===429||!c)pFail=Date.now();}
+      if(L[i]===O.url){if(okc){pFail=0;pOk=1;}else if(c>=500||c===429||!c)pFail=Date.now();}
       if(!okc&&(c>=500||c===429||!c)&&i+1<L.length)return go(i+1);
       delete fly[k];got(b,c,mark);});}
     go(0);}
   function flush(){if(!on||sP)return;while(Q.length)pend.push(pack());keep();
     if(dev&&!O.url){pend=[];keep();return;}
     if(navigator.onLine===false||!pend.length||Date.now()<nextT)return;send(pend[0]);}
+  // v1.6: адрес для sendBeacon — запасной, пока основной в этом сеансе ни разу не ответил «ОК» или падал последние 10 мин
+  function bUrl(){return U2&&(!pOk||(pFail&&Date.now()-pFail<6e5))?U2:O.url;}
   function beacon(){var i,b,ok,left=[];if(dev&&!O.url){pend=[];keep();return;}if(navigator.onLine===false)return;
-    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(urls()[0],JSON.stringify(b)));}catch(e){}
+    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(bUrl(),JSON.stringify(b)));}catch(e){}
       if(!ok||srv)left.push(b);}
     pend=left;keep();if(pend.length&&!srv)send(pend[0]);}
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
@@ -1052,7 +1063,7 @@ var STAT=(function(){
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
       if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
-      var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
+      var p=hw({sn:st.n,f:0,r:1}),k;slN=0;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
   // облако игры: в mergeSave — STAT.merge(d.stc): раньше установлен, больше сеансов
@@ -1070,14 +1081,14 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,slow:slow,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v8-101112',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v9.0-101320',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -1397,7 +1408,10 @@ var SOC=(function(){
     ntf:ntf,ntfOn:ntfOn,ntfDue:ntfDue,ntfDay:ntfDay,level:level,score:score,mission:mission,missionKnown:missionKnown,evOn:evOn,evFlush:evFlush};
 })();
 /*/SOC*/
-SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,now:()=>nowMs(),
+/* vkm (10.10): миссии VK — игра только сообщает модулю SOC «миссия выполнена» (js/meta-vkm.js), шлёт он сам, молча, через функцию vk-pay (?op=vkev).
+   evId — номер миссии из кабинета VK (js/meta-vkm-data.js; 0 — ещё не заведена, не шлём). На маке адрес функции можно подменить: ?evurl=… (стенд). Уровень/очки не шлём — таблица «по очкам» занята лигой. */
+const EV_URL=(()=>{const m=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]evurl=([^&#]*)/.exec(location.search);return m?decodeURIComponent(m[1]):'https://functions.yandexcloud.net/d4e7egf62asn7suf30m0?op=vkev';})();
+SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,now:()=>nowMs(),evUrl:EV_URL,evId:c=>typeof VKM_RY_ID==='object'&&VKM_RY_ID[c]||0,
   ntf:{t:n=>ntfText(n),b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Договорились! Попусту дёргать не стану.','Deal! I won\'t bother you often.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}}); // ntf (07.10): SOC v2.4
 // VK: куски по 1800 символов, двойной буфер «a0…»/«b0…», указатель svn="b:5:<длина>" — последним
 const VK_CHUNK=1800,VK_MAXCH=40,vkSent={};let vkCur=null,vkQ=null,vkAgain=false;
@@ -1541,6 +1555,7 @@ function adOpen(){setPause('ad',true);YG.stop();}
 function adClose(){setPause('ad',false);if(G&&!G.over&&!modalOn&&$('scr-fish').classList.contains('on'))YG.start();}
 const AD_FAIL=L('Реклама сейчас недоступна — загляни чуть позже','Ads are unavailable right now — try later'),AD_CLOSED=L('Ролик закрыт до конца — награды нет','The video was closed early — no reward'),VK_REAL=/[?&]vk_app_id=/.test(location.search);
 // межэкранная: только между рыбалками, по «долгу» S.adW (рыбалок с прошлого показа ≥ AD_EVERY=3), с 4-й рыбалки, не раньше AD_GAP после ЛЮБОЙ рекламы и после запуска
+let intNoT=0,AD_RETRY_NO=60000; /* rb2-core adRetry60 */
 let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=3,AD_COINS=30,AD_FROM=3,X2_ON=true;
 /* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще всего на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
    1) отказ «ролика нет» → один тихий автоповтор через AD_RETRY_MS под надписью «Ролик загружается…» (игра на паузе, нажать ничего нельзя);
@@ -1551,7 +1566,7 @@ let lastAdT=Date.now(),AD_GAP=180000,AD_EVERY=3,AD_COINS=30,AD_FROM=3,X2_ON=true
    Автоповтор — только на «ролика нет», не на закрытый ролик. Награда — только за досмотр (result:true / onRewarded) и один раз (paid).
    Статистика: ok+c='retry' — спас автоповтор; none — ролика не было и после повтора; err — код/причина.
    Тот же приём — во всех играх (журнал hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ»). Отличие Рыбалки: adReady() занято межэкранной → здесь adVidReady(). */
-const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAdCoins,#obAd,#eMore,#rX2,#neAd,#dyAd,#sX2,#mlGift2,.btn.accent[data-th^="buy:"]';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
+const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAdCoins,#obAd,#eMore,#rX2,#neAd,#dyAd,#sX2,#mlGift2,#r2eSwAd,.btn.accent[data-th^="buy:"]'; /* rb2-EVENT: #r2eSwAd — замена записки за ролик */let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} /* код VK, иначе причина словами — в статистику */
 function adShut(e){const d=e&&e.error_data||{};return +d.error_code===4;} /* код VK 4 — игрок сам закрыл ролик раньше конца */
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
@@ -1699,7 +1714,10 @@ function vkIntLoad(){if(!VK)return Promise.resolve(false);return vkSend('VKWebAp
 function showInterstitial(cb0){
   STAT.adReq('int');
   /* не показана: none c=nofill (VK: проверка сказала «нет», result:false или код 20) / nosdk; ошибка — err c=код VK или причина (adErrCode, как у ролика) */
-  const fin=(r,c)=>{lastAdT=Date.now();STAT.ad('int',r,c);if(r==='show'){S.adW=0;save();}cb0();};
+  /* rb2-core adRetry60 (решение владельца 12.10): после «рекламы нет» (nofill) следующая попытка — через ~60 с, а не через AD_GAP (180 с; на деле ~4,8 мин).
+     Межэкранная по-прежнему только между рыбалками. В STAT у запроса, пришедшего раньше AD_GAP после «нет», — поле rt:1 (замерить эффект). */
+  const rt=intNoT&&Date.now()-intNoT<AD_GAP?{rt:1}:undefined;
+  const fin=(r,c)=>{lastAdT=Date.now();STAT.ad('int',r,c,rt);intNoT=0;if(r==='none'&&c==='nofill'&&!R2.off('adRetry60')){intNoT=Date.now();lastAdT=Date.now()-Math.max(0,AD_GAP-AD_RETRY_NO);}if(r==='show'){S.adW=0;save();}cb0();};
   const cb=shown=>fin(shown!==false?'show':'none',shown!==false?'':'nofill');
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nosdk');cb0();}else stubAd(cb);return;}
   if(VK){const go=()=>{adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();vkIntOk=null;cb(!!(r&&r.result));vkIntLoad();},e=>{adClose();vkIntOk=null;if(adNoFill(e))cb(false);else fin('err',adErrCode(e));vkIntLoad();});};
@@ -2401,8 +2419,8 @@ function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;if(S.s
     tLine=`<p class="goal tipl">📅 ${L('Рыбалка дня','Fishing of the day')}: ${kgTxt(kg)}${nb?' — '+L('твой лучший сегодня!','your best today!'):' · '+L('лучший','best')+' '+kgTxt(s.best/1000)}</p>`;
     if(!S.daily['y'+todayKey()]){S.daily['y'+todayKey()]=1;S.coins+=ern('quest',20);G.earned+=20;G.bon.push([L('участие','entry'),20]);}
     if(nb)LB.submitDay(s.best);}
-  else if(G.tourn){const g=Math.round(kg*1000),wk=weekNum();if(!S.week||S.week.w!==wk)S.week={w:wk,best:0};const nb=g>(S.week.best||0);if(nb)S.week.best=g;
-    tLine=`<p class="goal tipl">🏆 ${L('Турнир недели','Weekly contest')}: ${kgTxt(kg)}${nb?' — '+L('твой лучший результат!','your best!'):' · '+L('лучший','best')+' '+kgTxt(S.week.best/1000)}</p>`;
+  else if(G.tourn){const g=window.r2eTs?r2eTs(G,kg):Math.round(kg*1000),wk=weekNum(); /* rb2-EVENT: очки турнира по виду недели (tkr) */if(!S.week||S.week.w!==wk)S.week={w:wk,best:0};const nb=g>(S.week.best||0);if(nb)S.week.best=g;
+    tLine=`<p class="goal tipl">🏆 ${L('Турнир недели','Weekly contest')}: ${window.r2eFmt?r2eFmt(wk,g):kgTxt(kg)}${nb?' — '+L('твой лучший результат!','your best!'):' · '+L('лучший','best')+' '+(window.r2eFmt?r2eFmt(wk,S.week.best):kgTxt(S.week.best/1000))}</p>`; /* rb2-EVENT: подпись очков вида недели */
     if(!S.daily['t'+todayKey()]){S.daily['t'+todayKey()]=1;S.coins+=ern('quest',15);G.earned+=15;G.bon.push([L('участие','entry'),15]);tLine+=`<p>${L('За участие сегодня','For taking part today')}: +${coinsTxt(15)}</p>`;}
     if(nb)LB.submit();}
   const dl=dailyAfterSession(kg,fish.length);
@@ -3857,8 +3875,10 @@ function openLetter(id){const x=LETTERS[id],f=FROM[x.fr],M=S.mail,r=M.rq[id],don
   $('mCancel').onclick=openMail;}
 // вход: одно окно «Почта» — раз в день или когда пришло новое письмо (иначе — красная точка на «Почте»)
 maybeStreak=function(){if(G||window.__demo||$('modal').classList.contains('on')||$('ad').classList.contains('on'))return;
-  const nw=a3MailDeliver();a3ClubNotes();if((S.caught||0)<1){updDots();return;}
-  const t=dayNum();if(a3MailCnt()&&(nw||S.mail.au!==t)){S.mail.au=t;save();openMail();}else updDots();};
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',()=>maybeStreak());return;} /* rb2-core: облако пришло раньше, чем загрузились модули, — подождать их */
+  if(R2.enterHi())return; /* rb2-core: окна входа буста prio ≥100 — раньше почты дня (за запуск не больше одного окна) */
+  const nw=a3MailDeliver();a3ClubNotes();if((S.caught||0)<1){updDots();R2.enterLo();return;}
+  const t=dayNum();if(a3MailCnt()&&(nw||S.mail.au!==t)){S.mail.au=t;save();openMail();R2.enterLo(true);}else{updDots();R2.enterLo();}}; /* rb2-core: prio <100 — если почта промолчала */
 // клуб: за 3 дня до конца — один тост; закончился — один тост (посылки остаются)
 function a3ClubNotes(){const c=a3Club();if(!c.n)return;
   if(c.on&&c.left<=3&&S.club.w3!==c.end){S.club.w3=c.end;save();toast('🎫 '+L('Клубная карта действует ещё '+c.left+' '+pl(c.left,'день','дня','дней','','')+'. Сама не продлится.','Your Club card has '+c.left+' days left. It won\'t renew by itself.'),4200,true);}
@@ -4128,6 +4148,7 @@ function fbTick(dt){if(!G)return;if(G.fbZ>0)G.fbZ-=dt;fbZSync();
 {const os=openSettings;openSettings=function(){os();const b=$('stShop');if(b&&fbSpecOn())b.onclick=()=>{hideModal();openShop('p');};};$('btnSet').onclick=openSettings;$('fSet').onclick=openSettings;}
 /*/FB1*/
 
+R2.wire1(); /* rb2-core: крючки сохранения и рыбалки — до запуска (облако и первая рыбалка новичка бывают раньше DOMContentLoaded) */
 /* ================= запуск ================= */
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('contextmenu',e=>e.preventDefault());
@@ -4137,7 +4158,11 @@ if(document.hidden)setPause('hide',true);
 applyStatic();document.title=GAME_NAME;$('logo').textContent='🎣 '+GAME_NAME;applyCalm();updCoins();
 const DEMO=new URLSearchParams(location.search).get('demo');
 // новичок — сразу на пруд (утро, ясно), карта — после первой рыбалки
-function bootScreen(){if(!DEMO&&!(S.sessions>0)&&!(S.caught>0)&&!(S.casts>0))startFish(0,{tod:'morning',wx:'sun'});else openMap();}
+function bootScreen(){if(!DEMO&&!(S.sessions>0)&&!(S.caught>0)&&!(S.casts>0)){if(r2fHold())return;startFish(0,{tod:'morning',wx:'sun'});}else openMap();}
+/* rb2-FIRSTFIX (cloudWait): память пустая (iPhone стирает её в VK/Safari) — до учебной рыбалки ждём облако площадки до 1,5 с под заставкой; облако вернуло прогресс → главный экран */
+function r2fHold(){if(window.__r2fH||DEMO||!R2.reg('cloudWait',{s:'FIRSTFIX',t:'новичок без памяти — ждать облако до 1,5 с'})||!(PLAT==='vk'||/yandex|playhop/.test(location.hostname)||/[?&]cw=1/.test(location.search)))return false;window.__r2fH=1;
+  const sp=document.createElement('div'),t0=Date.now();sp.id='r2fSplash';sp.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:50;display:flex;align-items:center;justify-content:center;background:linear-gradient(#2c5d78,#1f3a4a);color:#fff;font-size:22px;font-weight:600;text-align:center';sp.textContent='🎣 '+GAME_NAME;document.body.appendChild(sp);
+  (function w(){if(!(cloudReady||window.__sdkDone||Date.now()-t0>1500))return setTimeout(w,50);sp.remove();try{STAT.ev('tut',{s:'cw',ms:Date.now()-t0,c:cloudReady?1:0,p:S.sessions>0?1:0});}catch(e){}if(G)return;if(!(S.sessions>0)&&!(S.caught>0)&&!(S.casts>0))startFish(0,{tod:'morning',wx:'sun'});else if(!modalOn){openMap();if(window.__sdkDone)maybeStreak();}})();return true;}
 // битое сохранение: спросить игрока. Облако (если есть) всё равно сольётся — прогресс берётся по максимуму
 function saveBadAsk(){const b=SAVE_BAD&&SAVE_BAD.bak,done=()=>{SAVE_BAD=null;saveHold=false;BOOT_COINS=S.coins;save();hideModal();bootScreen();if(window.__sdkDone)maybeStreak();};
   const dt=b&&b.ts?new Date(b.ts):null,ds=dt?(dt.getDate()+'.'+('0'+(dt.getMonth()+1)).slice(-2)):'';
@@ -4164,25 +4189,37 @@ Object.assign(window.__test,{a2Orders,openOrders,openBook,a2Start,a2O,a2ZoneAt,p
 </script>
 <script src="js/north.js"></script><!--RB:NORTH: главы, Царь-рыба, письма Севера-->
 <script src="js/mg-art.js"></script><script src="js/mg-core.js"></script><script src="js/mg-dvor.js"></script><!--RB:MG0 мини-игры: оболочка «Двор Петровича»; игры js/mg-<id>.js — каждая своей строкой НИЖЕ этой-->
-<script src="js/mg-baiki.js"></script><!--RB:MG0 №1 Байки Петровича-->
-<script src="js/mg-akit.js"></script><!--RB:MGA набор рисования мини-игр MGA-->
-<script src="js/mg-bait.js"></script><!--RB:MGA №2 Наживка дня (id nazh)-->
-<script src="js/mg-grib.js"></script><!--RB:MGA №12 Грибы (id griby)-->
-<script src="js/mg-chist.js"></script><!--RB:MGA №5 Чистка с Васькой (id chist)-->
-<script src="js/mg-uha.js"></script><!-- RB:MGB мини-игра №3 «Уха у костра» -->
-<script src="js/mg-prik.js"></script><!-- RB:MGB мини-игра №7 «Прикормка по рецепту» + крючок клёва MG_BAIT_MULT -->
-<script src="js/mg-art-mgd.js"></script><!--RB:MGD рисунки игр MGD-->
-<script src="js/mg-spor.js"></script>
-<script src="js/mg-boroda.js"></script>
-<script src="js/mg-rynok.js"></script>
-<script src="js/mg-domino.js"></script>
+<script>R2.mgLazy(["js/mg-baiki.js", "js/mg-akit.js", "js/mg-bait.js", "js/mg-grib.js", "js/mg-chist.js", "js/mg-uha.js", "js/mg-prik.js", "js/mg-art-mgd.js", "js/mg-spor.js", "js/mg-boroda.js", "js/mg-rynok.js", "js/mg-domino.js"]);</script><!--rb2-core (lazyMg): 12 мини-игр Двора и их рисунки — по требованию (вход во Двор, «Мини-игра дня», «Перекур») и фоном после старта; ?off=lazyMg или ?mg=… — как раньше, сразу. Прежние строки: baiki; akit, bait, grib, chist (MGA); uha, prik (MGB); art-mgd, spor, boroda, rynok, domino (MGD)-->
 <script src="js/themes.js"></script><!--LK: темы оформления-->
-<script src="js/mg-mgc-art.js"></script><script src="js/mg-versha.js"></script><script src="js/mg-raki.js"></script><script src="js/mg-foto.js"></script><!-- RB:MGC мини-игры: верша, ночные раки, фото (общий рисунок mg-mgc-art.js) -->
+<script>R2.mgLazy(["js/mg-mgc-art.js","js/mg-versha.js","js/mg-raki.js"]);</script><script src="js/mg-foto.js"></script><!-- RB:MGC мини-игры: верша, ночные раки, фото (общий рисунок mg-mgc-art.js) --><!--rb2-core: верша и раки — лениво (lazyMg); «Фото» — на старте (кнопка в карточке улова), его рисунки mg-mgc-art — по требованию (needArt)-->
 <link rel="stylesheet" href="css/ui.css"><script src="js/ui-home.js"></script><script src="js/ui-first.js"></script><script src="js/ui-catch.js"></script><!--RB:UX новый главный экран и вид экранов-->
 <link rel="stylesheet" href="css/ui-album.css"><script src="js/ui-album.js"></script><!--RB:UX журнал рыбака и трофейная стена-->
 <link rel="stylesheet" href="css/ui-win.css"><script src="js/ui-win.js"></script><!--RB:UX-win окна в виде «Стекло и свет»-->
 <link rel="stylesheet" href="css/shop.css"><script src="js/fest.js"></script><script src="js/shop.js"></script><script src="js/fest-ryb.js"></script><script src="js/away.js"></script><script src="js/evstat.js"></script><!--RB:SHOP витрина, праздники FEST, «пока тебя не было», статистика забросов-->
 <link rel="stylesheet" href="css/meta.css"><script src="js/meta-core.js"></script><script src="js/meta-league.js"></script><script src="js/meta-sci.js"></script><script src="js/meta-map.js"></script><script src="js/meta-omens.js"></script><script src="js/meta-cat.js"></script><!--RB:META лиги, Наука Петровича, Карта России, приметы, кот Васька (js/meta-*.js)-->
 <script src="js/mg-path.js"></script><!--upd0910: мини-игры на пути — «Мини-игра дня» в Целях, «Перекур» в итогах--><script src="js/statx.js"></script><!--MERGE STAT: недостающие события статистики (показ/место покупок, «не хватает монет», первые минуты, бонусы рыбалки, Север)-->
+<script src="js/meta-vkm-data.js"></script><script src="js/meta-vkm.js"></script><!--vkm: миссии VK — условия (данные + счётчики); отправка — модуль SOC-->
+<!-- rb2:CORE -->
+<!-- rb2:FIRSTFIX --><script src="js/rb2-first.js"></script>
+<!-- rb2:HOME -->
+<link rel="stylesheet" href="css/rb2-home.css"><script src="js/rb2-home.js"></script><!--rb2-HOME: главный экран (зоны гнёзд, строка «Ещё», новичку по дню, цель, «Написать Петровичу» — окно лениво js/rb2-home-fb.js)-->
+<!-- rb2:EVENT --><script src="js/rb2-event.js"></script><!--rb2-EVENT: записки на мостках, клёв недели, турниры по кругу, Зорька, итог недели, конверты новичка (окна — лениво js/rb2-event-ui.js)-->
+<!-- rb2:SEASON --><script src="js/rb2-season.js"></script>
+<!-- rb2:MGREC -->
+<script src="js/rb2-mgrec.js"></script><!--rb2-MGREC: рекорды мини-игр, «Ещё разок», «Мостки рекордов» (договор — шапка файла); окно итогов и экран «Мостки» — лениво js/rb2-mgrec-ui.js-->
+<!-- rb2:LOVA --><script>if(window.MGREC){MGREC.add('blinchiki',{f:'js/mg-blinchiki.js',u:['блинчик','блинчика','блинчиков'],ue:['skip','skips'],mid:20,md:[10,20,32],nm:'Блинчиках'});
+MGREC.add('zabros',{f:'js/mg-zabros.js',u:['очко','очка','очков'],ue:['point','points'],mid:18,md:[8,18,30],nm:'Забросе в окошко'});
+MGREC.add('blesna',{f:'js/mg-blesna.js',u:['метр','метра','метров'],ue:['metre','metres'],mid:120,md:[40,110,190],nm:'Проводке блесны'});
+MGREC.add('polen',{f:'js/mg-polen.js',u:['полено','полена','поленьев'],ue:['log','logs'],mid:18,md:[9,18,28],nm:'Поленнице'});
+MGREC.add('poplavki',{f:'js/mg-poplavki.js',u:['рыба','рыбы','рыб'],ue:['fish','fish'],mid:24,md:[5,18,30],nm:'Пяти поплавках'});
+MGREC.add('sachok',{f:'js/mg-sachok.js',u:['малёк','малька','мальков'],ue:['fry','fry'],mid:17,md:[7,15,22],nm:'Сачке в ручье'});}</script><!--rb2-LOVA: ловкостные (договор MGREC.add: файл игры грузится по требованию; рамка js/mg-lkit.js — догружает сам файл игры); флаги lov-<id>-->
+<!-- rb2:LOVB -->
+<script>if(window.MGREC){MGREC.add('foto',{u:['очко','очка','очков'],ue:['point','points'],mid:85,md:[50,100,160],nm:'«Фото с трофеем»'});
+MGREC.add('prichal',{f:'js/mg-prichal.js',u:['очко','очка','очков'],ue:['point','points'],mid:20,md:[12,22,30],max:36,nm:'«Причаль лодку»'});
+MGREC.add('nasos',{f:'js/mg-nasos.js',u:['очко','очка','очков'],ue:['point','points'],mid:34,md:[20,36,50],max:60,nm:'«Накачай лодку»'});
+MGREC.add('utyata',{f:'js/mg-utyata.js',u:['утёнок','утёнка','утят'],ue:['duckling','ducklings'],mid:15,md:[8,16,24],nm:'«Утятах за мамой»'});
+if(/[?&]mg=(prichal|nasos|utyata)(&|$)/.test(location.search))document.write('<script src="js/mg-'+RegExp.$1+'.js"><\/script>');}</script><!-- rb2-LOVB: ловкостные Причаль/Накачай/Утята (договор MGREC: файл грузит MGREC.play; стенд ?mg=<id> — сразу), флаги lov-<id> -->
+<!-- rb2:ECO -->
+<script src="js/rb2-eco.js"></script><!--rb2-ECO договор чисел RECO-->
 </body>
 </html>

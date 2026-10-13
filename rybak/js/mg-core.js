@@ -126,7 +126,7 @@ function MG_REG(g){if(g&&g.en===false&&typeof LANG!=='undefined'&&LANG==='en')re
   if(!g.kind)g.kind='daily';REG[g.id]=g;if(S.mg)try{if(g.fix)g.fix(S.mg[g.id]);}catch(e){}
   if(STAND&&(STAND===g.id||STAND===g.oid))standGo();}
 function dvorOpen(){return ALL||(+S.sessions||0)>=DVOR_AT;}
-function isOpen(id){var m=MG_BY[id];if(!m||!REG[id])return false;if(ALL)return true;if(!dvorOpen())return false;
+function isOpen(id){var m=MG_BY[id];if(!m||!REG[id])return false;if(ALL)return true;if(m.lov)return !!(W0.MGREC&&W0.MGREC.isOpen(id));/* rb2-MGREC */if(!dvorOpen())return false;
   if(m.season&&!inSeason(m.season,dKey()))return false;
   var ok=m.at<0||!!(S.open&&S.open[m.at])||(m.fest&&festOn());
   if(ok&&REG[id].open)try{ok=!!REG[id].open();}catch(e){ok=false;}return ok;}
@@ -141,7 +141,7 @@ function leftToday(id){var g=REG[id];if(!g||!isOpen(id))return 0;if(g.kind==='de
   if(g.ready){try{if(!g.ready())return 0;}catch(e){return 0;}}return Math.max(0,(rw(id).day||1)-playsToday(id));}
 function deloState(){var m=mgDay(),id=deloId();if(!id)return null;if(m.dd.id&&m.dd.id!==id&&m.dd.n)id=m.dd.id;return {id:id,n:m.dd.n||0,ad:m.dd.ad||0};}
 // «N дел» на плитке Двора
-function todo(){if(!dvorOpen())return 0;var n=0,d=deloState();for(var id in REG)if(leftToday(id)>0&&!(d&&d.id===id))n++;if(d&&!d.n)n++;return n;}
+function todo(){if(!dvorOpen())return 0;var n=0,d=deloState();for(var id in REG)if(!MG_BY[id].lov&&leftToday(id)>0&&!(d&&d.id===id))n++;/* rb2-MGREC */if(d&&!d.n)n++;return n;}
 
 /* ---------- слой игры (host) ---------- */
 var CUR=null; // {g, host, o, el, raf, t0, onR, done}
@@ -152,14 +152,14 @@ function play(id,opt){opt=opt||{};var g=REG[id];if(!g)return false;css();if(CUR)
   var m=mgDay(),k=dKey(),delo=!!opt.delo,train=!!opt.train;
   if(!train&&!delo&&!opt.bot&&leftToday(id)<=0)train=true;
   var lay=mkEl('div','mg-lay');var el=mkEl('div','mg-el');lay.appendChild(el);
-  var bar=mkEl('div','mg-bar','<button class="mg-x" type="button" aria-label="'+L('Выйти','Exit')+'">'+ic('close')+'</button>'+(train?'<span class="mg-tag">'+L('Тренировка','Practice')+'</span>':delo?'<span class="mg-tag gold">'+L('Дело дня','Task of the day')+'</span>':''));
+  var bar=mkEl('div','mg-bar','<button class="mg-x" type="button" aria-label="'+L('Выйти','Exit')+'">'+ic('close')+'</button>'+(train?'<span class="mg-tag">'+(MG_BY[id].lov?L('На рекорд','For the record'):L('Тренировка','Practice'))+'</span>':delo?'<span class="mg-tag gold">'+L('Дело дня','Task of the day')+'</span>':''));
   lay.appendChild(bar);appEl().appendChild(lay);pcMark();lay.classList.toggle('pc',pcOn());
   lay.addEventListener('mousedown',function(e){var b=e.target&&e.target.closest&&e.target.closest('button');if(b)e.preventDefault();}); // RB:MGPC кнопка не держит фокус — пробел/Enter не жмут её второй раз
   var C={g:g,id:id,lay:lay,el:el,raf:0,res:[],delo:delo,train:train,adRun:!!opt.adRun,bot:opt.bot||'',noBack:!!opt.noBack,back:opt.back||null,src:opt.src||'yard',over:false,cb:opt.cb,keys:[],keysUp:[],pause:false,t0:Date.now()};CUR=C;
   bar.querySelector('.mg-x').onclick=function(){if(C.bot)return;askQuit(C);};
   var host=mkHost(C);C.host=host;
-  var o={calm:calmOn(),seed:seedOf(k,id),day:k,train:train,R:R(),lvl:topPlaceS(),delo:delo,bot:C.bot,lang:typeof LANG!=='undefined'?LANG:'ru',rec:(m.rec[id]||0)};C.o=o;
-  try{STAT.screen&&STAT.screen('mg_'+id);if(!C.bot)STAT.ev('mg',{id:id,a:'go',dl:delo?1:0,tr:train?1:0,ad:C.adRun?1:0,src:C.src});}catch(e){} /*MERGE STAT: старт захода*/
+  var o={calm:calmOn(),seed:seedOf(k,id),day:k,train:train,R:R(),lvl:topPlaceS(),delo:delo,bot:C.bot,lang:typeof LANG!=='undefined'?LANG:'ru',rec:(m.rec[id]||0),again:+opt.again||0,first:opt.first?1:0};C.o=o;C.ag=o.again;/* rb2-MGREC */
+  try{STAT.screen&&STAT.screen('mg_'+id);if(!C.bot)STAT.ev('mg',{id:id,a:'go',dl:delo?1:0,tr:train?1:0,ad:C.adRun?1:0,src:C.src,ag:C.ag||0});}catch(e){} /*MERGE STAT: старт захода*/
   try{g.run(host,o);}catch(e){try{console.error(e);}catch(x){}closeGame(true);toast(L('Игра не запустилась','The game failed to start'));}
   return true;}
 function topPlaceS(){try{return topPlace();}catch(e){return 0;}}
@@ -229,7 +229,7 @@ function calcReward(C,res,noCap){var id=C.id,r=rw(id),Rv=R(),t=Math.max(0,Math.m
   var room=noCap?1e9:Math.max(0,MG_RW.CAP-(m.dv||0)),capped=false;if(val>room){capped=true;var f=val>0?room/val:0;c*=f;val=room;}
   var coins=Math.round(c*Rv);var pt=(r.pt?r.pt[t]:t+1)+(rec?MG_RW.recPt:0);
   return {coins:coins,val:val,pt:pt,rec:rec,tier:t,score:sc,capped:capped,k:k,fx:capped&&f!==undefined?f:1,xv:Math.round(((+x.val||0)+lootVal(x))*k*Rv)};}
-function finishGame(C,res){C.over=true;cancelAnimationFrame(C.raf);var id=C.id,m=mgDay(),sc=+res.score||0,t=Math.max(0,Math.min(3,res.tier|0));C.result={score:sc,tier:t};
+function finishGame(C,res){C.over=true;cancelAnimationFrame(C.raf);var id=C.id,m=mgDay(),sc=+res.score||0,RC=W0.MGREC&&W0.MGREC.has(id)?W0.MGREC:null;if(RC&&res.tier==null)res.tier=RC.tier(id,sc);/* rb2-MGREC */var t=Math.max(0,Math.min(3,res.tier|0));C.result={score:sc,tier:t};
   var out={score:sc,tier:t,coins:0,pt:0,rec:false,train:C.train};
   if(!C.bot)m.cnt[id]=(m.cnt[id]||0)+1;
   if(C.bot){out=Object.assign(out,calcReward(C,res,true));}
@@ -243,7 +243,9 @@ function finishGame(C,res){C.over=true;cancelAnimationFrame(C.raf);var id=C.id,m
     out.lvUp=bookCheck();}
   try{STAT.ev('mg',{id:id,s:sc,t:t,ad:C.adRun?1:0,tr:C.train?1:0,dl:C.delo?1:0,c:out.coins||0,src:C.src||'yard'});}catch(e){}
   try{if(out.lvUp&&!C.bot)STAT.ev('mg',{a:'lvup',lv:out.lvUp.lv});}catch(e){} /*MERGE STAT: Книга двора — новый уровень*/
+  if(RC&&!C.bot)try{out.mr=RC.put(id,sc);}catch(e){}/* rb2-MGREC */
   if(!C.bot)mgSave();C.out=out;
+  try{if(!C.bot&&W0.R2)R2.emit('mg',{id:id,sc:sc,rec:!!out.rec,src:C.src||'yard',tr:C.train?1:0,t:t});}catch(e){}/* rb2-MGREC */
   if(C.bot){var cb=C.cb;C.cb=null;closeGame(true);if(cb)cb(out);return;}
   showResult(C,res,out);}
 function giveLoot(x,f){var got=[],n;if(isO(x.bait))for(var k in x.bait){n=Math.round((+x.bait[k]||0)*f);if(n>0){S.bait[k]=(S.bait[k]||0)+n;got.push([k,n]);}}
@@ -268,6 +270,7 @@ function showResult(C,res,out){var x=res.extra||{},g=C.g,lay=C.lay;C.el.classLis
   h+='<div class="mg-row">'+(x2Btn?'<button class="mg-btn sec mg-ad" data-a="x2">'+ic('ad')+' '+L('Удвоить добычу','Double the haul')+'</button>':'')+(adBtn?'<button class="mg-btn sec mg-ad" data-a="ad">'+ic('ad')+' '+L('Ещё заход','One more')+' <small>×½</small></button>':'')+
     '<button class="mg-btn" data-a="ok">'+L('Хорошо','OK')+kc('Enter')+'</button></div></div></div>';
   var d=mkEl('div','mg-resw',h);lay.appendChild(d);
+  if(out.mr&&W0.MGREC)W0.MGREC.load().then(function(R){if(CUR===C)R.deco(C,d,out);}).catch(function(){});/* rb2-MGREC */
   try{if(out.rec||out.tier===3)SND.record();else if(out.tier>0)SND.catch();}catch(e){}
   if(out.coins>0)setTimeout(function(){flyCoins(C,6,lay.clientWidth/2,lay.clientHeight*.45);},700);
   d.onclick=function(e){var a=e.target.closest&&e.target.closest('[data-a]');if(!a)return;var k=a.getAttribute('data-a');
@@ -328,7 +331,7 @@ window.addEventListener('keydown',function(e){var C=CUR;if(!C||C.bot||e.ctrlKey|
   var k=e.key,ent=isEnt(k),ask=C.lay.querySelector('.mg-ask');
   if(ask){if(!e.repeat&&(ent||k==='Escape')){e.preventDefault();var b=ask.querySelector('[data-a=no]');if(b)b.click();}else if(ent)e.preventDefault();return;}
   var rs=C.lay.querySelector('.mg-resw');
-  if(rs||C.over){if(ent||k==='Escape'){e.preventDefault();if(!e.repeat){var b2=rs&&rs.querySelector('[data-a=ok]');if(b2)b2.click();}}return;}
+  if(rs||C.over){if(ent||k==='Escape'){e.preventDefault();if(!e.repeat){var b2=rs&&(ent&&rs.querySelector('[data-a=again]')||rs.querySelector('[data-a=ok]'));if(b2)b2.click();}}return;}
   if(k==='Escape'){e.preventDefault();if(!e.repeat)askQuit(C);return;}
   if(isPaused(C))return;
   if(e.repeat&&!/^Arrow/.test(k)){if(ent||/^Arrow/.test(k))e.preventDefault();return;}

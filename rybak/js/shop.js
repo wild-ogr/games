@@ -154,7 +154,7 @@ function bindV(root){if(!root)return;root.querySelectorAll('[data-vpid]').forEac
 /* ---------- 5. окно «перед VK»: что купишь и как платить ---------- */
 var preOk=null;
 {var b0=PAY.buy;PAY.buy=function(id){var it=PAY_ITEMS[id];
-  if(!PAY.v||!it||PAY.busy||!PAY.on||preOk===id){preOk=null;return b0.call(PAY,id);}
+  if(!PAY.v||!it||PAY.busy||!PAY.on||preOk===id||window.RB2_PRE_SKIP&&RB2_PRE_SKIP(id,sn(),ios())){preOk=null;return b0.call(PAY,id);} /* rb2-ECO П1: «Как платить» — только перед первой покупкой */
   var back=PAY.re;try{STAT.ev('mod',{m:'shop',a:'pre',k:id});}catch(e){}
   modal('<div class="vt-pre"><div class="vt-a">'+art(id)+'</div><h2>'+esc(L(it.name,it.en))+'</h2><p>'+esc(L(it.desc,it.de))+'</p>'+(gain(id)?'<p class="vt-gn">'+gain(id)+'</p>':'')+
     '<p class="quote vt-vk"><b>'+T('Как платить','How to pay')+'</b>'+T('Покупка за голоса VK: 1 голос ≈ 7 ₽, пополнить можно картой прямо в окне.','Paid with VK votes: 1 vote ≈ 7 ₽, you can top up by card right in the window.')+

@@ -46,7 +46,7 @@ if(window.MAILX){
     get t(){var g=S.awayG;return T('Петрович: «Где пропадал? ','Petrovich: “Where have you been? ')+(g&&g.k>=14?T('Без тебя и клёв не тот!»','The bite isn\'t the same without you!”'):T('Мы тут без тебя скучали!»','We missed you!”'));},
     get sub(){var g=S.awayG,b=retB(g);return T('подарок за ','gift for ')+(g?g.k:3)+'+ '+T('дней','days')+(b?' · '+BAIT[b[0]].ic+' +'+b[1]:'');},
     take:function(){var g=S.awayG;if(!g||g.g)return;var c=retC(),b=retB(g);g.g=1;S.coins+=ern('gift',c);if(b)S.bait[b[0]]=(S.bait[b[0]]||0)+b[1];save();ev('ret_take',g.k);toast('🎁 '+T('С возвращением! +','Welcome back! +')+coinsTxt(c),3000,true);}});}
-function retC(){var g=S.awayG;if(!g)return 0;var k=g.k>=14?6:g.k>=7?4:2;return Math.min(3000,Math.max(60,Math.round(a3Trip()*k/5)*5));}
+function retC(){var g=S.awayG;if(!g)return 0;var k=g.k>=14?6:g.k>=7?4:2;var c=Math.min(3000,Math.max(60,Math.round(a3Trip()*k/5)*5));try{if(!R2.off('retCap'))c=Math.min(c,window.RECO&&RECO.ret&&RECO.ret.c?RECO.ret.c():a3GiftC(7));}catch(e){}return c;} /* rb2-FIRSTFIX retCap: не больше подарка 7-го дня серии (решение владельца 13.10); число — один источник RECO.ret.c() (rb2-MERGE) */
 function retB(g){if(!g||g.k<7)return null;return [a3BestBait(topPlace()),g.k>=14?30:20];}
 // запоминаем место последней рыбалки (для донки)
 {var sf=startFish;startFish=function(pi,opt){var r=sf.apply(this,arguments);try{if(G&&!G.tourn&&!G.guest&&!(opt&&opt.tourn)){S.awayP=pi;}}catch(e){}return r;};}

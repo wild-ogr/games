@@ -1,0 +1,62 @@
+'use strict';
+/* rb2-mgrec-ui — ленивая часть MGREC (договор — шапка js/rb2-mgrec.js): окно итогов мини-игры на рекорд (рекорд, медаль недели, «До Петровича — 3»,
+   соседи по мосткам, большая зелёная «↻ Ещё разок» — Enter, «Хватит» — Esc) и экран «Мостки рекордов». Грузится MGREC.load() (R2.need). 13.10.2026, поток MGREC. */
+(function(){var R=window.MGREC;if(!R||R.ui)return;
+var esc=R.esc,L2=R.L2,MD=['','🥉','🥈','🥇'];
+function mdN(m){return [L2('',''),L2('Бронза недели','Bronze of the week'),L2('Серебро недели','Silver of the week'),L2('Золото недели','Gold of the week')][m]||'';}
+function ev(o){try{STAT.ev('mg',o);}catch(e){}}
+function snd(k){try{SND[k]();}catch(e){}}
+function kc(l){try{return MG.pc()?MG.kc(l):'';}catch(e){return '';}}
+var CSS='.r2mr{margin:10px 0 2px;text-align:center}.r2mr p{margin:4px 0;font-size:17px;line-height:1.3}.r2mr .gp{color:#ffd27a;font-weight:700}.r2mr .gp.ok{color:#9be37a}.r2mr .md{font-weight:700}'+
+ '.r2tb{list-style:none;margin:8px auto 2px;padding:0;max-width:340px;text-align:left;font-size:17px}.r2tb li{display:flex;gap:8px;align-items:center;padding:3px 10px;border-radius:10px;line-height:1.25}'+
+ '.r2tb li span{width:20px;opacity:.65}.r2tb li b{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.r2tb li i{font-style:normal;font-weight:700;white-space:nowrap}'+
+ '.r2tb li.me{background:rgba(255,210,122,.22)}.r2tb li.me b{font-weight:700}'+
+ '.mg-row .mg-btn.r2ag{flex:1 1 100%;min-height:62px;font-size:21px;color:#fff;background:linear-gradient(180deg,#5fd36a,#2e9d48);box-shadow:0 6px 18px rgba(46,157,72,.4),inset 0 1px 0 rgba(255,255,255,.4)}'+
+ '.mg-row .mg-btn.r2no{min-height:48px;min-width:0;font-size:17px;background:transparent;border:0;box-shadow:none;color:rgba(255,255,255,.8);text-decoration:underline}'+
+ '@media (max-height:700px){.r2mr p{margin:2px 0}.r2tb{margin:4px auto 0}.r2tb li{padding:1px 10px}.mg-row .mg-btn.r2ag{min-height:56px}}'+
+ /* экран «Мостки» */
+ '.r2ms{position:absolute;left:0;top:0;width:100%;height:100%;z-index:31;background:linear-gradient(180deg,#27506b,#173246);color:#fff;font-family:var(--font,system-ui,sans-serif);display:flex;flex-direction:column}'+
+ '.r2ms-h{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 6px}.r2ms-h h2{margin:0;font-size:22px;flex:1}.r2ms-h small{font-size:17px;opacity:.75}@media (max-width:420px){.r2ms-h small{display:none}}'+
+ '.r2ms-l{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 12px 20px;max-width:560px;width:100%;margin:0 auto;box-sizing:border-box}'+
+ '.r2ms-c{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:10px 12px;margin:8px 0}'+
+ '.r2ms-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:19px;font-weight:700}.r2ms-t span{white-space:nowrap}.r2ms-c p{margin:4px 0;font-size:17px;line-height:1.3}'+
+ '.r2ms-c .mg-btn{width:100%;min-height:50px;margin-top:6px;font-size:18px}.r2ms-c.lk{opacity:.6}.r2ms-n{font-size:17px;opacity:.8;text-align:center;margin:12px 4px;line-height:1.35}';
+function css(){if(document.getElementById('r2mrCss'))return;var s=document.createElement('style');s.id='r2mrCss';s.textContent=CSS;document.head.appendChild(s);}
+function tbl(id,n){var L=R.table(id),m=0;for(var i=0;i<L.length;i++)if(L[i].me)m=i;var a=0,b=L.length;if(n&&n<L.length){a=Math.max(0,Math.min(L.length-n,m-1));b=a+n;}
+  return '<ol class="r2tb">'+L.slice(a,b).map(function(x,i){return '<li'+(x.me?' class="me"':'')+'><span>'+(a+i+1)+'</span><b>'+esc(x.nm)+'</b><i>'+(x.sc?esc(R.unit(id,x.sc)):'—')+'</i></li>';}).join('')+'</ol>';}
+function gapHtml(id,r){var g=R.gap(id);
+  if(r&&r.beat)return '<p class="gp ok">'+L2('Петрович позади! Посмотрим, что он скажет послезавтра…','Petrovich is behind you! Let\'s see what he says…')+'</p>';
+  if(g)return '<p class="gp">'+L2('До ','To beat ')+esc(g.g)+' — '+esc(R.unit(id,g.n))+'. '+L2('Ещё разок?','One more?')+'</p>';
+  return '<p class="gp ok">'+L2('Первый на мостках!','First on the pier!')+'</p>';}
+/* ---------- окно итогов оболочки (mg-core showResult) ---------- */
+function deco(C,d,out){var r=out.mr,id=C.id,p=d.querySelector('.mg-pn'),row=p&&p.querySelector('.mg-row');if(!p||!row||p.querySelector('.r2mr'))return;css();
+  var sc=p.querySelector('.mg-sc');if(sc&&id!=='foto')sc.innerHTML='<b>'+esc(R.unit(id,r.sc))+'</b>'+(out.rec?' <span class="mg-rec">'+L2('Рекорд!','Record!')+'</span>':'');
+  [].forEach.call(p.querySelectorAll('.mg-ln.mut'),function(x){if(C.train)x.textContent=L2('Монеты — за первые партии дня. Дальше — ради рекорда и медали.','Coins are for the first runs of the day. Now it\'s for the record.');});
+  var h='<div class="r2mr">'+(out.rec?'':'<p>'+L2('Рекорд: ','Record: ')+'<b>'+esc(R.unit(id,r.best))+'</b></p>')+
+    (r.medal?'<p class="md">'+MD[r.medal]+' '+mdN(r.medal)+'!</p>':'')+gapHtml(id,r)+tbl(id,(window.innerHeight||800)<760?3:0)+'</div>';
+  row.insertAdjacentHTML('beforebegin',h);
+  var ok=row.querySelector('[data-a=ok]');if(ok){ok.className='mg-btn r2no';ok.innerHTML=L2('Хватит','Enough')+kc('Esc');}
+  var ag=document.createElement('button');ag.className='mg-btn r2ag';ag.setAttribute('data-a','again');ag.innerHTML='↻ '+L2('Ещё разок','One more')+kc('Enter');row.insertBefore(ag,row.firstChild);
+  ag.onclick=function(e){e.stopPropagation();if(ag.disabled)return;ag.disabled=true;snd('tap');var n=(C.ag||0)+1;ev({id:id,a:'again',n:n});
+    var op={src:C.src,back:C.back,noBack:C.noBack,cb:C.cb,again:n};MG.close(true);MG.play(id,op);};}
+/* ---------- экран «Мостки рекордов» ---------- */
+var lay=null;
+function close(){if(lay&&lay.parentNode)lay.parentNode.removeChild(lay);lay=null;}
+function mostkiOpen(){css();close();try{R.tick();R.openTick();}catch(e){}var app=document.getElementById('app')||document.body;lay=document.createElement('div');lay.className='r2ms';app.appendChild(lay);
+  var a=R.opened(),olds=['griby','chist','raki','nazh'].filter(function(id){try{return MG.reg[id]&&MG.isOpen(id)&&R.best(id)>0;}catch(e){return false;}}),h='';
+  a.forEach(function(id){var t=R.get(id),md=R.medal(id);
+    h+='<div class="r2ms-c"><div class="r2ms-t"><b>'+R.ic(id)+' '+esc(R.name(id))+'</b><span>'+(t.b?esc(R.unit(id,t.b)):'—')+(md?' '+MD[md]:'')+'</span></div>'+
+      (t.b?gapHtml(id,null)+tbl(id,0):'<p>'+L2('Ещё не пробовал. Петрович: «Спорим, больше ','Not tried yet. Petrovich: «Bet you can\'t beat ')+R.petr(id)+L2(' не сделаешь?»','»')+'</p>')+
+      '<button type="button" class="mg-btn" data-id="'+id+'">▶ '+L2('Играть','Play')+'</button></div>';});
+  var nx='';for(var i=0;i<R.LOV.length;i++){var g=R.LOV[i];if(!g.old&&a.indexOf(g.id)<0&&R.ids.indexOf(g.id)>=0){try{if(!R.info(g.id))continue;}catch(e){}nx=g.id;break;}}
+  if(olds.length){h+='<div class="r2ms-n">'+L2('Рекорды Двора','Yard records')+'</div>';
+    olds.forEach(function(id){h+='<div class="r2ms-c"><div class="r2ms-t"><b>'+R.ic(id)+' '+esc(R.name(id))+'</b><span>'+esc(R.unit(id,R.best(id)))+'</span></div>'+gapHtml(id,null)+'<button type="button" class="mg-btn sec" data-id="'+id+'">▶ '+L2('Играть','Play')+'</button></div>';});}
+  h+='<div class="r2ms-n">'+L2('Новые игры появляются на мостках по одной — заходи через день-другой.','New games appear on the pier one by one — come back in a day or two.')+'</div>';
+  lay.innerHTML='<div class="r2ms-h"><button class="mg-x" type="button" data-a="x" aria-label="'+L2('Назад','Back')+'">'+(MG.ic?MG.ic('back')||'‹':'‹')+'</button><h2>🏆 '+L2('Мостки рекордов','Record pier')+'</h2><small>'+L2('соседи и рекорды','neighbours & records')+'</small></div><div class="r2ms-l">'+h+'</div>';
+  lay.onclick=function(e){var b=e.target.closest&&e.target.closest('button');if(!b)return;snd('tap');
+    if(b.getAttribute('data-a')==='x'){close();return;}var id=b.getAttribute('data-id');if(!id)return;close();
+    ev({a:'go',id:id,src:'mostki'});if(R.info(id))R.play(id,{src:'mostki',back:mostkiOpen});else MG.play(id,{src:'mostki',noBack:true,back:mostkiOpen});};}
+/* Esc на экране «Мостки» — назад */
+window.addEventListener('keydown',function(e){if(lay&&e.key==='Escape'&&!(window.MG&&MG.cur)){e.preventDefault();e.stopPropagation();close();}},true);
+R.ui=1;R.deco=deco;R.mostkiOpen=mostkiOpen;R.mostkiClose=close;R.tblHtml=tbl;
+})();

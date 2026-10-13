@@ -1,0 +1,61 @@
+'use strict';
+/* rb2-season-ice — зимняя рыбалка «Лунка» (поток SEASON, буст 2.0, флаг lunka). Грузится лениво, когда на месте лёд (RSEZ.ice(pi): 1.12–15.03,
+   пруд, речка, Селигер, Ладога, Байкал, Амур, Ока, Чудское, Онего). Логика клёва и вываживания НЕ меняется — только вид и заброс:
+   - фон BG «зимой»: вода → лёд (отражения проступают, как под первым прозрачным льдом), зелень → снег; трещины и намёты;
+   - лунки в точках A2 (PZ, до которых достаёт удочка) + 1–2 на чистой воде + лунка у берега; касание → заброс в ближайшую лунку,
+     первый раз за рыбалку — «бурим» (ледяная крошка); круги на воде — только в лунках; блики, рябь, стрекозы и светлячки — нет;
+   - рыба на вываживании видна тенью подо льдом и не выпрыгивает; дождь на льду — пасмурно (condFor в rb2-season.js). */
+(function(){
+if(!window.RSEZ||window.RSI)return;
+function T(r,e){return typeof LANG!=='undefined'&&LANG==='en'?e:r;}
+var HOLES=[],WIN=['Термос не забыл? Без чая на льду никуда.','Лёд трещит — это он поёт. Не бойся, держит.','Мормышку поиграй — окунь любит, когда она пляшет.','На первом льду рыба смелая, клюёт с подходом.','Ноги не мёрзнут? Валенки — лучшее изобретение человечества.','Лунку от снега чисти — рыба свет любит.'];
+function on(){return !!(G&&G.ice&&GEO);}
+function maxD(){return TACKLE.rod.dist[curTk().rod]*a2DK();}
+// лунки: точки A2 в пределах удочки, 1–2 на чистой воде (не рядом с точками), одна у берега (туда вытаскиваем рыбу)
+function mkHoles(){var H=[],md=maxD(),W=GEO.W,zs=(typeof PZ!=='undefined'&&PZ[G.pi])||[];
+  zs.forEach(function(z){if(z.d<=md+.5)H.push({x:W*z.x,d:z.d,k:z.k});});
+  [[.24,.45],[.58,.78],[.86,.6]].forEach(function(p){if(H.length>=6)return;var d=Math.max(4,md*p[1]),x=W*p[0],y=GEO.yOf(d),ok=true;
+    for(var i=0;i<H.length;i++){var h=H[i];if(Math.abs(h.x-x)<W*.2&&Math.abs(GEO.yOf(h.d)-y)<GEO.u*9)ok=false;}
+    try{if(ok&&G.o&&a2ZoneAt(x,y,d,md).k!=='open')ok=false;}catch(e){}if(ok)H.push({x:x,d:d,k:'open'});});
+  H.forEach(function(h){h.y=GEO.yOf(h.d);h.ps=GEO.ps(h.d);h.r=Math.max(GEO.u*2.4,GEO.u*7*h.ps);});
+  var y0=GEO.shY-GEO.u*4;H.shore={x:GEO.W*.5,y:y0,r:GEO.u*3.4};return H;}
+function nearHole(x,y,k){if(!HOLES.length)return null;var b=null,bd=1e9;for(var i=0;i<HOLES.length;i++){var h=HOLES[i],dx=x-h.x,dy=(y-h.y)*2.2,d=dx*dx+dy*dy;if(d<bd){bd=d;b=h;}}
+  if(k!=null&&bd>Math.pow(k,2))return null;return b;}
+/* ---- фон: вода → лёд, зелень → снег ---- */
+function winterize(g,W,H,dp){var hz=GEO.hz,img;try{img=g.getImageData(0,0,Math.round(W*dp),Math.round(H*dp));}catch(e){return false;}
+  var a=img.data,w=img.width,h=img.height,yh=Math.round(hz*dp),night=G.cond.tod==='night',ev=G.cond.tod==='evening',k=night?.42:ev?.8:1;
+  for(var y=0;y<h;y++){var water=y>=yh,fy=water?(y-yh)/Math.max(1,h-yh):0;for(var x=0;x<w;x++){var i=(y*w+x)*4,r=a[i],gg=a[i+1],b=a[i+2],L=(r+gg+b)/3;
+    if(gg>r+8&&gg>b+6){var v=Math.min(255,206+L*.3);a[i]=(v-10)*k;a[i+1]=(v-4)*k;a[i+2]=Math.min(255,v+4)*k;}          // зелень → снег
+    else if(water&&b>r+10&&b>=gg-8){var d=(L-130)*.32,base=212-fy*22;a[i]=(base-20+d)*k;a[i+1]=(base+6+d)*k;a[i+2]=Math.min(255,base+20+d*.8)*k;}}} // вода → лёд
+  g.putImageData(img,0,0);return true;}
+function paintIce(){if(!BG||!on())return;var dp=lowDp(),W=GEO.W,H=GEO.H,g=BG.getContext('2d'),u=GEO.u,R=rng(G.pi*977+11),night=G.cond.tod==='night';
+  g.save();g.setTransform(1,0,0,1,0,0);var ok=winterize(g,W,H,dp);g.restore();
+  g.save();g.setTransform(dp,0,0,dp,0,0);
+  if(!ok){g.fillStyle='rgba(214,232,244,.82)';g.fillRect(0,GEO.hz,W,GEO.shY-GEO.hz);}
+  // намёты снега и трещины
+  for(var i=0;i<14;i++){var d=2+R()*30,y=GEO.yOf(d),ps=GEO.ps(d),x=R()*W,rx=u*(6+R()*14)*ps*2.2;g.fillStyle='rgba(255,255,255,'+(night?.12:.32)+')';g.beginPath();g.ellipse(x,y,rx,rx*.16,0,0,7);g.fill();}
+  g.strokeStyle='rgba(255,255,255,'+(night?.25:.55)+')';g.lineWidth=1;for(var j=0;j<6;j++){var d2=3+R()*26,y2=GEO.yOf(d2),x2=R()*W,ps2=GEO.ps(d2)*2.2;g.beginPath();g.moveTo(x2,y2);
+    for(var s=0;s<4;s++){x2+=(R()-.3)*u*7*ps2;y2+=(R()-.5)*u*1.2*ps2;g.lineTo(x2,y2);}g.stroke();}
+  HOLES=mkHoles();
+  var holeAt=function(x,y,r,open){g.fillStyle='rgba(255,255,255,'+(night?.35:.85)+')';g.beginPath();g.ellipse(x,y+r*.08,r*1.75,r*.62,0,0,7);g.fill(); // снег от бура
+    var gr=g.createRadialGradient(x,y-r*.1,1,x,y,r);gr.addColorStop(0,'#0b2433');gr.addColorStop(.8,'#163f55');gr.addColorStop(1,'#5f8ea6');g.fillStyle=gr;g.beginPath();g.ellipse(x,y,r,r*.36,0,0,7);g.fill();
+    g.strokeStyle='rgba(225,240,250,.9)';g.lineWidth=Math.max(1,r*.12);g.beginPath();g.ellipse(x,y,r,r*.36,0,Math.PI*.05,Math.PI*.95);g.stroke();
+    if(!open){g.fillStyle='rgba(200,225,240,.85)';g.beginPath();g.ellipse(x,y,r*.82,r*.26,0,0,7);g.fill();g.strokeStyle='rgba(120,160,185,.8)';g.lineWidth=1;g.beginPath();g.moveTo(x-r*.5,y);g.lineTo(x+r*.4,y-r*.08);g.stroke();}};
+  HOLES.forEach(function(h){holeAt(h.x,h.y,h.r,true);});var sh=HOLES.shore;holeAt(sh.x,sh.y,sh.r,true);
+  g.restore();SHIM=[];if(G.P)G.P.sun=null;}
+/* ---- обёртки (действуют только при G.ice) ---- */
+{var bb=buildBg;buildBg=function(){bb.apply(this,arguments);try{if(on())paintIce();}catch(e){}};}
+{var dc=doCast;doCast=function(x,y){if(on()&&HOLES.length){var h=nearHole(x,y);if(h){x=h.x;y=h.y;if(!h.dr){h.dr=1;setTimeout(function(){try{if(G&&G.ice&&G.fl){splash(h.x,h.y,.7);try{SND.tap();}catch(e){}}}catch(e){}},420);
+      var o=RSEZ._.st();o.i.n=(o.i.n||0)+1;}}}return dc.call(this,x,y);};}
+{var rp=ripple;ripple=function(x,y,s){if(on()&&HOLES.length){var h=nearHole(x,y,GEO.u*5),sh=HOLES.shore;if(!h&&!(sh&&Math.abs(x-sh.x)<sh.r*2&&Math.abs(y-sh.y)<sh.r))return;}return rp.apply(this,arguments);};}
+{var up=update;update=function(dt){up.apply(this,arguments);if(!on())return;var ft=G.ft;if(ft&&ft.jump>0)ft.jump=0;var A=G.a1;if(A){A.df=null;A.bf=null;if(A.ff.length)A.ff.length=0;if(A.wp.length)A.wp.length=0;}};}
+{var hn=hint;hint=function(t,big){if(on()&&(t===L('Коснись воды — заброс','Tap the water to cast')))t=T('Коснись лунки — опустим мормышку','Tap a hole to lower the jig');return hn.call(this,t,big);};}
+function start(){if(!on())return;try{buildBg();}catch(e){}
+  try{if(!PH.petr.idleS)PH.petr.idleS=PH.petr.idle.slice();PH.petr.idle=PH.petr.idleS.concat(WIN);G.iceSay=1;}catch(e){}
+  if(G.phase==='aim')hint(L('Коснись воды — заброс','Tap the water to cast'));
+  var o=RSEZ._.st();if(!o.i.t&&(S.sessions||0)>=1){o.i.t=1;save();later(function(){say('mit',T('Лёд встал! Теперь ловим из лунки. Коснись лунки — опустим мормышку. Первый лёд прозрачный — гляди, рыбу видно!',''),8000);},900);}
+  try{RSEZ._.statEv('ice',{k:PLACES[G.pi].id});}catch(e){}}
+// обычная рыбалка после ледовой — реплики Петровича без зимних
+{var sf=startFish;startFish=function(){var r=sf.apply(this,arguments);try{if(G&&!G.ice&&PH.petr.idleS)PH.petr.idle=PH.petr.idleS.slice();}catch(e){}return r;};}
+window.RSI={start:start,holes:function(){return HOLES;},winterize:winterize};
+})();

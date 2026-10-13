@@ -1,0 +1,196 @@
+/* ================= rb2-first — поток FIRSTFIX буста «буст_в2.0» (первый заход и возврат), 13.10.2026 =================
+   Журнал: hobby-analytics/release-i/rybak-boost2/logs/FIRSTFIX.md. Каждая новинка — своим флагом (?off=id — игра как v8):
+   cloudWait — новичок без памяти ждёт облако (index.html, bootScreen/r2fHold) и учебная рыбалка прерывается, если облако вернуло прогресс (здесь);
+   soft, tmr, retCap, morning — см. разделы ниже. Синтаксис — только старый (как в каркасе): старые WebView. */
+(function(){
+'use strict';
+if(typeof startFish!=='function'||typeof R2!=='object')return;
+var $=function(id){return document.getElementById(id);};
+function st(n,o){try{STAT.ev(n,o);}catch(e){}}
+
+/* ---------- п.1 cloudWait: облако пришло во время учебной рыбалки и принесло прогресс → на главный ---------- */
+R2.reg('cloudWait',{s:'FIRSTFIX',t:'новичок без памяти — ждать облако до 1,5 с'});
+var oc=onCloud;
+onCloud=function(){
+  try{if(!R2.off('cloudWait')&&G&&!G.over&&!G.tourn&&G.uiFirst&&S.sessions>0){
+    var g=G;g.over=true;try{YG.stop();}catch(e){}try{$('catch').classList.remove('on');var sy=$('say');if(sy)sy.classList.remove('on','ui-hold');hint('');}catch(e){}
+    st('tut',{s:'cwback',n:g.used});
+    hideModal();openMap();toast('🎣 '+L('С возвращением! Твой улов и монеты на месте','Welcome back! Your catch and coins are restored'),3200);
+    if(window.__sdkDone)maybeStreak();
+    return;}}catch(e){}
+  return oc.apply(this,arguments);};
+
+/* ---------- п.2 soft: ступень «сделали сами» ----------
+   Было: 2 учебных заброса (окно подсечки +0,9 с, промахов нет) → с 3-го заброса окно ~1 с, 26 % промахов (iPhone 29 %).
+   Стало: добавка к окну плавно спадает по номеру заброса за всю игру (S.casts 3…8: +0,77 → +0,13 с, с 9-го — 0);
+   «Рано!» в учебном забросе не спугивает (рыба продолжает пробовать), в первые 8 забросов новая поклёвка — не дольше 2,5 с (было до 10 с);
+   «пробует» и «клюёт» видно без звука и вибрации: над поплавком «?» (пробует) и пульсирующий «!» с кругами (клюёт) — первые SOFT_SES рыбалок;
+   VK: на поклёвку — тактильный отклик моста (на iPhone navigator.vibrate нет). Турнир — без поблажек (честность). */
+R2.reg('soft',{s:'FIRSTFIX',t:'плавная ступень после учебных забросов, «?»/«!» над поплавком'});
+var SOFT_N=9,SOFT_SES=4;
+function softOn(){return !R2.off('soft')&&!!G&&!G.tourn;}
+function softX(){if(!softOn())return 0;var c=S.casts||0;if(c<3||c>=SOFT_N)return 0;return Math.round(.9*(SOFT_N-c)/(SOFT_N-2)*100)/100;}
+window.r2fSoftX=softX;
+var hw=hookWin;
+hookWin=function(f,c,o){var r=hw.apply(this,arguments);try{if(G&&G.phase==='nibble'&&!G.over)r+=softX();}catch(e){}return r;};
+var e0=early;
+early=function(){
+  try{if(softOn()&&G.phase==='nibble'&&tutCast()){ // учебный заброс: касание на «пробует» не спугивает
+      hint(L('Это рыба пробует — подожди, пока поплавок утонет!','Just nibbling — wait until the float goes under!'),1);if(G.fl)G.fl.dip=.25;
+      if(!G.r2fE){G.r2fE=1;st('tut',{s:'early'});}return;}}catch(e){}
+  var r=e0.apply(this,arguments);
+  try{if(softOn()&&(S.casts||0)<SOFT_N&&G.phase==='wait'){G.tw=Math.min(G.tw,2.5);G.quiet=false;}}catch(e){}
+  return r;};
+// подсказки над поплавком: «?» — пробует, «!» — клюёт (новичку, первые SOFT_SES рыбалок)
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function mark(){if(!softOn()||!G.fl||(S.sessions||0)>=SOFT_SES||!G.pk||G.pk.junk)return;var ph=G.phase;if(ph!=='nibble'&&ph!=='bite')return;
+  var g=cx,u=Math.max(GEO.u,Math.min(GEO.W,GEO.H)/30),f=G.fl,x=f.x,y=f.y,t=G.t,bite=ph==='bite';
+  g.save();
+  if(bite){for(var i=0;i<2;i++){var k=((t*1.6+i*.5)%1);g.globalAlpha=(1-k)*.9;g.strokeStyle='#ffb02e';g.lineWidth=u*.45;g.beginPath();g.ellipse(x,y,u*(1.5+k*5),u*(.6+k*2),0,0,Math.PI*2);g.stroke();}}
+  var s=bite?1+.12*Math.sin(t*14):1,r=u*(bite?2.2:1.6)*s,by=y-u*(bite?7.5:6.5);
+  var txt=bite?L('Клюёт! Жми!','Bite! Tap!'):L('пробует…','nibbling…');
+  g.globalAlpha=1;g.font='700 '+Math.round(Math.max(15,u*1.7))+'px '+(getComputedStyle(document.body).fontFamily||'sans-serif');
+  var tw=g.measureText(txt).width,pw=tw+r*2+u*1.6,ph2=r*2+u*.4,px=Math.max(u,Math.min(GEO.W-pw-u,x-pw/2)),py=by-ph2/2;
+  g.fillStyle=bite?'rgba(230,80,20,.94)':'rgba(30,50,60,.72)';rr(g,px,py,pw,ph2,ph2/2);g.fill();
+  g.fillStyle='#fff';g.beginPath();g.arc(px+ph2/2,by,r*.82,0,Math.PI*2);g.fill();
+  g.fillStyle=bite?'#e65014':'#2a4654';g.textAlign='center';g.textBaseline='middle';g.font='900 '+Math.round(r*1.3)+'px sans-serif';g.fillText(bite?'!':'?',px+ph2/2,by+r*.05);
+  g.fillStyle='#fff';g.textAlign='left';g.font='700 '+Math.round(Math.max(15,u*1.7))+'px '+(getComputedStyle(document.body).fontFamily||'sans-serif');g.fillText(txt,px+ph2+u*.3,by+u*.1);
+  // хвостик к поплавку
+  g.strokeStyle=bite?'rgba(230,80,20,.94)':'rgba(30,50,60,.72)';g.lineWidth=u*.35;g.beginPath();g.moveTo(Math.max(px+ph2/2,Math.min(px+pw-ph2/2,x)),py+ph2);g.lineTo(x,y-u*2.6);g.stroke();
+  g.restore();}
+var rd=render;
+render=function(){var r=rd.apply(this,arguments);
+  try{if(G&&G.phase!==G.r2fPh){G.r2fPh=G.phase; // рыба начала пробовать — облачко Митяя не закрывает воду (новичку подпись «?»/«!» над поплавком)
+      if(softOn()&&(G.phase==='nibble'||G.phase==='bite')&&(S.sessions||0)<SOFT_SES&&sayWho==='mit'){var sy=$('say');if(sy){sy.classList.remove('on','ui-hold');say.until=0;}}}
+    mark();}catch(e){}return r;};
+// «Заброс 2 из 3» загорался уже во время 1-го заброса: полоска считалась до смены фазы — пересчитать после заброса
+var dc=doCast;
+doCast=function(){var r=dc.apply(this,arguments);try{if(!R2.off('soft'))updHud();}catch(e){}return r;};
+// VK: тактильный отклик на поклёвку (iPhone — нет navigator.vibrate в браузере)
+var bz=buzz;
+buzz=function(ms){var r=bz.apply(this,arguments);
+  try{if(!R2.off('soft')&&PLAT==='vk'&&G&&G.phase==='bite'&&G.t<.05&&S.vib!==false&&window.vkBridge&&!/android/i.test(navigator.userAgent)&&G.r2fB!==G.pk){G.r2fB=G.pk;
+      vkBridge.send('VKWebAppTapticNotificationOccurred',{type:'warning'}).catch(function(){});}}catch(e){}
+  return r;};
+
+/* ---------- п.4 retCap: подарок вернувшемуся ≤ подарка 7-го дня (сама правка — js/away.js retC, метка rb2-FIRSTFIX) ---------- */
+R2.reg('retCap',{s:'FIRSTFIX',t:'подарок вернувшемуся не больше подарка 7-го дня'});
+
+/* ---------- поле S.r2f: серия и утро ----------
+   d0 — день первой законченной рыбалки (1 — старый игрок: утро сразу); fd — последний день с законченной рыбалкой/мини-игрой; sr — серия дней подряд;
+   bs — лучшая серия; wk — неделя (пн) для клеток; wb/wc — дни недели битами: рыбачил / Васька прикрыл; vk — неделя, когда Васька уже прикрывал;
+   md — день, когда показано «Утро»; g2 — подарок 2-го дня выдан; rd — день последней награды серии. */
+var DAY=864e5;
+function today(){return dayNum();}
+function wid(d){return Math.floor((d+3)/7);}      // неделя с понедельника (dayNum 0 — четверг)
+function wdy(d){return (d+3)%7;}                  // 0 — пн … 6 — вс
+R2.field('f',{id:'morning',def:function(){return {d0:0,fd:0,sr:0,bs:0,wk:0,wb:0,wc:0,vk:0,md:0,g2:0,rd:0};},
+  fix:function(o,S){['d0','fd','sr','bs','wk','wb','wc','vk','md','g2','rd'].forEach(function(k){var v=+o[k];o[k]=isFinite(v)&&v>=0?Math.floor(v):0;});
+    for(var k in o)if(['d0','fd','sr','bs','wk','wb','wc','vk','md','g2','rd'].indexOf(k)<0)delete o[k];
+    o.wb&=127;o.wc&=127;if(!o.d0&&(S.sessions||0)>0)o.d0=1;},
+  merge:function(a,b){var wa=a.wk,wb=b.wk,x=+a.d0||0,y=+b.d0||0,fa=+a.fd||0,fb=+b.fd||0;
+    for(var k in b){if(k==='wb'||k==='wc'||k==='wk'||k==='sr'||k==='d0')continue;var v=+b[k];if(isFinite(v)&&(!(a[k]>=0)||v>a[k]))a[k]=v;}
+    a.d0=x&&y?Math.min(x,y):x||y;
+    if(wb>wa){a.wk=wb;a.wb=b.wb|0;a.wc=b.wc|0;}else if(wb===wa){a.wb=(a.wb|0)|(b.wb|0);a.wc=(a.wc|0)|(b.wc|0);}
+    if(fb>fa||(fb===fa&&(+b.sr||0)>(+a.sr||0)))a.sr=+b.sr||0;
+  }});
+function F(){var o=S.r2f;return o&&typeof o==='object'?o:null;}
+function weekSync(o,d){var w=wid(d);if(o.wk!==w){o.wk=w;o.wb=0;o.wc=0;}}
+// Васька прикрывает один пропуск в неделю: вчера не рыбачил, позавчера — да
+function catCover(o,t){if(t-o.fd!==2||o.vk===wid(t-1)||!(o.sr>0))return false;o.vk=wid(t-1);o.fd=t-1;weekSync(o,t);if(wid(t-1)===o.wk)o.wc|=1<<wdy(t-1);st('cal',{a:'cat',d:o.sr});return true;}
+var SER_B=10; // наживки за 3 дня серии
+function serReward(o,t){if(o.rd===t)return '';var m=o.sr%7,b=a3BestBait(topPlace());
+  if(m===3){o.rd=t;S.bait[b]=(S.bait[b]||0)+SER_B;st('cal',{a:'s3',d:o.sr});return '🔥 '+L('Серия 3 дня! Горсть наживки: ','3-day streak! A handful of bait: ')+BAIT[b].ic+' +'+SER_B;}
+  if(m===0&&o.sr>0){o.rd=t;var c=a3Trip();S.coins+=ern('gift',c);S.bait[b]=(S.bait[b]||0)+SER_B;st('cal',{a:'s7',d:o.sr,c:c});updCoins();
+    return '🧺 '+L('Неделя подряд! Ведро Петровича: +','A whole week! Petrovich\'s bucket: +')+coinsTxt(c)+' · '+BAIT[b].ic+' +'+SER_B;}
+  return '';}
+// день засчитан: любая законченная рыбалка (турнир и «в гостях» тоже) или мини-игра Двора
+function dayDone(){var o=F();if(!o||R2.off('morning'))return;var t=today();if(!o.d0)o.d0=t;if(o.fd===t)return;
+  catCover(o,t);var gap=o.fd?t-o.fd:1;
+  if(gap===1)o.sr++;else o.sr=Math.max(0,o.sr-3)+1;   // пропуск не обнуляет — откат на 3 дня
+  o.fd=t;o.bs=Math.max(o.bs,o.sr);weekSync(o,t);o.wb|=1<<wdy(t);
+  var r=serReward(o,t);save();if(r)setTimeout(function(){toast(r,3800,true);},900);}
+R2.on('end',function(){dayDone();},'morning');
+R2.on('mg',function(){dayDone();},'morning');
+
+/* ---------- п.3 tmr: «завтра» в итогах первой рыбалки + донка Петровича сама + подарок 2-го дня ---------- */
+R2.reg('tmr',{s:'FIRSTFIX',t:'обещание на завтра в итогах 1-й рыбалки, донка сама, подарок 2-го дня'});
+var G2_C=40,G2_B=10; // подарок 2-го дня от Митяя: монеты и наживка (один раз)
+R2.on('end',function(g){if(!g||g.tourn||g.guest||S.sessions!==1)return;
+  var card=$('mcard');if(!card)return;
+  if(!S.awayD&&S.open[g.pi]&&window.__away){S.awayD={pi:g.pi,t:nowMs(),s:Math.floor(Math.random()*1e6)};save();st('mod',{m:'away',a:'set',k:'auto'});}
+  var fo=card.querySelector('.fbrf');if(fo)fo.style.display='none';
+  var b=a3BestBait(0),p=document.createElement('div');p.className='quote r2f-tmr';
+  p.innerHTML='<b>'+L('Петрович','Petrovich')+'</b>'+(S.awayD?L('Я донку на ночь поставил — завтра утром проверим, что попалось. ','I\'ve set a night line — tomorrow morning we\'ll see what bit. '):L('Приходи завтра утром! ','Come back tomorrow morning! '))
+    +L('А Митяй обещал гостинец: ','And Mityai promised a treat: ')+BAIT[b].ic+' '+esc(nm(BAIT[b]).toLowerCase())+' ×'+G2_B+' '+L('и','and')+' +'+coinsTxt(G2_C);
+  var row=card.querySelector('.row');if(row)card.insertBefore(p,row);else card.appendChild(p);
+  if(window.LOOK&&LOOK.walk)try{LOOK.walk(p);}catch(e){}
+  st('cal',{a:'tmr'});},'tmr');
+
+/* ---------- п.5 morning: окно «Утро у Петровича» (со 2-го дня, раз в день, вместо утренней «Почты») ----------
+   Подарок дня начисляется сам; серия — 7 клеток недели (день = любая законченная рыбалка, Васька прикрывает 1 пропуск в неделю);
+   донка, подарок вернувшемуся, подарок 2-го дня — тоже сами; задание дня; «завтра»; кнопки «На рыбалку», «📺 ×2», «Почта».
+   Другие потоки добавляют строки: R2.on('morning',function(rows){rows.push({ic:'✉',t:'…',sub:'…',right:'…',pri:50});},'свой флаг') — строки
+   рисуются по pri (больше — выше), не больше 2 чужих; html строки — как у «Почты» (.a3g). Конверты «Недели новичка» (EVENT) — сюда. */
+R2.reg('morning',{s:'FIRSTFIX',t:'окно «Утро у Петровича» на входе дня, серия, Васька'});
+var DOW=[['пн','Mo'],['вт','Tu'],['ср','We'],['чт','Th'],['пт','Fr'],['сб','Sa'],['вс','Su']];
+function row(ic,t,sub,right){return '<div class="r2f-r"><span class="r2f-i">'+ic+'</span><span class="r2f-t">'+t+(sub?' <small>'+sub+'</small>':'')+'</span><b>'+(right||'')+'</b></div>';}
+function cells(o,t){var h='<div class="r2f-wk">';for(var i=0;i<7;i++){var d=t-wdy(t)+i,on=(o.wb>>i)&1,cat=(o.wc>>i)&1,cls='r2f-c'+(d===t?' td':'')+(on?' on':cat?' cat':d<t?' miss':'');
+    h+='<span class="'+cls+'"><small>'+L(DOW[i][0],DOW[i][1])+'</small><b>'+(on?'✓':cat?'🐈':d===t?'☀':'·')+'</b></span>';}return h+'</div>';}
+function suppress(fn){var t0=toast;toast=function(){};try{return fn();}finally{toast=t0;}}
+function mx(id){var a=window.MAILX||[];for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null;}
+var last=null; // готовое окно — для повторного показа после ролика ×2
+function openMorning(again){
+  var h=last;if(!h)return false;
+  modal(h.replace('%X2%',!again&&h.gc&&adOk()?'<button class="btn accent noenter r2f-x2" id="mlGift2">📺 '+L('Подарок ×2 за рекламу','Gift ×2 for an ad')+' +'+coinsTxt(h.gc)+'</button>':''));
+  if($('mlGift2')){try{STAT.offer('gift');}catch(e){}$('mlGift2').onclick=function(){if(adHold('gift'))return;hideModal();try{STAT.place('gift');}catch(e){}
+    showRewarded(function(){var w=giftLate();if(w)toast('🎁 +'+coinsTxt(h.gc),2600,true);openMorning(true);},function(){openMorning(true);},giftLate);};}
+  if($('r2fGo'))$('r2fGo').onclick=function(){SND.tap();hideModal();st('cal',{a:'go'});var pi=typeof S.awayP==='number'&&S.open[S.awayP]&&S.awayP!==7?S.awayP:topPlace();startFish(pi);};
+  if($('r2fMail'))$('r2fMail').onclick=function(){SND.tap();openMail();};
+  if($('r2fTask'))$('r2fTask').onclick=function(){SND.tap();hideModal();try{openDaily();}catch(e){}};
+  $('mCancel').onclick=function(){hideModal();updDots();try{if($('scr-map').classList.contains('on'))openMap();}catch(e){}};
+  if(window.LOOK&&LOOK.walk)try{LOOK.walk($('mcard'));}catch(e){}
+  return true;}
+function morning(){var o=F(),t=today();if(!o||!(S.sessions>0)||(S.caught||0)<1||o.md===t||!o.d0||t<=o.d0)return false;
+  o.md=t;weekSync(o,t);var cat=catCover(o,t),rows=[],sum=0,first=!o.g2&&o.d0>1&&t-o.d0<=3;
+  try{a3MailDeliver();}catch(e){}
+  // подарок дня — сам
+  var stt=streakState(),gc=0,gd=stt.day;if(!stt.claimed)gc=suppress(function(){return a3ClaimGift(1);})||0;
+  if(gc){sum+=gc;rows.push(row('🎁',L('Подарок дня','Daily gift'),gd+'/7'+(gd===7?' · 🐟 +10':''),'+'+coinsTxt(gc)));}
+  // подарок 2-го дня от Митяя (обещан в итогах 1-й рыбалки)
+  if(first&&!R2.off('tmr')){o.g2=1;var b=a3BestBait(0);S.bait[b]=(S.bait[b]||0)+G2_B;S.coins+=ern('gift',G2_C);sum+=G2_C;
+    rows.push(row('🧺',L('Гостинец Митяя','Mityai\'s treat'),BAIT[b].ic+' ×'+G2_B,'+'+coinsTxt(G2_C)));}
+  // донка
+  var dk=mx('donka');if(dk&&window.__away){var s0=__away.st();if(s0==='ready'){var dc=dk.c()||0,dn=0;try{dn=__away.catchOf(S.awayD).length;}catch(e){}var ds=dn?dn+' '+pl(dn,'рыба','рыбы','рыб','fish','fish'):'';suppress(function(){__away.take();});sum+=dc;
+      rows.push(row('🔔',L('Донка','Night line'),ds,dc?'+'+coinsTxt(dc):''));}
+    else if(s0==='gone'){suppress(function(){__away.take();});}}
+  // подарок вернувшемуся
+  var rt=mx('ret');if(rt&&rt.ok()){var rc=rt.c()||0,rsub=rt.sub;suppress(function(){rt.take();});sum+=rc;var rb=null;try{rb=S.awayG&&S.awayG.k>=7?1:0;}catch(e){}rows.push(row('🧭',L('Где пропадал? Скучали!','Where have you been?'),'',' +'+coinsTxt(rc)));}
+  // чужие строки (конверты недели новичка и др.)
+  var ext=[];try{R2.emit('morning',ext);}catch(e){}
+  // ECO: пробная неделя Клуба на 2-й день (договор COMMON «Крючки»: window.ECO_CLUB_TRIAL={ok(),take()}; take() выдаёт и может вернуть {t,sub,right})
+  try{var ct=window.ECO_CLUB_TRIAL;if(ct&&ct.ok&&ct.ok()){var cr=ct.take()||{};ext.push({ic:cr.ic||'🎫',t:cr.t||L('Пробная неделя Клуба','Club trial week'),sub:cr.sub||'',right:cr.right||'',pri:cr.pri||60});}}catch(e){}
+  ext.sort(function(a,b){return (b.pri||0)-(a.pri||0);});ext.slice(0,2).forEach(function(x){if(x&&x.t)rows.push(row(x.ic||'✉',x.t,x.sub||'',x.right||''));});
+  // серия
+  var nx=o.sr%7,k3=nx<3?3-nx:7-nx,goal=nx<3?L('горсть наживки','a handful of bait'):L('Ведро Петровича','Petrovich\'s bucket');
+  var fishedToday=o.fd===t,ser=o.sr>0?L('Серия '+o.sr+' '+pl(o.sr,'день','дня','дней','',''),'Streak: '+o.sr+' day'+(o.sr>1?'s':'')):L('Начни серию','Start a streak');
+  var nxt=L('ещё '+k3+' '+pl(k3,'день','дня','дней','','')+' — ','in '+k3+' day'+(k3>1?'s':'')+' — ')+goal;
+  var catLine=cat?'<p class="r2f-cat">🐈 '+L('Петрович: «Васька вчера за тебя на мостках сидел — серию сберёг».','Petrovich: “Vaska sat on the pier for you yesterday — your streak is safe.”')+'</p>':'';
+  // задание дня и завтра
+  var task='';try{var d=dailyTask();if(d&&!d.done)task='<button class="noenter r2f-task" id="r2fTask">📅 '+dailyText(d)+' ›</button>';}catch(e){}
+  var tg=0;try{tg=a3GiftC(gd%7+1);}catch(e){}
+  var tm=L('Завтра','Tomorrow')+': '+L('подарок','gift')+' +'+coinsTxt(tg)+(S.awayD||(S.sessions||0)<3?'':' · '+L('поставь донку на ночь','set a night line'));
+  var mc=0;try{mc=a3MailCnt();}catch(e){}
+  var h='<h2>☀ '+L('Утро у Петровича','Morning at Petrovich\'s')+'</h2>'+cells(o,t)+'<p class="r2f-ser">🔥 <b>'+ser+'</b> · '+nxt+'</p>'+catLine
+    +'<div class="r2f-rows">'+rows.join('')+'</div>%X2%'+task+'<p class="r2f-tm">'+tm+'</p>'
+    +'<div class="row"><div class="row2">'+(mc?'<button class="btn noenter" id="r2fMail">✉ '+L('Почта','Mail')+' ('+mc+')</button>':'<button class="btn noenter" id="mCancel">'+L('Закрыть','Close')+'</button>')+'<button class="btn green" id="r2fGo">🎣 '+L('На рыбалку','Go fishing')+'</button></div>'
+    +(mc?'<button class="btn noenter" id="mCancel" style="display:none">'+L('Закрыть','Close')+'</button>':'')+'</div>';
+  last=new String(h);last.gc=gc;
+  save();updCoins();
+  st('cal',{a:'show',d:o.sr,k:rows.length,c:sum,r:rt&&rc?1:0,n:first?1:0});
+  if(sum)try{SND.coin();}catch(e){}
+  return openMorning(false);}
+R2.enter('morning',200,function(){try{return morning();}catch(e){try{console.warn('r2f morning',e);}catch(_){}return false;}});
+R2.css('css/rb2-first.css');
+
+})();

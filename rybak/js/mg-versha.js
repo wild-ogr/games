@@ -42,7 +42,7 @@ function ntf(){var m=st(),r=0;for(var i=0;i<2;i++)if(m.v[i]&&(!r||m.v[i].r<r))r=
   return {at:r,text:L2('Петрович: верша полна, раки разбегаются! Беги на мостки 🦞','Petrovich: the trap is full, crayfish are escaping!')};}
 
 /* ---------- сама игра ---------- */
-function needArt(cb){if(window.MGCA){A=window.MGCA;cb();return true;}var s=document.createElement('script');s.src='js/mg-mgc-art.js';s.onload=function(){A=window.MGCA;cb();};document.head.appendChild(s);return false;}
+function needArt(cb){if(window.MGCA){A=window.MGCA;cb();return true;}if(window.R2&&R2.need){R2.need('js/mg-mgc-art.js').then(function(){A=window.MGCA;cb();},function(){});return false;} /* rb2-core: fetch — обрыв сети не будит предохранитель загрузки */var s=document.createElement('script');s.src='js/mg-mgc-art.js';s.onload=function(){A=window.MGCA;cb();};document.head.appendChild(s);return false;}
 function run(host,o){
   if(!window.MGCA){needArt(function(){run(host,o);});return;}A=window.MGCA;
   o=o||{};A.css();var m=st(),td=today(),seed=o.seed||td,bot=o.bot||'',TR=!!(o.train||bot); /* RB:MGPC было TR||bot (TR ещё не задан) — «Потренироваться» трогала настоящую вершу */

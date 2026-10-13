@@ -1,0 +1,104 @@
+'use strict';
+/* rb2-LOVA №2 «Заброс в окошко» (js/mg-zabros.js, id 'zabros', флаг lov-zabros). Движок — «Заправка» Выезда / «Компот» Зины (держи-отпусти), макет MG-tools/mock.
+   Петрович: «Видишь окошко в кувшинках? Клади поплавок туда». Держишь — удочка замахивается, метка дальности бежит по воде (туда-обратно);
+   отпустил — заброс. Попал — очко, в самую середину — два. После попадания иногда клюёт — успей нажать, +1. С 3-го попадания — ветер.
+   Три промаха или 45 с — конец. Первый промах — разминка. Окошко уже с каждым попаданием. Зимой — «Мормышка в лунку» (лунки во льду, кивок).
+   Баланс: LK.simMany('zabros',k,200). */
+(function(){
+if(typeof MG_REG!=='function'||typeof R2==='undefined')return;
+var ID='zabros',KIT=window.LK?Promise.resolve():R2.need('js/mg-lkit.js'),G0=null;
+function g(){return G0||(G0=window.LK.add(def(window.LK)));}
+MG_REG({id:ID,kind:'lov',n:{ru:'Заброс в окошко',en:'Cast to the gap'},icon:'star',
+  run:function(h,o){KIT.then(function(){window.LK.run(g(),h,o);},function(){try{h.quit();}catch(e){}});},
+  bot:function(lv,o){return window.LK?window.LK.bot(g(),lv,o):null;}});
+KIT.then(g,function(){});
+function def(K){
+var TAU=Math.PI*2,DUR=45;
+function hy(fr){return fr.H*.3;}
+function dmap(fr,d){var H=fr.H;return H*.82-d*(H*.82-hy(fr)-H*.05);}
+var G={id:ID,amb:'water',n:['Заброс в окошко','Cast into the gap'],who:L('Петрович','Petrovich'),
+ u:LANG==='en'?['point','points','points']:['очко','очка','очков'],mid:18,md:[8,18,30],
+ short:['Держи — замах, отпусти — заброс в окошко!','Hold to swing, release to cast into the gap!'],
+ winterShort:['Держи — замах, отпусти — мормышка в лунку!','Hold to swing, release — the jig into the hole!'],
+ rules:[['Держи — замах, метка дальности бежит по воде.','Hold — the rod swings, the distance mark runs over the water.'],
+   ['Отпусти, когда метка в окошке. Середина — 2 очка.','Release when the mark is in the gap. Centre — 2 points.'],
+   ['Клюнуло — жми! С 3-го попадания дует ветер.','A bite — tap! From the 3rd hit the wind blows.']],
+ ctl:[['M',L('Держи — замах','Hold — swing'),L('Пробел','Space')]],
+ winter:{n:['Мормышка в лунку','Jig into the ice hole'],rules:[['Держи — замах, метка бежит по льду.','Hold — the mark runs over the ice.'],
+   ['Отпусти, когда метка у лунки. В самую лунку — 2 очка.','Release at the hole. Right in — 2 points.'],['Кивок дрогнул — жми! С 3-го попадания — позёмка.','The tip nods — tap! From the 3rd hit — drifting snow.']]},
+ init:function(st,fr){st.t=0;st.sc=0;st.hits=0;st.miss=0;st.throws=0;st.p=0;st.pd=1;st.hold=0;st.fly=0;st.wind=0;st.bite=0;st.biteT=0;st.last=null;st.warm=1;this.target(st,fr);},
+ target:function(st,fr){st.dt=fr.rnd(.3,.86);st.w=Math.max(.035,.085-st.hits*.0045)*(fr.calm?1.3:1);st.tx=fr.rnd(.3,.7);
+   if(st.hits>=3)st.wind=(fr.rnd(0,1)<.5?-1:1)*fr.rnd(.03,.07+Math.min(.04,st.hits*.004));},
+ step:function(st,dt,inp,fr){st.t+=dt;var T=DUR-st.t,self=this;
+  var hud=function(){fr.score(st.sc+' · '+Math.ceil(Math.max(0,T))+L(' с',' s'));};
+  if(st.bite){st.biteT+=dt;var dip=st.biteT>st.biteAt,bw=fr.calm?.85:.65;
+    if(fr.edge('M')){if(dip&&st.biteT<st.biteAt+bw){st.sc++;fr.pop(L('+1 подсёк!','+1 hooked!'));fr.say(fr.winter?L('Окунёк из лунки! Молодец!','A perch from the hole! Well done!'):L('Окунёк! Подсёк — молодец!','A perch! Nicely hooked!'));fr.snd('hook');}
+      else if(!dip)fr.say(L('Рано! Не дёргай — пусть возьмёт.','Too early! Let it take the bait.'));
+      st.bite=0;self.target(st,fr);st.hold=2;}
+    else if(st.biteT>st.biteAt+bw){fr.say(L('Прозевал поклёвку!','Missed the bite!'));st.bite=0;self.target(st,fr);}
+    hud();return;}
+  if(st.fly>0){st.fly-=dt;if(st.fly<=0){st.fly=0;self.land(st,fr);}hud();return;}
+  if(T<=0||st.miss>=3){fr.end(st.sc,st.miss>=3?L('Три промаха','Three misses'):L('Время вышло','Time’s up'));return;}
+  if(st.hold===2){if(!inp.M)st.hold=0;hud();return;} // палец, что подсекал, ещё не отпущен — не замах
+  var rate=.62+st.hits*.03;
+  if(inp.M){if(!st.hold){st.hold=1;st.p=0;st.pd=1;}st.p+=st.pd*rate*dt;if(st.p>1){st.p=1;st.pd=-1;}if(st.p<0){st.p=0;st.pd=1;}}
+  else if(st.hold){st.hold=0;st.land0=K.clamp(st.p+st.wind,0,1.05);st.fly=.55;st.throws++;fr.snd('cast');}
+  hud();},
+ land:function(st,fr){var d=Math.abs(st.land0-st.dt);st.last={d:st.land0,t:st.t};
+  if(d<=st.w){var per=d<=st.w*.35;st.sc+=per?2:1;st.hits++;st.warm=0;var wt=fr.winter;fr.pop(per?(wt?L('+2 в самую лунку!','+2 right in the hole!'):L('+2 в самое окошко!','+2 dead centre!')):'+1');
+    fr.say(per?(wt?L('Ювелирно! Прямо в лунку.','Perfect! Right in the hole.'):L('Ювелирно! В самое окошко.','Perfect! Right in the middle.')):(wt?L('Есть! В лунку.','Yes! In the hole.'):L('Есть! В окошко.','Yes! In the gap.')));fr.snd('plop');
+    if(fr.rnd(0,1)<.45){st.bite=1;st.biteT=0;st.biteAt=fr.rnd(.5,1.1);return;}this.target(st,fr);}
+  else{var warm=st.warm&&st.throws===1;if(!warm)st.miss++;st.warm=0;fr.snd('splash');
+    fr.say((st.land0<st.dt?L('Недокинул!','Too short!'):(fr.winter?L('Перекинул — в сугроб!','Too far — into the snow!'):L('Перекинул — в траву!','Too far — into the weeds!')))+(warm?L(' Разминка, не считается.',' Warm-up, doesn’t count.'):L(' Промах '+st.miss+' из 3.',' Miss '+st.miss+' of 3.')));
+    fr.shake(4);if(!warm)this.target(st,fr);}},
+ bot:function(st,fr,k,mem){
+  if(st.bite){if(mem.bt==null)mem.bt=k>=1?.12:.12+(1-k)*.42*fr.rnd(.3,1.4)+(fr.rnd(0,1)<.08*(1-k)?-.5:0);var go=st.biteT>st.biteAt+mem.bt;if(go&&!mem.bp){mem.bp=1;return {M:1};}return {};}
+  mem.bt=null;mem.bp=0;if(st.fly||st.hold===2){mem.aim=null;return {};}
+  if(mem.aim==null){var e=k>=1?0:(fr.rnd(-1,1)+fr.rnd(-1,1))*(.012+.12*(1-k));mem.aim=st.dt-st.wind+e;mem.wait=k>=1?.3:fr.rnd(.1,.5);}
+  if(mem.wait>0){mem.wait-=1/60;return {};}
+  if(!st.hold)return {M:1};var a=K.clamp(mem.aim,.02,.99);if(st.pd>0&&st.p<a)return {M:1};mem.aim=null;return {};},
+ draw:function(g,st,fr){var W=fr.W,H=fr.H,h0=hy(fr),A=fr.art,wt=fr.winter,t=st.t,P=window.MG_ART;
+  fr.layer(wt?'zw':'zs',function(x,w,h){var hz=h*.3;
+    if(A&&A.sky)A.sky(x,w,h,hz,wt?'day':'morning',0);else{x.fillStyle='#9cc8e6';x.fillRect(0,0,w,hz);}
+    for(var j=0;j<w/16+1;j++){var tx=j*16+((j*37)%9),th=h*(.05+((j*53)%7)/110);x.fillStyle=wt?'#4c6a5c':'#3f6b45';x.beginPath();x.moveTo(tx-7,hz);x.lineTo(tx,hz-th);x.lineTo(tx+7,hz);x.fill();
+      if(wt){x.fillStyle='rgba(255,255,255,.9)';x.beginPath();x.moveTo(tx-3,hz-th*.55);x.lineTo(tx,hz-th);x.lineTo(tx+3,hz-th*.55);x.fill();}}
+    var gr=x.createLinearGradient(0,hz,0,h);if(wt){gr.addColorStop(0,'#e6f0f7');gr.addColorStop(1,'#b8d2e3');}else{gr.addColorStop(0,'#6aa0b4');gr.addColorStop(1,'#2b5f75');}x.fillStyle=gr;x.fillRect(0,hz,w,h-hz);
+    if(wt){x.strokeStyle='rgba(255,255,255,.7)';x.lineWidth=1.2;for(var q=0;q<14;q++){var qy=hz+(h-hz)*((q*37)%100)/100,qx=(q*71)%w;x.beginPath();x.moveTo(qx,qy);x.lineTo(qx+30+q%3*10,qy+4);x.stroke();}}
+    else{x.strokeStyle='rgba(255,255,255,.18)';x.lineWidth=1;for(var y=hz+10;y<h*.86;y+=16){for(var xx=(y*7)%50-50;xx<w;xx+=50+(y%3)*8){x.beginPath();x.moveTo(xx,y);x.lineTo(xx+14+(y-hz)*.05,y);x.stroke();}}}
+    x.fillStyle=wt?'#f4f8fb':'#6f5a3a';x.fillRect(0,h*.86,w,h*.14);x.fillStyle=wt?'#dfeaf2':'#4f8a3c';x.fillRect(0,h*.845,w,h*.03);
+    if(A&&A.grass&&!wt)A.grass(x,0,h*.86,w,h*.05,0,'#4f8a3c',40,9);});
+  // окошко / лунка
+  var y1=dmap(fr,st.dt+st.w),y2=dmap(fr,st.dt-st.w),cy=(y1+y2)/2,cx=W*st.tx,s=1-.55*st.dt,rx=Math.max(34,W*.15*s),ry=Math.max(5,(y2-y1)/2);
+  if(wt){g.fillStyle='rgba(255,255,255,.95)';g.beginPath();g.ellipse(cx,cy+2,rx+10*s,ry+5*s,0,0,TAU);g.fill();g.fillStyle='#1d3b52';g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,TAU);g.fill();
+    g.fillStyle='rgba(120,180,220,.35)';g.beginPath();g.ellipse(cx,cy,rx*.35,ry*.35,0,0,TAU);g.fill();}
+  else{g.fillStyle='#4f8b9e';g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,TAU);g.fill();
+    g.strokeStyle='rgba(255,240,170,.85)';g.lineWidth=2;g.setLineDash([5,5]);g.stroke();g.setLineDash([]);
+    g.fillStyle='rgba(255,240,170,.35)';g.beginPath();g.ellipse(cx,cy,rx*.35,ry*.35,0,0,TAU);g.fill();
+    for(var i=0;i<14;i++){var an=i/14*TAU,px=cx+Math.cos(an)*(rx+14*s),py=cy+Math.sin(an)*(ry+9*s);g.fillStyle=i%5===0?'#f3c6d6':(i%2?'#3f7d3a':'#4d9046');g.beginPath();g.ellipse(px,py,13*s,6*s,an,0,TAU*.88);g.fill();
+      if(i%5===0){g.fillStyle='#fff3a0';g.beginPath();g.arc(px,py-1,2.2*s,0,TAU);g.fill();}}}
+  var ps=Math.min(H*.19,W*.34),pX=W*.6,rodX=pX-ps*.2,rodY=H-ps*.42,bend=st.hold===1?st.p:0,tipX=W*.42-bend*40,tipY=H*.62+bend*40;
+  // метка дальности и полоса силы
+  if(st.hold===1){var yy=dmap(fr,st.p),xx=rodX+(cx-rodX)*K.clamp((H*.8-yy)/(H*.8-cy),0,1.3);g.strokeStyle='#fff';g.setLineDash([3,4]);g.lineWidth=2;g.beginPath();g.ellipse(xx,yy,10,5,0,0,TAU);g.stroke();g.setLineDash([]);
+    var bx=W-30,by=H*.3,bh=H*.45;K.rr(g,bx,by,16,bh,8);g.fillStyle='rgba(0,0,0,.35)';g.fill();
+    g.fillStyle='rgba(255,224,138,.7)';g.fillRect(bx,by+bh*(1-st.dt-st.w),16,bh*st.w*2);g.fillStyle='#fff';g.fillRect(bx-4,by+bh*(1-st.p)-2,24,4);}
+  // удочка и Петрович
+  g.strokeStyle='#3a2a1a';g.lineWidth=4;g.lineCap='round';g.beginPath();g.moveTo(rodX,rodY);g.quadraticCurveTo(rodX-10-bend*30,(rodY+tipY)/2+10,tipX,tipY);g.stroke();
+  if(P&&P.petr)P.petr(g,pX,H*1.0,ps,t,{arm:st.bite?'point':'rest',face:st.bite&&st.biteT>st.biteAt?'wow':'smile',look:-1});
+  // полёт / поплавок
+  var fx=null,fy=null;
+  if(st.fly){var u=1-st.fly/.55,ly=dmap(fr,st.land0),lx=rodX+(cx-rodX)*K.clamp((H*.8-ly)/(H*.8-cy),0,1.3);fx=tipX+(lx-tipX)*u;fy=tipY+(ly-tipY)*u-Math.sin(u*Math.PI)*H*.18;}
+  else if(st.last&&(st.t-st.last.t<1.6||st.bite)){var ld=st.last.d,ly2=dmap(fr,ld);fx=rodX+(cx-rodX)*K.clamp((H*.8-ly2)/(H*.8-cy),0,1.3);fy=ly2;
+    var dip=st.bite&&st.biteT>st.biteAt;if(st.bite)fy+=dip?7:Math.sin(st.biteT*18)*1.5;
+    var age=st.bite?(st.biteT%1.2):st.t-st.last.t;g.strokeStyle='rgba(255,255,255,'+(wt?.0:.5)+')';g.lineWidth=1.5;g.beginPath();g.ellipse(fx,fy+3,10+age*12,4+age*4,0,0,TAU);g.stroke();}
+  if(fx!==null){g.strokeStyle='rgba(255,255,255,.65)';g.lineWidth=1;g.beginPath();g.moveTo(tipX,tipY);g.lineTo(fx,fy);g.stroke();
+    if(wt){g.fillStyle='#c0392b';g.beginPath();g.arc(fx,fy-2,4,0,TAU);g.fill();}
+    else{g.fillStyle='#e8402e';g.beginPath();g.ellipse(fx,fy-4,4,7,0,0,TAU);g.fill();g.fillStyle='#fff';g.fillRect(fx-4,fy-1,8,3);}}
+  if(st.bite&&st.biteT>st.biteAt){var tx2=L('КЛЮЁТ! ЖМИ!','BITE! TAP!');g.font='800 24px '+fr.font;g.textAlign='center';g.lineWidth=5;g.strokeStyle='rgba(0,0,0,.4)';g.strokeText(tx2,W/2,H*.93);g.fillStyle='#ffe08a';g.fillText(tx2,W/2,H*.93);}
+  if(st.wind){g.fillStyle='rgba(13,22,31,.75)';K.rr(g,W/2-110,h0-40,220,32,11);g.fill();g.fillStyle='#fff';g.font='600 17px '+fr.font;g.textAlign='center';
+    g.fillText(st.wind<0?L('ветер в лицо ↓ недолёт','headwind ↓ falls short'):L('ветер в спину ↑ перелёт','tailwind ↑ goes long'),W/2,h0-18);}
+  g.textAlign='left';g.font='600 17px '+fr.font;g.fillStyle=wt?'#2b3a48':'#fff';
+  g.fillText(L('Промахи: ','Misses: '),10,H*.83);var mw=g.measureText(L('Промахи: ','Misses: ')).width;
+  for(var m=0;m<3;m++){g.beginPath();g.arc(10+mw+8+m*18,H*.83-6,6,0,TAU);if(m<st.miss){g.fillStyle='#e8402e';g.fill();}else{g.strokeStyle=wt?'#2b3a48':'#fff';g.lineWidth=2;g.stroke();}}
+ }};
+return G;}
+})();

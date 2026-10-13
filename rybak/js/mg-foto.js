@@ -4,10 +4,13 @@
    Рыбы Красной книги (rarOf(id)==='redbook' из реестра NORTH js/places.js, или o.fish.rb): «сфотографировался и отпустил» — красная карточка, после фото рыба уходит в воду.
    Вход: o.fish = {id, w (кг), pi (место), k:'tr'|'rec'|'leg'|'new'|'rb', tod, wx}. Без него (стенд) — щука 4,2 кг с Речки.
    Сохранение: фото — в общий альбом S.ph (a1PhAdd из index.html, тот же формат), счётчики — S.mg.foto = {n, best, rb:{id:1}}.
-   Награда: host.done({score: качество 0..3, tier, extra:{ph, id, rb, share}}). Делиться — без наград (правила VK). */
+   Награда: host.done({score: качество 0..3, tier, extra:{ph, id, rb, share}}). Делиться — без наград (правила VK).
+   rb2-LOVB (13.10.2026, флаг lov-foto, договор рекордов MGREC): «Фото на рекорд» — 15 с (спокойно — 20 с), кадров сколько успеешь (затвор 0,5 с):
+   чистый кадр +10 (+2 за каждый чистый подряд, до +10), край рывка +4, смазан 0, моргнул −15, Васька в кадре −20. Рыба и Петрович к концу беспокойнее.
+   Счёт — очки (рекорд, соседи, «Ещё разок» — оболочка MGREC), в альбом — лучший кадр (один раз на рыбу), «Тренировкой» не прячем. Флаг выключен — как было (3 кадра). */
 (function(){
 'use strict';
-var ID='foto',A=window.MGCA,PEND=null;/* ждущее фото: {id,w,pi,k,rb} — ставит mgcFoto() из карточки улова */
+var ID='foto',A=window.MGCA,PEND=null,LASTF=null,SAVED={};/* ждущее фото: {id,w,pi,k,rb} — ставит mgcFoto() из карточки улова */
 function L2(ru,en){return typeof L==='function'?L(ru,en):ru;}
 function kc(k){return window.MG&&MG.kc?MG.kc(k):'';} /* RB:MGPC значок клавиши (виден только на ПК) */
 function snd(k){try{if(typeof SND!=='undefined'&&SND[k])SND[k]();}catch(e){}}
@@ -22,11 +25,21 @@ function rbColor(){try{if(typeof RAR!=='undefined'&&(RAR.rb||RAR.redbook))return
 /* можно ли сейчас поделиться и как: VK (не ОК) — история с картинкой; ОК/VK — ссылкой через SOC */
 function shareWay(){if(typeof PLAT==='undefined'||PLAT!=='vk')return '';if(typeof a1StoryOk==='function'&&a1StoryOk())return 'story';if(typeof SOC!=='undefined'&&SOC.share&&(typeof OK==='undefined'||!OK||typeof OK_LINK!=='undefined'&&OK_LINK))return 'link';return '';}
 
-function needArt(cb){if(window.MGCA){A=window.MGCA;cb();return true;}var s=document.createElement('script');s.src='js/mg-mgc-art.js';s.onload=function(){A=window.MGCA;cb();};document.head.appendChild(s);return false;}
+function q0(){return /[?&]mg=foto/.test(location.search);} /* стенд ?mg=foto — пишет в альбом, как было */
+function recOn(){return !(window.R2&&R2.off('lov-'+ID))&&!!(window.MGREC&&MGREC.has&&MGREC.has(ID));} /* rb2-LOVB */
+/* rb2-LOVB события кадра (общие для игры и бота без экрана): рывок рыбы tw, моргание bl, Васька cs (x 0 — дома, 1 — в кадре) */
+function evStep(E,dt,k,rnd,rec){var tw=E.tw,bl=E.bl,cs=E.cs,sp=0;
+  if(tw.on){tw.t+=dt;if(tw.t>.6){tw.on=0;tw.next=(1.2+rnd()*1.4)*k;}}else{tw.next-=dt;if(tw.next<=0&&!bl.on){tw.on=1;tw.t=0;sp=1;}}
+  if(bl.on){bl.t+=dt;if(bl.t>.45){bl.on=0;bl.next=(1.6+rnd()*2)*k;}}else{bl.next-=dt;if(bl.next<=0&&!tw.on&&tw.next>.5){bl.on=1;bl.t=0;}}
+  if(rec){if(cs.st===0){cs.next-=dt;if(cs.next<=0){cs.st=1;cs.t=0;}}else if(cs.st===1){cs.x=Math.min(1,cs.x+dt/.45);if(cs.x>=1){cs.st=2;cs.t=0;cs.stay=1+rnd()*1.2;}}
+    else if(cs.st===2){cs.t+=dt;if(cs.t>cs.stay)cs.st=3;}else{cs.x=Math.max(0,cs.x-dt/.4);if(cs.x<=0){cs.st=0;cs.next=(3.2+rnd()*2.6)*k;}}}
+  return sp;}
+function evNew(rnd){return {tw:{on:0,t:0,next:1.6},bl:{on:0,t:0,next:2.4},cs:{st:0,x:0,t:0,next:2.5+rnd()*2,stay:1}};}
+function needArt(cb){if(window.MGCA){A=window.MGCA;cb();return true;}if(window.R2&&R2.need){R2.need('js/mg-mgc-art.js').then(function(){A=window.MGCA;cb();},function(){});return false;} /* rb2-core: fetch — обрыв сети не будит предохранитель загрузки */var s=document.createElement('script');s.src='js/mg-mgc-art.js';s.onload=function(){A=window.MGCA;cb();};document.head.appendChild(s);return false;}
 function run(host,o){
   if(!window.MGCA){needArt(function(){run(host,o);});return;}A=window.MGCA;
   o=o||{};A.css();var m=st(),q=new URLSearchParams(location.search),bot=o.bot||'',calm=!!o.calm;
-  var f=o.fish||PEND||{id:q.get('fish')||'shuka',w:+(q.get('w')||4.2),pi:+(q.get('p')||1),k:q.get('k')||'tr'};
+  var real=!!(o.fish||PEND||(o.again&&LASTF)),f=o.fish||PEND||(o.again&&LASTF)||{id:q.get('fish')||'shuka',w:+(q.get('w')||4.2),pi:+(q.get('p')||1),k:q.get('k')||'tr'};
   var F=fishOf2(f.id)||(typeof FISH!=='undefined'?FISH.shuka:null),rb=isRb(f,f.id)||q.get('rb')==='1',place=typeof PLACES!=='undefined'?PLACES[f.pi||0]:null;
   var tod=f.tod||o.tod||q.get('tod')||(A.todNow()==='night'?'evening':A.todNow()),wx=f.wx||'sun',look=place?place.look:'birch';
   var root=document.createElement('div');root.className='mgc mgc-foto';host.el.appendChild(root);
@@ -34,7 +47,10 @@ function run(host,o){
   root.insertAdjacentHTML('beforeend','<div class="mgc-top"><div class="mgc-ttl"></div><div class="mgc-sub"></div></div><div class="mgc-say"></div><div class="mgc-bot"></div><div class="mgc-fin"></div>');
   var $=function(s){return root.querySelector(s);},ttl=$('.mgc-ttl'),sub=$('.mgc-sub'),sayEl=$('.mgc-say'),botEl=$('.mgc-bot'),fin=$('.mgc-fin');A.fontOf(root);
   var W,H,G0,P,BG,T=0,last=0,raf=0,dead=false,ph='aim',phT=0,sayT=0,flash=0,parts=[],FL=null;
-  var shots=[],SHOTS=3,best=null,tw={on:0,t:0,next:1.6},bl={on:0,t:0,next:2.4},cat={look:0};
+  var shots=[],SHOTS=3,best=null,EV=evNew(Math.random),tw=EV.tw,bl=EV.bl,cs=EV.cs,cat={look:0};
+  /* rb2-LOVB режим «на рекорд» */
+  var RECM=recOn(),TL=calm?20:15,tLeft=TL,pts=0,strk=0,cool=0,nShot=0,nClean=0,pops=[];if(RECM){SHOTS=999;LASTF=f;}
+  if(RECM)try{var tg=host.el.parentNode.querySelector('.mg-bar .mg-tag:not(.gold)');if(tg)tg.style.display='none';}catch(e){}
   function say(txt,ms){sayEl.innerHTML=(window.LOOK&&LOOK.av?'<div class="av">'+LOOK.av('petr')+'</div>':'')+'<div><b>'+L2('Петрович','Petrovich')+':</b> '+txt+'</div>';sayEl.classList.add('on');sayT=(ms||3600)/1000;}
   function ic(k){return window.LOOK?LOOK.I(k):'';}
   function resize(){var r=root.getBoundingClientRect();W=Math.max(200,r.width);H=Math.max(200,r.height);var d=A.dpr();cv.width=Math.round(W*d);cv.height=Math.round(H*d);g.setTransform(d,0,0,d,0,0);
@@ -53,13 +69,15 @@ function run(host,o){
   function fishLen(pb){var w=f.w||1;return Math.min(W*.86,Math.max(pb.h*.42,pb.h*(.4+.22*Math.log10(1+w*2))));}
   /* кадр видоискателя */
   function frameR(){var pb=petrBox(),fw=Math.min(W*.92,Math.max(fishLen(pb)*1.25,pb.h*.9)),top=pb.y-pb.h*1.12,bot2=pb.y-pb.h*.28;return {x:W/2-fw/2,y:top,w:fw,h:bot2-top};}
-  function calmNow(){return !tw.on&&!bl.on;}
+  function calmNow(){return !tw.on&&!bl.on&&!catIn();}
+  function catIn(){return RECM&&cs.x>.55;}
 
   function upd(dt){T+=dt;phT+=dt;if(sayT>0){sayT-=dt;if(sayT<=0)sayEl.classList.remove('on');}if(flash>0)flash=Math.max(0,flash-dt*2.2);
-    if(ph==='aim'){var k=calm?1.6:1;
-      if(tw.on){tw.t+=dt;if(tw.t>.6){tw.on=0;tw.next=(1.2+Math.random()*1.4)*k;}}else{tw.next-=dt;if(tw.next<=0&&!bl.on){tw.on=1;tw.t=0;snd('splash');for(var i=0;i<8;i++)parts.push({x:W/2+(Math.random()-.5)*fishLen(petrBox())*.8,y:fishY(),vx:(Math.random()-.5)*G0.u*20,vy:-G0.u*(4+Math.random()*10),t:0,life:.6});}}
-      if(bl.on){bl.t+=dt;if(bl.t>.45){bl.on=0;bl.next=(1.6+Math.random()*2)*k;}}else{bl.next-=dt;if(bl.next<=0&&!tw.on&&tw.next>.5){bl.on=1;bl.t=0;}}
-      if(botQ){botT-=dt;if(botT<=0){if(botW==null)botW=Math.random()<botQ;if(botW?calmNow():(tw.on&&tw.t>.15&&tw.t<.45||bl.on)){shoot();botW=null;botT=.9+Math.random()*.6;}else botT=.1;}}}
+    if(ph==='aim'){var k=(calm?1.6:1)*(RECM?1-.4*Math.min(1,(TL-tLeft)/TL):1);
+      if(RECM){tLeft-=dt;cool-=dt;var c0=cs.st;if(tLeft<=0){tLeft=0;ph='shot';setTimeout(function(){if(!dead)done1();},700);}}
+      if(evStep(EV,dt,k,Math.random,RECM)){snd('splash');for(var i=0;i<8;i++)parts.push({x:W/2+(Math.random()-.5)*fishLen(petrBox())*.8,y:fishY(),vx:(Math.random()-.5)*G0.u*20,vy:-G0.u*(4+Math.random()*10),t:0,life:.6});}
+      if(RECM&&c0===0&&cs.st===1&&!bot)say(L2('Васька! Брысь из кадра!','Vaska! Get out of the shot!'),1800);
+      if(botQ){botT-=dt;if(botT<=0){if(botW==null)botW=Math.random()<botQ;if(botW?calmNow():(tw.on&&tw.t>.15&&tw.t<.45||bl.on||catIn())){shoot();botW=null;botT=RECM?.5+Math.random()*.4:.9+Math.random()*.6;}else botT=.1;}}}
     for(var j=parts.length-1;j>=0;j--){var p=parts[j];p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=G0.u*60*dt;if(p.t>p.life)parts.splice(j,1);}
     if(ph==='release'){if(phT>2.2)showFin();}}
   var botW=null,botQ=bot==='good'?1:bot==='mid'?.6:bot==='bad'?.15:0,botT=1.2;
@@ -67,7 +85,8 @@ function run(host,o){
   function drawScene(gg,noUi){var u=G0.u,pb=petrBox();gg.drawImage(BG,0,0,W,H);
     if(!noUi&&SH)A.drawShim(gg,G0,SH,T,P);
     /* кот Васька смотрит на рыбу */
-    A.cat(gg,W*(G0.land?.32:.16),pb.y-u*.5,u*(G0.land?9:10),{P:P,t:T,dir:1});
+    var cx0=W*(G0.land?.32:.16),cy0=pb.y-u*.5;if(RECM&&cs.x>0){var fr0=frameR(),e=cs.x*cs.x*(3-2*cs.x),cx1=fr0.x+fr0.w*.2,cy1=fr0.y+fr0.h*.98;cx0+=(cx1-cx0)*e;cy0+=(cy1-cy0)*e-Math.sin(e*Math.PI)*u*14;} /* rb2-LOVB Васька лезет в кадр */
+    A.cat(gg,cx0,cy0,u*(G0.land?9:10)*(1+(RECM?cs.x*.25:0)),{P:P,t:T,dir:1});
     var L=fishLen(pb),fy=fishY(),released=ph==='release'||ph==='fin'&&rb;
     if(!released){A.petr(gg,pb.x,pb.y,pb.h,{P:{tod:'day'}/* вспышка телефона: лицо светлое и ночью */,t:T,pose:'fish',span:L*.33,hy:0,dir:1,blink:bl.on,smile:!bl.on});
       gg.save();var j=tw.on?Math.sin(tw.t*40)*.12:0;gg.translate(pb.x+(tw.on?Math.sin(tw.t*55)*u*.6:0),fy+(tw.on?Math.cos(tw.t*47)*u*.5:0));gg.rotate(j);
@@ -87,31 +106,44 @@ function run(host,o){
       g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=1;g.beginPath();for(var i=1;i<3;i++){g.moveTo(fr.x+fr.w*i/3,fr.y);g.lineTo(fr.x+fr.w*i/3,fr.y+fr.h);g.moveTo(fr.x,fr.y+fr.h*i/3);g.lineTo(fr.x+fr.w,fr.y+fr.h*i/3);}g.stroke();
       /* «рамка фокуса» на лице */
       var pb=petrBox(),fx=pb.x+pb.h*.02,fy2=pb.y-pb.h*.89,fs=pb.h*.12;g.strokeStyle=ok?'rgba(120,255,150,.9)':'rgba(255,214,90,.9)';g.lineWidth=2;g.strokeRect(fx-fs,fy2-fs,fs*2,fs*2);
-      A.chip(g,fr.x+fr.w/2,fr.y+fr.h+u*5,(ok?L2('Замерли — снимай!','Still — shoot!'):tw.on?L2('Рыба бьётся…','The fish is flapping…'):L2('Моргнул…','Blinked…')),{bg:ok?'rgba(30,120,60,.8)':'rgba(16,36,44,.66)',fs:Math.round(Math.max(16,Math.min(20,u*4.4)))});
+      A.chip(g,fr.x+fr.w/2,fr.y+fr.h+u*5,(ok?L2('Замерли — снимай!','Still — shoot!'):catIn()?L2('Васька в кадре!','Vaska in the shot!'):tw.on?L2('Рыба бьётся…','The fish is flapping…'):L2('Моргнул…','Blinked…')),{bg:ok?'rgba(30,120,60,.8)':'rgba(16,36,44,.66)',fs:Math.round(Math.max(16,Math.min(20,u*4.4)))});
       /* кадры */
-      for(i=0;i<SHOTS;i++){var x=fr.x+fr.w-u*2-(SHOTS-1-i)*u*5,y=fr.y-u*3.5;g.fillStyle=i<shots.length?'rgba(255,255,255,.35)':'rgba(255,255,255,.95)';A.rr(g,x-u*1.8,y-u*1.3,u*3.6,u*2.6,u*.5);g.fill();}}
+      if(RECM)recHud(fr,u);else for(i=0;i<SHOTS;i++){var x=fr.x+fr.w-u*2-(SHOTS-1-i)*u*5,y=fr.y-u*3.5;g.fillStyle=i<shots.length?'rgba(255,255,255,.35)':'rgba(255,255,255,.95)';A.rr(g,x-u*1.8,y-u*1.3,u*3.6,u*2.6,u*.5);g.fill();}}
     if(flash>0){g.fillStyle='rgba(255,255,255,'+flash+')';g.fillRect(0,0,W,H);}}
 
   /* снимок: копия кадра + оценка */
-  function shoot(){if(ph!=='aim'||shots.length>=SHOTS)return;var q=tw.on?(tw.t<.12||tw.t>.5?2:1):bl.on?1:3,why=tw.on?(q===2?'edge':'blur'):bl.on?'blink':'';
+  function shoot(){if(ph!=='aim'||shots.length>=SHOTS)return;if(RECM){if(cool>0)return;cool=.5;}var q=tw.on?(tw.t<.12||tw.t>.5?2:1):bl.on?1:3,why=tw.on?(q===2?'edge':'blur'):bl.on?'blink':'';
+    if(catIn()){q=1;why='cat';}
+    if(RECM){var d=why==='cat'?-20:why==='blink'?-15:why==='blur'?0:why==='edge'?4:10+Math.min(10,2*strk);strk=q===3?strk+1:0;pts=Math.max(0,pts+d);nShot++;if(q===3)nClean++;
+      pops.push({t:0,v:d,x:frameR().x+frameR().w*(.3+Math.random()*.4)});flash=.55;snd(d>0?'tap':'bad');vib(d<0?40:15);
+      if(!bot&&(why==='blink'&&Math.random()<.5||why==='cat'))say(why==='cat'?L2('Васька, брысь! Весь кадр испортил.','Vaska, scram! You ruined the shot.'):L2('Ой, моргнул!','Oops, I blinked!'),1600);
+      if(best&&q<=best.q){upBtn();return;}}
     var fr=frameR(),d=A.dpr(),pc=document.createElement('canvas');pc.width=Math.round(fr.w*d);pc.height=Math.round(fr.h*d);var pg=pc.getContext('2d');pg.scale(d,d);pg.translate(-fr.x,-fr.y);
     var hasF='filter' in pg;if(q<3&&tw.on&&hasF)pg.filter='blur('+(q===1?3:1.2)+'px)';drawScene(pg,true);pg.filter='none';
     var sh={q:q,why:why,c:pc};shots.push(sh);if(!best||q>best.q)best=sh;flash=.9;snd('click');snd('tap');vib(25);
-    say(q===3?L2('Во! Красота, хоть в газету!','Perfect! Front page material!'):why==='blink'?L2('Ой, я моргнул! Давай ещё разок.','Oops, I blinked! Once more.'):why==='blur'?L2('Смазалось — рыба дёрнулась. Ещё!','Blurry — the fish flapped. Again!'):L2('Почти! Чуть-чуть дрогнула.','Almost! A tiny wobble.'),2600);
-    upBtn();if(q===3||shots.length>=SHOTS){ph='shot';setTimeout(function(){if(!dead)done1();},900);}}
-  function upBtn(){var b=root.querySelector('#ftShot');if(b)b.innerHTML=ic('camera')+' '+L2('Снимаю!','Shoot!')+' <span style="opacity:.75;font-size:17px">'+(SHOTS-shots.length)+'/'+SHOTS+'</span>'+kc(L2('Пробел','Space'));}
+    if(!RECM)say(q===3?L2('Во! Красота, хоть в газету!','Perfect! Front page material!'):why==='blink'?L2('Ой, я моргнул! Давай ещё разок.','Oops, I blinked! Once more.'):why==='blur'?L2('Смазалось — рыба дёрнулась. Ещё!','Blurry — the fish flapped. Again!'):L2('Почти! Чуть-чуть дрогнула.','Almost! A tiny wobble.'),2600);
+    upBtn();if(!RECM&&(q===3||shots.length>=SHOTS)){ph='shot';setTimeout(function(){if(!dead)done1();},900);}}
+  function upBtn(){var b=root.querySelector('#ftShot');if(b)b.innerHTML=ic('camera')+' '+L2('Снимаю!','Shoot!')+(RECM?'':' <span style="opacity:.75;font-size:17px">'+(SHOTS-shots.length)+'/'+SHOTS+'</span>')+kc(L2('Пробел','Space'));}
+  /* rb2-LOVB: таймер, очки и всплывающие +10/−15 над кадром */
+  function recHud(fr,u){var y=fr.y-u*3.6,w=fr.w*.46,x=fr.x+fr.w-w,k=tLeft/TL;g.fillStyle='rgba(16,36,44,.66)';A.rr(g,x,y-u*1.6,w,u*3.2,u*1.6);g.fill();
+    g.fillStyle=k<.25?'#ff8a5c':'#8be08f';A.rr(g,x+u*.5,y-u*1.1,(w-u)*Math.max(0,k),u*2.2,u*1.1);g.fill();
+    var fs=Math.round(Math.max(17,Math.min(22,u*4.6)));g.font='700 '+fs+'px '+(A.font||'sans-serif');g.textBaseline='middle';g.textAlign='left';g.fillStyle='#fff';
+    g.strokeStyle='rgba(0,0,0,.55)';g.lineWidth=3;g.lineJoin='round';g.strokeText(Math.ceil(tLeft)+' '+L2('с','s'),x+u*1.2,y+u*.1);g.fillText(Math.ceil(tLeft)+' '+L2('с','s'),x+u*1.2,y+u*.1);g.textAlign='left';g.fillStyle='#ffe27a';g.fillText(pts+' '+L2('очк.','pts'),fr.x,y+u*.1);
+    for(var i=pops.length-1;i>=0;i--){var p=pops[i];p.t+=1/60;if(p.t>1){pops.splice(i,1);continue;}g.globalAlpha=1-p.t;g.fillStyle=p.v>0?'#ffe27a':p.v<0?'#ff6b5a':'#e0e0e0';
+      g.font='800 '+(fs+6)+'px '+(A.font||'sans-serif');g.textAlign='center';g.fillText((p.v>0?'+':p.v<0?'−':'')+Math.abs(p.v),p.x,fr.y+fr.h*.35-p.t*u*12);g.globalAlpha=1;}}
   function done1(){if(rb){ph='release';phT=0;bar();say(L2('Красная книга — сфотографировали, и ступай с миром. Плыви, красавица!','Red Book fish — photo taken, now off you go!'),3400);snd('splash');}else showFin();}
   function bar(){botEl.innerHTML='';}
   var phIdx=-1,shared=0;
-  function showFin(){if(ph==='fin')return;ph='fin';var q=best?best.q:0,tier=q;
-    var res=function(){stop();fin.classList.remove('on');root.classList.remove('fin-on');sayEl.classList.remove('on');if(!o.train&&!bot)PEND=null;host.done({score:q,tier:tier,rec:false,scoreTxt:L2('Кадр','Shot')+': <b>'+['—',L2('смазан','blurry'),L2('неплохо','good'),L2('отлично','perfect')][q]+'</b>',extra:{ph:phIdx,id:f.id,w:f.w,rb:rb?1:0,share:shared,line:rb?L2('Красная книга: сфотографировал и отпустил','Red Book: photographed & released'):L2('Фото — в альбоме','Saved to the album')}});};
+  function showFin(){if(ph==='fin')return;ph='fin';var q=best?best.q:0,tier=q,fk=f.id+'|'+f.w,svA=RECM?!SAVED[fk]&&!bot&&(real||q0()):!o.train&&!bot;
+    var res=function(){stop();fin.classList.remove('on');root.classList.remove('fin-on');sayEl.classList.remove('on');if((!o.train||RECM)&&!bot)PEND=null;if(RECM){var ut=pts+'';try{ut=MGREC.unit(ID,pts);}catch(e){}host.done({score:pts,scoreTxt:'<b>'+ut+'</b>',extra:{ph:phIdx,id:f.id,w:f.w,rb:rb?1:0,share:shared,line:L2('Кадров: ','Shots: ')+nShot+L2(', чистых: ',', clean: ')+nClean+(rb?' · '+L2('Красная книга — отпустили','Red Book — released'):'')}});return;}
+      host.done({score:q,tier:tier,rec:false,scoreTxt:L2('Кадр','Shot')+': <b>'+['—',L2('смазан','blurry'),L2('неплохо','good'),L2('отлично','perfect')][q]+'</b>',extra:{ph:phIdx,id:f.id,w:f.w,rb:rb?1:0,share:shared,line:rb?L2('Красная книга: сфотографировал и отпустил','Red Book: photographed & released'):L2('Фото — в альбоме','Saved to the album')}});};
     if(bot){setTimeout(res,100);return;}
-    if(!o.train&&!bot){m.n=(m.n||0)+1;m.best=Math.max(m.best||0,q);if(rb)m.rb[f.id]=1;
+    if(svA){if(RECM)SAVED[fk]=1;m.n=(m.n||0)+1;m.best=Math.max(m.best||0,q);if(rb)m.rb[f.id]=1;
       if(typeof a1PhAdd==='function'&&typeof dayNum==='function')try{phIdx=a1PhAdd({id:f.id,w:f.w,pi:f.pi||0,tod:tod,wx:wx,d:dayNum(),k:rb?'rb':(f.k||'tr')});}catch(e){}A.save();}
     var card=makeCard(best?best.c:null,q);card.style.cssText='width:100%;height:auto;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.3);transform:rotate(-1.5deg);margin:4px 0 6px';
-    var way=o.train?'':shareWay();
-    fin.innerHTML='<h2>'+(rb?L2('Красная книга','Red Book'):o.train?L2('Тренировка','Practice'):L2('Фото на память','A photo to remember'))+'</h2><div class="stars"></div><div class="ph"></div>'+
-      (rb?'<p>'+L2('Сфотографировал и отпустил. Награда — полная, запись — в альбоме.','Photographed and released. Full reward, saved to the album.')+'</p>':'<p style="opacity:.85">'+(o.train?L2('В тренировке фото в альбом не идёт.','Practice photos are not saved.'):L2('Фото — в альбоме, «Стенгазета двора».','Saved to the album.'))+'</p>')+
+    var trn=o.train&&!RECM,way=trn?'':shareWay();
+    fin.innerHTML='<h2>'+(rb?L2('Красная книга','Red Book'):trn?L2('Тренировка','Practice'):L2('Фото на память','A photo to remember'))+'</h2><div class="stars"></div><div class="ph"></div>'+
+      (rb?'<p>'+L2('Сфотографировал и отпустил. Награда — полная, запись — в альбоме.','Photographed and released. Full reward, saved to the album.')+'</p>':'<p style="opacity:.85">'+(trn?L2('В тренировке фото в альбом не идёт.','Practice photos are not saved.'):RECM?L2('Очки: ','Points: ')+pts+(svA?' · '+L2('лучший кадр — в альбоме','best shot saved to the album'):''):L2('Фото — в альбоме, «Стенгазета двора».','Saved to the album.'))+'</p>')+
       '<div class="'+(way?'row2':'')+'">'+(way?'<button class="btn" id="ftShare">'+ic('users')+' '+L2('Поделиться','Share')+'</button>':'')+'<button class="btn green" id="ftOk" data-enter>'+L2('Готово','Done')+kc('Enter')+'</button></div>';
     var stw=fin.querySelector('.stars');for(var i=0;i<3;i++)stw.appendChild(A.icon('star',44,{off:i>=tier}));fin.querySelector('.ph').appendChild(card);
     fin.style.top='50%';fin.style.maxHeight=(H-24)+'px';fin.style.overflow='auto';fin.style.padding='14px 16px 16px';card.style.maxHeight=Math.round(H*(G0.land?.5:.48))+'px';card.style.width='auto';card.style.maxWidth='100%';card.style.display='block';card.style.margin='4px auto 8px';
@@ -152,15 +184,23 @@ function run(host,o){
     if(ph==='aim'){shoot();return true;}return ph!=='fin';});
   host.amb('water',tod); /* RB:MGPC звуки по нарисованному времени суток */
   say(rb?L2('Это ж из Красной книги! Снимай скорее — и отпустим.','A Red Book fish! Quick photo — then we let it go.')+(host.pc?' '+L2('Пробел или щелчок — снимок.','Space or click — shoot.'):''):(host.pc?L2('Жми пробел или щёлкай, пока рыба не дёргается! И чтоб я не моргнул.','Press Space or click while the fish is still — and don\'t catch me blinking.'):L2('Снимай, пока не дёргается! И чтоб я не моргнул.','Shoot while it\'s still — and don\'t catch me blinking.')),4200);
-  window.__mgc={get ph(){return ph;},shoot:shoot,get shots(){return shots;},calmNow:calmNow};
+  window.__mgc={get ph(){return ph;},ev:EV,shoot:shoot,get shots(){return shots;},calmNow:calmNow};
   raf=requestAnimationFrame(function(ts){last=ts;frame(ts);});}
 
-function sim(q,seed){var R=(window.MGCA||{rng:function(){return Math.random;}}).rng(seed||Math.floor(Math.random()*1e9)),p=q==='good'?.92:q==='mid'?.55:.2,best=0;for(var i=0;i<3;i++){var r=R(),v=r<p?3:r<p+(1-p)*.4?2:1;best=Math.max(best,v);if(best===3)break;}return {score:best,tier:best};}
+/* rb2-LOVB бот «на рекорд» без экрана: те же события, затвор 0,5 с; good — снимает только в тихий миг (реакция 0,2–0,35 с), mid — ошибается в 25 %, bad — в 55 % */
+function simRec(q,o){o=o||{};var R=(window.MGCA&&MGCA.rng?MGCA.rng(o.seed||((Math.random()*1e9)|0)):Math.random),E=evNew(R),TL=o.calm?20:15,t=0,dt=1/30,pts=0,strk=0,cool=0,wait=.3,err=q==='good'?.04:q==='mid'?.25:.55;
+  var react=q==='good'?.2:q==='mid'?.3:.4,calmT=0;
+  while(t<TL){var k=(o.calm?1.6:1)*(1-.4*Math.min(1,t/TL));evStep(E,dt,k,R,true);t+=dt;cool-=dt;var cin=E.cs.x>.55,ok=!E.tw.on&&!E.bl.on&&!cin;calmT=ok?calmT+dt:0;
+    if(cool<=0){var go=false;if(R()<err*dt*4)go=true;else if(ok&&calmT>=react)go=true;
+      if(go){cool=.5;var why=cin?'cat':E.bl.on?'blink':E.tw.on?(E.tw.t<.12||E.tw.t>.5?'edge':'blur'):'';var d=why==='cat'?-20:why==='blink'?-15:why==='blur'?0:why==='edge'?4:10+Math.min(10,2*strk);
+        strk=why?0:strk+1;pts=Math.max(0,pts+d);}}}
+  var md=[50,100,160];try{md=MGREC.cf(ID).md;}catch(e){}var tr=0;for(var i=0;i<3;i++)if(pts>=md[i])tr=i+1;return {score:pts,tier:tr};}
+function sim(q,seed){if(recOn())return simRec(q,typeof seed==='object'?seed:{seed:seed});var R=(window.MGCA||{rng:function(){return Math.random;}}).rng(seed||Math.floor(Math.random()*1e9)),p=q==='good'?.92:q==='mid'?.55:.2,best=0;for(var i=0;i<3;i++){var r=R(),v=r<p?3:r<p+(1-p)*.4?2:1;best=Math.max(best,v);if(best===3)break;}return {score:best,tier:best};}
 
 var DEF={id:ID,n:{ru:'Фото с трофеем',en:'Trophy photo'},icon:'camera',kind:'event',
   open:function(){return typeof S!=='undefined'&&!!(S.open&&S.open[1]);},
-  run:run,sim:sim,ready:function(){return !!PEND;}};
+  run:run,sim:sim,bot:function(lv,o){return recOn()?simRec(lv,o):sim(lv,o&&o.seed);},ready:function(){return !!PEND;}};
 (window.MG_REG?window.MG_REG:function(d){(window.MG_PEND=window.MG_PEND||[]).push(d);})(DEF);
 /* для NORTH/UX: запустить фото прямо из итогов улова (без «Двора»). p = {id,w,pi,k,rb}. cb(res) — после «Готово» */
-window.mgcFoto=function(p,cb){PEND=p||null;if(window.MG&&MG.play)return MG.play(ID,{cb:cb});return false;};
+window.mgcFoto=function(p,cb){PEND=p||null;if(window.MG&&MG.play)return MG.play(ID,{cb:cb,src:'catch'});return false;}; /* rb2-core: источник в STAT — карточка улова (src catch), а не «Двор» (yard) */
 })();

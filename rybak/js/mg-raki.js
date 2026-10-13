@@ -17,7 +17,7 @@ function st(){if(typeof S==='undefined')return {finds:{},kinds:{}};if(!S.mg||typ
 var FINDS=[{id:'spoon',n:'Дедова блесна',en:'Grandpa\'s spoon lure'},{id:'coin',n:'Старинная копейка',en:'Old kopeck'},{id:'shell',n:'Речная ракушка-перловица',en:'River pearl mussel'},{id:'horse',n:'Подкова на счастье',en:'Lucky horseshoe'}];
 function tierOf(c,n){var f=n?c/n:0;return c<=0?0:f>=.9?3:f>=.6?2:f>=.25?1:0;}
 
-function needArt(cb){if(window.MGCA){A=window.MGCA;cb();return true;}var s=document.createElement('script');s.src='js/mg-mgc-art.js';s.onload=function(){A=window.MGCA;cb();};document.head.appendChild(s);return false;}
+function needArt(cb){if(window.MGCA){A=window.MGCA;cb();return true;}if(window.R2&&R2.need){R2.need('js/mg-mgc-art.js').then(function(){A=window.MGCA;cb();},function(){});return false;} /* rb2-core: fetch — обрыв сети не будит предохранитель загрузки */var s=document.createElement('script');s.src='js/mg-mgc-art.js';s.onload=function(){A=window.MGCA;cb();};document.head.appendChild(s);return false;}
 function run(host,o){
   if(!window.MGCA){needArt(function(){run(host,o);});return;}A=window.MGCA;
   o=o||{};A.css();var m=st(),seed=o.seed||today(),R0=A.rng(seed*17+11),calm=!!o.calm,q=new URLSearchParams(location.search),bot=o.bot||'';

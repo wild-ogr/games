@@ -141,7 +141,7 @@ albWall=function(){var box=$('alList'),all=mountable(),extra=Object.keys(S.mnt).
   var ws=Object.keys(S.cups).map(Number).filter(function(w){return w>0;}).sort(function(a,b){return b-a;});
   box.insertAdjacentHTML('beforeend','<div class="ua-ph2"><span class="ua-pi">🏅</span><span class="ua-pn"><b>'+L('Кубки турнира недели','Weekly contest cups')+'</b></span><span class="ua-pc">'+ws.length+'</span></div>');
   if(ws.length){var sf=document.createElement('div');sf.className='ua-shelf';ws.forEach(function(w){var c=cupOf(S.cups[w]),d0=new Date((w*7-3)*864e5),pi=weekPlace(w);
-      sf.insertAdjacentHTML('beforeend','<div class="ua-cup k'+c.k+'"><b>'+(c.k>=2?MEDAL[c.k-2]:'🎖')+'</b><span>'+E(LANG==='en'?nm(PLACES[pi]):P_SH[pi])+'</span><small>'+E(kgTxt(c.g/1000))+'</small><small>'+d0.getUTCDate()+'.'+('0'+(d0.getUTCMonth()+1)).slice(-2)+'</small></div>');});box.appendChild(sf);}
+      sf.insertAdjacentHTML('beforeend','<div class="ua-cup k'+c.k+'"><b>'+(c.k>=2?MEDAL[c.k-2]:'🎖')+'</b><span>'+E(LANG==='en'?nm(PLACES[pi]):P_SH[pi])+'</span><small>'+E(window.r2eFmt?r2eFmt(w,c.g):kgTxt(c.g/1000))/* rb2-EVENT: вид турнира */+'</small><small>'+d0.getUTCDate()+'.'+('0'+(d0.getUTCMonth()+1)).slice(-2)+'</small></div>');});box.appendChild(sf);}
   else box.insertAdjacentHTML('beforeend','<p class="ua-empty">'+L('Участвуй в турнире недели — в понедельник здесь появится кубок.','Take part in the weekly contest — a cup appears here on Monday.')+'</p>');
   box.querySelectorAll('[data-mnt]').forEach(function(b){b.onclick=function(){buyMnt(b.dataset.mnt);};});
   var wa=$('uaWa');if(wa)wa.onclick=function(){SND.tap();var s=st();s.wa=s.wa?0:1;try{save();}catch(e){}var y=box.scrollTop;albWall();box.scrollTop=y;};};
