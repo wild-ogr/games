@@ -293,7 +293,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'bogatyr',gv:'v24-101112',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+STAT.init({g:'bogatyr',gv:'v24.1-101312',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
@@ -306,7 +306,8 @@ setTimeout(()=>statProg(0),2500);
    p сила богатыря (powerNow), r Σ званий, a Σ оружейной, f Σ кузни, v Σ деревни, h открыто богатырей. Сразу после progress, после похода/трат — только если изменилось, и в новом сеансе (после 30 мин в фоне) */
 function statSum(o){let n=0;for(const k in o||{})n+=+o[k]||0;return n;}
 let statPrgK='',statHidT=0;
-function statPrg(){try{STAT.pl(Object.keys(S.done||{}).length);if(!statPr)return;const o={p:typeof powerNow==='function'?powerNow():0,r:statSum(S.rank),a:statSum(S.armory),f:statSum(S.forge),v:statSum(S.village),h:HEROES.filter(heroOpen).length},k=JSON.stringify(o);
+function statPrg(){if(typeof vkmCheck==='function')vkmCheck(); /* миссии VK (js/vkm-chk.js) */
+  try{STAT.pl(Object.keys(S.done||{}).length);if(!statPr)return;const o={p:typeof powerNow==='function'?powerNow():0,r:statSum(S.rank),a:statSum(S.armory),f:statSum(S.forge),v:statSum(S.village),h:HEROES.filter(heroOpen).length},k=JSON.stringify(o);
   if(k===statPrgK)return;statPrgK=k;STAT.ev('prg',o);}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){statHidT=Date.now();return;}if(statPr&&statHidT&&Date.now()-statHidT>30*60e3){statPrgK='';statPrg();}});
 let loginMerge=false,cloudBase=S.gold||0,cloudReady=false,cloudPending=null,cloudT=0,cloudLast=0,cloudBusy=false;
@@ -645,6 +646,10 @@ var SOC=(function(){
     ntf:ntf,ntfOn:ntfOn,ntfDue:ntfDue,ntfDay:ntfDay,level:level,score:score,mission:mission,missionKnown:missionKnown,evOn:evOn,evFlush:evFlush};
 })();
 /*/SOC*/
+/* vkm (10.10): лента друзей, таблица и миссии VK — игра только сообщает модулю SOC «уровень / очки / миссия» (vkmCheck в js/vkm-chk.js),
+   а он молча шлёт их в нашу функцию (hobby-pay, ?op=vkev), та — в VK. Только ВКонтакте с мостом и подписью; в ОК, Яндексе и на маке без vk_app_id — ни запроса.
+   Номера миссий — VKM_ID (js/vkm.js, пишет tools/missions.py из data/vk-missions-ids.json). На маке адрес можно подменить: ?evurl=http://localhost:порт/ */
+const EV_URL=(()=>{const m=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]evurl=([^&#]*)/.exec(location.search);return m?decodeURIComponent(m[1]):'https://functions.yandexcloud.net/d4e7egf62asn7suf30m0?op=vkev';})();
 /* VK хранит значение до 4096 байт: режем на куски по 1800 символов. Два набора кусков (sa… и sb…) по очереди:
    пишем новый набор ПОСЛЕДОВАТЕЛЬНО, «оглавление» svn = набор:кусков:длина — строго последним. Пока новый набор не дописан,
    старый цел. Старый формат (sv*, svn = число кусков) читается. Битое облако ≠ пустое: не пишем, читаем ещё раз. */

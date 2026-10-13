@@ -28,19 +28,20 @@
       false. На остальных до 12-го — кто первый спросил, того и победа. Строки, а не окна ('tmr', 'seal', 'goal', 'rev') — не спрашивают.
       GBNB.next(id) → номер уровня, где id точно получит место (для текста «Перерыв — после 5-го уровня»), или 0. GBNB.isNew() — новичок ли.
    STAT: tut {s}: 7 подарок (ур.3), 8 новинка ур.4, 9 победа ур.5, 10 победа ур.6, 11 «Ревизор едет» (ур.8), 12 Ревизия пройдена,
-      13 начат ур.11; nb {a: l1 (s сек до первого хода, r повторов) | gift (i) | new (g товар, v мама с малышом) | rev (l) | city | tmr (n) | gate (id, l) | ntf}.
+      13 начат ур.11; nb {a: l1 (s сек до первого хода, r повторов) | help (l уровень, m ходов, n который раз; v14.1) | gift (i) | new (g товар, v мама с малышом) | rev (l) | city | tmr (n) | gate (id, l) | ntf}.
    Сохранение (GB.onSave 'nb'): S.nb0 (1 новичок / 2 старый), S.nbT (день последнего показа «Завтра» — для статистики);
       разовые отметки — S.tips.nb_* (сливаются максимумом).
 */
 (function(){
 if(typeof GB==='undefined')return;
 var NB=window.GBNB={on:GB.flag('newbie'),
-  f:{l1:true,bst:true,gift:true,nw:true,rev:true,one:true,city:true,tmr:true,ntf:true},
+  f:{l1:true,help:true,bst:true,gift:true,nw:true,rev:true,one:true,city:true,tmr:true,ntf:true},
   RES:{3:['gift'],4:['new'],5:['mg','thanks'],6:['daily','plan'],10:['city']},UPTO:12,BST:3,TMR:5,
   tmrItems:[],TX:null};
 // тексты — отдельными данными (TEXT вычитывает, EN переводит; GBT.say('nb.<ключ>') главнее, если есть)
 NB.TX={
-  l1:'Я тётя Валя! Тащите сгущёнку к двум таким же — три одинаковых, и покупатель доволен!',
+  help:'Вот этот — сюда! Тащите туда, где светится.',
+  l1:'Сгущёнку выбросили! Тащите банку к двум таким же — покупатель уже тут.', // v14.1: зацепка вместо правила (было «Я тётя Валя! Тащите сгущёнку к двум таким же — три одинаковых, и покупатель доволен!»)
   gift_t:'Подарок от тёти Вали',gift:'Это вам, на счастье — {n}!',gift_c:'В зал — подарок: {c} 💰',
   gift_say:'Фикус в зале — теперь как дома!',
   new_good:'Новинка на витрине — {n}!',new_mom:'Мама с малышом — без очереди! Обслужите её первой — +5 💰.',
@@ -81,7 +82,7 @@ GB.onSave({id:'nb',keys:['nb0','nbT'],
 
 /* ---------- стили ---------- */
 (function(){var st=document.createElement('style');st.textContent=
-  'body.nbnob #scr-game .gf{visibility:hidden}'+
+  'body.nbnob #scr-game .gf{visibility:hidden}body.nbnob #scr-game .gf #bHint{visibility:visible}'+ /* v14.1: «Подсказка» новичку видна */
   '#tip.nbv{font-size:19px;line-height:1.28;text-align:left;padding:10px 14px 10px 80px;min-height:66px;display:flex;align-items:center}'+
   '#tip.nbv::before{content:"";position:absolute;left:10px;top:50%;margin-top:-30px;width:60px;height:60px;border-radius:50%;background:#f6dcb0 var(--nbva) center/cover no-repeat;box-shadow:0 0 0 3px #fff,0 2px 6px rgba(0,0,0,.2)}'+
   '#tip.nbp{animation:nbtp .7s ease-in-out 2}@keyframes nbtp{50%{transform:scale(1.04);box-shadow:0 0 0 6px rgba(255,176,59,.55),0 4px 14px rgba(0,0,0,.2)}}'+
@@ -128,16 +129,18 @@ function l1Card(){var e=$('tip');if(!e)return;var t=tx('l1');if(!t)return;
   if(G.speech&&G.speech.who==='valya')G.speech=null;}
 function l1Off(){var e=$('tip');if(e){e.classList.remove('nbv','nbp');}}
 function l1Apply(){if(!on('l1')||!isNew()||typeof G==='undefined'||!G||!G.tutor||G.daily||G.idx!==0)return;if(G.nbL1)return;l1Card();}
-// стартовая реплика Вали на 1-м уровне новичка молчит — говорит подсказка с её лицом
-if(typeof say==='function'){var say0=say;window.say=function(t,who){if(G&&G.nbL1&&G.tutor&&who==='valya')return;return say0.apply(this,arguments);};}
+// v14.1: на ВСЁМ 1-м уровне новичка Валя молчит пузырём (он закрывал верхние полки на 360×640) — говорит подсказка с её лицом.
+// («Вот это — сюда!» из подсказки на 1-м уровне тоже молчит: помощь новичку пишет строкой — helpTick)
+if(typeof say==='function'){var say0=say;window.say=function(t,who){if(who==='valya'&&G&&isNew()&&!G.daily&&!G.mode&&G.idx===0&&(G.nbL1||G.tutor))return;return say0.apply(this,arguments);};}
+// палец тащит полупрозрачную товар (c) из (x0,y0) в (x1,y1); k — 0..1 фаза
+function finger(x0,y0,x1,y1,c,k){var e=ease(k),x=x0+(x1-x0)*e,y=y0+(y1-y0)*e-Math.sin(e*Math.PI)*U*.25,a=Math.min(1,k*5,(1-k)*5);
+  if(c&&k>.05){ctx.globalAlpha=a*.75;drawCell(c,x,y-U*.08,1.1,false);}
+  ctx.globalAlpha=a*.85;ctx.fillStyle='rgba(255,255,255,.75)';ctx.strokeStyle='#e07a1f';ctx.lineWidth=Math.max(2,U*.06);ctx.beginPath();ctx.arc(x,y-U*.42,U*.22,0,6.2832);ctx.fill();ctx.stroke();
+  ctx.globalAlpha=a;ctx.fillStyle='#000';ctx.font=Math.round(U*.85)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('👆',x+U*.18,y-U*.42);ctx.globalAlpha=1;}
 // палец тащит полупрозрачную банку и крупнее
 if(typeof drawTutor==='function'){var dt0=drawTutor;window.drawTutor=function(){
   if(!on('l1')||!G||!G.nbL1||!G.units||!G.units[1]||!G.st||!G.st.F||!G.st.F[1])return dt0.apply(this,arguments);
-  try{var k=(G.t%2.2)/1.6;if(k>1)return;var x0=slotX(1,1),y0=G.units[1].pt,x1=slotX(0,2),y1=G.units[0].pt,e=ease(k),x=x0+(x1-x0)*e,y=y0+(y1-y0)*e-Math.sin(e*Math.PI)*U*.25;
-    var a=Math.min(1,k*5,(1-k)*5),c=G.st.F[1][1];
-    if(c&&k>.05){ctx.globalAlpha=a*.6;drawCell(c,x,y-U*.08,1.1,false);}
-    ctx.globalAlpha=a*.85;ctx.fillStyle='rgba(255,255,255,.75)';ctx.strokeStyle='#e07a1f';ctx.lineWidth=Math.max(2,U*.06);ctx.beginPath();ctx.arc(x,y-U*.42,U*.22,0,6.2832);ctx.fill();ctx.stroke();
-    ctx.globalAlpha=a;ctx.fillStyle='#000';ctx.font=Math.round(U*.85)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('👆',x+U*.18,y-U*.42);ctx.globalAlpha=1;}
+  try{var k=(G.t%1.9)/1.6;if(k>1)return;finger(slotX(1,1),G.units[1].pt,slotX(0,2),G.units[0].pt,G.st.F[1][1],k);}
   catch(err){ctx.globalAlpha=1;return dt0.apply(this,arguments);}};}
 // бустеры — с 3-го уровня (новичок, первый проход 1–2-го)
 function bst(){var b=document.body;if(!b)return;var hide=on('bst')&&isNew()&&typeof G!=='undefined'&&G&&!G.daily&&!G.mode&&G.idx<NB.BST-1&&(S.levelsDone||0)<NB.BST-1&&(had('l1')||G.nbL1);
@@ -147,6 +150,26 @@ setInterval(function(){if(typeof G==='undefined'||!G||!G.nbL1)return;
   if(!G.tutor){if(!G.nbL1.done){G.nbL1.done=1;l1Off();ev({a:'l1',s:Math.round((Date.now()-G.nbL1.t0)/1000),r:G.nbL1.r});}return;}
   if(typeof modalOn!=='undefined'&&modalOn||document.hidden||typeof paused!=='undefined'&&paused)return;
   if(Date.now()-G.nbL1.last>=5000&&G.nbL1.r<6){G.nbL1.last=Date.now();G.nbL1.r++;var e=$('tip');if(e){e.classList.remove('nbp');void e.offsetWidth;e.classList.add('nbp');}}},1000);
+
+/* ---------- v14.1: помощь новичку на ур.1–2 — 4 с без хода (после 1-го хода; на ур.2 до 1-го хода — 8 с) → бесплатная подсказка
+   (doHint: рамки и дуга) + палец тащит товар по ней + строка Вали «Вот этот — сюда!». Раньше неверный 1-й ход снимал обучение,
+   а кнопки новичку спрятаны — на экране не оставалось ни одной подсказки (разбор 13.10, gastronom-fix1310/FIX.md). Не чаще раза в 8 с, до 8 раз за уровень. ---------- */
+var HL={g:null,mv:-1,t:0,at:0,n:0,tx:''};
+function helpOff(){var e=$('tip');if(HL.tx&&e&&e.textContent===HL.tx){tip('');e.classList.remove('nbv');}HL.tx='';if(typeof G!=='undefined'&&G)G.nbHelp=0;}
+function helpTick(){if(typeof G==='undefined'||!G)return;var now=Date.now();
+  if(HL.g!==G){HL.g=G;HL.n=0;HL.mv=G.moves;HL.t=now;HL.tx='';return;}
+  if(HL.mv!==G.moves){HL.mv=G.moves;HL.t=now;if(G.nbHelp)helpOff();return;}
+  if(!on('help')||!isNew()||G.daily||G.mode||G.idx>1||G.over||G.won||G.tutor||G.drag||G.sel)return;
+  if(typeof modalOn!=='undefined'&&modalOn||document.hidden||typeof paused!=='undefined'&&paused){HL.t=now;return;}
+  var wait=G.idx===1&&G.moves===0?8000:4000;
+  if(now-HL.t<wait||now-HL.at<8000||HL.n>=8||G.hint&&G.hint.t<5)return;
+  HL.at=now;HL.n++;try{doHint();}catch(e){return;}
+  if(!G.hint)return;G.nbHelp=1;
+  var t=typeof LANG!=='undefined'&&LANG==='en'?'This one goes here! Drag it to the glowing spot.':tx('help'),e=$('tip');if(t&&e){tip(t);HL.tx=e.textContent;var u=ava();if(u){e.style.setProperty('--nbva','url('+u+')');e.classList.add('nbv');}}
+  ev({a:'help',l:G.idx+1,m:G.moves,n:HL.n});}
+setInterval(helpTick,1000);
+if(typeof render==='function'){var rn0=render;window.render=function(){rn0.apply(this,arguments);
+  try{var h=G&&G.nbHelp&&G.hint;if(h&&h.t<5&&G.units&&G.units[h.a]&&G.units[h.b]){var k=(h.t%1.8)/1.4;if(k<=1)finger(slotX(h.a,h.sa),G.units[h.a].pt,slotX(h.b,h.sb),G.units[h.b].pt,G.st.F[h.a][h.sa],k);}}catch(e){ctx.globalAlpha=1;}};}
 
 /* ---------- 2) новинки: подарок на 3-м, мама с малышом и новый товар на 4-м ---------- */
 function gift(){if(!NB.turn('gift'))return;if(!once('gift'))return;

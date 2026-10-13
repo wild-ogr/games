@@ -33,6 +33,31 @@ function fail(){if(done)return;done=true;
   if(document.body)show();else addEventListener('DOMContentLoaded',show);}
 })();
 </script>
+<style>/* v14.1 (разбор 13.10, hobby-analytics/release-i/gastronom-fix1310/FIX.md): заставка НОВОГО игрока — вместо пустой шапки карты и старого вида v13, который через ~1 с
+   перестраивается модулями буста. Страница под заставкой строится как обычно (visibility, не display — раскладка и холст считаются). */
+html.gbwait body{visibility:hidden}
+html.gbwait::before{content:attr(data-gbw1);position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:9000;background:#b3261e;color:#fff;font:800 clamp(26px,8vw,44px)/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:.04em;padding:.35em .7em;border-radius:.25em;border:3px solid #7a1a12;box-shadow:0 6px 18px rgba(0,0,0,.25);white-space:nowrap}
+html.gbwait::after{content:attr(data-gbw2);position:fixed;left:0;right:0;top:calc(38% + 52px);z-index:9000;text-align:center;color:#3b2a1a;font:600 18px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;animation:gbwp 1.2s ease-in-out infinite}
+@keyframes gbwp{50%{opacity:.45}}
+</style>
+<script>/* v14.1: заставка нового игрока (нет сохранения gastronom-v1). Снимается: модули буста готовы (GB.isReady) — сразу новый вид;
+   иначе через 3 с после того, как основной скрипт показал уровень (#scr-game.on) или страница разобрана — игрок не ждёт медленную сеть; предохранитель 15 с;
+   окно «Обновить» (#ldfail) — сразу. window.__gbw {on, why: gb|t|cap|fail, ms} — для STAT gbr. Старый игрок — ничего. Выключить: ?gboff=splash. */
+(function(){var d=document.documentElement,w=window.__gbw={},s=null,t0=Date.now(),t1=0,iv;
+try{s=localStorage.getItem('gastronom-v1');}catch(e){}
+if(s||/[?&]gboff=[^&]*splash/.test(location.search))return;
+var en=/[?&]lang=en/.test(location.search)||!/[?&](vk_app_id|vk)=/.test(location.search)&&/^en/i.test(navigator.language||'')&&!/[?&]lang=ru/.test(location.search);
+d.setAttribute('data-gbw1',en?'GROCERY No. 1':'ГАСТРОНОМ №1');d.setAttribute('data-gbw2',en?'Aunt Valya is opening the shop…':'Тётя Валя открывает магазин…');
+d.className+=' gbwait';w.on=true;
+function off(why){if(!w.on)return;w.on=false;w.why=why;w.ms=performance.now();clearInterval(iv);d.className=d.className.replace(/\s*gbwait/g,'');}
+w.off=off;
+iv=setInterval(function(){var n=Date.now();
+  if(window.GB&&GB.isReady)return off('gb');
+  if(document.getElementById('ldfail'))return off('fail');
+  var sg=document.getElementById('scr-game');if(document.readyState!=='loading'||sg&&/\bon\b/.test(sg.className)){if(!t1)t1=n;else if(n-t1>=3000)return off('t');}
+  if(n-t0>=15000)off('cap');},100);
+})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Гастроном №1</title>
 <style>
@@ -965,7 +990,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
 // (на маке — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (STAT.optOut)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'gastronom',gv:'v14-101217',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'gastronom',gv:'v14.1-101313',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: настройки сеанса (cfg), вход (start: pl — пройдено уровней, cn — монет, bt — было ли сохранение в облаке; после облака, но не позже 2,5 с),
    баланс (bal → cb в pause), откуда монеты (ern → earn: lvl, ad, gift, chest, buy, quest) */
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
@@ -2056,7 +2081,7 @@ function startLevel(idx,daily){if(window.GB&&G)GB._lvEnd('quit'); /* gb: «За�
     }
   nextTip();
   save();
-  later(()=>{if(!G)return;if(G.boss)say(pick(PH.valya.boss),'valya');else say(pick(PH.valya.start),'valya');},500);
+  later(()=>{if(!G||G.tutor)return;if(G.boss)say(pick(PH.valya.boss),'valya');else say(pick(PH.valya.start),'valya');},500); /* v14.1: на 1-м уровне новичка (обучение) без случайной реплики — бывало «Товар руками не трогать!» */
   if(!modalOn)YG.start();kick();}
 function nextTip(){if(!G)return;const t=G.tipQ&&G.tipQ.shift();if(t){G.tipCur=t;tip(L(t[0],t[1]));G.tipT=performance.now();G.tipOn=true;}else{G.tipOn=false;G.tipCur=null;tip('');}}
 function lvHas(lv,f){return lv.sh.some(L=>L.some(r=>r.some(c=>c&&f(c))));}

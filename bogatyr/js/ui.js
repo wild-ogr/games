@@ -397,7 +397,7 @@ function renderQuests(){if(qSeg==='a')return renderAch();if(qSeg==='b')return re
   if(el.querySelector('[data-qa]'))STAT.offer('quest2');
   for(const b of el.querySelectorAll('[data-qa]'))b.onclick=()=>{const qi=+b.dataset.qa;STAT.place('quest2');showRewarded(()=>claim(qi,2),null,()=>{const d2=dailyEnsure(),x=d2===dq?dq.list[qi]:null;if(!x||x.x2)return x?'':adLateGold(rw); // день сменился — золото по цене задания
       const a=x.c?rw:rw*2;if(!x.c&&!qDone(x))return '';if(!x.c)ern('quest',rw);ern('ad',rw);x.c=1;x.x2=1;S.gold+=a;save();SND.coin();try{questBadge();achToast();}catch(e){}lateRe();return L('задание ×2: +','quest ×2: +')+fmtNum(a)+goldW();});};
-  on('qBonus',()=>{if(dq.bonus)return;dq.bonus=1;S.streak={last:dayKey(),n:si.n};S.gold+=bonus;ern('chest',bonus);save();SND.chest();toast(L('Сундук дня: +','Daily chest: +')+fmtNum(bonus)+L(' золота!',' gold!'));renderQuests();setGold();questBadge();});
+  on('qBonus',()=>{if(dq.bonus)return;dq.bonus=1;S.streak={last:dayKey(),n:si.n};S.gold+=bonus;ern('chest',bonus);save();SND.chest();toast(L('Сундук дня: +','Daily chest: +')+fmtNum(bonus)+L(' золота!',' gold!'));renderQuests();setGold();questBadge();if(typeof vkmCheck==='function')vkmCheck();});
   onAd('qRest','streak',()=>showRewarded(()=>{S.streak={last:dayPrev(dayKey()),n:si.lost};save();SND.chest();toast(L('Серия возвращена: '+si.lost+' дн.','Streak restored: '+si.lost+' '+plu(si.lost,'','','','day','days')));renderQuests();},null,
     ()=>{const s2=streakInfo();if(!s2.lost||s2.lost!==si.lost)return adLateGold();S.streak={last:dayPrev(dayKey()),n:si.lost};save();SND.chest();lateRe();return L('серия возвращена: '+si.lost+' дн.','streak restored: '+si.lost+' '+plu(si.lost,'','','','day','days'));}));
   on('lbE',()=>{lbSeg='endless';renderQuests();});on('lbW',()=>{lbSeg='weekly';renderQuests();});on('lbK',()=>{lbSeg='kills';renderQuests();});on('lbD',()=>{lbSeg='daily';renderQuests();});
@@ -798,6 +798,7 @@ function firstStart(){if(/[?&](bot|promo)\b/.test(location.search))return;const 
   if(QS.has('promo')){const b=document.createElement('script');b.src='tools/promo.js';document.head.appendChild(b);} // картинки для магазина (только локально)
   // «Друзья и игры» (общий модуль SOC в core.js; только VK с мостом): сессии, кнопка 🎲, строка в ⚙
   SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{showModal(h);return $('mBody');},close:()=>hideModal(),okLink:OK_LINK,
+    evUrl:EV_URL,evId:c=>typeof VKM_ID==='object'&&VKM_ID[c]||0, /* vkm: события VK (уровень, очки, миссии) — см. js/vkm-chk.js */
     now:()=>nowMs(),ntf:{t:n=>ntfText(n),b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Уговор! Попусту тревожить не стану.','Deal! I won’t bother you for nothing.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}}); /* ntf: разрешение на напоминания VK (SOC v2.4) — вопрос в итогах победы, см. openResult */
   $('moreBtn').onclick=()=>{SND.click();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();};updMore();
   requestAnimationFrame(loop);

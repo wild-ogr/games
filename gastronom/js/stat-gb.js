@@ -24,6 +24,7 @@
            sr — серия заданий дня, st — звёзд всего, sz — размер сохранения в тыс. символов (бюджет облака VK — см. VK_MAXCH).
      mus   {on} — музыка вкл./выкл. раз за сеанс (cfg модуля STAT берёт только th/snd/calm) и при каждом переключении.
      pl    — STAT.pl(пройдено уровней) после каждой победы (v1.4: поле pl в pause и в start следующего сеанса).
+     gbr   {ms, sp, l, ms0} — (v14.1) модули буста готовы; sp — заставка нового игрока 0/1/2. mv1 {ok, s} — (v14.1) первый ход новичка на ур.1 тройкой (1) или нет (0).
      ldf   {n, f, w} — (предохранитель загрузки в <head>) прошлая загрузка сорвалась: n — попытка, f — файл, w — net | cut | none.
    Свои события других потоков (шлют сами; сводка — hobby-analytics/stat/README.md «Гастроном буст»): seal, plan, step, dep, glass, book, card, ord,
    ret (META), lg, ss (LEAGUE), mg (MG0), md (MODE), nb, tut (NEWBIE), fest (FEST), ob/tip (OBST), fb (форма отзывов — STATGB.fb).
@@ -163,7 +164,13 @@
 
   // ldf: прошлый запуск не загрузился (предохранитель в <head> перезагрузил) — что и сколько раз; шлём после удачного запуска
   function ldf(){try{if(document.getElementById('ldfail'))return;var x=sessionStorage.getItem('gbldlog');if(!x)return;sessionStorage.removeItem('gbldlog');var o=JSON.parse(x)||{};ev('ldf',{n:+o.n||1,f:o.f,w:o.w});}catch(e){}}
-  function boot(){hookRank();setTimeout(prg,3000);setTimeout(ldf,1500);}
+  // v14.1: gbr {ms, sp, l, ms0} — модули буста готовы (GB.ready): ms — мс от начала загрузки страницы; sp — заставка нового игрока
+  //   (0 не было, 1 — снята готовностью, 2 — уже снята таймером 3 с: игрок видел старый вид); l — экран-уровень (номер) или пусто; ms0 — когда снялась заставка
+  function gbr(){try{var w=window.__gbw||{},G_=g();if(w.on&&w.off)w.off('gb'); /* заставку — сразу, не ждать опроса 0,1 с */ev('gbr',{ms:Math.round(performance.now()),sp:w.on===undefined?0:w.why==='gb'?1:2,l:G_?L(G_):undefined,ms0:w.ms?Math.round(w.ms):undefined});}catch(e){}}
+  // v14.1: mv1 {ok, s, mv} — первый ход новичка на 1-м уровне: ok 1 — сразу тройка (как учит палец), 0 — не тот товар; s — секунд от начала уровня
+  wrapFn('tryMove',function(x,r){var G_=g(),st=sv();if(!r||!x||!G_||G_.moves!==1||G_.idx!==0||G_.daily||G_.mode||!st||(st.levelsDone||0)>0)return;
+    ev('mv1',{ok:left(G_)<x.n?1:0,s:Math.round(G_.t||0)});},function(){var G_=g();return G_&&G_.moves===0?{n:left(G_)}:null;});
+  function boot(){gbr();hookRank();setTimeout(prg,3000);setTimeout(ldf,1500);}
   if(typeof GB!=='undefined'&&GB.isReady)boot();else if(typeof GB!=='undefined'&&GB.on)GB.on('ready',boot);else window.addEventListener('load',boot);
 
   window.STATGB={fb:fb,prg:prg,_set:function(o){if(o&&o.stk)STK_S=+o.stk;},_dbg:function(){return {cur:{pm:cur.pm,act:cur.act,stk:cur.stk},pend:pend,cnt:cnt,prg:prgK,eZ:eZ};}};
