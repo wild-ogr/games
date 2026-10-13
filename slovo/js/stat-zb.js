@@ -133,7 +133,7 @@
   // zb2-TECH: события новинок; порядок полей = приоритет (≤ 8), поля сверх списка — в конце
   var Z2={nb2:['a','l','ms'],cal:['a','n','w','f'],sos2:['a','pl','dv'],zap:['a','t','id','s','n','c','ms','lv','f'],wd:['a','n','sr'],
     share:['id','ok'],node:['a','l','id'],auto:['id','a','l'],rec:['id','sc','pl'],again:['id','n'],cont:['id'],goal:['a','id','n','c'],
-    uchit:['a','f','n'],mail:['a','f','n','l']},z2C={};
+    uchit:['a','f','n'],mail:['a','f','n','l'],fr:['a','k','e','n','c'],week:['a','lv','s','i','k','e']},z2C={};
   function z2(n,p){try{n=String(n||'');var ks=Z2[n]||[],o={},q={},k,i,c=0;p=p&&typeof p==='object'?p:{};
       for(i=0;i<ks.length;i++)if(p.hasOwnProperty(ks[i]))o[ks[i]]=p[ks[i]];
       for(k in p)if(p.hasOwnProperty(k)&&!o.hasOwnProperty(k))o[k]=p[k];

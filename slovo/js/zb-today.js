@@ -175,12 +175,13 @@ function render(el){var L=list(),n=L.filter(function(x){return x.ok;}).length,in
     '<span class="sc-date">'+dateTxt()+'</span></div>'+
     '<div class="sc-dt"><b>Сегодня у Зины</b><span class="sc-cnt">'+n+'/5</span></div>'+rowsHtml(L,true)+sealHtml(n)+weekHtml()+
     (inf?'<button type="button" class="sc-cls" id="scCls"><span>🎓 '+esc(inf.short)+'</span><i class="sc-pb"><b style="width:'+Math.round(100*inf.frac)+'%"></b></i><small>'+esc(nextTxt(inf))+'</small></button>':'')+
+    (ZB.diarySlots?ZB.html(ZB.diarySlots,'',{}):'')+ /* zb2-MISC */
     '<p class="sc-mut">Пропустил день — ничего не сгорает. Пятёрка — одна в день.</p></div>'+
     '<div class="btns"><button type="button" class="btn blue" id="scBack">← Домой</button></div></div>';
   var rs=el.querySelectorAll('.sc-row');for(var i=0;i<rs.length;i++)rs[i].onclick=(function(x){return function(){tap();ZB.safe('td-go:'+x.id,function(){x.x.go&&x.x.go();});};})(L[+rs[i].dataset.i]);
   var b=el.querySelector('#scPf');if(b)b.onclick=function(){takePf(b);render(el);};
   var c=el.querySelector('#scCls');if(c)c.onclick=function(){tap();if(window.ZBS&&ZBS.openClass)ZBS.openClass();};
-  el.querySelector('#scBack').onclick=function(){tap();home();};}
+  el.querySelector('#scBack').onclick=function(){tap();home();};if(ZB.diarySlots)ZB.mount(el,ZB.diarySlots,{});} /* zb2-MISC */
 function nextTxt(inf){var x=inf.next;if(!x)return '';var a=[];
   if(inf.c<12){if(x.lLeft>0)a.push('контрольная — уровень '+x.l);if(x.fLeft>0)a.push('ещё '+x.fLeft+' '+pl(x.fLeft,'пятёрка','пятёрки','пятёрок'));
     return a.length?'До '+(x.c<12?x.c+' класса':'выпускного')+': '+a.join(' и '):'';}

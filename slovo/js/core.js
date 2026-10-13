@@ -392,7 +392,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Игра только на русском — lang:'ru' (window.LANG от Яндекса интерфейс не меняет).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v4.0-101222',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v4.1-101311',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе — после облака (что позже), но не дольше 2,5 с (иначе модуль сам отправит start без полей через 3 с).
 // pl — пройдено уровней, cn — монет, bt — облако хоть раз отдавало сохранение (S.cl — метка на устройстве, ставит cloudLoad)
 let statPr=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:+S.lv||0,cn:+S.coins||0,bt:S.cl?1:0});}
@@ -952,10 +952,11 @@ function showRewarded(cb0,onFail0,late0){
 // после ролика за награду. Площадки ещё и сами ограничивают частоту (VK — не чаще 30 с). Числа — флагами Яндекса (applyFlags, game.js).
 const AD={gap:180,afterRew:90,minLv:8,sess:180};
 let lastInter=0,lastRew=0,interOn=false,interNext=null;
+function zbTiho(){return !!(S.z2m&&+S.z2m.th>Date.now());} /* zb2-MISC Тихий час */
 function interDue(){const now=Date.now();
-  return !SHOT&&!(typeof PAY!=='undefined'&&PAY.own('no_ads'))&&!!(ysdk||VK||LOCAL)&&S.lv>=AD.minLv&&now-T0>=AD.sess*1000&&now-lastInter>=AD.gap*1000&&now-lastRew>=AD.afterRew*1000;}
+  return !SHOT&&!(typeof PAY!=='undefined'&&PAY.own('no_ads'))&&!zbTiho()&&!!(ysdk||VK||LOCAL)&&S.lv>=AD.minLv&&now-T0>=AD.sess*1000&&now-lastInter>=AD.gap*1000&&now-lastRew>=AD.afterRew*1000;}
 // STAT v1.2: межэкранная положена (не новичок, без no_ads), но не показана — ad int none: gap — рано после прошлой, cap — рано после ролика за награду, nosdk — нет SDK/моста
-function interWhy(){if(SHOT||(typeof PAY!=='undefined'&&PAY.own('no_ads'))||S.lv<AD.minLv||Date.now()-T0<AD.sess*1000)return;
+function interWhy(){if(SHOT||(typeof PAY!=='undefined'&&PAY.own('no_ads'))||zbTiho()||S.lv<AD.minLv||Date.now()-T0<AD.sess*1000)return;
   const c=!(ysdk||VK||LOCAL)?'nosdk':Date.now()-lastInter<AD.gap*1000?'gap':'cap';STAT.ad('int','none',c);}
 /* zb-TECH (10.10, буст «Школа»): межэкранная VK — предпроверка и пауза после отказов (было: отказ VK → новая попытка на КАЖДОМ переходе, серии до 31 отказа).
    vkIntLoad() — VKWebAppCheckNativeAds{interstitial} заранее (через 4 с после моста, через 3 с после показа, в фоне на переходе), ответ помним (vkIntOk).
@@ -976,7 +977,7 @@ function intRes(ok){if(ok){intFails=0;return;}if(++intFails>=2){intFails=0;intPa
 const ADBG=typeof ZB2==='undefined'||ZB2.reg('adbg',{t:'Межэкранная: фон, ошибка 10',who:'TECH'});
 if(typeof ZB2!=='undefined')ZB2.reg('int6',{t:'Межэкранная после мини-игры',who:'TECH'});
 let INT_POLL_MS=30000,INT_PRE_MS=15000,INT_E10_MS=180000,INT_TICK_MS=5000,intTickT=0;
-function intWant(){return !!VK&&!SHOT&&!(typeof PAY!=='undefined'&&PAY.own('no_ads'))&&S.lv>=AD.minLv;}
+function intWant(){return !!VK&&!SHOT&&!(typeof PAY!=='undefined'&&PAY.own('no_ads'))&&!zbTiho()&&S.lv>=AD.minLv;}
 function intPoll(){if(!VK||document.hidden||interOn||adBusy||vkIntBusy||!intWant())return;const now=Date.now();
   if(now<intPauseT)return;
   if(vkIntOk===false&&now-vkIntT>=INT_POLL_MS){vkIntLoad();return;}

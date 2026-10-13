@@ -57,7 +57,7 @@
     poor:{every:6,below:35,perDay:3},
     // ---- потолки монет В ДЕНЬ по источнику (ZBECO.give); нет ключа — без потолка ----
     // zb2: новое ≤60/день = mg 20 + zap 40; rec/wd — внутри mg (capIn)
-    cap:{mg:20,mode:40,cell:30,shelf:60,card:60, zap:40,rec:10,wd:10,cal:120,fair:0},
+    cap:{mg:20,mode:40,cell:30,shelf:60,card:60, zap:40,rec:10,wd:10,cal:120,fair:0,frnd:60},
     capIn:{rec:'mg',wd:'mg'},
     cal:{days:[{c:10},{c:0,hb:1},{c:30,box:'posylka'},{c:20},{c:30},{c:0,hb:1},{c:50,box:'sunduk',part:1}],
       wk2mul:1.25,back:50,backDays:2,forgive:1,saveAd:1,parts:4},
@@ -67,6 +67,11 @@
     node:{asLvl:true},
     rec:{best:3,medal:[0,10,6,3]},
     wd:{win:[0,10,10,8,6,5,4]},
+    // zb2-MERGE: з2 (модель Z2-MERGE-tools/coin_model3.py, казуал ≈ +60 %); за отправку другу — ничего (VK 2.6.2)
+    week:{cap:8,step:[{hb:1,sp:3},{c:4,sp:3},{sp:5,st:1}],subb:{goal:50,c:4,hb:1,sp:5},plan:{c:8,hb:2,sp:2,lv:25,lvNew:15,bon:12,five:3,mg:3,days:4},
+      tab:{good:8,best:16,hbG:1,spG:5,hbB:2,spB:10},mama:{goal:4,hb:1,sp:5},dup:5,final:{hb:1,sp:5},spPer:5,from:5},
+    sport:{r:[0,20,10,3,1,1]},deco:{gir:250,nak:120},
+    frnd:{hb:2,gc:30,ty:10,wc:5,take:3,tyDay:3,send:5,wsend:5,wsolve:5,from:5},
     // ---- реклама по нужде (≠ ×2): ----
     ad:{topUpMax:.3,topUpDay:2,       // «добить монеты до кабинета/облика»: нехватка ≤ 30 % цены, не больше 2 раз в день
       mgRun:1},                        // ролик в мини-игре — 1 за заход (MG0 host.adNeed)

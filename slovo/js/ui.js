@@ -396,7 +396,7 @@ function openSettings(){SND.tap();STAT.screen('settings');
     const st=$('sStat');if(st)st.onclick=()=>{STAT.setEnabled(!STAT.enabled());SND.tap();draw();};};
   // покупки — только вне уровня (из меню), ведут в магазин
   const shop=typeof PAY!=='undefined'&&PAY.on&&!$('game').classList.contains('on');
-  modal(`<h2>⚙️ Настройки</h2><div id="setRows"></div>${SOC.ok()?'<button class="setrow" id="sSoc"><span>👥 '+(OK?'Друзья<br><small>позвать друзей в игру</small>':'Друзья и игры')+'</span><b>›</b></button>':''}${shop?PAY.html(['no_ads'],false)+'<button class="setrow" id="sShop"><span>🛒 Все покупки</span><b>›</b></button>':''}<div class="btns"><button class="btn green" id="mOk">Продолжить</button></div>`);
+  modal(`<h2>⚙️ Настройки</h2><div id="setRows"></div>${SOC.ok()?'<button class="setrow" id="sSoc"><span>👥 '+(OK?'Друзья<br><small>позвать друзей в игру</small>':'Друзья и игры')+'</span><b>›</b></button>':''}${shop?PAY.html(['no_ads','tiho_d','tiho_w'],false)+'<button class="setrow" id="sShop"><span>🛒 Все покупки</span><b>›</b></button>':''}<div class="btns"><button class="btn green" id="mOk">Продолжить</button></div>`);
   draw();$('mOk').onclick=()=>{hideModal();SND.tap();};if($('sSoc'))$('sSoc').onclick=()=>{SND.tap();openSocial();};
   if(shop){PAY.bind($('mcard'));PAY.re=openSettings;$('sShop').onclick=()=>{hideModal();SND.tap();openShop();const p=document.querySelector('#shopList .pay');if(p)p.scrollIntoView();};}
 }
