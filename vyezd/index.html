@@ -973,7 +973,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v23-101112',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v23.1-101313',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: настройки сеанса; прогресс на входе — после чтения облака, но не позже 2,5 с (bt — облако хоть раз отдало сохранение: метка устройства, не в сохранении)
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -3536,6 +3536,6 @@ window.__test={get MUS(){return MUS;},musTick,setPause,DAILY_T,dailyTier,cam,bir
 <link rel="stylesheet" href="css/car.css"><script src="js/career.js" defer></script><script src="js/today.js" defer></script><script src="js/orders.js" defer></script>
 <script src="js/myyard.js" defer></script><script src="js/album.js" defer></script><script src="js/garage-tolik.js" defer></script><script src="js/league.js" defer></script><script src="js/season.js" defer></script><!-- vy-yard: после основного скрипта; не загрузились — игра как раньше -->
 <link rel="stylesheet" href="css/fest-vy.css"><script defer src="js/fest.js"></script><script defer src="js/fest-vy.js"></script><!-- vy-fest: праздники (модуль FEST + «Чёрная Волга», зима, «Ёлочный базар»); не загрузились — игра как раньше -->
-<script src="js/stat-vy.js" defer></script><script src="js/vkm-vy.js" defer></script> <!-- vy-tech: статистика буста (yard, crash, окна, экраны…) и миссии VK — после основного скрипта; не загрузились — игра как раньше -->
+<script src="js/stat-vy.js" defer></script><script src="js/vkm-vy-ids.js" defer></script><script src="js/vkm-vy.js" defer></script> <!-- vy-tech: статистика буста (yard, crash, окна, экраны…) и миссии VK — после основного скрипта; не загрузились — игра как раньше -->
 </body>
 </html>
