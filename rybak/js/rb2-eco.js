@@ -10,8 +10,8 @@
             Пишет STAT earn(src) (через ern), в рыбалке — строкой бонуса G.bon. RECO.left(src) — сколько ещё можно сегодня. Счётчики дня — S.r2k.d.
    ПОТОЛКИ  RECO.cap[src]=[доля Р, мин] в день. 'all' — общий потолок всех новых источников буста (кроме mg — у мини-игр свой MG_RW.CAP, = RECO.mg.cap).
    ВРЕМЯ    день — местная дата ГГГГ-ММ-ДД (как dayKey игры).
-   Флаги ECO: hoz (Хозяйство Петровича), tw (Стена трофеев + первое чучело подарком), pay1 («Как платить» один раз), pay2 (товары за голоса — ВЫКЛЮЧЕН,
-            включается ?on=pay2 / window.R2_PAY2=true вместе с оплатой), adOld (ролик старожилу — не монеты), payst (STAT окна VK). Поле сохранения — S.r2k. */
+   Флаги ECO: hoz (Хозяйство Петровича), tw (Стена трофеев + первое чучело подарком), pay1 («Как платить» один раз), pay2 (товары за голоса — включён с pay1310,
+            выключатель ?off=pay2), adOld (ролик старожилу — не монеты), payst (STAT окна VK). Поле сохранения — S.r2k. */
 var RECO=(function(){
   function R(){try{var t=TRIP_C[topPlace()];return t>0?t:30;}catch(e){return 30;}}
   function c(k,mn){return Math.max(mn||0,Math.round((k||0)*R()/5)*5);}
@@ -60,10 +60,11 @@ var RECO=(function(){
       oldR:15,          // … и монет ≥ 15 Р
       luck:2,           // ролик старожилу: «Удачная рыбалка» — ×2 к шансу трофея на следующую рыбалку
       luckDay:2},       // раз в день
-  /* ---------- ECO: товары за голоса (pay2, ВЫКЛЮЧЕНЫ; оплату не выкатываем) ---------- */
+  /* ---------- ECO: товары за голоса (pay2; цены = hobby-pay/catalog.json 54794412: trip_near, trip_far, kit_next, kit_next2) ---------- */
   vk:{tripNear:8, tripFar:14, tripFarFrom:5500,   // П2 «Путёвка с доплатой»: путёвка + снасть под место; дальний — путёвка ≥ 5500
       kitCh1:11, kitNorth:21,                      // П3 «Набор водоёма»: глава I (как volga_kit) / Север (как north_kit)
       club7:7, clubTrialDay:2,                     // П4 Клуб: пробная неделя подарком на 2-й день (FIRSTFIX «Утро»), потом «Клуб 7 дней» 7 голосов
+      clubTrialFrom:20739, clubTrialOld:0,         // pay1310: пробная неделя — только новичкам (первый день игры S.d0 ≥ 20739 = 13.10.2026); старым игрокам — НЕТ, пока владелец не решит (1 — дать всем, у кого Клуба не было: неделя без рекламы всей базе)
       coinsHideOrd:5}                              // П5 пакеты монет — не на первой полке, если открыто ≥ 6 мест (PLACE_ORD ≥ 5)
   };
   E.ord=function(){try{return ordOf(topPlace());}catch(e){return 0;}};
@@ -78,7 +79,7 @@ var RECO=(function(){
     if(d){d[src]=(d[src]||0)+n;if(E.cap[src]&&src!=='mg')d.all=(d.all||0)+n;}
     try{S.coins+=(typeof ern==='function'?ern(src,n):n);if(typeof G!=='undefined'&&G&&G.bon&&lbl){G.earned+=n;G.bon.push([lbl,n]);}save();if(typeof updCoins==='function')updCoins();}catch(e){}
     return n;};
-  E.pay2=function(){try{return (/[?&]on=[^&#]*pay2/.test(location.search)||window.R2_PAY2===true)&&!R2.off('pay2');}catch(e){return false;}};
+  E.pay2=function(){try{return !R2.off('pay2');}catch(e){return false;}};   // pay1310: включено в сборке (товары внесены в hobby-pay); выключатель — ?off=pay2 / R2_OFF_FILE
   return E;
 })();
 window.RECO=RECO;
@@ -162,5 +163,5 @@ if(window.R2)R2.reg('adOld',{s:'ECO',t:'ролик старожилу — уда
   if(typeof pickFish==='function'){var pf=pickFish;pickFish=function(){var r=pf.apply(this,arguments);
     try{if(typeof G!=='undefined'&&G&&G.r2luck&&G.phase==='wait'&&!G.tourn&&r&&rk(r)<3){var r2=pf.apply(this,arguments);if(rk(r2)>rk(r))r=r2;}}catch(e){}return r;};}
 })();
-/* ---------- pay2: товары за голоса (П2–П5) — ВЫКЛЮЧЕНЫ; при ?on=pay2 / window.R2_PAY2=true грузится js/rb2-eco-pay.js ---------- */
-if(window.R2){R2.reg('pay2',{s:'ECO',t:'товары за голоса П2–П5 (выключено до оплаты)'});if(RECO.pay2())R2.need('js/rb2-eco-pay.js').catch(function(){});}
+/* ---------- pay2: товары за голоса (П2–П5) — включены с pay1310; js/rb2-eco-pay.js грузится лениво (R2.need) ---------- */
+if(window.R2){R2.reg('pay2',{s:'ECO',t:'товары за голоса П2–П5'});if(RECO.pay2())R2.need('js/rb2-eco-pay.js').catch(function(){});}

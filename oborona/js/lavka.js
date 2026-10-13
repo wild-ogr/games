@@ -1,7 +1,7 @@
 'use strict';
 /* ob2-LAVKA: лавка за голоса, украшения по главам, праздничная лавка. Флаг lavka, поле S.o2k. На старте — товары (довыдача), подарок, обёртки; остальное — js/lavka-x.js (там описание).
-   LAV_CAT=1 — когда vk-pay знает kvas 4, starter 5, speed_box 7, night_kit 10, skins_firebird 11 */
-const LAV_CAT=0;
+   LAV_CAT=1 (13.10: vk-pay all-1310 выкачен и знает kvas 4, starter 5, speed_box 7, night_kit 10, skins_firebird 11; 0 — новых товаров в VK нет, Жар-птица 14) */
+const LAV_CAT=1;
 const LAV={x:null,up:-1,t:0,ios:0,dch:[0,0,2,3,4,5]};
 if(OB2.reg('lavka',{s:'LAVKA',t:'Лавка, украшения по главам'})){
   OB2.field('k',{id:'lavka',def:()=>({d0:dayKey()}),fix(o){if(typeof o.d0!=='string')o.d0=dayKey();}});
