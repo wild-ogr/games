@@ -105,7 +105,7 @@ const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test
 const OK_LINK='https://ok.ru/game/512005500650'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 let ysdk=null,YP=null,VK=null,paused=false,muted=false;
 /*STAT*/
-/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.6 (12.10.2026; v1.5 — 11.10, v1.4 — 09.10, v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
@@ -114,9 +114,13 @@ let ysdk=null,YP=null,VK=null,paused=false,muted=false;
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
    05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
    08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
-   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса.
+   11.10 (v1.5, sv:15): запасной адрес U2 (stat.assortiz.ru/ev), пока основной лежит.
+   12.10 (v1.6, sv:16; Оборона ob2-core, образец Зины zb2-core d41d683): последняя пачка при закрытии (sendBeacon) — на запасной адрес, пока основной в сеансе
+     ни разу не ответил «ОК» или недавно падал (bUrl; sendBeacon отвечает true сразу — пачка в лежащее облако терялась молча);
+     STAT.slow(sc,ms,o) — событие slow «медленный переход» (≥300 мс; sc — экран/переход, ms; не больше 8 за сеанс); в start — mem (ГБ, deviceMemory) и cpu (ядер). */
 var STAT=(function(){
-  var V=1,SV=15,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=16,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,pOk=0,slN=0,SLMAX=8,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -146,6 +150,10 @@ var STAT=(function(){
     return {os:os,dv:touch?(m<600?'m':'t'):'d',sw:Math.round(w/20)*20,sh:Math.round(h/20)*20,
       wv:/; wv\)|VKAndroidApp|com\.vkontakte/.test(ua)||(os==='ios'&&!/Safari\//.test(ua))?1:0,
       br:cv?'c'+cv[1]:sv?'s'+sv[1]:/Firefox\/(\d+)/.test(ua)?'f'+/Firefox\/(\d+)/.exec(ua)[1]:'?'};}
+  // v1.6: память (ГБ, только Chrome/Android) и число ядер — в start
+  function hw(p){try{var m=+navigator.deviceMemory,c=+navigator.hardwareConcurrency;if(m>0)p.mem=m;if(c>0)p.cpu=Math.min(64,Math.round(c));}catch(e){}return p;}
+  // v1.6: STAT.slow('t:map',420,{mk:'…'}) — медленный переход между экранами (≥300 мс), не больше SLMAX за сеанс
+  function slow(sc,ms,o){if(!on||!(ms>=300)||slN>=SLMAX)return;slN++;var p={sc:String(sc||'').slice(0,24),ms:Math.round(ms)},k;for(k in o||{})if(p[k]===undefined)p[k]=o[k];ev('slow',p);}
   function saveSt(){if(O.S){O.S.stc={c:st.c,n:st.n,d:st.d};}ls('stat-'+G,JSON.stringify(st));}
 
   /* STAT.init({g:'gastronom', gv:'v16', plat:PLAT, lang:LANG, url:STAT_URL, now:nowMs, S:S, rate:1}) — README.
@@ -174,7 +182,7 @@ var STAT=(function(){
       vp:scrub(qp('vk_platform').replace(/_ok$/,''),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
     pend=dev&&!O.url?[]:jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[]; // журнал мака очередь не трогает
     // start ждёт STAT.progress() (поля pl, cn, bt), но не дольше 3 с; события до него встанут после
-    sP=['start',sec(),{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)}];
+    sP=['start',sec(),hw({sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)})];slN=0;
     if(prog)rel();else sTm=setTimeout(rel,3000);
     dayMark();saveSt();
     if(se&&se.length){for(i=0;i<se.length;i++){x=se[i];if(x&&x[0]===2)res(x[1],x[2]);else if(x)err(x[1],x[2],x[3],0,{e:1});}}window.__se=[];
@@ -294,15 +302,17 @@ var STAT=(function(){
     var L=urls();
     function go(i){post(L[i],s,function(c,mark){
       var okc=c>=200&&c<300;
-      if(L[i]===O.url){if(okc)pFail=0;else if(c>=500||c===429||!c)pFail=Date.now();}
+      if(L[i]===O.url){if(okc){pFail=0;pOk=1;}else if(c>=500||c===429||!c)pFail=Date.now();}
       if(!okc&&(c>=500||c===429||!c)&&i+1<L.length)return go(i+1);
       delete fly[k];got(b,c,mark);});}
     go(0);}
   function flush(){if(!on||sP)return;while(Q.length)pend.push(pack());keep();
     if(dev&&!O.url){pend=[];keep();return;}
     if(navigator.onLine===false||!pend.length||Date.now()<nextT)return;send(pend[0]);}
+  // v1.6: адрес для sendBeacon — запасной, пока основной в этом сеансе ни разу не ответил «ОК» или падал последние 10 мин
+  function bUrl(){return U2&&(!pOk||(pFail&&Date.now()-pFail<6e5))?U2:O.url;}
   function beacon(){var i,b,ok,left=[];if(dev&&!O.url){pend=[];keep();return;}if(navigator.onLine===false)return;
-    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(urls()[0],JSON.stringify(b)));}catch(e){}
+    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(bUrl(),JSON.stringify(b)));}catch(e){}
       if(!ok||srv)left.push(b);}
     pend=left;keep();if(pend.length&&!srv)send(pend[0]);}
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
@@ -313,7 +323,7 @@ var STAT=(function(){
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
       if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
-      var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
+      var p=hw({sn:st.n,f:0,r:1}),k;slN=0;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
   // облако игры: в mergeSave — STAT.merge(d.stc): раньше установлен, больше сеансов
@@ -331,7 +341,7 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,slow:slow,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
@@ -339,7 +349,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v3.1-101112',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v4.0-101312',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
@@ -360,9 +370,13 @@ let hngP=0,hngX=0,hngN=0;const hngM=[];
 function hmk(s){const t=performance.now();hngM.push([t,s]);if(hngM.length>6)hngM.shift();}
 function hngBrk(){hngX=performance.now()+1500;hngP=0;}
 document.addEventListener('visibilitychange',hngBrk);window.addEventListener('blur',hngBrk);window.addEventListener('focus',hngBrk);
-function hangTick(t){const p=hngP;hngP=t;if(!p||document.hidden||t<hngX||p<hngX||(typeof adW!=='undefined'&&adW)||hngN>=5)return;const d=t-p;if(d<1000||d>60000)return;hngN++;
-  try{const mc=typeof MG!=='undefined'&&MG.cur,md=$('modal')&&$('modal').classList.contains('on')?($('mBody').getAttribute('data-w')||'m'):'';
-    const sc=(mc?'mg_'+mc.id:G?(G.over?'b_end':'b'):String(typeof curTab!=='undefined'?curTab:'menu').toLowerCase())+(md?':'+md:'');
+/* ob2-CORE STAT v1.6: «медленный переход» slow — кадр 300…999 мс, в котором был переход (вкладка t:, окно m:, новый бой nb, мини-игра mg:) — STAT.slow (≤8 за сеанс) */
+function hngSc(){const mc=typeof MG!=='undefined'&&MG.cur,md=$('modal')&&$('modal').classList.contains('on')?($('mBody').getAttribute('data-w')||'m'):'';
+  return (mc?'mg_'+mc.id:G?(G.over?'b_end':'b'):String(typeof curTab!=='undefined'?curTab:'menu').toLowerCase())+(md?':'+md:'');}
+function slowTick(p,d){try{if(d<300||d>=1000||!STAT.slow)return;const mk=hngM.filter(m=>m[0]>=p-50&&/^(t:|m:|nb|mg:)/.test(m[1])).map(m=>m[1]);if(!mk.length)return;
+  STAT.slow(mk[mk.length-1],d,{s2:hngSc(),mk:mk.join(',').slice(0,40),bt:Math.round(p/1000)});}catch(e){}}
+function hangTick(t){const p=hngP;hngP=t;if(!p||document.hidden||t<hngX||p<hngX||(typeof adW!=='undefined'&&adW))return;const d=t-p;slowTick(p,d);if(hngN>=5||d<1000||d>60000)return;hngN++;
+  try{const sc=hngSc();
     const mk=hngM.filter(m=>m[0]>=p-50).map(m=>m[1]).join(',')||(hngM.length?'~'+hngM[hngM.length-1][1]:'');
     const o={ms:Math.round(d),sc:sc,mk:mk,bt:Math.round(t/1000)};if(G){o.l=typeof statLv==='function'?statLv():'';o.wv=G.wave;o.en=(G.en||[]).filter(e=>!e.dead).length;o.sp=G.speed;}
     STAT.ev('hang',o);}catch(e){}}
@@ -659,7 +673,12 @@ var SOC=(function(){
     ntf:ntf,ntfOn:ntfOn,ntfDue:ntfDue,ntfDay:ntfDay,level:level,score:score,mission:mission,missionKnown:missionKnown,evOn:evOn,evFlush:evFlush};
 })();
 /*/SOC*/
+/* vkm (10.10): лента друзей, таблица и миссии VK — игра только сообщает модулю SOC «уровень / очки / миссия» (vkmCheck в js/vkm-ob.js),
+   а он молча шлёт их в нашу функцию (hobby-pay, ?op=vkev), та — в VK. Только ВКонтакте с мостом и подписью; в ОК, Яндексе и на маке без vk_app_id — ни запроса.
+   Номера миссий — VKM_ID (js/vkm.js, пишет tools/missions.py из data/vk-missions-ids.json). На маке адрес можно подменить: ?evurl=http://localhost:порт/ */
+const EV_URL=(()=>{const m=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]evurl=([^&#]*)/.exec(location.search);return m?decodeURIComponent(m[1]):'https://functions.yandexcloud.net/d4e7egf62asn7suf30m0?op=vkev';})();
 SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{showModal(h);return $('mBody');},close:()=>hideModal(),okLink:OK_LINK,
+  evUrl:EV_URL,evId:c=>typeof VKM_ID==='object'&&VKM_ID[c]||0,
   /* ntf: разрешение на напоминания VK (SOC v2.4) — вопрос воеводы в окне победы (ui.js: ntfText, socRow, onBattleEnd); расписание — в модуле, наград нет */
   now:()=>nowMs(),ntf:{t:n=>ntfText(n),b:Lg('🔔 Напоминать','🔔 Remind me'),ok:Lg('Так точно! По пустякам тревожить не стану.','Aye! I won’t trouble you over trifles.'),s:Lg('🔔 Включить напоминания','🔔 Turn on reminders')}});
 /* VK хранит значения до 4096 байт, а на деле (vk-bridge#226) надёжно ~2 КБ — режем сохранение на куски по 1000 знаков.
@@ -909,10 +928,13 @@ function interReady(){if(!INTER_ON||adBusy||interBusy||typeof PAY!=='undefined'&
 // подгрузка межэкранной VK: при запуске и после каждого показа/отказа; ответ не используется, на показ не влияет
 function interPre(){if(!VK)return;try{vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).then(r=>STAT.adChk('int',r&&r.result?1:0),()=>STAT.adChk('int',0));}catch(e){}}
 /* STAT v1.2: итог межэкранной — show | none nofill (площадка не дала) | none nosdk (нет моста/SDK) | err (ошибка, c — код); положена, но не показана — adWhy() */
-let lastIntT=0;
+let lastIntT=0,intRetry=0;   // intRetry — ob2-SPEED adretry: повторов подряд после «рекламы нет»
 function showInterstitial(cb0){if(interBusy)return;interBusy=true;let done=false;
   const cb=(shown,c)=>{if(done)return;done=true;clearTimeout(t);interBusy=false;lastAdT=Date.now();
-    if(shown===true){lastIntT=lastAdT;STAT.ad('int','show',c);}else if(shown==='err')STAT.ad('int','err',c);else STAT.ad('int','none',c||'nofill');cb0();};
+    if(shown===true){lastIntT=lastAdT;STAT.ad('int','show',c);}else if(shown==='err')STAT.ad('int','err',c);else STAT.ad('int','none',c||'nofill');
+    /* ob2-SPEED adretry: «рекламы нет» (nofill/таймаут) — следующая попытка через 90 с, не больше 2 повторов подряд; «раз в 8 минут» — от показанной */
+    if(shown===true)intRetry=0;else if(shown===false&&(!c||c==='nofill')&&intRetry<2&&typeof OB2!=='undefined'&&!OB2.off('adretry')){intRetry++;lastAdT=Date.now()-INTER_MIN*60e3+90e3;}else intRetry=0;
+    cb0();};
   const t=setTimeout(()=>{if(PAUSE.ad)adClose();cb(false,'nofill');},90000);   // площадка не ответила — не держим игрока
   if(PLAT==='vk'&&!VK){if(VK_REAL)cb(false,'nosdk');else stubAd(()=>cb(true,'stub'));return;}
   STAT.adReq('int');

@@ -88,15 +88,21 @@ function xbnRaiseBtn(id){if(!xbnOwn(id)||S.bn===id)return '';return '<button cla
 const SAGA=[{n:'Сказ о Жар-птице',en:'Tale of the Firebird',bn:{c1:'#d8501e',c2:'#ffd84a',em:[7,.5]}},
   {n:'Сказ о Морозко',en:'Tale of Morozko',bn:{c1:'#2a6ab8',c2:'#e8f6ff',em:[6,.3]}},
   {n:'Сказ о Царевне-лягушке',en:'Tale of the Frog Princess',bn:{c1:'#3a8a3a',c2:'#f2e27a',em:[0,1]}},
-  {n:'Сказ о Сивке-Бурке',en:'Tale of Sivka-Burka',bn:{c1:'#6a3a1a',c2:'#f4c070',em:[8,.6]}}];
+  {n:'Сказ о Сивке-Бурке',en:'Tale of Sivka-Burka',bn:{c1:'#6a3a1a',c2:'#f4c070',em:[8,.6]}},
+  /* ob2-NAKAZ */ {n:'Сказ о Кощее',en:'Tale of Koschei',bn:{c1:'#3a2a4a',c2:'#9aff6a',em:[3,.5]}},{n:'Сказ о богатырях',en:'Tale of the Bogatyrs',bn:{c1:'#8a1a2a',c2:'#e6b53a',em:[0,1]}}];
+/* ob2-NAKAZ (флаг weeks): Сказы по календарю — с 26.10.2026 блоки по 28 дн. сдвинуты на 4 дня (номер сказа тот же — прогресс не теряется); имя — по месяцу начала:
+   окт. Кощей · нояб. Жар-птица · дек. Морозко · янв. Сивка-Бурка · февр. богатыри · прочие — Лягушка/Жар-птица. Выключено — как было (4 по кругу от числа). */
+function sagaCal(){return typeof OB2!=='undefined'&&!OB2.off('weeks');}
+function sagaOff(){return sagaCal()&&slDayIdx()>=20752?4:0;}
+function sagaI(id){id=id|0;if(sagaCal()&&id>=741){const m=new Date((id*SAGA_D+4)*864e5).getUTCMonth(),c={9:4,10:0,11:1,0:3,1:5}[m];return c!=null?c:(id%2?2:0);}return ((id%4)+4)%4;}
 SAGA.forEach((s,i)=>xbnAdd(Object.assign({id:'sg'+i,n:'Знамя: '+s.n,en:'Banner: '+s.en},s.bn)));
 const SAGA_D=28,SAGA_N=30,SAGA_P=80;  // дней, ступеней, Славы на ступень
 function slDayIdx(){const k=dayKey().split('-').map(Number);return Math.floor(Date.UTC(k[0],k[1]-1,k[2])/864e5);}
-function slSagaId(){return Math.floor(slDayIdx()/SAGA_D);}
-function slSagaLeft(){return SAGA_D-((slDayIdx()%SAGA_D+SAGA_D)%SAGA_D);}
+function slSagaId(){return Math.floor((slDayIdx()-sagaOff())/SAGA_D);}   // ob2-NAKAZ: сдвиг календаря
+function slSagaLeft(){const d=slDayIdx()-sagaOff();return SAGA_D-((d%SAGA_D+SAGA_D)%SAGA_D);}
 function sagaStep(p){return Math.min(SAGA_N,Math.floor(p/SAGA_P));}
 // награды ступеней: трофеи, ускорение; 30-я — знамя сказа
-function sagaRw(i,id){if(i===SAGA_N)return {bn:'sg'+(((id|0)%SAGA.length)+SAGA.length)%SAGA.length};if(i%10===0)return {tr:10,i:i};if(i%5===0)return {bo:600};if(i%3===0)return {bo:300};return {tr:2+Math.floor(i/10),i:i};}
+function sagaRw(i,id){if(i===SAGA_N)return {bn:'sg'+sagaI(id)};if(i%10===0)return {tr:10,i:i};if(i%5===0)return {bo:600};if(i%3===0)return {bo:300};return {tr:2+Math.floor(i/10),i:i};}
 // текущий сказ; сменился — несобранное выдаём сами (ничего не пропадает)
 function slSaga(){const s=SL();if(!s)return {id:0,p:0,cl:0};const q=s.ss,id=slSagaId();
   if(q.id!==id){if(q.id>=0){let n=0;for(let i=q.cl+1;i<=sagaStep(q.p);i++){slGive(sagaRw(i,q.id));n++;}if(n){s.c.auto=(s.c.auto||0)+n;slEv('saga',{k:'auto',n:n,s:q.id});}}
@@ -246,14 +252,14 @@ function slTalHTML(s){const pts=slTalPts(s),sp=slTalSpent(s),fr=pts-sp;let h='';
       (w===''?'<button class="btn gold" data-slt="'+T.id+'">+1</button>':w==='max'?'<span class="tag ok">✓</span>':'')+'</div></div>';}
   if(sp)h+='<div class="btns"><button class="btn ghost" id="slReset">'+(slRes?Lg('Точно сбросить все таланты?','Really reset all talents?'):Lg('↺ Сбросить таланты (бесплатно)','↺ Reset talents (free)'))+'</button></div>';
   return h;}
-function slSagaHTML(){const q=slSaga(),nm=SAGA[((q.id%SAGA.length)+SAGA.length)%SAGA.length],st=sagaStep(q.p);let h='';
+function slSagaHTML(){const q=slSaga(),nm=SAGA[sagaI(q.id)],st=sagaStep(q.p);let h='';
   h+='<div class="card"><div class="row"><img class="ic" src="'+ic('sl_saga')+'" alt=""><div class="t"><b>'+Lg(nm.n,nm.en)+'</b><span>'+Lg('ступень ','step ')+st+' / '+SAGA_N+' · '+Lg('осталось дней: ','days left: ')+slSagaLeft()+'</span>'+
     (st<SAGA_N?slBar(q.p%SAGA_P,SAGA_P):slBar(1,1))+'</div></div><p class="sub" style="margin:6px 0 0">'+Lg('Каждые '+SAGA_P+' Славы — ступень Сказа (до '+SLV.cap+' Славы в день). На 30-й ступени — знамя сказа на ворота.','Every '+SAGA_P+' Fame is a step of the Tale (up to '+SLV.cap+' Fame a day). Step 30 gives the tale’s banner for your gate.')+'</p></div>';
   if(sagaReady(q))h+='<div class="btns"><button class="btn big gold" id="slSagaGet">'+Lg('🎁 Забрать награды','🎁 Collect rewards')+'</button></div>';
   const a=Math.max(1,q.cl),b=Math.min(SAGA_N,Math.max(a+6,st+3));
   const row=i=>{const r=sagaRw(i,q.id),got=i<=q.cl,rch=i<=st;return '<div class="card'+(got?'':rch?' next':'')+'" style="'+(got?'opacity:.6':'')+'"><div class="row"><b style="min-width:30px;font-size:18px;text-align:center">'+i+'</b>'+rwImg(r)+'<div class="t"><b>'+rwText(r)+'</b></div><span class="tag'+(got?' ok':'')+'">'+(got?'✓':rch?'🎁':'🔒')+'</span></div></div>';};
   for(let i=a;i<=b;i++)h+=row(i);if(b<SAGA_N)h+=row(SAGA_N);
-  h+=xbnRaiseBtn('sg'+(((q.id%SAGA.length)+SAGA.length)%SAGA.length))?'<div class="btns">'+xbnRaiseBtn('sg'+(((q.id%SAGA.length)+SAGA.length)%SAGA.length))+'</div>':'';
+  h+=xbnRaiseBtn('sg'+sagaI(q.id))?'<div class="btns">'+xbnRaiseBtn('sg'+sagaI(q.id))+'</div>':'';
   return h;}
 function openSlava(seg){const s=SL();if(!s)return;if(seg)slSeg=seg;STAT.screen(slSeg==='tal'?'sl_tal':slSeg==='saga'?'sl_saga':'sl_fame');
   const keep=$('modal').classList.contains('on')&&$('mBody').getAttribute('data-w')==='slava'&&!seg?$('mBody').scrollTop:0;

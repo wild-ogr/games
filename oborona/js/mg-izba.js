@@ -73,7 +73,7 @@ function dzCv(cv,W,H){const d=Math.min(2,window.devicePixelRatio||1);cv.width=Ma
 
 /* ---------- стиль избы ---------- */
 function dzCss(){mgCss();if($('dzCss'))return;const st=document.createElement('style');st.id='dzCss';st.textContent=
- '#dzIzba{position:fixed;top:0;right:0;bottom:0;left:0;z-index:27;background:var(--menuBg,#ecd9a8);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}'+
+ '#dzIzba{position:fixed;top:0;right:0;bottom:0;left:0;z-index:27;background:var(--menuBg,#ecd9a8);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}'+
  '#dzIzba .dzSc{position:relative;width:100%;overflow:hidden;border-bottom:4px solid var(--wood,#9a6332);box-shadow:0 4px 0 var(--lip)}#dzIzba .dzSc canvas{display:block}'+
  '#dzIzba .dzTitle{position:absolute;left:50%;top:calc(var(--st,0px) + 12px);transform:translateX(-50%);white-space:nowrap;font:800 24px/1.1 var(--f);color:#fff;background:var(--rib,#c9361d);border:2.5px solid var(--ribE,#7a1e0e);border-radius:12px;padding:6px 22px;text-shadow:0 2px 0 var(--ribE,#7a1e0e);box-shadow:0 4px 0 rgba(40,24,10,.35)}'+
  '#dzIzba .dzCol{max-width:560px;margin:0 auto;padding:14px 12px calc(var(--sb,0px) + 24px)}'+
@@ -145,6 +145,7 @@ function MG_IZBA(){if(!mgIzbaOpen()){toast(Lg('Дозорная изба отк�
   for(const b of el.querySelectorAll('[data-sit]'))b.onclick=()=>{const s=sit.find(x=>x.n===+b.dataset.sit);if(s)dzPlay(s.n,s.mode,s.ctx,{from:'izba',battle:s.n===2&&s.ctx?s.ctx:null});};
   for(const b of el.querySelectorAll('[data-dly]'))b.onclick=()=>dzPlay(+b.dataset.dly,'daily',{},{from:'izba'});
   for(const b of el.querySelectorAll('[data-tr]'))b.onclick=()=>dzPlay(+b.dataset.tr,'train',{},{from:'izba'});
+  if(typeof OB2!=='undefined')OB2.fill('izba',el,fresh); /* ob2-CORE гнездо «Изба» */
   // сцена
   const cv=$('dzCv'),W=el.clientWidth||window.innerWidth,H=Math.round(Math.max(200,Math.min(320,window.innerHeight*.34,W*.62)));dzCv(cv,W,H);
   cancelAnimationFrame(dzRaf);const calm=mgCalm(),t0=performance.now();
@@ -271,7 +272,9 @@ function dzPvPick(){if(!mgIzbaOpen())return null;const D=dzDayState();if(D.n&&!D
 function dzPvN(v){try{if(v==null)return +localStorage.getItem('oborona-pv')||0;localStorage.setItem('oborona-pv',String(v));}catch(e){}return 0;}
 {const be1=typeof onBattleEnd==='function'?onBattleEnd:null;if(be1)onBattleEnd=function(win){const g0=typeof G!=='undefined'&&G,camp=win&&mgCampaign(g0);
   const r=be1.apply(this,arguments);try{if(!camp||SHOT||(S.wins|0)<4)return r;const k=dzPvN()+1,need=3+(Math.floor(Date.now()/864e5)%2);dzPvN(k);if(k<need)return r;
-    const m=$('mBody');if(!m||m.querySelector('.soc-o.ntf')||$('dzPv'))return r;const pk=dzPvPick();if(!pk)return r;
+    const m=$('mBody');if(!m||m.querySelector('.soc-o.ntf')||m.querySelector('.ob2win')||$('dzPv'))return r;   /* ob2-LOVB: строка гнезда OB2 'win' уже есть — Передышку/вызов не ставим */
+    const cl=window.IZU&&IZ.on('udal-call')?IZU.call():null;if(cl){IZU.callRow(m,cl);return r;}   /* ob2-IZBA: вызов соседа вместо «Передышки» (правила показа те же) */
+    const pk=dzPvPick();if(!pk)return r;
     const bx=m.querySelector('.btns.stick')||m.querySelector('.btns');if(!bx)return r;const id=(mgG(pk.n)||{}).id||pk.n;
     const d=document.createElement('div');d.className='goal dzpv';d.id='dzPv';d.setAttribute('data-fit','6');
     d.innerHTML='<div style="display:flex;align-items:center;gap:8px;text-align:left"><img src="'+mgIc(pk.n,72)+'" style="width:34px;height:34px;flex:none" alt=""><span style="flex:1;min-width:0">'+Lg('Передышка: сыграть в «','A breather: play “')+mgNameN(pk.n)+Lg('»?','”?')+'</span>'+

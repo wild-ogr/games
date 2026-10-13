@@ -357,7 +357,8 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/pay.js"></script>
 <script src="js/art.js"></script>
 <script src="js/data.js"></script>
-<script src="js/en.js"></script>
+<script src="js/ob2-core.js"></script> <!-- ob2:CORE каркас буста: флаги OB2.off, события, поля S.o2*, гнёзда, очередь окон входа (сразу после data.js) -->
+<script>/* ob2:SPEED en.js в VK не нужен никогда (там всегда русский) — при флаге lazy не грузим (пустое наложение CH — для ch-lairs.js); в Яндексе — как раньше */(function(){var vk=/[?&](vk_app_id=|vk=1)/.test(location.search);if(!vk||(window.OB2&&OB2.off('lazy')))document.write('<script src="js/en.js"><\/script>');else langReg(CH,{});})();</script>
 <script src="js/ch-engine.js"></script>
 <script src="js/ch-med-art.js"></script>
 <script src="js/ch-med.js"></script>
@@ -383,24 +384,53 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/mg-core.js"></script> <!-- OB:MG0 мини-игры: оболочка «Дозорной избы»; игры js/mg-*.js — строками ниже -->
 <script src="js/mg-art.js"></script>
 <script src="js/mg-izba.js"></script>
-<script src="js/mg-podkop.js"></script>
-<script src="js/mg-igla.js"></script>
-<script src="js/mg-zg-data.js"></script>
-<script src="js/mg-zagadki.js"></script>
-<script src="js/mga-kit.js"></script> <!-- OB:MGA общий набор мини-игр MGA -->
-<script src="js/mg-chast.js"></script> <!-- OB:MGA №2 Починка частокола -->
-<script src="js/mg-opol.js"></script> <!-- OB:MGA №8 Набор ополчения -->
-<script src="js/mg-kotel.js"></script> <!-- OB:MGA №14 Котёл тётушки Яги -->
-<script src="js/mg-bkit.js"></script> <!-- OB:MGB набор сцены мини-игр №3, №11, №12 -->
-<script src="js/mg-pushka.js"></script>
-<script src="js/mg-tiles.js"></script>
-<script src="js/mg-ckit.js"></script> <!-- OB:MGC набор для игр №4, №6, №9 -->
-<script src="js/mg-dozor.js"></script>
-<script src="js/mg-lovlya.js"></script>
-<script src="js/mg-nabat.js"></script>
-<script src="js/mg-dkit.js"></script> <!-- OB:MGD набор рисования мини-игр №7 и №13 -->
-<script src="js/mg-razv.js"></script> <!-- OB:MGD №7 Разведка тропы -->
-<script src="js/mg-nabeg.js"></script> <!-- OB:MGD №13 Набег на логово -->
+<!-- ob2:SPEED мини-игры по требованию (флаг lazy): эти 18 файлов грузит SP.mgLoad() при первом открытии Избы/игры; флаг выключен, ?bot, ?shot, ?mg= — сразу, как раньше (те же строки через document.write, порядок тот же) -->
+<script>/* ob2:SPEED */window.SP_MG=['js/mg-podkop.js','js/mg-igla.js','js/mg-zg-data.js','js/mg-zagadki.js','js/mga-kit.js','js/mg-chast.js','js/mg-opol.js','js/mg-kotel.js','js/mg-bkit.js','js/mg-pushka.js','js/mg-tiles.js','js/mg-ckit.js','js/mg-dozor.js','js/mg-lovlya.js','js/mg-nabat.js','js/mg-dkit.js','js/mg-razv.js','js/mg-nabeg.js'];window.SP_LAZY=!(window.OB2&&OB2.off('lazy'))&&!/[?&](bot|shot|mg=|mgdbg)/.test(location.search);
+if(!SP_LAZY)for(var spi=0;spi<SP_MG.length;spi++)document.write('<scr'+'ipt src="'+SP_MG[spi]+'"><\/script>');</script>
 <script src="js/endg.js"></script> <!-- OB:ENDG мастерство и богатырские ступени (после всех: оборачивает costMul/spellCd/goldWanted) -->
+<script src="js/vkm.js"></script> <!-- OB:VKM миссии VK: данные (пишет tools/missions.py) -->
+<script src="js/vkm-ob.js"></script> <!-- OB:VKM счётчики и проверка миссий — последним -->
+<!-- ob2: метки потоков буста_в2.0 — свои строки <script> только под своей меткой; всё новое по возможности OB2.need() по требованию (старт +0 КБ) -->
+<!-- ob2:IZBA -->
+<script src="js/ob2-izba.js"></script> <!-- ob2:IZBA оболочка «Удали» и починка избы: стартовая часть (остальное — js/ob2-izba-ui.js, js/ob2-izba-lk.js по требованию) -->
+<!-- ob2:LOVA -->
+<!-- ob2:LOVB -->
+<script>/* ob2:LOVB сами на пути */(function(){if(typeof OB2==='undefined'||typeof IZ==='undefined')return;var sn;
+function row(k,t,n,x){return {h:'<img src="'+ic(k,48)+'" style="width:30px;vertical-align:middle"> '+t+' <button class="btn gold" style="width:auto;padding:4px 12px;margin:0">'+Lg('Давай!','Go!')+'</button>',bind:function(d){d.querySelector('button').onclick=function(){hideModal();toMenu('Map');IZ.load().then(function(){IZU.play(n,'auto',{ctx:x});});};}};}
+OB2.on('run',function(){sn=','+Object.keys(S.seen||{})+',';},'lov-zaris');
+OB2.slot('win','lov-zaris',function(G,w){var o=sn;sn=0;if(!w||!o||OB2.off('udal')||!mgIzbaOpen())return;var k=Object.keys(S.seen||{}).filter(function(x){return o.indexOf(','+x+',')<0&&EN[x]&&!EN[x].boss;})[0];
+ if(k)return row(EN[k].art||k,Lg('Дед Пахом: «Новенький — '+EN[k].n+'! Зарисуем в Книгу?»','Grandpa Pakhom: “A newcomer — '+EN[k].n+'! Sketch it?”'),24,{foe:EN[k].art||k});},60);
+OB2.slot('win','lov-otogrey',function(G,w){var d=dayKey(),k='ob-lovb-oto';try{if(!w||G.ci!==4||G.li<5||OB2.off('udal')||localStorage[k]===d)return;localStorage[k]=d;}catch(e){return}return row('karach',Lg('Карачун наморозил заставы — отогреешь?','Karachun froze the outposts — thaw them?'),23,{});},55);})();</script>
+<!-- ob2:TIHO -->
+<script>/* ob2-TIHO: 5 тихих игр избы (logs/TIHO.md). Код — по требованию js/tiho*.js; флаги tiho, tiho-<id> */
+(function(){if(typeof OB2==='undefined')return;var A={bort:'Борть',podm:'Подменыш',byl:'Былина или небылица',oboz:'Обоз',kosti:'Кости у костра'};OB2.reg('tiho',{s:'TIHO',t:'тихие игры избы (все)'});
+for(var k in A)OB2.reg('tiho-'+k,{s:'TIHO',t:'тихая игра «'+A[k]+'»'});var ld=function(){return OB2.need('js/tiho.js');};
+OB2.slot('izba','tiho',function(el){ld().then(function(){TIHO.shelf(el);}).catch(function(){});},10);
+OB2.slot('today','tiho-bort',function(a){var b=S.dzr&&S.dzr.tb;if(!b||!b.d||b.c||b.d>=dayKey()||OB2.off('tiho'))return;a.push({id:'tiho',hot:1,t:Lg('🍯 Мёд в борти готов','🍯 Honey is ready'),fn:function(){ld().then(function(){TIHO.play('bort','today');});}});},1);
+/* облако: борть S.dzr.tb {d,h,c:1 — собрано} — свежая по дню посадки, при равном — собранная */
+if(typeof META_MODS!=='undefined')META_MODS.push({id:'tiho',MERGE:function(x,o){try{var b=x&&x.dzr&&x.dzr.tb,a=o&&o.dzr;if(!b||!a||typeof b.d!=='string')return;var t=a.tb;
+if(!t||typeof t.d!=='string'||b.d>t.d||(b.d===t.d&&b.c&&!t.c))a.tb={d:b.d,h:+b.h|0,c:b.c?1:0};}catch(e){}}});})();</script>
+<!-- ob2:LET -->
+<script src="js/ob2-let.js"></script> <!-- ob2-LET заглушка: Летопись заставы, Неделя новичка (остальное — js/ob2-letx.js по требованию) -->
+<!-- ob2:NAKAZ -->
+<script>/* ob2-NAKAZ: заглушка «Поток наказов» (флаг nakaz) и «недели по кругу» (weeks); всё остальное — js/meta-nkz.js по требованию */
+(function(){if(typeof OB2==='undefined')return;var a=OB2.reg('nakaz',{s:'NAKAZ',t:'Поток наказов вместо заданий дня'}),b=OB2.reg('weeks',{s:'NAKAZ',t:'Недели по кругу, выходные, Сказы по календарю'});if(!a&&!b)return;
+if(a){OB2.field('n',{id:'nakaz',def:function(){return {v:1,n:0};},merge:function(x,y){if(window.NKZ)return NKZ.merge(x,y);if((y.n|0)>(x.n|0))for(var k in y)x[k]=y[k];}});
+var rq=window.renderQuests;if(rq)window.renderQuests=function(){if(S.o2n){var x=document.getElementById('dqBox');if(x)x.innerHTML='';return;}return rq.apply(this,arguments);};}
+var go=function(){OB2.need('js/meta-nkz.js').then(function(){if(window.NKZ)NKZ.boot();}).catch(function(e){console.warn('nkz load',e);});};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(go,0);});else go();})();</script>
+<!-- ob2:LAVKA -->
+<script src="js/lavka.js"></script> <!-- ob2-LAVKA лавка, украшения по главам (окна — js/lavka-x.js по требованию) -->
+<!-- ob2:MOROZ -->
+<script>/* ob2:MOROZ «Морозко на заставе» 15.12–14.01, «Застава богатырей» 21–23.02 — заглушка: флаг moroz, поле S.o2m; js/ob2-moroz.js — только в праздник или у хозяина облика. ?date=ГГГГ-ММ-ДД (тест) = ?festday */
+(function(){if(typeof OB2==='undefined'||!OB2.reg('moroz',{s:'MOROZ',t:'Морозко на заставе и Застава богатырей'}))return;OB2.field('m',{id:'moroz'});
+try{var q=/[?&]date=(\d{4}-\d\d-\d\d)/.exec(location.search),D=FEST._dbg();if(q&&D.test&&!D.fday){history.replaceState(null,'',location.href.replace(/([?&])date=/,'$1festday='));festInit();}
+var d=FEST.today().slice(5),k=S.skins||{},own=0;for(var i in k)if(/\.(snow|bogat)$/.test(i))own=1;
+var ny=d>='12-15'||d<='01-14',ld=function(){return OB2.need('js/ob2-moroz.js');};if(ny||d>='02-21'&&d<='02-23'||own)ld().catch(function(){});
+OB2.enter('moroz',60,function(){if(window.MZ)return MZ.enter();var c=(S.o2m||{}).c||{},t=FEST.today();for(var j in c)if(/sd$/.test(j)&&c[j]===t)return false;if(!ny)return false;ld().then(function(){if(window.MZ)MZ.enter(1);},function(){});return true;});}catch(e){}})();</script>
+<!-- ob2:VKT --><script src="js/ob2-vkt.js"></script> <!-- миссии VK новинок (S.o2v), STAT sz/cloud/tut, вход в письмо воеводе (окно — js/ob2-mail.js по требованию) -->
+<!-- ob2:NOVICE -->
+<!-- ob2:SPEED -->
+<script src="js/ob2-speed.js"></script> <!-- ob2:SPEED шторка перед боем, ленивая загрузка, повтор межэкранной, режим попроще -->
 </body>
 </html>

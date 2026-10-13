@@ -2,6 +2,8 @@
 /* ================= Бой: карта, нечисть, заставы, снаряды, отрисовка ================= */
 let G=null,cv,ctx,lastT=0,bgCv=null;
 const VIEW={W:0,H:0,dpr:1,s:1,ox:0,oy:0,B:1,top:56,bot:84};
+/* ob2-NOVICE флаги потока: выключить — OB2.off(id) из каркаса, ?off=id1,id2 или window.OB2_OFF='id1,id2' (newbhand, ch2soft, newbforge, quitlose, introfit) */
+function nvOn(id){try{if(typeof OB2!=='undefined'&&OB2&&typeof OB2.off==='function')return !OB2.off(id);}catch(e){}const q=/[?&]off=([^&#]*)/.exec(location.search);return (','+(q?decodeURIComponent(q[1]):'')+','+(window.OB2_OFF||'')+',').indexOf(','+id+',')<0;}
 const C=9,R=15,CELL=40,PW=C*CELL,PH=R*CELL,ESC=.8,STEP=2;
 let WW=PW,WH=PH;   // OB:VIS размер поля боя: PW×PH — «стоя» (карта как её строит genMap), на широком экране бой «лёжа» — WW/WH меняются местами (js/vis.js)
 
@@ -21,7 +23,8 @@ function layout(){
   if(window.__hudTop!=null)VIEW.top=window.__hudTop;if(window.__hudBot!=null)VIEW.bot=window.__hudBot;const aw=VIEW.W,ah=VIEW.H-VIEW.top-VIEW.bot;
   VIEW.s=Math.min(aw/WW,ah/WH,2.6);VIEW.ox=(VIEW.W-WW*VIEW.s)/2;VIEW.oy=VIEW.top+(ah-WH*VIEW.s)/2;if(typeof visFit==='function')visFit(aw,ah);/* OB:FIX1 высокие заставы и ворота — целиком в окне */VIEW.B=VIEW.s*VIEW.dpr;
   const k=Math.min(VIEW.B,window.__forceDpr?4:VIEW.rot&&!document.body.classList.contains('lite')?3:2.5);/* OB:VIS лёжа на Retina — плотнее (поле крупнее) */if(Math.abs(k-SPR_K)/k>.05)buildSprites(k);
-  if(G){G.coinTg=null;renderBg();warmBattle();G.redraw=1;}
+  /* ob2:SPEED П2 фон и прогрев — один раз на бой и при настоящей смене размера/плотности (раньше — в newBattle и снова в enterBattle и на каждый resize) */
+  if(G){const lk=[cv.width,cv.height,VIEW.B,VIEW.ox,VIEW.oy,VIEW.rot?1:0,SPR_K,window.SP_LQ?1:0].join();G.coinTg=null;if(G.lk!==lk||!bgCv){G.lk=lk;hmk('bg');renderBg();warmBattle();}G.redraw=1;}
 }
 function toWorld(cx,cy){return {x:(cx-VIEW.ox)/VIEW.s,y:(cy-VIEW.oy)/VIEW.s};}
 function toScreen(x,y){return {x:VIEW.ox+x*VIEW.s,y:VIEW.oy+y*VIEW.s};}
@@ -161,9 +164,16 @@ function statLv(){return G.dly?'daily':G.wk?'week':G.endless?'siege':(G.ci+1)+'-
 function statX(){const x={};try{if(typeof visRot==='function'&&visRot())x.ly=1;if(typeof mgBuf==='function'&&mgBuf()&&typeof mgCampaign==='function'&&mgCampaign(G))x.b=1;if(!G.endless&&!G.wk&&!G.dly&&typeof chNum==='function')x.n=chNum(G.ci);if(G.endless&&!G.wk&&!G.dly&&typeof sgToday==='function')x.sg=sgToday()+1;}catch(e){}return x;}
 function statMode(){return G.wk||G.endless?'':G.rule?'dch:'+G.rule:G.dif==='s'?'hard':G.dif==='h'?'hell':'';}   // OB:DIF '' — Обычный, hard — ⚔ Сложный, hell — 🔥 Адский
 // спрайты этого боя рисуем заранее (заставы, снаряды, нечисть уровня и подмога боссов), остальное — при первом показе
-function warmBattle(){const keys=['spot','gate','skull','coin','arrow','ball','ballG','pie','flaskG','flaskP','flaskK','frog','egg'];for(const k in ART)if(/^(t_|bar_)[^~]*$/.test(k)){keys.push(k);const sk=k[0]==='t'?skinOf(k.split('_')[1]):skinOf('pushka')==='gold'?'gold':'';if(sk)keys.push(k+'~'+sk);}
-  const ens=new Set(['kot','skel','snowb','rak','chert']);if(G.waves){for(const w of G.waves)for(const g of w.g)ens.add(g.t);}else for(const c of CH){for(const t of c.en)ens.add(t);ens.add(c.boss);}
-  for(const t of ens)if(EN[t])keys.push(EN[t].art||t);sprWarm(keys);}
+/* ob2:SPEED П4 прогрев по частям: сразу — места, ворота, снаряды, заставы 1-й ступени, нечисть первых 2 волн (в осаде — земли осады);
+   остальное (все ступени и ветки застав, облики, нечисть дальних волн) — по рисунку за кадр в фоне (warmStep из loop), пока идёт отсчёт до первой волны */
+let warmQ=[];
+function warmBattle(){const now=['spot','gate','skull','coin','arrow','ball','ballG','pie','flaskG','flaskP','flaskK','frog','egg'],later=[];
+  for(const k in ART)if(/^(t_|bar_)[^~]*$/.test(k)){const sk=k[0]==='t'?skinOf(k.split('_')[1]):skinOf('pushka')==='gold'?'gold':'';(/^t_[a-z]+_1$/.test(k)?now:later).push(sk?k+'~'+sk:k);if(sk)later.push(k);}
+  const e0=new Set(['kot','skel','snowb','rak','chert']),e1=new Set();
+  if(G.waves){G.waves.forEach((w,i)=>{for(const g of w.g)(i<2?e0:e1).add(g.t);});}else{const th=G.theme;for(const c of CH){const nb=c===th;for(const t of c.en)(nb?e0:e1).add(t);(nb?e0:e1).add(c.boss);}}
+  for(const t of e0)if(EN[t])now.push(EN[t].art||t);for(const t of e1)if(EN[t]&&!e0.has(t))later.push(EN[t].art||t);
+  sprWarm(now);warmQ=later.filter(k=>!SPR[k]);if(typeof icWarm==='function'&&typeof TW_ORDER!=='undefined')icWarm(TW_ORDER.map(t=>'ti_'+t+'_1@112').concat(TW_ORDER.map(t=>'ti_'+t+'_2@112')));}   // значки кольца — в фоне
+function warmStep(){if(!warmQ.length)return;const t=performance.now();while(warmQ.length&&performance.now()-t<4){const k=warmQ.shift();if(!SPR[k])spr(k);}}
 function towerBanned(t){return !!(G&&(G.rule==='noarch'&&t==='arch'||G.dban===t));}   // OB:DIF G.dban — запрет Адского
 function towerUnlocked(t){if(towerBanned(t))return false;if(!G||G.endless)return true;const u=TW_UNLOCK[t];return G.ci>u[0]||(G.ci===u[0]&&G.li>=u[1]);}
 function branchUnlocked(){if(!G||G.endless)return true;return G.ci>BRANCH_UNLOCK[0]||(G.ci===BRANCH_UNLOCK[0]&&G.li>=BRANCH_UNLOCK[1]);}
@@ -390,12 +400,12 @@ function spellReady(k){return G&&!G.sp[k].locked&&G.sp[k].cd<=0;}
 function prune(a,f){let j=0;for(let i=0;i<a.length;i++)if(f(a[i]))a[j++]=a[i];a.length=j;return a;}
 function later(t,fn){(G.later||(G.later=[])).push({t,fn});}
 function addNum(x,y,v,col){if(fxNum(x,y,v,col))return;/* OB:VIS «+41 41» → «+82» */if(G.nums.length>40)G.nums.shift();G.nums.push({x,y,v,t:0,col});}
-function burst(x,y,col,n,sp){for(let i=0;i<n;i++){if(G.pt.length>400)return;const a=rand(0,TAU),v=rand(.3,1)*(sp||100);G.pt.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-30,t:0,dur:rand(.3,.6),col,s:rand(1.5,3.2)});}}
-function sparkle(x,y,col,n){for(let i=0;i<n;i++){if(G.pt.length>400)return;G.pt.push({x:x+rand(-10,10),y:y+rand(-6,6),vx:rand(-40,40),vy:rand(-80,-20),t:0,dur:rand(.4,.8),col,s:rand(1.5,3),add:1});}}
-function dust(x,y){for(let i=0;i<12&&G.pt.length<=400;i++){const a=rand(0,TAU);G.pt.push({x:x+Math.cos(a)*14,y:y+Math.sin(a)*6,vx:Math.cos(a)*50,vy:Math.sin(a)*20-10,t:0,dur:rand(.4,.7),col:'#d8c8a8',s:rand(2.5,4.5)});}}
-function smoke(x,y){for(let i=0;i<5&&G.pt.length<=400;i++)G.pt.push({x,y,vx:rand(-20,20),vy:rand(-30,-10),t:0,dur:rand(.4,.7),col:'#e8e4dc',s:rand(2.5,4.5)});}
+function burst(x,y,col,n,sp){for(let i=0;i<n;i++){if(G.pt.length>(window.SP_LQ?120:400))return;/* ob2:SPEED lite — частиц ≤120 */const a=rand(0,TAU),v=rand(.3,1)*(sp||100);G.pt.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-30,t:0,dur:rand(.3,.6),col,s:rand(1.5,3.2)});}}
+function sparkle(x,y,col,n){for(let i=0;i<n;i++){if(G.pt.length>(window.SP_LQ?120:400))return;G.pt.push({x:x+rand(-10,10),y:y+rand(-6,6),vx:rand(-40,40),vy:rand(-80,-20),t:0,dur:rand(.4,.8),col,s:rand(1.5,3),add:1});}}
+function dust(x,y){for(let i=0;i<12&&G.pt.length<=(window.SP_LQ?120:400);i++){const a=rand(0,TAU);G.pt.push({x:x+Math.cos(a)*14,y:y+Math.sin(a)*6,vx:Math.cos(a)*50,vy:Math.sin(a)*20-10,t:0,dur:rand(.4,.7),col:'#d8c8a8',s:rand(2.5,4.5)});}}
+function smoke(x,y){for(let i=0;i<5&&G.pt.length<=(window.SP_LQ?120:400);i++)G.pt.push({x,y,vx:rand(-20,20),vy:rand(-30,-10),t:0,dur:rand(.4,.7),col:'#e8e4dc',s:rand(2.5,4.5)});}
 // сочность (boost 02.10): искры попадания стрелы и монета, летящая в кошель (цель — значок монет на HUD, считает ui.js)
-function hitSpark(x,y){for(let i=0;i<2&&G.pt.length<300;i++)G.pt.push({x,y,vx:rand(-50,50),vy:rand(-60,-10),t:0,dur:rand(.18,.3),col:'#fff6d0',s:rand(1,1.8)});}
+function hitSpark(x,y){for(let i=0;i<2&&G.pt.length<(window.SP_LQ?90:300);i++)G.pt.push({x,y,vx:rand(-50,50),vy:rand(-60,-10),t:0,dur:rand(.18,.3),col:'#fff6d0',s:rand(1,1.8)});}
 function coinFly(x,y,n){let k=0;for(const f of G.fx)if(f.k==='coin')k++;for(let i=0;i<n&&k<14;i++,k++)G.fx.push({k:'coin',x:x+rand(-6,6),y:y+rand(-4,4),t:-i*.06,dur:.6,ax:rand(-24,24)});}
 function plus(x,y){G.nums.push({x,y,v:'+',t:0,col:'#6aff8a'});}
 function poof(x,y){G.fx.push({k:'poof',x,y,t:0,dur:.5});}
@@ -408,6 +418,7 @@ function sayAt(x,y,s){if(bubDup(x,y,s))return;if(G.bub.length>3)G.bub.shift();G.
 
 /* ================= главный шаг ================= */
 function update(dt){if(!G||G.over)return;G.t+=dt;
+  if(G.tut===1)nvTick();   // ob2-NOVICE newbhand: 6 с без касания — воевода ставит первую заставу сам
   if(G.later){for(const l of G.later){l.t-=dt;if(l.t<=0){l.fn();l.done=1;}}prune(G.later,l=>!l.done);}
   for(const k in G.sp)if(G.sp[k].cd>0)G.sp[k].cd-=dt;
   spawnTick(dt);updPools(dt);updTowers(dt);updEnemies(dt);updProj(dt);
@@ -472,11 +483,11 @@ function continueBattle(){STAT.lvl(statLv(),'cont');G.over=false;G.lives=10;G.ma
   castCat();G.sp.cat.cd=0;YG.start();}
 
 /* ================= отрисовка ================= */
-function renderBg(){if(!G)return;const k=VIEW.B;bgCv=bgCv||document.createElement('canvas');bgCv.width=cv.width;bgCv.height=cv.height;
-  const g=bgCv.getContext('2d'),th=G.theme,gr=th.ground,R0=mulberry(G.map.seed+5);g.setTransform(k,0,0,k,VIEW.ox*VIEW.dpr,VIEW.oy*VIEW.dpr);g.lineJoin='round';g.lineCap='round';
+function renderBg(){if(!G)return;/* ob2:SPEED lite — фон в плотности 1 (рисуем в долю hq, растягиваем при выводе) и ровные пятна вместо градиентов */const lq=!!window.SP_LQ,hq=lq&&VIEW.dpr>1?1/VIEW.dpr:1,k=VIEW.B*hq;bgCv=bgCv||document.createElement('canvas');bgCv.width=Math.round(cv.width*hq);bgCv.height=Math.round(cv.height*hq);
+  const g=bgCv.getContext('2d'),th=G.theme,gr=th.ground,R0=mulberry(G.map.seed+5);g.setTransform(k,0,0,k,VIEW.ox*VIEW.dpr*hq,VIEW.oy*VIEW.dpr*hq);g.lineJoin='round';g.lineCap='round';
   const x0=-VIEW.ox/VIEW.s-10,y0=-VIEW.oy/VIEW.s-10,x1=(VIEW.W-VIEW.ox)/VIEW.s+10,y1=(VIEW.H-VIEW.oy)/VIEW.s+10;
   g.fillStyle=gr.base;g.fillRect(x0,y0,x1-x0,y1-y0);
-  for(let i=0;i<70;i++){const x=lerp(x0,x1,R0()),y=lerp(y0,y1,R0()),r=40+R0()*90,col=R0()<.5?gr.hi:gr.lo;const q=g.createRadialGradient(x,y,0,x,y,r);q.addColorStop(0,rgba(col,.7));q.addColorStop(1,rgba(col,0));g.fillStyle=q;g.fillRect(x-r,y-r,r*2,r*2);}
+  for(let i=0;i<70;i++){const x=lerp(x0,x1,R0()),y=lerp(y0,y1,R0()),r=40+R0()*90,col=R0()<.5?gr.hi:gr.lo;if(lq){g.fillStyle=rgba(col,.22);g.beginPath();g.arc(x,y,r*.6,0,TAU);g.fill();continue;}const q=g.createRadialGradient(x,y,0,x,y,r);q.addColorStop(0,rgba(col,.7));q.addColorStop(1,rgba(col,0));g.fillStyle=q;g.fillRect(x-r,y-r,r*2,r*2);}
   g.strokeStyle=rgba(gr.grass,.5);g.lineWidth=1.1;const area=(x1-x0)*(y1-y0);
   for(let i=0;i<area/500;i++){const x=lerp(x0,x1,R0()),y=lerp(y0,y1,R0()),s=3+R0()*4;g.beginPath();g.moveTo(x-2,y);g.quadraticCurveTo(x-3,y-s*.6,x-4,y-s);g.moveTo(x,y);g.lineTo(x,y-s*1.2);g.moveTo(x+2,y);g.quadraticCurveTo(x+3,y-s*.6,x+4,y-s);g.stroke();}
   for(let i=0;i<area/2600;i++){const x=lerp(x0,x1,R0()),y=lerp(y0,y1,R0()),col=gr.flow[Math.floor(R0()*gr.flow.length)];for(let j=0;j<5;j++){const a=j/5*TAU;g.beginPath();g.arc(x+Math.cos(a)*2,y+Math.sin(a)*2,1.4,0,TAU);g.fillStyle=col;g.fill();}}
@@ -505,8 +516,12 @@ function renderBg(){if(!G)return;const k=VIEW.B;bgCv=bgCv||document.createElemen
   // декор
   const dec=[],keys=th.decor,spots=M.spots,gate=M.gate,BUSY=visBusy(th);   // OB:VIS пёстрая глава — декора меньше и он приглушён
   const roadPts=[];for(const P of M.paths)for(let i=0;i<P.xs.length;i+=5)roadPts.push([P.xs[i],P.ys[i]]);
+  /* ob2:SPEED П5 расстояние до дороги — по сетке ячеек 100 (смотрим 3×3 соседних): точно до 100, дальше — «не ближе 100».
+     Все пороги ниже (24+rad, 54, 60, 95) меньше 100 — картинка та же, что при переборе всех точек дороги. */
+  const RC=100,RH={},rk=(cx,cy)=>(cx+500)*1000+cy+500;for(const p of roadPts){const kk=rk(Math.floor(p[0]/RC),Math.floor(p[1]/RC));(RH[kk]||(RH[kk]=[])).push(p);}
+  const nearR=(x,y)=>{const cx=Math.floor(x/RC),cy=Math.floor(y/RC);let nr=1e9;for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const L=RH[rk(cx+i,cy+j)];if(L)for(const p of L){const d=(p[0]-x)**2+(p[1]-y)**2;if(d<nr)nr=d;}}return Math.sqrt(nr);};
   for(let y=y0-30;y<y1+40;y+=24)for(let x=x0-30;x<x1+30;x+=24){const jx=x+(R0()-.5)*20,jy=y+(R0()-.5)*20;const key=keys[Math.floor(R0()*keys.length)],a=ART[key];if(!a)continue;
-    const sc=key==='d_pond'||key==='d_lava'?.45:.6,rad=a.size*sc*.32;let nr=1e9;for(const p of roadPts){const d=(p[0]-jx)**2+(p[1]-jy)**2;if(d<nr)nr=d;}nr=Math.sqrt(nr);
+    const sc=key==='d_pond'||key==='d_lava'?.45:.6,rad=a.size*sc*.32;const nr=nearR(jx,jy);
     if(nr<24+rad)continue;if(spots.some(s=>(s.x-jx)**2+(s.y-jy)**2<(30+rad)**2))continue;if((gate.x-jx)**2+(gate.y-jy)**2<85*85)continue;
     if(M.river>=0&&(M.rot?jx:jy)>M.river*CELL-14-rad&&(M.rot?jx:jy)<M.river*CELL+CELL+14)continue;
     const inWorld=jx>0&&jx<WW&&jy>0&&jy<WH;const prob=(inWorld?(nr<60?.18:.42):.62)*(BUSY?(nr<60?.75:.85):1);if(R0()>prob)continue;
@@ -514,7 +529,7 @@ function renderBg(){if(!G)return;const k=VIEW.B;bgCv=bgCv||document.createElemen
   // ориентиры: 2 крупных объекта главы — на самых просторных местах поля, подальше от дороги, мест под заставы, ворот и друг от друга
   {const ci=Math.max(0,CH.indexOf(th)),set=LMARK[ci]||[],R1=mulberry(M.seed*3+11),lms=[];
     for(let n=0;n<2&&set.length;n++){let best=null,bs=-1;
-      for(let y=50;y<WH-70;y+=18)for(let x=34;x<WW-30;x+=18){let nr=1e9;for(const q of roadPts){const d=(q[0]-x)**2+(q[1]-y)**2;if(d<nr)nr=d;}nr=Math.sqrt(nr);if(nr<54)continue;
+      for(let y=50;y<WH-70;y+=18)for(let x=34;x<WW-30;x+=18){const nr=nearR(x,y);if(nr<54)continue;
         if(spots.some(sp=>(sp.x-x)**2+(sp.y-y)**2<50*50))continue;if((gate.x-x)**2+(gate.y-y)**2<100*100)continue;if(M.river>=0&&(M.rot?x:y)>M.river*CELL-40&&(M.rot?x:y)<M.river*CELL+CELL+34)continue;
         if(lms.some(o=>(o.x-x)**2+(o.y-y)**2<130*130))continue;const sc0=Math.min(nr,95)+R1()*14;if(sc0>bs){bs=sc0;best={x,y};}}
       if(!best)break;const key=set[Math.floor(R1()*set.length)],a=ART[key];if(!a)break;const sz=key==='d_pond'||key==='d_lava'?92:66;lms.push({x:best.x,y:best.y,key,sz,fl:R1()<.5?-1:1});}
@@ -554,7 +569,7 @@ function glowDot(c,x,y,r,col,a){if(!(r>.05))return;const ga=c.globalAlpha;c.glob
 function rr(c,x,y,w,h,r){if(w<=0)return c.beginPath();r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function render(){if(!G||!bgCv)return;const c=ctx;
   G.shx=G.shake>0?rand(-1,1)*G.shake*VIEW.dpr*.5:0;G.shy=G.shake>0?rand(-1,1)*G.shake*VIEW.dpr*.5:0;
-  c.setTransform(1,0,0,1,0,0);c.drawImage(bgCv,G.shx,G.shy);worldT();
+  c.setTransform(1,0,0,1,0,0);if(bgCv.width===cv.width)c.drawImage(bgCv,G.shx,G.shy);else c.drawImage(bgCv,G.shx,G.shy,cv.width,cv.height);/* ob2:SPEED lite */worldT();
   // лужи и огонь
   for(const q of G.pools){const a=Math.min(1,q.t*5,(q.dur-q.t)*2);c.globalAlpha=a;
     if(q.fire){glowDot(c,q.x,q.y,q.r*1.1,'#ff7a2a',.55);for(let i=0;i<5;i++){const an=i*1.3+G.t*2,rr2=q.r*.55;glowDot(c,q.x+Math.cos(an)*rr2,q.y+Math.sin(an)*rr2*.5,8+Math.sin(G.t*9+i)*3,'#ffd84a',.8);}}
@@ -627,7 +642,28 @@ function render(){if(!G||!bgCv)return;const c=ctx;
   // прицел молнии
   if(G.aim&&G.aimPt){const p=G.aimPt,r=SPELLS.thunder.r*(forgeN('thunder')>=2?1.2:1);c.strokeStyle='rgba(160,220,255,.9)';c.fillStyle='rgba(140,200,255,.15)';c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();c.arc(p.x,p.y,r,0,TAU);c.fill();c.stroke();c.setLineDash([]);}
   drawOverlay();
+  if(G.tut===1||G.nvF)nvDraw();   // ob2-NOVICE newbhand: затемнение и палец
 }
+/* ob2-NOVICE newbhand (05-first-retention 1.1–1.2): первый шаг — всё темнеет, кроме места; палец тычет; 6 с без касания (или 15 с без заставы) — воевода ставит стрельцов сам,
+   вторую заставу новичок ставит по пальцу. G.nvTap — время последнего касания (ui.js), G.nvF — воевода поставил сам */
+function nvTick(){if(SHOT||!nvOn('newbhand')||typeof ringI!=='undefined'&&ringI>=0||$('modal').classList.contains('on'))return;
+  if(G.t-(G.nvTap||0)<6&&G.t<15)return;const i=tutSpot();if(G.tw[i]||!tryBuild(i,'arch'))return;
+  G.nvF=1;G.adv=null;G.advCd=.5;if(typeof HUDC!=='undefined')HUDC.tut2=1;try{STAT.ev('tut',{s:5});}catch(e){}
+  voice(Lg('Гляди, как надо! Стрельцы уже на месте. Теперь ты: ткни в место, куда показывает палец, — поставь ещё одну заставу.','Watch how it’s done! The archers are in place. Now you: tap the spot the finger points at and build one more outpost.'),VOEV(),'voevoda',12);}
+function nvDraw(){if(!nvOn('newbhand'))return;
+  if(typeof ringI!=='undefined'&&ringI>=0){const b=G.tut===1&&document.querySelector('.rbt[data-id="b_arch"]');if(!b)return;const r=b.getBoundingClientRect(),c=ctx,q=(G.t*1.25)%1,dn=q<.35?q/.35:q<.55?1:Math.max(0,1-(q-.55)/.45);
+    c.setTransform(VIEW.dpr,0,0,VIEW.dpr,0,0);c.textAlign='center';c.textBaseline='middle';c.font='42px sans-serif';c.fillStyle='#fff';if(r.top>VIEW.top+56)c.fillText('👇',r.left+r.width*.5,r.top-26+dn*10);else c.fillText('👉',r.left-26+dn*10,r.top+r.height*.45);return;}   // кольцо открыто — палец на «Стрельцов» (сверху, у края — слева)
+  let i=-1;const dim=G.tut===1;
+  if(dim)i=tutSpot();else if(G.tut===2&&!G.started&&G.adv&&G.adv.k==='build'&&G.tw.filter(Boolean).length<2)i=G.adv.i;
+  if(i<0||G.tw[i])return;const c=ctx,d=VIEW.dpr,s=G.map.spots[i],x=VIEW.ox+s.x*VIEW.s,y=VIEW.oy+(s.y+2)*VIEW.s,r=clamp(26*VIEW.s,30,44),fk=clamp(VIEW.s,1,1.4);
+  c.setTransform(d,0,0,d,0,0);
+  if(dim){c.fillStyle='rgba(8,6,22,'+(Math.min(1,G.t/.5)*.66)+')';c.beginPath();c.rect(0,0,VIEW.W,VIEW.H);c.moveTo(x+r,y);c.arc(x,y,r,0,TAU,true);c.fill();
+    const p=.5+.5*Math.sin(G.t*6);c.strokeStyle=rgba('#ffe14a',.6+p*.4);c.lineWidth=4;c.beginPath();c.arc(x,y,r-2+p*4,0,TAU);c.stroke();}
+  const q=(G.t*1.25)%1,dn=q<.35?q/.35:q<.55?1:Math.max(0,1-(q-.55)/.45),fy=y+r*.55+18*fk-dn*12*fk,fx=x+r*.25;   // палец снизу тычет в место
+  if(dn>.95){c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=2;c.beginPath();c.arc(x,y,r*.6+(q-.35)*40,0,TAU);c.stroke();}
+  c.textAlign='center';c.textBaseline='middle';c.font=Math.round(46*fk)+'px sans-serif';c.fillStyle='#fff';c.fillText('👆',fx,fy+22*fk);
+  const t=Lg('Ткни сюда!','Tap here!');c.font=cvF(900,18);const w=c.measureText(t).width+26,up=y-r-30>VIEW.top+14,ty=up?y-r-22:fy+64*fk;
+  c.fillStyle='rgba(255,225,74,.97)';rr(c,x-w/2,ty-16,w,32,16);c.fill();c.fillStyle='#3a2208';c.fillText(t,x,ty+1);}
 function tutSpot(){const s=G.map.spots;let best=0,bd=-1;for(let i=0;i<s.length;i++){if(s[i].r<3||s[i].r>8)continue;const v=-Math.abs((G.map.rot?s[i].y:s[i].x)-180);/* OB:VIS */if(v>bd){bd=v;best=i;}}return best;}
 function drawTower(t){const TB=fxTowerB(t),bdy=TB?TB.dy:0;/* OB:VIS подскок при постройке/улучшении — js/fx.js */
   worldT();ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(t.x+3,t.y+9,21,8,0,0,TAU);ctx.fill();
@@ -725,7 +761,7 @@ function wrapText(c,s,w){const words=s.split(' '),out=[];let l='';for(const x of
 
 /* ================= ускорение ×2/×3 тратит запас «времени ускорения» (S.boost, секунды) ================= */
 const BOOST_CAP=7200;
-function boostAdd(sec){S.boost=Math.min(BOOST_CAP,Math.max(0,(S.boost||0)+sec));}
+function boostAdd(sec){const b=S.boost||0;S.boost=Math.max(0,sec>0?Math.max(b,Math.min(BOOST_CAP,b+sec)):b+sec);}   /* ob2-LAVKA: купленное сверх потолка (лавка) не срезаем */
 let boostSaveT=0;
 // сколько запаса ушло в этом бою на ×2 и на ×3 (OB:META1: с 08.10 не возвращается — BOOST_REF)
 function boostDrain(sec){const d=Math.min(S.boost||0,sec);if(G){if(G.speed>=3)G.bs3=(G.bs3||0)+d;else G.bs2=(G.bs2||0)+d;}S.boost=Math.max(0,(S.boost||0)-sec);boostSaveT+=sec;if(boostSaveT>10){boostSaveT=0;save();}
@@ -740,7 +776,7 @@ function fmtBoost(s){s=Math.max(0,Math.round(s));const h=Lg(' ч ','h '),m=Lg(' 
 /* ================= цикл ================= */
 /* шаги расчёта: не больше 4 за кадр (на ×3 шаг длиннее) — слабый телефон не уходит в «спираль» тормозов.
    Кадр рисуем, только пока бой идёт: под паузой, окном и после окончания эффектов — один раз и стоп */
-function loop(t){requestAnimationFrame(loop);hangTick(t);const dt=Math.min(1/20,(t-lastT)/1000||0);lastT=t;if(!G)return;
+function loop(t){requestAnimationFrame(loop);hangTick(t);const dt=Math.min(1/20,(t-lastT)/1000||0);lastT=t;if(!G)return;warmStep();   /* ob2:SPEED П4 */
   const live=!paused&&!G.paused&&!G.over;if(live)STAT.frame(); // STAT v1.2: плавность — только идущий бой
   // открыто кольцо выбора: ×2/×3 не идут (запас не тратится — значит, и ускорения нет); «Вечное ×2» — ×2
   if(live){const x2f=typeof payX2==='function'&&payX2(),sp=ringI>=0&&G.speed>=2?(x2f?2:1):G.speed,rem=dt*sp,n=Math.min(4,Math.max(1,Math.ceil(rem*60-1e-6)));if(rem>1e-4)for(let i=0;i<n;i++)update(rem/n);

@@ -216,7 +216,7 @@ function MG_CLOSE(){const c=MG.cur;if(!c)return;MG.cur=null;for(const f of c.qs)
 function MG_FIN(g,o,r,opt){const c=MG.cur,n=g.num|0,rw=MG_RW[n]||{tr:[0,0,0,0],sl:[0,0,0,0]},z=DZ(),train=o.mode==='train';
   r.score=Math.max(0,Math.round(+r.score||0));r.tier=Math.max(0,Math.min(3,r.tier|0));const ex=r.extra||{};
   const best=z.b[n]|0,rec=r.score>best&&r.score>0;if(rec)z.b[n]=r.score;z.n[n]=(z.n[n]|0)+1;
-  const out={score:r.score,tier:r.tier,rec,best:Math.max(best,r.score),train,mode:o.mode,trf:null,sl:0,xp:0,items:[],buf:null,lv0:dzLv(z.x),lv1:null,first:!best};
+  const out={score:r.score,tier:r.tier,rec,best:Math.max(best,r.score),train,mode:o.mode,trf:null,sl:0,xp:0,items:[],buf:null,lv0:dzLv(z.x),lv1:null,first:!best,extra:ex};/* ob2-MERGE: extra в итог (просьба TIHO) */
   if(!train){const k=o.mode==='day2'?MG_RW.ad:1;let tr=Math.round((rw.tr[r.tier]||0)*k);if(k<1&&(rw.tr[r.tier]||0)>0)tr=Math.max(1,tr);
     if(n===8&&ex.trf)tr=rw.alt||2;
     if(n===13)tr=rw.tr[r.tier]||0;

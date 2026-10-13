@@ -324,7 +324,7 @@ function vilDone(){return BLD.every(b=>b.ch!=null||(S.village[b.id]||0)>=b.cost.
 // облик «Жар-птица» — покупка Яндекса skins_firebird (js/pay.js): на все роды застав сразу, без отстроенной деревни
 const SKIN_FB={id:'firebird',n:'Жар-птица',about:'огненные перья'};
 function skinFb(){return typeof PAY!=='undefined'&&PAY.own('skins_firebird');}
-function skinOf(t){const k=S.skin&&S.skin[t];return k==='firebird'?(skinFb()?k:''):k&&S.skins&&S.skins[t+'.'+k]?k:'';}
+function skinOf(t){const k=S.skin&&S.skin[t];return k==='firebird'?(skinFb()||S.skins&&S.skins[t+'.firebird']?k:''):k&&S.skins&&S.skins[t+'.'+k]?k:'';}   /* ob2-LAVKA узелок: Жар-птица на один род */
 function skinName(id){return id==='firebird'?SKIN_FB.n:(SKINS.find(k=>k.id===id)||{n:''}).n;}
 // сколько золота ещё можно потратить (постройки + облики + украшения)
 function goldSink(){let n=0;for(const b of BLD)for(let l=S.village[b.id]||0;l<b.cost.length;l++)n+=b.cost[l];
