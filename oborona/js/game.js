@@ -129,6 +129,21 @@ function weekWave(w){const ch=CH[G.ci],en=ch.en,R0=mulberry(G.wk.w*71+w*13+1),hp
   return {g,hpm,name:last?Lg('Босс недели!','Boss of the Week!'):pick2(R0,WAVE_NAMES[main]||WAVE_NAMES.mix),path:w};}
 function nextWave(w){return G.wk?weekWave(w):endlessWave(w);}
 
+/* ================= OB-GO (14.10, решение владельца): бой начинается сам =================
+   Самый первый бой новичка (обучение 1-1, побед нет): первая волна выходит сама через GO_NOV с, нечисть медленнее (GO_SLOW, весь этот бой).
+   Остальные бои: на «В бой!» отсчёт GO_T с, по нулю волна выходит сама; нажал раньше — «Смелость в цене» (как «Волна раньше»).
+   Отсчёт стоит: пауза/свёрнуто/ролик (update не идёт), открыто кольцо или окно, окно без фокуса (blur).
+   Босс недели, испытание дня, «Застава дня»: отсчёт идёт только после первого касания поля или первой заставы (G.goTap) — открыл и ушёл → попытка не сгорела.
+   Выключить: ?off=autogo (или OB2_OFF). STAT: wv1 {a:1 сама|0 нажал, s — секунд от начала боя}; у новичка — tut {s:3,a}. */
+const GO_T=15,GO_NOV=2.5,GO_SLOW=.75;let GO_BON=0,goBlur=0;   // GO_BON — бонус «Смелость в цене» за ранний «В бой!»: ВЫКЛ (бот: звёзд 121→152/122→160 — ломает баланс; журнал OB-GO.md п.6)
+try{window.addEventListener('blur',()=>{goBlur=1;});window.addEventListener('focus',()=>{goBlur=0;});}catch(e){}
+function goOn(){return !SHOT&&nvOn('autogo');}
+function goInit(){G.goT=0;if(!goOn())return;G.goNov=G.tut===1&&!S.wins;G.goT=G.goNov?GO_NOV:GO_T;G.goTap=!(G.wk||G.rule||G.dly);
+  if(G.goNov)G.dspd=(G.dspd||1)*GO_SLOW;}
+function goStop(){return typeof ringI!=='undefined'&&ringI>=0||$('modal').classList.contains('on')||goBlur||!G.goTap;}   // отсчёт обычного боя стоит
+function goTick(dt){if(G.started||!(G.goT>0))return;if(G.goNov?$('modal').classList.contains('on'):goStop())return;
+  G.goT-=dt/Math.max(1,G.speed||1);if(G.goT<=0){G.goT=0;G.goA=1;callWave();}}   // отсчёт — в настоящих секундах (×2/×3 его не ускоряют)
+function goBonus(){return !G.started&&G.goT>0&&!G.goNov&&GO_BON?Math.round(G.goT*(1+G.ci*.15)*(G.endless?1.5:1)):0;}
 /* ================= начало боя ================= */
 function forgeN(k){const v=(S.forge||{})[k];return typeof v==='number'?v:0;}
 // ступени кузницы заставы: объект {dmg1:1,...}; старый формат (число) переводим
@@ -154,6 +169,7 @@ function newBattle(o){hmk('nb');
   if(typeof difApply==='function')difApply(o);   // OB:DIF режим главы: здоровье по таблице, жизни/монеты/пауза/скорость/вожаки/запрет (js/dif.js)
   if(!endless)for(const k in G.sp){const u=SPELL_UNLOCK[k];if(ci<u[0]||(ci===u[0]&&o.li<u[1])||rule==='nospell')G.sp[k].locked=1;}
   if(o.dly){G.dly=o.dly;G.theme=CH[o.dly.th]||G.theme;} // OB:META1 «Застава дня»: карта и вид главы — по дате, у всех одинаковые
+  goInit();   // OB-GO: бой начинается сам (отсчёт на «В бой!», у новичка — волна через 2,5 с)
   layout();   // OB:VIS вид поля (стоя/лёжа) мог смениться — пересчёт масштаба; внутри renderBg и warmBattle
   try{STAT.lvl(statLv(),statMode(),statX());if(G.tut===1&&!S.wins)STAT.ev('tut',{s:1});}catch(e){} // STAT: старт боя (уровень «1-3», осада, Босс недели)
   META_HK('RUN',G); // OB:META1 розетка меты
@@ -198,7 +214,7 @@ function tstat(type,lvl,br){const d=TW[type],b=lvl===4?d.br[br-1]:null,i=lvl-1,F
 function towerKey(t){const k='t_'+t.type+'_'+(t.lvl<4?t.lvl:t.lvl+(t.br===1?'a':'b')),sk=typeof skinOf==='function'?skinOf(t.type):'';return sk?k+'~'+sk:k;}
 function tryBuild(i,type){const c=buildCost(type);if(!G||G.tw[i]||G.coins<c||!towerUnlocked(type))return false;
   const s=G.map.spots[i];G.coins-=c;G.tw[i]={i,type,lvl:1,br:0,x:s.x,y:s.y,cd:.3,inv:c,ang:-Math.PI/2,stunT:0,frostT:0,bounce:0,kills:0,dmgd:0,aim:(G.aimDef&&G.aimDef[type])||'first'};
-  G.spendT=G.t;G.tw[i].st=tstat(type,1,0);fxBuild(G.tw[i],0);/* OB:VIS */SND.build();dust(s.x,s.y+6);G.built=(G.built||0)+1;if(G.tut===1){G.tut=2;G.advCd=1.5;if(!S.wins)STAT.ev('tut',{s:2});}STAT.move();return true;}
+  G.spendT=G.t;G.goTap=1;G.tw[i].st=tstat(type,1,0);fxBuild(G.tw[i],0);/* OB:VIS */SND.build();dust(s.x,s.y+6);G.built=(G.built||0)+1;if(G.tut===1){G.tut=2;G.advCd=1.5;if(!S.wins)STAT.ev('tut',{s:2});}STAT.move();return true;}
 function tryUpgrade(i,br){const t=G&&G.tw[i];if(!t||t.lvl>=4)return false;if(t.lvl===3&&(!br||!branchUnlocked()))return false;
   const c=upCost(t,br);if(G.coins<c)return false;G.coins-=c;G.spendT=G.t;t.inv+=c;t.lvl++;if(t.lvl===4)t.br=br;t.st=tstat(t.type,t.lvl,t.br);fxBuild(t,1);/* OB:VIS */SND.up();dust(t.x,t.y+6);G.ups=(G.ups||0)+1;
   sparkle(t.x,t.y-20,'#ffd84a',14);STAT.move();return true;}
@@ -214,13 +230,13 @@ function peekWave(){if(!G||G.wave>=waveCount())return null;if(!G.endless)return 
 function waveWho(w){const out=[];if(!w)return out;for(const g of w.g){if(out.some(o=>o.t===g.t&&!o.lead===!g.lead))continue;const d=EN[g.t];
   out.push({t:g.t,n:g.n,fly:!!d.fly,arm:isArmored(g.t),boss:!!d.boss,lead:!!g.lead});}return out;}
 function callWave(){if(!G||G.over)return;hmk('wv');if(G.wave>=waveCount())return;
-  let bonus=0;if(G.nextT>0){bonus=Math.round(G.nextT*(1+G.ci*.15)*(G.endless?1.5:1));G.coins+=bonus;if(bonus>0)toast(Lg('Смелость в цене: +','Courage pays: +')+coinsTxt(bonus));}
+  let bonus=0;if(G.nextT>0||!G.goA&&goBonus()){bonus=G.nextT>0?Math.round(G.nextT*(1+G.ci*.15)*(G.endless?1.5:1)):goBonus();G.coins+=bonus;if(bonus>0)toast(Lg('Смелость в цене: +','Courage pays: +')+coinsTxt(bonus));}
   const w=G.endless?peekWave():G.waves[G.wave];G.wave++;G.started=true;G.nextT=-1;
   if(G.dchPrize&&G.wave===1&&S.dch&&!S.dch.tried){S.dch.tried=1;save();} // испытание дня: попытка — с первой волны (выход до неё награду не сжигает)
   for(const g of w.g)G.spawning.push({t:g.t,n:g.n,iv:g.iv,next:g.delay,hpm:g.hpm||w.hpm,lead:g.lead,yar:g.yar,pi:G.map.paths.length>1?(g.t===w.g[0].t?0:1)%G.map.paths.length:0,alt:G.map.paths.length>1});
   // баннер волны — небольшой, под HUD, 1,8 с (раньше крупно посреди поля на 3 с закрывал заставы — аудит 14)
-  G.banner={title:(G.endless&&!G.wk?Lg('Волна ','Wave ')+G.wave:Lg('Волна '+G.wave+' из '+waveCount(),'Wave '+G.wave+' of '+waveCount())),sub:w.name,t:0,wave:1};SND.wave();if(G.tut===2){G.tut=3;if(!S.wins)STAT.ev('tut',{s:3});};
-  if(G.wave===1){YG.start();G.advCd=10;}}
+  G.banner={title:(G.endless&&!G.wk?Lg('Волна ','Wave ')+G.wave:Lg('Волна '+G.wave+' из '+waveCount(),'Wave '+G.wave+' of '+waveCount())),sub:w.name,t:0,wave:1};SND.wave();if(G.tut===2)G.tut=3;
+  if(G.wave===1){YG.start();G.advCd=10;try{const a=G.goA?1:0;STAT.ev('wv1',{a,s:Math.round(G.t)});if(G.tut&&!G.endless&&!G.rule&&G.ci===0&&G.li===0&&!S.wins)STAT.ev('tut',{s:3,a});}catch(e){}}}   // OB-GO STAT: первая волна сама (a:1) или «В бой!» (a:0)
 function spawnTick(dt){
   for(const s of G.spawning){if(s.n<=0)continue;s.next-=dt;while(s.next<=0&&s.n>0){s.n--;s.next+=s.iv;
       const pi=s.alt?(s.n%2):s.pi;spawnEnemy(s.t,pi,0,s.hpm,s.lead?{lead:s.lead}:s.yar?{yar:1}:null);}}
@@ -418,6 +434,7 @@ function sayAt(x,y,s){if(bubDup(x,y,s))return;if(G.bub.length>3)G.bub.shift();G.
 
 /* ================= главный шаг ================= */
 function update(dt){if(!G||G.over)return;G.t+=dt;
+  goTick(dt);   // OB-GO
   if(G.tut===1)nvTick();   // ob2-NOVICE newbhand: 6 с без касания — воевода ставит первую заставу сам
   if(G.later){for(const l of G.later){l.t-=dt;if(l.t<=0){l.fn();l.done=1;}}prune(G.later,l=>!l.done);}
   for(const k in G.sp)if(G.sp[k].cd>0)G.sp[k].cd-=dt;
@@ -452,7 +469,7 @@ function novAuto(){if(!novAutoOn()||G.leaks<=(G.autoLk||0)||G.t-G.spendT<1.5)ret
 function advTick(dt){if(!advOn())return;novAuto();const a=G.adv;
   if(a){a.t+=dt;const t=G.tw[a.i];if(a.t>9||(a.k==='build'?!!t:!t||t.lvl!==a.lv))G.adv=null;return;}
   G.advCd-=dt;if(G.advCd>0||G.advN>=14||typeof ringI!=='undefined'&&ringI>=0)return;
-  const hot=G.leaks>(G.advLk||0),pre=G.tut===2&&!G.started;   // обучение: после первой заставы стрелка на следующее место — сразу (реплика воеводы уже говорит «поставь ещё»)
+  const hot=G.leaks>(G.advLk||0),pre=G.tut===2&&(!G.started||G.goNov);   // обучение: после первой заставы стрелка на следующее место — сразу (реплика воеводы уже говорит «поставь ещё»)
   if(G.t-G.spendT<(pre?1.5:hot?3:7))return;
   const p=advPick();if(!p)return;G.advN++;G.advLk=G.leaks;G.advCd=pre?1.5:G.advN<=2?5:12;
   G.adv={k:p.k,i:p.i,t:0,lv:p.k==='up'?G.tw[p.i].lvl:0,n:G.advN,hot};}
@@ -654,10 +671,10 @@ function nvDraw(){if(!nvOn('newbhand'))return;
   if(typeof ringI!=='undefined'&&ringI>=0){const b=G.tut===1&&document.querySelector('.rbt[data-id="b_arch"]');if(!b)return;const r=b.getBoundingClientRect(),c=ctx,q=(G.t*1.25)%1,dn=q<.35?q/.35:q<.55?1:Math.max(0,1-(q-.55)/.45);
     c.setTransform(VIEW.dpr,0,0,VIEW.dpr,0,0);c.textAlign='center';c.textBaseline='middle';c.font='42px sans-serif';c.fillStyle='#fff';if(r.top>VIEW.top+56)c.fillText('👇',r.left+r.width*.5,r.top-26+dn*10);else c.fillText('👉',r.left-26+dn*10,r.top+r.height*.45);return;}   // кольцо открыто — палец на «Стрельцов» (сверху, у края — слева)
   let i=-1;const dim=G.tut===1;
-  if(dim)i=tutSpot();else if(G.tut===2&&!G.started&&G.adv&&G.adv.k==='build'&&G.tw.filter(Boolean).length<2)i=G.adv.i;
+  if(dim)i=tutSpot();else if(G.tut===2&&(!G.started||G.goNov)&&G.adv&&G.adv.k==='build'&&G.tw.filter(Boolean).length<2)i=G.adv.i;
   if(i<0||G.tw[i])return;const c=ctx,d=VIEW.dpr,s=G.map.spots[i],x=VIEW.ox+s.x*VIEW.s,y=VIEW.oy+(s.y+2)*VIEW.s,r=clamp(26*VIEW.s,30,44),fk=clamp(VIEW.s,1,1.4);
   c.setTransform(d,0,0,d,0,0);
-  if(dim){c.fillStyle='rgba(8,6,22,'+(Math.min(1,G.t/.5)*.66)+')';c.beginPath();c.rect(0,0,VIEW.W,VIEW.H);c.moveTo(x+r,y);c.arc(x,y,r,0,TAU,true);c.fill();
+  if(dim){c.fillStyle='rgba(8,6,22,'+(Math.min(1,G.t/.5)*(G.started?.42:.66))+')';c.beginPath();c.rect(0,0,VIEW.W,VIEW.H);c.moveTo(x+r,y);c.arc(x,y,r,0,TAU,true);c.fill();
     const p=.5+.5*Math.sin(G.t*6);c.strokeStyle=rgba('#ffe14a',.6+p*.4);c.lineWidth=4;c.beginPath();c.arc(x,y,r-2+p*4,0,TAU);c.stroke();}
   const q=(G.t*1.25)%1,dn=q<.35?q/.35:q<.55?1:Math.max(0,1-(q-.55)/.45),fy=y+r*.55+18*fk-dn*12*fk,fx=x+r*.25;   // палец снизу тычет в место
   if(dn>.95){c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=2;c.beginPath();c.arc(x,y,r*.6+(q-.35)*40,0,TAU);c.stroke();}
@@ -754,7 +771,8 @@ function drawOverlay(){const c=ctx,d=VIEW.dpr;c.setTransform(d,0,0,d,0,0);const 
   // индикатор у входа: через сколько следующая волна
   if(G.nextT>0||!G.started){for(const P of G.map.paths){const p=toScreen(clamp(P.xs[Math.min(P.xs.length-1,40)],10,WW-10),clamp(P.ys[Math.min(P.xs.length-1,40)],16,WH));
       const pulse=1+Math.sin(G.t*5)*.06,r=17*pulse;c.fillStyle='rgba(30,10,20,.75)';c.beginPath();c.arc(p.x,p.y,r+3,0,TAU);c.fill();
-      if(G.nextT>0){const tot=G.nextTot||14;c.strokeStyle='#ffd84a';c.lineWidth=3;c.beginPath();c.arc(p.x,p.y,r+1,-Math.PI/2,-Math.PI/2+TAU*(1-G.nextT/tot));c.stroke();}
+      const gw=!G.started&&G.goT>0&&!G.goNov&&G.goTap,nt=G.nextT>0?G.nextT:gw?G.goT:0;   // OB-GO: отсчёт до первой волны — то же кольцо у входа
+      if(nt>0){const tot=G.nextT>0?G.nextTot||14:GO_T;c.strokeStyle='#ffd84a';c.lineWidth=3;c.beginPath();c.arc(p.x,p.y,r+1,-Math.PI/2,-Math.PI/2+TAU*(1-nt/tot));c.stroke();}
       const s=spr('skull');sprPut(c,s,p.x,p.y,r*1.8);}}
 }
 function wrapText(c,s,w){const words=s.split(' '),out=[];let l='';for(const x of words){const t=l?l+' '+x:x;if(c.measureText(t).width>w&&l){out.push(l);l=x;}else l=t;}if(l)out.push(l);return out;}

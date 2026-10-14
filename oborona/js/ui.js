@@ -196,7 +196,7 @@ function nvIntroFit(){if(!nvOn('introfit'))return;const m=$('mBody');if(!m)retur
 /* ================= БОЙ: запуск ================= */
 function startLevel(c,l){hideModal();if(G&&!G.win){boostRefund(.5);save();}S.lastCh=c;mapSel=c;const g=newBattle({ci:c,li:l});enterBattle();{const p=difOf(c)==='n'?pityCoins(c,l):0;if(p)setTimeout(()=>toast(Lg('Подмога воеводы: +'+coinsTxt(p)+' на старте','Commander’s aid: +'+coinsTxt(p)+' at the start')),600);}
   const k=lvKey(c,l);
-  if(g.tut===1){S.introSeen[k]=1;save();setTimeout(()=>{if(G&&G.tut===1)voice(nvOn('newbhand')?Lg('Нечисть лезет из леса! Ткни в светлое место у дороги — там встанут стрельцы.','Monsters are coming out of the forest! Tap the bright spot by the road — the archers will stand there.'):Lg('Нечисть лезет из леса! Нажми на мигающее место у дороги и выбери стрельцов.','Monsters are coming out of the forest! Tap the blinking spot by the road and pick the archers.'),VOEV(),'voevoda',30);},500);}
+  if(g.tut===1){S.introSeen[k]=1;save();setTimeout(()=>{if(G&&G.tut===1)voice(G.goNov?Lg('Нечисть идёт! Поставь заставу тут — ткни в светлое место у дороги.','Monsters are coming! Build an outpost here — tap the bright spot by the road.'):nvOn('newbhand')?Lg('Нечисть лезет из леса! Ткни в светлое место у дороги — там встанут стрельцы.','Monsters are coming out of the forest! Tap the bright spot by the road — the archers will stand there.'):Lg('Нечисть лезет из леса! Нажми на мигающее место у дороги и выбери стрельцов.','Monsters are coming out of the forest! Tap the blinking spot by the road and pick the archers.'),VOEV(),'voevoda',30);},500);}
   else if(!S.introSeen[k]){S.introSeen[k]=1;save();voice(CH[c].intro[l],VOEV(),'voevoda',8);}}
 function startEndless(){hideModal();if(G&&!G.win&&!G.over){boostRefund(.5);save();}newBattle({endless:true,ci:2});enterBattle();if(!S.introSeen.end){S.introSeen.end=1;save();}else return;voice(Lg('Бесконечная осада на Калиновом мосту! Волны всё злее. Держись сколько сможешь — рекорд запишем в летопись.','Endless siege at Kalinov Bridge! Each wave is nastier. Hold out as long as you can — we’ll write your record in the chronicle.'),VOEV(),'voevoda',8);}
 function enterBattle(){STAT.once('ready',{ms:Math.round(performance.now())});STAT.screen('battle');document.body.classList.add('run');closeRing();layout();musicMode('battle');hudTick(true);}
@@ -213,11 +213,11 @@ function hudTick(force){if(!G)return;if(force)for(const k in HUDC)delete HUDC[k]
   setTxt('hWave',G.endless&&!G.wk?String(G.wave):Math.min(G.wave,waveCount())+'/'+waveCount());
   if(HUDC.lv!==G.lives){if(HUDC.lv!=null&&G.lives<HUDC.lv){const e=$('hLives');e.classList.remove('warn');void e.offsetWidth;e.classList.add('warn');}HUDC.lv=G.lives;}
   const wb=$('waveBtn');let lbl,dis=false,go=false;
-  if(!G.started){lbl=swordImg()+Lg(' В бой!',' To battle!')+(G.tut?'':'<small>'+nextIcons()+'</small>');go=true;}
+  if(!G.started){const gn=G.goT>0&&!G.goNov&&G.goTap,gb=gn?goBonus():0;lbl=swordImg()+Lg(' В бой!',' To battle!')+(gn?' <b class="goN">'+Math.ceil(G.goT)+'</b>':'')+(G.tut?'':'<small>'+nextIcons()+(gb>=5?'+'+coinsTxt(gb):'')+'</small>');go=true;}   // OB-GO: отсчёт до первой волны
   else if(G.nextT>0){const b=Math.round(G.nextT*(1+G.ci*.15)*(G.endless?1.5:1));lbl=Lg('🔔 Волна раньше','🔔 Wave early')+'<small>'+nextIcons()+(b>=5?'+'+coinsTxt(b)+' · ':'')+Math.ceil(G.nextT)+Lg(' с',' s')+'</small>';go=!G.endless&&G.ci===0&&G.li<=1;}
   else if(G.wave>=waveCount()){lbl=Lg('Последняя волна!','Final wave!');dis=true;}
   else{lbl=Lg('Волна идёт…','Wave incoming…');dis=true;}
-  {const nt=G.tut===1&&nvOn('newbhand');if(HUDC.nvT!==nt){HUDC.nvT=nt;document.body.classList.toggle('nvT',nt);}}   // ob2-NOVICE newbhand: пока нет первой заставы — «В бой!» спрятана, панели приглушены
+  {const nt=G.tut===1&&nvOn('newbhand')&&(!S.wins||!goOn());if(HUDC.nvT!==nt){HUDC.nvT=nt;document.body.classList.toggle('nvT',nt);}}   // ob2-NOVICE newbhand: пока нет первой заставы — «В бой!» спрятана, панели приглушены
   setTxt('waveBtn',lbl);if(HUDC.wbd!==dis){HUDC.wbd=dis;wb.disabled=dis;}if(HUDC.wbg!==go){HUDC.wbg=go;wb.classList.toggle('go',go);}
   for(const [k,id] of[['thunder','spThunder'],['cat','spCat']]){const s=G.sp[k],el=$(id);const lock=!!s.locked;
     const p=lock?100:s.cd>0?Math.round(s.cd/spellCd(k)*100):0,txt=lock?'🔒':s.cd>0?Math.ceil(s.cd):'';const key=p+'|'+txt+'|'+(G.aim===k);
@@ -226,11 +226,11 @@ function hudTick(force){if(!G)return;if(force)for(const k in HUDC)delete HUDC[k]
   const hot=S.boost<60;if(HUDC.hot!==hot){HUDC.hot=hot;$('boostBtn').classList.toggle('hot',hot);}
   // запас ускорения на первых двух уровнях не показываем (лишнее понятие новичку), если он не кончается
   const bh=!G.endless&&G.ci===0&&G.li<2&&!hot;if(HUDC.bh!==bh){HUDC.bh=bh;$('boostBtn').style.display=bh?'none':'';}
-  if(G.tut===2&&!HUDC.tut2){HUDC.tut2=1;voice(Lg((G.started?'Отлично! Ставь ещё заставы у дороги — монеты за нечисть.':'Отлично! Потрать все монеты: поставь ещё две заставы у дороги и жми «В бой!» внизу справа.')+' Теперь так: нажми на значок заставы, потом ещё раз — построить.',(G.started?'Great! Keep building outposts by the road — monsters pay coins.':'Great! Spend all your coins: build two more outposts by the road and press “To battle!” at the bottom right.')+' From now on: tap an outpost icon, then tap it again to build.'),VOEV(),'voevoda',10);}
+  if(G.tut===2&&!HUDC.tut2){HUDC.tut2=1;const gs=G.started||G.goNov;voice(Lg((gs?'Отлично! Ставь ещё заставы у дороги — монеты за нечисть.':'Отлично! Потрать все монеты: поставь ещё две заставы у дороги и жми «В бой!» внизу справа.')+' Теперь так: нажми на значок заставы, потом ещё раз — построить.',(gs?'Great! Keep building outposts by the road — monsters pay coins.':'Great! Spend all your coins: build two more outposts by the road and press “To battle!” at the bottom right.')+' From now on: tap an outpost icon, then tap it again to build.'),VOEV(),'voevoda',10);}
   if(G.tut===3&&!HUDC.tut3){HUDC.tut3=1;G.tut=4;voice(Lg('Нечисть идёт! За каждую — монеты. Нажми на готовую заставу, чтобы её улучшить.','Here they come! Every monster pays coins. Tap a built outpost to upgrade it.'),VOEV(),'voevoda',9);}
   // советчик новичка (advTick в game.js): первые советы боя и советы «нечисть прорывается» — словами воеводы, дальше — только кольцо со стрелкой
   if(G.autoSay){G.autoSay=0;if(!$('modal').classList.contains('on'))voice(Lg('Нечисть прорывается! Дружина сама поставила заставу на твои монеты. Монеты не копи — ставь заставы и улучшай их!','Monsters are breaking through! The men built an outpost with your coins themselves. Don’t hoard coins — build outposts and upgrade them!'),VOEV(),'voevoda',7);}
-  if(G.adv&&HUDC.advO!==G.adv){HUDC.advO=G.adv;const a=G.adv;if((a.n<=3||a.hot)&&!(G.tut===2&&!G.started)&&!$('modal').classList.contains('on')){const pre=a.hot?Lg('Нечисть прорывается! ','Monsters are breaking through! '):'';
+  if(G.adv&&HUDC.advO!==G.adv){HUDC.advO=G.adv;const a=G.adv;if((a.n<=3||a.hot)&&!(G.tut===2&&(!G.started||G.goNov))&&!$('modal').classList.contains('on')){const pre=a.hot?Lg('Нечисть прорывается! ','Monsters are breaking through! '):'';
     voice(pre+(a.k==='build'?Lg('Монет хватает на новую заставу — нажми на место со стрелкой. Чем больше застав, тем крепче оборона!','You have enough coins for a new outpost — tap the spot with the arrow. More outposts, stronger defense!'):Lg('Монет хватает на улучшение — нажми на заставу со стрелкой и сделай её сильнее!','You have enough coins for an upgrade — tap the outpost with the arrow and make it stronger!')),VOEV(),'voevoda',6);}}
   if(ringI>=0)ringRefresh();
 }
@@ -337,8 +337,8 @@ function showInfo(h){const e=$('info');e.innerHTML=h;e.classList.add('on');}
 /* ---------- ввод на поле ---------- */
 function initInput(){
   document.addEventListener('pointerdown',()=>{if(G)G.nvTap=G.t;},true);   // ob2-NOVICE newbhand: последнее касание (воевода ставит сам после 6 с без касаний)
-  {const st=document.createElement('style');st.textContent='body.run.nvT #hud,body.run.nvT #hudB{opacity:.35;transition:opacity .4s}body.run.nvT #waveBtn{visibility:hidden}';document.head.appendChild(st);}   // ob2-NOVICE
-  cv.addEventListener('pointerdown',e=>{if(!G||G.over)return;ac();const p=toWorld(e.clientX,e.clientY);
+  {const st=document.createElement('style');st.textContent='body.run.nvT #hud,body.run.nvT #hudB{opacity:.35;transition:opacity .4s}body.run.nvT #waveBtn{visibility:hidden}#waveBtn .goN{display:inline-block;min-width:2.1ch;text-align:center;font-variant-numeric:tabular-nums;font-weight:900;margin-left:2px;padding:0 4px;border-radius:8px;background:rgba(0,0,0,.22)}';document.head.appendChild(st);}   // ob2-NOVICE
+  cv.addEventListener('pointerdown',e=>{if(!G||G.over)return;G.goTap=1;/* OB-GO: коснулся поля — отсчёт пошёл (Босс недели, испытания) */ac();const p=toWorld(e.clientX,e.clientY);
     if(G.aim==='thunder'){if(p.y>-40&&p.y<WH+20){castThunder(p.x,p.y);G.aim=null;G.aimPt=null;}return;}
     if(G.egg&&!G.egg.dead&&(G.egg.x-p.x)**2+(G.egg.y-6-p.y)**2<34*34){const ex=G.egg.x,ey=G.egg.y;dmgEnemy(G.egg,G.egg.max*.07,'true');sparkle(ex,ey-6,'#ffd84a',5);SND.click();return;}
     if(G.kolo&&!G.kolo.got&&(G.kolo.x-p.x)**2+(G.kolo.y-8-p.y)**2<30*30){koloTap();return;}
