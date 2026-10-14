@@ -298,6 +298,16 @@ button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;fon
 #shTabs button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media (max-width:400px){#shTabs{gap:4px;padding-left:8px;padding-right:8px}#shTabs button{font-size:16px;padding-left:0;padding-right:0;letter-spacing:-.4px}}
 @media (min-aspect-ratio:1/1) and (min-width:700px){.fbfore{max-width:560px;margin-left:auto;margin-right:auto}}
 /*/FB1*/
+/*CUPG: окна онлайн-турниров*/
+.cuptabs{display:flex;gap:8px;margin:8px 0}.cuptabs .btn{flex:1;min-height:48px;margin:0}
+.cupin{width:100%;box-sizing:border-box;min-height:54px;font:inherit;font-size:24px;font-weight:800;letter-spacing:4px;text-align:center;text-transform:uppercase;border:2px solid #c9c2ad;border-radius:14px;padding:6px 10px;margin:6px 0;background:#fff;color:#1d2a30;outline:none}
+.cupin:focus{border-color:#2f8f5b}
+.cupcode{font-size:34px;font-weight:800;letter-spacing:6px;text-align:center;margin:8px 0;-webkit-user-select:all;user-select:all}
+.cuprb{margin:10px 0 0}.cuprb .btn{min-height:48px}.lbgap{text-align:center;opacity:.6;padding:2px 0}
+.cuplg{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin:0 .3em 0 .15em;vertical-align:-.05em;box-shadow:0 0 0 2px rgba(255,255,255,.35)}.lbr{font-size:17px}.lbr.zup b{color:#1f8a4c}.lbr.zdown b{color:#c0492b}.lbr b{min-width:28px;width:auto;white-space:nowrap}
+html.lk .cupin{background:var(--in);color:var(--tx);border-color:var(--inB)}html.lk .cupin:focus{border-color:var(--ok)}
+html.lk .lbr.zup b{color:var(--ok)}html.lk .lbr.zdown b{color:var(--warn)}
+@supports not (inset:0){.cuptabs>*+*{margin-left:8px}}
 </style>
 <link rel="stylesheet" href="css/look.css"><link rel="stylesheet" href="css/themes.css"><script src="js/look.js"></script><!--LK: вид «Стекло и свет» и темы (rlook)-->
 <script src="js/places.js"></script><script src="js/places-art.js"></script><script src="js/rb2-water.js"></script><!--rb2-SEASON: водоём месяца (место с датой — в конец PLACES)--><!--RB:NORTH: реестр рыб и мест, пейзажи новых мест (до игры)-->
@@ -603,6 +613,18 @@ function a3MonthGoals(tp,ev){return [{ty:'dd',n:8},{ty:'f',n:PLACES[tp].mf}/*RB:
   {ty:'mo',n:4},{ty:'ni',n:3},{ty:'bg',n:4,kg:PLACES[tp].mbg},ev?{ty:'sea',n:6}:{ty:'bk',n:3},{ty:'ml',n:8}];}
 const A3_MP_ALL=8; // целей плана для вещи месяца
 /*/A3*/
+/*CUP:logic — онлайн-турниры (hobby-cup): условия и рыба из зерна путёвки. Тот же расчёт повторяет сервер
+   (hobby-analytics/online/server_draft.py: rybak_cond / rybak_pick / rybak_replay) — менять ТОЛЬКО вместе и со сверкой tools/cup-check.sh (10 000 партий).
+   Зерно путёвки: старшие 24 бита — турнир (место, время суток, погода — одни у всех), младшие 8 — номер попытки (у попытки № k рыба у всех одна и та же).
+   Рыба на заброс № i — свой поток rng от (зерно, i); дальность — в тысячных долях максимума (q), она же уходит в журнал. Снасть казённая, червь, без условий A2. */
+function cupCond(seed){const R=rng(((seed>>>8)^0x5EEDC0DE)>>>0);return {pi:Math.floor(R()*TOURN_PL)/*cup2: только места главы I (как турнир недели), сервер — RYBAK_T.tpl*/,tod:TODS[Math.floor(R()*4)],wx:WXS[Math.floor(R()*5)]};}
+function cupQ(df){return clamp(Math.round(df*1000),100,1000);}
+function cupPick(seed,i,q,c){c=c||cupCond(seed);return pickFish(c.pi,'worm',c.tod,c.wx,q/1000,rng((seed^Math.imul(i,0x9E3779B1))>>>0));}
+// рыба не по казённой снасти (рвёт и на отпущенной леске) — сервер такой улов прячет как подозрительный
+function cupHeavy(f,w){const tk=TOURN_TK;return (f.s*Math.pow(w,.55)*(STY[f.st][0]+.22)+.25)/(TACKLE.line.kg[tk.line]*TACKLE.rod.k[tk.rod])>3.5;}
+// очки лиги: золотой норматив места = 100 (день) / 200 (неделя), потолок — полтора норматива
+function cupLg(mode,seed,g){const n=TOURN_NORM[cupCond(seed).pi][2],k=mode==='week'?200:100;return Math.min(k*1.5,Math.floor(k*g/n));}
+/*/CUP:logic*/
 /*/LOGIC*/
 /*A2:ui — «Глубина игры» в интерфейсе: точки на воде и глубина, донка, поклёвка по видам, навык, сезоны и давление на карте, заказы соседей, Книга места.
    Поля сохранения A2: S.dp (глубина поплавка), S.way (способ), S.xp {f,d} (опыт поплавка/донки), S.pb {'место.вид': биты фактов}, S.pbs {место: звёзд забрано},
@@ -1085,10 +1107,187 @@ var STAT=(function(){
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
+/*CUP*/
+/* ===== CUP v1 (03.10.2026): таблицы рекордов, турниры дня/недели, лиги, вызов другу — общий модуль хобби-игр =====
+   Источник — ~/Projects/hobby-analytics/online/cup.js (правки только тут, в игры — cup-sync.sh). Сервер — online/function/index.py.
+   Главное правило: игра НИКОГДА не ждёт сервер и не ломается без него. Нет адреса, сервер «отдыхает» (суточный предохранитель),
+   нет сети, подпись не прошла — все вызовы молча отвечают null, игра работает как без онлайна. Окон с ошибками модуль не показывает.
+   Что уходит на сервер: в VK — строка параметров запуска (её подписал VK; сервер берёт из неё только номер игрока и проверяет подпись,
+   саму строку не хранит) и имя («Иван П.» делает сервер; фамилия целиком не хранится); в Яндексе — подпись игрока (signature).
+   Больше ничего: ни устройства, ни адреса страницы. На устройстве (localStorage 'cup-<игра>') — только «показывать имя» (1/0).
+   Запросы — text/plain без своих заголовков (без CORS-предзапроса), по одному вызову на действие: вход сразу приносит путёвку,
+   результат — место, очки лиги и следующую путёвку. Вход — ленивый: пока игрок не открыл турнир/таблицу, запросов нет вообще.
+   Старый синтаксис: только var/function, без стрелок, optional chaining, шаблонных строк, Promise. */
+var CUP=(function(){
+  var V=1,TMO=8000,TOPC=60e3,FAILS=3,PAUSE=5*60e3;
+  var O={},G='',url='',dev=false,cut='',st='off',tok='',tokT=0,me=null,helloQ=null,tks={},fails=0,pauseT=0,restDay=0,
+      topC={},sh=0,shL=null,log=[],mockN=0;
+  function ls(k,v){try{if(v===undefined)return window.localStorage.getItem(k);window.localStorage.setItem(k,v);}catch(e){}return null;}
+  function qp(k){var m=new RegExp('[?&]'+k+'=([^&#]*)').exec(location.search);try{return m?decodeURIComponent(m[1]):'';}catch(e){return '';}}
+  function locH(h){return /^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|0\.0\.0\.0|)$|\.localhost$|\.local$|\.test$|^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(String(h||''));}
+  function locU(u){var m=/^https?:\/\/(\[[^\]]*\]|[^\/:?#]+)/i.exec(u);return !!m&&locH(m[1]);}
+  function mskDay(){var d=new Date(Date.now()+3*3600e3);return d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate();}
+  function later(cb,v){if(typeof cb==='function')setTimeout(function(){try{cb(v);}catch(e){}},0);}
+  function note(a,b){if(dev||O.debug){log.push([a,b]);if(log.length>200)log.shift();try{if(dev&&window.console)console.log('[CUP]',a,b);}catch(e){}}}
+  function setSt(s){if(st!==s){st=s;try{if(O.onState)O.onState(s);}catch(e){}}}
+
+  /* Тот же генератор, что mulberry32 на сервере: одинаковые числа в игре и при пересчёте результата (тесты сверяют). */
+  var imul=Math.imul||function(a,b){var ah=(a>>>16)&0xffff,al=a&0xffff,bh=(b>>>16)&0xffff,bl=b&0xffff;return (al*bl+(((ah*bl+al*bh)<<16)>>>0))|0;};
+  function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;var t=a;t=imul(t^(t>>>15),t|1);
+    t^=t+imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
+
+  /* CUP.init({g:'rybak', plat:PLAT, url:CUP_URL, lang:LANG, name:function(){return 'Иван Петров';}, sig:function(cb){cb(подпись Яндекса);},
+               free:['endless'], onState:function(s){}})
+     url ПУСТОЙ → модуль молчит (можно встроить заранее, адрес вписать потом). plat: 'vk' | 'yandex'.
+     name — VK: имя и фамилия из VKWebAppGetUserInfo (строка или функция); Яндекс — не нужен (имя придёт в подписи).
+     sig  — Яндекс: функция, отдающая player.signature из ysdk.getPlayer({signed:true}) (нет входа в Яндекс → отдать '').
+     free — режимы со случайным зерном («бесконечная»): их путёвку берём заодно со входом, без отдельного запроса.
+     НАШИ ТЕСТЫ — не на боевой сервер: боевой адрес обнуляется, если игра открыта автоматом (webdriver/HeadlessChrome) или с мака/локальной
+     сети/file://. На localhost: ?cup=sink:8831 → стенд http://localhost:8831/fn; ?cup=dev → без сервера, ответы-заглушки и журнал в консоль. */
+  function init(o){O=o||{};G=String(O.g||'');url=String(O.url||'');cut='';dev=false;tok='';me=null;tks={};topC={};fails=0;pauseT=0;restDay=0;helloQ=null;
+    var loc=locH(location.hostname)&&location.protocol!=='file:',q=qp('cup'),m;
+    if(loc&&(m=/^sink:(\d{2,5})$/.exec(q)))url='http://'+location.hostname+':'+m[1]+'/fn';
+    if(/^https?:/i.test(url)&&!locU(url)){var wd=false;try{wd=navigator.webdriver===true||/HeadlessChrome|PhantomJS|Puppeteer|Playwright/.test(navigator.userAgent||'');}catch(e){}
+      cut=wd?'wd':location.protocol==='file:'?'file':locH(location.hostname)?'local':'';if(cut)url='';}
+    if(!url&&loc&&(q==='dev'||O.dev===true))dev=true;
+    shL=ls('cup-'+G);sh=shL==='1'?1:0;                                        // имя скрыто по умолчанию (политика 13.10): только если игрок сам включил
+    api.on=!!(url||dev)&&!!G;setSt(api.on?'idle':'off');return api.on;}
+
+  function plat(){return O.plat==='vk'?'vk':'ya';}
+  function resting(){if(restDay&&restDay!==mskDay())restDay=0;return !!restDay||st==='gone'||(pauseT&&Date.now()<pauseT);}
+
+  /* один запрос: POST text/plain, ответ JSON; любая беда → cb(null) */
+  function post(op,body,cb){
+    if(dev){note('→ '+op,body);return later(function(){var r=mock(op,body);note('← '+op,r);cb(r);});}
+    var x,done=false,t;
+    function fin(r){if(done)return;done=true;clearTimeout(t);
+      if(!r){fails++;if(fails>=FAILS){pauseT=Date.now()+PAUSE;fails=0;setSt('err');}}else{fails=0;pauseT=0;}
+      note('← '+op,r);cb(r);}
+    try{x=new XMLHttpRequest();x.open('POST',url+(url.indexOf('?')<0?'?':'&')+'op='+op,true);
+      x.setRequestHeader('Content-Type','text/plain;charset=UTF-8');
+      x.onreadystatechange=function(){if(x.readyState!==4)return;var r=null;try{r=JSON.parse(x.responseText);}catch(e){}fin(r&&typeof r==='object'?r:null);};
+      x.onerror=function(){fin(null);};
+      t=setTimeout(function(){try{x.abort();}catch(e){}fin(null);},TMO);
+      note('→ '+op,body);x.send(JSON.stringify(body));
+    }catch(e){fin(null);}}
+
+  /* ответ сервера «нет»: что делаем дальше (всё молча) */
+  function refuse(r){var w=r&&r.why;
+    if(w==='rest'){restDay=mskDay();setSt('rest');}           // суточный предохранитель: до полуночи МСК не беспокоим
+    else if(w==='off'||w==='game'||w==='config'||w==='sign'||w==='old'||w==='plat'){setSt('gone');} // до перезапуска игры
+    else if(w==='tok'){tok='';}                                // жетон истёк — следующий вызов войдёт заново
+  }
+
+  /* вход (ленивый, один на всех ждущих): want — режимы, чью путёвку взять сразу */
+  function hello(want,cb){
+    if(tok&&Date.now()-tokT<23*3600e3)return cb(true);
+    if(helloQ){helloQ.push(cb);return;}
+    helloQ=[cb];
+    function go(sig){
+      var b={g:G,plat:plat(),want:want||[]},i,f=O.free||[];if(shL==='0'||shL==='1')b.sh=sh; // выбора на устройстве нет — сервер помнит прежний (новый игрок — скрыто)
+      for(i=0;i<f.length&&b.want.length<3;i++)if(b.want.indexOf(f[i])<0)b.want.push(f[i]);
+      if(b.plat==='vk'){b.q=location.search;var n='';try{n=typeof O.name==='function'?O.name():O.name;}catch(e){}b.nm=String(n||'').slice(0,60);}
+      else{if(!sig)return end(false);b.sig=sig;}
+      post('hello',b,function(r){
+        if(!r||!r.ok){refuse(r);return end(false);}
+        tok=r.tok;tokT=Date.now();if(shL!=='0'&&shL!=='1')sh=r.sh?1:0;me={lad:r.lad||null,tier:r.tier,ntf:r.ntf,tg:r.tg,nm:r.nm,sh:r.sh,claims:r.claims||[],day:r.day,wk:r.wk,wend:r.wend,sd:r.sd||null,t:Date.now()};
+        var k;if(r.tk)for(k in r.tk)if(r.tk.hasOwnProperty(k)&&r.tk[k]&&r.tk[k].ok)tks[k]=wrap(r.tk[k]);else if(r.tk.hasOwnProperty(k))tks[k]={no:r.tk[k]};
+        setSt('ok');end(true);});}
+    function end(ok){var q=helloQ||[],i;helloQ=null;for(i=0;i<q.length;i++)try{q[i](ok);}catch(e){}}
+    if(plat()==='ya'){var got=false;try{O.sig(function(s){if(!got){got=true;go(s);}});}catch(e){if(!got){got=true;end(false);}}}
+    else go('');}
+
+  function wrap(t){t.rng=rng(t.seed);t.got=Date.now();return t;}
+
+  /* общий вызов с жетоном; один повтор, если жетон истёк */
+  function call(op,body,cb,want,again){
+    if(!api.on||resting())return later(cb,null);
+    hello(want,function(ok){
+      if(!ok)return cb(null);
+      body.tok=tok;
+      post(op,body,function(r){
+        if(r&&!r.ok&&r.why==='tok'&&!again){tok='';return call(op,body,cb,want,true);}
+        if(r&&!r.ok)refuse(r);
+        cb(r);});});}
+
+  /* --- путёвка: cb({t, seed, left, mode, rng}) или cb(null) (нет онлайна) или cb({no:'limit'}) (попытки кончились) --- */
+  function ticket(mode,cb,pa){  /* pa — параметры досок от игры, например {l:17} (номер уровня) для досок 'a@l' */
+    if(!api.on||resting())return later(cb,null);
+    hello(pa?[]:[mode],function(ok){
+      if(!ok)return cb(null);
+      var t=pa?null:tks[mode];
+      if(t){delete tks[mode];if(t.no)return cb({no:t.no.why||'no',left:0});
+        if(Date.now()-t.got<(t.exp||0)*1000-60e3)return cb(t);}
+      var b={mode:mode};if(pa)b.pa=pa;
+      call('ticket',b,function(r){
+        if(!r)return cb(null);
+        cb(r.ok?wrap(r):{no:r.why||'no',left:r.left||0});});});}
+
+  /* --- результат: CUP.submit(t, очки, {log:[…], d:мс_игры, next:true}, cb) → cb({rank, approx, best, bv, lg, next, …}) | cb(null) | cb({no:'bad'|'used'|…}) --- */
+  function submit(t,v,o,cb){
+    if(typeof o==='function'){cb=o;o={};}o=o||{};
+    if(!t||!t.t)return later(cb,null);
+    var b={t:t.t,v:Math.round(v)};if(o.log!==undefined)b.log=o.log;if(o.d)b.d=Math.round(o.d);if(o.next)b.next=1;
+    call('submit',b,function(r){
+      if(!r)return cb(null);
+      if(!r.ok)return cb({no:r.why||'no',c:r.c});
+      topC={};if(r.next&&r.next.ok)r.next=wrap(r.next);else if(r.next)r.next={no:r.next.why||'no',left:0};
+      cb(r);});}
+
+  /* --- таблица: per 'd' день | 'w' неделя | 'a' всё время; в памяти 60 с (повторное открытие окна — без запроса) --- */
+  function top(mode,per,cb,pa){  /* per — 'd'|'w'|'a'|'p' или доска с параметром 'w@t' (своя ступень), 'a@l' + pa {l:17} (уровень) */
+    var k=mode+':'+(per||'')+':'+(pa?JSON.stringify(pa):''),c=topC[k];
+    if(c&&Date.now()-c.t<TOPC)return later(cb,c.r);
+    var b={mode:mode};if(per)b.per=per;if(pa)b.pa=pa;
+    call('top',b,function(r){if(r&&r.ok){topC[k]={t:Date.now(),r:r};cb(r);}else cb(null);});}
+
+  function simple(op,body,cb){call(op,body,function(r){cb(r&&r.ok?r:null);});}
+  function league(cb){simple('league',{},cb);}
+  function claim(wk,cb){simple('claim',{wk:wk},cb||function(){});}
+  function challenge(cb){simple('chal',{},cb);}                       // код вызова по последнему результату
+  function accept(code,cb){call('accept',{code:String(code||'')},function(r){   // путёвка на том же зерне
+    if(!r)return cb(null);cb(r.ok?wrap(r):{no:r.why||'no',ch:r.ch});});}
+  function chres(code,cb){simple('chres',{code:String(code||'')},cb);}
+  function friends(mode,ids,cb){if(plat()!=='vk')return later(cb,null);simple('friends',{mode:mode,ids:(ids||[]).slice(0,20)},cb);}
+  function notify(on,cb){if(plat()!=='vk')return later(cb,null);simple('ntf',{on:on?1:0},function(r){if(r&&me)me.ntf=r.ntf;(cb||function(){})(r);});}
+  function showName(on,cb){sh=on?1:0;shL=String(sh);ls('cup-'+G,shL);topC={};
+    if(!tok)return later(cb,{ok:1,sh:sh});                              // ещё не входили — уйдёт вместе со входом
+    simple('name',{sh:sh},function(r){if(r&&me)me.sh=r.sh;(cb||function(){})(r);});}
+  function forget(cb){simple('forget',{},function(r){if(r){tok='';me=null;tks={};topC={};}(cb||function(){})(r);});}
+
+  /* подпись строки таблицы: имя «Иван П.» или «Игрок 4821» (имя скрыто), у «соседей» лиги — имя на языке игры */
+  function nameOf(row){if(!row)return '';var en=O.lang==='en'||(typeof O.lang==='function'&&O.lang()==='en');
+    if(row.bot)return en&&row.nm_en?row.nm_en:row.nm;
+    return row.nm||((en?'Player ':'Игрок ')+(row.tg||''));}
+
+  /* ?cup=dev на localhost: ответы-заглушки, чтобы собирать окна игры без сервера */
+  function mseed(m){return (((m==='week'?0x51A7C3:0x3039E5)+mskDay()%9973)*256+(mockN&255))>>>0;}  // как у сервера: старшие биты — турнир, младшие 8 — № попытки
+  /* заглушка лестницы (как по умолчанию в ядре: 7 лиг × 4 подгруппы) */
+  var LAD0={n:['Деревянная','Каменная','Медная','Бронзовая','Серебряная','Золотая','Алмазная'],ne:['Wooden','Stone','Copper','Bronze','Silver','Gold','Diamond'],s:4};
+  function mock(op,b){mockN++;
+    if(op==='hello'){var tk={},i;for(i=0;i<(b.want||[]).length;i++)tk[b.want[i]]={ok:1,t:'dev'+mockN+i,mode:b.want[i],seed:mseed(b.want[i]),left:1,exp:3600};
+      return {ok:1,tok:'dev',ttl:86400,lad:LAD0,tier:0,ntf:0,tg:4821,nm:'Иван П.',sh:b.sh,claims:[],tk:tk,day:mskDay(),wk:0,wend:86400,sd:{day:(mseed('day')&~255)>>>0,week:(mseed('week')&~255)>>>0}};}
+    if(op==='ticket')return {ok:1,t:'dev'+mockN,mode:b.mode,seed:mseed(b.mode),left:1,exp:3600};
+    if(op==='submit'){var r={ok:1,v:b.v,per:'d',best:1,bv:b.v,rank:3,lg:{pts:40,tr:0}};if(b.next)r.next={ok:1,t:'dev'+mockN,mode:'',seed:mseed(''),left:0,exp:3600};return r;}
+    if(op==='top')return {ok:1,b:b.mode,per:b.per||'d',top:[{i:1,nm:'Наталья К.',tg:0,v:320},{i:2,nm:'',tg:7313,v:290},{i:3,nm:'Иван П.',tg:0,v:250,me:1}],me:{i:3,v:250},around:[]};
+    if(op==='league')return {ok:1,wk:0,wend:86400,lad:LAD0,tier:0,tiers:28,joined:1,tr:0,n:2,up:1,down:0,i:2,claims:[],
+      rows:[{i:1,v:90,nm:'Наталья К.',tg:0,z:'up'},{i:2,v:40,nm:'Иван П.',tg:0,me:1},{i:3,v:25,bot:1,nm:'Петрович',nm_en:'Petrovich'}]};
+    if(op==='chal')return {ok:1,code:'ABC234',v:250,mode:'day'};
+    if(op==='accept')return {ok:1,t:'dev'+mockN,mode:'day',seed:mseed('day'),left:0,exp:3600,from:{nm:'Наталья К.',tg:0,v:320}};
+    return {ok:1};}
+
+  var api={on:false,v:V,init:init,rng:rng,ticket:ticket,submit:submit,top:top,league:league,claim:claim,challenge:challenge,accept:accept,
+    chres:chres,friends:friends,notify:notify,showName:showName,forget:forget,nameOf:nameOf,
+    state:function(){return st;},me:function(){return me;},shown:function(){return sh;},
+    _dbg:function(){return {url:url,cut:cut,dev:dev,st:st,tok:!!tok,log:log,rest:restDay,tks:tks};}};
+  return api;
+})();
+/*/CUP*/
+var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';  // функция hobby-cup (живая лига; облако 07.10). Пусто → модуль молчит, игра = v9. На маке/в безголовом Chrome адрес обнуляется сам (cup.js)
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v9.1-101322',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v9.2-101420',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -1119,7 +1318,7 @@ function mergeSave(d,ref){if(!isObj(d))return;const a1ph=S.ph; // A1: фото �
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
   if(isObj(d.week)){const a=S.week,b=d.week;if(!a||(b.w||0)>(a.w||0))S.week=b;else if(b.w===a.w)a.best=Math.max(a.best||0,b.best||0);}
   if(newer&&isObj(d.bait))S.bait=Object.assign({},d.bait);
-  for(const k in d)if(k!=='soc'&&k!=='stc'&&(!(k in S)||newer&&!/^(ts|coins|alb|week|bait|streak|buy|buyB|payT|payV|open|tk|own|daily|ach|tips|visit|legs|junk|caught|sessions|casts|cat|bigW|bestKg|dec|sets|gild|mnt|cups|dayT|stc|xp|pbs|pb)$/.test(k)))S[k]=d[k]; // флажки и настройки
+  for(const k in d)if(k!=='soc'&&k!=='stc'&&(!(k in S)||newer&&!/^(ts|coins|alb|week|bait|streak|buy|buyB|payT|payV|open|tk|own|daily|ach|tips|visit|legs|junk|caught|sessions|casts|cat|bigW|bestKg|dec|sets|gild|mnt|cups|dayT|stc|xp|pbs|pb|cup)$/.test(k)))S[k]=d[k]; // флажки и настройки
   if(isObj(d.pb)){if(!isObj(S.pb))S.pb={};for(const k in d.pb)if(d.pb[k]>=0&&d.pb[k]<32)S.pb[k]=(S.pb[k]||0)|d.pb[k];} //A2 Книга места — объединение
   SOC.merge(d.soc);payMerge(d);STAT.merge(d.stc);if(a1ph!=null||d.ph!=null)S.ph=a1PhMerge(a1ph,d.ph); // A1
   if(isObj(d.dayT)){const a=S.dayT,b=d.dayT;if(!isObj(a)||(b.d||0)>(a.d||0))S.dayT=b;else if(b.d===a.d){a.n=Math.max(a.n||0,b.n||0);a.ad=Math.max(a.ad||0,b.ad||0);a.best=Math.max(a.best||0,b.best||0);}}
@@ -2309,7 +2508,7 @@ function update(dt){G.t+=dt;G.ptime+=dt;const ph=G.phase,f=G.fl;
   if(f){f.dip=Math.max(0,f.dip-dt*1.6);}
   if(ph==='fly'){const k=Math.min(1,G.t/.6);if(k>=1){G.phase='wait';G.t=0;{const raw=waitTime(G.cond.tod,G.cond.wx,G.R)*a2WaitK();G.quiet=G.o&&!tutCast()&&raw>A2_WMAX&&G.R()>A2_WMAX/raw;G.tw=Math.min(A2_WMAX,raw);}if(tutCast()){G.tw=Math.min(G.tw,2.4);statTut(2);}SND.plop(.8+GEO.ps(f.d));ripple(f.x,f.y,1.2);splash(f.x,f.y,.35);hint(L('Ждём поклёвку…','Waiting for a bite…'));
       if(!S.tips.wait){S.tips.wait=1;save();later(()=>say('mit',L('Гляди на поплавок. Дёргается — рыба пробует, не спеши. Утонул или зазвенел колокольчик — жми скорей!',''),7000),500);}}}
-  else if(ph==='wait'){if(G.t>=G.tw&&G.quiet){a2Quiet();return;}if(G.t>=G.tw){const tut=tutCast(),pk=tut===1?{f:FISH.karas,w:.21}:tut===2?{f:FISH.karas,w:.86}:pickFish(G.pi,G.bait,G.cond.tod,G.cond.wx,f.d/(TACKLE.rod.dist[curTk().rod]*a2DK()),G.R,a2O());
+  else if(ph==='wait'){if(G.t>=G.tw&&G.quiet){a2Quiet();return;}if(G.t>=G.tw){const tut=tutCast(),pk=tut===1?{f:FISH.karas,w:.21}:tut===2?{f:FISH.karas,w:.86}:G.cup?cupCast()/*CUPG: рыба по зерну путёвки*/:pickFish(G.pi,G.bait,G.cond.tod,G.cond.wx,f.d/(TACKLE.rod.dist[curTk().rod]*a2DK()),G.R,a2O());
       if(!pk){G.phase='aim';G.used--;S.casts--;const b=BAIT[G.bait];if(b.pack&&!G.tourn)S.bait[G.bait]=(S.bait[G.bait]||0)+1;G.bait=S.sel='worm';save();G.fl=null;updHud();
         toast(L('Тишина… Здесь на «'+nm(b)+'» не берут — надел червя','Nothing bites on this bait here — switched to worms'),3500);hint(L('Коснись воды — заброс','Tap the water to cast'));return;}
       G.pk=pk;const st=pk.f?pk.f.st:'calm',nb=G.o&&pk.f?nibOf(pk.f,G.o,G.R):null;G.ng=nb?nb.g:null;G.nib=pk.junk?0:tut?1:nb?nb.n:st==='calm'?1+Math.floor(G.R()*3):Math.floor(G.R()*3);G.phase='nibble';G.t=0;G.nt=.3+G.R()*.5;}}
@@ -3461,7 +3660,7 @@ $('fBack').onclick=()=>{if(!G)return openMap();if(G.over){G=null;return openMap(
 /* ---- клавиатура на ПК ---- */
 document.addEventListener('keydown',e=>{const k=e.key;if(e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on'))return;
   if(window.MG&&MG.busy&&MG.busy())return; // RB:MGPC мини-игра или Двор на экране — клавиши у них (js/mg-core.js)
-  if(modalOn){if(e.repeat)return;
+  if(modalOn){if(e.repeat)return;if(k!=='Escape'&&document.activeElement&&document.activeElement.tagName==='INPUT')return; //CUPG: поле кода вызова
     if(k==='Escape'){const b=['socClose','socBack','mCancel','lbClose','sClose','stClose','abBack','sOk','niOk','rMap','hBack','qStay','eHome'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
       const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2):not(.buy):not(.noenter)');if(b){e.preventDefault();b.click();}}
@@ -4148,6 +4347,75 @@ function fbTick(dt){if(!G)return;if(G.fbZ>0)G.fbZ-=dt;fbZSync();
 {const os=openSettings;openSettings=function(){os();const b=$('stShop');if(b&&fbSpecOn())b.onclick=()=>{hideModal();openShop('p');};};$('btnSet').onclick=openSettings;$('fSet').onclick=openSettings;}
 /*/FB1*/
 
+/*CUPG: живая лига — онлайн-турниры через общий сервер hobby-cup (cup1 03.10 → cup2 13.10 под v9; журнал hobby-analytics/release-i/cup-rybak/CUP-RB.md).
+   Модуль CUP — блок выше (правится только в hobby-analytics/online/cup.js + cup-sync.sh). CUP_URL пуст → cupOn() всегда false, игра как v9.
+   v9 не трогаем: местный турнир недели (виды недели, Зорька), «Лига двора» с соседями-ботами, кубки и S.week — как были.
+   Онлайн — отдельная «🌐 Живая лига» (карточка в окне «Турниры», окна — лениво js/rb2-cup-ui.js через R2.need):
+   «Рыбалка дня» для всех (VK и Яндекс; вместо местной «Рыбалки дня» Яндекса, пока онлайн жив — те же попытки S.dayT),
+   общий турнир недели по весу (20 попыток, результат — S.cup.wb, в S.week НЕ пишем), лига по 30 человек (соседи-персонажи добивают
+   группу на сервере, если людей < 10), вызов другу. Имя в таблицах по умолчанию скрыто («Игрок NNNN»), включает только сам игрок.
+   Честность: зерно путёвки → место (только главы I, TOURN_PL)/время/погода (cupCond) и рыба на заброс (cupPick); сервер повторяет (rybak_replay).
+   Сохранение: S.cup {ask — окно знакомства показано, ch — код последнего вызова, lgw — неделя лиги, итоги которой показаны,
+   wb {w, best, rk} — лучший улов общего турнира недели, jw — неделя сервера, в которой игрок был в группе лиги (п.11: «Итоги недели» и награда;
+   lgw — неделя, награда за которую уже выдана: один раз на номер недели; п.12 статистика: sw — неделя, итог которой отправлен в STAT,
+   tr/mv — последняя известная ступень и итог прошлой недели (событие STAT lg a:'ses' раз за запуск)}. Всё — в fixSave/mergeSave ниже. */
+let cupVkNm='',cupVkAsked=false,cupMute=false,cupHash='',cupFb=false;
+try{const m=/[#&]ch=([A-Za-z0-9]{6})\b/.exec(location.hash||'');if(m)cupHash=m[1].toUpperCase();}catch(e){}
+function cupSig(cb){if(CUP._dbg().dev)return cb('dev');
+  try{if(!ysdk||!YP||!YP.getMode||YP.getMode()==='lite')return cb('');
+    timeLim(ysdk.getPlayer({signed:true}),8000).then(p=>cb(p&&p.signature||''),()=>cb(''));}catch(e){cb('');}}
+CUP.init({g:'rybak',plat:PLAT,url:CUP_URL,lang:()=>LANG,name:()=>cupVkNm,sig:cupSig});
+function cupOn(){if(!CUP.on||window.__demo||CUP.state()==='gone')return false;if(CUP._dbg().dev)return true;
+  return PLAT==='vk'?!!VK:!!(ysdk&&YP&&YP.getMode&&YP.getMode()!=='lite');}
+function cupLive(){return cupOn()&&!cupFb&&CUP.state()==='ok';} // уже вошли в этом сеансе и сервер отвечает
+function cupSave(){if(!isObj(S.cup))S.cup={};return S.cup;}
+function cupEv(a,k){try{STAT.ev('mod',{m:'cupo',a:a,k:k});}catch(e){}}
+// окна живой лиги — отдельным файлом, по требованию (R2.need: fetch + вставка текстом, без <script src> посреди игры)
+function cupUi(){return R2.need('js/rb2-cup-ui.js');}
+function cupOpenL(){cupUi().then(()=>cupOpen(),()=>{toast(L('Нет связи — общая таблица откроется позже','No connection — the shared leaderboard will open later'),3500);});}
+// лучший улов общего турнира недели (отдельно от местного S.week)
+function cupWb(){const c=cupSave(),wk=weekNum();if(!isObj(c.wb)||c.wb.w!==wk)c.wb={w:wk,best:0};return c.wb;}
+
+/* --- рыбалка по путёвке --- */
+function cupCast(){const q=cupQ(G.fl.d/TACKLE.rod.dist[TOURN_TK.rod]);G.cup.qs[G.used]=q;return cupPick(G.cup.t.seed,G.used,q,G.cup.c);}
+function cupLog(g){const log=[];for(let i=1;i<=g.catch.length&&i<=5;i++){const q=g.cup.qs[i];if(q==null)break;const c=g.catch[i-1];log.push(c&&c.id&&!c.lost?[q,c.id,Math.round(c.w*1000)]:[q]);}return log;}
+// opt.cup — путёвка: место/время/погода строго из зерна (Зорька и «время турнира недели» rb2-EVENT их не меняют)
+{const sf=startFish;startFish=function(pi,opt){let c=null;if(opt&&opt.cup){c=cupCond(opt.cup.seed);pi=c.pi;opt.tod=c.tod;opt.wx=c.wx;}sf(pi,opt);
+  if(c&&G){G.cup={t:opt.cup,c:c,qs:{},t0:Date.now(),from:opt.from||null};
+    if(opt.from)later(()=>toast('🤝 '+L('Вызов: ','Challenge: ')+(typeof cupRowNm==='function'?cupRowNm(opt.from):'')+' — '+kgTxt((opt.from.v||0)/1000),4000),700);}};}
+{const a=LB.submit,b=LB.submitDay;LB.submit=function(){return cupMute?Promise.resolve():a.apply(LB,arguments);};LB.submitDay=function(){return cupMute?Promise.resolve():b.apply(LB,arguments);};}
+// итоги онлайн-рыбалки: таблицы Яндекса не трогаем; турнир недели — в S.cup.wb (на время подсчёта подставляем его вместо S.week, очки — по весу)
+{const fin=finish;finish=function(){if(!G||G.over||!G.cup)return fin();const g=G,wk0=isObj(S.week)?JSON.parse(JSON.stringify(S.week)):null,dy0=isObj(S.dayT)?JSON.parse(JSON.stringify(S.dayT)):null;
+  const wk=g.tourn==='week'&&!g.cup.from,ts=window.r2eTs,tf=window.r2eFmt;
+  cupMute=true;if(wk){const b=cupWb();S.week={w:b.w,best:b.best};window.r2eTs=null;window.r2eFmt=null;}
+  try{fin();}finally{cupMute=false;
+    if(wk){const b=cupWb();if(isObj(S.week)&&S.week.w===b.w&&(S.week.best||0)>b.best)b.best=S.week.best;window.r2eTs=ts;window.r2eFmt=tf;}
+    if(g.tourn==='week'||g.cup.from){if(wk0)S.week=wk0;else delete S.week;}
+    if(g.cup.from){if(dy0)S.dayT=dy0;else delete S.dayT;} // вызов другу — вне зачёта дня и недели
+    save();}
+  cupUi().then(()=>cupSubmit(g),()=>{});};}
+{const ar=afterRes;afterRes=function(g,where){if(where==='again'&&g&&g.cup){hideModal();const go=()=>{G=null;openMap();cupOpenL();};
+    if(adDue()&&adReady())showInterstitial(go);else go();return;}ar(g,where);};}
+// местная «Рыбалка дня» Яндекса прячется, пока живая лига на связи (её «Рыбалка дня» — общая, попытки те же: S.dayT)
+{const d0=dayOn;dayOn=function(){return d0()&&!cupLive();};}
+{const fs=fixSave;fixSave=function(){fs();if(S.cup!=null&&!isObj(S.cup))delete S.cup;
+  if(isObj(S.cup)){const c=S.cup;if(typeof c.ch!=='string'||!/^[A-Z0-9]{6}$/.test(c.ch))delete c.ch;if(!(c.lgw>0))delete c.lgw;if(c.ask!==1)delete c.ask;delete c.pl;
+    if(!(c.jw>0))delete c.jw;if(!(c.sw>0))delete c.sw;if(!(c.tr>=0&&c.tr<64))delete c.tr;if(!/^(up|stay|down|top)$/.test(c.mv||''))delete c.mv;if(c.wb!=null&&!(isObj(c.wb)&&c.wb.w>0&&c.wb.best>=0))delete c.wb;else if(c.wb){c.wb={w:Math.floor(c.wb.w),best:Math.floor(c.wb.best)||0};}}};
+ const ms=mergeSave;mergeSave=function(d,ref){const a=isObj(S.cup)?JSON.parse(JSON.stringify(S.cup)):null;ms(d,ref);const b=isObj(d)&&isObj(d.cup)?d.cup:null;
+  if(a||b){const x=a||{},y=b||{};S.cup={};if(x.ask||y.ask)S.cup.ask=1;const lw=Math.max(x.lgw||0,y.lgw||0);if(lw)S.cup.lgw=lw;const jw=Math.max(x.jw||0,y.jw||0);if(jw)S.cup.jw=jw;const sw=Math.max(x.sw||0,y.sw||0);if(sw)S.cup.sw=sw;const tz=x.tr!=null?x:y;if(tz.tr!=null){S.cup.tr=tz.tr;if(tz.mv)S.cup.mv=tz.mv;}const ch=x.ch||y.ch;if(typeof ch==='string')S.cup.ch=ch;
+    const wa=isObj(x.wb)?x.wb:null,wb=isObj(y.wb)?y.wb:null;if(wa||wb){const w=(wa&&(!wb||wa.w>wb.w||wa.w===wb.w&&(wa.best||0)>=(wb.best||0)))?wa:wb;S.cup.wb={w:w.w,best:w.best||0};}
+    fixSave();}};
+ fixSave();}
+// ссылка-вызов vk.com/app…#ch=КОД: как только площадка и карта готовы — открыть «Вызов другу» с кодом
+// статистика рангов (п.12): ступень живой лиги и итог прошлой недели — одним событием за запуск (только у тех, кто в лиге)
+try{if(isObj(S.cup)&&S.cup.tr!=null&&CUP.on)STAT.ev('lg',{a:'ses',t:S.cup.tr,m:S.cup.mv||''});}catch(e){}
+// «Итоги недели» живой лиги при входе (п.11): был в группе (jw), награда не забрана (lgw) — когда карта на экране и окон нет, тихо спросить сервер
+{const c=isObj(S.cup)?S.cup:null;if(!cupHash&&c&&c.jw>(c.lgw||0)){let n=0;const tm=setInterval(()=>{if(++n>120){clearInterval(tm);return;}
+  if(window.__sdkDone&&!G&&!modalOn&&(S.sessions||0)>0&&$('scr-map').classList.contains('on')&&!$('ad').classList.contains('on')){clearInterval(tm);if(cupOn())cupUi().then(()=>cupWeekCheck(),()=>{});}},1500);}}
+if(cupHash){let n=0;const tm=setInterval(()=>{if(++n>180||!cupHash){clearInterval(tm);return;}
+  if(window.__sdkDone&&!G&&!modalOn&&(S.sessions||0)>0&&$('scr-map').classList.contains('on')&&!$('ad').classList.contains('on')&&cupOn()){clearInterval(tm);cupOpenL();}},1000);}
+/*/CUPG*/
+
 R2.wire1(); /* rb2-core: крючки сохранения и рыбалки — до запуска (облако и первая рыбалка новичка бывают раньше DOMContentLoaded) */
 /* ================= запуск ================= */
 document.addEventListener('gesturestart',e=>e.preventDefault());
@@ -4221,5 +4489,28 @@ MGREC.add('utyata',{f:'js/mg-utyata.js',u:['утёнок','утёнка','утя
 if(/[?&]mg=(prichal|nasos|utyata)(&|$)/.test(location.search))document.write('<script src="js/mg-'+RegExp.$1+'.js"><\/script>');}</script><!-- rb2-LOVB: ловкостные Причаль/Накачай/Утята (договор MGREC: файл грузит MGREC.play; стенд ?mg=<id> — сразу), флаги lov-<id> -->
 <!-- rb2:ECO -->
 <script src="js/rb2-eco.js"></script><!--rb2-ECO договор чисел RECO-->
+<!-- cup2 --><script>/*CUPG2: живая лига — поздние крючки (после ui-win, meta-league, rb2-event: они переписывают/оборачивают openWeek и openSettings).
+   Карточка «🌐 Живая лига» в окне «Турниры» и строки «Турниры онлайн» в ⚙ — только когда онлайн возможен (cupOn). Окна — js/rb2-cup-ui.js (лениво). */
+(function(){if(typeof CUP==='undefined')return;
+var ow=openWeek;openWeek=function(){var r=ow.apply(this,arguments);try{if(!cupOn()||cupFb||window.__demo)return r;var mc=$('mcard');if(!mc||$('cupCard'))return r;
+  var rows=mc.querySelectorAll('.row'),row=rows[rows.length-1];if(!row)return r;var d=document.createElement('div');d.className='tcard';d.id='cupCard';
+  d.innerHTML='<h3>🌐 '+L('Живая лига','Live league')+'</h3><p class="uw-small">'+L('Общая Рыбалка дня и турнир недели с живыми рыбаками, лига по 30 человек, вызов другу.','Shared daily and weekly contests with real anglers, leagues of 30, friend challenges.')+'</p>'
+    +'<div class="row"><button class="btn blue noenter" id="cupGoB">🌐 '+L('Открыть','Open')+'</button></div>';
+  row.parentNode.insertBefore(d,row);$('cupGoB').onclick=function(){SND.tap();cupOpenL();};}catch(e){}return r;};
+// ⚙: показ имени (по умолчанию выкл.) и удаление данных турниров на сервере
+var os=openSettings;openSettings=function(){var r=os.apply(this,arguments);try{if(!cupOn()||inGame()||$('stCupN'))return r;var mc=$('mcard');if(!mc)return r;
+  var on=!!CUP.shown(),g=document.createElement('div');g.className='uw-grp';g.id='stCupG';
+  g.innerHTML='<div class="uw-gh">🏆 '+L('Турниры онлайн','Online contests')+'</div>'
+    +'<button class="set" id="stCupN"><span>👤 '+L('Показывать моё имя','Show my name')+'<br><small>'+L('в общих таблицах: «Имя Ф.» вместо «Игрок '+((CUP.me()&&CUP.me().tg)||'NNNN')+'»','on shared boards: first name and initial instead of a number')+'</small></span><i class="uw-sw" aria-label="'+(on?L('вкл','on'):L('выкл','off'))+'">'+(on?L('вкл','on'):L('выкл','off'))+'</i></button>'
+    +'<button class="set" id="stCupD"><span>🗑 '+L('Удалить мои данные турниров','Delete my contest data')+'<br><small>'+L('результаты, место в лиге и вызовы на сервере — во всех играх','scores, league place and challenges on the server — in all games')+'</small></span><i class="go">›</i></button><p class="about" id="stCupM"></p>';
+  var cols=mc.querySelector('.uw-cols .uw-col:last-child'),rows=mc.querySelectorAll('.row'),row=rows[rows.length-1];
+  if(cols)cols.appendChild(g);else if(row)row.parentNode.insertBefore(g,row);else mc.appendChild(g);
+  $('stCupN').onclick=function(){SND.tap();CUP.showName(!on,function(){});try{if(typeof cupLgR!=='undefined')cupLgR=null;}catch(e){}cupEv('name',on?0:1);openSettings();};
+  $('stCupD').onclick=function(){var b=$('stCupD'),m=$('stCupM');if(!b.dataset.sure){b.dataset.sure='1';m.textContent=L('Нажми ещё раз — результаты, лига и вызовы будут удалены с сервера. Монеты, кубки и прогресс в игре останутся.','Tap again to delete your scores, league and challenges from the server. Coins, cups and progress stay.');return;}
+    m.textContent=L('Удаляем…','Deleting…');CUP.forget(function(x){if(!$('stCupM'))return;b.dataset.sure='';
+      if(x){var c=cupSave();delete c.ch;delete c.wb;delete c.ask;save();try{if(typeof cupLgR!=='undefined'){cupLgR=null;cupLast=null;}}catch(e){}cupEv('forget','ok');}
+      $('stCupM').textContent=x?L('Готово: данные турниров удалены.','Done: your contest data is deleted.'):L('Сервер сейчас не отвечает — попробуй позже.','The server is not responding — try again later.');});};}catch(e){}return r;};
+try{$('btnWeek').onclick=function(){openWeek();};$('btnSet').onclick=function(){openSettings();};$('fSet').onclick=function(){openSettings();};}catch(e){}
+})();</script><!--cup2: живая лига (крючки окна «Турниры» и ⚙; окна — лениво js/rb2-cup-ui.js)-->
 </body>
 </html>

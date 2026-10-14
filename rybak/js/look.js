@@ -11,6 +11,10 @@
 (function(){
 'use strict';
 var IG={
+ send:'<path class="d" d="M3.5 11.5L20.5 4l-6 16.5-3.2-6.8z"/><path d="M11.3 13.7L20.5 4"/>',
+ signal:'<circle class="d" cx="12" cy="18" r="1.7"/><path d="M7.5 14a6.5 6.5 0 0 1 9 0M4.3 10.6a11 11 0 0 1 15.4 0"/>',
+ user:'<circle class="d" cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6"/>',
+ trash:'<path d="M4.5 7h15M9.5 7V4.5h5V7"/><path class="d" d="M6.5 7l1 13h9l1-13"/>',
  back:'<path d="M15 5l-7 7 7 7"/>',
  close:'<path d="M6 6l12 12M18 6L6 18"/>',
  set:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle class="d" cx="15" cy="7" r="2.3"/><circle class="d" cx="9" cy="17" r="2.3"/>',
@@ -120,7 +124,8 @@ var MAP={'🏆':'trophy','🐟':'fish','🐠':'fish','🎣':'rod','📅':'cal','
  '✉':'mail','📮':'mail','📖':'book','📚':'book','☕':'cup','🔔':'bell','🏅':'medal','🎖':'medal','📦':'box','🧰':'box','🍂':'leaf','🌿':'leaf','🔮':'fore','📋':'list','🖼':'frame',
  '🔍':'search','👥':'users','🛒':'bag','🎒':'bag','📍':'pin','📌':'pin','⚠':'warn','🏡':'home','🏠':'home','🕑':'clock','⏳':'clock','📊':'bars','🎯':'goal','🔒':'lock',
  '📞':'phone','📲':'phone','🗺':'map','☀':'sun','⛅':'cloud','🌁':'cloud','🌧':'rain','🌬':'wind','🚫':'noads','🔊':'sound','❓':'quest','❔':'quest','🧵':'line','🎨':'palette',
- '←':'back','💰':'coin'};
+ '←':'back','💰':'coin',
+ '🤝':'users','📤':'send','📡':'signal','👤':'user','🗑':'trash'}; //CUPG: окна онлайн-турниров
 var ARTM={'🐛':'worm','⚪':'maggot','🍞':'dough','🔴':'blood','🌽':'corn','🥄':'spoon','🐟':'live'};
 var AVM={'👴':'mit','🧢':'petr'};
 var ARTCTX='#baitBtn,.bait,.lkbt',AVCTX='.a3g .ai,.a3let';
