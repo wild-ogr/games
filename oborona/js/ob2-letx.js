@@ -60,7 +60,7 @@ function tourNow(){try{if(typeof tourTick!=='function')return null;const o=tourT
   const up=pl>1?tb[pl-2]:null,dn=tb[pl];return {o:o,pl:pl,pts:me,up:up,gap:up?up.pts-me+1:0,lead:dn?me-dn.pts:0};}catch(e){return null;}}
 if(typeof tourWinHtml==='function'){const tw0=tourWinHtml;
   window.tourWinHtml=function(g){const h=tw0(g);if(!h||!LON())return h;const t=tourNow();if(!t||tourPend(t.o))return h;
-    const add=t.up&&t.up.i>=0?Lg(' · до '+tourNbName(t.up.i).split(' ').pop()+' '+fmtNum(t.gap),' · '+fmtNum(t.gap)+' to '+tourNbName(t.up.i).split(' ').pop()):t.pl===1&&t.lead>0?Lg(' · отрыв '+fmtNum(t.lead),' · lead '+fmtNum(t.lead)):'';
+    const add=t.up&&t.up.i>=0&&t.up.i<100?Lg(' · до '+tourNbName(t.up.i).split(' ').pop()+' '+fmtNum(t.gap),' · '+fmtNum(t.gap)+' to '+tourNbName(t.up.i).split(' ').pop()):t.pl===1&&t.lead>0?Lg(' · отрыв '+fmtNum(t.lead),' · lead '+fmtNum(t.lead)):'';
     return add?h.replace(' ›</span>',add+' ›</span>'):h;};}
 
 /* ---------- «Летопись заставы» ---------- */
