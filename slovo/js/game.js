@@ -266,7 +266,7 @@ function submit(w){
     foundWord(wd,false);return;
   }
   // словарь не догрузился (плохая сеть) — не «не знаю», а просим повторить; в промахи не считаем (аудит 18)
-  if(!dictReady()){ensureDict();flashPreview(w,'old');zina('Погоди, тетрадку со словами ищу… Скажи это слово ещё раз чуть позже.','norm');return;}
+  if(!dictReady()){DWAIT.w=w;DWAIT.g=G;DWAIT.t=Date.now();ensureDict();flashPreview(w,'old');zina('Погоди, тетрадку со словами ищу… Найду — проверю это слово.','norm');return;} /* OKFIX: слово запомнено, проверит dictCame() */
   if(isWord(w)){
     if(G.bonus.has(w)){flashPreview(w,'old');SND.old();zina(say('old'),'stern');return;}
     G.bonus.add(w);STAT.move();const nd=collectDef(w);S.bonusAll=(S.bonusAll||0)+1;S.jar=(S.jar||0)+1;flashPreview(w+(nd?' 📖':''),'bonus');SND.bonus();buzz('word');

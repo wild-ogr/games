@@ -685,7 +685,11 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script>/* zb-TECH (10.10): словари — zina.js 40К, gloss.js 94К, dict.js 323К (40 % веса) — грузим ПОСЛЕ первого экрана (DOMContentLoaded: все defer-скрипты
    выполнены, меню/1-й уровень уже показаны), по порядку (async=false). До них игра живёт: isWord ждёт dictReady() (бонусные слова не засчитываются
    первые доли секунды), толкование — через typeof GLOSS; не загрузились — ensureDict (core.js) докачивает, перезагрузки страницы нет (data-lazy). */
-(function(){function go(){['js/zina.js','js/gloss.js','js/dict.js'].forEach(function(s){var e=document.createElement('script');e.src=s;e.async=false;e.setAttribute('data-lazy','');document.body.appendChild(e);});}
+/* OKFIX (15.10): порядок — zina.js, dict.js, потом gloss.js (толкования нужны позже); window.__lz[файл]={t:начало,s:0 грузится|1 загружен|-1 ошибка} —
+   ensureDict не качает файл второй раз, пока ленивый ещё грузится (иначе он выполнялся дважды → SyntaxError); пришёл словарь — dictCame() (core.js) проверит отложенное слово.
+   На медленной сети игрок вводит слово РАНЬШЕ, чем начнётся ленивая загрузка (DOMContentLoaded ждёт все defer-модули) — тогда ensureDict зовёт window.__lzGo(): та же загрузка, только раньше. */
+(function(){var Z=window.__lz=window.__lz||{},on=false;function go(){if(on)return;on=true;['js/zina.js','js/dict.js','js/gloss.js'].forEach(function(s){var e=document.createElement('script'),z=Z[s]={t:Date.now(),s:0};e.src=s;e.async=false;e.setAttribute('data-lazy','');
+  e.onload=function(){z.s=1;if(typeof dictCame==='function')dictCame();};e.onerror=function(){z.s=-1;};document.body.appendChild(e);});}window.__lzGo=go;
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();</script>
 </body>
 </html>

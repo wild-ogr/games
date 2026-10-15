@@ -23,9 +23,20 @@ let MAIN=null,EXTRA=null,MORE=null,WHY=null,DENY=null,RUDEH=null;
 const dictReady=()=>typeof DICT_MAIN!=='undefined'&&typeof ZINA_NO==='object';
 // аудит 18: dict.js/zina.js не догрузились (плохая сеть) — пробуем ещё раз: не чаще раза в 3 с, после 4 попыток — раз в минуту
 const DLOAD={n:{},t:{}};
+// OKFIX (15.10): не качаем файл, пока его ленивый <script data-lazy> (index.html, window.__lz) ещё грузится — повтор только после его ошибки или через 20 с;
+// и не запускаем новую докачку, пока прошлая ещё идёт (DLOAD.p). Пришёл файл — dictCame(): отложенное слово (DWAIT) проверяется само
+const DWAIT={w:'',g:null,t:0};
 function ensureDict(){[['js/dict.js',typeof DICT_MAIN==='undefined'],['js/zina.js',typeof ZINA_NO!=='object']].forEach(([f,need])=>{
-  const n=DLOAD.n[f]||0,ago=Date.now()-(DLOAD.t[f]||0);if(!need||ago<(n>=4?60000:3000))return;DLOAD.n[f]=n+1;DLOAD.t[f]=Date.now();
-  loadScript(f+'?r='+(n+1),15000).catch(()=>{});});}
+  if(need&&!(window.__lz||{})[f]&&typeof window.__lzGo==='function'){window.__lzGo();return;} /* ленивая ещё не начиналась — начать её сейчас, не качать отдельно */
+  const z=(window.__lz||{})[f];if(!need||(z&&z.s===0&&Date.now()-z.t<20000)||(DLOAD.p&&DLOAD.p[f]))return;
+  const n=DLOAD.n[f]||0,ago=Date.now()-(DLOAD.t[f]||0);if(ago<(n>=4?60000:3000))return;DLOAD.n[f]=n+1;DLOAD.t[f]=Date.now();
+  (DLOAD.p=DLOAD.p||{})[f]=1;const done=()=>{DLOAD.p[f]=0;};
+  /* data-lazy: ошибка докачки — не повод перезагружать страницу посреди уровня (предохранитель в <head> такие файлы пропускает) */
+  new Promise((ok,no)=>{const e=document.createElement('script');e.src=f+'?r='+(n+1);e.setAttribute('data-lazy','');e.onload=ok;e.onerror=no;document.head.appendChild(e);setTimeout(no,20000);})
+    .then(()=>{done();dictCame();},done);});}
+// словарь пришёл: слово, названное до него (одно последнее), засчитываем, если оно верное и игрок всё ещё в том же уровне (не дольше 2 минут)
+function dictCame(){if(!dictReady()||!DWAIT.w)return;const w=DWAIT.w,g=DWAIT.g,t=DWAIT.t;DWAIT.w='';DWAIT.g=null;
+  try{if(typeof G==='undefined'||!G||G!==g||G.won||Date.now()-t>120000)return;if(!isWord(w)||G.words.some(x=>x.w===w)||G.bonus.has(w))return;submit(w);}catch(e){}}
 addEventListener('load',()=>setTimeout(()=>{if(!dictReady())ensureDict();},1500));
 function isWord(w){if(!dictReady())return false;
   if(!MAIN){MAIN=new Set(DICT_MAIN.split(' '));EXTRA=new Set(DICT_EXTRA.split(' '));
@@ -392,7 +403,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Игра только на русском — lang:'ru' (window.LANG от Яндекса интерфейс не меняет).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v4.1-101311',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v4.2-101521',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе — после облака (что позже), но не дольше 2,5 с (иначе модуль сам отправит start без полей через 3 с).
 // pl — пройдено уровней, cn — монет, bt — облако хоть раз отдавало сохранение (S.cl — метка на устройстве, ставит cloudLoad)
 let statPr=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:+S.lv||0,cn:+S.coins||0,bt:S.cl?1:0});}
@@ -423,7 +434,7 @@ function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.create
 // ответ VK с ограничением по времени (вне VK мост не отвечает)
 function vkSend(method,params,ms){return withTimeout(window.vkBridge.send(method,params||{}),ms||4000);}
 /*SOC*/
-/* ===== SOC v2.4 (06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
+/* ===== SOC v2.5 (15.10: в Одноклассниках «Ещё игры» НЕТ — SOC.list() там пуст, open() сразу false, кнопка «🎲 Игры» прячется сама по SOC.can('more'); причина — VKWebAppOpenApp {app_id:<ID в ОК>, app_is_local:true} в ОК игру не открывает, модерация ОК отклонила Выезд 15.10. v2.4 — 06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
    Общий модуль для всех игр. Источник — ~/Projects/hobby-analytics/soc/soc.js (правки — только там, потом soc-sync.sh).
    Правила VK: 2.6.2 — никаких наград за приглашение/«поделиться»/избранное/экран (разрешено лишь за вступление в сообщество —
    в наших играх НЕ даём); 2.6.3 — само-предложения не в первую сессию, отказ помним, повтор не чаще раза в 30 дней, ≤3 раз.
@@ -432,12 +443,13 @@ function vkSend(method,params,ms){return withTimeout(window.vkBridge.send(method
    ОК (Одноклассники; та же игра VK, запущенная с vk_client=ok — модуль узнаёт сам, SOC.isOk): в ОК нет избранного и значка на экран,
    ссылки на vk.com запрещены, группа у нас только ВКонтакте, ID игр в ОК другие. Поэтому в ОК остаётся только «Позвать друзей»
    (окно приглашения с обязательным message), а остальное включается настройками SOC.init: okLink — ссылка на игру в ОК («Поделиться»),
-   okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК («Ещё игры», только сайт и мобильный браузер ОК). */
+   okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК (с v2.5 не используется: «Ещё игр» в ОК нет вовсе — переход в другую игру
+   там не работает ни на сайте, ни в приложениях; поле оставлено на случай, если ОК даст рабочий способ; вернуть — только с проверкой на живой площадке). */
 var SOC=(function(){
-  var GROUP=241793582,DAY=864e5,VER=2.4;
+  var GROUP=241793582,DAY=864e5,VER=2.5;
   // i — место в спрайте dvor.jpg (по 96 px), g — группа (c карты, p головоломки, s сказка, r спокойные), a — возраст,
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
-  // ok — ID этой игры в Одноклассниках (vk_ok_app_id), когда она там вышла; без него в ОК игра в «Ещё игры» не показывается.
+  // ok — ID этой игры в Одноклассниках (vk_ok_app_id). С v2.5 (15.10) в ОК «Ещё игр» нет вообще — поле сейчас не используется.
   // v2.4: off:'all' прячет игру везде, и в ОК тоже (Козёл: номер ОК вписан заранее, показ включится, когда уберём off).
   var GAMES=[
     {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p',ok:512004864050},
@@ -518,14 +530,14 @@ var SOC=(function(){
     return send('VKWebAppShare',{link:OKP?O.okLink:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
   function group(){if(OKP&&!O.okGroup)return Promise.resolve(false);
     return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
-  function open(g){if(OKP&&!(g.ok&&OKWEB))return Promise.resolve(false); // ОК: OpenApp есть только на сайте и в мобильном браузере
+  function open(g){if(OKP)return Promise.resolve(false); // v2.5: в ОК OpenApp игру не открывает (ни сайт, ни приложения) — не зовём
     return send('VKWebAppOpenApp',OKP?{app_id:g.ok,app_is_local:true}:{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
     toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
 
   // --- список «Ещё игры»: без себя, без 18+, без неопубликованных на этой площадке; сначала родственные, дальше — сдвиг по дню ---
   function list(n){var m=me(),mg=m?m.g:'',out=[],i,g,day=Math.floor(Date.now()/DAY);
     for(i=0;i<N;i++){g=GAMES[i];if(g.id===APP||g.a>=18)continue;
-      if(g.off==='all'||(OKP?!(g.ok&&OKWEB):(g.off==='web'&&WEB)))continue;out.push(g);} // ОК: только игры с ID в ОК и только там, где работает OpenApp
+      if(g.off==='all'||OKP||(g.off==='web'&&WEB))continue;out.push(g);} // v2.5 (15.10): в ОК «Ещё игры» НЕТ — переход в другую игру там не открывается (Выезд отклонён модерацией ОК 15.10)
     out.sort(function(a,b){var x=(b.g===mg)-(a.g===mg);if(x)return x;return ((a.i+day)%N)-((b.i+day)%N);});
     return out.slice(0,n||6);}
 
