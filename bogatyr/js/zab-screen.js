@@ -7,6 +7,7 @@
    Своих ключей сейва нет (всё в S.zab ядра). */
 (function(){
 const FB={1:'i_mace',2:'pt_bayun',3:'tr_scroll',4:'kol',5:'p_apple',6:'sl_sila',7:'yarn',8:'pt_konek',9:'d_bush',10:'d_pond',11:'chest',12:'upyr',13:'pie',14:'egg'};
+const ZT=typeof BB2!=='undefined'&&BB2.on('zabtop'),ZR=()=>typeof ZREC!=='undefined'&&ZREC.on(); /* bb2 ZAB: экран и плитка выше края; рамка рекордов */
 function icK(n){const g=zabG(n);if(g&&g.icon&&ART[g.icon])return g.icon;if(ART['zb_i'+n])return 'zb_i'+n;return FB[n]||'chest';}
 function mon(){const D=new Date(dayMs());const d=(D.getDay()+6)%7;return 7-d;}               // дней до конца недели (вкл. сегодня)
 /* что можно сыграть сейчас с наградой (без печи и сундуков) */
@@ -25,15 +26,15 @@ function status(){const r=readyList(),c=chestsN();if(c)return L('Сундуки 
   return L('На сегодня всё сыграно — завтра новые!','All played for today — new ones tomorrow!');}
 
 /* ---------- деревня: карточка (её прячет «Меню двора» в плитку) ---------- */
-if(typeof DVOR_CARDS!=='undefined'&&!DVOR_CARDS.some(x=>x[0]==='zabCard')){const n=zabN('Забавы','Fun');DVOR_CARDS.push(['zabCard',n.ru,n.en]);}
-function VIL(el){try{if(!el||!zabOpen()||!ZAB.list.length)return;const z=ZB(),nw=!z.in;
+function dvAdd(){if(typeof DVOR_CARDS!=='undefined'&&!DVOR_CARDS.some(x=>x[0]==='zabCard')){const n=zabN('Забавы','Fun');if(ZT)DVOR_CARDS.unshift(['zabCard',n.ru,n.en]);else DVOR_CARDS.push(['zabCard',n.ru,n.en]);}}dvAdd(); /* MERGE: при лёгком старте Забавы могут выполниться раньше Подворья — тогда плитка добавляется при первой отрисовке деревни (VIL) */ /* bb2 ZAB zabtop: плитка первой — на 360×640 в первом ряду */
+function VIL(el){try{dvAdd();if(!el||!zabOpen()||!ZAB.list.length)return;const z=ZB(),nw=!z.in;
   const d=document.createElement('div');d.className='card'+(anyReady()||nw?' next':'');d.id='zabCard';
   d.innerHTML='<div class="row"><img class="ic" src="'+ic('zb_tent',96)+'"><div class="t"><b>'+L('🎪 Забавы','🎪 Fun & Games')+'</b><span>'+(nw?L('Новое! Ярмарка забав открыта','New! The fair is open'):status())+'</span></div><button class="btn gold" id="zabGo">'+L('Открыть','Open')+'</button></div>';
   const ids=['tmCard','wpnCard','petCard','slCard','troCard','yardCard'];let after=null;for(const id of ids){const c=el.querySelector('#'+id);if(c&&c.parentNode===el){after=c;break;}}
   if(after)el.insertBefore(d,after.nextSibling);else{const cv=el.querySelector('#village');if(cv&&cv.nextSibling)el.insertBefore(d,cv.nextSibling);else el.appendChild(d);}
   on('zabGo',()=>{window.ZAB_SRC='menu';zabScreen();});}catch(e){zabErr('vil',e);}}
 /* «Дела на сегодня»: одна строка */
-function TODAY(TL){try{if(!zabOpen()||!ZAB.list.length)return;const c=chestsN(),n=dayPick();
+function TODAY(TL0){try{if(!zabOpen()||!ZAB.list.length)return;const c=chestsN(),n=dayPick(),TL=ZT?{push:x=>TL0.splice(Math.min(1,TL0.length),0,x)}:TL0;
   if(c)TL.push({k:'zab',ic:'chest',t:L('Три сундука старосты','The elder’s three chests'),s:L('Логово взято — выбери награду','Lair taken — choose your reward'),ready:true,b:L('Выбрать','Choose'),always:1,fn:()=>{window.ZAB_SRC='day';hideModal();zabScreen();}});
   else if(n)TL.push({k:'zab',ic:icK(n),t:L('Забава дня готова','Today’s game is ready'),s:zabNameN(n),ready:true,b:L('Играть','Play'),always:1,fn:()=>{window.ZAB_SRC='day';hideModal();zabPlay(n);}});
   else TL.push({k:'zab',ic:'zb_tent',t:L('Забавы','Fun & Games'),s:status(),ready:false,b:L('Открыть','Open'),always:1,fn:()=>{window.ZAB_SRC='day';hideModal();zabScreen();}});}catch(e){zabErr('today',e);}}
@@ -50,17 +51,17 @@ window.zabWeekTick=function(g){try{if(g.kind!=='week'||typeof TR!=='function'||!
 
 /* ---------- запуск с экрана ---------- */
 function zabPlay(n,train){const g=zabG(n);if(!g)return;const z=ZB();if(!train&&!zabAvail(n)){toast(L('Сейчас эта забава не идёт','This game isn’t on right now'));return;}
-  if(!train&&z.d.p[g.id]){train=true;toast(L('Награда за сегодня уже взята — это тренировка','Today’s reward is taken — this is practice'));}
+  if(!train&&z.d.p[g.id]){train=true;toast(ZR()&&ZREC.info(g.id)?L('Награда за сегодня взята — играем на рекорд','Today’s reward is taken — playing for a record'):L('Награда за сегодня уже взята — это тренировка','Today’s reward is taken — this is practice'));}
   hideModal();const mode=train?'train':g.kind==='week'?'week':g.kind==='fest'?'fest':'day';let ctx={};
   if(g.kind==='after'&&!train){const s=z.lr[0];ctx={slot:s,land:CAMP_S[s]&&CAMP_S[s].th};}
   ZAB_OPEN(g.id,{train,mode,ctx,back:()=>zabScreen()});}
-window.zabPlay=zabPlay;
+window.zabPlay=zabPlay;window.zabDayPick=dayPick; /* bb2 ZAB: забава дня — для «Привала» */
 /* upd0910 (решение владельца 09.10): приглашение в итогах победы — «Передохнуть: сыграть в …?» раз в 3–4 похода главы.
    Счётчик походов главы с открытыми Забавами — localStorage bogatyr-zinv (только это устройство, не облако); показ — на победе, когда с прошлого показа ≥3 походов
    и есть забава с наградой на сегодня (dayPick). Окно занято важным (новый богатырь/облик, кузница, конец кампании) — не показываем и счётчик не сбрасываем.
    Награды — обычные (одна сила забав на поход — zabBufAdd). STAT: zab {a:'see'|'no', id, src:'win'}, вход — go с src:'win'. */
 const ZINV_N=3;
-function zabInvite(ok){try{if(!zabOpen()||!ZAB.list.length)return 0;let c=0;try{c=+localStorage.getItem('bogatyr-zinv')||0;}catch(e){}c++;
+function zabInvite(ok){try{if(typeof BB2!=='undefined'&&BB2.on('prival'))return 0; /* bb2 ZAB: вместо приглашения в окне победы — «Привал» на карте (0 сыгравших из 40 показов) */if(!zabOpen()||!ZAB.list.length)return 0;let c=0;try{c=+localStorage.getItem('bogatyr-zinv')||0;}catch(e){}c++;
   const n=ok&&c>=ZINV_N?dayPick():0;if(n)c=0;try{localStorage.setItem('bogatyr-zinv',String(c));}catch(e){}
   if(n)zabEv('see',{id:zabG(n).id,src:'win'});return n;}catch(e){zabErr('inv',e);return 0;}}
 function zabInviteHTML(n){const g=zabG(n);if(!g)return '';return '<div class="tutbox zabinv" id="rZabBox"><img src="'+ic(icK(n),72)+'" alt=""><div><b>'+L('🎪 Передохнуть: сыграть в ','🎪 Take a break: play ')+qt(zabNameN(n))+'?</b><br><small>'+L('Награда за сегодня ещё не взята — пара минут отдыха от сечи','Today’s reward is still waiting — a couple of minutes’ break')+'</small>'+
@@ -72,16 +73,23 @@ window.zabInviteNo=n=>{try{zabEv('no',{id:(zabG(n)||{}).id,src:'win'});}catch(e)
 let scrT=0;
 function rowHTML(n,o){o=o||{};const g=zabG(n),z=ZB(),i=ZAB_INFO[n];if(!i)return '';const has=!!g,av=has&&zabAvail(n),done=has&&!!z.d.p[g.id],best=has?z.b[g.id]|0:0;
   const st=!has?L('скоро на ярмарке','coming soon'):o.st||(done?L('✓ сегодня сыграно','✓ played today'):av?L('готова — награда ждёт','ready — a reward awaits'):o.off||L('не сегодня','not today'));
-  const b=!has?'':(av&&!done&&!o.noPlay?'<button class="btn gold" data-zp="'+n+'">'+L('Играть','Play')+'</button>':'')+(o.noTrain?'':'<button class="btn ghost" data-zt="'+n+'">'+L('Тренировка','Practice')+'</button>');
-  return '<div class="card zabRow'+(av&&!done&&!o.noPlay?' next':'')+(has?'':' off')+'"><div class="row"><img class="ic" src="'+ic(icK(n),96)+'"'+(has?'':' style="opacity:.5;filter:grayscale(.7)"')+'><div class="t"><b>'+zabNameN(n)+'</b><span>'+zabAbout(n)+'</span><span class="zabSt">'+st+(best?' · '+L('рекорд ','best ')+fmtNum(best):'')+'</span></div></div>'+
+  const b=!has?'':(av&&!done&&!o.noPlay?'<button class="btn gold" data-zp="'+n+'">'+L('Играть','Play')+'</button>':'')+(o.noTrain?'':'<button class="btn ghost" data-zt="'+n+'">'+(ZR()&&has&&ZREC.info(g.id)?L('На рекорд','For a record'):L('Тренировка','Practice'))+'</button>');
+  return '<div class="card zabRow'+(av&&!done&&!o.noPlay?' next':'')+(has?'':' off')+'"><div class="row"><img class="ic" src="'+ic(icK(n),96)+'"'+(has?'':' style="opacity:.5;filter:grayscale(.7)"')+'><div class="t"><b>'+zabNameN(n)+'</b><span>'+zabAbout(n)+'</span><span class="zabSt">'+st+(best?' · '+L('рекорд ','best ')+(ZR()?ZREC.unit(g.id,best)+zrGap(g.id):fmtNum(best)):'')+'</span></div></div>'+
     (b?'<div class="btns zabBt">'+b+'</div>':'')+'</div>';}
 const sec=t=>'<div class="zabSec">'+t+'</div>';
-function screenHTML(){const z=ZB(),w=zabWeekN(),c=chestsN(),en=LANG==='en';let h='<h3>'+L('🎪 Забавы','🎪 Fun & Games')+'</h3><canvas id="zabC" class="zabScene"></canvas>';
-  h+='<div class="card zabTip"><div class="row"><img class="ic" src="'+ic('zb_tent',96)+'"><div class="t"><span>'+
+function zrGap(id){try{if(!ZREC.ui||!ZREC.info(id))return '';const q=ZREC.gap(id);return q&&q.n?L(' · до '+q.gen+' '+fmtNum(q.n),' · '+fmtNum(q.n)+' to '+q.nm):q?'':L(' · ты первый!',' · you’re first!');}catch(e){return '';}}
+const TIP=()=>L('Короткие забавы между походами. Каждая — раз в день с наградой (Слава, трофеи, сила на следующий поход), а на рекорд можно играть сколько хочешь. Золота забавы не дают.','Short games between runs. Each gives a reward once a day (Fame, trophies, a boost for your next run); play for a record as much as you like. No gold here.');
+/* bb2 ZAB: раздел «На рекорд» — ловкостные (объявлены ZREC.add) и Доска почёта; строки рисует ленивая часть рамки */
+function lovHTML(){try{if(!ZR()||!ZREC.ids().some(id=>ZREC.isOpen(id)))return '';if(!ZREC.ui){ZREC.load().then(()=>{if($('modal').classList.contains('on')&&$('mBody').getAttribute('data-w')==='zab')zabScreen();},()=>{});return '';}
+  return sec(L('На рекорд — спор богатырей','For the record — the heroes’ contest'))+ZREC.board()+ZREC.rows();}catch(e){zabErr('lov',e);return '';}}
+function screenHTML(){const z=ZB(),w=zabWeekN(),c=chestsN(),en=LANG==='en';const tipUp=!ZT||!BB2.s('zab').t1;let h='<h3>'+L('🎪 Забавы','🎪 Fun & Games')+'</h3><canvas id="zabC" class="zabScene'+(ZT?' sm':'')+'"></canvas>';
+  if(tipUp&&!ZT)h+='<div class="card zabTip"><div class="row"><img class="ic" src="'+ic('zb_tent',96)+'"><div class="t"><span>'+
     L('Короткие забавы между походами. Каждая — раз в день с наградой (Слава, трофеи, сила на следующий поход), тренироваться можно сколько хочешь. Золота забавы не дают.','Short games between runs. Each gives a reward once a day (Fame, trophies, a boost for your next run); practise as much as you like. No gold here.')+'</span></div></div></div>';
   const b=zabBuf();if(b)h+='<div class="card zabBuf"><div class="row"><img class="ic" src="'+ic('sl_sila',96)+'"><div class="t"><b>'+L('Сила на следующий поход главы','Boost for your next chapter run')+'</b><span>'+zabBufTxt(b)+'</span><span class="zabSt">'+L('Не действует в сече, походе дня и испытании недели. Вместе с узелком — не больше +20 %.','Not in Endless Battle, Daily Run or Weekly Trial. With your bundle — no more than +20%.')+'</span></div></div></div>';
   if(c&&zabG(11)){h+=sec(L('🎁 Логово взято!','🎁 Lair taken!'))+rowHTML(11,{st:L('ждут сундуков: ','chests waiting: ')+c,noTrain:1});}
+  if(ZT&&tipUp)h+='<p class="sub zabNext">'+TIP()+'</p>';
   h+=sec(L('Каждый день','Every day'));for(const n of ZAB_DAILY){if(en&&zabG(n)&&zabG(n).en===false)continue;if(en&&!zabG(n)&&ZAB_INFO[n].en===false)continue;h+=rowHTML(n,n===1?{off:L('откроется после первой ковки в кузнице','unlocks after your first upgrade at the forge')}:null);}
+  h+=lovHTML();
   h+=sec(L('Забава недели','Game of the week')+' <span class="zabSm">'+L('ещё '+mon()+' '+plu(mon(),'день','дня','дней','day','days'),mon()+' '+plu(mon(),'день','дня','дней','day','days')+' left')+'</span>')+rowHTML(w);
   const nx=ZAB_WEEK[(ZAB_WEEK.indexOf(w)+1)%ZAB_WEEK.length];h+='<p class="sub zabNext">'+L('Со следующего понедельника: ','From next Monday: ')+zabNameN(nx)+'</p>';
   h+=sec(L('Праздничные','Festive'));for(const n in ZAB_FEST){const k=ZAB_FEST[n],on=zabFestNow(+n),f6=zabFest6In(+n);
@@ -89,6 +97,7 @@ function screenHTML(){const z=ZB(),w=zabWeekN(),c=chestsN(),en=LANG==='en';let h
     h+=rowHTML(+n,{off,st:on&&f6===0&&!zabFestOn(k)&&!z.d.p[(zabG(+n)||{}).id]?L('гость ярмарки на этой неделе — награда ждёт','this week’s guest game — a reward awaits'):'',noTrain:!on&&!(z.n[(zabG(+n)||{}).id])});}
   if(zabG(13))h+=sec(L('На подворье','On the homestead'))+rowHTML(13,{st:L('сыграешь, когда достаёшь блюдо из печи','play it when you take a dish out of the oven'),noPlay:1});
   if(!c&&zabG(11))h+='<p class="sub zabNext">'+L('🎁 Три сундука старосты — после победы в каждом Логове земли.','🎁 The elder’s three chests — after beating each land’s Lair.')+'</p>';
+  if(ZT&&!tipUp)h+='<p class="sub zabNext">'+TIP()+'</p>';
   h+='<div class="btns"><button class="btn big" id="zabBack">'+L('Назад','Back')+'</button></div>';return h;}
 function zabScreen(){if(!zabOpen()&&!LOCAL){toast(L('Забавы откроются после 3-го похода','Fun & Games unlock after your 3rd run'));return;}
   const z=ZB();if(!z.in){z.in=1;zabTouch();save();try{villageBadge();}catch(e){}}
@@ -97,8 +106,9 @@ function zabScreen(){if(!zabOpen()&&!LOCAL){toast(L('Забавы откроют
   on('zabBack',zabClose);
   for(const b of $('mBody').querySelectorAll('[data-zp]'))b.onclick=()=>{SND.click();zabPlay(+b.dataset.zp);};
   for(const b of $('mBody').querySelectorAll('[data-zt]'))b.onclick=()=>{SND.click();zabPlay(+b.dataset.zt,true);};
+  for(const b of $('mBody').querySelectorAll('[data-zl]'))b.onclick=()=>{SND.click();window.ZAB_SRC='menu';ZREC.play(b.dataset.zl,{src:'menu',back:()=>zabScreen()}).then(null,()=>{});};
   clearInterval(scrT);let f=0;scrT=setInterval(()=>{if(!$('modal').classList.contains('on')||$('mBody').getAttribute('data-w')!=='zab'){clearInterval(scrT);scrT=0;return;}f++;drawScene(f);},120);}
-function zabClose(){clearInterval(scrT);scrT=0;hideModal();if(typeof curTab!=='undefined'&&curTab==='Village'&&!G)try{renderVillage();}catch(e){}}
+function zabClose(){clearInterval(scrT);scrT=0;hideModal();if(ZT)try{const q=BB2.s('zab');if(!q.t1){q.t1=1;save();}}catch(e){}if(typeof curTab!=='undefined'&&curTab==='Village'&&!G)try{renderVillage();}catch(e){}}
 window.zabScreen=zabScreen;window.zabScreenRe=()=>{if(!G)zabScreen();};
 /* ярмарка на холсте: небо, холмы, плетень, балаган с флажками, дуб с котом, печь, сундуки (рисунки art.js) */
 function drawScene(f){const c=$('zabC');if(!c)return;const r=c.getBoundingClientRect(),W=r.width||320,H=r.height||180,d=Math.min(devicePixelRatio||1,2);
@@ -137,5 +147,5 @@ function zabCss2(){if($('zabCss2'))return;const s=document.createElement('style'
   '.zabRow.next{box-shadow:0 0 0 2px #e0a92e inset}.zabRow.off{opacity:.78}'+
   '.zabRow .btns.zabBt{flex-direction:row;gap:8px;margin-top:6px}.zabRow .btns.zabBt .btn{flex:1;min-height:44px}'+
   '.zabTip .t span{font-size:14px;line-height:1.35}.zabNext{margin:4px 6px 0;font-size:13.5px}'+
-  '@media (min-height:760px){.zabScene{height:200px}}';document.head.appendChild(s);}
+  '@media (min-height:760px){.zabScene{height:200px}}.zabScene.sm{height:92px}@media (min-height:760px){.zabScene.sm{height:130px}}';document.head.appendChild(s);}
 })();

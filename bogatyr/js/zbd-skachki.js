@@ -7,8 +7,9 @@
    Рисунок коня — код: 4 ноги по 2 сустава (обратная кинематика), галоп по фазам, грива и хвост волнами, сбруя, чепрак; на коне — богатырь игрока. */
 (function(){
 const K=zbdK,TAU=Math.PI*2;
-const TIER=[25,55,95];
-function tierOf(s){return s>=TIER[2]?3:s>=TIER[1]?2:s>=TIER[0]?1:0;}
+const SOFT=typeof BB2!=='undefined'&&BB2.on('zabsoft'); /* bb2 ZAB: мягче (03-minigames §2 F5) */
+const TIER=SOFT?[18,50,90]:[25,55,95];   /* мягче: первая ступень — ещё и за 15 с в седле (было 29 партий из 54 «мимо») */
+function tierOf(s,el){return s>=TIER[2]?3:s>=TIER[1]?2:s>=TIER[0]||SOFT&&el>=15?1:0;}
 const DUR=60,JT=.8,JH=.74,MAGIC_N=12,MAGIC_T=4;
 const V0=3.0,V1=1.7;   // скорость (высот коня в секунду): V0 + V1·t/60
 function vAt(t,calm){return (V0+V1*Math.min(1,t/DUR))*(calm?.82:1);}
@@ -196,7 +197,7 @@ function run(host,o){
     if(st.ph==='fall'){st.v*=Math.pow(.05,dt);st.pos+=st.v*dt;if(st.t>1.3)fallOffer();return;}
     if(st.ph==='end'){st.v*=Math.pow(.25,dt);st.pos+=st.v*dt;st.phi=(st.phi+st.v*dt/1.15)%1;
       if(st.t>2.4&&!st.sent){st.sent=1;let tot=0;if(!o.train&&host.store){try{const sv=host.store();sv.shoes=(sv.shoes|0)+st.shoes;tot=sv.shoes;host.touch();}catch(e){}}
-        host.done({score:st.score,tier:tierOf(st.score),extra:{shoes:st.shoes,clean:st.clean,msg:tot?L('Подков в конюшне: ','Horseshoes in the stable: ')+tot:''}});}return;}
+        host.done({score:st.score,tier:tierOf(st.score,st.el),extra:{shoes:st.shoes,clean:st.clean,msg:tot?L('Подков в конюшне: ','Horseshoes in the stable: ')+tot:''}});}return;}
     if(st.ph!=='run')return;
     st.el+=dt;st.time-=dt;if(st.hint>0)st.hint-=dt;if(st.inv>0)st.inv-=dt;if(st.stum>0)st.stum-=dt;st.sm=Math.min(1,st.sm+dt*.5);
     st.v=vAt(st.el,calm)*st.sm*(st.magic>0?1.2:1);st.pos+=st.v*dt;st.phi=(st.phi+st.v*dt/1.15*(st.air>0?.25:1))%1;
@@ -315,7 +316,7 @@ function sim(o,k){const calm=!!o.calm,C=course(o.seed,o.lvl,calm),R=K.rnd((o.see
   for(const it of items){while(pos<it.x){const v=vAt(t,calm)*(magic>0?1.2:1);t+=.05;pos+=v*.05;if(magic>0)magic-=.05;if(t>=DUR)break;}if(t>=DUR||hp<=0)break;
     if(it.o){if(magic>0){score++;continue;}const pc=Math.max(.2,Math.min(.99,.35+k*.66-Math.min(.12,t/DUR*.15)));if(R()<pc)score++;else{hp--;t+=.9;}}
     else{const p=magic>0?1:it.v.arc?(.45+k*.5):(.8+k*.18);if(R()<p){score++;mag++;if(mag>=MAGIC_N){mag=0;magic=MAGIC_T;}}}}
-  return {score,tier:tierOf(score)};}
+  return {score,tier:tierOf(score,t)};}
 const REG={id:'skachki',num:8,icon:'zbd_i8',kind:'week',en:true,open:()=>true,run,sim,tiers:TIER};
 if(typeof art==='function')art('zbd_i8',48,g=>{g.lineCap='round';g.strokeStyle='#6a3a08';g.lineWidth=9;g.beginPath();g.arc(0,-2,13,Math.PI*.85,Math.PI*2.15);g.stroke();
   const q=g.createLinearGradient(-14,-14,14,14);q.addColorStop(0,'#fff3a0');q.addColorStop(.5,'#f2c03a');q.addColorStop(1,'#c8861a');g.strokeStyle=q;g.lineWidth=6;g.beginPath();g.arc(0,-2,13,Math.PI*.85,Math.PI*2.15);g.stroke();

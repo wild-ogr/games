@@ -42,14 +42,15 @@ art('zba_kotel',48,g=>{g.strokeStyle='#3a2a1a';g.lineWidth=2;g.beginPath();g.mov
   ell(g,0,8,16,13,'#3a3a44',{hl:.35});ell(g,0,-2,14,3.6,'#5a6a4a',{lw:1});g.fillStyle='rgba(160,255,140,.6)';g.beginPath();g.ellipse(-3,-2.5,6,1.4,0,0,TAU);g.fill();
   for(const [x,y,r] of[[-4,-8,3],[3,-11,2.4],[0,-15,1.8]])ell(g,x,y,r,r,'rgba(200,255,190,.7)',{ol:false,flat:true});});
 
+const SOFT=typeof BB2!=='undefined'&&BB2.on('zabsoft'); /* bb2 ZAB: мягче (03-minigames §2 F5) */
 /* ---------- игра ---------- */
 const G={id:'travy',noCombo:true,hudIcon:'zba_h_zver',barCol:['#c8ff7a','#4ab83a'],
-  dur:o=>45,
+  dur:o=>SOFT?35:45,
   title:()=>L('Сбор трав для зелья','Herbs for a Potion'),
   rules:(o,st)=>[['zba_h_rom',L('Собери травы по рецепту знахарки — он вверху экрана.','Gather the herbs from the herbalist’s recipe at the top.')],
     ['zba_h_zver',st&&st.pc?L('Щёлкни по траве или жми цифру её кочки 1–9. Трава скоро вянет!','Click a herb or press its patch number 1–9. Herbs wilt fast!'):L('Коснись нужной травы, пока она не завяла.','Tap the right herb before it wilts.')],
     ['zba_h_bel',L('Белену не рви — она ядовита!','Never pick henbane — it’s poisonous!')]],
-  tiers:o=>{const c=o.calm?.8:1;return [Math.round(180*c),Math.round(420*c),Math.round(650*c)];},
+  tiers:o=>{const c=o.calm?.8:1,T=SOFT?[110,240,390]:[180,420,650];return [Math.round(T[0]*c),Math.round(T[1]*c),Math.round(T[2]*c)];},   /* мягче: 35 с и достижимое «отлично» (было 4 из 74) */
   tipY:st=>st.H-st.hz-26*st.k,
   pcHint:st=>[['1','…','9'],L('— кочки, как на клавиатуре','— patches, like the keyboard')],
   endTitle:(st,t)=>t>=3?L('Взвар на славу!','A splendid brew!'):t>=2?L('Добрый взвар','A good brew'):t>=1?L('Взвар сварен','The brew is ready'):L('Корзинка пуста…','The basket is empty…'),

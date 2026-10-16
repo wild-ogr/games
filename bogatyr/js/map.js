@@ -41,7 +41,7 @@ function renderMap(){const el=$('tabMap');if(!renderMap.init){renderMap.init=1;i
   el.innerHTML=renderMap.wide?'<div class="mapwrap"><div class="mapL"><canvas id="mapCv"></canvas></div><div class="mapR">'+(S.runs?todayCard():'')+side+'</div></div>':(S.runs?todayCard():'')+'<canvas id="mapCv"></canvas>'+side;drawMap();renderChInfo();on('goBtn',()=>startRun(mapSel));mapFocus(false);
   const tb=$('todayBtn');if(tb)tb.onclick=()=>{SND.click();openToday();};
   $('mapCv').onclick=e=>{const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let best=null,bd=46;
-    for(const id of TH_IDS){const p=mapXY(id),d=Math.hypot(p[0]*r.width-x,p[1]*r.height-y);if(d<bd){bd=d;best=id;}}if(best)mapTapLand(best);};}
+    for(const id of TH_IDS){const p=mapXY(id),d=Math.hypot(p[0]*r.width-x,p[1]*r.height-y);if(d<bd){bd=d;best=id;}}if(best)mapTapLand(best);};BB2.hk('map',el);}
 // выбранная земля не должна прятаться под закреплённой панелью «Выступить»
 function mapFocus(smooth){setTimeout(()=>{const c=$('mapCv'),tab=$('tabMap'),gb=$('goBtn');if(!c||!tab||!gb||!tab.classList.contains('on')||renderMap.wide)return;
   const r=c.getBoundingClientRect(),p=mapXY(mapTh(mapSel)),y=r.top+p[1]*r.height,tr=tab.getBoundingClientRect(),bot=($('chSel')||gb).getBoundingClientRect().top-10,top=tr.top+8,R=40;
@@ -83,7 +83,7 @@ function renderChInfo(){const c=CH[mapSel],hr=HERO_BY[S.hero]||HEROES[0],best=S.
   for(const b of document.querySelectorAll('[data-cu]'))b.onclick=()=>{S.curse=+b.dataset.cu;save();SND.click();renderChInfo();};
   const gb=$('goBtn');if(gb){const d=difOf(mapSel);gb.innerHTML='<img src="'+ic('i_sword',48)+'" style="width:22px;height:22px">'+L('Выступить: ','March: ')+c.name+(d==='n'?'':' · '+(d==='s'?'⚔':'🔥'));}
   on('chgHero',()=>openTab('Heroes'));on('endBtn',()=>startRun(0,true));
-  on('wkBtn',()=>startRun(0,true,true));on('wkRules',openWkRules);on('wkLb',()=>{qSeg='q';lbSeg='weekly';openTab('Quests');setTimeout(()=>{const b=$('lbBox');if(b)b.scrollIntoView({block:'center'});},50);});}
+  on('wkBtn',()=>startRun(0,true,true));on('wkRules',openWkRules);on('wkLb',()=>{qSeg='q';lbSeg='weekly';openTab('Quests');setTimeout(()=>{const b=$('lbBox');if(b)b.scrollIntoView({block:'center'});},50);});BB2.hk('chInfo',mapSel,$('chSel'),$('chInfo'));}
 /* ---------- полоса 3 глав выбранной земли (A22) ---------- */
 function mapStrip(){const id=mapTh(mapSel);
   return '<div class="mstrip">'+mapSlots(id).map(s=>{const r=CAMP_S[s],on=chPos(s)>0,op=on&&chOpen(s),sel=s===mapSel,d=difOf(s),dn=!!S.done[s];

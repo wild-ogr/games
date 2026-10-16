@@ -59,7 +59,7 @@ function fixSave(){const ob=v=>v&&typeof v==='object'&&!Array.isArray(v);
 fixSave();
 const BOOT={ts:S.ts||0,fresh:!S.ts}; // что было на этом устройстве при запуске
 /*STAT*/
-/* ===== STAT v1.4 (09.10.2026; v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.6 (12.10.2026; v1.5 — 11.10, v1.4 — 09.10, v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
@@ -68,9 +68,13 @@ const BOOT={ts:S.ts||0,fresh:!S.ts}; // что было на этом устро
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
    05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
    08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
-   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса. */
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса.
+   11.10 (v1.5, sv:15): запасной адрес U2 (stat.assortiz.ru/ev), пока основной лежит.
+   12.10 (v1.6, sv:16; Оборона ob2-core, образец Зины zb2-core d41d683): последняя пачка при закрытии (sendBeacon) — на запасной адрес, пока основной в сеансе
+     ни разу не ответил «ОК» или недавно падал (bUrl; sendBeacon отвечает true сразу — пачка в лежащее облако терялась молча);
+     STAT.slow(sc,ms,o) — событие slow «медленный переход» (≥300 мс; sc — экран/переход, ms; не больше 8 за сеанс); в start — mem (ГБ, deviceMemory) и cpu (ядер). */
 var STAT=(function(){
-  var V=1,SV=15,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=16,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,pOk=0,slN=0,SLMAX=8,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -100,6 +104,10 @@ var STAT=(function(){
     return {os:os,dv:touch?(m<600?'m':'t'):'d',sw:Math.round(w/20)*20,sh:Math.round(h/20)*20,
       wv:/; wv\)|VKAndroidApp|com\.vkontakte/.test(ua)||(os==='ios'&&!/Safari\//.test(ua))?1:0,
       br:cv?'c'+cv[1]:sv?'s'+sv[1]:/Firefox\/(\d+)/.test(ua)?'f'+/Firefox\/(\d+)/.exec(ua)[1]:'?'};}
+  // v1.6: память (ГБ, только Chrome/Android) и число ядер — в start
+  function hw(p){try{var m=+navigator.deviceMemory,c=+navigator.hardwareConcurrency;if(m>0)p.mem=m;if(c>0)p.cpu=Math.min(64,Math.round(c));}catch(e){}return p;}
+  // v1.6: STAT.slow('t:map',420,{mk:'…'}) — медленный переход между экранами (≥300 мс), не больше SLMAX за сеанс
+  function slow(sc,ms,o){if(!on||!(ms>=300)||slN>=SLMAX)return;slN++;var p={sc:String(sc||'').slice(0,24),ms:Math.round(ms)},k;for(k in o||{})if(p[k]===undefined)p[k]=o[k];ev('slow',p);}
   function saveSt(){if(O.S){O.S.stc={c:st.c,n:st.n,d:st.d};}ls('stat-'+G,JSON.stringify(st));}
 
   /* STAT.init({g:'gastronom', gv:'v16', plat:PLAT, lang:LANG, url:STAT_URL, now:nowMs, S:S, rate:1}) — README.
@@ -128,7 +136,7 @@ var STAT=(function(){
       vp:scrub(qp('vk_platform').replace(/_ok$/,''),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
     pend=dev&&!O.url?[]:jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[]; // журнал мака очередь не трогает
     // start ждёт STAT.progress() (поля pl, cn, bt), но не дольше 3 с; события до него встанут после
-    sP=['start',sec(),{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)}];
+    sP=['start',sec(),hw({sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)})];slN=0;
     if(prog)rel();else sTm=setTimeout(rel,3000);
     dayMark();saveSt();
     if(se&&se.length){for(i=0;i<se.length;i++){x=se[i];if(x&&x[0]===2)res(x[1],x[2]);else if(x)err(x[1],x[2],x[3],0,{e:1});}}window.__se=[];
@@ -248,15 +256,17 @@ var STAT=(function(){
     var L=urls();
     function go(i){post(L[i],s,function(c,mark){
       var okc=c>=200&&c<300;
-      if(L[i]===O.url){if(okc)pFail=0;else if(c>=500||c===429||!c)pFail=Date.now();}
+      if(L[i]===O.url){if(okc){pFail=0;pOk=1;}else if(c>=500||c===429||!c)pFail=Date.now();}
       if(!okc&&(c>=500||c===429||!c)&&i+1<L.length)return go(i+1);
       delete fly[k];got(b,c,mark);});}
     go(0);}
   function flush(){if(!on||sP)return;while(Q.length)pend.push(pack());keep();
     if(dev&&!O.url){pend=[];keep();return;}
     if(navigator.onLine===false||!pend.length||Date.now()<nextT)return;send(pend[0]);}
+  // v1.6: адрес для sendBeacon — запасной, пока основной в этом сеансе ни разу не ответил «ОК» или падал последние 10 мин
+  function bUrl(){return U2&&(!pOk||(pFail&&Date.now()-pFail<6e5))?U2:O.url;}
   function beacon(){var i,b,ok,left=[];if(dev&&!O.url){pend=[];keep();return;}if(navigator.onLine===false)return;
-    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(urls()[0],JSON.stringify(b)));}catch(e){}
+    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(bUrl(),JSON.stringify(b)));}catch(e){}
       if(!ok||srv)left.push(b);}
     pend=left;keep();if(pend.length&&!srv)send(pend[0]);}
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
@@ -267,7 +277,7 @@ var STAT=(function(){
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
       if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
-      var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
+      var p=hw({sn:st.n,f:0,r:1}),k;slN=0;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
   // облако игры: в mergeSave — STAT.merge(d.stc): раньше установлен, больше сеансов
@@ -285,15 +295,15 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,slow:slow,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
-const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'bogatyr',gv:'v24.1-101312',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev',STAT_FB='https://stat.assortiz.ru/ev'; /* bb2 (13.10): облако Яндекса лежит с 11.10 → свой сервер ПЕРВЫМ, облако — запасным. Вернуть как было: url:STAT_URL и убрать url2 */
+STAT.init({g:'bogatyr',gv:'v25.1-101521',plat:PLAT,lang:LANG,url:STAT_FB,url2:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
@@ -368,7 +378,7 @@ function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.create
 // ответ VK с ограничением по времени (вне VK мост не отвечает)
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
 /*SOC*/
-/* ===== SOC v2.4 (06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
+/* ===== SOC v2.5 (15.10: в Одноклассниках «Ещё игры» НЕТ — SOC.list() там пуст, open() сразу false, кнопка «🎲 Игры» прячется сама по SOC.can('more'); причина — VKWebAppOpenApp {app_id:<ID в ОК>, app_is_local:true} в ОК игру не открывает, модерация ОК отклонила Выезд 15.10. v2.4 — 06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
    Общий модуль для всех игр. Источник — ~/Projects/hobby-analytics/soc/soc.js (правки — только там, потом soc-sync.sh).
    Правила VK: 2.6.2 — никаких наград за приглашение/«поделиться»/избранное/экран (разрешено лишь за вступление в сообщество —
    в наших играх НЕ даём); 2.6.3 — само-предложения не в первую сессию, отказ помним, повтор не чаще раза в 30 дней, ≤3 раз.
@@ -377,12 +387,13 @@ function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(meth
    ОК (Одноклассники; та же игра VK, запущенная с vk_client=ok — модуль узнаёт сам, SOC.isOk): в ОК нет избранного и значка на экран,
    ссылки на vk.com запрещены, группа у нас только ВКонтакте, ID игр в ОК другие. Поэтому в ОК остаётся только «Позвать друзей»
    (окно приглашения с обязательным message), а остальное включается настройками SOC.init: okLink — ссылка на игру в ОК («Поделиться»),
-   okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК («Ещё игры», только сайт и мобильный браузер ОК). */
+   okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК (с v2.5 не используется: «Ещё игр» в ОК нет вовсе — переход в другую игру
+   там не работает ни на сайте, ни в приложениях; поле оставлено на случай, если ОК даст рабочий способ; вернуть — только с проверкой на живой площадке). */
 var SOC=(function(){
-  var GROUP=241793582,DAY=864e5,VER=2.4;
+  var GROUP=241793582,DAY=864e5,VER=2.5;
   // i — место в спрайте dvor.jpg (по 96 px), g — группа (c карты, p головоломки, s сказка, r спокойные), a — возраст,
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
-  // ok — ID этой игры в Одноклассниках (vk_ok_app_id), когда она там вышла; без него в ОК игра в «Ещё игры» не показывается.
+  // ok — ID этой игры в Одноклассниках (vk_ok_app_id). С v2.5 (15.10) в ОК «Ещё игр» нет вообще — поле сейчас не используется.
   // v2.4: off:'all' прячет игру везде, и в ОК тоже (Козёл: номер ОК вписан заранее, показ включится, когда уберём off).
   var GAMES=[
     {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p',ok:512004864050},
@@ -463,14 +474,14 @@ var SOC=(function(){
     return send('VKWebAppShare',{link:OKP?O.okLink:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
   function group(){if(OKP&&!O.okGroup)return Promise.resolve(false);
     return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
-  function open(g){if(OKP&&!(g.ok&&OKWEB))return Promise.resolve(false); // ОК: OpenApp есть только на сайте и в мобильном браузере
+  function open(g){if(OKP)return Promise.resolve(false); // v2.5: в ОК OpenApp игру не открывает (ни сайт, ни приложения) — не зовём
     return send('VKWebAppOpenApp',OKP?{app_id:g.ok,app_is_local:true}:{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
     toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
 
   // --- список «Ещё игры»: без себя, без 18+, без неопубликованных на этой площадке; сначала родственные, дальше — сдвиг по дню ---
   function list(n){var m=me(),mg=m?m.g:'',out=[],i,g,day=Math.floor(Date.now()/DAY);
     for(i=0;i<N;i++){g=GAMES[i];if(g.id===APP||g.a>=18)continue;
-      if(g.off==='all'||(OKP?!(g.ok&&OKWEB):(g.off==='web'&&WEB)))continue;out.push(g);} // ОК: только игры с ID в ОК и только там, где работает OpenApp
+      if(g.off==='all'||OKP||(g.off==='web'&&WEB))continue;out.push(g);} // v2.5 (15.10): в ОК «Ещё игры» НЕТ — переход в другую игру там не открывается (Выезд отклонён модерацией ОК 15.10)
     out.sort(function(a,b){var x=(b.g===mg)-(a.g===mg);if(x)return x;return ((a.i+day)%N)-((b.i+day)%N);});
     return out.slice(0,n||6);}
 
@@ -989,6 +1000,7 @@ const QL={mode:0,auto:0,n:0,sum:0,bad:0,last:0};
 try{const q=JSON.parse(localStorage.getItem('bogatyr-q')||'{}');QL.mode=+q.mode||0;QL.auto=+q.auto||0;}catch(e){}
 function qSave(){try{localStorage.setItem('bogatyr-q',JSON.stringify({mode:QL.mode,auto:QL.auto}));}catch(e){}}
 function qLow(){return QL.mode===2||(QL.mode===0&&!!QL.auto);}
+function qLowF(){return !QL.nf&&qLow();} // bb2 SPEED (флаг ql3 ставит QL.nf): «мало» больше не меняет число и крепость нечисти
 // кадр похода: t — время кадра (мс). Считаем среднее за секунду; паузы, окна и первые секунды не считаем
 function qFrame(t){if(QL.mode!==0||QL.auto)return;const gap=t-QL.last;QL.last=t;if(!(gap>0&&gap<250))return;QL.n++;QL.sum+=gap;
   if(QL.sum<1000)return;const fps=QL.n*1000/QL.sum;QL.n=0;QL.sum=0;QL.bad=fps<40?QL.bad+1:0;
@@ -1026,7 +1038,7 @@ const LB={
   async login(){try{await ysdk.auth.openAuthDialog();loginMerge=true;clearTimeout(cloudT);cloudT=0;cloudReady=false;cloudPending=null;YP=await ysdk.getPlayer({scopes:false});yCloud(3);return true;}catch(e){return false;}},
   // VK: таблица друзей (окно VK). Счёт — сколько нечисти одолено всего (в настройках приложения VK — турнирная таблица «по очкам»)
   vkFriends(){if(OK)return;if(!VK){toast('Таблица друзей откроется в игре ВКонтакте');return;} // i18n:ru — только VK (там всегда русский)
-    vkSend('VKWebAppShowLeaderBoardBox',{user_result:Math.floor(S.kills||0)},60000).catch(()=>toast('Таблица друзей сейчас недоступна'));} // i18n:ru — только VK (там всегда русский)
+    vkSend('VKWebAppShowLeaderBoardBox',{user_result:typeof BB2!=='undefined'&&BB2.lbKills?BB2.lbKills():Math.floor(S.kills||0)},60000).catch(()=>toast('Таблица друзей сейчас недоступна'));} // i18n:ru — только VK (там всегда русский)
 };
 
 /* ================= возврат игрока: ярлык и оценка (Яндекс), избранное, экран «Домой», друзья (VK) =================

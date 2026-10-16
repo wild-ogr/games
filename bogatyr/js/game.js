@@ -15,7 +15,7 @@ function layout(){
   VIEW.dpr=Math.min(window.devicePixelRatio||1,window.__dprMax||(qLow()?1.5:2)); // потолок 2 (эффекты «мало» — 1,5): на 3× экранах разницы не видно, а памяти и работы вдвое меньше
   VIEW.W=cv.clientWidth||window.innerWidth;VIEW.H=cv.clientHeight||window.innerHeight;
   cv.width=Math.round(VIEW.W*VIEW.dpr);cv.height=Math.round(VIEW.H*VIEW.dpr);
-  VIEW.zoom=clamp(Math.min(VIEW.W,VIEW.H)/370,.7,2.4);VIEW.B=VIEW.zoom*VIEW.dpr;
+  VIEW.zoom=clamp(Math.min(VIEW.W,VIEW.H)/370,.7,2.4)*(BB2.hk('zoom',VIEW.W,VIEW.H)||1);VIEW.B=VIEW.zoom*VIEW.dpr;
   VIEW.ww=VIEW.W/VIEW.zoom/2;VIEW.wh=VIEW.H/VIEW.zoom/2;VIEW.R=Math.hypot(VIEW.ww,VIEW.wh)+30;
   const k=Math.min(VIEW.B,2.5);if(Math.abs(k-SPR_K)/k>.05||!SPR_OK){SPR_OK=1;buildSprites(k);groundTiles={};}vigCache=null;rDirty=true;
 }
@@ -23,7 +23,7 @@ function layout(){
 /* ---------- ввод: плавающий джойстик + клавиатура ---------- */
 const IN={on:false,id:-1,ox:0,oy:0,px:0,py:0,keys:{}};
 function initInput(){
-  cv.addEventListener('pointerdown',e=>{if(!G||G.over||G.paused)return;ac();IN.on=true;IN.id=e.pointerId;IN.ox=IN.px=e.clientX;IN.oy=IN.py=e.clientY;try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+  cv.addEventListener('pointerdown',e=>{if(!G||G.over||G.paused)return;if(BB2.hk('tap',e,G)===true)return;ac();IN.on=true;IN.id=e.pointerId;IN.ox=IN.px=e.clientX;IN.oy=IN.py=e.clientY;try{cv.setPointerCapture(e.pointerId);}catch(_){}});
   cv.addEventListener('pointermove',e=>{if(!IN.on||e.pointerId!==IN.id)return;IN.px=e.clientX;IN.py=e.clientY;
     const dx=IN.px-IN.ox,dy=IN.py-IN.oy,d=Math.hypot(dx,dy),M=56;if(d>M){IN.ox=IN.px-dx/d*M;IN.oy=IN.py-dy/d*M;}});
   const up=e=>{if(e.pointerId===IN.id)IN.on=false;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
@@ -137,7 +137,7 @@ function mkEnemy(type,x,y,o){const d=EN[type],ch=G.ch,lt=DT(),tm=1+lt/60*.34;
   if(d.boss){e.hp*=mn(G.short&&G.short.bossHp,df&&df.bossHp);e.dmg*=mn(G.short&&(G.short.bossDmg||1),df&&df.bossDmg);if(G.short)e.spd*=G.short.bossSpd;}
   if(d.boss){e.boss=1;e.at=3;e.at2=8;e.at3=10;e.state='';e.st=0;e.phase=0;}
   if(G.curse){const cm=curseMul(G.curse);e.hp*=cm.hp;e.dmg*=cm.dmg;}
-  const wm=G.wk;if(d.prop){e.prop=1;e.spd=0;}else{if(wm.espd)e.spd*=d.boss?1+(wm.espd-1)/2:wm.espd;if(!d.boss&&type!=='egg'){if(wm.ehp)e.hp*=wm.ehp;if(wm.esz){e.sc*=wm.esz;e.r*=wm.esz;}if(wm.exp)e.xp*=wm.exp;if(qLow())e.hp*=1.25;}G.meet[type]=1;} // эффекты «мало»: нечисти ×0,8, но она крепче
+  const wm=G.wk;if(d.prop){e.prop=1;e.spd=0;}else{if(wm.espd)e.spd*=d.boss?1+(wm.espd-1)/2:wm.espd;if(!d.boss&&type!=='egg'){if(wm.ehp)e.hp*=wm.ehp;if(wm.esz){e.sc*=wm.esz;e.r*=wm.esz;}if(wm.exp)e.xp*=wm.exp;if(qLowF())e.hp*=1.25;}G.meet[type]=1;} // эффекты «мало»: нечисти ×0,8, но она крепче
   if(d.beh)e.beh=d.beh; /* повадка вида (BEH, M1: реестр пуст) */
   if(d.boss&&BOSS[type]&&BOSS[type].kit)e.kit=BOSS[type].kit; /* M3: приёмы босса темы → BK_STEP */
   if(o&&o.mini){const mk=BOSS[type]&&BOSS[type].mini;e.mini=1;if(d.boss)e.hp*=mk>0&&mk<1?mk:MB_HP;}
@@ -150,7 +150,7 @@ function spawnPos(far){const H=G.hero;let a=rand(0,TAU);if(H.moving&&Math.random
 /* M3: волны главы G.w=[{id,t,v,e}] (chW): старые главы — из en по порогам 0/35/95/165, вес 4-го .3 — ровно как было; свежий вид первые 60 с ×1,6, первый после 2:30 ×.6 */
 function pickType(){const t=DT(),W=G.w||(G.w=chW(G.ch));let tot=0;const w=W.map((x,i)=>{if(t<x.t||x.e&&t>=x.e)return 0;let v=x.v;if(x.t>0&&t-x.t<60)v*=1.6;if(G.soft&&EN[x.id].ranged)v*=G.soft.w;if(G.df&&EN[x.id].ranged)v*=G.df.w;if(i===0&&t>150)v*=.6;tot+=v;return v;});
   let r=Math.random()*tot;for(let i=0;i<W.length;i++){r-=w[i];if(r<=0)return W[i].id;}return W[0].id;}
-function spawnTick(dt){const t=DT();let rate=(1.15+t/60*1.2)*(G.wk.spawn||1);const cap=(48+t/60*56)*(G.wk.cap||1)*(qLow()?.8:1);
+function spawnTick(dt){const t=DT();let rate=(1.15+t/60*1.2)*(G.wk.spawn||1);const cap=(48+t/60*56)*(G.wk.cap||1)*(qLowF()?.8:1);
   if(G.boss&&!G.boss.dead)rate*=.35;if(G.richT>0)rate*=1.6;if(G.win)return;if(G.sleepT>0)rate=0; // сон-трава: пока нечисть спит, новая не лезет
   G.spawnAcc+=rate*dt;while(G.spawnAcc>=1){G.spawnAcc-=1;if(G.en.length>=cap)break;const p=spawnPos();mkEnemy(pickType(),p[0],p[1]);}
   while(G.ev.length&&G.t>=G.ev[0].t){const ev=G.ev.shift(),H=G.hero;
@@ -167,7 +167,7 @@ function spawnBoss(){const v=G.ch.bv&&BOSS[G.ch.bv],type=v&&v.base&&EN[v.base]?v
   // выход босса — событие (boost): 1,4 с он стоит и грозит, края экрана темнеют, плашка с именем и прозвищем; реплика — в облачке
   const pb=PH.boss[type],nm=v&&v.n?L(v.n,v.en&&v.en.n||v.n):EN[type].n,ttl=v&&v.title?L(v.title.ru,v.title.en||v.title.ru):BOSS_TITLE[type]?BOSS_TITLE[type]():pb?'«'+pb.intro+'»':'';
   G.boss=e;e.intro=1.4;G.bossIn=1.4;banner(nm,ttl,5);if(pb)say(e,pb.intro,3.2);SND.boss();G.shake=12;vib(60,1);musicPlay('boss');
-  G.fx.push({k:'wave',x:e.x,y:e.y,t:0,dur:.9,r1:240,col:'#ff5a3a'});burst(e.x,e.y,EN[type].col,24,220);}
+  G.fx.push({k:'wave',x:e.x,y:e.y,t:0,dur:.9,r1:240,col:'#ff5a3a'});burst(e.x,e.y,EN[type].col,24,220);BB2.hk('bossIn',e,G);}
 // прозвища боссов для плашки выхода
 const BOSS_TITLE={solo:()=>L('Свистун дремучего леса','Whistler of the Deep Forest'),yaga:()=>L('Хозяйка гиблого болота','Mistress of the Mire'),gory:()=>L('Трёхглавый хозяин Дикого поля','Three-headed lord of the Wild Field'),
   kosh:()=>L('Царь над златом и тьмой','King of gold and gloom'),karach:()=>L('Повелитель стужи','Lord of the Frost'),morcar:()=>L('Владыка морских глубин','Ruler of the deep sea'),
@@ -275,14 +275,14 @@ function addNum(x,y,v,col,cr){const cap=qLow()?10:16;if(G.nums.length>=cap){if(!
 /* удар «с отдачей» (v13): крит 5% × удача — урон ×2, крупная жёлтая цифра с «!» (надпись «КРИТ!» — не чаще раза в 0,7 с);
    крит по вожаку/боссу — вибрация, по боссу — ещё замирание кадра 45 мс (не чаще раза в 1,2 с, иначе похоже на тормоза) */
 function hitEnemy(e,d,kx,ky){if(e.dead)return;if(e.prop){propHit(e);return;}if(e.invul){e.flash=.06;return;}
-  const cr=Math.random()<.05*G.st.luck;if(cr)d*=2;
+  const cr=Math.random()<.05*G.st.luck;if(cr)d*=2;if(e.umF>G.t)d*=e.umK; /* bb2 UM: «Мороз-воевода» — застывший получает больше */
   if(e.beh||e.afx)d=BEH_HIT(e,d); /* щиты/броня повадок и вожаков */
   e.hp-=d;e.flash=e.boss?.06:.1;const m=e.boss||e.elite?.08:1;e.kx+=(kx||0)*m;e.ky+=(ky||0)*m;
   // цифры по одному врагу за 0,25 с складываются в одну (раньше — три ряда «33 33 33» поверх героя); крит — своя цифра; слово «КРИТ!» — только по вожаку и боссу
   {const m0=e.num;if(!cr&&m0&&m0.t<.25&&G.t-m0.b<.6&&!m0.cr&&typeof m0.v==='number'){m0.v+=Math.round(d);if(m0.v>=40)m0.col='#ffd84a';m0.t=Math.min(m0.t,.12);}else{const n=addNum(e.x+rand(-6,6),e.y-e.r*1.2,d,cr?'#ffe14a':d>=40?'#ffd84a':null,cr);if(!cr)e.num=n;}}
   if(cr){SND.crit();if((e.boss||e.elite)&&G.t-(G.critL||-9)>.7){G.critL=G.t;addNum(e.x,e.y-e.r*1.2-16,L('КРИТ!','CRIT!'),'#ffe14a',1);}
     if(e.boss||e.elite){vib(20);if(e.boss&&G.t-(G.hsT||-9)>1.2)hitStop(.045);}}else SND.hit();
-  if(e.hp<=0){if(e.type==='kosh'&&e.phase===0){kosheyEgg(e);return;}killEnemy(e);}}
+  if(e.hp<=0){if(e.type==='kosh'&&e.phase===0){kosheyEgg(e);return;}if(e.boss&&BB2.hk('bossLow',e,G)===true)return; /* bb2 HERO: смертельный удар по боссу — true: гибель отложена («Богатырский удар») */killEnemy(e);}}
 // замирание кадра: игра стоит s секунд (кадр не перерисовывается — на слабом телефоне это даже отдых). В спокойном режиме — нет
 function hitStop(s){if(CALM())return;G.hs=Math.max(G.hs||0,s);G.hsT=G.t;}
 // серия: сколько одолено за последние 10 с (10 корзин по секунде) — «Раззудись плечо! ×50/×100/×200»
@@ -299,7 +299,7 @@ function killEnemy(e){e.dead=true;G.kills++;G.kt[e.type]=(G.kt[e.type]||0)+1;SND
   if(Math.random()<.005*lk&&!G.wk.noHeal)drop('pie',e.x,e.y);
   if(Math.random()<.0025*lk)drop('yarn',e.x,e.y);
   if(e.elite)drop('chest',e.x,e.y);}
-function bossDie(e){G.shake=16;SND.win();S.bossKill[e.type]=1;musicPlay(G.endless?'run':null);hitStop(.14);vib(90,1);
+function bossDie(e){BB2.hk('bossDie',e,G);G.shake=16;SND.win();S.bossKill[e.type]=1;musicPlay(G.endless?'run':null);hitStop(.14);vib(90,1);
   // гибель босса — событие (boost): взрыв, две волны, сноп искр, короткое замедление (в спокойном режиме — без замедления), золото само летит к богатырю
   G.fx.push({k:'boom',x:e.x,y:e.y,t:0,dur:.7,r:170});G.fx.push({k:'wave',x:e.x,y:e.y,t:0,dur:.8,r1:300,col:'#ffe07a'});G.fx.push({k:'wave',x:e.x,y:e.y,t:-.18,dur:.9,r1:380,col:'#ffffff'});
   spark(e.x,e.y,'#fff3b0',30);burst(e.x,e.y,'#ffd84a',26,320);if(!CALM())G.slowT=.9;
@@ -326,14 +326,14 @@ function nextCycle(){if(!G||G.over)return;G.cyc++;const N=END_ORD.length,LAP=Mat
   G.em=LAP?Math.pow(1.5,LAP)*F.hp/G.ch.hp:1;G.emD=LAP?Math.pow(1.25,LAP)*F.dmg/G.ch.dmg:1;
   G.t0=G.t;G.ev=mkEvents(G.t);G.egg=null;G.w=chW(G.ch);G.K=chK(G.chi);banner(L('Круг ','Round ')+(G.cyc+1)+': '+G.ch.name,G.ch.sub);SND.boss();}
 function endP(k){if(!G||!G.endless)return 1;const x=(G.t-ENDP.t0)/60;return x>0?Math.pow(ENDP[k],x):1;} // fix-v23: множитель давления сечи/недели (data.js ENDP)
-function hurtHero(d,src){const H=G.hero;if(H.inv>0||G.over||G.win)return;if(src)G.lastBy=src;G.hits++;d=Math.max(1,d-G.st.armor);H.hp-=d;H.inv=.5;H.hurtT=.22;SND.hurt();G.shake=Math.max(G.shake,4);
+function hurtHero(d,src){const H=G.hero;if(H.inv>0||G.over||G.win)return;if(BB2.has('hurt')){const q=BB2.hk('hurt',d,src,G);if(q===false)return;if(typeof q==='number')d=q;}if(src)G.lastBy=src;G.hits++;d=Math.max(1,d-G.st.armor);H.hp-=d;H.inv=.5;H.hurtT=.22;SND.hurt();G.shake=Math.max(G.shake,4);
   addNum(H.x,H.y-30,d,'#ff5a5a');if(H.hp<H.max*.3&&H.sayT<=0){heroSay(pick(PH.low));}
   if(G.novHeal&&H.hp>0&&H.hp<G.st.maxHp*.35){G.novHeal=0;drop('loaf',H.x+rand(-30,30),H.y-46);const lf=G.picks[G.picks.length-1];lf.find=1;lf.t=.3;} // первый поход: каравай сам прилетит (+50% здоровья)
   if(H.hp<=0){H.hp=0;heroDown();}}
-function heroDown(){const H=G.hero;G.falls=(G.falls||0)+1;if(G.revives>0){G.revives--;revive(L('Знахаркин отвар!','Wise woman\'s brew!'));return;}G.paused=true;IN.on=false;YG.stop();openDeath();}
+function heroDown(){const H=G.hero;G.falls=(G.falls||0)+1;if(BB2.hk('down',G,G.lastBy)===true)return;if(G.revives>0){G.revives--;revive(L('Знахаркин отвар!','Wise woman\'s brew!'));return;}G.paused=true;IN.on=false;YG.stop();openDeath();}
 function revive(msg){const H=G.hero;H.hp=G.st.maxHp*.6;G.hpLock=H.hp;H.inv=2.5;G.paused=false;G.fx.push({k:'wave',x:H.x,y:H.y,t:0,dur:.6,r1:260,col:'#ffe07a',own:1});
   for(const e of G.en){if(e.dead||e.boss)continue;const dx=e.x-H.x,dy=e.y-H.y,d=Math.hypot(dx,dy)||1;if(d<260){e.kx+=dx/d*600;e.ky+=dy/d*600;hitEnemy(e,60);}}
-  heroSay(msg||L('Врёшь, не возьмёшь!','Not today, monsters!'));SND.level();YG.start();}
+  heroSay(msg||L('Врёшь, не возьмёшь!','Not today, monsters!'));SND.level();YG.start();BB2.hk('revive',G,msg);}
 
 /* ---------- добыча ---------- */
 function dropGem(x,y,v){if(v<=0)return;if(G.gems.length>320){const g=G.gems[Math.floor(Math.random()*G.gems.length)];g.v+=v;return;}
@@ -416,12 +416,12 @@ function updWeapons(dt){const H=G.hero,st=G.st;
 /* ---------- дары богатырей ---------- */
 function darRank(){return (S.rank||{})[G.heroId]||0;}
 function darCd(){return heroDef(G.heroId).dar.cd*(1-.07*darRank());}
-function darPow(){return (1+.3*darRank())*G.st.might;}
+function darPow(){return (1+.3*darRank())*G.st.might*(G.umK||1);}
 function updDar(dt){const H=G.hero;G.wolfT-=dt;G.swordT-=dt;G.dashT-=dt;G.darT-=dt;
   if(G.wolfT>0)forNear(H.x,H.y,40,e=>{if((e.x-H.x)**2+(e.y-H.y)**2>(e.r+18)**2||(e.hk.wv||0)>G.t)return;e.hk.wv=G.t+.3;hitEnemy(e,35*darPow(),(e.x-H.x)*4,(e.y-H.y)*4);});
   if(G.swordT>0){G.swords=[];for(let i=0;i<6;i++){const a=G.t*4+i/6*TAU,x=H.x+Math.cos(a)*95,y=H.y+Math.sin(a)*95;G.swords.push([x,y,a]);
     forNear(x,y,34,e=>{if((e.x-x)**2+(e.y-y)**2>(e.r+14)**2||(e.hk.ms||0)>G.t)return;e.hk.ms=G.t+.3;hitEnemy(e,25*darPow(),Math.cos(a)*120,Math.sin(a)*120);});}}
-  if(G.darT>0||G.win)return;G.darT=darCd();G.q.dars++;const d=heroDef(G.heroId).dar,P=darPow(),A=G.st.area;heroSay(d.name+'!');SND.level();
+  if(G.darT>0||G.win||BB2.hk('dar',G)===true)return;G.darT=darCd();G.q.dars++;const d=heroDef(G.heroId).dar,P=darPow(),A=G.st.area;heroSay(d.name+'!');SND.level();
   switch(G.heroId){
   case 'dob':{const R=190*A;G.fx.push({k:'wave',own:1,t:0,dur:.5,r1:R,col:'#ffd84a'});G.shake=6;
     forNear(H.x,H.y,R+20,e=>{const dx=e.x-H.x,dy=e.y-H.y,dd=Math.hypot(dx,dy)||1;if(dd<R+e.r)hitEnemy(e,60*P,dx/dd*520,dy/dd*520);});break;}
@@ -558,7 +558,7 @@ function update(dt){
     const dx=e.x-H.x,dy=e.y-H.y,dd=Math.hypot(dx,dy)||1,rr=e.r+11;
     if(dd<rr&&e.dmg>0){hurtHero(e.dmg,e.type);if(!e.boss){e.x=H.x+dx/dd*rr;e.y=H.y+dy/dd*rr;}}}
   // расталкивание
-  for(const e of G.en){if(e.dead||e.fly||e.boss||e.prop)continue;forNear(e.x,e.y,e.r+20,o=>{if(o===e||o.fly)return;const dx=e.x-o.x,dy=e.y-o.y,m=e.r+o.r;const d2=dx*dx+dy*dy;
+  for(const e of G.en){if(e.dead||e.fly||e.boss||e.prop||e.ob)continue;forNear(e.x,e.y,e.r+20,o=>{if(o===e||o.fly||o.ob)return;const dx=e.x-o.x,dy=e.y-o.y,m=e.r+o.r;const d2=dx*dx+dy*dy;
     if(d2<m*m&&d2>.01){const d=Math.sqrt(d2),p=(m-d)*.35;e.x+=dx/d*p;e.y+=dy/d*p;}});}
   // случайные реплики нечисти
   G.quipT-=dt;if(G.quipT<=0&&!(G.first&&G.t<(G.short?50:160))){G.quipT=rand(11,17);const vis=G.en.filter(e=>!e.dead&&!e.boss&&onScreen(e,-30)&&PH.en[e.type]);if(vis.length){const e=pick(vis);say(e,pick(PH.en[e.type]));}}
@@ -595,7 +595,7 @@ function update(dt){
   if(G.win){G.winT-=dt;if(G.winT<=0&&!G.over)endRun(true);}
   else if(G.lvlQ>0&&!G.paused&&H.hp>0){G.paused=true;IN.on=false;tutEvent('lvl');openLevelUp();}
 }
-function pickup(p){const H=G.hero;
+function pickup(p){const H=G.hero;if(BB2.hk('pick',p,G)===true)return;
   if(p.k==='coin'){G.gold+=p.v*ECO.coin*(G.short?G.short.coin:1);SND.coin();}
   if(p.k==='pie'){H.hp=Math.min(G.st.maxHp,H.hp+30);SND.heal();heroSay(pick(PH.pie));addNum(H.x,H.y-30,30,'#6aff8a');}
   if(p.k==='yarn'){for(const g of G.gems)g.mag=true;SND.heal();}
@@ -624,7 +624,7 @@ function endRun(win){if(G.over)return;G.over=true;G.fw=win&&!G.endless&&!G.daily
       {const got={w:1,d:!G.falls?1:0,t:G.t<=STAR_T?1:0};G.starGot=got;G.starNew=0;for(const k of STAR_K)if(got[k]&&!S.stars[G.chi+pre+k]){S.stars[G.chi+pre+k]=1;G.starNew++;}}}
     else if(G.t>=30){S.pity={c:G.chi,n:Math.min(PITY_MAX,(S.pity&&S.pity.c===G.chi?S.pity.n|0:0)+1)};}if(win)S.done[G.chi]=1;S.best[G.chi]=Math.max(S.best[G.chi]||0,Math.floor(G.t));}if(G.t>=30)S.runs++; // поход, брошенный в первые 30 с, не считается (задания, достижения)
   S.kills+=G.kills;G.bossN=G.endless?(G.bossesKilled||0):(win?1:0);S.bosses=(S.bosses||0)+G.bossN;G.questDone=questsFromRun(win);runStats(win);
-  if(G.endless&&!G.weekly)LB.set('endless',S.endBest);LB.set('kills',S.kills);
+  if(G.endless&&!G.weekly)LB.set('endless',S.endBest);LB.set('kills',BB2.lbKills?BB2.lbKills():S.kills);
   if(!win&&!G.endless&&!G.daily&&!S.nb&&!S.village.forge&&G.t>=30){S.nb=1;G.nbGold=NOV_GIFT;S.gold+=NOV_GIFT;ern('gift',NOV_GIFT);} // подъёмные от старосты: один раз, новичку после первого поражения
   S.gold+=G.reward;ern('lvl',G.reward);META_HK('END',G,win); // золото похода — сразу в кошелёк и в сохранение (openResult → save), ×2/×3 за рекламу доплачивает разницу
   // статистика: итог похода (выход с привала — quit); t — игровые секунды, k — нечисть, lv — уровень богатыря, hr — богатырь
@@ -651,6 +651,8 @@ function worldT(){const B=VIEW.B;ctx.setTransform(B,0,0,B,cv.width/2-VIEW.cx*B,c
 function drawSpr(key,x,y,sx,sy,flash,rot,alpha){const s=SPR[key]||spr(key);if(!s)return;const B=VIEW.B,tx=(x-VIEW.cx)*B+cv.width/2,ty=(y-VIEW.cy)*B+cv.height/2;
   if(rot){const c=Math.cos(rot),n=Math.sin(rot);ctx.setTransform(B*sx*c,B*sx*n,-B*sy*n,B*sy*c,tx,ty);}else ctx.setTransform(B*sx,0,0,B*sy,tx,ty);
   if(alpha!=null)ctx.globalAlpha=alpha;ctx.drawImage(flash?sprF(s):s.c,-s.s/2,-s.s/2,s.s,s.s);if(alpha!=null)ctx.globalAlpha=1;}
+/* bb2 (PERF 08 §4.1): размер цифр урона меняется шагами по 1/8 — браузер не готовит буквы заново на каждый кадр (кадр при 300 врагах в 2 раза легче). Выключить: флаг numq */
+const NUMQ=BB2.on('numq');
 function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=calm?0:G.shake;
   const sx=shk?rand(-shk,shk):0,sy=shk?rand(-shk,shk):0;VIEW.cx=G.cam.x+sx*.5;VIEW.cy=G.cam.y+sy*.5;
   c.setTransform(1,0,0,1,0,0); // сплошной заливки нет: плитки земли и так закрывают весь экран
@@ -683,10 +685,10 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
   worldT();
   // тени
   c.fillStyle='rgba(20,30,20,.22)';c.beginPath();
-  for(const e of G.en){if(!onScreen(e,60))continue;const r=e.r*(e.fly?.7:1);c.moveTo(e.x+r,e.y+e.r*.9+(e.fly?8:0));c.ellipse(e.x,e.y+e.r*.9+(e.fly?8:0),r,r*.38,0,0,TAU);}
+  for(const e of G.en){if(e.ob||!onScreen(e,60))continue;const r=e.r*(e.fly?.7:1);c.moveTo(e.x+r,e.y+e.r*.9+(e.fly?8:0));c.ellipse(e.x,e.y+e.r*.9+(e.fly?8:0),r,r*.38,0,0,TAU);}
   c.moveTo(H.x+14,H.y+22);c.ellipse(H.x,H.y+22,14,5,0,0,TAU);c.fill();
   // сущности, сортировка по y
-  const ents=ENTS;ents.length=0;for(const e of G.en)if(onScreen(e,70))ents.push(e);for(const t of talls)ents.push(t);ents.push(H);ents.sort((a,b)=>a.y-b.y);
+  if(G.ob){BB2.hk('drawOb',c,G);worldT();} /* bb2 ORDA: орда (e.ob) — одним слоем из листа-картинки, без тени и сортировки каждой */const ents=ENTS;ents.length=0;for(const e of G.en)if(!e.ob&&onScreen(e,70))ents.push(e);for(const t of talls)ents.push(t);ents.push(H);ents.sort((a,b)=>a.y-b.y);
   for(const e of ents){
     if(e.deco){const sz=ART[e.deco].size,behind=H.y<e.y&&H.y>e.y0-sz*.75&&Math.abs(H.x-e.x)<sz*.4;drawSpr(e.deco,e.x,e.y0,e.fl,1,false,0,behind?.45:null);continue;}
     if(e===H){const fr=H.moving?Math.floor(H.step)%2:0,bob=H.moving?Math.abs(Math.sin(H.step*Math.PI))*2:Math.sin(G.t*3)*.6;
@@ -756,7 +758,7 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
   // цифры урона: шрифт задаём один раз, «выпрыгивание» — масштабом, обводка — тёмной тенью со сдвигом
   c.textAlign='center';c.textBaseline='middle';c.font='900 13px '+CVL.font;c.lineWidth=2.8;c.lineJoin='round';c.strokeStyle=CVL.num;
   // крит — в 1,5 раза крупнее и с «!» (в спокойном режиме — без «выпрыгивания»)
-  for(const n of G.nums){const q=n.t/.8,s=(calm?1:q<.15?.6+q/.15*.5:1.1-q*.2)*(n.cr?1.5:1),k=B*s,tx=n.cr&&typeof n.v==='number'?n.v+'!':n.v;c.globalAlpha=q>.6?(1-q)/.4:1;
+  for(const n of G.nums){const q=n.t/.8,s0=(calm?1:q<.15?.6+q/.15*.5:1.1-q*.2)*(n.cr?1.5:1),s=NUMQ?Math.round(s0*8)/8:s0,k=B*s,tx=n.cr&&typeof n.v==='number'?n.v+'!':n.v;c.globalAlpha=q>.6?(1-q)/.4:1;
     c.setTransform(k,0,0,k,(n.x-VIEW.cx)*B+cv.width/2,(n.y-q*22-VIEW.cy)*B+cv.height/2);c.strokeText(tx,0,0);c.fillStyle=n.col||'#fff';c.fillText(tx,0,0);}c.globalAlpha=1;worldT();
   // реплики
   for(const b of G.bub)drawBubble(b);
@@ -766,7 +768,7 @@ function render(){if(!G)return;const c=ctx,H=G.hero,B=VIEW.B,calm=CALM(),shk=cal
   const low=H.hp>0&&H.hp<G.st.maxHp*.3,hurt=!calm&&H.hurtT>0?Math.min(.6,H.hurtT*2.5):0,ra=Math.max(hurt,low?(calm?.32:.32+Math.sin(G.t*6)*.12):0);
   if(ra>0){c.globalAlpha=ra;c.drawImage(V.red,0,0,cv.width,cv.height);c.globalAlpha=1;}
   if(G.bossIn>0){c.globalAlpha=clamp(Math.min(G.bossIn/.4,(1.4-G.bossIn)/.2),0,1);c.drawImage(V.dark,0,0,cv.width,cv.height);c.drawImage(V.dark,0,0,cv.width,cv.height);c.globalAlpha=1;}
-  drawHUD();}
+  drawHUD();if(BB2.has('drawTop')){c.setTransform(VIEW.dpr,0,0,VIEW.dpr,0,0);BB2.hk('drawTop',c,G);}}
 // свечение: градиент рисуется один раз на цвет (64×64), дальше — только drawImage (раньше — новый градиент на каждую частицу)
 const GLOW={};
 function glowSpr(col){let c=GLOW[col];if(c)return c;c=mkCanvas(64,64);const g=c.getContext('2d');let gr;
@@ -850,7 +852,7 @@ function drawHUD(){const c=ctx,d=VIEW.dpr,W=VIEW.W,H=G.hero;c.setTransform(d,0,0
     c.font='900 '+f1+'px '+CVL.font;c.lineWidth=4;c.strokeStyle='rgba(40,10,6,.7)';c.strokeText(b.title,W/2,py+8+f1/2);c.fillStyle='#fff3c8';c.fillText(b.title,W/2,py+8+f1/2);
     if(b.sub){c.font='700 '+f2+'px '+SF;c.lineWidth=3;c.strokeText(b.sub,W/2,py+12+f1+f2/2);c.fillStyle='#fff';c.fillText(b.sub,W/2,py+12+f1+f2/2);}c.globalAlpha=1;}
   // дар богатыря: портрет и кольцо перезарядки
-  {const cx=36,cy=VIEW.H-44-(window.__safeBot||0),R=24,q=1-clamp(G.darT/darCd(),0,1),sp=spr('hp_'+G.hkey);
+  if(BB2.hk('hudDar',c,G)!==true){const cx=36,cy=VIEW.H-44-(window.__safeBot||0),R=24,q=1-clamp(G.darT/darCd(),0,1),sp=spr('hp_'+G.hkey);
     c.fillStyle=CVL.track;c.beginPath();c.arc(cx,cy,R,0,TAU);c.fill();if(sp)c.drawImage(sp.c,cx-R*.85,cy-R*.85,R*1.7,R*1.7);
     c.lineWidth=4;c.strokeStyle='rgba(255,255,255,.15)';c.beginPath();c.arc(cx,cy,R,0,TAU);c.stroke();
     c.strokeStyle=q>=1?'#ffd84a':'#8ad0ff';c.beginPath();c.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+TAU*q);c.stroke();
@@ -859,11 +861,12 @@ function drawHUD(){const c=ctx,d=VIEW.dpr,W=VIEW.W,H=G.hero;c.setTransform(d,0,0
   // джойстик
   if(IN.on){c.fillStyle='rgba(255,255,255,.10)';c.strokeStyle='rgba(255,255,255,.35)';c.lineWidth=2;c.beginPath();c.arc(IN.ox,IN.oy,48,0,TAU);c.fill();c.stroke();
     c.fillStyle='rgba(255,255,255,.55)';c.beginPath();c.arc(IN.px,IN.py,20,0,TAU);c.fill();}
+  else if(G.tut&&TUT[G.tut.i]&&TUT[G.tut.i].id==='move'&&BB2.hk('tutDraw',c,G)===true){} /* bb2 NOVICE: подсказка управления по устройству */
   else if(G.tut&&TUT[G.tut.i]&&TUT[G.tut.i].id==='move'){const cx=W/2,cy=VIEW.H*.56,a=G.t*2.2,px=cx+Math.cos(a)*34,py=cy+Math.sin(a)*22;
     c.fillStyle='rgba(255,255,255,.10)';c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=2;c.beginPath();c.arc(cx,cy,48,0,TAU);c.fill();c.stroke();
     c.fillStyle='rgba(255,255,255,.6)';c.beginPath();c.arc(px,py,20,0,TAU);c.fill();c.font='30px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText('👆',px+6,py+22);}
   else if(G.t<6&&!G.tut){c.globalAlpha=Math.min(1,(6-G.t));c.font='700 15px '+CVL.font;c.textAlign='center';c.fillStyle='#fff';c.strokeStyle='rgba(10,10,30,.6)';c.lineWidth=4;
-    for(const [s,dy] of[[L('Веди пальцем по экрану — богатырь пойдёт.','Drag your finger — the hero walks.'),-80],[L('Бьёт он сам!','He attacks on his own!'),-58]]){c.strokeText(s,W/2,VIEW.H+dy);c.fillText(s,W/2,VIEW.H+dy);}c.globalAlpha=1;}}
+    for(const [s,dy] of[[BB2.hk('hint')||L('Веди пальцем по экрану — богатырь пойдёт.','Drag your finger — the hero walks.'),-80],[L('Бьёт он сам!','He attacks on his own!'),-58]]){c.strokeText(s,W/2,VIEW.H+dy);c.fillText(s,W/2,VIEW.H+dy);}c.globalAlpha=1;}}
 
 // на паузе, под окном выбора и на итогах кадр не перерисовываем (rDirty — один кадр после смены размера)
 // замирание кадра (G.hs): не считаем и не рисуем; счётчик кадров для «авто»-качества — только в самом бою, после 3-й секунды

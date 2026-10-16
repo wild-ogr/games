@@ -226,6 +226,7 @@ function ZAB_OPEN(id,opt){opt=opt||{};const g=ZAB.by[id]||zabG(+id);if(!g){toast
   const day=dayKey(),seed=opt.seed!=null?opt.seed>>>0:zabSeed(g.id,day),mode=opt.train?'train':opt.mode||'day';
   const o={calm:opt.calm!=null?!!opt.calm:zabCalm(),lvl:opt.lvl!=null?opt.lvl:zabLvl(),seed,train:mode==='train',day,week:typeof weekNo==='function'?weekNo():0,lang:LANG,
     rnd:mulberry(seed),mode,ctx:opt.ctx||{},best:ZB().b[g.id]|0};
+  try{if(typeof ZREC!=='undefined')ZREC.pre(g,o,opt);}catch(e){zabErr('zrec',e);} /* bb2 ZAB: рамка рекордов — o.again/o.first/o.vs/o.unit, догрузка окна итогов */
   qb.onclick=()=>{try{SND.click();}catch(e){}if(fin){ZAB_CLOSE();return;}ZAB_QUIT_ASK(host);};
   const onRs=()=>{for(const f of rs)try{f(host.w,host.h);}catch(e){console.error(e);}};
   window.addEventListener('resize',onRs);
@@ -247,10 +248,11 @@ function ZAB_CLOSE(){const c=ZAB.cur;if(!c)return;ZAB.cur=null;for(const f of c.
   try{STAT.screen(typeof curTab!=='undefined'?String(curTab).toLowerCase():'menu');}catch(e){}}
 
 /* ---------- итог: награды по ZAB_RW, рекорд, сила на бой → окно итогов (zabFinUI) ---------- */
-function ZAB_FIN(g,o,r,opt){const c=ZAB.cur,n=g.num|0,rw=ZAB_RW[n]||{sl:[0,0,0,0],tr:[0,0,0,0]},z=ZB(),train=o.mode==='train';
+function ZAB_FIN(g,o,r,opt){const c=ZAB.cur,n=g.num|0,rw=ZAB_RW[n]||typeof ZREC!=='undefined'&&ZREC.rw(g)||{sl:[0,0,0,0],tr:[0,0,0,0]},z=ZB(),train=o.mode==='train';
+  let zr=null;try{if(typeof ZREC!=='undefined')zr=ZREC.put(g,o,r);}catch(e){zabErr('zrec',e);} /* bb2 ZAB: рекорд пишет рамка (и в тренировке, и у ловкостных); null — как раньше */
   r.score=Math.max(0,Math.round(+r.score||0));r.tier=Math.max(0,Math.min(3,r.tier|0));const ex=r.extra&&typeof r.extra==='object'?r.extra:{};
-  const best=z.b[g.id]|0,rec=!train&&!g.noRec&&r.tier>=1&&r.score>best&&r.score>0;if(rec)z.b[g.id]=r.score;
-  const out={score:r.score,tier:r.tier,rec,best:Math.max(best,r.score),train,mode:o.mode,items:[],sl:0,buf:null,msg:ex.msg||''};
+  const best=zr?zr.prev:z.b[g.id]|0,rec=zr?zr.rec:!train&&!g.noRec&&r.tier>=1&&r.score>best&&r.score>0;if(rec&&!zr)z.b[g.id]=r.score;
+  const out={score:r.score,tier:r.tier,rec,best:zr?zr.best:Math.max(best,r.score),zr,train,mode:o.mode,items:[],sl:0,buf:null,msg:ex.msg||''};
   if(!train){z.n[g.id]=(z.n[g.id]|0)+1;const fr=g.kind==='after'||!!g.free;   // free — без дневных потолков (клад: 5 трофеев + находки за раз)
     // повтор за ролик (day2) — лучший из двух: доплачиваем разницу ступеней
     const t0=o.mode==='day2'&&c&&c.prevTier!=null?c.prevTier:-1,tt=Math.max(r.tier,t0);
@@ -266,11 +268,12 @@ function ZAB_FIN(g,o,r,opt){const c=ZAB.cur,n=g.num|0,rw=ZAB_RW[n]||{sl:[0,0,0,0
     if(g.kind==='week'&&typeof zabWeekTick==='function')zabWeekTick(g);
     if(typeof g.after==='function')try{const more=g.after(r,out,o);if(Array.isArray(more))out.items=out.items.concat(more);}catch(e){zabErr('after-'+g.id,e);}}
   zabTouch();save();
-  zabEv('end',{id:g.id,score:r.score,tier:r.tier,ad:c&&c.ad?1:0,m:o.mode,rec:rec?1:0,src:ZAB.src}); /* upd0910: train убран (это m:'train'), вместо него src — откуда вошли: day «Дела на сегодня», win приглашение в итогах победы, menu плитка/экран, pech печь */
+  zabEv('end',zr?{id:g.id,score:r.score,tier:r.tier,ad:c&&c.ad?1:0,m:o.mode,t:c?Math.round((Date.now()-c.t0)/1000):0,src:ZAB.src}:{id:g.id,score:r.score,tier:r.tier,ad:c&&c.ad?1:0,m:o.mode,rec:rec?1:0,src:ZAB.src}); /* bb2 ZAB: с рамкой вместо rec — t (секунды партии; у STAT предел 8 полей), рекорд — отдельным событием zab rec */ /* upd0910: train убран (это m:'train'), вместо него src — откуда вошли: day «Дела на сегодня», win приглашение в итогах победы, menu плитка/экран, pech печь */
   if(typeof zabFinUI==='function')return zabFinUI(g,o,out,opt);
   ZAB_CLOSE();toast(zabName(g)+': '+r.score);}
 /* окно итогов (поверх игры): ступень звёздами, очки, награды; «Ещё попытка за рекламу» — одна просьба, если ступень < 3, игра в окне ролик не брала, раз в день */
 function zabFinUI(g,o,out,opt){const c=ZAB.cur;if(!c){toast(zabName(g)+': '+out.score);return;}const host=c.host,z=ZB(),n=g.num|0;
+  try{if(typeof ZREC!=='undefined'&&ZREC.fin(g,o,out,opt))return;}catch(e){zabErr('zrec',e);} /* bb2 ZAB: окно итогов рамки («Ещё разок», соседи); false — старое окно ниже */
   const tierT=[L('Мимо','Miss'),L('Неплохо','Not bad'),L('Хорошо','Good'),L('Отлично!','Excellent!')][out.tier];
   const canAd=!out.train&&ZAB_RW.ad&&o.mode!=='day2'&&out.tier<3&&!c.ad&&!c.asked&&!g.noRetry&&!z.d.a[g.id]&&g.kind!=='after'&&g.kind!=='kiln'&&host.adOk();
   let h='<div class="panel zabRes"><h3>'+zabName(g)+'</h3>'+

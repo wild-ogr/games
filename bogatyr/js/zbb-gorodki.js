@@ -7,7 +7,8 @@
    Подсказка-пунктир показывает полёт только до черты города (дальше — догадывайся сам): меткость, не угадайка.
    Логика (бросок, сбивание, счёт) — чистые функции gk*, ими же играет бот (sim). */
 (function(){
-const GK={CZ:6.5,CD:2,CW:1,RL:.36,RR:.1,BL:1.05,BATS:5,CLEAN:3,FENCE:16,TIERS:[10,20,30],ZMIN:2,ZMAX:10.4};
+const SOFT=typeof BB2!=='undefined'&&BB2.on('zabsoft'); /* bb2 ZAB: мягче (03-minigames §2 F5) */
+const GK={CZ:6.5,CD:2,CW:1,RL:.36,RR:.1,BL:1.05,BATS:5,CLEAN:3,FENCE:16,TIERS:SOFT?[7,12,15]:[10,20,30],FIGS:SOFT?3:0,ZMIN:2,ZMAX:10.4};   /* мягче: партия — 3 фигуры (все три выбиты = «отлично»; было 2 из 33) */
 // фигуры: x — поперёк (−1…1), z — от черты кона (город 6,5…8,5); o: 'x' лежит поперёк, 'z' лежит вдоль, 'v' стоит
 const FIG=[
   {id:'pushka',n:()=>L('Пушка','Cannon'),r:[[-.24,6.62,'v'],[.24,6.62,'v'],[0,6.8,'z'],[0,7.12,'x'],[0,6.62,'v']]},
@@ -48,7 +49,7 @@ function gkSim(o,k){o=o||{};k=k==null?.6:+k;const seed=(o.seed|0)||20261008,rnd=
   for(let b=0;b<bats;b++){const al=R.filter(r=>!r.out);const mx=al.reduce((s,r)=>s+r.x,0)/al.length,mz=Math.min(...al.map(r=>r.z));
     const zT=mz-.08+gs()*(1.1*(1-k)+.12),xT=mx+gs()*(.5*(1-k)+.05),pow=Math.max(0,Math.min(1,(zT-GK.ZMIN)/(GK.ZMAX-GK.ZMIN)));
     const r=gkThrow(R,{xL:xT,zL:GK.ZMIN+pow*(GK.ZMAX-GK.ZMIN),pow},gkNoise(rnd,o.calm),o.calm,rnd);score+=r.outN;
-    if(R.every(q=>q.out)){if(fresh&&r.outN===5)score+=GK.CLEAN;fig++;R=gkFig(fig);fresh=1;}else fresh=0;}
+    if(R.every(q=>q.out)){if(fresh&&r.outN===5)score+=GK.CLEAN;fig++;R=gkFig(fig);fresh=1;if(GK.FIGS&&fig>=GK.FIGS&&!o.more)break;}else fresh=0;}
   return {score,tier:gkTier(score)};}
 
 /* =================================== игра =================================== */
@@ -126,7 +127,7 @@ function gkRun(host,o){o=o||{};const K=zbbK,seed=(o.seed|0)||20261008,calm=K.cal
     if(G.R.every(q=>q.out)){const clean=G.fresh&&r.outN===5;G.figN++;if(clean){G.score+=GK.CLEAN;G.cleanN++;K.snd('combo');}else K.snd('level');
       G.banner={t:0,s:clean?L('С одной биты! +','In one throw! +')+GK.CLEAN:L('Фигура выбита!','Figure cleared!'),sub:FIG[G.fig%FIG.length].n()};
       G.fig++;G.R=gkFig(G.fig);for(const q of G.R)q.pop=0;G.fresh=1;}else G.fresh=0;
-    if(G.bat>=G.bats){G.state='end';setTimeout(()=>END.end(G.score),650);}else G.state='aim';}
+    if(G.bat>=G.bats||GK.FIGS&&G.figN>=GK.FIGS&&!G.adUsed){G.state='end';setTimeout(()=>END.end(G.score),G.bat>=G.bats?650:1500);}else G.state='aim';}
 
   /* =================================== рисование =================================== */
   const C={};
@@ -135,7 +136,7 @@ function gkRun(host,o){o=o||{};const K=zbbK,seed=(o.seed|0)||20261008,calm=K.cal
     drawBack(g,W,H);drawYard(g,W,H);drawCity(g);drawObjs(g);K.parts(g,G.P,dt);
     g.save();K.pops(g,G.N,dt,20/G.zoom);g.restore();g.restore();
     drawHero(g,W,H);if(G.state==='aim'||G.state==='intro')drawHandBat(g);drawAim(g);drawHUD(g,W,H);
-    if(G.state==='intro')K.intro(g,W,H,Object.assign(G.intro,{title:L('Городки','Gorodki'),lines:[L('Выбей рюхи из «города» за 5 бит.','Knock the pins out of the “town” with 5 bats.'),
+    if(G.state==='intro')K.intro(g,W,H,Object.assign(G.intro,{title:L('Городки','Gorodki'),lines:[GK.FIGS?L('Три фигуры, пять бит: выбей все рюхи из «города».','Three figures, five bats: knock every pin out of the “town”.'):L('Выбей рюхи из «города» за 5 бит.','Knock the pins out of the “town” with 5 bats.'),
       L('Рюха выбита, когда вылетела за черту. Вся фигура одной битой — +3.','A pin is out once it flies over the line. Whole figure in one throw — +3.'),
       pc?L('Мышью: зажми, потяни назад и отпусти.','Mouse: press, pull back and release.'):L('Потяни биту назад и отпусти. Пунктир покажет полёт до черты.','Pull the bat back and let go. The dotted line shows the flight up to the line.')],
       pc:[[['←','→'],L('прицел влево-вправо','aim left / right')],[['↑','↓'],L('дальше / ближе','farther / nearer')],[[L('Пробел','Space')],L('прицелиться, ещё раз — бросок','aim, press again to throw')]],

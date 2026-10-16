@@ -1,0 +1,10 @@
+/* bb2 LOVB: объявления ловкостных 6–10 (игры — догрузкой) + «Встреча на дороге» и «Троеборье» (js/bb2-lovb-x.js, набор lovb — в меню). Журнал: bogatyr-boost2/logs/LOVB.md */
+(function(){var K='js/bb2-lov-kit.js',J='js/bb2-lovb-',D={shchit:'shit',smorod:'ryvok',svist:'shit',bulavy:'perebros',chuchela:'zamah'};
+ZREC.add('shchit',{f:[K,J+'shchit.js'],n:['Щит Добрыни','Dobrynya’s Shield'],a:['Жми туда, откуда летит, — щит закроет. Шишки Лешего — понарошку','Tap where it flies from — the shield blocks. Leshy’s cones are fake'],icon:'um_shit',u:['стрела','стрелы','стрел'],ue:['arrow','arrows'],mid:22,md:[14,26,40]}); // i18n:ru
+ZREC.add('smorod',{f:[K,J+'smorod.js'],n:['Через Смородину','Across the Smorodina'],a:['Жми — Садко прыгает вперёд. Бревно уплыло — купайся','Tap to hop forward. Miss the log — take a swim'],icon:'i_gusli',u:['прыжок','прыжка','прыжков'],ue:['hop','hops'],mid:22,md:[15,30,55]}); // i18n:ru
+ZREC.add('svist',{f:[K,J+'svist.js'],n:['Свист Соловья','Nightingale’s Whistle'],a:['Держи слева или справа — упирайся против ветра','Hold left or right — lean against the wind'],icon:'solo',u:['секунда','секунды','секунд'],ue:['second','seconds'],mid:22,md:[15,28,42]}); // i18n:ru
+ZREC.add('bulavy',{f:[K,J+'bulavy.js'],n:['Три булавы','Three Maces'],a:['Жми по булаве внизу — Микула подбросит. Потом их две, потом три','Tap a falling mace to toss it. Then two, then three'],icon:'mace',u:['подброс','подброса','подбросов'],ue:['toss','tosses'],mid:30,md:[20,45,80]}); // i18n:ru
+ZREC.add('chuchela',{f:[K,'js/bb2-lov-rist.js',J+'chuchela.js'],n:['Сто чучел','A Hundred Dummies'],a:['Разнеси сто чучел как можно быстрее. Оружие — дня','Smash a hundred dummies, fast. Weapon of the day'],icon:'i_axe',u:['секунда','секунды','секунд'],ue:['second','seconds'],mid:75,md:[95,65,45],less:1}); // i18n:ru
+BB2.hook('zab',function(e){if(D[e.id]&&e.tier>0)BB2.after('lovdar',function(){var k;if(window.LOVDAR)for(k in D)LOVDAR.map[k]=D[k];});},40);
+if(BB2.on('meet')||BB2.on('troe')){BB2.lazy('lovb',['js/bb2-lovb-x.js'],function(){return !!window.LOVBX;});BB2.late('lovb');}
+})();

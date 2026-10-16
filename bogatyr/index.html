@@ -5,12 +5,12 @@
 <script>window.__se=[];addEventListener('error',function(e){var t=e.target,s=window.__se;if(s&&s.length<10)s.push(t&&t.tagName?[2,t.src||t.href||'',t.tagName]:[1,e.message,e.filename,e.lineno]);},true);</script>
 <script>/* предохранитель загрузки (05.10.2026): свой файл игры не загрузился → перезагрузка до 2 раз, потом окно «Обновить» */
 (function(){var K='ldfail',n=0,done=false;try{n=+sessionStorage.getItem(K)||0;}catch(e){}
-function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
+function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.getAttribute&&t.getAttribute('data-lazy'))return false;/* bb2: догружаемые файлы (BB2.need) — не повод перезагружать игру */if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
   try{var a=document.createElement('a');a.href=u;if(a.host!==location.host)return false;}catch(e){return false;}
   return !/vk-bridge|sdk\.js/.test(u);}
 addEventListener('error',function(e){if(done||!own(e.target))return;fail();},true);
 /* главы данными (07.10): файлы движка глав загрузились, но не выполнились (обрыв посреди файла) — то же самое */
-addEventListener('load',function(){if(!done&&(typeof THEME_ADD!=='function'||typeof BEH!=='object'||typeof BK!=='object'||typeof BAL!=='object'||typeof renderMap!=='function'||typeof META_RUN!=='function'))fail();});
+addEventListener('load',function(){if(!done&&(typeof THEME_ADD!=='function'||typeof BEH!=='object'||typeof BK!=='object'||typeof BAL!=='object'||typeof renderMap!=='function'||typeof BB2!=='object'||typeof META_RUN!=='function'&&!BB2.lz))fail();});
 function fail(){if(done)return;done=true;
   if(n<2){try{sessionStorage.setItem(K,n+1);}catch(x){}setTimeout(function(){location.reload();},700+n*1500);return;}
   var ru=/^(ru|be|kk|uk|uz)/i.test(navigator.language||'ru')||/[?&](vk_app_id|vk)=/.test(location.search);
@@ -298,37 +298,40 @@ setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.dis
 <script src="js/vkm.js"></script><script src="js/vkm-chk.js"></script><!-- миссии VK: до ui.js — к моменту SOC.ready() таблица номеров уже загружена -->
 <script src="js/art.js"></script>
 <script src="js/data.js"></script>
-<script src="js/en.js"></script>
+<script src="js/bb2-core.js"></script><script src="js/bb2-eco.js"></script><!-- bb2: каркас буста в2 (флаги, догрузка, S.bb2, крючки) — сразу после data.js -->
+<script src="js/bb2-vkt.js"></script><!-- bb2 VKT: «Пульт владельца» (pult.json) — первым после bb2-eco.js, до заглушек других потоков; входы «Челобитной»; миссии VK новинок — набор vkt -->
+<script src="js/bb2-ev.js"></script><!-- bb2:EVENT шина «Подвигов» и события (догрузка набором ev) -->
+<script src="js/bb2-um.js"></script><!-- bb2 UM: заглушка умений (договор BB2.um.* и бой догружаются набором um) -->
+<script src="js/bb2-hero.js"></script><!-- bb2 HERO: заглушка героев («Свои приёмы», кино-выход босса, «Богатырский удар» догружаются набором hero) -->
+<script src="js/bb2-chudo.js"></script><!-- bb2 CHUDO: заглушка «Чудес» (остальное догружается: js/bb2-chudo-run.js) -->
+<script src="js/bb2-tail.js"></script><!-- bb2 TAIL: заглушка Зароков, Лихой недели, Гонки, Калинова моста, подвигов героев (остальное — набор tail) -->
+<script src="js/bb2-byl.js"></script><!-- bb2 BYL: заглушка «Былины о походе» (стихи и Книга былин — набор byl) -->
+<script src="js/bb2-rp.js"></script><!-- bb2 REPLAY: запись похода (тень и договор — догружаемый js/bb2-rp-run.js) -->
+<script src="js/bb2-winter.js"></script><!-- bb2 WINTER: зима (заглушка; набор winter грузится только зимой) -->
+<script src="js/bb2-speed.js"></script><!-- bb2 SPEED: заглушка скорости (остальное догружается: js/bb2-speed-run.js) -->
+<script src="js/bb2-cup.js"></script><!-- bb2 CUP-BG: живая лига (заглушка; окна — набор cup) -->
+<script>BB2.inc('en',['js/en.js'],PLAT==='vk'&&LANG!=='en')</script><!-- bb2: в VK всегда русский — английские тексты не грузим (флаг lazy) -->
+<script src="js/bb2-land.js"></script><!-- bb2 LAND: заглушка 12-й земли «Долгая ночь» (сама земля — набор land, по требованию) -->
 <script src="js/beh.js"></script>
 <script src="js/bk.js"></script>
+<script src="js/bb2-nech.js"></script><!-- bb2 NECH: «Ночь нечисти» — заглушка (сохранение, полоска на карте; режим догружается: js/bb2-nech-run.js) -->
 <!-- темы (главы данными): при сборке tools/thpack.sh заменяет блок одной строкой js/th.js (только темы из THEMES_ON) -->
-<script src="js/th.js"></script>
-<script src="js/meta-art.js"></script>
-<script src="js/meta.js"></script>
-<script src="js/meta-tro.js"></script>
-<script src="js/meta-slava.js"></script>
-<script src="js/meta-pet.js"></script>
-<script src="js/meta-wpn.js"></script>
-<script src="js/meta-terem.js"></script>
-<script src="js/meta-dvor.js"></script>
-<script src="js/zab-core.js"></script>
-<script src="js/zab-screen.js"></script>
-<script src="js/fest.js"></script>
-<script src="js/meta-fest.js"></script>
-<script src="js/zb0-art.js"></script>
-<script src="js/zb0-zg-data.js"></script>
-<script src="js/zb0-zagadki.js"></script>
-<script src="js/zb0-sunduki.js"></script>
-<script src="js/zb0-pech.js"></script>
-<script src="js/zbb-kit.js"></script><script src="js/zbb-gorodki.js"></script><script src="js/zbb-luk.js"></script><script src="js/zbb-kanat.js"></script>
-<script src="js/zbc-chastokol.js"></script><script src="js/zbc-igla.js"></script><script src="js/zbc-klad.js"></script>
+<script src="js/th.js"></script><script>BB2.inc("th",["js/th2.js"],0,"lazyth")</script>
+<script>/* bb2: Подворье и Забавы — новичку догружаются в фоне (флаг lazy), остальным — сразу, как раньше. Список файлов — только здесь */BB2.inc('meta',['js/meta-art.js','js/meta.js','js/meta-tro.js','js/meta-slava.js','js/meta-pet.js','js/meta-wpn.js','js/meta-terem.js','js/meta-dvor.js'])</script>
+<script>BB2.inc('zab',['js/zab-core.js','js/zab-screen.js','js/fest.js','js/meta-fest.js','js/zb0-art.js','js/zb0-zg-data.js','js/zb0-zagadki.js','js/zb0-sunduki.js','js/zb0-pech.js','js/zbb-kit.js','js/zbb-gorodki.js','js/zbb-luk.js','js/zbb-kanat.js','js/zbc-chastokol.js','js/zbc-igla.js','js/zbc-klad.js'])</script>
+<script src="js/bb2-zab.js"></script><!-- bb2:ZAB договор рекордов (рамка ловкостных, «Ещё разок»); остальное — лениво js/bb2-zab-ui.js -->
+<script src="js/bb2-lov.js"></script><!-- bb2:LOVA пять ловкостных (объявления) + «Дар в поход»; игры — догрузкой -->
+<script src="js/bb2-lovb.js"></script><!-- bb2:LOVB ловкостные 6–10 (объявления), «Встреча на дороге» и «Троеборье» — догрузкой -->
+<script src="js/bb2-sud.js"></script><!-- bb2 SUD: «Суд над нечистью» — заглушка (сохранение + догрузка набора sud) -->
+<script src="js/bb2-glove.js"></script><!-- bb2:GLOVE «Перчатка», «Спор богатырей», гости (заглушка; остальное — набор glove) -->
+<script src="js/bb2-dvor.js"></script><!-- bb2 DVOR: «Живой двор» — заглушка (сохранение + набор dvor в меню) -->
 <script src="js/bal.js"></script>
+<script src="js/bb2-first.js"></script><!-- bb2 NOVICE: первый поход заново (после bal.js, до game.js и map.js) -->
+<script src="js/bb2-orda.js"></script><!-- bb2 ORDA: заглушка «Орды» (1000 нечисти одним слоем в Сече), остальное — набор orda -->
 <script src="js/game.js"></script>
 <script src="js/map.js"></script>
 <script src="js/ui.js"></script>
-<script src="js/zba-kit.js"></script><script src="js/zba-nakoval.js"></script><script src="js/zba-travy.js"></script><script src="js/zba-gadanie.js"></script>
-<script src="js/zbd-kit.js"></script>
-<script src="js/zbd-kulak.js"></script>
-<script src="js/zbd-skachki.js"></script>
+<script src="js/bb2-eco-m.js"></script><!-- bb2 ECO: заглушки денег (после ui.js: оборачивает takeGift/showRewarded/calcStats); окно Лавки — js/bb2-eco-shop.js по требованию -->
+<script>BB2.inc('zab',['js/zba-kit.js','js/zba-nakoval.js','js/zba-travy.js','js/zba-gadanie.js','js/zbd-kit.js','js/zbd-kulak.js','js/zbd-skachki.js'])</script>
 </body>
 </html>
