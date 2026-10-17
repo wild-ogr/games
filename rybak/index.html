@@ -1287,7 +1287,7 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';  // фун
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v9.3-101521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v9.4-101715',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -2609,7 +2609,7 @@ function endSession(){G.phase='done';hint('');const g=G;
   modal(`<h2>📞 ${L('Звонит жена','Your wife is calling')}</h2><p class="quote"><b>${L('Жена','Wife')}</b>${esc(L(pick(PH.wife),'Dinner is getting cold! Come home!'))}</p>
     <div class="row">${canExtra?`<button class="btn accent noenter" id="eMore">📺 ${L('Ещё 3 заброса за рекламу','3 more casts for an ad')}</button>`:''}<button class="btn green" id="eHome">🏠 ${L('Иду-иду!','Coming!')}</button></div>`);
   $('eHome').onclick=()=>{hideModal();finish();};if($('eMore'))STAT.offer('more3');
-  if($('eMore'))$('eMore').onclick=()=>{if(adHold('more3'))return;hideModal();STAT.place('more3');showRewarded(()=>{G.extra=3;G.phase='aim';updHud();kick();hint(L('Ещё три заброса! Коснись воды','Three more casts! Tap the water'));},()=>finish(),
+  if($('eMore'))$('eMore').onclick=()=>{if(adHold('more3'))return;hideModal();STAT.place('more3');showRewarded(()=>{if(!G)return;/* 17.10: рыбалка уже закрыта, пока шёл ролик */G.extra=3;G.phase='aim';updHud();kick();hint(L('Ещё три заброса! Коснись воды','Three more casts! Tap the water'));},()=>finish(),
     /* поздний зачёт (adt): рыбалка уже закончена — монеты по цене трёх забросов (средний улов за заброс этой рыбалки × 3, не меньше цены ролика) */
     ()=>adLateCoins(more3Price(g)));};}
 function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;if(S.sessions===1)statTut(5);S.adW=(S.adW||0)+1;if(VK&&!vkIntOk)vkIntLoad();

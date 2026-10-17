@@ -15,7 +15,7 @@ A.rng=function(seed){var s=(seed>>>0)||1;return function(){s=(s+0x6D2B79F5)>>>0;
 A.clamp=function(v,a,b){return v<a?a:v>b?b:v;};
 A.ease=function(k){k=A.clamp(k,0,1);return k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;};
 A.back=function(k){k=A.clamp(k,0,1);var c=1.7;return 1+(c+1)*Math.pow(k-1,3)+c*Math.pow(k-1,2);};
-function rr(g,x,y,w,h,r){r=Math.min(r,w/2,h/2);g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function rr(g,x,y,w,h,r){r=Math.max(0,Math.min(r,Math.abs(w)/2,Math.abs(h)/2));/* 17.10: IndexSizeError при отрицательном радиусе (узкий экран, mg_rynok) */g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 A.rr=rr;
 /* сколько «говорит» персонаж: по длине реплики (без тегов) */
 A.talkT=function(t){var n=String(t||'').replace(/<[^>]*>/g,'').length;return Math.min(3.6,.8+n*.035);};
