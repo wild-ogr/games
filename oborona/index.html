@@ -137,6 +137,7 @@ button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertic
 /* длинные подписи кнопок рекламы (особенно по-английски) переносятся, а не вылезают за окно */
 .btns .btn.ad{white-space:normal;line-height:1.2}
 /* pre: ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
+html.okNoAd .btn.ad{display:none!important} /* OK-OB: только Одноклассники, пока площадка говорит «ролика нет» */
 button[data-adwait]{position:relative}
 button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;font-size:16px;line-height:1;pointer-events:none}
 #mapCv{width:100%;border-radius:20px;display:block;margin:6px 0 10px;box-shadow:0 10px 30px rgba(0,0,0,.35);touch-action:pan-y}
@@ -435,11 +436,12 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';
 (function(){if(typeof OB2==='undefined'||!OB2.reg('cup',{s:'CUP',t:'Живая лига в «Соседних заставах»'})||typeof openTour!=='function'||!TOUR_ON)return;
 OB2.field('c',{id:'cup',merge:function(x,y){var t=(y.ts||0)>(x.ts||0),k;OB2.merge(x,y);if(t)for(k in {tr:1,mv:1,pl:1,n:1})if(y[k]!=null)x[k]=y[k];}});
 var q=/[?&]cup=(dev|sink:\d+)/.test(location.search),ld=function(){return OB2.need('js/ob-cup.js');},o=function(){return S.o2c||{};};
-function can(){if(!CUP_URL&&!q)return false;try{if(!q&&(LOCAL||navigator.webdriver||/HeadlessChrome/.test(navigator.userAgent)))return false;}catch(e){}return PLAT==='vk'?!!window.vkBridge:!!ysdk;}
+function can(){if(OK)return false;/* OK-OB 15.10: в Одноклассниках живой лиги нет — «Соседние заставы» местные (без имён, без запросов на сервер, без ⚙ «Показывать имя») */if(!CUP_URL&&!q)return false;try{if(!q&&(LOCAL||navigator.webdriver||/HeadlessChrome/.test(navigator.userAgent)))return false;}catch(e){}return PLAT==='vk'?!!window.vkBridge:!!ysdk;}
 function go(f){if(can())ld().then(function(){if(window.CUPX)f(CUPX);}).catch(function(){});}
-var r0=tourRoll;tourRoll=function(t){r0.apply(this,arguments);try{var j=o().jl;if(t.r&&j&&j[+t.r.w]){t.c=Math.max(+t.c||0,+t.r.w);delete t.r;}}catch(e){}};
+var r0=tourRoll;tourRoll=function(t){r0.apply(this,arguments);if(OK)return;try{var j=o().jl;if(t.r&&j&&j[+t.r.w]){t.c=Math.max(+t.c||0,+t.r.w);delete t.r;}}catch(e){}};
 var ot=openTour;openTour=function(f,b){if(!can()||!tourCanJoin())return ot.apply(this,arguments);if(window.CUPX)return CUPX.open(ot,f,b);var r=ot.apply(this,arguments);go(function(X){var m=document.getElementById('mBody');if(m&&m.getAttribute('data-w')==='tour'&&document.getElementById('tourOk'))X.open(ot,f,b,1);});return r;};
-OB2.on('menu',function(){var c=o();if(c.on||c.jw>(c.lgw||0))go(function(X){X.boot();});},'cup');
+OB2.on('menu',function(){var c=o();if(c.on||c.jw>(c.lgw||0)||tourCanJoin())go(function(X){X.boot();});},'cup');   /* OB-FIX п.5: живая лига — всем в VK, кто дорос до «Соседних застав» (было — только тем, кто сам открыл окно) */
+var te=tourEv;tourEv=function(a){if(o().on&&can())return;return te.apply(this,arguments);};   /* OB-FIX п.5: в живой лиге местный турнир событий cup (без on) не пишет — в STAT cup без on = только местный */
 OB2.on('run',function(g){if(o().on&&(g.wk||g.endless))go(function(X){X.run(g);});},'cup');
 OB2.on('end',function(g,w){if(window.CUPX)CUPX.end(g,w);},'cup');
 var os=window.openSettings;window.openSettings=function(){var r=os.apply(this,arguments);if(can())go(function(X){X.set();});return r;};})();</script>

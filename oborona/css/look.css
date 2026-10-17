@@ -382,3 +382,7 @@ html.lk.th-palekh{--ink:#f6e7c0;--ink2:#d8c28a;--parch:#1b1612;--parch2:#120e0b;
  --woodBg:linear-gradient(180deg,#201812,#120e0b);--woodT:#f0d68a;--rib:linear-gradient(180deg,#c22a1c,#8a160e);--menuBg:#120e0b;--menuFlat:#120e0b;
  --cv-pill:rgba(20,14,10,.85);--cv-pillT:#f6e7c0;--cv-card:#1b1612;--cv-cardT:#f6e7c0;--cv-cardE:#c9a03a}
 */
+
+/* OB-FIX (AUDIT №1): шапка не шире экрана — hdrFit() в ui.js */
+html.lk .topbar.tight .title,.topbar.tight .title{display:none}html.lk .topbar.tight .pill:first-of-type,.topbar.tight .pill:first-of-type{margin-left:auto}html.lk .topbar.tight,.topbar.tight{justify-content:flex-end}
+html.lk .topbar.tight2 .pill,.topbar.tight2 .pill{font-size:15px;padding:3px 7px 3px 4px}html.lk .topbar.tight2 .pill img,.topbar.tight2 .pill img{width:20px;height:20px}html.lk .topbar.tight2,.topbar.tight2{gap:4px}

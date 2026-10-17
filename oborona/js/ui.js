@@ -26,7 +26,13 @@ function lvOpen(c,l){return chLvOpen(c,l);}   // OB:CH: по CH_ORDER + «в г�
 function chOpen(c){return lvOpen(c,0);}
 function chStars(c){let n=0;for(let l=0;l<chLvN(c);l++)n+=S.stars[lvKey(c,l)]||0;return n;}
 // красная точка — только там, где правда ждёт дело, и не на открытой вкладке (раньше горели все четыре сразу — аудит 14)
-function setPills(){forgeGuard();STAT.bal(Math.floor(+S.gold||0));$('pGold').textContent=fmtNum(S.gold);$('pStar').textContent=starsFree();const cur=G?'':curTab;
+/* OB-FIX (AUDIT №1, 15.10): шапка меню не шире экрана — если ⚙ уходит за правый край (VK: 🎲 + большое золото на 360–390 px), прячем название (tight),
+   не хватило и так — пилюли мельче (tight2). Меряем по-настоящему, а не по ширине экрана: зависит от числа кнопок и длины золота. */
+let hdrK='',hdrQ=0;function hdrFit(){if(hdrQ)return;hdrQ=1;try{requestAnimationFrame(()=>{hdrQ=0;hdrFit0();});}catch(e){hdrQ=0;hdrFit0();}}   // замер — в начале следующего кадра (вёрстку браузер всё равно считает), не посреди перестройки меню
+function hdrFit0(){try{if(G)return;const t=document.querySelector('#menu>.topbar'),b=$('setBtn'),m=$('btnMore');if(!t||!b)return;   // в бою не меряем; мерим только когда сменилось золото/звёзды/🎲/ширина (замер = пересчёт вёрстки)
+  const k=$('pGold').textContent+'|'+$('pStar').textContent+'|'+(m&&m.style.display)+'|'+innerWidth+'|'+LANG;if(k===hdrK)return;if(!t.clientWidth)return;hdrK=k;t.classList.remove('tight','tight2');
+  const over=()=>b.getBoundingClientRect().right>t.getBoundingClientRect().right-2;if(over()){t.classList.add('tight');if(over())t.classList.add('tight2');}}catch(e){}}
+function setPills(){forgeGuard();STAT.bal(Math.floor(+S.gold||0));$('pGold').textContent=fmtNum(S.gold);$('pStar').textContent=starsFree();hdrFit();const cur=G?'':curTab;
   $('navF').classList.toggle('dot',cur!=='Forge'&&canForge());$('navV').classList.toggle('dot',cur!=='Village'&&afkGold()>=afkReadyAt()); // OB:META1 без гостинца
   $('navM').classList.toggle('dot',cur!=='Map'&&(dqClaimable()||!!loginAvail()));$('navS').classList.toggle('dot',cur!=='Siege'&&eventsReady());}
 // звёзд потрачено больше, чем есть (кузница пришла из облака с другого устройства) — сбрасываем кузницу, звёзды возвращаются
@@ -52,9 +58,10 @@ function mapK(){return Math.max(1,(CH_ORDER.length-1)/7);}
 function mapPos(){const n=CH_ORDER.length,a=[];CH_ORDER.forEach((c,k)=>{a[c]=n===8?MAPPOS8[k]:[k%2?.71:.28+(k%4===2?.03:0),.87-k*(.8/(n-1))];});return a;}
 const mapCache={};
 function artCanvas(key,px){const id=key+'@'+px;return mapCache[id]||(mapCache[id]=drawArt(key,px));}
+// OB-FIX (AUDIT №2, 15.10): карточка главы с «Играть» (chHead, только телефон) — первой, над делами, Славой и Наказами: на 360×640 «Играть» была ниже края на 150–200 px
 function renderMap(){const el=$('tabMap');
   let first=CH_ORDER[0];for(const c of CH_ORDER)if(chOpen(c))first=c;if(mapSel==null||!chOpen(mapSel))mapSel=first;
-  el.innerHTML='<div id="tdBox"></div><div id="glBox"></div><div id="chHead"></div><div class="mapcols"><canvas id="mapCv"></canvas><div class="mapside"><div id="chCard"></div><div id="dqBox"></div></div></div>';renderToday();renderGoal();drawMap();renderChCard();renderQuests();META_HK('MAP',el);   // OB:SLAVA MAP — плашки «Слава» и «Соседние заставы» под «Сегодня» · OB:CH порядок глав
+  el.innerHTML='<div id="chHead"></div><div id="tdBox"></div><div id="glBox"></div><div class="mapcols"><canvas id="mapCv"></canvas><div class="mapside"><div id="chCard"></div><div id="dqBox"></div></div></div>';renderToday();renderGoal();drawMap();renderChCard();renderQuests();META_HK('MAP',el);   // OB:SLAVA MAP — плашки «Слава» и «Соседние заставы» под «Сегодня» · OB:CH порядок глав
   $('mapCv').onclick=e=>{const r=e.target.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
     let best=-1,bd=.012;mapPos().forEach((p,i)=>{if(!p)return;const d=(p[0]-x)**2+((p[1]-y)*1.08*r.height/r.width)**2;/* OB:FIX1 по настоящим пропорциям карты */if(d<bd){bd=d;best=i;}});
     if(best>=0){SND.click();if(!chOpen(best)){const pv=CH[chPrev(best)];toast(Lg('Сначала освободи «'+pv.name+'»','First free “'+pv.name+'”'));return;}mapSel=best;S.lastCh=best;drawMap();renderChCard();}};}
@@ -157,6 +164,12 @@ function bannersBind(el){if(typeof xbnBind==='function')xbnBind(el);   // OB:SLA
 
 /* ---------- окно перед боем ---------- */
 function levelEnemies(c,l){const set=new Set();for(const w of mkWaves(c,l))for(const g of w.g)set.add(g.t);return [...set];}
+/* OB-FIX п.3 (STAT 15.10: самое частое подвисание Android — «победа → Дальше», метки t:Map,m:intro в одном кадре): карта главы и вступление
+   больше не в одном кадре — вступление открывается следующим кадром; миниатюры уровней следующей главы и значки вступления готовим заранее,
+   по одному раз в 150 мс, пока на экране окно победы (игрок читает итоги). */
+function nxIntro(c,l){const f=()=>{if(!G&&curTab==='Map'&&!$('modal').classList.contains('on'))openIntro(c,l);};try{requestAnimationFrame(()=>setTimeout(f,0));}catch(e){f();}}
+function nxWarm(c,l){const q=[];for(let i=0;i<chLvN(c);i++)q.push(()=>lvThumb(c,i));q.push(()=>{for(const t of levelEnemies(c,l))ic(EN[t].art||t);ic('voevoda');});
+  const step=()=>{if(!q.length||!$('modal').classList.contains('on'))return;try{q.shift()();}catch(e){}setTimeout(step,150);};setTimeout(step,1200);}
 function openIntro(c,l){STAT.screen('intro');if(!difLvOpen(c,l,difOf(c))){S.dfc[c]='n';if(mapSel===c)renderChCard();}const dm=difOf(c),ch=CH[c],en=levelEnemies(c,l),st=difStars(c,l,dm);S.introSeen[lvKey(c,l)]=1;   // реплика уже в окне — в бою речью не повторяем
   const news=[];for(const t in TW_UNLOCK){const u=TW_UNLOCK[t];if(u[0]===c&&u[1]===l)news.push({ic:'ti_'+t+'_1',n:TW[t].n,a:TW[t].about,k:'nt'});}
   if(BRANCH_UNLOCK[0]===c&&BRANCH_UNLOCK[1]===l)news.push({ic:'ti_arch_4a',n:Lg('Мастера','Masters'),a:Lg('Заставы 3-го уровня теперь можно улучшить в одну из двух веток.','Level 3 outposts can now be upgraded into one of two branches.')});
@@ -226,7 +239,7 @@ function hudTick(force){if(!G)return;if(force)for(const k in HUDC)delete HUDC[k]
   const hot=S.boost<60;if(HUDC.hot!==hot){HUDC.hot=hot;$('boostBtn').classList.toggle('hot',hot);}
   // запас ускорения на первых двух уровнях не показываем (лишнее понятие новичку), если он не кончается
   const bh=!G.endless&&G.ci===0&&G.li<2&&!hot;if(HUDC.bh!==bh){HUDC.bh=bh;$('boostBtn').style.display=bh?'none':'';}
-  if(G.tut===2&&!HUDC.tut2){HUDC.tut2=1;const gs=G.started||G.goNov;voice(Lg((gs?'Отлично! Ставь ещё заставы у дороги — монеты за нечисть.':'Отлично! Потрать все монеты: поставь ещё две заставы у дороги и жми «В бой!» внизу справа.')+' Теперь так: нажми на значок заставы, потом ещё раз — построить.',(gs?'Great! Keep building outposts by the road — monsters pay coins.':'Great! Spend all your coins: build two more outposts by the road and press “To battle!” at the bottom right.')+' From now on: tap an outpost icon, then tap it again to build.'),VOEV(),'voevoda',10);}
+  if(G.tut===2&&!HUDC.tut2){HUDC.tut2=1;const gs=G.started||G.goNov;voice(G.goNov?Lg('Отлично! Ставь ещё заставы у дороги — палец покажет где. Монеты дают за нечисть.','Great! Build more outposts by the road — the finger shows where. Monsters pay coins.'):Lg((gs?'Отлично! Ставь ещё заставы у дороги — монеты за нечисть.':'Отлично! Потрать все монеты: поставь ещё две заставы у дороги и жми «В бой!» внизу справа.')+' Теперь так: нажми на значок заставы, потом ещё раз — построить.',(gs?'Great! Keep building outposts by the road — monsters pay coins.':'Great! Spend all your coins: build two more outposts by the road and press “To battle!” at the bottom right.')+' From now on: tap an outpost icon, then tap it again to build.'),VOEV(),'voevoda',G.goNov?7:10);}   // OB-FIX: в первом бою новичка заставы строятся с одного касания — без «потом ещё раз»
   if(G.tut===3&&!HUDC.tut3){HUDC.tut3=1;G.tut=4;voice(Lg('Нечисть идёт! За каждую — монеты. Нажми на готовую заставу, чтобы её улучшить.','Here they come! Every monster pays coins. Tap a built outpost to upgrade it.'),VOEV(),'voevoda',9);}
   // советчик новичка (advTick в game.js): первые советы боя и советы «нечисть прорывается» — словами воеводы, дальше — только кольцо со стрелкой
   if(G.autoSay){G.autoSay=0;if(!$('modal').classList.contains('on'))voice(Lg('Нечисть прорывается! Дружина сама поставила заставу на твои монеты. Монеты не копи — ставь заставы и улучшай их!','Monsters are breaking through! The men built an outpost with your coins themselves. Don’t hoard coins — build outposts and upgrade them!'),VOEV(),'voevoda',7);}
@@ -281,7 +294,7 @@ function ringRefresh(){const sig=ringItems().map(i=>i.id+i.no).join();if(sig!==r
 function ringTap(id){const t=G.tw[ringI],s=G.map.spots[ringI];if(!s||(!t&&!id.startsWith('b_'))){closeRing();return;}SND.click();   // fix0910: кольцо от уже исчезнувшей заставы (сбой iOS ui.js:266, t.type)
   // 🎯 — сразу следующая цель по кругу (без второго нажатия: ничего не стоит и не ломается); новые заставы этого вида в бою берут её же
   if(id==='aim'&&t&&AIM_BY[t.type]){const L=AIM_BY[t.type];t.aim=L[(L.indexOf(t.aim||'first')+1)%L.length];G.aimDef=G.aimDef||{};G.aimDef[t.type]=t.aim;ringSel=null;ringBuild();return;}
-  if(ringSel!==id&&!(G.tut===1&&id.startsWith('b_')&&towerUnlocked(id.slice(2))&&G.coins>=buildCost(id.slice(2)))){ringSel=id;
+  if(ringSel!==id&&!((G.tut===1||G.goNov)&&id.startsWith('b_')&&towerUnlocked(id.slice(2))&&G.coins>=buildCost(id.slice(2)))){ringSel=id;
     if(id.startsWith('b_')){const ty=id.slice(2);if(!towerUnlocked(ty)){const u=TW_UNLOCK[ty];showInfo('<b>'+TW[ty].n+'</b><p>'+Lg('Откроется в главе '+(u[0]+1)+', уровень '+(u[1]+1)+'.','Unlocks in chapter '+(u[0]+1)+', level '+(u[1]+1)+'.')+'</p>');ringBuild();return;}
       const st=tstat(ty,1,0);G.preview={x:s.x,y:s.y,r:st.rng};showInfoType(ty,1,0,buildCost(ty));}
     else if(id==='up'){const st=tstat(t.type,t.lvl+1,0);G.preview={x:t.x,y:t.y,r:st.rng};showInfoType(t.type,t.lvl+1,0,upCost(t),t);}
@@ -457,16 +470,18 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
     // после первой победы — один ясный шаг: Частокол в деревне (строкой и кнопкой во втором ряду; главная кнопка одна — «Дальше»)
     const hintWall=S.wins===1&&!S.village.wall&&S.gold>=BLD.find(b=>b.id==='wall').cost[0];
     const x2b=goldWanted()&&adOk()&&!(c===0&&l<3);   // первые три уровня — без рекламных кнопок (решение владельца 03.10)
-    const nvF=l===5&&dmN&&chNum(c)<=2&&nvOn('newbforge'),nvFb=nvF&&canForge();   // ob2-NOVICE newbforge: «Глава освобождена» в главах 1–2 — без «⚔ Попробовать Сложный», первой кнопкой «В кузницу»
+    const nvF=l===5&&dmN&&chNum(c)<=2&&nvOn('newbforge'),nvFb=nvF&&canForge();
+    const x2H=x2b?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить золото за рекламу: ещё +','🎬 Double the gold for an ad: +')+fmtNum(reward)+(needB(reward)?Lg(' — хватит на «'+needB(reward)+'»',' — enough for “'+needB(reward)+'”'):'')+'</button>':'';   // OB-FIX п.2   // ob2-NOVICE newbforge: «Глава освобождена» в главах 1–2 — без «⚔ Попробовать Сложный», первой кнопкой «В кузницу»
+    if(next)nxWarm(next[0],next[1]);   // OB-FIX п.3
     showModal('<h3>'+(l===5?Lg('Глава освобождена!','Chapter liberated!'):Lg('Победа!','Victory!'))+(dmN?'':' '+difIcon(dm))+'</h3><div class="bigstars">'+[0,1,2].map(i=>'<img src="'+ic(i<st?'star':'star0',128)+'">').join('')+'</div>'+
       '<p class="sub" data-fit="4">'+(l===5?Lg('Босс повержен! '+CH[c].name+' '+({m:'свободен',n:'свободно',f:'свободна',p:'свободны'})[CH[c].g]+'. '+(c!==chLast()?'':'Тридевятое царство спасено! Ура!'),'Boss defeated! '+CH[c].name+' is free. '+(c!==chLast()?'':'The Thrice-Nine Kingdom is saved! Hooray!')):l===6?Lg('Логово взято! Ярая сила повержена.','The Lair is taken! The raging foe is down.'):st===3?pick(lines):!dmN?(st===2?Lg('Кое-кто просочился. Для трёх звёзд на этом режиме — потеряй не больше '+difLeak3()+' ❤.','A few slipped through. For three stars on this mode, lose no more than '+difLeak3()+' ❤.'):Lg('Еле устояли! Для трёх звёзд на этом режиме — потеряй не больше '+difLeak3()+' ❤.','That was close! For three stars on this mode, lose no more than '+difLeak3()+' ❤.')):st===2?Lg('Кое-кто просочился. Для трёх звёзд — не больше двух.','A few slipped through. For three stars — no more than two.'):Lg('Еле устояли! Для трёх звёзд в город должно пройти не больше двух.','That was close! For three stars, no more than two may reach the city.'))+'</p>'+
       (crownNew?'<p class="sub" style="color:#ffe7a0;font-weight:800">'+Lg('👑 Корона «Богатырской» — теперь она на этом уровне навсегда!','👑 The “Heroic” crown — it stays on this level forever!')+'</p>':'')+
-      '<div class="card treasury rew" style="text-align:center"><b>+'+fmtGold(reward)+''+(first?Lg(' (первая победа ×2)',' (first victory ×2)'):'')+' <span style="white-space:nowrap">· ⏩ +'+fmtBoost(bst)+'</span></b>'+(bref>=1?'<br><span style="font-size:13px">'+BREF()+fmtBoost(bref)+'</span>':'')+(lg?'<br><span class="note">'+Lg('🎁 За вход: +'+lg+' сегодня','🎁 Daily bonus: +'+lg+' today')+'</span>':'')+'</div>'+
+      '<div class="card treasury rew" style="text-align:center"><b>+'+fmtGold(reward)+''+(first?Lg(' · первая победа',' · first victory'):'')+' <span style="white-space:nowrap">· ⏩ +'+fmtBoost(bst)+'</span></b>'+(bref>=1?'<br><span style="font-size:13px">'+BREF()+fmtBoost(bref)+'</span>':'')+(lg?'<br><span class="note">'+Lg('🎁 За вход: +'+lg+' сегодня','🎁 Daily bonus: +'+lg+' today')+'</span>':'')+'</div>'+
       (nvF?'':difUpHTML(c,dUp))+goalHTML(next,c,hintWall||nvFb)+tomorrowHTML()+(hintWall?'<div class="goal" data-fit="3">'+Lg('🏠 Золота хватает на <b>Частокол</b> в деревне: +1 жизнь в каждом бою.','🏠 You have enough gold for the <b>Palisade</b> in the village: +1 life in every battle.')+'</div>':'')+
       '<div class="stats" data-fit="5"><div><b>'+G.kills+'</b>'+Lg('одолели','defeated')+'</div><div><b>'+G.leaks+'</b>'+Lg('прорвалось','got through')+'</div><div><b>'+fmtTime(G.t)+'</b>'+Lg('время','time')+'</div></div>'+bestTwHTML()+dqNote(dq0)+
       '<div class="btns stick">'+
-      (nvFb?nvForgeB(true):'')+(next?'<button class="btn'+(nvFb?'':' big')+'" id="rNext">'+Lg('Дальше: ','Next: ')+CH[next[0]].levels[next[1]]+' ▸</button>':'<button class="btn big" id="rMap">'+Lg('На карту','To the map')+'</button>')+
-      (x2b?'<button class="btn ad" id="rX2">'+Lg('🎬 Удвоить золото за рекламу: ещё +','🎬 Double the gold for an ad: +')+fmtNum(reward)+(needB(reward)?Lg(' — хватит на «'+needB(reward)+'»',' — enough for “'+needB(reward)+'”'):'')+'</button>':'')+
+      (nvFb?nvForgeB(true)+x2H:'')+(next?'<button class="btn'+(nvFb?' ghost':' big')+'" id="rNext">'+Lg('Дальше: ','Next: ')+CH[next[0]].levels[next[1]]+' ▸</button>':'<button class="btn big" id="rMap">'+Lg('На карту','To the map')+'</button>')+
+      (nvFb?'':x2H)+
       (dUp&&!nvF?'<button class="btn ghost" id="rUp">'+(dUp==='s'?Lg('⚔ Попробовать Сложный','⚔ Try Hard'):Lg('🔥 Попробовать Адский','🔥 Try Hell'))+'</button>':'')+
       '<div class="btns h" style="margin-top:0">'+(hintWall?'<button class="btn ghost" id="rWall">'+Lg('🏠 В деревню','🏠 To the village')+'</button>':'<button class="btn ghost" id="rAgain">'+Lg('Ещё раз','Play again')+'</button>')+(next?'<button class="btn ghost" id="rMap">'+Lg('На карту','To the map')+'</button>':'')+'</div></div>','win');
     {let x2d=0;const bt=$('rX2'),pay=()=>{x2d=1;S.gold+=reward;ern('ad',reward);META_HK('X2',G,reward);save();if(bt&&bt.parentNode)bt.parentNode.removeChild(bt);};
@@ -474,10 +489,10 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
       ()=>{if(x2d)return '';pay();SND.coin();setPills();return Lg('удвоено: +','doubled: +')+fmtGold(reward);}));} /* поздний зачёт (adt): всегда, один раз */
     // межэкранная — только тут, при уходе с экрана победы, и со 2-й главы (после Соловья)
     const ia=c>=1;
-    on('rNext',()=>afterAd(ia,()=>{toMenu('Map');mapSel=next[0];renderMap();if(!$('modal').classList.contains('on'))openIntro(next[0],next[1]);}));
+    on('rNext',()=>afterAd(ia,()=>{mapSel=next[0];toMenu('Map');nxIntro(next[0],next[1]);}));   // OB-FIX п.3: карта рисуется один раз (было дважды), вступление — следующим кадром
     on('rWall',()=>afterAd(ia,()=>{toMenu('Village');const w=document.querySelector('[data-b="wall"]');if(w){w.classList.add('hl');w.scrollIntoView({block:'center'});}}));
     on('rForge',()=>afterAd(ia,nvForge));   // ob2-NOVICE newbforge
-    on('rUp',()=>afterAd(ia,()=>{difSet(c,dUp,'res');toMenu('Map');mapSel=c;renderMap();if(!$('modal').classList.contains('on'))openIntro(c,0);}));   // OB:DIF
+    on('rUp',()=>afterAd(ia,()=>{difSet(c,dUp,'res');mapSel=c;toMenu('Map');nxIntro(c,0);}));   // OB:DIF
     on('rAgain',()=>afterAd(ia,()=>startLevel(c,l)));on('rMap',()=>afterAd(ia,()=>{toMenu('Map');if(canForge())toast(Lg('Есть звёзды для кузницы!','You have stars for the forge!'));}));
     // VK: одно предложение за сессию (модуль SOC) — строкой и кнопкой ПОД кнопками окна победы; диалог VK — только по нажатию игрока
     /* ntf (06.10): вопрос воеводы про напоминания VK идёт тем же путём (SOC.offer вернёт k:'ntf') и ставится СРАЗУ при открытии окна. Пока модуль хочет
@@ -821,7 +836,7 @@ function openSocial(){if(!SOC.ok()){openSettings();return;}STAT.screen('social')
 // STAT: какие соц-кнопки жмут (модуль SOC не трогаем — слушаем клики рядом; «Ещё игры» перерисовывает окно — навешиваем снова)
 function socStat(){for(const b of $('mBody').querySelectorAll('[data-soc],[data-g]'))b.addEventListener('click',()=>{const k=b.getAttribute('data-soc');
   STAT.ev('mod',{m:'soc',a:k?k:'app'});if(k==='more')setTimeout(socStat,50);});}
-function updMore(){const b=$('btnMore');if(b){const m=SOC.can('more');b.style.display=m?'':'none';b.parentNode.classList.toggle('more',m);}}   // .more — в шапке четыре кнопки (на 320 px название уступает им место)
+function updMore(){const b=$('btnMore');if(b){const m=SOC.can('more');b.style.display=m?'':'none';b.parentNode.classList.toggle('more',m);hdrFit();}}   // .more — в шапке четыре кнопки (на 320 px название уступает им место)
 function openSettings(){STAT.screen('settings');const oo=v=>v?Lg('Вкл','On'):Lg('Выкл','Off');showModal('<h3>'+Lg('Настройки','Settings')+'</h3>'+
   // язык: в VK всегда русский — переключателя нет
   (LANG_VK?'':'<div class="tg">'+Lg('Язык','Language')+' <div class="seg" style="margin:0;flex:none"><button data-lang="ru" class="'+(LANG==='ru'?'on':'')+'" style="padding:4px 14px">RU</button><button data-lang="en" class="'+(LANG==='en'?'on':'')+'" style="padding:4px 14px">EN</button></div></div>')+
@@ -832,6 +847,7 @@ function openSettings(){STAT.screen('settings');const oo=v=>v?Lg('Вкл','On'):
   (STAT.available()?'<div class="tg" style="border:0;padding-bottom:0">'+Lg('📊 Анонимная статистика','📊 Anonymous statistics')+' <button class="btn '+(STAT.enabled()?'green':'ghost')+'" id="sStat">'+oo(STAT.enabled())+'</button></div><p class="sub" style="margin:2px 0 8px;font-size:14px">'+STAT.note()+'</p>':'')+
   (LK&&LOOK.list().filter(t=>LOOK.owned(t.id)).length>1?'<div class="tg" style="border:0;padding-bottom:0">'+Lg('Оформление','Look')+'</div><div class="seg">'+LOOK.list().filter(t=>LOOK.owned(t.id)).map(t=>'<button data-th="'+t.id+'" class="'+(LOOK.cur()===t.id?'on':'')+'">'+Lg(t.ru,t.en)+'</button>').join('')+'</div>':'')+
   '<p class="sub" style="margin-top:12px">'+Lg('Тридевятая оборона: защита башен.<br>Реклама за награду — по желанию. Между боями иногда бывает короткая реклама.','Thrice-Nine Defense: fairy-tale tower defense.<br>Rewarded ads are optional. A short ad sometimes plays between battles.')+'</p>'+
+  (OK&&OK_GROUP_LINK?'<p class="sub" id="sSup" style="margin-top:8px"><b>'+Lg('Поддержка.','Support.')+'</b> '+Lg('Вопросы и пожелания — в группе «Игры во дворе» в Одноклассниках.','Questions and feedback — in the “Yard Games” group on OK.')+'<br><a class="btn ghost" id="sGrp" href="'+OK_GROUP_LINK+'" target="_blank" rel="noopener" style="display:inline-flex;margin-top:8px;text-decoration:none;color:inherit">'+Lg('Открыть группу поддержки','Open the support group')+'</a></p>':'')+
   (SOC.ok()?'<button class="btn ghost" id="sSoc" style="width:100%;margin-top:8px;justify-content:center">👥 '+(OK?'Друзья':'Друзья и игры')+' ›</button>':'')+
   '<div class="btns stick"><button class="btn ghost" id="sCred">'+Lg('🎻 Благодарности','🎻 Credits')+'</button><button class="btn big" id="sOk">'+Lg('Готово','Done')+'</button></div>');
   for(const b of document.querySelectorAll('[data-lang]'))b.onclick=()=>{SND.click();setLang(b.dataset.lang,true);openSettings();};
@@ -923,7 +939,7 @@ function onReady(){
   on('setBtn',openSettings);
   layout();initInput();let rsT=0;const rsKey=()=>window.innerWidth+'x'+window.innerHeight+'x'+(window.devicePixelRatio||1)+'x'+document.documentElement.clientHeight+'x'+cv.clientWidth+'x'+cv.clientHeight;let rsK=rsKey();window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(()=>{   // ob2:SPEED П2 resize — через 150 мс и только при настоящей смене размера окна
     const k=rsKey();if(k===rsK)return;rsK=k;hmk('rs');
-    layout();fitModal();if(!G&&curTab==='Map'){drawMap();if(LK)renderChCard();}if(ringI>=0)ringBuild();},150);});
+    layout();fitModal();hdrK='';hdrFit();if(!G&&curTab==='Map'){drawMap();if(LK)renderChCard();}if(ringI>=0)ringBuild();},150);});
   mapSel=S.lastCh||0;
   /* первый шаг — после облака: на новом устройстве у игрока может быть весь прогресс в облаке. Есть SDK или настоящий VK —
      ждём облако до 3 с (заставка ещё на экране), потом решаем: новичок — сразу в бой 1-1, иначе меню и «Награда за вход»

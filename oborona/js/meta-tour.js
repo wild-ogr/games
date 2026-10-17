@@ -15,7 +15,8 @@
 const TOUR_ON=!/[?&]notour/.test(location.search);
 const TOUR_SERVER=null;  // этап 2: адрес/модуль hobby-cup (CUP). Пока null — только персонажи
 function tourOnline(){return !!TOUR_SERVER&&typeof CUP!=='undefined';}
-const TOUR={from:5,min:100,P0:1500,Pmin:300,Pmax:8000,tierK:.1,plate:3,part:50,
+const TOUR={from:3,   // OB-FIX п.5 (15.10): «Соседние заставы» с 3 побед и 3 уровней (было 5 уровней) — новичок видит лигу в первый же день
+  min:100,P0:1500,Pmin:300,Pmax:8000,tierK:.1,plate:3,part:50,
   prize:[{g:300,gt:50,bo:1200},{g:200,gt:30,bo:600},{g:120,gt:20,bo:300}]};
 function tourErr(w,x){tourErr.n=(tourErr.n||0)+1;if(tourErr.n<=5)console.warn('meta tour '+w+': '+(x&&x.message||x));}
 function tourEv(a,p){try{STAT.ev('cup',Object.assign({a:a},p||{}));}catch(e){}}

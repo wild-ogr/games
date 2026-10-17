@@ -488,7 +488,7 @@ function todaySlot(a){var o=O();if(!o)return;for(var i=0;i<a.length;i++)if(a[i].
   a[i].fn=function(){var b=document.getElementById('nkzBoard');if(b)b.scrollIntoView({block:'center',behavior:'smooth'});};}}
 function winSlot(G,win){var o=O();if(!o||!S.wins)return null;refresh(1);var best=-1,bv=-1;
   for(var i=0;i<3;i++){var s=o.s[i];if(!s)continue;var v=s.p>=s.g?2:s.p/s.g;if(v>bv){bv=v;best=i;}}if(best<0)return null;var s2=o.s[best],w=sWho(s2,o);
-  if(bv>=2)return {h:'<span>📜 '+Lg('Наказ выполнен: ','Order done: ')+sTxt(s2)+'</span> <button class="btn gold" id="nkzWin" style="padding:4px 10px;min-height:0">'+Lg('Забрать +','Collect +')+fmtNum(goldFor(s2))+'</button>',
+  if(bv>=2)return {h:'<span>📜 '+Lg('Наказ выполнен: ','Order done: ')+sTxt(s2)+'</span> <button class="btn gold" id="nkzWin" style="padding:6px 14px;min-height:44px">'+Lg('Забрать +','Collect +')+fmtNum(goldFor(s2))+'</button>',
     bind:function(d){d.setAttribute('data-fit','6');var b=d.querySelector('#nkzWin');if(b)b.onclick=function(){SND.click();var r=doClaim(best,'win');d.innerHTML='📜 '+(r?'+'+fmtGold(r.g)+' · '+Lg('новый наказ: ','new order: ')+sTxt(O().s[best]):'');if(typeof fitModal==='function')fitModal();};}};
   if(bv<=0)return null;var left=s2.g-Math.floor(s2.p);
   return {bind:function(d){d.setAttribute('data-fit','6');},h:'📜 '+Lg('Ещё ','')+fmtNum(left)+Lg(' — и ',' more — and ')+Lg(w.n,w.en)+Lg(' будет доволен',' will be pleased')+(s2.k===3?' ('+((s2.c|0)+1)+'/5)':'')+': '+sTxt(s2)};}

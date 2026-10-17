@@ -135,11 +135,12 @@ function nextWave(w){return G.wk?weekWave(w):endlessWave(w);}
    Отсчёт стоит: пауза/свёрнуто/ролик (update не идёт), открыто кольцо или окно, окно без фокуса (blur).
    Босс недели, испытание дня, «Застава дня»: отсчёт идёт только после первого касания поля или первой заставы (G.goTap) — открыл и ушёл → попытка не сгорела.
    Выключить: ?off=autogo (или OB2_OFF). STAT: wv1 {a:1 сама|0 нажал, s — секунд от начала боя}; у новичка — tut {s:3,a}. */
-const GO_T=15,GO_NOV=2.5,GO_SLOW=.75;let GO_BON=0,goBlur=0;   // GO_BON — бонус «Смелость в цене» за ранний «В бой!»: ВЫКЛ (бот: звёзд 121→152/122→160 — ломает баланс; журнал OB-GO.md п.6)
+const GO_T=15,GO_NOV=2.5,GO_SLOW=.9,GO_NW=4,GO_NP=.35;   // OB-FIX 15.10: первый бой новичка короче — 4 волны вместо 6, пауза между волнами ×0,35 (≈3,5 с), нечисть ×0,9 → ≈60–70 с вместо 130–150 (STAT: 37–61 % новичков уходили посреди боя)
+let GO_BON=0,goBlur=0;   // GO_BON — бонус «Смелость в цене» за ранний «В бой!»: ВЫКЛ (бот: звёзд 121→152/122→160 — ломает баланс; журнал OB-GO.md п.6)
 try{window.addEventListener('blur',()=>{goBlur=1;});window.addEventListener('focus',()=>{goBlur=0;});}catch(e){}
 function goOn(){return !SHOT&&nvOn('autogo');}
 function goInit(){G.goT=0;if(!goOn())return;G.goNov=G.tut===1&&!S.wins;G.goT=G.goNov?GO_NOV:GO_T;G.goTap=!(G.wk||G.rule||G.dly);
-  if(G.goNov)G.dspd=(G.dspd||1)*GO_SLOW;}
+  if(G.goNov){G.dspd=(G.dspd||1)*GO_SLOW;if(G.waves&&G.waves.length>GO_NW)G.waves=G.waves.slice(0,GO_NW);G.dpause=(G.dpause||1)*GO_NP;}}
 function goStop(){return typeof ringI!=='undefined'&&ringI>=0||$('modal').classList.contains('on')||goBlur||!G.goTap;}   // отсчёт обычного боя стоит
 function goTick(dt){if(G.started||!(G.goT>0))return;if(G.goNov?$('modal').classList.contains('on'):goStop())return;
   G.goT-=dt/Math.max(1,G.speed||1);if(G.goT<=0){G.goT=0;G.goA=1;callWave();}}   // отсчёт — в настоящих секундах (×2/×3 его не ускоряют)
@@ -741,11 +742,19 @@ function drawBubble(b){const c=ctx,e=b.e,x=e.x,y=e.y-(e.r||10)*2.6-(e.fly?18:0)-
   c.fillStyle=CVL?CVL.bub:'rgba(255,255,255,.95)';c.beginPath();if(tail){c.moveTo(tx-4,by+h-1);c.lineTo(tx,by+h+5);c.lineTo(tx+4,by+h-1);c.fill();}rr(c,bx,by,w,h,h/2);c.fill();if(CVL){c.strokeStyle=CVL.bubE;c.lineWidth=1.3;c.stroke();}
   c.fillStyle=CVL?CVL.bubT:'#2a1a14';c.textAlign='center';c.textBaseline='middle';c.fillText(b.s,bx+w/2,by+h/2+.5);c.globalAlpha=1;}
 // поверх карты: полоса босса, баннер волны, индикатор следующей волны
+/* OB-FIX 15.10: плашка «Волна 2 из 4 · следующая через 3 с» и кружки волн — только в первом бою новичка (G.goNov), между баннерами волн */
+function goNovPill(c,W){const n=waveCount(),k=Math.min(G.wave,n),nx=G.nextT>0?Math.ceil(G.nextT):0,
+    txt=Lg('Волна '+k+' из '+n,'Wave '+k+' of '+n)+(nx?Lg(' · следующая через '+nx+' с',' · next in '+nx+' s'):k>=n?Lg(' · последняя!',' · final!'):''),y=VIEW.top+24;
+  c.font=cvF(800,CVL?15:14);c.textAlign='center';c.textBaseline='middle';const dw=n*12,w=Math.min(W-24,c.measureText(txt).width+dw+40),x0=(W-w)/2;
+  if(CVL){c.fillStyle=CVL.ban1;rr(c,x0,y-15,w,30,14);c.fill();c.strokeStyle=CVL.ban2;c.lineWidth=2;c.stroke();c.fillStyle=CVL.banE;}else{c.fillStyle='rgba(20,10,30,.72)';rr(c,x0,y-14,w,28,14);c.fill();c.fillStyle='#ffe7a0';}
+  const fc=c.fillStyle;for(let i=0;i<n;i++){c.beginPath();c.arc(x0+16+i*12,y,4.2,0,TAU);if(i<k){c.fillStyle=fc;c.fill();}else{c.strokeStyle=fc;c.lineWidth=1.5;c.stroke();}}
+  c.fillStyle=fc;c.fillText(txt,x0+dw+16+(w-dw-16)/2,y+.5,w-dw-24);}
 function drawOverlay(){const c=ctx,d=VIEW.dpr;c.setTransform(d,0,0,d,0,0);const W=VIEW.W;
   if(G.boss&&!G.boss.dead){const e=G.boss,w=Math.min(300,W-60),x=(W-w)/2,y=VIEW.top+10,by=CVL?y+15:y+11;
     if(CVL){c.fillStyle=CVL.pill;rr(c,x-6,y-7,w+12,36,12);c.fill();c.strokeStyle=CVL.pillE;c.lineWidth=2;c.stroke();}else{c.fillStyle='rgba(10,8,20,.75)';rr(c,x-4,y-6,w+8,30,10);c.fill();}
     c.fillStyle=CVL?'#5a2a1a':'#3a1a1a';rr(c,x,by,w,8,4);c.fill();c.fillStyle=e.invul?(CVL?'#2fae5c':'#5cff9a'):'#ff4a3a';rr(c,x,by,w*Math.max(.01,e.hp/e.max),8,4);c.fill();
     c.font=cvF(800,CVL?16:13);c.textAlign='center';c.textBaseline='middle';c.fillStyle=CVL?CVL.pillT:'#fff';c.fillText(e.lead?Lg('Вожак: ','Leader: ')+LEAD.n[e.type]:EN[e.type].n+(e.invul?(e.type==='kosh'?Lg(' — бессмертен!',' — deathless!'):Lg(' — неуязвим',' — invulnerable')/* OB:VIS без эмодзи на холсте */):''),W/2,y+(CVL?4:2),CVL?w:W-24);}
+  if(G.goNov&&G.started&&!G.over&&!G.banner&&!(G.boss&&!G.boss.dead))goNovPill(c,W);   // OB-FIX: первый бой новичка — всегда видно «Волна N из M»
   if(G.banner&&G.banner.wave){const b=G.banner,q=b.t,a=q<.2?q/.2:q>1.4?Math.max(0,(1.8-q)/.4):1,txt=b.title+(b.sub?' · '+b.sub:''),y=VIEW.top+(G.boss&&!G.boss.dead?(CVL?54:48):12)+12;
     c.globalAlpha=a;c.font=cvF(800,CVL?16:14);c.textAlign='center';c.textBaseline='middle';const w=Math.min(W-24,c.measureText(txt).width+28);
     if(CVL){c.fillStyle=CVL.ban1;rr(c,(W-w)/2,y-16,w,32,14);c.fill();c.strokeStyle=CVL.ban2;c.lineWidth=2;c.stroke();c.fillStyle=CVL.banE;}else{c.fillStyle='rgba(20,10,30,.72)';rr(c,(W-w)/2,y-14,w,28,14);c.fill();c.fillStyle='#ffe7a0';}c.fillText(txt,W/2,y+.5,w-20);c.globalAlpha=1;}

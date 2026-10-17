@@ -263,7 +263,7 @@ function rowsHTML(tb){const me=typeof slRank==='function'?slRank():'';return '<d
 /* ---------- плашка на карте ---------- */
 const mb0=tourMapBtn;
 tourMapBtn=function(){try{const o=tourTick();if(!o||!liveNow())return mb0.apply(this,arguments);const tb=tourTable(o,nowMs()),pl=tourPlace(tb),pts=tourPts(o),cl=claims().length;tourLast={w:o.w,pts:pts,tb:tb};
-  return '<button class="glbar mtile'+(cl?' hot':'')+'" id="tourGo"><img src="'+ic('tour_shield',64)+'" alt=""><span class="t"><b>'+(cl?Lg('🏆 Итоги!','🏆 Results!'):pts?tourPlTxt(pl):Lg('Соседи','Neighbours'))+'</b><small>'+(cl?Lg('забрать награду','collect the reward'):esc(tierN(lg.tier||0))+' · '+wendTxt())+'</small></span></button>';}catch(e){err('map',e);return mb0.apply(this,arguments);}};
+  return '<button class="glbar mtile'+(cl||!O().ask?' hot':'')+'" id="tourGo"><img src="'+ic('tour_shield',64)+'" alt=""><span class="t"><b>'+(cl?Lg('🏆 Итоги!','🏆 Results!'):pts?tourPlTxt(pl):Lg('Соседи','Neighbours'))+'</b><small>'+(cl?Lg('забрать награду','collect the reward'):esc(tierN(lg.tier||0))+' · '+wendTxt())+'</small></span></button>';}catch(e){err('map',e);return mb0.apply(this,arguments);}};
 // «Сегодня»: итоги живой недели ждут
 OB2.slot('today','cup',a=>{try{if(liveNow()&&claims().length)a.push({id:'cup',hot:1,t:Lg('🏆 Итоги недели','🏆 Weekly results'),fn:()=>openTour('map')});}catch(e){}},5);
 
@@ -292,7 +292,7 @@ function claimWin(c,back){const o=O(),got=c.wk<=(o.lgw||0),gold=got?0:rwGold(c.r
     CUP.claim(c.wk);if(lg&&lg.claims)lg.claims=lg.claims.filter(x=>x.wk!==c.wk);
     if(back==='none'){hideModal();metaRe();}else if(typeof back==='function')back();else liveOpen(null,back);});}
 // при входе: был в живой группе, награда не забрана — тихо спросить сервер и показать, когда окно свободно
-function boot(){const o=O();if(!o.on&&!(o.jw>(o.lgw||0)))return;
+function boot(){const o=O();if(!o.on&&!(o.jw>(o.lgw||0))&&!(typeof tourCanJoin==='function'&&tourCanJoin()))return;   // OB-FIX п.5: вход в живую группу сам, после меню (имя скрыто по умолчанию; знакомство — при первом открытии окна)
   login(r=>{if(!r)return;try{if(typeof metaRe==='function')metaRe();}catch(e){}
     try{if(O().tr!=null&&!boot.s){boot.s=1;ev('ses',{t:O().tr,m:O().mv||''});}}catch(e){}
     const cl=claims();if(!cl.length||claimWait)return;claimWait=true;let n=0;

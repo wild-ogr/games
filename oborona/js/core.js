@@ -102,7 +102,8 @@ function cloudApply(start){if(!cloudPending||(!start&&typeof G!=='undefined'&&G&
 // VK передаёт в адрес игры параметры запуска (vk_app_id и др.); ?vk=1 — проверка VK-режима на маке
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
-const OK_LINK='https://ok.ru/game/512005500650'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
+const OK_LINK='https://ok.ru/game/512005500650';
+const OK_GROUP_LINK='https://ok.ru/group/70000058939568'; // OK-OB 15.10: группа поддержки «Игры во дворе» в ОК (правила ОК, п. 1.6) — строка в ⚙ только в ОК; пусто — спрятано // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 let ysdk=null,YP=null,VK=null,paused=false,muted=false;
 /*STAT*/
 /* ===== STAT v1.6 (12.10.2026; v1.5 — 11.10, v1.4 — 09.10, v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
@@ -349,7 +350,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v4.3-101500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v4.4-101609',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
@@ -395,7 +396,7 @@ const SDK_WAIT=20000;
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||SDK_WAIT);});}
 function vkSend(method,params,ms){return withTimeout(window.vkBridge.send(method,params||{}),ms||4000);}
 /*SOC*/
-/* ===== SOC v2.4 (06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
+/* ===== SOC v2.5 (15.10: в Одноклассниках «Ещё игры» НЕТ — SOC.list() там пуст, open() сразу false, кнопка «🎲 Игры» прячется сама по SOC.can('more'); причина — VKWebAppOpenApp {app_id:<ID в ОК>, app_is_local:true} в ОК игру не открывает, модерация ОК отклонила Выезд 15.10. v2.4 — 06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
    Общий модуль для всех игр. Источник — ~/Projects/hobby-analytics/soc/soc.js (правки — только там, потом soc-sync.sh).
    Правила VK: 2.6.2 — никаких наград за приглашение/«поделиться»/избранное/экран (разрешено лишь за вступление в сообщество —
    в наших играх НЕ даём); 2.6.3 — само-предложения не в первую сессию, отказ помним, повтор не чаще раза в 30 дней, ≤3 раз.
@@ -404,12 +405,13 @@ function vkSend(method,params,ms){return withTimeout(window.vkBridge.send(method
    ОК (Одноклассники; та же игра VK, запущенная с vk_client=ok — модуль узнаёт сам, SOC.isOk): в ОК нет избранного и значка на экран,
    ссылки на vk.com запрещены, группа у нас только ВКонтакте, ID игр в ОК другие. Поэтому в ОК остаётся только «Позвать друзей»
    (окно приглашения с обязательным message), а остальное включается настройками SOC.init: okLink — ссылка на игру в ОК («Поделиться»),
-   okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК («Ещё игры», только сайт и мобильный браузер ОК). */
+   okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК (с v2.5 не используется: «Ещё игр» в ОК нет вовсе — переход в другую игру
+   там не работает ни на сайте, ни в приложениях; поле оставлено на случай, если ОК даст рабочий способ; вернуть — только с проверкой на живой площадке). */
 var SOC=(function(){
-  var GROUP=241793582,DAY=864e5,VER=2.4;
+  var GROUP=241793582,DAY=864e5,VER=2.5;
   // i — место в спрайте dvor.jpg (по 96 px), g — группа (c карты, p головоломки, s сказка, r спокойные), a — возраст,
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
-  // ok — ID этой игры в Одноклассниках (vk_ok_app_id), когда она там вышла; без него в ОК игра в «Ещё игры» не показывается.
+  // ok — ID этой игры в Одноклассниках (vk_ok_app_id). С v2.5 (15.10) в ОК «Ещё игр» нет вообще — поле сейчас не используется.
   // v2.4: off:'all' прячет игру везде, и в ОК тоже (Козёл: номер ОК вписан заранее, показ включится, когда уберём off).
   var GAMES=[
     {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p',ok:512004864050},
@@ -490,14 +492,14 @@ var SOC=(function(){
     return send('VKWebAppShare',{link:OKP?O.okLink:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
   function group(){if(OKP&&!O.okGroup)return Promise.resolve(false);
     return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
-  function open(g){if(OKP&&!(g.ok&&OKWEB))return Promise.resolve(false); // ОК: OpenApp есть только на сайте и в мобильном браузере
+  function open(g){if(OKP)return Promise.resolve(false); // v2.5: в ОК OpenApp игру не открывает (ни сайт, ни приложения) — не зовём
     return send('VKWebAppOpenApp',OKP?{app_id:g.ok,app_is_local:true}:{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
     toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
 
   // --- список «Ещё игры»: без себя, без 18+, без неопубликованных на этой площадке; сначала родственные, дальше — сдвиг по дню ---
   function list(n){var m=me(),mg=m?m.g:'',out=[],i,g,day=Math.floor(Date.now()/DAY);
     for(i=0;i<N;i++){g=GAMES[i];if(g.id===APP||g.a>=18)continue;
-      if(g.off==='all'||(OKP?!(g.ok&&OKWEB):(g.off==='web'&&WEB)))continue;out.push(g);} // ОК: только игры с ID в ОК и только там, где работает OpenApp
+      if(g.off==='all'||OKP||(g.off==='web'&&WEB))continue;out.push(g);} // v2.5 (15.10): в ОК «Ещё игры» НЕТ — переход в другую игру там не открывается (Выезд отклонён модерацией ОК 15.10)
     out.sort(function(a,b){var x=(b.g===mg)-(a.g===mg);if(x)return x;return ((a.i+day)%N)-((b.i+day)%N);});
     return out.slice(0,n||6);}
 
@@ -814,6 +816,7 @@ function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];le
   /* OB:META1 (07-stats п.6): «×2» при коде 20 жали впустую до 31 раза подряд — если VK ответил «ролика нет» (adSt<0), кнопки ×2 (data-pre, ставит adOn)
      прячем, пока ролик не подгрузится (pre: при pr=1 — 69 успехов на 1 отказ, при pr=0 — одни отказы); стало «есть» — кнопка появляется сама */
   const pre=adPre();try{const P=document.querySelectorAll('[data-pre]');for(let i=0;i<P.length;i++){const b=P[i];if(pre)b.style.display='none';else if(b.style.display==='none'){b.style.display='';STAT.offer(b.getAttribute('data-pre'));}}}catch(e){}
+  if(OK)document.documentElement.classList.toggle('okNoAd',pre); // OK-OB 15.10: в ОК «ролика нет» → все кнопки «за рекламу» спрятаны (CSS html.okNoAd .btn.ad в index.html); стало «есть» — вернутся сами
   if(on||pre)adMarkT=setTimeout(adMark,1000);return seen;}
 function adPre(){return !!(VK&&adSt<0);} // OB:META1: VK сказал «ролика нет» — кнопки ×2 спрятаны до «есть»
 // вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз
