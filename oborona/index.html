@@ -137,7 +137,7 @@ button.prow:active{transform:translateY(1px)}.pcur{width:18px;height:18px;vertic
 /* длинные подписи кнопок рекламы (особенно по-английски) переносятся, а не вылезают за окно */
 .btns .btn.ad{white-space:normal;line-height:1.2}
 /* pre: ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
-html.okNoAd .btn.ad{display:none!important} /* OK-OB: только Одноклассники, пока площадка говорит «ролика нет» */
+html.okNoAd .btn.ad{display:none!important} /* OK-OB → OB-ERR 17.10: VK и ОК, пока площадка говорит «ролика нет» (adPre) — без серых «⏳»-кнопок */
 button[data-adwait]{position:relative}
 button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;font-size:16px;line-height:1;pointer-events:none}
 #mapCv{width:100%;border-radius:20px;display:block;margin:6px 0 10px;box-shadow:0 10px 30px rgba(0,0,0,.35);touch-action:pan-y}
@@ -397,7 +397,7 @@ if(!SP_LAZY)for(var spi=0;spi<SP_MG.length;spi++)document.write('<scr'+'ipt src=
 <!-- ob2:LOVA -->
 <!-- ob2:LOVB -->
 <script>/* ob2:LOVB сами на пути */(function(){if(typeof OB2==='undefined'||typeof IZ==='undefined')return;var sn;
-function row(k,t,n,x){return {h:'<img src="'+ic(k,48)+'" style="width:30px;vertical-align:middle"> '+t+' <button class="btn gold" style="width:auto;padding:4px 12px;margin:0">'+Lg('Давай!','Go!')+'</button>',bind:function(d){d.querySelector('button').onclick=function(){hideModal();toMenu('Map');IZ.load().then(function(){IZU.play(n,'auto',{ctx:x});});};}};}
+function row(k,t,n,x){return {h:'<img src="'+ic(k,48)+'" style="width:30px;vertical-align:middle"> '+t+' <button class="btn gold" style="width:auto;padding:4px 12px;margin:0">'+Lg('Давай!','Go!')+'</button>',bind:function(d){d.querySelector('button').onclick=function(){hideModal();toMenu('Map');IZ.load().then(function(){IZU.play(n,'auto',{ctx:x});}).catch(function(e){console.warn('izba',e&&e.message||e);});};}};}
 OB2.on('run',function(){sn=','+Object.keys(S.seen||{})+',';},'lov-zaris');
 OB2.slot('win','lov-zaris',function(G,w){var o=sn;sn=0;if(!w||!o||OB2.off('udal')||!mgIzbaOpen())return;var k=Object.keys(S.seen||{}).filter(function(x){return o.indexOf(','+x+',')<0&&EN[x]&&!EN[x].boss;})[0];
  if(k)return row(EN[k].art||k,Lg('Дед Пахом: «Новенький — '+EN[k].n+'! Зарисуем в Книгу?»','Grandpa Pakhom: “A newcomer — '+EN[k].n+'! Sketch it?”'),24,{foe:EN[k].art||k});},60);
@@ -407,7 +407,7 @@ OB2.slot('win','lov-otogrey',function(G,w){var d=dayKey(),k='ob-lovb-oto';try{if
 (function(){if(typeof OB2==='undefined')return;var A={bort:'Борть',podm:'Подменыш',byl:'Былина или небылица',oboz:'Обоз',kosti:'Кости у костра'};OB2.reg('tiho',{s:'TIHO',t:'тихие игры избы (все)'});
 for(var k in A)OB2.reg('tiho-'+k,{s:'TIHO',t:'тихая игра «'+A[k]+'»'});var ld=function(){return OB2.need('js/tiho.js');};
 OB2.slot('izba','tiho',function(el){ld().then(function(){TIHO.shelf(el);}).catch(function(){});},10);
-OB2.slot('today','tiho-bort',function(a){var b=S.dzr&&S.dzr.tb;if(!b||!b.d||b.c||b.d>=dayKey()||OB2.off('tiho'))return;a.push({id:'tiho',hot:1,t:Lg('🍯 Мёд в борти готов','🍯 Honey is ready'),fn:function(){ld().then(function(){TIHO.play('bort','today');});}});},1);
+OB2.slot('today','tiho-bort',function(a){var b=S.dzr&&S.dzr.tb;if(!b||!b.d||b.c||b.d>=dayKey()||OB2.off('tiho'))return;a.push({id:'tiho',hot:1,t:Lg('🍯 Мёд в борти готов','🍯 Honey is ready'),fn:function(){ld().then(function(){TIHO.play('bort','today');}).catch(function(e){console.warn('tiho',e&&e.message||e);});}});},1);
 /* облако: борть S.dzr.tb {d,h,c:1 — собрано} — свежая по дню посадки, при равном — собранная */
 if(typeof META_MODS!=='undefined')META_MODS.push({id:'tiho',MERGE:function(x,o){try{var b=x&&x.dzr&&x.dzr.tb,a=o&&o.dzr;if(!b||!a||typeof b.d!=='string')return;var t=a.tb;
 if(!t||typeof t.d!=='string'||b.d>t.d||(b.d===t.d&&b.c&&!t.c))a.tb={d:b.d,h:+b.h|0,c:b.c?1:0};}catch(e){}}});})();</script>

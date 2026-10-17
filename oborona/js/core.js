@@ -350,7 +350,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v4.4-101609',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v4.5-101718',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
@@ -816,7 +816,7 @@ function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];le
   /* OB:META1 (07-stats п.6): «×2» при коде 20 жали впустую до 31 раза подряд — если VK ответил «ролика нет» (adSt<0), кнопки ×2 (data-pre, ставит adOn)
      прячем, пока ролик не подгрузится (pre: при pr=1 — 69 успехов на 1 отказ, при pr=0 — одни отказы); стало «есть» — кнопка появляется сама */
   const pre=adPre();try{const P=document.querySelectorAll('[data-pre]');for(let i=0;i<P.length;i++){const b=P[i];if(pre)b.style.display='none';else if(b.style.display==='none'){b.style.display='';STAT.offer(b.getAttribute('data-pre'));}}}catch(e){}
-  if(OK)document.documentElement.classList.toggle('okNoAd',pre); // OK-OB 15.10: в ОК «ролика нет» → все кнопки «за рекламу» спрятаны (CSS html.okNoAd .btn.ad в index.html); стало «есть» — вернутся сами
+  document.documentElement.classList.toggle('okNoAd',pre); // OB-ERR 17.10: и в VK так же (было только ОК — в VK висели серые «⏳»-кнопки). OK-OB 15.10: в ОК «ролика нет» → все кнопки «за рекламу» спрятаны (CSS html.okNoAd .btn.ad в index.html); стало «есть» — вернутся сами
   if(on||pre)adMarkT=setTimeout(adMark,1000);return seen;}
 function adPre(){return !!(VK&&adSt<0);} // OB:META1: VK сказал «ролика нет» — кнопки ×2 спрятаны до «есть»
 // вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз

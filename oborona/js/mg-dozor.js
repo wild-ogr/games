@@ -41,7 +41,7 @@ const MG_DOZOR={id:'dozor',adKind:'torch',hudIcon:'trf_eye',barCol:['#8a7aff','#
     st.R=(st.calm?96:82)*k*Math.max(1,Math.min(1.25,W/H*.9));st.rMul=st.rMul||(st.extra&&st.extra.ad?1.35:1);
     if(!keep){st.mon=[];st.ff=[];st.got=0;st.brk=0;st.ffl=0;st.spawnT=.6;st.touch=!st.pc;st.lx=W/2;st.ly=(st.zT+st.zB)/2;st.tx=st.lx;st.ty=st.ly;st.shake=0;st.red=0;st.dawn=0;st.idl=0;
       const nf=st.skin==='ny'?3:4;for(let i=0;i<nf;i++)st.ff.push(dzFfly(st,i));}
-    else{for(const m of st.mon){m.x=m.fx*W;m.y0=st.zT+m.fy*(st.zB-st.zT);}for(const f of st.ff){f.cx=f.fx*W;f.cy=st.zT+f.fy*(st.zB-st.zT);}st.lx=Math.min(st.lx,W);st.ly=Math.min(st.ly,H);}
+    else{for(const m of st.mon||[]){m.x=m.fx*W;m.y0=st.zT+m.fy*(st.zB-st.zT);}for(const f of st.ff||[]){f.cx=f.fx*W;f.cy=st.zT+f.fy*(st.zB-st.zT);}st.lx=Math.min(st.lx,W);st.ly=Math.min(st.ly,H);}
     st.bush=dzBushes(st);st.bg=null;st.pal=null;st.bats=st.bats||[];},
   onStart(st){st.mon=[];st.got=0;st.brk=0;st.ffl=0;st.spawnT=.5;},
   down(st,x,y,pt){st.touch=pt!=='mouse';dzAim(st,x,y);st.held=true;st.moved=1;},
@@ -82,7 +82,7 @@ function dzStep(st,dt){dzAmb(st,dt);const k=st.k;
   for(const fl of st.ff){if(fl.gone>0){fl.gone-=dt;if(fl.gone<=0)Object.assign(fl,dzFfly(st,0));continue;}
     const d=Math.hypot(fl.x-L.x,fl.y-L.y);if(d<L.r*.8){fl.an+=dt/(st.calm?1.4:1.05);if(fl.an>=1){fl.gone=3.5;fl.an=0;st.ffl++;dzPen(st,fl.x,fl.y,10,Lg('Светлячка спугнул!','Firefly scared!'));mgkSparks(st,fl.x,fl.y,8,'#e8ff7a',90,{gr:-40});}}
     else fl.an=Math.max(0,fl.an-dt*.8);}}
-function dzAmb(st,dt){const W=st.W;for(const fl of st.ff){if(fl.gone>0)continue;fl.ph+=dt*fl.sp;fl.x=fl.cx+Math.sin(fl.ph*1.3)*38*st.k+Math.sin(fl.ph*.47)*24*st.k;fl.y=fl.cy+Math.sin(fl.ph*1.9+1)*18*st.k;}
+function dzAmb(st,dt){const W=st.W;for(const fl of st.ff||[]){if(fl.gone>0)continue;fl.ph+=dt*fl.sp;fl.x=fl.cx+Math.sin(fl.ph*1.3)*38*st.k+Math.sin(fl.ph*.47)*24*st.k;fl.y=fl.cy+Math.sin(fl.ph*1.9+1)*18*st.k;}
   st.shake=Math.max(0,st.shake-dt*2.5);st.red=Math.max(0,st.red-dt*1.6);
   if(st.skin==='hw'&&st.live){if(!st.bats.length||st.bats[st.bats.length-1].t>6){const n=5+((st.fr()*4)|0),y=st.hy*(.15+st.fr()*.35);for(let i=0;i<n;i++)st.bats.push({t:-i*.18,x:-30-i*22-st.fr()*20,y:y+st.fr()*30-15,v:70+st.fr()*30,ph:st.fr()*TAU});}
     for(const b of st.bats){b.t+=dt;b.x+=b.v*dt*st.k;b.ph+=dt*14;}st.bats=st.bats.filter(b=>b.x<W+40);}

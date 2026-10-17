@@ -96,7 +96,7 @@ function mgkRun(host,o,G){const cv=document.createElement('canvas');cv.style.css
   const UI={host,ph:'intro',t:0,btn:null,ad:null,go:null,press:null,endT:0,shown:0,rec:false,adUsed:false};
   let st=null;
   function size(){W=Math.max(200,host.w||innerWidth);H=Math.max(200,host.h||innerHeight);dpr=Math.min(2,host.dpr||devicePixelRatio||1);MGCK.dpr=dpr;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
-    const keep=st;st=mgkState(G,o,W,H);if(keep){for(const k of['t','score','combo','best','ev','stats'])if(keep[k]!=null)st[k]=keep[k];if(keep.extra)st.extra=keep.extra;}
+    const keep=st;st=mgkState(G,o,W,H);if(keep){for(const k of['t','score','combo','best','ev','stats'])if(keep[k]!=null)st[k]=keep[k];if(keep.extra)st.extra=keep.extra;for(const k in keep)if(!(k in st))st[k]=keep[k];}
     st.live=true;G.init(st,keep);}
   size();host.onResize(()=>{size();});
   function best(){try{const d=S.dzr;if(!d)return 0;const b=d.best||d.rec||d.rb;return b&&b[G.id]?+b[G.id]||0:0;}catch(e){return 0;}}

@@ -51,7 +51,7 @@ var OB2=(function(){
     try{if(typeof S!=='undefined')FIX(S);}catch(x){}   // первая загрузка: META_HK('FIX') уже прошёл — чиним сами
     return key;}
   function size(){var r={};try{for(var l in fields){var v=S[fields[l].key];r[fields[l].key]=v==null?0:JSON.stringify(v).length;}}catch(e){}return r;}
-  function need(src,ms){if(!loaded[src])loaded[src]=loadScript(src,ms||20000).catch(function(e){delete loaded[src];throw e;});return loaded[src];}
+  function need(src,ms){if(!loaded[src])loaded[src]=loadScript(src,ms||20000).catch(function(e){delete loaded[src];throw e instanceof Error?e:new Error('need '+src+(e&&e.type?' '+e.type:' timeout'));});   /* OB-ERR 17.10: причина отказа — с именем файла (было «promise: undefined» по таймауту) */return loaded[src];}
   // крючки движка → гнёзда и события (META_MODS: FIX/MERGE и пр. см. data.js «OB:META1»)
   if(typeof META_MODS!=='undefined')META_MODS.push({id:'ob2',
     RUN:function(G){emit('run',G);},

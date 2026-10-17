@@ -11,13 +11,13 @@ if(OB2.reg('lavka',{s:'LAVKA',t:'Лавка, украшения по глава�
   it('starter',5,'🎒',{perm:1,give(){lkBoost(3600);xb('voev');lkK().sf=1;}});
   it('speed_box',7,'⏩',{give(){lkBoost(10800);}});
   it('night_kit',10,'🎃',{perm:1,give(){for(const t of TW_ORDER)S.skins[t+'.night']=1;lkDeco('lantern');xb('luna');}});
-  OB2.slot('map','lavka',()=>{if(S.wins>=2||lkK().gw===1)lkX().then(x=>x.map());});
+  OB2.slot('map','lavka',()=>{if(S.wins>=2||lkK().gw===1)lkX().then(x=>x.map()).catch(lkE);});
   OB2.on('end',(g,win)=>{if(win)lkGift();},'lavka');
-  OB2.on('menu',()=>{if(S.deco.lantern||S.deco.scare||S.bns.voev||S.bns.luna||lkFest())lkX();},'lavka');
-  OB2.enter('lavka',40,()=>{if(lkK().gw||!lkGift())return false;lkX().then(x=>x.gift());return true;});
-  {const c0=cosmeticsHTML;cosmeticsHTML=function(){if(LAV.x)return LAV.x.cos();lkX().then(()=>{if(curTab==='Village'&&!G)renderVillage();});return c0();};}
+  OB2.on('menu',()=>{if(S.deco.lantern||S.deco.scare||S.bns.voev||S.bns.luna||lkFest())lkX().catch(lkE);},'lavka');
+  OB2.enter('lavka',40,()=>{if(lkK().gw||!lkGift())return false;lkX().then(x=>x.gift()).catch(lkE);return true;});
+  {const c0=cosmeticsHTML;cosmeticsHTML=function(){if(LAV.x)return LAV.x.cos();lkX().then(()=>{if(curTab==='Village'&&!G)renderVillage();}).catch(lkE);return c0();};}
   {const h0=payHtml;payHtml=function(ids,o){return h0(ids||['no_ads','speed_x2','skins_firebird'],o);};}
-  {const a0=payAfter;payAfter=function(){a0.apply(this,arguments);if(!G&&(lkK().sf||curTab==='Map'&&lkShow()))lkX().then(x=>{x.map();if(lkK().sf)x.pick();});};}
+  {const a0=payAfter;payAfter=function(){a0.apply(this,arguments);if(!G&&(lkK().sf||curTab==='Map'&&lkShow()))lkX().then(x=>{x.map();if(lkK().sf)x.pick();}).catch(lkE);};}
   {const v0=PAY.give;PAY.give=function(){PAY.gv=(PAY.gv|0)+1;return v0.apply(PAY,arguments);};}
 }
 function lkK(){return S.o2k||(S.o2k={d0:dayKey()});}
@@ -26,5 +26,7 @@ function lkFest(){return typeof festOn==='function'&&festOn();}
 function lkDeco(id){if(S.deco[id])return;S.deco[id]=1;let n=0;for(const k in S.deco)if(S.deco[k])n++;OB2.emit('deco',{id:id,n:n});}
 function lkDOpen(i){return vilDone()||!!S.stars[CH_ORDER[LAV.dch[i]]+'-5'];}
 function lkX(){return OB2.need('js/lavka-x.js').then(()=>LAV.x);}
+/* OB-ERR 17.10: окна Лавки не загрузились (медленная сеть) — молча, без «Uncaught (in promise)»; при следующем входе грузим снова */
+function lkE(e){try{console.warn('lavka-x',e&&e.message||e);}catch(x){}}
 function lkGift(){const k=lkK();if(k.gw||!S.stars[CH_ORDER[0]+'-5'])return false;k.gw=1;if(S.deco.well){k.gw=2;return false;}lkDeco('well');save();return true;}
 function lkShow(){return !OK&&S.wins>=2&&(PAY.on&&!LAV.ios||lkFest());}

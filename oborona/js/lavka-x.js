@@ -7,12 +7,12 @@
    Праздничная лавка за золото (hw26): фонари 2000, пугало 3000, знамя «Лунное» 2500 — остаются навсегда. Событие OB2 'deco' {id,n} — для миссий VK.
    S.o2k: d0 — первый день, kv — кружек кваса, gw — подарок (1 выдан, 2 показан), sf — выбрать род для Жар-птицы, sv — какие товары видел (метка «новое»). */
 function lkMap(el){let b=$('lkBox');const gl=$('glBox');if(!gl)return;
-  if(!lkShow()){if(b)b.remove();if(lkK().gw===1&&!G)setTimeout(()=>{if(lkK().gw===1&&!G&&!$('modal').classList.contains('on'))lkX().then(x=>x.gift());},900);return;}
+  if(!lkShow()){if(b)b.remove();if(lkK().gw===1&&!G)setTimeout(()=>{if(lkK().gw===1&&!G&&!$('modal').classList.contains('on'))lkX().then(x=>x.gift()).catch(lkE);},900);return;}
   if(!b){const w=document.createElement('div');w.className='lkrow';gl.parentNode.insertBefore(w,gl);w.appendChild(gl);b=document.createElement('button');b.id='lkBox';b.className='lkbtn';w.appendChild(b);
     if(!$('lkCss')){const s=document.createElement('style');s.id='lkCss';s.textContent='.lkrow{display:flex;gap:8px;align-items:stretch}.lkrow #glBox{flex:1;min-width:0}.lkrow #glBox:empty{display:none}.lkrow .glbar .t b{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15;font-size:15px}.lkrow .glbar.hot em{padding:7px 8px;font-size:15px}@media (max-width:380px){.lkrow .glbar img{display:none}.lkrow .glbar{padding-left:10px}}.lkbtn{flex:0 0 auto;min-height:56px;margin:0 0 10px;padding:4px 7px;border-radius:16px;border:2.5px solid #a8762e;background:#fff3d6;box-shadow:0 3px 0 #d8b67a;font-weight:800;font-size:15px;color:#4a2e12;line-height:1.1;position:relative}.lkrow #glBox:empty+.lkbtn{flex:1}.lkbtn i{position:absolute;top:-7px;right:-4px;background:#e0452b;color:#fff;font-style:normal;font-size:11px;border-radius:9px;padding:1px 6px}';document.head.appendChild(s);}}
   const nw=lkIds().some(id=>(','+(lkK().sv||'')+',').indexOf(','+id+',')<0);
-  b.innerHTML='🧺<br>'+Lg('Лавка','Shop')+(nw?'<i>'+Lg('новое','new')+'</i>':'');b.onclick=()=>{SND.click();lkX().then(x=>x.open());};
-  if(lkK().gw===1&&!G)setTimeout(()=>{if(lkK().gw===1&&!G&&!$('modal').classList.contains('on'))lkX().then(x=>x.gift());},900);}
+  b.innerHTML='🧺<br>'+Lg('Лавка','Shop')+(nw?'<i>'+Lg('новое','new')+'</i>':'');b.onclick=()=>{SND.click();lkX().then(x=>x.open()).catch(lkE);};
+  if(lkK().gw===1&&!G)setTimeout(()=>{if(lkK().gw===1&&!G&&!$('modal').classList.contains('on'))lkX().then(x=>x.gift()).catch(lkE);},900);}
 // что сейчас на прилавке (для «новое»)
 function lkIds(){const a=[];if(PAY.on&&!LAV.ios)for(const x of PAY.list){const id=x.id,o=PAY_ITEMS[id];if(o.perm&&PAY.own(id))continue;
     if(id==='starter'&&(Date.parse(dayKey())-Date.parse(lkK().d0))/864e5>=7)continue;if(id==='night_kit'&&!lkFest())continue;a.push(id);}

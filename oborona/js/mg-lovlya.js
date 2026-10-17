@@ -31,7 +31,7 @@ const MG_LOVLYA={id:'lovlya',adKind:'more',hudIcon:'trf_feather',barCol:['#ffcf4
   init(st,keep){const W=st.W,H=st.H;st.sk=st.k*(W>H*1.2?Math.min(1.45,H/W*2.6):1);const k=st.sk;st.gy=H*(W>H?.74:.76);st.skyT=Math.max(80*k,H*.12);st.skyB=st.gy-H*.16;
     st.lx=Math.max(56*k,W*.13);st.ly=H-52*k;st.bx=st.lx+64*k;st.by=H-30*k;st.R=(st.calm?64:54)*k;
     if(!keep){st.fl=[];st.nt=[];st.got=0;st.dbl=0;st.dove=0;st.spawnT=.3;st.cd=0;st.nets=(st.calm?18:15)+(st.netAd?4:0);st.bump=0;st.aim=null;st.wave=0;}
-    else{for(const f of st.fl){f.y0=st.skyT+f.fy*(st.skyB-st.skyT);}}
+    else{for(const f of st.fl||[]){f.y0=st.skyT+f.fy*(st.skyB-st.skyT);}}
     st.bg=null;},
   onStart(st){st.fl=[];st.nt=[];st.got=0;st.dbl=0;st.dove=0;st.spawnT=.3;st.cd=0;st.nets=(st.calm?18:15)+(st.netAd?4:0);},
   down(st,x,y){lvThrow(st,x,y);},
@@ -46,7 +46,7 @@ function lvPos(st,f,t){const a=t-f.t0;let te=a,ox=0,oy=0;if(f.lt!=null&&a>f.lt){
 function lvSpawn(st,key,y0,dx){const W=st.W,k=st.k,T=LV_T[key],dir=st.rnd()<.5?1:-1,tw=(st.calm?7:6.2)-Math.min(1.6,st.lvl*.12)-st.t*.015,v=W/Math.max(3.8,tw)/1*T.sp;
   const fy=y0!=null?y0:st.rnd();st.fl.push({key,T,dir,t0:st.t,x0:dir>0?-40*k-(dx||0):W+40*k+(dx||0),y0:st.skyT+fy*(st.skyB-st.skyT),fy,vx:v*dir,amp:(10+st.rnd()*22)*k,fq:1.4+st.rnd()*1.4,ph:st.rnd()*TAU,
     lt:st.rnd()<.35?1+st.rnd()*2:null,lr:(26+st.rnd()*14)*k,wav:T.wav,x:0,y:0,st:'fly',ct:0,flap:st.rnd()*TAU});}
-function lvStep(st,dt){lvAmb(st,dt);const k=st.k;st.cd=Math.max(0,st.cd-dt);
+function lvStep(st,dt){if(!st.fl)st.fl=[];if(!st.nt)st.nt=[];lvAmb(st,dt);const k=st.k;st.cd=Math.max(0,st.cd-dt);
   st.spawnT-=dt;if(st.spawnT<=0&&st.t<st.dur-1.5){const r=st.rnd(),pool=lvPool(st);
     if(r<.15)lvSpawn(st,'mgc_dove');else if(r<.15+(st.lvl>=3?.04:.02)&&!st.fl.some(f=>f.T.rare))lvSpawn(st,'bird');
     else if(r<.42){const key=pool[(st.rnd()*pool.length)|0],fy=st.rnd()*.8,n=2+(st.rnd()<.3+st.lvl*.03?1:0);for(let i=0;i<n;i++)lvSpawn(st,key,Math.min(1,fy+i*.07),i*34*k);
@@ -63,7 +63,7 @@ function lvStep(st,dt){lvAmb(st,dt);const k=st.k;st.cd=Math.max(0,st.cd-dt);
   st.nt=st.nt.filter(n=>!((n.ph==='bag'&&n.bt>1.05)||(n.ph==='miss'&&n.mt>.6)));
   st.fl=st.fl.filter(f=>f.st!=='gone');
   if(st.nets<=0&&!st.nt.length&&!st.over){st.overT=(st.overT||0)+dt;if(st.overT>.6)st.over=true;}}
-function lvAmb(st,dt){st.bump=Math.max(0,st.bump-dt*3);for(const f of st.fl)f.flap+=dt*(f.T.dove?11:14);
+function lvAmb(st,dt){st.bump=Math.max(0,st.bump-dt*3);for(const f of st.fl||[])f.flap+=dt*(f.T.dove?11:14);
   if(st.live){st.cl=st.cl||[];if(!st.cl.length)for(let i=0;i<5;i++)st.cl.push({x:st.fr()*st.W,y:st.H*(.06+st.fr()*.3),s:(.6+st.fr()*.7),v:4+st.fr()*8});for(const c of st.cl){c.x+=c.v*dt*st.k;if(c.x>st.W+120*st.k)c.x=-120*st.k;}}}
 function lvThrow(st,x,y){const k=st.k;if(st.cd>0||st.nets<=0)return false;if(y>st.gy+10*k)y=st.gy;st.nets--;st.cd=st.calm?.4:.5;
   const d=Math.hypot(x-st.lx,y-st.ly),fly=(st.calm?.36:.42)*Math.min(1.15,.75+d/(700*k));st.nt.push({sx:st.lx,sy:st.ly-30*k,tx:x,ty:y,t:0,fly,ph:'fly',got:[],spin:st.fr()*TAU});
