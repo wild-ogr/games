@@ -22,7 +22,11 @@ const WEEK={need:5,gift:20};
 // круг из 7; на 7-й в первом круге — ещё и блюдце «С голубой каёмочкой» (SKINS, gift:'lg'). S.lg={d:день последнего гостинца,n:сколько всего взято}
 const LOGIN=[5,10,10,15,15,20,40],LOGIN_FROM=3; // с 3-го пройденного уровня (первая сессия): сначала игра, потом подарки
 const lgN=()=>S.lg&&+S.lg.n||0;
-const lgDue=()=>!SHOT&&S.lv>=LOGIN_FROM&&!(S.lg&&+S.lg.d>=todayKey());
+/* zfix (17.10, разбор потока ОК: 32 % новичков прошли 3-й уровень и не начали 4-й — после «Дальше» шла цепочка окон, а после календаря игра вставала):
+   новичок в ПЕРВЫЙ день (S.z2n.d1 — день первого запуска), пока не прошёл LOGIN_NB уровней и ни разу не брал гостинец, — сначала играет: гостинец/календарь
+   откроется после LOGIN_NB-го уровня («Дальше» → окно → следующий уровень) или при следующем заходе. Подарок не теряется: он «сегодняшний», просто позже. */
+const LOGIN_NB=5,lgEarly=()=>!S.lg&&S.lv<LOGIN_NB&&!!S.z2n&&+S.z2n.d1===todayKey();
+const lgDue=()=>!SHOT&&S.lv>=LOGIN_FROM&&!(S.lg&&+S.lg.d>=todayKey())&&!lgEarly();
 const lgTaken=()=>!!(S.lg&&+S.lg.d===todayKey());
 const lgAmt=n=>LOGIN[n%LOGIN.length];
 const lgItem=n=>n===LOGIN.length-1; // 7-й гостинец первого круга — блюдце
@@ -381,18 +385,19 @@ const NOVICE=10,novice=()=>!!G&&!G.daily&&G.idx<NOVICE&&S.lv<NOVICE;
 function updPrices(){const f=learnFree()||freeLeft()||typeof hfFree==='function'&&hfFree(),h=!f&&hbN();$('prLet').textContent=f?'даром':h?'есть '+h:PRICE.letter;$('hLet').title=f?'Открыть букву — сегодня даром':h?'Открыть букву — в запасе '+h:'Открыть букву';$('prWord').textContent=PRICE.word;}
 // окно подсказки: всегда два способа — за монеты и за рекламу (ролик; награда только за досмотренный). В VK без моста — только монеты
 function pay(kind,then){
-  const pr=PRICE[kind],g=G,ad=adsOk(),enough=S.coins>=pr,ic=kind==='letter'?'💡':'📜';
+  const pr=PRICE[kind],g=G,ad=adsOk(),enough=S.coins>=pr,ic=kind==='letter'?'💡':'📜',fr=ad&&!enough&&adfOk(); // zfix: ролика нет (кнопка спрятана) и монет не хватает — раз в день даром (как раньше после «ролик не пришёл»)
   const doPay=()=>{addCoins(-pr);STAT.ev('spend',{k:kind,c:pr});S.hintsUsed=(S.hintsUsed||0)+1;updPrices();then();};
   if(enough&&S.tip.noAsk){doPay();return;}
   modal(`<h2>${kind==='letter'?'💡 Открыть букву?':'📜 Открыть слово?'}</h2><div style="width:96px;height:96px;margin:4px auto">${zinaSVG('norm')}</div>
-    <p>${kind==='letter'?'Одну букву':'Самое длинное слово'} — за <b>${pr}</b> ${COIN_I}${ad?' или за рекламу':''}. У тебя ${S.coins}.</p>
-    ${enough?'':`<p style="font-size:14.5px">Монеток пока маловато${ad?' — посмотри рекламу, и подсказка бесплатно!':'. Проходи уровни — накопим!'}</p>`}
+    <p>${kind==='letter'?'Одну букву':'Самое длинное слово'} — за <b>${pr}</b> ${COIN_I}${ad?'<span class="adtx"> или за рекламу</span>':''}. У тебя ${S.coins}.</p>
+    ${enough?'':`<p style="font-size:14.5px">Монеток пока маловато${ad?'<span class="adtx"> — посмотри рекламу, и подсказка бесплатно!</span><span class="adno-only">'+(fr?' — эту дарю: раз в день можно даром.':'. Проходи уровни — накопим!')+'</span>':'. Проходи уровни — накопим!'}</p>`}
     ${enough?'<label class="chk"><input type="checkbox" id="mNoAsk"> за монеты — больше не спрашивать</label>':''}
     <div class="btns"><button class="btn ${enough?'green':'ghost'}" id="mYes"${enough?'':' disabled'}>${ic} за ${pr} ${COIN_I}</button>
-      ${ad?`<button class="btn ${enough?'blue':'green'}" id="mAd">🎬 ${kind==='letter'?'Буква':'Слово'} за рекламу</button>`:''}
+      ${ad?`<button class="btn ${enough?'blue':'green'}" id="mAd">🎬 ${kind==='letter'?'Буква':'Слово'} за рекламу</button>`:''}${fr?`<button class="btn green adno-only" id="mFree">🎁 ${kind==='letter'?'Буква':'Слово'} даром</button>`:''}
       <button class="btn ghost" id="mNo">Сам справлюсь</button></div>`);
   $('mYes').onclick=()=>{if(S.coins<pr)return;const na=$('mNoAsk');if(na&&na.checked){S.tip.noAsk=1;save();}hideModal();doPay();};
   $('mNo').onclick=()=>{hideModal();SND.tap();};
+  const fb=$('mFree');if(fb)fb.onclick=()=>{if(fb.disabled||!adfOk()||G!==g||g.won)return;fb.disabled=true;adFailWhy='none';adKind(kind,pr,g,then,'hide');};
   const b=$('mAd');if(b)STAT.offer(kind);if(b)b.onclick=()=>{if(b.disabled)return;b.disabled=true;STAT.place(kind);
     showRewarded(()=>{hideModal();if(G===g&&!g.won){S.hintsUsed=(S.hintsUsed||0)+1;then();}},()=>{b.disabled=false;adKind(kind,pr,g,then);},
       // поздний «досмотрел» (adt): тот же уровень ещё идёт и не открыто чужое окно — подсказка; иначе монеты по полной цене подсказки (PRICE)
@@ -402,9 +407,9 @@ function pay(kind,then){
 // w-ads: ролик за подсказку не пришёл не по вине игрока (нет рекламы, ошибка площадки, пустой ответ, жал по погасшей кнопке) —
 // раз в день подсказка даром, если монет на неё не хватает (хватает — купит сам). Закрыл ролик сам, ушёл не дождавшись — без подарка (поздний досмотр придёт сам)
 const adfOk=()=>!(S.adf&&+S.adf.d===todayKey());
-function adKind(kind,pr,g,then){if(!/^(none|err|fail|hold)$/.test(adFailWhy)||!adfOk()||S.coins>=pr||G!==g||g.won||!$('game').classList.contains('on'))return false;
-  S.adf={d:todayKey()};save();STAT.ev('adf',{p:kind,c:adFailWhy});hideModal();S.hintsUsed=(S.hintsUsed||0)+1;then();
-  toast('Ролик не пришёл — ну и ладно, держи подсказку даром. Такое — раз в день',4500);return true;}
+function adKind(kind,pr,g,then,c){if(!/^(none|err|fail|hold)$/.test(adFailWhy)||!adfOk()||S.coins>=pr||G!==g||g.won||!$('game').classList.contains('on'))return false;
+  S.adf={d:todayKey()};save();STAT.ev('adf',{p:kind,c:c||adFailWhy});hideModal();S.hintsUsed=(S.hintsUsed||0)+1;then();
+  toast(c?'Держи подсказку даром. Такое — раз в день':'Ролик не пришёл — ну и ладно, держи подсказку даром. Такое — раз в день',4500);return true;}
 function hintLetter(){
   if(!G||G.won)return;poke();
   const closed=[...G.cells.values()].filter(c=>!c.open);if(!closed.length)return;

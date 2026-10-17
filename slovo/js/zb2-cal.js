@@ -49,7 +49,7 @@ function streak(){return alive()?c().n:0;}
 // день серии, который засчитается сегодня
 function day(){var o=c();return o.d===tk()?o.n:alive()?o.n+1:1;}
 function w1(){var o=c();return W1&&o.w>=0&&o.w<7?o.w+1:0;}
-function due(){if(!WIN)return false;try{if(SHOT)return false;}catch(e){}return (+S.lv||0)>=FROM&&c().g!==tk();}
+function due(){if(!WIN)return false;try{if(SHOT)return false;if(typeof lgEarly==='function'&&lgEarly())return false;}catch(e){}return (+S.lv||0)>=FROM&&c().g!==tk();} // zfix: новичок 1-го дня — календарь после LOGIN_NB-го уровня (game.js lgEarly)
 function fest(){return tk()%10000===1104;}
 if(ST)ZB.levelHook.push(function(i){if(i&&i.ok&&i.end==='win')ZB.safe('cal-mark',mark);});
 var ADD=[];function add(x){if(x&&x.id){ADD=ADD.filter(function(y){return y.id!==x.id;});ADD.push(x);}}
@@ -64,9 +64,9 @@ function open(view,then){if(!WIN)return;if(typeof view==='function'){then=view;v
   if(!view&&!due()){if(then)then();return;}
   try{if(window.ZBMIG&&ZBMIG.pending()){ZBMIG.open(function(){open(view,then);});return;}}catch(e){}
   roll();if(!view)try{modal('<div class="zc-wait"><h2>🗓 Отрывной календарь</h2><p>Баба Зина ищет очки…</p></div>');}catch(e){}
-  load().then(function(U){U.open({view:!!view,then:null});},function(){try{hideModal();}catch(e){}if(lg0&&!view)lg0(then);});}
+  load().then(function(U){U.open({view:!!view,then:then||null});},function(){try{hideModal();}catch(e){}if(lg0&&!view)lg0(then);});}
 var lg0=null;
-if(WIN){ZB.on('ready',function(){lg0=window.openLogin;window.openLogin=function(then){return open(0,null);};
+if(WIN){ZB.on('ready',function(){lg0=window.openLogin;window.openLogin=function(then,cont){return open(0,cont?then:null);}; /* zfix: cont — из окна победы: после календаря — следующий уровень (раньше then терялся и игрок оставался на выигранном уровне) */
     // старая карточка возврата (retCard) не нужна — задание дня внутри календаря
     try{if(window.ZBNB&&typeof ZBNB.turn==='function'&&!ZBNB.turn.zc){var t0=ZBNB.turn;ZBNB.turn=function(id){if(calm()&&(id==='mgnew'||id==='five'))return false;return t0.apply(this,arguments);};ZBNB.turn.zc=1;}}catch(e){}
     if(w1())ZB.load('js/zb2-week1.js').catch(function(){});

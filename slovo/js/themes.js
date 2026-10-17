@@ -206,7 +206,7 @@ function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen(
     else if(u.t==='pay'){btn=canBuy(T)?'<button class="btn green noenter" data-th="buy:'+T.id+'">Купить · '+PAY.price(PAY.item(u.pay))+'</button>':'<span class="th-lk">'+(inLevel()?'Купить можно из меню':'Покупки сейчас недоступны')+'</span>';
       if(ads&&trN<TRY_MAX&&TRIAL!==T.id)btn+='<button class="btn gold thad noenter" data-th="try:'+T.id+'">📺 Примерить на уровень за рекламу</button>';
       if(TRIAL===T.id)btn+='<span class="th-lk">сейчас примеряется</span>';}
-    else if(u.t==='ads')btn=ads?'<button class="btn gold thad noenter" data-th="buy:'+T.id+'">📺 Реклама · '+pr.have+' из '+pr.need+'</button>':'<span class="th-lk">Реклама сейчас недоступна</span>';
+    else if(u.t==='ads')btn=ads?'<button class="btn gold thad noenter" data-th="buy:'+T.id+'">📺 Реклама · '+pr.have+' из '+pr.need+'</button><span class="th-lk adno-only">Роликов: '+pr.have+' из '+pr.need+' · ролик ещё не готов — загляни позже</span>':'<span class="th-lk">Реклама сейчас недоступна</span>';
     h+='<div class="thc'+(on?' on':'')+(own?'':' lock')+'">'+prevHtml(T)+'<div class="thc-b"><b>'+T.ru+(own?'':' <span class="thc-l">🔒</span>')+'</b><small>'+T.ds+'</small>'+
       '<small class="th-how">'+(own?(u.t==='free'?'бесплатно, у всех':'открыто навсегда'):how(T)+(pr?': '+pr.txt:''))+'</small>'+
       (pr&&!own?'<span class="thbar"><i style="width:'+Math.round(pr.have/pr.need*100)+'%"></i></span>':'')+'</div><div class="thc-f">'+btn+'</div></div>';}

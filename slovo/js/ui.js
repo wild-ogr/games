@@ -63,7 +63,7 @@ function updMenuGoal(){const e=$('mGoal');if(!e)return;const on=S.lv>=1&&S.lv<LE
 // теперь «Удвоить гостинец»: ещё раз сегодняшний гостинец (5…40) и 💡 подсказка в запас; и в окне гостинца (#lgAd), и в меню синей кнопкой (класс adg — для AD_BTN_SEL)
 const giftTaken=()=>!!(S.gift&&S.gift.d===todayKey());
 const giftAmt=()=>lgTaken()?lgAmt(Math.max(0,lgN()-1)):ECO.gift;
-const giftOn=()=>S.lv>=3&&ECO.gift>0&&adsOk()&&!giftTaken()&&(typeof adLikely!=='function'||adLikely());
+const giftOn=()=>S.lv>=3&&ECO.gift>0&&adsOk()&&!giftTaken(); // zfix: ролик не готов — кнопку прячут стили (html.adno #btnGift.adg / #lgAd), готов — появится сама
 const giftTxt=()=>`🎬 Гостинец ×2 за рекламу: <span class="nw">+${giftAmt()} ${COIN_I} и 💡</span>`;
 function giftGive(){if(giftTaken())return false;const n=giftAmt();S.gift={d:todayKey()};addCoins(n,'ad');hbAdd(1,'gift');SND.coin();updGift();return n;}
 // ролик за гостинец ×2: b — нажатая кнопка (в меню или в окне гостинца); done(n) — после награды
@@ -255,7 +255,7 @@ function winModal(g,r,again){
     if(r.chap&&!r.chapSeen){openChapFinale(g,r,nextI);return;}
     const go=()=>maybeInterstitial(()=>{if(last)openTheEnd();else if(nextI<0)openMenu();else startLevel(nextI);});
     // первая сессия: после 3-го уровня — первый гостинец и обещание на завтра (вернувшимся он выдаётся в меню)
-    if(lgDue()&&!g.daily){lgAuto=true;openLogin(go);return;}
+    if(lgDue()&&!g.daily){lgAuto=true;openLogin(go,1);return;} // zfix: 1 — после окна подарка продолжить (следующий уровень), а не остаться на выигранном
     go();};
   // r2: на 10-м уровне задание дня — кнопкой (раньше «Оно в меню», а в меню первая сессия не попадает → серия не начиналась)
   const dl=$('mDly');if(dl)dl.onclick=()=>{hideModal();SND.tap();maybeInterstitial(()=>startLevel(dailyIdx(),true));};
@@ -302,7 +302,7 @@ function openChapFinale(g,r,nextI,again){r.chapSeen=1;
     ${nx?`<p class="chnx" style="font-size:14.5px">Дальше — «${nx.n}» ${nx.e}. ${nx.s}</p>`:''}
     ${zbh}
     <div class="btns"><button class="btn green" id="mGo">${nx||end?'Дальше ▶':'В меню'}</button>
-      ${adsOk()&&(r.chx2||typeof adLikely!=='function'||adLikely())?(r.chx2?`<button class="btn gold" disabled>✅ Сундук главы: 💡 +1 и +${r.chap}</button>`:`<button class="btn gold" id="mChX2">🎬 Сундук главы за рекламу: <span class="nw">💡 +1 и +${r.chap} ${COIN_I}</span></button>`):''}
+      ${adsOk()?(r.chx2?`<button class="btn gold" disabled>✅ Сундук главы: 💡 +1 и +${r.chap}</button>`:`<button class="btn gold" id="mChX2">🎬 Сундук главы за рекламу: <span class="nw">💡 +1 и +${r.chap} ${COIN_I}</span></button>`):''}
       <button class="btn ghost small" id="mCard">📤 Открытка «Я прошёл главу»</button></div>`);
   if(zbh)ZB.mount($('mcard'),ZB.chapSlots,zbc); /* zb */
   fitChap();
@@ -337,7 +337,7 @@ function openDaily(ret){ret=ret==='ret'; // z-new: ret — карточка во
   const easy=S.lv<30,yk=dayKey(1);
   // мягкая серия: пропустил ровно один день — баба Зина «прикроет» за рекламу (раз в день)
   // без рекламы (VK без моста) спасать серию нечем — окно не показываем, серия начнётся заново
-  if(S.lastDaily===dayKey(2)&&(S.streak||0)>=2&&!(S.fix&&S.fix.d===todayKey())){if(adsOk()){openStreakFix();return;}S.fix={d:todayKey()};save();}
+  if(S.lastDaily===dayKey(2)&&(S.streak||0)>=2&&!(S.fix&&S.fix.d===todayKey())){if(adsOk()&&adLikely()){openStreakFix();return;}if(!adsOk()){S.fix={d:todayKey()};save();}} // zfix: ролик не готов — окна «спасти за рекламу» нет, но и «спрошено» не ставим: готов позже — спросим
   const ns=S.lastDaily===yk?(S.streak||0)+1:1,sb=ECO.daily(ns)-ECO.daily(1);
   modal(`<h2>📅 Задание дня</h2><div style="width:100px;height:100px;margin:4px auto">${zinaSVG('happy')}</div>
     ${ret?`<p class="retp">${ns>1?'С возвращением! Серию держим?':'С возвращением! Я тут новый кроссворд приготовила.'}</p>`:''}
@@ -466,7 +466,7 @@ function bind(){
 }
 // zb2-NEWB 1.3 (флаг walk): на устройстве нет сохранения (BOOT.ts=0), а облако может принести прогресс — ждём его до 2,5 с, Дом прячем;
 // потом решаем: прогресс есть — Дом/текущий уровень, нет — 1-й уровень с обучением. Возвращает true, если ждём (onReady доделает сам).
-let znW=0;const ZN_WAIT=(m=>m?(m[1]==='1'?1500:0):1000)(/[?&]vk_is_app_user=([01])/.exec(location.search)); // мс; 0 — не ждать. zb2-MERGE (решение главного 12.10): VK — ждём облако только у того, кто уже запускал игру (vk_is_app_user=1), новичок VK — не ждёт; где признака нет (Яндекс/ОК) — 1,0 с
+let znW=0;const ZN_WAIT=(m=>m?(m[1]==='1'?1500:0):typeof OK!=='undefined'&&OK?300:1000)(/[?&]vk_is_app_user=([01])/.exec(location.search)); /* zfix 17.10: ОК — 300 мс (поток ОК 15–17.10: ждали в среднем 0,64–0,73 с на пустом экране, 30 % — полную 1 с, а прогресс в облаке нашёлся у 9 из ~1 040) */ // мс; 0 — не ждать. zb2-MERGE (решение главного 12.10): VK — ждём облако только у того, кто уже запускал игру (vk_is_app_user=1), новичок VK — не ждёт; где признака нет (Яндекс/ОК) — 1,0 с
 function znWait(){if(znW||!ZN_WAIT||BOOT.ts||typeof ZB2==='undefined'||ZB2.off('walk')||ZB2.off('nbwait')||/[?&](nosdk|lv)=?/.test(location.search))return false;znW=1;
   const m=$('menu'),t0=Date.now();if(m)m.style.visibility='hidden';let no=0;
   window.addEventListener('error',e=>{const t=e&&e.target;if(t&&t.src&&/\/sdk\.js|vk-bridge/.test(t.src))no=1;},true); // SDK не загрузился — облака не будет, не ждём

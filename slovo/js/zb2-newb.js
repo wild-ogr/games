@@ -34,14 +34,14 @@ function l1Start(){ZB.safe('nb2:l1',function(){var on=l1On();document.documentEl
 ZB.on('start',l1Start);ZB.on('ready',function(){var G1=g();if(G1&&!G1.won)l1Start();});
 ZB.levelHook.push(function(i){if(i.idx===0)document.documentElement.classList.remove('zn-l1');});
 
-/* ---------- walk (3.3): после 4-го и 20-го — в Дом с подсветкой ---------- */
-var WALK={3:{b:1,a:'home4',z:'zbToday',t:'Тут мой дневник: 5 дел в день — пятёрка и портфель! А «Играть» — дальше к урокам.'},
+/* ---------- walk (3.3): после 6-го (zfix 17.10: было после 4-го — в начале сразу дальше) и 20-го — в Дом с подсветкой; ключ STAT home4 оставлен, l=6 ---------- */
+var WALK={5:{b:1,a:'home4',z:'zbToday',t:'Тут мой дневник: 5 дел в день — пятёрка и портфель! А «Играть» — дальше к урокам.'},
   19:{b:2,a:'home20',z:'zbSchool',t:'Глава позади! Загляни в Школу — там кабинеты ремонтируем. А «Играть» — к урокам.'}};
 var stop=null;
 ZB.levelHook.push(function(i){if(!N.ok('walk')||!ZB.vw||!i.ok||!i.first||i.daily)return;var w=WALK[i.idx];
   if(w&&!(Z().w&w.b)&&S.lv<=i.idx+1)stop={idx:i.idx+1,w:w};});
 wrapStart(function(idx,daily,go){if(stop&&!daily&&idx===stop.idx&&N.ok('walk')){ZB.safe('nb2:walk',function(){openMenu();});if(!stop)return;}stop=null;return go();});
-ZB.on('home',function(){if(!stop)return;var w=stop.w;stop=null;Z().w|=w.b;save();if(window.ZBNB&&ZBNB.turn)ZBNB.turn('home');ev({a:w.a,l:w.b===1?4:20});
+ZB.on('home',function(){if(!stop)return;var w=stop.w;stop=null;Z().w|=w.b;save();if(window.ZBNB&&ZBNB.turn)ZBNB.turn('home');ev({a:w.a,l:w.b===1?6:20});
   setTimeout(function(){ZB.safe('nb2:walkhl',function(){var say=$('mSay');if(say)say.textContent=w.t;
     var el=$(w.z);if(!el||!el.firstElementChild)el=$('zbToday');if(!el)return;var pl=$('btnPlay');
     el.classList.add('zn-hl');if(pl)pl.classList.add('zn-hlp');try{el.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}

@@ -3,7 +3,7 @@
 (function(){
 var NB=window.ZBNB={on:true,
   f:{l1:true,hand:true,fast:true,rest:true,zero:true,gate:true,tmr:true,ios:true},
-  RES:{3:['gift'],4:['home'],5:['mg'],6:['tmr','ask'],10:['daily']},UPTO:12,
+  RES:{3:[],4:[],5:['gift','mg'],6:['home','tmr','ask'],10:['daily']},UPTO:12,
   tmrItems:[],zeroMin:6,restS:150};
 function on(k){return NB.on&&NB.f[k]!==false;}
 NB.noIntro=function(){return on('l1');};

@@ -64,7 +64,7 @@ function shortModalZb(it,isZ,id){
   const E=window.ZBECO,P=it.p,n=P-S.coins,top=adsOk()?E.topUp(P):0,cn=' <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>';
   modal(`<h2>Монеток маловато</h2><div style="width:110px;height:110px;margin:4px auto;position:relative">${isZ?zinaSVG('norm',id):`<div class="mini" id="cfPv" style="width:110px;height:110px"><div class="plate"></div></div>`}</div>
     <p>«${it.n}» — <b>${P}</b>${cn}, у тебя ${S.coins}. Не хватает <b>${n}</b>.</p>
-    ${top?`<p style="font-size:14.5px">Чуть-чуть осталось! Посмотри рекламу — добавлю <b>${top}</b>${cn}, и хватит ровно.</p>`:`<p style="font-size:14.5px">Проходи уровни — накопим!</p>`}
+    ${top?`<p style="font-size:14.5px" class="adtx">Чуть-чуть осталось! Посмотри рекламу — добавлю <b>${top}</b>${cn}, и хватит ровно.</p><p style="font-size:14.5px" class="adno-only">Чуть-чуть осталось! Проходи уровни — накопим.</p>`:`<p style="font-size:14.5px">Проходи уровни — накопим!</p>`}
     <div class="btns">${top?`<button class="btn green zbad" id="mAd">🎬 Добить ${top} за рекламу</button>`:''}<button class="btn ghost" id="mNo">${top?'Потом':'Хорошо'}</button></div>`);
   if(!isZ)applySkin($('cfPv'),id);
   $('mNo').onclick=()=>{hideModal();SND.tap();shopSay('Проходи уровни — накопим! Я пока в старом похожу.','norm');};
@@ -80,7 +80,7 @@ function shortModal(it,isZ,id){
   const n=it.p-S.coins,left=adsOk()?adCoinsLeft():0,cn=' <span class="coin" style="width:16px;height:16px;vertical-align:-2px"></span>';
   modal(`<h2>Монеток маловато</h2><div style="width:110px;height:110px;margin:4px auto;position:relative">${isZ?zinaSVG('norm',id):`<div class="mini" id="cfPv" style="width:110px;height:110px"><div class="plate"></div></div>`}</div>
     <p>«${it.n}» — <b>${it.p}</b>${cn}, у тебя ${S.coins}. Не хватает <b>${n}</b>.</p>
-    ${left?`<p style="font-size:14.5px">Посмотри рекламу — дам <b>+${ECO.adCoins}</b>${cn}. Сегодня можно ещё ${left} ${plural(left,'раз','раза','раз')}.</p>`:`<p style="font-size:14.5px">${adsOk()?'На сегодня рекламные монетки кончились. ':''}Проходи уровни — накопим!</p>`}
+    ${left?`<p style="font-size:14.5px" class="adtx">Посмотри рекламу — дам <b>+${ECO.adCoins}</b>${cn}. Сегодня можно ещё ${left} ${plural(left,'раз','раза','раз')}.</p><p style="font-size:14.5px" class="adno-only">Проходи уровни — накопим!</p>`:`<p style="font-size:14.5px">${adsOk()?'На сегодня рекламные монетки кончились. ':''}Проходи уровни — накопим!</p>`}
     <div class="btns">${left?`<button class="btn green" id="mAd">🎬 +${ECO.adCoins} за рекламу</button>`:''}<button class="btn ghost" id="mNo">${left?'Потом':'Хорошо'}</button></div>`);
   if(!isZ)applySkin($('cfPv'),id);
   $('mNo').onclick=()=>{hideModal();SND.tap();shopSay('Проходи уровни — накопим! Я пока в старом похожу.','norm');};

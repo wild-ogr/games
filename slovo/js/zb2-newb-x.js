@@ -2,7 +2,7 @@
 /* ================= zb2-newb-x — часть NEWB по требованию (буст_в2.0, 12.10.2026) =================
    Грузит js/zb2-newb.js через ZB.load (ZB2N.x()) — не входит в вес старта. Журнал — hobby-analytics/release-i/zina-boost2/logs/NEWB.md.
    Что всё делает поток NEWB (разбор 04-first-retention.md, номера — оттуда); каждая часть — флаг ZB2 (`?off=lv1safe,ramp…`):
-     lv1safe — 1-й уровень нельзя проиграть (1.4–1.6): после слова 2 промаха / 10 с — номера 1-2-3 и палец; 4 промаха / 25 с —
+     lv1safe — 1-й уровень нельзя проиграть (1.4–1.6): после слова 2 промаха / 4 с без касания (zfix; было 10 с) — номера 1-2-3 и палец; 4 промаха / 20 с —
                Зина вписывает слово по букве («Давай вместе: Н… О… С!», это не подсказка); до первого слова — то же через 6 промахов / 40 с.
                Палец — под буквой (кольцо вокруг буквы, 👆 ниже), строка Зины короче («Веди пальцем: Н → О → С»), фон 1-го бледнее.
                Здесь — тик и вписывание (l1); старт и классы — zb2-newb.js; строка — zb-newbie.js; стили — css/zb2-newb.css.
@@ -35,6 +35,10 @@ function hand(w){if(typeof startTutorial!=='function'||typeof shortestWord!=='fu
 
 /* ---------- lv1safe: тик 1-го уровня ---------- */
 var L1={g:null,f:0,t:0,s1:0,s3:0,busy:0},timer=0;
+/* zfix (17.10, разбор потока ОК: help1 приходил на 25–55-й с, 32 % новичков не прошли 1-й уровень): цифры и палец — после L1_HAND мс без касания круга
+   (было 10 с от последнего слова), Зина вписывает слово — через 20 с (было 25 с). */
+var L1_HAND=4000,L1T=0;
+document.addEventListener('pointerdown',function(e){var w=$('wheel');if(w&&e.target&&w.contains(e.target))L1T=Date.now();},true);
 // Зина вписывает слово по букве: буквы круга загораются по очереди, «Давай вместе: Н… О… С!», в конце слово засчитано (submit)
 function spell(wd,why){var g=G,ix=letIdx(wd.w),E=els(),k=0,up=wd.w.toUpperCase().split('');L1.busy=1;unnum();
   if(typeof stopTutorial==='function')stopTutorial();
@@ -49,10 +53,10 @@ function spell(wd,why){var g=G,ix=letIdx(wd.w),E=els(),k=0,up=wd.w.toUpperCase()
 function tick(){if(!N.l1On()||L1.busy||(typeof dragging!=='undefined'&&dragging))return;
   if(L1.g!==G)L1={g:G,f:foundN(),t:Date.now(),s1:0,s3:0,busy:0};
   var f=foundN(),now=Date.now();if(f!==L1.f){L1.f=f;L1.t=now;L1.s1=L1.s3=0;unnum();return;}
-  var w=shortestOpen();if(!w)return;var idle=now-L1.t,m=G.miss||0;
+  var w=shortestOpen();if(!w)return;var idle=now-L1.t,m=G.miss||0,still=now-Math.max(L1.t,L1T); // still — без касаний круга (zfix)
   if(G.tut){if(m>=6||idle>=40000)spell(w,m>=6?'miss':'idle');return;} // до первого слова — обучение zb-newbie; застрял надолго — вписываем
-  if(m>=4||idle>=25000){spell(w,m>=4?'miss':'idle');return;}
-  if(!L1.s1&&(m>=2||idle>=10000)){L1.s1=1;numbers(w.w);hand(w.w);
+  if(m>=4||idle>=20000){spell(w,m>=4?'miss':'idle');return;}
+  if(!L1.s1&&(m>=2||still>=L1_HAND)){L1.s1=1;numbers(w.w);hand(w.w);
     zina('Смотри на цифры: '+upw(w.w)+'. Веди по порядку!','happy',8);ev({a:'help1',l:1,ms:now-G.t0,w:m>=2?'miss':'idle'});}
   else if(L1.s1&&m>=3&&!L1.s3){L1.s3=1;numbers(w.w);}} // ещё промах после номеров — номера заново
 function l1(){L1.g=null;if(!timer)timer=setInterval(function(){if(!N.l1On()){if(S.lv>0){clearInterval(timer);timer=0;}return;}if(inGame())ZB.safe('nb2:l1t',tick);},500);}

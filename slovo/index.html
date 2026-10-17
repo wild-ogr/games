@@ -34,6 +34,8 @@ addEventListener('load',function(){setTimeout(function(){if(!done)try{sessionSto
 </script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Баба Зина: слова из букв</title>
+<!-- zfix 17.10 (Android ОК: старт 2,3 с против 1,7 с в VK): файлы, без которых не начать 1-й уровень, качаем первыми — раньше 40 модулей буста, которые делят с ними сеть -->
+<link rel="preload" as="script" href="js/levels.js"><link rel="preload" as="script" href="js/defs.js"><link rel="preload" as="script" href="js/vkm.js"><link rel="preload" as="script" href="js/zb-core.js"><link rel="preload" as="script" href="js/zb2-core.js"><link rel="preload" as="script" href="js/core.js"><link rel="preload" as="script" href="js/text.js"><link rel="preload" as="script" href="js/game.js"><link rel="preload" as="script" href="js/extras.js"><link rel="preload" as="script" href="js/pay.js"><link rel="preload" as="script" href="js/ui.js">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23fbf7ec'/%3E%3Ccircle cx='32' cy='32' r='26' fill='%23fff' stroke='%231d4fa3' stroke-width='6'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='900' font-size='34' text-anchor='middle' fill='%231d4fa3'%3E%D0%97%3C/text%3E%3C/svg%3E"> <!-- значок вкладки (без него favicon.ico 404 в консоли) — блюдце-гжель с буквой «З» -->
 <meta name="description" content="Баба Зина: слова из букв — составляй слова из букв, разгадывай кроссворды и собирай смешной «Толковый словарь бабы Зины».">
 <style>
@@ -71,9 +73,11 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .btn.ghost:active{box-shadow:0 1px 0 var(--edge)}
 .btn.small{padding:10px 16px;font-size:16px;border-radius:14px}
 .btn[disabled]{filter:grayscale(1);opacity:.55;pointer-events:none}
-/* pre: ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
-button[data-adwait]{position:relative}
-button[data-adwait]::after{content:"⏳";position:absolute;top:3px;right:6px;font-size:15px;line-height:1;pointer-events:none}
+/* zfix 17.10: ролик за награду не готов (VK/ОК не подтвердили) — кнопки «за рекламу» (AD_BTN_SEL в core.js) и тексты про ролик (.adtx) спрятаны,
+   вместо них — .adno-only; ролик готов — всё появляется само (класс adno на <html> ставит adVis в core.js). Уже полученные (disabled «✅») — видны. */
+html.adno #mAd,html.adno #mFix,html.adno #btnGift.adg,html.adno .thad,html.adno .adtx,
+html.adno #jfX2:not([disabled]),html.adno #mX2:not([disabled]),html.adno #mChX2:not([disabled]),html.adno #mBox:not([disabled]),html.adno #lgAd:not([disabled]),html.adno .zbad:not([disabled]){display:none!important}
+html:not(.adno) .adno-only{display:none!important}
 .ibtn{width:46px;height:46px;flex:none;border-radius:14px;background:var(--card);box-shadow:0 3px 0 var(--edge),0 4px 10px rgba(39,50,74,.08);
   display:flex;align-items:center;justify-content:center;font-size:22px}
 .ibtn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}

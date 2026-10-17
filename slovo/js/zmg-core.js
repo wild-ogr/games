@@ -292,7 +292,7 @@ function start(g,opt){const z=Z(),mode=opt.mode||'cab',train=mode==='cab'||!!opt
       e.addEventListener('pointerdown',dn);e.addEventListener('pointermove',mv);e.addEventListener('pointerup',up);e.addEventListener('pointercancel',up);e.style.touchAction='none';
       offs.push(()=>{e.removeEventListener('pointerdown',dn);e.removeEventListener('pointermove',mv);e.removeEventListener('pointerup',up);e.removeEventListener('pointercancel',up);});},
     mem(){const m=S.zmg.m;return ob(m[g.id])?m[g.id]:(m[g.id]={});},
-    adOk(){try{return !adUsed&&typeof adsOk==='function'&&adsOk();}catch(e){return false;}},
+    adOk(){try{return !adUsed&&typeof adsOk==='function'&&adsOk()&&(typeof adLikely!=='function'||adLikely());}catch(e){return false;}}, // zfix: ролик не готов — мини-игра не предлагает «за рекламу»
     adNeed(kind){if(adUsed)return Promise.resolve(false);adUsed=true;return new Promise(res=>{let ok=false;try{STAT.place('mg_'+g.id+'_'+(kind||'x'));hold=true;
       showRewarded(()=>{hold=false;if(!ok){ok=true;res(true);}},()=>{hold=false;if(!ok){ok=true;adUsed=false;res(false);}},
         ()=>{hold=false;if(!ok&&REG.cur&&REG.cur.host===host){ok=true;res(true);return 'подсказка в игре';}return '';});}catch(e){hold=false;adUsed=false;res(false);}});},

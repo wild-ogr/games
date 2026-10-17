@@ -64,6 +64,8 @@ function sosHtml(){try{if(typeof sosCalHtml==='function')return sosCalHtml()||''
 
 /* ---------- окно ---------- */
 var then=null;
+// zfix: что дальше после окна (из окна победы — следующий уровень); один раз
+function go(){var t=then;then=null;if(t)try{t();}catch(e){}}
 if(C.w1()&&!window.ZB2W1)ZB.load('js/zb2-week1.js').catch(function(){});
 function open(o){o=o||{};then=o.then||null;var c=C.c(),T=C.tk(),taken=c.g===T,t=today();
   var d=new Date(Math.floor(T/10000),Math.floor(T/100)%100-1,T%100,12),n=C.streak();
@@ -83,7 +85,7 @@ function open(o){o=o||{};then=o.then||null;var c=C.c(),T=C.tk(),taken=c.g===T,t=
   tipFill(T);
   bindZap();
   var b=$$('zcTake');if(b)b.onclick=function(){take(t);};
-  var ok=$$('zcOk');if(ok)ok.onclick=function(){tap();hideModal();};
+  var ok=$$('zcOk');if(ok)ok.onclick=function(){tap();hideModal();go();};
   var ad=$$('zcAd');if(ad){try{STAT.offer('calsave');}catch(e){}ad.onclick=function(){if(ad.disabled)return;ad.disabled=true;tap();try{STAT.place('calsave');}catch(e){}
     showRewarded(function(){ad.disabled=false;rescue(true);},function(){ad.disabled=false;},
       // поздний зачёт (adt): то же окно открыто — серию спасаем; иначе — монеты по цене ролика
@@ -120,7 +122,7 @@ function take(t){var o=C.c(),T=C.tk();if(o.g===T)return;tap();var g=t.g,got=give
     '<button type="button" class="btn '+(act||dl?'ghost small':'green')+'" id="zcGo">'+(act||dl?'Потом':'Спасибо, баба Зина!')+'</button>';
   if(act)$$('zcAct').onclick=function(){tap();hideModal();ZB.safe('w1-go',act.go);};
   if(dl)$$('zcDay').onclick=function(){hideModal();try{openDaily();}catch(e){}};
-  $$('zcGo').onclick=function(){tap();hideModal();};
+  $$('zcGo').onclick=function(){tap();hideModal();go();};
   try{if(typeof fitWin==='function')fitWin();}catch(e){}
   try{ZB.refresh();C.paint();}catch(e){}}
 function bindZap(){var z=$$('zcZap');if(z)z.onclick=function(e){e.preventDefault();tap();hideModal();try{ZB2ZAP.open();}catch(x){}};}

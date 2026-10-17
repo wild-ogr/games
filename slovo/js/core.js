@@ -403,7 +403,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Игра только на русском — lang:'ru' (window.LANG от Яндекса интерфейс не меняет).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v4.2-101521',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v4.3-101718',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе — после облака (что позже), но не дольше 2,5 с (иначе модуль сам отправит start без полей через 3 с).
 // pl — пройдено уровней, cn — монет, bt — облако хоть раз отдавало сохранение (S.cl — метка на устройстве, ставит cloudLoad)
 let statPr=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:+S.lv||0,cn:+S.coins||0,bt:S.cl?1:0});}
@@ -835,12 +835,22 @@ function adSoon(){return 'Ролик будет через несколько с
 let AD_STEP=[5000,5000,5000,5000,5000,5000,15000,15000,15000,15000],AD_STEP_MAX=45000,AD_ASK_MIN=3000,AD_FRESH=120000,AD_LOOK_MS=20000;
 let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAskWhy='boot',adMarkT=0,adRdyToastT=0;
 function adBtns(){try{return Array.prototype.slice.call(document.querySelectorAll(AD_BTN_SEL));}catch(e){return [];}}
-function adLikely(){return !(VK&&adSt<0&&adNoN>=2&&!adWinAsk());} // false — VK уже дважды подряд ответил «ролика нет» (zb-TECH: и свежий вопрос после победы уже ответил)
+/* zfix (17.10, разбор потока ОК: ролик в ОК есть в 3–7 % проверок, кнопку жали впустую сотни раз): кнопка ролика за награду ВИДНА ТОЛЬКО, когда площадка сказала «ролик готов».
+   VK/ОК: adSt===1 и нет паузы кнопок (adCoolT) → видно; «нет» / ещё не спрашивали / ролик только что показан → все кнопки AD_BTN_SEL и тексты .adtx спрятаны
+   (класс adno на <html>, стили в index.html; .adno-only — замена «без ролика»). Опрос в фоне идёт как раньше (adPreload) — ролик подгрузился → кнопки появляются сами.
+   Яндекс и заглушка на маке: сведений о готовности нет — кнопки как раньше. Значка ⏳ больше нет. */
+function adLikely(){return !VK||adSt===1&&Date.now()>=adCoolT;} // false — VK не подтвердил, что ролик готов: кнопку не показываем, окно «только ради ролика» не открываем
+let adVisT=0;
+function adVis(){clearTimeout(adVisT);const no=!adLikely();try{const D=document.documentElement,was=D.classList.contains('adno');D.classList.toggle('adno',no);
+  if(was&&!no&&typeof fitWin==='function'&&$('modal').classList.contains('on'))fitWin();}catch(e){} // кнопка появилась в открытом окне — окно снова подгоняем под экран
+  if(no&&Date.now()<adCoolT)adVisT=setTimeout(adVis,adCoolT-Date.now()+50);}
+// «кнопку показали» (STAT.offer) — только если её правда видно; спрятанная кнопка — не показ (модуль STAT не правим — обёртка, как STAT.place ниже)
+{const so=STAT.offer;STAT.offer=function(){if(!adLikely())return;return so.apply(STAT,arguments);};}
 /* zb-TECH (10.10): корзинка «ждёт» 182 раза на ~10 досмотров — решение принималось по старому «нет». Теперь на победе (ZB 'level' ok) VK спрашиваем сразу заново
    (adPreload('win')); пока свежий ответ не пришёл (до 5 с) — считаем, что ролик может быть (кнопку показываем; пришло «нет» — на ней ⏳, нажать можно, как и раньше). */
 function adWinAsk(){return !!adAsking&&adAskWhy==='win'&&Date.now()-adAskT<5000;}
 if(typeof ZB!=='undefined')ZB.on('level',i=>{if(i&&i.ok&&VK&&adSt<1&&!adBusy&&!adW)adPreload('win');});
-function adPreload(why){if(!VK)return;clearTimeout(adChkT);if(typeof why==="string"){adAskWhy=why;adStepN=0;}
+function adPreload(why){if(!VK)return;adVis();clearTimeout(adChkT);if(typeof why==="string"){adAskWhy=why;adStepN=0;}
   if(document.hidden||PR.has('vk')||adW)return; // свёрнуты или ролик на экране — молчим; вернёмся / ролик закончится — спросим (adBackChk, итог показа)
   const now=typeof why==='string'&&why!=='back'&&why!=='look'; // итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN
   if(!now){const wait=adAsking?AD_ASK_MIN:adAskT+AD_ASK_MIN-Date.now();if(wait>0){adChkT=setTimeout(adPreload,wait);return;}}
@@ -854,17 +864,16 @@ function adAns(ok){const t=Date.now();
   if(ok===false){if(!adNoN)adNoT0=t;adNoN++;adSt=-1;adStT=t;adMark();} // null — мост не ответил: состояние не трогаем, но спрашивать продолжаем
   adChkT=setTimeout(adPreload,AD_STEP[adStepN++]||AD_STEP_MAX);}
 // ⏳ на кнопках ролика, пока VK говорит «нет» (окна перерисовываются — поэтому раз в секунду, только пока «нет»); вернёт true, если значок был на видимой кнопке и снят
-function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];let seen=false,old=[];try{old=document.querySelectorAll('[data-adwait]');}catch(e){}
-  for(let i=0;i<q.length;i++)q[i].setAttribute('data-adwait','1');
-  for(let i=0;i<old.length;i++){const b=old[i];if(q.indexOf(b)<0){b.removeAttribute('data-adwait');if(!on&&b.offsetParent)seen=true;}} // кнопка перестала быть рекламной («Получено», гостинец вместо подарка) — значок снять
-  if(on)adMarkT=setTimeout(adMark,1000);return seen;}
+// zfix: значка ⏳ нет — кнопки прячутся/появляются (adVis); true — кнопка ролика только что появилась на экране (для «Ролик готов»)
+function adMark(){clearTimeout(adMarkT);const was=document.documentElement.classList.contains('adno');adVis();if(!was||!adLikely())return false;
+  const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)return true;return false;}
 // вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз
 function adBackChk(tick){if(!VK||adBusy||document.hidden||PR.has('vk'))return;
   if(adSt<1){if(tick!==1)adPreload('back');else if(Date.now()-adAskT>AD_STEP_MAX+2*AD_ASK_MIN)adPreload();return;} // по таймеру — только страховка, шаги не сбрасываем
   if(Date.now()-adStT<AD_FRESH)return;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent){adPreload('look');return;}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(adChkT);else setTimeout(adBackChk,300);});
 setInterval(()=>adBackChk(1),AD_LOOK_MS);
-function adReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast('Ролик готов — можно смотреть');},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();adVis();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast('Ролик готов — можно смотреть');},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
 function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
   if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.74);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
   w.textContent=txt||'Ролик загружается…';
@@ -873,7 +882,7 @@ function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(
   w.style.display='flex';}
 // кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду); гаснут через opacity, не disabled: нажатие по погасшей объясняет
 function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)q[i].style.opacity=off?'.45':'';}catch(e){}if(off)adDimT=setTimeout(adDim,1000);}
-function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload('none');}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;if(VK){adSt=-1;adStT=Date.now();}adDim();adVis();adPreload('none');} // zfix: «ролика нет» при показе — кнопки прячем до ответа «готов»
 /* adt (04.10): обрыв ролика через 60 с. Раньше показ ждал ответа VK 60 с (vkSend(…,60000)), потом писал «недоступна», а поздний ответ «досмотрел» никто не слушал —
    на Android так кончалось каждое пятое нажатие: ролик посмотрен, награды нет. Теперь:
    1) ответа площадки ждём AD_WAIT_MS (180 с); игра всё это время на паузе «ad» (звук выключен, как при рекламе);
