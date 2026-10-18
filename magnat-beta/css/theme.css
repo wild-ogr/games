@@ -208,8 +208,9 @@ button.card{display:block}button.card.regc{display:flex}
   #hdr{padding:4px 12px 6px;padding-top:max(4px,env(safe-area-inset-top))}
   .hname b{font-size:16px}.hname span{font-size:14px}
   .hcash b{font-size:26px}#hdr .hbtn{margin-left:6px}#hdr .h2{margin-top:5px}
-  #nav button{min-height:58px}#adv{bottom:66px}#adv .at{max-height:19vh;font-size:15px}#adv .ah svg{width:44px;height:44px}}
+  #nav button{min-height:58px}#adv{bottom:66px}#adv .at{max-height:19vh;font-size:15px}#adv .ah>svg{width:44px;height:44px}/* b2-fix N3: только лицо, не значки в тексте */}
 body.advon .screen{padding-bottom:52vh}
+body.advon .toast{bottom:calc(var(--advt,160px) + 8px)}/* b2-fix N3: тосты не закрывают кнопки пузыря Людмилы (обучение) */
 body.big #main,body.big #mcard,body.big #adv{zoom:1.12}
 
 /* ---- карта ---- */

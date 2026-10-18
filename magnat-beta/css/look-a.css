@@ -123,3 +123,63 @@ body.noico lk-i:not([data-w]){display:none}
 body.noico lk-i[data-w]::before{content:attr(data-w);margin:0 .2em;font-weight:inherit;color:inherit}
 body.noico .bz-ic,body.noico .mt-ic,body.noico .cb-ic,body.noico .ph-ji{display:none}
 body.noico .pbar lk-i{display:none}
+/* ================= b2-polish: стиль-гид «Магнат 2.0» (logs/STYLE.md) — 4 типа карточек, цифры, метки; движение только при html.b2p:not(.b2-still) ================= */
+html.lk-a{--b2-paper:#fbf6e8;--b2-paper-ink:#2b2418;--b2-paper-ln:#d9ccb0;--b2-sky:linear-gradient(180deg,#cfe3ff 0,#eef4ff 100%);--b2-rival:#c4462f;--b2-dot:#e5484d;--b2-ease:cubic-bezier(.2,.8,.2,1)}
+body.th-dark{--b2-paper:#2a2721;--b2-paper-ink:#f1e9d6;--b2-paper-ln:#4a4436;--b2-sky:linear-gradient(180deg,#1b2440 0,#2a3354 100%)}
+.b2-num{font-variant-numeric:tabular-nums;-webkit-font-feature-settings:"tnum";font-feature-settings:"tnum";font-family:var(--numfont,inherit);white-space:nowrap}
+.b2-pos{color:var(--good)!important}.b2-neg{color:var(--bad)!important}
+.b2c{position:relative;background:var(--lkc,var(--card));border-radius:var(--r,20px);box-shadow:var(--sh);padding:16px 18px;margin-bottom:14px;overflow:hidden;color:var(--ink)}
+.b2c h4{margin:6px 0 4px;font-size:1.1em;line-height:1.25;font-weight:800}
+.b2c p{margin:0 0 6px;color:var(--ink2);line-height:1.35}
+.b2c small{color:var(--muted);font-size:.86em}
+/* 1) решение */
+.b2c-dec{border-left:5px solid var(--who,var(--accent))}
+.b2c-who{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;font-size:.92em}
+.b2c-who b{margin-right:6px}
+.b2c-ava{display:inline-block;width:44px;height:44px;min-width:44px;border-radius:50%;overflow:hidden;background:var(--soft);margin-right:10px;box-shadow:0 0 0 2px var(--who,var(--accent))}
+.b2c-ava svg,.b2c-ava img{width:100%;height:100%;display:block}
+.b2c-opts{margin-top:10px}
+.b2o{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:justify;justify-content:space-between;width:100%;min-height:52px;margin:0 0 8px;padding:10px 14px;border:1px solid var(--line2);border-radius:var(--r2,16px);background:var(--lkb,var(--soft));color:var(--ink);font:inherit;font-weight:700;text-align:left;cursor:pointer}
+.b2o:last-child{margin-bottom:0}
+.b2o em{font-style:normal;font-weight:700;font-size:.9em;margin-left:10px;white-space:nowrap}
+.b2o.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+/* 2) цель */
+.b2c-h{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;font-weight:800}
+.b2c-h>span{-webkit-box-flex:1;flex:1;margin-left:6px}
+.b2c-h>b{color:var(--accent);font-size:1.15em}
+.b2-bar{height:10px;border-radius:6px;background:var(--track);overflow:hidden;margin:8px 0 6px}
+.b2-bar>i{display:block;height:100%;border-radius:6px;background:var(--barfill,var(--accent));-webkit-transform-origin:0 50%;transform-origin:0 50%}
+.b2-bar.ok>i{background:var(--good)}
+.b2c-goal.b2c-mini{padding:10px 14px}.b2c-mini .b2-bar{margin:4px 0 0;height:8px}
+/* 3) новость */
+.b2c-news{background:var(--b2-paper);color:var(--b2-paper-ink);border:1px solid var(--b2-paper-ln);box-shadow:var(--sh);-webkit-transform:rotate(-.4deg);transform:rotate(-.4deg)}
+.b2c-news .b2c-mast{font-family:Georgia,"Times New Roman",serif;font-weight:900;letter-spacing:.12em;text-align:center;border-bottom:3px double var(--b2-paper-ln);padding-bottom:6px;font-size:.95em}
+.b2c-news .b2c-mast small{display:block;letter-spacing:.02em;font-weight:400;color:inherit;opacity:.75;font-size:.8em}
+.b2c-news h4{font-family:Georgia,"Times New Roman",serif;font-size:1.2em;font-weight:700;margin-top:8px}
+.b2c-news p{color:inherit;opacity:.85;font-style:italic}
+/* 4) мир */
+.b2c-world{padding:0;background:var(--b2-sky);min-height:120px}
+.b2c-world>svg{display:block;width:100%;height:136px}
+@media (min-width:700px){.b2c-world>svg{height:180px}}
+.b2c-cap{position:absolute;left:10px;bottom:10px;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,.88);color:#101828;font-weight:700;font-size:.85em}
+body.th-dark .b2c-cap{background:rgba(20,24,34,.85);color:#f1f4fa}
+/* мелочи */
+.b2-chip{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--soft);color:var(--ink2);font-size:.8em;font-weight:700;vertical-align:.1em}
+.b2-chip.new{background:var(--accent-t,var(--soft));color:var(--accent)}
+.b2-row{display:-webkit-box;display:flex;-webkit-box-pack:justify;justify-content:space-between;-webkit-box-align:baseline;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line)}
+.b2-row:last-child{border-bottom:0}
+.b2-more{display:block;width:100%;margin-top:6px;padding:10px 0;background:none;border:0;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;min-height:48px!important}   /* b2-merge: 45+ — цель ≥ 44 px (check.py) */
+/* всплывающее «+86 тыс.» (POL.pop) */
+.b2-pop{position:fixed;z-index:60;pointer-events:none;font-weight:800;font-family:var(--numfont,inherit);font-size:17px;white-space:nowrap;text-shadow:0 1px 0 rgba(255,255,255,.8);-webkit-animation:b2Pop 1.2s var(--b2-ease) forwards;animation:b2Pop 1.2s var(--b2-ease) forwards}
+@-webkit-keyframes b2Pop{0%{opacity:0;-webkit-transform:translate(-50%,6px) scale(.8)}15%{opacity:1;-webkit-transform:translate(-50%,-6px) scale(1.05)}70%{opacity:1}100%{opacity:0;-webkit-transform:translate(-50%,-30px)}}
+@keyframes b2Pop{0%{opacity:0;transform:translate(-50%,6px) scale(.8)}15%{opacity:1;transform:translate(-50%,-6px) scale(1.05)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px)}}
+/* b2-polish: «вдавливание» всего, что нажимается (кнопки вида уже есть в theme.css — тут недостающие), без движения при html.b2-still */
+html.b2p .f-tab:active,html.b2p .f-anb:active,html.b2p .f-sw:active,html.b2p .fu-row:active,html.b2p .nav-fr:active,html.b2p .oh:active,html.b2p .pb:active,html.b2p .mx:active,html.b2p .cp-line:active,html.b2p .mt-btn:active,html.b2p .b2o:active,html.b2p .b2-more:active,html.b2p .b2-chip:active{-webkit-transform:scale(.97);transform:scale(.97)}
+html.b2p button.card:active,html.b2p .f-card:active,html.b2p button.b2c:active{-webkit-transform:scale(.985);transform:scale(.985)}
+html.b2p .b2o,html.b2p .b2-more,html.b2p .f-card,html.b2p .fu-row{-webkit-transition:-webkit-transform .1s var(--b2-ease),box-shadow .1s;transition:transform .1s var(--b2-ease),box-shadow .1s}
+html.b2-still *,html.b2-still *::before,html.b2-still *::after{-webkit-animation:none!important;animation:none!important;-webkit-transition:none!important;transition:none!important}
+html.b2-still .b2-pop{display:none}
+/* b2-polish: Людмила ≤ 2 строк — остальное под «▼ Подробнее» (b2-polish.js cut) */
+.b2-cut{max-height:2.75em;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 60%,transparent);mask-image:linear-gradient(180deg,#000 60%,transparent)}
+.b2-cut p{margin:0!important}
+.say .b2-more,#adv .b2-more{margin:0 0 -6px;padding:6px 0;min-height:46px;text-align:left}
