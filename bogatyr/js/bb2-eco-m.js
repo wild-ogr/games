@@ -59,6 +59,7 @@ function frOk(){return PC&&PLAT==='vk'&&deny>=N('adfree.deny',2)&&Date.now()<adC
 if(PC&&PLAT==='vk'){
   var sA=STAT.ad;STAT.ad=function(f,r){if(f==='rew'){if(r==='none')deny+=2;else if(r==='ok')deny=0;}return sA.apply(STAT,arguments);}; /* none = отказ и после тихого повтора: два «нет» */
   var sR=showRewarded,aD=adDim;
+  var aO=adOk;adOk=function(){return aO()||frOk();}; /* ok2: кнопки «за рекламу» без ролика не рисуются — а «Взять так» на ПК должна остаться */
   showRewarded=function(cb,fail,late){if(adBusy||!frOk())return sR(cb,fail,late);var s=st(),d=dayKey(),n=(s.fr&&s.fr[0]===d?s.fr[1]:0)+1,p=adPl;adPl='';s.fr=[d,n];save();
     stat('free',{p:p||'?',n:n});toast(L('Ролика сейчас нет — держи так','No video right now — take it anyway'));try{cb();}catch(e){}adDim();};
   adDim=function(){aD();var ok=frOk(),q,i,b,h;try{q=document.querySelectorAll('.btn.ad,[data-g]');}catch(e){return;}

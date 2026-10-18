@@ -74,6 +74,7 @@ h2{font-size:20px;font-weight:900;margin:10px 2px 4px}
 /* pre: ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
 button[data-adwait]{position:relative}
 button[data-adwait]::after{content:"\23F3";position:absolute;top:2px;right:4px;font-size:14px;line-height:1;pointer-events:none;text-shadow:none}
+html.adno .btn.ad:not([data-bb2f]),html.adno [data-g]:not([data-bb2f]),html.adno .adx{display:none!important} /* ok2: ролика нет — кнопок «за рекламу» нет (core.js adVis) */
 .btn.ghost{background:rgba(255,255,255,.08);box-shadow:none;border:1px solid var(--line)}
 .btn[disabled]{filter:grayscale(1) brightness(.7);pointer-events:none}
 .btn img{width:18px;height:18px}

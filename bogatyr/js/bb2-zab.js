@@ -78,7 +78,8 @@ var ZREC=(function(){
   function botQ(){return /[?&]bot/.test(location.search)&&!window.__zabBot;}
   function chRun(g){return !!g&&!g.endless&&!g.daily&&!g.weekly;}
   function goOn(chi,o){startRun(chi,o.endless,o.wk,o.dr);}   /* не BB2.go: окна «В поход» других потоков должны получить свой черёд (счётчик привала уже сброшен) */
-  Z.pvDue=function(){return BB2.on('prival')&&!botQ()&&(S.runs|0)>=3&&(Z.s().pv|0)>=BB2.n('zab.pvEvery',3) /*ECO?*/;};
+  /* ok2 (17.10): новичку привал — после 6 походов (флаг nvq), чтобы не шёл одной пачкой с первым судом */
+  Z.pvDue=function(){return BB2.on('prival')&&!botQ()&&(S.runs|0)>=3&&!(BB2.on('nvq')&&(S.runs|0)<7)&&(Z.s().pv|0)>=BB2.n('zab.pvEvery',3) /*ECO?*/;};
   BB2.hook('win',function(g){if(chRun(g))Z.inc('pv');});
   BB2.hook('march',function(chi,o){o=o||{};if(typeof ZAB!=='undefined'&&ZAB.cur)return true;   /* забава на экране (Enter на карте) — в поход не уходим */
     if(o.endless||o.wk||o.dr||!Z.pvDue())return;Z.s().pv=0;Z.inc('pn');

@@ -231,7 +231,10 @@ var SUDX=(function(){
     var b=el('sudRe');if(b)b.onclick=function(){snd('click');X.court(slot,{src:'again'},function(e){if(e)after(g,e);var q2=el('mBody');if(q2&&q2.getAttribute('data-w')==='result')resLine(q2,g);});};}
   function after(g,e){g.sud.done=1;if(e&&e.tro)g.sud.tro=e.tro;if(e&&e.src!=='book')B.ev('kuplet',{c:'sud',t:kuplet(e),src:'sud'});}
   BB2.hook('run',function(){var o=el('sudOv');if(o&&o.parentNode)o.parentNode.removeChild(o);}); /* MERGE: суд не висит поверх нового похода (босс остаётся «ждёт суда» в Книге судеб) */
+  function quiet(m,g){var b=m.querySelector('.goldrow');if(!b||m.querySelector('#sudLater'))return;var d=document.createElement('p');d.className='sub';d.id='sudLater';
+    d.innerHTML='⚖ '+L(U.name(g.sud.slot)+' ждёт твоего суда — рассудишь потом, в деревне: «Книга судеб»',U.name(g.sud.slot)+' awaits your judgment — decide later in the village: Book of Fates');b.parentNode.insertBefore(d,b.nextSibling);}
   X.result=function(m,g){var s=g.sud;if(!s)return;css();
+    if(s.first&&!s.done&&B.nvq&&B.nvq()){if(!s.lat){s.lat=1;B.stat('sud',{a:'later',c:s.slot});}quiet(m,g);return;} /* ok2: новичку суд — потом, в Книге судеб (дело уже записано «ждёт суда») */
     if(s.first&&!s.done&&!s.ask){s.ask=1;setTimeout(function(){var q0=el('mBody');if(!q0||q0.getAttribute('data-w')!=='result'||!el('modal').classList.contains('on')||(typeof G!=='undefined'&&G&&G!==g&&!G.over)){s.ask=0;return;}X.court(s.slot,{src:'win'},function(e){after(g,e);var q=el('mBody');if(q&&q.getAttribute('data-w')==='result')resLine(q,g);});},120);return;} /* MERGE: суд — через кадр после окна итогов (переход «итог похода» на слабом телефоне легче) */
     resLine(m,g);};
 

@@ -610,7 +610,7 @@ function openGift(){const g0=G,H=G.hero;H.inv=Math.max(H.inv,3);G.q.feather=(G.q
   const ad='<small class="adl">'+L('🎬 за рекламу','🎬 for an ad')+'</small>';
   showModal('<h3>'+L('Жар-птица!','Firebird!')+'</h3><p class="sub">'+L('✨ Перо Жар\u2011птицы — даром: 3 секунды неуязвимости.','✨ A Firebird feather — free: 3 seconds of invulnerability.')+'</p>'+
     '<div class="btns" style="margin-top:0"><button class="btn gold big" id="gNo">'+L('✨ Взять перо и лететь дальше','✨ Take the feather and carry on')+'</button></div>'+
-    '<p class="sub" style="margin:12px 0 0">'+L('А за просмотр рекламы — дар побольше (по желанию):','Or watch an ad for a bigger gift (optional):')+'</p><div class="cards giftc">'+
+    '<p class="sub adx" style="margin:12px 0 0">'+L('А за просмотр рекламы — дар побольше (по желанию):','Or watch an ad for a bigger gift (optional):')+'</p><div class="cards giftc">'+
     '<button class="upc" data-g="chest"><img src="'+ic('chest',104)+'"><div><b>'+L('Сундук умений','Skill chest')+'</b><span>'+L('Два новых умения сразу','Two new skills at once')+'</span>'+ad+'</div></button>'+
     '<button class="upc" data-g="gold"><img src="'+ic('p_coin',104)+'"><div><b>'+L('Золотой поход','Golden run')+'</b><span>'+L('×2 золота до конца похода','×2 gold for the rest of the run')+'</span>'+ad+'</div></button>'+
     (G.wk.noHeal?'':'<button class="upc" data-g="heal"><img src="'+ic('p_livew',104)+'"><div><b>'+L('Живая вода','Water of Life')+'</b><span>'+L('Полное здоровье и 5 секунд неуязвимости','Full health and 5 seconds of invulnerability')+'</span>'+ad+'</div></button>')+
