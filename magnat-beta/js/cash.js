@@ -46,7 +46,7 @@ function shadow(W,days,apply){const st=shInit(W,days,apply);shRun(st,days);retur
 
 /* ---------------- подписи ---------------- */
 function regC(c){const R=E.REGS&&E.REGS[c];return R?L2(R.city,R.ce):L2('','');}
-function bizName(W,id){const b=(W.biz||[]).find(x=>x.id===id);const B=b&&E.BIZ&&E.BIZ[b.t];if(!B)return null;const c=regC(b.c);
+function bizName(W,id){const b=bzF(W,id);const B=b&&E.BIZ&&E.BIZ[b.t];if(!B)return null;const c=regC(b.c);
   const many=(W.cities||[]).length>1;return L2(B.ico+' '+B.n+(many&&c.ru?' · '+c.ru:''),B.ico+' '+B.en+(many&&c.en?' · '+c.en:''));}
 function objName(W,id){const o=(W.obj||[]).find(x=>x.id===id);const O=o&&E.OBJ[o.t];if(!O)return null;const c=regC(o.r);return L2(O.n+(c.ru?' · '+c.ru:''),O.en+(c.en?' · '+c.en:''));}
 function goodName(g){const G=E.GOODS[g];return G?L2(G.n,G.en):L2(g,g);}
@@ -57,8 +57,9 @@ function loanName(l){if(!l)return L2('Кредит','Loan');if(l.frp)return L2('
 /* ---------------- источники (реестр) ---------------- */
 // каждый источник: fn(W, days, P) → items[]; P.take(pred) забирает потоки (каждый — один раз), P.item(f,k,ru,en,src) — строка из потока
 const SRC=[];
-const isPt=(W,t)=>/^z\d+$/.test(t)&&(W.biz||[]).some(b=>b.id===t);
-const ptT=(W,t)=>{const b=(W.biz||[]).find(x=>x.id===t);return b?b.t:'';};
+const bzF=(W,id)=>{const X=W.biz&&E.bix?E.bix(W):null;return X?X.id[id]:(W.biz||[]).find(x=>x.id===id);};   /* b2-perf: точка по id без обхода всех (ленту тени — тысячи строк) */
+const isPt=(W,t)=>/^z\d+$/.test(t)&&!!bzF(W,t);
+const ptT=(W,t)=>{const b=bzF(W,t);return b?b.t:'';};
 // 1. оплаты покупателей (дебиторка W.rec): ДДС «поступления» без тега в дни, когда у покупателей подошёл срок
 SRC.push(function rec(W,days,P){const o=[];const dueBy={};for(const x of P.sh.days)dueBy[x.d]=x.due;
   for(const f of P.take(f=>f.cf==='sales'&&f.tag==='_'&&f.a>0&&dueBy[f.d]>0)){const a=Math.min(f.a,dueBy[f.d]);dueBy[f.d]-=a;
@@ -244,7 +245,13 @@ function fixesOf(W,p0,gp){const F=[];const unit=W.ned?1e6:1e4,H=60,p=p0.days>=H?
 
 /* ---------------- советы Людмилы: z_cash (причина разрыва), z_factor (починен: раньше ждал cash<0, которого не бывает) ---------------- */
 function advWrap(name){const f=E[name];if(typeof f!=='function'||f.__cp)return;const g=function(W){const o=f.apply(this,arguments);try{if(Array.isArray(o)&&W&&E.cpAdvOn&&!E.cpIn)cpAdv(W,o);}catch(e){}return o;};g.__cp=1;E[name]=g;}
-function cpAdv(W,o){const p=cashPlan(W,35);const g=p.gaps[0];if(!g||g.d>40)return;
+/* b2-perf (N5): новый игровой день или действие игрока, тень ещё не готова — совет z_cash по прошлому плану (не старше дня), тень досчитывается кусками (cpWarm, ~0,5 с), разница — перерисовка */
+let CPA=null;const cpaK=g=>g?[g.d,g.a,g.why,g.k,g.id].join('|'):'';
+function cpAdvG(W){const off=typeof B2!=='undefined'&&B2&&B2.off&&B2.off.perf;
+  if(!off&&CPA&&CPA.W===W&&(CPA.gen!==E.cpGen||W.t-CPA.gt===1)&&W.t-CPA.gt<=1&&!cpHas(W,35)&&root.UI&&root.UI.refresh){const g0=CPA.g,t=W.t;
+    cpWarm(W,()=>{if(W.t!==t||!root.GAME||root.GAME.W!==W||CPA.gt===t&&CPA.gen===E.cpGen)return;const g1=cashPlan(W,35).gaps[0];CPA={W,gt:t,gen:E.cpGen,g:g1};if(cpaK(g1)!==cpaK(g0))root.UI.refresh('day');},35);return g0;}
+  const g=cashPlan(W,35).gaps[0];CPA={W,gt:W.t,gen:E.cpGen,g};return g;}
+function cpAdv(W,o){const g=cpAdvG(W);if(!g||g.d>40)return;
   // без двойных советов: про овердрафт «сейчас» говорит z_od, про склад — z_whs / z_factor (fx3) — z_cash тогда не добавляем
   const has=k=>o.some(x=>x.k===k),dup=g.d===0&&has('z_od')||g.why==='whs'&&(has('z_whs')||has('z_factor'));
   if(!dup&&!has('z_cash'))o.push({k:'z_cash',pri:g.k==='od'&&g.d<=15?88:g.k==='halt'?84:72,a:{d:g.d,a:g.a,why:g.why,k:g.k,id:g.id}});

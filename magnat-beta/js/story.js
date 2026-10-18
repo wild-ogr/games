@@ -116,6 +116,7 @@ function stBack(F,id,st){for(const c of F.ch||[]){if(!c||c.w!==id)continue;const
 function storyMigrate(W,fx){if(!W.fr||typeof W.fr!=='object'||!W.fr.v){init(W);if(fx)fx.push('fr');return;}
   const F=W.fr,num=(o,k,d)=>{if(typeof o[k]!=='number'||!isFinite(o[k]))o[k]=d;};
   for(const k of ['q','fd','ch','jv','ln','rh'])if(!Array.isArray(F[k]))F[k]=[];if(!F.dn||typeof F.dn!=='object')F.dn={};
+  if((W.hold|0)>1&&frShift(F,frMaxT(F,W.t+1),W.t+1)&&fx)fx.push('frT');   /* b2-fix Х2-4: уже вышедшие на IPO — дни «из будущего» сдвинуть в прошлое */
   num(F,'m0',W.m);num(F,'n',1);num(F,'rq',W.m+3);num(F,'nt',W.t);num(F,'rd',W.t);num(F,'ls',-99);num(F,'buy',-1);num(F,'vlg',-1);num(F,'gp',-1);
   num(F,'rs',9);num(F,'rags',0);num(F,'ld',-1);num(F,'lm',W.m);num(F,'cm',W.m-1);
   for(const id of FR){if(!F[id]||typeof F[id]!=='object')F[id]={};const x=F[id];num(x,'tr',TR0[id]);num(x,'k',tgt(id,0));num(x,'c',0);num(x,'no',0);num(x,'cq',-9);num(x,'cg',-9);num(x,'gu',-1);if(x.gu===0&&!F.gu1)x.gu=-1;if(x.ln===undefined)x.ln=null;
@@ -246,9 +247,9 @@ const SC={
   // Соня уходит из банка и открывает фонд — зовёт на презентацию (день 5)
   owl4:{w:'owl',big:1,when:(W,F)=>F.rags&&W.hold===1&&si(W)>=2&&mm(W,F)>=104,o:{a:{fx:(W,F)=>{yes(F,'owl');return tr(F,'owl',5);}},b:{fx:()=>0}}},
   // Пётр зовёт на первый взрыв на новом уступе (глава «Карьер», день 7)
-  bars5:{w:'bars',when:(W,F)=>F.rags&&!W.ned&&W.st==='quarry'&&mm(W,F)>=140,o:{a:{fx:(W,F)=>{yes(F,'bars');return tr(F,'bars',5);}},b:{fx:()=>0}}},
+  bars5:{w:'bars',when:(W,F)=>F.rags&&!W.ned&&W.st==='quarry'&&mm(W,F)>=140/* b2-quarry */||F.rags&&!W.ned&&typeof B2!=='undefined'&&B2.quarry&&B2.quarry.qm(W)>=6,o:{a:{fx:(W,F)=>{yes(F,'bars');return tr(F,'bars',5);}},b:{fx:()=>0}}},
   // Борис слышал про письма Роснедр: «идём вместе?» (перед недрами)
-  beav6:{w:'beav',when:(W,F)=>F.rags&&!W.ned&&W.st==='quarry'&&mm(W,F)>=150,o:{a:{fx:(W,F)=>{yes(F,'beav');return tr(F,'beav',3);}},b:{fx:()=>0}}},
+  beav6:{w:'beav',when:(W,F)=>F.rags&&!W.ned&&W.st==='quarry'&&mm(W,F)>=150/* b2-quarry */||F.rags&&!W.ned&&typeof B2!=='undefined'&&B2.quarry&&B2.quarry.qm(W)>=14,o:{a:{fx:(W,F)=>{yes(F,'beav');return tr(F,'beav',3);}},b:{fx:()=>0}}},
   // Людмилу переманивает Топтыгин
   lud1:{w:'lud',big:1,when:(W,F)=>F.rags&&W.hold===1&&F.dn.tpt1!==undefined&&W.t-F.dn.tpt1>=150,o:{a:{fx:(W,F)=>{F.lud.loyal=1;return 0;}},b:{fx:(W,F)=>{F.lud.loyal=2;return 0;}}}},
   // Топтыгин, шаг 2: торги за «Каменный ручей» — друзья против Медведя (только сюжет, деньги не двигаются)
@@ -631,11 +632,17 @@ function storyTouch(W){fr(W);return 'ok';}   // пустое действие: �
 // info — запись IPO {hold, eq} (для кадра «Фото на память»: «начинали с 5 000 ₽ — сегодня …»)
 function storyCarry(W,F0,info){if(!F0||!F0.v)return fr(W);const F=init(W);F.m0=F0.m0;F.rags=F0.rags;
   for(const id of FR){F[id].tr=F0[id].tr;F[id].k=F0[id].k;if(typeof F0[id].rel==='number')F[id].rel=F0[id].rel;if(F0[id].st)F[id].st=Object.assign({},F0[id].st);for(const k of ['hlp','disc','plan','opi','solo','wed','intern'])if(F0[id]&&F0[id][k]!==undefined)F[id][k]=F0[id][k];}F.bear.seen=1;F.bear.met=F0.bear&&F0.bear.met?1:0;
-  F.dn=Object.assign({},F0.dn);F.fd=F0.fd.slice(-15);F.ch=F0.ch.slice(-20);F.rh=F0.rh.slice();F.n=F0.n+1;F.rs=F0.rs;F.mn=F0.mn;
+  F.dn=Object.assign({},F0.dn);F.fd=F0.fd.slice(-15).map(x=>Object.assign({},x));F.ch=F0.ch.slice(-20).map(x=>Object.assign({},x));/* b2-fix: копии — сдвиг дней не трогает старый мир */F.rh=F0.rh.slice();F.n=F0.n+1;F.rs=F0.rs;F.mn=F0.mn;
   // герой, Людмила, арка Топтыгина и выборы игрока идут с ним в новый холдинг
   F.hero=Object.assign(HERO0(),F0.hero||{});F.lud=Object.assign(lud0(),F0.lud||{});F.tp=Object.assign({},F0.tp||{});F.part=F0.part||'';
   F.mem=F0.mem||0;F.memM=F0.memM===undefined?-99:F0.memM;if(F0.b1m!==undefined)F.b1m=F0.b1m;F.cloth=F0.cloth;F.lt=(F0.lt||[]).slice();F.h0=W.m;F.cup=F0.cup;F.crp=(F0.crp||0)+(F0.pari&&F0.pari.cr?F0.pari.cr:0);   // 💎 к зачислению и ставка 💎 незакрытого пари — с игроком
-  info=info||{};qPush(W,F,{id:'s'+(F.n++),k:'ipo',w:'all',t:W.t,a:{h:W.hold,h0:info.hold||W.hold-1,eq:info.eq||0,m:W.m,st:F0.rags?1:0},big:1});return F;}
+  info=info||{};frShift(F,typeof info.t0==='number'?info.t0:frMaxT(F,-1));   /* b2-fix Х2-4/Х2-6: дни прошлого холдинга — в прошлое нового (W.t с 0) */
+  qPush(W,F,{id:'s'+(F.n++),k:'ipo',w:'all',t:W.t,a:{h:W.hold,h0:info.hold||W.hold-1,eq:info.eq||0,m:W.m,st:F0.rags?1:0},big:1});return F;}
+/* b2-fix Х2-4/Х2-6: лента fd, чаты ch и дни решений dn переезжают при IPO со старыми днями, а W.t нового мира — с 0:
+   «непрочитанное» не снималось ~23 игр. года, «Пётр обещал…» висело годами. Сдвиг на −(t0+2): всё ≤ −2 — прочитано (S.ph.rd нет → −1), даты в телефоне верны (месяцы идут подряд). */
+function frMaxT(F,lim){let mx=-Infinity;const see=t=>{if(typeof t==='number'&&t>lim&&t>mx)mx=t;};for(const f of F.fd||[])if(f)see(f.t);for(const c of F.ch||[])if(c)see(c.t);for(const k in F.dn||{})see(F.dn[k]);return mx;}
+function frShift(F,t0,lim){if(!isFinite(t0))return 0;const D=t0+2,sh=t=>typeof t==='number'&&(lim==null||t>lim)?t-D:t;let n=0;
+  for(const f of F.fd||[])if(f&&f.t!==sh(f.t)){f.t=sh(f.t);n++;}for(const c of F.ch||[])if(c&&c.t!==sh(c.t)){c.t=sh(c.t);n++;}for(const k in F.dn||{}){const v=sh(F.dn[k]);if(v!==F.dn[k]){F.dn[k]=v;n++;}}return n;}
 // герой: пол и имя (пролог, настройки)
 function storyHero(W,h){const F=fr(W),x=F.hero;h=h||{};
   if(h.g==='m'||h.g==='f')x.g=h.g;
@@ -700,4 +707,5 @@ const STORY={FR,ALL,SC,ORDER,RQ,CALL,NEED,JV,REF,NAT,partA,init:fr,acctOk,capOf,
   PK,CD,LV_MIN,PARI_CR,monthGain,crHave:null,REL_HOME,lvOf,lv:(W,id)=>lv(fr(W),id),taxAdv,bankPay,bridgeA,offerOk:(W,w,p)=>offerOk(W,fr(W),w,p)};
 Object.assign(E,{storyDay,storyClose,storyBal,storyMigrate,storyGuar,storyGuarUse,storyCarry,friendAnswer,friendCall,friendChat,friendVisit,jvCreate,jvDiv,jvExit,congrats,storyRead,storyTouch,storyHero,storyPrologue,STORY});
 root.STORY=STORY;
+/* b2-story */ STORY.tr=tr;STORY.yes=yes;
 })(typeof window!=='undefined'?window:this);

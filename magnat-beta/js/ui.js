@@ -191,6 +191,7 @@ function advText(x){if(hasAdv('text')){try{const t=ADV.text(x,w());if(t&&typeof 
 const WHY_GO={z_ruin:()=>{if(window.CASHUI)CASHUI.open();},   /* M48rb */z_cash:()=>{if(window.CASHUI)CASHUI.open();},z_factor:()=>{if(window.CASHUI)CASHUI.open();},full:x=>go('reg',x.a.r),input:()=>go('obj'),depleted:()=>go('obj'),halt:()=>go('obj'),cash:()=>go('fin'),od:()=>goFin('bank')(),san:()=>go('fin'),lev:()=>go('fin'),loss:()=>go('fin'),
   nev:()=>{if(window.NEDUI)NEDUI.open();},chain:x=>go('reg',x.a.r),scrap:()=>go('obj'),frp:x=>{if(window.NEDUI&&NEDUI.frpOpen)NEDUI.frpOpen(x.a.o);},   /* M47c */
   grow:()=>go('fin'),ok:()=>go('fin'),meh:()=>go('fin'),auc:()=>{const a=w().auc[0];if(a)go('reg',a.r);else go('map');},myauc:()=>go('map'),cons:()=>go('market'),up:()=>go('market'),down:()=>go('market'),idle:()=>go('map'),lazy:()=>go('map')};
+if(window.B2)B2.whyGo={go:WHY_GO,hl:goHl};   /* b2-nedra: куда ведут советы — потоки дописывают свои ключи (NEDRA: b2up, b2dz, b2idle) */
 function whyTxt(o){const y=o.why||'';if(!y)return '';
   if(y.indexOf('in:')===0){const g=y.slice(3);return L('нет '+(GEN[g]||NM.good(g)),'no '+low(NM.good(g)));}
   return ({full:L('склад полон','warehouse full'),acc:L('авария, ремонт','accident, repairs'),empty:L('запасы кончились','deposit depleted'),cash:L('нет денег','no money')})[y]||y;}
@@ -269,7 +270,7 @@ function go(tab,r){
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab||(tab==='reg'&&b.dataset.tab==='map')));
   if(hlSel&&hlSel.indexOf('data-tab="'+tab+'"')>=0){hlSel=null;}
   render('go');tutTick();}
-function render(ev){const W=w();if(!W)return;
+function render(ev){const W=w();if(!W)return;if(ECON.pmRun&&!render.pm){render.pm=1;try{return ECON.pmRun(W,()=>render(ev));}finally{render.pm=0;}}   /* b2-perf: кэш расчётов на перерисовку (N5) */
   try{if(BZ()&&BZ().render(cur,ev)){}else if(cur==='map')rMap();else if(cur==='reg')rReg();else if(cur==='obj')rObj();else if(cur==='logi')rLogi();
     else if(cur==='market'){const el=$$('scr-market');if(ev&&ev!=='go'&&hasFin('refresh')&&el.firstChild){if(ev!=='day')FIN.refresh();}else if(hasFin('renderMarket'))FIN.renderMarket(el);else el.innerHTML='<div class="card mut">'+L('Рынок загружается…','Market is loading…')+'</div>';}
     else if(cur==='fin'){const el=$$('scr-fin');if(ev&&ev!=='go'&&hasFin('refresh')&&el.firstChild){if(ev!=='day')FIN.refresh();}else if(hasFin('renderFin'))FIN.renderFin(el);else el.innerHTML='<div class="card mut">'+L('Финансы загружаются…','Finance is loading…')+'</div>';}
@@ -280,7 +281,7 @@ function render(ev){const W=w();if(!W)return;
 let ptrDown=0,pendDay=false;
 ['pointerdown','touchstart'].forEach(t=>document.addEventListener(t,()=>{ptrDown=Date.now();},{capture:true,passive:true}));
 ['pointerup','pointercancel','touchend','touchcancel'].forEach(t=>document.addEventListener(t,()=>{ptrDown=0;if(pendDay){pendDay=false;setTimeout(()=>refresh('day'),150);}},{capture:true,passive:true}));
-function refresh(ev){if(!w())return;if(ev==='day'&&ptrDown&&Date.now()-ptrDown<5000){pendDay=true;hdr();return;}if(advCur&&advCur.key==='wait'&&tutStep()==='wait')advShow(TUT.wait());for(const a of w().auc)if(a.you||a.finder==='you')watch[a.id]={g:a.g,r:a.r,p:a.p};hdr();render(ev||'change');tutTick();}
+function refresh(ev){if(!w())return;if(ev==='day'&&ptrDown&&Date.now()-ptrDown<5000){pendDay=true;hdr();return;}if(advCur&&advCur.key==='wait'&&tutStep()==='wait')advShow(TUT.wait());for(const a of w().auc)if(a.you||a.finder==='you')watch[a.id]={g:a.g,r:a.r,p:a.p,V:a.V};/* b2-fix */hdr();render(ev||'change');tutTick();}
 
 /* ================= шапка ================= */
 const COMPACT=()=>window.innerHeight<700&&window.innerWidth<700;
@@ -318,7 +319,8 @@ function hdr(){const W=w();if(!W)return;hnameFit();const cOv=(()=>{const c=$$('h
   const tx=(e,t)=>{if(e&&e.textContent!==String(t))e.textContent=t;};
   {const ch=BZ()&&BZ().hname(W);tx($$('hName'),ch?ch:holdName(W)+' ✎');}spdBtnUpd();
   tx($$('hDate'),FMT.date(W.m));
-  const c=$$('hCash'),ct=M(W.cash);if(!cashHold&&cashShown==null&&(c.textContent!==ct||fitW!==fitK())){c.textContent=ct;fitCash(c);}else if(!cashHold&&(fitW!==fitK()||c.textContent!==fitCash.t||cOv)){if(cOv)fitCash.k2=0;fitCash(c);if(cOv)fitCash.o=c.scrollWidth>c.clientWidth+1?cOv:'';}   // повтор не помог (уже 17 px) — больше не дёргаемc.classList.toggle('neg',W.cash<0);
+  const c=$$('hCash'),ct=M(W.cash);if(!cashHold&&cashShown==null&&(c.textContent!==ct||fitW!==fitK())){c.textContent=ct;fitCash(c);}else if(!cashHold&&(fitW!==fitK()||c.textContent!==fitCash.t||cOv)){if(cOv)fitCash.k2=0;fitCash(c);if(cOv)fitCash.o=c.scrollWidth>c.clientWidth+1?cOv:'';}   // повтор не помог (уже 17 px) — больше не дёргаем
+  c.classList.toggle('neg',W.cash<0);   /* b2-fix О-1: строка была съедена комментарием */
   const run=GAME.running(),fr=Math.min(1,(W.d+GAME.dayFrac())/E.DAYS);
   {const b=$$('hBar'),t='translateX('+(fr*100-100).toFixed(1)+'%)';if(b.style.transform!==t)b.style.transform=t;}   // M47d: сдвиг вместо width (анимация width = вёрстка каждый кадр)
   $$('hdr').classList.toggle('stop',!run);
@@ -350,7 +352,8 @@ const offSeen={};
 function regStats(W,r){const P=W.plots[r];let ex=0,mine=0;for(const p of P){if(p.st!=='hid'&&p.st!=='exp'&&p.st!=='bex')ex++;if(p.own==='you')mine++;}
   const objs=W.obj.filter(o=>o.r===r);return {n:P.length,ex,mine,objs,st:E.stockR(W,r),cap:E.storR(W,r)};}
 function topGoods(r,n){const p=E.REGS[r].p;return Object.keys(p).sort((a,b)=>p[b]-p[a]).slice(0,n);}
-function mapSvg(W){const mw=$$('main').clientWidth||360,wide=mw>=700;
+function mapSvg(W){if(window.KRAI&&KRAI.mapSvg){const k=KRAI.mapSvg(W);if(k)return k;}   /* b2-krai: своя карта края */
+  const mw=$$('main').clientWidth||360,wide=mw>=700;
   const cw=window.innerWidth>=900?(mw-48)*1.3/2.3:mw-28,vb=wide?[-4,70,500,270]:[4,80,470,270],k=vb[2]/Math.max(280,cw),u=px=>+(px*k).toFixed(1);
   let s=`<svg viewBox="${vb.join(' ')}" role="img" aria-label="${L('Карта России','Map of Russia')}">`;
   s+=`<path d="${LAND}" class="map-land" stroke-width="${u(1.4)}" stroke-linejoin="round"/>`;
@@ -405,8 +408,10 @@ function rMap(){const W=w(),el=$$('scr-map'),v=GAME.value(),ready=GAME.ipoReady(
     rows.map((x,i)=>`<div class="rv${x.me?' me':''}"><span class="mut" style="width:26px;flex:none">${i+1}</span><i class="sw" style="background:${x.c}"></i><span class="f1">${esc(x.n)}</span><b>${M(x.v)}</b></div>`).join('')+'</div></div>';
   const nl=newsList(W,8);h+=nl?`<div><h3>${L('Новости','News')}</h3><div class="card news">${nl}</div></div>`:'';h+='</div>';
   if(S.fame&&S.fame.length)h+=`<p class="mut" style="text-align:center;font-size:15px">🏛 ${L('Прошлые холдинги','Past holdings')}: ${S.fame.map(f=>'№'+f.hold+' — '+M(f.eq)).join(' · ')}</p>`;
+  if(window.B2)h+=B2.html('today',{W});   /* b2-core: гнездо «Сегодня» (гл.5, карта) */
   if(typeof socMoreHtml==='function')h+=socMoreHtml(); // VK с мостом: «🎲 Ещё игры во дворе»
   put(el,h);
+  if(window.B2)B2.emit('today',el);
   const ms=$$('metaMap');if(ms&&window.META&&typeof META.card==='function'){try{META.card(ms);}catch(e){console.error(e);}}}
 
 /* ================= регион ================= */
@@ -466,7 +471,7 @@ function foreTxt(fo){if(!fo)return '';const u=NM.unit(fo.g),dr=fo.drop>=.03?L(` 
   return h;}
 function rReg(){const W=w(),r=curReg,el=$$('scr-reg'),st=regStats(W,r),full=st.st/st.cap;
   let h=`<div class="rh"><button class="back" data-a="back">← ${L('Карта','Map')}</button><h2>${NM.reg(r)}<small>${NM.city(r)} · ${L('в недрах чаще','mostly')} ${topGoods(r,2).map(g=>low(NM.good(g))).join(', ')}</small></h2></div>`;
-  h+=`<div class="card hero">${scene(r)}</div>`;
+  h+=`<div class="card hero">${scene(r)}</div>`;if(window.B2)h+=B2.html('reg',{W,r});   /* b2-krai: гнездо экрана региона (правило края) */
   // склад
   const gs=E.GL.filter(g=>W.inv[r][g].q>=1);const inb=W.tr.filter(x=>x.to===r);
   h+=`<div class="card"><div class="flex" style="flex-wrap:wrap"><b class="f1" style="margin-right:10px">${L('Склад','Warehouse')}</b><span style="white-space:nowrap">${FMT.num(Math.round(st.st))} ${L('из','of')} ${FMT.num(st.cap)} ${L('мест','units')}</span></div>
@@ -534,27 +539,31 @@ function pjOffer(W,cost,days){const o=E.loanOffer(W),u=E.loanUnit(W);
 function pjTake(p){if(!p||!p.a)return 'limit';if(p.fx4&&PJ())return GAME.act('projLoan',p.a,p.days,p.cost||undefined);return GAME.act('takeLoan',p.a,p.n,'ann',p.gr);}
 // строка и кнопка «стройка стоит → не хватает X → проектный кредит» (объекты, советы)
 function pjLine(W){const p=pjOffer(W,0);if(!p)return '';return `<div class="tip" style="margin-top:6px">⚠ ${L(`Не хватает около <b>${M(p.gap)}</b>: стройка платится каждый день, а <b>${M(E.duty(W))}</b> банк велит держать на конец месяца (зарплаты, проценты, налог).`,`About <b>${M(p.gap)}</b> short: construction is paid daily, and <b>${M(E.duty(W))}</b> must stay for month end (wages, interest, tax).`)}
-  ${p.a?`<button class="btn blue noenter w" data-a="pjl" style="margin-top:8px">🏦 ${L('Проектный кредит','Project loan')} ${M(p.a)}<small>${L(`36 мес., первые 6 — только проценты ≈ ${M(p.int)} в мес.`,`36 mo, first 6 interest only ≈ ${M(p.int)} a month`)}</small></button>`:`<p class="mut" style="font-size:15px">${L('Лимит банка исчерпан — продайте запасы или законсервируйте убыточное.','The bank limit is used up — sell stock or mothball loss-makers.')}</p>`}</div>`;}
+  ${p.a?`<button class="btn blue noenter w" data-a="pjl" style="margin-top:8px">🏦 ${L('Проектный кредит','Project loan')} ${M(p.a)}<small>${L(`36 мес., первые ${p.gr||6} — только проценты ≈ ${M(p.int)} в мес.`,`36 mo, first ${p.gr||6} interest only ≈ ${M(p.int)} a month`)}</small></button>`:`<p class="mut" style="font-size:15px">${L('Лимит банка исчерпан — продайте запасы или законсервируйте убыточное.','The bank limit is used up — sell stock or mothball loss-makers.')}</p>`}</div>`;}
 function pjGo(){const W=w(),p=pjOffer(W,0);if(!p||!p.a){snd('no');tst(L('Банк больше не даёт — лимит исчерпан','The bank won’t lend more — limit reached'));return;}
   if(pjTake(p)==='ok'){snd('coin');tst(L('Проектный кредит на счёте: ','Project loan received: ')+M(p.a));}else{snd('no');tst(L('Банк отказал: лимит исчерпан','The bank declined: limit reached'));}}
-function spendOk(cost,mo,what,fn,nf,fo){const W=w(),cash=W.cash;   // fo — M47b: прогноз objFore (прибыль/окупаемость) строкой в окне
+function spendOk(cost,mo,what,fn,nf,fo,fx){const W=w(),cash=W.cash;   // fx — b2-fix Н-9: {t,r} завода передела → сначала ФРП   // fo — M47b: прогноз objFore (прибыль/окупаемость) строкой в окне
   // в обучении окно не нужно, только если денег хватает на стройку и на конец месяца (M30: раньше обучение молча вело в кассовый разрыв)
   const foBad=fo&&(fo.m<=0||fo.pay>60);   // M47b: плохой прогноз — окно с предупреждением даже для небольшой траты
   if((tutStep()&&!foBad&&!(mo?pjOffer(W,cost,mo*30):buildGap(W,0))&&cost<=cash)||(cost<=cash*.3&&cost<=cash&&!foBad&&!(mo&&pjOffer(W,cost,mo*30))))return fn();
   const left=cash-cost,fm=fixM(W),mm=left>0?Math.floor(left/fm):0,add=nf?`${L(' После пуска добавится ещё ',' After launch, add ')}${M(nf)}${L(' в месяц.',' a month.')}`:'';
   const bd=mo?Math.max(30,mo*30):0,pj=mo?pjOffer(W,cost,bd):null;
+  /* b2-fix Н-9: на завод передела сначала ФРП (50 % цены, 3 %), банк — только на остаток */
+  const fr=pj&&fx&&W.ned&&W.n5&&E.frpLoan&&E.OBJ[fx.t]&&E.OBJ[fx.t].in?Math.floor(cost*(E.FRP_K||.5)/1e6)*1e6:0,fRest=fr?Math.max(0,pj.gap-fr):0,fBank=fRest>0&&E.projLoanAmt?E.projLoanAmt(W,fRest,cost):0;
   modal(`<h2>💰 ${L('Крупная трата','A big spend')}</h2>
     <p>${what}: <b>${M(cost)}</b>${mo?L(` — платится каждый день понемногу, около ${M(cost/bd)} в день, ${mons(mo)}. Начать можно, если на счёте есть хотя бы ${M(cost*.2)}.`,` — paid a little every day, about ${M(cost/bd)} a day, for ${mons(mo)}. You can start with at least ${M(cost*.2)} in the account.`):'.'}</p>
     ${fo?`<p class="${fo.m<=0||fo.pay>60?'tip':''}" style="margin:6px 0">${foreTxt(fo)}</p>`:''}
-    ${pj?`<div class="tip">⚠ ${L(`Денег не хватит примерно на <b>${M(pj.gap)}</b>: банк велит держать ${M(E.duty(W))} на конец месяца, и без денег стройка встанет на полпути.`,`You’ll be about <b>${M(pj.gap)}</b> short: ${M(E.duty(W))} must stay for month end, and without cash the build stops halfway.`)}${pj.a?' '+L(`Проектный кредит ${M(pj.a)}: 3 года, первые 6 месяцев — только проценты (≈ ${M(pj.int)} в месяц).`,`A project loan of ${M(pj.a)}: 3 years, first 6 months interest only (≈ ${M(pj.int)} a month).`):''}</div>`:''}
+    ${pj?`<div class="tip">⚠ ${L(`Денег не хватит примерно на <b>${M(pj.gap)}</b>: банк велит держать ${M(E.duty(W))} на конец месяца, и без денег стройка встанет на полпути.`,`You’ll be about <b>${M(pj.gap)}</b> short: ${M(E.duty(W))} must stay for month end, and without cash the build stops halfway.`)}${fr>=10e6?' '+L(`🏛 Фонд развития промышленности даст <b>${M(fr)}</b> под 3 % (2 года — только проценты) — намного дешевле банка${fBank?`; банк — проектный кредит только на остаток: ${M(fBank)}`:', кредит банка не нужен'}.`,`🏛 The Industrial Development Fund lends <b>${M(fr)}</b> at 3% (interest-only for 2 years) — far cheaper than the bank${fBank?`; the bank covers only the rest with a project loan of ${M(fBank)}`:', no bank loan needed'}.`):pj.a?' '+L(`Проектный кредит ${M(pj.a)}: 3 года, первые ${pj.gr||6} месяцев — только проценты (≈ ${M(pj.int)} в месяц).`,`A project loan of ${M(pj.a)}: 3 years, first ${pj.gr||6} months interest only (≈ ${M(pj.int)} a month).`):''}</div>`:''}
     <div class="tiles"><div class="tile"><span>${L('Сейчас на счёте','In the account')}</span><b>${M(cash)}</b></div><div class="tile ${left<0||pj?'neg':mm<2?'neg':'pos'}"><span>${left<0||pj?L('Не хватит','Short by'):L('Останется','Left over')}</span><b>${M(pj?pj.gap:Math.abs(left))}</b></div></div>
     <div class="say">${face(left<0||mm<2?'worry':'calm')}<div><p>${left<0?L('Денег не хватит: стройка встанет, а если деньги кончатся совсем — банк даст овердрафт под высокий процент. Надёжнее сначала взять кредит.','Not enough money: construction will stall, and if cash runs out the bank gives an expensive overdraft. Safer to take a loan first.')
       :mm<2?L(`После этого денег хватит примерно на ${mons(mm)} постоянных расходов (${M(fm)} в месяц). Рискованно.`,`After that, cash covers about ${mons(mm)} of fixed costs (${M(fm)} a month). Risky.`)
       :L(`Постоянные расходы сейчас (офис и работающие объекты) — около ${M(fm)} в месяц: запаса хватит примерно на ${mons(mm)}.`,`Current fixed costs (office and running assets) are about ${M(fm)} a month: the cushion lasts about ${mons(mm)}.`)}${add}</p></div></div>
-    <div class="row">${pj&&pj.a?`<button class="btn green noenter" id="spPj">🏦 ${L('Кредит и строить','Loan and build')}</button>`:''}<button class="btn ${left<0||pj?'':'green'} noenter" id="spYes">${pj?L('Строить без кредита','Build without a loan'):L('Да, тратим','Yes, spend it')}</button>${(left<0||mm<2)&&!(pj&&pj.a)?`<button class="btn blue noenter" id="spBank">🏦 ${L('Сначала в банк','Bank first')}</button>`:''}<button class="btn" id="spNo" data-esc>${L('Отмена','Cancel')}</button></div>`);
+    <div class="row">${fr>=10e6?`<button class="btn green noenter" id="spFrp">🏛 ${L('ФРП и строить','IDF loan and build')}<small>${M(fr)} · 3 %${fBank?' + '+L('банк','bank')+' '+M(fBank):''}</small></button>`:''}${pj&&pj.a&&!(fr>=10e6)?`<button class="btn green noenter" id="spPj">🏦 ${L('Кредит и строить','Loan and build')}</button>`:''}<button class="btn ${left<0||pj?'':'green'} noenter" id="spYes">${pj?L('Строить без кредита','Build without a loan'):L('Да, тратим','Yes, spend it')}</button>${(left<0||mm<2)&&!(pj&&pj.a)?`<button class="btn blue noenter" id="spBank">🏦 ${L('Сначала в банк','Bank first')}</button>`:''}<button class="btn" id="spNo" data-esc>${L('Отмена','Cancel')}</button></div>`);
   $$('spYes').onclick=()=>{hideModal();fn();setTimeout(nextQ,60);};
   if($$('spPj'))$$('spPj').onclick=()=>{hideModal();if(pjTake(pj)==='ok'){snd('coin');tst(L('Проектный кредит на счёте: ','Project loan received: ')+M(pj.a));}fn();setTimeout(nextQ,60);};
   if($$('spBank'))$$('spBank').onclick=()=>{snd('tap');closeM();goFin('bank')();};
+  if($$('spFrp'))$$('spFrp').onclick=()=>{hideModal();if(fBank)GAME.act('projLoan',fBank,bd,cost);const n0=w().obj.length;fn();const W2=w(),o=W2.obj.length>n0?W2.obj[W2.obj.length-1]:null;
+    if(o&&o.t===fx.t&&GAME.act('frpLoan',o.id)==='ok'){snd('coin');tst(L('ФРП: на счёте ','IDF: received ')+M(fr)+' · 3 %');}setTimeout(nextQ,60);};   /* b2-fix Н-9 */
   $$('spNo').onclick=()=>{snd('tap');closeM();};}
 
 /* ---- окно «построить завод» ---- */
@@ -572,7 +581,7 @@ function openFac(r){const W=w();let h=`<h2>🏭 ${L('Завод','Plant')} ${reg
   h+=`<div class="row"><button class="btn" id="fClose" data-esc>${L('Закрыть','Close')}</button></div>`;
   modal(h);try{modalRe=()=>openFac(r);}catch(e){}
   $$('fClose').onclick=()=>{snd('tap');closeM();};
-  document.querySelectorAll('#mcard [data-fac]').forEach(b=>b.onclick=()=>{const t=b.dataset.fac;hideModal();spendOk(E.capexOf(w(),t,r),E.OBJ[t].mo,NM.obj(t),()=>{const res=act('build',t,r,null);if(res==='ok'){snd('build');tst(L('Стройка началась: ','Construction started: ')+low(NM.obj(t)));tutRoute(t,r);}setTimeout(nextQ,60);},E.OBJ[t].fix,objFore(w(),t,r,E.capexOf(w(),t,r)));});}
+  document.querySelectorAll('#mcard [data-fac]').forEach(b=>b.onclick=()=>{const t=b.dataset.fac;hideModal();spendOk(E.capexOf(w(),t,r),E.OBJ[t].mo,NM.obj(t),()=>{const res=act('build',t,r,null);if(res==='ok'){snd('build');tst(L('Стройка началась: ','Construction started: ')+low(NM.obj(t)));tutRoute(t,r);}setTimeout(nextQ,60);},E.OBJ[t].fix,objFore(w(),t,r,E.capexOf(w(),t,r)),{t,r});});}
 
 /* ================= объекты ================= */
 // «Объекты»: компактные строки (значок, название, состояние) — подробности открываются нажатием; фильтр «⚠ проблемы», проблемные — первыми
@@ -732,7 +741,7 @@ function openClose(rep){if(BZ()&&BZ().openClose&&BZ().openClose(rep))return;cons
   let tut='';
   if(tutOn()&&!S.tut.c1&&ragsW()){S.tut.c1=1;save();if(net<0)tut+=`<p>${L('Первый месяц в недрах. Убыток — это разведка и офис: вложение в поиск, окупится, когда заработает разрез. Своё дело по-прежнему приносит прибыль — оно во вкладке «Объекты».','Our first month in mining. The loss is exploration and the office: an investment in the search that pays off once the pit runs. Your business still earns — see the Assets tab.')}</p>`;}
   if(tutOn()&&!S.tut.c1){S.tut.c1=1;save();tut+=`<p>${L(`Это первый отчёт. <b>Выручка</b> — сколько получили за проданное. <b>Затраты</b> — добыча, зарплаты, перевозки, офис, проценты и налог. <b>Прибыль</b> = выручка − затраты. <b>Деньги на конец</b> отличаются от прибыли: стройка тратит деньги, но расходом не считается — это вложение в имущество.`,`This is your first report. <b>Revenue</b> is what we got for sales. <b>Costs</b> are mining, wages, freight, office, interest and tax. <b>Profit</b> = revenue − costs. <b>Cash at month end</b> differs from profit: construction spends cash but isn’t an expense — it’s an investment in assets.`)}</p><p>${L(`Баланс сошёлся: имущество = долги + капитал, расхождение — ${rub(rep.bal.diff)}. У меня всегда так.`,`The balance sheet balances: assets = debt + equity, difference ${rub(rep.bal.diff)}. Always, with me.`)}</p>`;}
-  if(tutOn()&&rep.m%12===11&&!S.tut.year){S.tut.year=1;save();tut+=`<p><b>${L('Первый год позади!','The first year is behind us!')}</b> ${L('Вы прошли весь путь: разведка, лицензия, стройка, продажи, отчёты. Дальше — сами: растите, стройте заводы, а при стоимости от '+M(E.IPO_EQ)+' — IPO.','You’ve walked the whole path: exploration, licence, construction, sales, reports. Now it’s up to you: grow, build plants and at '+M(E.IPO_EQ)+' of value — IPO.')}</p>`;}
+  if(tutOn()&&(typeof w().n5m==='number'?rep.m-w().n5m>=11:rep.m%12===11)&&!S.tut.year){/* b2-fix N3: год главы, а не календарный */S.tut.year=1;save();tut+=`<p><b>${L('Первый год позади!','The first year is behind us!')}</b> ${L('Вы прошли весь путь: разведка, лицензия, стройка, продажи, отчёты. Дальше — сами: растите, стройте заводы, а при стоимости от '+M(E.IPO_EQ)+' — IPO.','You’ve walked the whole path: exploration, licence, construction, sales, reports. Now it’s up to you: grow, build plants and at '+M(E.IPO_EQ)+' of value — IPO.')}</p>`;}
   const tile=(t,v,c)=>`<div class="tile ${c||''}"><span>${t}</span><b>${M(v)}</b></div>`;
   modalH(`<h2>${L('Закрытие месяца','Month closed')}: ${LANG==='en'?FMT.date(rep.m):low(FMT.date(rep.m))}</h2><p class="mut" style="text-align:center;margin-top:-6px;font-size:15px">${L('Людмила Санна свела отчёты','Lyudmila Sanna has closed the books')}</p>
     <div class="chero"><div class="mut">${net>=0?L('Чистая прибыль за месяц','Net profit for the month'):L('Убыток за месяц','Loss for the month')}</div><div class="cbig ${net>=0?'up':'dn'}">${net>0?'+':''}${M(net)}</div>${dn!=null?`<div class="mut">${dn>=0?'▲':'▼'} ${L(`на ${M(Math.abs(dn))} ${dn>=0?'больше':'меньше'}, чем в ${MPREP[pr0.m%12]}`,`${M(Math.abs(dn))} ${dn>=0?'more':'less'} than in ${FMT.date(pr0.m).split(' ')[0]}`)}</div>`:''}</div>
@@ -742,7 +751,7 @@ function openClose(rep){if(BZ()&&BZ().openClose&&BZ().openClose(rep))return;cons
     ${rep.ev?`<p style="font-size:16px">📰 ${esc(evText(rep.ev))}</p>`:''}
     ${newOff.length?`<div class="tip">🤝 ${L(`Пришло предложение: «${esc(newOff[0].b)}» купит ${FMT.qty(newOff[0].q,newOff[0].g)} (${low(NM.good(newOff[0].g))}) по ${rub(newOff[0].p)}.`,`New offer: “${esc(newOff[0].be)}” will buy ${FMT.qty(newOff[0].q,newOff[0].g)} of ${low(NM.good(newOff[0].g))} at ${rub(newOff[0].p)}.`)} <button class="btn sm noenter" id="cOff" style="margin-top:6px">${L('Посмотреть','Take a look')}</button></div>`:''}
     <div class="say">${face(mood)}<div>${say?`<p>${esc(say)}</p>`:''}${tut}${pro&&!tut?`<div class="mut" style="font-size:14px;margin-top:6px">${pro}</div>`:''}</div></div>
-    ${BZ()?BZ().closeExtra(rep):''}${closeTeaser()}<div class="row"><button class="btn green" id="cGo">${L('Продолжить ▶','Continue ▶')}</button>${hasFin('openReport')?`<button class="btn noenter" id="cMore">📊 ${L('Подробнее','Details')}</button>`:''}</div>`);
+    ${BZ()?BZ().closeExtra(rep):''}${closeTeaser()}${window.B2?B2.html('close',{W,rep}):''}<div class="row"><button class="btn green" id="cGo">${L('Продолжить ▶','Continue ▶')}</button>${hasFin('openReport')?`<button class="btn noenter" id="cMore">📊 ${L('Подробнее','Details')}</button>`:''}</div>`);
   try{modalRe=()=>openClose(rep);}catch(e){}
   try{if(typeof socOffer==='function')socOffer(adDue()&&adReady()&&(!BZ()||BZ().adAllowed()));}catch(e){} // VK: одно предложение SOC за сессию — строкой под кнопками
   {const cb=document.querySelector('#mcard .cbig');if(cb&&!calm())tweenNum(cb,0,Math.round(net),800,v=>(v>0?'+':'')+M(v));}
@@ -762,7 +771,8 @@ function afterClose(rep){const W=w();if(tutOn()){// M30: «два месяца �
   const it=advRel(W)[0];if(it&&it.pri>=70&&!tutActive()&&!(S.lastSay&&String(S.lastSay).indexOf(advText(it))>=0))advShow(   /* M34: уже сказано в окне месяца — не повторяем пузырём */{html:esc(advText(it)),mood:it.k==='san'?'strict':'worry',go:WHY_GO[it.k]?()=>WHY_GO[it.k](it):null});}
 
 /* ================= окно: пока вас не было ================= */
-function openOffline(s){if(BZ()&&BZ().offline(s))return;const W=w(),mo=s.months||0;snd('close');
+function openOffline(s,raw){if(!raw&&window.B2F&&B2F.morning(s,()=>openOffline(s,1)))return;   /* b2-first: одно окно утром */
+  if(BZ()&&BZ().offline(s))return;const W=w(),mo=s.months||0;snd('close');
   const list=o=>Object.keys(o).filter(g=>o[g]>=1).map(g=>`<span class="g">${gIco(g)}${NM.good(g)} <b>${FMT.qty(o[g],g)}</b></span>`).join('');
   const pr=list(s.prod),so=list(s.sold);
   let h=`<h2>${s.ext?'⏱ '+L('Смена продлена','Shift extended'):'👋 '+L('Пока вас не было','While you were away')}</h2>
@@ -772,6 +782,7 @@ function openOffline(s){if(BZ()&&BZ().offline(s))return;const W=w(),mo=s.months|
   if(pr)h+=`<div class="lbl">${L('Добыто и выпущено','Produced')}</div><div class="gl">${pr}</div>`;
   if(so)h+=`<div class="lbl">${L('Продано','Sold')}</div><div class="gl">${so}</div>`;
   if(s.debt1!=null&&(s.debt0||s.debt1))h+=`<div class="tile ${s.debt1>s.debt0+1e6?'neg':''}" style="margin-top:10px"><span>${L('Долг','Debt')}</span><b>${M(s.debt0)} → ${M(s.debt1)}</b></div>${s.debt1>s.debt0+1e6?`<p style="font-size:16px" class="bad">${L('Долг вырос: денег не хватало, банк дал овердрафт под высокий процент. Продайте запасы и не начинайте новых строек.','Debt grew: cash ran short and the bank gave an expensive overdraft. Sell stock and hold off on new projects.')}</p>`:''}`;
+  if(s.aucW&&s.aucW.length)h+=`<div class="lbl">${L('Торги ждут вас','Auctions waiting for you')}</div>`+s.aucW.slice(0,4).map(a=>`<p style="font-size:16px">🔨 ${esc(L(`${NM.reg(a.r)}: ${a.f?'ваша находка':'ваша ставка'} — ${low(NM.good(a.g))}. Торги без вас не закончились: ещё ${days(Math.max(1,a.end-W.t))}. Карта → регион.`,`${NM.reg(a.r)}: ${a.f?'your find':'your bid'} — ${low(NM.good(a.g))}. The auction waited for you: ${days(Math.max(1,a.end-W.t))} left. Map → region.`))}</p>`).join('');   /* b2-fix Т-2 */
   if(s.auc&&s.auc.length)h+=`<div class="lbl">${L('Торги без вас','Auctions while away')}</div>`+s.auc.slice(-6).map(n=>`<p style="font-size:16px">🔨 ${esc(newsText(n))}</p>`).join('');
   if(s.ev&&s.ev.length)h+=`<div class="lbl">${L('События','Events')}</div>`+s.ev.map(e=>`<p style="font-size:16px">📰 ${esc(evText(e))}</p>`).join('');
   if(s.built&&s.built.length)h+=`<p style="font-size:16px">🏗 ${L('Достроено','Completed')}: ${s.built.map(id=>{const o=W.obj.find(x=>x.id===id);return o?NM.obj(o.t):'';}).filter(Boolean).join(', ')}</p>`;
@@ -790,7 +801,18 @@ function mgrOwn(){try{return typeof PAY!=='undefined'&&PAY.own('manager');}catch
 function shiftStat(k){if(k==='ad')S.shAd=(S.shAd|0)+1;try{STAT.ev('shift',k==='ad'?{ad:1}:{mgr:1});}catch(e){}}
 window.mgrOwn=mgrOwn;window.shiftStat=shiftStat;
 /* ================= окно: торги ================= */
-function openAuc(aid){const W=w(),a=E.aucById(W,aid);if(!a||a.done){tst(L('Торги уже закончились','The auction is over'));return;}
+/* b2-fix Н-3: окно торгов не «висит» после конца торгов — закрываем и говорим, чем кончилось; «до конца N дней» обновляется по дням */
+let aucOpen=null;
+function aucEndTxt(W,pid){const n=pid&&W.news.slice().reverse().find(v=>v.a&&v.a.p===pid&&(v.k==='lost'||v.k==='won'||v.k==='nobid'));
+  if(n&&n.k==='lost')return L(`Торги закончились: участок у «${NM.bot(n.a.b)}» за ${M(n.a.pr)}`,`The auction is over: the plot went to ${NM.bot(n.a.b)} for ${M(n.a.pr)}`);
+  if(n&&n.k==='won')return L(`Торги закончились: участок ваш за ${M(n.a.pr)}`,`The auction is over: the plot is yours for ${M(n.a.pr)}`);
+  if(n&&n.k==='nobid')return L('Торги не состоялись — участок можно взять без торгов','Nobody bid — you can take the plot directly');
+  return L('Торги уже закончились','The auction is over');}
+function aucGone(){const x=aucOpen,W=w();aucOpen=null;if(modalOn&&$$('aLater'))hideModal();
+  const n=x&&W.news.slice().reverse().find(v=>v.a&&v.a.p===x.p&&(v.k==='lost'||v.k==='won'));if(!(x&&x.w&&n))tst(aucEndTxt(W,x&&x.p));setTimeout(nextQ,60);}   // свои торги — дальше окно итога (onAuc)
+GAME.on('day',()=>{if(!aucOpen||!modalOn||!$$('aLater'))return;const W=w(),a=E.aucById(W,aucOpen.id);if(!a||a.done){aucGone();return;}
+  const el=$$('aLeft');if(el)el.textContent=days(Math.max(0,a.end-W.t));});
+function openAuc(aid){const W=w(),a=E.aucById(W,aid);if(!a||a.done){if(aucOpen&&aucOpen.id===aid)aucGone();else tst(L('Торги уже закончились','The auction is over'));return;}aucOpen={id:aid,p:a.p,w:!!(a.you||a.finder==='you')};
   const p=E.plotById(W,a.p),left=Math.max(0,a.end-W.t),lim=a.V*LIC_K,next=a.lead?a.pr+a.step:a.pr;
   const lead=a.lead==='you'?L('вы','you'):a.lead?NM.bot(a.lead):L('пока никого','no one yet');
   const bots=a.bots.map(b=>`<span><i style="background:${botCol(b.id)}"></i>${esc(NM.bot(b.id))}</span>`).join('');
@@ -799,26 +821,35 @@ function openAuc(aid){const W=w(),a=E.aucById(W,aid);if(!a||a.done){tst(L('То�
   const warn=a.lead==='you'||!mc?'':bpA&&bpA.kind==='no'?`<div class="tip" style="border-color:var(--bad)">⚠️ ${L(`После ставки ${M(next)} на стройку рудника (${M(mc)}) не хватит даже с проектным кредитом — стройка встанет. Выше не поднимайте.`,`After a ${M(next)} bid there won’t be enough for the mine (${M(mc)}) even with a project loan — construction would stall. Don’t go higher.`)}</div>`:after<mc*.2?`<div class="tip" style="border-color:var(--bad)">⚠️ ${L(`После ставки останется ${M(after)} — на стройку рудника (${M(mc)}, сразу нужно ${M(mc*.2)}) не хватит. Понадобится кредит.`,`After this bid you’d have ${M(after)} — not enough to build the mine (${M(mc)}, ${M(mc*.2)} up front). You’ll need a loan.`)}</div>`
     :after<mc?`<div class="tip">${L(`После ставки останется ${M(after)}: на рудник (${M(mc)}) хватит на начало стройки, остальное — из выручки или кредита.`,`After this bid you’d have ${M(after)}: enough to start the mine (${M(mc)}), the rest from revenue or a loan.`)}</div>`:'';
   const msg=aucMsg[aid]?`<div class="tip">${aucMsg[aid]}</div>`:'';
+  /* b2-fix Н-5: ставки не хватает денег (деньги в стройке) — кредит банка прямо в окне торгов, как в «Карьере» */
+  const lo=a.lead!=='you'&&!over&&W.cash<next?E.loanOffer(W):null,lu=lo?E.loanUnit(W):0,lNeed=lo?Math.ceil((next-W.cash+E.duty(W))/lu)*lu:0,lAmt=lo&&lo.max>=lNeed?lNeed:0;
+  const loanB=lAmt?`<button class="btn blue noenter" id="aLoan">🏦 ${L(`Кредит ${M(lAmt)} и ставка ${M(next)}`,`Loan ${M(lAmt)} and bid ${M(next)}`)}<small>${L(`банк, 3 года, ${(lo.rate*100).toFixed(1).replace('.',',')} % · ≈ ${M(lAmt*lo.rate/12)} в месяц процентов`,`bank, 3 years, ${(lo.rate*100).toFixed(1)}% · ≈ ${M(lAmt*lo.rate/12)} a month interest`)}</small></button>`:'';
   modalH(`<h2>🔨 ${L('Торги','Auction')}: ${NM.good(a.g)}</h2>
-    <p class="mut" style="text-align:center;margin-top:-4px">${NM.reg(a.r)} · ${plotNo(p)} · ${L('до конца','ends in')} ${days(left)}</p>
+    <p class="mut" style="text-align:center;margin-top:-4px">${NM.reg(a.r)} · ${plotNo(p)} · ${L('до конца','ends in')} <span id="aLeft">${days(left)}</span></p>
     <div class="bidp"><span class="mut">${L('Текущая цена','Current price')}</span><b class="pr">${M(a.pr)}</b><span>${L('Лидер','Leader')}: <b>${esc(lead)}</b></span></div>${msg}
     ${depFacts(W,p)}
     <div class="lbl" style="text-align:center">${L('Кто торгуется','Bidders')}</div><div class="who">${bots||`<span>${L('соперников нет','no rivals')}</span>`}</div>
     <div class="say">${face(over?'worry':'calm')}<div><p>${L(`Оценка участка — ${M(a.V)} (столько рудник заработает после налога сверх стройки). Разумный предел — около 0,6 оценки: <b>${M(lim)}</b>. Дороже — рудник будет окупаться слишком долго.`,`The plot is estimated at ${M(a.V)} (what the mine earns after tax beyond construction). A sensible limit is about 0.6 of that: <b>${M(lim)}</b>. Higher, and the mine takes too long to pay off.`)} ${licWhy()}</p></div></div>
     <div class="row">${a.lead==='you'?`<p class="good" style="text-align:center;margin:0"><b>${L('Вы лидируете!','You’re leading!')}</b> ${L('Если никто не перебьёт до конца торгов — лицензия ваша.','If nobody outbids you by the end, the licence is yours.')}</p><button class="btn green noenter" id="aPass">✅ ${L('Забрать лицензию за ','Take the licence for ')}${M(a.pr)}</button>`
-      :`<button class="btn ${over?'':'accent'} noenter" id="aUp">${a.lead?L('Поднять до ','Raise to '):L('Вступить: ','Bid: ')}${M(next)}${over?`<small>${L('дороже разумного предела','above the sensible limit')}</small>`:''}</button>${a.lead?`<button class="btn noenter" id="aPass">${L('Пас — выйти из торгов','Pass — leave the auction')}</button>`:''}`}
-    ${warn}<button class="btn" id="aLater" data-esc>${L('Решить позже','Decide later')}</button></div>`);
+      :`<button class="btn ${over||lAmt?'':'accent'} noenter" id="aUp">${a.lead?L('Поднять до ','Raise to '):L('Вступить: ','Bid: ')}${M(next)}${over?`<small>${L('дороже разумного предела','above the sensible limit')}</small>`:''}</button>${a.lead?`<button class="btn noenter" id="aPass">${L('Пас — выйти из торгов','Pass — leave the auction')}</button>`:''}`}
+    ${loanB}${warn}<button class="btn" id="aLater" data-esc>${L('Решить позже','Decide later')}</button></div>`);
   try{modalRe=()=>openAuc(aid);}catch(e){}
   $$('aLater').onclick=()=>{snd('tap');closeM();};
-  const info={p:a.p,r:a.r,g:a.g};
+  const info={p:a.p,r:a.r,g:a.g,V:a.V};   /* b2-fix: V — для честной причины проигрыша */
   if($$('aUp'))$$('aUp').onclick=()=>{snd('gavel');const r=act('bidRaise',aid);
     if(r==='bot'){const b=E.aucById(w(),aid);aucMsg[aid]=`🔨 <b>${esc(NM.bot(b.last||b.lead))}</b> ${L('перебил: теперь','outbid you: now')} <b>${M(b.pr)}</b>`;openAuc(aid);}
     else if(r==='won'){hideModal();aucResult('won',info);}
     else if(r==='cash'){aucMsg[aid]=`<span class="bad">${L('Не хватает денег на эту ставку','Not enough money for this bid')}</span>`;openAuc(aid);}
     else openAuc(aid);};
+  if($$('aLoan'))$$('aLoan').onclick=()=>{if(act('takeLoan',lAmt,36,'ann',0)!=='ok'){snd('no');aucMsg[aid]=`<span class="bad">${L('Банк отказал: лимит исчерпан','The bank declined: limit reached')}</span>`;openAuc(aid);return;}snd('coin');$$('aUp').click();};   /* b2-fix Н-5 */
   if($$('aPass'))$$('aPass').onclick=()=>{snd('gavel');const r=act('bidPass',aid);hideModal();
     if(r==='won'||r==='lost')aucResult(r,info);else{if(r==='none')tst(L('Торги не состоялись','The auction fell through'));setTimeout(nextQ,60);}};}
 const aucMsg={};
+/* b2-fix Т-1: честная причина проигрыша вместо «деньги целы» всегда */
+function aucWhy(x,n){const lim=x.V>0?x.V*LIC_K:0,pr=n&&n.a?n.a.pr:0,end=x.end?L('Срок торгов вышел, последнее слово — за соперником. ','The auction ran out of time with a rival on top. '):'';
+  if(lim&&pr>lim)return end+L(`Людмила Санна: он заплатил больше разумного предела (0,6 оценки ≈ ${M(lim)}) — перебивать было невыгодно, деньги целы.`,`Lyudmila Sanna: they paid above the sensible limit (0.6 of the estimate ≈ ${M(lim)}) — outbidding wasn’t worth it, our money is safe.`);
+  if(lim&&pr)return end+L(`Людмила Санна: цена ниже разумного предела (≈ ${M(lim)}) — можно было побороться. В следующий раз поднимайте ставку до предела, пока торги идут.`,`Lyudmila Sanna: the price was below the sensible limit (≈ ${M(lim)}) — we could have fought for it. Next time raise your bid up to the limit while the auction runs.`);
+  return end+L('Людмила Санна: не беда — участков в России много, а деньги целы.','Lyudmila Sanna: never mind — Russia has plenty of plots, and our money is safe.');}
 // итог торгов, в которых вы участвовали: окно с «что дальше»
 function aucResult(res,x){const W=w(),p=E.plotById(W,x.p);
   if(res==='won'){snd('win');const t=E.MINE_OF[x.g],pr=p&&p.lic?p.lic.g:0,c=t?E.capexOf(W,t,x.r,x.p):0;
@@ -831,7 +862,7 @@ function aucResult(res,x){const W=w(),p=E.plotById(W,x.p);
   const n=W.news.slice().reverse().find(v=>v.k==='lost'&&v.a.p===x.p),rb=W.news.slice().reverse().find(v=>v.k==='reimb'&&v.a.p===x.p);
   modal(`<h2>🔨 ${L('Торги закончились','The auction is over')}</h2>
     <div class="say">${n&&n.a.b?whoFace(n.a.b):face('calm')}<div><p>${n?L(`Участок (${low(NM.good(x.g))}, ${NM.reg(x.r)}) купил «${esc(NM.bot(n.a.b))}» за ${M(n.a.pr)}.`,`The plot (${low(NM.good(x.g))}, ${NM.reg(x.r)}) went to “${esc(NM.bot(n.a.b))}” for ${M(n.a.pr)}.`):L('Участок ушёл сопернику.','The plot went to a rival.')}</p>
-    ${rb?`<p>${L('Затраты на разведку вам вернули','Your exploration costs were refunded')}: <b>${M(rb.a.c)}</b>.</p>`:''}<p class="mut">${L('Людмила Санна: не беда — участков в России много, а деньги целы.','Lyudmila Sanna: never mind — Russia has plenty of plots, and our money is safe.')}</p></div></div>
+    ${rb?`<p>${L('Затраты на разведку вам вернули','Your exploration costs were refunded')}: <b>${M(rb.a.c)}</b>.</p>`:''}<p class="mut">${aucWhy(x,n)}</p></div></div>
     <div class="row"><button class="btn green" id="arOk">${L('Понятно','Got it')}</button></div>`);
   $$('arOk').onclick=()=>{snd('tap');closeM();};}
 
@@ -847,9 +878,10 @@ function openIpo(){const W=w();if(!GAME.ipoReady())return;const v=GAME.value(),h
   modal(`<h2>🔔 ${L('Колокол биржи','The exchange bell')}</h2>
     <div class="say">${face('wow')}<div><p>${L(`Холдинг №${W.hold} готов к IPO! Стоимость компании — <b>${M(v)}</b>, прибыль за год — <b>${M(np)}</b>. ${ragsW()&&W.hold===1?'Мы начинали с 5 000 ₽ и комнаты в общежитии. Помните листовки у метро?':`Мы начинали с ${M(W.cap)} уставного капитала.`}`,`Holding No. ${W.hold} is ready for an IPO! Company value: <b>${M(v)}</b>, profit over the year: <b>${M(np)}</b>. ${ragsW()&&W.hold===1?'We started with 5,000 ₽ and a dorm room. Remember the flyers by the metro?':`We started with ${M(W.cap)} of share capital.`}`)}</p></div></div>
     <p>${L(`После IPO вы основаете новый холдинг с репутацией ${W.rep+1}: кредиты дешевле, разведка быстрее и дешевле, стартовый капитал — ${M(800e6+200e6*(W.rep+1))}.`,`After the IPO you found a new holding with reputation ${W.rep+1}: cheaper loans, faster and cheaper exploration, starting capital ${M(800e6+200e6*(W.rep+1))}.`)}</p>
-    ${ipoList(W)}
+    ${window.B2?B2.html('ipo',{W}):''}<!-- b2-krai: выбор края -->${ipoList(W)}
     ${window.META&&META.ipoHtml?META.ipoHtml():''}${window.SHOP&&SHOP.offerHtml?SHOP.offerHtml('ipo_pack','ipo'):''}
     <div class="row"><button class="btn green noenter" id="iGo">🔔 ${L('Позвонить в колокол — основать новый холдинг','Ring the bell — found a new holding')}</button><button class="btn" id="iLater" data-esc>${L('Позже','Later')}</button></div>`);
+  try{B2.emit('ipoPre');}catch(e){}   /* b2-juice */
   $$('iLater').onclick=()=>{snd('tap');closeM();};
   $$('iGo').onclick=()=>{const rec=GAME.doIpo();if(!rec){closeM();return;}snd('win');salute();
     // сюжет покажет IPO тремя кадрами (событие ipo) — вместо второго окна короткий тост, чтобы не было 5 окон подряд
@@ -897,7 +929,7 @@ function advShow(o){advCur=o;const el=$$('adv');clearTimeout(advT);try{if(o.hold
   bt[o.okMain?'unshift':'push'](`<button class="btn sm${o.okMain?' accent':o.go?'':' green'}" id="advOk">${o.okLbl||L('Понятно','Got it')}</button>`);
   if(o.tut)bt.push(`<button class="btn sm" id="advOff">${L(hg('Я сам','Я сама'),'I’ll manage')}</button>`);
   el.innerHTML=`<div class="ah">${o.who?whoFace(o.who):face(o.mood)}<div class="f1" style="flex:1;min-width:0"><div class="an">${o.who?esc(NM.who(o.who)+' · '+NM.bot(o.who)):ADV_NAME()}</div><div class="at">${o.html}${o.hold?`<div class="mut advpz">⏸ ${L('Время стоит, пока вы читаете','Time is paused while you read')}</div>`:''}</div></div></div><div class="btns">${bt.join('')}</div>`;
-  el.classList.add('on');document.body.classList.add('advon');document.body.style.setProperty('--advh',el.offsetHeight+'px');
+  el.classList.add('on');document.body.classList.add('advon');document.body.style.setProperty('--advh',el.offsetHeight+'px');try{document.body.style.setProperty('--advt',Math.max(0,innerHeight-el.getBoundingClientRect().top)+'px');}catch(e){}   /* b2-fix N3: тост — над пузырём */
   const seen=()=>{if(o.tut&&o.key&&!S.tut['v_'+o.key]){S.tut['v_'+o.key]=1;save();}};
   $$('advOk').onclick=()=>{snd('tap');seen();advHide();if(o.ok)o.ok();};
   if($$('advGo'))$$('advGo').onclick=()=>{snd('tap');seen();advHide();o.go();};
@@ -939,7 +971,7 @@ const TUT={
   loan:()=>{const W=w(),p=tutPlot(),t=E.MINE_OF[p.dep.g],c=E.capexOf(W,t,p.r,p.id),pj=pjOffer(W,c,30)||{a:0,int:0};return {key:'loan',tut:1,mood:'calm',
     go:()=>{if(pjTake(pj)==='ok'){snd('coin');tst(L('Проектный кредит на счёте: ','Project loan received: ')+M(pj.a));}S.tut.loan=1;save();tutTick();},goLbl:'🏦 '+L('Взять кредит ','Take the loan ')+M(pj.a),
     ok:()=>{S.tut.loan=2;save();tutTick();},okLbl:L('Без кредита','No loan'),
-    html:`<p>${L(`Разрез стоит <b>${M(c)}</b>, а на счёте <b>${M(W.cash)}</b>. Ещё <b>${M(E.duty(W))}</b> держим на конец месяца — зарплаты, проценты, налог. Без денег стройка встанет на полпути.`,`The pit costs <b>${M(c)}</b>, and we have <b>${M(W.cash)}</b>. Another <b>${M(E.duty(W))}</b> stays for month end — wages, interest, tax. Without cash the build stops halfway.`)}</p><p>${L(`Я договорилась с банком: <b>проектный кредит ${M(pj.a)}</b> на 3 года, первые 6 месяцев платим только проценты — около ${M(pj.int)} в месяц. Разрез к тому времени уже будет приносить деньги.`,`I’ve arranged it with the bank: a <b>project loan of ${M(pj.a)}</b> for 3 years, the first 6 months interest only — about ${M(pj.int)} a month. By then the pit will be earning.`)}</p>`};},
+    html:`<p>${L(`Разрез стоит <b>${M(c)}</b>, а на счёте <b>${M(W.cash)}</b>. Ещё <b>${M(E.duty(W))}</b> держим на конец месяца — зарплаты, проценты, налог. Без денег стройка встанет на полпути.`,`The pit costs <b>${M(c)}</b>, and we have <b>${M(W.cash)}</b>. Another <b>${M(E.duty(W))}</b> stays for month end — wages, interest, tax. Without cash the build stops halfway.`)}</p><p>${L(`Я договорилась с банком: <b>проектный кредит ${M(pj.a)}</b> на 3 года, первые ${pj.gr||6} ${pl(pj.gr||6,'месяц','месяца','месяцев','month','months').replace(/^\d+\s/,'')} платим только проценты — около ${M(pj.int)} в месяц. Разрез к тому времени уже будет приносить деньги.`,`I’ve arranged it with the bank: a <b>project loan of ${M(pj.a)}</b> for 3 years, the first ${pj.gr||6} months interest only — about ${M(pj.int)} a month. By then the pit will be earning.`)}</p>`};},
   build0:()=>({key:'build0',tut:1,hl:toKuz(),go:()=>go('reg','kuz'),goLbl:L('Открыть Кузбасс','Open Kuzbass'),html:L('Лицензия наша. Откройте Кузбасс — будем строить разрез.','The licence is ours. Open Kuzbass — let’s build the pit.')}),
   build:()=>({key:'build',tut:1,hl:'#pl-'+tutPlot().id+' [data-a="bmine"]',go:()=>tutClick('#pl-'+tutPlot().id+' [data-a="bmine"]'),goLbl:L('Построить разрез','Build the pit'),html:L('Лицензия наша! Теперь стройте угольный разрез. Первый построим быстро — за 1 месяц.','The licence is ours! Now build a coal pit. The first one goes up fast — in 1 month.')})};
 function tutActive(){return !!tutStep();}
@@ -973,7 +1005,8 @@ function onFound(pid){const W=w(),p=E.plotById(W,pid);if(!p)return;
   snd('found');buzz(40);
   if((p.st==='found'&&p.direct)||p.st==='auc')showQ(()=>celebrate(pid));}
 // первая радость: находка — окном с цифрами (для торгов — совет по пределу)
-function celebrate(pid){const W=w(),p=E.plotById(W,pid);if(!p||!p.dep)return;const d=p.dep,a=W.auc.find(x=>x.p===p.id),V=E.depVal(W,p.r,d);snd('found');
+function celebrate(pid){const W=w(),p=E.plotById(W,pid);if(!p||!p.dep)return;
+  if(!((p.st==='found'&&p.direct)||p.st==='auc')){tst(p.own&&p.own!=='you'?L(`Пока вы были заняты, торги за находку (${low(NM.good(p.dep.g))}, ${NM.reg(p.r)}) закончились: участок у «${NM.bot(p.own)}»`,`While you were busy, the auction for your find (${low(NM.good(p.dep.g))}, ${NM.reg(p.r)}) ended: the plot went to ${NM.bot(p.own)}`):aucEndTxt(W,p.id));setTimeout(nextQ,60);return;}   /* b2-fix Н-4: устаревшее «Нашли!» из очереди не показываем */const d=p.dep,a=W.auc.find(x=>x.p===p.id),V=E.depVal(W,p.r,d);snd('found');
   modal(`<h2>🎉 ${L('Нашли','Found')}: ${low(NM.good(d.g))}!</h2><div style="width:110px;height:110px;margin:0 auto">${gIco(d.g)}</div>
     <p style="text-align:center;font-size:22px;margin:4px 0"><b>${FMT.qty(d.res,d.g)}</b></p><p style="text-align:center" class="mut">${NM.reg(p.r)} · ${plotNo(p)}</p>
     <div class="facts" style="justify-content:center"><span>${L('Оценка участка','Plot estimate')}</span><b>${M(V)}</b><span>${L('Добыча обойдётся','Mining cost')}</span><b>${FMT.num(d.vc)} ₽/${NM.unit(d.g)}</b></div>
@@ -984,7 +1017,7 @@ function onBuilt(oid){const W=w(),o=W.obj.find(x=>x.id===oid);if(!o)return;liveT
   tst(L(`Объект «${NM.obj(o.t)}» ${RIN[o.r]} заработал!`,`${NM.obj(o.t)} in ${NM.reg(o.r)} is up and running!`));
   if(E.OBJ[o.t].dep)tutOnce('work',L('Разрез заработал! Уголь идёт на склад Кузбасса и продаётся сам — автопродажу можно выключить на «Рынке». Цены плавают каждый день: следите за стрелками ▲▼.','The pit is running! Coal goes to the Kuzbass warehouse and sells by itself — auto-sell can be turned off on the Market. Prices move daily: watch the ▲▼ arrows.'),'happy','#nav [data-tab="market"]',()=>go('market'));}
 function onAuc(aid,res){const x=watch[aid];delete watch[aid];delete aucMsg[aid];if(!x)return;
-  if(res==='won'||res==='lost')showQ(()=>aucResult(res,x));
+  if(res==='won'||res==='lost')showQ(()=>aucResult(res,Object.assign({end:1},x)));   /* b2-fix: итог по сроку */
   else if(res==='cash')tst(L('Не хватило денег оплатить лицензию','Not enough money to pay for the licence'));}
 const CR_WHY={expl:['за первую разведку','for your first exploration'],lic:['за первую лицензию','for your first licence'],profit:['за первую прибыль','for your first profit'],year:['за первый год','for your first year'],yearclose:['за закрытый год','for a closed year'],ipo:['за IPO','for the IPO'],
   z_gig1:['за первый заказ','for your first order'],z_rt48:['за рейтинг 4,8','for a 4.8 rating'],z_ip:['за ИП','for going sole trader'],z_biz1:['за первое своё дело','for your first business'],z_quit:[()=>hg('за «Сам себе начальник»','за «Сама себе начальница»'),'for being your own boss'],z_mgr1:['за первого управляющего','for your first manager'],
@@ -1016,7 +1049,7 @@ function idleTips(){const W=w(),c=[],DO=L('Сделать','Do it'),SH=L('Пок
   if(halt){const pj=pjOffer(W,0);add('halt',95,L(`Стройка стоит: ${low(NM.obj(halt.t))} ${RIN[halt.r]} — кончились деньги.${pj?` Не хватает около ${M(pj.gap)}.`:''}${pj&&pj.a?` Возьмём проектный кредит ${M(pj.a)}: полгода платим только проценты.`:' Банк даст кредит, загляните в «Финансы».'}`,`Construction stopped: ${low(NM.obj(halt.t))} in ${NM.reg(halt.r)} — out of money.${pj?` About ${M(pj.gap)} short.`:''}${pj&&pj.a?` Let’s take a project loan of ${M(pj.a)}: interest only for six months.`:' The bank will lend; see Finance.'}`),pj&&pj.a?pjGo:goFin('bank'),pj&&pj.a?'🏦 '+L('Взять','Take it'):SH,'worry');}
   const adv=E.advise(W),cash=adv.find(x=>x.k==='cash');if(cash)add('cash',92,advText(cash),goFin('sum'),SH,'worry');
   for(const r of E.REG)for(const p of W.plots[r]){
-    if(p.st==='found'&&p.direct)add('direct',88,L(`Лицензия ${RIN[r]} (${low(NM.good(p.dep.g))}) ждёт вас без торгов — всего ${M(p.direct)}. Такие подарки долго не лежат.`,`A licence in ${NM.reg(r)} (${low(NM.good(p.dep.g))}) awaits, no auction — just ${M(p.direct)}. Gifts like that don’t wait.`),goHl('reg',r,'#pl-'+p.id+' [data-a="buyD"]'),DO,'happy');
+    if(p.st==='found'&&p.direct)add('direct',88,L(`Лицензия ${RIN[r]} (${low(NM.good(p.dep.g))}) ждёт вас без торгов — всего ${M(p.direct)}. Соперники на неё не претендуют — можно взять, когда хватит денег.`/* b2-fix: предложение без срока */,`A licence in ${NM.reg(r)} (${low(NM.good(p.dep.g))}) awaits, no auction — just ${M(p.direct)}. No rivals claim it — take it when you have the money.`),goHl('reg',r,'#pl-'+p.id+' [data-a="buyD"]'),DO,'happy');
     if(p.own==='you'&&p.st==='lic'&&!W.obj.some(o=>o.plot===p.id))add('nobuild',80,L(`Лицензия ${RIN[r]} есть, а ${low(NM.obj(E.MINE_OF[p.dep.g]))} — нет. Участок скучает, я тоже.`,`We hold a licence in ${NM.reg(r)} but no ${low(NM.obj(E.MINE_OF[p.dep.g]))}. The plot is bored, and so am I.`),goHl('reg',r,'#pl-'+p.id+' [data-a="bmine"]'),DO);}
   const au=W.auc.find(a=>!a.done&&a.finder==='you')||W.auc.find(a=>!a.done);
   if(au)add('auc',au.finder==='you'?86:62,L(`Идут торги ${RIN[au.r]}: ${low(NM.good(au.g))}, цена ${M(au.pr)}, лидер — ${au.lead==='you'?'вы':au.lead?NM.bot(au.lead):'пока никто'}. Ещё ${days(Math.max(0,au.end-W.t))}.`,`Auction in ${NM.reg(au.r)}: ${low(NM.good(au.g))}, price ${M(au.pr)}, leader: ${au.lead==='you'?'you':au.lead?NM.bot(au.lead):'nobody yet'}. ${days(Math.max(0,au.end-W.t))} left.`),()=>openAuc(au.id),SH);
@@ -1031,7 +1064,7 @@ function idleTips(){const W=w(),c=[],DO=L('Сделать','Do it'),SH=L('Пок
   const hr=E.REG.filter(r=>W.plots[r].some(p=>p.st==='hid'&&W.cash>E.explCost(W,r)+60e6));
   if(hr.length){const r=hr[Math.floor(Math.random()*hr.length)],p=W.plots[r].find(x=>x.st==='hid');
     add('explore',45,L(`Денег хватает — можно разведать участок ${RIN[r]}: там чаще ${topGoods(r,2).map(g=>low(NM.good(g))).join(' и ')}. Геологи уже чистят сапоги.`,`We can afford to explore a plot in ${NM.reg(r)}: mostly ${topGoods(r,2).map(g=>low(NM.good(g))).join(' and ')}. The geologists are polishing their boots.`),goHl('reg',r,'#pl-'+p.id+' [data-a="expl"]'),DO);}
-  if(W.obj.length>=2){let best=null;for(const r of E.REG)for(const t of FAC){const ec=facEcon(W,t,r);if(!ec||ec.m<=0)continue;const c=E.capexOf(W,t,r);
+  if(W.obj.length>=2&&!(window.B2&&B2.nedra&&B2.nedra.M&&!B2.off('nedra'))){let best=null;for(const r of E.REG)for(const t of FAC){   /* b2-nedra: «что дальше» без падения цены — заменён советом b2idle */const ec=facEcon(W,t,r);if(!ec||ec.m<=0)continue;const c=E.capexOf(W,t,r);
       if(!best||ec.m/c>best.m/best.c)best={t,r,m:ec.m,c,mo:E.OBJ[t].mo};}
     if(best&&!W.obj.some(o=>o.t===best.t&&o.r===best.r&&o.st==='b'))add('goal',58,L(`Что дальше? По нынешним ценам выгоднее всего ${low(NM.obj(best.t))} ${RIN[best.r]}: +${M(best.m)} в месяц, стройка ${M(best.c)} (${mons(best.mo)}), окупится примерно за ${mons(Math.ceil(best.c/best.m))}. На счёте ${M(W.cash)}${W.cash<best.c*.2?' — понадобится кредит':''}.`,`What next? At today’s prices the best bet is a ${low(NM.obj(best.t))} in ${NM.reg(best.r)}: +${M(best.m)} a month, build cost ${M(best.c)} (${mons(best.mo)}), pays back in about ${mons(Math.ceil(best.c/best.m))}. Cash: ${M(W.cash)}${W.cash<best.c*.2?' — you’ll need a loan':''}.`),goHl('reg',best.r,'[data-a="bfac"]'),SH,'happy');
     const v=GAME.value();if(!GAME.ipoReady())add('ipogoal',36,L(`Цель — IPO: стоимость компании ${M(v)} из ${M(E.IPO_EQ)} (${FMT.pct(v/E.IPO_EQ)}) и год с прибылью.`,`Goal — IPO: company value ${M(v)} of ${M(E.IPO_EQ)} (${FMT.pct(v/E.IPO_EQ)}) and a profitable year.`),()=>go('map'),SH);}
@@ -1182,8 +1215,8 @@ function init(){
   GAME.on('change',()=>refresh('change'));GAME.on('day',()=>refresh('day'));
   GAME.on('close',rep=>{refresh('close');showQ(()=>openClose(rep));});
   // M47b (аудит №11): короткая отлучка (< 10 мин, без закрытия месяца и построек) — тихий тост вместо окна «Пока вас не было» (окно снова стоит время)
-  GAME.on('offline',s=>{liveSync();if(s&&!s.ext&&!(s.more>0)&&(s.el||0)<OFF_WIN_MS&&!(s.months>0)&&!(s.built&&s.built.length)&&!(s.ev&&s.ev.length)&&!(s.auc&&s.auc.length)){tst('⏱ '+L(`Пока вас не было: ${days(s.days||0)} · деньги ${M(s.cash0)} → ${M(s.cash1)}`,`While you were away: ${days(s.days||0)} · cash ${M(s.cash0)} → ${M(s.cash1)}`));return;}
-    const sh=()=>{if(Date.now()-lastIn<1200){setTimeout(sh,700);return;}showQ(()=>openOffline(s));};sh();});
+  GAME.on('offline',s=>{liveSync();if(s&&!s.ext&&!(s.more>0)&&(s.el||0)<OFF_WIN_MS&&!(s.months>0)&&!(s.built&&s.built.length)&&!(s.ev&&s.ev.length)&&!(s.auc&&s.auc.length)&&!(s.aucW&&s.aucW.length)/* b2-fix */){tst('⏱ '+L(`Пока вас не было: ${days(s.days||0)} · деньги ${M(s.cash0)} → ${M(s.cash1)}`,`While you were away: ${days(s.days||0)} · cash ${M(s.cash0)} → ${M(s.cash1)}`));return;}
+    window.__offPend=Date.now();const sh=()=>{if(Date.now()-lastIn<1200){setTimeout(sh,700);return;}showQ(()=>{window.__offPend=0;openOffline(s);});};sh();});   /* b2-merge: __offPend — очередь окон входа B2 ждёт «Пока вас не было» */
   GAME.on('day',onDayLive);GAME.on('ipo',liveSync);GAME.on('rollback',liveSync);   // M48rb
   GAME.on('found',onFound);GAME.on('built',onBuilt);GAME.on('auc',onAuc);GAME.on('cr',onCr);
   GAME.on('upgraded',oid=>{const o=w().obj.find(x=>x.id===oid);snd('build');if(o)tst(L('Модернизация завершена: ','Upgrade finished: ')+low(NM.obj(o.t)));});
@@ -1195,8 +1228,9 @@ function init(){
   setInterval(()=>{hdr();{const ob=$$('advOff');if(ob){const t=L(hg('Я сам','Я сама'),'I’ll manage');if(ob.textContent!==t)ob.textContent=t;}}if(modalOn)advStale();nextQ();idleTick();if(!modalOn&&pendT.length)toast(pendT.shift());if(GAME.hold.has('tut')&&!advCur&&!modalOn&&tutStep()==='hi')advShow(TUT.hi());},500);
   ['pointerdown','keydown','touchstart','wheel'].forEach(t=>document.addEventListener(t,()=>{lastIn=Date.now();},{capture:true,passive:true}));
   let rt=0;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(cur==='map')render();},200);});
+  const awayD=Math.floor(Math.max(0,nowMs()-(S.lastT||nowMs()))/GAME.OFF_DAY_MS);   // b2-fix Н-6: до start — офлайн ещё не посчитан
   GAME.start();liveSync();
-  if(S.pendRep!=null){const r=w().reps.find(x=>x.m===S.pendRep);if(r)showQ(()=>openClose(r));else delete S.pendRep;}
+  if(S.pendRep!=null){const r=w().reps.find(x=>x.m===S.pendRep);if(r&&awayD<30-(w().d|0))showQ(()=>openClose(r));else delete S.pendRep;}   /* b2-fix Н-6: за отлучку закроется новый месяц — старый отчёт окном не показываем (он в «Отчётах»), сразу «Пока вас не было» */
   // ⚙: пункт «Обучение заново» (только в первом холдинге)
   const os=window.openSettings;if(typeof os==='function')window.openSettings=function(){os.apply(this,arguments);try{const W=w(),h=$$('stHow');
     const cb=$$('stCalm');if(cb&&!$$('stBig')){const b=document.createElement('button');b.className='set';b.id='stBig';b.innerHTML=`<span>🔠 ${L('Крупный шрифт','Large text')}<br><small>${L('всё на экране крупнее','everything a bit bigger')}</small></span>${S.big?'<i>'+L('вкл','on')+'</i>':'<i class="off">'+L('выкл','off')+'</i>'}`;cb.parentNode.insertBefore(b,cb.nextSibling);b.onclick=()=>{S.big=!S.big;save();applyBig();window.openSettings();};}
@@ -1221,5 +1255,6 @@ function back(){navIntent('back');if($$('adv').classList.contains('on')){advHide
 window.UI={objFore,hdr,fly,salute,pulse:pulseEl,tweenNum,face,TAB_DEF,buildNav,init,refresh,go,back,restartTut,idleTest:()=>{lastIn=0;lastIdle=0;idleWait=0;idleTick();return advCur&&advCur.key;},show:t=>go(t),openRegion:r=>go('reg',r),render,openHow,openAuc,openClose,openOffline,openIpo,openFac,openRoute,adv:advShow,advOpen,tutStep,
   navSync,navKey,navIntent,navMem:()=>NAV,
   get cur(){return cur;},get reg(){return curReg;}};
+window.UI.GD=GD;window.UI.OG=OG;window.UI.TONE=TONE;   /* b2-krai: значки товаров и объектов края */
 init();
 })();

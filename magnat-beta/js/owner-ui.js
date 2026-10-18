@@ -319,7 +319,7 @@ function onClick(e){const b=e.target.closest('[data-ow]');if(!b||b.disabled)retu
     case 'edu':snd('tap');openEdu();break;
     case 'jnet':{snd('tap');hideModal();try{UI.go('net');}catch(x){}break;}   // M47a (Ф13)
     case 'jfree':{const r=act('bizMgr',b.dataset.id,true);if(r==='ok'){snd('coin');toast(L('Управляющий нанят — ваше время свободно','Manager hired — a hand is free'),2200);if(modalOn)openJobs();}else if(MSG[r]){snd('no');toast(MSG[r]());}break;}   // M47a (Ф13)
-    case 'job':{const r=act('jobStart',b.dataset.k,b.dataset.a);if(r==='ok'){snd('coin');toast('✋ '+T(JN[b.dataset.k])+' — '+days(E.JOBS[b.dataset.k].d),2200);stat('job',{j:b.dataset.k});if(modalOn){hideModal();}}else if(MSG[r]){snd('no');toast(MSG[r]());}break;}
+    case 'job':{const r=act('jobStart',b.dataset.k,b.dataset.a);if(r==='ok'){snd('coin');toast('✋ '+T(JN[b.dataset.k])+' — '+days(E.JOBS[b.dataset.k].d),2200);stat('job',{j:b.dataset.k});if(modalOn){hideModal();}/* b2-mgcore */if(window.MG)MG.after('job',b.dataset.k,b.dataset.a);}else if(MSG[r]){snd('no');toast(MSG[r]());}break;}
     case 'jstop':{if(act('jobStop',b.dataset.id)==='ok')snd('tap');break;}
     case 'ed':{const r=act('edStart',b.dataset.k);if(r==='ok'){snd('coin');toast('🎓 '+T(EDN[b.dataset.k])+' — '+days(E.ED[b.dataset.k].d),2400);stat('edu',{c:b.dataset.k});hideModal();}else if(MSG[r]){snd('no');toast(MSG[r]());}break;}
     case 'ev':{const v=W.ow&&W.ow.ev;const r=act('evAns',+b.dataset.i);if(r){snd('tap');if(modalOn&&b.closest('#modal'))hideModal();toast('📰 '+((EVR[r]||EVR.ok)()),2400);stat('ev',{e:v?v.k:'',i:+b.dataset.i,r,rem:v&&v.rem?1:0});}break;}

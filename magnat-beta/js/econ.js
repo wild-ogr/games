@@ -93,8 +93,8 @@ function newDeposit(W,r,force){const g=force||pick(W,Object.assign({},REGS[r].p,
 function freshMk(W){for(const g of GL){W.mk[g]={i:1,tg:1,s30:0,p0:0,sh:0,shT:0,V:GOODS[g].V,ph:[]};W.own[g]=0;}}
 // мир: o.rags — «из грязи в князи» (старт с 5 000 ₽, глава «Карьера», части «недра» ещё нет — её создаст initNedra при переходе);
 // без rags — как раньше: сразу недра (IPO, симулятор, старые игроки)
-function newWorld(o){o=o||{};const seed=(o.seed>>>0)||((Math.random()*4e9)>>>0)||7;const rags=!!o.rags;
-  const W={v:1,fv:FMT_V,seed,rs:seed,t:0,m:o.m0||0,d:0,rep:o.rep||0,hold:o.hold||1,tut:rags?false:o.tut!==false,
+function newWorld(o){o=o||{};const kr=root.KRAI&&root.KRAI.pre?root.KRAI.pre(o):null;/* b2-krai: профиль края (o.kr) до мира */const seed=(o.seed>>>0)||((Math.random()*4e9)>>>0)||7;const rags=!!o.rags;
+  const W={v:1,fv:FMT_V,b2:{},seed,rs:seed,t:0,m:o.m0||0,d:0,rep:o.rep||0,hold:o.hold||1,tut:rags?false:o.tut!==false,
     cash:0,cap:0,ret:0,lossCF:0,inv:{},tr:[],obj:[],nid:1,plots:{},auc:[],loans:[],wag:{n:0,g:0,dep:0,busy:[]},
     mk:{},own:{},key:.16,auto:{},routes:[],offers:[],cons:[],bots:[],ev:[],news:[],hist:[],reps:[],od:0,odM:0,san:0,rbg:0,ach:{},stat:{sold:0,built:0,expl:0},
     st:rags?'gig':'nedra',ned:false,home:o.home||'kuz',me:null,biz:[],rec:[],taxm:rags?'npd':'osno',ch:rags?0:60,les:{},partner:null,
@@ -106,6 +106,7 @@ function newWorld(o){o=o||{};const seed=(o.seed>>>0)||((Math.random()*4e9)>>>0)|
   if(rags){W.bs={};W.bd={};for(const g of GL){W.bs[g]=0;W.bd[g]=0;}W.key=.14;
     const c=o.cap||5000;W.cap=c;recv(W,c,'eqin');if(root.ECON&&root.ECON.bizInit)root.ECON.bizInit(W,o);news(W,'start',{c,rags:1});return W;}
   initNedra(W,{cap:o.cap||(800e6+200e6*W.rep)});
+  if(kr)kr(W);   /* b2-krai: W.b2.krai — край мира */
   return W;}
 // часть мира «недра»: участки (учебный — в Кузбассе), боты со стартовыми активами, рынок металлов; o.cap — взнос в уставный капитал (ДДС: eqin)
 function initNedra(W,o){o=o||{};W.ned=true;W.st='nedra';freshMk(W);W.bots=[];W.auc=[];
@@ -115,7 +116,7 @@ function initNedra(W,o){o=o||{};W.ned=true;W.st='nedra';freshMk(W);W.bots=[];W.a
   // «наследство репутации»: второй и следующие холдинги (без обучения) — найденный участок в родном регионе без торгов за 25–35 % оценки (+1 за улучшение «Наследство»)
   else if(W.rep>0)for(let i=0;i<1+pkL(W,'heir');i++)legacy(W);
   // боты: стартовые активы на своих участках
-  const start={bars:[['orepit','ural'],['limepit','ural']],bear:[['coalpit','kuz'],['coalpit','kuz']],owl:[['coalpit','kuz'],['orepit','kar']],beav:[['logging','kar'],['sawmill','kar']]};
+  const start=(root.KRAI&&root.KRAI.bst&&root.KRAI.bst())||{bars:[['orepit','ural'],['limepit','ural']],bear:[['coalpit','kuz'],['coalpit','kuz']],owl:[['coalpit','kuz'],['orepit','kar']],beav:[['logging','kar'],['sawmill','kar']]};   /* b2-krai: свои стартовые активы ботов края */
   for(const b of BOTS){const B={id:b.id,cash:rnd0(RR(W,900e6,1200e6)),debt:0,rate:W.key+.035,as:[],ex:[],v:[]};W.bots.push(B);
     for(const [t,r] of start[b.id]){const O=OBJ[t];let plot=null;
       if(O.dep){plot=W.plots[r].find(p=>p.st==='hid'&&!p.tut&&p.dep&&p.dep.g===O.dep)||W.plots[r].find(p=>p.st==='hid'&&!p.tut);
@@ -164,8 +165,8 @@ function boost(W){if(!boostOk(W))return 'no';const d=boostD(W);W.bst=W.t+d;W.bst
 /* ---------------- миграция сохранений ----------------
    ПРАВИЛО: любой новый товар, объект, регион или поле мира — только вместе с шагом миграции здесь (и тестом в check.py).
    FMT_V — версия формата мира; migrate(W) доводит старый мир до текущего и возвращает список исправлений. */
-const FMT_V=6;   // M39: 5 — опт по видам (b.kd), машины у хозяина (b.at), W.lnk; M44: 6 — износ машин (wr), смены/закупка к сезону опта, ТК
-function migrate(W){const fx=[];if(!W||typeof W!=='object')throw new Error('мир пуст');
+const FMT_V=7;   // b2-core: 7 — W.b2 (данные потоков «Магнат 2.0», шаги — B2.mig); M39: 5 — опт по видам (b.kd), машины у хозяина (b.at), W.lnk; M44: 6 — износ машин (wr), смены/закупка к сезону опта, ТК
+function migrate(W){const fx=[];if(!W||typeof W!=='object')throw new Error('мир пуст');if(root.KRAI&&root.KRAI.use)root.KRAI.use(W);   /* b2-krai: профиль края мира */
   const num=(o,k,d)=>{if(typeof o[k]!=='number'||!isFinite(o[k])){o[k]=d;fx.push(k);}};
   for(const k of ['t','m','d','cash','cap','ret','lossCF','od','odM','san','rep','hold','nid','rbg'])num(W,k,k==='hold'||k==='nid'?1:0);   // M48rb: rbg — сколько раз мир откатывали (облако)
   num(W,'key',.16);if(typeof W.rs!=='number')W.rs=(W.seed>>>0)||7;
@@ -200,6 +201,7 @@ function migrate(W){const fx=[];if(!W||typeof W!=='object')throw new Error('ми
   if(root.ECON&&root.ECON.bizMigrate)root.ECON.bizMigrate(W,fx);
   if(root.ECON&&root.ECON.reMigrate)root.ECON.reMigrate(W,fx);
   if(root.ECON&&root.ECON.nedMig)root.ECON.nedMig(W,fx);
+  if(!W.b2||typeof W.b2!=='object'||Array.isArray(W.b2))W.b2={};if(root.B2&&root.B2.runMig)root.B2.runMig(W,fx);   /* b2-core: W.b2 и шаги потоков */
   if((W.fv||1)<FMT_V)fx.push('v'+(W.fv||1)+'→'+FMT_V);W.fv=FMT_V;
   return fx;}
 function botAsset(W,t,r,plot,build){const O=OBJ[t];return {t,r,plot:plot?plot.id:null,vc:plot&&plot.dep?plot.dep.vc:(O.vc||0),
@@ -267,18 +269,18 @@ function dtName(W,id,v){const M=W.mon;(M.nm||hid(M,'nm',{}))[id]=v;}
 function debtOf(W){let d=0;for(const l of W.loans)d+=l.a;return d;}
 
 /* ---------------- рынок ---------------- */
-function price(W,r,g){return rnd0(GOODS[g].p*REGS[r].k[g]*W.mk[g].i);}
+function price(W,r,g){return rnd0(GOODS[g].p*REGS[r].k[g]*W.mk[g].i*(root.KRAI&&root.KRAI.px?root.KRAI.px(W,r,g):1));}   /* b2-krai: правило края — цена по месяцам */
 function sellPrice(W,r,g,q){return price(W,r,g)*(1-.1*q/W.mk[g].V)*(boostOn(W)?1+BOOST_K:1);}
 function buyPrice(W,r,g,q){return price(W,r,g)*1.06*(1+.1*q/W.mk[g].V);}
 function mkSupply(W,g,q){const M=W.mk[g];M.s30+=q;M.i=clamp(M.i-.15*q/M.V,.5,1.7);}
 // продать q со склада региона r: ₽ выручки; how — 'spot' (игрок), 'auto' (автопродажа), 'c' (контракт, цена задана)
-function sell(W,r,g,q,cp){const s=W.inv[r][g];q=Math.min(q,s.q);if(q<=1e-6)return 0;
+function sell(W,r,g,q,cp){if(root.KRAI&&root.KRAI.no&&root.KRAI.no(W,r,g))return 0;/* b2-krai: зимник */const s=W.inv[r][g];q=Math.min(q,s.q);if(q<=1e-6)return 0;
   const p=cp||sellPrice(W,r,g,q),rev=rnd0(p*q),cost=invTake(W,r,g,q);
   // продажа уменьшает «свою продукцию» в той доле, в какой она есть в общем запасе товара
   {let tot=0;for(const rr of REG)tot+=W.inv[rr][g].q+q*(rr===r?1:0);const ow=W.own[g]||0;W.own[g]=Math.max(0,ow-(cp?q:q*Math.min(1,ow/Math.max(1e-9,tot))));}
   const t0=tg('g.'+g);recv(W,rev,'sales');pl(W,'rev',rev);pl(W,'cogs',cost);tg(t0);W.mon.cg[g]=(W.mon.cg[g]||0)+cost;W.mon.sold[g]=(W.mon.sold[g]||0)+q;W.mon.rev[g]=(W.mon.rev[g]||0)+rev;W.stat.sold+=rev;
   mkSupply(W,g,q);return rev;}
-function buy(W,r,g,q){if(q<=0)return 0;const p=buyPrice(W,r,g,q),c=rnd0(p*q);if(c>W.cash)return 0;
+function buy(W,r,g,q){if(q<=0||root.KRAI&&root.KRAI.no&&root.KRAI.no(W,r,g))return 0;/* b2-krai */const p=buyPrice(W,r,g,q),c=rnd0(p*q);if(c>W.cash)return 0;
   const t0=tg('g.'+g);pay(W,c,'supp');tg(t0);invAdd(W,r,g,q,c);W.mon.bought[g]=(W.mon.bought[g]||0)+q;const M=W.mk[g];M.s30-=q;M.i=clamp(M.i+.15*q/M.V,.5,1.7);return c;}
 function cycle(W,g){const m=W.m,mo=m%12;let c=0;
   if(g==='steel'||g==='roll'||g==='pig')c=.07*Math.sin(2*Math.PI*m/40+1);
@@ -406,7 +408,7 @@ function tariff(W,a,b){let t=250+1.05*km(a,b);for(const e of W.ev)if(e.k==='tari
 function rentRate(W){let r=RENT;for(const e of W.ev)if(e.k==='wagons')r*=1.5;return r;}
 function wagFree(W){let b=0;for(const x of W.wag.busy)b+=x.n;return Math.max(0,W.wag.n-b);}
 function freightCost(W,a,b,q){const n=Math.ceil(q/WAG_T),own=Math.min(n,wagFree(W));const rented=q*Math.max(0,n-own)/n;return {c:rnd0(q*tariff(W,a,b)+rented*rentRate(W)),own};}
-function ship(W,g,a,b,q){if(a===b)return 0;q=Math.min(q,W.inv[a][g].q);if(q<1)return 0;const fc=freightCost(W,a,b,q);
+function ship(W,g,a,b,q){if(a===b||root.KRAI&&root.KRAI.no&&(root.KRAI.no(W,a,g)||root.KRAI.no(W,b,g)))return 0;/* b2-krai */q=Math.min(q,W.inv[a][g].q);if(q<1)return 0;const fc=freightCost(W,a,b,q);
   if(fc.c>W.cash)return 0;const t0=tg('ship.'+g);pay(W,fc.c,'log');pl(W,'log',fc.c);tg(t0);const v=invTake(W,a,g,q),days=transitDays(W,a,b);
   W.tr.push({g,q,v,from:a,to:b,arr:W.t+days});if(fc.own)W.wag.busy.push({n:fc.own,ret:W.t+2*days});return q;}
 function inbound(W,r,g){let s=0;for(const x of W.tr)if(x.to===r&&x.g===g)s+=x.q;return s;}
@@ -447,14 +449,15 @@ function reserve(W,r,g){let s=0;for(const o of W.obj){const O=OBJ[o.t];if(o.r===
   for(const z of W.routes)if(z.from===r&&z.g===g)s+=z.q/3;return s;}
 
 /* ---------------- день ---------------- */
-function tick(W,off){const out=[];W.t++;W.d++;TG='';TS='';mkDay(W);
+function tick(W,off){if(root.KRAI&&root.KRAI.use)root.KRAI.use(W);/* b2-krai */const out=[];W.t++;W.d++;TG='';TS='';mkDay(W);
   // прибытие поездов, возврат вагонов
   const arr=W.tr.filter(x=>x.arr<=W.t);if(arr.length){for(const x of arr)invAdd(W,x.to,x.g,x.q,x.v);W.tr=W.tr.filter(x=>x.arr>W.t);}
   W.wag.busy=W.wag.busy.filter(x=>x.ret>W.t);
   // разведка
   for(const r of REG)for(const p of W.plots[r])if(p.st==='exp'&&--p.left<=0){explDone(W,p);out.push({k:'found',p:p.id});}
   // торги: срок вышел — решают без игрока
-  for(const a of W.auc.slice())if(W.t>=a.end){const res=aucAuto(W,a);out.push({k:'auc',a:a.id,res});}
+  for(const a of W.auc.slice()){if(off&&!a.done&&(a.finder==='you'||a.you)){a.end++;continue;}   /* b2-fix Т-1: торги своей находки (и где вы ставили) в офлайне ждут игрока — как в «Карьере» */
+    if(W.t>=a.end){const res=aucAuto(W,a);out.push({k:'auc',a:a.id,res});}}
   // стройка и модернизация
   for(const o of W.obj){
     if(o.st==='b'){if(buildDay(W,o,o,off)&&o.left<=0){o.st='w';o.g=o.paid;o.paid=0;news(W,'built',{o:o.id,t:o.t,r:o.r});out.push({k:'built',o:o.id});W.ach['b_'+o.t]=1;}}
@@ -468,10 +471,10 @@ function tick(W,off){const out=[];W.t++;W.d++;TG='';TS='';mkDay(W);
   for(const o of W.obj){const O=OBJ[o.t];if(!o.ab||!O.in||o.st!=='w'||o.off)continue;const d=objCap(o)/DAYS;
     for(const g in O.in){const need=d*O.in[g]*3-W.inv[o.r][g].q-inbound(W,o.r,g);if(need>d*O.in[g]*.5&&W.cash-buyPrice(W,o.r,g,need)*need>20e6)buy(W,o.r,g,need);}}
   // производство: сначала добыча, потом заводы по цепочке
-  const order=['coalpit','orepit','limepit','logging','cupit','sawmill','furnace','steel','rolling','cuconc','smelter','wiremill'];
+  const order=['coalpit','orepit','limepit','logging','cupit','sawmill','furnace','steel','rolling','cuconc','smelter','wiremill'].concat(root.KRAI&&root.KRAI.ord||[]);   /* b2-krai: объекты края */
   for(const t of order)for(const o of W.obj){if(o.t!==t||o.st!=='w'||o.off)continue;const O=OBJ[t];o.why='';
     if(o.stop&&o.stop>W.t){o.why='acc';continue;}
-    let q=objCap(o)/DAYS;const room=storR(W,o.r)-stockR(W,o.r);
+    let q=objCap(o)/DAYS*(root.KRAI&&root.KRAI.pk?root.KRAI.pk(W,o):1);const room=storR(W,o.r)-stockR(W,o.r);   /* b2-krai: правило края — выпуск по месяцам */
     if(O.dep){const p=plotById(W,o.plot);q=Math.min(q,p.dep.res);if(p.dep.res<=0){o.why='empty';continue;}
       for(const e of W.ev)if(e.k==='flood'&&e.r===o.r&&o.t==='logging')q*=.5;
       if(room<q){q=Math.max(0,room);o.why='full';}
@@ -579,7 +582,7 @@ function close(W,off){const M=W.mon,san0=W.san|0;TG='';TS='';const bz=!!root.ECO
   for(const c of W.cons.slice())if(W.t>=c.end||c.done>=c.q){if(c.done<c.q-1){const pen=rnd0((c.q-c.done)*c.p*c.pen);pay(W,pen,'oth');pl(W,'oth',-pen);news(W,'penalty',{g:c.g,q:rnd0(c.q-c.done),pen});}
     else news(W,'cdone',{g:c.g,q:c.q});W.cons=W.cons.filter(x=>x!==c);}
   // санация (только при игроке): второй месяц подряд нужен овердрафт
-  TG='san';let san=null;if(W.ned&&W.cash<0&&od&&W.odM>=2&&!off){const e=ebitda3(W)*12,dt=debtOf(W);if((e<=0||dt>4*e)&&dt>.25*Math.max(1,equity(W)))san=sanation(W);}
+  TG='san';let san=null;if(W.ned&&W.cash<0&&od&&W.odM>=2&&!off){const e=ebitda3(W)*12,dt=debtOf(W)+Math.max(0,-W.cash);/* b2-fix Н-8: овердрафт уже погашен выше — дыра на счёте тоже долг */if((e<=0||dt>4*e)&&dt>.25*Math.max(1,equity(W)))san=sanation(W);}
   if(!san&&(W.san|0)>san0){const n=W.news.slice().reverse().find(x=>x.k==='san');san={sold:n&&n.a&&n.a.sold||[],debt:n&&n.a&&n.a.debt||0,biz:1};}   // M48rb: санация глав 1–4 (biz.js bizSan) — тоже в отчёте (rep.san)
   // налог на прибыль: 25 %, убыток прошлых лет уменьшает базу не больше чем наполовину
   TG='tax';const p=M.pl,ebt=p.rev-p.cogs-p.fix-p.log-p.adm-p.expl-p.dep+p.oth-p.int;let tax=0;
@@ -680,15 +683,16 @@ const IPO_EQ=2.2e9;
 function ipoReady(W){const h=W.hist.slice(-12);return equity(W)>=ipoEq(W)&&h.length>=12&&h.reduce((a,x)=>a+x.np,0)>0;}
 function snap(W){const b=bal(W);return {t:W.t,m:W.m,cash:W.cash,eq:b.E,debt:b.debt,sold:W.stat.sold};}
 // офлайн: автопилот days дней — производит и продаёт всё сверх нужд заводов, новых решений нет, кредитов не берёт (только овердрафт)
-function offline(W,days){const s0=snap(W),prod={},sold={},ev=[],built=[],sg={};let closes=0,rev=0,np=0,gigs=0,gigNet=0;
-  for(let i=0;i<days;i++){const out=tick(W,true);for(const e of out){if(e.k==='close'){closes++;rev+=e.rep.pl.rev;np+=netOf(e.rep.pl);for(const g in e.rep.prod)prod[g]=(prod[g]||0)+e.rep.prod[g];for(const g in e.rep.sold)sold[g]=(sold[g]||0)+e.rep.sold[g];if(e.rep.ev)ev.push(e.rep.ev);
+function offline(W,days){const s0=snap(W),prod={},sold={},ev=[],built=[],sg={},auc=[];let closes=0,rev=0,np=0,gigs=0,gigNet=0;
+  for(let i=0;i<days;i++){const am={};for(const a of W.auc)am[a.id]=a;const out=tick(W,true);for(const e of out){
+      if(e.k==='auc'&&am[e.a]){const a=am[e.a],k=e.res==='won'?'won':e.res==='lost'?'lost':a.finder==='you'?'nobid':'';if(k)auc.push({t:W.t,m:W.m,k,a:{p:a.p,r:a.r,g:a.g,pr:a.pr,b:a.win,f:a.finder==='you'?1:0}});}   /* b2-fix Т-2: итог торгов — из цикла (лента новостей держит 40) */if(e.k==='close'){closes++;rev+=e.rep.pl.rev;np+=netOf(e.rep.pl);for(const g in e.rep.prod)prod[g]=(prod[g]||0)+e.rep.prod[g];for(const g in e.rep.sold)sold[g]=(sold[g]||0)+e.rep.sold[g];if(e.rep.ev)ev.push(e.rep.ev);
         for(const k in e.rep.sg||{}){const x=sg[k]||(sg[k]={rev:0,e:0});x.rev+=e.rep.sg[k].rev;x.e+=e.rep.sg[k].e;}}
       else if(e.k==='built'||e.k==='upgraded'||e.k==='bizopen')built.push(e.o||e.id);else if(e.k==='gig'){gigs++;gigNet+=e.net||0;}}
     if(root.ECON.offSnap&&out.some(e=>e.k==='close'))try{root.ECON.offSnap(W);}catch(x){}}   // M48rb: снимок на начало месяца (game.js, откат при разорении)
   // предложения, торги за время отсутствия: торги решились без игрока (это видно в новостях)
-  const s1=snap(W);rev=s1.sold-s0.sold;np=s1.eq-s0.eq;return {days,months:closes,prod,sold,rev,np,ev,built,sg,gigs,gigNet,cash0:s0.cash,cash1:s1.cash,eq0:s0.eq,eq1:s1.eq,debt0:s0.debt,debt1:s1.debt,auc:W.news.filter(n=>n.t>s0.t&&(n.k==='lost'||n.k==='won'||n.k==='nobid'))};}
+  const s1=snap(W);rev=s1.sold-s0.sold;np=s1.eq-s0.eq;return {days,months:closes,prod,sold,rev,np,ev,built,sg,gigs,gigNet,cash0:s0.cash,cash1:s1.cash,eq0:s0.eq,eq1:s1.eq,debt0:s0.debt,debt1:s1.debt,auc,aucW:W.auc.filter(a=>!a.done&&(a.finder==='you'||a.you)).map(a=>({id:a.id,p:a.p,r:a.r,g:a.g,end:a.end,f:a.finder==='you'?1:0}))};}   /* b2-fix Т-2: aucW — торги, ждущие игрока */
 
-root.ECON={FMT_V,buildRes,buildRest,buildFlow,buildPlan,buildHalt,projLoanAmt,projLoan,migrate,initNedra,segsOf,SEG_G,loanUnit,ownQ:(W,g)=>W.own[g]||0,SEGS,DAYS,TAX,REGS,REG,GOODS,GL,OBJ,MINE_OF,BOTS,KM,WAG_T,WAG_COST,STOR0,UP_MAX,IPO_EQ,CFG,EVENTS,
+root.ECON={FMT_V,buildRes,buildRest,buildFlow,buildPlan,buildHalt,projLoanAmt,projLoan,migrate,initNedra,segsOf,SEG_G,loanUnit,ownQ:(W,g)=>W.own[g]||0,SEGS,DAYS,TAX,REGS,REG,GOODS,GL,OBJ,MINE_OF,BOTS,KM,DEP,/* b2-krai */WAG_T,WAG_COST,STOR0,UP_MAX,IPO_EQ,CFG,EVENTS,
   newWorld,tick,close,bal,check,equity,debtOf,price,sellPrice,buyPrice,sell,buy,explore,explCost,explDays,depVal,plotById,
   aucById,bidRaise,bidPass,buyDirect,passDirect,build,canBuild,capexOf,upgrade,upCost,speed,speedExpl,mothball,autoBuy,inbound,objCap,objFix,
   km,transitDays,tariff,rentRate,wagFree,freightCost,ship,addRoute,delRoute,buyWagons,
@@ -699,4 +703,14 @@ root.ECON={FMT_V,buildRes,buildRest,buildFlow,buildPlan,buildHalt,projLoanAmt,pr
   _:{pay,recv,pl,news,R,RR,RN,pick,rnd0,clamp,invAdd,invTake,emptyMon,objFix,ebitda3}};
 // E.IPO_EQ — планка текущего мира (интерфейс берёт её как число); без игры (симулятор) — базовая 2,2 млрд
 Object.defineProperty(root.ECON,'IPO_EQ',{get(){const G=root.GAME;return ipoEq(G&&G.W);},enumerable:true,configurable:true});
+/* b2-perf (N5 шаги 1–3): кэш расчётов на время одной перерисовки/рассылки события — мир в это время не меняется (действие игрока GAME.act и вложенная рассылка кэш сбрасывают).
+   pmRun(W,fn) — выполнить fn с кэшем для этого W (вложенно — тот же кэш); pm(W,ключ,f) — f() один раз на ключ. Ключ дополняется «подписью» временных правок мира
+   внутри прогнозов (W.biz.length — openNFore, _noLink/_olOff — связи, _fd — fleetGain, _pjX, PM.tk — tkFore). Копия мира (тень cash.js) — другой W, кэш не берёт. B2.off.perf — выключить. */
+const PM={W:null,d:0,c:new Map(),tk:0,hit:0,miss:0};
+function pmOff(){return typeof B2!=='undefined'&&B2&&B2.off&&B2.off.perf;}
+function pmSig(W){return W.biz.length+'|'+(W._noLink?1:0)+(W._olOff?1:0)+'|'+(W._fd?W._fd.id+':'+W._fd.d:'')+'|'+(W._pjX||0)+'|'+PM.tk;}
+function pm(W,k,f){if(!PM.d||W!==PM.W||!W.biz)return f();const key=k+'#'+pmSig(W);if(PM.c.has(key)){PM.hit++;return PM.c.get(key);}PM.miss++;const v=f();PM.c.set(key,v);return v;}
+function pmRun(W,fn){if(PM.d&&W!==PM.W)return fn();if(!PM.d){if(!W||pmOff())return fn();PM.W=W;PM.c.clear();}PM.d++;try{return fn();}finally{if(!--PM.d){PM.W=null;PM.c.clear();}}}
+function pmClear(){PM.c.clear();}
+Object.assign(root.ECON,{pm,pmRun,pmClear,pmOff,PM});
 })(typeof window!=='undefined'?window:this);

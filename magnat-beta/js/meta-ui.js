@@ -370,7 +370,7 @@ function hook(){if(!window.GAME||!GAME.on){setTimeout(hook,200);return;}
   GAME.on('qgoal',g=>{const x=g.o[g.p];if(g.st==='ok'){salute(true);}if(g.st==='ok')toast('🏛 '+T('Цель квартала выполнена','Quarter goal achieved')+' · +'+cr(x.cr),3500);});
   GAME.on('cos',applyCos);GAME.on('reset',applyCos);GAME.on('lad',()=>setTimeout(refresh,50));
   // запасной путь (сцен сюжета нет или их закрыли свайпом): «Доля основателя», когда окон нет; пока ждёт сцена IPO — до 15 с даём ей открыться первой
-  GAME.on('ipo',()=>{let n=0;ipoQ.perks=0;ipoQ.wait=1;const tr=()=>{if(ipoQ.perks||!Array.isArray(S.pkP)||!S.pkP.length)return;
+  GAME.on('ipo',()=>{let n=0;ipoQ.perks=0;ipoQ.pk=0;ipoQ.wait=1;const tr=()=>{if(ipoQ.perks||ipoQ.pk||!Array.isArray(S.pkP)||!S.pkP.length)return;
     if(!modalOn&&!document.hidden&&!(ipoScenePending()&&n<10)){ipoQ.perks=1;openPerks();return;}if(++n<200)setTimeout(tr,1500);};setTimeout(tr,1500);});
   GAME.on('day',borisLater);
   applyCos();}
@@ -379,21 +379,23 @@ function hook(){if(!window.GAME||!GAME.on){setTimeout(hook,200);return;}
    и показываем вместо него выбор улучшения; само окно ответа — позже, на ближайшем игровом дне без окон, паузы и рекламы. */
 const ipoQ={wait:0,arm:0,perks:0,boris:'',borisT:0};
 function ipoScenePending(){try{const F=GAME.W&&GAME.W.fr;return !!(F&&Array.isArray(F.q)&&F.q.some(x=>x.k==='ipo'));}catch(e){return false;}}
-document.addEventListener('click',e=>{if(!ipoQ.wait)return;const t=e.target&&e.target.closest?e.target.closest('[data-ok]'):null,mc=$m('mcard');
+document.addEventListener('click',e=>{if(!ipoQ.wait)return;const t=e.target&&e.target.closest?e.target.closest('[data-ok]'):null,mc=$m('mcard');if(e.target&&e.target.closest&&e.target.closest('[data-pk]'))ipoQ.pk=1;   /* b2-fix Х2-3: доли выбраны в сцене */
   if(t&&mc&&mc.contains(t)&&mc.querySelector('.st-photo'))ipoQ.arm=1;},true);
 document.addEventListener('click',()=>{if(!ipoQ.arm)return;ipoQ.arm=0;const mc=$m('mcard');
   if(!modalOn||!mc||mc.querySelector('.st-photo'))return; // ответ не принят — окно сцены осталось
   ipoQ.wait=0;
   // M30: одно окно после IPO — ответ Бориса всегда позже (не стопкой), «Доля основателя» отдельно — только если не выбрали в окне сцены
-  if(ipoQ.perks||!Array.isArray(S.pkP)||!S.pkP.length){ipoQ.boris=mc.innerHTML;ipoQ.borisT=Date.now()+120000;hideModal();return;}
+  if(ipoQ.perks||ipoQ.pk||!Array.isArray(S.pkP)||!S.pkP.length){ipoQ.boris=mc.innerHTML;ipoQ.borisT=Date.now()+120000;hideModal();return;}
   // не стопкой: окно ответа Бориса прячем, после короткой паузы (0,8 с) — «Доля основателя»; сам ответ Бориса — не раньше чем через 2 минуты
   ipoQ.boris=mc.innerHTML;ipoQ.perks=1;ipoQ.borisT=Date.now()+120000;hideModal();
   const go=()=>{if(modalOn){setTimeout(go,600);return;}openPerks();};setTimeout(go,800);},false);
+{const f0=calmNow;calmNow=function(){return f0()&&(!window.b2Calm||b2Calm());};}   /* b2-first: после окна утром второстепенные окна ждут (B2F.calm) */
 function calmNow(){if((typeof winCalm==='function'&&!winCalm())||modalOn||(typeof paused!=='undefined'&&paused)||document.hidden)return false;try{if(GAME.hold&&GAME.hold.size)return false;}catch(e){}
   const a=$m('ad');return !(a&&a.classList.contains('on'));}
 function borisLater(){if(!ipoQ.boris||Date.now()<ipoQ.borisT||!calmNow())return;const h=ipoQ.boris;ipoQ.boris='';modal(h);
   const c=$m('mcard');c&&c.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{snd('tap');close();});}
 hook();
 window.addEventListener('load',applyCos);
+/* b2-event: «Планёрка» → табель 28 + Поток заданий (js/b2-event*.js); выключен поток — старое */{const ev=(k,f)=>function(){return window.B2&&B2.evUI&&!B2.off('event')?B2.evUI(k):f.apply(this,arguments);};planLine=ev('line',planLine);planCard=ev('card',planCard);planMini=ev('mini',planMini);openPlan=ev('open',openPlan);}
 window.META={card,refresh,openPlan,openMiles,openCos,openPerks,perkBtns,pkName:k=>pkName(k),openPrestige,starterHtml,ipoHtml,applyCos,passQ,passClaim,passX2};
 })();

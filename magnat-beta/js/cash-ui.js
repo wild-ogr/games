@@ -26,7 +26,7 @@ const K={rec:['🧾','От покупателей','From buyers'],sale:['🏪','
   life:['🏠','Жизнь','Living costs'],ipf:['📄','Взносы ИП','Sole-trader contributions'],acc:['📒','Бухгалтер','Accountant'],tax:['🏛','Налог','Tax'],int:['🏦','Проценты банку','Bank interest'],
   loan:['🏦','Платёж по кредиту','Loan repayment'],od:['⚠','Овердрафт','Overdraft'],build:['🏗','Стройка','Construction'],fix:['🏭','Постоянные расходы объектов','Sites’ fixed costs'],
   adm:['🏢','Офис','Head office'],log:['🚂','Перевозки и доставка','Freight & delivery'],con:['🤝','Контракты','Contracts'],mkt:['📈','Продажи на рынке','Market sales'],prod:['⛏','Добыча и передел','Production'],
-  fr:['👥','Друзья и совместные дела','Friends & joint ventures'],re:['🏡','Недвижимость и ипотека','Property & mortgage'],own:['🎓','Дела хозяина','Owner’s affairs'],act:['✋','Ваши действия','Your actions'],oth:['📝','Прочее','Other']};
+  fr:['👥','Друзья и совместные дела','Friends & joint ventures'],re:['🏡','Недвижимость и ипотека','Property & mortgage'],own:['🎓','Дела хозяина','Owner’s affairs'],act:['✋','Ваши действия','Your actions'],oth:['📝','Прочее','Other'],dv:['📈','Дивиденды','Dividends']};   /* b2-fix Х2-7 */
 const kN=k=>{const x=K[k]||K.oth;return T(x[1],x[2]);},kI=k=>(K[k]||K.oth)[0];
 const lc=t=>{t=String(t);return /^[A-ZА-ЯЁ]{2}/.test(t)?t:t.charAt(0).toLowerCase()+t.slice(1);};   // «Взносы ИП» → «взносы ИП»
 // «каждодневные» виды — в ленте сворачиваются в строку «за день»

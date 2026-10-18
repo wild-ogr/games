@@ -624,7 +624,7 @@ function finSum(w,el){const wide=isWide(el),r=w.reps[w.reps.length-1],p=w.reps[w
     <button data-a="go" data-v="reps"><span class="lic">${LIC.doc}</span><div class="li"><b>${L('Полные отчёты','Full reports')}</b><span>${L('прибыли и убытки (БДР), движение денег (ДДС), баланс, показатели, история','P&L, cash flow, balance, ratios, history')}</span></div><span class="chev">›</span></button>
     ${early?`<div class="f-lock" style="padding:12px 14px;color:var(--muted);font-size:16px">🔒 ${L('Банк и соперники откроются со своим делом — в главе 2. Пока копим и берём заказы.','Bank and rivals open with your own business — in chapter 2. For now we save and take jobs.')}</div>`:''}
     ${early?'':`<button data-a="go" data-v="bank"><span class="lic">${LIC.bank}</span><div class="li"><b>${L('Банк и кредиты','Bank & loans')}</b><span>${w.loans.length?`${L('Долг','Debt')} ${FMT.money(debtOfW(w))} · ${L('платёж','payment')} ${FMT.money(pay)} ${L('в конце месяца','at month end')}`:`${L('Долгов нет · банк даст до','No debt · the bank lends up to')} ${FMT.money(o.max)}`}</span></div><span class="chev">›</span></button>`}
-    ${early?'':`<button data-a="go" data-v="riv"><span class="lic">${LIC.cup}</span><div class="li"><b>${L('Соперники и рейтинг','Rivals & leaderboard')}</b><span>${rv.length>1?L('Вы','You are')+' '+pos+L('-й из',' of')+' '+rv.length:L('соперники появятся в «Недрах»','rivals appear in Mining')} · ${L('стоимость','value')} ${FMT.money(GAME.value())}</span></div><span class="chev">›</span></button>`}</div>`;
+    ${early?'':`<button data-a="go" data-v="riv"><span class="lic">${LIC.cup}</span><div class="li"><b>${L('Соперники и рейтинг','Rivals & leaderboard')}</b><span>${rv.length>1?L('Вы','You are')+' '+pos+L('-й из',' of')+' '+rv.length:(window.B2&&B2.rivals&&B2.rivals(w).firms.length?B2.rivals(w).firms.map(f=>L(f.n,f.en)).join(', ') /* b2-rival */:L('соперники появятся в «Недрах»','rivals appear in Mining'))} · ${L('стоимость','value')} ${FMT.money(GAME.value())}</span></div><span class="chev">›</span></button>`}</div>`;
   const rng=[[3,L('3 мес','3 mo')],[6,L('6 мес','6 mo')],[12,L('Год','Year')],[0,L('Всё','All')]];
   const chW=wide?Math.round((cw-18)*1.45/2.45)-34:cw-34;
   const ch=w.hist.length?`<div class="f-card"><div class="f-hdr"><b style="font-weight:600">${L('Выручка и прибыль','Revenue and profit')}</b><span class="f-mut">${FMT.uName(revSpec(st.rn).u)}</span></div>
@@ -737,6 +737,7 @@ const BOT_CH={cautious:['Осторожный семейный бизнес: б�
   calc:['Расчётливая: торгуется до последнего, но не переплачивает.','Calculating: bargains hard but never overpays.'],
   wood:['Лесной и мирный: пилит лес в Карелии и никого не трогает.','Woodland and peaceful: saws timber in Karelia and bothers no one.']};
 function finRiv(w,el){let h=topBar('sum',L('Соперники и рейтинг','Rivals & leaderboard'),L('стоимость компании = капитал','company value = equity'));
+  if(window.B2&&B2.html)h+=B2.html('riv',{W:w});   /* b2-rival: соперники в городе (гнездо riv) */
   const me={you:1,n:L('Вы','You'),who:L('ваш холдинг','your holding'),v:GAME.value(),k:w.obj.length,col:CV.eq};
   const rows=[me].concat(w.bots.map(b=>{const d=E.BOTS.find(x=>x.id===b.id)||{};return {id:b.id,n:NM.bot(b.id),who:NM.who(b.id),v:E.botValue(w,b),k:b.as.length,col:botCol(b.id),ch:d.ch};}));
   rows.sort((a,b)=>b.v-a.v);
@@ -758,7 +759,7 @@ function go(el,v){const was=st.fv;st.fv=v;renderFin(el);if(was!==v)scrollTop0(el
 function renderFin(el,tab){if(!el)return;css();lastF=el;if(tab)st.fv=VIEWS[tab]||tab;const w=Wd();if(!w){el.innerHTML='';return;}
   let v=st.fv||'sum';if(v==='rep'&&isWide(el))v='reps';if(v==='reps'&&!isWide(el)&&st.fv==='rep')v='rep';
   const body=v==='cash'&&window.CASHUI?topBar('sum','📅 '+L('Деньги на 30 дней','Money for 30 days'),L('что придёт и что уйдёт — по дням','what comes in and goes out — day by day'))+CASHUI.finHtml(w):v==='profit'?finProfit(w,el):v==='reps'?finReps(w,el):v==='rep'?finRep1(w,el):v==='bank'?topBar('sum',L('Банк и кредиты','Bank & loans'),L('ставки, лимит и ваши кредиты','rates, limit and your loans'))+finBank(w):v==='riv'?finRiv(w,el):finSum(w,el);
-  el.innerHTML=`<div class="fin${isWide(el)?' f-wide':''}">${body}</div>`;
+  el.innerHTML=`<div class="fin${isWide(el)?' f-wide':''}">${body}</div>`;try{if(v==='sum')B2.emit('finSum',el,w);}catch(e){}   /* b2-juice */
   el.onclick=e=>{const b=e.target.closest('[data-a]');if(!b||!el.contains(b)||b.disabled)return;const a=b.dataset.a;if(a==='nop')return;snd('tap');
     if(a==='go'){go(el,b.dataset.v);}
     else if(a==='kpi'){const k=b.dataset.v;if(k==='np')go(el,'profit');else if(k==='debt')go(el,'bank');else if(k==='val')go(el,'riv');else{CH['fin:cash']=CH['fin:cash']||{mk:cashSpec};openChart('fin:cash');}}

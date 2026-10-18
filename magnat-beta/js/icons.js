@@ -216,5 +216,7 @@ function onMut(list){if(busy)return;busy=true;try{for(var i=0;i<list.length;i++)
   finally{busy=false;}}
 function start(){bodyCls();walk(document.body);try{new MutationObserver(onMut).observe(document.body,{childList:true,subtree:true,characterData:true});}catch(e){}
   if(!RM)document.body.classList.add('lk-anim');}
+/* b2-polish */ ICONS.add=function(g,m){var k;for(k in g)if(!G[k])G[k]=g[k];for(k in m)if(!MAP[k]&&G[m[k]])MAP[k]=m[k];keys=Object.keys(MAP).sort(function(a,b){return b.length-a.length;});
+/* b2-polish */ RE=new RegExp('('+keys.map(function(x){return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}).join('|')+')\uFE0F?','g');ICONS.list=Object.keys(G);if(document.body&&document.readyState!=='loading')walk(document.body);};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();

@@ -549,6 +549,7 @@ function openAsk(qid){const w=W();if(!w||!w.fr)return false;const q=w.fr.q.find(
     :`<div class="st-hd">${pic(wh,s.m,72)}<div><b>${esc(nm(wh))}</b><small>${esc(who(wh).sub)}</small></div></div>`;
   const title=TITLE[q.k]?T(TITLE[q.k][0],TITLE[q.k][1]):'';
   let h=(title?`<h2>${title}</h2>`:'')+hd+`<p class="st-say">${esc(s.tx)}</p><div class="row">`;
+  if(window.B2&&B2.story&&B2.story.ep)h=B2.story.ep(q,title,h);   /* b2-story: «Сезон · Серия N» */
   for(const op of ops){const x=s.o[op.o]||[T('Да','Yes'),''],ok=op.ok===true;
     h+=`<div><button class="btn w${op.o==='a'&&ok?' accent':''}${spendO(q,op.o)?' noenter':''}" data-o="${op.o}"${ok?'':' disabled'}>${esc(x[0])}${ok?'':`<span class="st-why">${esc(why(op.ok))}</span>`}</button>${x[1]?`<p class="st-hint">${esc(x[1])}</p>`:''}</div>`;}
   if(!q.big)h+=`<button class="btn w noenter" data-x="1">${T('Ответить позже','Answer later')}</button>`;
@@ -562,6 +563,7 @@ function answer(q,o){let r;try{r=GAME.act('friendAnswer',q.id,o);}catch(e){conso
   if(q.k==='reu'||q.k==='pro'){close();const c=r.cr?` +${r.cr} 💎`:'',cu=r.cup==='you'?T(' · 🏆 кубок ваш',' · 🏆 the cup is yours'):'';
     toast('🥂 '+T('За встречу!','Cheers!')+c+cu+' · '+T('фото — в Кабинете ★','photo — in the Office ★'));try{CAB.badge();}catch(e){}next();return;}
   open(`<div class="st-hd">${pic(wh,af.mood,72)}<div><b>${esc(nm(wh))}</b><small>${esc(who(wh).sub)}</small></div></div><p class="st-say">${esc(af.tx)}</p>${af.toast?`<p class="st-toast">${esc(af.toast)}</p>`:''}<div class="row"><button class="btn w accent" data-x="1">${T('Хорошо','OK')}</button></div>`);
+  if(window.B2&&B2.story&&B2.story.nx)B2.story.nx(q,r);   /* b2-story: «В следующей серии…» */
   bind('[data-x]',()=>{close();next();});}
 // встреча выпускников: «Кто из нас дальше»
 const PH={owl:[['Считаю: ты догонишь. А я считаю точно.','My maths says you’ll catch up. And my maths is exact.'],['Горжусь тобой. И чуть-чуть завидую.','Proud of you. And a tiny bit jealous.']],
@@ -764,7 +766,7 @@ function openIpoScene(qid){const w=W();const q=w&&w.fr&&w.fr.q.find(x=>x.id===qi
       +((r=>r&&r.dv>0?`<p class="st-hint" style="text-align:center">📈 ${T(`Акции холдинга №${r.hold} остаются у вас: дивиденды ≈ ${money(r.dv)} в месяц пойдут в новый холдинг.`,`You keep shares in Holding No. ${r.hold}: dividends of about ${money(r.dv)} a month flow into the new holding.`)}</p>`:'')(Array.isArray(S.fame)?S.fame[S.fame.length-1]:null))   /* M47c */
       +`<p class="st-hint" style="text-align:center">${T('Фото — в «Зале славы». Людмила Санна не скрывает слёз.','The photo goes to the Hall of Fame. Lyudmila Sanna doesn’t hide her tears.')}</p>`
       +(typeof socBragHtml==='function'?socBragHtml('ipo'):'')+`<div class="row"><button class="btn w accent noenter" data-ok="1">${T('Спасибо всем!','Thank you all!')}</button></div>`;
-    open(h,draw);
+    open(h,draw);try{B2.emit('ipoScene',a,qid);}catch(e){}   /* b2-juice */
     bind('[data-pk]',el=>{const k=el.dataset.pk;if(GAME.perkPick(k)==='ok'){snd('coin');{const n=window.META&&META.pkName?META.pkName(k):k;picked=picked?picked+', '+n:n;}try{toast('⭐ '+picked);}catch(e){}draw();}});
     bind('[data-ok]',()=>{if(F.tp.anchor===1&&!F.tp.paid){F.tp.paid=1;try{GAME.addCr(10,'anchor');}catch(e){}}answer(q,'a');});}
   draw();return true;}
@@ -810,6 +812,7 @@ function awayAuto(){const c=document.getElementById('mcard');if(!c||c._stObs||ty
 const hasPhone=()=>!!window.PHONE;
 let shown={},bigT=0;
 // спокойный момент для большой сцены: нет окна, паузы, рекламы, открытого телефона и первых шагов обучения
+{const f0=calmNow;calmNow=function(){return f0()&&(!window.b2Calm||b2Calm());};}   /* b2-first: после окна утром второстепенные окна ждут (B2F.calm) */
 function calmNow(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof winCalm==='function'&&!winCalm())return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
   try{if(GAME.hold&&GAME.hold.size)return false;}catch(e){}
   try{if(window.UI&&UI.tutStep&&UI.tutStep())return false;}catch(e){}
@@ -840,7 +843,7 @@ setTimeout(fallback,2500);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',awayAuto);else awayAuto();setTimeout(awayAuto,1500);
 // IPO: друзья переходят в новый холдинг (доверие, встречи, лента); займы и СП остались в прежней компании
 if(window.GAME&&GAME.doIpo&&E.storyCarry){const d0=GAME.doIpo;GAME.doIpo=function(){const w0=GAME.W,F0=w0&&w0.fr;const r=d0.apply(GAME,arguments);
-  if(r&&F0&&GAME.W&&GAME.W!==w0){try{E.storyCarry(GAME.W,F0,{hold:r.hold,eq:r.eq});GAME.act('storyTouch');}catch(e){console.error(e);}}return r;};}
+  if(r&&F0&&GAME.W&&GAME.W!==w0){try{E.storyCarry(GAME.W,F0,{hold:r.hold,eq:r.eq,t0:w0.t});/* b2-fix */GAME.act('storyTouch');}catch(e){console.error(e);}}return r;};}
 
 // M20: строка в окне «Закрытие месяца» (biz-ui.js closeExtra): сколько сэкономили друзья за этот месяц
 function closeLine(rep){const w=W();if(!w||!w.fr||!rep||!SY.monthGain)return '';let g=null;try{g=SY.monthGain(w,rep.m);}catch(e){g=null;}if(!g)return '';
@@ -849,4 +852,5 @@ function closeLine(rep){const w=W();if(!w||!w.fr||!rep||!SY.monthGain)return '';
 window.STORYUI={closeLine,who,msg,why,after,big,callLabel,call,hello,feed:feedApi,date,openFriends,openFriend,openAsk,openReunion,ask,feedTx:(f)=>feedTx(W(),f),
   prologue,prologueDue,openHero,openIpoScene,awayHtml,teaser:()=>teaser(),partner,G,heroName,hv,speaker:spk,title:k=>TITLE[k]?T(TITLE[k][0],TITLE[k][1]):'',
   lvName,pic,nm,jvName,pct,perkName,taxTx,relW,log:x=>logMsg(W(),x)};   // M18: для окна «Друзья» (js/friends-ui.js)
+window.STORYUI.SC=SC;window.STORYUI.TITLE=TITLE;window.STORYUI.ALLW=ALLW;   /* b2-story: тексты сцен краёв и финала */
 })();

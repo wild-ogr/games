@@ -73,8 +73,14 @@ window.NEDTXT=T;
 
 /* ---------------- окно события ---------------- */
 function evOf(W){return W&&W.nx&&W.nx.ev||null;}
+/* b2-fix Н-7: окно события, чей срок вышел под ним (Людмила решила сама), — закрыть и сказать, что выбрано */
+let evOpen=null;
+function evGone(){const W=w(),l=W&&W.nx&&W.nx.last;evOpen=null;hideModal();
+  if(l&&l.auto&&T[l.k]){let t='';try{t=T[l.k].o(l.a)[l.i];}catch(x){}toast('⏱ '+L(`Пока вы думали, срок вышел — Людмила выбрала: «${t}»`,`Time ran out while you were thinking — Lyudmila chose: “${t}”`),3500);}
+  else toast(L('Это решение уже принято','This decision has already been made'));}
+if(window.GAME&&GAME.on)GAME.on('day',()=>{if(!evOpen||typeof modalOn==='undefined'||!modalOn||!document.querySelector('#mcard [data-nev]'))return;const e=evOf(w());if(!e||e.id!==evOpen)evGone();});
 function open(){const W=w(),e=evOf(W);if(!W||!e)return false;const D=T[e.k];if(!D)return false;const a=e.a,adv=E.nedAdv(W),left=Math.max(0,e.x-W.t),opts=D.o(a),def=E.EVN[e.k].def;
-  try{(S.nevSeen||(S.nevSeen={}))[e.id]=1;save();}catch(x){}snd('alert');
+  try{(S.nevSeen||(S.nevSeen={}))[e.id]=1;save();}catch(x){}snd('alert');evOpen=e.id;
   modalH(`<h2>${D.ico} ${esc(D.t(a))}</h2><p>${D.d(a)}</p>
     <div class="say">${face(adv===0?'calm':'worry')}<div><p><b>${L('Людмила Санна','Lyudmila Sanna')}:</b> ${esc(D.why(a,adv))}</p></div></div>
     <div class="nev-o">${opts.map((t,i)=>`<button class="btn ${i===adv?'green':''} w noenter" data-nev="${i}" style="margin-top:8px">${esc(t)}${i===adv?`<small>${L('совет Людмилы','Lyudmila’s advice')}</small>`:''}</button>`).join('')}</div>
@@ -84,7 +90,7 @@ function open(){const W=w(),e=evOf(W);if(!W||!e)return false;const D=T[e.k];if(!
   document.querySelectorAll('#mcard [data-nev]').forEach(b=>b.onclick=()=>{const i=+b.dataset.nev,r=act('nedAns',i);
     if(r==='ok'){hideModal();snd('coin');toast(D.ico+' '+L('Решено: ','Done: ')+opts[i]);}
     else if(r==='cash'){snd('no');toast(L('Не хватает денег — можно взять кредит в «Финансах»','Not enough cash — you can take a loan in Finance'));}
-    else{snd('no');hideModal();}});
+    else{snd('no');evGone();}});
   $$('nevLater').onclick=()=>{snd('tap');hideModal();};return true;}
 // карточка на карте: ждёт решения + идущие торги
 function mapCard(){const W=w();if(!W||!W.ned)return '';let h='';const e=evOf(W);
@@ -95,7 +101,7 @@ function mapCard(){const W=w();if(!W||!W.ned)return '';let h='';const e=evOf(W);
 document.addEventListener('click',ev=>{const t=ev.target&&ev.target.closest?ev.target.closest('[data-nevo],[data-auco]'):null;if(!t)return;ev.preventDefault();ev.stopPropagation();snd('tap');
   if(t.dataset.nevo)open();else{const W=w(),a=W&&W.auc.find(x=>x.id===t.dataset.auco);if(a){try{UI.openRegion(a.r);}catch(x){}try{UI.openAuc(a.id);}catch(x){}}}},true);
 // само окно — один раз на событие, в спокойный момент (нет окон, обучения, пузыря Людмилы, рекламы)
-function quiet(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof winCalm==='function'&&!winCalm())return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
+function quiet(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(window.PHONE&&PHONE.isOpen)return false;/* b2-fix Х2-5: не поверх телефона */if(typeof winCalm==='function'&&!winCalm())return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
   try{if(UI.tutStep&&UI.tutStep())return false;}catch(x){}const a=$$('adv');if(a&&a.classList.contains('on'))return false;const d=$$('ad');if(d&&d.classList.contains('on'))return false;return true;}
 const aucSeen={};let busyT=0;
 setInterval(()=>{const W=w();if(!W||!W.ned)return;if(typeof modalOn!=='undefined'&&modalOn){busyT=Date.now();return;}if(Date.now()-busyT<2500||!quiet())return;
@@ -147,7 +153,8 @@ function frpBtns(){const W=w();if(!W||!W.ned||!E.frpList)return;const el=$$('scr
 document.addEventListener('click',ev=>{const t=ev.target&&ev.target.closest?ev.target.closest('[data-frp]'):null;if(!t)return;ev.preventDefault();ev.stopPropagation();frpOpen(t.dataset.frp);},true);
 try{GAME.on('change',()=>setTimeout(frpBtns,40));GAME.on('day',()=>setTimeout(frpBtns,40));document.addEventListener('click',()=>setTimeout(frpBtns,70));}catch(x){}
 /* M47c: дивиденды по акциям прошлых холдингов — Людмила объясняет один раз на холдинг (S.dvSeen = номер холдинга), в спокойный момент */
-function dvExplain(){const W=w();if(!W||!W.ned||!(W.dv>0)||!(W.nx&&W.nx.dvS)||(S.dvSeen|0)>=(W.hold|0)||!quiet())return false;   // после первой выплаты (закрытие месяца)S.dvSeen=W.hold|0;try{save();}catch(x){}snd('coin');
+function dvExplain(){const W=w();if(!W||!W.ned||!(W.dv>0)||!(W.nx&&W.nx.dvS)||(S.dvSeen|0)>=(W.hold|0)||!quiet())return false;   // после первой выплаты (закрытие месяца)
+  S.dvSeen=W.hold|0;try{save();}catch(x){}snd('coin');   /* b2-fix Х2-1: строка была съедена комментарием */
   const f=Array.isArray(S.fame)?S.fame:[],last=f[f.length-1];
   modal(`<h2>📈 ${L('Акции старого холдинга','Shares in your old holding')}</h2>
     <div class="say">${face('happy')}<div><p><b>${L('Людмила Санна','Lyudmila Sanna')}:</b> ${L(`Холдинг №${last?last.hold:W.hold-1} теперь на бирже, но часть акций осталась у вас. Компания делится прибылью с акционерами — платит <abbr class="gl" data-gl="divd">дивиденды</abbr>. Вам — <b>≈ ${M(W.dv)} в месяц</b>, и они приходят сюда, в новый холдинг, даже когда вы не в игре.`,`Holding No. ${last?last.hold:W.hold-1} is public now, but you kept part of its shares. The company shares profit with its shareholders — it pays dividends. You get <b>about ${M(W.dv)} a month</b>, paid here, into the new holding, even while you’re away.`)}</p>

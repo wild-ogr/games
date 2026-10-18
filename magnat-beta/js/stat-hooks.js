@@ -81,7 +81,7 @@ GAME.on('close',()=>{try{const w=W(),l=w&&w.lnk;if(!l||l.m<0||l.st)return;l.st=1
    ready — первый кадр после построения экрана (act считает модуль). cfg — тема, звук, спокойный режим. frame() не зовём: покадрового цикла нет (тик 250 мс).
    offer — показ кнопок «📺 … за рекламу» по местам (те же имена, что у STAT.place при нажатии), раз в 2 с: появилась на экране — +1 показ (модуль шлёт of_<место> с n не чаще раза в 20 с).
    cfm {k:'opt', a: show|yes|no} — подтверждения опта (M41: покупка машины ≥ 1 млн ₽, лишняя машина, продажа) — обёртка BIZUI.h.modalYes; 💎 — cfm {k:'cr'} в ui.js crAsk. */
-const EARN={ad:'ad',giftx2:'ad',passx2:'ad',sponsor:'ad',gift:'gift',pass:'chest',mile:'lvl',yearclose:'lvl',ipo:'lvl',pari:'oth'};
+const EARN={ad:'ad',giftx2:'ad',passx2:'ad',sponsor:'ad',gift:'gift',pass:'chest',mile:'lvl',yearclose:'lvl',ipo:'lvl',pari:'oth',b2first:'gift'};   /* b2-merge: конверт недели новичка (FIRST) = подарок дня */
 GAME.on('cr',(n,why)=>{try{if(n>0){const w=String(why||''),inAd=typeof adInCb!=='undefined'&&adInCb>0;STAT.earn(inAd&&(w==='rew'||w==='gift')?'ad':EARN[w]||'quest',n);}STAT.bal(GAME.cr()|0);}catch(e){}});
 const NOMV={no:1,cash:1,cr:1,wait:1,max:1};
 GAME.on('change',(n,r)=>{if(n&&r!=null&&r!==false&&!(typeof r==='string'&&NOMV[r]))STAT.move();});

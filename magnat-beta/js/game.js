@@ -33,7 +33,7 @@ const FMT={num,
   price(r,g){return num(E.price(GAME.W,r,g),0)+' ₽/'+NM.unit(g);}};
 // товары вне ECON.GOODS (щебень и песок карьеров «от ларька») — запасные названия, чтобы советник не падал (TypeError в окне закрытия месяца)
 const GX={grav:['Щебень','Gravel','т','t'],sand:['Песок','Sand','т','t']},gx=(g,i)=>{const x=GX[g];return x?x[en()?i+1:i]:String(g||'');};
-const NM={good:g=>E.GOODS[g]?(en()?E.GOODS[g].en:E.GOODS[g].n):gx(g,0),unit:g=>E.GOODS[g]?(en()?E.GOODS[g].ue:E.GOODS[g].u):gx(g,2),obj:t=>en()?E.OBJ[t].en:E.OBJ[t].n,
+const NM={good:g=>E.GOODS[g]?(en()?E.GOODS[g].en:E.GOODS[g].n):gx(g,0),unit:g=>E.GOODS[g]?(en()?E.GOODS[g].ue:E.GOODS[g].u):gx(g,2),obj:t=>!E.OBJ[t]?String(t)/* b2-krai2: объект края до загрузки профиля */:en()?E.OBJ[t].en:E.OBJ[t].n,
   reg:r=>en()?E.REGS[r].en:E.REGS[r].n,city:r=>en()?E.REGS[r].ce:E.REGS[r].city,
   bot:id=>{const b=E.BOTS.find(x=>x.id===id);return b?(en()?b.en:b.n):'';},who:id=>{const b=E.BOTS.find(x=>x.id===id);return b?(en()?b.whoe:b.who):'';}};
 
@@ -53,7 +53,7 @@ if(E.BIZ_ACH)Object.assign(ACH,E.BIZ_ACH);
 // новый игрок начинает с подработки (глава «Карьера»), если модель малого бизнеса подключена; иначе — сразу недра с обучением
 function newPlayer(){const pk=S.pk&&typeof S.pk==='object'?S.pk:{};return E.bizInit?E.newWorld({rags:true,pk}):E.newWorld({tut:true,pk});}
 let W=null,acc=0,lastRT=0,timer=0,offDone=false,saveT=0;const subs={};
-function emit(n,...a){for(const f of subs[n]||[]){try{f(...a);}catch(e){console.error(e);}}}
+function emit(n,...a){const go=()=>{for(const f of subs[n]||[]){try{f(...a);}catch(e){console.error(e);}}};if(E.pmRun&&W){E.pmClear();E.pmRun(W,go);}else go();}   /* b2-perf: кэш расчётов на рассылку (N5) */
 function valid(w){return !!w&&typeof w==='object'&&w.v===1&&w.inv&&Array.isArray(w.obj)&&w.mon&&w.plots;}
 function todayKey(){const d=new Date(nowMs());return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
 function isoWeek(ms){const d=new Date(ms);const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dn=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-dn);
@@ -82,7 +82,7 @@ function rbLoad(){if(RB)return RB;let o=null;try{o=JSON.parse(localStorage.getIt
 function rbStore(){try{localStorage.setItem(RB_KEY,JSON.stringify(RB));}catch(e){}}   // нет места — снимки живут в памяти до перезагрузки
 function rbClear(){rbLoad();RB.id=wid();RB.s=[];rbStore();}
 function rbHiUpd(){if(!W)return;const h=rbObj('rbHi'),k=wid();if(W.t>(h[k]||0))h[k]=W.t;}
-function rbReplay(){if(!W||!S.rbHi||typeof S.rbHi!=='object')return false;return W.t<=(S.rbHi[wid()]||0);}
+function rbReplay(){if(!W||!S.rbHi||typeof S.rbHi!=='object')return false;return (W.rbg|0)>0&&W.t<(S.rbHi[wid()]||0);}   /* b2-fix Р-1: только после отката и строго раньше дальнего дня (было <= — 💎 встреч/пари/IPO не давались никогда) */
 function rbSnap(){if(!W||typeof PACK==='undefined')return;const R=rbLoad(),id=wid();if(R.id!==id){R.id=id;R.s=[];}
   const o=Object.assign({},W);delete o.reps;delete o.hist;delete o.news;let w;try{w=JSON.stringify(PACK.packSafe(o));}catch(e){return;}
   R.s=R.s.filter(x=>x&&x.t<W.t&&x.m<W.m);R.s.push({m:W.m,t:W.t,c:Math.round(W.cash),d:Math.round(E.debtOf(W)),e:Math.round(E.equity(W)),w});
@@ -118,7 +118,8 @@ function handle(out,off,ruin){for(const e of out){
     else{emit('close',e.rep);rbSnap();}}
   else if(e.k==='own'){emit('own',e);if(e.w==='visit')emit('ownVisit',{fr:e.a,off:!!off,r:e.fr||null});}   // M17: дела хозяина (js/owner.js); ownVisit — хук для модуля друзей: «сходил в гости к другу» (fr — owl|beav|bars|vit)
   else if(!off){if(e.k==='found')emit('found',e.p);else if(e.k==='built')emit('built',e.o);else if(e.k==='upgraded')emit('upgraded',e.o);else if(e.k==='auc')emit('auc',e.a,e.res);else if(e.k==='gig')emit('gig',e);}}}
-function dayStep(){let out;const s0=W.san|0;try{out=E.tick(W,false);}catch(e){broken(e);return;}handle(out,false,(W.san|0)>s0);rbHiUpd();persist();emit('day');}   // M48rb: рост W.san — санация (оба пути)
+function dayStep(){const b2t=performance.now();try{dayStep0();}finally{if(window.B2)B2.dayMs(performance.now()-b2t);}}   /* b2-core: STAT slow — долгая смена дня */
+function dayStep0(){let out;const s0=W.san|0;try{out=E.tick(W,false);}catch(e){broken(e);return;}handle(out,false,(W.san|0)>s0);rbHiUpd();persist();emit('day');}   // M48rb: рост W.san — санация (оба пути)
 // сломанное сохранение: не затираем молча — копия в резерв, окно «исправить / начать заново»
 let brokenOn=false;
 function broken(e){if(brokenOn)return;brokenOn=true;GAME.hold.add('broken');try{console.warn('magnat: мир не грузится',e);}catch(x){}
@@ -138,12 +139,14 @@ function loop(){const now=performance.now(),dt=Math.min(3000,now-lastRT)*(spd()|
   if(GAME.running()){acc+=dt;let dm=dayBase();while(acc>=dm&&GAME.running()){acc-=dm;dayStep();dm=dayBase();}}}
 function shiftMs(){return typeof PAY!=='undefined'&&PAY.own&&PAY.own('manager')?SHIFT_MGR:SHIFT;}
 function runOffline(el){const cap=shiftMs(),use=Math.min(el,cap),days=Math.floor(use/OFF_DAY_MS);if(days<1)return null;
-  let sum;try{E.offSnap=rbSnap;sum=E.offline(W,days);}catch(e){broken(e);return null;}finally{E.offSnap=null;}rbHiUpd();checkAch();   // M48rb: снимок на начало каждого месяца и в офлайнеweekUpd();sum.el=el;sum.cap=cap;
+  let sum;try{E.offSnap=rbSnap;sum=E.offline(W,days);}catch(e){broken(e);return null;}finally{E.offSnap=null;}rbHiUpd();checkAch();   // M48rb: снимок на начало каждого месяца и в офлайне
+  weekUpd();sum.el=el;sum.cap=cap;   /* b2-fix О-2: строка была съедена комментарием */
   S.offMore=Math.floor(Math.min(Math.max(0,el-cap),cap)/OFF_DAY_MS);sum.more=S.offMore;S.lastT=nowMs();persist(true);emit('offline',sum);emit('change');return sum;}
-function offlineCheck(){if(offDone||!W)return;offDone=true;const now=nowMs(),last=S.lastT||0;
+function offlineCheck(){if(offDone||!W)return;let sum=null;try{sum=offlineCheck0();}finally{if(window.B2)B2.enter(sum);}}   /* b2-core: вход — очередь окон */
+function offlineCheck0(){offDone=true;const now=nowMs(),last=S.lastT||0;
   if(S.maxT&&now<S.maxT-60000){S.lastT=now;return;}         // часы перевели назад — ничего не начисляем
   const el=now-last;if(!last||el<60000){S.lastT=now;return;}
-  runOffline(el);}
+  return runOffline(el);}
 document.addEventListener('visibilitychange',()=>{if(!W)return;if(!document.hidden){lastRT=performance.now();const now=nowMs(),el=now-(S.lastT||now);
   if(S.maxT&&now<S.maxT-60000){S.lastT=now;return;}if(el>=60000)runOffline(el);S.lastT=now;}else persist(true);});
 
@@ -167,7 +170,8 @@ const GAME={get DAY_MS(){const b=dayBase();return b/(spd()||1);},get DAY_BASE(){
       // M25: деньги действия игрока — под тегом «a.действие[.кто]» (раскрытие строк отчётов); проданное — запомнить, чем было
       const a0=typeof a[0]==='string'&&a[0].length<24?a[0]:'',t0=E.tg?E.tg('a.'+name+(a0?'.'+a0:'')):'';
       if(a0&&/sell|Sell/.test(name)&&E.dtName){const b=(W.biz||[]).find(x=>x.id===a0)||W.obj.find(x=>x.id===a0)||(Array.isArray(W.re)?W.re:[]).find(x=>x.id===a0);if(b)E.dtName(W,b.id,(b.t||b.cls)+'.'+(b.c||b.r||''));}
-      try{r=E[name](W,...a);}finally{if(E.tg)E.tg(t0);}}
+      const pd=E.PM?E.PM.d:0;if(pd)E.PM.d=0;   /* b2-perf: действие меняет мир — без кэша */
+      try{r=E[name](W,...a);}finally{if(E.tg)E.tg(t0);if(pd){E.PM.d=pd;E.pmClear();}}}
     checkAch();persist(true);emit('change',name,r,a);return r;},
   cr(){return S.cr||0;},
   addCr(n,why){if(RB_REPLAY[why]&&rbReplay()){persist(true);emit('change');return;}   // M48rb: 💎 «по ходу времени» за прожитые до отката дни — один раз
@@ -229,20 +233,22 @@ const CAL=[3,3,5,5,8,8,0],CAL7_CR=15,CAL7=['em_star','fr_ribbon','fr_silver','em
 function PL(){let p=S.pl;if(!p||typeof p!=='object'||Array.isArray(p))p=S.pl={};if(typeof p.cal!=='number')p.cal=0;if(typeof p.str!=='number')p.str=0;
   if(!p.c||typeof p.c!=='object')p.c={close:0,prof:0};if(!Array.isArray(p.t))p.t=[];planRoll(p);return p;}
 function planRoll(p){const d=dayN();if(p.d===d)return;
-  if(typeof p.last==='number'&&d-p.last>=2){p.cal=Math.max(0,p.cal-1);p.str=Math.floor(p.str/2);p.miss=1;}else p.miss=0;
+  if(typeof p.last==='number'&&d-p.last>=2&&!b2og(p,d)){p.cal=Math.max(0,p.cal-1);p.str=Math.floor(p.str/2);p.miss=1;}else p.miss=0;/* b2-event: b2og */
   p.d=d;p.got=0;p.gv=0;p.x2=0;p.all=0;p.t=W?planTasks():[];p.h=wid();}
+/* b2-event: отгул (табель 28) — 1 пропущенный день в ISO-неделю прощается, клетка не отступает; S.b2e.og — неделя отгула. Здесь, а не в b2-event.js: planRoll идёт до загрузки потоков */function b2og(p,d){if(typeof B2==='undefined'||B2.off('event'))return false;const o=B2.s('e'),w=isoWeek(nowMs());if(d-p.last===2&&o.og!==w){o.og=w;p.og=1;return true;}p.og=0;return false;}
 function wid(){return W?W.hold+':'+(S.rst||0):'';}
 // забрать подарок дня: вернёт число 💎 (украшение — 0, его id в p.gi)
 function planGift(){if(!W)return 0;const p=PL();if(p.got)return 0;const c=p.cal;let n=CAL[c]||0;p.gi='';
   if(!n){const id=CAL7.find(x=>!cosHas(x));if(id){cosGive(id);p.gi=id;}else n=CAL7_CR;}
   p.got=1;p.gv=n;p.gc=c;p.last=p.d;p.str++;p.cal=(c+1)%CAL.length;if(n)GAME.addCr(n,'gift');else{persist(true);emit('change');}return n||0;}
+{const f0=planGift;planGift=function(){const r=typeof window!=='undefined'&&window.B2F&&B2F.calSwap?B2F.calSwap():null;return r==null?f0():r;};}   /* b2-first: неделя новичка — конверт вместо клетки CAL */
 // «📺 удвоить подарок» — раз в день, после подарка; зовётся ТОЛЬКО из колбэка досмотра. За украшение — +10 💎
 function planX2Ok(){const p=PL();return !!p.got&&!p.x2;}
 function planX2(){if(!planX2Ok())return 0;const p=PL();p.x2=1;const n=p.gv||X2_ITEM;GAME.addCr(n,'giftx2');return n;}
 /* поручения дня: 3 штуки под текущую главу, выполнимы за 1–2 захода. m — счётчик (прогресс = m − база на момент выдачи), need — сколько нужно */
 const TM={ip:W=>W.ip||W.reg&&W.reg.k==='ip'?1:0,bike:W=>W.me&&W.me.eq&&W.me.eq.bike?1:0,gigs:W=>W.me?W.me.ng:0,close:()=>S.pl.c.close,prof:()=>S.pl.c.prof,pts:W=>W.biz.filter(b=>E.SMALL.indexOf(b.t)>=0).length,city:W=>W.cities?W.cities.length:1,
   expl:W=>W.stat.expl,build:W=>W.stat.built,lic:W=>{let n=0;for(const r of E.REG)for(const p of W.plots[r])if(p.own==='you')n++;return n;},sold:W=>W.stat.sold,eq:W=>E.equity(W)};
-function taskPool(){const st=W.st||'nedra',c=W.cash,eq=Math.max(1,E.equity(W)),o=[];
+function taskPool(){if(GAME.b2flow&&GAME.b2flow())return [];/* b2-event: Поток заданий вместо поручений */const st=W.st||'nedra',c=W.cash,eq=Math.max(1,E.equity(W)),o=[];
   const mr=()=>{const r=W.reps[W.reps.length-1];return r?r.pl.rev:0;};
   // глава 1: месяц = 10 мин — «закрыть 2 месяца» слишком долго для поручения на сегодня
   o.push({k:'close',need:st==='gig'?1:2,cr:TASK_CR});o.push({k:'prof',need:1,cr:TASK_CR});
@@ -257,7 +263,7 @@ function taskPool(){const st=W.st||'nedra',c=W.cash,eq=Math.max(1,E.equity(W)),o
     if(mr()>0)o.push({k:'sold',need:Math.max(1e6,Math.round(mr()*.6/1e6)*1e6),cr:TASK_CR});
     o.push({k:'eq',need:.03,cr:TASK_CR,pct:1});}
   return o;}
-function planTasks(){if(!W)return [];const pool=taskPool(),out=[];const first=pool.shift();out.push(first); // «закрыть 2 месяца» — всегда
+function planTasks(){if(!W||GAME.b2flow&&GAME.b2flow())return [];/* b2-event */const pool=taskPool(),out=[];const first=pool.shift();out.push(first); // «закрыть 2 месяца» — всегда
   while(out.length<3&&pool.length){const i=Math.floor(Math.random()*pool.length);out.push(pool.splice(i,1)[0]);}
   for(const t of out){t.b=TM[t.k](W);t.ok=0;}return out;}
 function taskCur(t){if(!W)return 0;const v=TM[t.k](W);return t.pct?(t.b>0?v/t.b-1:0):v-t.b;}
@@ -401,6 +407,7 @@ const LXC={plate:{ids:['car1','car2','car2b','suv'],cr:40,ico:'7️⃣',ru:'Но
   flag:{ids:['yacht'],cr:30,ico:'🚩',ru:'Флаг холдинга на яхте',en:'Holding flag on the yacht'},kennel:{ids:['dog'],cr:15,ico:'🏠',ru:'Будка-терем для Барона',en:'A carved kennel for Baron'},
   gframe:{ids:['paint1','paint2'],cr:20,ico:'🖼',ru:'Золочёная рама для картин',en:'Gilded frames for the paintings'},plaque:{ids:['gym11'],cr:25,ico:'🏅',ru:'Табличка «Почётный спонсор» на спортзале',en:'“Honorary sponsor” plaque on the gym'}};
 function wallAdd(k,o){const w=so('wall');if(w[k])return false;wsMig();w[k]=Object.assign({m:W?W.m:null,h:W?W.hold:1},o||{});S.wN=wallNew().length;return true;}
+GAME.wallAdd=wallAdd;   /* b2-cup: кубок лиги на полку */
 // M43: «новое на Стене» — не счётчик, а список увиденного S.wS={ключ:1} (облако — объединение): новое = есть на стене, но не увидено.
 // Миграция: всё, что на стене, кроме последних S.wN (старый счётчик), — уже увидено. S.wN оставлен как число для старых версий.
 function wsMig(){const s=so('wS');if(!S.wsV){const ks=Object.keys(so('wall')),n=Math.min(ks.length,Math.max(0,S.wN|0));for(const k of ks.slice(0,ks.length-n))s[k]=1;S.wsV=1;}return s;}

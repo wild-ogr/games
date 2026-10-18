@@ -226,7 +226,7 @@ function money0(x){return (x>0?'+':'')+M(x);}
 function chW(ch){return [L('нет истории','no history'),L('плохая','poor'),L('средняя','fair'),L('хорошая','good'),L('отличная','excellent')][E.chWord(ch)];}
 function lastPm(b){return b.pm&&b.pm.length?b.pm[b.pm.length-1]:null;}
 function bizDot(W,b){const B=E.BIZ[b.t];if(!B)return false;if(b.st==='b')return !!b.halt;if(b.down>0)return true;
-  if(b.pm.length>=2&&b.pm.slice(-2).every(x=>x<0))return true;if(B.sd&&b.t!=='flow'&&b.st==='w'&&(b.stk||0)<=0&&W.cash<5000)return true;return false;}
+  if(b.pm.length>=2&&b.pm.slice(-2).every(x=>x<0)&&!(b.pm.length>=6&&b.pm.slice(-12).reduce((a,x)=>a+x,0)>0))return true;   /* b2-polish: сезонный минус при плюсе за год — не «ждёт решения», без красной точки (STYLE.md §6) */if(B.sd&&b.t!=='flow'&&b.st==='w'&&(b.stk||0)<=0&&W.cash<5000)return true;return false;}
 function bizState(W,b){const B=E.BIZ[b.t];
   if(b.st==='b')return b.halt?L('стройка стоит — нет денег','construction stopped — no money'):(isPit(b.t)?L('строится','building'):L('открывается','opening'))+', '+L('ещё ','')+days(b.left)+L('',' left');
   if(b.down>0)return L('закрыта ещё ','closed for ')+days(b.down);
@@ -305,6 +305,7 @@ function openRest(){const W=w(),M0=W&&W.me;if(!M0)return;if(M0.rest>0||M0.out>0)
   try{modalRe=openRest;}catch(e){}
   $$('bzRN').onclick=()=>{snd('tap');hideModal();};$$('bzRY').onclick=()=>{hideModal();if(act('gigRest')==='ok'){snd('tap');toast(L('Выходной: завтра силы — до максимума','Day off: full energy tomorrow'));}};}
 function rToday(el){const W=w(),M0=W.me,st=W.st;let h='';
+  if(window.B2)h+=B2.html('top',{W});   /* b2-home: верх «Сегодня» — Улица (гнездо top) */
   // M30: глава 1 (первые 10 заказов) — только главное: панель, цель, деньги месяца, руки, одна строка Планёрки; глава 2 — главное сверху, остальное под «▼ Ещё»
   const e1=early1(),ch2=st==='small'&&!W.ned,g=E.goal(W),gOoo=!!(g&&g.k==='ooo');
   h+=pinBar(W);
@@ -315,6 +316,7 @@ function rToday(el){const W=w(),M0=W.me,st=W.st;let h='';
   if(W.st==='quarry'&&!W.ned)return q4Today(el,W,h);   // M34: «Сегодня» главы 4 — срочное, карьеры, деньги; хвосты глав 1–2 — под «▼ Ещё»
   const les=lesDue(W),lesH=les?`<button class="card tap bz-li" data-b="les" data-n="${les.n}" style="padding:14px 18px"><span class="bz-ic">📘<i></i></span><span class="f1"><b>${L('Школа Людмилы: урок ','Lyudmila’s school: lesson ')+les.n}</b><small>${esc(LES[les.n].t())}</small></span><span class="chev">›</span></button>`:'';
   h+=goalCard(W);
+  if(window.B2)h+=B2.html('goal',{W});   /* b2-home: под целью — строки потоков (гнездо home) и «Гонка 11 „Б“» */
   h+=lesH;   // M46 (владелец: точка на «Сегодня» горит, а урок-вопрос Людмилы спрятан под «▼ Ещё»): то, что ждёт игрока, — наверху, не под «Ещё»
   const nedraH=W.st==='quarry'&&E.nedraOk(W)?`<div class="card"><b>🎉 ${L('Можно в недра!','Ready for mining!')}</b><p class="bz-note">${L('Капитал и карьер готовы. Партнёр ждёт звонка.','Capital and quarry are ready. The partner is waiting for your call.')}</p><button class="btn accent w noenter" data-b="nedra" style="margin-top:10px">${L('Перейти в недра','Go to mining')}</button></div>`:'';
   if(ch2){   // M38 (a45): «Сегодня» главы 2 сжато до уровня главы 3 — цель, событие, Планёрка строкой, «к 30-му», остальное под «▼ Ещё»
@@ -350,8 +352,9 @@ function rToday(el){const W=w(),M0=W.me,st=W.st;let h='';
     // «Подарок дня» теперь в Планёрке (META, #metaSlot) — старую карточку giftCard() здесь не рисуем (был дубль)
     if(!e1){const open=!!S.tdMore;h+=`<button class="btn w noenter bz-more" data-b="tdmore" aria-expanded="${open?'true':'false'}" style="margin:6px 0 10px">${open?'▲ '+L('Свернуть','Collapse'):'▼ '+L('Ещё: ','More: ')+L('подарки, поручения, вехи, кабинет, кредиты','gifts, tasks, milestones, office, loans')}</button>`;
       if(open){h+='<div id="metaSlot2" data-keep="1" data-mtm="rest2"></div>';h+=borrowCard(W);}}}
+  if(window.B2)h+=B2.html('today',{W});   /* b2-core: гнездо «Сегодня» */
   if(!e1&&typeof socMoreHtml==='function')h+=socMoreHtml(); // VK с мостом: «🎲 Ещё игры во дворе»
-  put(el,h);
+  put(el,h);if(window.B2)B2.emit('today',el);
   // карточка «Планёрки»/вех (js/meta-ui.js, помощник Economy): META.card(el) сам перерисовывает содержимое слота
   const ms=$$('metaSlot');if(ms&&window.META&&typeof META.card==='function'){try{META.card(ms);}catch(e){console.error(e);}}
   const m2=$$('metaSlot2');if(m2&&window.META&&typeof META.card==='function'){try{META.card(m2);}catch(e){console.error(e);}}}
@@ -360,14 +363,16 @@ function q4Today(el,W,h){const M0=W.me;
   if(window.CASHUI)h+=CASHUI.todayLine(W);   // «К 30-му» с предупреждением «стройка встанет» — наверх
   h+=aucCard(W)||goalCard(W);h+=pitSum(W)+invCard(W,1);
   if(W.st==='quarry'&&E.nedraOk(W))h+=`<div class="card"><b>🎉 ${L('Можно в недра!','Ready for mining!')}</b><button class="btn accent w noenter" data-b="nedra" style="margin-top:10px">${L('Перейти в недра','Go to mining')}</button></div>`;
+  if(window.B2&&!B2.off('home')){const mo=!!S.mcMore;h+='<div id="metaSlot" data-keep="1" data-mtm="mini"></div>'+`<button class="btn w noenter bz-more" data-b="mcmore" aria-expanded="${mo?'true':'false'}" style="margin:0 0 10px">${mo?'▲ '+L('Свернуть «Этот месяц»','Collapse “This month”'):'▼ '+L('Этот месяц подробно','This month in detail')}</button>`+(mo?monthCard(W):'');}else   /* b2-home: гл.4 как гл.3 — Планёрка строкой, «Этот месяц» под ▼ */
   h+=monthCard(W)+'<div id="metaSlot" data-keep="1"></div>';
   const les=lesDue(W);if(les)h+=`<button class="card tap bz-li" data-b="les" data-n="${les.n}" style="padding:14px 18px"><span class="bz-ic">📘</span><span class="f1"><b>${L('Школа Людмилы: урок ','Lyudmila’s school: lesson ')+les.n}</b><small>${esc(LES[les.n].t())}</small></span><span class="chev">›</span></button>`;   // M46: урок — на виду
   if(window.FRUI&&FRUI.todayCard)h+=FRUI.todayCard(W);   // M46: в «Карьере» 5 вкладок — кнопки «Друзья» в меню нет, карточка друзей — на виду (не под «▼ Ещё»)
   const open=!!S.tdMore;const more=[L('доходы точек','outlet income'),L('налоги','taxes')];if(M0)more.push(L('время и дела хозяина','hands and owner’s tasks'));more.push(L('кредиты','loans'));
   h+=`<button class="btn w noenter bz-more" data-b="tdmore" aria-expanded="${open?'true':'false'}" style="margin:6px 0 10px">${open?'▲ '+L('Свернуть','Collapse'):'▼ '+L('Ещё: ','More: ')+more.join(', ')}</button>`;
   if(open){if(W.biz.length)h+=incomeCard(W);h+=taxCard(W);if(M0)h+=handsCard(W)+(window.OWNUI?OWNUI.ownCard(W)+OWNUI.eduCard(W):'');h+=borrowCard(W);}
+  if(window.B2)h+=B2.html('today',{W});   /* b2-core: гнездо «Сегодня» */
   if(typeof socMoreHtml==='function')h+=socMoreHtml();
-  put(el,h);const ms=$$('metaSlot');if(ms&&window.META&&typeof META.card==='function'){try{META.card(ms);}catch(e){console.error(e);}}}
+  put(el,h);if(window.B2)B2.emit('today',el);const ms=$$('metaSlot');if(ms&&window.META&&typeof META.card==='function'){try{META.card(ms);}catch(e){console.error(e);}}}
 // M34: идущие торги — одной карточкой с кнопкой ставки (вместо цели «Выиграть торги 50 %»)
 function aucCard(W){const p=W.opi.find(x=>x.st==='auc');if(!p||W.ned)return '';const ol=E.opiLim(W,p.id),nx=p.lead?p.pr+p.step:p.pr,me=p.lead==='you',dl=Math.max(0,p.end-W.t);
   return `<div class="card bz-goal" id="bzAucT"><div class="bz-lab">🔨 ${L('Идут торги — решайте','An auction is on — decide')}</div><div class="gh"><b>${esc(qn(T(p.nm)))} · ${esc(T(PG[p.g]))}</b></div><small>${L(`Цена ${M(p.pr)} · лидер — ${p.lead?rivN(p.lead):'пока никто'} · итог через ${days(dl)}`,`Price ${M(p.pr)} · leader — ${p.lead?rivN(p.lead):'nobody yet'} · ends in ${days(dl)}`)}</small>`+
@@ -553,6 +558,7 @@ function rGigs(el){const W=w(),M0=W.me;if(!M0){el.innerHTML='';return;}const H=E
   const soon=M0.gigs.length?Math.min(...M0.gigs.map(g=>g.left)):0;
   const bwhy=M0.out>0?WHY_G.out():M0.rest>0?WHY_G.rest():H.free<1?WHY_G.hand()+(soon?L(' — освободится через ',' — free in ')+days(soon):''):!live.length?L('Заказов пока нет','No jobs yet'):live.every(g=>E.gigCanTake(W,g)!=='ok')&&live.some(g=>E.gigCanTake(W,g)==='en')?L('Мало сил ⚡ — возьмите выходной 🛌','Low energy ⚡ — take a day off 🛌'):L('Нет подходящих заказов','No suitable jobs');
   const lowEn=!best&&M0.rest<=0&&M0.out<=0&&H.free>0&&live.some(g=>E.gigCanTake(W,g)==='en');
+  if(lowEn&&window.B2F)h+=`<button class="btn green w noenter bz-best" id="bzBest" disabled>✋ ${L('Мало сил ⚡ — отдохните','Low energy ⚡ — rest first')}</button><button class="btn w noenter" data-b="rest" id="bzRest" style="margin-top:8px">🛌 ${L('Взять выходной: силы до максимума','Take a day off: back to full')}</button>`;else   /* b2-first: «Лучший» не превращается в «выходной» под тем же пальцем */
   h+=lowEn?`<button class="btn w noenter bz-best" data-b="rest" id="bzBest">🛌 ${L('Сил мало — взять выходной: силы до максимума','Low energy — take a day off: back to full')}</button>`
     :`<button class="btn green w noenter bz-best" data-b="gbest" id="bzBest"${best?'':' disabled'}>✋ ${best?(window.innerWidth<380?L('Лучший','Best'):L('Взять лучший','Take the best'))+`: ${esc(low(gShort(best.t)))}, ${M(best.pay)}`:esc(bwhy)}</button>`;
   // M38 (a45): «Брать лучший заказ автоматически» — открывается после 3 заказов (E.abOk; M47 — главы 1–2), работает онлайн раз в день
@@ -572,7 +578,7 @@ function rGigs(el){const W=w(),M0=W.me;if(!M0){el.innerHTML='';return;}const H=E
   else if(M0.en<30)h+=`<div class="tip">⚡ ${L('Сил мало — риск сорвать заказ вдвое выше. Возьмите выходной (кнопка 🛌 вверху).','Low energy — twice the risk of failing an order. Take a day off (the 🛌 button at the top).')}</div>`;
   // второе дыхание и срочный заказ — одной карточкой
   const bOk=E.breathOk(W),uOk=E.urgentGigOk(W);   // M45: блок «Ускорители» — только в «Карьере» (в «Своём деле» второе дыхание и срочный заказ не работают)
-  if(W.st==='gig')h+=`<div class="bz-sec">${L('Ускорители','Boosts')}</div><div class="card"><b>⚡ ${L('Второе дыхание: +50 сил','Second wind: +50 energy')}</b><p class="bz-note">${bOk?L('Раз в игровую неделю.','Once per game week.'):L('Уже было на этой неделе.','Already used this week.')}</p><div class="btns">
+  if(W.st==='gig'&&!(window.B2F&&(M0.ng|0)<10))/* b2-first: «Ускорители» за 💎 — с 10-го заказа */h+=`<div class="bz-sec">${L('Ускорители','Boosts')}</div><div class="card"><b>⚡ ${L('Второе дыхание: +50 сил','Second wind: +50 energy')}</b><p class="bz-note">${bOk?L('Раз в игровую неделю.','Once per game week.'):L('Уже было на этой неделе.','Already used this week.')}</p><div class="btns">
     <button class="btn cr sm noenter" data-b="brCr"${bOk?'':' disabled'}>💎 ${E.CR_BIZ.breath}</button>${adL('breath')?`<button class="btn sm noenter" data-b="brAd"${bOk?adD('breath'):' disabled'}>📺 ${L('бесплатно за рекламу','free for an ad')}${bOk?adS('breath'):''}</button>`:''}</div>
     <div class="hr"></div><b>🔥 ${L('Срочный заказ: оплата ×1,5','Urgent order: pay ×1.5')}</b><p class="bz-note">${uOk?L('Раз в игровой месяц появится на доске.','Once a game month it appears on the board.'):L('В этом месяце уже был.','Already used this month.')}</p><div class="btns"><button class="btn cr sm noenter" data-b="urgCr"${uOk?'':' disabled'}>💎 ${E.CR_BIZ.urgent} — ${L('найти','find one')}</button>${adL('urg')?`<button class="btn sm noenter" data-b="urgAd"${uOk?adD('urg'):' disabled'}>📺 ${L('бесплатно за рекламу','free for an ad')}${uOk?adS('urg'):''}</button>`:''}</div></div>`;
   // постоянный клиент
@@ -648,7 +654,7 @@ function openGig(id){const W=w(),g=W&&W.me&&W.me.board.find(x=>x.id===id);if(!g)
   try{modalRe=()=>openGig(id);}catch(e){}
   $$('bzGN').onclick=()=>{snd('tap');hideModal();};$$('bzGT').onclick=()=>{hideModal();takeGig(id,o||undefined);};}
 function takeGig(id,o){const W=w(),g=W.me.board.find(x=>x.id===id);const r=o?act('gigTake',id,o):act('gigTake',id);
-  if(r==='ok'){delete gSel[id];snd('coin');buzz(15);toast(L('Взято: ','Taken: ')+low(gShort(g?g.t:''))+L(' — готово через ',' — done in ')+days(g?g.days:1),2200);}return r;}
+  if(r==='ok'){delete gSel[id];snd('coin');buzz(15);toast(L('Взято: ','Taken: ')+low(gShort(g?g.t:''))+L(' — готово через ',' — done in ')+days(g?g.days:1),2200);/* b2-mgcore */if(g&&window.MG)MG.after('gig',g.t,id);}return r;}
 const EQ_WHY={bike:()=>L('курьер на велосипеде: 3 700 вместо 3 100 за смену — окупится за ~30 смен','bicycle courier: 3,700 instead of 3,100 a shift — pays back in ~30 shifts'),
   laptop:()=>L('статьи пишутся за 2 дня вместо 3','articles take 2 days instead of 3'),tool:()=>{let a=4500;try{const W=w();a=E.gigMoney(W,'handy','').net;}catch(e){}const hi=(()=>{try{return w().me.rt>=4.7;}catch(e){return false;}})();return L(`открывает заказы «Мастер на час» — ${M(a)} за день${hi?' — уже с надбавкой +25 % за рейтинг ⭐ 4,7':' (с рейтингом ⭐ 4,7 — на 25 % больше)'}`,`unlocks handyman jobs — ${M(a)} a day${hi?' — already with the +25% bonus for a ⭐ 4.7 rating':' (with a ⭐ 4.7 rating — 25% more)'}`);},
   car:()=>L('такси на своей машине: 5 000 вместо 2 700 за смену; курьер — 5 000','taxi in your own car: 5,000 instead of 2,700 a shift; courier — 5,000'),
@@ -963,7 +969,10 @@ function advFresh(W,its){if(!ch3(W)||!its)return its;if(!S.advM||typeof S.advM!=
   const out=its.filter(x=>{if(x.k==='ok')return true;const m=S.advM[key(x)];return !(m!=null&&m<=W.m&&W.m-m<3);});for(const x of out.slice(0,2))if(x.k!=='ok')S.advM[key(x)]=W.m;
   const ks=Object.keys(S.advM);if(ks.length>40)for(const k of ks)if(!(W.m-S.advM[k]<3))delete S.advM[k];return out.length?out:its.filter(x=>x.k==='ok');}
 // ⏫ все точки до выгодного максимума (ECON.ptUpAllMax)
-function upAllPlan(W){try{return E.ptUpAllMax?E.ptUpAllMax(W,true):null;}catch(e){console.error(e);return null;}}
+// b2-perf (N5 шаг 4): на смене дня план «⏫ Все точки до максимума» берём прежний (тот же месяц, без действий игрока, не старше 3 игровых дней) — пересчёт на действие, открытие вкладки и раз в 3 дня
+let upEv='',upC=null;
+function upAllPlan(W){const re=upEv==='day'&&E.PM&&E.PM.d&&upC&&upC.W===W&&upC.gen===E.cpGen&&upC.m===W.m&&W.t-upC.t>=0&&W.t-upC.t<=3&&!E.pmOff();
+  if(re)return upC.p;let p=null;try{p=E.ptUpAllMax?E.ptUpAllMax(W,true):null;}catch(e){console.error(e);return null;}if(E.PM&&E.PM.d)upC={W,t:W.t,m:W.m,gen:E.cpGen,p};return p;}
 function upAllRow(W,p){p=p||upAllPlan(W);if(!p)return '';
   if(p.n)return `<button class="btn green w noenter" data-b="upall" id="bzUpAll" style="margin:6px 0">⏫ ${L(`Все точки до максимума · ${M(p.c)} · +${Mr(p.g)}/мес`,`All outlets to max · ${M(p.c)} · +${Mr(p.g)}/mo`)}</button>`;
   // M38: одно число «можно потратить» вместо «денег сверх запаса … не хватает» (читалось как противоречие при миллионах на счёте)
@@ -1057,7 +1066,7 @@ function rNet(el){const W=w();if(V.biz==='pt'&&(V.from==='net'||V.from==='opt'))
     return `<div class="bz-li"><span class="bz-ic">🏙</span><span class="f1"><b>${esc(cityN(c))}</b><small>${has?(c===(W.home||'kuz')?L('родной город','home town'):L('представительство открыто','office open')):L('аренда ×','rent ×')+num(E.CITY[c].rent,2)+' · '+L('спрос ×','demand ×')+num(E.CITY[c].dem,2)}</small></span>${has?'<span class="v good">✓</span>':`<button class="btn sm noenter" data-b="city" data-c="${c}"${W.ooo?'':' disabled'}>${L('Открыть','Open')} · ${M(1e6)}</button>`}</div>`;}).join('')+'</div>';
   if(W.st==='mid'){const eq=E.equity(W),has=E.quarrySale?E.quarrySale(W):W.biz.some(b=>b.t==='base')||W.biz.filter(b=>b.t==='truck').length>=2;
     h+=`<div class="card"><b>⛏ ${L('Следующая глава — «Карьер»','Next chapter — Quarry')}</b><div class="bz-ck">${ck(eq>=Q_EQ(),L('Капитал от ','Equity from ')+M(Q_EQ())+L(' — сейчас ',' — now ')+M(eq))}${ck(has,E.quarrySale?L('Свой сбыт: стройбаза или 2 оптовых бизнеса','Your own sales: a builders’ yard or 2 wholesale businesses'):L('Свой сбыт щебня: стройбаза или 2 самосвала','Your own gravel sales: a builders’ yard or 2 trucks'))}${ck(W.ch>=50,L('Кредитная история «хорошая» — сейчас «','Credit history “good” — now “')+chW(W.ch)+L('»','”'))}</div></div>`;}
-  el.innerHTML=h;}
+  el.innerHTML=h;try{B2.emit('net',el,W,{ptRow,bizDot,lastPm,bico,bn,cf:cityF(W),money0});}catch(e){}}   /* b2-juice */
 
 /* ---------------- M22: подряды стройбазы (модель — ECON.pcNew/pcTake/pcFore в js/biz.js) ---------------- */
 const PCCL=[['ЖК «Северный»','“Northern” housing estate'],['Дорожное управление','Road department'],['Завод ЖБИ','Concrete products plant'],['Коттеджный посёлок «Сосны»','“Pines” cottage village'],
@@ -1107,6 +1116,7 @@ function rPit(el){const W=w();if(V.biz==='pt'&&V.from==='pit'){const b=W.biz.fin
   h+=haltCard(W);
   for(const p of W.opi)if(p.st==='auc')h+=opiCard(W,p);
   h+=qeCard(W);
+  if(window.B2)h+=B2.html('pit',{W});   /* b2-quarry: тендеры, план квартала, разведка участков */
   const pits=W.biz.filter(b=>isPit(b.t));
   if(pits.length){h+=`<div class="bz-sec">${L('Ваши карьеры','Your quarries')}</div><div class="card bz-list">`+pits.map(b=>{const B=E.BIZ[b.t],p=lastPm(b);
       return `<button class="bz-li" data-b="bpt" data-id="${b.id}" data-from="pit"><span class="bz-ic">${bico(b.t)}${b.halt?'<i></i>':''}</span><span class="f1"><b>${esc(pnm(W,b))}</b><small>${b.st==='b'?esc(bizState(W,b))+' · '+L('осталось заплатить ','still to pay ')+M(Math.max(0,b.cost-b.paid))+(b.halt?'':' · '+L('заработает ≈ ','starts ≈ ')+inMon(W,Math.round((W.d+b.left)/30)).replace(/^в /,'')):(f=>L(`${num(f.q/1000,0)} тыс. т в месяц · себестоимость ${f.vc} ₽/т, цена ≈ ${num(f.price,0)} ₽/т`,`${num(f.q/1000,0)}k t a month · cost ${f.vc} ₽/t, price ≈ ${num(f.price,0)} ₽/t`))(E.pitFore(W,b))}${b.xu?' · '+L('расширяется','expanding'):''}</small>${b.st==='b'?prog(((b.tot||B.days)-b.left)/(b.tot||B.days)):''}</span><span class="v ${p==null?'':p>=0?'good':'bad'}">${p!=null?money0(p):'—'}</span></button>`;}).join('')+'</div>';}
@@ -1292,7 +1302,7 @@ function openNedra(){const W=w();if(!E.nedraOk(W))return;const Eq=E.equity(W),a=
     <p>${L('Роснедра приглашают к федеральным торгам. ','The federal agency invites you to national auctions. ')+(x=>x.charAt(0).toUpperCase()+x.slice(1))(pn.n)+L(' верит в вас и входит партнёром.',' believes in you and joins as a partner.')} ${riv}</p>
     <div class="facts"><span>${L('Ваш капитал','Your equity')}</span><b>${M(Eq)}</b><span>${L('Взнос партнёра','Partner’s stake')}</span><b>${M(a)}</b><span>${L('Ваша доля','Your share')}</span><b>${sh}${L(' %','%')}</b>
       <span>${L('На счёте после взноса','Cash after the stake')}</span><b>${M(cash+(sel?no.pr:0))}</b><span>${L('В точках и карьерах','Tied up in outlets and quarries')}</span><b>${M(Math.max(0,rest-(sel?no.bk:0)))}</b></div>
-    <p class="bz-note">${L(`Тратить можно только деньги на счёте. Первый угольный разрез стоит около ${M(pit)} — не хватит, банк даст проектный кредит, я помогу.`,`Only cash in the account can be spent. The first coal pit costs about ${M(pit)} — if it’s not enough, the bank gives a project loan; I’ll help.`)}</p>
+    <p class="bz-note">${L(`Тратить можно только деньги на счёте. Первый угольный разрез стоит около ${M(pit)}${cash>=pit*1.3?' — своих хватит, кредит не нужен.':' — не хватит, банк даст проектный кредит, я помогу.'}`,`Only cash in the account can be spent. The first coal pit costs about ${M(pit)}${cash>=pit*1.3?' — your own cash covers it, no loan needed.':' — if it’s not enough, the bank gives a project loan; I’ll help.'}`)}<!-- b2-fix N3 --></p>
     ${no?`<div class="card" style="margin:10px 0"><b>🏪 ${L(`Ваши точки: ${no.n} · прибыль ${M(no.last)} в месяц`,`Your outlets: ${no.n} · profit ${M(no.last)} a month`)}</b><p class="bz-note" style="margin:4px 0">${L(`Федеральная сеть купит их все за <b>${M(no.pr)}</b> (по учёту ${M(no.bk)} + ${no.k} месяцев прибыли). В недрах эти деньги работают быстрее, но точки уйдут навсегда, а эти виды 2 года не открыть.`,`A national chain will buy them all for <b>${M(no.pr)}</b> (book ${M(no.bk)} + ${no.k} months of profit). In mining the money works faster, but the outlets are gone for good and these types can’t be reopened for 2 years.`)}</p>
       <button class="sw noenter" id="bzNS"><span>${L('Продать точки при входе','Sell the outlets on entry')}<br><small class="mut">${sel?L(`+${M(no.pr)} на счёт`,`+${M(no.pr)} to the account`):L('можно решить и позже — в «Своём деле»','you can also decide later, in “My business”')}</small></span><i class="${sel?'':'off'}">${sel?L('да','yes'):L('нет','no')}</i></button></div>`:''}
     <div class="bz-ch"><ul><li>${L('Три региона: Кузбасс, Урал, Карелия — разведка и торги','Three regions: Kuzbass, Urals, Karelia — surveys and auctions')}</li><li>${L('Уголь, руда, лес, металл, медь; ж/д логистика','Coal, ore, timber, metal, copper; rail logistics')}</li><li>${L('Налог — 25 % с прибыли; карьер и всё, что не продали, остаётся в портфеле','Tax — 25% of profit; the quarry and whatever you keep stay in the portfolio')}</li></ul></div>
@@ -1333,6 +1343,7 @@ function openChapter(st,stH){const c=CHAP[st];if(!c)return;if(stH===undefined){s
   modal(`<div class="bz-ch"><div class="n">${L('Глава ','Chapter ')+c.n}</div><h2>${T(c.t)}</h2><ul>${c.li.map(x=>`<li>${esc(T(typeof x==='function'?x():x))}</li>`).join('')}</ul>${st==='small'?ch1Sum():''}</div>
     <div class="say">${UI.face('happy')}<div><p>${T(c.sayFn?c.sayFn()||c.say:c.say)}</p></div></div>${stH||''}${window.CAB&&CAB.chLine?CAB.chLine(st):''}${typeof socBragHtml==='function'?socBragHtml(st):''}<div class="row"><button class="btn green" id="bzChGo">${T(c.btn)}</button></div>`);
   try{modalRe=()=>openChapter(st,stH);}catch(e){}
+  try{B2.emit('chap',st);}catch(e){}   /* b2-juice */
   $$('bzChGo').onclick=()=>{snd('tap');hideModal();if(st==='gig'){S.tut.b_hi=1;save();}V.biz='list';UI.go(c.tab);};}
 
 /* ================= Школа Людмилы (8 уроков на числах игрока) ================= */
@@ -1759,7 +1770,7 @@ function render(cur,ev){const W=w();if(!W)return false;const mine=SCR.indexOf(cu
   if(W.ned&&mine&&!(cur==='biz'&&W.biz.length)){setTimeout(()=>UI.go('map'),0);return true;}
   if(!mine)return false;
   const def=UI.TAB_DEF.find(t=>t.id===cur);if(def&&!(cur==='biz'&&W.ned)){let ok=true;try{ok=def.show();}catch(e){}if(!ok){setTimeout(()=>UI.go(home()),0);return true;}}
-  if(drag&&ev==='day')return true;
+  if(drag&&ev==='day')return true;upEv=ev||'';   /* b2-perf */
   const el=$$('scr-'+cur);if(!el)return true;
   if(cur!=='gigs')gbKeep=null;
   if(cur==='today')rToday(el);else if(cur==='gigs')rGigs(el);else if(cur==='biz')rBiz(el);else if(cur==='net')rNet(el);else if(cur==='pit')rPit(el);

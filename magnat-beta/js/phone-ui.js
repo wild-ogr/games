@@ -362,7 +362,7 @@ function chatList(n){const ids=contacts().map(id=>({id,l:lastOf(id),u:unread(id)
 /* ---------------- экраны ---------------- */
 let nav=[{v:'home'}],isOn=false,embedEl=null;
 function isOpen(){return isOn;}
-function vHome(){return {t:T('Телефон','Phone'),h:appsHtml()+`<div class="ph-sec"><span>${T('Сообщения','Messages')}</span><button class="ph-lnk noenter" data-p="go" data-v="contacts">${T('Контакты','Contacts')}</button></div>`+chatList(6)
+function vHome(){return {t:T('Телефон','Phone'),h:appsHtml()+(window.B2?B2.html('phone',{W:W()}):'')+`<div class="ph-sec"><span>${T('Сообщения','Messages')}</span><button class="ph-lnk noenter" data-p="go" data-v="contacts">${T('Контакты','Contacts')}</button></div>`+chatList(6)
   +`<button class="btn w noenter ph-mt" data-p="go" data-v="chats">${ICO.chats}<span>${T('Все чаты','All chats')}</span></button>`};}
 function tabs(on){return `<div class="ph-tabs"><button class="noenter${on==='chats'?' on':''}" data-p="go" data-v="chats" data-r="1">${T('Чаты','Chats')}</button><button class="noenter${on==='contacts'?' on':''}" data-p="go" data-v="contacts" data-r="1">${T('Контакты','Contacts')}</button></div>`;}
 function vChats(){return {t:T('Чаты','Chats'),h:tabs('chats')+chatList(0)};}

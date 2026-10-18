@@ -204,7 +204,7 @@ function tkGather(W){const t=tkOf(W);if(!t)return 0;let n=0;for(const v of W.biz
   if(n&&t.auto)tkPlan(W);return n;}
 // газель главы 2 (малое дело gazel) → машина парка ТК (балансовая стоимость та же)
 function gazelToTk(W,id){const t=tkOf(W),b=W.biz.find(x=>x.id===id);if(!t||!b||b.t!=='gazel'||b.st!=='w')return 'no';
-  b.t='van';b.at=t.id;b.go='';b.k={};b.mgr=0;b.wr=b.wr||Math.min(40,(b.wm||0)*2);delete b.ld;if(t.auto)tkPlan(W);return 'ok';}
+  b.t='van';E.bixV=(E.bixV|0)+1;/* b2-perf: вид сменился — указатель заново */b.at=t.id;b.go='';b.k={};b.mgr=0;b.wr=b.wr||Math.min(40,(b.wm||0)*2);delete b.ld;if(t.auto)tkPlan(W);return 'ok';}
 // стройбаза зимой: лишние самосвалы — на вывоз снега через ТК
 function baseSnow(W,id){const t=tkOf(W),b=W.biz.find(x=>x.id===id);if(!t||!b||b.t!=='base')return 'no';const x=E.bizEcon(W,b,b.k,null,true),k=Math.floor(x.fr+.05);if(k<1)return 'none';
   const fl=fleet(W,b.id).filter(v=>v.st==='w').slice(-k);for(const v of fl){v.at=t.id;v.go='snow';}return fl.length?'ok':'none';}
@@ -235,12 +235,12 @@ function baseMan(W,b,s){if((b.up||0)<1)return null;const rev=s*MAN.add;return {r
 /* ---------------- связи ---------------- */
 function linkOn(W,o){return o&&o.t==='whs'&&o.st==='w'&&!(o.down>0)&&(o.wm||0)>=1;}
 // скидка закупки точке b от своих оптов: {d (с потолком), src:[{id,kd,d}]}
-function linkOf(W,b){const r={d:0,raw:0,src:[]};if(!b||W._noLink||W.ned&&!W.biz.length)return r;
-  for(const o of W.biz){if(!linkOn(W,o))continue;const kd=kdOf(o),L=LINKS[kd];if(!L||!L[b.t])continue;if(OPT_KEEP35&&kd==='food'&&BIZ[b.t].seg==='retail')continue;
+function linkOf(W,b){const r={d:0,raw:0,src:[]};if(!b||W._noLink||W.ned&&!W.biz.length)return r;const X=E.bix(W),WB=X?X.whs:W.biz;   /* b2-perf: только опты */
+  for(const o of WB){if(!linkOn(W,o))continue;const kd=kdOf(o),L=LINKS[kd];if(!L||!L[b.t])continue;if(OPT_KEEP35&&kd==='food'&&BIZ[b.t].seg==='retail')continue;
     let d=L[b.t]+((o.up||0)>=2&&LINK_UP2[kd]&&LINK_UP2[kd][b.t]||0);if(o.c&&b.c&&o.c!==b.c)d*=LINK_FAR;d*=optLoadK(W,o);r.raw+=d;r.src.push({id:o.id,kd,d});}
   const ch=E.chainDisc(W,b.t);r.d=Math.max(0,Math.min(r.raw,LINK_CAP,TOT_CAP-ch));
   // M44: ПВЗ — свой опт упаковки: штрафы за брак упаковки −30 % (не скидка закупки)
-  for(const o of W.biz){if(!linkOn(W,o))continue;const kd=kdOf(o),R=LINK_RK[kd];if(!R||!R[b.t])continue;let k=R[b.t];if(o.c&&b.c&&o.c!==b.c)k*=LINK_FAR;r.rk=Math.min(.5,(r.rk||0)+k);r.src.push({id:o.id,kd,d:0,rk:k});}
+  for(const o of WB){if(!linkOn(W,o))continue;const kd=kdOf(o),R=LINK_RK[kd];if(!R||!R[b.t])continue;let k=R[b.t];if(o.c&&b.c&&o.c!==b.c)k*=LINK_FAR;r.rk=Math.min(.5,(r.rk||0)+k);r.src.push({id:o.id,kd,d:0,rk:k});}
   return r;}
 function linkRk(W,b){if(W._noLink||W.optT>W.m)return 0;return linkOf(W,b).rk||0;}
 /* M44: «опт не успевает» — если свои точки закупают больше половины потолка склада, скидка своим уменьшается пропорционально.
@@ -250,7 +250,8 @@ function optLoad(W,o){const L=LINKS[kdOf(o)];if(!L)return 0;let c=OLC&&OLC.get(W
   if(c.v[o.id]!=null)return c.v[o.id];c.v[o.id]=0;let a=0;const nl=W._noLink;W._noLink=1;try{for(const b of W.biz)if(b.st==='w'&&L[b.t]){const x=E.bizEcon(W,b,b.k,null,true);a+=Math.max(0,x.vc||0);}}finally{if(nl)W._noLink=nl;else delete W._noLink;}
   c.v[o.id]=a;return a;}
 function optLoadK(W,o){if(W._olOff)return 1;const lim=optLim(o),a=optLoad(W,o);return a>lim*.5?lim*.5/a:1;}
-function linkDisc(W,b){if(W._noLink||W.optT>W.m)return 0;let ok=false;for(const o of W.biz)if(o.t==='whs'&&o.st==='w'){ok=true;break;}return ok?linkOf(W,b).d:0;}
+function linkDisc(W,b){if(W._noLink||W.optT>W.m)return 0;if(E.pm&&E.PM.d)return E.pm(W,'ld'+b.id+'|'+b.t+'|'+b.c,()=>linkDisc0(W,b));return linkDisc0(W,b);}   /* b2-perf */
+function linkDisc0(W,b){let ok=false;const X=E.bix(W);for(const o of X?X.whs:W.biz)if(o.t==='whs'&&o.st==='w'){ok=true;break;}return ok?linkOf(W,b).d:0;}
 // польза связей: разница прибыли точек со связью и без (₽/мес, этот месяц); [{from, kd, a, to:[{id,t,a}]}] + сумма
 function linkSum(W,m){const by={},out=[];let sum=0;
   for(const b of W.biz){if(b.st!=='w'||E.SMALL.indexOf(b.t)<0)continue;const lo=linkOf(W,b);if(!lo.d&&!lo.rk)continue;

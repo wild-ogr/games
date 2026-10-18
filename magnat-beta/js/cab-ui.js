@@ -214,7 +214,8 @@ const PHN={ph_gig1:['Первый заказ','First order','Выполните 
 function phInfo(k){const w=S.wall&&S.wall[k];if(k==='ph_meet_10')return {ico:'🎓',t:T('Пари 11 «Б»: встреча через 10 лет','The 11B bet: 10-year reunion'),who:['owl','beav','bars','vit'],w,ch:0,j:T('Поспорили, кто через пять лет будет богаче. Спор записан на салфетке, салфетка — у Сони.','We bet on who’d be richest in five years. The bet is written on a napkin; Sonya keeps the napkin.')};
   if(k.indexOf('ph_meet_')===0){const y=+k.slice(8);return {ico:'🎓',t:T('Встреча выпускников: '+y+' '+plural(y,'год','года','лет'),'Class reunion: '+y+' years'),who:['owl','beav','bars','vit'],w,ch:0,j:T('Все пришли. Даже Витя — вовремя.','Everyone came. Even Vitya — on time.')};}
   const p=GAME.PH.find(x=>x.k===k),n=PHN[k]||[k,k,'','','',''];return {ico:p?p.ico:'📷',t:T(n[0],n[1]),need:T(n[2],n[3]),j:T(n[4],n[5]),who:p?p.who:[],ch:p?p.ch:0,w,gold:GAME.phGold(k)};}
-function cupInfo(k){const w=S.wall&&S.wall[k]||{};if(k.indexOf('cup_w_')===0){const t=w.w|0,n=[[],['🥉','Бронза недели','Bronze of the week'],['🥈','Серебро недели','Silver of the week'],['🥇','Золото недели','Gold of the week']][t]||['🥉','',''];
+function cupInfo(k){const w=S.wall&&S.wall[k]||{};if(k.indexOf('cup_lg_')===0&&window.B2&&B2.cup&&B2.cup.info){const i=B2.cup.info(k,w);i.sub=wkLbl(k.slice(7));return i;}   /* b2-cup */
+  if(k.indexOf('cup_w_')===0){const t=w.w|0,n=[[],['🥉','Бронза недели','Bronze of the week'],['🥈','Серебро недели','Silver of the week'],['🥇','Золото недели','Gold of the week']][t]||['🥉','',''];
     return {ico:n[0],t:T(n[1],n[2]),sub:wkLbl(k.slice(6)),j:T('Капитал за неделю вырос — кубок на полку.','Equity grew over the week — a cup for the shelf.')};}
   if(k.indexOf('cup_11b_')===0){const y=+k.slice(8);return {ico:'🏆',t:T('Кубок 11 «Б»','Class 11B Cup'),sub:T('встреча «'+y+' '+plural(y,'год','года','лет')+'»',y+'-year reunion'),j:T('Капитал больше, чем у Бориса. Борис требует пересчёта.','Equity bigger than Boris’s. Boris demands a recount.')};}
   if(k.indexOf('cup_plan_')===0)return {ico:'🏆',t:T('Кубок Планёрки','Briefing Cup'),sub:wkLbl(k.slice(9)),j:T('Четыре недели подряд — «Ударник». Людмила Санна повесила кубок сама.','Four weeks in a row as “Worker of the week”. Lyudmila Sanna hung the cup herself.')};
@@ -233,7 +234,7 @@ const HR_CH={1:['lk0','w0'],2:['lk0','w0'],3:['suit1','watch1'],4:['brief','watc
 function heroAt(k,info){const A=ART(),me=A.me(),w=S.wall&&S.wall[k];if(w&&w.hr&&typeof w.hr==='object')return {g:me.g,st:w.hr.st||me.st,lk:w.hr.lk||me.lk,wt:w.hr.wt||me.wt};
   const ch=info&&info.ch;if(!ch||ch>=me.st)return me;const d=HR_CH[ch]||HR_CH[1];return {g:me.g,st:ch,lk:d[0],wt:d[1]};}
 function scn(k,info,got){const A=ART();if(!A)return `<b>${info.ico}</b>${faces(info.who)}`;return `<span class="cb-pic">${A.scene(k,{ghost:!got,hero:heroAt(k,info)})}</span>`;}
-function cupKind(k){const w=S.wall&&S.wall[k]||{};return k.indexOf('cup_w_')===0?['w',w.w|0]:k.indexOf('cup_11b_')===0?['11b',3]:k.indexOf('cup_plan_')===0?['plan',3]:k==='g_patron'?['patron',3]:k.indexOf('g_ud_')===0?['ud',3]:['w',3];}
+function cupKind(k){const w=S.wall&&S.wall[k]||{};return k.indexOf('cup_w_')===0||k.indexOf('cup_lg_')===0?['w',w.w|0]:k.indexOf('cup_11b_')===0?['11b',3]:k.indexOf('cup_plan_')===0?['plan',3]:k==='g_patron'?['patron',3]:k.indexOf('g_ud_')===0?['ud',3]:['w',3];}   /* b2-cup: кубок лиги cup_lg_ */
 function cupIco(k,emo){const A=ART();if(!A)return emo;const c=cupKind(k);return A.cup(c[0],c[1]);}
 function gramIco(info,got){const A=ART();return A?A.gram(got?info.ico:'?',{ghost:!got}):info.ico;}
 const dateTxt=w=>w&&typeof w.m==='number'?FMT.date(w.m)+(w.h>1?' · '+T('холдинг №','holding #')+w.h:''):'';
@@ -353,7 +354,7 @@ function open(t,from){css();if(!GAME.W)return;slotOpen='';
     nw=`<div class="cb-new"><b>🆕 ${T('Новое','New')}</b><ul>${li.join('')}</ul>${bt?'<div class="cb-row">'+bt+'</div>':''}</div>`;
     S.rwNew=[];try{GAME.wallSeen(nz.wall);}catch(e){}const sn=S.lxSeen&&typeof S.lxSeen==='object'?S.lxSeen:(S.lxSeen={});for(const id of nz.lx)sn[id]=1;try{save();}catch(e){}}
   const tm=n=>n?`<i class="cb-tn">${n>9?'9+':n}</i>`:'';
-  modal(`<h2>🏛 ${T('Кабинет','Office')}</h2>${nw}${top()}<div class="cb-tabs"><button class="noenter${tab==='lx'?' on':''}" data-cb="tab:lx">🛍 ${T('Вещи','Things')}${tm(nz.lx.length)}</button><button class="noenter${tab==='wall'?' on':''}" data-cb="tab:wall">🖼 ${T('Стена почёта','Wall of fame')}${tm(nz.wall.length)}</button><button class="noenter${tab==='rk'?' on':''}" data-cb="tab:rk">★ ${T('Звания','Ranks')}${tm(nz.rw)}</button>${window.FRUI?`<button class="noenter" data-cb="fr">👥 ${T('Друзья','Friends')}</button>`:''}</div>
+  modal(`<h2>🏛 ${T('Кабинет','Office')}</h2>${nw}${window.B2?B2.html('cab',{W:GAME.W,tab}):''}${top()}<div class="cb-tabs"><button class="noenter${tab==='lx'?' on':''}" data-cb="tab:lx">🛍 ${T('Вещи','Things')}${tm(nz.lx.length)}</button><button class="noenter${tab==='wall'?' on':''}" data-cb="tab:wall">🖼 ${T('Стена почёта','Wall of fame')}${tm(nz.wall.length)}</button><button class="noenter${tab==='rk'?' on':''}" data-cb="tab:rk">★ ${T('Звания','Ranks')}${tm(nz.rw)}</button>${window.FRUI?`<button class="noenter" data-cb="fr">👥 ${T('Друзья','Friends')}</button>`:''}</div>
     <div id="cbBody" style="--wf:${(GAME.cosCur('wf')||{c:'#8d5a2b'}).c}">${body}</div><div class="row"><button class="btn" id="cbClose" data-esc="1">${T('Закрыть','Close')}</button></div>`);
   try{modalRe=()=>open();}catch(e){}bind();badge();}
 /* M47: ×2 за рекламу за мелкое звание — в блоке «Новое» (до M38 была кнопка в окне награды). Один раз на строку; после выдачи строка уходит. */
@@ -439,7 +440,7 @@ function show(o){css();rw=o;lastRw=Date.now();const e=(o.cr||0)*(sponsor()?2:1);
   const x2=x2Ok(o.cr)?`<button class="btn noenter mt-x2b" id="rwX2">📺 ${e===o.cr?T('×2 за рекламу','×2 for an ad'):T('За рекламу','For an ad')}: +${o.cr} → +${cr(o.cr+e)}</button>`:'';
   modal(`<div class="rw"><div class="rw-e">${o.ico}</div><h2>${esc(o.title)}</h2>${o.cr?`<div class="rw-cr">+${cr(o.cr)}</div>`:''}${o.lines&&o.lines.length?'<ul>'+o.lines.map(x=>`<li>${x}</li>`).join('')+'</ul>':''}
     <button class="btn green" id="rwTake">${T('Забрать','Take')}${o.cr?' +'+cr(o.cr):''}</button>${x2}${o.note?`<p class="rw-note">${o.note}</p>`:''}${o.soc&&typeof socBragHtml==='function'?socBragHtml(o.soc):''}<button class="rw-link noenter" id="rwCab">${T('Посмотреть в кабинете','See it in the Office')}</button></div>`);
-  try{modalRe=null;}catch(e){}
+  try{modalRe=null;}catch(e){}try{B2.emit('rw',o);}catch(e){}   /* b2-juice */
   $c('rwTake').onclick=()=>{const b=$c('rwTake').getBoundingClientRect();snd('coin');hideModal();if(o.cr&&window.UI&&UI.fly&&!calmMode())try{UI.fly({x:b.left+b.width/2,y:b.top},o.cr,'cr');}catch(x){}
     stat(o,'take');rw=null;refresh();};
   if($c('rwX2'))$c('rwX2').onclick=()=>{try{STAT.place('rw_'+o.k);}catch(x){}showRewarded(()=>{GAME.adUse('rw');GAME.addCr(e,'rew');snd('coin');hideModal();toast('📺 +'+cr(e)+' · '+T('всего','total')+' +'+cr(o.cr+e),3000);stat(o,'x2',o.cr+e);rw=null;refresh();},
@@ -450,6 +451,7 @@ function stat(o,a,c){try{STAT.ev('rw',{k:o.k,a,c:c==null?o.cr||0:c});}catch(e){}
 /* ---------- очередь наград REWQ ---------- */
 function pend(){const o=[];if((S.rk|0)>(S.rkG|0))o.push({k:'rk'});for(const k in (S.col||{}))if(S.col[k]&&!(S.colG&&S.colG[k]))o.push({k:'col',id:k});
   if(S.wkR&&!S.wkR.got)o.push({k:'wk'});return o;}
+{const f0=quiet;quiet=function(){return f0()&&(!window.b2Calm||b2Calm());};}   /* b2-first: после окна утром второстепенные окна ждут (B2F.calm) */
 function quiet(){if(typeof modalOn!=='undefined'&&modalOn)return false;if(typeof winCalm==='function'&&!winCalm())return false;if(typeof paused!=='undefined'&&paused)return false;if(document.hidden)return false;
   try{if(GAME.hold&&GAME.hold.size)return false;}catch(e){}const a=$c('adv');if(a&&a.classList.contains('on'))return false;const d=$c('ad');if(d&&d.classList.contains('on'))return false;
   try{if(window.BIZUI&&BIZUI.tutStep&&BIZUI.tutStep())return false;}catch(e){}try{if(window.UI&&UI.tutStep&&UI.tutStep())return false;}catch(e){}
@@ -461,7 +463,7 @@ function flush(){let p=pend();if(!p.length)return;let rkSoc=false;const q=a=>T('
   for(const x of p){if(x.k==='col'){const c=GAME.COL[x.id],n=GAME.colClaim(x.id);sum+=n;parts.push('col');title=T('Набор собран: ','Set complete: ')+T(c.ru,c.en);ico=c.ico;
       lines.push(`${c.ico} ${T('Набор','Set')} ${q(esc(T(c.ru,c.en)))} · ★ +5 · ${esc(T(SET_B[x.id][0],SET_B[x.id][1]))}`);if(c.cos&&!GAME.cosCur('emb'))GAME.cosSel('emb',c.cos);}
     else if(x.k==='wk'){const r=S.wkR;const n=GAME.wkClaim();sum+=n;parts.push('wk');title=T('Итоги недели','The week’s results');ico=ART()?ART().cup(r.t?'w':'ud',r.t||3):r.t?['','🥉','🥈','🥇'][r.t]:'🏅';
-      lines.push(`📈 ${T('Капитал за неделю','Equity this week')}: <b>+${FMT.pct(r.pct,r.pct<.1?1:0)}</b> · ${esc(wkLbl(r.k))}`);
+      /* b2-first: «в N раз» вместо «+3 494 %» */lines.push(`📈 ${T('Капитал за неделю','Equity this week')}: <b>${window.B2F&&r.pct>=1?T('вырос в '+Math.round(1+r.pct)+' '+pl(Math.round(1+r.pct),'раз','раза','раз','time','times'),'grew '+Math.round(1+r.pct)+'×'):'+'+FMT.pct(r.pct,r.pct<.1?1:0)}</b> · ${esc(wkLbl(r.k))}`);
       if(r.t)lines.push(['','🥉','🥈','🥇'][r.t]+' '+esc(cupInfo('cup_w_'+r.k).t)+' — '+T('на полку кубков','on the trophy shelf'));
       lines.push(`📋 ${T('Планёрка — все поручения','Briefing — all tasks')}: ${r.pd} ${T('из 7 дней','of 7 days')}${r.pd>=5?' · 🏅 '+T('грамота','certificate')+' '+q(T('Ударник недели','Worker of the week')):''}`);}}
   GAME.rankSync();

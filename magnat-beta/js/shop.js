@@ -16,6 +16,7 @@ const W=()=>window.GAME&&GAME.W||null;
 const adOn=()=>{try{return typeof adOk==='function'&&adOk();}catch(e){return false;}};
 const payOn=()=>typeof PAY!=='undefined'&&!!PAY.on;
 const own=id=>typeof PAY!=='undefined'&&PAY.own(id);
+const ECO=()=>{try{return typeof B2!=='undefined'&&!B2.off('eco');}catch(e){return false;}};   /* b2-eco: магазин по главе (П2, П3, П5, В12) — под флагом B2.off.eco */
 
 const SECS=[
   {id:'cr',ic:'💎',tab:['Кристаллы','Crystals'],h:['Кристаллы','Crystals']},
@@ -35,7 +36,8 @@ const DAYS={pass:30};                                    // «на N дней»
 const stI=()=>{const w=W();if(!w)return 0;if(w.ned)return 4;try{return ECON.stI(w);}catch(e){return 0;}};
 const SHOW={sponsor:()=>typeof adPlat==='function'&&adPlat(),starter:()=>typeof starterOn!=='function'||starterOn(),nedra_pack:()=>{const w=W();return !!w&&(w.ned||w.st==='quarry'||w.st==='nedra');},
   kit1:()=>{if(own('kit1'))return true;const w=W();return !!(w&&w.me&&!w.ned&&stI()<=1&&GAME.enLv&&GAME.enLv()<1);},
-  net_pack:()=>own('net_pack')||stI()>=2,magnat:()=>own('magnat')||stI()>=2,ipo_pack:()=>own('ipo_pack')||stI()>=4};
+  net_pack:()=>own('net_pack')||stI()>=2,magnat:()=>own('magnat')||stI()>=2,ipo_pack:()=>own('ipo_pack')||stI()>=4,
+  bundle:()=>!ECO()||own('bundle')};   // b2-eco (В12): «Всё и сразу» снят с продажи — его покрывает «Магнат навсегда»; купленное остаётся
 function kindOf(id){const it=PAY_ITEMS[id];if(!it)return '';if(DAYS[id])return 'days';if(ONCE[id])return 'once';return it.perm?'perm':'cons';}
 function kindTxt(k,id){switch(k){
   case 'perm':return T('Навсегда','Forever');
@@ -87,6 +89,11 @@ function css(){if(cssOn)return;cssOn=true;const s=document.createElement('style'
 .shop-bar{display:block;height:8px;border-radius:8px;background:var(--track);overflow:hidden;margin:6px 0 2px}.shop-bar i{display:block;height:100%;background:var(--good);border-radius:8px}
 .shop-more{margin-top:12px}.shop-more .btn{margin-top:8px}
 .shop-note{font-size:16px;color:var(--muted);text-align:center;margin:10px 0 0}
+.shop-tabs.b2e{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px 8px;padding-bottom:4px}
+.shop-tabs.b2e .shop-tab{flex:0 0 auto;min-width:84px;min-height:56px;padding:4px 10px}
+.shop-mo{margin-top:12px}.shop-mo>summary{min-height:48px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;color:var(--accent);border:2px solid var(--line);border-radius:14px;cursor:pointer;list-style:none}
+.shop-mo>summary::-webkit-details-marker{display:none}
+.shop-first.b2e{padding:8px 12px;margin:0 0 8px;font-size:16px}
 `;document.head.appendChild(s);}
 
 /* ---- строки товаров за деньги ---- */
@@ -98,13 +105,18 @@ function badge(id){if(ctx.hl===id&&ctx.miss)return `<em class="shop-k k-hl">✓ 
   let pc='';if(it.n&&SEC[id]==='cr'&&id!=='tea'&&id!=='cr_s'&&PAY_ITEMS.cr_s){const a=priceNum(id),b=priceNum('cr_s');if(a&&b){const x=Math.round((it.n/a)/(PAY_ITEMS.cr_s.n/b)*100-100);if(x>=5)pc='+'+x+T(' % к Горсти','% vs Handful');}}
   if(BEST[id])return `<em class="shop-k k-best">★ ${T('Выгодно','Best value')}${pc?' · '+pc:''}</em>`;
   return pc?`<em class="shop-k k-best">${pc}</em>`:'';}
+// b2-eco (П5): на что тратить 💎 — про текущую главу, а не про стройку, которой у новичка нет
+const CRD=[['Силы, режим дня, второе дыхание, срочный заказ','Energy, daily routine, second wind, urgent orders'],['Силы, режим дня, открыть точку раньше','Energy, daily routine, open a shop sooner'],
+  ['Открыть точку раньше, Тайный покупатель, оформление','Open a shop sooner, Mystery shopper, looks'],['Знакомый в комиссии на торгах, оформление','An insider at the auction, looks'],['Ускорить стройку и разведку, Геолог-светило','Speed up building and exploration, Star geologist']];
+function descOf(id){const it=PAY_ITEMS[id];if(ECO()&&id==='cr_s'){const d=CRD[Math.min(4,stI())];return T(d[0],d[1]);}return it.desc;}
 function itemRow(id){const it=PAY_ITEMS[id],k=kindOf(id),mine=it.perm&&own(id);
-  let sub=esc(it.desc);if(id==='starter'&&!mine&&typeof starterLeft==='function'){const n=starterLeft();if(n)sub+='<br><b>'+T('В магазине ещё '+n+' '+pl(n,'день','дня','дней','day','days'),'In the shop for '+n+' more '+pl(n,'день','дня','дней','day','days'))+'</b>';}
+  let sub=esc(descOf(id));if(id==='starter'&&!mine&&typeof starterLeft==='function'){const n=starterLeft();if(n)sub+='<br><b>'+T('В магазине ещё '+n+' '+pl(n,'день','дня','дней','day','days'),'In the shop for '+n+' more '+pl(n,'день','дня','дней','day','days'))+'</b>';}
   const body=`<span><b class="shop-nm">${it.ic} ${esc(it.name)}</b><small>${sub}</small></span><em class="shop-k k-${k}">${esc(kindTxt(k,id))}</em>${mine?'':badge(id)}`;
   return mine?`<div class="set pown shop-it" data-pid="${esc(id)}">${body}<i>✓ ${T('Ваше','Yours')}</i></div>`
     :`<button class="set pbuy shop-it noenter${ctx.hl===id?' shop-hl':''}" data-pid="${esc(id)}">${body}<b class="shop-pr">${priceOf(id)}</b></button>`;}
 // M36 (П1): подарок за первую покупку — строка вверху «Кристаллов» и «Наборов», пока игрок ничего не покупал (shell.js payPaid/payFirst)
 function firstHtml(){try{if(!payOn()||typeof payPaid!=='function'||payPaid())return '';}catch(e){return '';}
+  if(ECO())return `<div class="shop-first b2e">🎁 ${T('Первая покупка — с подарком: +'+(typeof FIRST_CR!=='undefined'?FIRST_CR:50)+' 💎 и рамка «Меценат»','First purchase gift: +'+(typeof FIRST_CR!=='undefined'?FIRST_CR:50)+' 💎 and the “Patron” frame')}</div>`;
   return `<div class="shop-first">🎁 ${T('Первая покупка — с подарком: +'+(typeof FIRST_CR!=='undefined'?FIRST_CR:50)+' 💎 и рамка «Меценат». Любая, даже самая маленькая.','Your first purchase comes with a gift: +'+(typeof FIRST_CR!=='undefined'?FIRST_CR:50)+' 💎 and the “Patron” frame. Any purchase, even the smallest.')}</div>`;}
 // M36: самый маленький пакет 💎, которого хватит на недостающее (окно «Не хватает кристаллов» → магазин)
 function hlFor(miss){if(!(miss>0))return '';const a=['cr_xs','cr_s','cr_l','cr_xl'].filter(id=>PAY_ITEMS[id]&&visible(id)).sort((x,y)=>PAY_ITEMS[x].n-PAY_ITEMS[y].n);
@@ -119,13 +131,22 @@ function ladBtn(){let lb='';try{lb=adOn()&&GAME.ladLabel?GAME.ladLabel():'';}cat
   return '';}
 
 /* ---- разделы ---- */
-function secCr(){let h=`<p class="shop-p">${T('Кристаллы ускоряют стройку и разведку, покупают время на дела, силы и украшения. Рубли в игре не продаются, место в рейтинге — тоже.','Crystals speed up construction and exploration and buy hands, energy and decorations. In-game rubles are not for sale, nor is a place in the leaderboard.')}</p>`;
+function secCr(){const intro=`<p class="shop-p">${T('Кристаллы ускоряют стройку и разведку, покупают время на дела, силы и украшения. Рубли в игре не продаются, место в рейтинге — тоже.','Crystals speed up construction and exploration and buy hands, energy and decorations. In-game rubles are not for sale, nor is a place in the leaderboard.')}</p>`;
+  let h=ECO()?'':intro;   // b2-eco (П3): на телефоне первый товар — в верхней половине экрана, пояснение — под товарами
   if(ctx.miss>0)h+=`<p class="shop-need">💎 ${T('Не хватает '+ctx.miss+' 💎'+(ctx.hl?' — подойдёт пакет, отмеченный «Хватит»':''),'You’re '+ctx.miss+' 💎 short'+(ctx.hl?' — the pack marked “Enough” will do':''))}</p>`;
   h+=firstHtml();const r=rowsOf('cr');h+=r;
   if(!r)h+=`<p class="shop-p">${T('Кристаллы даются за достижения, звания, Планёрку'+(adOn()?' и ролики':'')+' — загляните в соседние разделы.','Crystals come for achievements, ranks, the Briefing'+(adOn()?' and videos':'')+' — see the other sections.')}</p>`;
+  if(ECO()&&r)h+=intro;
   const lb=ladBtn();if(lb)h+=`<div class="shop-more">${lb}</div>`;
   return h+restoreHtml();}
-function secPack(){return firstHtml()+`<p class="shop-p">${T('Наборы выгоднее, чем по одному. «Навсегда» — платите один раз, и это ваше навсегда, без продлений.','Bundles are better value than single items. “Forever” means you pay once and it’s yours for good — no renewals.')}</p>`+rowsOf('pack')+restoreHtml();}
+// b2-eco (П2): сверху 2–3 товара главы (стартовый, пока идёт, набор главы, «Магнат навсегда»), остальное — под «Ещё удобства по отдельности ▾»
+const TOPP=[['starter','kit1'],['starter','kit1'],['starter','net_pack','magnat'],['starter','nedra_pack','magnat'],['starter','ipo_pack','magnat']];
+function secPackB2(){const top=TOPP[Math.min(4,stI())].filter(id=>PAY_ITEMS[id]&&visible(id)&&!(PAY_ITEMS[id].perm&&own(id))).slice(0,3),sk={};for(const id of top)sk[id]=1;
+  const rest=rowsOf('pack',sk),op=ctx.hl&&!sk[ctx.hl]&&secOf(ctx.hl)==='pack'?' open':'';
+  return firstHtml()+(top.length?`<h4>⭐ ${T('Для вашей главы','For your chapter')}</h4>`+top.map(itemRow).join(''):'')
+    +(rest?`<details class="shop-mo"${op}><summary>${T('Ещё удобства по отдельности','More perks one by one')} ▾</summary>${rest}</details>`:'')
+    +`<p class="shop-p">${T('«Навсегда» — платите один раз, без продлений.','“Forever” means you pay once — no renewals.')}</p>`+restoreHtml();}
+function secPack(){if(ECO())return secPackB2();return firstHtml()+`<p class="shop-p">${T('Наборы выгоднее, чем по одному. «Навсегда» — платите один раз, и это ваше навсегда, без продлений.','Bundles are better value than single items. “Forever” means you pay once and it’s yours for good — no renewals.')}</p>`+rowsOf('pack')+restoreHtml();}
 
 // темы оформления — js/themes.js: THEME.list() → [{id,name,prev:{bg,hd,card,ink,acc,acc2},unlock,owned,cur,progress:{have,need,txt},how}]
 // тема внутри коллекции (k90 ← set90) продаётся строкой коллекции ниже — одна кнопка на товар
@@ -160,19 +181,21 @@ function pkRow(ic,nm,sub,next,done,k){if(!next&&!done)return '';
     :`<div class="shop-info"><span>${ic} ${nm}<small>${sub}</small></span><b>✓ ${T('Всё куплено','All bought')}</b></div>`;}
 function infoRow(ic,nm,sub,right){return `<div class="shop-info"><span>${ic} ${nm}<small>${sub}</small></span><b>${right}</b></div>`;}
 function secBoost(){const w=W(),E=window.ECON||{};let h=`<p class="shop-p">${T('За кристаллы можно сделать дела быстрее или навсегда стать сильнее. Деньги (₽) так не купить — их зарабатывают делом.','Crystals let you get things done faster or become stronger for good. Money (₽) can’t be bought this way — you earn it by doing business.')}</p>`;
-  if(w&&w.me&&!w.ned&&GAME.handNext){
+  const b2=ECO(),si=stI(),gig=w&&w.st==='gig';   // b2-eco (П5): ускорения — только текущей главы
+  if(w&&w.me&&!w.ned&&GAME.handNext&&(!b2||si<=1)){
     h+=`<h4>💪 ${T('Навсегда','Forever')}</h4>`;
     h+=pkRow('✋',T('+1 дело одновременно','+1 hand'),T('Берёте больше заказов одновременно','Take more orders at once'),GAME.handNext(),GAME.handLv&&GAME.handLv()>0,'hand');
     h+=pkRow('⚡',T('+'+(E.EN_STEP||20)+' к запасу сил','+'+(E.EN_STEP||20)+' to energy reserve'),T('Больше работы без отдыха','More work without rest'),GAME.enNext(),GAME.enLv&&GAME.enLv()>0,'en');
     if(GAME.regNext)h+=pkRow('🌅',T('Режим дня: +'+(E.REG_STEP||10)+' ⚡ за ночь','Daily routine: +'+(E.REG_STEP||10)+' ⚡ per night'),T('Силы восстанавливаются быстрее','Energy recovers faster'),GAME.regNext(),GAME.regLv&&GAME.regLv()>0,'reg');}
   h+=`<h4>⏩ ${T('Ускорить сейчас','Speed up now')}</h4><p class="shop-p">${T('Кнопки — прямо на карточках дел: там, где это можно.','The buttons are right on the cards — wherever it’s possible.')}</p>`;
   const B=E.CR_BIZ||{},C=GAME.CR||{};
-  if(w&&w.me&&!w.ned){h+=infoRow('⚡',T('Второе дыхание: +50 сил','Second wind: +50 energy'),T('раз в игровую неделю · карточка героя','once a game week · hero card'),cr(B.breath||2));
+  if(w&&w.me&&!w.ned&&(!b2||gig)){h+=infoRow('⚡',T('Второе дыхание: +50 сил','Second wind: +50 energy'),T('раз в игровую неделю · карточка героя','once a game week · hero card'),cr(B.breath||2));
     h+=infoRow('🔥',T('Срочный заказ','Urgent order'),T('раз в игровой месяц, оплата ×1,5 · доска заказов','once a game month, pay ×1.5 · order board'),cr(B.urgent||3));}
-  if(w&&!w.ned)h+=infoRow('🏪',T('Открыть точку на 5 дней раньше','Open a shop 5 days sooner'),T('раз на точку · карточка стройки','once per shop · construction card'),cr(B.open||4));
+  if(w&&!w.ned&&(!b2||si===1||si===2))h+=infoRow('🏪',T('Открыть точку на 5 дней раньше','Open a shop 5 days sooner'),T('раз на точку · карточка стройки','once per shop · construction card'),cr(B.open||4));
   if(w&&w.ned){h+=infoRow('🏗',T('Стройка на 15 дней быстрее','Construction 15 days faster'),T('раз на объект · карточка объекта','once per facility · facility card'),cr(C.speed||10));
     h+=infoRow('🔎',T('Разведка сразу','Instant exploration'),T('участок на разведке · карта региона','plot being explored · region map'),cr(C.expl||4));
     h+=infoRow('📦',T('Срочный контракт','Urgent contract'),T('раз в 3 игровых месяца · «Рынок»','once every 3 game months · Market'),cr(C.urgent||6));}
+  if(b2&&B2.eco.shopBoost)try{h+=B2.eco.shopBoost(w,infoRow,cr)||'';}catch(e){console.error(e);}   // b2-eco (П11): «знание» за 💎 главы
   return h;}
 
 // бесплатно за рекламу: лесенка и места (у каждого — свой предел в день, общего нет)
@@ -233,10 +256,11 @@ function openFrom(sec,o){o=o&&typeof o==='object'?o:{};const miss=Math.max(0,(o.
 function open(sec){css();const ok=secs();cur=typeof sec==='string'&&sec?sec:'cr';if(ok.indexOf(cur)<0)cur=ok[0];const S0=SECS.find(s=>s.id===cur);
   let body='';try{body=BODY[cur]();}catch(e){console.error(e);}
   const tabs=ok.map(id=>{const s=SECS.find(x=>x.id===id);return `<button class="shop-tab noenter${id===cur?' on':''}" data-sec="${id}" role="tab" aria-selected="${id===cur}"><b>${s.ic}</b>${T(s.tab[0],s.tab[1])}</button>`;}).join('');
-  modal(`<h2>🛒 ${T('Магазин','Shop')}</h2><p class="shop-bal">${T('У вас','You have')} <b>${cr(S.cr|0)}</b></p><div class="shop-tabs" role="tablist">${tabs}</div>
+  modal(`<h2>🛒 ${T('Магазин','Shop')}</h2><p class="shop-bal">${T('У вас','You have')} <b>${cr(S.cr|0)}</b></p><div class="shop-tabs${ECO()?' b2e':''}" role="tablist">${tabs}</div>
     <div class="shop-sec" data-sec="${cur}"><h3>${S0.ic} ${T(S0.h[0],S0.h[1])}</h3>${body}</div>
     <div class="row"><button class="btn" id="shClose" data-esc>${T('Закрыть','Close')}</button></div>`);
   const mc=$s('mcard');if(mc)mc.classList.add('shop-card');
+  if(ECO())try{const tb=mc.querySelector('.shop-tab.on'),ts=mc.querySelector('.shop-tabs');if(tb&&ts)ts.scrollLeft=Math.max(0,tb.offsetLeft-ts.offsetLeft-40);}catch(e){}   // b2-eco (П3): вкладки в одну строку — выбранная на виду
   modalRe=()=>open(cur);if(typeof PAY!=='undefined')PAY.re=()=>open(cur);   // каталог/мост пришёл или покупка прошла, пока окно открыто, — перерисуем
   try{STAT.screen('shop');STAT.screen('shop_'+cur);if(cur==='look')STAT.screen('look');}catch(e){}   // STAT v1.2: вход в магазин — scr shop (раз за сеанс), раздел — shop_<раздел>; «Оформление» — и scr look
   mc.querySelectorAll('.shop-tab').forEach(b=>b.onclick=()=>{snd('tap');open(b.dataset.sec);});

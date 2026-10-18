@@ -38,7 +38,7 @@ try{const r=localStorage.getItem(SKEY);if(r){let o=null;try{o=wIn(JSON.parse(r))
 const OBJF=['rbN','rbHi','crE','ask','tut','cos','pk','psG','psT','wall','lxE','lxc','col','colG','thU','adT','wS','lxSeen'];   // M43: wS — увиденное на Стене, lxSeen — показанные вещи в продаже (объединение = «прочитано по максимуму»)   // M31: adT — пауза мест рекламы (мс последнего ролика), берём позднее   // M27: thU — открытые темы оформления (js/themes.js), объединение
    // M8: стена почёта, вещи, украшения вещей, наборы — объединение // cos — украшения за 💎, pk — улучшения «Доли основателя» (объединение, берём больший уровень); psG/psT — «Путёвка председателя» (день начала / сколько взято по ключу покупки)
 // защита от сохранений неожиданной формы (ручная правка, старая версия)
-function fixSave(){for(const f of OBJF)if(!isObj(S[f]))S[f]={};
+function fixSave(){for(const f of OBJF)if(!isObj(S[f]))S[f]={};if(typeof B2!=='undefined')B2.fixS(S);   /* b2-core: S.b2<буква> */
   if(S.w!=null&&!isObj(S.w))S.w=null;
   if(typeof S.cr!=='number'||!isFinite(S.cr))S.cr=20;if(S.cr<0)S.cr=0;S.cr=Math.floor(S.cr);
   if(typeof S.adW!=='number'||!isFinite(S.adW)||S.adW<0)S.adW=0;
@@ -52,12 +52,14 @@ function fixSave(){for(const f of OBJF)if(!isObj(S[f]))S[f]={};
 fixSave();
 // «точка отсчёта» с облаком (как монеты в «Козле»): 💎, заработанные/потраченные на устройстве с этой точки, прибавляются к облачным
 let BOOT_TS=S.ts||0,BOOT_CR=S.cr;
-// облако: Яндекс — не чаще раза в 3,5 с, VK — раза в 15 с; при сворачивании — сразу. Пока облако не прочитано и не слито — не пишем
+// облако: Яндекс — не чаще раза в 20 с, VK — раза в 60 с (b2-fix Б8/Б9); при сворачивании — сразу. Пока облако не прочитано и не слито — не пишем
 let cloudT=0,cloudReady=false,cloudBusy=false,cloudTry=0,cloudBroken=0;
 function save(){S.ts=nowMs();
   try{localStorage.setItem(SKEY,JSON.stringify(sOut()));}catch(e){}
   if(!cloudReady){cloudLoad();return;}
-  if((YP||VK)&&!cloudT)cloudT=setTimeout(cloudFlush,YP?3500:15000);}
+  if((YP||VK)&&!cloudT)cloudT=setTimeout(cloudFlush,YP?CLOUD_YA_MS:CLOUD_VK_MS);}
+/* b2-fix Б8/Б9: облако реже — Яндекс раз в 20 с (было 3,5 с: setData с flush на каждое действие), VK раз в 60 с (было 15 с: до 32 кусков каждый раз); при сворачивании/уходе/важном — сразу, как было */
+const CLOUD_YA_MS=20000,CLOUD_VK_MS=60000;
 function cloudFlush(){clearTimeout(cloudT);cloudT=0;if(!cloudReady)return;
   try{if(YP){const ts=S.ts,c=S.cr;YP.setData(sOut(),true).then(()=>{BOOT_TS=ts;BOOT_CR=c;}).catch(()=>{});}else if(VK)vkSaveCloud();}catch(e){}}
 function canon(o){return JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((r,x)=>(r[x]=v[x],r),{}):v);}
@@ -83,16 +85,22 @@ const PLAT=IS_APK?'apk':IS_VK?'vk':'yandex';
 const apkAds=()=>window.__APK__&&window.__APK__.ads||null;
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
-/* ===== STAT v1.2 (04.10.2026; v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
+/* ===== STAT v1.6 (12.10.2026; v1.5 — 11.10, v1.4 — 09.10, v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
    Источник — ~/Projects/hobby-analytics/stat/stat.js (правки только тут, в игры — stat-sync.sh). Как встраивать — stat/README.md.
    Никогда не отправляем: vk_user_id и параметры адреса запуска (кроме vk_platform, vk_ref), имя, IP, User-Agent целиком,
    постоянный номер игрока/устройства. Ключ — случайная строка СЕАНСА (только в памяти). На устройстве: день установки, число сеансов,
    день отметки, неотправленные пачки (stat-q-<игра>), признак новой функции (stat-srv), буквы опытов (stat-ab-<игра>-<опыт>).
    v1.2: очередь «без потерь» (включается сама по ответу функции {"v":2} / X-Stat: 2), bd — день пачки по Москве, adReq→ms, offer/hold с n,
    progress→start, bal→cb, ранние ошибки и незагрузившиеся файлы, act, perf, ab+cfg, adchk, earn, idle. Старый синтаксис: только var/function.
-   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут. */
+   05.10: perf v:2 — плавность меряем по кадрам БРАУЗЕРА, пока игра зовёт STAT.frame(); паузы игры, сворачивание и реклама в «подвисания» не идут.
+   08.10 (v1.3, sv:13): «без хода» (idle) обнуляется при новом сеансе после перерыва — раньше тянулся из прошлого (idle 2612 с у сеанса в 72 с).
+   09.10 (v1.4, sv:14): STAT.pl(n) — прогресс сейчас (то же, что pl в STAT.progress) → поле pl в pause (прогресс на конец захода) и в start нового сеанса.
+   11.10 (v1.5, sv:15): запасной адрес U2 (stat.assortiz.ru/ev), пока основной лежит.
+   12.10 (v1.6, sv:16; Оборона ob2-core, образец Зины zb2-core d41d683): последняя пачка при закрытии (sendBeacon) — на запасной адрес, пока основной в сеансе
+     ни разу не ответил «ОК» или недавно падал (bUrl; sendBeacon отвечает true сразу — пачка в лежащее облако терялась молча);
+     STAT.slow(sc,ms,o) — событие slow «медленный переход» (≥300 мс; sc — экран/переход, ms; не больше 8 за сеанс); в start — mem (ГБ, deviceMemory) и cpu (ядер). */
 var STAT=(function(){
-  var V=1,SV=12,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
+  var V=1,SV=16,FB='https://stat.assortiz.ru/ev',U2='',pFail=0,pOk=0,slN=0,SLMAX=8,FLUSH=90,MAXQ=40,MAXB=60,PMAX=30,PBYTES=3e5,SESS_GAP=30*60e3,MAXERR=5,THR=2e4;
   var O={},on=false,dev=false,G='',Q=[],pend=[],sk='',seq=0,t0=0,act=0,actT=0,vis=true,hideT=0,timer=0,
       st={c:0,n:0,d:0},hdr={},lvl=null,scr='',errN=0,resN=0,errSeen={},once={},lastErr='',
       srv=false,nm=0,fly={},fails=0,nextT=0,sP=null,sTm=0,prog=null,cb,mvT=0,aR={},thr={},eS=null,aC={},
@@ -122,6 +130,10 @@ var STAT=(function(){
     return {os:os,dv:touch?(m<600?'m':'t'):'d',sw:Math.round(w/20)*20,sh:Math.round(h/20)*20,
       wv:/; wv\)|VKAndroidApp|com\.vkontakte/.test(ua)||(os==='ios'&&!/Safari\//.test(ua))?1:0,
       br:cv?'c'+cv[1]:sv?'s'+sv[1]:/Firefox\/(\d+)/.test(ua)?'f'+/Firefox\/(\d+)/.exec(ua)[1]:'?'};}
+  // v1.6: память (ГБ, только Chrome/Android) и число ядер — в start
+  function hw(p){try{var m=+navigator.deviceMemory,c=+navigator.hardwareConcurrency;if(m>0)p.mem=m;if(c>0)p.cpu=Math.min(64,Math.round(c));}catch(e){}return p;}
+  // v1.6: STAT.slow('t:map',420,{mk:'…'}) — медленный переход между экранами (≥300 мс), не больше SLMAX за сеанс
+  function slow(sc,ms,o){if(!on||!(ms>=300)||slN>=SLMAX)return;slN++;var p={sc:String(sc||'').slice(0,24),ms:Math.round(ms)},k;for(k in o||{})if(p[k]===undefined)p[k]=o[k];ev('slow',p);}
   function saveSt(){if(O.S){O.S.stc={c:st.c,n:st.n,d:st.d};}ls('stat-'+G,JSON.stringify(st));}
 
   /* STAT.init({g:'gastronom', gv:'v16', plat:PLAT, lang:LANG, url:STAT_URL, now:nowMs, S:S, rate:1}) — README.
@@ -134,6 +146,7 @@ var STAT=(function(){
   function init(o){O=o||{};O.url=String(O.url||'');G=String(O.g||'game').slice(0,16);t0=Date.now();actT=t0;
     cut='';if(/^https?:/i.test(O.url)&&!locU(O.url)){var wd=false;try{wd=navigator.webdriver===true||/HeadlessChrome|PhantomJS|Puppeteer|Playwright/.test(navigator.userAgent||'');}catch(e){}
       cut=wd?'wd':location.protocol==='file:'?'file':locH(location.hostname)?'local':'';if(cut)O.url='';}
+    U2=O.url?String(O.url2!==undefined?O.url2:/^https?:\/\/functions\.yandexcloud\.net\//i.test(O.url)?FB:''):'';
     dev=!O.url&&(O.dev===true||(/[?&]stat=dev/.test(location.search)&&/^(localhost|127\.0\.0\.1|\[::1\])$|\.localhost$|\.test$/.test(location.hostname)));
     var s=jp(ls('stat-'+G))||{},c=O.S&&O.S.stc||{};
     st={c:+s.c||+c.c||0,n:Math.max(+s.n||0,+c.n||0),d:Math.max(+s.d||0,+c.d||0)};
@@ -149,7 +162,7 @@ var STAT=(function(){
       vp:scrub(qp('vk_platform').replace(/_ok$/,''),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
     pend=dev&&!O.url?[]:jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[]; // журнал мака очередь не трогает
     // start ждёт STAT.progress() (поля pl, cn, bt), но не дольше 3 с; события до него встанут после
-    sP=['start',sec(),{sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)}];
+    sP=['start',sec(),hw({sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)})];slN=0;
     if(prog)rel();else sTm=setTimeout(rel,3000);
     dayMark();saveSt();
     if(se&&se.length){for(i=0;i<se.length;i++){x=se[i];if(x&&x[0]===2)res(x[1],x[2]);else if(x)err(x[1],x[2],x[3],0,{e:1});}}window.__se=[];
@@ -178,6 +191,8 @@ var STAT=(function(){
   function progress(o){o=o||{};prog={};if(o.pl!==undefined)prog.pl=+o.pl||0;if(o.cn!==undefined){prog.cn=+o.cn||0;if(cb===undefined)cb=prog.cn;}
     if(o.bt!==undefined)prog.bt=o.bt?1:0;rel();}
   function bal(n){if(typeof n==='number'&&isFinite(n))cb=n;}
+  // v1.4: STAT.pl(n) — прогресс изменился (уровень пройден и т. п.): событий не шлёт, уходит полем pl в pause и в start следующего сеанса
+  function setPl(n){n=+n;if(!isFinite(n))return;prog=prog||{};prog.pl=n;}
 
   // --- уровни: STAT.lvl(5,'daily',{n:3}) в начале, STAT.use('hint') по ходу, STAT.end('win',{st:3}) в конце; STAT.move() — каждый ход ---
   function lvlStart(l,m,x){if(lvl)lvlEnd('quit');lvl={l:l,m:m||'',t:Date.now(),h:0,u:0,x:{}};var p={l:l},k,n=0;if(m)p.m=m;
@@ -254,30 +269,41 @@ var STAT=(function(){
   function got(b,s,mark){if(mark){if(!srv)ls('stat-srv','2');srv=true;nm=0;}else if(s>=200&&s<300&&srv&&++nm>=3){srv=false;ls('stat-srv',null);}
     if(s>=500||s===429||!s)return bad();fails=0;nextT=0;drop(b);flush();}
   function bad(){fails++;if(fails>=3)nextT=Date.now()+Math.min(900,90*Math.pow(2,fails-3))*1000;}
-  function send(b){var s=JSON.stringify(b),k=bk(b),t=Date.now();if(fly[k]&&t-fly[k]<3e4)return;fly[k]=t;
-    function fin(c,mark){delete fly[k];got(b,c,mark);}
-    function no(){delete fly[k];bad();}
-    try{if(window.fetch){fetch(O.url,{method:'POST',mode:'cors',body:s,keepalive:s.length<6e4,headers:{'Content-Type':'text/plain'}}).then(function(r){
+  /* v1.5: запасной адрес. Основной — облако Яндекса; если оно не отвечает (сеть, 5xx, 429) — ТА ЖЕ пачка уходит на свой сервер (U2).
+     После сбоя основного 10 минут сразу пробуем запасной первым. Повтор пачки не задваивает (ключ day,g,sk,q,i; INSERT IGNORE). */
+  function post(u,s,done){
+    try{if(window.fetch){fetch(u,{method:'POST',mode:'cors',body:s,keepalive:s.length<6e4,headers:{'Content-Type':'text/plain'}}).then(function(r){
         var h='';try{h=r.headers.get('X-Stat')||'';}catch(e){}
-        return r.text().then(function(x){fin(r.status,h==='2'||/"v"\s*:\s*2/.test(x));},function(){fin(r.status,h==='2');});},no);return;}
-      var x=new XMLHttpRequest();x.open('POST',O.url,true);x.setRequestHeader('Content-Type','text/plain');
-      x.onload=function(){fin(x.status,/x-stat:\s*2/i.test(x.getAllResponseHeaders()||'')||/"v"\s*:\s*2/.test(x.responseText||''));};x.onerror=no;x.send(s);}catch(e){no();}}
+        return r.text().then(function(x){done(r.status,h==='2'||/"v"\s*:\s*2/.test(x));},function(){done(r.status,h==='2');});},function(){done(0,false);});return;}
+      var x=new XMLHttpRequest();x.open('POST',u,true);x.setRequestHeader('Content-Type','text/plain');
+      x.onload=function(){done(x.status,/x-stat:\s*2/i.test(x.getAllResponseHeaders()||'')||/"v"\s*:\s*2/.test(x.responseText||''));};x.onerror=function(){done(0,false);};x.send(s);}catch(e){done(0,false);}}
+  function urls(){return U2?(pFail&&Date.now()-pFail<6e5?[U2,O.url]:[O.url,U2]):[O.url];}
+  function send(b){var s=JSON.stringify(b),k=bk(b),t=Date.now();if(fly[k]&&t-fly[k]<3e4)return;fly[k]=t;
+    var L=urls();
+    function go(i){post(L[i],s,function(c,mark){
+      var okc=c>=200&&c<300;
+      if(L[i]===O.url){if(okc){pFail=0;pOk=1;}else if(c>=500||c===429||!c)pFail=Date.now();}
+      if(!okc&&(c>=500||c===429||!c)&&i+1<L.length)return go(i+1);
+      delete fly[k];got(b,c,mark);});}
+    go(0);}
   function flush(){if(!on||sP)return;while(Q.length)pend.push(pack());keep();
     if(dev&&!O.url){pend=[];keep();return;}
     if(navigator.onLine===false||!pend.length||Date.now()<nextT)return;send(pend[0]);}
+  // v1.6: адрес для sendBeacon — запасной, пока основной в этом сеансе ни разу не ответил «ОК» или падал последние 10 мин
+  function bUrl(){return U2&&(!pOk||(pFail&&Date.now()-pFail<6e5))?U2:O.url;}
   function beacon(){var i,b,ok,left=[];if(dev&&!O.url){pend=[];keep();return;}if(navigator.onLine===false)return;
-    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(O.url,JSON.stringify(b)));}catch(e){}
+    for(i=0;i<pend.length;i++){b=pend[i];ok=false;try{ok=!!(navigator.sendBeacon&&navigator.sendBeacon(bUrl(),JSON.stringify(b)));}catch(e){}
       if(!ok||srv)left.push(b);}
     pend=left;keep();if(pend.length&&!srv)send(pend[0]);}
   function hide(){if(!on||!vis)return;vis=false;act+=Date.now()-actT;hideT=Date.now();fP=0;fBrk();rel();var k,p={d:actSec()};
     for(k in thr)thrOut(thr[k]);if(eS){ev('earn',eS);eS=null;}for(k in aC){if(aC[k].y||aC[k].n)ev('adchk',{f:k,y:aC[k].y,n:aC[k].n});aC[k]={y:0,n:0};}
     perf();if(!acted&&tp&&!rdT){acted=1;ev('act',{ms:tp-t0,nr:1});}
-    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();ev('pause',p);
+    if(lvl)p.l=lvl.l;if(scr)p.sc=scr;if(cb!==undefined)p.cb=cb;if(mvT)p.idle=idle();if(prog&&prog.pl!==undefined)p.pl=prog.pl;ev('pause',p);
     while(Q.length)pend.push(pack());keep();beacon();}
   function show(){if(!on||vis)return;vis=true;actT=Date.now();fBrk();
     if(Date.now()-hideT>SESS_GAP){ // долго не было — новый сеанс (новый ключ, счётчик сеансов +1)
-      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
-      var p={sn:st.n,f:0,r:1},k;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
+      if(lvl)lvl=null;once={};errN=0;resN=0;errSeen={};mvT=0;sk=rnd();hdr.sk=sk;seq=0;t0=Date.now();act=0;st.n++;saveSt();cfgS=0;
+      var p=hw({sn:st.n,f:0,r:1}),k;slN=0;for(k in prog||{})p[k]=prog[k];if(cb!==undefined)p.cn=cb;ev('start',p);if(cfgO||hasAb())cfg();}
     dayMark();}
 
   // облако игры: в mergeSave — STAT.merge(d.stc): раньше установлен, больше сеансов
@@ -295,7 +321,7 @@ var STAT=(function(){
   function toggle(){setEnabled(!enabled());return label();}
   return {v:SV,init:init,enabled:enabled,available:available,setEnabled:setEnabled,label:label,note:note,toggle:toggle,ev:ev,once:onceEv,lvl:lvlStart,use:use,end:lvlEnd,screen:screen,
     place:setPlace,ad:ad,adReq:adReq,offer:offer,adChk:adChk,err:err,flush:function(){rel();flush();},merge:merge,optOut:optOut,
-    progress:progress,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,
+    progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg,slow:slow,
     _dbg:function(){return {on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 /*/STAT*/
@@ -311,7 +337,7 @@ const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':
 // бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta3' (бета-1 — 'beta1', бета-2 — 'beta2'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta12':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta14':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 /* STAT v1.2 (M44): «монеты» статистики в Магнате — 💎 (S.cr): cn в start, cb в pause, earn по источникам (js/stat-hooks.js, GAME 'cr'; покупки — payAdd).
    progress — после облака или готовности SDK, но не позже 2,5 с (statProg; pl — глава 1–5, bt — облако хоть раз отдавало сохранение: метка устройства magnat-cl) */
 STAT.bal(S.cr|0);
@@ -345,6 +371,7 @@ function mergeSave(d,ref){if(!isObj(d))return;wIn(d);
     if(gb>ga||gb===ga&&(tb>ta||tb===ta&&dt>(S.ts||0))){S.w=d.w;const ph0=S.ph;for(const f of ['wk','lastT','offMore','freeM','ph','adD','gift'])if(f in d)S[f]=d[f];S.ph=phMerge(S.ph,ph0);}
     else S.ph=phMerge(S.ph,d.ph);}   // M43: телефон едет с миром; прочитанное с другого устройства того же холдинга — по максимуму
   if(typeof d.cr==='number'&&isFinite(d.cr))S.cr=newer?Math.max(0,d.cr+(S.cr-BOOT_CR)):(dt===rt&&!dt)?Math.max(S.cr,d.cr):S.cr;
+  if(typeof B2!=='undefined')B2.mergeS(S,d,newer);   /* b2-core: S.b2<буква> — слияние потоков */
   for(const f of OBJF)if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f]){const a=S[f][k],b=d[f][k];
     if(typeof b==='number'&&(typeof a!=='number'||b>a))S[f][k]=b;else if(a==null)S[f][k]=b;}}
   if(Array.isArray(d.fame)){if(!Array.isArray(S.fame))S.fame=[];for(const x of d.fame)if(isObj(x)&&!S.fame.some(y=>y&&y.hold===x.hold))S.fame.push(x);
@@ -377,7 +404,7 @@ function timeLim(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
 /*SOC*/
-/* ===== SOC v2.2 (04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
+/* ===== SOC v2.5 (15.10: в Одноклассниках «Ещё игры» НЕТ — SOC.list() там пуст, open() сразу false, кнопка «🎲 Игры» прячется сама по SOC.can('more'); причина — VKWebAppOpenApp {app_id:<ID в ОК>, app_is_local:true} в ОК игру не открывает, модерация ОК отклонила Выезд 15.10. v2.4 — 06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
    Общий модуль для всех игр. Источник — ~/Projects/hobby-analytics/soc/soc.js (правки — только там, потом soc-sync.sh).
    Правила VK: 2.6.2 — никаких наград за приглашение/«поделиться»/избранное/экран (разрешено лишь за вступление в сообщество —
    в наших играх НЕ даём); 2.6.3 — само-предложения не в первую сессию, отказ помним, повтор не чаще раза в 30 дней, ≤3 раз.
@@ -386,23 +413,25 @@ function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(meth
    ОК (Одноклассники; та же игра VK, запущенная с vk_client=ok — модуль узнаёт сам, SOC.isOk): в ОК нет избранного и значка на экран,
    ссылки на vk.com запрещены, группа у нас только ВКонтакте, ID игр в ОК другие. Поэтому в ОК остаётся только «Позвать друзей»
    (окно приглашения с обязательным message), а остальное включается настройками SOC.init: okLink — ссылка на игру в ОК («Поделиться»),
-   okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК («Ещё игры», только сайт и мобильный браузер ОК). */
+   okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК (с v2.5 не используется: «Ещё игр» в ОК нет вовсе — переход в другую игру
+   там не работает ни на сайте, ни в приложениях; поле оставлено на случай, если ОК даст рабочий способ; вернуть — только с проверкой на живой площадке). */
 var SOC=(function(){
-  var GROUP=241793582,DAY=864e5,VER=2.2;
+  var GROUP=241793582,DAY=864e5,VER=2.5;
   // i — место в спрайте dvor.jpg (по 96 px), g — группа (c карты, p головоломки, s сказка, r спокойные), a — возраст,
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
-  // ok — ID этой игры в Одноклассниках (vk_ok_app_id), когда она там вышла; без него в ОК игра в «Ещё игры» не показывается.
+  // ok — ID этой игры в Одноклассниках (vk_ok_app_id). С v2.5 (15.10) в ОК «Ещё игр» нет вообще — поле сейчас не используется.
+  // v2.4: off:'all' прячет игру везде, и в ОК тоже (Козёл: номер ОК вписан заранее, показ включится, когда уберём off).
   var GAMES=[
     {id:54791564,t:'Выезд со двора',a:6,i:0,g:'p',ok:512004864050},
     {id:54787973,t:'Баба Зина: слова из букв',a:0,i:1,g:'p',ok:512005727621},
     {id:54791567,t:'Богатырь против нечисти',a:6,i:2,g:'s',ok:512005580574},
     {id:54791569,t:'Тридевятая оборона: защита башен',a:6,i:3,g:'s',ok:512005500650},
-    {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',off:'all'},
+    {id:54791634,t:'Гастроном номер 1',a:0,i:4,g:'p',ok:512005037494},
     {id:54792006,t:'Дурак во дворе',a:12,i:5,g:'c',ok:512005141228},
     {id:54792009,t:'Косынка во дворе',a:0,i:6,g:'c',ok:512005597603},
     {id:54792011,t:'Паук на даче',a:0,i:7,g:'c',ok:512005626567},
     {id:54792015,t:'Свободная ячейка в санатории',a:0,i:8,g:'c',ok:512005010476},
-    {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all'},
+    {id:54792674,t:'Козёл во дворе',a:12,i:9,g:'c',off:'all',ok:512005062986},
     {id:54792676,t:'Кирпичики во дворе',a:0,i:10,g:'p',ok:512005552366},
     {id:54794412,t:'Рыбалка с Петровичем',a:0,i:11,g:'r',ok:512005219424},
     {id:54794419,t:'Дворовая викторина',a:6,i:12,g:'p',ok:512005471658}
@@ -424,13 +453,14 @@ var SOC=(function(){
   // что доступно на этой площадке: inv|share|fav|home|grp|more. В VK — всё (как было), в ОК — см. шапку модуля
   function can(k){if(!ok())return false;
     if(k==='more')return list(1).length>0;
+    if(k==='ntf')return !OKP&&!ntfOn(); // уведомления — пока только ВКонтакте
     if(!OKP)return k==='home'?!!homeOk:k==='fav'?!(st.fav&&st.fav.d):true;
     return k==='inv'||(k==='share'&&!!O.okLink)||(k==='grp'&&!!O.okGroup);}
   function me(){for(var i=0;i<N;i++)if(GAMES[i].id===APP)return GAMES[i];return null;}
   function done(k){st[k]={d:1};saveFn();}
   function tried(k){var x=st[k]||{};x.n=(x.n||0)+1;x.t=Date.now();st[k]=x;saveFn();}
   // STAT v1.2 (А15): итог предложения площадки → soc {a: fav|home|inv|grp|shr|more, r: show|ok|no|err}; отказ игрока (код 4 / «denied») — no
-  function sx(a,r){try{if(typeof STAT!=='undefined'&&STAT.ev)STAT.ev('soc',{a:a,r:r});}catch(e){}}
+  function sx(a,r,n,x){try{if(typeof STAT!=='undefined'&&STAT.ev){var p={a:a,r:r},k;if(n)p.n=n;if(x)for(k in x)if(x[k]!==''&&x[k]!=null)p[k]=x[k];STAT.ev('soc',p);}}catch(e){}} // n — номер попытки (уведомления: 1–3); x — доп. поля (v2.4)
   function sr(a){return function(e){var d=e&&e.error_data||{};sx(a,d.error_code===4||/denied|cancel/i.test(String(d.error_reason||d.error_msg||''))?'no':'err');};}
   function due(k){var x=st[k]||{};return !x.d&&(x.n||0)<3&&(!x.t||Date.now()-x.t>30*DAY);}
 
@@ -438,9 +468,10 @@ var SOC=(function(){
      cls — классы кнопок (по умолчанию 'btn noenter': Enter их не жмёт); modal(html) — показать окно игры и вернуть его
      контейнер; close() — закрыть окно игры. Без modal — своё лёгкое окно. */
   function init(S,opt){O=opt||{};if(!S.soc||typeof S.soc!=='object')S.soc={};st=S.soc;
-    st.ses=(st.ses||0)+1;if(!OKP&&qp('vk_is_favorite')==='1')st.fav={d:1};saveFn();ready();}
+    if(!st.ses&&!st.d0)st.d0=nowFn(); // день первого запуска (для расписания уведомлений); у давних игроков его нет
+    st.ses=(st.ses||0)+1;if(!OKP&&qp('vk_is_favorite')==='1')st.fav={d:1};evInit();saveFn();ready();}
   // после VKWebAppInit (мост готов): узнать, можно ли значок на экран (только Android)
-  function ready(){if(readyOn||!ok())return;readyOn=true;
+  function ready(){if(readyOn||!ok())return;readyOn=true;evPlan(8000);ntfSes();
     if(!OKP&&PF.indexOf('android')>=0)vkSend('VKWebAppAddToHomeScreenInfo',{},4000).then(function(r){
       homeOk=!!(r&&r.is_feature_supported&&!r.is_added_to_home_screen);},function(){homeOk=false;});
     else homeOk=false;}
@@ -448,6 +479,8 @@ var SOC=(function(){
   function merge(d){if(!d||typeof d!=='object')return;
     for(var k in d){var a=st[k],b=d[k];
       if(k==='ses'){if(typeof b==='number'&&b>(st.ses||0))st.ses=b;continue;}
+      if(k==='ev'){evMerge(b);continue;}
+      if(k==='d0'){if(+b>0&&(!st.d0||+b<st.d0))st.d0=+b;continue;} // первый запуск — более ранний
       if(!b||typeof b!=='object')continue;
       if(!a||typeof a!=='object'){st[k]=b;continue;}
       if(a.d||b.d){st[k]={d:1};continue;}
@@ -467,14 +500,14 @@ var SOC=(function(){
     return send('VKWebAppShare',{link:OKP?O.okLink:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
   function group(){if(OKP&&!O.okGroup)return Promise.resolve(false);
     return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
-  function open(g){if(OKP&&!(g.ok&&OKWEB))return Promise.resolve(false); // ОК: OpenApp есть только на сайте и в мобильном браузере
+  function open(g){if(OKP)return Promise.resolve(false); // v2.5: в ОК OpenApp игру не открывает (ни сайт, ни приложения) — не зовём
     return send('VKWebAppOpenApp',OKP?{app_id:g.ok,app_is_local:true}:{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
     toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
 
   // --- список «Ещё игры»: без себя, без 18+, без неопубликованных на этой площадке; сначала родственные, дальше — сдвиг по дню ---
   function list(n){var m=me(),mg=m?m.g:'',out=[],i,g,day=Math.floor(Date.now()/DAY);
     for(i=0;i<N;i++){g=GAMES[i];if(g.id===APP||g.a>=18)continue;
-      if(OKP?!(g.ok&&OKWEB):(g.off==='all'||(g.off==='web'&&WEB)))continue;out.push(g);} // ОК: только игры с ID в ОК и только там, где работает OpenApp
+      if(g.off==='all'||OKP||(g.off==='web'&&WEB))continue;out.push(g);} // v2.5 (15.10): в ОК «Ещё игры» НЕТ — переход в другую игру там не открывается (Выезд отклонён модерацией ОК 15.10)
     out.sort(function(a,b){var x=(b.g===mg)-(a.g===mg);if(x)return x;return ((a.i+day)%N)-((b.i+day)%N);});
     return out.slice(0,n||6);}
 
@@ -501,13 +534,14 @@ var SOC=(function(){
     if(can('fav'))b+=btn('fav',tx('⭐ В избранное','⭐ Add to favourites'));
     if(can('home'))b+=btn('home',tx('📲 На экран телефона','📲 Add to home screen'));
     if(can('grp'))b+=btn('grp',tx('📣 Наше сообщество','📣 Our community'));
+    if(O.ntf&&can('ntf'))b+=btn('ntf',O.ntf.s||tx('🔔 Напоминания от игры','🔔 Game reminders'));
     if(can('more'))b+=btn('more',tx('🎲 Ещё игры во дворе','🎲 More yard games'));
     return '<div class="soc-set">'+b+'</div>';}
   // навесить обработчики после вставки HTML: SOC.bind(контейнер, back) — back() вызывается при «Назад» из «Ещё игры»
   function bind(root,back){if(!root)return;var bs=root.querySelectorAll('[data-soc]');
     for(var i=0;i<bs.length;i++)bs[i].onclick=function(){var k=this.getAttribute('data-soc');
       if(k==='inv')invite();else if(k==='share')share();else if(k==='fav')fav().then(function(){if(back)back();});
-      else if(k==='home')home().then(function(){if(back)back();});else if(k==='grp')group();else if(k==='more')showMore(back);};}
+      else if(k==='home')home().then(function(){if(back)back();});else if(k==='ntf')ntf(0).then(function(){if(back)back();});else if(k==='grp')group();else if(k==='more')showMore(back);};}
 
   // --- окно «Ещё игры во дворе»: через modal() игры (O.modal) или своё лёгкое. back — куда вернуться по «Назад» ---
   function showMore(back){if(!can('more'))return;css();var G=list(6),spr=O.sprite||'js/dvor.jpg',h='';
@@ -528,26 +562,133 @@ var SOC=(function(){
   /* --- одно само-предложение за сессию (звать из окна победы). wins — число побед всего; busy — игра занята
      (реклама < 60 с назад, пауза, следом межэкранная). Вернёт {k, t, b, run} или null — строку и кнопку рисует игра.
      Показ сразу считается «отказом» (≤3 раз, не чаще раза в 30 дней); успех fav/home/inv/grp — больше никогда. --- */
-  function offer(wins,busy){if(!ok()||asked||busy||(st.ses||0)<2||Date.now()-T0<120000)return null;
+  function offer(wins,busy){if(!ok()||asked||busy||Date.now()-T0<120000)return null;
     var o=null;
-    if(can('fav')&&due('fav'))o={k:'fav',t:tx('Добавьте игру в избранное — будет всегда под рукой.','Add the game to favourites — always at hand.'),b:tx('⭐ В избранное','⭐ Add to favourites'),run:fav};
+    // уведомления: до 3 показов за всё время — в 1-й, 3-й и 7-й день игрока (NTF_DAYS), после 3 побед; из ⚙ игрок может включить сам
+    var nn=ntfDue()&&(wins||0)>=3?ntfN()+1:0,nt=nn?ntfText(nn):'';
+    if(nn&&nt)o={k:'ntf',n:nn,t:nt,b:O.ntf.b||tx('🔔 Напоминать','🔔 Remind me'),ok:O.ntf.ok||'',run:function(){return ntf(nn);}};
+    else if((st.ses||0)<2)return null; // остальные предложения — не в первую сессию (п. 2.6.3)
+    else if(can('fav')&&due('fav'))o={k:'fav',t:tx('Добавьте игру в избранное — будет всегда под рукой.','Add the game to favourites — always at hand.'),b:tx('⭐ В избранное','⭐ Add to favourites'),run:fav};
     else if(can('home')&&st.ses>=3&&due('home'))o={k:'home',t:tx('Значок игры на экране — заходить в одно касание.','A game icon on your screen — one tap to play.'),b:tx('📲 На экран телефона','📲 Add to home screen'),run:home};
     else if(st.ses>=3&&(wins||0)>=5&&due('inv'))o={k:'inv',t:tx('Позовите друзей — будет с кем посоревноваться.','Invite friends — someone to compete with.'),b:tx('👥 Позвать друзей','👥 Invite friends'),run:invite};
     else if(can('grp')&&st.ses>=4&&due('grp'))o={k:'grp',t:tx('Новости и новые игры — в сообществе «Игры во дворе».','News and new games — in the "Yard Games" community.'),b:tx('📣 Наше сообщество','📣 Our community'),run:group};
     else{var x=st.more||{};if(!x.t||Date.now()-x.t>7*DAY){var g=list(1)[0];
       if(g)o={k:'more',t:tx('Попробуйте ещё: «'+g.t+'»'+(g.a>=12?' ('+g.a+'+)':'')+'.','Try another one: "'+g.t+'".'),b:tx('🎲 Открыть','🎲 Open'),run:function(){return open(g);}};}}
-    if(!o)return null;asked=true;sx(o.k,'show');if(o.k==='more'){st.more={t:Date.now()};saveFn();}else tried(o.k);return o;}
+    if(!o)return null;asked=true;sx(o.k,'show',o.n,o.k==='ntf'?{d:ntfDay()}:null);
+    if(o.k==='more'){st.more={t:Date.now()};saveFn();}
+    else if(o.k==='ntf'){st.ntf={n:o.n,t:nowFn()};saveFn();}
+    else tried(o.k);return o;}
+
+  /* ===== v2.3. Разрешение на уведомления (VKWebAppAllowNotifications) =====
+     Сам модуль ничего не показывает: игра включает настройкой SOC.init(…,{ntf:{t:'вопрос' или function(n){…},b:'кнопка',ok:'ответ',s:'кнопка в ⚙'},now:часы игры}).
+     Тогда: в ⚙ — кнопка (жмёт сам игрок, всегда, пока не разрешено), в SOC.offer — предложение 'ntf' до NTF_MAX=3 раз за всё время,
+     по дням игрока NTF_DAYS=[1,3,7] (день 1 — день первого запуска, S.soc.d0; дни календарные, по часам игры O.now):
+     показ №1 — в первый же день (условие «вторая сессия» на него НЕ действует; остаётся: не в первые 2 минуты сеанса и при ≥3 победах),
+     №2 — не раньше 3-го дня, №3 — не раньше 7-го; не заходил в нужный день — при первом заходе позже; два показа в один день — никогда.
+     Игрок, который начал играть до этой версии (нет S.soc.d0): №1 — сразу по обычному условию, №2 — через 2 дня после №1, №3 — через 4 дня после №2.
+     t — строка или функция от номера попытки (1–3): каждый раз свой повод; вернула пусто — в этот раз не предлагаем (показ не тратится).
+     S.soc.ntf: {n: сколько раз показали, t: когда в последний раз (часы игры O.now, иначе Date.now)} или {d:1} — разрешено, больше никогда.
+     Облако (merge): счётчик — больший, дата — более поздняя, «разрешено» — навсегда. Окно VK вызывается только нажатием кнопки игроком.
+     Статистика: soc {a:'ntf', r: show|ok|no|err, n: номер попытки 1–3; из ⚙ — без n}. Если VK уже сообщил vk_are_notifications_enabled=1 — не спрашиваем. В ОК пока выключено. Наград нет.
+     v2.4 — статистика подробнее (событие то же, soc с a:'ntf'; сервер статистики править не надо):
+       show {n, d}        — предложение показано: n — какое по счёту (1–3), d — день игрока (1 — день первого запуска; 0 — неизвестен, давний игрок);
+       ok | no | err {n, d, e} — ответ на окно VK: разрешил | отказал (закрыл окно, код 4) | ошибка; e — код ошибки VK (число) или короткая причина; из ⚙ — без n;
+       on {s}             — раз за сеанс, если уведомления включены: s:'vk' — так сообщил VK (vk_are_notifications_enabled=1), s:'me' — игрок разрешил нашей кнопкой, а VK параметра не дал;
+       off                — раз за сеанс: игрок разрешал нашей кнопкой, а VK сообщает vk_are_notifications_enabled=0 (выключил в настройках VK).
+     «Пришёл по уведомлению» модуль не пишет: метка захода vk_ref и так есть в шапке каждой пачки статистики (поле src).
+     Если игрок выключил уведомления в VK (параметр = 0), кнопка в ⚙ появляется снова (включить может только он сам); само-предложение — никогда. */
+  var ntfNow=false; // разрешил в этом сеансе (параметр запуска VK до перезапуска остаётся прежним)
+  function ntfOn(){var v=qp('vk_are_notifications_enabled');return ntfNow||v==='1'||(v!=='0'&&!!(st.ntf&&st.ntf.d));}
+  function ntfDay(){return st.d0?Math.max(0,dayNo(nowFn())-dayNo(st.d0)+1):0;}
+  function ntfSes(){if(!O.ntf||OKP)return;var v=qp('vk_are_notifications_enabled'),d=!!(st.ntf&&st.ntf.d);
+    if(v==='1')sx('ntf','on',0,{s:'vk'});else if(d)sx('ntf',v==='0'?'off':'on',0,v==='0'?null:{s:'me'});}
+  var NTF_MAX=3,NTF_DAYS=[1,3,7]; // показов всего; в какой день игрока (от первого запуска) не раньше — показ №1, №2, №3
+  function dayNo(t){var d=new Date(t);return Math.floor((t-d.getTimezoneOffset()*60000)/DAY);} // номер календарного дня (местное время)
+  function nowFn(){var t=0;try{t=+(O.now&&O.now())||0;}catch(e){}return t>0?t:Date.now();}
+  function ntfN(){return st.ntf&&+st.ntf.n||0;}
+  function ntfDue(){if(!O.ntf||!can('ntf')||(st.ntf&&st.ntf.d))return false;var n=ntfN();
+    if(n>=NTF_MAX)return false;if(!n)return true;
+    var now=dayNo(nowFn()),last=dayNo(+st.ntf.t||0);if(now<=last)return false; // в один день — никогда
+    return st.d0?now-dayNo(st.d0)+1>=NTF_DAYS[n]:now-last>=NTF_DAYS[n]-NTF_DAYS[n-1];}
+  function ntfText(n){var t=O.ntf.t;if(typeof t==='function'){try{t=t(n);}catch(e){t='';}}
+    return t==null?tx('Напомнить, когда появится что-то новое?','Remind you when there is something new?'):String(t||'');}
+  // n — номер попытки из offer (1–3) или 0/пусто — кнопка в ⚙. Отказ счётчик показов не меняет (показ уже посчитан в offer)
+  function ntf(n){n=+n||0;return send('VKWebAppAllowNotifications').then(function(r){var y=!!(r&&r.result);if(y){done('ntf');ntfNow=true;}sx('ntf',y?'ok':'no',n,{d:ntfDay()});return y;},
+    function(e){var d=e&&e.error_data||{},c=+d.error_code||0,why=String(d.error_reason||d.error_msg||'');
+      sx('ntf',c===4||/denied|cancel/i.test(why)?'no':'err',n,{d:ntfDay(),e:c||String(why||(e&&(e.error_type||e.message))||'?').slice(0,24)});return false;});}
+
+  /* ===== v2.3. События VK: лента активности друзей, таблица результатов, миссии =====
+     VK принимает их только с сервера (secure.addAppEvent), поэтому игра шлёт в свою функцию (hobby-pay, ?op=vkev) подписанные параметры
+     запуска и список событий; сервер проверяет подпись. Включается настройками SOC.init: evUrl — адрес функции,
+     evId(код) — номер миссии из кабинета VK (0/пусто — миссия ещё не заведена, не шлём), evGap — пауза между отправками уровня/очков (мс).
+     Игра зовёт (в любой момент, хоть на каждую победу): SOC.level(n) — пройдено уровней, SOC.score(n) — очки, SOC.mission('код') — миссия выполнена.
+     Модуль помнит в S.soc.ev: l/p — что надо отправить, ls/ps — что уже отправлено, m — миссии {код: 0 ждёт | 1 отправлена},
+     f — {код: когда VK в последний раз отказал}. Отказ VK по миссии (ещё на проверке у модератора, отклонена, сбой) — НЕ навсегда:
+     миссия остаётся ждать и повторяется при следующих запусках, но не чаще раза в сутки (EV_RETRY_DAYS) на миссию. Шлёт пачкой (до 4 событий, миссий — до 2 за запрос и до 4 за сеанс), уровень/очки — не чаще раза в evGap (3 мин),
+     плюс при сворачивании игры; не отправилось (нет сети, сервер молчит) — уйдёт в следующий раз/при следующем запуске.
+     Только ВКонтакте с мостом и подписью в адресе: в ОК, в Яндексе и на маке без vk_app_id — ни одного запроса. Всё молча: игрок ничего не видит.
+     Статистика: STAT.ev('vkev',{a:'lvl'|'pts'|'mis'|'req', r:итог, k:код миссии}). Наград за это нет. */
+  var evT=0,evBusy=false,evLast=0,evSes=0,evDead=false,evWait=0,evFails=0,evSkip={},EV_RETRY_DAYS=1;
+  function evHold(k){var e=evSt(),t=e.f&&+e.f[k]||0;return evSkip[k]||(t>0&&nowFn()-t<EV_RETRY_DAYS*DAY&&nowFn()>=t);} // недавно отказали — пока не шлём
+  function evSt(){if(!st.ev||typeof st.ev!=='object')st.ev={};if(!st.ev.m||typeof st.ev.m!=='object')st.ev.m={};return st.ev;}
+  function evKeep(){return typeof PLAT!=='undefined'&&PLAT==='vk'&&!OKP;} // запоминать достижения (даже без сети/моста)
+  function evOn(){return ok()&&!OKP&&!!O.evUrl&&!!qp('sign')&&!evDead&&typeof fetch==='function';}
+  function evNum(code){var n=0;try{n=+(typeof O.evId==='function'?O.evId(code):O.evId&&O.evId[code])||0;}catch(e){}return n>=3?n:0;}
+  function evStat(a,r,k){try{if(typeof STAT!=='undefined'&&STAT.ev){var p={a:a,r:String(r).slice(0,8)};if(k)p.k=k;STAT.ev('vkev',p);}}catch(e){}}
+  function evInit(){if(!evKeep())return;evSt();
+    try{document.addEventListener('visibilitychange',function(){if(document.hidden)evFlush(true);});}catch(e){}}
+  function evMerge(b){if(!b||typeof b!=='object')return;var e=evSt(),k,i,ks=['l','ls','p','ps'];
+    for(i=0;i<ks.length;i++){k=ks[i];if(+b[k]>(+e[k]||0))e[k]=+b[k];}
+    if(b.m&&typeof b.m==='object')for(k in b.m)if(e.m[k]==null||+b.m[k]>+e.m[k])e.m[k]=+b.m[k]===1?1:0;
+    if(b.f&&typeof b.f==='object'){if(!e.f)e.f={};for(k in b.f)if(+b.f[k]>(+e.f[k]||0))e.f[k]=+b.f[k];}}
+  function evSet(k,n){if(!evKeep())return;n=Math.floor(+n||0);var e=evSt();if(!(n>(+e[k]||0)))return;e[k]=n;saveFn();evPlan(5000);}
+  function level(n){evSet('l',n);}
+  function score(n){evSet('p',n);}
+  function missionKnown(code){return !evKeep()||evSt().m[code]!=null;}
+  function mission(code){if(!evKeep()||!code)return false;var e=evSt();if(e.m[code]!=null)return false;e.m[code]=0;saveFn();evPlan(5000);return true;}
+  function evPick(force){var e=evSt(),out=[],k,n=0,gap=+O.evGap||180000,now=Date.now();
+    for(k in e.m){if(e.m[k]!==0||evHold(k)||!evNum(k))continue;if(n>=2||evSes+n>=4)break;out.push({m:k,id:evNum(k)});n++;}
+    if(out.length||!evLast||now-evLast>=(force?30000:gap)){
+      if((+e.l||0)>(+e.ls||0))out.push({a:1,v:+e.l});
+      if((+e.p||0)>(+e.ps||0))out.push({a:2,v:+e.p});}
+    return out;}
+  function evPlan(ms){if(evT||!evOn())return;var e=evSt(),gap=+O.evGap||180000,left=evLast?evLast+gap-Date.now():0,k,mis=false;
+    for(k in e.m)if(e.m[k]===0&&!evHold(k)&&evNum(k)&&evSes<4){mis=true;break;}
+    if(!mis&&!((+e.l||0)>(+e.ls||0)||(+e.p||0)>(+e.ps||0)))return;
+    evT=setTimeout(function(){evT=0;evFlush();},Math.max(ms||5000,mis?0:left,evWait-Date.now()));}
+  function evFlush(force){if(evBusy||!evOn()||Date.now()<evWait)return;
+    try{if(navigator.onLine===false)return;}catch(e){}
+    var list=evPick(force);if(!list.length)return;evBusy=true;evLast=Date.now();
+    var fin=false,guard=setTimeout(function(){end(null);},15000);
+    function end(d){if(fin)return;fin=true;clearTimeout(guard);evBusy=false;evDone(list,d);}
+    try{fetch(O.evUrl,{method:'POST',mode:'cors',keepalive:true,headers:{'Content-Type':'text/plain'},body:JSON.stringify({app:String(APP),q:location.search,ev:list})})
+      .then(function(r){return r.json();}).then(function(d){end(d&&typeof d==='object'?d:null);},function(){end(null);});}catch(e){end(null);}}
+  function evDone(list,d){var e=evSt(),i,x,r,again=false;
+    if(!d){evFails++;evWait=Date.now()+Math.min(3600000,60000*Math.pow(2,evFails));evStat('req','net');evPlan(5000);return;} // сеть/сервер: позже, в этом же сеансе реже
+    if(!d.ok||!d.r){evDead=true;evStat('req',d.why||'bad');return;} // подпись устарела, игра не включена на сервере и т. п. — до следующего запуска молчим
+    evFails=0;
+    for(i=0;i<list.length;i++){x=list[i];r=String(d.r[i]||'net');
+      if(x.m){evStat('mis',r,x.m);
+        if(r==='ok'||r==='dup'){e.m[x.m]=1;evSes++;if(e.f)delete e.f[x.m];}
+        else if(r==='off')evSkip[x.m]=1; // на сервере миссии ещё нет — до следующего запуска не спрашиваем
+        else if(r==='busy'||r==='net')again=true;
+        else{if(!e.f)e.f={};e.f[x.m]=nowFn();evSkip[x.m]=1;}} // VK отказал (на проверке / отклонена / сбой): миссия ждёт дальше, повтор — не раньше чем через сутки
+      else{evStat(x.a===1?'lvl':'pts',r);
+        if(r==='busy'||r==='net')again=true;
+        else if(x.a===1)e.ls=x.v;else e.ps=x.v;}} // ok — принято; off/bad/e… — это значение больше не шлём, следующее (больше) попробуем
+    saveFn();if(again)evWait=Date.now()+120000;evPlan(20000);}
 
   return {v:VER,ok:ok,isOk:OKP,can:can,init:init,ready:ready,merge:merge,fav:fav,home:home,invite:invite,share:share,group:group,open:open,list:list,
-    settingsHtml:settingsHtml,bind:bind,showMore:showMore,offer:offer,games:GAMES};
+    settingsHtml:settingsHtml,bind:bind,showMore:showMore,offer:offer,games:GAMES,
+    ntf:ntf,ntfOn:ntfOn,ntfDue:ntfDue,ntfDay:ntfDay,level:level,score:score,mission:mission,missionKnown:missionKnown,evOn:evOn,evFlush:evFlush};
 })();
 /*/SOC*/
 // VK: куски по 1800 символов, двойной буфер «a0…»/«b0…», указатель svn="b:5:<длина>" — последним. Мир в «Недрах» дорастал до 90+ тыс. знаков (sim, 01.10; с упаковкой js/savepack.js — до ~55) →
 // до 200 кусков (360 тыс.; у VK лимит 1000 ключей на игрока, значение ≤ 4096 байт — 1800 знаков кириллицы влезают), читаем пачками по 50 ключей
-const VK_CHUNK=1800,VK_MAXCH=200,VK_GETN=50,vkSent={};let vkCur=null,vkQ=null,vkAgain=false;
+const VK_CHUNK=1800,VK_MAXCH=200,VK_GETN=50,vkSent={};let vkCur=null,vkQ=null,vkAgain=false;let vkBigN=0;function vkBig(n){if(n<=vkBigN)return;vkBigN=n;try{if(typeof STAT!=='undefined'&&STAT.ev)STAT.ev('cloud',{k:n>VK_MAXCH?'vkfull':'vkbig',n});}catch(e){}}   /* b2-fix Б8: > 150 кусков — сигнал в статистику (> 200 облако не пишется) */
 async function vkPut(k,v){if(vkSent[k]===v)return;await vkSend('VKWebAppStorageSet',{key:k,value:v},8000);vkSent[k]=v;}
 function vkSaveCloud(){if(vkQ){vkAgain=true;return vkQ;}
-  vkQ=(async()=>{try{do{vkAgain=false;const str=JSON.stringify(sOut()),ts=S.ts,c=S.cr,n=Math.ceil(str.length/VK_CHUNK),pre=vkCur==='a'?'b':'a';if(n>VK_MAXCH)return;
+  vkQ=(async()=>{try{do{vkAgain=false;const str=JSON.stringify(sOut()),ts=S.ts,c=S.cr,n=Math.ceil(str.length/VK_CHUNK),pre=vkCur==='a'?'b':'a';if(n>150)vkBig(n);if(n>VK_MAXCH)return;
       for(let i=0;i<n;i++)await vkPut(pre+i,str.slice(i*VK_CHUNK,(i+1)*VK_CHUNK));
       await vkPut('svn',pre+':'+n+':'+str.length);vkCur=pre;BOOT_TS=ts;BOOT_CR=c;}while(vkAgain);}catch(e){}finally{vkQ=null;}})();
   return vkQ;}
@@ -1195,6 +1336,7 @@ function openSettings(){const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="o
   modal(`<h2>${L('Настройки','Settings')}</h2>
     <button class="set" id="stBig"><span>🔠 ${L('Крупный шрифт','Large text')}<br><small>${L('весь текст и кнопки крупнее','all text and buttons bigger')}</small></span><i${(S.bigF|0)?'':' class="off"'}>${[L('обычный','normal'),L('крупнее','larger'),L('ещё крупнее','largest')][S.bigF|0]}</i></button>
     ${BETA?`<button class="set" id="stFb"><span>✉️ ${L('Написать отзыв','Send feedback')}<br><small>${L('тестовая версия — нам важно ваше мнение','test version — your opinion matters')}</small></span><i class="go">›</i></button>`:''}
+    ${typeof B2!=='undefined'?B2.html('settings',{}):''}<!-- b2-core: гнездо ⚙ (бета: «🧪 Начать с главы…») -->
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
     ${window.MUSIC?MUSIC.setHtml(on):''}<!-- M47e: 🎵 Музыка (js/music.js) -->
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
@@ -1328,7 +1470,7 @@ function socOffer(busy){if(PLAT!=='vk'||!SOC.ok()||window.__demo)return;socClose
   const d=document.createElement('div');d.className='soc-o';d.style.cssText='margin-top:12px;text-align:center;font-size:17px';
   d.innerHTML='<p style="margin:0 0 8px">'+o.t+'</p><button class="btn noenter" id="mSoc">'+o.b+'</button>';
   row.parentNode.insertBefore(d,row);STAT.ev('mod',{m:'soc',a:'of_'+o.k});
-  const b=$('mSoc');b.onclick=()=>{b.disabled=true;SND.tap();STAT.ev('mod',{m:'soc',a:'ok_'+o.k});o.run();};}
+  const b=$('mSoc');b.onclick=()=>{b.disabled=true;SND.tap();STAT.ev('mod',{m:'soc',a:'ok_'+o.k});Promise.resolve(o.run()).then(r=>{if(r&&o.ok)toast(o.ok);},()=>{});};}   // b2-core: ответ Людмилы после «🔔 Напоминать»
 
 /* ================= запуск ================= */
 document.addEventListener('gesturestart',e=>e.preventDefault());
@@ -1343,7 +1485,11 @@ function goBack(){const ad=$('ad');if(ad&&ad.classList.contains('on'))return tru
   return !!(window.UI&&UI.back&&UI.back());}
 window.__back=goBack;document.addEventListener('backbutton',e=>{e.preventDefault&&e.preventDefault();goBack();},false);
 // SOC — после загрузки сохранения, до моста VK (считает сессии в S.soc); окна — через modal() игры
-SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal()});
+/* b2-vkt */ const EV_URL=(()=>{const m=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]evurl=([^&#]*)/.exec(location.search);return m?decodeURIComponent(m[1]):'https://functions.yandexcloud.net/d4e7egf62asn7suf30m0?op=vkev';})(); // миссии VK (SOC v2.5 → vk-pay ?op=vkev; на маке — ?evurl=)
+SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),
+  now:()=>nowMs(),evUrl:EV_URL,evId:c=>window.B2&&B2.vkmId?B2.vkmId(c):0,   /* b2-vkt: now, evUrl, evId */
+  ntf:{t:n=>['','Завтра будет новый подарок дня. Напомнить вам?','Каждый день — поручения и подарок. Напоминать о них?','Буду изредка звать — дела ждут хозяина. Напоминать?'][n]||'',
+    b:'🔔 Напоминать',ok:'Договорились! Часто беспокоить не буду.',s:'🔔 Включить напоминания'}});   // b2-core: SOC v2.5 — разрешение на уведомления VK (вопрос Людмилы, только VK; в ОК/Яндексе модуль молчит)
 // покупки → статистика (модуль PAY не трогаем): попытка и итог; «ok» — площадка подтвердила и товар выдан (PAY.give)
 // STAT v1.2: buy {i, r: try|ok|cancel|fail, v: цена в голосах из PAY_ITEMS (= hobby-pay/catalog.json)}; fail — ошибка моста/SDK, cancel — отказ игрока (раньше — 'no')
 // M36: при «ok» ещё s — глава (1–5), d — реальный день игры, n — какая по счёту покупка, cr — 💎 до покупки; подарок за первую покупку (payFirst) — здесь же

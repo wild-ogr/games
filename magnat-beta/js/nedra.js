@@ -1,7 +1,7 @@
 /* ================= «Из ларька в магнаты: бизнес» — глава 5 «Недра»: вторая половина главы (M30, без DOM) =================
    Решение владельца 02.10: порог IPO не снижать, а заполнить главу. Только миры с флагом W.n5 (новые миры и миры «из ларька»;
    эталонный сейв v3 без флага идёт до рубля как раньше). Грузится после econ.js (и в симуляторе — tools/sim.sh и др.).
-   1) Новые участки по ходу главы: регион без «?» — раз в несколько месяцев геологи открывают новый (до NP_MAX участков в регионе);
+   1) Новые участки по ходу главы: ВЫКЛЮЧЕНО (NP_N5=0 с M30-fix-ch5 — бот smart; b2-fix Н-1: комментарий приведён к коду, доразведку делает поток NEDRA);
       к 8-му месяцу главы на Урале гарантированно есть свободный участок с медью (единственный регион с медью).
    2) События с выбором (8 видов, nev): РЖД продаёт вагоны со скидкой, завод-банкрот продаёт оборудование (передел со скидкой 25 %),
       профсоюз, экологическая проверка, продолжение пласта (доразведка своего участка), экспортёр, рефинансирование, город просит помочь.
@@ -29,7 +29,7 @@ function margin(W,t,r,vc){const O=E.OBJ[t];let c=vc!=null?vc:(O.vc||0);if(O.in)f
 
 /* ---------------- новые участки ---------------- */
 function newDep(W,r,g){const P=E.REGS[r].p;if(!g){let s=.2;for(const k in P)s+=P[k];let x=NR(W)*s;g=null;for(const k in P){x-=P[k];if(x<0){g=k;break;}}if(!g)return null;}
-  const D={coal:{res:[900e3,2500e3],vc:[5000,6400]},ore:{res:[1200e3,3000e3],vc:[4800,6600]},lime:{res:[1500e3,3500e3],vc:[500,800]},wood:{res:[600e3,1500e3],vc:[2300,3100]},cuore:{res:[4e6,9e6],vc:[1400,1900]}}[g];
+  const D={coal:{res:[900e3,2500e3],vc:[5000,6400]},ore:{res:[1200e3,3000e3],vc:[4800,6600]},lime:{res:[1500e3,3500e3],vc:[500,800]},wood:{res:[600e3,1500e3],vc:[2300,3100]},cuore:{res:[4e6,9e6],vc:[1400,1900]}}[g]||(E.DEP&&E.DEP[g]);if(!D)return null;   /* b2-krai: товары края */
   // участок «по наводке геологов» — из лучших: запас в верхней половине, добыча дешевле (нижняя треть), стройка без надбавки
   return {g,res:rnd0(NRR(W,(D.res[0]+D.res[1])/2,D.res[1])/1000)*1000,vc:rnd0(NRR(W,D.vc[0],D.vc[0]+(D.vc[1]-D.vc[0])/3)/10)*10,cm:Math.round(NRR(W,1,1.08)*100)/100};}
 function addPlot(W,r,g){if(W.plots[r].length>=NP_MAX)return null;const p={id:r+W.plots[r].length,r,st:'hid',dep:newDep(W,r,g),own:null,n5:1};while(E.plotById(W,p.id))p.id+='x';W.plots[r].push(p);news(W,'ev',{k:'plot',r});return p;}
@@ -171,7 +171,7 @@ E.advise=function(W){const o=adv0.apply(this,arguments);if(!on(W))return o;const
 let cpReg=false;
 function cpHook(){if(cpReg||!Array.isArray(E.cpSrc))return;cpReg=true;
   E.cpSrc.unshift((W,days,P)=>P.take(f=>f.tag==='ev'&&f.cf==='fix').map(f=>P.item(f,'fix','Доплата горнякам (профсоюз)','Miners’ pay rise (union)','union')));
-  E.cpSrc.unshift((W,days,P)=>P.take(f=>f.tag==='dv').map(f=>P.item(f,'oth','Дивиденды по акциям прошлых холдингов','Dividends from your past holdings','dv')));}   // M47c
+  E.cpSrc.unshift((W,days,P)=>P.take(f=>f.tag==='dv').map(f=>P.item(f,'dv','Дивиденды по акциям прошлых холдингов','Dividends from your past holdings','dv')/* b2-fix Х2-7: свой вид, а не «прочее» */));}   // M47c
 cpHook();
 function nedMig(W,fx){if(W.n5){nx(W);if(typeof W.n5m!=='number')W.n5m=W.m;}}
 Object.assign(E,{nedPlots:plotsMonth,nedBots:botsMonth,NEV,EVN,ND,NP_MAX,nedDay,nedClose,nedAns,nedAdv,nedAuto,nedMig,scrap,scrapOk,SCRAP_K,nedMargin:margin,plantOf,frpOk,frpLoan,frpList,FRP_K,FRP_R,FRP_N,FRP_GR});
