@@ -1,6 +1,7 @@
 /* ===== bb2-first.js — поток NOVICE (буст в2, 13.10.2026): первый поход заново — СТАРТОВАЯ часть (≤6 КБ сжатых). Грузится после bal.js, до game.js. =====
    Сам первый поход (мир ждёт, «иди туда», автоход, кольцо, свист, звёзды) — js/bb2-first1.js: грузится сразу, но только новичку (место 1 не пройдено или походов < 3).
    Флаги (BB2.on): first2 — мир ждёт первого движения, уровни без окна, первая карточка из двух, «страшно, но погибнуть нельзя», свист конусом, честные звёзды;
+   tap1 (UP 24.10) — мир НЕ ждёт: живой с первой секунды, нажатие = богатырский «Хрясь!», рука-подсказка на ближайшей нечисти (выключает заморозку first2);
    tapgo — нажатие без ведения = «иди туда»; autowalk — рука сама ведёт после 6 с; pchint — подсказка управления для ПК; short — походы мест 2–6 короче;
    lair — Логово Кощея (место 12) и Чертог Карачуна (место 18) мягче; pw — «сила на карте» по настоящим победителям; res2 — «Завтра» в итогах на виду, окно уровня с 4 карточками;
    naskok / revansh / nedob — «Наскок на 60 секунд», «Реванш босса», «Недобитый» (бой и окна — js/bb2-first2.js, по требованию).
@@ -8,7 +9,9 @@
 var NV=(function(){
   var o={},PC=!!(window.matchMedia&&matchMedia('(hover:hover) and (pointer:fine)').matches);
   /* числа первого захода (не экономика). LAD — место в кампании → секунда босса и поправки (x — опыт, bh — здоровье босса): подобрано ботом, журнал logs/NOVICE.md */
-  var K=o.K={tapRuns:3,idle:6,waitMax:20,noWin:20,autoLv:2,still:.7,ringHit:.07,ringDur:14,whFirst:2.2,whCd:5.5,whWarn:1,whAng:.55,whR:340,whDmg:.34},
+  /* tap1 (UP 24.10): мир живой с 0 с, нажатие = «Хрясь!» (рывок до hitDash и удар радиусом hitR, вожаку/боссу hitBig) первые hitT с первого похода; рука на ближайшей нечисти, пока ударов < hitHint */
+  var K=o.K={tapRuns:3,idle:6,waitMax:20,noWin:20,autoLv:2,still:.7,ringHit:.07,ringDur:14,whFirst:2.2,whCd:5.5,whWarn:1,whAng:.55,whR:340,whDmg:.34,
+    hitT:25,hitCd:.55,hitR:120,hitDash:90,hitBig:40,hitHint:2},
     LAD=o.LAD={2:{boss:78,x:.85,bh:.55},3:{boss:90,x:.85,bh:.55},4:{boss:120,x:.85,bh:1},5:{boss:140,x:.85,bh:.65},6:{boss:160,x:.85,bh:.4}},
     LAIR={k15:.675,mini20:.8}, /* слот 15 (место 12): здоровье Кощея и мини-босса на Обычной ×0,675; слот 20 (место 18): мини-босс ×0,8, лавина реже и медленнее */
     PWN={7:200,8:200,9:220,10:230,11:240,12:250,13:250,14:250,15:300,16:350,17:550,18:600,19:800,20:950,21:1000,22:1000,23:1000,24:1050,25:1700,26:2000,27:2000,28:2600}; /* место → сила победителей (FIRST-tools/walls.txt), не выше старой */
@@ -92,4 +95,30 @@ var NV=(function(){
       var lv=typeof EVS!=='undefined'&&EVS.gory_lavina;
       if(lv)['start','step'].forEach(function(f){var old=lv[f];lv[f]=function(g,a,b){var n0=g.en.length,i,e;old.call(lv,g,a,b);if(g.chi!==20||g.dif!=='n'||!on('lair'))return;for(i=n0;i<g.en.length;i++){e=g.en[i];if((i-n0)%3===2)e.dead=true;else{e.spd/=1.3;e.dmg*=.7;}}};});}
     if(typeof BAL_PW==='function'){var pw0=BAL_PW;BAL_PW=function(slot,k){var n=pw0(slot,k),v;if(k&&k!=='n'||!on('pw'))return n;v=PWN[chPos(slot)];return v&&n>0?Math.min(n,v):n;};}}catch(e){try{console.warn('bb2 nv: '+e.message);}catch(x){}}
+  /* ---------- tmrw (UP 24.10) «Завтра в деревне»: одно окно после первого законченного похода (VK и ОК, PLAT==='vk'; на Яндексе — нет) ----------
+     Подарок за вход завтра, серия 7 дней (облик), новые дела и сундук дня, «Реванш» (если есть); «🔔 Напомнить завтра» (SOC.ntf, только VK — SOC.can('ntf'),
+     показ считается показом №1 вопроса SOC: S.soc.ntf={n:1,t}) и «⭐ В избранное» (SOC.fav, со 2-го сеанса — правило VK 2.6.3; в ОК SOC.can('fav') — нет).
+     Один раз: S.bb2.novice.tw. Флаг tmrw (?bb2=-tmrw — выключить). Статистика: nv_tmrw {a: show|ntf|ntfok|fav|favok|go, n,f}. */
+  function twDue(){try{return on('tmrw')&&PLAT==='vk'&&typeof G!=='undefined'&&!G&&(S.runs|0)>=1&&!!S.done[ORD[0]]&&!sv().tw&&!$('modal').classList.contains('on')&&!adShowing&&!adBusy;}catch(e){return false;}}
+  function twNtf(){try{return typeof SOC!=='undefined'&&SOC.ok()&&SOC.can('ntf')&&SOC.ntfDue()&&!(S.soc&&S.soc.ntf&&+S.soc.ntf.n);}catch(e){return false;}}
+  function twFav(){try{return typeof SOC!=='undefined'&&SOC.ok()&&SOC.can('fav')&&(S.soc&&S.soc.ses|0)>=2;}catch(e){return false;}}
+  function twRow(ic,t,sub){return '<div class="tmw"><span>'+ic+'</span><div><b>'+t+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</div></div>';}
+  function twShow(){var s=sv(),ls,n,r,rows='',nb,fb,rv=s.rv;s.tw=1;try{save();}catch(e){}
+    try{ls=loginState();n=ls.n%7+1;r=loginReward(n);rows+=twRow('🎁',L('Подарок за вход — день ','Login gift — day ')+n,rewardText(r));
+      if(n<7&&typeof loginReward(7)==='string')rows+=twRow('🔥',L('7 дней подряд — облик богатыря','7 days in a row — a hero outfit'),L('Не потеряй серию: пропустишь день — начнёшь сначала','Keep the streak: miss a day and it starts over'));}catch(e){}
+    rows+=twRow('📋',L('Новые задания и сундук дня','New quests and the daily chest'),'');
+    try{if(rv&&EN[rv.b]&&on('revansh'))rows+=twRow('⚔',L(qt(EN[rv.b].n)+' вернётся за реваншем','The '+EN[rv.b].n+' returns for a rematch'),'');}catch(e){}
+    nb=twNtf();fb=twFav();
+    if(nb){try{S.soc.ntf={n:1,t:Date.now()};save();STAT.ev('soc',{a:'ntf',r:'show',n:1,d:SOC.ntfDay(),w:'tmrw'});}catch(e){}}
+    showModal('<h3>'+L('📅 Завтра в деревне','📅 Tomorrow in the village')+'</h3><p class="tmwq">'+L('Нечисть ещё вернётся, богатырь! Приходи завтра — тебя ждёт подарок.','The fiends will be back, hero! Come tomorrow — a gift awaits you.')+'</p>'+rows+
+      ((nb||fb)?'<div class="btns tmwb">'+(nb?'<button class="btn ghost" id="twNtf">'+L('🔔 Напомнить завтра','🔔 Remind me')+'</button>':'')+(fb?'<button class="btn ghost" id="twFav">'+L('⭐ В избранное','⭐ Favourite')+'</button>':'')+'</div>':'')+
+      '<div class="btns"><button class="btn big" id="twGo">'+L('Дальше','Continue')+'</button></div>','tmrw');
+    st('nv_tmrw',{a:'show',n:nb?1:0,f:fb?1:0});
+    var b=$('twNtf');if(b)b.onclick=function(){b.disabled=true;st('nv_tmrw',{a:'ntf'});Promise.resolve(SOC.ntf(1)).then(function(y){if(y){st('nv_tmrw',{a:'ntfok'});b.textContent=L('✓ Напомню','✓ Will remind');}else b.disabled=false;},function(){b.disabled=false;});};
+    var f=$('twFav');if(f)f.onclick=function(){f.disabled=true;st('nv_tmrw',{a:'fav'});Promise.resolve(SOC.fav()).then(function(y){if(y){st('nv_tmrw',{a:'favok'});f.textContent=L('✓ В избранном','✓ In favourites');}else f.disabled=false;},function(){f.disabled=false;});};
+    $('twGo').onclick=function(){try{SND.click();}catch(e){}st('nv_tmrw',{a:'go'});hideModal();};}
+  o.tw={due:twDue,show:twShow};
+  BB2.hook('menu',function(){if(!on('tmrw')||PLAT!=='vk'||sv().tw||(S.runs|0)<1)return;var k=0,tm=setInterval(function(){if(++k>60||sv().tw){clearInterval(tm);return;}if(twDue()){clearInterval(tm);twShow();}},700);});
+  try{var cs2=document.createElement('style');cs2.textContent='.tmwq{margin:0 0 8px;font-size:14.5px;line-height:1.35}.tmw{display:flex;gap:10px;align-items:center;text-align:left;background:rgba(255,216,74,.12);border:1px solid rgba(255,216,74,.4);border-radius:12px;padding:7px 10px;margin:0 0 6px}.tmw>span{font-size:24px}.tmw b{display:block;font-size:14.5px}.tmw small{display:block;font-size:12.5px;opacity:.85;line-height:1.25}.tmwb{gap:6px}.tmwb .btn{flex:1;font-size:14px}';document.head.appendChild(cs2);}catch(e){}
+
   return o;})();

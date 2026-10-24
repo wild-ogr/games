@@ -73,7 +73,7 @@ function resRar(){var card=$('mcard');if(!card||!$('rWin'))return;card.classList
 
 /* ---------- звонок жены — без лишнего окна ---------- */
 var es=endSession;
-endSession=function(){try{if(G&&!G.over){var canExtra=!G.tourn&&!G.extra&&adOk()&&(S.sessions||0)>=3&&(S.sessions||0)%2===0&&!interSoon();
+endSession=function(){try{if(G&&!G.over){var canExtra=!G.tourn&&!G.extra&&adOk()&&adLikely()&&(S.sessions||0)>=3&&(S.sessions||0)%2===0&&!interSoon();
     if(!canExtra){G.phase='done';hint('');SND.phone();buzz([100,80,100]);var g=G,done=false;
       say('wife',pick(PH.wife),2600);var e=$('say');if(e)e.classList.add('ui-wife');
       var go=function(){if(done)return;done=true;document.removeEventListener('pointerdown',tap,true);if(e)e.classList.remove('ui-wife');if(G===g&&!g.over){e&&e.classList.remove('on');finish();}};

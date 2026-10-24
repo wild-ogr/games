@@ -152,7 +152,7 @@ function openMorning(again){
   if(window.LOOK&&LOOK.walk)try{LOOK.walk($('mcard'));}catch(e){}
   return true;}
 function morning(){var o=F(),t=today();if(!o||!(S.sessions>0)||(S.caught||0)<1||o.md===t||!o.d0||t<=o.d0)return false;
-  o.md=t;weekSync(o,t);var cat=catCover(o,t),rows=[],sum=0,first=!o.g2&&o.d0>1&&t-o.d0<=3;
+  o.md=t;try{if(S.mail&&typeof S.mail==='object')S.mail.au=t;}catch(e){}/* UP-RB 24.10: «Утро» — вместо утренней «Почты»: закрыл «Утро» → openMap → maybeStreak не открывает следом «Почту» (было: два окна подряд каждый день со 2-го) */weekSync(o,t);var cat=catCover(o,t),rows=[],sum=0,first=!o.g2&&o.d0>1&&t-o.d0<=3;
   try{a3MailDeliver();}catch(e){}
   // подарок дня — сам
   var stt=streakState(),gc=0,gd=stt.day;if(!stt.claimed)gc=suppress(function(){return a3ClaimGift(1);})||0;

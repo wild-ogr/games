@@ -41,7 +41,8 @@ var NB=window.GBNB={on:GB.flag('newbie'),
 // тексты — отдельными данными (TEXT вычитывает, EN переводит; GBT.say('nb.<ключ>') главнее, если есть)
 NB.TX={
   help:'Вот этот — сюда! Тащите туда, где светится.',
-  l1:'Сгущёнку выбросили! Тащите банку к двум таким же — покупатель уже тут.', // v14.1: зацепка вместо правила (было «Я тётя Валя! Тащите сгущёнку к двум таким же — три одинаковых, и покупатель доволен!»)
+  l1:'Сгущёнку выбросили! Нажмите на банку — покупатель уже тут.', // UP-GS 24.10: одно касание делает 1-й ход (index.html tutorTap); было «Тащите банку к двум таким же…»
+  // v14.1: зацепка вместо правила (было «Я тётя Валя! Тащите сгущёнку к двум таким же — три одинаковых, и покупатель доволен!»)
   gift_t:'Подарок от тёти Вали',gift:'Это вам, на счастье — {n}!',gift_c:'В зал — подарок: {c} 💰',
   gift_say:'Фикус в зале — теперь как дома!',
   new_good:'Новинка на витрине — {n}!',new_mom:'Мама с малышом — без очереди! Обслужите её первой — +5 💰.',
@@ -124,7 +125,7 @@ function ava(){if(avaURL)return avaURL;try{var d=2,w=60,c=document.createElement
 function l1Card(){var e=$('tip');if(!e)return;var t=tx('l1');if(!t)return;
   var u=ava();if(u)e.style.setProperty('--nbva','url('+u+')');e.classList.add('nbv');
   // подсказка уровня 1 — пара [ru,en]: по-русски наша фраза, английская остаётся прежней
-  if(G.tipCur&&G.tipCur[0]&&G.tipCur[0].indexOf('сгущёнку')>=0){G.tipCur=[t,G.tipCur[1]];tip(L(G.tipCur[0],G.tipCur[1]));}
+  if(G.tipCur&&G.tipCur[0]&&/сгущёнку/i.test(G.tipCur[0])){G.tipCur=[t,G.tipCur[1]];tip(L(G.tipCur[0],G.tipCur[1]));}
   G.nbL1={t0:Date.now(),r:0,last:Date.now()};once('l1');
   if(G.speech&&G.speech.who==='valya')G.speech=null;}
 function l1Off(){var e=$('tip');if(e){e.classList.remove('nbv','nbp');}}
@@ -161,7 +162,7 @@ function helpTick(){if(typeof G==='undefined'||!G)return;var now=Date.now();
   if(HL.mv!==G.moves){HL.mv=G.moves;HL.t=now;if(G.nbHelp)helpOff();return;}
   if(!on('help')||!isNew()||G.daily||G.mode||G.idx>1||G.over||G.won||G.tutor||G.drag||G.sel)return;
   if(typeof modalOn!=='undefined'&&modalOn||document.hidden||typeof paused!=='undefined'&&paused){HL.t=now;return;}
-  var wait=G.idx===1&&G.moves===0?8000:4000;
+  var wait=G.idx===0?2000:G.moves===0?4000:4000; /* UP-GS 24.10: ур.1 — 2 с (было 4), ур.2 до 1-го хода — 4 с (было 8) */
   if(now-HL.t<wait||now-HL.at<8000||HL.n>=8||G.hint&&G.hint.t<5)return;
   HL.at=now;HL.n++;try{doHint();}catch(e){return;}
   if(!G.hint)return;G.nbHelp=1;

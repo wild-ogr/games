@@ -13,7 +13,8 @@
 const HW='hw26',GOAL=2500;
 let festSt=null;
 function on(){return typeof FEST!=='undefined'&&FEST.on(HW);}
-function nm(){return FEST.name(HW)||L('Кощеева неделя','Spooky week');}
+function nm(){try{const r=(FEST.table()||[]).find(x=>x.id===HW);if(PLAT==='yandex'&&LANG!=='en'&&r&&r.ya)return r.ya;}catch(e){} /* UP 24.10: на Яндексе — «Осенний вечер» (решение владельца 07.10; в модуле ng:{bogatyr} перекрывает ya) */
+  return FEST.name(HW)||L('Кощеева неделя','Spooky week');}
 function K(){return (S.festK&&S.festK[HW])|0;}
 function nightGot(){return !!(S.festN&&S.festN[HW]===FEST.today());}
 /* облик «Кощеев»: тёмный кафтан, лунно-зелёная отделка (для всех богатырей; виден в праздник или если уже есть) */
@@ -64,7 +65,12 @@ META_MODS.push({id:'fest',
     if(h)G.metaHtml=(G.metaHtml||'')+h;},
   TODAY(TL){if(!on()||(S.runs|0)<3)return;const hot=!nightGot()||K()>=GOAL&&!FEST.got(HW,'main');
     TL.unshift({k:'fest',ic:'hp_'+(S.hero||'dob')+'@koshei',t:'🌙 '+nm(),s:FEST.got(HW,'main')?L('Лунный сундук — за первую победу дня','Moon chest for your first win today'):fmtNum(Math.min(GOAL,K()))+' / '+fmtNum(GOAL)+L(' нечисти → облик «Кощеев»',' monsters → “Deathless” outfit'),ready:hot,b:L('Открыть','Open'),always:1,fn:()=>{hideModal();open();}});},
-  CHIPS(a){if(on())a.push('<i class="hot">🌙 '+L('праздник','holiday')+'</i>');}});
+  CHIPS(a){if(on())a.push('<i class="hot">🌙 '+L('праздник','holiday')+'</i>');},
+  /* UP 24.10: плашка праздника в деревне (#festB, как README FEST п.4 — но окно своё, open()); с 1-го похода */
+  VIL(el){try{if(!on()||!el||(S.runs|0)<1)return;const got=FEST.got(HW,'main'),left=FEST.left(HW),d=document.createElement('div');d.className='card next';d.id='festB';
+    d.innerHTML='<div class="row"><img class="ic" src="'+ic('hp_'+(S.hero||'dob')+'@koshei',96)+'"><div class="t"><b>🌙 '+nm()+'</b><span>'+(got?L('Лунный сундук — за первую победу дня','Moon chest for your first win today'):fmtNum(Math.min(GOAL,K()))+' / '+fmtNum(GOAL)+L(' нечисти → облик «Кощеев»',' monsters → “Koshchei” outfit'))+' · '+L('ещё ','')+left+L(' дн.',' days left')+'</span></div><button class="btn gold" id="festGo">'+L('Открыть','Open')+'</button></div>';
+    const at=el.querySelector('#village');if(at&&at.nextSibling)el.insertBefore(d,at.nextSibling);else el.appendChild(d);
+    const b=d.querySelector('#festGo');if(b)b.onclick=()=>{try{SND.click();}catch(e){}open();};}catch(e){META_ERR('fest.vil',e);}}});
 fix(S);init();
 /* на входе в меню — выдать облик, если задание выполнено на другом устройстве */
 setTimeout(()=>{try{const s=check();if(s)toast(s);}catch(e){}},4000);

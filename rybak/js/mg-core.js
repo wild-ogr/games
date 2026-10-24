@@ -177,7 +177,7 @@ function mkHost(C){var rs=[];var H={el:C.el,
   ad:function(kind){return new Promise(function(ok){if(C.train&&kind!=='free'){ok(false);return;}var pl='mg_'+C.id+(kind?'_'+kind:''); /*MERGE STAT: место ролика — игра и кнопка (x2, more, help, buyer, uha, versha2, hint)*/try{if(adHold(pl)){ok(false);return;}}catch(e){}
     try{STAT.place&&STAT.place(pl);}catch(e){}var got=false;C.adNow=Date.now();ok=(function(f){return function(v){C.adNow=0;C.adEnd=Date.now();f(v);};})(ok);
     try{showRewarded(function(){got=true;ok(true);},function(){if(!got)ok(false);},function(){got=true;ok(true);return L('засчитано','granted');});}catch(e){ok(false);}});},
-  adOk:function(){if(C.train||C.bot)return false;try{var k=adOk();if(k)try{STAT.offer('mg_'+C.id);}catch(x){}return k;}catch(e){return false;}}, /*MERGE STAT: показ кнопки ролика в игре — offer mg_<игра> (раз в 20 с)*/
+  adOk:function(){if(C.train||C.bot)return false;try{var k=adOk()&&!(typeof adPre==='function'&&adPre());/*UP-RB 24.10: ролика нет — кнопки нет*/if(k)try{STAT.offer('mg_'+C.id);}catch(x){}return k;}catch(e){return false;}}, /*MERGE STAT: показ кнопки ролика в игре — offer mg_<игра> (раз в 20 с)*/
   snd:function(n,a){try{if(SND[n])SND[n](a);}catch(e){}},
   L:function(ru,en){return L(ru,en);},
   say:function(t,who){saySay(C,t,who);},

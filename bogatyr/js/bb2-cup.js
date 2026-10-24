@@ -3,7 +3,7 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';
 (function(){
   if(typeof BB2!=='object'||!BB2)return;
   function n(v){return typeof v==='number'&&isFinite(v)&&v>0?Math.floor(v):0;}
-  BB2.save('cup',{fix:function(o){var r={},k,a=['jw','lgw','sw'];if(o.ask===1)r.ask=1;for(k=0;k<3;k++)if(n(o[a[k]]))r[a[k]]=n(o[a[k]]);
+  BB2.save('cup',{fix:function(o){var r={},k,a=['jw','lgw','sw'];if(o.ask===1)r.ask=1;if(o.au===1)r.au=1;for(k=0;k<3;k++)if(n(o[a[k]]))r[a[k]]=n(o[a[k]]);
       if(o.tr>=0&&o.tr<64)r.tr=Math.floor(o.tr);if(/^(up|stay|down|top)$/.test(o.mv||''))r.mv=o.mv;return r;},
     merge:function(a,c){var r=BB2.mx(a,c);if(a&&a.tr!=null){r.tr=a.tr;if(a.mv)r.mv=a.mv;else delete r.mv;}return r;}});
   BB2.lazy('cup',['js/cup.js','js/bb2-cup-ui.js'],function(){return !!(BB2.cup&&BB2.cup.ok);});
@@ -19,6 +19,14 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';
   BB2.hook('run',function(g){if(ok()&&X.mode(g)){g.cupM=X.mode(g);go('run',g);}});
   BB2.hook('end',function(g,w){if(g.cupM)go('end',g,w);});
   BB2.hook('modal',function(k,m){if(!ok())return;if(k==='result'&&typeof G!=='undefined'&&G&&G.cupM)go('res',m);else if(!k&&m.querySelector('#setOk'))go('set',m);});
+  /* auto (UP 24.10, как Оборона v4.4): лига открывается САМА — один раз (S.bb2.cup.au), с 3 пройденных глав, в свободном меню (без окна, рекламы, похода);
+     открывается знакомство (имя скрыто по умолчанию), дальше — как по кнопке. Флаг cupauto (?bb2=-cupauto — выключить). STAT cupo {a:'auto'}. */
+  function nDone(){var n=0,k;try{for(k in S.done)if(S.done[k])n++;}catch(e){}return n;}
+  function idle(){try{return typeof G!=='undefined'&&!G&&!document.getElementById('modal').classList.contains('on')&&!document.body.classList.contains('run')&&!adShowing&&!adBusy;}catch(e){return false;}}
+  X.auDue=function(){return BB2.on('cupauto')&&X.on()&&!X.in()&&BB2.s('cup').au!==1&&nDone()>=3;};
+  X.auto=function(){if(!X.auDue()||!idle())return false;BB2.s('cup').au=1;try{save();}catch(e){}BB2.stat('cupo',{a:'auto',k:nDone()});
+    BB2.need('cup').then(function(){if(idle())BB2.cup.open();},function(){});return true;};
+  BB2.hook('menu',function(){if(!X.auDue())return;var k=0,tm=setInterval(function(){if(++k>60||!X.auDue()){clearInterval(tm);return;}if(X.auto())clearInterval(tm);},1500);});
   BB2.hook('chInfo',function(s,sel,el){if(!el||!X.on()||!S.done[0])return;var c=document.createElement('div');c.className='card';c.id='cupCard';c.style.marginTop='14px';
     c.innerHTML='<div class="row"><div class="t"><b>🌐 '+L('Живая лига','Live league')+'</b><span id="cupCardT">'+L('Лиги по 30 богатырей, ступень и награда каждую неделю','Leagues of 30 heroes, a new step and a reward every week')+'</span></div><button class="btn" id="cupCardB">'+L('Открыть','Open')+'</button></div>';
     el.appendChild(c);var b=c.querySelector('#cupCardB');b.onclick=function(){BB2.open('cup',function(){BB2.cup.open();},b);};if(BB2.ready('cup'))BB2.cup.card(c);});

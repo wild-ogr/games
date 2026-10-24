@@ -281,8 +281,7 @@ button.a3g{width:100%}
 .btn.fbmain{width:100%;font-size:19px;min-height:56px;margin:2px 0 6px}
 .btn.fbx2{width:100%;margin-top:8px;font-size:17px}
 /* pre (05.10): ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
-button[data-adwait]{position:relative}
-button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;font-size:16px;line-height:1;pointer-events:none}
+/* UP-RB 24.10: кнопки «за рекламу» прячутся, пока ролика нет (html.rbNoAd; правило для AD_BTN_SEL ставит adMark) — без серых «⏳»-кнопок, как Оборона v4.5 */
 .a3g.fbl i{color:#1f5f80}@media (max-width:359px){.fbrt{display:none}}.a3g.fbpe{background:#f3f4ef}.a3g.fbpe small{color:#4b5560}
 .fbfore{display:block;width:100%;text-align:left;background:#eef6fb;border-radius:14px;padding:8px 12px;margin:0 0 8px;box-shadow:0 3px 0 rgba(31,95,128,.25);font-weight:700;font-size:17px;line-height:1.3;color:#1f3b4a;min-height:48px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fbfore b{font-weight:900;display:block}.fbfore small{display:block;font-size:16px;font-weight:700;color:#2f5568;overflow:hidden;text-overflow:ellipsis}
@@ -1287,7 +1286,7 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';  // фун
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v9.4-101715',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v9.5-102414',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -1770,7 +1769,7 @@ const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} /* код VK, иначе причина словами — в статистику */
 function adShut(e){const d=e&&e.error_data||{};return +d.error_code===4;} /* код VK 4 — игрок сам закрыл ролик раньше конца */
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
-function adSoon(){return L('Ролик будет через несколько секунд — кнопка загорится, когда он загрузится','The video will be ready in a few seconds — the button will light up');}
+function adSoon(){return L('Ролик будет через несколько секунд — кнопка появится, когда он загрузится','The video will be ready in a few seconds — the button will appear');}
 function adStill(){return L('Ролик ещё загружается — подожди несколько секунд','The video is still loading — wait a few seconds');}
 /* подгрузка ролика заранее; «не готов» — переспросить n раз (каждые AD_POLL_MS); «готов» во время паузы кнопок — зажечь их */
 /* pre (05.10): ролик за награду подгружаем ЗАРАНЕЕ и помним ответ. VKWebAppCheckNativeAds не только отвечает «есть/нет», но и просит VK загрузить ролик,
@@ -1783,7 +1782,8 @@ function adStill(){return L('Ролик ещё загружается — под
 let AD_STEP=[5000,5000,5000,5000,5000,5000,15000,15000,15000,15000],AD_STEP_MAX=45000,AD_ASK_MIN=3000,AD_FRESH=120000,AD_LOOK_MS=20000;
 let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAskWhy='boot',adMarkT=0,adRdyToastT=0;
 function adBtns(){try{return Array.prototype.slice.call(document.querySelectorAll(AD_BTN_SEL));}catch(e){return [];}} /* все кнопки ролика на странице */
-function adLikely(){return !(VK&&adSt<0&&adNoN>=2);} /* false — VK уже дважды подряд ответил «ролика нет»: сами ролик не предлагаем */
+function adPre(){return !!(VK&&adSt<0)||Date.now()<adCoolT;} /* UP-RB 24.10: ролика сейчас нет (VK ответил «нет» или пауза после отказа) — кнопки ролика спрятаны */
+function adLikely(){return !adPre();} /* false — ролика нет: сами ролик не предлагаем (было: после двух «нет» подряд) */
 function adPreload(why){if(!VK)return;clearTimeout(adChkT);if(typeof why==="string"){adAskWhy=why;adStepN=0;}
   if(document.hidden||pauseWhy.has('hide')||adW)return; /* свёрнуты или ролик на экране — молчим; вернёмся / ролик закончится — спросим (adBackChk, итог показа) */
   const now=typeof why==='string'&&why!=='back'&&why!=='look'; /* итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN */
@@ -1798,9 +1798,11 @@ function adAns(ok){const t=Date.now();
   if(ok===false){if(!adNoN)adNoT0=t;adNoN++;adSt=-1;adStT=t;adMark();} /* null — мост не ответил: состояние не трогаем, но спрашивать продолжаем */
   adChkT=setTimeout(adPreload,AD_STEP[adStepN++]||AD_STEP_MAX);}
 /* ⏳ на кнопках ролика, пока VK говорит «нет» (окна перерисовываются — поэтому раз в секунду, только пока «нет»); вернёт true, если значок был на видимой кнопке и снят */
-function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];let seen=false,old=[];try{old=document.querySelectorAll('[data-adwait]');}catch(e){}
-  for(let i=0;i<q.length;i++)q[i].setAttribute('data-adwait','1');
-  for(let i=0;i<old.length;i++){const b=old[i];if(q.indexOf(b)<0){b.removeAttribute('data-adwait');if(!on&&b.offsetParent)seen=true;}}
+/* UP-RB 24.10: вместо ⏳ — прячем: класс html.rbNoAd, пока adPre(); правило CSS собирается из AD_BTN_SEL (один раз). Вернёт true, если кнопки снова показаны и одна видна */
+function adMark(){clearTimeout(adMarkT);const de=document.documentElement,on=adPre(),was=de.classList.contains('rbNoAd');let seen=false;
+  if(!adMark.css){adMark.css=1;try{const st=document.createElement('style');st.textContent=AD_BTN_SEL.split(',').map(x=>'html.rbNoAd '+x.trim()).join(',')+'{display:none!important}';document.head.appendChild(st);}catch(e){}}
+  de.classList.toggle('rbNoAd',on);
+  if(was&&!on){const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)seen=true;}
   if(on)adMarkT=setTimeout(adMark,1000);return seen;}
 /* вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз */
 function adBackChk(tick){if(!VK||adBusy||document.hidden||pauseWhy.has('hide'))return;
@@ -1808,7 +1810,7 @@ function adBackChk(tick){if(!VK||adBusy||document.hidden||pauseWhy.has('hide'))r
   if(Date.now()-adStT<AD_FRESH)return;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent){adPreload('look');return;}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(adChkT);else setTimeout(adBackChk,300);});
 setInterval(()=>adBackChk(1),AD_LOOK_MS);
-function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();adMark();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
 function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
   if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.74);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
   w.textContent=txt||L('Ролик загружается…','Loading the video…');
@@ -1817,7 +1819,7 @@ function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(
   w.style.display='flex';}
 /* кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду) */
 function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)q[i].style.opacity=off?'.45':'';}catch(e){}if(off)adDimT=setTimeout(adDim,1000);}
-function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload('none');}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adMark();adPreload('none');}
 /* нажатие по погасшей кнопке: площадку не дёргаем, окно не закрываем — только объясняем (зовётся первым в обработчиках кнопок «за рекламу») */
 function adHold(p){if(adBusy||Date.now()>=adCoolT)return false;if(p)STAT.place(p);STAT.ad('rew','hold');toast(adStill());return true;} // STAT v1.2: нажатие по погасшей — ad rew hold (p — место кнопки)
 /* adt (04.10): обрыв ролика через 60 с. Раньше показ ждал ответа VK 60 с (vkSend(…,60000)), потом писал «недоступна», а поздний ответ «досмотрел» никто не слушал —
@@ -2296,9 +2298,13 @@ function drawFish(g,lk,x,y,L,sil){if(window.FISH_ART&&FISH_ART[lk[0]])return FIS
 const FISH_IMG={};
 // картинка рыбы на холсте (для альбома, окна улова); кэш по id и размеру
 function fishCanvas(id,w,sil){const k=id+':'+w+':'+(sil?1:0);if(FISH_IMG[k])return FISH_IMG[k];const f=fishOf(id),c=document.createElement('canvas'),h=Math.round(w*.52),dp=Math.min(2,window.devicePixelRatio||1);
-  c.width=w*dp;c.height=h*dp;c.style.width='';const g=c.getContext('2d');g.scale(dp,dp);const hh=(SHAPES[f.lk[0]]||SHAPES.std)[0];
+  c.width=w*dp;c.height=h*dp;c.style.width='';const g=c.getContext('2d');if(!g)return c;g.scale(dp,dp);const hh=(SHAPES[f.lk[0]]||SHAPES.std)[0];
   drawFish(g,f.lk,w*.5,h*.5+(hh>.4?h*.04:0),w*(hh>.4?.74:hh<.2?.9:.84),sil);return FISH_IMG[k]=c;}
-function fishImg(id,w,sil){const c=fishCanvas(id,w,sil),o=document.createElement('canvas');o.width=c.width;o.height=c.height;o.getContext('2d').drawImage(c,0,0);return o;}
+/*FX2410: iOS — память холстов. Копии холстов (fishImg/placeThumb), выпавшие из страницы, сразу обнуляем (width=0): WebKit иначе держит их до сборки мусора,
+  у старожила кончалась память холстов → getContext вернул null (альбом, карта, фон рыбалки). Копия свежее 3 с не трогается (её ещё вставляют). */
+const CV_CP=[];function cvCopy(src,w,h){const now=Date.now();for(let i=CV_CP.length-1;i>=0;i--){const e=CV_CP[i];if(e.c.isConnected){e.t=now;continue;}if(now-e.t>3000){e.c.width=0;e.c.height=0;CV_CP.splice(i,1);}}
+  const o=document.createElement('canvas');o.width=w;o.height=h;const x=o.getContext('2d');if(x&&src&&src.width)x.drawImage(src,0,0);CV_CP.push({c:o,t:now});return o;}
+function fishImg(id,w,sil){const c=fishCanvas(id,w,sil);return cvCopy(c,c.width,c.height);}
 
 /* ================= пейзаж: небо, дальний берег, отражение, вода ================= */
 function paintSky(g,W,H,hz,P,R){const sg=g.createLinearGradient(0,0,0,hz);sg.addColorStop(0,P.top);sg.addColorStop(1,P.bot);g.fillStyle=sg;g.fillRect(0,0,W,hz+2);
@@ -2383,10 +2389,11 @@ function geoMake(W,H){const land=W>H*1.1,hz=H*(land?.36:.31),shY=H*(land?.84:.8)
 function layout(){const r=$('scr-fish').getBoundingClientRect(),W=Math.max(200,r.width),H=Math.max(200,r.height),dp=lowDp();
   cv.width=Math.round(W*dp);cv.height=Math.round(H*dp);cx.setTransform(dp,0,0,dp,0,0);GEO=geoMake(W,H);if(G)buildBg();}
 function buildBg(){if(!G||!GEO)return;const dp=lowDp(),W=GEO.W,H=GEO.H;
-  BG=document.createElement('canvas');BG.width=Math.round(W*dp);BG.height=Math.round(H*dp);const g=BG.getContext('2d');g.scale(dp,dp);
-  G.P=pal(PLACES[G.pi].look,G.cond.tod,G.cond.wx);paintBg(g,W,H,GEO,G.pi,G.P,false);a2PaintZones(g);
+  if(BG){BG.width=0;BG.height=0;}for(const c of CLOUDS){c.c.width=0;c.c.height=0;} /*FX2410: старый фон и облака освобождаем сразу (iOS)*/
+  BG=document.createElement('canvas');BG.width=Math.round(W*dp);BG.height=Math.round(H*dp);const g=BG.getContext('2d');
+  G.P=pal(PLACES[G.pi].look,G.cond.tod,G.cond.wx);if(!g){BG=null;CLOUDS=[];return;}g.scale(dp,dp);paintBg(g,W,H,GEO,G.pi,G.P,false);a2PaintZones(g);
   const R=rng(G.pi*17+3),n={sun:2,cloud:5,rain:7,wind:4,fog:2}[G.cond.wx],u=GEO.u;CLOUDS=[];
-  for(let i=0;i<n;i++){const w=u*(14+R()*16),h=w*.45,c=document.createElement('canvas');c.width=Math.ceil(w*2*dp);c.height=Math.ceil(h*2*dp);const cg=c.getContext('2d');cg.scale(dp,dp);
+  for(let i=0;i<n;i++){const w=u*(14+R()*16),h=w*.45,c=document.createElement('canvas');c.width=Math.ceil(w*2*dp);c.height=Math.ceil(h*2*dp);const cg=c.getContext('2d');if(!cg)continue;cg.scale(dp,dp);
     const base=G.cond.tod==='night'?'#3a4466':G.cond.wx==='rain'?'#8a949c':G.cond.tod==='evening'?'#f3c2a4':'#ffffff';
     for(let k=0;k<7;k++){const x=w*(.4+R()*1.2),y=h*(.7+R()*.6),r=h*(.35+R()*.35);const gr=cg.createRadialGradient(x,y,1,x,y,r);gr.addColorStop(0,rgba(base,.85));gr.addColorStop(1,rgba(base,0));cg.fillStyle=gr;cg.fillRect(0,0,w*2,h*2);}
     CLOUDS.push({c,w:w*2,h:h*2,x:R()*W,y:GEO.hz*(.05+R()*.55),v:u*(.3+R()*.5)*(G.cond.wx==='wind'?3:1)});}
@@ -2398,7 +2405,7 @@ function kick(){if(!raf&&G&&$('scr-fish').classList.contains('on')){lastT=perfor
 let lowF=0;const LOW_QUIET={aim:1,wait:1,card:1,done:1};
 function lowSkipFrame(){if(!LOW)return false;lowF++;if(modalOn)return lowF%4!==0;return LOW_QUIET[G.phase]===1&&!G.parts.length&&!(G.flash>0)&&lowF%2!==0;}
 function stopLoop(){if(raf)cancelAnimationFrame(raf);raf=0;}
-function loop(t){raf=0;if(!G||!$('scr-fish').classList.contains('on'))return;STAT.frame();const dt=Math.min(.05,(t-lastT)/1000||.016);if(!paused&&!modalOn&&!document.hidden)lowTick(t-lastT);lastT=t;
+function loop(t){raf=0;if(!G||!$('scr-fish').classList.contains('on'))return;STAT.frame();const dt=Math.max(0,Math.min(.05,(t-lastT)/1000||.016)); /*FX2410: метка кадра rAF бывает раньше lastT (kick) — dt<0 «молодил» рябь лупы → IndexSizeError, рыбалка замирала*/if(!paused&&!modalOn&&!document.hidden)lowTick(t-lastT);lastT=t;
   if(!paused&&!modalOn)update(dt);if(!lowSkipFrame())render();
   if(!paused)raf=requestAnimationFrame(loop);}
 // таймеры рыбалки: не срабатывают, если рыбалка уже другая
@@ -2604,7 +2611,7 @@ function nextCast(){if(!G||G.over)return;$('catch').classList.remove('on');$('ca
 function more3Price(g){let s=0;(g.catch||[]).forEach(c=>{if(!c.lost)s+=c.c||0;});return Math.max(adCoins(),Math.round(3*s/Math.max(1,g.used||5)));}
 function endSession(){G.phase='done';hint('');const g=G;
   // одна рекламная просьба за концовку: «ещё 3 заброса» — через рыбалку и не когда следом межэкранная; «×2» — только если про забросы не спрашивали
-  const canExtra=!G.tourn&&!G.extra&&adOk()&&(S.sessions||0)>=3&&(S.sessions||0)%2===0&&!interSoon(); /* RB:UX: не в первых 3 рыбалках (было >=2) */if(canExtra)G.adAsked=1;
+  const canExtra=!G.tourn&&!G.extra&&adOk()&&adLikely()&&(S.sessions||0)>=3&&(S.sessions||0)%2===0&&!interSoon(); /* RB:UX: не в первых 3 рыбалках (было >=2) */if(canExtra)G.adAsked=1;
   SND.phone();buzz([100,80,100]);
   modal(`<h2>📞 ${L('Звонит жена','Your wife is calling')}</h2><p class="quote"><b>${L('Жена','Wife')}</b>${esc(L(pick(PH.wife),'Dinner is getting cold! Come home!'))}</p>
     <div class="row">${canExtra?`<button class="btn accent noenter" id="eMore">📺 ${L('Ещё 3 заброса за рекламу','3 more casts for an ad')}</button>`:''}<button class="btn green" id="eHome">🏠 ${L('Иду-иду!','Coming!')}</button></div>`);
@@ -2883,7 +2890,7 @@ function a1Loupe(g,t){const A=a1S(),f=G.fl;if(A.lp<=.01||!f)return;const P=G.P,{
   g.lineCap='round';for(let i=0;i<(LOW?0:9);i++){const yy=cy-r*.9+((i*41+t*9)%(r*1.9)),xx=cx-r+((i*67+t*(6+i))%(r*2.4))-r*.2,a=(Math.sin(t*1.7+i)+1)/2;
     g.strokeStyle='rgba(255,255,255,'+(.08+.14*a).toFixed(3)+')';g.lineWidth=Math.max(1,r*.025);g.beginPath();g.moveTo(xx,yy);g.lineTo(xx+r*(.15+.1*(i%3)),yy);g.stroke();}
   const fx=cx+ps.dx*h,id=fltSel();
-  for(const q of A.lr){const rr0=w*(1.2+q.r*3.2*q.s);g.strokeStyle='rgba(255,255,255,'+(.55*q.l).toFixed(3)+')';g.lineWidth=Math.max(1.2,r*.02);g.beginPath();g.ellipse(fx,wl,rr0,rr0*.28,0,0,7);g.stroke();}
+  for(const q of A.lr){const rr0=Math.max(1,w*(1.2+q.r*3.2*q.s));g.strokeStyle='rgba(255,255,255,'+(.55*q.l).toFixed(3)+')';g.lineWidth=Math.max(1.2,r*.02);g.beginPath();g.ellipse(fx,wl,rr0,rr0*.28,0,0,7);g.stroke();}
   // под водой: киль и грузило (бледно), над водой — сам поплавок, внизу — отражение
   const keel=()=>{const c=FLT[id]||FLT.std;g.fillStyle=shadeH(c[0],.7);g.beginPath();g.moveTo(-w*.96,0);g.quadraticCurveTo(-w*.5,h*.3,0,h*.42);g.quadraticCurveTo(w*.5,h*.3,w*.96,0);g.closePath();g.fill();
     g.strokeStyle='rgba(40,40,40,.7)';g.lineWidth=Math.max(1,w*.07);g.beginPath();g.moveTo(0,h*.4);g.lineTo(0,h*.62);g.stroke();};
@@ -3277,9 +3284,9 @@ function decPreview(id,W,H){const c=document.createElement('canvas'),dp=Math.min
 
 /* ================= карта мест ================= */
 const THUMB={},THUMB_C={tod:'day',wx:'sun'}; // картинка места на карте — всегда светлая (аудит 40), прогноз — в подписи
-function placeThumb(i,cond){const k=i+cond.tod+cond.wx;if(!THUMB[k]){const W=236,H=200,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d'),geo=geoMake(W,H*1.6);geo.hz=H*.56;
+function placeThumb(i,cond){const k=i+cond.tod+cond.wx;if(!THUMB[k]){const W=236,H=200,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d'),geo=geoMake(W,H*1.6);geo.hz=H*.56;if(!g)return cvCopy(null,W,H);
     paintBg(g,W,H*1.9,geo,i,pal(PLACES[i].look,cond.tod,cond.wx),true);THUMB[k]=c;}
-  const o=document.createElement('canvas');o.width=236;o.height=200;o.getContext('2d').drawImage(THUMB[k],0,0);return o;}
+  return cvCopy(THUMB[k],236,200);}
 const RANKS=[[0,'Новичок','Beginner'],[15,'Любитель','Amateur'],[50,'Рыболов','Angler'],[120,'Бывалый','Seasoned'],[250,'Знаток','Expert'],[500,'Мастер','Master'],[1000,'Гроссмейстер удочки','Grandmaster']];
 function rankOf(n){let r=RANKS[0];for(const x of RANKS)if(n>=x[0])r=x;return r;}
 function legHint(i){const P=PLACES[i],lg=LEG[P.leg];if(S.legs[P.leg])return `<small>✨ ${esc(nm(lg))} — ${L('в альбоме','caught')} ✓</small>`;
@@ -4513,5 +4520,6 @@ var os=openSettings;openSettings=function(){var r=os.apply(this,arguments);try{i
       $('stCupM').textContent=x?L('Готово: данные турниров удалены.','Done: your contest data is deleted.'):L('Сервер сейчас не отвечает — попробуй позже.','The server is not responding — try again later.');});};}catch(e){}return r;};
 try{$('btnWeek').onclick=function(){openWeek();};$('btnSet').onclick=function(){openSettings();};$('fSet').onclick=function(){openSettings();};}catch(e){}
 })();</script><!--cup2: живая лига (крючки окна «Турниры» и ⚙; окна — лениво js/rb2-cup-ui.js)-->
+<script src="js/rb2-up.js"></script><!--UP-RB 24.10: «Завтра на берегу» после 1-й рыбалки, живая лига сама-->
 </body>
 </html>

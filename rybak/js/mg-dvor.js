@@ -343,7 +343,7 @@ function plural2(n){try{return pl(n,'дело','дела','дел','task','tasks
 function todayList(){var h='<div class="mg-tl">',n=0,dl=M.deloState();for(var i=0;i<MG.list.length&&n<3;i++){var id=MG.list[i].id;if(!MG.reg[id]||!M.isOpen(id)||dl&&dl.id===id)continue;if(!(M.leftToday(id)>0))continue;n++;
   h+='<button type="button" class="mg-tli hot" data-id="'+id+'">'+icn(REGIC(id))+'<span>'+L2(MG.by[id].n)+'</span><small>'+L('можно сыграть','ready')+'</small></button>';}
   return n?h+'</div>':'';}
-function adOkS(){try{return adOk();}catch(e){return false;}}
+function adOkS(){try{return adOk()&&!(typeof adPre==='function'&&adPre());}catch(e){return false;}} /*UP-RB 24.10: ролика нет — кнопки нет*/
 function adDelo(id){var C={id:id};try{if(adHold('mg_delo'))return;}catch(e){}try{STAT.place&&STAT.place('mg_delo');}catch(e){}
   showRewarded(function(){playG(id,{delo:true,adRun:true});},null,function(){return L('ещё заход открыт — загляни во двор','extra run unlocked');});}
 function playG(id,o){M.play(id,o||{});}

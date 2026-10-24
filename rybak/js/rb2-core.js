@@ -105,8 +105,8 @@ var R2=(function(){
       if(!mgReady())mgLoad('daily').then(function(){try{if(mOn()&&document.getElementById('dSlots')&&!G)window.openDaily();}catch(e){}},function(){});return r;};}}catch(e){err('mg/daily',e);}
     try{if(typeof window.uiDvor==='function'){var ud=window.uiDvor;window.uiDvor=function(){var r=ud.apply(this,arguments);if(r&&window.MG_DVOR)r.open=function(){MG_DVOR.open();};return r;};}}catch(e){err('mg/ui',e);}
     function bg(){var nb=false;try{nb=!(S.sessions>0)&&!(S.casts>0);}catch(e){}
-      if(nb){on('end',function(){setTimeout(function(){mgLoad('first');},1500);});setTimeout(function(){mgLoad('nb120');},120000);}
-      else setTimeout(function(){mgLoad('bg');},1500);}
+      if(nb){on('end',function(){setTimeout(function(){mgLoad('first').catch(function(){});},1500);});setTimeout(function(){mgLoad('nb120').catch(function(){});},120000);}
+      else setTimeout(function(){mgLoad('bg').catch(function(){});},1500);}
     if(document.readyState==='complete')bg();else window.addEventListener('load',bg);}
   // ---- «Альбом» быстрее (флаг albFast): рисунки рыб (fishCanvas, кэш FISH_IMG) готовим заранее, в тишине — по 2 рыбы за раз, не во время рыбалки;
   // карточки вне экрана браузер не рисует (content-visibility). Раньше первое открытие рисовало все ~67 рыб сразу (0,8 с на слабом телефоне).

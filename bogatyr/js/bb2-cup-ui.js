@@ -124,8 +124,13 @@
       CUP.claim(c.wk);if(lgR&&lgR.claims)lgR.claims=lgR.claims.filter(function(x){return x.wk!==c.wk;});ev('claim',c.res);if(back==='none')hideModal();else U.open();});}
   /* тихая проверка при входе в меню: был в группе (jw), награда не забрана (lgw) — когда меню свободно */
   function idle(){return typeof G!=='undefined'&&!G&&!$('modal').classList.contains('on')&&!document.body.classList.contains('run');}
-  U.check=function(){var c=C();if(!X.on()||c.ask!==1||!(c.jw>(c.lgw||0)))return;var n=0,tm=setInterval(function(){if(++n>80){clearInterval(tm);return;}if(!idle())return;clearInterval(tm);
-    login(function(r){if(!r||!idle())return;var cl=(r.claims||[]).filter(function(x){return x&&x.wk>(C().lgw||0);});if(cl.length)claim(cl[0],'none');});},1500);};
+  /* UP 24.10: раньше проверка шла только при c.jw>lgw (jw — неделя, в которой игрок попал в группу); итогов недели (lg wk) не было ни разу при 13 вошедших.
+     Теперь, как в Обороне: у вошедшего (ask=1) — раз за запуск спрашиваем сервер (login → claims из league/hello) без условия jw; диагностика lg {a:'chk'} — раз за запуск. */
+  var chk0=0,chkW=0;
+  U.check=function(){var c=C();if(!X.on()||c.ask!==1||chkW)return;if(chk0&&!(c.jw>(c.lgw||0)))return;chkW=1;var n=0,tm=setInterval(function(){if(++n>80){clearInterval(tm);chkW=0;return;}if(!idle())return;clearInterval(tm);
+    login(function(r){chkW=0;var me=CUP.me()||{},src=r&&r.claims&&r.claims.length?r.claims:(me.claims||[]),cl=src.filter(function(x){return x&&x.wk>(C().lgw||0);});
+      if(!chk0&&r){chk0=1;BB2.stat('lg',{a:'chk',j:C().jw||0,w:C().lgw||0,n:cl.length,jn:r.joined?1:0,wk:r.wk||0});}
+      if(!r||!idle())return;if(cl.length)claim(cl[0],'none');});},1500);};
   BB2.hook('menu',function(){setTimeout(U.check,800);});
 
   /* --- поход: путёвка в начале, счёт в конце --- */

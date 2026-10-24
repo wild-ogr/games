@@ -178,6 +178,8 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 @media (min-width:700px){.card.wide2{max-width:680px}.wide2 .medals{display:flex;flex-wrap:wrap;justify-content:space-between}.wide2 .mdr{width:49.3%}}
 .btn.wide{height:auto}
 #lifes.nudge .life:not([disabled]):not(.used){animation:nudge 1.6s ease-in-out 3}
+#answers.fing{position:relative}#answers.fing::after{content:'👆';position:absolute;right:12px;top:4%;font-size:36px;line-height:1;pointer-events:none;z-index:3;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));animation:fing 3.2s ease-in-out infinite}
+@keyframes fing{0%{top:4%}22%{top:4%}25%{top:29%}47%{top:29%}50%{top:54%}72%{top:54%}75%{top:79%}97%{top:79%}100%{top:4%}} /* палец проходит по всем 4 ответам — не подсказывает верный */body.calm #answers.fing::after{animation:none}
 @keyframes nudge{50%{box-shadow:0 0 0 4px #ffd36e,0 3px 0 rgba(0,0,0,.14);transform:translateY(-2px)}}
 body.calm .card{animation:none}body.calm #lifes.nudge .life{animation:none}
 body.calm .ans,body.calm .ladder span{transition:none}
@@ -212,10 +214,10 @@ body.calm .ans,body.calm .ladder span{transition:none}
 /* look1: элементы нового вида (lk-o) и значки (lk-i) в «Классике» не видны; css/look.css и css/themes.css — новый вид (html.lk) */
 html:not(.lk) .lk-o,html:not(.lk) #scene,html:not(.lk) #rays{display:none!important}html.lk .cl-o,html.lk lk-t{display:none!important}lk-i{display:none}.ladinfo i{font-style:normal}
 @supports not (inset:0){.hdr-r>*+*,.nrow>*+*,.row2>*+*,.ladder>*+*,.lifes>*+*,.host>*+*,.say>*+*,.ans>*+*,.mdr>*+*,.lbr>*+*,.tp.all>*+*{margin-left:8px}.row>*+*,.answers>*+*,.gcol1>*+*,.gcol2>*+*,.mscroll>*+*,.next>*+*{margin-top:9px}}
-/* pre: ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
-button[data-adwait]{position:relative}
-button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;font-size:16px;line-height:1;pointer-events:none}
-html.lk button[data-adwait]::after{top:2px;right:4px;font-size:13px}
+/* FX-GV 24.10 (правило Зины v4.3 / Обороны v4.5 / Богатыря v25.2): ролик за награду не готов (VK/ОК не подтвердили) — кнопки «за рекламу» (AD_BTN_SEL) спрятаны,
+   вместо них — .adno-only; ролик готов — всё появляется само (класс adno на <html> ставит adVis). Было: серые ⏳-кнопки, 26 % нажатий «второй шанс» — «рекламы нет» */
+html.adno #mAdCoins,html.adno #s2Ad,html.adno #lAd,html.adno #dX2,html.adno #thAd,html.adno #cfAd,html.adno #tdStAd,html.adno #tdSerAd,html.adno #ydAd,html.adno .adtx{display:none!important}
+html:not(.adno) .adno-only{display:none!important}
 </style>
 <link rel="stylesheet" href="css/look.css"><link rel="stylesheet" href="css/themes.css"><script src="js/look.js"></script><script src="js/ui-core.js"></script><link rel="stylesheet" href="css/ui-main.css"><link rel="stylesheet" href="css/ui-home.css"><link rel="stylesheet" href="css/ui-fx.css"><script src="js/ui-home.js"></script><script src="js/ui-topics.js"></script><script src="js/ui-fx.js"></script><script src="js/ui-modes.js"></script>
 <link rel="stylesheet" href="css/car.css"><script src="js/look-sansan.js"></script> <!-- CAR: карьера, «Сегодня», Сан Саныч (буст 09.10) -->
@@ -280,6 +282,8 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 </div>
 <script src="js/topics.js"></script><script src="js/topics-fest.js"></script><!--FEST: праздничные наборы (после данных тем CONTENT)-->
 <script src="js/price-id.js"></script><script src="js/price.js"></script>
+<script src="js/qstart.js"></script> <!-- UP-OV 24.10: стартовый набор для первой лестницы новичка (tools/qstart.py) -->
+<script src="js/tmr.js"></script> <!-- UP-OV 24.10: окно «Завтра — подарок» (VK/ОК, одно за всё время; тот же файл, что в Обороне) -->
 <link rel="stylesheet" href="css/board.css"><script src="js/board.js"></script>
 <script src="js/questions.js" defer onload="window.qBoot&&qBoot()"></script>
 <script>
@@ -471,7 +475,7 @@ const SKEY='viktorina-v1';
 let S={coins:60,lvl:0,games:0,wins:0,correct:0,best:0,seen:{},cyc:{},tp:{},tc:{},daily:{},duel:{},bad:[],adW:0,lossRow:0,dold:0,tips:{}};
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
-const NUMOBJ=['cyc','tp','daily','duel','tips','tc'],NUMS=['lvl','games','wins','correct','best','dold','fin'];
+const NUMOBJ=['cyc','tp','daily','duel','tips','tc'],NUMS=['lvl','games','wins','correct','best','dold','fin','tmr'];
 // защита от сохранений неожиданной формы (ручная правка, старая версия)
 function fixSave(){for(const f of NUMOBJ)if(!isObj(S[f]))S[f]={};if(!isObj(S.seen))S.seen={};for(const k in S.seen)if(typeof S.seen[k]!=='string')delete S.seen[k];
   for(const f of NUMS.concat(['adW','lossRow']))if(typeof S[f]!=='number'||!isFinite(S[f])||S[f]<0)S[f]=0;
@@ -765,7 +769,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'viktorina',gv:'v5.1-101521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'viktorina',gv:'v5.2-102414',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (pl — пройдено уровней, cn — монеты, bt — облако хоть раз отдавало сохранение: метка устройства viktorina-cl) — после облака, не позже 2,5 с
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('viktorina-cl')?1:0;}catch(e){}STAT.progress({pl:+S.lvl||0,cn:+S.coins||0,bt:bt});if(window.STATANS)STATANS.prg();} // STATANS.prg — разовое prg (js/stat-ans.js)
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound===false?0:1,calm:S.calm===true?1:0});
@@ -1237,8 +1241,15 @@ function adHold(p){if(Date.now()<adCoolT&&!adBusy){if(p)STAT.place(p);STAT.ad('r
 function adBtns(){const o=[];try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)o.push(q[i]);}catch(e){}return o;}
 let AD_STEP=[5000,5000,5000,5000,5000,5000,15000,15000,15000,15000],AD_STEP_MAX=45000,AD_ASK_MIN=3000,AD_FRESH=120000,AD_LOOK_MS=20000;
 let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAskWhy='boot',adMarkT=0,adRdyToastT=0;
-function adLikely(){return !(VK&&adSt<0&&adNoN>=2);} // false — VK уже дважды подряд ответил «ролика нет»: предложение ролика не подсвечиваем
-function adPreload(why){if(!VK)return;clearTimeout(adChkT);if(typeof why==="string"){adAskWhy=why;adStepN=0;}
+/* FX-GV 24.10: кнопка ролика за награду ВИДНА ТОЛЬКО, когда площадка сказала «ролик готов» (adSt===1) и нет паузы кнопок (adCoolT).
+   «нет» / ещё не спрашивали / ролик только что показан → кнопки AD_BTN_SEL спрятаны (класс adno на <html>); опрос в фоне (adPreload) — подгрузился → появляются сами.
+   Яндекс и заглушка на маке (VK=null) — как раньше. Предложение (STAT.offer) пишется, только если кнопка видна. */
+function adLikely(){return !VK||adSt===1&&Date.now()>=adCoolT;}
+let adVisT=0;
+function adVis(){clearTimeout(adVisT);const no=!adLikely();try{document.documentElement.classList.toggle('adno',no);}catch(e){}
+  if(no&&Date.now()<adCoolT)adVisT=setTimeout(adVis,adCoolT-Date.now()+50);}
+{const so=STAT.offer;STAT.offer=function(){if(!adLikely())return;return so.apply(STAT,arguments);};}
+function adPreload(why){if(!VK)return;adVis();clearTimeout(adChkT);if(typeof why==="string"){adAskWhy=why;adStepN=0;}
   if(document.hidden||pauseWhy.has('hide')||adW)return; // свёрнуты или ролик на экране — молчим; вернёмся / ролик закончится — спросим (adBackChk, итог показа)
   const now=typeof why==='string'&&why!=='back'&&why!=='look'; // итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN
   if(!now){const wait=adAsking?AD_ASK_MIN:adAskT+AD_ASK_MIN-Date.now();if(wait>0){adChkT=setTimeout(adPreload,wait);return;}}
@@ -1251,18 +1262,16 @@ function adAns(ok){const t=Date.now();
     return;}
   if(ok===false){if(!adNoN)adNoT0=t;adNoN++;adSt=-1;adStT=t;adMark();} // null — мост не ответил: состояние не трогаем, но спрашивать продолжаем
   adChkT=setTimeout(adPreload,AD_STEP[adStepN++]||AD_STEP_MAX);}
-// ⏳ на кнопках ролика, пока VK говорит «нет» (окна перерисовываются — поэтому раз в секунду, только пока «нет»); вернёт true, если значок был на видимой кнопке и снят
-function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];let seen=false,old=[];try{old=document.querySelectorAll('[data-adwait]');}catch(e){}
-  for(let i=0;i<q.length;i++)q[i].setAttribute('data-adwait','1');
-  for(let i=0;i<old.length;i++){const b=old[i];if(q.indexOf(b)<0){b.removeAttribute('data-adwait');if(!on&&b.offsetParent)seen=true;}} // кнопка перестала быть рекламной (появились монеты) — значок снять
-  if(on)adMarkT=setTimeout(adMark,1000);return seen;}
+// FX-GV: значка ⏳ больше нет — кнопки прячутся/появляются (adVis); true — кнопка ролика только что появилась на экране (для «Ролик готов»)
+function adMark(){clearTimeout(adMarkT);const was=document.documentElement.classList.contains('adno');adVis();if(!was||!adLikely())return false;
+  const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)return true;return false;}
 // вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз
 function adBackChk(tick){if(!VK||adBusy||document.hidden||pauseWhy.has('hide'))return;
   if(adSt<1){if(tick!==1)adPreload('back');else if(Date.now()-adAskT>AD_STEP_MAX+2*AD_ASK_MIN)adPreload();return;} // по таймеру — только страховка, шаги не сбрасываем
   if(Date.now()-adStT<AD_FRESH)return;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent){adPreload('look');return;}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(adChkT);else setTimeout(adBackChk,300);});
 setInterval(()=>adBackChk(1),AD_LOOK_MS);
-function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();adVis();let vis=false;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;}catch(e){}if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
 function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
   if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:rgba(0,0,0,.74);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
   w.textContent=txt||L('Ролик загружается…','Loading the video…');
@@ -1271,7 +1280,7 @@ function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(
   w.style.display='flex';}
 // кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду и при каждом открытии окна, см. modal)
 function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT;try{const q=document.querySelectorAll(AD_BTN_SEL);for(let i=0;i<q.length;i++)q[i].style.opacity=off?'.45':'';}catch(e){}if(off)adDimT=setTimeout(adDim,1000);}
-function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload('none');}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;if(VK){adSt=-1;adStT=Date.now();}adDim();adVis();adPreload('none');} // FX-GV: «ролика нет» при показе — кнопки прячем до ответа «готов»
 /* adt (04.10): обрыв ролика через 60 с — перенос из «Зины» (образец: hobby-analytics/release-g/ads-timeout.md, раздел «ОБРАЗЕЦ»).
    Раньше показ ждал ответа VK 60 с (vkSend(…,60000)), потом «недоступна», а поздний «досмотрел» никто не слушал. Теперь:
    1) ответа площадки ждём AD_WAIT_MS (180 с), игра на паузе «ad»;
@@ -1561,7 +1570,7 @@ function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');cl
 function hideModal(){$('modal').classList.remove('on','rs');$('mcard').classList.remove('wide2','res');modalOn=false;}
 // look1: окно итогов-праздник — party(): класс res на карточке (ведущий над ней) и rs на подложке (лучи)
 function party(){$('mcard').classList.add('res');$('modal').classList.add('rs');}
-function modal(html){PAY.re=null;if(!/Медали тем|Topic medals/.test(html))$('mcard').classList.remove('wide2');$('mcard').classList.remove('res');$('mcard').classList.remove('many');$('modal').classList.remove('rs');$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;if(adCoolT)adDim();if(adSt<0)adMark();}
+function modal(html){PAY.re=null;if(!/Медали тем|Topic medals/.test(html))$('mcard').classList.remove('wide2');$('mcard').classList.remove('res');$('mcard').classList.remove('many');$('modal').classList.remove('rs');$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;if(adCoolT)adDim();adVis();}
 function nowMs(){const sh=window.DATE_SHIFT||0;/* ?date= на маке — js/topics-fest.js */try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t+sh;}}catch(e){}return Date.now()+sh;}
 function dayKey(off){const d=new Date(nowMs());d.setDate(d.getDate()+(off||0));return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
 const speed=()=>S.speed==='test'?0:calm()?.5:1; // test — только для автопрогона
@@ -1639,7 +1648,10 @@ function openMedals(){STAT.screen('medals');const r=window.CAR?[0,CAR.rankName()
 // минуя экран 15 тем; экран тем он увидит после первой победы. Тема первого раза — FIRST_TOPIC: «СССР и быт» — ближе всего аудитории 45+ и «двору»,
 // 37 самых лёгких вопросов (оценка 5), по STAT у новичков лучший первый уровень (3 победы из 4; «Всё подряд» — 0 из 5)
 const FIRST_TOPIC='ussr';
-function firstGo(){if(!qReady)return qWait(firstGo);if(BYT[FIRST_TOPIC])startLadder(FIRST_TOPIC);}
+// UP-OV (24.10, «первые секунды»): первая лестница новичка — из стартового набора js/qstart.js, не дожидаясь js/questions.js (770 КБ; на слабой сети 10–25 с).
+// Вопросы те же (id те же — «уже видел» не ломается); qAdd не берёт дубли, когда придёт полный набор. qReady остаётся false до questions.js — меню и прочие режимы ждут как раньше
+function qStartAdd(){if(!window.QSTART)return false;qAdd(window.QSTART);return (BYT[FIRST_TOPIC]||[]).length>=10;}
+function firstGo(){if(!qReady&&!qStartAdd())return qWait(firstGo);if(BYT[FIRST_TOPIC])startLadder(FIRST_TOPIC,!qReady);}
 function openIntro(){STAT.screen('intro');STAT.ev('tut',{s:1});modal(`<div class="av">${portrait('mihalych','happy')}</div><h2>${L('Здравствуй, сосед!','Hello, neighbour!')}</h2>
   <p>${L('Я Михалыч, дворник. Задаю вопросы — ты отвечаешь. Без спешки, таймера нет.','I am the yard keeper. I ask — you answer. No timer.')}</p>
   <div class="how intro"><p>🔟 ${L('<b>Дойди до 5-й ступеньки — уровень пройден.</b> На первом уровне я страхую: ошибка не страшна.','<b>Reach step 5 to pass the level.</b> On level one I have your back: a wrong answer is no big deal.')}</p>
@@ -1672,7 +1684,7 @@ function seededSet(seed){const R=rng(seed),used=new Set(),tu={},qs=[];
 
 /* ================= лестница ================= */
 function newG(mode,qs,o){return Object.assign({mode,qs,i:0,res:[],life:{},paid:{},second:0,over:false,st:'ask',perm:null,pi:-1,gone:new Set(),wrongs:new Set(),hint:null,say:null},o||{});}
-function startLadder(topic){if(!qReady)return qWait(()=>startLadder(topic));if(topic!=='all'&&TK.indexOf(topic)<0)topic='all';
+function startLadder(topic,st){if(!qReady&&!st)return qWait(()=>startLadder(topic));if(topic!=='all'&&TK.indexOf(topic)<0)topic='all';
   const ts=topic==='all'?TK:[topic],lv=S.lvl||0,hp=helpDue(),rp=hp?[1,1,1,1,1].concat(ramp(lv).slice(5)):ramp(lv),used=new Set(),tu={},qs=[];
   // лёгкий старт: на уровнях 1–3 сначала самые известные вопросы (оценка 5), на 4–10 — первые три ступени из оценок ≥ 4
   for(let j=0;j<rp.length;j++){const d=rp[j],ez=lv<3||hp?(j<5?5:4):lv<10&&j<3?4:0;const q=pickQ(ts,d,used,tu,ez);if(!q)break;used.add(q.i);tu[q.t]=(tu[q.t]||0)+1;qs.push(q.i);}
@@ -1681,7 +1693,7 @@ function startLadder(topic){if(!qReady)return qWait(()=>startLadder(topic));if(t
   STAT.lvl(lv+1,'lad');STAT.screen('game');if(S.games<=2)STAT.ev('tut',{s:S.games===1?3:5}); // 3 — первая лестница, 5 — вторая
   G.say=hp?{who:'mihalych',m:'happy',t:L('Два раза не повезло — с кем не бывает! Теперь я страхую: до пятой ступеньки ошибка лестницу не оборвёт, и вопросы дам полегче. Не уверен — жми подсказку внизу.','Two misses — it happens! Now I have your back: up to step 5 a wrong answer will not end the ladder, and the questions are easier. Not sure? Tap a hint below.')}
     :lv===0&&S.games>1?{who:'mihalych',m:'happy',t:L('Попробуем ещё раз. На первом уровне я страхую: до пятой ступеньки ошибка не страшна. Не уверен — жми подсказку внизу.','Let us try again. On level one I have your back: up to step 5 a wrong answer is no big deal. Not sure? Tap a hint below.')}
-    :{who:'mihalych',t:S.games===1?L('Первый вопрос — совсем лёгкий. Не знаешь — жми подсказку внизу, первая каждого вида даром!','First question is easy. Stuck? Tap a hint below — the first of each kind is free!'):G.wk?L('Тема недели — монеты на кону вдвойне! Начнём.','Topic of the week — double coins! Let us start.'):pick(HOST.start)};
+    :{who:'mihalych',t:S.games===1?L('Здравствуй, сосед! Я Михалыч. Таймера нет, первый вопрос лёгкий — жми ответ! Не знаешь — подсказки внизу, первые даром.','Hello, neighbour! No timer, the first question is easy — tap an answer! Stuck? Hints below, the first ones are free.'):G.wk?L('Тема недели — монеты на кону вдвойне! Начнём.','Topic of the week — double coins! Let us start.'):pick(HOST.start)};
   if(hp)STAT.ev('mod',{m:'help',a:'on',l:lv+1});
   show('scr-game');hideModal();renderQ();YG.start();}
 function openDaily(){const k=dayKey(0);
@@ -1726,6 +1738,7 @@ function renderQ(){if(!G)return;const q=cur();
   const sy=G.say||{who:'mihalych',t:''};$('say').classList.toggle('help',sy.who!=='mihalych');
   // на низком экране прячем обычную реплику Михалыча на вопросе (кроме первого вопроса первой игры и вторых попыток)
   $('say').classList.toggle('plain',sy.who==='mihalych'&&G.st==='ask'&&!sy.m);
+  $('answers').classList.toggle('fing',G.mode==='lad'&&S.games===1&&G.i===0&&G.st==='ask'&&!G.wrongs.size); // UP-OV: палец на ответах первого вопроса первой игры
   $('lifes').classList.toggle('nudge',G.mode==='lad'&&((S.games||0)<=2||insured())&&G.st==='ask'&&!G.life.ff&&!G.life.nb&&!G.life.zi&&(G.i===0||!!G.wrongs.size));$('sayAv').innerHTML=portrait(sy.who,sy.m||'norm');$('sayT').innerHTML=sy.h||esc(sy.t);
   $('qMeta').textContent=tn.ic+' '+tn.n+(typeof priceOf==='function'?'':' · '+DNAME[q.d]); // буст: сложность — ценой на плашке (qSlots)
   $('qSlots').parentNode.classList.toggle('hasQs',UI.fill($('qSlots'),qSlots,{q,mode:G.mode,step:G.i+1,G},'qs')>0);
@@ -1807,10 +1820,11 @@ function reveal(k){if(!G||G.st!=='wait')return;const q=cur(),ok=G.perm[k]===0;
 function dayProg(){if(G&&G.mode==='day'){S.dprog={k:G.day,res:G.res.slice(),life:Object.assign({},G.life)};save();}}
 function endQ(){if(!G)return; /* окно «вторая попытка» осталось открытым после выхода из игры — G уже нет */
   G.st='done';G.res[G.i]=0;ansFire(0);dayProg();G.say={who:'mihalych',m:'sad',t:pick(HOST.wrong)+' '+L('Верный ответ — ','The answer is ')+'«'+cur().a[0]+'».'};save();renderQ();}
+function uiFree2Left(){const d=dayKey(0);return !(isObj(S.uiFree)&&S.uiFree.d===d&&S.uiFree.n>=AD_FREE2);} // FX-GV: проверка без траты
 function uiFree2(){const d=dayKey(0);if(!isObj(S.uiFree)||S.uiFree.d!==d)S.uiFree={d,n:0};if(S.uiFree.n>=AD_FREE2)return false;S.uiFree.n++;save();return true;}
-function secondOffer(){const can=S.coins>=COST.second;
+function secondOffer(){const can=S.coins>=COST.second,fr=adBtnOk()&&!can&&uiFree2Left(); // FX-GV: ролика нет (кнопка спрятана) и монет мало — «даром» до AD_FREE2 раз в день
   modal(`<h2>${L('Неверно…','Wrong…')}</h2><p>${L('Можно попробовать ещё раз: этот вариант уберём. Вторая попытка — одна на лестницу.','You can try again without this option. One second try per ladder.')}</p>
-    <div class="row">${adBtnOk()?`<button class="btn accent noenter" id="s2Ad">📺 ${L('Вторая попытка за рекламу','Second try for an ad')}</button>`:''}
+    <div class="row">${adBtnOk()?`<button class="btn accent noenter" id="s2Ad">📺 ${L('Вторая попытка за рекламу','Second try for an ad')}</button>`:''}${fr?`<button class="btn accent noenter adno-only" id="s2Free">🎁 ${L('Вторая попытка даром','Free second try')}</button>`:''}
     <button class="btn buy noenter" id="s2Coin" ${can?'':'disabled'}>${L('Вторая попытка за ','Second try for ')}${coinsTxt(COST.second)}${can?'':'<small>'+L('у тебя ','you have ')+coinsTxt(S.coins)+'</small>'}</button>
     <button class="btn" id="s2No">${L('Показать ответ','Show the answer')}</button></div>`);
   const use=()=>{G.second=1;G.say={who:'mihalych',t:L('Ладно, ещё разок! Этот вариант убрал.','Fine, one more try!')};renderQ();};
@@ -1820,6 +1834,7 @@ function secondOffer(){const can=S.coins>=COST.second;
     secondOffer();},
     // late: тот же вопрос той же лестницы ещё ждёт решения и открыто это же окно → вторая попытка; иначе — её цена монетами
     ()=>{if(G===g&&!g.over&&g.i===qi&&g.st==='ask'&&!g.second&&modalOn&&$('s2No')){hideModal();use();return L('вторая попытка твоя','the second try is yours');}return adLateCoins(COST.second);});};
+  if($('s2Free'))$('s2Free').onclick=()=>{if(adLikely()||!uiFree2())return;hideModal();STAT.ev('mod',{m:'ad',a:'free2n'});toast(L('Ролика сейчас нет — Михалыч разрешил и так. Попытка твоя!','No video right now — take the try anyway!'),3500);use();};
   $('s2Coin').onclick=()=>{if(S.coins<COST.second)return;hideModal();setCoins(S.coins-COST.second);STAT.ev('spend',{k:'second',c:COST.second});SND.coin();use();};
   $('s2No').onclick=()=>{hideModal();endQ();};}
 function next(){if(!G||G.st!=='done'||G.over)return;SND.tap();
@@ -1922,7 +1937,7 @@ function finishLadder(kind){if(!G||G.over)return;G.over=true;YG.stop();
     <div class="row2"><button class="btn" id="rTopic">${L('Другая тема','Other topic')}</button><button class="btn" id="rMenu">🏠 ${L('Меню','Menu')}</button></div></div>`);
   if($('mcard').querySelectorAll('.goal').length>3)$('mcard').classList.add('many'); // FIX1 (аудит 🟠4–5): много плашек — компактный список, кнопки «липкие»
   UI.mount($('mcard'),resultSlots,rctx);party();socEarly(newRank||carNews||!!(G.newM&&G.newM.length)||(!pass&&helpDue()));fitCard();if(window.UIF)UIF.result();
-  const go=f=>()=>{hideModal();between(f);};
+  const go=f=>()=>{hideModal();between(()=>TMR.go(f));}; // UP-OV: после 3-го итога — одно окно «Завтра — подарок» (js/tmr.js)
   if($('rNext'))$('rNext').onclick=go(openTopics);
   if($('rAgain'))$('rAgain').onclick=go(()=>startLadder(topic));
   $('rTopic').onclick=go(openTopics);$('rMenu').onclick=go(openMenu);
@@ -2128,7 +2143,7 @@ function socPut(o,dense){const w=$('mWon');w.insertAdjacentHTML('afterend',socBo
 // Не в «полном» окне (full: новое звание, новая медаль темы, обещание страховки после двух неудач) и не когда не влезает: примерка тем же текстом —
 // обычный вид, потом плотный; годится вид, где окно целиком на экране и портрет Михалыча не пропал из-за вопроса (цитата, цель и ряд ступенек — необязательные,
 // fitCard и так убирает их первыми). Не влезло — не спрашиваем, показ не тратится (SOC.offer не зовём)
-function socEarly(full){if(PLAT!=='vk'||!VK||askedNow||full||window.__demo||ladFin()<3||Date.now()-BOOT_T<120000||!$('mWon')||socBusy()||!SOC.ntfDue())return;
+function socEarly(full){if(PLAT!=='vk'||!VK||askedNow||full||TMR.due()||window.__demo||ladFin()<3||Date.now()-BOOT_T<120000||!$('mWon')||socBusy()||!SOC.ntfDue())return;
   const n=(isObj(S.soc)&&isObj(S.soc.ntf)&&+S.soc.ntf.n||0)+1,tx=ntfText(n);if(!tx)return;
   const base=fitCard();fitUndo();let view=-1;
   for(const dense of [0,1]){$('mWon').insertAdjacentHTML('afterend',socBox({k:'ntf',t:tx,b:L('🔔 Напоминать','🔔 Remind me')},dense));
@@ -2136,7 +2151,7 @@ function socEarly(full){if(PLAT!=='vk'||!VK||askedNow||full||window.__demo||ladF
     if(h.indexOf('!')<0&&(h.indexOf('.av')<0||base.indexOf('.av')>=0)){view=dense;break;}}
   if(view<0)return;
   const o=SOC.offer(ladFin(),socBusy());if(!o)return;askedNow=true;socPut(o,view);}
-async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
+async function offerReturn(){if(askedNow||window.__demo||TMR.due())return; // UP-OV: следом окно «Завтра — подарок» с вопросом про напоминанияsessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
   if(pauseWhy.size||!(G&&G.over&&modalOn&&$('mWon')))return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{
@@ -2154,9 +2169,19 @@ if(document.hidden)setPause('hide',true);
 applyLook();updCoins();
 SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,now:()=>nowMs(),
   ntf:{t:n=>ntfText(n),b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Договорились! Попусту беспокоить не стану.','Deal! I will not bother you for nothing.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}});
+/* UP-OV (24.10): «Завтра — подарок» — одно окно за всё время после 3-го доигранного итога лестницы (ladFin), при уходе из окна итога (go → TMR.go).
+   Только VK и ОК (js/tmr.js проверяет площадку и мост сам). Метка S.tmr (NUMS — в облаке максимум). Тексты — только VK/ОК, по-русски. */
+function tmrBody(){const g=giftState(),sd=isObj(S.tdS)?S.tdS:{},n=sd.d===dayKey(0)?((+sd.n||0)+30*(+sd.cy||0)):0,wkNow=weekTopic(),d=new Date(nowMs()),wkTom=TK[((weekNo()+(d.getDay()===0?1:0))*7+4)%TK.length];
+  return '<p class="goal tipl">🎁 <b>Гостинец Михалыча завтра:</b> +'+coinsTxt(g.after)+'</p>'+
+    '<p class="goal">📅 <b>Новая викторина дня</b> — 10 вопросов, одни на весь двор'+(wkTom!==wkNow?' · ⭐ новая тема недели':'')+'</p>'+
+    '<p class="goal">🔥 <b>Серия:</b> '+(n?n+' '+pl(n,'день','дня','дней','day','days')+' — ':'')+'заходи завтра, не потеряй серию</p>';}
+TMR.init({ready:()=>ladFin()>=3,done:()=>(S.tmr||0)>0,mark:()=>{S.tmr=1;save();},body:tmrBody,title:'📅 Завтра — подарок!',
+  modal:h=>{modal('<div class="av">'+portrait('mihalych','happy')+'</div>'+h);return $('mcard');},close:()=>hideModal(),toast:t=>toast(t),cls:'btn noenter',main:'accent',row:'row',now:()=>nowMs(),
+  ok:'Договорились! Завтра напомню.'});
 if(!DUEL_ON)$('btnDuel').style.display='none';
-// новичок — знакомство и сразу первый вопрос (экран тем — фоном под окном, без отметки в статистике); остальные — в меню
-if(!/[?&]demo=/.test(location.search)&&!(S.games>0)&&!duelIn){openTopics(true);if(!S.tips.intro)openIntro();else firstGo();}else openMenu();
+// новичок — СРАЗУ первый вопрос, без окна знакомства (UP-OV 24.10: короткие первые сеансы уходили с окна intro; слова Михалыча — репликой на первом вопросе,
+// палец — на ответах, tut s:1/s:2 пишутся как раньше). Экран тем — фоном. openIntro оставлена (не зовётся). Остальные — в меню
+if(!/[?&]demo=/.test(location.search)&&!(S.games>0)&&!duelIn){openTopics(true);if(!S.tips.intro){S.tips.intro=1;STAT.ev('tut',{s:1});STAT.ev('tut',{s:2});}firstGo();}else openMenu();
 // режим для скриншотов карточки: ?demo=menu|topics|q|nb|zina|day|win|duel
 if(/[?&]demo=/.test(location.search))qWait(()=>{const q=new URLSearchParams(location.search),d=q.get('demo');if(!d)return;window.__demo=true;save=()=>{};
   S.coins=Math.max(S.coins,340);S.lvl=Math.max(S.lvl,12);S.games=Math.max(S.games,31);S.wins=Math.max(S.wins,12);S.correct=Math.max(S.correct,248);
@@ -2183,6 +2208,7 @@ window.__test={get G(){return G;},get S(){return S;},get MUS(){return MUS;},musT
 <script src="js/themes.js"></script>
 <link rel="stylesheet" href="css/fest-vik.css"><script src="js/fest.js"></script><script src="js/fest-vik.js"></script><!--FEST: модуль праздников и праздничные наборы в игре-->
 <script src="js/yard.js"></script><script src="js/stamps.js"></script><script src="js/league.js"></script><script src="js/season.js"></script>
+<script src="js/vik-cup.js"></script> <!-- UP-OV 24.10: живая лига hobby-cup во вкладке «Лига» (VK и Яндекс; сервер молчит — как было) -->
 <!-- затеи двора (MG0): оболочка, затем затеи js/vmg-<id>.js -->
 <link rel="stylesheet" href="css/vmg.css">
 <script src="js/vmg-core.js"></script>

@@ -308,11 +308,13 @@ function intro(next){const o=O(),me=CUP.me()||{},sh=CUP.shown(),old=S.tour&&S.to
     '<p class="sub">'+Lg('В таблицах ты — <b>«Игрок '+(me.tg||'NNNN')+'»</b>: имя скрыто. Показать имя («Имя Ф.») можно сейчас или потом в ⚙. Удалить свои данные турниров — тоже в ⚙.',
        'On the boards you are <b>“Player '+(me.tg||'NNNN')+'”</b>: your name is hidden. You can show your name now or later in ⚙. Deleting your contest data is in ⚙ too.')+'</p>'+
     '<div class="btns"><button class="btn big" id="cupI0">'+(sh?Lg('Оставить имя','Keep my name'):Lg('Без имени — в бой!','No name — to battle!'))+'</button><button class="btn ghost" id="cupI1">'+(sh?Lg('Скрыть имя','Hide my name'):Lg('Показывать моё имя','Show my name'))+'</button></div>','tour');
-  const fin=x=>{o.ask=1;save();cev('intro',{n:x});next();};
+  let did=0;const fin=x=>{if(did)return;did=1;o.ask=1;save();cev('intro',{n:x});next();}; // FX-GV 24.10: второе нажатие (пока «Показывать имя» ждёт сервер) — не открывать окно дважды
   on('cupI0',()=>fin(sh?1:0));on('cupI1',()=>{CUP.showName(!sh,()=>{lg=null;login(()=>fin(sh?0:1),true);});});}
 function liveOpen(ot,back,from){const o=tourTick();if(!o)return;
   if(claims().length){claimWin(claims()[0],back);return;}
   if(!O().ask){intro(()=>liveOpen(ot,back,from));return;}
+  // FX-GV 24.10 (сбой VK Android 18.10, ob-cup.js:316 «Cannot read properties» lg.n): лиги ещё нет (lg=null — «Показывать имя» перезаходит) — дождаться входа
+  if(!lg){login(x=>{if(x&&x.joined)liveOpen(ot,back,from);else if(typeof ot==='function')ot(from,back);});return;}
   const tb=tourTable(o,nowMs()),pl=tourPlace(tb),pts=tourPts(o),hum=(lg.n|0),k=lg.rwd&&lg.rwd.k?lg.rwd.k[Math.max(0,Math.min(lg.rwd.k.length-1,lg.tier||0))]:0,z=lg.rwd&&lg.rwd.z||{};
   STAT.screen('tour');cev('view',{f:from||'',pl:pl,pts:pts,n:hum});
   const lead=tb[0].i<0?tb[1]:tb[0],nm=lead?tourNbName(lead.i):'';

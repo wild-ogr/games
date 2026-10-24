@@ -41,7 +41,7 @@ html.gbwait::after{content:attr(data-gbw2);position:fixed;left:0;right:0;top:cal
 @keyframes gbwp{50%{opacity:.45}}
 </style>
 <script>/* v14.1: заставка нового игрока (нет сохранения gastronom-v1). Снимается: модули буста готовы (GB.isReady) — сразу новый вид;
-   иначе через 3 с после того, как основной скрипт показал уровень (#scr-game.on) или страница разобрана — игрок не ждёт медленную сеть; предохранитель 15 с;
+   UP-GS 24.10: как только основной скрипт показал уровень (#scr-game.on) — сразу; страница разобрана без уровня — через 3 с — игрок не ждёт медленную сеть; предохранитель 15 с;
    окно «Обновить» (#ldfail) — сразу. window.__gbw {on, why: gb|t|cap|fail, ms} — для STAT gbr. Старый игрок — ничего. Выключить: ?gboff=splash. */
 (function(){var d=document.documentElement,w=window.__gbw={},s=null,t0=Date.now(),t1=0,iv;
 try{s=localStorage.getItem('gastronom-v1');}catch(e){}
@@ -54,7 +54,8 @@ w.off=off;
 iv=setInterval(function(){var n=Date.now();
   if(window.GB&&GB.isReady)return off('gb');
   if(document.getElementById('ldfail'))return off('fail');
-  var sg=document.getElementById('scr-game');if(document.readyState!=='loading'||sg&&/\bon\b/.test(sg.className)){if(!t1)t1=n;else if(n-t1>=3000)return off('t');}
+  var sg=document.getElementById('scr-game');if(sg&&/\bon\b/.test(sg.className))return off('lvl'); /* UP-GS 24.10: уровень на экране — сразу снимаем (было +3 с): новичок из ленты не ждёт заставку */
+  if(document.readyState!=='loading'){if(!t1)t1=n;else if(n-t1>=3000)return off('t');}
   if(n-t0>=15000)off('cap');},100);
 })();
 </script>
@@ -133,6 +134,8 @@ button.pill::before{content:"";position:absolute;top:-8px;bottom:-8px;left:-4px;
 canvas{display:block;touch-action:none}
 .tip{position:absolute;left:10px;right:10px;bottom:8px;background:rgba(255,250,236,.96);border-radius:14px;padding:10px 12px;font-weight:700;font-size:16px;line-height:1.3;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.2);display:none;pointer-events:none;color:#3b2a1a}
 .gf{display:flex;gap:8px;padding:6px 10px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+/* UP-GS 24.10: новичок на 1-м уровне — бустеры спрятаны сразу (до модулей; то же правило в gb-newbie), видна только «Подсказка» */
+body.nbnob #scr-game .gf{visibility:hidden}body.nbnob #scr-game .gf #bHint{visibility:visible}
 .gf .btn{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;padding:6px 2px;border-radius:14px}
 .gf .btn b{font-size:21px}
 .gf .btn span{font-size:14px;font-weight:800;white-space:nowrap}
@@ -238,6 +241,7 @@ body.calm .node.cur,body.calm .card,body.calm .hearts.warn,body.calm .btn.glow,b
 .mh,.mnav,.gh,.gf{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 /* запасные отступы для старых браузеров без gap во flex (≈ те же, где нет inset) */
 /* pre: ролик за награду ещё грузится — значок ⏳ в углу кнопки (раскладку не меняет, нажать можно) */
+html.adno [data-adh]:not([disabled]){display:none!important} /* UP-GS 24.10: ролик не готов — кнопки «за рекламу» спрятаны (adVis) */
 button[data-adwait]{position:relative}
 button[data-adwait]::after{content:"⏳";position:absolute;top:4px;right:7px;font-size:16px;line-height:1;pointer-events:none}
 @supports not (inset:0){.soc-o>*+*{margin-top:6px}.soc-o.lite>*+*{margin-top:0;margin-left:8px}.vsay>*+*,.goal>*+*{margin-left:10px}.mnav>*+*,.gf>*+*,.gh>*+*,.hdr-r>*+*,.mh>*+*,.bst-ex>*+*,.lbr>*+*,.row2>*+*,.shopad>*+*{margin-left:8px}.streak>*{margin:2px}.row>*+*{margin-top:10px}.node-row>*+*{margin-left:12px}.node-row.r>*+*{margin-left:0;margin-right:12px}.gh-r>*+*{margin-top:3px}.grid>*{margin:6px}}
@@ -990,7 +994,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
 // (на маке — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (STAT.optOut)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'gastronom',gv:'v14.2-101521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'gastronom',gv:'v14.4-102414',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: настройки сеанса (cfg), вход (start: pl — пройдено уровней, cn — монет, bt — было ли сохранение в облаке; после облака, но не позже 2,5 с),
    баланс (bal → cb в pause), откуда монеты (ern → earn: lvl, ad, gift, chest, buy, quest) */
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
@@ -1987,7 +1991,7 @@ function drawHall(tk){const R=HALL;ctx.drawImage(hallCv,R.x,R.y,R.w,R.h);
   ctx.drawImage(counterCv,R.x,R.y,R.w,R.h);
   drawPerson(ctx,'valya',R.x+R.vX,R.y+R.vY,R.vS,G.valyaMood,tk,G.valyaTalk);
   ctx.restore();for(const c of Q)drawWant(c,tk);}
-function custX(k){const R=HALL;return R.x+R.cx0+(k+.5)*R.cw;}
+function custX(k){const R=HALL;if(!R)return 0;return R.x+R.cx0+(k+.5)*R.cw;}
 function drawCustomer(c,tk){const R=HALL,mood=c.st==='happy'?1:c.st==='angry'?-1:c.pat<=3?-1:0;let x=c.x,y=R.y+R.base,a=1;
   if(c.st==='happy'||c.st==='angry'){const k=Math.min(1,c.tt/0.9);a=1-Math.max(0,k-.4)/.6;if(c.st==='happy')y-=Math.abs(Math.sin(c.tt*9))*R.ph*.06;}
   if(c.shake>0)x+=Math.sin(c.shake*50)*3;ctx.globalAlpha=Math.max(0,a);drawPerson(ctx,c.kind,x,y,R.ph,mood,tk,c.talk);if(c.st==='happy'&&window.GB&&GB.viewOn)drawThanks(c,x,y);ctx.globalAlpha=1;} /* gb-VIEW: уходит с авоськой и «спасибо» */
@@ -2069,12 +2073,13 @@ function startLevel(idx,daily){if(window.GB&&G)GB._lvEnd('quit'); /* gb: «За�
   if(window.GBMD&&G.idx>=GBMD.BASE)GBMD._g(G); /* gb-MODE: уровень режима (G.mode, Ревизия, своя очередь) — до очереди и хуков */
   qFill(lv,st,G.q);syncQueue(true);
   if(window.GB)GB._lvStart(); /* gb */
+  if(document.body)document.body.classList.toggle('nbnob',!!(G.tutor&&!(S.levelsDone>0))); /* UP-GS 24.10: новичок ур.1 — без бустеров с первого кадра */
   show('scr-game');tip('');layout();requestAnimationFrame(layout);
   renderHearts();updHud();updCoins();
   // обучение действием: 1-й — перетащить, 2-й — ряд сзади и терпение очереди (числа видны уже здесь); спецтовары — при первой встрече.
   // Подсказка висит до хода игрока (не меньше 3 с), следующая — после него (аудит 14: 7 с для 45+ мало)
   const tp=S.tips,tq=[];G.tipQ=tq;
-  if(G.tutor)tq.push(['Перетащите сгущёнку к двум таким же. Три одинаковых — и покупатель доволен!','Drag the condensed milk next to the two matching tins. Three of a kind — and the customer is happy!']);
+  if(G.tutor)tq.push(['Сгущёнку выбросили! Нажмите на банку — покупатель уже тут.','Condensed milk is in! Tap the tin — a customer is already here.']); /* UP-GS 24.10: одно касание делает 1-й ход (ptrUp), текст — как у gb-newbie */
   else{if(!daily&&idx===1&&!tp.back){tp.back=1;tq.push(['Сзади стоит ещё ряд (он темнее). Опустеет полка — он выедет вперёд.','There\'s another row behind (the darker one). Empty the shelf and it moves forward.']);}
     if(!daily&&idx>=1&&idx<=2&&!tp.queue){tp.queue=1;tq.push(['Число у покупателя — сколько ходов он ждёт. Ход с тройкой терпение не тратит.','The number by a customer is how many moves they\'ll wait. A move that makes a triple costs no patience.']);}
     if(lvHas(lv,c=>iceOf(c)>0)&&!tp.ice){tp.ice=1;tq.push(['❄️ Товар во льду: оттает, когда соберёте столько троек, сколько на нём написано.','❄️ Frozen goods thaw after you make as many triples as the number on them.']);}
@@ -2339,7 +2344,11 @@ cv.addEventListener('pointerdown',e=>{if(!G||G.over||modalOn||paused)return;cons
       if(c&BOXF){toast(L('📦 Дефицит откроется, когда рядом соберёте тройку','📦 Rare goods open when you make a triple nearby'));SND.bad();return;}
       const n=iceOf(c)-G.st.cl;toast(L('❄️ Во льду: оттает после ','❄️ Frozen: thaws after ')+n+' '+pl(n,'тройки','троек','троек','triple','triples'));SND.ice();return;}}});
 cv.addEventListener('pointermove',e=>{const d=G&&G.drag;if(!d||d.id!==e.pointerId)return;const p=cvPos(e);d.x=p.x;d.y=p.y;if(!d.moved&&Math.hypot(p.x-d.sx,p.y-d.sy)>9){d.moved=true;G.sel=null;G.hide[d.i+':'+d.k]=1;}kick();});
+// UP-GS 24.10: новичок из ленты уходит за 8 с, не сходив. На 1-м уровне до 1-го хода любое касание витрины (не перетаскивание) — ход по пальцу
+function tutorTap(p){if(!G.tutor||G.moves||G.over||G.won||modalOn||!G.units||!G.units[1]||hitUnit(p.x,p.y,U*.3)<0)return false;
+  const st=G.st;if(!st.F[1]||!movable(st,st.F[1][1])||st.F[0][2]!==0)return false;G.drag=null;G.sel=null;G.hide={};STAT.ev('nb',{a:'tap1'});return tryMove(1,1,0,2,null);}
 function ptrUp(e,cancel){if(!G)return;const d=G.drag,p=cvPos(e);
+  if(!cancel&&G.tutor&&!(d&&d.moved)&&(!d||d.id===e.pointerId)&&tutorTap(p)){kick();return;}
   if(d&&d.id===e.pointerId){G.drag=null;
     if(d.moved){delete G.hide[d.i+':'+d.k];const t=cancel?null:dropAt(p.x,p.y,d.i);
       if(!(t&&tryMove(d.i,d.k,t.i,t.k,{x:p.x,y:p.y}))){G.hide[d.i+':'+d.k]=1;G.fly.push({c:d.c,x0:p.x,y0:p.y,i:d.i,s:d.k,t:0,dur:.15});SND.back();}}
@@ -2405,8 +2414,13 @@ function render(){if(!G||!HALL)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clea
   const gr=G.grid;ctx.fillStyle='rgba(255,255,255,.06)';ctx.beginPath();ctx.moveTo(gr.x+gr.w*.55,gr.y);ctx.lineTo(gr.x+gr.w*.72,gr.y);ctx.lineTo(gr.x+gr.w*.42,gr.y+gr.h);ctx.lineTo(gr.x+gr.w*.25,gr.y+gr.h);ctx.closePath();ctx.fill();
   if(G.drag&&G.drag.moved){const d=G.drag;const t=dropAt(d.x,d.y,d.i);if(t){ctx.strokeStyle='rgba(46,139,71,.85)';ctx.lineWidth=U*.06;{const q=1+((G.kk||1)-1)*.9;rrect(ctx,slotX(t.i,t.k)-U*.46*q,G.units[t.i].pt-U*1.0*q,U*.92*q,U*1.0*q,U*.14);ctx.stroke();}}
     ctx.fillStyle='rgba(0,0,0,.26)';ell(ctx,d.x+U*.06,d.y+U*.2,U*.42,U*.11);ctx.fill();drawCell(d.c,d.x,d.y+U*.05,1.22,false);}
-  if(G.tutor)drawTutor();
+  if(G.tutor){if(!G.moves)drawTutorGlow();drawTutor();}
   drawSpeech();}
+function drawTutorGlow(){try{const pu=.55+.45*Math.sin(G.t*5),q=1+((G.kk||1)-1)*.9,u0=G.units[0],u1=G.units[1];if(!u0||!u1)return;
+  const box=(i,s,col,lw)=>{ctx.strokeStyle=col;ctx.lineWidth=lw;rrect(ctx,slotX(i,s)-U*.48*q,G.units[i].pt-U*1.04*q,U*.96*q,U*1.04*q,U*.16);ctx.stroke();};
+  ctx.save();ctx.fillStyle=`rgba(255,226,120,${.1+.12*pu})`;for(const s of [0,1]){rrect(ctx,slotX(0,s)-U*.48*q,u0.pt-U*1.04*q,U*.96*q,U*1.04*q,U*.16);ctx.fill();}
+  ctx.setLineDash([U*.12,U*.09]);box(0,2,`rgba(46,139,71,${.55+.45*pu})`,Math.max(2,U*.07));ctx.setLineDash([]);
+  box(1,1,`rgba(255,190,40,${.6+.4*pu})`,Math.max(2.5,U*.09));ctx.restore();}catch(e){ctx.globalAlpha=1;}}
 function drawTutor(){const k=(G.t%2.2)/1.6;if(k>1)return;const x0=slotX(1,1),y0=G.units[1].pt-U*.45,x1=slotX(0,2),y1=G.units[0].pt-U*.45,e=ease(k),x=x0+(x1-x0)*e,y=y0+(y1-y0)*e;
   ctx.globalAlpha=Math.min(1,k*5,(1-k)*5);ctx.font=`${Math.round(U*.7)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('👆',x+U*.1,y);ctx.globalAlpha=1;}
 function drawSpeech(){const s=G.speech;if(!s)return;const a=Math.min(1,s.t*6,(s.life-s.t)*3);if(a<=0)return;
@@ -2466,8 +2480,19 @@ function adBtns(){const o=[];try{const q=document.querySelectorAll(AD_BTN_SEL);f
    Образец: hobby-analytics/release-h/preload/preload-sample.md, раздел «ОБРАЗЕЦ». «Ролик на экране» помнит флаг adVidOn (снимается и при выходе без ответа — adt, ниже). */
 let AD_STEP=[5000,5000,5000,5000,5000,5000,15000,15000,15000,15000],AD_STEP_MAX=45000,AD_ASK_MIN=3000,AD_FRESH=120000,AD_LOOK_MS=20000;
 let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAskWhy='boot',adMarkT=0,adRdyToastT=0,adVidOn=0;
-function adLikely(){return !(VK&&adSt<0&&adNoN>=2);} /* false — VK уже дважды подряд ответил «ролика нет» */
-function adPreload(why){if(!VK)return;clearTimeout(adChkT);if(typeof why==='string'){adAskWhy=why;adStepN=0;}
+/* UP-GS 24.10 «ролик при готовом» (образец Зина v4.3 core.js, Викторина FX-GV): кнопка ролика за награду ВИДНА ТОЛЬКО, когда VK сказал «ролик готов»
+   (adSt===1) и нет паузы кнопок (adCoolT). «нет» / ещё не спрашивали / ролик только что показан → все кнопки ролика (adBtns: .btn.rw и [data-q] с 📺, кроме
+   «Ролики дня»/«Задания» — они только открывают окно) спрятаны: класс adno на <html> + метка data-adh (ставит adVis и наблюдатель DOM — новые окна
+   прячутся до первого кадра). Опрос в фоне — как раньше (adPreload): ролик подгрузился → кнопки появляются сами. Значка ⏳ больше нет.
+   Яндекс и мак без моста: сведений о готовности нет — кнопки как раньше. STAT.offer — только если кнопку правда видно. */
+function adLikely(){return !VK||adSt===1&&Date.now()>=adCoolT;}
+let adVisT=0,adVisMO=null;
+function adTag(){const q=adBtns();for(let i=0;i<q.length;i++)if(!q[i].hasAttribute('data-adh'))q[i].setAttribute('data-adh','1');}
+function adVis(){clearTimeout(adVisT);const no=!adLikely();try{const D=document.documentElement,was=D.classList.contains('adno');D.classList.toggle('adno',no);if(no)adTag();if(was!==no&&G)updCoins(); /* подписи «📺 за рекламу» на бустерах */
+  if(VK&&!adVisMO&&window.MutationObserver){adVisMO=new MutationObserver(()=>{if(document.documentElement.classList.contains('adno'))adTag();});adVisMO.observe(document.body,{childList:true,subtree:true});}}catch(e){}
+  if(no&&Date.now()<adCoolT)adVisT=setTimeout(adVis,adCoolT-Date.now()+50);}
+{const so=STAT.offer;STAT.offer=function(){if(!adLikely())return;return so.apply(STAT,arguments);};}
+function adPreload(why){if(!VK)return;adVis();clearTimeout(adChkT);if(typeof why==='string'){adAskWhy=why;adStepN=0;}
   if(document.hidden||pauseWhy.has('hide')||adVidOn)return; /* свёрнуты или ролик на экране — молчим; вернёмся / ролик закончится — спросим (adBackChk, итог показа) */
   const now=typeof why==='string'&&why!=='back'&&why!=='look'; /* итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN */
   if(!now){const wait=adAsking?AD_ASK_MIN:adAskT+AD_ASK_MIN-Date.now();if(wait>0){adChkT=setTimeout(adPreload,wait);return;}}
@@ -2481,17 +2506,16 @@ function adAns(ok){const t=Date.now();
   if(ok===false){if(!adNoN)adNoT0=t;adNoN++;adSt=-1;adStT=t;adMark();} /* null — мост не ответил: состояние не трогаем, но спрашивать продолжаем */
   adChkT=setTimeout(adPreload,AD_STEP[adStepN++]||AD_STEP_MAX);}
 /* ⏳ на кнопках ролика, пока VK говорит «нет» (окна перерисовываются — поэтому раз в секунду, только пока «нет»); вернёт true, если значок был на видимой кнопке и снят */
-function adMark(){clearTimeout(adMarkT);const on=!adLikely(),q=on?adBtns():[];let seen=false,old=[];try{old=document.querySelectorAll('[data-adwait]');}catch(e){}
-  for(let i=0;i<q.length;i++)q[i].setAttribute('data-adwait','1');
-  for(let i=0;i<old.length;i++){const b=old[i];if(q.indexOf(b)<0){b.removeAttribute('data-adwait');if(!on&&b.offsetParent)seen=true;}}
-  if(on)adMarkT=setTimeout(adMark,1000);return seen;}
+/* UP-GS 24.10: значка ⏳ нет — кнопки прячутся/появляются (adVis); true — кнопка ролика только что появилась на экране (для «Ролик готов») */
+function adMark(){clearTimeout(adMarkT);const was=document.documentElement.classList.contains('adno');adVis();if(!was||!adLikely())return false;
+  const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)return true;return false;}
 /* вернулись в игру или давно не спрашивали, а кнопка ролика на экране — спросить ещё раз */
 function adBackChk(tick){if(!VK||adBusy||document.hidden||pauseWhy.has('hide'))return;
   if(adSt<1){if(tick!==1)adPreload('back');else if(Date.now()-adAskT>AD_STEP_MAX+2*AD_ASK_MIN)adPreload();return;} /* по таймеру — только страховка, шаги не сбрасываем */
   if(Date.now()-adStT<AD_FRESH)return;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent){adPreload('look');return;}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(adChkT);else setTimeout(adBackChk,300);});
 setInterval(()=>adBackChk(1),AD_LOOK_MS);
-function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();let vis=false;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
+function adVidReady(){if(Date.now()>=adCoolT)return;clearTimeout(adRdyT);adRdyT=setTimeout(()=>{if(Date.now()>=adCoolT)return;adCoolT=0;adDim();adVis();let vis=false;const q=adBtns();for(let i=0;i<q.length;i++)if(q[i].offsetParent)vis=true;if(vis&&!adBusy)toast(L('Ролик готов — можно смотреть','The video is ready to watch'));},Math.max(0,adCoolS+AD_COOL_MIN-Date.now()));}
 function adWaitOn(){const w=document.getElementById('adWait');return !!w&&w.style.display!=='none';}
 function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(w)w.style.display='none';return;}
   if(!w){w=document.createElement('div');w.id='adWait';w.style.cssText='position:fixed;top:0;right:0;bottom:0;left:0;z-index:99999;background:rgba(0,0,0,.74);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px;line-height:1.35';document.body.appendChild(w);}
@@ -2502,7 +2526,7 @@ function adWait(on,txt,exit){let w=document.getElementById('adWait');if(!on){if(
 /* кнопки «за рекламу» гаснут, пока идёт пауза (окна перерисовываются — поэтому раз в секунду); остаются нажимаемыми — нажатие объясняет */
 function adDim(){clearTimeout(adDimT);const off=Date.now()<adCoolT,q=adBtns();for(let i=0;i<q.length;i++){const b=q[i];
     if(off){b.style.opacity='.45';b.setAttribute('data-adoff','1');}else if(b.hasAttribute('data-adoff')){b.style.opacity='';b.removeAttribute('data-adoff');}}if(off)adDimT=setTimeout(adDim,1000);}
-function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adPreload('none');}
+function adCool(){adCoolS=Date.now();adCoolT=adCoolS+AD_COOL_MS;adDim();adVis();adPreload('none');}
 let adBusy=false;
 /* adt (06.10): обрыв ролика за награду через 60 с (образец — Зина, hobby-analytics/release-g/ads-timeout.md «ОБРАЗЕЦ»; так же, как в «Выезде»). Раньше показ ждал ответа VK 60 с
    (vkSend(…,60000)), потом писал «недоступна», а поздний ответ «досмотрел» никто не слушал: ролик посмотрен, награды нет. Теперь:
@@ -2927,15 +2951,18 @@ function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true
   const md=$('mDaily');if(md)md.onclick=()=>startLevel(0,true);
   const ms=$('mShop');if(ms)ms.onclick=()=>{hideModal();openShop();};
   $('mMap').onclick=()=>{hideModal();openMap();};}
+/* UP-GS 24.10 «ролик по делу»: «Ещё попытка за рекламу» щедрее попытки за монеты — очереди +REV_PAT хода терпения (как «ещё 3 хода» у Зины/Рыбалки) */
+const REV_PAT=3;
+function revPat(){if(!G||!G.q)return;for(const v of G.q.vis)if(v.max<90){v.pat+=REV_PAT;if(v.pat>v.max)v.max=v.pat;}syncQueue(true);STAT.ev('mod',{m:'revpat',a:'ok'});kick();}
 function lose(){if(!G)return;YG.stop();SND.stuck();qEnd(false,0);STAT.end('lose',stEnd());if(window.GB)GB._lvEnd('lose'); /* gb */const canPay=S.coins>=PRICE.life;const gbL=window.GB?GB.winCtx({rev:!!G.gbRev}):null;
   modal(`<h2>${L('Очередь обиделась 😟','The queue got upset 😟')}</h2><p>${L('Трое покупателей ушли, не дождавшись. Тётя Валя вздыхает: «Бывает…» Попробуем ещё?','Three customers gave up and left. Aunt Valya sighs: "It happens…" Shall we try again?')}</p>
     ${gbL?GB.loseHtml(gbL):''}
-    <div class="row">${canPay?`<button class="btn accent buy" id="mLife">${L('❤️ Ещё попытка','❤️ One more try')} — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent rw" id="mRev">'+L('📺 Ещё попытка за рекламу','📺 One more try for an ad')+'</button>'}<button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn" id="mMap2">${L('На карту','To the map')}</button></div>`);
+    <div class="row">${canPay?`<button class="btn accent buy" id="mLife">${L('❤️ Ещё попытка','❤️ One more try')} — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent rw" id="mRev">'+L('📺 Ещё попытка за рекламу','📺 One more try for an ad')+'<small style="display:block;font-weight:600">'+L('и +'+REV_PAT+' хода терпения очереди','and +'+REV_PAT+' moves of queue patience')+'</small></button>'}<button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn" id="mMap2">${L('На карту','To the map')}</button></div>`);
   if(gbL)GB.loseMount(gbL); /* gb */
   const revive=()=>{if(window.GB)GB._lvRevive(); /* gb */STAT.lvl(G.idx+1,'rev');G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();kick();if(!hasMove(G.lv,G.st))stuck();};
   if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);SND.coin();STAT.ev('spend',{k:'life',c:PRICE.life});revive();};
-  const r=$('mRev');if(r){STAT.offer('life');r.onclick=()=>{const g=G;hideModal();STAT.place('life');showRewarded(()=>{G.usedRevive=true;revive();},lose,
-    ()=>{if(G===g&&G.over&&modalOn&&$('mRev')&&$('scr-game').classList.contains('on')){G.usedRevive=true;revive();return L('❤️ ещё попытка','❤️ one more try');}return adLateCoins(PRICE.life);});};} /* adt: поздний досмотр — попытка, только если то же окно поражения ещё открыто; иначе монеты по цене попытки */
+  const r=$('mRev');if(r){STAT.offer('life');r.onclick=()=>{const g=G;hideModal();STAT.place('life');showRewarded(()=>{G.usedRevive=true;revive();revPat();},lose,
+    ()=>{if(G===g&&G.over&&modalOn&&$('mRev')&&$('scr-game').classList.contains('on')){G.usedRevive=true;revive();revPat();return L('❤️ ещё попытка','❤️ one more try');}return adLateCoins(PRICE.life);});};} /* adt: поздний досмотр — попытка, только если то же окно поражения ещё открыто; иначе монеты по цене попытки */
   $('mRe').onclick=()=>startLevel(G.daily?0:G.idx,G.daily);$('mMap2').onclick=()=>{hideModal();openMap();};}
 // тупик: ставить некуда — предлагаем бустеры, иначе уровень заново
 // тупик: ставить некуда — бустеры за монеты и рядом тот же бустер за рекламу (многие берегут монеты на обстановку), иначе уровень заново
@@ -3304,6 +3331,8 @@ window.__test={get G(){return G;},get S(){return S;},startLevel,tryMove,layout,r
 
 <!-- gb:EN -->
 <script src="js/gb-en.js" defer data-gb></script>
+<!-- gb:UP (UP-GS 24.10: «Завтра — подарок», ролик по делу) -->
+<script src="js/gb-up.js" defer data-gb></script>
 <script src="js/gb-ready.js" defer data-gb></script> <!-- gb: ПОСЛЕДНИМ, не трогать -->
 </body>
 </html>

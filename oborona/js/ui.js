@@ -489,11 +489,11 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
       ()=>{if(x2d)return '';pay();SND.coin();setPills();return Lg('удвоено: +','doubled: +')+fmtGold(reward);}));} /* поздний зачёт (adt): всегда, один раз */
     // межэкранная — только тут, при уходе с экрана победы, и со 2-й главы (после Соловья)
     const ia=c>=1;
-    on('rNext',()=>afterAd(ia,()=>{mapSel=next[0];toMenu('Map');nxIntro(next[0],next[1]);}));   // OB-FIX п.3: карта рисуется один раз (было дважды), вступление — следующим кадром
-    on('rWall',()=>afterAd(ia,()=>{toMenu('Village');const w=document.querySelector('[data-b="wall"]');if(w){w.classList.add('hl');w.scrollIntoView({block:'center'});}}));
-    on('rForge',()=>afterAd(ia,nvForge));   // ob2-NOVICE newbforge
-    on('rUp',()=>afterAd(ia,()=>{difSet(c,dUp,'res');mapSel=c;toMenu('Map');nxIntro(c,0);}));   // OB:DIF
-    on('rAgain',()=>afterAd(ia,()=>startLevel(c,l)));on('rMap',()=>afterAd(ia,()=>{toMenu('Map');if(canForge())toast(Lg('Есть звёзды для кузницы!','You have stars for the forge!'));}));
+    on('rNext',()=>afterAd(ia,()=>TMR.go(()=>{mapSel=next[0];toMenu('Map');nxIntro(next[0],next[1]);})));   // UP-OV: после 3-й победы — одно окно «Завтра — подарок» (js/tmr.js)   // OB-FIX п.3: карта рисуется один раз (было дважды), вступление — следующим кадром
+    on('rWall',()=>afterAd(ia,()=>TMR.go(()=>{toMenu('Village');const w=document.querySelector('[data-b="wall"]');if(w){w.classList.add('hl');w.scrollIntoView({block:'center'});}})));
+    on('rForge',()=>afterAd(ia,()=>TMR.go(nvForge)));   // ob2-NOVICE newbforge
+    on('rUp',()=>afterAd(ia,()=>TMR.go(()=>{difSet(c,dUp,'res');mapSel=c;toMenu('Map');nxIntro(c,0);})));   // OB:DIF
+    on('rAgain',()=>afterAd(ia,()=>TMR.go(()=>startLevel(c,l))));on('rMap',()=>afterAd(ia,()=>TMR.go(()=>{toMenu('Map');if(canForge())toast(Lg('Есть звёзды для кузницы!','You have stars for the forge!'));})));
     // VK: одно предложение за сессию (модуль SOC) — строкой и кнопкой ПОД кнопками окна победы; диалог VK — только по нажатию игрока
     /* ntf (06.10): вопрос воеводы про напоминания VK идёт тем же путём (SOC.offer вернёт k:'ntf') и ставится СРАЗУ при открытии окна. Пока модуль хочет
        спросить (SOC.ntfDue — показа не тратит): не в окнах первых трёх побед (там подсказки новичку), не в «Глава освобождена!» и не с новой короной;
@@ -508,7 +508,7 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
         const h0=Array.from(m.querySelectorAll('[data-fit]')).filter(e=>e.style.display==='none').length; /* сколько спрятано и без вопроса */
         let best=-1,bh=99;[[false,false],[false,true],[true,false],[true,true]].forEach((v,k)=>{if(bh<=h0)return;const h=probe(v[0],v[1]);if(h>=0&&h<bh){bh=h;best=k;}});
         fit=best>=0;lite=best===1||best===3;m.classList.toggle('rc',best>=2);if(!fit)fitModal();}
-      const o=fit?SOC.offer(S.wins,busy):null;
+      const o=fit&&!TMR.due()?SOC.offer(S.wins,busy):null;   // UP-OV: следом окно «Завтра — подарок» с вопросом про напоминания — тут не перебиваем
       if(o){retAsked=true;m.insertAdjacentHTML('beforeend',socRow(o,lite));fitModal();STAT.ev('mod',{m:'soc',a:'of_'+(o.k||'ret')});const b=$('mSoc');
         b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_'+(o.k||'ret')});const r=o.run();
           if(o.k==='ntf'){const d=m.querySelector('.soc-o');if(d)d.remove();Promise.resolve(r).then(y=>{if(y&&o.ok)toast(o.ok);}).catch(()=>{});}};}
@@ -914,6 +914,15 @@ function ntfText(n){return n<=1?Lg('Завтра готовлю новые за�
 // строка предложения SOC под кнопками окна победы; напоминания — репликой воеводы (lite — без портрета, одной строкой)
 function socRow(o,lite){const n=o.k==='ntf';
   return '<div class="soc-o'+(n?' ntf':'')+'">'+(n&&!lite?'<div class="say"><img src="'+ic('voevoda')+'" alt=""><div><b class="who">'+VOEV()+'</b>'+o.t+'</div></div>':'<span>'+(n?'<b>'+Lg('Воевода','Commander')+':</b> ':'')+o.t+'</span>')+'<button class="btn ghost" id="mSoc">'+o.b+'</button></div>';}
+/* UP-OV (24.10): «Завтра — подарок» — одно окно за всё время, после 3-й победы в кампании, при уходе из окна победы (rNext/rMap/rAgain/rWall → TMR.go).
+   Только VK и ОК (js/tmr.js сам проверяет площадку и мост); метка — S.ret.tmr (облако: объединение S.ret). В VK-местах тексты только по-русски. */
+function tmrBody(){const L=S.login||{},n=L.day===dayKey()?(L.n||1):0;
+  return '<div class="goal tmr"><b>🎁 Завтра за вход:</b> '+loginTmrText()+'</div>'+
+    '<div class="goal"><b>📜 Новые наказы дня</b> — за все три сундук дня</div>'+
+    '<div class="goal"><b>🔥 Серия:</b> '+(n?n+' '+plw(n,'день','дня','дней','day','days')+' — ':'')+'заходи завтра, не потеряй серию'+(n?'':' (награда растёт 30 дней)')+'</div>';}
+TMR.init({ready:()=>(S.wins||0)>=3,done:()=>!!(S.ret&&S.ret.tmr),mark:()=>{if(!S.ret)S.ret={};S.ret.tmr=1;save();},body:tmrBody,
+  modal:h=>{showModal(h,'tmr');return $('mBody');},close:()=>hideModal(),toast:t=>toast(t),cls:'btn',main:'big',now:()=>nowMs(),
+  ok:'Так точно! Завтра напомню.'});
 async function retOffer(){if(G||retAsked||S.wins<3||Date.now()-BOOT_T<120000||Date.now()-lastAdT<60000||$('modal').classList.contains('on'))return;const R=S.ret;
   const ask=(k,fn)=>{retAsked=true;R[k]=1;save();try{const p=fn();p&&p.catch&&p.catch(()=>{});}catch(e){}};
   try{if(ysdk){
