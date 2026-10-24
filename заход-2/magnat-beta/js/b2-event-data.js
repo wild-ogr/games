@@ -1,0 +1,108 @@
+/* b2-event-data.js — EVENT: задания Потока от 5 героев (грузится по требованию из b2-event-flow.js). Только данные и тексты.
+   Строка: [id, герой, главы, вид, сколько, условие, ru, en]
+     герой: lud Людмила Санна (отчёты и термины — Поток учит жаргону, решение владельца 05.10) · son Соня (деньги) · bor Борис (соперничество)
+            pet Пётр (стройка и улучшения) · vit Витя (доставка, опт, машины)
+     главы: g «Карьера» (подработка) · s «Своё дело» · m «Сеть» · q «Карьер» · n «Недра»
+     вид — как в договоре Потока (c:/a:/u:); сколько — для c:eq доля (0.05 = +5 %)
+     условие — ключ COND в b2-event-flow.js ('' — всегда)
+   Ничего не требует покупать за 💎/₽ магазина; выполнимо за 5–30 минут игры. */
+(function(){'use strict';
+if(typeof B2==='undefined')return;
+B2.evData=[
+/* ---------- Людмила Санна: отчёты, термины, порядок в делах ---------- */
+['l1','lud','gsmqn','u:rep',1,'','Откройте отчёт месяца (Финансы → Отчёты) и посмотрите, на чём мы теряем','Open the monthly report (Finance → Reports) and see where we lose money'],
+['l2','lud','gsmqn','u:gl',2,'','Загляните в словарик: разберите 2 слова (нажмите слово с пунктиром)','Check the glossary: learn 2 terms (tap a dotted word)'],
+['l3','lud','gsmqn','c:prof',1,'','Закройте месяц с прибылью','Close a month in profit'],
+['l4','lud','gsmqn','c:close',2,'','Закройте 2 месяца — я подготовлю отчёты','Close 2 months — I’ll prepare the reports'],
+['l5','lud','smqn','u:fin',1,'','Откройте «Финансы» и посмотрите «Деньги на 30 дней»','Open Finance and check “Money for 30 days”'],
+['l6','lud','smqn','c:prof',2,'','Два прибыльных месяца — это уже привычка, а не удача','Two profitable months — that’s a habit, not luck'],
+['l7','lud','g','c:gigs',3,'','Выполните 3 заказа — я запишу доход в книгу','Complete 3 orders — I’ll log the income'],
+['l8','lud','g','a:regIP',1,'ip0','Оформите ИП: налог 6 % — честно и спокойно','Register as a sole trader: 6% tax, honest and calm'],
+['l9','lud','s','a:bizMgr',1,'mgr','Поставьте управляющего в точку и сравните прибыль через месяц','Put a manager in a shop and compare profit in a month'],
+['l10','lud','m','a:regOOO',1,'ooo0','Оформите ООО — я подготовлю устав','Register an LLC — I’ll prepare the charter'],
+['l11','lud','mqn','u:rep',1,'','Найдите в БДР строку EBITDA и сравните с прошлым месяцем','Find EBITDA in the P&L and compare with last month'],
+['l12','lud','qn','c:close',3,'','Закройте квартал (3 месяца) — подведём итоги','Close a quarter (3 months) — we’ll sum up'],
+['l13','lud','n','u:gl',3,'','Разберите 3 слова в словарике: ROE, амортизация, оборот','Learn 3 glossary terms: ROE, depreciation, turnover'],
+/* ---------- Соня Совина: деньги, кредиты, подушка ---------- */
+['s1','son','gsmqn','c:eq',0.05,'','Поднимите стоимость дела на 5 %','Grow your business value by 5%'],
+['s2','son','smqn','a:repay',1,'loan','Погасите кредит досрочно хотя бы частью','Repay part of a loan early'],
+['s3','son','smqn','a:factor',1,'rec','Продайте банку долг покупателей (факторинг) — деньги сразу','Sell customers’ debt to the bank (factoring) — cash now'],
+['s4','son','gsmqn','c:prof',1,'','Месяц в плюс — банк любит стабильных','A month in profit — banks love the steady'],
+['s5','son','gs','c:gigs',4,'gig','Возьмите 4 заказа: копим подушку','Take 4 orders: we’re building a cushion'],
+['s6','son','smqn','u:fin',1,'','Откройте «Финансы → Банк» и посмотрите, сколько банк даст','Open Finance → Bank and see how much the bank lends'],
+['s7','son','mqn','c:eq',0.08,'','Стоимость компании +8 % — фонду нравятся такие графики','Company value +8% — funds like such charts'],
+['s8','son','s','c:close',2,'','Закройте 2 месяца без паники — деньги любят тишину','Close 2 months calmly — money loves quiet'],
+['s9','son','n','a:repay',1,'loan','Сократите долг: погасите часть кредита','Cut debt: repay part of a loan'],
+['s10','son','qn','c:prof',2,'','Два месяца в плюс — и ставка по кредиту станет ниже','Two months in profit — and loan rates go down'],
+['s11','son','g','c:close',1,'','Закройте месяц и посмотрите итог','Close a month and look at the result'],
+/* ---------- Борис Бобров: соперничество (с ехидцей) ---------- */
+['b1','bor','gsmqn','c:eq',0.1,'','Борис: «Спорим, за неделю ты не вырастешь на 10 %?»','Boris: “Bet you won’t grow 10% this week?”'],
+['b2','bor','s','a:bizOpen',1,'cheap','Откройте новую точку — у Бориса уже три','Open a new shop — Boris already has three'],
+['b3','bor','sm','a:ptUp',1,'pts','Улучшите точку — пусть Борис позавидует','Upgrade a shop — let Boris envy'],
+['b4','bor','gsmqn','c:prof',2,'','Два прибыльных месяца подряд — Борис так не умеет','Two profitable months — Boris can’t'],
+['b5','bor','g','c:gigs',5,'gig','5 заказов — Борис в твои годы делал три','5 orders — Boris did three at your age'],
+['b6','bor','m','a:cityOpen',1,'c3','Откройтесь в новом городе — Борис туда ещё не дошёл','Open in a new city — Boris isn’t there yet'],
+['b7','bor','m','a:bizOpen',2,'cheap','Откройте 2 точки — «Бобров и Ко» не спит','Open 2 shops — Beaver & Co never sleeps'],
+['b8','bor','q','c:eq',0.06,'','Капитал +6 % — Борис говорит, карьер тебе не по зубам','Equity +6% — Boris says the quarry is too much for you'],
+['b9','bor','n','c:sold',1,'sold','Продайте добычу на круглую сумму — Борис считает в уме','Sell output for a round sum — Boris counts in his head'],
+['b10','bor','qn','c:close',2,'','Два месяца без убытков — и Борис признает','Two months without losses — and Boris will admit it'],
+['b11','bor','sm','a:mkRun',1,'pts','Запустите рекламу точки — Борис раздаёт листовки у метро','Run shop marketing — Boris hands out flyers at the metro'],
+/* ---------- Пётр Барсуков: стройка, улучшения, техника ---------- */
+['p1','pet','sm','a:ptUp',1,'pts','Улучшите одну точку — сделаем по-инженерному','Upgrade one shop — the engineer’s way'],
+['p2','pet','m','a:ptUpAll',1,'pts','Улучшите сеть одного вида разом','Upgrade a whole chain of one type at once'],
+['p3','pet','q','a:pitUp',1,'pit','Расширьте карьер','Expand the quarry'],
+['p4','pet','q','a:vehTO',1,'veh','Сделайте ТО самосвалу — сломанный стоит дороже','Service a dump truck — a broken one costs more'],
+['p5','pet','n','a:build',1,'lic','Начните стройку на своём участке','Start building on your plot'],
+['p6','pet','n','c:build',1,'lic','Достройте объект','Finish a construction'],
+['p7','pet','n','a:upgrade',1,'obj','Модернизируйте объект','Modernise a facility'],
+['p8','pet','gsmqn','c:close',2,'','Закройте 2 месяца — я проверю, всё ли крепко','Close 2 months — I’ll check it’s all solid'],
+['p9','pet','g','c:gigs',3,'gig','3 заказа — руки помнят','3 orders — hands remember'],
+['p10','pet','s','a:stTrain',1,'pts','Обучите персонал точки','Train a shop’s staff'],
+['p11','pet','m','a:optUp',1,'opt','Улучшите склад опта','Upgrade a wholesale depot'],
+['p12','pet','qn','c:eq',0.05,'','Стоимость +5 % — фундамент держит','Value +5% — the foundation holds'],
+['p13','pet','s','c:prof',1,'','Месяц в плюс — значит, построено правильно','A month in profit — built right'],
+/* ---------- Витя Козлов: доставка, опт, машины ---------- */
+['v1','vit','g','c:gigs',3,'gig','Возьмите 3 заказа — подвезу, если что','Take 3 orders — I’ll give you a lift'],
+['v2','vit','m','a:vehAdd',1,'opt','Купите ещё газель опту — наёмные дороже','Buy one more van for wholesale — hired ones cost more'],
+['v3','vit','m','a:optUp',1,'opt','Улучшите опт — довезём дешевле','Upgrade wholesale — cheaper delivery'],
+['v4','vit','n','a:ship',1,'inv','Отправьте груз по железной дороге','Ship a cargo by rail'],
+['v5','vit','n','a:addRoute',1,'inv','Настройте постоянный маршрут','Set up a regular route'],
+['v6','vit','n','a:buyWagons',1,'wag','Купите свои вагоны — аренда дорогая','Buy your own rail cars — renting is pricey'],
+['v7','vit','q','a:vehTO',1,'veh','ТО самосвалам перед сезоном','Service the dump trucks before the season'],
+['v8','vit','gsmqn','c:prof',1,'','Месяц в плюс — заправлю газель за свой счёт','A month in profit — I’ll fill up the van myself'],
+['v9','vit','s','a:bizOpen',1,'cheap','Откройте точку — привезу товар первым рейсом','Open a shop — I’ll bring the first load'],
+['v10','vit','sm','c:close',2,'','Закройте 2 месяца — посчитаем рейсы','Close 2 months — let’s count the runs'],
+['v11','vit','qn','c:close',2,'','2 месяца без простоев техники','2 months without idle machines'],
+['v12','vit','mq','c:eq',0.05,'','Капитал +5 % — пора на вторую газель','Equity +5% — time for a second van'],
+/* ---------- второй круг (18.10): чтобы у каждого героя в каждой главе было из чего выбрать ---------- */
+['l14','lud','sm','a:bizAudit',1,'pts','Проведите ревизию в точке — посмотрим, не воруют ли','Audit a shop — let’s see if anyone steals'],
+['l15','lud','sm','a:edStart',1,'pts','Запишитесь на курс — учиться никогда не поздно','Sign up for a course — never too late to learn'],
+['l16','lud','n','c:expl',1,'hid','Проведите разведку участка — запишем в план','Explore a plot — I’ll add it to the plan'],
+['s12','son','gsmqn','a:friendCall',1,'','Позвоните Соне: она расскажет новости банка','Call Sonya: she’ll share bank news'],
+['s13','son','sm','a:afacSet',1,'rec','Включите автофакторинг — деньги не будут ждать','Turn on auto-factoring — money won’t wait'],
+['s14','son','q','a:repay',1,'loan','Сократите долг карьера: погасите часть кредита','Cut the quarry debt: repay part of a loan'],
+['s15','son','n','a:frpLoan',1,'frp','Возьмите льготный заём ФРП на завод — 3 % годовых','Take a 3% industrial fund loan for a plant'],
+['b12','bor','gsmqn','a:friendCall',1,'','Позвоните Борису — пусть похвастается, а вы послушаете','Call Boris — let him brag while you listen'],
+['b13','bor','q','a:opiBid',1,'auc','Сделайте ставку на торгах — «Бобров и Ко» тоже там','Bid at the auction — Beaver & Co is there too'],
+['b14','bor','q','a:pitBuild',1,'pplot','Постройте карьер — у Бориса пока только стройбаза','Build a quarry — Boris only has a builders’ yard'],
+['b15','bor','n','a:explore',1,'hid','Начните разведку раньше Бориса','Start exploring before Boris does'],
+['b16','bor','n','c:eq',0.04,'','Капитал +4 % — Борис следит за котировками','Equity +4% — Boris watches the quotes'],
+['b17','bor','s','c:pts',1,'cheap','Пусть точек станет больше: +1 — у Бориса ларёк у остановки','More shops: +1 — Boris has a kiosk at the bus stop'],
+['p14','pet','g','c:close',1,'','Закройте месяц — посмотрим, что накопили на дело','Close a month — let’s see the savings for a business'],
+['p15','pet','g','c:prof',1,'','Месяц в плюс — фундамент для своего дела','A month in profit — a foundation for your own business'],
+['p16','pet','s','a:ptUp',1,'pts','Поднимите уровень точки: свет, вывеска, ремонт','Level up a shop: lights, sign, repairs'],
+['p17','pet','m','a:ptUp',2,'pts','Улучшите 2 точки — проверю каждую','Upgrade 2 shops — I’ll check each one'],
+['p18','pet','q','a:pitBuild',1,'pplot','Начните стройку карьера — я проверю проект','Start building a quarry — I’ll check the design'],
+['p19','pet','n','c:expl',1,'hid','Проведите разведку — без неё стройка вслепую','Explore — building without it is blind'],
+['p20','pet','gsmqn','a:friendCall',1,'','Позвоните Петру — у него совет по стройке','Call Pyotr — he has a building tip'],
+['v13','vit','g','c:gigs',4,'gig','4 заказа — газель простаивать не должна','4 orders — the van mustn’t sit idle'],
+['v14','vit','g','c:close',1,'','Закройте месяц — посчитаем бензин','Close a month — let’s count the fuel'],
+['v15','vit','s','c:prof',1,'','Месяц в плюс — значит, товар везли вовремя','A month in profit — goods arrived on time'],
+['v16','vit','s','a:ptUp',1,'pts','Улучшите точку — подвезу оборудование','Upgrade a shop — I’ll bring the equipment'],
+['v17','vit','q','a:vehAdd',1,'base','Купите самосвал стройбазе — щебень сам не поедет','Buy a dump truck for the yard — gravel won’t move itself'],
+['v18','vit','q','c:prof',1,'','Месяц в плюс — самосвалы окупаются','A month in profit — trucks pay off'],
+['v19','vit','n','c:sold',1,'sold','Продайте добычу — довезу до покупателя','Sell output — I’ll deliver to the buyer'],
+['v20','vit','gsmqn','a:friendCall',1,'','Позвоните Вите — он знает все дороги','Call Vitya — he knows every road'],
+['v21','vit','m','a:vehTO',1,'veh','Сделайте ТО машине — меньше поломок в пути','Service a vehicle — fewer breakdowns on the road']
+];
+})();
