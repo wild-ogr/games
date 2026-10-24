@@ -39,7 +39,7 @@ LET_HW.forEach(function(x){x.ru=x.ru.replace('{N}',hwName());LETTERS[x.id]=x;});
 {var rt=a3RwTxt;a3RwTxt=function(x){var s=rt(x);if(x&&x.rw&&x.rw.svet)s+=(s?' · ':'')+'✨ '+T('поплавок «Светлячок»','the «Firefly» float');return s;};}
 
 /* ---------- страшилки Петровича (на рыбалке, в праздник) ---------- */
-var SPOOK=['Слышишь? Это не леший — это выпь. Наверное.','В Кощееву неделю рыба смелеет. И комары тоже.','Дед мой говорил: ночью на омуте сом-полуночник усами туман разводит.','Ты фонарь-то не гаси — мало ли кто из камышей посмотрит.','Говорят, кто сома-полуночника отпустит — тому весь год клевать будет.'];
+var SPOOK=['Слышишь? Это не леший — это выпь. Наверное.',(PLAT==='vk'?'В Кощееву неделю':'Осенними вечерами')+' рыба смелеет. И комары тоже.','Дед мой говорил: ночью на омуте сом-полуночник усами туман разводит.','Ты фонарь-то не гаси — мало ли кто из камышей посмотрит.','Говорят, кто сома-полуночника отпустит — тому весь год клевать будет.'];
 {var sf=startFish;startFish=function(pi,opt){D.body.classList.add('rb-fish');var r=sf.apply(this,arguments);
   try{if(G&&on(HW)&&!G.tourn&&PH&&PH.petr){if(!PH.petr.idle0)PH.petr.idle0=PH.petr.idle;PH.petr.idle=PH.petr.idle0.concat(SPOOK,SPOOK);FEST.use(HW,'fish');}
     else if(PH&&PH.petr&&PH.petr.idle0)PH.petr.idle=PH.petr.idle0;}catch(e){}return r;};}
@@ -76,7 +76,7 @@ if(typeof slotAdd==='function'&&typeof mapSlots!=='undefined'){
     bind:function(el){var b=el.querySelector('button');if(b)b.onclick=function(){SND.tap();openMail();};}});}
 // подсветка плашки праздника в итогах рыбалки (resultSlots): поймал сома — строка
 if(typeof slotAdd==='function'&&typeof resultSlots!=='undefined')slotAdd(resultSlots,{id:'fest',pri:40,when:function(c){return on(HW)&&c&&c.fish&&c.fish.some(function(x){return x&&x.id==='som_polu';});},
-  html:function(){return '<p class="goal tipl">🌙 '+T('Сом-полуночник! Такой бывает только в Кощееву неделю.','The Midnight catfish — only during spooky week!')+'</p>';}});
+  html:function(){return '<p class="goal tipl">🌙 '+T('Сом-полуночник! Такой бывает только в праздник «'+hwName()+'».','The Midnight catfish — only during spooky week!')+'</p>';}});
 
 /* ---------- малые дни и Новый год — строкой в «Почте» (MAILX из js/shop.js) ---------- */
 function dayFest(){var ids=['bab26','vyh26','sin26','bab27','vyh27','sin27'];for(var i=0;i<ids.length;i++)if(on(ids[i])&&!FEST.got(ids[i],'main'))return FEST.get(ids[i]);return null;}

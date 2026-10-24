@@ -116,6 +116,7 @@ canvas{display:block;touch-action:none}
 .adt{font-size:54px;margin-top:16px}
 .toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:9px 14px;border-radius:12px;font-weight:700;font-size:15px;line-height:1.3;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;white-space:normal;text-align:center;width:max-content;max-width:90%}
 .toast.on{opacity:1}
+.toast.mtop{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 10px)}
 .logo{font-size:21px}
 .gt{min-width:0}.sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sub.long{font-size:12.5px;line-height:1.15;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -973,7 +974,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v23.4-102420',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v23.5-102421',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: настройки сеанса; прогресс на входе — после чтения облака, но не позже 2,5 с (bt — облако хоть раз отдало сохранение: метка устройства, не в сохранении)
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -1713,7 +1714,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(window.UI)UI.shown(id);} /* vy-ux: UI.cur по видимому экрану */
 // тост живёт не меньше 2,5 с и дольше для длинного текста (кроме коротких служебных, например «Реклама через секунду…»)
-function toast(t,ms){if(LANG==='en'&&TOAST_EN[t])t=TOAST_EN[t];const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
+function toast(t,ms){if(LANG==='en'&&TOAST_EN[t])t=TOAST_EN[t];const e=$('toast');e.textContent=t;e.classList.toggle('mtop',!!modalOn);e.classList.add('on'); /* bk2410: при открытом окне — сверху, не на кнопках окна */clearTimeout(toast._t);
   const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 
 function startLevel(idx,daily,o){ /* vy-lvl: o={mode:'rush'|'ice'|'fest', p, seed} — режим двора; FEST передаёт свои p и зерно */
@@ -2766,12 +2767,13 @@ function hideModal(){$('modal').classList.remove('on');modalOn=false;modalRe=nul
 // modalRe — чем перерисовать открытое окно при смене языка (задаётся окнами настроек, «Как играть», «Об игре», монет)
 let modalRe=null;
 function modal(html){PAY.re=null;modalRe=null;const k=html.slice(0,160);if(!(modalOn&&modal.k===k))$('modal').scrollTop=0;modal.k=k; // перерисовка того же окна (после покупки) — прокрутку не сбрасываем
-  $('mcard').className='card';$('mcard').innerHTML=html;try{if(window.icoFix)icoFix($('mcard'));}catch(e){}$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;if(inYard())YG.stop();} // окно поверх двора — игра на паузе и для GameplayAPI
+  $('mcard').className='card';$('mcard').innerHTML=html;try{if(window.icoFix)icoFix($('mcard'));}catch(e){}$('modal').classList.add('on');modalOn=true;$('toast').classList.add('mtop');$('mcard').scrollTop=0;if(inYard())YG.stop();} // окно поверх двора — игра на паузе и для GameplayAPI
 // пустая звезда — контуром ☆ (отличается не только цветом)
 function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="e">☆</span>';return s;}
 function win(){
   const uxw=!!(window.UI&&UI.winTop); /* vy-ux: новое окно — жильцы, реплика, «Завтра во дворе», главная кнопка всегда «Следующий двор» на одном месте, без ×2 (решение владельца 09.10) */
   G.over=true;YG.stop();SND.win();const st=G.mode==='ice'&&window.LVLM?LVLM.iceStars(G):Math.max(1,G.hearts); /* vy-lvl */let newModel=null,wsGift=false;
+  const md=G.mode==='rush'||G.mode==='ice',mNx=md&&window.LVLM?LVLM.next(G):-1; /* bk2410: режим — следующий двор того же десятка без звёзд */
   const again=G.daily&&(S.daily[todayKey()]||0)>0; // задание дня уже пройдено сегодня — повтор без награды (иначе бесконечные монеты)
   const gift1=streakAuto(); // гостинец 1-го дня — молча, ещё до окна: в окне сразу честная строка «Завтра»
   if(G.daily){S.daily[todayKey()]=Math.max(S.daily[todayKey()]||0,st);}
@@ -2780,7 +2782,7 @@ function win(){
     G.first=first;/* vy-ux */const mi=CAR_AT.indexOf(i+1);if(first&&mi>=0&&MODELS[mi]&&!S.garage.includes(mi)){S.garage.push(mi);newModel=MODELS[mi];}S.levelsDone++;if(S.levelsDone<=3)STAT.ev('tut',{s:2+S.levelsDone});S.adW=(S.adW||0)+1;
     // серия побед подряд (без окна «Машины помяты»): каждые WSTREAK — бесплатная подсказка (не копится больше одной)
     if(!S.freeHint){S.ws=(S.ws||0)+1;if(S.ws>=WSTREAK){S.freeHint=1;S.ws=0;wsGift=true;}}}
-  const reward=again?0:(G.daily?DAILY_REWARD:Math.round((4+2*st)*(isBoss(G.idx)?2:1)*(G.mode==='rush'||G.mode==='ice'?1.5:1)))+G.bonus; /* vy-lvl: режимы ×1,5 */S.coins+=reward;ern('lvl',reward);
+  const reward=again?0:(G.daily?DAILY_REWARD:Math.round((4+2*st)*(isBoss(G.idx)?2:1)*(md&&G.mBetter?1.5:1)))+G.bonus; /* vy-lvl: режимы ×1,5; bk2410 — только когда звёзд режима стало больше, повтор — как обычный двор */S.coins+=reward;ern('lvl',reward);
   // неделя заданий дня: 3, 5 и 7 выполненных за неделю (Пн–Вс) — премия; выдаётся сама, один раз (S.dw[понедельник] — сколько ступеней выдано)
   let wb=0,wbN=0;
   if(G.daily&&!again){const w=dailyWeek();let got=S.dw[w.key]||0;while(got<DWEEK.length&&w.n>=DWEEK[got][0]){wb+=DWEEK[got][1];wbN=DWEEK[got][0];got++;}if(wb){S.dw[w.key]=got;S.coins+=wb;ern('quest',wb);}}
@@ -2789,8 +2791,8 @@ function win(){
   const meet=!S.meet&&!G.daily;if(meet)S.meet=1; // знакомство с бабой Шурой — в окне первой победы
   const tip=G.daily?'':winTip();
   save();updCoins();if(reward)setTimeout(()=>SND.coin(),500);
-  const hasNext=!G.daily;
-  const regionDone=!G.daily&&isBoss(G.idx);
+  const hasNext=!G.daily&&(!md||mNx>=0);
+  const regionDone=!G.daily&&!md&&isBoss(G.idx); /* bk2410: в режиме босс десятка — не «Регион пройден» */
   const adNext0=hasNext&&adDue()&&!regionDone&&!newModel&&adReady(),adNext=adNext0&&intPre();G.adNext=adNext; /* vy-tech: предпроверка — нет ролика VK → без «Реклама через секунду» */
   if(hasNext&&adDue()&&!regionDone&&!newModel&&!adNext0&&!(PLAT==='vk'&&!VK&&VK_REAL))adWhy();
   // ×2 за рекламу: не во дворах обучения (1–3), не когда следом межэкранная (два ролика подряд), в VK — только с мостом
@@ -2802,11 +2804,11 @@ function win(){
   const toMap=regionDone||!!tip;
   // одна главная (зелёная) кнопка; вторая — ссылкой под ней (UX 18 п.3)
   const bNext=hasNext&&!regionDone?`<button class="btn${toMap&&!uxw?' sec':' green'}" id="mNext">${uxw?L('Следующий двор →','Next yard →'):L('Дальше →','Next →')}</button>`:'';
-  const bMap=uxw?`<button class="btn${!bNext?' green':' sec'}" id="mMap">${regionDone?L('🗺 Дальше — новый регион','🗺 On to the new region'):L('🏠 Во двор','🏠 To my yard')}</button>`:`<button class="btn${toMap||!bNext?' green':' sec'}" id="mMap">${regionDone?L('🗺 Дальше — на карту','🗺 On to the map'):toMap?L('🗺 На карту','🗺 To the map'):L('На карту','To the map')}</button>`;
+  const bMap=uxw?`<button class="btn${!bNext?' green':' sec'}" id="mMap">${regionDone?L('🗺 Дальше — новый регион','🗺 On to the new region'):md?L('🗺 На карту','🗺 To the map'):L('🏠 Во двор','🏠 To my yard')}</button>`:`<button class="btn${toMap||!bNext?' green':' sec'}" id="mMap">${regionDone?L('🗺 Дальше — на карту','🗺 On to the map'):toMap?L('🗺 На карту','🗺 To the map'):L('На карту','To the map')}</button>`;
   // «Завтра»: со 2-го двора — строкой; если завтра краска или машина — карточкой с картинкой (не влезает — fitWin заменит строкой)
   const tm=!meet?tmrInfo():null,tmLine=tm?tmrHtml(tm):'',tmCard=tm&&!G.daily&&!newModel&&S.garage.length&&(tm.r.paint||tm.r.car>=0)&&win.tmD!==dayKey(0);if(tmCard)win.tmD=dayKey(0); // карточка с картинкой — раз в день, дальше строкой
   const run=G.daily?dailyRun():0;
-  modal(`${uxw?UI.winTop(wctx):''}<h2>${regionDone?L('Регион пройден! 🏆','Region complete! 🏆'):L('Двор свободен! 🎉','Yard cleared! 🎉')}</h2><div class="big-stars${uxw?' pop':''}">${starsHtml(st)}</div>
+  modal(`${uxw?UI.winTop(wctx):''}<h2>${regionDone?L('Регион пройден! 🏆','Region complete! 🏆'):md?LVLM.MODES[G.mode].ico+' '+L(LVLM.MODES[G.mode].ru+': двор пройден!',LVLM.MODES[G.mode].en+': yard cleared!'):L('Двор свободен! 🎉','Yard cleared! 🎉')}</h2><div class="big-stars${uxw?' pop':''}">${G.mode==='rush'?'★':starsHtml(st)}</div>
     <p data-fit="1">${G.daily?L('Задание дня выполнено!','Daily challenge done!'):levelName(G.idx)+L(': двор пройден за ',': cleared in ')+G.moves+' '+pl(G.moves,'ход','хода','ходов','move','moves')}</p>
     ${meet?shura(gift1?L('Я баба Шура, старшая по двору. Ловко ты! Держи гостинец — '+gift1+' 💰. И завтра заходи: будет ещё.','I’m Granny Shura, I keep an eye on this yard. Nicely done! Here’s a little gift — '+gift1+' 💰. Come back tomorrow for more.'):L('Я баба Шура, старшая по двору. Ловко ты! Заходи каждый день — у меня для тебя гостинцы.','I’m Granny Shura, I keep an eye on this yard. Nicely done! Drop by every day — I’ve got gifts for you.')):''}
     ${!G.daily&&G.idx===2?`<p data-fit="3"><b>${L('С 4-го двора каждая авария отнимает ❤️ — их три на двор','From yard 4 on, every crash takes a ❤️ — three per yard')}</b></p>`:''}
@@ -2817,7 +2819,7 @@ function win(){
     ${newModel?`<div class="newcar"><p>${L('Новая машина в гараже:','New car in the garage:')} <b>${newModel.name}</b></p><canvas id="ncv"></canvas></div>`:''}
     ${wsGift?`<p class="goal gift">🔥 ${L(`${WSTREAK} ${plural(WSTREAK,'победа','победы','побед')} подряд — подсказка в следующем дворе бесплатно!`,`${WSTREAK} wins in a row — your next hint is free!`)}</p>`:''}
     ${G.daily?weekHtml()+`<p class="goal" data-fit="4">${L('Всего выполнено дней:','Days completed:')} <b>${LB.days()}</b>${run>1?` · <span class="fire">🔥 ${run} ${L('подряд','in a row')}</span>`:''}</p>`:''}
-    ${G.daily||newModel?'':winGoal(G.idx)}${tip?`<p class="goal tipl">${tip}</p>`:''}
+    ${md?LVLM.winLine(G):G.daily||newModel?'':winGoal(G.idx)}${tip?`<p class="goal tipl">${tip}</p>`:''}
     ${uiW}${uiT}
     ${tmCard?`<div class="newcar sm tmrc" id="tmrC"><p><b>${L('Завтра','Tomorrow')}</b> ${tm.r.paint?L('баба Шура подарит краску «'+PAINT[tm.r.paint][1]+'» — и ещё '+tm.r.coins+' 💰','Granny Shura will give you the “'+PAINT[tm.r.paint][1]+'” paint — plus '+tm.r.coins+' 💰'):L('баба Шура подарит машину: '+MODELS[tm.r.car].name+' — и ещё '+tm.r.coins+' 💰','Granny Shura will give you a car: the '+MODELS[tm.r.car].name+' — plus '+tm.r.coins+' 💰')}</p><canvas id="tcv"></canvas></div>`:tmLine}${uxw&&!tmLine&&!tmCard&&!uiT&&!meet?UI.winTmr(wctx):''}
     <div class="row">${uxw?(bNext||bMap):toMap||!bNext?bMap:bNext}<div class="row2">${uxw?(bNext?bMap:''):!bNext?'':toMap?bNext:bMap}${x2?`<button class="btn x2 x2p noenter" id="mX2">${L('📺 Удвоить за рекламу: +','📺 Double for an ad: +')}${reward}&nbsp;💰</button>`:''}${G.daily&&LB.ok()?`<button class="btn accent noenter" id="mLb">🏆 ${L('Рейтинг','Leaderboard')}</button>`:''}</div></div>`);
@@ -2837,9 +2839,9 @@ function win(){
   if(!G.daily)setTimeout(streakAfterWin,1500);setTimeout(offerReturn,2200);
   // реклама раз в AD_EVERY побед (долг не сгорает), не после босса/новой машины, не раньше 180 с после любой рекламы; перед показом — предупреждение
   // после «Дальше» кнопки окна гаснут (иначе «На карту» успевает нажаться до межэкранной); переход — только если двор тот же
-  const n=$('mNext');if(n)n.onclick=()=>{document.querySelectorAll('#mcard .btn').forEach(b=>b.disabled=true);const go=()=>{if(G===g)startLevel(g.idx+1,false,g.mode==='rush'||g.mode==='ice'?{mode:g.mode}:undefined);};
+  const n=$('mNext');if(n)n.onclick=()=>{document.querySelectorAll('#mcard .btn').forEach(b=>b.disabled=true);const go=()=>{if(G===g)startLevel(md?mNx:g.idx+1,false,md?{mode:g.mode}:undefined);};
     if(adNext&&adReady()){toast(L('Реклама через секунду…','Ad in a second…'),1200);setTimeout(()=>showInterstitial(go),1000);}else go();};
-  $('mMap').onclick=()=>{const k=regionDone?Math.floor(g.idx/10):-1;hideModal();if(uxw&&k<0){if(G===g)G.over=true;UI.go('home');return;}openMap();if(k>=0)regionParty(k);}; /* vy-ux: «Во двор» — на главный */
+  $('mMap').onclick=()=>{const k=regionDone?Math.floor(g.idx/10):-1;hideModal();if(md){if(G===g)G.over=true;openMap();return;} /* bk2410: из режима — на карту, к кнопкам режимов */if(uxw&&k<0){if(G===g)G.over=true;UI.go('home');return;}openMap();if(k>=0)regionParty(k);}; /* vy-ux: «Во двор» — на главный */
   /* up2410 ЗАВТРА ПОДАРОК: один раз — по кнопке окна победы сначала окно бабы Шуры, потом сам переход */
   if(tmrDue(g))['mNext','mMap'].forEach(id=>{const b=$(id);if(!b)return;const f=b.onclick;b.onclick=e=>{if(!tmrDue(g)||G!==g)return f(e);tmrAsk(()=>{if(G===g)f(e);});};});
 }

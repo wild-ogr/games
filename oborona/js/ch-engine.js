@@ -11,10 +11,13 @@
 const CH_OLD=8;
 const CH_ORDER=[0,1,2,3,4,5,6,7];
 const CH_WEEK=[0,1,2,3,4,5,6,7];
+function CH_DLY(){return CH_ORDER.filter(c=>c<CH_CAMP);}   // BK-OB: «Застава дня» — только 11 прежних земель (у всех одинаково, с 12-й землёй или без)
 function chPos(c){return CH_ORDER.indexOf(c);}
 function chPrev(c){const i=chPos(c);return i>0?CH_ORDER[i-1]:null;}
 function chNext(c){const i=chPos(c);return i>=0&&i<CH_ORDER.length-1?CH_ORDER[i+1]:null;}
 function chLast(){return CH_ORDER[CH_ORDER.length-1];}
+const CH_FIN=7;   // BK-OB 24.10: «Тридевятое царство спасено!» — после Лиха (глава 7), даже когда за ним есть 12-я земля
+const CH_CAMP=11;   // BK-OB 24.10: «вся кампания» для мастерства и «Заставы дня» — 11 прежних земель (0–10); 12-я «Долгая ночь» (11) — добавка
 function chNum(c){return chPos(c)+1;}
 function chLvN(c){return CH[c]&&CH[c].lair?7:6;}
 function chAny(c){for(let l=0;l<7;l++)if(S.stars[c+'-'+l])return true;return false;}

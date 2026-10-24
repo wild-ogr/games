@@ -18,7 +18,7 @@ function lockTxt(n){const i=VYMG.INFO[n],z=VYMG.Z(),y=VYMG.yards(),g=VYMG.REG.by
 function isNew(){const m=mem();return VYMG.openList().some(g=>!m.sn[g.num]);}
 function dayLeft(){const t=VYMG.today&&VYMG.today();return !!(t&&!t.done);}
 /* ---------- входы ---------- */
-navSlots.push({id:'garazhi',order:25,ic:'🏚',t:L0('Гаражи','Garages'),go:'garazhi',dot:()=>isNew()||dayLeft()});
+navSlots.push({id:'garazhi',order:25,ic:'🏚',t:()=>L0('Гаражи','Garages') /* bk2410: функция — язык Яндекса приходит позже */,go:'garazhi',dot:()=>isNew()||dayLeft()});
 homeSlots.push({id:'vymg-garazhi',order:35,zone:'feed',render(){const l=VYMG.openList().length;
   return UI.tile({ic:'🏚',t:L0('Гаражи — мини-игры','Garages — mini-games'),s:l?L0('открыто '+l+' из 15 · играй сколько хочешь','unlocked '+l+' of 15 · play any time'):L0('первая игра — после 4-го двора','first game after yard 4'),tag:isNew()?'🆕':'',cls:'vy0-gzt',go:'garazhi'});}});
 // запасной вход на карте, пока у UX нет своей нижней панели с navSlots

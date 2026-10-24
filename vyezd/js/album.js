@@ -231,7 +231,7 @@ function info(id){var c=BY[id];if(!c)return;var s=st(id),own=s>=4,rusty=s>0&&s<4
   if(MY.Q('albGo'))MY.Q('albGo').onclick=function(){hideModal();MY.open('garage');};
   if(MY.Q('albY'))MY.Q('albY').onclick=function(){if(S.albY[id])delete S.albY[id];else S.albY[id]=1;MY.save();hideModal();MY.fire('yardcars');MY.toast(S.albY[id]?'🏠 '+nm(c)+L(' — теперь во дворах!',' — now in the yards!'):L('Убрали из дворов','Taken out of the yards'));MY.render();};}
 ALB.open=function(id){MY.open('album');if(id)setTimeout(function(){info(id);},50);};
-MY.tab({id:'album',n:L('Альбом','Album'),ic:'📒',o:10,title:L('Автоальбом','Car album'),sub:function(){return ALB.count()+' '+L('из','of')+' '+N+' '+L('машин','cars');},render:render,dot:function(){return S.albN.length>0;}});
+MY.tab({id:'album',n:function(){return L('Альбом','Album');},ic:'📒',o:10,title:function(){return L('Автоальбом','Car album');},sub:function(){return ALB.count()+' '+L('из','of')+' '+N+' '+L('машин','cars');},render:render,dot:function(){return S.albN.length>0;}}); /* bk2410: n/title — функции (язык Яндекса приходит позже) */
 MY.homeLine({pri:40,f:function(){var a=S.albN.length;return a?{ic:'📒',t:L('Новая машина в альбоме','A new car in the album')+(a>1?' (+'+a+')':''),a:'album'}:null;}});
 // после двора и на старте — проверить источники
 MY.onYard(function(){setTimeout(function(){ALB.sync(false);},0);});

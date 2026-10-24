@@ -26,6 +26,7 @@ lk-i{display:none}
 html.lk lk-i{display:inline-block;width:1.2em;height:1.2em;vertical-align:-.24em;line-height:0;margin:0 .1em}
 html.lk lk-i svg{display:block;width:100%;height:100%}
 html.lk lk-i+lk-t+*{margin-left:0}
+html.lk lk-nw.z lk-i{margin-right:0}/*BK-VK: «40 💰.» — знак вплотную к монете*/
 html.lk .ic{width:28px;height:28px;flex:none;display:inline-block;vertical-align:middle}
 .bust{display:block;width:100%;height:100%}
 

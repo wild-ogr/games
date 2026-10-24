@@ -447,6 +447,13 @@ OB2.on('run',function(g){if(o().on&&(g.wk||g.endless))go(function(X){X.run(g);})
 OB2.on('end',function(g,w){if(window.CUPX)CUPX.end(g,w);},'cup');
 var os=window.openSettings;window.openSettings=function(){var r=os.apply(this,arguments);if(can())go(function(X){X.set();});return r;};})();</script>
 <!-- ob2:NOVICE -->
+<!-- bk:NOCH --><script>/* BK-OB 24.10: 12-я земля «Долгая ночь» (js/ch-noch-art.js + js/ch-noch.js) — по требованию (старт +0 КБ): когда игрок дошёл до Тридевятого царства
+   (есть звёзды в главе 7) или в самой земле уже есть звёзды. Выключить: ?off=noch. «Застава дня» и мастерство считают только 11 прежних земель. */
+(function(){if(typeof OB2==='undefined'||OB2.off('noch'))return;OB2.reg('noch',{s:'BK-OB',t:'12-я земля «Долгая ночь»'});var busy=0;
+window.nochNeed=function(force){if(CH.length>11)return Promise.resolve(true);if(busy)return Promise.resolve(false);
+  var st=typeof S!=='undefined'&&S&&S.stars;if(!force&&!(st&&(st['7-0']||chAny(11))))return Promise.resolve(false);busy=1;
+  return OB2.need('js/ch-noch-art.js').then(function(){return OB2.need('js/ch-noch.js');}).then(function(){busy=0;try{if(typeof nochReady==='function')nochReady();}catch(e){console.warn('noch',e);}return true;},function(e){busy=0;console.warn('noch',e);return false;});};
+OB2.on('menu',function(){nochNeed();},'noch');OB2.on('end',function(){setTimeout(function(){nochNeed();},300);},'noch');setTimeout(function(){nochNeed();},2500);})();</script>
 <!-- ob2:SPEED -->
 <script src="js/ob2-speed.js"></script> <!-- ob2:SPEED шторка перед боем, ленивая загрузка, повтор межэкранной, режим попроще -->
 </body>

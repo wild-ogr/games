@@ -273,7 +273,8 @@ function fixText(n){var v=n.nodeValue;if(!v)return;RE.lastIndex=0;if(!RE.test(v)
   if(pre)f.appendChild(document.createTextNode(pre));
   var i=document.createElement('lk-i');i.setAttribute('data-k',key);i.innerHTML=iconHtml(key);box.appendChild(i);
   var t=document.createElement('lk-t');t.textContent=m[0];box.appendChild(t);last=m.index+m[0].length;
-  if(nw){var z=/^[)\].,!?:;»…]+/.exec(v.slice(last));if(z){nw.appendChild(document.createTextNode(z[0]));last+=z[0].length;RE.lastIndex=last;}f.appendChild(nw);}}
+  // BK-VK 24.10 (как Рыбалка BL1): пробел перед знаком после монеты убираем («40 💰 .» → «40 💰.»), отступ значка справа — у класса .z
+  if(nw){var z=/^[ \u00A0]?([)\].,!?:;»…]+)/.exec(v.slice(last));if(z){nw.appendChild(document.createTextNode(z[1]));nw.className='z';last+=z[0].length;RE.lastIndex=last;}f.appendChild(nw);}}
  if(last<v.length)f.appendChild(document.createTextNode(v.slice(last)));
  if(n.parentNode)n.parentNode.replaceChild(f,n);}
 function scan(root){if(!root)return;if(root.nodeType===3){fixText(root);return;}if(root.nodeType!==1)return;

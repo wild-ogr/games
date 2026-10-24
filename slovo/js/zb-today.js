@@ -85,7 +85,12 @@ function onLevel(o){if(!o)return;var t=sd(),key=String(o.key||o.l);
 ZB.levelHook.push(onLevel);
 
 /* ---------- пять своих дел ---------- */
-function startNext(){try{var i=Math.min(lvDone(),LEVELS.length-1);hideModal();if(typeof maybeInterstitial==='function')maybeInterstitial(function(){startLevel(i);});else startLevel(i);}catch(e){}}
+/* BK-ZN 24.10: все уровни пройдены — домашка не гоняет последний уровень по кругу, а даёт «повторение» (пройденный уровень из последних 200, свой на каждый заход);
+   ещё не подгруженные уровни (S.lv < ZBCH.total) startLevel подгрузит сам */
+function lvTotal(){try{return typeof ZBCH!=='undefined'&&ZBCH.total?ZBCH.total():LEVELS.length;}catch(e){return LEVELS.length;}}
+function allDone(){return lvDone()>=lvTotal();}
+function repIdx(){var n=Math.min(LEVELS.length,200);return LEVELS.length-1-((dn()*37+cnt('w')*101+7)%n);}
+function startNext(){try{var i=allDone()?repIdx():lvDone();if(allDone())try{toast('Новые тетради ещё в печати — домашка на повторение: уровень '+(i+1),4000);}catch(e){}hideModal();if(typeof maybeInterstitial==='function')maybeInterstitial(function(){startLevel(i);});else startLevel(i);}catch(e){}}
 function dailyDone(){try{return !!S.daily[dk()]||!!sd().m.lesson;}catch(e){return false;}} /* zb2-TECH Б8: праздничный кроссворд — тоже урок дня */
 var OWN=[
  {id:'lesson',order:10,sub:'Урок дня',ic:'📅',t:'Урок дня',done:dailyDone,
@@ -99,7 +104,7 @@ var OWN=[
  {id:'mg-fb',order:40,sub:'Перемена',ic:'🔔',t:'Перемена: Отличник',done:function(){return cnt('nh')>0||!!sd().m['mg-fb'];},
    hint:function(){return 'уровень без единой подсказки';},go:startNext},
  {id:'home',order:50,sub:'Домашка',ic:'📚',t:'Домашка',done:function(){return cnt('w')>=nHome();},prog:function(){return [Math.min(cnt('w'),nHome()),nHome()];},
-   hint:function(){return 'пройди '+nHome()+' уровня · '+Math.min(cnt('w'),nHome())+' из '+nHome();},go:startNext}];
+   hint:function(){return (allDone()?'повтори ':'пройди ')+nHome()+' уровня · '+Math.min(cnt('w'),nHome())+' из '+nHome();},go:startNext}];
 // регистрируем, только если такого id ещё нет (MG0 мог прийти раньше — его 'mg' главнее)
 OWN.forEach(function(x){x.own=1;for(var i=0;i<ZB.todayTasks.length;i++)if(ZB.todayTasks[i].id===x.id)return;ZB.todayTasks.push(x);});
 // дело показывается, если on()!==false и off()!==true (MG0 пишет off)

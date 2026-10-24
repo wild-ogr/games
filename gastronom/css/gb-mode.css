@@ -11,7 +11,7 @@
 .md-chip:active{transform:translateY(2px);box-shadow:0 1px 0 #cdb892}
 .md-chip i{font-style:normal;font-size:24px;line-height:1}
 .md-chip span{min-width:0;display:flex;flex-direction:column;line-height:1.15}
-.md-chip small{font-weight:600;font-size:13px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-chip small{font-weight:600;font-size:13px;opacity:.8;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.2} /* BK-GS: было в одну строку — на 320–412 «Сегодня…», «20 поку…» */
 .md-chip.off{opacity:.65;filter:saturate(.5)}
 .md-chip.md-all{flex:0 1 auto;justify-content:center;background:#f4e3c3}
 /* экран «Затеи магазина» (POLISH): доска объявлений в зале — деревянная рама, пробка, листки на кнопках */
@@ -66,3 +66,4 @@
 /* POLISH: телефон (≤560) — шапка уровня режима без обрезки: название мельче, строка счёта — в две строки */
 @media (max-width:560px){#scr-game[data-md]:not([data-md=""]) #gLevel{font-size:14.5px;text-overflow:clip}
   #scr-game[data-md]:not([data-md=""]) #gCity{white-space:normal;font-size:12px;line-height:1.15;text-overflow:clip}}
+.md-spr{color:#8e1f17;font-size:17px}.md-lines small{font-weight:600;opacity:.85} /* BK-GS: звания Сверхплана */

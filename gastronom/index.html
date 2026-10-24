@@ -231,7 +231,7 @@ body.en .logo{white-space:normal;line-height:1.02;font-size:21px;min-width:0;fle
 .mh .logo{min-width:0;flex:0 1 auto;white-space:normal;line-height:1.05;overflow-wrap:break-word}
 .mh .hdr-r{flex:none}
 @media (max-width:440px){.mh .logo{font-size:20px}.mh{gap:6px}}
-@media (max-width:340px){.mh .lgi{display:none}.mh .logo{font-size:17px}.mh .pill{padding:6px 8px;font-size:14px}.mh .icon{width:40px;height:40px;font-size:19px}}
+@media (max-width:340px){.mh .lgi{display:none}.mh .logo{font-size:17px}.mh .pill{padding:6px 8px;font-size:14px}.mh .icon{width:44px;height:44px;font-size:19px}} /* BK-GS: ⚙ 40→44 px (палец) */
 @media (max-height:520px){.gh{padding-top:4px;padding-bottom:0}.gt>div:first-child{font-size:16px}.gf{padding-top:3px;padding-bottom:5px}.gf .btn{flex-direction:row;gap:6px;padding:4px 6px}.gf .btn b{font-size:18px}.gf .btn span{display:none}.mnav{padding-top:6px;padding-bottom:6px}.node-row{height:70px}.tip{font-size:15px;padding:7px 10px}}
 @media (min-width:900px) and (min-height:600px){#app{box-shadow:0 0 50px rgba(0,0,0,.18)}}
 /* меньше движения: системная настройка или «спокойный режим» */
@@ -994,7 +994,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
 // (на маке — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (STAT.optOut)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'gastronom',gv:'v14.5-102420',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'gastronom',gv:'v14.6-102421',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: настройки сеанса (cfg), вход (start: pl — пройдено уровней, cn — монет, bt — было ли сохранение в облаке; после облака, но не позже 2,5 с),
    баланс (bal → cb в pause), откуда монеты (ern → earn: lvl, ad, gift, chest, buy, quest) */
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
@@ -2290,7 +2290,7 @@ function updUndo(){$('bUndo').classList.toggle('off',!(G&&G.undo.length));}
 // экономика (аудит 12, 27.09; модель ~/Projects/hobby-analytics/sims/gastronom-econ.py): первая отмена хода на уровне — бесплатно, дальше 10 💰;
 // задание дня 30 💰 + серия дней; +30 💰 за рекламу — не больше AD_DAY раз в день; межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут
 const PRICE={undo:10,hint:30,mix:40,table:60,life:60},DAILY_REWARD=30,AD_FROM=6;
-let AD_COINS=30,AD_DAY=5,AD_EVERY=3,AD_MIN=4,AD_GAP=60000,X2_ON=false; /* gb-ECO: «×2 за ролик» убран (решение владельца 10.10: 410 показов → 8 досмотров) */
+let AD_COINS=30,AD_DAY=5,AD_EVERY=3,AD_MIN=4,AD_GAP=60000,X2_ON=true; /* gb-ECO: «×2 за ролик» убирали 10.10 (410 показов → 8 досмотров); BK-GS 24.10 — вернули на пробу (решение владельца): кнопка видна только при готовом ролике (adVis), STAT of_x2 / ad p:x2 */
 // удалённая настройка Яндекса (флаги в консоли; нет флага — действуют значения выше). Рамки жёсткие, значение вне рамок не принимается:
 // ad_every 2–6 уровней, ad_minutes 3–8, ad_gap 60–300 с (межэкранная не чаще), ad_coins 10–100, ad_day 1–10, цены бустеров — см. ниже, x2=0 — выключить ×2
 function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
@@ -2505,10 +2505,14 @@ let adSt=0,adStT=0,adAskT=0,adAsking=0,adAskN=0,adNoN=0,adNoT0=0,adStepN=0,adAsk
 function adLikely(){return !VK||adSt===1&&Date.now()>=adCoolT;}
 let adVisT=0,adVisMO=null;
 function adTag(){const q=adBtns();for(let i=0;i<q.length;i++)if(!q[i].hasAttribute('data-adh'))q[i].setAttribute('data-adh','1');}
-function adVis(){clearTimeout(adVisT);const no=!adLikely();try{const D=document.documentElement,was=D.classList.contains('adno');D.classList.toggle('adno',no);if(no)adTag();if(was!==no&&G)updCoins(); /* подписи «📺 за рекламу» на бустерах */
+function adVis(){clearTimeout(adVisT);const no=!adLikely();try{const D=document.documentElement,was=D.classList.contains('adno');D.classList.toggle('adno',no);if(no)adTag();else if(adOfP.length)setTimeout(adOfFlush,0);if(was!==no&&G)updCoins(); /* подписи «📺 за рекламу» на бустерах */
   if(VK&&!adVisMO&&window.MutationObserver){adVisMO=new MutationObserver(()=>{if(document.documentElement.classList.contains('adno'))adTag();});adVisMO.observe(document.body,{childList:true,subtree:true});}}catch(e){}
   if(no&&Date.now()<adCoolT)adVisT=setTimeout(adVis,adCoolT-Date.now()+50);}
-{const so=STAT.offer;STAT.offer=function(){if(!adLikely())return;return so.apply(STAT,arguments);};}
+/* BK-GS 24.10: окно открылось, когда ролик ещё не готов (кнопка спрятана), а потом ролик подгрузился и кнопка появилась — показ тоже считаем
+   (раньше такой of_* терялся, и «показали/досмотрели» по ×2 и др. занижало показы). Помним кнопки окна; adVis при «готов» досчитывает, если окно то же. */
+let adOfP=[];
+{const so=STAT.offer;STAT.offer=function(p){if(!adLikely()){try{const m=$('mcard');if(modalOn&&m){const q=adBtns().filter(b=>m.contains(b));if(q.length)adOfP.push([p,q]);if(adOfP.length>8)adOfP.shift();}}catch(e){}return;}return so.apply(STAT,arguments);};}
+function adOfFlush(){if(!adOfP.length||!adLikely())return;const l=adOfP;adOfP=[];for(const x of l)if(x[1].some(b=>document.contains(b)&&b.offsetParent))STAT.offer(x[0]);}
 function adPreload(why){if(!VK)return;adVis();clearTimeout(adChkT);if(typeof why==='string'){adAskWhy=why;adStepN=0;}
   if(document.hidden||pauseWhy.has('hide')||adVidOn)return; /* свёрнуты или ролик на экране — молчим; вернёмся / ролик закончится — спросим (adBackChk, итог показа) */
   const now=typeof why==='string'&&why!=='back'&&why!=='look'; /* итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN */
@@ -2679,7 +2683,7 @@ const coinsTxt=n=>n+' '+pl(n,'монета','монеты','монет','coin','
 const FREE=()=>L('бесплатно','free'),FORAD=x=>L('📺 '+x+' за рекламу','📺 '+x+' for an ad'),NOMOVES=()=>L('Ходов не видно — попробуйте «Смешать» или «Столик»','No moves in sight — try Shuffle or Table');
 function updCoins(){STAT.bal(+S.coins||0);for(const id of['coinCnt','gCoins','shopCoins']){const e=$(id);if(e)e.textContent=id==='coinCnt'?S.coins:'💰 '+S.coins;}
   // монет не хватает — на кнопке сразу видно, что можно за рекламу
-  for(const [id,k] of [['pUndo','undo'],['pHint','hint'],['pMix','mix'],['pTable','table']]){const e=$(id);if(e)e.textContent=freeUndo(k)?FREE():S.coins>=PRICE[k]||!adOk()?PRICE[k]+' 💰':L('📺 за рекламу','📺 for an ad');}
+  for(const [id,k] of [['pUndo','undo'],['pHint','hint'],['pMix','mix'],['pTable','table']]){const e=$(id);if(e)e.textContent=freeUndo(k)?FREE():S.coins>=PRICE[k]||!adOk()?PRICE[k]+' 💰':L('📺 реклама','📺 ad');} /* BK-GS: было «📺 за рекламу» — не влезало под кнопкой на 320–412 px; «реклама» — прямо, что за ролик (правило Яндекса 4.5.1) */
   if(G)$('bTable').classList.toggle('off',G.table);updUndo();}
 function setCoins(n){S.coins=Math.max(0,n);save();updCoins();}
 function spend(kind,then){const pr=PRICE[kind];

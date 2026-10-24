@@ -321,8 +321,10 @@ THEME_ADD({id:'kosh',
       say(e,L('Смерть моя далеко — не найдёшь!','My death is far away — you won’t find it!'),3);link(G,'kosh_dub',H.x+Math.cos(a)*300,H.y+Math.sin(a)*300);return 0;}},
     kosh_cep:{on(e){e.ax=e.x;e.ay=e.y;e.an=rand(0,TAU);e.zt=0;},
       step(e,dt,G){const H=G.hero,hs=(G.st&&G.st.spd||118)*.72;e.zt+=dt;
+        if(e.zt-(e.kz||0)>25){e.kz=e.zt;const qx=e.x-H.x,qy=e.y-H.y;if(qx*qx+qy*qy>170*170){const a=rand(0,TAU);e.x=H.x+Math.cos(a)*140;e.y=H.y+Math.sin(a)*140;e.ax=e.x;e.ay=e.y;e.kx=e.ky=0;G.fx.push({k:'poof',x:e.x,y:e.y,t:0,dur:.5});}
+          const t=TIP[e.type];if(t)banner(L(t[0],t[2]),L(t[1],t[3]),4);} /* bk2410: страховка — звено цепочки живёт 25 с и дольше → само подходит к богатырю (2 игрока стояли у Кощея с 0 % 14–18 мин и вышли) */
         if(e.type==='kosh_zayac'){const dx=e.x-H.x,dy=e.y-H.y,d=Math.hypot(dx,dy)||1,a=Math.atan2(dy,dx)+Math.sin(e.zt*2.6)*.7,
-            sp=(d<320?hs:d<440?hs*.25:-hs*.5)*(.55+.9*Math.abs(Math.sin(e.zt*5)));return bzMv(e,Math.cos(a),Math.sin(a),sp,dt,1);}
+            sp=(d<320?hs:d<440?hs*.25:-hs*.5)*(.55+.9*Math.abs(Math.sin(e.zt*5)))*(e.zt>25?.45:1);return bzMv(e,Math.cos(a),Math.sin(a),sp,dt,1);}
         if(e.type==='kosh_utka'){const dx=e.ax-H.x,dy=e.ay-H.y,d=Math.hypot(dx,dy)||1;if(d<220){e.ax+=dx/d*30*dt;e.ay+=dy/d*30*dt;}
           e.an+=dt*1.1;const x=e.ax+Math.cos(e.an)*110,y=e.ay+Math.sin(e.an)*110;e.face=Math.sin(e.an)>0?-1:1;e.x=x+e.kx*.02;e.y=y+e.ky*.02;e.kx*=.9;e.ky*=.9;return true;}
         return bzStay(e,dt);},

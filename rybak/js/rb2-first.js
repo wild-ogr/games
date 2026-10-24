@@ -120,6 +120,7 @@ R2.on('end',function(g){if(!g||g.tourn||g.guest||S.sessions!==1)return;
   var card=$('mcard');if(!card)return;
   if(!S.awayD&&S.open[g.pi]&&window.__away){S.awayD={pi:g.pi,t:nowMs(),s:Math.floor(Math.random()*1e6)};save();st('mod',{m:'away',a:'set',k:'auto'});}
   var fo=card.querySelector('.fbrf');if(fo)fo.style.display='none';
+  if(window.RB_TMRW_DUE&&RB_TMRW_DUE(g)){st('cal',{a:'tmr',w:'tmrw'});return;} // BK-RB 24.10: следом будет окно «Завтра на берегу» (rb2-up.js) — то же обещание, строку в итогах не дублируем
   var b=a3BestBait(0),p=document.createElement('div');p.className='quote r2f-tmr';
   p.innerHTML='<b>'+L('Петрович','Petrovich')+'</b>'+(S.awayD?L('Я донку на ночь поставил — завтра утром проверим, что попалось. ','I\'ve set a night line — tomorrow morning we\'ll see what bit. '):L('Приходи завтра утром! ','Come back tomorrow morning! '))
     +L('А Митяй обещал гостинец: ','And Mityai promised a treat: ')+BAIT[b].ic+' '+esc(nm(BAIT[b]).toLowerCase())+' ×'+G2_B+' '+L('и','and')+' +'+coinsTxt(G2_C);

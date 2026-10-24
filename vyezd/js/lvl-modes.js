@@ -53,7 +53,14 @@
   function hook(G,ok){fix();var S=Sv();return {mode:G.mode||'n',region:G.region||'',fails:(S.lvF[key(G)]||0)};}
   /* победа в режиме: свои звёзды, обычные S.stars/unlocked/гараж не трогаем. true — обработано */
   function win(G,st){if(!G||(G.mode!=='rush'&&G.mode!=='ice'))return false;fix();var S=Sv(),o=G.mode==='rush'?S.lvR:S.lvI;
-    o[G.idx]=Math.max(o[G.idx]||0,G.mode==='rush'?1:st);delete S.lvF[key(G)];stopTimer();return true;}
+    var nv=G.mode==='rush'?1:st;G.mBetter=nv>(o[G.idx]||0); /* bk2410: ×1,5 — только когда звёзд режима стало больше */
+    o[G.idx]=Math.max(o[G.idx]||0,nv);delete S.lvF[key(G)];stopTimer();return true;}
+  /* bk2410: следующий двор режима в том же десятке — без полных звёзд (после текущего, потом с начала); -1 — всё собрано */
+  function next(G){fix();if(!G||!MODES[G.mode])return -1;var S=Sv(),o=G.mode==='rush'?S.lvR:S.lvI,mx=G.mode==='rush'?1:3,k=Math.floor(G.idx/10);
+    for(var j=1;j<10;j++){var i=k*10+(G.idx-k*10+j)%10;if((o[i]||0)<mx)return i;}return -1;}
+  /* bk2410: строка окна победы режима — прогресс по десятку */
+  function winLine(G){if(!G||!MODES[G.mode])return '';var m=MODES[G.mode],k=Math.floor(G.idx/10),n=stars(k,G.mode),mx=G.mode==='rush'?10:30;
+    return '<p class="goal">'+m.ico+' '+L2(m.ru,m.en)+L2(' · дворы ',' · yards ')+(k*10+1)+'–'+(k*10+10)+': <b>★'+n+'/'+mx+'</b>'+(n>=mx?L2(' — все звёзды! 🏆',' — all stars! 🏆'):'')+'</p>';}
   function winN(G){fix();if(G&&!G.daily)delete Sv().lvF[key(G)];stopTimer();}
   function start(idx,mode){if(!MODES[mode])mode=undefined;try{hideModal();}catch(e){}startLevel(idx,false,mode?{mode:mode}:undefined);}
   /* выбор двора режима: первый двор десятка без звезды режима, иначе первый */
@@ -89,7 +96,7 @@
         g.beginPath();g.moveTo(c2[0]-r*2,c2[1]);g.lineTo(c2[0],c2[1]+r*.35);g.lineTo(c2[0]+r*2,c2[1]);g.lineTo(c2[0],c2[1]-r*.35);g.closePath();g.fill();}
       g.restore();}}
   W.LVLM={MODES:MODES,open:open,start:start,pick:pick,stars:stars,mapHtml:mapHtml,hook:hook,norm:norm,begin:begin,revive:revive,iceStars:iceStars,
-    win:win,winN:winN,fail:fail,fix:fix,dayOne:true,stop:stopTimer,onExit:onExit,draw:draw};
+    win:win,winN:winN,next:next,winLine:winLine,fail:fail,fix:fix,dayOne:true,stop:stopTimer,onExit:onExit,draw:draw};
   /* для STAT prg (просьба TECH): звёзд в режимах */
   W.LVL=W.LVL||{};W.LVL.prg=function(){fix();var S=Sv(),n=0,k;for(k in S.lvR)n+=S.lvR[k]||0;for(k in S.lvI)n+=S.lvI[k]||0;return {md:n};};
 })(window);

@@ -7,7 +7,7 @@
    Сейв: S.dlyO {day, best — лучшее за день, got — награда взята, runs}. Облако — свежий день, в тот же день — максимум. */
 const DLY_GOAL=8;let DLY_LB=false;
 function dlyDef(){const day=dayKey(),seed=+day.replace(/-/g,''),R=mulberry(seed*31+7);R();R();
-  const th=Math.floor(R()*CH.length),rule=DCH_RULES[Math.floor(R()*DCH_RULES.length)].k;
+  const th=Math.floor(R()*Math.min(CH.length,CH_CAMP)),rule=DCH_RULES[Math.floor(R()*DCH_RULES.length)].k;
   return {day,seed:seed%100000+9000,th,rule,river:R()<.5||!!CH[th].river,side:R()<.5};}
 function dlyMine(){const d=dayKey(),o=S.dlyO;return o&&o.day===d?o:{day:d,best:0,got:0,runs:0};}
 function dlyOpen(){return !!S.stars['0-5'];}

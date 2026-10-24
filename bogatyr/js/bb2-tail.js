@@ -12,7 +12,7 @@
     if(typeof o.vl==='string'&&o.vl)r.vl=o.vl.replace(/[^a-z]/g,'').slice(0,16);
     if(typeof o.rd==='string'&&o.rd)r.rd=o.rd.slice(0,10);
     if(ob(o.l)&&nm(o.l.w))r.l={w:nm(o.l.w),c:a3(o.l.c,999),s:a3(o.l.s,7),g:nm(o.l.g)&7};
-    if(ob(o.m)&&nm(o.m.s))r.m={s:nm(o.m.s),f:Math.min(100,nm(o.m.f)),t:Math.min(100,nm(o.m.t))};
+    if(ob(o.m)&&nm(o.m.s))r.m={s:nm(o.m.s),f:Math.min(9999,nm(o.m.f)),t:Math.min(9999,nm(o.m.t))};
     if(Array.isArray(o.r)){a=[];for(i=0;i<o.r.length&&a.length<8;i++){x=o.r[i];if(Array.isArray(x)&&typeof x[0]==='string'&&/^[0-9a-z]{2,96}$/.test(x[1]))a.push([x[0].slice(0,6),x[1]]);}if(a.length)r.r=a;}
     return r;}
   function merge(a,c){var r=BB2.mx(a,c),x=a.l,y=c.l,k,i,q; /* числа — максимум, объекты — объединение; ниже — то, что так сливать нельзя */

@@ -236,15 +236,20 @@
   function mFloors(){return N('most.floors',100);}function mFS(){return N('most.floorSec',90);}function mRest(){return Math.max(2,N('most.rest',5));}
   function mSeason(){return Math.floor(weekNo()/Math.max(1,Math.round(N('most.days',28)/7)));}
   function mOpen(){return on('most')&&doneList().length>=N('most.openCh',6/*ECO?*/);}
+  /* bk2410 «Мост без конца» (флаг mostx): прошедшему всю кампанию мост не кончается на 100-м этаже — дальше «за Смородиной» без предела (рекорд s.mb);
+     «скорый подъём» — новый сезон с привала в половину рекорда (не дальше 50-го, золото за пропущенных боссов не платится); босс с 26-го этажа платит среднюю награду. */
+  function mAll(){return on('mostx')&&!!S.done[campLast()];}
+  function mEnd(){return mAll()?9999:mFloors();}
+  function mSkip(m){var b=Math.min(sv().mb|0,mFloors());return mAll()&&m.f===0?Math.min(50,Math.floor(b/2/mRest())*mRest()):0;}
   function mState(wr){var s=sv(),se=mSeason();if(ob(s.m)&&s.m.s===se)return s.m;var m={s:se,f:0,t:0};if(wr)s.m=m;return m;} /* запись в сохранение — только когда есть что писать */
   function mBase(m){return Math.floor(m.f/mRest())*mRest();}
   function mPlan(m){var base=mBase(m),D=doneList(),R=mulberry(m.s*1009+base*31+7),n=D.length,i,r,last=-1,rules=[];
-    var chi=D[Math.min(n-1,Math.floor(base/mFloors()*n+R()*3))];
+    var chi=base>=mFloors()?D[n-1-Math.floor(R()*Math.max(1,Math.round(n/3)))]:D[Math.min(n-1,Math.floor(base/mFloors()*n+R()*3))]; /* за Смородиной — главы последней трети */
     for(i=0;i<mRest();i++){do{r=Math.floor(R()*MR.length);}while(r===last);last=r;rules.push(i===mRest()-1&&MR[r].id==='hung'?0:r);} /* на этаже-боссе без «голодного»: бой с боссом без лечения — слишком зло */
     return {base:base,chi:chi,rules:rules};}
   function mHp(n){return 1+N('most.hpK',.03/*ECO?*/)*n;}function mDmg(n){return 1+N('most.dmgK',.012/*ECO?*/)*n;}
   T.mostState=mState;T.mostPlan=function(){return mPlan(mState());};
-  T.mostGo=function(){if(!mOpen())return;var m=mState(),p=mPlan(m);if(p.base>=mFloors())return;PEND={k:'most',chi:p.chi,base:p.base,rules:p.rules,t:Date.now()};hideModal();startRun(p.chi);};
+  T.mostGo=function(){if(!mOpen())return;var m=mState(),p=mPlan(m);if(p.base>=mEnd())return;PEND={k:'most',chi:p.chi,base:p.base,rules:p.rules,t:Date.now()};hideModal();startRun(p.chi);};
   function mSet(g,fl){var q=g.bb2most,n=q.base+fl+1,r=MR[q.rules[fl]]||MR[0],boss=fl===mRest()-1;q.fl=fl;q.img=null;
     g.em=mHp(n);g.emD=mDmg(n)*(r.dmg||1);applyWk(g,mix([r.mod,{gold:1e-9,cap:.85}]),fl===0);
     banner(L('Этаж ','Floor ')+n+(boss?L(' · босс',' · boss'):''),LL(r.n)+' — '+LL(r.d),4);}
@@ -253,31 +258,35 @@
     for(i=0;i<g.ev.length;i++)if(g.ev[i].k!=='boss'&&g.ev[i].t<FS*(R-1)-8)ev.push(g.ev[i]);
     if(FS*(R-1)>300)ev.push({t:FS*(R-1)-40,k:'elite'});ev.push({t:FS*(R-1),k:'boss'});ev.sort(function(a,b){return a.t-b.t;});g.ev=ev;
     mSet(g,0);stat('most',{a:'run',n:p.base+1,c:chPos(g.chi)});}
-  function mMark(n){var m=mState(1),s=sv();if(n>m.f){m.f=Math.min(mFloors(),n);if(m.f>(s.mb|0))s.mb=m.f;BB2.pdv('most',m.f,1);return 1;}return 0;}
+  function mMark(n){var m=mState(1),s=sv();if(n>m.f){m.f=Math.min(mEnd(),n);if(m.f>(s.mb|0))s.mb=m.f;BB2.pdv('most',m.f,1);return 1;}return 0;}
   function frameMost(dt,g){var q=g.bb2most,fl=Math.min(mRest()-1,Math.floor(g.t/mFS()));if(fl<=q.fl||g.win)return;
     if(mMark(q.base+fl)){keep();stat('most',{a:'floor',n:q.base+fl});}mSet(g,fl);}
   function drawMost(c,g){var q=g.bb2most;if(!q.img){var r=MR[q.rules[q.fl]]||MR[0];q.img=pill(L('Этаж ','Floor ')+(q.base+q.fl+1)+' · '+LL(r.n),'#ffd98a');}pillDraw(c,q.img);}
   function endMost(g,win){var q=g.bb2most,R={from:q.base,win:win?1:0,gold:0,it:[]},m,s=sv(),b,rest=mRest();unsnap(g);
     mMark(win?q.base+rest:q.base+Math.max(0,q.fl));m=mState(1);R.to=m.f;R.fl=win?q.base+rest:q.base+q.fl+1;
-    for(b=(Math.floor(m.t/rest)+1)*rest;b<=m.f;b+=rest){m.t=b;R.gold+=pay(rw(N('most.boss','s')),'quest');var t=tro(g.chi,N('most.bossTro',2/*ECO?*/));if(t)R.tro=(R.tro|0)+t;
+    for(b=(Math.floor(m.t/rest)+1)*rest;b<=m.f;b+=rest){m.t=b;R.gold+=pay(rw(b>25&&on('mostx')?'m':N('most.boss','s')),'quest');var t=tro(g.chi,N('most.bossTro',2/*ECO?*/));if(t)R.tro=(R.tro|0)+t;
       if(b===50){if(!S.skins)S.skins={};if(!S.skins['mar@most']){S.skins['mar@most']=1;R.it.push(L('👕 облик Марьи «Страж Калинова моста»','👕 Marya outfit “Kalinov Bridge Guard”'));}}
       if(b===25)R.it.push(L('🏷️ звание «Мостовой страж»','🏷️ title “Bridge Guard”'));if(b===100)R.it.push(L('👑 звание «Хозяин Калинова моста»','👑 title “Master of Kalinov Bridge”'));
       stat('most',{a:'boss',n:b});}
     if(!win)stat('most',{a:'die',n:R.fl,t:Math.floor(g.t)});res(g).most=R;keep();}
-  T.mostTitle=function(){var b=sv().mb|0;return b>=100?L('Хозяин Калинова моста','Master of Kalinov Bridge'):b>=25?L('Мостовой страж','Bridge Guard'):'';};
+  T.mostTitle=function(){var b=sv().mb|0;return b>=150?L('Страж за Смородиной','Guard beyond the Smorodina'):b>=100?L('Хозяин Калинова моста','Master of Kalinov Bridge'):b>=25?L('Мостовой страж','Bridge Guard'):'';};
   function openMost(){if(!mOpen()){toast(L('Калинов мост откроется после шести пройденных глав','Kalinov Bridge unlocks after six cleared chapters'));return;}
-    stat('tl',{a:'open',k:'most'});var m=mState(),p=mPlan(m),F=mFloors(),rest=mRest(),per=Math.max(1,Math.round(N('most.days',28)/7)),wl=(per-1-(weekNo()%per))*7*24+weekLeftH(),i,h,done=p.base>=F;
+    stat('tl',{a:'open',k:'most'});var m=mState(),p=mPlan(m),F=mFloors(),rest=mRest(),per=Math.max(1,Math.round(N('most.days',28)/7)),wl=(per-1-(weekNo()%per))*7*24+weekLeftH(),i,h,done=p.base>=mEnd(),sk=mSkip(m),far=p.base>=F;
     h='<h3>'+L('Калинов мост','Kalinov Bridge')+'</h3><p class="sub" style="margin:0 0 6px">'+L('Мост через Смородину: '+F+' этажей, сезон 4 недели. Поход — '+rest+' этажей: каждые '+mFS()+' с новое правило, в конце босс. Одолел — привал.',
       'A bridge over the Smorodina: '+F+' floors, a 4-week season. A run is '+rest+' floors: a new rule every '+mFS()+' s, a boss at the end. Beat it to rest.')+'</p>'+
-      '<div class="prog" style="margin:0 0 8px"><div class="bar"><i style="width:'+Math.max(2,Math.round(m.f/F*100))+'%"></i></div><span>'+L('Этаж ','Floor ')+'<b>'+m.f+'</b>'+L(' из ',' of ')+F+' · '+L('привал на ','rest at ')+p.base+' · '+L('сезон: ещё ','season: ')+Math.ceil(wl/24)+L(' дн.','d')+'</span></div>';
+      (mAll()?'<p class="sub" style="margin:0 0 6px">'+L('🏆 Кампания пройдена — мост для тебя без конца: после '+F+'-го этажа — «за Смородиной», рекорд за всё время: ','🏆 Campaign complete — the bridge is endless for you: past floor '+F+' lies “beyond the Smorodina”, all-time record: ')+'<b>'+(sv().mb|0)+'</b></p>':'')+
+      '<div class="prog" style="margin:0 0 8px"><div class="bar"><i style="width:'+Math.max(2,Math.min(100,Math.round(m.f/F*100)))+'%"></i></div><span>'+L('Этаж ','Floor ')+'<b>'+m.f+'</b>'+(far?'':L(' из ',' of ')+F)+' · '+L('привал на ','rest at ')+p.base+' · '+L('сезон: ещё ','season: ')+Math.ceil(wl/24)+L(' дн.','d')+'</span></div>';
     if(done)h+='<div class="tutbox">'+L('Мост пройден! Нечисть по ту сторону Смородины пишет жалобу. Новый сезон — новый мост.','Bridge cleared! The monsters across the river are filing a complaint. New season — new bridge.')+'</div>';
     else{h+='<div class="card" style="padding:7px 10px;margin-bottom:6px"><b style="font-size:14px">'+L('Впереди: ','Ahead: ')+CH[p.chi].name+'</b>';
       for(i=0;i<rest;i++){var r=MR[p.rules[i]];h+='<span style="display:block;font-size:13px;line-height:1.35'+(m.f>=p.base+i+1?';opacity:.55':'')+'">'+(m.f>=p.base+i+1?'✓ ':'')+(p.base+i+1)+'. <b>'+(i===rest-1?L('Босс · ','Boss · '):'')+LL(r.n)+'</b></span>';}
       h+='</div>';}
-    h+='<p class="sub" style="margin:4px 0 0">'+L('Золото — только за босса: +'+fmtNum(rw(N('most.boss','s')))+' и трофеи, раз за сезон. Этажи 25, 50, 100 — звание, облик Марьи, звание.',
-      'Gold only for a boss: +'+fmtNum(rw(N('most.boss','s')))+' and trophies, once per season. Floors 25, 50, 100 — a title, Marya’s outfit, a title.')+'</p>'+
+    var g1=fmtNum(rw(N('most.boss','s'))),g2=on('mostx')?fmtNum(rw('m')):'';
+    h+='<p class="sub" style="margin:4px 0 0">'+L('Золото — только за босса: +'+g1+(g2?' (с 26-го этажа +'+g2+')':'')+' и трофеи, раз за сезон. Этажи 25, 50, 100 — звание, облик Марьи, звание.',
+      'Gold only for a boss: +'+g1+(g2?' (from floor 26: +'+g2+')':'')+' and trophies, once per season. Floors 25, 50, 100 — a title, Marya’s outfit, a title.')+'</p>'+
+      (sk&&!done?'<button class="btn ghost" id="tlMSk" style="width:100%;margin-top:6px">'+L('⏩ Скорый подъём: начать с этажа '+(sk+1),'⏩ Quick climb: start at floor '+(sk+1))+'</button><p class="sub" style="margin:2px 0 0;font-size:12px">'+L('Половина твоего рекорда. Золото за пропущенных боссов не дают.','Half your record. No gold for skipped bosses.')+'</p>':'')+
       '<div class="btns" style="flex-direction:row;margin-top:8px"><button class="btn ghost" id="tlMX" style="flex:1">'+L('Закрыть','Close')+'</button>'+(done?'':'<button class="btn" id="tlMGo" style="flex:1.6">'+L('⚔ На мост: этаж ','⚔ To the bridge: floor ')+(p.base+1)+'</button>')+'</div>';
-    showModal(h,'tlmost');var b=el('tlMX');if(b)b.onclick=function(){SND.click();hideModal();};b=el('tlMGo');if(b)b.onclick=function(){SND.click();T.mostGo();};}
+    showModal(h,'tlmost');var b=el('tlMX');if(b)b.onclick=function(){SND.click();hideModal();};b=el('tlMGo');if(b)b.onclick=function(){SND.click();T.mostGo();};
+    b=el('tlMSk');if(b)b.onclick=function(){SND.click();var q=mState(1),k=mSkip(q);if(k){q.f=q.t=k;keep();stat('most',{a:'skip',n:k});}openMost();};}
   T.openMost=openMost;
 
   /* =====================================================================================================================
@@ -350,6 +359,13 @@
     try{if(g.bb2hq)endHq(g,win);}catch(e){console.warn('tail hq',e);}
     try{if(g.bb2rc)endRace(g,win);}catch(e){console.warn('tail race',e);}});
 
+  /* bk2410 (флаг mostx): победа в последней главе кампании (любой уровень) — позвать на «Мост без конца» (после «Забрать» — окно моста) */
+  BB2.hook('modal',function(kind,m){try{if(kind!=='result'||!on('mostx')||typeof G==='undefined'||!G||G.endless||G.daily||G.weekly||G.bb2most||G.chi!==campLast()||!BB2.win||!mOpen())return;
+    var x=BB2.put(m,'end','<div class="tutbox" style="margin:6px 0 0;padding:6px 10px;font-size:13.5px;line-height:1.35"><b>'+L('🌉 Дальше — без конца','🌉 What next — endless')+'</b><br>'+
+      L('Калинов мост для тебя теперь бесконечный: этажи за Смородиной, рекорд и золото за боссов. А ещё Лихая неделя и Зароки — на карте.','Kalinov Bridge is now endless for you: floors beyond the Smorodina, a record and gold for bosses. Plus the Wild Week and Vows on the map.')+
+      '<button class="btn ghost" id="tlFinGo" style="width:100%;margin-top:6px">'+L('Забрать и на мост','Collect and go to the bridge')+'</button></div>','tlFin'),b=el('tlFinGo');
+    if(b){stat('tl',{a:'fin',k:'most'});b.onclick=function(){var o=el('rOk')||el('rNext')||el('rForge');SND.click();if(o)o.click();setTimeout(function(){if(!$('modal').classList.contains('on'))openMost();},700);};}}catch(e){}});
+
   /* =====================================================================================================================
      Итоги похода: строки хвоста сразу под заголовком
      ===================================================================================================================== */
@@ -381,7 +397,7 @@
     if(!info||!isOpen())return;
     function line(id,ic2,t,s){h+='<button class="tlr" id="'+id+'" style="display:flex;align-items:center;gap:8px;width:100%;min-height:44px;margin:0;padding:5px 2px;background:none;border:0;border-top:1px solid var(--line,rgba(0,0,0,.15));color:inherit;text-align:left;font:inherit;cursor:pointer"><span style="font-size:20px;flex:none;width:28px;text-align:center">'+ic2+'</span><span style="flex:1;min-width:0"><b style="display:block;font-size:14px;line-height:1.2">'+t+'</b><span style="display:block;font-size:12.5px;line-height:1.25;opacity:.85">'+s+'</span></span><span style="flex:none;font-weight:900">›</span></button>';}
     if(on('lih')){var l=lihState();if(l)line('tlRL','🌪',L('Лихая неделя · ','Wild Week · ')+lihStars(l)+L(' ★ из 9',' ★ of 9'),weekly().name+L(': три твои главы под лихом',': three of your chapters under the rule'));}
-    if(on('most')){if(mOpen()){var m=mState();line('tlRM','🌉',L('Калинов мост · этаж ','Kalinov Bridge · floor ')+m.f+L(' из ',' of ')+mFloors(),L('Башня сезона: пролёт из '+mRest()+' этажей, на последнем босс','Season tower: a span of '+mRest()+' floors with a boss at the end'));}
+    if(on('most')){if(mOpen()){var m=mState();line('tlRM','🌉',L('Калинов мост · этаж ','Kalinov Bridge · floor ')+m.f+(mAll()?'':L(' из ',' of ')+mFloors()),L('Башня сезона: пролёт из '+mRest()+' этажей, на последнем босс','Season tower: a span of '+mRest()+' floors with a boss at the end'));}
       else line('tlRM','🌉',L('Калинов мост','Kalinov Bridge'),L('🔒 Откроется после шести пройденных глав','🔒 Unlocks after six cleared chapters'));}
     if(on('hq')){var nx=T.hqNext(S.hero),hr=HERO_BY[S.hero];line('tlRH','🏅',L('Подвиги героев','Hero feats')+(hr?' · '+hr.name.split(' ')[0]+' '+T.hqDone(S.hero)+'/5':''),nx?'«'+nx.name+'»: '+nx.text:L('Все подвиги этого богатыря свершены — зови другого','All feats of this hero are done — call another'));}
     if(on('vow')){var tot=vowTotal(),n2=vowNext(tot),tt=vowTitle();line('tlRV','☠',L('Зароки · черепов ','Vows · skulls ')+tot+(tt?' · '+tt:''),n2?L('На ','At ')+n2[0]+' — '+n2[1]+' '+LL(n2[2]):L('Дорожка черепов пройдена!','Skull track complete!'));}
@@ -393,7 +409,7 @@
   BB2.hook('today',function(TL){try{var l=lihState();if(!l||!Array.isArray(TL))return;var n=lihStars(l);
     TL.push({k:'tl_lih',ic:'e_perun',t:L('Лихая неделя','Wild Week'),s:weekly().name+' · '+n+L(' ★ из 9',' ★ of 9'),ready:n===0,b:L('Открыть','Open'),fn:function(){hideModal();openTab('Map');openLih();}});}catch(e){}});
   BB2.hook('utroTile',function(a){try{var l=lihState();if(l&&Array.isArray(a))a.push({ic:'🌪',t:L('Лихая неделя','Wild Week'),s:lihStars(l)+L(' ★ из 9',' ★ of 9'),w:lihStars(l)<9?55:10,fn:function(){openTab('Map');openLih();}});}catch(e){}});
-  BB2.hook('utroRow',function(a){try{if(mOpen()&&Array.isArray(a)){var m=mState();if(mBase(m)<mFloors())a.push({ic:'🌉',t:L('Калинов мост','Kalinov Bridge'),s:L('Этаж ','Floor ')+m.f+L(' из ',' of ')+mFloors(),fn:function(){openTab('Map');openMost();}});}}catch(e){}});
+  BB2.hook('utroRow',function(a){try{if(mOpen()&&Array.isArray(a)){var m=mState();if(mBase(m)<mEnd())a.push({ic:'🌉',t:L('Калинов мост','Kalinov Bridge'),s:L('Этаж ','Floor ')+m.f+(mAll()?'':L(' из ',' of ')+mFloors()),fn:function(){openTab('Map');openMost();}});}}catch(e){}});
   BB2.hook('tab',function(){PEND=null;});
   /* для стенда и бота */
   T.test={pend:function(o){PEND=o;if(o)o.t=Date.now();},vows:VOWS,rules:MR,hq:HQ,lihCap:LIH_CAP};

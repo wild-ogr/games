@@ -22,7 +22,7 @@ function mstR(v){return v<2000?Math.round(v/10)*10:Math.round(v/50)*50;}
   for(const x of FORGE_EXTRA)if(MST_X[x.k])MST_L.push({id:'x.'+x.k,t:'',k:x.k,kind:MST_X[x.k],p0:mstR(MST.star*x.cost[x.cost.length-1]*MST.first),own:()=>forgeN(x.k)>=x.cost.length,name:()=>x.n,ic:x.ic});
   for(const b of BLD)if(MST_V[b.id])MST_L.push({id:'v.'+b.id,t:'',k:b.id,kind:MST_V[b.id],p0:mstR(b.cost[b.cost.length-1]*MST.first),own:()=>(S.village[b.id]||0)>=b.cost.length,name:()=>b.name,ic:b.ic,v:1});
 })();
-function mstOpen(){for(const c of CH_ORDER)if(!S.stars[c+'-5'])return false;return true;}   // вся кампания на Обычном (боссы всех земель; Логова не нужны)
+function mstOpen(){for(const c of CH_ORDER)if(c<CH_CAMP&&!S.stars[c+'-5'])return false;return true;}   // вся кампания на Обычном (боссы всех земель; Логова не нужны)
 // в этом бою действует? (вне боя — для показа — да)
 function mstOn(){return mstOpen()&&!(typeof G!=='undefined'&&G&&(G.wk||G.dly));}
 function mstN(id){const v=S.mst&&S.mst[id];return v>0?Math.floor(v):0;}

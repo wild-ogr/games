@@ -200,3 +200,6 @@ html.vw-keys .vw-kbd-e{position:absolute;right:10px;top:8px;opacity:.85}
 body.calm .vw-stamp.on{animation:none}
 /* низкий телефон (≤680): «План» одной строкой «📋 План на сегодня 3/5», по нажатию — полный экран плана (запасной путь вида, пока гнездо не рисует ctx.mini само) */
 .gbv-mini .mt-home .mt-chips,.gbv-mini .mt-home .mt-hl{display:none}
+/* BK-GS 24.10 мелочи узких экранов (320–360): подписи вкладок, смайлики «обслужено», плашки бустеров не обрезаются */
+@media (max-width:360px){html.gbv .gbnav{font-size:11.5px;letter-spacing:-.2px}html.gbv .gf .btn small{padding:1px 5px;font-size:11px}}
+@media (max-width:340px){html.gbv .gbnav{font-size:10.5px}.vw-sv{font-size:12px;gap:0}html.gbv .gf .btn small{font-size:10.5px;padding:1px 4px}}

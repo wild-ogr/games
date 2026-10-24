@@ -154,7 +154,7 @@ function render(el){if(!MY.lgOpen()){el.innerHTML='<div class="lghead">'+badge(0
     [1,2,3].map(function(p){var x=pay(l,p);return p+L(' место ',' place ')+x.c+' 💰 + '+x.p+' 🔩';}).join(' · ')+(cars?L('; первые тройки — ещё и редкая машина в альбом.','; your first top-3 finishes also bring a rare car.'):'.')+
     (MY.fn('board')?' '+L('Доска объявлений во дворе: +','Notice board in your yard: +')+Math.round(MY.fn('board')*100)+'% '+L('к монетам.','to coins.'):'')+' '+L('Соседи — жильцы округи, их очки считает честная модель, одинаковая у всех игроков.','The neighbours are local residents; their points come from a fair model, the same for every player.')+'</p>';
   el.innerHTML=h;}
-MY.tab({id:'league',n:L('Лига','League'),ic:'🥇',o:30,title:L('Лига соседей','Neighbours’ league'),render:render,sub:function(){return MY.lgOpen()?MY.lgName():L('с района «Квартал»','from the “Block” district');},dot:function(){return !!S.lgaR;}});
+MY.tab({id:'league',n:function(){return L('Лига','League');},ic:'🥇',o:30,title:function(){return L('Лига соседей','Neighbours’ league');},render:render,sub:function(){return MY.lgOpen()?MY.lgName():L('с района «Квартал»','from the “Block” district');},dot:function(){return !!S.lgaR;}}); /* bk2410: n/title — функции (язык Яндекса приходит позже) */
 MY.homeLine({pri:30,f:function(){if(!MY.lgOpen())return null;if(S.lgaR)return {ic:'🥇',t:L('Итоги недели в лиге — загляни!','League week results — take a look!'),a:'league'};var p=MY.lgPlace(),l=S.lgaL||0,z=zone(p,l);
   return {ic:'🥇',t:MY.lgName(l)+': '+L('ты ','you’re ')+p+L('-й из 8',' of 8')+(z==='up'?L(' · зона повышения',' · promotion zone'):z==='down'?L(' · зона вылета',' · relegation zone'):''),a:'league'};}});
 // открыть вкладку лиги — сначала итог прошлой недели

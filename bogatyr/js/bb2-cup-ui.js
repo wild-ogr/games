@@ -74,7 +74,7 @@
       +'<p class="sub">'+L('Если в группе мало людей, её добивают соседи — богатыри из игры, они подписаны «(сосед)».','If a group has few people, heroes from the game fill it — they are marked “(neighbour)”.')+'</p>'
       +btns(sh?'<button class="btn" id="cupNmY">'+L('Оставить имя','Keep my name')+'</button><button class="btn ghost" id="cupNmN">'+L('Скрыть имя','Hide my name')+'</button>'
         :'<button class="btn" id="cupNmN">'+L('Без имени — дальше','Stay anonymous')+'</button><button class="btn ghost" id="cupNmY">'+L('Показывать имя','Show my name')+'</button>'));
-    function go(y){var c=C();c.ask=1;save();if(!!CUP.shown()!==y)CUP.showName(y,function(){});ev('name',y?1:0);BB2.stat('lg',{a:'in',t:(CUP.me()||{}).tier||0});BB2.late('cup');U.open();}
+    function go(y){var c=C();c.ask=1;delete c.ao;save();if(!!CUP.shown()!==y)CUP.showName(y,function(){});ev('name',y?1:0);BB2.stat('lg',{a:'in',t:(CUP.me()||{}).tier||0});BB2.late('cup');U.open();}
     on('cupNmY',function(){go(true);});on('cupNmN',function(){go(false);});}
 
   /* главное окно: вкладки «Лига · День · Неделя · Ступень · Сеча» */
@@ -127,7 +127,7 @@
   /* UP 24.10: раньше проверка шла только при c.jw>lgw (jw — неделя, в которой игрок попал в группу); итогов недели (lg wk) не было ни разу при 13 вошедших.
      Теперь, как в Обороне: у вошедшего (ask=1) — раз за запуск спрашиваем сервер (login → claims из league/hello) без условия jw; диагностика lg {a:'chk'} — раз за запуск. */
   var chk0=0,chkW=0;
-  U.check=function(){var c=C();if(!X.on()||c.ask!==1||chkW)return;if(chk0&&!(c.jw>(c.lgw||0)))return;chkW=1;var n=0,tm=setInterval(function(){if(++n>80){clearInterval(tm);chkW=0;return;}if(!idle())return;clearInterval(tm);
+  U.check=function(){var c=C();if(!X.on()||!X.in()||chkW)return;if(chk0&&!(c.jw>(c.lgw||0)))return;chkW=1;var n=0,tm=setInterval(function(){if(++n>80){clearInterval(tm);chkW=0;return;}if(!idle())return;clearInterval(tm);
     login(function(r){chkW=0;var me=CUP.me()||{},src=r&&r.claims&&r.claims.length?r.claims:(me.claims||[]),cl=src.filter(function(x){return x&&x.wk>(C().lgw||0);});
       if(!chk0&&r){chk0=1;BB2.stat('lg',{a:'chk',j:C().jw||0,w:C().lgw||0,n:cl.length,jn:r.joined?1:0,wk:r.wk||0});}
       if(!r||!idle())return;if(cl.length)claim(cl[0],'none');});},1500);};
@@ -169,14 +169,14 @@
     on('stCupN',function(){CUP.showName(!sh,function(){});lgR=null;ev('name',sh?0:1);openSettings();});
     on('stCupD',function(){var b=$('stCupD'),e=$('stCupM');if(!b.getAttribute('data-sure')){b.setAttribute('data-sure','1');e.textContent=L('Нажми ещё раз — результаты, лига и вызовы будут удалены с сервера. Золото и прогресс в игре останутся.','Tap again to delete your scores, league and challenges from the server. Gold and progress stay.');return;}
       e.textContent=L('Удаляем…','Deleting…');CUP.forget(function(x){if(!$('stCupM'))return;b.removeAttribute('data-sure');
-        if(x){var c=C();delete c.ask;delete c.jw;delete c.tr;delete c.mv;save();lgR=null;pend=null;ev('forget','ok');}
+        if(x){var c=C();delete c.ask;delete c.ai;c.ao=1;delete c.jw;delete c.tr;delete c.mv;save();lgR=null;pend=null;ev('forget','ok');}
         $('stCupM').textContent=x?L('Готово: данные турниров удалены. Живая лига снова спросит, показывать ли имя.','Done: your contest data is deleted. The live league will ask about your name again.'):L('Сервер сейчас не отвечает — попробуй позже.','The server is not responding — try again later.');});});};
 
   /* --- карточка на карте: ступень --- */
-  U.card=function(el){var c=C(),t=$('cupCardT');if(!t||c.ask!==1||c.tr==null)return;
+  U.card=function(el){var c=C(),t=$('cupCardT');if(!t||!X.in()||c.tr==null)return;
     t.innerHTML=L('Твоя ступень: ','Your step: ')+tierH(c.tr)+(c.jw>(c.lgw||0)?' · 🏅 '+L('итоги недели!','week results!'):'');};
   (function(){var el=$('cupCard');if(el)U.card(el);})();
   /* статистика рангов: ступень и итог прошлой недели — раз за запуск, у вошедших */
-  try{var c0=C();if(c0.ask===1&&c0.tr!=null&&CUP.on)BB2.stat('lg',{a:'ses',t:c0.tr,m:c0.mv||''});}catch(e){}
+  try{var c0=C();if(X.in()&&c0.tr!=null&&CUP.on)BB2.stat('lg',{a:'ses',t:c0.tr,m:c0.mv||''});}catch(e){}
   setTimeout(U.check,1500);
 })();

@@ -6,6 +6,10 @@
    коробка «Дефицит» с 5-го, меньше пустых мест. Кривая без плато до 1500-го: рост раз в республику; внутри республики
    города 1–3 «вход» (новая помеха), 4–7 микс, 8–10 трудные; 10-й уровень города — Ревизия, 100-й республики — «Главк».
    После 1500-го — «Сверхплан» (бесконечно, максимум сложности, случайные помехи, своё зерно).
+   UP-GS 24.10: Сверхплан был без калибровки терпения (бот-человек: 33 % проигрышей, отдельные уровни 75–95 %; 1471–1500 — 12 %).
+   Теперь он калибруется, как обычные уровни (цели band последней республики), и идёт кругом по SPN=300 раскладкам: уровень i ≥ 1500
+   строится как 1500+(i−1500)%300 — все 300 сняты в таблицу gb-lvl2-tab.js (n=1800), игра строит их за доли секунды.
+   Снять заново: sh tools/lvl_tab.sh make 1800 (или только хвост — см. журнал UP-GS).
 
    ДОГОВОР:
    GBL2.v = 2;  GBL2.gen(i, rareId) → уровень (i с 0; rareId — номер карточки «Дефицита» или -1), как genLevel v1 + поля
@@ -23,6 +27,7 @@ var GBL2=(function(){
   var ON=function(name){return typeof GB==='undefined'||!GB.flag||GB.flag(name);}; // в jsc (сторож) GB нет — всё включено
   var SAW=[0,1,2,1,3,4,2,5,6,7];
   var WAVE=[0,1,1,2,2,3,3,4,4,4]; // республика 2–15: размер по городу (1–3 «вход», 4–7 микс, 8–10 трудные)
+  var SPN=300;function spb(i){return i>=1500?1500+(i-1500)%SPN:i;} // UP-GS: Сверхплан по кругу из SPN калиброванных раскладок
   function seed(i){return i>=1500?(i*104729+99991)>>>0:i*7919+17;}
   // параметры уровня. j — «место на кривой» (в Сверхплане — трудные города последней республики)
   function params(i){
@@ -121,7 +126,7 @@ var GBL2=(function(){
     var put=[];for(var o=0;o<obs.length;o++){if(!GBOB.on(obs[o].id))continue;if(GBOB.place(lv,obs[o].id,R,obs[o].pow))put.push(obs[o].id);else return null;}
     if(lhash(lv)!==e.substr(6,3))return null;
     lv.try=k;lv.P=n36(e.substr(3,2));lv.pd=n36(e[5]);lv.v2=1;lv.glavk=P.glavk?1:0;lv.sp=P.sp?1:0;lv.obs=put;lv.rx=rx;lv.tab=1;return lv;}
-  function gen(i,rareId,sd,P0,slow,rx){if(sd==null&&!P0&&!slow){var fl=fast(i,rareId);if(fl)return fl;}
+  function gen(i,rareId,sd,P0,slow,rx){if(sd==null&&!P0)i=spb(i);if(sd==null&&!P0&&!slow){var fl=fast(i,rareId);if(fl)return fl;}
     rx=rx||0;var P=P0||params(i);if(P.tut)return tutLevel();var nd=need(i,P),best=null,bc=null,nc=0,s0=(sd==null?seed(i):sd)+rx*500009,rs=0;
     var obs=prep(i,P,rx);
     if(obs.some(function(o){return o.id===7;})){obs=obs.slice(0,1);P.E=Math.max(P.E+2,Math.ceil(P.S/2)+1);} // «Подвоз» сам заполняет витрину: места свободнее, без других помех (с «Уборщицей» и т. п. — 44 % тупиков) (иначе тупики, sim-b: 12 %) // «Подвоз» сам заполняет витрину — места свободнее (иначе тупики, sim-b: 12 %)
@@ -136,10 +141,10 @@ var GBL2=(function(){
       lv.P=Math.round(4+2.5*mp)+(P.pt||0)+2*put.length;lv.pd=1+Math.round(mp/2);if(P.pt>=30){lv.P=40;lv.pd=0;}
       lv.v2=1;lv.glavk=P.glavk?1:0;lv.sp=P.sp?1:0;lv.obs=put;
       if(lv.fr>=nd){ // дружелюбный: подгоняем терпение; не влез в цель даже с запасом +8 — «лабиринт», ищем другой (до 6 раз)
-        if(P.pt>=30||P.sp)return lv;nc++; /* Сверхплан — без калибровки: таблицы нет, строится в игре (терпение по формуле, это «максимум») */if(calib(lv,i,P,s0)&&botOk(lv,i,sd))return lv;if(!bc||(lv.cal[5]>15)<(bc.cal[5]>15)||((lv.cal[5]>15)===(bc.cal[5]>15)&&lv.cal[3]<bc.cal[3]))bc=lv;if(nc>=6)break;continue;}
+        if(P.pt>=30)return lv;nc++; /* UP-GS: Сверхплан тоже калибруется (таблица до 1800, дальше — по кругу) */if(calib(lv,i,P,s0)&&botOk(lv,i,sd))return lv;if(!bc||(lv.cal[5]>15)<(bc.cal[5]>15)||((lv.cal[5]>15)===(bc.cal[5]>15)&&lv.cal[3]<bc.cal[3]))bc=lv;if(nc>=6)break;continue;}
       if(!best||lv.fr>best.fr)best=lv;
       if(k%30===29&&P.E<6)P.E++;}
-    var res=bc;if(!res){res=best;if(best&&!(P.pt>=30)&&!P.sp)calib(best,i,P,s0);}
+    var res=bc;if(!res){res=best;if(best&&!(P.pt>=30))calib(best,i,P,s0);}
     // не влезло в цель даже лучшее (проигрышей на 10 % выше цели или тупиков > 25 %) — послабление и новый поиск (кроме заданий дня)
     if(res&&res.cal&&sd==null&&!P0&&rx<2){var b=band(i,params(i));if(res.cal[3]>100*b[1]+5||res.cal[5]>25||!botOk(res,i,sd)){var r2=gen(i,rareId,null,null,true,rx+1);if(r2)return r2;}}
     return res;}

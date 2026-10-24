@@ -89,7 +89,7 @@ var FACT_EN={
  chaika:'For ministers and weddings. With tail “fins”, as was the fashion.',
  zil:'The ZIL-114 — the leaders’ car. Assembled almost by hand.'};
 /* «одна форма» — варианты с одинаковым силуэтом не ставим вместе */
-var SAME={shesterka:'sedan',moskvich:'sedan',kopeyka:'sedan',morozh:'raf',raf:'raf',volga:'gaz24',taxi:'gaz24'}; /* vy-merge: Волга и Такси — один кузов ГАЗ-24, в один вопрос не ставим (решение владельца после ART2) */
+var SAME={shesterka:'sedan',moskvich:'sedan',kopeyka:'sedan',morozh:'raf',raf:'raf',skoraya:'raf',volga:'gaz24',taxi:'gaz24',buhanka:'uaz452',tabletka:'uaz452'}; /* bk2410: по замеру силуэтов (IoU ≥ 0,95: Буханка/Таблетка 0,994, РАФ/Скорая/Мороженое 0,99) — тоже одна форма */ /* vy-merge: Волга и Такси — один кузов ГАЗ-24, в один вопрос не ставим (решение владельца после ART2) */
 function key(c){return SAME[c.id]||(c.s+'|'+(c.cargo||'')+'|'+(c.cab||'')+'|'+(/taxi|skoraya|tabletka|bobik/.test(c.id)?c.id:''));}
 function cars(){return window.VYCARS&&VYCARS.list&&VYCARS.list.length?VYCARS.list:[];}
 function pickRounds(R){var L=cars(),com=K.shuffle(L.filter(function(c){return c.rar==='common';}),R),rare=K.shuffle(L.filter(function(c){return c.rar!=='common';}),R);

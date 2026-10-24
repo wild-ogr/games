@@ -50,6 +50,7 @@
     v_pr:'Принимаем завоз: всё по полкам, тройками. Лимит ходов — ',v_rush:'Час пик! Двадцать человек — успеть бы всех!',
     v_mar:'Ревизия-марафон: пять подряд, без поблажек.',v_fish:'Рыбный день! Кильку берут ящиками.',v_week:'Задание недели: ',
     best:'Лучший итог: ',today:'Сегодня: ',rushN:'Сегодня смен: ',done:'Выполнено',sp_n:'Сверх плана: ',lv:' ур.',
+    spr1:'Ударник труда',spr2:'Отличник торговли',spr3:'Стахановец',spr4:'Мастер прилавка',spr5:'Герой труда',spr_new:'Новое звание: ',spr_to:'До звания «',spr_to2:'» — ',spr_x:' ×',
     prDone:'Все три приёмки на сегодня разложены',runs:'Смены с наградой кончились — дальше играем на счёт',
     marStep:'Ревизия ',weekStep:'Уровень ',fresh:'Новый набор — в понедельник',
     torg:'Проверка Торга',deficit:'Дефицит дня',r_notable:'без Столика',r_revq:'очередь из ревизоров',r_ice:'всё во льду',
@@ -93,7 +94,7 @@
       var m=o(S.mdM);S.mdM=m?{w:num(m.w),b:Math.min(5,num(m.b)),ok:m.ok?1:0}:{w:0,b:0,ok:0};
       var w=o(S.mdW);S.mdW=w?{w:num(w.w),s:Math.min(5,num(w.s)),ok:w.ok?1:0}:{w:0,s:0,ok:0};
       var f=o(S.mdF);S.mdF=f?{d:num(f.d),st:Math.min(3,num(f.st))}:{d:0,st:0};
-      var sp=o(S.mdSp);S.mdSp=sp?{n:num(sp.n),st:num(sp.st)}:{n:0,st:0};
+      var sp=o(S.mdSp);S.mdSp=sp?{n:num(sp.n),st:num(sp.st),r:num(sp.r)}:{n:0,st:0,r:0}; /* r — звание Сверхплана (BK-GS 24.10) */
       var dd=o(S.mdD);S.mdD=dd?{d:num(dd.d)}:{d:0};
       if(!o(S.mdH))S.mdH={};},
     // облако: по каждому полю — у кого день/неделя свежее, тот и прав; тот же день — максимум (звёзды, счёт), минимум ходов
@@ -105,7 +106,7 @@
       a=S.mdW;b=o(d.mdW);if(b){if(num(b.w)>num(a&&a.w))S.mdW=b;else if(a&&num(b.w)===num(a.w)){a.s=Math.max(a.s||0,num(b.s));a.ok=a.ok||b.ok?1:0;}}
       a=S.mdF;b=o(d.mdF);if(b){if(num(b.d)>num(a&&a.d))S.mdF=b;else if(a&&num(b.d)===num(a.d))a.st=Math.max(a.st||0,num(b.st));}
       a=S.mdD;b=o(d.mdD);if(b&&num(b.d)>num(a&&a.d))S.mdD={d:num(b.d)};
-      a=S.mdSp;b=o(d.mdSp);if(b){if(!a)S.mdSp=b;else{a.n=Math.max(a.n||0,num(b.n));a.st=Math.max(a.st||0,num(b.st));}}
+      a=S.mdSp;b=o(d.mdSp);if(b){if(!a)S.mdSp=b;else{a.n=Math.max(a.n||0,num(b.n));a.st=Math.max(a.st||0,num(b.st));a.r=Math.max(a.r||0,num(b.r));}}
       a=S.mdH;b=o(d.mdH);if(b){if(!o(a))S.mdH=a={};for(var k in b)if(b[k])a[k]=1;}}});
   // сегодняшние/недельные записи (старые — как пустые)
   function P(){var s=Sx(),p=s.mdP;if(p.d!==day()){p.d=day();p.s=[0,0,0];p.m=[0,0,0];}return p;}
@@ -275,7 +276,10 @@
   // строки режима в «Кассе» (zone extra) — и в своей, и в «Кассе» VIEW, если она возьмёт режимы
   GB.add(GB.winSlots,{id:'md',order:50,zone:'extra',on:function(){var g=Gx();return !!(g&&((g.mode&&NO[g.mode])||(!g.mode&&g.idx>=1500)));},
     render:function(ctx){var g=Gx();if(g&&g.mode&&GBMD.res)return '<div class="md-lines">'+GBMD.res.lines.map(function(t){return '<p>'+t+'</p>';}).join('')+'</div>';
-      if(g&&!g.mode&&g.idx>=1500&&spOn()){var sp=GBMD.sp();return '<div class="md-lines"><p>📈 '+tr('sp')+': '+tr('sp_n')+sp.n+tr('lv')+'</p></div>';}return '';}});
+      if(g&&!g.mode&&g.idx>=1500&&spOn()){var sp=GBMD.sp(),SR=GBMD.spRank(),nw=GBMD.spNew&&GBMD.spNew.l===g.idx+1?GBMD.spNew:null;
+        return '<div class="md-lines"><p>📈 '+tr('sp')+': '+sp.n+tr('lv')+(SR.k&&!nw?' · '+SR.name:'')+'</p>'+
+          (nw?'<p class="md-spr">🎖 '+tr('spr_new')+'<b>'+spName(nw.k)+'</b>! +'+nw.c+' 💰</p>':'')+
+          '<p><small>'+tr('spr_to')+SR.nextName+tr('spr_to2')+SR.left+tr('lv')+'</small></p></div>';}return '';}});
   function mdLose(g,why){if(!g||g.mdEnd)return;g.mdEnd=1;g.over=true;if(typeof YG!=='undefined')YG.stop();if(typeof SND!=='undefined')SND.stuck();
     try{if(window.STAT&&STAT.end)STAT.end('lose',typeof stEnd==='function'?stEnd():{});}catch(e){}
     GB._lvEnd('lose');var id=g.mode,m=g.md;stat('end',{id:id,st:m.step,sc:id==='rush'?g.served:0,r:why});GB.emit('md',{id:id,r:'lose',st:m.step});
@@ -301,8 +305,19 @@
   prov();GB.on("ready",prov);GBMD._prov=prov;
 
   /* ---------- «Сверхплан»: счёт уровней сверх 1500 (уровни — LVL) ---------- */
-  GB.levelHook.push(function(i){if(i.mode||i.daily||i.r!=='win'||!(i.l>1500))return;var s=Sx();if(!s||!s.mdSp)return;
-    if(i.first){s.mdSp.n++;s.mdSp.st+=i.st||0;stat('end',{id:'sp',sc:s.mdSp.n,st:i.st||0,r:'win'});}});
+  /* BK-GS 24.10 (новизна для топа): звания Сверхплана — цель на годы вперёд. Порог (уровней сверх плана), монеты разово (без потолка дня).
+     После последнего — «Герой труда ×2, ×3…» каждые 150 уровней. Звание — S.mdSp.r (облако: максимум). */
+  var SPR=[[30,100],[90,150],[180,200],[300,250],[450,300]],SPX=150;
+  function spAt(k){return k<=SPR.length?SPR[k-1][0]:SPR[SPR.length-1][0]+SPX*(k-SPR.length);}
+  function spCoin(k){return k<=SPR.length?SPR[k-1][1]:SPR[SPR.length-1][1];}
+  function spRank(n){var k=0;while(n>=spAt(k+1))k++;return k;}
+  function spName(k){if(k<=0)return '';if(k<=SPR.length)return tr('spr'+k);return tr('spr'+SPR.length)+tr('spr_x')+(k-SPR.length+1);}
+  GBMD.spRank=function(){var s=GBMD.sp(),k=spRank(s.n||0);return {n:s.n||0,k:k,name:spName(k),next:spAt(k+1),nextName:spName(k+1),left:spAt(k+1)-(s.n||0)};};
+  GB.levelHook.push(function(i){if(i.mode||i.daily||i.r!=='win'||!(i.l>1500))return;var s=Sx();if(!s||!s.mdSp)return;GBMD.spNew=null;
+    if(i.first){s.mdSp.n++;s.mdSp.st+=i.st||0;stat('end',{id:'sp',sc:s.mdSp.n,st:i.st||0,r:'win'});
+      var k=spRank(s.mdSp.n),was=s.mdSp.r||0;if(k>was){var c=0;for(var j=was+1;j<=k;j++)c+=spCoin(j);s.mdSp.r=k;
+        if(window.GBECO&&GBECO.add)c=GBECO.add(c,'md');else{s.coins+=typeof ern==='function'?ern('md',c):c;}sv();if(typeof updCoins==='function')updCoins();
+        GBMD.spNew={l:i.l,k:k,c:c};stat('rank',{id:'sp',k:k,sc:s.mdSp.n});}}});
 
   /* ---------- входы: список, гнёзда, экран ---------- */
   var IC={priemka:'📦',rush:'🏃',marathon:'🔥',week:'📋',fish:'🐟',sp:'📈'};
@@ -312,7 +327,7 @@
     if(id==='marathon'){var m=M();return m.ok?tr('done')+' ✓':m.b?tr('best')+m.b+'/5':tr('d_marathon');}
     if(id==='week'){var w=W();return (w.ok?tr('done')+' ✓ · ':w.s?w.s+'/5 · ':'')+tr('c_'+GBMDG.cond(week()));}
     if(id==='fish'){var f=F();return today('fish')?(f.st?tr('today')+'★'.repeat(f.st):tr('d_fish')):tr('thu');}
-    if(id==='sp'){return tr('sp_n')+GBMD.sp().n+tr('lv');}return '';}
+    if(id==='sp'){var SR=GBMD.spRank();return tr('sp_n')+SR.n+tr('lv')+(SR.k?' · '+SR.name:'');}return '';}
   GBMD.list=function(){var L=[];IDS.forEach(function(id){if(GBMD.shown(id))L.push({id:id,ic:IC[id],t:tr(id),s:status(id),can:GBMD.can(id)});});
     if(spOn())L.push({id:'sp',ic:IC.sp,t:tr('sp'),s:status('sp'),can:true});return L;};
   GBMD.go=function(id){if(id==='sp'){stat('go',{id:'sp'});startLevel(Math.max(1500,lvl()-1));return;}if(GBMD.can(id))GBMD.start(id);else GBMD.open();};

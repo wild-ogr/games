@@ -3,8 +3,23 @@
 <head>
 <script>window.__se=[];addEventListener('error',function(e){var t=e.target,s=window.__se;if(s&&s.length<10)s.push(t&&t.tagName?[2,t.src||t.href||'',t.tagName]:[1,e.message,e.filename,e.lineno]);},true);</script> <!-- STAT v1.2: ранние ошибки и незагрузившиеся файлы — до всех скриптов -->
 <meta charset="utf-8">
+<script>/* предохранитель загрузки (05.10.2026): свой файл игры не загрузился → перезагрузка до 2 раз, потом окно «Обновить» */
+(function(){var K='ldfail',n=0,done=false;try{n=+sessionStorage.getItem(K)||0;}catch(e){}
+function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
+  try{var a=document.createElement('a');a.href=u;if(a.host!==location.host)return false;}catch(e){return false;}
+  return !/vk-bridge|sdk\.js/.test(u);}
+addEventListener('error',function(e){if(done||!own(e.target))return;done=true;
+  if(n<2){try{sessionStorage.setItem(K,n+1);}catch(x){}setTimeout(function(){location.reload();},700+n*1500);return;}
+  var ru=true; /* игра только по-русски */
+  function show(){var d=document.createElement('div');d.id='ldfail';d.setAttribute('style','position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#1c2b3a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px/1.4 system-ui,sans-serif;text-align:center;padding:24px');
+    d.innerHTML='<div style="max-width:320px">'+(ru?'Не получилось загрузить игру. Проверьте интернет и попробуйте ещё раз.':'The game failed to load. Check your connection and try again.')+'</div><button type="button" style="margin-top:18px;font:700 18px system-ui,sans-serif;padding:12px 28px;border:0;border-radius:14px;background:#4caf50;color:#fff">'+(ru?'Обновить':'Reload')+'</button>';
+    d.querySelector('button').onclick=function(){try{sessionStorage.removeItem(K);}catch(x){}location.reload();};(document.body||document.documentElement).appendChild(d);}
+  if(document.body)show();else addEventListener('DOMContentLoaded',show);},true);
+addEventListener('load',function(){setTimeout(function(){if(!done)try{sessionStorage.removeItem(K);}catch(x){}},3000);});})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Дурак во дворе</title>
+<script src="js/look-zina.js"></script><script src="js/look-kin.js"></script><script src="js/look-petr.js"></script> <!-- персонажи 09.10: баба Зина — облик из «Бабы Зины» (ZINA_ART), тётя Валя — «Гастроном», дед Митяй — «Рыбалка» (KIN); файлы — копии из viktorina/js -->
 <style>
 :root{--ink:#2d3436;--muted:#57606f;--card:#fffdf7;--tr:.28s}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
@@ -775,7 +790,7 @@ const CHARS={
   bogatyr:{n:'Богатырь',full:'Богатырь',about:'Прёт напролом козырями, но и считать умеет',lvl:'сильный'},
   zina:{n:'Баба Зина',full:'Баба Зина',about:'Учительница на пенсии. Помнит все вышедшие карты',lvl:'самая сильная'},
   barsik:{n:'Барсик',full:'Кот Барсик',about:'Играет лапой. По силе — как Михалыч',lvl:'полегче',special:1},
-  petrovich:{n:'Петрович',full:'Участковый Петрович',about:'Всё по протоколу. По силе — как дядя Коля',lvl:'крепкий',special:1}
+  petrovich:{n:'Петрович',full:'Рыбак Петрович',about:'Сосед-рыбак с пруда: торопиться не любит. По силе — как дядя Коля',lvl:'крепкий',special:1}
 };
 const LINES={
   mityai:{meet:['Садись, молодёжь, научу! Я в домино чемпион, а в карты — тем более.'],start:['Ну что, сыграем? Я в домино чемпион, а в карты — тем более!','Раздавай, не жалей!','Эх, тряхну стариной!','Садись, молодёжь, научу!','Чую, сегодня мой день!'],
@@ -815,10 +830,10 @@ const LINES={
     tr:['Твой черёд, брат!','Передаю тебе, воин!'],trTo:['Мне? Давай, я готов!','Ко мне пожаловали? Добро!'],trump:['Козырем — наотмашь!','Вот мой меч-кладенец!','Козырной булавой!'],
     out:['Бой окончен! Победа!','Всё, я чист, как роса!'],lose:['Эх, пал богатырь… Но встанет!','Пойду к коню, посоветуюсь…','Сила есть — ума бы!','Проиграл честно. Уважаю!'],
     youWin:['Силён! Достойный соперник!','Ты — настоящий богатырь!','Победа честная, признаю!'],youLose:['Не кручинься, воин!','Утро вечера мудренее — отыграешься!']},
-  zina:{meet:['Ну что ж, проверим, чему тебя двор научил. Шпаргалки убрать, телефоны сдать!'],start:['Садитесь. Урок карт начинается!','Раздаю. Шпаргалки убрать!','Посмотрим, чему вас научила жизнь.','Внимательно, я всё записываю!'],
-    lead:['К доске!','Отвечай!','Вот тебе задачка.','Решай, милок.'],throw:['Дополнительный вопрос!','А это на пятёрку!','И домашнее задание!'],
+  zina:{meet:['Здравствуй, внучок! Ну что ж, проверим, чему тебя двор научил. Шпаргалки убрать, телефоны сдать!'],start:['Садитесь. Урок карт начинается!','Раздаю. Шпаргалки убрать!','Посмотрим, чему вас научила жизнь.','Внимательно, я всё записываю!'],
+    lead:['К доске!','Отвечай!','Вот тебе задачка.','Решай, внучок.'],throw:['Дополнительный вопрос!','А это на пятёрку!','И домашнее задание!'],
     beat:['Верно, садись, пять.','Эта карта уже выходила, я помню!','Не спеши, я всё посчитала.','Правильный ответ!'],take:['Возьму, разберём после уроков.','Беру. Это мне на проверку.','Хм, беру. Но я всё вижу.'],
-    youTake:['Бери, но в тетрадку запиши!','Это тебе на дом. К завтрашнему дню разобрать!','Садись, два. Забирай.','Козыри надо было учить!','Ох, милок, полные руки…'],bito:['Бито. Следующая тема.','Бито. Тузов больше нет, я считала.','Урок окончен — бито.'],
+    youTake:['Бери, но в тетрадку запиши!','Это тебе на дом. К завтрашнему дню разобрать!','Садись, два. Забирай.','Козыри надо было учить!','Ох, внучок, полные руки…'],bito:['Бито. Следующая тема.','Бито. Тузов больше нет, я считала.','Урок окончен — бито.'],
     tr:['Переадресую вопрос соседу.','Отвечать будет… вот он!','А ну-ка, ты расскажи!'],trTo:['Меня к доске? Ну-ну.','На учителя переводите? Смело!'],
     trump:['Козырь — как пятёрка в четверти!','Козыри надо знать, как таблицу умножения!'],out:['Звонок! Урок окончен.','Я свободна. Проверяйте тетради.'],
     lose:['Ну и ну… Садись, Зина, два.','Даже учитель ошибается. Редко!','Ученик превзошёл учителя!'],
@@ -826,9 +841,9 @@ const LINES={
   barsik:{start:['Мур-р! Сыграем?','Мяу! Раздаю лапкой.'],lead:['Мяу!','Кусь!','Лапкой — хоп!'],throw:['Мур-мур, ещё!','Пш-ш!'],beat:['Мур-р-р!','Цап-царап!'],take:['Мяу… беру.','Утащу в корзинку.'],
     youTake:['Мур-р-р, бери!','Мяв!'],bito:['Мур. Бито.'],tr:['Мяу — тебе!'],trTo:['Мя?!'],trump:['Козырной коготь!'],out:['Мур-р, я пустой! Пойду спать.'],
     lose:['Мя-я-у… Дай сосиску.','Фыр! Не считается!'],youWin:['Мур! Хозяин победил!'],youLose:['Мур-р, не грусти, погладь кота.']},
-  petrovich:{start:['Граждане, партия под контролем!','Всё по закону, играем честно!'],lead:['Предъявите!','Пройдёмте!'],throw:['Добавлю к протоколу.','Отягчающее!'],beat:['Нарушение пресечено!','Алиби есть!'],
-    take:['Изымаю для проверки.','Приобщаю к делу.'],youTake:['Изъято!','Распишитесь в получении.'],bito:['Дело закрыто — бито.'],tr:['Передаю по подведомственности!'],trTo:['Это не мой участок!'],
-    trump:['Козырь — по закону!'],out:['Смена окончена!'],lose:['Протокол составлен… на меня.'],youWin:['Честная победа, претензий нет!'],youLose:['Отпускаю под честное слово — отыграетесь!']}
+  petrovich:{meet:['Здорово, сосед! Удочки сушатся — можно и в картишки. Тут, как на рыбалке, главное — терпение.'],start:['Ну, забрасываем!','Сели — как на зорьке: тихо, без суеты.','Раздаю. Посмотрим, какой нынче клёв.'],lead:['Пробный заброс.','Вот тебе наживка.','Ну-ка, клюнешь?'],throw:['Подкормочки добавлю.','И ещё одну — на удачу.'],beat:['Подсёк!','Есть поклёвка — отбился.'],
+    take:['Сорвалась… Беру.','Ладно, заберу — не всё ж ловить.'],youTake:['Клюнуло! Забирай улов.','Подсёк я тебя, сосед.'],bito:['Бито. Сматываем удочки.'],tr:['Перебрасываю — пусть там клюёт!'],trTo:['Ко мне заплыло? Ну, держись.'],
+    trump:['Козырь — как щука: всех съест!'],out:['Всё, я с уловом!'],lose:['Эх, сошла рыбка… Бывает.'],youWin:['Хороший улов, сосед! Уважаю.'],youLose:['Не беда — рыбалка любит терпеливых. Ещё заход?']}
 };
 /* портреты — рисунок кодом (SVG 200×200) в стиле бабы Зины из «Слова за слово»; mood: norm, happy, sad, wow */
 function eyesSvg(m){return m==='happy'?'<path d="M75 96 q8 -8 16 0 M109 96 q8 -8 16 0" stroke="#3a2a22" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
@@ -864,8 +879,10 @@ const LOOK={
     hair:'<g fill="#b5523b"><circle cx="58" cy="78" r="14"/><circle cx="142" cy="78" r="14"/><circle cx="54" cy="98" r="11"/><circle cx="146" cy="98" r="11"/><circle cx="70" cy="62" r="14"/><circle cx="130" cy="62" r="14"/><circle cx="100" cy="56" r="15"/></g>',
     hat:'<path d="M60 58 q40 -16 80 0 v-14 q-40 -26 -80 0z" fill="#fff" stroke="#e3e3e3" stroke-width="2"/><g fill="#fff" stroke="#e8e8e8"><circle cx="72" cy="34" r="9"/><circle cx="86" cy="28" r="10"/><circle cx="100" cy="26" r="10"/><circle cx="114" cy="28" r="10"/><circle cx="128" cy="34" r="9"/></g>',
     face:'<circle cx="52" cy="116" r="4" fill="#f5b72d"/><circle cx="148" cy="116" r="4" fill="#f5b72d"/>',lip:'#d0273b',brow:'#8a3a2a'},
-  kolya:{bg:'#e3e9f2',body:'#2c5aa0',bodyX:'<path d="M72 150 v50 M128 150 v50" stroke="#1d3f73" stroke-width="8"/><path d="M84 146 l16 16 l16 -16" fill="#dfe6ee"/>',
+  kolya:{bg:'#e3e9f2',body:'#7fa8d6',bodyX:'<path d="M84 146 l16 16 l16 -16" fill="#dfe6ee"/><path d="M44 172 q20 -14 40 -16 l16 24 l16 -24 q20 2 40 16 l6 28 H38z" fill="#8a6a45"/><g fill="#6f5434"><circle cx="100" cy="186" r="2.8"/></g><rect x="128" y="168" width="16" height="11" rx="2" fill="#6f5434"/><path d="M133 170 v-12" stroke="#ffcf40" stroke-width="3.4" stroke-linecap="round"/>'+
+      '<g transform="rotate(-9 46 190)"><rect x="18" y="168" width="54" height="44" rx="4" fill="#2e6b4a"/><g stroke="#fff" stroke-width="1.3" stroke-dasharray="2 1.4"><rect x="24" y="174" width="12" height="14" fill="#e5484d"/><rect x="40" y="174" width="12" height="14" fill="#3f8fe0"/><rect x="56" y="174" width="12" height="14" fill="#ffcf40"/></g></g>',
     hat:'<path d="M50 72 q4 -44 52 -46 q46 2 50 40 q-50 -8 -102 6z" fill="#6b5b4a"/><path d="M50 72 q50 -14 102 -6 q16 4 20 12 q-60 -10 -122 -6z" fill="#574a3c"/><circle cx="102" cy="28" r="4" fill="#574a3c"/>',
+    glasses:'<g fill="rgba(210,230,255,.28)" stroke="#222" stroke-width="3"><rect x="68" y="86" width="30" height="20" rx="5"/><rect x="102" y="86" width="30" height="20" rx="5"/></g><path d="M98 95 h4 M68 93 l-14 -4 M132 93 l14 -4" stroke="#222" stroke-width="3" fill="none"/>',
     face:'<path d="M76 116 q12 -8 24 -2 q12 -6 24 2 q-6 10 -24 6 q-18 4 -24 -6z" fill="#5b3a29"/>',mouthOver:0,brow:'#5b3a29'},
   bogatyr:{bg:'#eef0e6',body:'#8d99a6',bodyX:'<g fill="none" stroke="#6c7781" stroke-width="2">'+[0,1,2,3].map(r=>'<path d="M'+(34+r*4)+' '+(166+r*9)+' h'+(132-r*8)+'" stroke-dasharray="5 3"/>').join('')+'</g><path d="M28 200 q2 -30 22 -44 l8 44z M172 200 q-2 -30 -22 -44 l-8 44z" fill="#b3261e"/>',
     hair:'<path d="M58 118 q-4 40 42 58 q46 -18 42 -58 q-14 22 -42 22 q-28 0 -42 -22z" fill="#d9a54a"/><path d="M80 118 q20 -10 40 0 q-20 8 -40 0z" fill="#c48f36"/>',
@@ -886,7 +903,9 @@ function catSvg(){return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/20
   <ellipse cx="60" cy="56" rx="12" ry="8" fill="#fff3e3"/><path d="M57 53 h6 l-3 4z" fill="#e0707a"/><path d="M60 57 q-3 5 -7 3 M60 57 q3 5 7 3" stroke="#3a2a22" stroke-width="1.8" fill="none"/>
   <path d="M40 56 l-16 -3 M40 60 l-15 3 M80 56 l16 -3 M80 60 l15 3" stroke="#fff" stroke-width="1.6" opacity=".9"/><path d="M46 74 l14 6 l14 -6 l-4 10 l-10 -4 l-10 4z" fill="#1d4fa3"/></svg>`;}
 const PVC={};
-function portrait(id,m){m=m||'norm';const k=id+m;if(PVC[k])return PVC[k];return PVC[k]=id==='barsik'?catSvg():headSvg(LOOK[id]||LOOK.mihalych,m);}
+function portrait(id,m){m=m||'norm';
+  if(id==='zina'&&window.ZINA_ART)return ZINA_ART.head(m);if(window.KIN&&KIN.ids[id])return KIN.head(id,m,(LOOK[id]||{}).bg);if(id==='petrovich'&&window.PETR_ART)return PETR_ART.head(m,'#e3eef3'); // Петрович — рыбак из «Рыбалки» (js/look-petr.js), решение владельца 24.10 // Зина — облик из «Бабы Зины» (js/look-zina.js), Валя — «Гастроном», Митяй — «Рыбалка» (js/look-kin.js); как в Викторине
+  const k=id+m;if(PVC[k])return PVC[k];return PVC[k]=id==='barsik'?catSvg():headSvg(LOOK[id]||LOOK.mihalych,m);}
 /* турнир двора: 6 мест по 3 партии; победа открывает следующую партию, все три — следующее место */
 const PLACES=[
   {id:'yard',n:'Двор',ic:'🏠',t:'oil',b:'red',bg:'linear-gradient(#e0775f,#b3452f)',about:'Лавочка у подъезда',g:[{o:['mityai']},{o:['mityai']},{o:['mityai','mihalych']}]},
@@ -935,7 +954,8 @@ function fixSave(){for(const f of NUMOBJ)if(!isObj(S[f]))S[f]={};if(!isObj(S.sel
   if(typeof S.unlocked!=='number'||!(S.unlocked>=1))S.unlocked=1;for(const f of ['wins','games','adW','lossRow','rk'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;
   if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
   if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.pzh!=null&&!isObj(S.pzh))delete S.pzh;if(S.quick!=null&&!isObj(S.quick))delete S.quick;
-  if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
+  if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};
+  if(S.music!=null&&typeof S.music!=='boolean')S.music=S.music===1;} // музыка: только true — включена (по умолчанию выключена)
 fixSave();
 // boost: старые сохранения — знакомые соседи (без окна «Новый сосед») и текущее звание (без ложного «повышения»)
 if(!Object.keys(S.met).length&&(S.games||0)>0){for(let i=0;i<Math.min(S.unlocked-1,TOUR.length);i++)TOUR[i].o.forEach(x=>S.met[x]=1);for(const k in S.beat)S.met[k]=1;for(const k in S.lost)S.met[k]=1;if(S.unlocked>1||S.wins>0)S.met.mityai=1;}
@@ -1204,7 +1224,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'durak',gv:'v2.2-102420',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'durak',gv:'v2.3-102421',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl партии/расклад/задачка, ad ролики и ×2, gift гостинцы лавочки, chest сундуки, buy покупки, quest достижения);
    progress — после облака, но не позже 2,5 с: pl — побед всего, cn — монеты, bt — облако хоть раз отдало сохранение (метка устройства durak-cl, в сохранение не пишется);
    cfg — стол (th), звук, спокойный режим. Покадрового цикла нет (переходы CSS) — STAT.frame() не зовём. */
@@ -1214,7 +1234,8 @@ let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=local
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
-  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false)acWake();}catch(e){}}
+  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false||S.music===true)acWake();}catch(e){}}
+  try{musTick();}catch(e){} // музыка: замолчать сразу, а не через 300 мс
   if(!paused&&typeof kick==='function')kick();}
 const YG={
   start(){try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
@@ -1607,6 +1628,31 @@ function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)
 function unlockAudio(){if(S.sound===false||muted)return;const a=ac();if(!a)return;
   if(!acUnlocked){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);acUnlocked=true;}catch(e){}}}
 ['touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true}));
+/* ---- музыка (24.10, bk2410): записанный трек по кругу в меню и за столом; код — копия Кирпичиков/Покера ----
+   audio/carefree.m4a — «Carefree», Kevin MacLeod (incompetech.com), CC BY 4.0: подпись в «Об игре» (#abMus) НЕ удалять — условие лицензии.
+   По умолчанию ВЫКЛЮЧЕНА (S.music===true — включена; ⚙ → «🎵 Музыка»). Файл не запрашивается, пока музыка выключена и пока игрок не коснулся экрана.
+   Потоком: <audio loop> → createMediaElementSource → GainNode. Молчит при любой причине setPause (ad / hide / sdk / pay) и скрытой вкладке.
+   iOS: элемент создаётся и первый раз запускается только в жесте (musPrime). От S.sound не зависит. */
+const MUSF='audio/carefree.m4a',MUS_VOL=.16;
+const MUS={el:null,g:null,ok:0,bad:0};
+function musOn(){return S.music===true&&!muted&&!document.hidden;}
+function musEl(){if(MUS.el||MUS.bad)return MUS.el;const a0=ac();if(!a0)return null;
+  try{const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');a.addEventListener('error',()=>{MUS.bad=1;});a.src=MUSF;
+    try{const src=a0.createMediaElementSource(a),g=a0.createGain();g.gain.value=MUS_VOL;src.connect(g).connect(a0.destination);MUS.g=g;}catch(e){a.volume=MUS_VOL;}
+    MUS.el=a;}catch(e){MUS.bad=1;}
+  return MUS.el;}
+function musPlay(){const a=MUS.el;if(!a||MUS.bad)return;
+  try{if(MUS.g&&AC){const t=AC.currentTime,g=MUS.g.gain;g.cancelScheduledValues(t);g.setValueAtTime(.0001,t);g.linearRampToValueAtTime(MUS_VOL,t+.6);}}catch(e){}
+  try{const p=a.play();if(p&&p.then)p.then(()=>{MUS.ok=1;if(!musOn())a.pause();},()=>{});else MUS.ok=1;}catch(e){}}
+// в жесте: создать элемент (тут и начинается загрузка файла) и запустить
+function musPrime(){if(!musOn())return;ac();const a=musEl();if(a&&a.paused)musPlay();}
+function musTick(){const a=MUS.el;
+  if(!musOn()){if(a&&!a.paused){try{a.pause();}catch(e){}}return;}
+  if(!a||MUS.bad||!MUS.ok)return; // первый запуск — только из жеста (musPrime)
+  if(AC&&AC.state!=='running'){acWake();return;}
+  if(a.paused)musPlay();}
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,musPrime,{capture:true,passive:true}));
+setInterval(musTick,300);
 function tone(type,f1,f2,dur,vol){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.006);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02);}
 const NZ={};function noiseBuf(a,dur){const k=Math.round(dur*100);if(NZ[k]&&NZ[k].sampleRate===a.sampleRate)return NZ[k];const n=a.createBuffer(1,Math.max(1,Math.floor(a.sampleRate*dur)),a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);return NZ[k]=n;}
 function noise(dur,vol,freq,type){if(muted||S.sound===false)return;const a=ac();if(!a)return;const t=a.currentTime,s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();f.type=type||'lowpass';f.frequency.value=freq;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.004);s.buffer=noiseBuf(a,dur);s.connect(f).connect(g).connect(a.destination);s.start(t);}
@@ -1813,7 +1859,7 @@ const PAY_ITEMS={
   coins_l:{n:1200,vk:14,ic:'💰',name:'Сундук: 1200 💰',desc:'Выгоднее кошелька',done:'+1200 💰 — спасибо!'},
   tables:{perm:1,vk:7,ic:'🎨',name:'Столы «Праздник»',desc:'Хохлома, золотая парча и новогодний — три стола'},
   backs:{perm:1,vk:7,ic:'🃏',name:'Рубашки «Узоры»',desc:'Гжель, палех и звезда — три рубашки'},
-  rivals:{perm:1,vk:10,ic:'🐈',name:'Особые соперники',desc:'Кот Барсик и участковый Петрович: свой вид и реплики. Играют не сильнее остальных'}
+  rivals:{perm:1,vk:10,ic:'🐈',name:'Особые соперники',desc:'Кот Барсик и рыбак Петрович: свой вид и реплики. Играют не сильнее остальных'}
 };
 const PAY_TEST={no_ads:99,coins_s:39,coins_l:99,tables:59,backs:59,rivals:79}; // цены только для ?paytest=1; настоящие — в консоли
 function payAdd(n){S.coins+=ern('buy',n);}
@@ -2016,6 +2062,7 @@ function buildCards(){const box=$('cards');if(CEL.length)return;
 function setUp(el,c,up){const dk=curDeck();if(el._up===up&&(up?el._dk===dk:el._bk===curBack()))return;el._up=up;
   if(up){el._dk=dk;el.innerHTML=faceHtml(c,dk);}else{el._bk=curBack();el.innerHTML='<div class="b bk-'+el._bk+'"></div>';}}
 let LY=null;
+const HAND2=.6; // рука в две строки (12+ карт): верхняя строка выше на долю высоты карты — было .4, масть верхних карт пряталась под нижней строкой (бэклог «рука 15+», bk2410)
 function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
 // раскладка стола от размеров: соперники сверху, колода слева, бито справа, стол посередине, рука снизу
 function layout(){const tb=$('tbl'),W=tb.clientWidth,H=tb.clientHeight;if(!G||!W||!H)return null;
@@ -2026,7 +2073,7 @@ function layout(){const tb=$('tbl'),W=tb.clientWidth,H=tb.clientHeight;if(!G||!W
   const seatW=W/k,seatsH=6+A+22+oh*.8;
   const seats=[];for(let j=0;j<k;j++)seats.push({x:seatW*(j+.5),y:6,w:seatW,A});
   const handY=H-ch-pad,hn=G.s.hands[0].length,two=hn>1&&Math.min(cw*1.04,(W-16-cw)/(hn-1))<cw*.32;
-  const lift=ch*(S.two?.2:.08)+(two?ch*.4:0),barY=handY-lift-54-(land?0:4); // кнопки «Беру/Бито» — выше приподнятых карт руки
+  const lift=ch*(S.two?.2:.08)+(two?ch*HAND2:0),barY=handY-lift-54-(land?0:4); // кнопки «Беру/Бито» — выше приподнятых карт руки
   const midT=seatsH+4,midB=barY-6,midH=Math.max(60,midB-midT);
   const cols=land?6:3,rows=land?1:2;
   let tw=Math.min(cw*.95,midH/(rows*1.42*1.24+.12*(rows-1)),(W-cw*1.4)/(cols*1.28+.2));tw=Math.max(tw,34);const th=tw*1.42;
@@ -2065,7 +2112,7 @@ function render(){if(!G)return;const L=layout();if(!L)return;const s=G.s,T=s.T,m
   if(hn>1&&sp<cw*.32){const h1=Math.ceil(hn/2);rowsH=[my0.slice(0,h1),my0.slice(h1)];}
   const playable=new Set(leg.filter(a=>a.c!=null).map(a=>a.c));
   rowsH.forEach((row,ri)=>{const k2=row.length,sp2=k2>1?Math.min(cw*1.04,(W-16-cw)/(k2-1)):0,x0=(W-(cw+sp2*(k2-1)))/2,
-      yb=L.handY-(rowsH.length>1&&ri===0?ch*.4:0);
+      yb=L.handY-(rowsH.length>1&&ri===0?ch*HAND2:0);
     row.forEach((c,j)=>{let y=yb;if(my&&playable.has(c))y-=ch*.08;if(G.sel===c)y-=ch*.2;
       where[c]={x:x0+j*sp2,y,r:0,k:1,z:100+ri*40+j,up:true,mine:1};});});
   for(let c=0;c<36;c++){const el=CEL[c],w=where[c];if(!w){el.style.display='none';continue;}el.style.display='';
@@ -2661,7 +2708,7 @@ $('btnStreak').onclick=showStreak;
 function openSettings(){STAT.screen('settings');const on=v=>v?'<i>вкл</i>':'<i class="off">выкл</i>',sp=S.speed||'norm';
   if(G&&!G.s.over)YG.stop();
   modal(`<h2>Настройки</h2><div class="sets">
-    <button class="set" id="stSnd"><span>🔊 Звук</span>${on(S.sound!==false)}</button>
+    <button class="set" id="stSnd"><span>🔊 Звук</span>${on(S.sound!==false)}</button><button class="set" id="stMus"><span>🎵 Музыка</span>${on(S.music===true)}</button>
     <button class="set" id="stVib"><span>📳 Вибрация</span>${on(S.vib!==false)}</button>
     <button class="set" id="stBig"><span>🔎 Крупные значки на картах</span>${on(bigOn())}</button>
     <button class="set" id="stFour"><span>🎨 Четыре цвета мастей<br><small>бубны синие, трефы зелёные</small></span>${on(!!S.four)}</button>
@@ -2674,6 +2721,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?'<i>вкл</i>':'<
     <div class="row"><button class="btn noenter" id="stHow">❓ Правила</button><button class="btn noenter" id="stAbout">ℹ️ Об игре</button><button class="btn green" id="stClose">Готово</button></div>`);
   const tg=(k,f)=>{S[k]=!S[k];save();if(f)f();openSettings();};
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();if(S.sound){unlockAudio();SND.tap();}openSettings();};
+  $('stMus').onclick=()=>{S.music=S.music!==true;save();if(S.music)musPrime();else musTick();openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stBig').onclick=()=>{S.big=!bigOn();save();relook();openSettings();};$('stFour').onclick=()=>tg('four',relook);$('stTwo').onclick=()=>tg('two');
   $('stCalm').onclick=()=>{if(RM){toast('Включено в настройках телефона («уменьшить движение»)');return;}S.calm=!S.calm;save();applyCalm();openSettings();};
@@ -2705,6 +2753,7 @@ function openAbout(){STAT.screen('about');
   modal(`<h2>Об игре</h2><p class="about">«Дурак во дворе» — подкидной и переводной дурак против соседей по двору: деда Митяя, дворника Михалыча, тёти Вали, дяди Коли, богатыря и бабы Зины. Карты, лица и звуки нарисованы и собраны прямо в игре.</p>
     <p class="about"><b>Честная раздача: соперники не видят ваших карт.</b> Колода тасуется случайно, персонажи играют только по тому, что лежит на столе, и по памяти — как живой человек за столом. Сила соперника — это его манера игры, а не подглядывание. После партии можно посмотреть, как лежала колода.</p>
     <p class="about">Соперники — персонажи игры, а не живые игроки. Новичкам первое время они немного поддаются (карт всё равно не видят). Монеты тратятся только на украшения; силу соперников и удачу раздачи купить нельзя.</p>
+    <p class="about" id="abMus">Музыка: «Carefree» — Kevin MacLeod (incompetech.com), лицензия CC BY 4.0</p>
     ${PLAT==='vk'&&!OK?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
     <p class="about">На ПК: Esc — назад, Enter или пробел — «Беру/Бито/Пас», цифры 1–9 — карта из руки по порядку.</p>
     <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ Восстановить покупки</button>':''}<button class="btn" id="abBack">← Назад</button></div>`);
@@ -2787,7 +2836,7 @@ SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(
   now:()=>nowMs(),ntf:{t:n=>ntfText(n),b:NTF_B,ok:'Договорились, сосед! Попусту дёргать не стану.',s:'🔔 Включить напоминания'}});updMore();
 if(PLAT==='vk')initVK();
 else (()=>{const s=document.createElement('script');s.src='/sdk.js';s.async=true;s.onload=s.onerror=()=>initSDK();document.head.appendChild(s);})();
-window.__test={finish,openSocial,hideModal,get G(){return G;},get S(){return S;},startTour,startDaily,startPuzzle,startQuick,startEndless,humanAct,legal,viewFor,aiMove,render,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,openShop2,openMap,dailyCfg,set VK(v){VK=v;},get VK(){return VK;},PAY};
+window.__test={get MUS(){return MUS;},musTick,setPause,finish,openSocial,hideModal,get G(){return G;},get S(){return S;},startTour,startDaily,startPuzzle,startQuick,startEndless,humanAct,legal,viewFor,aiMove,render,mergeSave,vkSaveCloud,vkLoadCloud,cloudFlush,showRewarded,showInterstitial,openShop2,openMap,dailyCfg,set VK(v){VK=v;},get VK(){return VK;},PAY};
 </script>
 </body>
 </html>

@@ -114,7 +114,7 @@ function mkWaves(ci,li){const R0=mulberry(ci*131+li*17+5),ch=CH[ci],en=ch.en,nw=
   if(ch.waveX)ch.waveX(waves,li,ci);   // OB:CH: добавки темы (воришки и т.п.)
   return waves;}
 function pick2(r,a){return a[Math.floor(r()*a.length)];}
-function endlessWave(w){const dl=G&&G.dly,ci=dl?CH_ORDER[(CH_ORDER.indexOf(dl.th)+Math.floor(w/5))%CH_ORDER.length]:Math.floor(w/5)%CH_OLD,en=CH[ci].en;   // OB:CH: осада — только старые 8 глав · OB:MERGE «Застава дня»: нечисть — с главы дня (все 11 по CH_ORDER), боссы — старые
+function endlessWave(w){const dl=G&&G.dly,ci=dl?CH_DLY()[(CH_DLY().indexOf(dl.th)+Math.floor(w/5))%CH_DLY().length]:Math.floor(w/5)%CH_OLD,en=CH[ci].en;   // OB:CH: осада — только старые 8 глав · OB:MERGE «Застава дня»: нечисть — с главы дня (все 11 по CH_ORDER), боссы — старые
   const hpm=.9*Math.pow(1.1,w),g=[],B=150*(1+.2*Math.min(w,30));const main=w<3?en[0]:pick(en);const two=w>=2;
   g.push({t:main,n:cnt(main,B*(two?.62:1)),iv:spacing(main)*.9,delay:0});
   if(two){const t2=pick(en.filter(x=>x!==main));g.push({t:t2,n:cnt(t2,B*.42),iv:spacing(t2),delay:4});}

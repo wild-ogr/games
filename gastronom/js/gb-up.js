@@ -115,7 +115,7 @@ if(typeof useBoost==='function'){var ub0=useBoost;window.useBoost=function(k){
     try{STAT.place('hintad');}catch(e){}
     showRewarded(function(){if(G===g&&!g.over){go();try{STAT.ev('mod',{m:'hintad',a:'ok'});}catch(e){}}},null,function(){return lateBoost(g,'hint',go);});return;}
   return ub0.apply(this,arguments);};}
-// «📺 за рекламу» на кнопках бустеров (монет не хватает) — только при готовом ролике
+// «📺 реклама» (было «📺 за рекламу») на кнопках бустеров (монет не хватает) — только при готовом ролике
 if(typeof updCoins==='function'){var uc0=updCoins;window.updCoins=function(){var r=uc0.apply(this,arguments);
   GB.safe('upad:lbl',function(){var ok=adYes();[['pUndo','undo'],['pHint','hint'],['pMix','mix'],['pTable','table']].forEach(function(x){var e=$(x[0]);
     if(e&&!ok&&/📺/.test(e.textContent)&&typeof PRICE!=='undefined')e.textContent=PRICE[x[1]]+' 💰';});

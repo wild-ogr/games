@@ -107,9 +107,9 @@
   if(typeof updHud==='function'){var uh=updHud;window.updHud=function(){var r=uh.apply(this,arguments);GB.safe('vw:hud',function(){
     if(!GB.viewOn||typeof G==='undefined'||!G)return;var f=GB.lvInfo(G.idx),w=innerWidth||400,nar=w<=400,K0=G.lv&&G.lv.K||0,sv=G.served||0,an=G.angry||0;
     var n0=typeof NUMS==='function'?NUMS():'№';
-    var lv=$('gLevel');if(lv&&!G.daily)lv.textContent=G.boss?(f.glavk?Lx('🔥 «Главк» · ','🔥 Head office · '):Lx('🔥 Ревизия · ','🔥 Inspection · '))+(nar?'':f.city):f.city+(w<=340?'':' · '+(nar?'':n0)+f.n);
+    var lv=$('gLevel');if(lv&&!G.daily)lv.textContent=G.boss?(f.glavk?Lx('🔥 «Главк»','🔥 Head office'):Lx('🔥 Ревизия','🔥 Inspection'))+(w<=340?'':' · '+f.city): /* BK-GS: было «🔥 Ревизия ·» с висящей точкой, город — в строке смайликов (обрезалась на ≤400) */(w<=340?f.n+' · '+f.city:f.city+' · '+(nar?'':n0)+f.n); /* BK-GS: на ≤340 номер был спрятан — теперь «8 · Город», обрезается город */
     var c=$('gCity');if(!c)return;var sm='';
-    if(K0&&K0<=10){for(var i=0;i<K0;i++)sm+='<i class="'+(i<sv?'y':i<sv+an?'n':'')+'">'+(i>=sv&&i<sv+an?'😟':'🙂')+'</i>';c.innerHTML='<span class="vw-sv">'+(nar&&G.boss?esc(f.city)+' ':'')+sm+'</span>';}
+    if(K0&&K0<=10){for(var i=0;i<K0;i++)sm+='<i class="'+(i<sv?'y':i<sv+an?'n':'')+'">'+(i>=sv&&i<sv+an?'😟':'🙂')+'</i>';c.innerHTML='<span class="vw-sv">'+sm+'</span>';}
     else c.innerHTML='<span class="vw-sv"><i class="y">🙂</i> '+sv+Lx(' из ',' of ')+K0+(an?' · 😟 '+an:'')+'</span>';});return r;};}
 
   /* ---------- рамки «Подсобка» и «Книга» (наполняют MG0 и META своим GB.screen) ---------- */

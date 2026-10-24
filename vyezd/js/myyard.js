@@ -388,8 +388,9 @@ MY.icon=function(y,i,l){var kind=YARDS[y].o[i],se=SEA[YARDS[y].s],nat=kind==='pa
 /* =====================================================================================
    ЭКРАН «МОЙ ДВОР» (#scr-my): шапка, вкладки (Двор · Альбом · Гараж · Лига — регистрируют album/garage/league через MY.tab)
    ===================================================================================== */
-var TABS=[{id:'yard',n:L2('Двор','Yard'),ic:'🏡',o:0,dot:function(){return MY.park()>=Math.max(20,MY.parkRate()*4)||!!MY.mail()||canBuild();}}],cur='yard',back=null,ysel=0;
+var TABS=[{id:'yard',n:function(){return L2('Двор','Yard');},ic:'🏡',o:0,dot:function(){return MY.park()>=Math.max(20,MY.parkRate()*4)||!!MY.mail()||canBuild();}}],cur='yard',back=null,ysel=0;
 function canBuild(){var nb=MY.next();return !!nb&&MY.coins()>=nb.c;}
+function tv(x){return typeof x==='function'?x():x;} /* bk2410: подписи вкладок — функции, на языке игры в момент показа */
 MY.tab=function(t){TABS.push(t);TABS.sort(function(a,b){return (a.o||0)-(b.o||0);});};
 function ensureScreen(){var sc=Q('scr-my');if(sc)return sc;sc=document.createElement('section');sc.id='scr-my';sc.className='screen myscr';
   sc.innerHTML='<header class="gh"><button class="icon" id="myBack" aria-label="'+L2('Назад','Back')+'">←</button><div class="gt"><div id="myTitle">'+L2('Мой двор','My yard')+'</div><div id="mySub" class="sub"></div></div>'+
@@ -415,9 +416,9 @@ MY.open=function(tab,bk){ensureScreen();keysHook();if(tab&&typeof tab==='string'
   try{STAT.screen(cur==='yard'?'myyard':cur);}catch(e){}MY.render();};
 MY.isOpen=function(){var s=Q('scr-my');return !!s&&s.classList.contains('on');};
 MY.render=function(){if(!Q('scr-my'))return;hdr();
-  Q('myTabs').innerHTML=TABS.map(function(t){var dot=false;try{dot=t.dot&&t.dot();}catch(e){}return '<button class="mytab'+(t.id===cur?' on':'')+'" role="tab" data-t="'+t.id+'" aria-selected="'+(t.id===cur)+'" data-keys-num'+(t.id===cur?' data-keys-default':'')+'><span>'+t.ic+'</span>'+t.n+(dot?'<i class="mydot"></i>':'')+'</button>';}).join('');
+  Q('myTabs').innerHTML=TABS.map(function(t){var dot=false;try{dot=t.dot&&t.dot();}catch(e){}return '<button class="mytab'+(t.id===cur?' on':'')+'" role="tab" data-t="'+t.id+'" aria-selected="'+(t.id===cur)+'" data-keys-num'+(t.id===cur?' data-keys-default':'')+'><span>'+t.ic+'</span>'+tv(t.n)+(dot?'<i class="mydot"></i>':'')+'</button>';}).join('');
   Q('myTabs').querySelectorAll('[data-t]').forEach(function(b){b.onclick=function(){if(cur===b.dataset.t)return;MY.snd('tap');cur=b.dataset.t;try{STAT.screen(cur==='yard'?'myyard':cur);}catch(e){}MY.render();};});
-  var t=TABS.filter(function(x){return x.id===cur;})[0]||TABS[0],pane=Q('myPane');Q('myTitle').textContent=t.title||(t.id==='yard'?L2('Мой двор','My yard'):t.n);
+  var t=TABS.filter(function(x){return x.id===cur;})[0]||TABS[0],pane=Q('myPane');Q('myTitle').textContent=tv(t.title)||(t.id==='yard'?L2('Мой двор','My yard'):tv(t.n));
   Q('mySub').textContent=t.sub?t.sub():'';pane.className='mypane mp-'+t.id;
   try{if(t.id==='yard')renderYard(pane);else t.render(pane);}catch(e){MY.err('render',e);pane.innerHTML='<p class="mynote">'+L2('Не получилось открыть. Попробуй ещё раз.','Could not open. Please try again.')+'</p>';}
   pane.scrollTop=0;};
@@ -502,7 +503,7 @@ function homeHook(){var H=window.homeSlots,ux=Array.isArray(H)&&window.UI&&UI.sc
       if(r)return {who:'tolik',t:L2('Машина готова!','A car is ready!'),s:L2('Забери у Толика','Collect it from Tolik'),badge:'🔧',go:function(){MY.open('garage');}};
       if(rs&&TOLIK.slots()&&TOLIK.free())return {who:'tolik',t:L2('Ржавых машин: ','Rusty cars: ')+rs,s:L2('Толик ждёт работу','Tolik is waiting for work'),badge:'!',go:function(){MY.open('garage');}};
       if(MY.parkFull())return {who:'tolik',t:L2('Стоянка полная','The car park is full'),s:'+'+MY.park()+' 💰',badge:'🅿️',go:function(){MY.open('yard');}};}catch(e){}return null;}});
-    if(Array.isArray(window.navSlots))navSlots.push({id:'my',order:25,ic:'🏡',t:L2('Мой двор','My yard'),go:'my',dot:function(){try{return MY.dot();}catch(e){return false;}}});
+    if(Array.isArray(window.navSlots))navSlots.push({id:'my',order:25,ic:'🏡',t:function(){return L2('Мой двор','My yard');} /* bk2410: функция — язык Яндекса приходит позже */,go:'my',dot:function(){try{return MY.dot();}catch(e){return false;}}});
     UI.screen('my',function(o){MY.open(o&&o.tab||(typeof o==='string'?o:''));});['album','garage','league'].forEach(function(t){UI.screen('my-'+t,function(){MY.open(t);});});
     try{UI.refresh&&UI.refresh();}catch(e){}}catch(e){MY.err('home',e);}}
   // главного экрана UX ещё нет (ui-home.js) — запасной вход: кнопка «🏡 Двор» на карте и карточка в боковой панели ПК

@@ -470,11 +470,15 @@ function hookWin(f,calm,o){const b0=f.leg?.75:f.w[1]>2.5?.85:1;if(!o)return b0+(
 /* вываживание. Мелочь (сила рыбы меньше трети прочности снасти) идёт к берегу сама — палец только ускоряет.
    Крупная: палец держит — подматываем (натяжение растёт), отпустил — леска свободнее, но рыба уходит дальше.
    Натяжение > 1 дольше 0,45 с (спокойный режим — 0,9 с) — обрыв. Слабина дольше 4 с — рыба сходит. Дальше maxD — ушла. */
+const NB_KG=2.6; // BK-RB 24.10: сколько кг «держит» первая леска на строгих местах (было 2)
 const STRICT_FROM=2; // с какого места (Волга) вываживание строгое; пруд и речка — как в выпущенной v0.1 (решение владельца 02.10)
-function fightNew(f,w,dist,tk,calm,R,easy){const B=f.s*Math.pow(w,.55),sy=STY[f.st],need=B*(sy[0]+.22)+.25,cap0=TACKLE.line.kg[tk.line]*TACKLE.rod.k[tk.rod]*(calm?1.25:1),m=need/cap0;
+function fightNew(f,w,dist,tk,calm,R,easy){const B=f.s*Math.pow(w,.55),sy=STY[f.st],need=B*(sy[0]+.22)+.25,cap0=TACKLE.line.kg[tk.line]*TACKLE.rod.k[tk.rod]*(calm?1.25:1);let m=need/cap0;
   const o={B,D:dist,D0:dist,maxD:Math.max(dist+14,24),E:1,T:0,rush:0,next:1.2+R()*1.5,warn:false,brk:0,slack:0,t:0,small:w<.6&&!f.leg,res:null,jump:0,calm:!!calm,easy:!!easy};
   // easy (пруд, речка): формула v0.1 — прочность снасти как есть, терпит 0,45 с (спокойный режим 0,9); со снастью по рыбе красной зоны нет вовсе
   if(easy){o.cap=cap0;o.gear=1.2/m;o.bmax=calm?.9:.45;return o;}
+  // BK-RB 24.10: на строгих местах самая первая леска (0,14 мм, 2 кг) держит как NB_KG кг — поблажка новичку (обрывы на Волге/Камчатке). Всё ещё слабее лески 0,18 (3,5 кг):
+  // порядок ступеней не ломается, леска 0,18 и выше — как было (навык на хорошей снасти не трогаем)
+  if(tk.line===0)m=need/(NB_KG*TACKLE.rod.k[tk.rod]*(calm?1.25:1));
   // строгое (с Волги): need — натяжение на рывке, если держать палец; m — во сколько раз оно больше прочности снасти. Пик сжат: у рыбы от ~4 кг рывок всегда
   // заходит в красную зону (lo…), слабая снасть — выше и короче терпит, но шанс есть; совсем не по снасти (m > 3,5) — рвёт и на отпущенной леске (аудит 40)
   const lo=Math.min(1.2,.8+.1*B),pk=m<=lo?lo:Math.min(m,lo+(f.leg?.9:.45)*(1-Math.exp(-(m-lo)/1.5))+Math.max(0,m-3.5)*.6);
@@ -1286,7 +1290,7 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';  // фун
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v9.6-102420',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v9.7-102421',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -4427,9 +4431,11 @@ function cupLog(g){const log=[];for(let i=1;i<=g.catch.length&&i<=5;i++){const q
 {const d0=dayOn;dayOn=function(){return d0()&&!cupLive();};}
 {const fs=fixSave;fixSave=function(){fs();if(S.cup!=null&&!isObj(S.cup))delete S.cup;
   if(isObj(S.cup)){const c=S.cup;if(typeof c.ch!=='string'||!/^[A-Z0-9]{6}$/.test(c.ch))delete c.ch;if(!(c.lgw>0))delete c.lgw;if(c.ask!==1)delete c.ask;delete c.pl;
-    if(!(c.jw>0))delete c.jw;if(!(c.sw>0))delete c.sw;if(!(c.tr>=0&&c.tr<64))delete c.tr;if(!/^(up|stay|down|top)$/.test(c.mv||''))delete c.mv;if(c.wb!=null&&!(isObj(c.wb)&&c.wb.w>0&&c.wb.best>=0))delete c.wb;else if(c.wb){c.wb={w:Math.floor(c.wb.w),best:Math.floor(c.wb.best)||0};}}};
+    if(!(c.jw>0))delete c.jw;if(!(c.sw>0))delete c.sw;if(!(c.tr>=0&&c.tr<64))delete c.tr;if(!/^(up|stay|down|top)$/.test(c.mv||''))delete c.mv;if(c.wb!=null&&!(isObj(c.wb)&&c.wb.w>0&&c.wb.best>=0))delete c.wb;else if(c.wb){c.wb={w:Math.floor(c.wb.w),best:Math.floor(c.wb.best)||0};}
+    ['sl','sv'].forEach(k=>{const x=c[k];if(x!=null&&!(isObj(x)&&x.w>0&&x.v>=0))delete c[k];else if(x)c[k]={w:Math.floor(x.w),v:Math.min(840,Math.floor(x.v)||0)};});if(c.slt!==1)delete c.slt;}}; // BK-RB: sl/sv — очки обычных рыбалок недели (js/rb2-cupsl.js)
  const ms=mergeSave;mergeSave=function(d,ref){const a=isObj(S.cup)?JSON.parse(JSON.stringify(S.cup)):null;ms(d,ref);const b=isObj(d)&&isObj(d.cup)?d.cup:null;
   if(a||b){const x=a||{},y=b||{};S.cup={};if(x.ask||y.ask)S.cup.ask=1;const lw=Math.max(x.lgw||0,y.lgw||0);if(lw)S.cup.lgw=lw;const jw=Math.max(x.jw||0,y.jw||0);if(jw)S.cup.jw=jw;const sw=Math.max(x.sw||0,y.sw||0);if(sw)S.cup.sw=sw;const tz=x.tr!=null?x:y;if(tz.tr!=null){S.cup.tr=tz.tr;if(tz.mv)S.cup.mv=tz.mv;}const ch=x.ch||y.ch;if(typeof ch==='string')S.cup.ch=ch;
+    if(x.slt||y.slt)S.cup.slt=1;['sl','sv'].forEach(k=>{const p=isObj(x[k])?x[k]:null,q=isObj(y[k])?y[k]:null;if(p||q){const w=(p&&(!q||p.w>q.w||p.w===q.w&&(p.v||0)>=(q.v||0)))?p:q;S.cup[k]={w:w.w,v:w.v||0};}}); // BK-RB
     const wa=isObj(x.wb)?x.wb:null,wb=isObj(y.wb)?y.wb:null;if(wa||wb){const w=(wa&&(!wb||wa.w>wb.w||wa.w===wb.w&&(wa.best||0)>=(wb.best||0)))?wa:wb;S.cup.wb={w:w.w,best:w.best||0};}
     fixSave();}};
  fixSave();}
@@ -4540,5 +4546,6 @@ var os=openSettings;openSettings=function(){var r=os.apply(this,arguments);try{i
 try{$('btnWeek').onclick=function(){openWeek();};$('btnSet').onclick=function(){openSettings();};$('fSet').onclick=function(){openSettings();};}catch(e){}
 })();</script><!--cup2: живая лига (крючки окна «Турниры» и ⚙; окна — лениво js/rb2-cup-ui.js)-->
 <script src="js/rb2-up.js"></script><!--UP-RB 24.10: «Завтра на берегу» после 1-й рыбалки, живая лига сама-->
+<script src="js/rb2-cupsl.js"></script><!--BK-RB 24.10: автовход в живую лигу — очки обычных рыбалок недели (S.cup.sl/sv)-->
 </body>
 </html>

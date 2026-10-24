@@ -64,7 +64,7 @@ function rowHtml(){var a=[],ML=window.META&&META.league;
     else if(ow('donka')){var hs='';try{hs=orig.donka.html({});}catch(e){}var w=/disabled/.test(hs),m=/ещё ([^<]*)</.exec(hs)||/— ([^<]*)</.exec(hs);
       a.push(ic(w?'donkaW':'donka','🔔',L_('Донка','Line'),w&&m?m[1].replace(/\s*мин/,'м').replace(/\s*ч/,'ч'):'',!w,isNew('donka')));}}
   if(ow('festday')){var fi='';try{fi=(/rb-fest">([^ <]+) <b>/.exec(orig.festday.html({}))||[])[1];}catch(e){}a.unshift(ic('festday',fi||'🎁',L_('День','Day'),'',true,false));} // праздник — первым: он на время
-  if(ow('fest'))a.unshift(ic('fest','🌙',L_('Кощей','Spooky'),'',true,false));
+  if(ow('fest'))a.unshift(ic('fest','🌙',PLAT==='vk'?L_('Кощей','Spooky'):L_('Вечер','Spooky'),'',true,false)); // BK-RB: на Яндексе праздник — «Осенний вечер» (FEST ya), в VK — «Кощеева неделя»
   ICX.forEach(function(o){if(R2.off(o.id))return;try{if(o.when&&!o.when())return;a.push(ic('x_'+o.id,v(o.ic),esc(v(o.t)),o.sub?esc(v(o.sub)):'',!!v(o.dot),false));}catch(e){}});
   return a.length?'<div class="r2h-row'+(a.length>5?' many':'')+'">'+a.join('')+'</div>':'';}
 /* значки других потоков в строке «Ещё»: R2H.icon(id-флага,{pri,when(),ic,t,sub,dot,go()}) — ic/t/sub/dot строкой или функцией */

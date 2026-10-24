@@ -14,6 +14,7 @@ function st(a){try{STAT.ev('mod',{m:'tmrw',a:a});}catch(e){}}
 R2.reg('tmrw',{s:'UP-RB',t:'окно «Завтра на берегу» после 1-й рыбалки: подарок, серия, задание, напомнить, избранное'});
 function due(g){try{return !R2.off('tmrw')&&PLAT==='vk'&&!window.__demo&&!!g&&!g.tourn&&!g.guest&&!g.cup&&(S.sessions||0)>=1&&(S.sessions||0)<=2&&(S.caught||0)>=1&&/* только новичку: давним игрокам окно не показываем */
   !(S.tips&&S.tips.tmrw);}catch(e){return false;}}
+window.RB_TMRW_DUE=due; // BK-RB 24.10: rb2-first (tmr) не дублирует строку «завтра» в итогах, если следом это окно
 function row(ic,t,sub,right){return '<div class="r2f-r"><span class="r2f-i">'+ic+'</span><span class="r2f-t">'+t+(sub?' <small>'+sub+'</small>':'')+'</span><b>'+(right||'')+'</b></div>';}
 function ntfCan(){try{return !OK&&typeof SOC==='object'&&SOC.ok()&&SOC.can('ntf')&&SOC.ntfDue()&&!(S.soc&&S.soc.ntf&&+S.soc.ntf.n);}catch(e){return false;}}
 function favCan(){try{return !OK&&typeof SOC==='object'&&SOC.ok()&&SOC.can('fav');}catch(e){return false;}}

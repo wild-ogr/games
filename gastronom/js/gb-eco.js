@@ -22,7 +22,7 @@
    МИНИ-ИГРЫ: GBECO.mg {st, cap, thanksDay, thanksPer, breakDay, tableDay, tableMax}, GBECO.give('mg', n) — потолок 30 в день.
    ЛИГА / СЕЗОН / РЕЖИМЫ: GBECO.lg, GBECO.qp, GBECO.md (форма — как DEF в gb-league.js / gb-season.js / gb-mode.js), монеты — give('lg'|'qp'|'md', n).
    ВЕРНУВШЕМУСЯ: GBECO.back [[дней, монет]…].
-   РЕКЛАМА ПО НУЖДЕ (×2 НЕТ: GBECO.x2 === false): GBECO.topUp(price) → сколько монет добьёт ролик (0 — кнопку не показывать: нехватка > 30 % цены
+   РЕКЛАМА ПО НУЖДЕ (×2 был убран 10.10, с 24.10 снова на пробе: GBECO.x2 === true): GBECO.topUp(price) → сколько монет добьёт ролик (0 — кнопку не показывать: нехватка > 30 % цены
      или исчерпан лимит дня); GBECO.topUpOpen(price, name, after) — готовое окно «Не хватает — добить за рекламу» (кнопка .rw, 📺, late);
      GBECO.topUpTake(n) — зачесть вручную. Новые кнопки рекламы — класс `rw`, 📺 в тексте, showRewarded(cb, onFail, late).
    ПОКУПКИ (PAY_ITEMS в index.html; витрина «Торг» — js/gb-torg.js): GBECO.pay.starter/prem/remont; GBECO.starterOn() — Авоська ещё продаётся;
@@ -34,7 +34,7 @@
 */
 (function(){
   var DAY=864e5;
-  var E=window.GBECO={v:1,on:true,x2:false,
+  var E=window.GBECO={v:1,on:true,x2:true, /* BK-GS 24.10: ×2 вернули на пробу; false — снова выключить */
     start:60,                                   // монет у новичка (S.coins в index.html — как в main)
     // ---- уровень (как в main: 2·звёзды + ½ обслуженных; Ревизия ×2) ----
     lvl:{star:2,servedDiv:2,bossMul:2,glavkMul:3,vet:5,daily:30},
@@ -175,7 +175,7 @@
       en:{name:'Department makeover',desc:'Marble, mirrors and moulding, grand-store style — for one department. Looks only',done:'The crew is on its way — thank you!'}};
     // VK: каталог мог собраться раньше нас (PAY.initVK берёт ключи PAY_ITEMS) — допишем новые товары
     try{if(typeof PAY!=='undefined'&&PAY.v&&Array.isArray(PAY.list))['starter','prem','remont'].forEach(function(id){if(!PAY.item(id))PAY.list.push({id:id});});}catch(e){}}
-  // ---------- «×2 за ролик» — убран (решение владельца 10.10: 410 показов → 8 досмотров); X2_ON=false в index.html ----------
+  // ---------- «×2 за ролик» — убран 10.10 (410 показов → 8 досмотров), вернули на пробу 24.10 (BK-GS); E.x2=false выключит снова ----------
   function x2Off(){try{if(E.on&&E.x2===false&&typeof X2_ON!=='undefined')X2_ON=false;}catch(e){}}
   // ---------- обёртки старых функций (function-объявления — свойства window) ----------
   function wrap(name,mk){var f=window[name];if(typeof f!=='function'||f.__gbEco)return;var w=mk(f);w.__gbEco=1;window[name]=w;}

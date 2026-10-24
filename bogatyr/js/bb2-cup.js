@@ -3,7 +3,7 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';
 (function(){
   if(typeof BB2!=='object'||!BB2)return;
   function n(v){return typeof v==='number'&&isFinite(v)&&v>0?Math.floor(v):0;}
-  BB2.save('cup',{fix:function(o){var r={},k,a=['jw','lgw','sw'];if(o.ask===1)r.ask=1;if(o.au===1)r.au=1;for(k=0;k<3;k++)if(n(o[a[k]]))r[a[k]]=n(o[a[k]]);
+  BB2.save('cup',{fix:function(o){var r={},k,a=['jw','lgw','sw'];if(o.ask===1)r.ask=1;if(o.au===1)r.au=1;if(o.ai===1)r.ai=1;if(o.ao===1)r.ao=1;for(k=0;k<3;k++)if(n(o[a[k]]))r[a[k]]=n(o[a[k]]);
       if(o.tr>=0&&o.tr<64)r.tr=Math.floor(o.tr);if(/^(up|stay|down|top)$/.test(o.mv||''))r.mv=o.mv;return r;},
     merge:function(a,c){var r=BB2.mx(a,c);if(a&&a.tr!=null){r.tr=a.tr;if(a.mv)r.mv=a.mv;else delete r.mv;}return r;}});
   BB2.lazy('cup',['js/cup.js','js/bb2-cup-ui.js'],function(){return !!(BB2.cup&&BB2.cup.ok);});
@@ -11,7 +11,11 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';
   X.on=function(){if(!BB2.on('cup')||!CUP_URL||typeof CUP!=='undefined'&&CUP.state()==='gone')return false;var q=/[?&]cup=/.test(location.search);
     if(/^(localhost|127\.|192\.168\.|10\.|$)/.test(location.hostname)||location.protocol==='file:')return q;
     try{if(navigator.webdriver)return false;return PLAT==='vk'?!!VK&&!OK:!!(ysdk&&YP&&YP.getMode&&YP.getMode()!=='lite');}catch(e){return false;}};
-  X.in=function(){return BB2.s('cup').ask===1;};
+  /* bk2410 автовход (флаг cupin, как Оборона v4.4): игрок с 1 пройденной главой попадает в лигу сам, без окна (S.bb2.cup.ai=1, имя скрыто);
+     счёт Похода дня/Испытания недели уходит сам, знакомство с выбором имени — при первом открытии окна лиги. «Удалить мои данные» ставит ao=1 — больше сам не входит.
+     STAT cupo {a:'ain'}. ?bb2=-cupin — как раньше (только по кнопке/знакомству). */
+  X.in=function(){var c=BB2.s('cup');return c.ask===1||c.ai===1&&BB2.on('cupin');};
+  X.ainDue=function(){var c=BB2.s('cup');return BB2.on('cupin')&&X.on()&&c.ask!==1&&c.ai!==1&&c.ao!==1&&nDone()>=1;};
   X.mode=function(g){if(!g||g.first||g.short||g.nvm||g.bb2lih||g.bb2most||g.bb2race)return '';return g.daily?'day':g.weekly?'week':g.endless?'endless':'';};
   function go(f,a,b){BB2.need('cup').then(function(){BB2.cup[f](a,b);},function(){});}
   function ok(){return X.on()&&X.in();}
@@ -26,7 +30,8 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';
   X.auDue=function(){return BB2.on('cupauto')&&X.on()&&!X.in()&&BB2.s('cup').au!==1&&nDone()>=3;};
   X.auto=function(){if(!X.auDue()||!idle())return false;BB2.s('cup').au=1;try{save();}catch(e){}BB2.stat('cupo',{a:'auto',k:nDone()});
     BB2.need('cup').then(function(){if(idle())BB2.cup.open();},function(){});return true;};
-  BB2.hook('menu',function(){if(!X.auDue())return;var k=0,tm=setInterval(function(){if(++k>60||!X.auDue()){clearInterval(tm);return;}if(X.auto())clearInterval(tm);},1500);});
+  BB2.hook('menu',function(){if(X.ainDue()){var c=BB2.s('cup');c.ai=1;try{save();}catch(e){}BB2.stat('cupo',{a:'ain',k:nDone()});BB2.late('cup');return;}
+    if(!X.auDue())return;var k=0,tm=setInterval(function(){if(++k>60||!X.auDue()){clearInterval(tm);return;}if(X.auto())clearInterval(tm);},1500);});
   BB2.hook('chInfo',function(s,sel,el){if(!el||!X.on()||!S.done[0])return;var c=document.createElement('div');c.className='card';c.id='cupCard';c.style.marginTop='14px';
     c.innerHTML='<div class="row"><div class="t"><b>🌐 '+L('Живая лига','Live league')+'</b><span id="cupCardT">'+L('Лиги по 30 богатырей, ступень и награда каждую неделю','Leagues of 30 heroes, a new step and a reward every week')+'</span></div><button class="btn" id="cupCardB">'+L('Открыть','Open')+'</button></div>';
     el.appendChild(c);var b=c.querySelector('#cupCardB');b.onclick=function(){BB2.open('cup',function(){BB2.cup.open();},b);};if(BB2.ready('cup'))BB2.cup.card(c);});

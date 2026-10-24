@@ -2,7 +2,7 @@
 /* ob2-vkx (поток VKT, буст_в2.0) — грузится через 1,5 с после старта из js/ob2-vkt.js (флаг stx). Только статистика, игру не меняет:
    sz {sz — тыс. знаков сохранения, o2 — знаков во всех S.o2*, mx/mv — самое большое поле} раз за загрузку;
    cloud {a:'big', n — кусков} — сохранение больше 48 кусков облака VK (80 % предела 60, дальше облако молча перестаёт писаться) — раз за сеанс;
-   tut {s:6} — новичок (до 1-й победы) открыл кольцо выбора заставы, {s:7, c — монет} — «не хватает монет» на постройку; по разу за бой (бэклог Б4).
+   tut {s:6} — новичок (до 1-й победы) открыл кольцо выбора заставы, {s:7, c — монет} — «не хватает монет» на постройку; {s:8, id} — нажал пункт кольца (BK-OB 24.10); по разу за бой (бэклог Б4).
    Ещё: чинит S.o2v (только числа и наборы {id:1}); вход в письмо воеводе (флаг mail): строка в ⚙ и окне победы → окно js/ob2-mail.js (OB2.need). */
 (function(){if(typeof OB2==='undefined'||window.OB2VKX)return;window.OB2VKX=1;
   const st=(n,p)=>{try{STAT.ev(n,p);}catch(e){}},n=x=>Math.max(0,Math.floor(+x||0));let big=0;
@@ -15,6 +15,8 @@
   if(!OB2.off('stx')){sz(true);setInterval(()=>{if(!document.hidden)sz(false);},10*60e3);
   const ro=window.openRing,tb=window.tryBuild;
   if(typeof ro==='function')window.openRing=function(){try{if(G&&!S.wins&&!G.vkR){G.vkR=1;st('tut',{s:6});}}catch(e){}return ro.apply(this,arguments);};
+  const rt=window.ringTap;   // BK-OB 24.10: tut {s:8, id — пункт кольца} — новичок нажал пункт в кольце (между «открыл кольцо» s:6 и «построил» s:2), раз за бой
+  if(typeof rt==='function')window.ringTap=function(id){try{if(G&&!S.wins&&!G.vkP){G.vkP=1;st('tut',{s:8,id:String(id).slice(0,12)});}}catch(e){}return rt.apply(this,arguments);};
   if(typeof tb==='function')window.tryBuild=function(i,ty){const r=tb.apply(this,arguments);
     try{if(!r&&G&&!S.wins&&!G.vkM&&!G.tw[i]&&G.coins<buildCost(ty)){G.vkM=1;st('tut',{s:7,c:Math.floor(G.coins)});}}catch(e){}return r;};}
   if(OB2.off('mail'))return;

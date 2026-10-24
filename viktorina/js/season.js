@@ -170,7 +170,7 @@ function render(el){rollSeason();var s=S.sea,S0=seaOf(s.id),st=stepOf(s.p),ser=s
   // абонемент
   var hideP=!s.a&&!payOn('sea_pass'),lastD=dl<=1; // FIX1 (AUD-ADS 1–2): нет покупок (ОК, Яндекс без товара) — платного не показываем; последний день месяца — не продаём
   if(!s.a&&!hideP&&lastD)h+='<p class="goal">⭐ «Абонемент» нового сезона «'+seaOf(YD.seaId(new Date(YD.date().getFullYear(),YD.date().getMonth()+1,1).getTime())).n+'» — с 1-го числа.</p>';
-  else if(!s.a&&!hideP){var pv=true;h+='<div class="seapass"><b>⭐ «Абонемент» сезона</b><small>Верхняя дорожка: 4 украшения двора «'+S0.n+'», облик Михалыча, рамка, 6 марок и 500 💰. Купишь позже — всё набранное откроется сразу.</small>'+
+  else if(!s.a&&!hideP){var pv=true;h+='<div class="seapass"><b>⭐ «Абонемент» сезона</b><small>Верхняя дорожка: 4 украшения двора «'+S0.n+'», облик Михалыча, рамка, 6 марок и 500 💰 — забранное остаётся навсегда. Действует до конца сезона (ещё '+dl+' '+YD.pl(dl,'день','дня','дней')+'), уже набранные ступени откроются сразу.</small>'+
     (pv?'<button class="btn gold noenter" id="seaBuy">Открыть · '+payPrice('sea_pass')+'</button>':'')+'</div>';}
   else if(s.a)h+='<p class="goal">⭐ «Абонемент» сезона у тебя — верхняя дорожка открыта.</p>';
   // дорожка

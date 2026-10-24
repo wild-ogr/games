@@ -94,6 +94,6 @@ function render(el){roll();grant();var x=S.sea,t=th(),n=steps(),left=dayLeft(),h
   h+='</div><p class="mynote">'+L('Очки сезона: двор 10 (+5 за ★★★), задание дня +20, постройка во дворе 20, шаг реставрации у Толика 15, тройка в лиге 50 — до '+DAYCAP+' в день. Награды приходят сами; украшения остаются во дворе №1 навсегда.','Season points: yard 10 (+5 for ★★★), daily challenge +20, a building 20, a restoration step 15, a top-3 league finish 50 — up to '+DAYCAP+' a day. Rewards arrive automatically; decorations stay in yard 1 forever.')+'</p>';
   el.innerHTML=h;
   try{var sp=MY.Q('seaPay');if(sp&&typeof PAY!=="undefined"&&PAY.bind){PAY.bind(sp);PAY.re=function(){MY.render();};}}catch(e){}}
-MY.tab({id:'season',n:L('Сезон','Season'),ic:'🎟',o:40,title:L('Сезон месяца','Season of the month'),sub:function(){var t=th();return L(t[0],t[1]);},render:render});
+MY.tab({id:'season',n:function(){return L('Сезон','Season');},ic:'🎟',o:40,title:function(){return L('Сезон месяца','Season of the month');},sub:function(){var t=th();return L(t[0],t[1]);},render:render}); /* bk2410: n/title — функции (язык Яндекса приходит позже) */
 MY.homeLine({pri:50,f:function(){roll();var n=steps();return n<STEPS?{ic:'🎟',t:L('Сезон «','Season “')+L(th()[0],th()[1])+L('»: ступень ','”: step ')+n+'/'+STEPS,a:'season'}:null;}});
 })();
