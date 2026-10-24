@@ -973,7 +973,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v23.3-102414',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v23.4-102420',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: настройки сеанса; прогресс на входе — после чтения облака, но не позже 2,5 с (bt — облако хоть раз отдало сохранение: метка устройства, не в сохранении)
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -1013,10 +1013,10 @@ function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.create
 // ответ VK с ограничением по времени (вне VK мост может не ответить вовсе); VKWebAppInit на слабом телефоне может идти долго — ждём до 20 с
 function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(method,params||{}),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms||4000))]);}
 /*SOC*/
-/* ===== SOC v2.5 (15.10: в Одноклассниках «Ещё игры» НЕТ — SOC.list() там пуст, open() сразу false, кнопка «🎲 Игры» прячется сама по SOC.can('more'); причина — VKWebAppOpenApp {app_id:<ID в ОК>, app_is_local:true} в ОК игру не открывает, модерация ОК отклонила Выезд 15.10. v2.4 — 06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
+/* ===== SOC v2.6 (24.10, решение владельца: сообщество «Игры во дворе» — предложение СО 2-ГО захода и первым в очереди (после уведомлений); НАГРАДА за вступление (п. 2.6.2 разрешает) — настройка SOC.init(…,{grp:{n,c,give}}), один раз на игрока, помним в S.soc.grw (облако); кнопки в ⚙ «📣 Новости двора» и «🔔 Сообщать о новом» (VKWebAppAllowMessagesFromGroup); статистика soc a:'grp' r:'rew', a:'msg' — см. «v2.6» ниже. v2.5 — 15.10: в Одноклассниках «Ещё игры» НЕТ — SOC.list() там пуст, open() сразу false, кнопка «🎲 Игры» прячется сама по SOC.can('more'); причина — VKWebAppOpenApp {app_id:<ID в ОК>, app_is_local:true} в ОК игру не открывает, модерация ОК отклонила Выезд 15.10. v2.4 — 06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
    Общий модуль для всех игр. Источник — ~/Projects/hobby-analytics/soc/soc.js (правки — только там, потом soc-sync.sh).
-   Правила VK: 2.6.2 — никаких наград за приглашение/«поделиться»/избранное/экран (разрешено лишь за вступление в сообщество —
-   в наших играх НЕ даём); 2.6.3 — само-предложения не в первую сессию, отказ помним, повтор не чаще раза в 30 дней, ≤3 раз.
+   Правила VK (ред. 17.03.2026): 2.6.2 — никаких наград за приглашение/«поделиться»/избранное/экран; за вступление в сообщество — можно
+   (с v2.6 даём, если игра передала grp:{n,c,give}; только ВКонтакте); 2.6.3 — само-предложения не в первую сессию, отказ помним, повтор не чаще раза в 30 дней, ≤3 раз.
    Покер (18+) в список не добавлять никогда. 12+ (Дурак, Козёл) — с пометкой «12+».
    Старый синтаксис: без optional chaining и nullish-оператора, без CSS-свойства inset. Нужны из игры: PLAT ('vk'|…), VK (мост после VKWebAppInit или null), vkSend(метод,параметры,мс).
    ОК (Одноклассники; та же игра VK, запущенная с vk_client=ok — модуль узнаёт сам, SOC.isOk): в ОК нет избранного и значка на экран,
@@ -1025,7 +1025,7 @@ function vkSend(method,params,ms){return Promise.race([window.vkBridge.send(meth
    okGroup — ID группы в ОК («Наше сообщество»), поле ok у игры в GAMES — её ID в ОК (с v2.5 не используется: «Ещё игр» в ОК нет вовсе — переход в другую игру
    там не работает ни на сайте, ни в приложениях; поле оставлено на случай, если ОК даст рабочий способ; вернуть — только с проверкой на живой площадке). */
 var SOC=(function(){
-  var GROUP=241793582,DAY=864e5,VER=2.5;
+  var GROUP=241793582,DAY=864e5,VER=2.6;
   // i — место в спрайте dvor.jpg (по 96 px), g — группа (c карты, p головоломки, s сказка, r спокойные), a — возраст,
   // off — где игры НЕТ в каталоге VK: 'all' — нигде, 'web' — нет на компьютере (desktop_web). Обновлять по platforms.md.
   // ok — ID этой игры в Одноклассниках (vk_ok_app_id). С v2.5 (15.10) в ОК «Ещё игр» нет вообще — поле сейчас не используется.
@@ -1050,7 +1050,7 @@ var SOC=(function(){
   var APP=+qp('vk_app_id')||0,PF=qp('vk_platform'),WEB=PF.indexOf('desktop')===0;
   // Одноклассники: vk_client=ok (и vk_platform с хвостом _ok); на маке — ?vk=1&ok=1. То же правило, что у константы OK в играх
   var OKP=/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search),OKWEB=PF.indexOf('web')>=0;
-  var st={},O={},T0=Date.now(),asked=false,homeOk=null,readyOn=false;
+  var st={},O={},T0=Date.now(),asked=false,askedK='',homeOk=null,readyOn=false;
   function tx(ru,en){return typeof LANG!=='undefined'&&LANG==='en'?en:ru;} // VK всегда по-русски; обёртка — по правилам игр
   function nop(){}
   function saveFn(){(O.save||nop)();}
@@ -1063,6 +1063,7 @@ var SOC=(function(){
   function can(k){if(!ok())return false;
     if(k==='more')return list(1).length>0;
     if(k==='ntf')return !OKP&&!ntfOn(); // уведомления — пока только ВКонтакте
+    if(k==='msg')return !OKP&&!(st.msg&&st.msg.d); // v2.6: сообщения от сообщества — только ВКонтакте, пока не разрешили
     if(!OKP)return k==='home'?!!homeOk:k==='fav'?!(st.fav&&st.fav.d):true;
     return k==='inv'||(k==='share'&&!!O.okLink)||(k==='grp'&&!!O.okGroup);}
   function me(){for(var i=0;i<N;i++)if(GAMES[i].id===APP)return GAMES[i];return null;}
@@ -1108,7 +1109,22 @@ var SOC=(function(){
   function share(){if(OKP&&!O.okLink)return Promise.resolve(false);
     return send('VKWebAppShare',{link:OKP?O.okLink:refOn()?REF.link():'https://vk.com/app'+APP}).then(function(){sx('shr','ok');return true;},function(e){sr('shr')(e);return false;});}
   function group(){if(OKP&&!O.okGroup)return Promise.resolve(false);
-    return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){if(r&&r.result)done('grp');sx('grp',r&&r.result?'ok':'no');return !!(r&&r.result);},function(e){sr('grp')(e);tried('grp');return false;});}
+    return send('VKWebAppJoinGroup',{group_id:OKP?O.okGroup:GROUP}).then(function(r){var y=!!(r&&r.result);if(y)done('grp');sx('grp',y?'ok':'no');if(y)grpRew();return y;},function(e){sr('grp')(e);if(askedK!=='grp')tried('grp');return false;});} // v2.6: отказ сразу после показа предложения — та же попытка (показ уже посчитан), не вторая
+  /* ===== v2.6 (24.10). Награда за вступление в сообщество и сообщения от сообщества =====
+     Награда — настройка SOC.init(…,{grp:{n:сколько (число или функция), c:'💰' (значок валюты), give:function(n){начислить n и обновить экран}, ok:'текст тоста' (необязательно)}}).
+     Только ВКонтакте (не ОК), только после VKWebAppJoinGroup с result:true (уже состоящий в группе тоже получает — VK вернёт result), один раз на игрока:
+     S.soc.grw={d:1} в сохранении игры; облако — через SOC.merge (как «сделано»). Модуль денег не знает — начисляет give() игры, потом сохраняет.
+     Статистика: soc {a:'grp', r:'rew', v:n}. Без grp у игры — наград нет, кнопки без «+N».
+     Сообщения: кнопка «🔔 Сообщать о новом» в ⚙ → VKWebAppAllowMessagesFromGroup {group_id:241793582}; разрешил — кнопка пропадает (S.soc.msg={d:1}).
+     Статистика: soc {a:'msg', r: ok|no|err}. Наград за сообщения нет (п. 2.6.2 не разрешает). В ОК, Яндексе, без моста — ничего этого нет. */
+  function grpN(){if(OKP||!O.grp||typeof O.grp.give!=='function'||(st.grw&&st.grw.d))return 0;var n=0;try{n=+(typeof O.grp.n==='function'?O.grp.n():O.grp.n)||0;}catch(e){}return n>0?Math.floor(n):0;} // n — число или функция (награда растёт с игрой, напр. Богатырь)
+  function grpC(){return O.grp&&O.grp.c||'💰';}
+  function grpPlus(){var n=grpN();return n?' — +'+n+' '+grpC():'';}
+  function grpRew(){var n=grpN();if(!n)return 0;st.grw={d:1};
+    try{O.grp.give(n);}catch(e){}saveFn();sx('grp','rew',0,{v:n});
+    toastFn(O.grp.ok||tx('Спасибо, что с нами! +'+n+' '+grpC(),'Thanks for joining! +'+n+' '+grpC()));return n;}
+  function msg(){if(OKP)return Promise.resolve(false);
+    return send('VKWebAppAllowMessagesFromGroup',{group_id:GROUP}).then(function(r){var y=!!(r&&r.result);if(y){done('msg');toastFn(tx('Готово — сообщим о новом','Done — we will let you know'));}sx('msg',y?'ok':'no');return y;},function(e){sr('msg')(e);return false;});}
   function open(g){if(OKP)return Promise.resolve(false); // v2.5: в ОК OpenApp игру не открывает (ни сайт, ни приложения) — не зовём
     return send('VKWebAppOpenApp',OKP?{app_id:g.ok,app_is_local:true}:{app_id:g.id,location:'from='+APP}).then(function(){return true;},function(){
     toastFn(tx('Найдите «'+g.t+'» в разделе «Игры»','Find "'+g.t+'" in the Games section'));return false;});}
@@ -1142,7 +1158,8 @@ var SOC=(function(){
     if(can('share'))b+=btn('share',tx('📤 Поделиться игрой','📤 Share the game'));
     if(can('fav'))b+=btn('fav',tx('⭐ В избранное','⭐ Add to favourites'));
     if(can('home'))b+=btn('home',tx('📲 На экран телефона','📲 Add to home screen'));
-    if(can('grp'))b+=btn('grp',tx('📣 Наше сообщество','📣 Our community'));
+    if(can('grp'))b+=btn('grp',tx('📣 Новости двора','📣 Yard news')+grpPlus());
+    if(can('msg'))b+=btn('msg',tx('🔔 Сообщать о новом','🔔 Tell me what is new'));
     if(O.ntf&&can('ntf'))b+=btn('ntf',O.ntf.s||tx('🔔 Напоминания от игры','🔔 Game reminders'));
     if(can('more'))b+=btn('more',tx('🎲 Ещё игры во дворе','🎲 More yard games'));
     return '<div class="soc-set">'+b+'</div>';}
@@ -1150,7 +1167,7 @@ var SOC=(function(){
   function bind(root,back){if(!root)return;var bs=root.querySelectorAll('[data-soc]');
     for(var i=0;i<bs.length;i++)bs[i].onclick=function(){var k=this.getAttribute('data-soc');
       if(k==='inv')invite();else if(k==='share')share();else if(k==='fav')fav().then(function(){if(back)back();});
-      else if(k==='home')home().then(function(){if(back)back();});else if(k==='ntf')ntf(0).then(function(){if(back)back();});else if(k==='grp')group();else if(k==='more')showMore(back);};}
+      else if(k==='home')home().then(function(){if(back)back();});else if(k==='ntf')ntf(0).then(function(){if(back)back();});else if(k==='grp')group().then(function(){if(back)back();});else if(k==='msg')msg().then(function(){if(back)back();});else if(k==='more')showMore(back);};}
 
   // --- окно «Ещё игры во дворе»: через modal() игры (O.modal) или своё лёгкое. back — куда вернуться по «Назад» ---
   function showMore(back){if(!can('more'))return;css();var G=list(6),spr=O.sprite||'js/dvor.jpg',h='';
@@ -1177,13 +1194,13 @@ var SOC=(function(){
     var nn=ntfDue()&&(wins||0)>=3?ntfN()+1:0,nt=nn?ntfText(nn):'';
     if(nn&&nt)o={k:'ntf',n:nn,t:nt,b:O.ntf.b||tx('🔔 Напоминать','🔔 Remind me'),ok:O.ntf.ok||'',run:function(){return ntf(nn);}};
     else if((st.ses||0)<2)return null; // остальные предложения — не в первую сессию (п. 2.6.3)
+    else if(can('grp')&&!OKP&&due('grp')){var gn=grpN();o={k:'grp',v:gn,t:tx('Новости и новые игры — в сообществе «Игры во дворе».','News and new games — in the "Yard Games" community.')+(gn?tx(' За вступление — +'+gn+' '+grpC()+'.',' Join and get +'+gn+' '+grpC()+'.'):''),b:tx('📣 Вступить','📣 Join')+grpPlus(),run:group};} // v2.6: со 2-го захода, первым (было: с 4-го, последним)
     else if(can('fav')&&due('fav'))o={k:'fav',t:tx('Добавьте игру в избранное — будет всегда под рукой.','Add the game to favourites — always at hand.'),b:tx('⭐ В избранное','⭐ Add to favourites'),run:fav};
     else if(can('home')&&st.ses>=3&&due('home'))o={k:'home',t:tx('Значок игры на экране — заходить в одно касание.','A game icon on your screen — one tap to play.'),b:tx('📲 На экран телефона','📲 Add to home screen'),run:home};
     else if(st.ses>=3&&(wins||0)>=5&&due('inv'))o={k:'inv',t:tx('Позовите друзей — будет с кем посоревноваться.','Invite friends — someone to compete with.'),b:tx('👥 Позвать друзей','👥 Invite friends'),run:invite};
-    else if(can('grp')&&st.ses>=4&&due('grp'))o={k:'grp',t:tx('Новости и новые игры — в сообществе «Игры во дворе».','News and new games — in the "Yard Games" community.'),b:tx('📣 Наше сообщество','📣 Our community'),run:group};
     else{var x=st.more||{};if(!x.t||Date.now()-x.t>7*DAY){var g=list(1)[0];
       if(g)o={k:'more',t:tx('Попробуйте ещё: «'+g.t+'»'+(g.a>=12?' ('+g.a+'+)':'')+'.','Try another one: "'+g.t+'".'),b:tx('🎲 Открыть','🎲 Open'),run:function(){return open(g);}};}}
-    if(!o)return null;asked=true;sx(o.k,'show',o.n,o.k==='ntf'?{d:ntfDay()}:null);
+    if(!o)return null;asked=true;askedK=o.k;sx(o.k,'show',o.n,o.k==='ntf'?{d:ntfDay()}:null);
     if(o.k==='more'){st.more={t:Date.now()};saveFn();}
     else if(o.k==='ntf'){st.ntf={n:o.n,t:nowFn()};saveFn();}
     else tried(o.k);return o;}
@@ -1287,7 +1304,7 @@ var SOC=(function(){
         else if(x.a===1)e.ls=x.v;else e.ps=x.v;}} // ok — принято; off/bad/e… — это значение больше не шлём, следующее (больше) попробуем
     saveFn();if(again)evWait=Date.now()+120000;evPlan(20000);}
 
-  return {v:VER,ok:ok,isOk:OKP,can:can,init:init,ready:ready,merge:merge,fav:fav,home:home,invite:invite,share:share,group:group,open:open,list:list,
+  return {v:VER,ok:ok,isOk:OKP,can:can,init:init,ready:ready,merge:merge,fav:fav,home:home,invite:invite,share:share,group:group,msg:msg,grpN:grpN,open:open,list:list,
     settingsHtml:settingsHtml,bind:bind,showMore:showMore,offer:offer,games:GAMES,
     ntf:ntf,ntfOn:ntfOn,ntfDue:ntfDue,ntfDay:ntfDay,level:level,score:score,mission:mission,missionKnown:missionKnown,evOn:evOn,evFlush:evFlush};
 })();
@@ -3531,6 +3548,8 @@ if(!/[?&]demo=/.test(location.search)&&!(S.levelsDone>0)&&S.unlocked===1&&!Objec
 /* vy-tech: миссии VK, лента друзей, таблица — события шлёт SOC в функцию vk-pay (?op=vkev); условия и номера миссий — js/vkm-vy.js (VKM_VY_ID). На маке адрес можно подменить ?evurl= */
 const EV_URL=(()=>{const m=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]evurl=([^&#]*)/.exec(location.search);return m?decodeURIComponent(m[1]):'https://functions.yandexcloud.net/d4e7egf62asn7suf30m0?op=vkev';})();
 SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn noenter',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,now:()=>nowMs(),evUrl:EV_URL,evId:c=>typeof VKM_VY_ID==='object'&&VKM_VY_ID[c]||0,
+  // grp (24.10, SOC v2.6): за вступление в сообщество «Игры во дворе» — разово 40 💰 (= цена подсказки), один раз на игрока (S.soc.grw, облако); только VK, в ОК/Яндексе нет. Правило VK 2.6.2 это разрешает
+  grp:{n:40,c:'💰',give:n=>{S.coins+=n;ern('quest',n);updCoins();}},
   // ntf (06.10): разрешение на напоминания VK — спрашивает баба Шура, до 3 раз за всё время (1-й, 3-й, 7-й день игрока — правила в модуле SOC), каждый раз свой повод. Наград нет. В ОК, Яндексе и без моста модуль молчит сам
   ntf:{t:n=>ntfText(n),
     b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Договорились! Часто дёргать не буду.','Deal! I will not bother you often.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}});updMore(); /* okGroup в SOC не передаём: в ОК VKWebAppJoinGroup с номером группы ОК ничего не делает (проверено вживую 06.10) — группа открывается ссылкой в «Об игре» */

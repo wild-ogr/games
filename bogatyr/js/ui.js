@@ -798,6 +798,7 @@ function firstStart(){if(/[?&](bot|promo)\b/.test(location.search))return;const 
   if(QS.has('promo')){const b=document.createElement('script');b.src='tools/promo.js';document.head.appendChild(b);} // картинки для магазина (только локально)
   // «Друзья и игры» (общий модуль SOC в core.js; только VK с мостом): сессии, кнопка 🎲, строка в ⚙
   SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{showModal(h);return $('mBody');},close:()=>hideModal(),okLink:OK_LINK,
+    grp:{n:()=>giftAmt(),c:'💰',give:n=>{S.gold+=n;ern('quest',n);save();setGold();}}, /* grp (24.10, SOC v2.6): за вступление в сообщество «Игры во дворе» — разово золото «Дара Жар-птицы» (giftAmt: 100 + 50 за каждую пройденную землю, 100–500), один раз на игрока (S.soc.grw, облако); только VK. Правило VK 2.6.2 разрешает */
     evUrl:EV_URL,evId:c=>typeof VKM_ID==='object'&&VKM_ID[c]||0, /* vkm: события VK (уровень, очки, миссии) — см. js/vkm-chk.js */
     now:()=>nowMs(),ntf:{t:n=>ntfText(n),b:L('🔔 Напоминать','🔔 Remind me'),ok:L('Уговор! Попусту тревожить не стану.','Deal! I won’t bother you for nothing.'),s:L('🔔 Включить напоминания','🔔 Turn on reminders')}}); /* ntf: разрешение на напоминания VK (SOC v2.4) — вопрос в итогах победы, см. openResult */
   $('moreBtn').onclick=()=>{SND.click();STAT.ev('mod',{m:'soc',a:'more'});SOC.showMore();};updMore();
