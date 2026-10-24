@@ -21,9 +21,11 @@ KR.prog=function(W){const k=kOf(W),D=k&&data(k.id);if(!D)return [];const mon=W.m
     return {k:s.k,s,ok,now,need};});};
 KR.bits=W=>{let b=0;KR.prog(W).forEach((x,i)=>{if(i===0||x.ok)b|=1<<i;});return b;};
 const SK=()=>B2.s('k');
-KR.total=()=>{const s=SK().st||{};let n=0;for(const k in s)n+=nb(s[k]);return n;};
-KR.open=id=>{const D=data(id);if(!D)return false;const n=D.need||{},st=SK().st||{};if(n.st&&KR.total()<n.st)return false;if(n.all&&n.all.some(x=>!((st[x]||0)&1)))return false;return true;};
-KR.next=()=>{const s=SK(),Ls=KR.list().filter(KR.open);if(s.nx&&Ls.indexOf(s.nx)>=0)return s.nx;const st=s.st||{};
+/* b2-fix15 Б4: в окне IPO и при выборе следующего края звёзды текущего края (IPO гарантирована) уже считаются — иначе после Якутии снова Якутия */
+KR.stP=()=>{const st=Object.assign({},SK().st||{}),W=root.GAME&&GAME.W,k=kOf(W);try{if(k&&k.id&&E.ipoReady(W))st[k.id]=(st[k.id]||0)|KR.bits(W);}catch(e){}return st;};
+KR.total=p=>{const s=p?KR.stP():SK().st||{};let n=0;for(const k in s)n+=nb(s[k]);return n;};
+KR.open=(id,p)=>{const D=data(id);if(!D)return false;const n=D.need||{},st=p===true?KR.stP():SK().st||{};if(n.st&&KR.total(p===true)<n.st)return false;if(n.all&&n.all.some(x=>!((st[x]||0)&1)))return false;return true;};
+KR.next=()=>{const s=SK(),Ls=KR.list().filter(x=>KR.open(x,true));if(s.nx&&Ls.indexOf(s.nx)>=0)return s.nx;const st=KR.stP();
   return Ls.find(x=>!((st[x]||0)&1))||Ls.find(x=>nb(st[x]||0)<3)||Ls[0]||null;};
 /* ================= IPO: звёзды старого края, новый холдинг — в выбранном крае ================= */
 if(root.GAME&&GAME.doIpo&&!GAME.doIpo.kr){const d0=GAME.doIpo;GAME.doIpo=function(){const W0=GAME.W;if(!GAME.ipoReady())return d0.apply(this,arguments);
@@ -96,8 +98,8 @@ function today(ctx){const W=ctx.W||GAME.W;if(!W||!W.ned)return '';icons();const 
 const CN={money:['💸',['Дорогие деньги','Dear money'],['ставка банка +3 п.','bank rate +3 pts']],north:['🚛',['Северный завоз','Northern haul'],['дороги ×1,4, разведка +20 %','routes ×1.4, exploration +20%']],green:['🌲',['Бережный надзор','Strict eco-watch'],['постоянные рудников +15 %','mine fixed costs +15%']]};
 function ipo(ctx){const W=ctx.W||GAME.W;if(!W)return '';const Ls=KR.list();if(!Ls.length)return '';const s=SK(),nx=KR.next(),D=data(nx);
   let h=`<div class="card" style="text-align:left"><h3 style="margin:0 0 4px">🗺 ${T('Куда дальше? Новый холдинг — в новом крае','Where next? The new holding — in a new region')}</h3>`;
-  for(const id of Ls){const X=data(id),op=KR.open(id),st=(s.st||{})[id]||0;
-    const need=X.need&&X.need.st?T(`нужно ★ ${X.need.st} (у вас ${KR.total()})`,`needs ★ ${X.need.st} (you have ${KR.total()})`):X.need&&X.need.all?T('нужно IPO во всех краях','needs an IPO in every region'):'';
+  for(const id of Ls){const X=data(id),op=KR.open(id,true),st=(s.st||{})[id]||0;
+    const need=X.need&&X.need.st?T(`нужно ★ ${X.need.st} (у вас ${KR.total(true)})`,`needs ★ ${X.need.st} (you have ${KR.total(true)})`):X.need&&X.need.all?T('нужно IPO во всех краях','needs an IPO in every region'):'';
     h+=`<button class="kr-pick noenter${id===nx?' on':''}${op?'':' lock'}" style="--kr:${X.col}" ${op?`data-b2="krai:pick:${id}"`:'disabled'}><b>${op?'':'🔒 '}${t2(X.n)}</b> ${star(st&1)}${star(st&2)}${star(st&4)}<br>
       <span>${t2(X.sub)}</span>${op?`<br><small class="mut">${t2(X.rule.n)}: ${esc(t2(X.rule.t).split('. ')[0])}. ${T('Капитал','Capital')} ${M(X.cap||800e6+200e6*(W.rep+1))}</small>`:`<br><small class="mut">${need}</small>`}</button>`;}
   if(D&&(D.cond||[]).length){const c=s.c||[];h+=`<p style="margin:10px 0 2px"><b>${T('Условия холдинга','Holding conditions')}</b> <span class="mut">${T('— по желанию: сложнее, но каждое +15 % долей основателя при следующем IPO','— optional: harder, but each gives +15% founder shares at the next IPO')}</span></p>`;
@@ -167,7 +169,7 @@ function openEmp(){if(typeof modal!=='function')return;const Ls=KR.list(),s=SK()
   modal(h);B2.ev('krai','emp',{n:KR.total()});}
 KR.openEmp=openEmp;
 function click(a,arg,el){const s=SK();
-  if(a==='pick'&&KR.open(arg)){s.nx=arg;s.c=(s.c||[]).filter(c=>(data(arg).cond||[]).indexOf(c)>=0);if(typeof SND!=='undefined'&&SND.tap)SND.tap();rerender(el);if(typeof save==='function')save();}
+  if(a==='pick'&&KR.open(arg,true)){s.nx=arg;s.c=(s.c||[]).filter(c=>(data(arg).cond||[]).indexOf(c)>=0);if(typeof SND!=='undefined'&&SND.tap)SND.tap();rerender(el);if(typeof save==='function')save();}
   else if(a==='cond'){const c=s.c||(s.c=[]),i=c.indexOf(arg);if(i>=0)c.splice(i,1);else c.push(arg);if(typeof SND!=='undefined'&&SND.tap)SND.tap();rerender(el);if(typeof save==='function')save();}
   else if(a==='emp'){if(typeof SND!=='undefined'&&SND.tap)SND.tap();openEmp();}
   else if(a==='x'){if(typeof hideModal==='function')hideModal();}}

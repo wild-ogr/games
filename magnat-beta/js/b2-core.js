@@ -71,8 +71,8 @@ const HAS_DOM=typeof document!=='undefined'&&typeof window!=='undefined';
 const qs=HAS_DOM&&location&&location.search||'';
 const qlist=k=>{const m=new RegExp('[?&]'+k+'=([^&#]*)').exec(qs);return m?decodeURIComponent(m[1]).split(',').map(s=>s.trim()).filter(Boolean):[];};
 const Q_OFF=qlist('off'),Q_ON=qlist('on');
-const IDS=['st','first','home','rival','quarry','nedra','krai','krai2','story','mgcore','mg1','mg2','event','fest','cup','eco','polish','team','juice','vkt'];
-const SK={z:'st',f:'first',h:'home',r:'rival',q:'quarry',n:'nedra',k:'krai',K:'krai2',s:'story',m:'mgcore',x:'mg1',y:'mg2',e:'event',v:'fest',c:'cup',o:'eco',p:'polish',t:'team',j:'juice',w:'vkt'};
+const IDS=['st','first','home','rival','quarry','nedra','krai','krai2','story','mgcore','mg1','mg2','event','fest','cup','eco','polish','team','juice','vkt','qol'];
+const SK={z:'st',f:'first',h:'home',r:'rival',q:'quarry',n:'nedra',k:'krai',K:'krai2',s:'story',m:'mgcore',x:'mg1',y:'mg2',e:'event',v:'fest',c:'cup',o:'eco',p:'polish',t:'team',j:'juice',w:'vkt',Q:'qol'};
 const BAD_KEYS=['$n','$k','$s','$m','$i','$d','$pk'];
 const isObj=o=>o!==null&&typeof o==='object'&&!Array.isArray(o);
 const safe=(f,...a)=>{try{return f(...a);}catch(e){try{console.error('B2',e);}catch(x){}return undefined;}};
@@ -96,7 +96,8 @@ function need(f){f=String(f);if(!/^b2-[\w.-]+\.js$/.test(f))return Promise.rejec
 /* 3. шина */
 const subs={};
 function on(n,fn){(subs[n]=subs[n]||[]).push(fn);}
-function emit(n,...a){for(const fn of (subs[n]||[]).slice())safe(fn,...a);}
+function cpIn(){return !!(root.ECON&&root.ECON.cpIn);}   /* b2-fix15 Б3: прогноз денег (тень) — без событий и статистики */
+function emit(n,...a){if(cpIn())return;for(const fn of (subs[n]||[]).slice())safe(fn,...a);}
 
 /* 4. гнёзда и нажатия */
 const slots={},clicks={};
@@ -152,7 +153,7 @@ function mergeS(st,d,newer){if(!st||!isObj(d))return;for(const k in d){if(!/^b2.
 const MQ={mgcore:20,mg1:20,mg2:20,event:15,fest:15,krai:15,rival:8},vkmL={};   // b2-merge: krai 15, rival 8 (план §5)
 function vkm(id,list){if(Array.isArray(list))vkmL[id]=list;}
 function ev0(n,p){try{if(root.STAT&&STAT.ev)STAT.ev(n,p);}catch(e){}}
-function ev(id,n,p){ev0(('b2'+id+'_'+n).slice(0,16),p);}
+function ev(id,n,p){if(cpIn())return;ev0(('b2'+id+'_'+n).slice(0,16),p);}
 
 /* 11. STAT v1.6: плавность (frame — по кадрам браузера, пока время идёт), долгая смена дня и переход экрана (slow ≥ 300 мс), прогресс (pl, prg раз за загрузку) */
 const CH=['gig','small','mid','quarry','nedra'];let plN=0,dayN=0,dayA=0,dayB=0;

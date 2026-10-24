@@ -22,6 +22,7 @@
     h2   {h,c,cr,fm,pk,dv,rep}  начало холдинга №N: деньги, 💎, прошлых холдингов, уровней улучшений, дивиденды, репутация
     ruin {m,db,c,t} / rb {m,bk,pay,t} / san {m,db,t}   разорение (окно отката), откат, принятая санация
     spd  {v,was,t}              скорость/пауза: 0 — своя ⏸, 1, 2, 4
+    x1   {m,ch,h,s,x}            b2-fix15: за игровой месяц — глава, холдинг, реальных секунд (s) и сколько было бы при ×1 (x: на ×2/×4 секунда хода = 2/4 с)
     tm   {m,run,fx,win,rd,adv,hl,ps} за игровой месяц (секунды при открытой вкладке): шло (из них fx — на ×2/×4), стояло: окно, «читаю», Людмила/обучение/пролог/словарик, прочие hold, пауза (своя/площадка)
     sys  {m,sz,sv,svx,dom,ob,lt,ltm} раз в игровой месяц: размер сейва, save() ср./макс. мс, узлов DOM, точек+объектов, длинных задач и худшая (мс)
     lt   {ms,w,t,lg}            длинная задача ≥ 300 мс (≤ 40 за сеанс): где (экран/окно); lg=1 — замер по опозданию таймера (нет longtask)
@@ -152,13 +153,13 @@ GAME.on('rollback',x=>{try{ev('rb',{m:x&&x.m,bk:x&&x.back,pay:String(x&&x.pay||'
 GAME.on('reset',()=>setTimeout(()=>hd(1),300));
 
 /* ---------- время, скорость, телефон, словарик (раз в 1 с) ---------- */
-const tm={};let spd0=spd(),ph=null,gl=null;
+const tm={};let spd0=spd(),ph=null,gl=null,x1s=0;
 function cat(){const w=G();if(!w)return '';let run=false;try{run=GAME.running();}catch(e){}
   if(run)return spd()>1?'fx':'run';if(mOn())return 'win';
   try{if(GAME.hold&&GAME.hold.size){const h=Array.from(GAME.hold)[0];return h==='read'?'rd':/^(advb|tut|pro|gl)$/.test(h)?'adv':'hl';}}catch(e){}
   return 'ps';}
 setInterval(()=>{try{
-  if(!document.hidden){const c=cat();if(c)tm[c]=(tm[c]||0)+1;}
+  if(!document.hidden){const c=cat();if(c){tm[c]=(tm[c]||0)+1;x1s+=c==='fx'?spd():1;}}   /* b2-fix15: x1s — те же секунды, если бы играл на ×1 */
   const v=spd();if(v!==spd0){ev('spd',{v,was:spd0,t:day()});spd0=v;}
   const P=window.PHONE;if(P){const on=!!P.isOpen;
     if(on&&!ph){let u=0,q=0;try{u=P.unread();q=P.wait?P.wait():0;}catch(e){}ph={t0:Date.now(),u,q,c:N.clk};}
@@ -198,7 +199,8 @@ GAME.on('close',rep=>{try{const m=rep&&rep.m;let tot=0;for(const k in tm)tot+=tm
       const w=G();let ob=0;try{ob=(w.obj||[]).length+(w.biz||[]).length;}catch(e){}
       ev('sys',{m,sz:lsz(),sv:svN?Math.round(svS/svN):0,svx:Math.round(svX),dom:document.getElementsByTagName('*').length,ob,lt:ltN,ltm:ltX});
       if(cw.ok||cw.er)ev('cw',{ok:cw.ok,er:cw.er,ms:Math.round(cw.ms/Math.max(1,cw.ok+cw.er)),sz:lsz(),m});
-      for(const k in tm)delete tm[k];svN=svS=svX=0;ltN=ltX=0;cw.ok=cw.er=cw.ms=0;}
+      {const w=G();ev('x1',{m,ch:stI(),h:w&&w.hold||1,s:tot,x:Math.round(x1s)});}   /* b2-fix15: «если бы при ×1» — реальные секунды месяца и они же при ×1 */
+      for(const k in tm)delete tm[k];x1s=0;svN=svS=svX=0;ltN=ltX=0;cw.ok=cw.er=cw.ms=0;}
     hd(1);}catch(e){}});
 
 /* ---------- ошибки со стеком ---------- */

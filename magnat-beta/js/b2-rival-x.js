@@ -11,7 +11,7 @@ const E=ECON,_=E._,MAIN=['beav','bear','ryad'];
 const LIKE={beav:{kiosk:3,shaw:3,coffee:2,flow:2,bakery:2,truckf:2,vend:1,canteen:1},bear:{wash:3,sto:3,tire:3,club:2,canteen:2,clean:2,gazel:2,barber:1},
   ryad:{kiosk:2,pharm:3,hard:3,bakery:2,pvz:3,vend:2,clean:1,barber:2,flow:1}};
 const TGT={beav:60,bear:55,ryad:50};   // ‰ — к чему растёт фирма в рынке без ответа игрока
-const DAYS=20;
+const DAYS=60;   /* b2-qol (M52): срок ответа соперникам — 2 игровых месяца (было 20 дней) */
 function hash(s){let h=2166136261;s=String(s);for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;}
 const rnd=(W,s)=>hash((W.seed|0)+'|'+W.t+'|'+s);
 const cap=()=>Math.round(1000*(B2.eco?B2.eco.k('rival.share_max',.15):.15));

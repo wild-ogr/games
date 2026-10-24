@@ -42,6 +42,9 @@ const CSS=`
 body.calm .b2mv{display:none}
 @media (prefers-reduced-motion:reduce){.b2mv{display:none}}
 .b2hit{position:absolute;bottom:0;padding:0;margin:0;border:0;background:transparent;border-radius:12px;min-height:48px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.b2hit.rvmv{box-shadow:inset 0 0 0 3px #e53935;animation:b2rv 1s ease-in-out infinite alternate}@keyframes b2rv{from{background:rgba(229,57,53,.05)}to{background:rgba(229,57,53,.28)}}
+.b2sv.still .b2hit.rvmv{animation:none;background:rgba(229,57,53,.18)}
+.b2hi{position:absolute;left:8px;right:8px;top:8px;background:#fff;border-radius:14px;padding:8px 12px;font:600 16px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1c274c;box-shadow:0 4px 14px -6px rgba(0,0,0,.4);border:2px solid #3359f0}
 .b2hit:active,.b2hit:focus-visible{background:rgba(255,255,255,.22);outline:0;box-shadow:inset 0 0 0 2px rgba(51,89,240,.45)}
 .b2pp{position:absolute;left:0;top:0;font:900 14px/1 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0a7a3a;white-space:nowrap;pointer-events:none;opacity:0;will-change:transform,opacity;
   text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}
@@ -75,9 +78,13 @@ function rivals(W,ch){   /* договор RIVAL a2053f2: B2.rivals.street(W,г�
 /* ---------- сборка сцены ---------- */
 function ctxOf(W,w,h){const ch=W.st==='gig'?'gig':W.st==='small'?'small':W.st==='quarry'?'quarry':'mid';let d='';try{const n=new Date(typeof nowMs==='function'?nowMs():Date.now());d=('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2);}catch(e){}
   return {W,ch,ses:ses(W),date:d,eve:tod()!=='day',tod:dk()?'night':tod(),w,h};}
-function outlets(W,ch){const bz=(W.biz||[]).filter(b=>!SKIP[b.t]&&KS[b.t]);const att=b=>{try{return !!(BIZUI.h&&BIZUI.h.bizDot&&BIZUI.h.bizDot(W,b));}catch(e){return false;}};
-  if(ch==='small'||ch==='gig'){return bz.map(b=>({k:'pt',id:b.id,t:b.t,n:1,bld:b.st==='b',left:b.left|0,bad:att(b)||(b.down>0),off:b.down>0,pm:b.st==='w'?lastPm(b):null}));}
-  const g={};for(const b of bz){const x=g[b.t]||(g[b.t]={k:'grp',id:b.t,t:b.t,n:0,bld:0,bad:false,off:false,pm:0,first:b.id});x.n++;if(b.st==='b')x.bld++;if(att(b))x.bad=true;const p=b.st==='w'?lastPm(b):null;if(p)x.pm+=p;}
+/* b2-fix15: «＋» на витрине — точку можно улучшить (окупится ≤ 18 мес., деньги есть сверх запаса); кэш на день */
+const UPC={k:''};function upSet(W){const k=W.t+'|'+(W.biz||[]).length+'|'+Math.round(W.cash/1e4);if(UPC.k===k&&UPC.W===W)return UPC.s;const s={};
+  try{if(E&&E.lvGain){const fr=W.cash-(E.ptUpRes?E.ptUpRes(W):0);for(const b of W.biz||[]){if(b.st!=='w')continue;const g=E.lvGain(W,b);if(g&&g.g>0&&g.pay<=18&&g.x&&g.x.c<=fr)s[b.id]=1;}}}catch(e){}
+  UPC.k=k;UPC.W=W;UPC.s=s;return s;}
+function outlets(W,ch){const bz=(W.biz||[]).filter(b=>!SKIP[b.t]&&KS[b.t]);const us=upSet(W);const att=b=>{try{return !!(BIZUI.h&&BIZUI.h.bizDot&&BIZUI.h.bizDot(W,b));}catch(e){return false;}};
+  if(ch==='small'||ch==='gig'){return bz.map(b=>({k:'pt',id:b.id,t:b.t,n:1,bld:b.st==='b',left:b.left|0,bad:att(b)||(b.down>0),up:!!us[b.id],off:b.down>0,pm:b.st==='w'?lastPm(b):null}));}
+  const g={};for(const b of bz){const x=g[b.t]||(g[b.t]={k:'grp',id:b.t,t:b.t,n:0,bld:0,bad:false,off:false,pm:0,first:b.id});x.n++;if(b.st==='b')x.bld++;if(att(b))x.bad=true;if(us[b.id])x.up=true;const p=b.st==='w'?lastPm(b):null;if(p)x.pm+=p;}
   return Object.keys(g).map(k=>{const x=g[k];x.bld=x.bld>=x.n;return x;});}
 /* какие витрины влезут: проблемные → строящиеся → по прибыли; на улице — в постоянном порядке (по id), чтобы не «прыгали» */
 function pick(list,n){const sc=x=>(x.bad?3e12:0)+(x.bld?2e12:0)+(x.pm||0);const top=list.slice().sort((a,b)=>sc(b)-sc(a)).slice(0,n);
@@ -152,7 +159,7 @@ function shop(c,p,o,x,w,gy,rv){const kk=KS[o.t]||['','','#6b7685','s'],form=rv?'
     s=`<g opacity=".55">${s}</g>`+sc+`<rect x="${x+w/2-25}" y="${top+4}" width="50" height="15" rx="7.5" fill="#fff" stroke="#e0a030" stroke-width="1.4"/><text x="${x+w/2}" y="${top+14.6}" font-size="8.8" font-weight="800" fill="#8a5a00" text-anchor="middle" font-family="system-ui,sans-serif">${esc(o.left?LL('ещё ','in ')+o.left+LL(' дн.',' d'):LL('СКОРО','SOON'))}</text>`;}
   if(o.off&&!o.bld)s+=`<rect x="${x+w/2-22}" y="${gy-30}" width="44" height="13" rx="3" fill="#fff" stroke="#c62828"/><text x="${x+w/2}" y="${gy-20.6}" font-size="8" font-weight="900" fill="#c62828" text-anchor="middle" font-family="system-ui,sans-serif">${esc(LL('ЗАКРЫТО','CLOSED'))}</text>`;
   if(o.n>1)s+=`<g><rect x="${x+w-31}" y="${gy-19}" width="28" height="17" rx="8.5" fill="#fff" stroke="${col}" stroke-width="1.6"/><text x="${x+w-17}" y="${gy-6.8}" font-size="10.5" font-weight="900" fill="${col}" text-anchor="middle" font-family="system-ui,sans-serif">×${o.n}</text></g>`;
-  if(o.bad&&!o.bld)s+=badge(x+11,top+1,'!');
+  if(o.bad&&!o.bld)s+=badge(x+11,top+1,'!');else if(o.up&&!o.bld)s+=badge(x+11,top+1,'+','#2e7d32');   /* b2-fix15 */
   return {s,top};}
 function moreLot(x,w,gy,n){return `<g><rect x="${x+8}" y="${gy-44}" width="${w-16}" height="38" rx="12" fill="#fff" opacity=".92" stroke="#c9d3df"/><text x="${x+w/2}" y="${gy-21}" font-size="14" font-weight="900" fill="#3359f0" text-anchor="middle" font-family="system-ui,sans-serif">+${n}</text><text x="${x+w/2}" y="${gy-10}" font-size="8" fill="#4f5d72" text-anchor="middle" font-family="system-ui,sans-serif">${esc(LL('ещё','more'))}</text></g>`;}
 function home5(c,p,x,gy,w,r){const bh=78,top=gy-bh;let s=`<rect x="${x}" y="${top}" width="${w}" height="${bh}" rx="3" fill="#e8dccb" stroke="#cdbfa9"/>`;   /* пятиэтажка с подъездом */
@@ -186,7 +193,7 @@ function scene(c){const W=c.W,w=c.w,h=c.h,p=PAL[c.tod]||PAL.day,gy=h-34,seed=hu(
   const LW=w<420?Math.max(62,Math.floor((w-8)/5)):w<760?78:88,nL=Math.max(3,Math.floor((w-8)/LW));
   const r=rng(seed);let row=[];
   if(c.ch==='gig'){row=[{k:'home'}];if((W.biz||[]).length)row=row.concat(pick(outlets(W,'small'),nL-2));}
-  else{const ol=outlets(W,c.ch),rv=rivals(W,c.ch),nR=Math.min(rv.length,nL>=6?2:1),lotN=Math.min(lots.length,1);let free=nL-nR-lotN;
+  else{const ol=outlets(W,c.ch),rv=rivals(W,c.ch).sort((a,b)=>(b.id===rvMv(W))-(a.id===rvMv(W)))/* b2-fix15: соперник с ходом — на виду */,nR=Math.min(rv.length,nL>=6?2:1),lotN=Math.min(lots.length,1);let free=nL-nR-lotN;
     const more=ol.length>free;if(more)free--;const ours=pick(ol,Math.max(1,free));row=ours.slice();
     rv.slice(0,nR).forEach((x,i)=>{row.splice(Math.min(row.length,1+i*3),0,{k:'rv',id:x.id,lab:(x.sg||x.nm.split(/\s/)[0]||x.nm).toUpperCase().slice(0,9),col:x.col,nm:x.nm,stub:x.stub,live:x.live,t:''});});
     lots.slice(0,lotN).forEach(x=>row.push({k:'lot',it:x}));
@@ -204,7 +211,7 @@ function scene(c){const W=c.W,w=c.w,h=c.h,p=PAL[c.tod]||PAL.day,gy=h-34,seed=hu(
     else if(o.k==='empty'){fr+=busStop(x+8,gy)+person(x+20,gy,'#3a7bd5')+person(x+30,gy,'#d4a017');hits.push({x,w:ww,a:'home:open',lab:LL('Открыть первое дело','Open your first business')});}
     else if(o.k==='more'){fr+=moreLot(x,ww,gy,o.n);hits.push({x,w:ww,a:'home:list',lab:LL('Все точки','All outlets')+': +'+o.n});}
     else if(o.k==='lot'){const it=o.it;fr+=`<g transform="translate(${x},${gy-80})">${it.svg||''}</g>`+(it.lab?sign(x+6,gy-16,ww-12,it.lab,it.col||'#3a7a5a',9):'');if(it.tap)hits.push({x,w:ww,a:it.tap,lab:it.lab||''});}
-    else if(o.k==='rv'){const z=shop(c,p,{id:o.id,t:'',col:o.col,lab:o.lab,n:1},x,ww,gy,true);fr+=z.s;hits.push({x,w:ww,a:o.live?'rival:open:'+o.id:'home:rv:'+o.id,lab:LL('Соперник: ','Rival: ')+o.nm});}
+    else if(o.k==='rv'){const z=shop(c,p,{id:o.id,t:'',col:o.col,lab:o.lab,n:1},x,ww,gy,true);fr+=z.s;hits.push({x,w:ww,a:o.live?'rival:open:'+o.id:'home:rv:'+o.id,lab:LL('Соперник: ','Rival: ')+o.nm,rv:rvMv(W)===o.id});}
     else{const z=shop(c,p,o,x,ww,gy,false);fr+=z.s;const nm=(window.BIZUI&&BIZUI.h&&BIZUI.h.bn?BIZUI.h.bn(o.t):o.t)+(o.n>1?' × '+o.n:'');
       hits.push({x,w:ww,a:o.k==='grp'?'home:grp:'+o.t:'home:pt:'+o.id,lab:nm+(o.bld?LL(' — строится',' — being built'):o.bad?LL(' — нужно внимание',' — needs attention'):'')});
       const pm=o.k==='grp'?o.pm:o.pm;if(!o.bld&&pm>0&&(!best||pm>best.pm))best={pm,x:x+ww/2,y:z.top-12,n:o.n||1};}
@@ -236,19 +243,22 @@ function keyOf(c,W){const ol=(W.biz||[]).map(b=>b.t+(b.st==='b'?'b'+Math.ceil((b
   let rv='';try{rv=rivals(W,c.ch).map(x=>x.id+x.n).join(',');}catch(e){}
   try{if(B2.eco&&B2.eco.mec)rv+='|'+(B2.eco.mec(W)||[]).map(m=>m.k).join(',');}catch(e){}
   let at='';try{if(BIZUI.h&&BIZUI.h.bizDot)at=(W.biz||[]).filter(b=>BIZUI.h.bizDot(W,b)).map(b=>b.id).join(',');}catch(e){}
-  const eq=W.me&&W.me.eq&&W.me.eq.bike?'b':'';
-  return [c.ch,c.ses,c.tod,c.w,c.h,ol,it,rv,at,eq,LANG,R.scene.length].join('|');}
+  const eq=W.me&&W.me.eq&&W.me.eq.bike?'b':'';const fx=Object.keys(upSet(W)).join(',')+'|'+(rvMv(W)||'');   /* b2-fix15 */
+  return [c.ch,c.ses,c.tod,c.w,c.h,ol,it,rv,at,eq,LANG,R.scene.length,fx].join('|');}
+function rvMv(W){const m=W.b2&&W.b2.rival&&W.b2.rival.mv;return m?m.f:'';}
+function hiH(z){const s=B2.s('h');if(s.hi||z.hits.length<2)return '';s.hi=1;try{if(typeof save==='function')setTimeout(save,50);}catch(e){}B2.ev('home','hi',{});   /* b2-fix15: при первом показе — подсказка Людмилы */
+  setTimeout(()=>{const e=document.querySelector('.b2hi');if(e)e.remove();},15000);return `<div class="b2hi" onclick="this.remove()">👩‍💼 ${esc(LL('Людмила: нажмите на витрину — откроется точка. «!» — нужно внимание, «+» — можно улучшить.','Lyudmila: tap a shop window to open the outlet. “!” needs attention, “+” can be upgraded.'))}</div>`;}
 function draw(el,W){const box=document.getElementById('b2St');if(!box)return;
   const iw=innerWidth+'|'+(S.bigF|0)+'|'+document.documentElement.className;let wv=box.firstElementChild&&draw.iw===iw?draw.w:0;   /* ширину читаем только при смене окна — без лишней вёрстки в смене дня */
   if(!wv){wv=Math.round(box.clientWidth);if(!wv)return;draw.iw=iw;draw.w=wv;}const h=hgt(wv),c=ctxOf(W,wv,h),k=keyOf(c,W);
   const sv=box.firstElementChild;if(sv&&sv.__k===k&&!ST.dirty)return;ST.dirty=0;
   const z=scene(c);if(!z)return;
-  let hs='';for(const t of z.hits){const lw=Math.max(48,t.w);hs+=`<button class="b2hit noenter" style="left:${Math.round(t.x)}px;width:${Math.round(lw)}px;height:${t.y?72:Math.round(h-30)}px;bottom:${t.y?34:30}px" data-b2="${esc(t.a)}" aria-label="${esc(t.lab)}"></button>`;}
+  let hs='';for(const t of z.hits){const lw=Math.max(48,t.w);hs+=`<button class="b2hit noenter${t.rv?' rvmv':''}" style="left:${Math.round(t.x)}px;width:${Math.round(lw)}px;height:${t.y?72:Math.round(h-30)}px;bottom:${t.y?34:30}px" data-b2="${esc(t.a)}" aria-label="${esc(t.lab)}"></button>`;}
   let mh='';for(const m of z.mv){const sp=SP[m.k];if(!sp)continue;const ht=m.k==='walk'?24:m.k==='bike'?30:24;
     const sw=m.k==='walk'?12:m.k==='bike'?30:m.k==='van'||m.k==='truck'?48:38;
     mh+=`<i class="${m.r?'r':''}" data-d="${m.d}" data-sw="${sw}" style="top:${m.y-ht}px;height:${ht}px;width:${sw}px;animation-duration:${m.d}s;animation-delay:-${((hu(m.k+m.d)%100)/100*m.d).toFixed(1)}s">${sp(m.c)}</i>`;}
   const cls='b2sv'+(still()?' still':'');
-  box.innerHTML=`<div class="${cls}" style="height:${h}px" role="group" aria-label="${esc(LL('Улица: ваши точки','Street: your outlets'))}"><svg width="${wv}" height="${h}" viewBox="0 0 ${wv} ${h}" aria-hidden="true">${z.svg}</svg><div class="b2mv${Element.prototype.animate?'':' css'}" aria-hidden="true">${mh}</div>${hs}<i class="b2pp" aria-hidden="true"></i></div>`;
+  box.innerHTML=`<div class="${cls}" style="height:${h}px" role="group" aria-label="${esc(LL('Улица: ваши точки','Street: your outlets'))}"><svg width="${wv}" height="${h}" viewBox="0 0 ${wv} ${h}" aria-hidden="true">${z.svg}</svg><div class="b2mv${Element.prototype.animate?'':' css'}" aria-hidden="true">${mh}</div>${hs}<i class="b2pp" aria-hidden="true"></i>${hiH(z)}</div>`;
   const d=box.firstElementChild;d.__k=k;cur={best:z.best,el:d,h};
   /* движение — Web Animations в пикселях (замер ×6: CSS-анимации давали ~14 пересчётов стиля в секунду и вёрстку, WAAPI — ~5 без вёрстки) */
   cur.an=[];if(!still()&&Element.prototype.animate){let calm0=false;try{calm0=document.body.classList.contains('calm')||matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
