@@ -723,7 +723,7 @@ function finBank(w){let h='';const o=E.loanOffer(w);let dB=0;for(const l of w.lo
         <span>${L('Переплата за весь срок','Total interest')}</span><b id="flO">${FMT.money(ov)}</b></div>
       <button class="btn blue noenter" data-a="take">🏦 ${L('Взять кредит','Take the loan')}</button></div>`;}
   else if(dB>0)h+=`<div class="f-warn">${L('Сейчас банк новых денег не даст: лимит исчерпан. Лимит растёт вместе с EBITDA и капиталом.','The bank won’t lend more right now: the limit is used up. It grows with EBITDA and equity.')}</div>`;
-  h+=`<h3>${L('Ваши кредиты','Your loans')}</h3>`;
+  h+=`<h3>${L('Ваши кредиты','Your loans')}</h3>`;if(window.B2&&B2.qol)h+=B2.qol.rallBtn(w);   /* b2-qol: «Погасить все» */
   if(!w.loans.length)h+=`<div class="f-card f-mut">${L('Долгов нет — спим спокойно.','No debt — sleeping soundly.')}</div>`;
   // M30: больше трёх кредитов — крупные и овердрафт сверху, мелкие старые свёрнуты в одну строку
   let lsh=w.loans;if(w.loans.length>3&&!st.lAll){const so=w.loans.slice().sort((x,y)=>((y.k==='od')-(x.k==='od'))||y.a-x.a);lsh=so.slice(0,2);const rest=so.slice(2);let ra=0,rp=0;for(const l of rest){ra+=l.a;rp+=Math.round(l.a*l.r/12)+Math.min(l.a,Math.round(E.loanPay(l)));}

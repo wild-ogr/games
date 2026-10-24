@@ -119,15 +119,17 @@ function handle(out,off,ruin){for(const e of out){
   else if(e.k==='own'){emit('own',e);if(e.w==='visit')emit('ownVisit',{fr:e.a,off:!!off,r:e.fr||null});}   // M17: дела хозяина (js/owner.js); ownVisit — хук для модуля друзей: «сходил в гости к другу» (fr — owl|beav|bars|vit)
   else if(!off){if(e.k==='found')emit('found',e.p);else if(e.k==='built')emit('built',e.o);else if(e.k==='upgraded')emit('upgraded',e.o);else if(e.k==='auc')emit('auc',e.a,e.res);else if(e.k==='gig')emit('gig',e);}}}
 function dayStep(){const b2t=performance.now();try{dayStep0();}finally{if(window.B2)B2.dayMs(performance.now()-b2t);}}   /* b2-core: STAT slow — долгая смена дня */
-function dayStep0(){let out;const s0=W.san|0;try{out=E.tick(W,false);}catch(e){broken(e);return;}handle(out,false,(W.san|0)>s0);rbHiUpd();persist();emit('day');}   // M48rb: рост W.san — санация (оба пути)
+function dayStep0(){let out;const s0=W.san|0;try{out=E.tick(W,false);}catch(e){broken(e,'day');return;}handle(out,false,(W.san|0)>s0);rbHiUpd();persist();emit('day');}   // M48rb: рост W.san — санация (оба пути)
 // сломанное сохранение: не затираем молча — копия в резерв, окно «исправить / начать заново»
 let brokenOn=false;
-function broken(e){if(brokenOn)return;brokenOn=true;GAME.hold.add('broken');try{console.warn('magnat: мир не грузится',e);}catch(x){}
+function brStat(e,w,n){try{if(typeof STAT==='undefined'||!STAT.ev)return;const st=String(e&&e.stack||'').split('\n').filter(l=>/\.js/.test(l)).slice(0,4).map(l=>l.replace(/^\s*at\s*/,'').replace(/\(?(https?:\/\/[^)\s]*\/)?([\w.-]+\.js)(\?[^:)]*)?(:\d+)(:\d+)?\)?/,'@$2$4').replace(/\s+/g,'').slice(0,60)).join(' ');
+    const K=W&&W.b2&&W.b2.krai;STAT.ev('err',{m:('broken '+w+': '+String(e&&e.message||e)).slice(0,120),s:st.slice(0,240),e:3,w:w,n:n|0,t:W?W.t|0:-1,h:W?W.hold|0:-1,ned:W&&W.ned?1:0,kr:K&&K.id||''});if(STAT.flush)STAT.flush();}catch(x){}}   /* b2-fix15 Б1: текст ошибки, стек и место — в статистику */
+function broken(e,w,n){brStat(e,w||'?',n);if(brokenOn)return;brokenOn=true;GAME.hold.add('broken');try{console.warn('magnat: мир не грузится',e);}catch(x){}
   try{localStorage.setItem('magnat-backup-'+Date.now(),JSON.stringify(S));}catch(x){}
   const show=()=>{if(typeof modal!=='function')return setTimeout(show,300);
     modalH(`<h2>${L('Не удалось загрузить сохранение','Could not load your save')}</h2><p class="about">${L('После обновления игры сохранение прочиталось не полностью. Копия отложена в резерв — ничего не потеряно.','After the game update your save was not read completely. A backup copy is kept — nothing is lost.')}</p>
       <div class="row"><button class="btn green" id="brFix">🔧 ${L('Попробовать исправить','Try to repair')}</button><button class="btn noenter" id="brNew">${L('Начать заново','Start over')}</button></div>`);
-    document.getElementById('brFix').onclick=()=>{try{E.migrate(W);E.tick(W,false);brokenOn=false;GAME.hold.delete('broken');hideModal();persist(true);emit('change');}catch(x){toast(L('Не получилось — можно начать заново','That didn’t work — you can start over'));}};
+    document.getElementById('brFix').onclick=()=>{try{E.migrate(W);E.tick(W,false);brokenOn=false;GAME.hold.delete('broken');hideModal();persist(true);emit('change');}catch(x){brStat(x,'fix');toast(L('Не получилось — можно начать заново','That didn’t work — you can start over'));}};
     document.getElementById('brNew').onclick=()=>{W=S.w=newPlayer();S.tut={};brokenOn=false;GAME.hold.delete('broken');hideModal();persist(true);emit('change');};};
   show();}
 function dayBase(){return (W&&DAY_ST[W.st])||DAY_MS0;}
@@ -135,11 +137,11 @@ function dayBase(){return (W&&DAY_ST[W.st])||DAY_MS0;}
 function spd4(){return typeof BETA!=='undefined'&&!!BETA;}
 function spd(){const v=S.spd;return v===0||v===2||v===4&&spd4()?v:1;}
 function loop(){const now=performance.now(),dt=Math.min(3000,now-lastRT)*(spd()||1);lastRT=now;if(!W)return;
-  if(!document.hidden){const t=nowMs();S.lastT=t;S.maxT=Math.max(S.maxT||0,t);}
+  if(!document.hidden&&offDone){const t=nowMs();S.lastT=t;S.maxT=Math.max(S.maxT||0,t);}   /* b2-fix15 Б1: до досчёта офлайна время ухода не затираем */
   if(GAME.running()){acc+=dt;let dm=dayBase();while(acc>=dm&&GAME.running()){acc-=dm;dayStep();dm=dayBase();}}}
 function shiftMs(){return typeof PAY!=='undefined'&&PAY.own&&PAY.own('manager')?SHIFT_MGR:SHIFT;}
 function runOffline(el){const cap=shiftMs(),use=Math.min(el,cap),days=Math.floor(use/OFF_DAY_MS);if(days<1)return null;
-  let sum;try{E.offSnap=rbSnap;sum=E.offline(W,days);}catch(e){broken(e);return null;}finally{E.offSnap=null;}rbHiUpd();checkAch();   // M48rb: снимок на начало каждого месяца и в офлайне
+  let sum;try{E.offSnap=rbSnap;sum=E.offline(W,days);}catch(e){broken(e,'off',days);return null;}finally{E.offSnap=null;}rbHiUpd();checkAch();   // M48rb: снимок на начало каждого месяца и в офлайне
   weekUpd();sum.el=el;sum.cap=cap;   /* b2-fix О-2: строка была съедена комментарием */
   S.offMore=Math.floor(Math.min(Math.max(0,el-cap),cap)/OFF_DAY_MS);sum.more=S.offMore;S.lastT=nowMs();persist(true);emit('offline',sum);emit('change');return sum;}
 function offlineCheck(){if(offDone||!W)return;let sum=null;try{sum=offlineCheck0();}finally{if(window.B2)B2.enter(sum);}}   /* b2-core: вход — очередь окон */
@@ -156,11 +158,12 @@ const GAME={get DAY_MS(){const b=dayBase();return b/(spd()||1);},get DAY_BASE(){
   on(n,f){(subs[n]=subs[n]||[]).push(f);},emit,
   start(){if(!valid(S.w))S.w=newPlayer();W=S.w;if(S.spd===0)S.spd=1;   // M47: своя ⏸ не переживает перезагрузку (время не стоит «навсегда»)
    
-    try{pkSync();const fx=E.migrate(W);if(fx.length)try{console.info('magnat: сохранение обновлено',fx.join(','));}catch(e){}E.check(W);E.bal(W);}catch(e){broken(e);}weekUpd();checkAch();lastRT=performance.now();
+    try{pkSync();const fx=E.migrate(W);if(fx.length)try{console.info('magnat: сохранение обновлено',fx.join(','));}catch(e){}E.check(W);E.bal(W);}catch(e){broken(e,'load');}weekUpd();checkAch();lastRT=performance.now();
     if(!timer)timer=setInterval(loop,250);
-    if(window.__sdkDone)offlineCheck();else setTimeout(offlineCheck,1500);
+    const offGo=()=>{try{if(window.KRAI&&KRAI.use)KRAI.use(W);}catch(e){}if(window.__sdkDone)offlineCheck();else setTimeout(offlineCheck,1500);};
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',offGo);else offGo();   /* b2-fix15 Б1: офлайн — когда загружены все файлы (край: b2-krai.js ставит профиль — иначе «Не удалось загрузить» в мире края) */
     persist(true);emit('change');},
-  running(){return !!W&&spd()!==0&&!(typeof paused!=='undefined'&&paused)&&!(typeof modalHolds==='function'?modalHolds():(typeof modalOn!=='undefined'&&modalOn))&&!document.hidden&&GAME.hold.size===0;},   // M47: окно игрока время не держит
+  running(){return !!W&&document.readyState!=='loading'&&spd()!==0&&!(typeof paused!=='undefined'&&paused)&&!(typeof modalHolds==='function'?modalHolds():(typeof modalOn!=='undefined'&&modalOn))&&!document.hidden&&GAME.hold.size===0;},   // M47: окно игрока время не держит
   dayFrac(){return Math.min(1,acc/dayBase());},
   // проверки и снимки: прокрутить n дней «онлайн» сразу (события приходят как обычно)
   fast(n){for(let i=0;i<n;i++)dayStep();},

@@ -188,7 +188,7 @@ function shadowFor(W,days){const k=key(W,0);if(W.t!==SHT){SHT=W.t;SHP=SHN;SHN=0;
 const sumK=(its,ks,d1,sg)=>{let s=0;for(const x of its)if(x.d<=d1&&ks.indexOf(x.k)>=0&&(!sg||sg*x.a>0))s+=x.a;return s;};
 // кнопки-решения считаются «что если» (до ~9 прогонов тени) — лениво и не чаще раза в 3 игровых дня, пока не поменялось устройство дела
 const FXC={};let FXN=0;
-function fxKey(W,g){let k='';for(const b of W.biz||[])k+=b.t[0]+(b.k&&b.k.def||'');return [W.m,Math.floor(W.d/3),g.k,g.why,g.d>0?1:0,(W.loans||[]).length,(W.obj||[]).length,(W.biz||[]).length,k,W.st].join('|');}
+function fxKey(W,g){let k='';for(const b of W.biz||[])k+=b.t[0]+(b.k&&b.k.def||'');return [W.m,g.k,g.why,g.d>0?1:0,Math.round(Math.log2(Math.max(1,g.a))),(W.loans||[]).length,(W.obj||[]).length,(W.biz||[]).length,k,W.st].join('|');}
 function lazyFix(W,p,g){let v=null;Object.defineProperty(g,'fix',{enumerable:true,configurable:true,get(){if(!v){const k=fxKey(W,g);const c=FXC[k];if(c&&c.W===W)v=c.v;else{v=fixesOf(W,p,g);if(++FXN>40){for(const x in FXC)delete FXC[x];FXN=0;}FXC[k]={W,v};}}return v;}});return g;}
 // M39: опт по видам — сумма по всем оптам (закупка опта), id — опт с самой большой нехваткой товара
 function whsGap(W){const a=(W.biz||[]).filter(x=>x.t==='whs'&&x.st==='w');if(!a.length||!E.bizEcon)return null;let r=null,tgt=0,stk=0,need=0,mx=-1;

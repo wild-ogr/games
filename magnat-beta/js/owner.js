@@ -308,7 +308,8 @@ function evNew(W){const O=ow(W),ps=pts(W),mid=W.st==='mid',D=mid?EV3:EV2,KL=mid?
   if(k==='mall'){a.mv=Math.max(80e3,k1((b.lr||0)*.15));(O.mallC||(O.mallC={}))[b.c]=W.m;a.inc=rnd0(B.rent*C.rent*.6/1000)*1000;const f0=E.bizForecast(W,b,b.k).prof,f1=E.bizForecast(W,Object.assign({},b,{spot:(b.spot||0)+.25,rx:(b.rx||0)+a.inc}),b.k).prof;a.g=rnd0((f1-f0)/100)*100;}
   O.ev={k,id:b.id,bt:b.t,exp:W.t+EV_DAYS,def:evDef(k).def,a,m:W.m};O.evM=W.m;}
 // ответ: i — номер варианта; auto — прошёл срок (EV_DAYS)
-function evAns(W,i,auto){const O=ow(W),v=O.ev;if(!v)return 'no';const b=W.biz.find(x=>x.id===v.id);O.ev=null;if(!b)return 'gone';const B=E.BIZ[b.t],k=v.k,a=v.a||{};let res='ok';
+function evAns(W,i,auto){const O=ow(W),v=O.ev;if(!v)return 'no';const b=W.biz.find(x=>x.id===v.id);if(!auto&&b&&i===0){const a0=v.a||{};if((v.k==='city2'&&W.cash<a0.pr&&W.cities.indexOf(a0.c)<0)||(v.k==='mall'&&W.cash<(a0.mv||80e3)))return 'nocash';}   /* b2-fix15 Б6: без денег событие не сгорает — ждёт до срока */
+  O.ev=null;if(!b)return 'gone';const B=E.BIZ[b.t],k=v.k,a=v.a||{};let res='ok';
   if(k==='rent'){if(i===0)b.rx=(b.rx||0)+a.inc;else{if(W.cash<60e3)b.rx=(b.rx||0)+a.inc;else{cost(W,60e3,'oth','oth',B.seg);b.down=Math.max(b.down||0,5);}}}
   else if(k==='raise'){if(i===0){b.sx=(b.sx||0)+a.inc;b.rt=Math.min(5,(b.rt||3.5)+.2);}else b.ev.quit=[W.m+2,.9];}
   else if(k==='fair'){if(i===0&&W.cash>=20e3){cost(W,20e3,'adm','adm',B.seg);O.mon.sp+=20e3;if(!b.mc)b.mc=[];b.mc.push({k:'fair',u:W.t+7,e:.3,pr:1});}}

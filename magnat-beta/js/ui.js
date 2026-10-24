@@ -545,7 +545,7 @@ function pjGo(){const W=w(),p=pjOffer(W,0);if(!p||!p.a){snd('no');tst(L('Бан�
 function spendOk(cost,mo,what,fn,nf,fo,fx){const W=w(),cash=W.cash;   // fx — b2-fix Н-9: {t,r} завода передела → сначала ФРП   // fo — M47b: прогноз objFore (прибыль/окупаемость) строкой в окне
   // в обучении окно не нужно, только если денег хватает на стройку и на конец месяца (M30: раньше обучение молча вело в кассовый разрыв)
   const foBad=fo&&(fo.m<=0||fo.pay>60);   // M47b: плохой прогноз — окно с предупреждением даже для небольшой траты
-  if((tutStep()&&!foBad&&!(mo?pjOffer(W,cost,mo*30):buildGap(W,0))&&cost<=cash)||(cost<=cash*.3&&cost<=cash&&!foBad&&!(mo&&pjOffer(W,cost,mo*30))))return fn();
+  if((tutStep()&&!foBad&&!(mo?pjOffer(W,cost,mo*30):buildGap(W,0))&&cost<=cash)||(cost<=cash*(W.ned?.5:.3)&&cost<=cash&&!foBad&&!(mo&&pjOffer(W,cost,mo*30))&&!(W.ned&&buildGap(W,cost))))return fn();   /* b2-fix15: в «Недрах» и крае — окно только при риске минуса к 30-му или трате > 50 % денег */
   const left=cash-cost,fm=fixM(W),mm=left>0?Math.floor(left/fm):0,add=nf?`${L(' После пуска добавится ещё ',' After launch, add ')}${M(nf)}${L(' в месяц.',' a month.')}`:'';
   const bd=mo?Math.max(30,mo*30):0,pj=mo?pjOffer(W,cost,bd):null;
   /* b2-fix Н-9: на завод передела сначала ФРП (50 % цены, 3 %), банк — только на остаток */
@@ -725,7 +725,7 @@ function onClick(e){const b=e.target.closest('[data-a]');if(!b||b.disabled)retur
     case 'ipo':openIpo();break;}}
 
 /* ================= окно: закрытие месяца ================= */
-function openClose(rep){if(BZ()&&BZ().openClose&&BZ().openClose(rep))return;const W=w(),p=rep.pl,net=E.netOf(p),cost=p.rev-net;snd('close');
+function openClose(rep,full){if(!full&&window.B2&&B2.qol&&B2.qol.quiet&&B2.qol.quiet(rep))return;/* b2-qol: спокойный месяц — полоской */if(BZ()&&BZ().openClose&&BZ().openClose(rep))return;const W=w(),p=rep.pl,net=E.netOf(p),cost=p.rev-net;snd('close');
   S.pendRep=rep.m;save();
   let say='',pro='';if(hasAdv('month')&&W.m>=12&&!(W.me&&!W.ned&&E.stI&&E.stI(W)<=1)){try{const m=ADV.month(rep);if(m&&m.proHtml)pro=m.proHtml;else if(m&&m.pro)pro=esc(m.pro);}catch(e){}}
   const pr0=W.reps.find(x=>x.m===rep.m-1),dn=pr0?net-E.netOf(pr0.pl):null;
@@ -752,7 +752,7 @@ function openClose(rep){if(BZ()&&BZ().openClose&&BZ().openClose(rep))return;cons
     ${newOff.length?`<div class="tip">🤝 ${L(`Пришло предложение: «${esc(newOff[0].b)}» купит ${FMT.qty(newOff[0].q,newOff[0].g)} (${low(NM.good(newOff[0].g))}) по ${rub(newOff[0].p)}.`,`New offer: “${esc(newOff[0].be)}” will buy ${FMT.qty(newOff[0].q,newOff[0].g)} of ${low(NM.good(newOff[0].g))} at ${rub(newOff[0].p)}.`)} <button class="btn sm noenter" id="cOff" style="margin-top:6px">${L('Посмотреть','Take a look')}</button></div>`:''}
     <div class="say">${face(mood)}<div>${say?`<p>${esc(say)}</p>`:''}${tut}${pro&&!tut?`<div class="mut" style="font-size:14px;margin-top:6px">${pro}</div>`:''}</div></div>
     ${BZ()?BZ().closeExtra(rep):''}${closeTeaser()}${window.B2?B2.html('close',{W,rep}):''}<div class="row"><button class="btn green" id="cGo">${L('Продолжить ▶','Continue ▶')}</button>${hasFin('openReport')?`<button class="btn noenter" id="cMore">📊 ${L('Подробнее','Details')}</button>`:''}</div>`);
-  try{modalRe=()=>openClose(rep);}catch(e){}
+  try{modalRe=()=>openClose(rep,true);}catch(e){}
   try{if(typeof socOffer==='function')socOffer(adDue()&&adReady()&&(!BZ()||BZ().adAllowed()));}catch(e){} // VK: одно предложение SOC за сессию — строкой под кнопками
   {const cb=document.querySelector('#mcard .cbig');if(cb&&!calm())tweenNum(cb,0,Math.round(net),800,v=>(v>0?'+':'')+M(v));}
   if($$('cMore'))$$('cMore').onclick=()=>{snd('tap');FIN.openReport(rep.m);};
@@ -831,7 +831,7 @@ function openAuc(aid){const W=w(),a=E.aucById(W,aid);if(!a||a.done){if(aucOpen&&
     <div class="lbl" style="text-align:center">${L('Кто торгуется','Bidders')}</div><div class="who">${bots||`<span>${L('соперников нет','no rivals')}</span>`}</div>
     <div class="say">${face(over?'worry':'calm')}<div><p>${L(`Оценка участка — ${M(a.V)} (столько рудник заработает после налога сверх стройки). Разумный предел — около 0,6 оценки: <b>${M(lim)}</b>. Дороже — рудник будет окупаться слишком долго.`,`The plot is estimated at ${M(a.V)} (what the mine earns after tax beyond construction). A sensible limit is about 0.6 of that: <b>${M(lim)}</b>. Higher, and the mine takes too long to pay off.`)} ${licWhy()}</p></div></div>
     <div class="row">${a.lead==='you'?`<p class="good" style="text-align:center;margin:0"><b>${L('Вы лидируете!','You’re leading!')}</b> ${L('Если никто не перебьёт до конца торгов — лицензия ваша.','If nobody outbids you by the end, the licence is yours.')}</p><button class="btn green noenter" id="aPass">✅ ${L('Забрать лицензию за ','Take the licence for ')}${M(a.pr)}</button>`
-      :`<button class="btn ${over||lAmt?'':'accent'} noenter" id="aUp">${a.lead?L('Поднять до ','Raise to '):L('Вступить: ','Bid: ')}${M(next)}${over?`<small>${L('дороже разумного предела','above the sensible limit')}</small>`:''}</button>${a.lead?`<button class="btn noenter" id="aPass">${L('Пас — выйти из торгов','Pass — leave the auction')}</button>`:''}`}
+      :`<button class="btn ${over||lAmt||W.cash<next?'':'accent'} noenter" id="aUp"${W.cash<next?' style="opacity:.55"':''}>${a.lead?L('Поднять до ','Raise to '):L('Вступить: ','Bid: ')}${M(next)}${W.cash<next?`<small>${L('не хватает денег: на счёте ','not enough money: you have ')+M(Math.max(0,W.cash))}</small>`:over?`<small>${L('дороже разумного предела','above the sensible limit')}</small>`:''}</button>${a.lead?`<button class="btn noenter" id="aPass">${L('Пас — выйти из торгов','Pass — leave the auction')}</button>`:''}`}
     ${loanB}${warn}<button class="btn" id="aLater" data-esc>${L('Решить позже','Decide later')}</button></div>`);
   try{modalRe=()=>openAuc(aid);}catch(e){}
   $$('aLater').onclick=()=>{snd('tap');closeM();};
@@ -1252,7 +1252,7 @@ function back(){navIntent('back');if($$('adv').classList.contains('on')){advHide
   document.addEventListener('pointerdown',e=>{x0=-1;if(e.clientX<24&&!(typeof modalOn!=='undefined'&&modalOn)&&!e.target.closest('#modal,#phone,.ph-body')){x0=e.clientX;y0=e.clientY;t0=Date.now();}},{passive:true});
   document.addEventListener('pointerup',e=>{if(x0<0)return;const dx=e.clientX-x0,dy=Math.abs(e.clientY-y0);x0=-1;if(dx>80&&dy<60&&Date.now()-t0<800){snd('tap');back();}},{passive:true});
   document.addEventListener('pointercancel',()=>{x0=-1;},{passive:true});})();
-window.UI={objFore,hdr,fly,salute,pulse:pulseEl,tweenNum,face,TAB_DEF,buildNav,init,refresh,go,back,restartTut,idleTest:()=>{lastIn=0;lastIdle=0;idleWait=0;idleTick();return advCur&&advCur.key;},show:t=>go(t),openRegion:r=>go('reg',r),render,openHow,openAuc,openClose,openOffline,openIpo,openFac,openRoute,adv:advShow,advOpen,tutStep,
+window.UI={showQ,/* b2-qol */objFore,hdr,fly,salute,pulse:pulseEl,tweenNum,face,TAB_DEF,buildNav,init,refresh,go,back,restartTut,idleTest:()=>{lastIn=0;lastIdle=0;idleWait=0;idleTick();return advCur&&advCur.key;},show:t=>go(t),openRegion:r=>go('reg',r),render,openHow,openAuc,openClose,openOffline,openIpo,openFac,openRoute,adv:advShow,advOpen,tutStep,
   navSync,navKey,navIntent,navMem:()=>NAV,
   get cur(){return cur;},get reg(){return curReg;}};
 window.UI.GD=GD;window.UI.OG=OG;window.UI.TONE=TONE;   /* b2-krai: значки товаров и объектов края */

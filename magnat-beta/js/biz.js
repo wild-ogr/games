@@ -638,7 +638,7 @@ function bizDay(W,off,out){if(W.d===0)cpReg();const M=W.me;if(!M){if(!W.biz.leng
     if(!off)abDay(W);   // M38: «Брать лучший заказ автоматически» (только онлайн; M47 — главы 1–2, где есть доска заказов)
     const keep=W.ip&&W.biz.length&&E.ownHands?1:0;
     for(const t in M.auto){if(!M.auto[t]||!autoOk(W,t)||!gigSeason(W,t))continue;if(M.gigs.some(g=>g.auto&&g.t===t))continue;if(hands(W).free<1+keep||M.en<=40||M.rest>0||M.out>0)break;
-      const g=mkGig(W,t);g.auto=1;M.board.push(g);if(gigTake(W,g.id)!=='ok')M.board=M.board.filter(x=>x!==g);}
+      const g=mkGig(W,t);if(M.en-g.e<30)continue;   /* b2-fix15: берём, только если сил хватит на весь заказ (без «устал» — иначе срыв) */g.auto=1;M.board.push(g);if(gigTake(W,g.id)!=='ok')M.board=M.board.filter(x=>x!==g);}
     if(W.st==='mid'&&E.equity(W)>=QUARRY_EQ&&quarrySale(W)&&W.ch>=50&&(W.d<=1||E.equity(W)-whsPad(W,'f')>=QUARRY_EQ)){   /* M47a (Ф11): в середине месяца — с учётом аренды/зарплат/налога, которые спишутся 30-го */W.st='quarry';opiGen(W);opiSpread(W);news(W,'biz',{k:'stage',st:'quarry'});out.push({k:'stage',st:'quarry'});}
     // торги ОПИ: пришёл срок — торги; прошло 10 дней — решают без игрока
     // M30 (решение владельца 02.10): торги ждут игрока — во время офлайн-автопилота не открываются и не кончаются

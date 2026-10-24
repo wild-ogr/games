@@ -146,6 +146,7 @@ function show(h,re){css();modal(`<div class="fu">${h}</div>`);try{modalRe=re||nu
 function bindAll(){const c=document.getElementById('mcard');if(!c)return;c.querySelectorAll('[data-fu]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.fu,b)));}
 function open(from){const w=W();if(!w)return;SY.init(w);last=null;try{if(typeof STAT!=='undefined')STAT.ev('frw',{f:String(from||'x')});}catch(e){}
   let h=`<h2>👥 ${T('Друзья из 11 «Б»','Friends from Class 11B')}</h2><p class="fu-sub">${T('Отношения идут в плюс и в минус. Помогайте, звоните, заходите в гости — и друзья помогут в ответ: скидки, займы, ремонт, поручительство в банке.','Relations go up and down. Help out, call, drop by — and your friends help back: discounts, loans, repairs, a bank guarantee.')}</p>`;
+  if(window.B2&&B2.qol)h+=B2.qol.meetBtn(w);   /* b2-qol: «Встреча 11 «Б»» */
   for(const id of FRS){const f=SY.friend(w,id);
     h+=`<button class="fu-row noenter" data-fu="card:${id}">${pic(id,moodOf(f),64)}<span class="fu-f"><b>${esc(nm(id))}</b><small>${esc(T(ROLE[id][0],ROLE[id][1]))}</small>${lvLine(f)}${bar(f.rel,f.lv)}<span class="fu-can">${esc(canLine(w,id))}</span>${f.q.length?`<span class="fu-q">✉️ ${T('ждёт ответа','waiting for your reply')}</span>`:''}</span></button>`;}
   // «Кто из нас дальше» — капитал сейчас
