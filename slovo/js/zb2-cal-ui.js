@@ -115,7 +115,8 @@ function take(t){var o=C.c(),T=C.tk();if(o.g===T)return;tap();var g=t.g,got=give
   var h='';extra.forEach(function(x){h+='<p class="zc-ex">'+esc(x)+'</p>';});
   var W=window.ZB2W1;if(t.w&&W&&W.after)h+=ZB.safe('w1-after',function(){return W.after(t.w);})||'';
   var tm=C.tomorrow();if(tm)h+='<p class="tmr zc-tm">'+tm+'</p>';
-  var ln=$$('zcLn');if(ln)ln.insertAdjacentHTML('afterbegin',h);bindZap();
+  var ta=o.k===1?ZB.safe('cal-tmrask',tmrAsk):null;if(ta)h+=ta.h;
+  var ln=$$('zcLn');if(ln)ln.insertAdjacentHTML('afterbegin',h);bindZap();if(ta)ZB.safe('cal-tmrask-b',ta.b);
   var dl=(+S.lv||0)>=10&&!(S.daily&&S.daily[T]),bt=$$('zcBtns'),act=t.w&&W&&W.act?ZB.safe('w1-act',function(){return W.act(t.w);}):null;
   bt.innerHTML=(act?'<button type="button" class="btn green" id="zcAct">'+act.t+'</button>':'')+
     (dl?'<button type="button" class="btn '+(act?'blue':'green')+'" id="zcDay">📅 Задание дня — начать</button>':'')+
@@ -125,6 +126,25 @@ function take(t){var o=C.c(),T=C.tk();if(o.g===T)return;tap();var g=t.g,got=give
   $$('zcGo').onclick=function(){tap();hideModal();go();};
   try{if(typeof fitWin==='function')fitWin();}catch(e){}
   try{ZB.refresh();C.paint();}catch(e){}}
+/* up2410 ЗАВТРА ПОДАРОК: первый листок (новичок, после 5-го уровня) — обещание завтра + «Напомнить?» и «В избранное» прямо здесь.
+   Только VK/ОК (SOC.ok); кнопки — что площадка умеет (SOC.can: в ОК их нет — только текст про серию). Один раз (S.z2n.ak бит 4).
+   Показ «Напомнить» = попытка №1 модуля SOC (S.soc.ntf), вопрос «До завтра?» на Доме в этот день уже не нужен (ak бит 1).
+   STAT nb2 {a:'tmr', r: show|ntf|fav|no, k: ntf,fav}. ?off=tmrask — выкл. */
+function tmrAsk(){if(typeof SOC==='undefined'||!SOC.ok()||(window.ZB2&&ZB2.off('tmrask')))return null;
+  var N=window.ZB2N,z=N&&N.z?N.z():null;if(!z||z.ak&4)return null;
+  var nt=SOC.can('ntf')&&!(S.soc&&S.soc.ntf&&S.soc.ntf.d),fv=SOC.can('fav'),k=[];
+  z.ak|=4;if(nt){z.ak|=1;S.soc.ntf={n:Math.max(1,+(S.soc.ntf&&S.soc.ntf.n)||0),t:(typeof nowMs==='function'?nowMs():Date.now())};k.push('ntf');}if(fv)k.push('fav');
+  try{save();}catch(e){}if(N.ev)N.ev({a:'tmr',r:'show',k:k.join(',')});
+  var h='<div class="zc-ta" id="zcTa"><p><b>🔥 Не потеряй серию!</b> Завтра — новый подарок и задание дня.</p>'+
+    (k.length?'<div class="zc-tab">'+(nt?'<button type="button" class="btn blue small" id="zcNtf">🔔 Напомнить</button>':'')+
+      (fv?'<button type="button" class="btn ghost small" id="zcFav">⭐ В избранное</button>':'')+'</div>':'')+'</div>';
+  return {h:h,b:function(){
+    // место под блок на телефоне: совет на обороте и реплику Зины прячем (подарок уже забран)
+    [$$('zcTip'),D.querySelector('.zc-win .zc-say')].forEach(function(e){if(e)e.style.display='none';});
+    var b1=$$('zcNtf');if(b1)b1.onclick=function(){if(b1.disabled)return;b1.disabled=true;tap();SOC.ntf(1).then(function(y){if(N.ev)N.ev({a:'tmr',r:y?'ntf':'no',k:'ntf'});
+      if(y){b1.textContent='✓ Напомню!';try{toast('Хорошо, напомню! Нечасто — я не назойливая.',2500);}catch(e){}}else b1.disabled=false;});};
+    var b2=$$('zcFav');if(b2)b2.onclick=function(){if(b2.disabled)return;b2.disabled=true;tap();SOC.fav().then(function(y){if(N.ev)N.ev({a:'tmr',r:y?'fav':'no',k:'fav'});
+      if(y)b2.textContent='✓ В избранном';else b2.disabled=false;});};}};}
 function bindZap(){var z=$$('zcZap');if(z)z.onclick=function(e){e.preventDefault();tap();hideModal();try{ZB2ZAP.open();}catch(x){}};}
 window.ZB2CALUI={open:open,today:today,tips:tips};
 })();

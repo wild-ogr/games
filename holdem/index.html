@@ -1190,7 +1190,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Турнир / раздача дня / турнир недели / учебная раздача — «уровень» STAT: lvl в newGame/resumeLive, end в finishGame (win/lose/draw) и leaveGame (quit).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'holdem',gv:'v2.1-101521',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'holdem',gv:'v2.2-102414',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: progress — после облака, но не позже 2,5 с: pl — турниров сыграно, cn — спички, bt — облако хоть раз отдавало сохранение
    (метка устройства holdem-cl, в сохранение не пишется); cfg — настройки сеанса: th — выбранный стол, snd, calm */
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('holdem-cl')?1:0;}catch(e){}
@@ -2253,7 +2253,7 @@ function advNow(){if(!advOn()||!G.waitHuman)return null;const s=G.s;
    Столу и рисованию всё равно, кто сидит: у места берётся только имя и облик. Ход — SEAT_CTL[kind].decide(view, место) → Promise хода. */
 const SEAT_CTL={
   human:{decide(){return new Promise(ok=>{G.waitHuman=ok;G.rz=null;updHint();renderActs();render();SND.turn();buzz(15);tipOnTurn();});}},
-  bot:{async decide(v,seat,tok){await sleepG(thinkMs(v),tok);return botDecide(v,seat.id,mkRng(hash32(G.s.seed^0x5bd1e995,v.no*16+v.me)),G.mode==='tour'?botMod(G.pi,G.tn,G.tt):G.mode==='learn'?{soft:1}:undefined);}},
+  bot:{async decide(v,seat,tok){await sleepG(thinkMs(v),tok);if(!G||G.tok!==tok)return null;/* fix2410: игрок ушёл из-за стола, пока бот думал (G=null) */return botDecide(v,seat.id,mkRng(hash32(G.s.seed^0x5bd1e995,v.no*16+v.me)),G.mode==='tour'?botMod(G.pi,G.tn,G.tt):G.mode==='learn'?{soft:1}:undefined);}},
   // онлайн (после MVP): ход придёт с сервера — seat.net.resolve(ход); пока связи нет, движок сам даст авто-ход по таймеру (timeoutAct)
   remote:{decide(v,seat,tok){return new Promise(ok=>{seat.net={resolve:ok};
     const t=setInterval(()=>{if(!G||G.tok!==tok){clearInterval(t);return;}const a=timeoutAct(G.s,Date.now());if(a){clearInterval(t);ok(a);}},500);});}}
@@ -2296,7 +2296,7 @@ async function loop(tok){
     const i=s.cur,seat=G.seats[i],v=viewFor(s,i);
     const a=await SEAT_CTL[seat.kind].decide(v,seat,tok);if(!alive(tok)||G.s!==s)return;
     if(!act(s,a,Date.now())){const Lg=legal(s);act(s,{seat:Lg.seat,no:Lg.no,t:Lg.check?'check':'fold'},Date.now());}
-    saveLive();await playEvents(tok);if(G.mode==='learn'&&seat.kind==='bot'&&alive(tok))await sleepG(wt(1500),tok);}}
+    saveLive();await playEvents(tok);if(alive(tok)&&G.mode==='learn'&&seat.kind==='bot')await sleepG(wt(1500),tok);}}
 function nextHand(){const s=G.s,m=LV[Math.min(LV.length-1,Math.floor(s.hand/LV_EVERY))];
   const lvUp=s.hand>0&&s.hand%LV_EVERY===0&&m!==LV[Math.min(LV.length-1,Math.floor((s.hand-1)/LV_EVERY))];
   s.sb=G.sb0*m;s.bb=G.bb0*m;startHand(s,Date.now());
@@ -2308,7 +2308,7 @@ function nextHand(){const s=G.s,m=LV[Math.min(LV.length-1,Math.floor(s.hand/LV_E
   tipsOnDeal();}
 // события движка по одному: ставки, улицы, вскрытие — с паузами для глаз
 async function playEvents(tok){const s=G.s,D=G.disp;
-  while(G.logN<s.log.length){const e=s.log[G.logN++];if(!alive(tok))return;
+  while(alive(tok)&&G.logN<s.log.length){/* fix2410: после await стол мог закрыться (G=null) */const e=s.log[G.logN++];if(!alive(tok))return;
     if(e.e==='act'){const i=e.seat;D.st[i]-=e.amt;D.bet[i]=e.to;
       const T={fold:[L('Фолд','Fold'),'f'],check:[L('Чек','Check'),''],call:[L('Колл','Call'),'c'],raise:[s.log.some((x,k)=>k<G.logN-1&&x.e==='act'&&x.street===e.street&&x.t==='raise')||e.street===0?L('Рейз','Raise'):L('Ставка','Bet'),'r']}[e.t];
       G.tag[i]=e.allin?{t:L('Ва-банк','All-in'),c:'a'}:{t:T[0],c:T[1]};

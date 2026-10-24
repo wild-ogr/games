@@ -1,0 +1,185 @@
+/* ================= M27 · вид A «Мягкий объём» — основной для всех (класс html.lk.lk-a в index.html) =================
+   Глубина вместо плоскости: карточки «парят» (2 мягкие тени + светлая кромка сверху), главные кнопки — выпуклые с цветной тенью,
+   значки — «пластилиновые» скруглённые квадраты с градиентом в цвет вида; меню — плавающая «таблетка»; цифры — ui-rounded (SF Pro Rounded на Apple).
+   Шрифт системный (0 КБ). Старые WebView: без inset/gap, градиенты linear-gradient (Chrome 26+).
+   Цвета — только переменные: здесь (на html) — светлые значения вида A; темы (css/themes.css, body.th-<id>, js/themes.js) переопределяют их на body.
+   Переменные вида: --lkc (фон карточки), --lkb (фон обычной кнопки), --lkt (плитка), --lk-app (фон экрана), --lk-pos/--lk-neg (плитки +/−),
+   --lk-acc (главная кнопка), --lk-go (кнопка «Забрать»), --lk-gosh, --lk-cr/--lk-crsh (💎), --lk-x2/--lk-x2sh/--lk-x2ink (за рекламу), --lk-bar (полоса месяца), --lk-hb (кнопки шапки),
+   --lk-ed (светлая кромка сверху), --lk-shc (цвет мягких теней, rgb без скобок). */
+html.lk-a{
+  --bg:#eef1f7;--page:#e3e8f1;--card:#fff;--card2:#f7f9fd;--ink:#101828;--ink2:#344054;--muted:#4f5d72;--line:#e8ecf3;--line2:#d3dae6;
+  --accent:#3355ff;--accent-d:#2440e0;--accent-t:#eaefff;--blue:#3355ff;--good:#0a7a3a;--good-t:#e7f8ee;--bad:#c62828;--bad-t:#fdeeee;
+  --soft:#eef2f9;--soft2:#f4f7fc;--track:#e1e7f0;--barfill:#3355ff;--icbg:#eef2f9;
+  --sh:0 1px 1px rgba(28,39,76,.05),0 10px 28px -8px rgba(28,39,76,.16);--sh2:0 30px 80px rgba(28,39,76,.28);
+  --btnsh:0 8px 18px -6px rgba(51,85,255,.55),inset 0 1px 0 rgba(255,255,255,.35);
+  --hd-bg:#fff;--hd-btn:#f1f4fa;--nav-bg:#fff;--map-bg:#fff;--map-land:#e6ecf8;--map-landln:#d7e0f0;--map-ridge:#c5d0e3;
+  --chart-rev:#3355ff;--r:24px;--r2:18px;
+  --numfont:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --lkc:linear-gradient(180deg,#fff 0,#fdfdff 100%);--lkb:linear-gradient(180deg,#fff,#eef2f9);--lkt:linear-gradient(160deg,#f7f9fe,#eef2fa);--lkhi:inset 0 1px 0 #fff;--lk-hb:linear-gradient(180deg,#fff,#eef2f9);
+  --lk-app:linear-gradient(180deg,#eef1f7 0,#f3f0fb 100%);--lk-pos:linear-gradient(160deg,#effbf3,#ddf3e5);--lk-neg:linear-gradient(160deg,#fff3f3,#fbe2e2);
+  --lk-acc:linear-gradient(180deg,#3d5dff 0,#3355ff 55%,#2b48ea 100%);--lk-go:linear-gradient(180deg,#12884a,#0b7a3e);--lk-gosh:0 8px 16px -6px rgba(11,122,62,.6),inset 0 1px 0 rgba(255,255,255,.3);
+  --lk-cr:linear-gradient(160deg,#6a5cf0,#5444e6);--lk-crsh:0 6px 14px -4px rgba(90,73,240,.55),inset 0 1px 0 rgba(255,255,255,.35);
+  --lk-x2:linear-gradient(180deg,#ffe28a,#ffc53d);--lk-x2sh:0 6px 14px -6px rgba(240,160,32,.8),inset 0 1px 0 rgba(255,255,255,.5);--lk-x2ink:#5c3200;
+  --lk-bar:linear-gradient(90deg,#6f86ff,#3355ff);--lk-ed:rgba(255,255,255,.9);--lk-shc:28,39,76}
+html.lk-a #app{background:var(--lk-app)}
+/* заголовки — округлый шрифт, крупнее; разделы — жирнее (из B) */
+html.lk-a h2,html.lk-a .bz-h1,html.lk-a .rh h2{font-family:var(--numfont);font-weight:700;letter-spacing:-.02em}
+html.lk-a .bz-h1{font-size:30px}
+html.lk-a h3,html.lk-a .bz-sec{color:var(--ink2);font-weight:700;font-size:16px}
+html.lk-a .num,html.lk-a .tile b,html.lk-a .f-kpi .kv{font-variant-numeric:tabular-nums}
+
+/* ---- шапка: «полка» со скруглённым низом ---- */
+html.lk-a #hdr{border-bottom:0;border-radius:0 0 26px 26px;box-shadow:0 8px 24px -12px rgba(var(--lk-shc),.25)}
+html.lk-a .hbtn{border-radius:16px;background:var(--lk-hb,var(--hd-btn));box-shadow:0 1px 0 var(--lk-ed) inset,0 2px 6px rgba(var(--lk-shc),.12)}
+html.lk-a #crBtn{background:var(--lk-cr);color:#fff;box-shadow:var(--lk-crsh)}
+html.lk-a .hcash b{font-family:var(--numfont);font-weight:700}
+html.lk-a .mbar{height:8px;border-radius:8px;box-shadow:inset 0 1px 2px rgba(var(--lk-shc),.12)}
+html.lk-a .mbar i{background:var(--lk-bar);border-radius:8px}
+
+/* ---- карточки: парят ---- */
+html.lk-a .card,html.lk-a .f-card,html.lk-a .plot{border-radius:var(--r);box-shadow:var(--sh);border:0;background:var(--lkc,var(--card))}
+html.lk-a .mt-card,html.lk-a .cb-card{border:0;border-left:0;border-radius:var(--r);box-shadow:var(--sh);position:relative;overflow:hidden}
+html.lk-a .mt-card:before,html.lk-a .cb-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--sign,var(--accent))}
+html.lk-a .cb-card:before{background:var(--gold)}
+html.lk-a .tile{border-radius:18px;background:var(--lkt,var(--soft2));box-shadow:var(--lkhi)}
+html.lk-a .tile.pos{background:var(--lk-pos)}html.lk-a .tile.neg{background:var(--lk-neg)}
+html.lk-a .tip,html.lk-a .say{border-radius:18px;box-shadow:var(--lkhi),0 1px 2px rgba(var(--lk-shc),.06)}
+html.lk-a .bz-list{padding:6px 16px}
+html.lk-a .bz-li{border-top-color:var(--line)}
+html.lk-a .bz-hand{border-radius:20px;background:var(--lkb,var(--soft));box-shadow:0 2px 8px -2px rgba(var(--lk-shc),.14)}
+html.lk-a .f-kpi.hot{box-shadow:0 0 0 2px var(--accent),var(--sh)}
+
+/* ---- кнопки: выпуклые ---- */
+html.lk-a .btn{border-radius:var(--r2);background:var(--lkb,var(--soft));box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 3px 8px -2px rgba(var(--lk-shc),.16);font-weight:700}
+html.lk-a .btn.accent,html.lk-a .btn.blue{background:var(--lk-acc);box-shadow:var(--btnsh)}
+html.lk-a .btn.green{background:var(--lk-go);box-shadow:var(--lk-gosh)}
+html.lk-a .btn.cr{background:var(--lk-cr);box-shadow:var(--lk-crsh)}
+html.lk-a .btn:not([disabled]):active,html.lk-a .mt-btn:active,html.lk-a .cb-btn:active{-webkit-transform:translateY(1px) scale(.98);transform:translateY(1px) scale(.98);box-shadow:0 1px 3px rgba(var(--lk-shc),.18)}
+html.lk-a .btn,html.lk-a .mt-btn,html.lk-a .cb-btn{-webkit-transition:-webkit-transform .12s,box-shadow .12s;transition:transform .12s,box-shadow .12s}
+html.lk-a .mt-btn:not(.go):not(.x2):not(.ac),html.lk-a .cb-btn{border:0;border-radius:16px;background:var(--lkb,var(--soft));box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 3px 8px -2px rgba(var(--lk-shc),.18)}
+html.lk-a .mt-btn.go{border:0;background:var(--lk-go);box-shadow:var(--lk-gosh)}
+html.lk-a .mt-btn.ac{border:0;background:var(--lk-acc);box-shadow:var(--btnsh)}
+html.lk-a .mt-btn.x2,html.lk-a .mt-x2b{background:var(--lk-x2);border:0;color:var(--lk-x2ink);box-shadow:var(--lk-x2sh)}
+html.lk-a .set,html.lk-a .sw{border-radius:18px}
+html.lk-a .tag,html.lk-a .chip{box-shadow:inset 0 1px 0 var(--lk-ed)}
+
+/* ---- нижнее меню: плавающая таблетка ---- */
+@media (max-width:899px){
+  html.lk-a #nav{margin:0 8px;margin-bottom:10px;margin-bottom:max(10px,env(safe-area-inset-bottom));padding-bottom:0;border:0;border-radius:24px;box-shadow:0 10px 30px -8px rgba(var(--lk-shc),.3)}
+  html.lk-a #nav button{min-height:62px}
+  html.lk-a #nav button.on::after{display:none}
+  html.lk-a #nav button.on svg{background:var(--accent-t);border-radius:14px;padding:3px 10px;width:48px;height:32px;box-sizing:border-box}
+  html.lk-a #nav button svg{width:48px;height:32px;padding:3px 10px;box-sizing:border-box;margin-bottom:1px;-webkit-transition:background-color .2s;transition:background-color .2s}
+  /* 5 вкладок («Недра»): плавающее меню уже — подписи чуть плотнее, чтобы «Логистика» и «Финансы» не обрезались */
+  html.lk-a #nav button:first-child:nth-last-child(n+5),html.lk-a #nav button:first-child:nth-last-child(n+5)~button{font-size:14px;letter-spacing:-.5px}
+  html.lk-a #nav button:first-child:nth-last-child(n+5) svg,html.lk-a #nav button:first-child:nth-last-child(n+5)~button svg{width:44px;padding:3px 8px}
+  html.lk-a #mcard{border-radius:28px 28px 0 0}}
+
+/* ---- окна ---- */
+html.lk-a #mcard{box-shadow:0 -10px 40px rgba(var(--lk-shc),.25)}
+html.lk-a .chero .cbig{font-family:var(--numfont);font-weight:800;font-size:46px}
+html.lk-a .clist div{border-bottom-color:var(--line)}
+
+/* ---- графики ---- */
+html.lk-a .lk-area{opacity:.16}
+html.lk-a .spk svg path[fill="none"],html.lk-a .f-ich svg path[fill="none"]{stroke-width:3px}
+html.lk-a .bz-bars rect{fill-opacity:.9}
+/* карта: мягкие холмы */
+html.lk-a .mapc{border-radius:var(--r)}
+html.lk-a .map-mk{-webkit-filter:drop-shadow(0 3px 4px rgba(var(--lk-shc),.25));filter:drop-shadow(0 3px 4px rgba(var(--lk-shc),.25))}
+
+/* ---- значки (js/icons.js) ---- */
+html.lk lk-i{display:inline-block;width:1.2em;height:1.2em;vertical-align:-.24em;position:relative;line-height:1;font-style:normal}
+html.lk lk-i svg{display:block;width:100%;height:100%;overflow:visible}
+html.lk lk-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+html.lk .lk-s path{stroke-linecap:round;stroke-linejoin:round}
+html.lk .lk-s .d{fill:none}
+html.lk lk-i.bd{width:100%;height:100%;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;border-radius:inherit}
+html.lk lk-i.bd svg{width:58%;height:58%}
+html.lk .bz-hand>i{display:block;width:44px;height:44px;border-radius:14px;margin:0 auto 4px}
+html.lk .qs>i{height:30px}
+/* A: в тексте — двухтон (светлый силуэт, тёмные детали); в кружке — пластилиновый квадрат */
+html.lk-a .lk-s .f{fill:var(--c2)}html.lk-a .lk-s .k{fill:var(--c)}html.lk-a .lk-s .d{stroke:var(--c3);stroke-width:1.8}
+html.lk-a .bz-ic{border-radius:30%;background:none;overflow:visible}
+html.lk-a lk-i.bd{background:linear-gradient(150deg,var(--c2),var(--c) 75%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(0,0,0,.12),0 5px 12px -4px var(--cs)}
+html.lk-a lk-i.bd .f{fill:#fff}html.lk-a lk-i.bd .k{fill:var(--c2)}html.lk-a lk-i.bd .d{stroke:var(--c3)}
+html.lk-a .qs>i lk-i.bd{border-radius:9px}
+
+/* ---- появление (только без prefers-reduced-motion и не в «Спокойном режиме») ---- */
+@-webkit-keyframes lkRise{from{opacity:0;-webkit-transform:translateY(10px)}to{opacity:1;-webkit-transform:none}}
+@keyframes lkRise{from{opacity:0;-webkit-transform:translateY(10px);transform:translateY(10px)}to{opacity:1;-webkit-transform:none;transform:none}}
+html.lk-a body.lk-anim:not(.calm) .screen.on>.card,html.lk-a body.lk-anim:not(.calm) .screen.on .f-card,html.lk-a body.lk-anim:not(.calm) .screen.on .mt-card{-webkit-animation:lkRise .35s cubic-bezier(.2,.8,.2,1) both;animation:lkRise .35s cubic-bezier(.2,.8,.2,1) both}
+html.lk-a body.lk-anim .screen.on>.card:nth-child(2){-webkit-animation-delay:.04s;animation-delay:.04s}html.lk-a body.lk-anim .screen.on>.card:nth-child(3){-webkit-animation-delay:.08s;animation-delay:.08s}
+html.lk-a body.lk-anim .screen.on>.card:nth-child(4){-webkit-animation-delay:.12s;animation-delay:.12s}html.lk-a body.lk-anim .screen.on>.card:nth-child(n+5){-webkit-animation-delay:.16s;animation-delay:.16s}
+@media (prefers-reduced-motion:reduce){html.lk *{-webkit-animation:none!important;animation:none!important;-webkit-transition:none!important;transition:none!important}}
+/* M38 (a45): контраст для 45+ — зелёная кнопка Кабинета не белым по белому, подписи на цветных кнопках без прозрачности */
+html.lk-a .cb-btn.go{background:var(--lk-go);color:#fff;box-shadow:var(--lk-gosh)}
+html.lk-a .btn.accent small,html.lk-a .btn.blue small,html.lk-a .btn.green small,html.lk-a .btn.cr small{opacity:1}
+html.lk body.th-poster .cb-btn.go{background:var(--good);color:#fff}
+/* M38 (a45): «Без значков» — слова вместо значков-единиц у чисел («силы 60», «+3 кр.»), остальные значки и кружки-значки спрятаны */
+body.noico lk-i{width:auto;height:auto;vertical-align:baseline}
+body.noico lk-i>svg{display:none}
+body.noico lk-i:not([data-w]){display:none}
+body.noico lk-i[data-w]::before{content:attr(data-w);margin:0 .2em;font-weight:inherit;color:inherit}
+body.noico .bz-ic,body.noico .mt-ic,body.noico .cb-ic,body.noico .ph-ji{display:none}
+body.noico .pbar lk-i{display:none}
+/* ================= b2-polish: стиль-гид «Магнат 2.0» (logs/STYLE.md) — 4 типа карточек, цифры, метки; движение только при html.b2p:not(.b2-still) ================= */
+html.lk-a{--b2-paper:#fbf6e8;--b2-paper-ink:#2b2418;--b2-paper-ln:#d9ccb0;--b2-sky:linear-gradient(180deg,#cfe3ff 0,#eef4ff 100%);--b2-rival:#c4462f;--b2-dot:#e5484d;--b2-ease:cubic-bezier(.2,.8,.2,1)}
+body.th-dark{--b2-paper:#2a2721;--b2-paper-ink:#f1e9d6;--b2-paper-ln:#4a4436;--b2-sky:linear-gradient(180deg,#1b2440 0,#2a3354 100%)}
+.b2-num{font-variant-numeric:tabular-nums;-webkit-font-feature-settings:"tnum";font-feature-settings:"tnum";font-family:var(--numfont,inherit);white-space:nowrap}
+.b2-pos{color:var(--good)!important}.b2-neg{color:var(--bad)!important}
+.b2c{position:relative;background:var(--lkc,var(--card));border-radius:var(--r,20px);box-shadow:var(--sh);padding:16px 18px;margin-bottom:14px;overflow:hidden;color:var(--ink)}
+.b2c h4{margin:6px 0 4px;font-size:1.1em;line-height:1.25;font-weight:800}
+.b2c p{margin:0 0 6px;color:var(--ink2);line-height:1.35}
+.b2c small{color:var(--muted);font-size:.86em}
+/* 1) решение */
+.b2c-dec{border-left:5px solid var(--who,var(--accent))}
+.b2c-who{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;font-size:.92em}
+.b2c-who b{margin-right:6px}
+.b2c-ava{display:inline-block;width:44px;height:44px;min-width:44px;border-radius:50%;overflow:hidden;background:var(--soft);margin-right:10px;box-shadow:0 0 0 2px var(--who,var(--accent))}
+.b2c-ava svg,.b2c-ava img{width:100%;height:100%;display:block}
+.b2c-opts{margin-top:10px}
+.b2o{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:justify;justify-content:space-between;width:100%;min-height:52px;margin:0 0 8px;padding:10px 14px;border:1px solid var(--line2);border-radius:var(--r2,16px);background:var(--lkb,var(--soft));color:var(--ink);font:inherit;font-weight:700;text-align:left;cursor:pointer}
+.b2o:last-child{margin-bottom:0}
+.b2o em{font-style:normal;font-weight:700;font-size:.9em;margin-left:10px;white-space:nowrap}
+.b2o.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+/* 2) цель */
+.b2c-h{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;font-weight:800}
+.b2c-h>span{-webkit-box-flex:1;flex:1;margin-left:6px}
+.b2c-h>b{color:var(--accent);font-size:1.15em}
+.b2-bar{height:10px;border-radius:6px;background:var(--track);overflow:hidden;margin:8px 0 6px}
+.b2-bar>i{display:block;height:100%;border-radius:6px;background:var(--barfill,var(--accent));-webkit-transform-origin:0 50%;transform-origin:0 50%}
+.b2-bar.ok>i{background:var(--good)}
+.b2c-goal.b2c-mini{padding:10px 14px}.b2c-mini .b2-bar{margin:4px 0 0;height:8px}
+/* 3) новость */
+.b2c-news{background:var(--b2-paper);color:var(--b2-paper-ink);border:1px solid var(--b2-paper-ln);box-shadow:var(--sh);-webkit-transform:rotate(-.4deg);transform:rotate(-.4deg)}
+.b2c-news .b2c-mast{font-family:Georgia,"Times New Roman",serif;font-weight:900;letter-spacing:.12em;text-align:center;border-bottom:3px double var(--b2-paper-ln);padding-bottom:6px;font-size:.95em}
+.b2c-news .b2c-mast small{display:block;letter-spacing:.02em;font-weight:400;color:inherit;opacity:.75;font-size:.8em}
+.b2c-news h4{font-family:Georgia,"Times New Roman",serif;font-size:1.2em;font-weight:700;margin-top:8px}
+.b2c-news p{color:inherit;opacity:.85;font-style:italic}
+/* 4) мир */
+.b2c-world{padding:0;background:var(--b2-sky);min-height:120px}
+.b2c-world>svg{display:block;width:100%;height:136px}
+@media (min-width:700px){.b2c-world>svg{height:180px}}
+.b2c-cap{position:absolute;left:10px;bottom:10px;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,.88);color:#101828;font-weight:700;font-size:.85em}
+body.th-dark .b2c-cap{background:rgba(20,24,34,.85);color:#f1f4fa}
+/* мелочи */
+.b2-chip{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--soft);color:var(--ink2);font-size:.8em;font-weight:700;vertical-align:.1em}
+.b2-chip.new{background:var(--accent-t,var(--soft));color:var(--accent)}
+.b2-row{display:-webkit-box;display:flex;-webkit-box-pack:justify;justify-content:space-between;-webkit-box-align:baseline;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line)}
+.b2-row:last-child{border-bottom:0}
+.b2-more{display:block;width:100%;margin-top:6px;padding:10px 0;background:none;border:0;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;min-height:48px!important}   /* b2-merge: 45+ — цель ≥ 44 px (check.py) */
+/* всплывающее «+86 тыс.» (POL.pop) */
+.b2-pop{position:fixed;z-index:60;pointer-events:none;font-weight:800;font-family:var(--numfont,inherit);font-size:17px;white-space:nowrap;text-shadow:0 1px 0 rgba(255,255,255,.8);-webkit-animation:b2Pop 1.2s var(--b2-ease) forwards;animation:b2Pop 1.2s var(--b2-ease) forwards}
+@-webkit-keyframes b2Pop{0%{opacity:0;-webkit-transform:translate(-50%,6px) scale(.8)}15%{opacity:1;-webkit-transform:translate(-50%,-6px) scale(1.05)}70%{opacity:1}100%{opacity:0;-webkit-transform:translate(-50%,-30px)}}
+@keyframes b2Pop{0%{opacity:0;transform:translate(-50%,6px) scale(.8)}15%{opacity:1;transform:translate(-50%,-6px) scale(1.05)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px)}}
+/* b2-polish: «вдавливание» всего, что нажимается (кнопки вида уже есть в theme.css — тут недостающие), без движения при html.b2-still */
+html.b2p .f-tab:active,html.b2p .f-anb:active,html.b2p .f-sw:active,html.b2p .fu-row:active,html.b2p .nav-fr:active,html.b2p .oh:active,html.b2p .pb:active,html.b2p .mx:active,html.b2p .cp-line:active,html.b2p .mt-btn:active,html.b2p .b2o:active,html.b2p .b2-more:active,html.b2p .b2-chip:active{-webkit-transform:scale(.97);transform:scale(.97)}
+html.b2p button.card:active,html.b2p .f-card:active,html.b2p button.b2c:active{-webkit-transform:scale(.985);transform:scale(.985)}
+html.b2p .b2o,html.b2p .b2-more,html.b2p .f-card,html.b2p .fu-row{-webkit-transition:-webkit-transform .1s var(--b2-ease),box-shadow .1s;transition:transform .1s var(--b2-ease),box-shadow .1s}
+html.b2-still *,html.b2-still *::before,html.b2-still *::after{-webkit-animation:none!important;animation:none!important;-webkit-transition:none!important;transition:none!important}
+html.b2-still .b2-pop{display:none}
+/* b2-polish: Людмила ≤ 2 строк — остальное под «▼ Подробнее» (b2-polish.js cut) */
+.b2-cut{max-height:2.75em;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 60%,transparent);mask-image:linear-gradient(180deg,#000 60%,transparent)}
+.b2-cut p{margin:0!important}
+.say .b2-more,#adv .b2-more{margin:0 0 -6px;padding:6px 0;min-height:46px;text-align:left}

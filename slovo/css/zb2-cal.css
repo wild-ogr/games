@@ -46,3 +46,8 @@
 html:not(.zn-homefit) .zbs-zc-cal>.zc-chip{display:flex;align-items:center;gap:8px;width:100%;border:0;border-radius:12px;background:rgba(245,183,45,.18);padding:8px 12px;margin:4px 0;font:inherit;cursor:pointer;text-align:left}
 html:not(.zn-homefit) .zbs-zc-cal>.zc-chip i{font-style:normal;font-size:20px}
 html:not(.zn-homefit) .zbs-zc-cal>.zc-chip small{margin-left:auto;color:#c2410c;font-weight:700}
+/* up2410 ЗАВТРА ПОДАРОК: обещание завтра в первом листке */
+.zc-ta{margin:6px 0;padding:6px 8px;border-radius:12px;background:rgba(194,65,12,.08);border:1px dashed rgba(194,65,12,.35)}
+.zc-ta p{margin:0 0 6px;font-size:14px;line-height:1.35}
+.zc-tab{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.zc-tab .btn{min-height:44px;flex:1 1 120px;white-space:nowrap;padding-left:8px;padding-right:8px}

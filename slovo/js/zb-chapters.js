@@ -24,6 +24,7 @@
 */
 (function(){
   var LEN=20,N_OLD=500,D_OLD=120;
+  var ZB3_N=500,ZB3_V="146eb206"; // >>> zb3 (пишет tools/zb3_build.py)
   // места глав 1–25 — номера рисунков ART (README-1..3)
   var P=['podyezd','lavochka','rynok','poliklinika','dacha','elektrichka','banya','sberkassa','yubiley','sanatoriy','vypusk','pochta',
     'zhek','rybalka','griby','svadba','kruiz','moskva','novyj-god','akademiya','hor-dk','mfc','poezd-yug','vnuk-smartfon','solenya'];
@@ -43,8 +44,10 @@
   // <<< chapters.json
   var ZBCH=window.ZBCH={LEN:LEN,ON:true,list:[]};
   var nw=NEW.split(',');
-  for(var n=1;n<=75;n++){
-    var pv=n<=25?[P[n-1],'']:nw[n-26].split(' '),cells=[];
+  // up2410 ПОСЛЕ 1500: главы 76+ «Сверх программы» (tools/zb3_build.py → js/levels-zb3.js, ZB3_N уровней); места — по кругу глав 26–75
+  var NCH=75+Math.floor(ZB3_N/LEN);
+  for(var n=1;n<=NCH;n++){
+    var pv=n<=25?[P[n-1],'']:nw[(n-26)%nw.length].split(' '),cells=[];
     for(var k in INTRO)if(+k<=n)cells.push(INTRO[k]);
     ZBCH.list.push({n:n,place:pv[0],pn:P.indexOf(pv[0])+1,v:pv[1]||'',from:(n-1)*LEN+1,to:n*LEN,
       hard:n>25&&n%2===1?1:0,cell:INTRO[n]||'',cells:cells,cls:1,boss:0});
@@ -58,21 +61,27 @@
   names();clsApply(CLS);
   ZBCH.setCls=function(starts){clsApply(starts);};
   // сколько уровней всего: LV_ZB — число новых (пишет tools/build_zb.py в levels.js), файл новых может быть ещё не подгружен
-  ZBCH.total=function(){var z=ZBCH.ON&&typeof LV_ZB!=='undefined'?+LV_ZB||0:0;return Math.max(LEVELS.length,N_OLD+z);};
-  ZBCH.count=function(){return Math.min(75,Math.ceil(ZBCH.total()/LEN));};
+  ZBCH.total=function(){var z=ZBCH.ON&&typeof LV_ZB!=='undefined'?+LV_ZB||0:0;return Math.max(LEVELS.length,N_OLD+z+(z&&ZB3_N?ZB3_N:0));};
+  ZBCH.N3=ZB3_N;ZBCH.FROM3=N_OLD+(typeof LV_ZB!=='undefined'?+LV_ZB||0:0); // 1500: с какого индекса — «Сверх программы»
+  ZBCH.count=function(){return Math.min(NCH,Math.ceil(ZBCH.total()/LEN));};
   ZBCH.get=function(n){return n>=1&&n<=ZBCH.count()?ZBCH.list[n-1]:null;};
-  ZBCH.of=function(l){var n=Math.max(1,Math.min(75,Math.ceil(l/LEN))),c=ZBCH.list[n-1];
+  ZBCH.of=function(l){var n=Math.max(1,Math.min(NCH,Math.ceil(l/LEN))),c=ZBCH.list[n-1];
     return {ch:c,n:n,cls:c.cls,i:(l-1)%LEN,boss:!!c.boss&&c.boss===l};};
   ZBCH.classes=function(){var out=[],m=ZBCH.count();ZBCH.list.slice(0,m).forEach(function(c){var o=out[out.length-1];
     if(!o||o.cls!==c.cls)out.push(o={cls:c.cls,from:c.n,to:c.n,boss:0});o.to=c.n;o.boss=c.to;});return out;};
   ZBCH.boss=function(cls){var a=ZBCH.classes();for(var i=0;i<a.length;i++)if(a[i].cls===cls)return a[i].boss;return 0;};
   // ---------- подгрузка уровней 501+ (старт не тяжелеет: файл грузится только тем, кто близко к 500-му) ----------
   var ld=null;
-  ZBCH.loaded=function(){return LEVELS.length>=ZBCH.total();};
+  // up2410: уровни 1501+ (js/levels-zb3.js) нужны только тем, кто близко к 1500 (ZBCH.PRE3) — остальным файл не грузим
+  ZBCH.PRE3=1440;
+  function want(){var t=ZBCH.total();return ZB3_N&&(typeof S==='undefined'||(+S.lv||0)<ZBCH.PRE3)?Math.min(t,ZBCH.FROM3):t;}
+  ZBCH.loaded=function(){return LEVELS.length>=want();};
   ZBCH.load=function(){if(ZBCH.loaded())return Promise.resolve(LEVELS.length);if(ld)return ld;
     var v=typeof LV_ZB_V!=='undefined'?LV_ZB_V:'1';
     // файл выполнен, а уровни не дописались (LEVELS другой длины) — отказ, а не вечный круг startLevel → load → startLevel
-    ld=(typeof ZB!=='undefined'&&ZB.load?ZB.load('js/levels-zb.js?v='+v):Promise.reject(new Error('no ZB')))
+    var zl=function(f,ver){return typeof ZB!=='undefined'&&ZB.load?ZB.load(f+'?v='+ver):Promise.reject(new Error('no ZB'));};
+    ld=(LEVELS.length>=ZBCH.FROM3?Promise.resolve():zl('js/levels-zb.js',v))
+      .then(function(){if(LEVELS.length>=ZBCH.FROM3&&LEVELS.length<want())return zl('js/levels-zb3.js',ZB3_V);})
       .then(function(){ld=null;if(!ZBCH.loaded())throw new Error('levels-zb: '+LEVELS.length);if(typeof ZB!=='undefined')ZB.emit('levels',LEVELS.length);return LEVELS.length;},
         function(e){ld=null;throw e;});
     return ld;};

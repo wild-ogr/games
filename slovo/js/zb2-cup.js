@@ -1,0 +1,25 @@
+'use strict';
+/* ================= zb2-cup — живая лига hobby-cup в «Соседках по подъезду» (UP-ZN 24.10.2026; журнал hobby-analytics/release-i/fix-2410/UP-ZN.md) =================
+   Здесь только то, что нужно со старта: флаг новинки (?off=cup), поле сохранения S.z2u и ленивая подгрузка js/zb2-cup-x.js (модуль CUP + окна).
+   Кто: VK (не Одноклассники — ядро hobby-cup ОК не поддерживает) и Яндекс (только вошедший игрок — проверка в -x), с 10-го уровня (Соседки, sosOn()).
+   Сервер не ответил / CUP_LIVE без zina / нет сети — ничего не видно, игра как была (cup.js молчит сам).
+   S.z2u: on — был в живой лиге; jw — номер недели сервера, в которой вошёл в группу; lgw — неделя, награда которой выдана; sv/svw — последняя сданная
+   сумма очков и её неделя; tr — ступень (0 — Деревянная 4); sw — неделя, итог которой показан в статистике. Слияние облака — максимум по каждому числу. */
+(function(){
+if(!window.ZB2||!ZB2.reg)return;
+var ON=!!ZB2.reg('cup',{t:'Живая лига в Соседках (hobby-cup)',who:'UP-ZN'});
+ZB2.field('z2u',{def:{on:0,jw:0,lgw:0,sv:0,svw:0,tr:0,sw:0},
+  merge:function(m,c){['on','jw','lgw','svw','sw'].forEach(function(k){m[k]=Math.max(+m[k]||0,+c[k]||0);});
+    if((+c.svw||0)>(+m.svw||0)||(+c.svw||0)===(+m.svw||0)&&(+c.sv||0)>(+m.sv||0))m.sv=+c.sv||0;
+    if((+c.jw||0)>=(+m.jw||0))m.tr=+c.tr||0;}});
+var ZC=window.ZBCUP={on:ON,x:null};
+function plat(){try{if(typeof PLAT==='undefined'||typeof SHOT!=='undefined'&&SHOT)return false;if(PLAT==='vk')return typeof OK==='undefined'||!OK;return PLAT==='yandex';}catch(e){return false;}}
+ZC.want=function(){return ON&&!ZB2.off('cup')&&plat()&&typeof sosOn==='function'&&sosOn();};
+var xp=null;
+ZC.load=function(){if(!xp)xp=ZB.load('js/zb2-cup-x.js').then(function(){return ZC.x;},function(e){xp=null;throw e;});return xp;};
+// после первого показа Дома в сеансе (не мешаем старту) — подгрузить и тихо войти в группу недели
+var started=false;
+function home(){if(started||!ZC.want())return;started=true;setTimeout(function(){ZC.load().then(function(x){if(x&&x.boot)ZB.safe('cup:boot',x.boot);},function(){});},3000);}
+ZB.on('home',home);
+ZB.on('ready',function(){var m=document.querySelector('.screen.on');if(m&&(m.id==='menu'||m.id==='zb-home'))home();});
+})();

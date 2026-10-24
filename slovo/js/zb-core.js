@@ -109,7 +109,8 @@
   ZB.load=function(src){if(loaded[src])return loaded[src];
     function one(u){return new Promise(function(ok,no){var s=document.createElement('script');s.src=u;s.async=true;s.setAttribute('data-lazy','1');
       s.onload=function(){ok();};s.onerror=function(){s.remove();no(new Error('load '+u));};document.head.appendChild(s);});}
-    var p=one(src).catch(function(){return new Promise(function(r){setTimeout(r,1200);}).then(function(){return one(src+(src.indexOf('?')<0?'?':'&')+'r=2');});});
+    var p=one(src).catch(function(){return new Promise(function(r){/* fix2410: нет сети — ждём её (до 15 с), потом тот же один повтор */
+      if(navigator.onLine===false){var d=0,f=function(){if(d)return;d=1;removeEventListener('online',f);setTimeout(r,600);};addEventListener('online',f);setTimeout(f,15000);}else setTimeout(r,1200);}).then(function(){return one(src+(src.indexOf('?')<0?'?':'&')+'r=2');});});
     loaded[src]=p.catch(function(e){delete loaded[src];err('load',src);throw e;});return loaded[src];};
   // ---- VIEW: главы и места (данные; рисует zb-view.js) ----
   // рисунки мест ART: номер 1…25 → id (ZBCH.place может дать номер или id)

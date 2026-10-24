@@ -55,7 +55,8 @@ ZB.add(ZB.homeSlots,{id:'wordday',get order(){return aft()?10:70;},get zone(){re
   render:function(){var h=card();if(h)css();return h;},
   mount:function(el){var c=el&&el.querySelector('.zw-card');if(!c)return;if(!shown){shown=1;ev({a:'show',n:st().g.length,sr:cur('zagadala')});}
     c.onclick=function(){try{SND.tap();}catch(e){}var s=st();ev({a:'go',m:'home',n:s.g.length});
-      if(s.e===1&&window.ZMG&&ZMG.load)W.x().then(function(){return ZMG.load('zagadala');}).then(function(g){if(g&&g.shareToday)g.shareToday();else open('zagadala');},function(){open('zagadala');});else open('zagadala','home');};
+      if(s.e===1&&window.ZMG&&ZMG.load)W.x().then(function(){return ZMG.load('zagadala');}).then(function(g){/* fix2410: данные слова (deps) грузит только start() — догрузить перед «Похвастаться» */
+        return (window.ZMG_ZAGADALA?Promise.resolve():ZB.load('js/zmg-zagadala-data.js')).then(function(){if(!(g&&g.shareToday&&g.shareToday()))open('zagadala');});}).catch(function(){open('zagadala');});else open('zagadala','home');};
     c.onkeydown=function(e){if(e.key==='Enter')c.onclick();};}});
 ZB.on('zmg',function(d){if(d&&(d.id==='zagadala'||d.id==='muha'))ZB.safe('wd-ref',function(){ZB.refresh();});});
 var cssOn=0;

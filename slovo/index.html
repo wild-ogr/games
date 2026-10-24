@@ -7,6 +7,10 @@
 (function(){var K='ldfail',n=0,done=false;try{n=+sessionStorage.getItem(K)||0;}catch(e){}
 function own(t){var u=t&&(t.src||t.href)||'';if(!u||!t.tagName)return false;if(t.tagName!=='SCRIPT'&&t.tagName!=='LINK')return false;
   /* zb: модули буста (data-zb) и ленивые (data-lazy, ZB.load) — не перезагружаем: игра живёт без них, список — window.__zbmiss */
+  /* fix2410: ленивый стиль окна/мини-игры (link, добавленный скриптом или data-zb; кроме themes.css и zb-view.css из <head>) не загрузился —
+     НЕ перезагружаем игру (так было: css/zmg.css, zb2-cal.css, zb-cab.css в ОК), а один раз тихо повторяем через 1,5 с с ?r=2 */
+  if(t.tagName==='LINK'&&/stylesheet/i.test(t.rel||'')&&!/css\/(themes|zb-view)\.css$/.test(u)){if(!/[?&]r=2/.test(u))setTimeout(function(){try{var l=t.cloneNode(false);
+    l.href=u+(u.indexOf('?')<0?'?':'&')+'r=2';if(t.parentNode)t.parentNode.insertBefore(l,t.nextSibling);t.remove();}catch(x){}},1500);return false;}
   if(t.hasAttribute&&(t.hasAttribute('data-zb')||t.hasAttribute('data-lazy'))){(window.__zbmiss=window.__zbmiss||[]).push(u);return false;}
   try{var a=document.createElement('a');a.href=u;if(a.host!==location.host)return false;}catch(e){return false;}
   return !/vk-bridge|sdk\.js/.test(u);}
@@ -685,6 +689,8 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <!-- zb2:WEEK -->
 <script src="js/zb2-week.js" defer data-zb></script>
 
+<!-- zb2:CUP -->
+<script src="js/zb2-cup.js" defer data-zb></script><!-- up2410 UP-ZN: живая лига hobby-cup в Соседках (флаг cup; модуль и окна — js/zb2-cup-x.js, лениво) -->
 <script src="js/zb-ready.js" defer></script><!-- zb: все модули выполнены → ZB.ready() (до словаря) -->
 <script>/* zb-TECH (10.10): словари — zina.js 40К, gloss.js 94К, dict.js 323К (40 % веса) — грузим ПОСЛЕ первого экрана (DOMContentLoaded: все defer-скрипты
    выполнены, меню/1-й уровень уже показаны), по порядку (async=false). До них игра живёт: isWord ждёт dictReady() (бонусные слова не засчитываются

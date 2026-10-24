@@ -43,7 +43,7 @@ function shareText(L,rows,won,day){const d=new Date(Date.UTC(Math.floor(day/1e4)
   const r=(window.ZBWD&&ZBWD.cur)?ZBWD.cur(ID):0;
   return 'Баба Зина загадала слово · '+dd+' · '+(won?rows.length:'✕')+'/'+TRIES+'\n'+rows.map(x=>x.map(v=>v===2?'🟩':v===1?'🟨':'⬜').join('')).join('\n')+(r>1?'\nСерия 🔥'+r:'')+'\nА ты угадаешь?';}
 /* карточка Дома: «Похвастаться» без открытия игры */
-function shareToday(){const m=S.zmg&&S.zmg.m&&S.zmg.m[ID];if(!m||+m.k!==tk()||!m.e)return false;const a=wordOf(dn(tk()));
+function shareToday(){if(!D())return false;/* fix2410: данных слова нет — пусть откроется игра */const m=S.zmg&&S.zmg.m&&S.zmg.m[ID];if(!m||+m.k!==tk()||!m.e)return false;const a=wordOf(dn(tk()));
   const rows=String(m.g||'').split(',').filter(Boolean).map(g=>score(g,a));if(window.ZBWD)ZBWD.share(shareText(a.length,rows,+m.e===1,tk()),ID);return true;}
 let SIM5=null;
 ZMG_REG({a:'Угадай слово дня за 6 попыток: зелёная — буква на месте, жёлтая — есть в слове',ns:'Загадала слово на весь подъезд. Шесть попыток — и ни одной подсказки от Гали!',/* zb2-MERGE: правило и «Новая затея!» (просьба MGR) */id:ID,finWho:'zina',deps:['js/zmg-zagadala-data.js','js/zb2-wordday-x.js'],src:'wd',shareToday,
