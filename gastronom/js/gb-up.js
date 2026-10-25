@@ -33,9 +33,9 @@ function S_(){if(typeof S==='undefined'||!S)return null;fix(S);return S;}
 /* ---------- окно «Завтра — подарок» ---------- */
 var W={l:0,first:false};
 GB.levelHook.push(function(i){W={l:i.r==='win'?i.l:0,first:!!(i.r==='win'&&i.first&&!i.daily&&!i.mode)};});
-function due(idx){var s=S_();if(!s||!UP.tmr)return false;
+function due(idx){var s=S_();if(!s||!UP.tmr)return false;if(typeof ses2==='function'&&!ses2())return false; /* rules2510: окно «Завтра — подарок» только со 2-го захода (п. 2.6.3) */
   try{if(window.__demo||PLAT!=='vk')return false;}catch(e){return false;}
-  return !s.upTm.s&&W.first&&W.l>=UP.L1&&W.l<=UP.L2&&idx===W.l&&(s.levelsDone||0)<=UP.L2+4;}
+  return !s.upTm.s&&W.first&&W.l>=UP.L1&&idx===W.l&&(W.l<=UP.L2&&(s.levelsDone||0)<=UP.L2+4||typeof tmrCatch==='function'&&tmrCatch()&&(s.levelsDone||0)<=40);} /* rules2510: во 2-м–3-м заходе — при первой новой победе захода, если окна ещё не было */
 function ntfCan(){try{return !OK&&typeof SOC==='object'&&SOC.ok()&&SOC.can('ntf')&&SOC.ntfDue()&&!(S.soc&&S.soc.ntf&&+S.soc.ntf.n);}catch(e){return false;}}
 function favCan(){try{return !OK&&typeof SOC==='object'&&SOC.ok()&&SOC.can('fav');}catch(e){return false;}}
 function row(ic,t,sub){return '<div class="chest uptm-r"><span class="uptm-i">'+ic+'</span><span>'+t+(sub?'<small>'+sub+'</small>':'')+'</span></div>';}

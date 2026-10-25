@@ -229,7 +229,7 @@ openFore=function(back){STAT.screen('fore');var on=clubOn(),n=on?7:1,d0=dayNum()
   modal('<div class="uw-hd"><h2>🔮 '+L('Прогноз Петровича','Petrovich\'s forecast')+'</h2></div>'+top
     +(o0&&S.open[o0.pi]?'<div class="row"><button class="btn green uw-main" id="fbGo">🎣 '+L('Поехать','Go')+': '+esc(nm(PLACES[o0.pi]))+', '+L(TOD_AT[o0.t],TOD_N[o0.t][1].toLowerCase())+'</button></div>':'')
     +(rows?'<div class="uw-gh">'+(on?L('На неделю','This week'):L('Дальше','Next'))+'</div><div class="uw-fds">'+rows+'</div>':'')
-    +(on||OK?'':'<p class="uw-small">🎫 '+L('Прогноз на 7 дней — в Клубной карте.','The 7-day forecast comes with the Club card.')+'</p>')
+    +(on||OK||(typeof VK_IOS!=='undefined'&&VK_IOS)?'':'<p class="uw-small">🎫 '+L('Прогноз на 7 дней — в Клубной карте.','The 7-day forecast comes with the Club card.')+'</p>')
     +how(L('Как это работает','How it works'),'<p>'+L('Петрович смотрит погоду, давление и время суток по твоим открытым местам и советует, где и когда лучше клюёт. Точки — сила клёва.','Petrovich checks the weather at your places: where and when the bite is best.')+'</p>')
     +'<div class="row"><button class="btn" id="mCancel">'+L('Назад','Back')+'</button></div>');
   mark('fore');

@@ -12,7 +12,7 @@ if(typeof afterRes!=='function'||typeof R2!=='object')return;
 var $=function(id){return document.getElementById(id);};
 function st(a){try{STAT.ev('mod',{m:'tmrw',a:a});}catch(e){}}
 R2.reg('tmrw',{s:'UP-RB',t:'окно «Завтра на берегу» после 1-й рыбалки: подарок, серия, задание, напомнить, избранное'});
-function due(g){try{return !R2.off('tmrw')&&PLAT==='vk'&&!window.__demo&&!!g&&!g.tourn&&!g.guest&&!g.cup&&(S.sessions||0)>=1&&(S.sessions||0)<=2&&(S.caught||0)>=1&&/* только новичку: давним игрокам окно не показываем */
+function due(g){try{return !R2.off('tmrw')&&PLAT==='vk'&&(typeof ses2!=='function'||ses2())&&/* rules2510: только со 2-го захода (п. 2.6.3) */!window.__demo&&!!g&&!g.tourn&&!g.guest&&!g.cup&&(S.sessions||0)>=1&&((S.sessions||0)<=2||typeof tmrCatch==='function'&&tmrCatch()&&(S.sessions||0)<=30)&&/* rules2510: во 2-м–3-м заходе — после первой рыбалки захода, если окна ещё не было */(S.caught||0)>=1&&/* только новичку: давним игрокам окно не показываем */
   !(S.tips&&S.tips.tmrw);}catch(e){return false;}}
 window.RB_TMRW_DUE=due; // BK-RB 24.10: rb2-first (tmr) не дублирует строку «завтра» в итогах, если следом это окно
 function row(ic,t,sub,right){return '<div class="r2f-r"><span class="r2f-i">'+ic+'</span><span class="r2f-t">'+t+(sub?' <small>'+sub+'</small>':'')+'</span><b>'+(right||'')+'</b></div>';}

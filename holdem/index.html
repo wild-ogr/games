@@ -964,6 +964,8 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 /* ================= площадка: Яндекс Игры или VK (модули — из «Выезда»/«Дурака») ================= */
 const PLAT=IS_VK?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
+// rules2510: VK на iPhone/iPad — оплата голосами недоступна (VKWebAppShowOrderBox только Android/Web) → покупки не запускаем, кнопок нет. ОК (mobile_iphone_ok) — не сюда
+const VK_IOS=PLAT==='vk'&&!OK&&/[?&]vk_platform=mobile_(iphone|ipad)(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512005367341'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
@@ -1201,7 +1203,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Турнир / раздача дня / турнир недели / учебная раздача — «уровень» STAT: lvl в newGame/resumeLive, end в finishGame (win/lose/draw) и leaveGame (quit).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'holdem',gv:'v2.5-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'holdem',gv:'v2.6-102516',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: progress — после облака, но не позже 2,5 с: pl — турниров сыграно, cn — спички, bt — облако хоть раз отдавало сохранение
    (метка устройства holdem-cl, в сохранение не пишется); cfg — настройки сеанса: th — выбранный стол, snd, calm */
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('holdem-cl')?1:0;}catch(e){}
@@ -1576,7 +1578,7 @@ async function initVK(){
     adPreload('boot'); // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
     await cloudLoad();
   }catch(e){VK=null;}
-  if(!OK)PAY.init(); // ОК: покупки в «ОКах», сервер не готов (и п. 3.12 правил ОК: без быстрых платежей) → PAY.on=false, кнопок и окон покупок нет
+  if(!OK&&!VK_IOS)PAY.init(); // rules2510: и не на VK-iOS. ОК: покупки в «ОКах», сервер не готов (и п. 3.12 правил ОК: без быстрых платежей) → PAY.on=false, кнопок и окон покупок нет
   updCoins();
   window.__sdkDone=true;if(!G&&!window.__demo&&!modalOn&&$('scr-menu').classList.contains('on')){openMenu();menuPopups();}
 }
@@ -1772,12 +1774,12 @@ function showRewarded(cb0,onFail0,late0){
   adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},AD_WAIT_MS*2+AD_RETRY_MS+15000);
   const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0; /* pre: был ли ролик готов к нажатию */
   let paid=false,st=0; /* st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний) */
-  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=adRwT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=adRwT=Date.now();onFail0&&onFail0();};
+  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=adRwT=Date.now();cb0();if(VK||YP)setTimeout(cloudFlush,1500);} /* rules2510: награда — в облако сразу */,onFail=()=>{adBusy=false;lastAdT=adRwT=Date.now();onFail0&&onFail0();};
   const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr}); // ms ставит модуль; место живёт до итога; pre: pr — был ли ролик готов к нажатию (нужен STAT с 4-м параметром)
   const rel=why=>{if(st)return;st=2;rec.w=Date.now()-t0;rec.exit=why==='exit';adUnwatch();adClose();adPreload('exit');
     adRel=true;try{onFail();}finally{adRel=false;}adDim();toast(rec.exit?L('Хорошо. Подтвердится просмотр — награду отдам','All right. Once the view is confirmed, the reward is yours'):L('Не дождался ответа о просмотре. Придёт — награду отдам','No answer about the video yet. If it comes, the reward is yours'),4500);adLatePend(rec);};
   const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||pauseWhy.has('ad')||$('ad').classList.contains('on')||document.hidden){setTimeout(lateOk,1000);return;} /* другая реклама или игра свёрнута — подождём (hold: «не пришло» уже не пишем) */
-    paid=true;lastAdT=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}
+    paid=true;lastAdT=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}if(VK||YP)setTimeout(cloudFlush,1500);
     adLateEnd(rec,'ok',m?(adLateC?'latec':'late'):'late0');if(m)toast(L('Просмотр подтвердился — ','The view is confirmed — ')+m,4500);};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL());onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
   if(VK){
@@ -2435,7 +2437,7 @@ function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear(
     const was=S.best[pi]||0;if(stars>was)S.best[pi]=stars;
     let opened='';if(stars>=2&&pi+1<PLACES.length&&S.unlocked<pi+2){S.unlocked=pi+2;opened=T2(PLACES[pi+1].n);newTable=true;}
     const rk0=rankIdx(),insB=me.out&&(S.insN||0)<INS_N&&(S.tours||0)<INS_N,insT=me.out&&!insB&&pi>0&&G.tt===0,ins=insB||insT,back=ins?G.stack0:0;if(insB)S.insN=(S.insN||0)+1;
-    ern('lvl',end+back);S.coins+=end+back;S.tours++;if(place===1)S.wins++;if(!me.out)S.fin=(S.fin||0)+1;S.adW=(S.adW||0)+1;const recs=recUpd(end);save();updCoins();
+    ern('lvl',end+back);S.coins+=end+back;S.tours++;if(place===1)S.wins++;if(!me.out)S.fin=(S.fin||0)+1;S.adW=(S.adW||0)+1;const recs=recUpd(end);save();updCoins();if(VK||YP)setTimeout(cloudFlush,1500); /* rules2510: итог турнира — в облако сразу */
     const diff=end-G.stack0,coach=(S.tours<=10||me.out)?coachLine(me.out,place,G.dev):'';
     html=`<h2 id="${place===1?'rWon':'rEnd'}">${me.out?L('Вы выбыли','You\'re out')+' · '+L(place+'-е место',ordEn(place)+' place'):place===1?L('Победа! 1-е место','Victory! 1st place'):L(place+'-е место',ordEn(place)+' place')}</h2>
       <div class="big-stars">${starsHtml(stars)}</div>
@@ -2461,7 +2463,7 @@ function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear(
       <div class="row"><button class="btn green" id="rMenu">${L('В меню','Menu')}</button></div>`;
     if(won){SND.win();confetti();}}
   else if(mode==='week'){const k=weekKey(),score=me.out?0:end;S.wkB[k]=Math.max(S.wkB[k]||0,score);const rec=score>(S.wkBest||0);S.wkBest=Math.max(S.wkBest||0,score);
-    S.tours++;S.adW=(S.adW||0)+1;for(const w in S.wkN)if(+w<k-8){delete S.wkN[w];delete S.wkB[w];}save();LB.submit();
+    S.tours++;S.adW=(S.adW||0)+1;for(const w in S.wkN)if(+w<k-8){delete S.wkN[w];delete S.wkB[w];}save();LB.submit();if(VK||YP)setTimeout(cloudFlush,1500);
     const left=Math.max(0,WEEK_TRIES-(S.wkN[k]||0));
     html=`<h2 id="${place===1?'rWon':'rEnd'}">${L('Турнир недели','Weekly tournament')}: ${L(place+'-е место',ordEn(place)+' place')}</h2>
       <p>${L('Ваш результат','Your result')}: <b>${mH(score)}</b>${rec?' — '+L('личный рекорд!','personal best!'):''}</p>
@@ -2481,8 +2483,9 @@ function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear(
   modal(html);$('mcard').classList.add('fin');G.over=true;
   socEarly(mode==='learn'||newTable,mode!=='daily'&&mode!=='learn'&&!me.out&&adDue()&&adReady()&&adOk());
   if(mailOk&&mailWant()){const pi0=G.pi;mailWin(()=>finishShowAgain(html,mode,pi0));} // mail2410: «Написать нам» раз в 7 дней
-  const next=f=>()=>{hideModal();const go=()=>{G=null;f();};
-    if(mode!=='daily'&&mode!=='learn'&&!me.out&&adDue()&&adReady()&&adOk())showInterstitial(go);else{if(mode!=='daily'&&mode!=='learn'&&!me.out)statInt();go();}};
+  let nW=0;const next=f=>()=>{if(nW)return;const go=()=>{G=null;f();};
+    if(mode!=='daily'&&mode!=='learn'&&!me.out&&adDue()&&adReady()&&adOk()){nW=1;toast(L('Загрузка… реклама через секунду','Loading… ad in a second'),1200);setTimeout(()=>{hideModal();showInterstitial(go);},1000);} /* rules2510 (VK 5.1.5): показ — в явной загрузке перехода, окно итога остаётся до показа; второе нажатие не даёт второй показ */
+    else{hideModal();if(mode!=='daily'&&mode!=='learn'&&!me.out)statInt();go();}};
   $('rMenu').onclick=next(()=>{openMenu();menuPopups();});
   const G0pi=G.pi;
   if($('rAgain'))$('rAgain').onclick=next(()=>mode==='week'?startWeek():mode==='learn'?startLearn():startTour(G0pi));
@@ -2914,7 +2917,8 @@ function ntfB(){return L('🔔 Напоминать','🔔 Remind me');}function
 function socFits(){const m=$('modal'),c=$('mcard'),row=c.lastElementChild;if(m.scrollHeight<=m.clientHeight+1)return true; // окно целиком на экране
   const pl=c.querySelector('.places')||c.querySelector('.goal')||row,top=pl.getBoundingClientRect().top; // шапка итога — всё, что выше списка мест
   return top<=row.getBoundingClientRect().top+1;}
-function socEarly(full,adNext){const g=G;if(PLAT!=='vk'||!VK||!SOC.ok()||askedNow||full||adNext||window.__demo||!g||(S.tours||0)<3||adBusy||pauseWhy.size||Date.now()-lastAdT<60000||!SOC.ntfDue())return;
+const ses2=()=>(isObj(S.soc)&&+S.soc.ses||0)>=2; // rules2510 (п. 2.6.3, решение 25.10): само-предложения («🔔 Напоминать», группа, избранное, приглашение, отзыв/ярлык Яндекса) — только со 2-го захода, в первый никогда
+function socEarly(full,adNext){const g=G;if(!ses2()||PLAT!=='vk'||!VK||!SOC.ok()||askedNow||full||adNext||window.__demo||!g||(S.tours||0)<3||adBusy||pauseWhy.size||Date.now()-lastAdT<60000||!SOC.ntfDue())return;
   const c=$('mcard'),row=c.lastElementChild;if(!row||!row.classList.contains('row'))return;
   const t=ntfText(((S.soc&&S.soc.ntf&&+S.soc.ntf.n)||0)+1);if(!t)return;
   row.insertAdjacentHTML('afterbegin','<div class="socq" id="socBox"><span><b>'+T2(CHARS.tolik.n)+':</b> '+t+'</span><button class="btn noenter" id="socOf">'+ntfB()+'</button></div>');
@@ -2928,7 +2932,7 @@ function socEarly(full,adNext){const g=G;if(PLAT!=='vk'||!VK||!SOC.ok()||askedNo
 function socBind(){const g=G,box=$('socBox'),b=$('socOf'),o=g&&g.socO;if(!box)return;if(!o){box.remove();return;}
   b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_ntf'});
     Promise.resolve(o.run()).then(y=>{g.socO=null;if(y&&o.ok)toast(o.ok,3200);const x=$('socBox');if(x)x.remove();});};}
-async function offerReturn(){if(askedNow||window.__demo)return;if(Date.now()-BOOT_T<180000||adBusy||$('ad').classList.contains('on'))return;
+async function offerReturn(){if(askedNow||window.__demo||!ses2())return;if(Date.now()-BOOT_T<180000||adBusy||$('ad').classList.contains('on'))return;
   if(pauseWhy.size||!(G&&G.over&&modalOn&&$('rWon')))return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{

@@ -413,7 +413,10 @@ function dailyBoost(){const d=dayKey();if(S.boostDay!==d){S.boostDay=d;if(S.boos
    ok — это итог победы (или осады); после поражения межэкранной нет никогда */
 function afterAd(ok,fn){if(!ok||!interReady()){if(ok)adWhy();fn();return;}  // STAT v1.2: положена, но не показана — ad int none gap|cap|nosdk
   for(const b of document.querySelectorAll('#modal button'))b.disabled=true;
-  toast(Lg('Реклама через секунду…','Ad in a second…'));setTimeout(()=>showInterstitial(fn),1000);}
+  /* rules2510 (п. 5.1.5 VK «явная загрузка»): вместо тоста — экран «Загрузка…» на время паузы перед межэкранной */
+  let d=null;try{d=document.createElement('div');d.id='adLoad';d.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;background:rgba(0,0,0,.6);color:#fff;font:600 20px/1.2 sans-serif;text-align:center';
+    d.innerHTML=Lg('Загрузка…','Loading…')+'<small style="font-size:14px;font-weight:400;opacity:.8">'+Lg('реклама через секунду','ad in a second')+'</small>';document.body.appendChild(d);}catch(e){}
+  setTimeout(()=>{try{if(d)d.remove();}catch(e){}showInterstitial(fn);},1000);}
 function starsFor(){if(G.dif==='s'||G.dif==='h')return difStarsFor();const lost=G.maxLives-G.lives;return lost<=2?3:lost<=10?2:1;}   // OB:DIF Сложный/Адский — по доле жизней
 /* «Лучшая застава» и кто сколько сделал (урон без «перебора», проданные заставы тоже считаются) */
 function bestTwHTML(){if(!G)return '';const L=G.tw.filter(Boolean).concat(G.gone||[]).filter(t=>t.dmgd>0);if(!L.length)return '';
@@ -508,7 +511,7 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
         const h0=Array.from(m.querySelectorAll('[data-fit]')).filter(e=>e.style.display==='none').length; /* сколько спрятано и без вопроса */
         let best=-1,bh=99;[[false,false],[false,true],[true,false],[true,true]].forEach((v,k)=>{if(bh<=h0)return;const h=probe(v[0],v[1]);if(h>=0&&h<bh){bh=h;best=k;}});
         fit=best>=0;lite=best===1||best===3;m.classList.toggle('rc',best>=2);if(!fit)fitModal();}
-      const o=fit&&!TMR.due()?SOC.offer(S.wins,busy):null;   // UP-OV: следом окно «Завтра — подарок» с вопросом про напоминания — тут не перебиваем
+      const o=fit&&!TMR.due()&&(+(S.soc&&S.soc.ses)||0)>=2?SOC.offer(S.wins,busy):null;   /* rules2510: в первый заход никаких предложений, и «Напоминать» тоже (п. 2.6.3) */   // UP-OV: следом окно «Завтра — подарок» с вопросом про напоминания — тут не перебиваем
       if(o){retAsked=true;m.insertAdjacentHTML('beforeend',socRow(o,lite));fitModal();STAT.ev('mod',{m:'soc',a:'of_'+(o.k||'ret')});const b=$('mSoc');
         b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_'+(o.k||'ret')});const r=o.run();
           if(o.k==='ntf'){const d=m.querySelector('.soc-o');if(d)d.remove();Promise.resolve(r).then(y=>{if(y&&o.ok)toast(o.ok);}).catch(()=>{});}};}
@@ -920,7 +923,7 @@ function tmrBody(){const L=S.login||{},n=L.day===dayKey()?(L.n||1):0;
   return '<div class="goal tmr"><b>🎁 Завтра за вход:</b> '+loginTmrText()+'</div>'+
     '<div class="goal"><b>📜 Новые наказы дня</b> — за все три сундук дня</div>'+
     '<div class="goal"><b>🔥 Серия:</b> '+(n?n+' '+plw(n,'день','дня','дней','day','days')+' — ':'')+'заходи завтра, не потеряй серию'+(n?'':' (награда растёт 30 дней)')+'</div>';}
-TMR.init({ready:()=>(S.wins||0)>=3,done:()=>!!(S.ret&&S.ret.tmr),mark:()=>{if(!S.ret)S.ret={};S.ret.tmr=1;save();},body:tmrBody,
+TMR.init({ready:()=>(S.wins||0)>=3&&(+(S.soc&&S.soc.ses)||0)>=2,   /* rules2510: окно — только со 2-го захода, в первый никогда (п. 2.6.3) */ done:()=>!!(S.ret&&S.ret.tmr),mark:()=>{if(!S.ret)S.ret={};S.ret.tmr=1;save();},body:tmrBody,
   modal:h=>{showModal(h,'tmr');return $('mBody');},close:()=>hideModal(),toast:t=>toast(t),cls:'btn',main:'big',now:()=>nowMs(),
   ok:'Так точно! Завтра напомню.'});
 async function retOffer(){if(G||retAsked||S.wins<3||Date.now()-BOOT_T<120000||Date.now()-lastAdT<60000||$('modal').classList.contains('on'))return;const R=S.ret;

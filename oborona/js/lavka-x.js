@@ -51,7 +51,7 @@ art('dc_scare',48,g=>{ell(g,0,19,12,3,'rgba(0,0,0,.2)',{ol:false,flat:true});ln(
   for(const [x,y] of[[-6,4],[5,8]])poly(g,[x-2,y-2,x+2,y-2,x+2,y+2,x-2,y+2],'#c0392b',{lw:.4});});
 // ---------- окно «Лавка» ----------
 let busyRe=0;
-function ios(){const u=navigator.userAgent||'';return /iPhone|iPad|iPod/.test(u)||/vk_platform=mobile_ip/.test(location.search)||/Macintosh/.test(u)&&navigator.maxTouchPoints>1;}
+function ios(){return typeof PAY_IOS!=='undefined'&&!!PAY_IOS;} // rules2510: только VK на iPhone/iPad по vk_platform (не по браузеру — на Яндексе/ОК с iPhone заметки про «голоса» нет)
 function days(){return Math.max(0,7-Math.floor((Date.parse(dayKey())-Date.parse(K().d0))/864e5));}
 function shown(id){if(!PAY.on||LAV.ios||!PAY.item(id))return false;if(id==='starter')return days()>0||PAY.own(id);if(id==='night_kit')return lkFest()||PAY.own(id);return true;}
 function gold(c,attr){return '<button class="btn gold" '+attr+' '+(S.gold<c?'disabled':'')+'><img src="'+ic('ingot',40)+'">'+fmtNum(c)+'</button>';}

@@ -742,6 +742,8 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 // Одноклассники: та же VK-сборка, запущенная в ОК (vk_client=ok или vk_platform с хвостом _ok; на маке ?vk=1&ok=1). PLAT остаётся 'vk'
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
+/* rules2510: VK на iPhone/iPad — покупки за голоса недоступны (VKWebAppShowOrderBox: Android, Mobile Web, Web) → PAY не запускаем, как в ОК (кнопок покупок нет). ОК (…_ok) — это OK, не VK_IOS */
+const VK_IOS=PLAT==='vk'&&!OK&&/[?&]vk_platform=mobile_(iphone|ipad)(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512005037494'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 // название игры: в VK знак «№» в названии запрещён — там «Гастроном номер 1» (как в каталоге VK, VK всегда по-русски);
 // на Яндексе «Гастроном №1», по-английски «Soviet Grocery No. 1» (как в английской карточке Яндекса). Ставит setLang
@@ -994,7 +996,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
 // (на маке — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (STAT.optOut)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'gastronom',gv:'v14.7-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'gastronom',gv:'v14.8-102516',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: настройки сеанса (cfg), вход (start: pl — пройдено уровней, cn — монет, bt — было ли сохранение в облаке; после облака, но не позже 2,5 с),
    баланс (bal → cb в pause), откуда монеты (ern → earn: lvl, ad, gift, chest, buy, quest) */
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
@@ -1545,7 +1547,7 @@ async function initVK(){
     adPreload('boot');setTimeout(vkIntLoad,4000); /* gb-TECH: межэкранная — спросить VK заранее */ // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
     await cloudLoad();
   }catch(e){VK=null;updQuest();} /* без моста в настоящем VK — задания молчат */
-  if(!OK)PAY.init(); // покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1). ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
+  if(!OK&&!VK_IOS)PAY.init(); // rules2510: и не на iPhone/iPad в VK. Покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1). ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
   window.__sdkDone=true;
 }
 async function initSDK(){
@@ -2470,6 +2472,7 @@ function adOpen(){setPause('ad',true);YG.stop();}
 // игра снова «идёт» для GameplayAPI, только если уровень на экране и поверх нет окна
 function adClose(){setPause('ad',false);if(G&&!G.over&&!modalOn&&$('scr-game').classList.contains('on'))YG.start();}
 const AD_FAIL_T=()=>L('Реклама сейчас недоступна — загляните чуть позже','Ads aren\'t available right now — try again a bit later'),AD_CLOSED_T=()=>L('Ролик закрыт до конца — награды нет','The video was closed early — no reward'),VK_REAL=/[?&]vk_app_id=/.test(location.search);
+const INT_BOOT_T=Date.now(),INT_BOOT=180000; // rules2510 (VK 5.1.5): межэкранная — не в первые 3 минуты после запуска (долг S.adW с прошлой сессии ждёт)
 let lastAdT=Date.now(); // межэкранная — не чаще раза в 60 с (и не в первую минуту после запуска)
 // за награду — по желанию игрока; награда только после успешного просмотра; пока ролик идёт, повторные нажатия не запускают второй
 /* adfix (03.10): «ролика нет» — VK отвечает ошибкой 20 ('No ads'), чаще на компьютере: ролик ещё не подгрузился, готов он бывает через 10–60 с.
@@ -2631,7 +2634,7 @@ function showRewarded(cb0,onFail0,late0){
       adClose();stat('err','');toast(AD_FAIL_T());adCool();onFail();adDim();}}});
 }
 // межэкранная — не чаще раза в AD_GAP после ЛЮБОЙ рекламы (и за награду тоже) и после запуска
-function adReady(){return Date.now()-lastAdT>=AD_GAP&&adOk();}
+function adReady(){return Date.now()-lastAdT>=AD_GAP&&Date.now()-INT_BOOT_T>=INT_BOOT&&adOk();}
 // реклама вообще возможна: в настоящем VK без моста — нет (кнопок «за рекламу» не показываем)
 var AD_LOCAL=/^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|.*\.local|.*\.localhost)$/.test(location.hostname)||location.protocol==='file:';
 function adOk(){if(PLAT==='vk')return !(!VK&&VK_REAL);return !!ysdk||AD_LOCAL||!window.__sdkDone;} /* gb: на Яндексе без SDK кнопок «за рекламу» нет */
@@ -2641,7 +2644,7 @@ function adDue(){return !PAY.own('no_ads')&&(S.unlocked||1)>AD_FROM&&((S.adW||0)
 // долг S.adW обнуляется только после настоящего показа (Яндекс wasShown, VK result) — как в «Выезде» (аудит 14)
 /* STAT v1.2: итог межэкранной — show | none nofill (площадка не дала) | none nosdk (нет моста); положена, но рано — adWhy(): gap (после прошлой межэкранной) / cap (после ролика или запуска) */
 let lastIntT=0;
-function adWhy(){const n=Date.now();if(adOk()&&VK&&(n<intPauseT||vkIntOk===false)){intPre();return;} /* gb-TECH: VK заранее «нет» / пауза после 2 отказов */STAT.ad('int','none',!adOk()?'nosdk':n-lastIntT<AD_GAP?'gap':'cap');}
+function adWhy(){const n=Date.now();if(adOk()&&VK&&(n<intPauseT||vkIntOk===false)){intPre();return;} /* gb-TECH: VK заранее «нет» / пауза после 2 отказов */STAT.ad('int','none',!adOk()?'nosdk':n-lastIntT<AD_GAP||n-INT_BOOT_T<INT_BOOT?'gap':'cap');}
 /* gb-TECH (10.10, буст): межэкранная VK — предпроверка и пауза после отказов (было: nofill 47 % обращений, серии до 31 отказа подряд, 6 раз игрок ждал 60 с).
    vkIntLoad() — VKWebAppCheckNativeAds{interstitial} заранее (через 4 с после моста, через 3 с после показа, при открытии «Кассы», если ответ старше INT_FRESH), ответ помним (vkIntOk).
    «Дальше»: VK заранее сказал «нет» — переход сразу, без «Реклама через секунду…», VK не спрашиваем (ad int none c=pre); переспросить — не раньше INT_NO_MS.
@@ -3207,7 +3210,11 @@ function socPut(o,lite){const row=document.querySelector('#mcard .row');if(!row)
 // ntf: вопрос про напоминания ставим в окно победы СРАЗУ при открытии (зовётся из win()), а не через 2,2 с, как остальные предложения: окно стоит по центру,
 // и строка, появившаяся позже, сдвигает кнопки из-под пальца, а на 320×568 уходит под край. Не раньше 3-й победы (порог SOC) и не в «полном» окне
 // (full: Ревизия, новая карточка «Дефицит», грамота, «открылось задание дня», серия дней, следом межэкранная)
-function socEarly(full){if(PLAT!=='vk'||askedNow||full||window.__demo||(S.levelsDone||0)<3||Date.now()-BOOT_T<120000||!SOC.ntfDue()||socBusy())return;
+/* rules2510 (п. 2.6.3, решение владельца 25.10): само-предложения (окно «Завтра…» с «Напомнить»/«В избранное», «🔔 Напоминать» и др. SOC) — только со 2-го захода (S.soc.ses — счётчик заходов модуля SOC), в первый никогда */
+function ses2(){try{return (+(S.soc&&S.soc.ses)||0)>=2;}catch(e){return false;}}
+/* rules2510: чтобы новичок не потерял окно «Завтра…» (в 1-й заход его нет): во 2-м–3-м заходе оно положено при первой подходящей победе/рыбалке захода, даже если «счёт новичка» уже ушёл за верхнюю границу (один раз за игру, как и было) */
+function tmrCatch(){try{var n=+(S.soc&&S.soc.ses)||0;return n>=2&&n<=3;}catch(e){return false;}}
+function socEarly(full){if(PLAT!=='vk'||!ses2()||askedNow||full||window.__demo||(S.levelsDone||0)<3||Date.now()-BOOT_T<120000||!SOC.ntfDue()||socBusy())return;
   const row=document.querySelector('#mcard .row'),mo=$('modal');if(!row||!modalOn)return;
   const nn=(isObj(S.soc)&&isObj(S.soc.ntf)&&+S.soc.ntf.n||0)+1,txt=ntfText(nn);if(!txt)return;
   // примерка: влезает ли окно в экран без прокрутки — обычная строка, потом короткая (lite); на тесном экране с кнопкой «Обставить магазин»
@@ -3217,7 +3224,7 @@ function socEarly(full){if(PLAT!=='vk'||askedNow||full||window.__demo||(S.levels
   if(!fit(false)){lite=true;if(!fit(true)){gl=$('mShop')?document.querySelector('#mcard .goal'):null;if(!gl)return;gl.style.display='none';if(!fit(true)){gl.style.display='';return;}}}
   const o=SOC.offer(S.levelsDone||0,false);if(!o){if(gl)gl.style.display='';return;}askedNow=true;socPut(o,lite);}
 // skip — следом межэкранная: два окна подряд раздражают (аудит 12)
-async function offerReturn(skip){if(askedNow||window.__demo)return;sessWins++;if(skip||sessWins<2||Date.now()-BOOT_T<120000)return;
+async function offerReturn(skip){if(askedNow||window.__demo)return;sessWins++;if(!ses2()||skip||sessWins<2||Date.now()-BOOT_T<120000)return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{
     if(PLAT==='yandex'&&ysdk){

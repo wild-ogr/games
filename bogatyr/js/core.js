@@ -303,7 +303,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev',STAT_FB='https://stat.assortiz.ru/ev'; /* bb2 (13.10): облако Яндекса лежит с 11.10 → свой сервер ПЕРВЫМ, облако — запасным. Вернуть как было: url:STAT_URL и убрать url2 */
-STAT.init({g:'bogatyr',gv:'v25.6-102500',plat:PLAT,lang:LANG,url:STAT_FB,url2:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+STAT.init({g:'bogatyr',gv:'v25.7-102516',plat:PLAT,lang:LANG,url:STAT_FB,url2:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
@@ -746,7 +746,7 @@ let sdkDone=false;
    Межэкранная: после экрана итогов, со 2-го похода за всё время (решение 02.10; было с 4-го), не после первого похода захода, не чаще раза в 4 мин от ЛЮБОЙ рекламы,
    поход не короче 45 с; под флагами Яндекса (ADV). Никогда — посреди похода, при запуске, в первом походе. */
 const VK_REAL=/[?&]vk_app_id=/.test(location.search);
-const ADV={on:true,gap:4,from:2,sess:0,last:0}; // from: решение владельца 02.10 — со 2-го похода за всё время (было 4)
+const ADV={on:true,gap:4,from:2,sess:0,last:0,t0:Date.now(),early:180000}; // rules2510: t0/early — не в первые 3 мин захода (п. 5.1.5 VK) // from: решение владельца 02.10 — со 2-го похода за всё время (было 4)
 try{ADV.last=+localStorage.getItem('bogatyr-ad')||0;}catch(e){}
 // флаги: inter = 0/off — выключить; inter_gap — минут между рекламой (2–30); inter_from — с какого похода (2–30). Чужие значения не берём
 function applyFlags(f){if(!f||typeof f!=='object')return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
@@ -756,14 +756,18 @@ function adMark(){ADV.last=Date.now();try{localStorage.setItem('bogatyr-ad',Stri
 // поход закончен и итоги забраны: показать межэкранную? (runT — длина похода, с). Считает походы захода — звать ровно раз за поход
 function interReady(runT){ADV.sess++;const now=Date.now();if(ADV.last>now)adMark(); // часы перевели назад — отсчёт заново
   if(typeof PAY!=='undefined'&&PAY.own('no_ads'))return false; // куплено «Без рекламы между походами»
-  if(!ADV.on||S.runs<ADV.from||ADV.sess<2||!(runT>=45)||adBusy||adShowing)return false;
+  if(!ADV.on||S.runs<ADV.from||ADV.sess<2||!(runT>=45)||adBusy||adShowing||now-ADV.t0<ADV.early)return false;
   // STAT v1.2: положена, но не показана — ad int none: gap — рано после прошлой межэкранной, cap — рано после ролика за награду, nosdk — нет SDK/моста
   if(now-ADV.last<ADV.gap*60000){STAT.ad('int','none',now-lastIntT<ADV.gap*60000?'gap':'cap');return false;}
   const ok=PLAT==='vk'?!!VK||(!VK_REAL&&LOCAL):!!ysdk||LOCAL; // в настоящем VK без моста — нет; ?vk=1 на маке — заглушка
   if(!ok)STAT.ad('int','none','nosdk');return ok;}
 let lastIntT=0; // когда была последняя межэкранная (в этом заходе) — отличить gap от cap
 // STAT v1.2: adReq('int') перед показом (→ ms); итоги: show | none nofill (площадка не дала) | none nosdk (нет SDK/моста) | err (код/причина)
-function showInterstitial(cb0){let done=false;const cb=()=>{if(done)return;done=true;adMark();if(cb0)cb0();};lastIntT=Date.now();
+// rules2510 (п. 5.1.5 VK «явная загрузка»): перед межэкранной — короткая надпись «Загрузка…» (0,4 с) поверх перехода
+function adLoading(fn){let d=null;try{d=document.createElement('div');d.id='adLoad';d.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);color:#fff;font:600 20px/1.2 sans-serif';d.textContent=L('Загрузка…','Loading…');document.body.appendChild(d);}catch(e){}
+  setTimeout(()=>{try{if(d)d.remove();}catch(e){}fn();},400);}
+function showInterstitial(cb0){adLoading(()=>showInter0(cb0));}
+function showInter0(cb0){let done=false;const cb=()=>{if(done)return;done=true;adMark();if(cb0)cb0();};lastIntT=Date.now();
   if(PLAT==='vk'&&!VK){if(!VK_REAL&&LOCAL){STAT.adReq('int');STAT.ad('int','show','stub');stubAd(cb);}else{STAT.ad('int','none','nosdk');cb();}return;}
   if(VK){adOpen();STAT.adReq('int');vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{if(r&&r.result)STAT.ad('int','show');else STAT.ad('int','none','nofill');},e=>{if(adNoFill(e))STAT.ad('int','none','nofill');else STAT.ad('int','err',adErrCode(e));}).then(()=>{adClose();cb();vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).then(r=>STAT.adChk('int',r&&r.result?1:0),()=>STAT.adChk('int',0));});return;}
   if(!ysdk){if(LOCAL){STAT.adReq('int');STAT.ad('int','show','stub');stubAd(cb);}else{STAT.ad('int','none','nosdk');cb();}return;}
@@ -771,7 +775,7 @@ function showInterstitial(cb0){let done=false;const cb=()=>{if(done)return;done=
   try{ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();if(w!==false)STAT.ad('int','show');else STAT.ad('int','none','nofill');cb();},onError:()=>{adClose();STAT.ad('int','err','sdk');cb();},onOffline:()=>{adClose();STAT.ad('int','err','offline');cb();}}});}catch(e){adClose();STAT.ad('int','err','ex');cb();}}
 // будет ли межэкранная после этих итогов (как interReady, но без счёта походов) — чтобы не предлагать «Друзья и игры» перед роликом
 function interPeek(runT){const now=Date.now();if(typeof PAY!=='undefined'&&PAY.own('no_ads'))return false;
-  if(!ADV.on||S.runs<ADV.from||ADV.sess+1<2||!(runT>=45)||now-ADV.last<ADV.gap*60000)return false;return PLAT==='vk'?!!VK||(!VK_REAL&&LOCAL):!!ysdk||LOCAL;}
+  if(!ADV.on||S.runs<ADV.from||ADV.sess+1<2||!(runT>=45)||now-ADV.last<ADV.gap*60000||now-ADV.t0<ADV.early)return false;return PLAT==='vk'?!!VK||(!VK_REAL&&LOCAL):!!ysdk||LOCAL;}
 function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen();let n=3;tEl.textContent=n;
   const it=setInterval(()=>{n--;tEl.textContent=n;if(n<=0){clearInterval(it);ad.classList.remove('on');adClose();cb();}},600);}
 // можно ли показать рекламу: без SDK/моста кнопок «за рекламу» не рисуем (иначе нажатие даёт только «недоступна»); пока SDK Яндекса грузится — кнопки есть

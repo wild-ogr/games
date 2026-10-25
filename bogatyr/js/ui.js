@@ -118,8 +118,9 @@ const VPOS={home:[.5,.62,1.1],forge:[.16,.72,.9],altar:[.84,.74,.8],barn:[.33,.5
    не влез, следом межэкранная) — ntfPend, и он показывается плашкой на экране деревни после возвращения из похода. Одно предложение за сеанс и расписание — в SOC.offer;
    не пока нет кузницы (там обучение «первым делом — кузница»), не при открытом окне, не при рекламе. Плашка живёт до нажатия или до следующего похода */
 let ntfPend=false,ntfV=null;
+const ses2=()=>(S.soc&&+S.soc.ses||0)>=2; // rules2510 (п. 2.6.3, решение 25.10): само-предложения («🔔 Напоминать», SOC, ярлык/оценка Яндекса) — только со 2-го захода, в первый никогда
 function ntfVillage(){
-  if(!ntfV&&ntfPend&&curTab==='Village'&&!G&&S.village.forge&&!$('modal').classList.contains('on')&&typeof SOC!=='undefined'&&SOC.ntfDue()){
+  if(!ntfV&&ntfPend&&ses2()&&curTab==='Village'&&!G&&S.village.forge&&!$('modal').classList.contains('on')&&typeof SOC!=='undefined'&&SOC.ntfDue()){
     const o=SOC.offer(S.runs||0,Date.now()-ADV.last<60000||adShowing||adBusy);if(o){ntfPend=false;if(o.k==='ntf')ntfV=o;}}
   return ntfV?'<div class="card ntfv" id="vNtf"><p>'+ntfV.t+'</p><button class="btn ghost" id="vNtfB">'+ntfV.b+'</button></div>':'';}
 function renderVillage(){const el=$('tabVillage');const giftOk=nowMs()-(S.gift||0)>4*3600e3,gAmt=giftAmt(),mill=!!S.village.mill,vet=!!S.runs;
@@ -743,7 +744,7 @@ function openResult(win){const GE=G.endless||!!G.daily; // поход дня: к
   /* предложение «Друзья и игры» под кнопками. Пока модуль хочет спросить про напоминания (SOC.ntfDue — показа не тратит), вопрос ставим только если
      окно с ним целиком влезает в экран (ничего не уезжает под край и не вытесняется) и в окне нет важного (новый богатырь, новый облик, «построй кузницу», «кампания пройдена»);
      не влезло / не к месту — в этом окне молчат и остальные предложения (иначе избранное съест «одно предложение за сеанс») */
-  if(win&&!GE&&typeof SOC!=='undefined'){const m=$('mBody'),due=!socBusy&&(S.runs||0)>=3&&SOC.ntfDue();let fit=!due;
+  if(win&&!GE&&typeof SOC!=='undefined'&&ses2()){const m=$('mBody'),due=!socBusy&&(S.runs||0)>=3&&SOC.ntfDue();let fit=!due;
     const probe=()=>{m.insertAdjacentHTML('beforeend','<div class="socof ntf" id="rSocBox"><p>'+(ntfText(((S.soc&&S.soc.ntf&&+S.soc.ntf.n)||0)+1)||ntfText(3))+'</p><button class="btn ghost">'+L('🔔 Напоминать','🔔 Remind me')+'</button></div>');
       const y=m.scrollHeight<=m.clientHeight+1,pb=$('rSocBox');if(pb)pb.remove();return y;};
     if(due&&!socFull){fit=probe();if(!fit){rc=true;m.classList.add('rc');fit=probe();if(!fit){rc=false;m.classList.remove('rc');}}}
@@ -757,7 +758,7 @@ function ntfText(n){return n<=1?L('Завтра в деревне новые д�
   n===2?L('Каждый день в деревне новые задания. Напоминать о них?','There are new quests in the village every day. Remind you?'):
   L('Изредка буду звать в поход — когда нечисть осмелеет. Звать?','Now and then I’ll call you to a run when monsters grow bold. Shall I?');}
 // после победы (с 3-го похода) — одно предложение за сессию: ярлык/оценка на Яндексе, избранное/экран/друзья в VK
-async function askReturn(){if(ASK.session||S.runs<3||G)return;let o=null;try{o=await ASK.next();}catch(e){}if(!o||G||$('modal').classList.contains('on'))return;
+async function askReturn(){if(ASK.session||S.runs<3||G||!ses2())return;let o=null;try{o=await ASK.next();}catch(e){}if(!o||G||$('modal').classList.contains('on'))return;
   ASK.session=true;S.ask[o.k]=Date.now();save();
   showModal('<h3>'+L('Отличный поход!','Great run!')+'</h3><p class="sub" style="font-size:14px">'+o.t+'</p><div class="btns"><button class="btn big" id="askGo">'+o.b+'</button><button class="btn ghost" id="askNo">'+L('Не сейчас','Not now')+'</button></div>');
   on('askGo',()=>{hideModal();try{Promise.resolve(o.run()).catch(()=>{});}catch(e){}});on('askNo',hideModal);}

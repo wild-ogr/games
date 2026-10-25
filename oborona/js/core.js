@@ -350,7 +350,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v4.9-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v5.0-102516',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
@@ -946,6 +946,7 @@ function applyFlags(f){if(!f||typeof f!=='object')return;const n=parseInt(f.inte
   if(f.inter==='0'||f.inter==='off')INTER_ON=false;}
 function interReady(){if(!INTER_ON||adBusy||interBusy||typeof PAY!=='undefined'&&PAY.own('no_ads')||/[?&](bot|shot)/.test(location.search))return false;const now=Date.now();
   if(now-sessT<5*60e3||now-lastAdT<INTER_MIN*60e3)return false;
+  if(!(S.stars&&S.stars['0-5']))return false;   // rules2510 (п. 5.1.5 VK): новичку — нет, только после 1-й главы (6 уровней, «Логово Соловья»)
   return adOk();}   // в VK без ответа моста и в Яндексе без SDK — просто пропускаем, без заглушки   // в VK без ответа моста — просто пропускаем, без заглушки
 // подгрузка межэкранной VK: при запуске и после каждого показа/отказа; ответ не используется, на показ не влияет
 function interPre(){if(!VK)return;try{vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).then(r=>STAT.adChk('int',r&&r.result?1:0),()=>STAT.adChk('int',0));}catch(e){}}

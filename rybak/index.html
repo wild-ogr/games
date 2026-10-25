@@ -868,6 +868,8 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 /* ================= площадка: Яндекс Игры или VK (модули — из «Выезда»/«Дурака») ================= */
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
+/* rules2510: VK на iPhone/iPad — покупки за голоса недоступны (VKWebAppShowOrderBox: Android, Mobile Web, Web) → PAY не запускаем, как в ОК (кнопок покупок нет). ОК (…_ok) — это OK, не VK_IOS */
+const VK_IOS=PLAT==='vk'&&!OK&&/[?&]vk_platform=mobile_(iphone|ipad)(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512005219424'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 /*STAT*/
 /* ===== STAT v1.6 (12.10.2026; v1.5 — 11.10, v1.4 — 09.10, v1.3 — 08.10, v1.2 — 04.10, v1 — 29.09): своя ОБЕЗЛИЧЕННАЯ статистика — общий модуль всех игр =====
@@ -1290,7 +1292,7 @@ var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';  // фун
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (общий модуль hobby-analytics/stat, обновлять stat-sync.sh): без vk_user_id, IP и постоянного номера.
 // На маке и в домашней сети адреса нет — модуль молчит (?stat=dev — журнал [STAT] в консоль и window.__stat). Выключатель — ⚙ «Анонимная статистика».
 const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'rybak',gv:'v9.8-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'rybak',gv:'v9.9-102516',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl улов, ad ролики, gift подарки/письма/серия, chest посылки клуба, buy покупки, quest задания/кубки/достижения);
    progress — после облака, но не позже 2,5 с: pl — рыбалок за всё время, cn — монеты, bt — облако хоть раз отдавало сохранение (метка на устройстве rybak-cl) */
 function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
@@ -1682,7 +1684,7 @@ async function initVK(){
     await cloudLoad();
     vkIntLoad();
   }catch(e){VK=null;}
-  if(!OK)PAY.init(); // ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
+  if(!OK&&!VK_IOS)PAY.init(); // rules2510: и не на iPhone/iPad в VK. ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
   updCoins();
   window.__sdkDone=true;if(!G&&!window.__demo&&!modalOn&&$('scr-map').classList.contains('on')){openMap();maybeStreak();}
 }
@@ -1936,6 +1938,8 @@ function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.sessions||0
 // Раньше при отказе пауза не ставилась — игра просила рекламу после каждой рыбалки (196 отказов в 17 сеансах, разбор release-h/vk-mobile-inter/analysis.md п. 7)
 let vkIntOk=null;
 function vkIntLoad(){if(!VK)return Promise.resolve(false);return vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'},5000).then(r=>(vkIntOk=!!(r&&r.result)),()=>(vkIntOk=false)).then(ok=>{STAT.adChk('int',ok?1:0);return ok;});}
+/* rules2510 (VK 5.1.5: межэкранная — только при явной загрузке): после кнопки итогов — надпись «Загрузка…» ~0,4 с, потом показ */
+function intGo(go){toast(L('Загрузка…','Loading…'),900);setTimeout(()=>showInterstitial(go),400);}
 function showInterstitial(cb0){
   STAT.adReq('int');
   /* не показана: none c=nofill (VK: проверка сказала «нет», result:false или код 20) / nosdk; ошибка — err c=код VK или причина (adErrCode, как у ролика) */
@@ -2681,7 +2685,7 @@ function finish(){if(!G||G.over)return;G.over=true;YG.stop();S.sessions++;if(S.s
   countUp($('rCoins'),G.earned,'+','\u00A0💰');if(recS||legS||bonus){SND.record();FX.burst(.5,.25,recS||legS?44:26,bonus&&!recS?'coin':null);}
   offerReturn();}
 function afterRes(g,where){hideModal();const go=()=>{if(where==='goal')goalGo();else if(where==='again'&&g.tourn==='day'){G=null;openMap();openWeek();}else if(where==='again'&&!g.tourn)startFish(g.pi,{tod:g.cond.tod});else if(where==='again')startFish(g.pi,{tourn:true,tod:g.cond.tod});else{G=null;openMap();maybeStreak();}};
-  if(adDue()&&adReady())showInterstitial(go);else{if(adDue())STAT.ad('int','none','gap');go();}} // STAT v1.2: положена, но рано после прошлой
+  if(adDue()&&adReady())intGo(go);else{if(adDue())STAT.ad('int','none','gap');go();}} // STAT v1.2: положена, но рано после прошлой
 // ближайшая цель для монет: следующая ступень снасти / путёвка; когда всё куплено — украшения берега (самое дешёвое)
 function goalNext(){const o=[];
   for(const k of TK_KEYS){const l=S.tk[k];if(l<4)o.push({p:TACKLE[k].p[l+1],s:TACKLE[k].ic+' '+L(TACKLE[k].lv[l+1][0],TACKLE[k].lv[l+1][1]),go:'t',k});}
@@ -3704,7 +3708,11 @@ document.addEventListener('keydown',e=>{const k=e.key;if(e.ctrlKey||e.metaKey||e
 document.addEventListener('keyup',e=>{if((e.key==='Enter'||e.key===' ')&&G)G.hold=false;});
 /* ---- ярлык, оценка, избранное: одно предложение за сессию, после 2-й рыбалки и не раньше 2 минут; отказ запоминаем ---- */
 const BOOT_T=Date.now();let askedNow=false,sessN=0;
-async function offerReturn(){if(askedNow||window.__demo)return;sessN++;if(sessN<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
+/* rules2510 (п. 2.6.3, решение владельца 25.10): само-предложения (окно «Завтра…» с «Напомнить»/«В избранное», «🔔 Напоминать» и др. SOC) — только со 2-го захода (S.soc.ses — счётчик заходов модуля SOC), в первый никогда */
+function ses2(){try{return (+(S.soc&&S.soc.ses)||0)>=2;}catch(e){return false;}}
+/* rules2510: чтобы новичок не потерял окно «Завтра…» (в 1-й заход его нет): во 2-м–3-м заходе оно положено при первой подходящей победе/рыбалке захода, даже если «счёт новичка» уже ушёл за верхнюю границу (один раз за игру, как и было) */
+function tmrCatch(){try{var n=+(S.soc&&S.soc.ses)||0;return n>=2&&n<=3;}catch(e){return false;}}
+async function offerReturn(){if(askedNow||window.__demo)return;sessN++;if(!ses2()||sessN<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
   if(pauseWhy.size||!(G&&G.over&&modalOn&&$('rWin')))return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{
@@ -3872,7 +3880,7 @@ const WD=[['Вс','Sun'],['Пн','Mon'],['Вт','Tue'],['Ср','Wed'],['Чт','T
 function openFore(back){STAT.screen('fore');const on=clubOn(),n=on?7:1,d0=dayNum();let rows='';
   for(let i=1;i<=n;i++){const o=a3Fore(d0+i),dt=new Date(nowMs()+i*864e5);rows+=`<tr><td>${L(WD[dt.getDay()][0],WD[dt.getDay()][1])} ${dt.getDate()}</td><td>${a3ForeTxt(o)}</td></tr>`;}
   modal(`<h2>📅 ${on?L('Прогноз клёва на неделю','7-day bite forecast'):L('Прогноз на завтра','Tomorrow\'s forecast')}</h2><p>${L('Петрович смотрит погоду по открытым местам: где и когда лучше клюёт.','Petrovich checks the weather at your places: where and when the bite is best.')}</p>
-    <table class="ctab a3fc">${rows}</table>${on||OK?'':`<p class="about">🎫 ${L('Прогноз на 7 дней — в Клубной карте.','The 7-day forecast comes with the Club card.')}</p>`}
+    <table class="ctab a3fc">${rows}</table>${on||OK||VK_IOS?'':`<p class="about">🎫 ${L('Прогноз на 7 дней — в Клубной карте.','The 7-day forecast comes with the Club card.')}</p>`}
     <div class="row"><button class="btn" id="mCancel">${L('Назад','Back')}</button></div>`);$('mCancel').onclick=back||hideModal;}
 
 /* ---- окно «Клубная карта» (первая строка окна «Монеты», ⚙, строка на карте) ---- */
@@ -4263,7 +4271,7 @@ function later0(f,ms){setTimeout(f,ms);}
 openFore=function(back){STAT.screen('fore');const on=clubOn(),n=on?7:1,d0=dayNum(),o0=a3Fore(d0);let rows='';
   for(let i=0;i<=n;i++){const o=a3Fore(d0+i),dt=new Date(nowMs()+i*864e5);rows+=`<tr${i?'':' class="fbtd"'}><td>${i?L(WD[dt.getDay()][0],WD[dt.getDay()][1])+' '+dt.getDate():L('Сегодня','Today')}</td><td>${a3ForeTxt(o)}</td></tr>`;}
   modal(`<h2>🔮 ${L('Прогноз Петровича','Petrovich\'s forecast')}</h2><p>${L('Петрович смотрит погоду по твоим местам: где и когда лучше клюёт.','Petrovich checks the weather at your places: where and when the bite is best.')}</p>
-    <table class="ctab a3fc">${rows}</table>${on||OK?'':`<p class="about">🎫 ${L('Прогноз на 7 дней — в Клубной карте.','The 7-day forecast comes with the Club card.')}</p>`}
+    <table class="ctab a3fc">${rows}</table>${on||OK||VK_IOS?'':`<p class="about">🎫 ${L('Прогноз на 7 дней — в Клубной карте.','The 7-day forecast comes with the Club card.')}</p>`}
     <div class="row">${o0&&S.open[o0.pi]?`<button class="btn green" id="fbGo">🎣 ${L('Поехать','Go')}: ${esc(nm(PLACES[o0.pi]))}, ${L(TOD_AT[o0.t],TOD_N[o0.t][1].toLowerCase())}</button>`:''}<button class="btn" id="mCancel">${L('Назад','Back')}</button></div>`);
   if($('fbGo'))$('fbGo').onclick=()=>{hideModal();startFish(o0.pi,{tod:o0.t});};$('mCancel').onclick=back||hideModal;};
 // итоги: «завтра» — всегда отдельной строкой «Прогноз Петровича на завтра» (не вытесняется плашками)
@@ -4295,7 +4303,7 @@ function socPut(o,lite){const row=document.querySelector('#mcard .row');if(!row)
     // строку прячем, место оставляем (окно по центру — иначе кнопки прыгнут из-под пальца); разрешил — ответ Петровича
     const x=$('mSocBox');if(x){x.removeAttribute('id');b.removeAttribute('id');x.style.visibility='hidden';}
     Promise.resolve(o.run()).then(r=>{if(r&&o.ok)toast(o.ok);});};}
-function socEarly(g){if(PLAT!=='vk'||askedNow||window.__demo||!g||g.tourn||g.guest||g.nfull||(S.sessions||0)<3||Date.now()-BOOT_T<120000)return;
+function socEarly(g){if(PLAT!=='vk'||!ses2()||askedNow||window.__demo||!g||g.tourn||g.guest||g.nfull||(S.sessions||0)<3||Date.now()-BOOT_T<120000)return;
   if(!modalOn||!$('rWin')||$('mSocBox')||!SOC.ntfDue()||socBusy()||(adDue()&&adReady()))return;
   const mc=$('mcard'),mo=$('modal'),row=mc.querySelector('.row');if(!row)return;
   const nn=(isObj(S.soc)&&isObj(S.soc.ntf)&&+S.soc.ntf.n||0)+1,txt=ntfText(nn);if(!txt)return;
@@ -4426,7 +4434,7 @@ function cupLog(g){const log=[];for(let i=1;i<=g.catch.length&&i<=5;i++){const q
     save();}
   cupUi().then(()=>cupSubmit(g),()=>{});};}
 {const ar=afterRes;afterRes=function(g,where){if(where==='again'&&g&&g.cup){hideModal();const go=()=>{G=null;openMap();cupOpenL();};
-    if(adDue()&&adReady())showInterstitial(go);else go();return;}ar(g,where);};}
+    if(adDue()&&adReady())intGo(go);else go();return;}ar(g,where);};}
 // местная «Рыбалка дня» Яндекса прячется, пока живая лига на связи (её «Рыбалка дня» — общая, попытки те же: S.dayT)
 {const d0=dayOn;dayOn=function(){return d0()&&!cupLive();};}
 {const fs=fixSave;fixSave=function(){fs();if(S.cup!=null&&!isObj(S.cup))delete S.cup;

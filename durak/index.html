@@ -1084,6 +1084,8 @@ const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
    PLAT остаётся 'vk' (мост, облако, реклама — те же), а OK прячет то, чего в ОК нет или нельзя: рейтинг, покупки, избранное,
    значок на экран, группу VK, «Ещё игры», ссылки на vk.com. Образец — hobby-analytics/release-h/ok/ok-sample.md */
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
+// rules2510: VK на iPhone/iPad — оплата голосами недоступна (VKWebAppShowOrderBox только Android/Web) → покупки не запускаем, кнопок нет. ОК (mobile_iphone_ok) — не сюда
+const VK_IOS=PLAT==='vk'&&!OK&&/[?&]vk_platform=mobile_(iphone|ipad)(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512005141228'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
@@ -1320,7 +1322,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'durak',gv:'v2.4-102500',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'durak',gv:'v2.5-102516',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl партии/расклад/задачка, ad ролики и ×2, gift гостинцы лавочки, chest сундуки, buy покупки, quest достижения);
    progress — после облака, но не позже 2,5 с: pl — побед всего, cn — монеты, bt — облако хоть раз отдало сохранение (метка устройства durak-cl, в сохранение не пишется);
    cfg — стол (th), звук, спокойный режим. Покадрового цикла нет (переходы CSS) — STAT.frame() не зовём. */
@@ -1698,7 +1700,7 @@ async function initVK(){
     adPreload('boot'); /* pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне */
     await cloudLoad();
   }catch(e){VK=null;}
-  if(!OK)PAY.init(); // ОК: покупки — в «ОКах», сервер не готов → модуль не запускаем: PAY.on=false, кнопок и окон покупок нет
+  if(!OK&&!VK_IOS)PAY.init(); // rules2510: и не на VK-iOS. ОК: покупки — в «ОКах», сервер не готов → модуль не запускаем: PAY.on=false, кнопок и окон покупок нет
   updCoins();
   window.__sdkDone=true;if(!G&&!window.__demo&&!modalOn&&$('scr-map').classList.contains('on')){openMap();maybeStreak();}
 }
@@ -1877,12 +1879,12 @@ function showRewarded(cb0,onFail0,late0){
   adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},AD_WAIT_MS*2+AD_RETRY_MS+15000);
   const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0; /* pre: был ли ролик готов к нажатию */
   let paid=false,st=0; /* st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний) */
-  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=lastRewT=Date.now();cb0();},onFail=()=>{adBusy=false;lastAdT=lastRewT=Date.now();onFail0&&onFail0();};
+  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=lastRewT=Date.now();cb0();if(VK||YP)setTimeout(cloudFlush,1500);} /* rules2510: награда — в облако сразу, не через 15 с */,onFail=()=>{adBusy=false;lastAdT=lastRewT=Date.now();onFail0&&onFail0();};
   const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr}); /* STAT v1.2: ms ставит модуль; место живёт до итога; pre: pr — был ли ролик готов к нажатию (нужен STAT с 4-м параметром) */
   const rel=why=>{if(st)return;st=2;rec.ms=Date.now()-t0;rec.exit=why==='exit';adUnwatch();adClose();adPreload('exit');
     toast(rec.exit?'Хорошо. Подтвердится просмотр — награду отдам':'Ответа о просмотре пока нет. Придёт — награду отдам',4500);onFail();adDim();adLatePend(rec);};
   const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||pauseWhy.has('ad')||document.hidden){setTimeout(lateOk,1000);return;} /* другой ролик, межэкранная или игра свёрнута — подождём */
-    paid=true;lastAdT=lastRewT=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}
+    paid=true;lastAdT=lastRewT=Date.now();adLateC=0;let m='';try{m=late0&&late0()||'';}catch(e){}if(VK||YP)setTimeout(cloudFlush,1500);
     adLateEnd(rec,'ok',m?(adLateC?'latec':'late'):'late0');if(m)toast('Просмотр подтвердился — '+m,4500);};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL);onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;}
   if(VK){
@@ -2617,7 +2619,7 @@ function bindResult(adNext){const g=G,r=G.resR;
   {const sx=$('mSocBox'),sb=$('mSoc'),o=g.socO; /* ntf: строка вопроса про напоминания живёт в окне итога (и после «Честной раздачи»); отвечено — убираем */
     if(sx&&!o)sx.remove();else if(sb&&o)sb.onclick=()=>{sb.disabled=true;STAT.ev('mod',{m:'soc',a:'offer'});
       Promise.resolve(o.run()).then(y=>{g.socO=null;if(y&&o.ok)toast(o.ok,3200);const x=$('mSocBox');if(x&&G===g&&modalOn){x.remove();g.resHtml=$('mcard').innerHTML;}});};}
-  const go=f=>{const b=document.activeElement;if(adNext&&adDue()&&adReady()){toast('Реклама через секунду…',1200);setTimeout(()=>showInterstitial(f),1000);}else{if(g.kind!=='puz'&&adDue()&&!adReady())STAT.ad('int','none',!adOk()?'nosdk':Date.now()-lastRewT<AD_GAP?'cap':'gap');f();}}; /* STAT v1.2: положена, но рано после ролика (cap) / после прошлой (gap) */
+  const go=f=>{const b=document.activeElement;if(adNext&&adDue()&&adReady()){toast('Загрузка… реклама через секунду',1200);setTimeout(()=>showInterstitial(f),1000);}else{if(g.kind!=='puz'&&adDue()&&!adReady())STAT.ad('int','none',!adOk()?'nosdk':Date.now()-lastRewT<AD_GAP?'cap':'gap');f();}}; /* STAT v1.2: положена, но рано после ролика (cap) / после прошлой (gap) */
   const n=$('rNext');if(n)n.onclick=()=>{n.disabled=true;go(()=>startTour(g.idx+1));};
   const a=$('rAgain');if(a)a.onclick=()=>{a.disabled=true;go(()=>g.kind==='tour'?startTour(g.idx):g.kind==='daily'?startDaily():g.kind==='puz'?startPuzzle():g.kind==='endless'?startEndless():startQuick());};
   $('rMap').onclick=()=>{hideModal();leaveGame();};
@@ -2893,7 +2895,8 @@ function ntfText(n){return n<=1?((S.wins||0)>0?'Завтра припасу те
   :'Буду изредка звать во двор — партию сыграть. Звать?';}
 function socBusy(){return Date.now()-lastAdT<60000||pauseWhy.size>0||(adDue()&&adReady());}
 function socFits(){const m=$('modal');return m.scrollHeight<=m.clientHeight+1;}
-function socEarly(full){const g=G;if(PLAT!=='vk'||askedNow||full||window.__demo||!g||g.kind==='puz'||(S.games||0)<3||Date.now()-BOOT_T<120000||adBusy||socBusy()||!SOC.ntfDue())return;
+const ses2=()=>(isObj(S.soc)&&+S.soc.ses||0)>=2; // rules2510 (п. 2.6.3, решение 25.10): само-предложения («🔔 Напоминать», группа, избранное, приглашение, отзыв/ярлык Яндекса) — только со 2-го захода, в первый никогда
+function socEarly(full){const g=G;if(!ses2()||PLAT!=='vk'||askedNow||full||window.__demo||!g||g.kind==='puz'||(S.games||0)<3||Date.now()-BOOT_T<120000||adBusy||socBusy()||!SOC.ntfDue())return;
   const c=$('mcard'),row=c.querySelector('.row');if(!row)return;
   const t=ntfText(((S.soc&&S.soc.ntf&&+S.soc.ntf.n)||0)+1);if(!t)return;
   row.insertAdjacentHTML('afterend','<div class="chest soc-o ntf" id="mSocBox"><span><b>Дед Митяй:</b> '+t+'</span><button class="btn noenter" id="mSoc">'+NTF_B+'</button></div>');
@@ -2904,7 +2907,7 @@ function socEarly(full){const g=G;if(PLAT!=='vk'||askedNow||full||window.__demo|
     if(!ok){box.remove();return;}} // не влезет, даже если fitCard уберёт все необязательные строки, — в этом окне не спрашиваем (показ не потрачен)
   const o=SOC.offer(S.games||0,false);if(!o||o.k!=='ntf'){box.remove();if(o)askedNow=true;return;}
   askedNow=true;g.socO=o;}
-async function offerReturn(){if(askedNow||window.__demo)return;if(G&&G.resR&&G.resR.win)sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
+async function offerReturn(){if(askedNow||window.__demo||!ses2())return;if(G&&G.resR&&G.resR.win)sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
   if(pauseWhy.size||!(G&&G.s.over&&modalOn&&$('mWon')))return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{

@@ -129,7 +129,7 @@
     if(Q.length){var t=Q[Q.length-1];Q=[];setTimeout(function(){if(typeof toast==='function')toast(t[0],t[1]);},250);}}
   if(typeof hideModal==='function'){var hm=hideModal;window.hideModal=function(){closed();return hm.apply(this,arguments);};}
   if(typeof modal==='function'){var md=modal;window.modal=function(html){if(K.open&&String(html).indexOf('class="vw-kassa')<0)closed();return md.apply(this,arguments);};}
-  if(typeof toast==='function'){var ts=toast;window.toast=function(t,ms){if(K.open&&document.querySelector('#mcard .vw-kassa')&&typeof modalOn!=='undefined'&&modalOn){Q.push([t,ms]);return;}return ts.apply(this,arguments);};}
+  if(typeof toast==='function'){var ts=toast;window.toast=function(t,ms){/* rules2510 (VK 5.1.5): «Реклама через секунду…» — сразу, поверх окна кассы (в очереди он всплывал уже после рекламы) */if(K.open&&!/^(Реклама через секунду|Ad in a second)/.test(String(t))&&document.querySelector('#mcard .vw-kassa')&&typeof modalOn!=='undefined'&&modalOn){Q.push([t,ms]);return;}return ts.apply(this,arguments);};}
 
   /* ---------- новый город — плашкой в уровне (после Ревизии «Дальше» ведёт прямо в уровень) ---------- */
   GB.add(GB.levelSlots,{id:'vwCity',order:1,zone:'top',render:function(c){var n=K.newCity;if(!n||n.idx!==c.idx||c.daily)return '';K.newCity=null;

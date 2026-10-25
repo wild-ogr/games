@@ -38,6 +38,8 @@ function payAfter(){if($('modal').classList.contains('on')&&PAY.re)PAY.re();if(!
      которая «съест» первый чужой pay_ этого товара — второй раз не выдастся.
    Мак: ?paytest=1 — имитация Яндекса (localStorage «paytest»), ?vk=1&paytest=1 — имитация VK с сервером (localStorage «paytestvk»),
    ?paytest=fail — отказ. В настоящем VK (vk_app_id) и в Яндексе заглушек нет */
+// rules2510: клиент VK на iOS (vk_platform=mobile_iphone|mobile_ipad, без хвоста _ok) — VKWebAppShowOrderBox там не работает. ОК (…_ok) не трогаем
+const PAY_IOS=PLAT==='vk'&&!OK&&/[?&]vk_platform=mobile_(iphone|ipad)(&|$)/.test(location.search);
 const payObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 const PAY={on:false,p:null,v:null,list:[],busy:false,
   test:/[?&]paytest=/.test(location.search),
@@ -55,6 +57,7 @@ const PAY={on:false,p:null,v:null,list:[],busy:false,
     else if(PAY.test&&!VK_REAL)PAY.v=payStubVK();
     if(!PAY.v)return;
     try{await PAY.restore();}catch(e){}
+    if(PAY_IOS){PAY.list=[];PAY.on=false;return;} // rules2510: VK на iPhone/iPad — покупки за голоса недоступны, кнопок нет (довыдача прежних — выше)
     PAY.list=Object.keys(PAY_ITEMS).filter(id=>PAY_ITEMS[id].vk>0).map(id=>({id}));
     PAY.on=PAY.list.length>0;if(PAY.on)payAfter();},
   own(id){return !!(payObj(S.buy)&&S.buy[id]);},

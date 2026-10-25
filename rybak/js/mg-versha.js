@@ -104,7 +104,7 @@ function run(host,o){
     fin.querySelector('#vrOk').onclick=function(){snd('tap');finish();};
     var b2=fin.querySelector('#vr2');if(b2)b2.onclick=function(){askSecond(b2);};}
   /* напоминание VK — через существующий модуль SOC (ntf, SOC v2.4): тот же порядок показов (≤3, не чаще раза в день), своё — только слова Петровича про вершу */
-  function ntfAsk(){try{if(TR||typeof SOC==='undefined'||!SOC.ntfDue||!SOC.ntfDue()||typeof PLAT==='undefined'||PLAT!=='vk'||window.__demo)return;
+  function ntfAsk(){try{if(TR||(typeof ses2==='function'&&!ses2())||/* rules2510: не в 1-й заход */typeof SOC==='undefined'||!SOC.ntfDue||!SOC.ntfDue()||typeof PLAT==='undefined'||PLAT!=='vk'||window.__demo)return;
       if(typeof askedNow!=='undefined'&&askedNow)return;var o=SOC.offer(S.sessions||0,false);if(!o||o.k!=='ntf')return;try{askedNow=true;}catch(e){}
       var d=document.createElement('div');d.className='quote soc-o ntf';d.style.cssText='margin:10px 0 0;text-align:left';
       d.innerHTML='<span><b>'+L2('Петрович','Petrovich')+':</b> '+L2('Напомнить тебе, когда верша будет полна?','Shall I remind you when the trap is full?')+'</span>';

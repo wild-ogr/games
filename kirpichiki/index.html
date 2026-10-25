@@ -483,6 +483,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
   </section>
 
   <div id="modal" class="modal"><div class="card" id="mcard"></div></div>
+  <div id="adLd" class="ad"><div><span data-en="Loading…">Загрузка…</span></div></div>
   <div id="ad" class="ad"><div>📺 <span data-en="Ad">Реклама</span><br><small data-en="back soon">скоро продолжим</small><div id="adT" class="adt">3</div></div></div>
   <div id="toast" class="toast"></div>
 </div>
@@ -1016,6 +1017,8 @@ async function cloudLoad(force){if(cloudBusy||cloudReady||!(YP||VK)||(!force&&Da
 /* ================= площадка: Яндекс Игры или VK (модули — из «Выезда»/«Дурака») ================= */
 const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
+// rules2510 (25.10): VK на iPhone/iPad — покупки за голоса недоступны (VKWebAppShowOrderBox только Android/Mobile Web/Web) → PAY не запускаем (payCan/PAY.on = нет). В ОК (mobile_iphone_ok) — не трогаем (там OK)
+const VK_IOS=PLAT==='vk'&&!OK&&/[?&]vk_platform=mobile_(iphone|ipad)(_messenger)?(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512005552366'; // ссылка на игру в ОК (пусто — «Поделиться» в ОК спрятано)
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
@@ -1252,7 +1255,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'kirpichiki',gv:'v7.5-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'kirpichiki',gv:'v7.6-102516',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl уровни/задание дня/бесконечная, ad ролики и ×2, gift подарок за вход, chest сундуки глав и посылки сезона, buy покупки,
    quest поручения/звания/кладовка/неделя/кубки); progress — после облака, но не позже 2,5 с: pl — уровней со звёздами, cn — монеты, bt — облако хоть раз отдало
    сохранение (метка устройства kirpichiki-cl, в сохранение не пишется); cfg — тема, звук, спокойный режим. */
@@ -1657,7 +1660,7 @@ async function initVK(){
     adPreload('boot'); /* pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне */
     await cloudLoad();
   }catch(e){VK=null;}
-  if(!OK)PAY.init(); // ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
+  if(!OK&&!VK_IOS)PAY.init(); // rules2510: VK iOS — покупок нет (VK_IOS); ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
   updCoins();
   window.__sdkDone=true;if(!G&&!window.__demo&&!modalOn&&$('scr-menu').classList.contains('on')){renderMenu();maybeStreak();}
 }
@@ -2596,7 +2599,9 @@ function useBomb(r,c){const st=G.st,now=performance.now();delete G.paid.bomb;G.t
   if(!res.clr.length)toast(L('Там было пусто…','It was empty there…'));G.busy=false;updBoost();setHud();afterMove();curSave();kick();}
 
 /* ---- конец: победа, поражение, итог бесконечной игры ---- */
-function goNext(fn,ok){if(ok!==false&&adDue()&&adReady())showInterstitial(fn);else{if(ok!==false&&adDue())STAT.ad('int','none',!adOk()?'nosdk':PLAT==='vk'&&intNo>=INT_NO_MAX?'no2':Date.now()-lastRewT<AD_GAP?'cap':'gap');fn();}} /* STAT v1.2: положена, но рано после ролика (cap) / после прошлой (gap) */
+// rules2510 (п. 5.1.5): перед межэкранной — короткий экран «Загрузка…» (#adLd, 0,4 с) — показ в момент явной загрузки, а не поверх экрана
+function adLoad(f){const e=$('adLd');if(!e){f();return;}e.classList.add('on');setTimeout(()=>{e.classList.remove('on');f();},window.__fastAd?30:400);}
+function goNext(fn,ok){if(ok!==false&&adDue()&&adReady())adLoad(()=>showInterstitial(fn));else{if(ok!==false&&adDue())STAT.ad('int','none',!adOk()?'nosdk':PLAT==='vk'&&intNo>=INT_NO_MAX?'no2':Date.now()-lastRewT<AD_GAP?'cap':'gap');fn();}} /* STAT v1.2: положена, но рано после ролика (cap) / после прошлой (gap) */
 /* ---- награды в окне итога (boost): подарок за вход (не сгорает), звание, сундук главы, «Кладовка», неделя задания дня ---- */
 const chip=t=>'<span class="aw">'+t+'</span>';
 function giftChip(){const st=streakState();if(st.claimed||window.__demo||(S.wins||0)<1)return '';const c=STREAK[st.day-1],s=S.streak||{cyc:0};
@@ -3069,6 +3074,7 @@ const BOOT_T=Date.now();let askedNow=false,sessWins=0;
    в этот раз не спрашиваем (показ не тратится).
    Пока вопрос «должен» (SOC.ntfDue) — другие предложения SOC не показываются нигде. В ОК, Яндексе и без моста SOC.ntfDue() = false — ничего нет. */
 const NTF_W=4,NTF_DH=24;
+const ses2=()=>(isObj(S.soc)&&+S.soc.ses||0)>=2; // rules2510 (п. 2.6.3, решение 25.10): само-предложения («🔔 Напоминать», окно «Завтра — подарок», SOC, отзыв/ярлык Яндекса) — только со 2-го захода, в первый никогда
 function ntfText(n){return n<=1?L('Завтра тебя ждёт подарок за вход. Напомнить?','A login gift is waiting for you tomorrow. Shall I remind you?'):
   n===2?L('Каждый день во дворе новое задание. Напоминать о нём?','There is a new daily task in the yard every day. Shall I remind you?'):
   L('Буду изредка звать во двор сложить пару рядов. Напоминать?','I will call you to the yard now and then to clear a few rows. Shall I?');}
@@ -3086,7 +3092,7 @@ function socPut(o,row,lite){const n=o.k==='ntf',d=socLine(o,lite),sp=n?ntfSpot(r
     d.remove();if(sp.tm)sp.tm.style.display='';Promise.resolve(o.run()).then(r=>{if(r&&o.ok)toast(o.ok);});};return d;}
 // ntf: зовётся из levelWon (full — окно занято важным). Ставит строку в той же задаче, что и окно, но после обёрток K3 (микрозадачи), до отрисовки:
 // примерка без SOC.offer (показ не тратится) — влезла без прокрутки → настоящий вопрос; иначе короткий вид; не влез и он — в этот раз не спрашиваем
-function ntfEarly(full){if(askedNow||full||tmrDue()||(PLAT==='vk'&&!(isObj(S.tips)&&S.tips.tmr))||window.__demo||(S.wins||0)<NTF_W||Date.now()-BOOT_T<120000||!SOC.ntfDue())return;const my=G;
+function ntfEarly(full){if(!ses2()||askedNow||full||tmrDue()||(PLAT==='vk'&&!(isObj(S.tips)&&S.tips.tmr))||window.__demo||(S.wins||0)<NTF_W||Date.now()-BOOT_T<120000||!SOC.ntfDue())return;const my=G;
   const h=()=>$('modal').scrollHeight,fits=h0=>{const mo=$('modal'),h1=mo.scrollHeight;return h1<=mo.clientHeight+1||(h0>mo.clientHeight+1&&h1<=h0+NTF_DH);}, /* влезло без прокрутки — или окно и так длиннее экрана (320–375) и стало выше не больше чем на NTF_DH: строка рядом с кнопками */
     row=()=>{const r=document.querySelector('#mcard .row');return G===my&&modalOn&&!askedNow&&r?r:null;},
     n=(isObj(S.soc)&&isObj(S.soc.ntf)&&+S.soc.ntf.n||0)+1,tr={k:'ntf',t:ntfText(n),b:L('🔔 Напоминать','🔔 Remind me')};
@@ -3101,7 +3107,7 @@ function ntfEarly(full){if(askedNow||full||tmrDue()||(PLAT==='vk'&&!(isObj(S.tip
    (SOC.can('fav'), не в первую сессию — п. 2.6.3 правил VK), «▶ Дальше». В ОК — только текст и «Дальше» (SOC.can там ntf/fav не даёт).
    Пока окно не показано, ntfEarly молчит (вопрос — в этом окне). Статистика: mod {m:'tmr', a: show|ntf|ntf_no|fav|fav_no|next, k: 'ntf,fav'}. ?off=tmr — выключить. */
 const TMR_W=4;
-function tmrDue(){return PLAT==='vk'&&!window.__demo&&SOC.ok()&&!(isObj(S.tips)&&S.tips.tmr)&&(S.wins||0)>=TMR_W&&!/[?&]off=tmr/.test(location.search);}
+function tmrDue(){return ses2()&&PLAT==='vk'&&!window.__demo&&SOC.ok()&&!(isObj(S.tips)&&S.tips.tmr)&&(S.wins||0)>=TMR_W&&!/[?&]off=tmr/.test(location.search);}
 function tmrGo(fn){if(!tmrDue()||!G||G.mode!=='level'){fn();return;}S.tips.tmr=1;
   const nt=SOC.can('ntf')&&SOC.ntfDue(),fv=SOC.can('fav')&&(+S.soc.ses||0)>=2,k=[];
   if(nt){S.soc.ntf={n:Math.max(1,isObj(S.soc.ntf)&&+S.soc.ntf.n||0),t:nowMs()};k.push('ntf');}if(fv)k.push('fav');save();
@@ -3114,7 +3120,7 @@ function tmrGo(fn){if(!tmrDue()||!G||G.mode!=='level'){fn();return;}S.tips.tmr=1
   if(b1)b1.onclick=()=>{if(b1.disabled)return;b1.disabled=true;SOC.ntf(1).then(y=>{STAT.ev('mod',{m:'tmr',a:y?'ntf':'ntf_no'});if(y){b1.textContent='✓ '+L('Напомню!','I will!');toast(L('Хорошо, напомню! Нечасто.','OK, I will remind you. Not often.'));}else b1.disabled=false;});};
   if(b2)b2.onclick=()=>{if(b2.disabled)return;b2.disabled=true;SOC.fav().then(y=>{STAT.ev('mod',{m:'tmr',a:y?'fav':'fav_no'});if(y)b2.textContent='✓ '+L('В избранном','In favourites');else b2.disabled=false;});};
   $('tmGo').onclick=()=>{STAT.ev('mod',{m:'tmr',a:'next'});hideModal();fn();};}
-async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
+async function offerReturn(){if(askedNow||window.__demo||!ses2())return;sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
   if(pauseWhy.size||!(G&&G.st.over&&modalOn))return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{

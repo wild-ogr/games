@@ -99,7 +99,7 @@ var NV=(function(){
      Подарок за вход завтра, серия 7 дней (облик), новые дела и сундук дня, «Реванш» (если есть); «🔔 Напомнить завтра» (SOC.ntf, только VK — SOC.can('ntf'),
      показ считается показом №1 вопроса SOC: S.soc.ntf={n:1,t}) и «⭐ В избранное» (SOC.fav, со 2-го сеанса — правило VK 2.6.3; в ОК SOC.can('fav') — нет).
      Один раз: S.bb2.novice.tw. Флаг tmrw (?bb2=-tmrw — выключить). Статистика: nv_tmrw {a: show|ntf|ntfok|fav|favok|go, n,f}. */
-  function twDue(){try{return on('tmrw')&&PLAT==='vk'&&typeof G!=='undefined'&&!G&&(S.runs|0)>=1&&!!S.done[ORD[0]]&&!sv().tw&&!$('modal').classList.contains('on')&&!adShowing&&!adBusy;}catch(e){return false;}}
+  function twDue(){try{return on('tmrw')&&PLAT==='vk'&&(S.soc&&S.soc.ses|0)>=2&&typeof G!=='undefined'&&!G&&(S.runs|0)>=1&&!!S.done[ORD[0]]&&!sv().tw&&!$('modal').classList.contains('on')&&!adShowing&&!adBusy;}catch(e){return false;}}
   function twNtf(){try{return typeof SOC!=='undefined'&&SOC.ok()&&SOC.can('ntf')&&SOC.ntfDue()&&!(S.soc&&S.soc.ntf&&+S.soc.ntf.n);}catch(e){return false;}}
   function twFav(){try{return typeof SOC!=='undefined'&&SOC.ok()&&SOC.can('fav')&&(S.soc&&S.soc.ses|0)>=2;}catch(e){return false;}}
   function twRow(ic,t,sub){return '<div class="tmw"><span>'+ic+'</span><div><b>'+t+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</div></div>';}

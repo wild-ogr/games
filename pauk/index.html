@@ -754,6 +754,8 @@ const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
    Образец — hobby-analytics/release-h/ok/ok-sample.md. OK_LINK — ссылка на игру в ОК, у каждой из трёх игр своя (вид проверить на живой ссылке);
    пока пусто — «Поделиться» в ОК спрятано. */
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
+// rules2510: VK на iPhone/iPad — оплата голосами недоступна (VKWebAppShowOrderBox только Android/Web) → покупки не запускаем, кнопок нет. ОК (mobile_iphone_ok) — не сюда
+const VK_IOS=PLAT==='vk'&&!OK&&/[?&]vk_platform=mobile_(iphone|ipad)(&|$)/.test(location.search);
 const OK_LINK=({spider:'https://ok.ru/game/512005626567',})[GID]||''; // ссылка на игру в ОК; пусто — «Поделиться» в ОК спрятано
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
@@ -991,7 +993,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Имя игры — по сборке (BUILD_GAME → GID): Косынка — kosynka, Паук — pauk, Ячейка — yacheyka. Раздача = «уровень» (STAT.lvl в startDeal/resumeDeal)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v3.4-102500',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v3.5-102516',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (сыграно раскладов, монеты, было ли облачное сохранение) — после облака или через 2,5 с; баланс; настройки
 let statPr=0,statBt=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:played(),cn:+S.coins||0,bt:statBt});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0,th:S.th||'day'});
@@ -1384,7 +1386,7 @@ async function initVK(){
     adPreload('boot'); // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
     await cloudLoad();
   }catch(e){VK=null;}
-  if(!OK)PAY.init(); // покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1). ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
+  if(!OK&&!VK_IOS)PAY.init(); // rules2510: и не на VK-iOS. Покупки VK: после моста и облака (на маке без моста — только ?vk=1&paytest=1). ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
   updCoins();updButtons();
   window.__sdkDone=true;if(!window.__demo&&!modalOn&&$('scr-menu').classList.contains('on')){openMenu();maybeStreak();}
 }
@@ -2429,7 +2431,7 @@ function askNew(then){const c=G&&!G.won?G:loadCur();
     $('mYes').onclick=()=>{hideModal();abandon();then();};$('mCancel').onclick=()=>{hideModal();if(inPlay())YG.start();};return;}
   if(c)abandon();then();}
 // новая обычная раздача: сначала, если пора, межэкранная (не при запуске, не чаще раза в AD_GAP, с AD_FROM-й раздачи, по «долгу»)
-function newDeal(mode){askNew(()=>{const go=()=>startDeal(0,mode);if(adDue()&&adReady())showInterstitial(go);else{if(adDue())STAT.ad('int','none','gap');go();}});}
+function newDeal(mode){if(newDeal._w)return;askNew(()=>{const go=()=>startDeal(0,mode);if(adDue()&&adReady()){newDeal._w=1;toast('Загрузка… реклама через секунду',1200);setTimeout(()=>{newDeal._w=0;showInterstitial(go);},1000);} /* rules2510 (VK 5.1.5): показ — в явной загрузке новой раздачи; второе нажатие за эту секунду не даёт второй показ */else{if(adDue())STAT.ad('int','none','gap');go();}});}
 function openDaily(){STAT.screen('daily');const cur=loadCur();if(G&&G.daily===dayKey(0)&&!G.won){openGame();return;}
   if(cur&&cur.daily===dayKey(0)&&!(G&&!G.won)){resumeDeal(cur);return;}
   const done=!!S.daily[dayKey(0)];
@@ -2862,12 +2864,12 @@ function showRewarded(cb0,onFail0,late0){
   adBusy=true;clearTimeout(showRewarded._t);showRewarded._t=setTimeout(()=>{adBusy=false;adWait(0);},AD_WAIT_MS*2+AD_RETRY_MS+15000);
   const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0; /* pre: был ли ролик готов к нажатию */const secs=()=>Math.round((Date.now()-t0)/1000);
   let paid=false,st=0; // st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний)
-  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();S.adTot=(S.adTot|0)+1;save();cb0();thCheck();},onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
+  const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();S.adTot=(S.adTot|0)+1;save();cb0();thCheck();if(VK||YP)setTimeout(cloudFlush,1500);} /* rules2510: награда — в облако сразу */,onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
   const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr}); // ms ставит модуль (adReq); место живёт до итога; pre: pr — был ли ролик готов к нажатию (нужен STAT с 4-м параметром)
   const rel=why=>{if(st)return;st=2;rec.w=secs();rec.exit=why==='exit';adUnwatch();adClose();adPreload('exit');
     toast(rec.exit?'Хорошо. Подтвердится просмотр — награду отдам':'Не дождалась ответа о просмотре. Придёт — награду отдам',4500);onFail();adDim();adLatePend(rec);};
   const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||pauseWhy.has('ad')||document.hidden){setTimeout(lateOk,1000);return;} // другой ролик (или межэкранная) либо игра свёрнута — подождём (hold: «не пришло» уже не пишем)
-    paid=true;lastAdT=Date.now();adLateC=0;S.adTot=(S.adTot|0)+1;save();let m='';try{m=late0&&late0()||'';}catch(e){}thCheck();
+    paid=true;lastAdT=Date.now();adLateC=0;S.adTot=(S.adTot|0)+1;save();if(VK||YP)setTimeout(cloudFlush,1500);let m='';try{m=late0&&late0()||'';}catch(e){}thCheck();
     adLateEnd(rec,'ok',m?(adLateC?'latec':'late'):'late0');if(m)toast('Просмотр подтвердился — '+m,4500);};
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('rew','fail','nobridge');toast(AD_FAIL);onFail();}else{STAT.ad('rew','ok','stub');stubAd(cb);}return;} // мост VK не ответил — награду даром не даём; ?vk=1 на маке — заглушка
   if(VK){let tries=0;
@@ -2897,7 +2899,7 @@ function adReady(){return Date.now()-lastAdT>=AD_GAP&&!(PLAT==='vk'&&!VK&&VK_REA
 function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
 // «долг» межэкранной: S.adW — раздач с прошлого показа (разложенных и брошенных после 5+ ходов); показ положен при S.adW ≥ AD_EVERY.
 // Если сейчас нельзя (пауза после рекламы) — показ не сгорает, а ждёт следующей раздачи. Обнуляется только после настоящего показа
-function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.games||0)>=AD_FROM;}
+function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.games||0)>=AD_FROM&&!novice();} // rules2510 (VK 5.1.5): не новичку (первые NOVICE_DEALS раздачи с обучением)
 function showInterstitial(cb0){STAT.adReq('int');
   /* не показана: none c=nofill (площадка не дала: result:false или код 20) / nosdk; ошибка — err c=код VK или причина (как у ролика — adErrCode) */
   const fin=(r,c)=>{lastAdT=Date.now();STAT.ad('int',r,c);if(r==='show'){S.adW=0;save();}cb0();};
@@ -3198,7 +3200,8 @@ function ntfOk(){return GID==='freecell'?'Договорились! Беспок
 function socBusy(){return Date.now()-lastAdT<60000||pauseWhy.size>0||(adDue()&&adReady());}
 function socFits(){const m=$('modal'),c=$('mcard');return m.scrollHeight<=m.clientHeight+1&&c.scrollHeight<=c.clientHeight+1;} // на ПК (≥700 px) прокручивается само окно, на телефоне — подложка
 const SOC_OPT='#mcard .wfan,#mcard .hello,#mcard .wgoal,#mcard .wnext'; // необязательное в окне победы: убираем, чтобы вопрос влез без прокрутки
-function socEarly(full){const g=G;if(PLAT!=='vk'||askedNow||full||window.__demo||!g||!g.won||played()<3||Date.now()-BOOT_T<120000||adBusy||socBusy()||!SOC.ntfDue())return;
+const ses2=()=>(isObj(S.soc)&&+S.soc.ses||0)>=2; // rules2510 (п. 2.6.3, решение 25.10): само-предложения («🔔 Напоминать», группа, избранное, приглашение, отзыв/ярлык Яндекса) — только со 2-го захода, в первый никогда
+function socEarly(full){const g=G;if(!ses2()||PLAT!=='vk'||askedNow||full||window.__demo||!g||!g.won||played()<3||Date.now()-BOOT_T<120000||adBusy||socBusy()||!SOC.ntfDue())return;
   const c=$('mcard'),row=c.querySelector('.row');if(!row)return;
   const t=ntfText(((S.soc&&S.soc.ntf&&+S.soc.ntf.n)||0)+1);if(!t)return;
   row.insertAdjacentHTML('afterend','<div class="soc-o ntf" id="mSocBox"><span><b>'+HOSTN[GC.host]+':</b> '+t+'</span><button class="btn noenter" id="mSoc">'+NTF_B+'</button></div>');
@@ -3212,7 +3215,7 @@ function socEarly(full){const g=G;if(PLAT!=='vk'||askedNow||full||window.__demo|
   askedNow=true;STAT.ev('mod',{m:'soc',a:'of_ntf'});const b=$('mSoc');
   b.onclick=()=>{b.disabled=true;STAT.ev('mod',{m:'soc',a:'ok_ntf'});Promise.resolve(o.run()).then(r=>{if(r){if(o.ok)toast(o.ok,3200);if(document.body.contains(box))box.remove();}else b.disabled=false;},()=>{b.disabled=false;});};}
 // окно площадки — только пока на экране окно победы (не поверх следующей раздачи или межэкранной) и ничего не на паузе
-async function offerReturn(){if(askedNow||window.__demo)return;sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
+async function offerReturn(){if(askedNow||window.__demo||!ses2())return;sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
   if(pauseWhy.size||!(G&&G.won&&modalOn&&$('mWon')))return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{

@@ -277,6 +277,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 
   <nav class="navbar" id="navBar"></nav>
   <div id="modal" class="modal"><div id="rays"></div><div class="card" id="mcard"></div></div>
+  <div id="adLd" class="ad"><div>Загрузка…</div></div>
   <div id="ad" class="ad"><div>📺 Реклама<br><small>скоро продолжим</small><div id="adT" class="adt">3</div></div></div>
   <div id="toast" class="toast"></div>
 </div>
@@ -533,6 +534,8 @@ const PLAT=/[?&](vk_app_id|vk)=/.test(location.search)?'vk':'yandex';
    OK_LINK — ссылка на игру в ОК (вид проверить на живой ссылке); пока пусто — «Поделиться» и дуэль по ссылке в ОК спрятаны. */
 const OK=PLAT==='vk'&&/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
 const OK_LINK='https://ok.ru/game/512005471658';
+// rules2510 (25.10): VK на iPhone/iPad — покупки за голоса недоступны (VKWebAppShowOrderBox только Android/Mobile Web/Web) → PAY не запускаем, кнопок покупок нет. В ОК (mobile_iphone_ok) — не трогаем (там OK)
+const VK_IOS=PLAT==='vk'&&!OK&&/[?&]vk_platform=mobile_(iphone|ipad)(_messenger)?(&|$)/.test(location.search);
 const DUEL_ON=PLAT==='vk'&&(!OK||!!OK_LINK); // дуэль — это ссылка другу: в Яндексе нельзя, в ОК — только когда известна ссылка на игру
 let ysdk=null,YP=null,VK=null,paused=false;
 /*STAT*/
@@ -780,7 +783,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'viktorina',gv:'v5.5-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'viktorina',gv:'v5.6-102516',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (pl — пройдено уровней, cn — монеты, bt — облако хоть раз отдавало сохранение: метка устройства viktorina-cl) — после облака, не позже 2,5 с
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('viktorina-cl')?1:0;}catch(e){}STAT.progress({pl:+S.lvl||0,cn:+S.coins||0,bt:bt});if(window.STATANS)STATANS.prg();} // STATANS.prg — разовое prg (js/stat-ans.js)
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound===false?0:1,calm:S.calm===true?1:0});
@@ -1159,7 +1162,7 @@ async function initVK(){
     adPreload('boot'); // pre: подгрузка ролика за награду сразу после моста (облако не ждём); «нет» — переспрашиваем в фоне
     await cloudLoad();
   }catch(e){VK=null;}
-  if(!OK)PAY.init(); // ОК: покупки — в «ОКах», сервер не готов → модуль не запускаем: PAY.on=false, кнопок и окон покупок нет
+  if(!OK&&!VK_IOS)PAY.init(); // rules2510: VK iOS — покупок нет (VK_IOS); ОК: покупки — в «ОКах», сервер не готов → модуль не запускаем: PAY.on=false, кнопок и окон покупок нет
   updCoins();sdkDone();statProg();}
 async function initSDK(){
   if(window.YaGames){
@@ -1400,7 +1403,9 @@ function showInterstitial(cb0){STAT.adReq('int'); // STAT v1.2: ms в итого
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();fin('err','');}}});
 }
 // межэкранная — только здесь: между лестницами, по кнопке «Дальше/Ещё раз» в окне итогов
-function between(cb){if(adDue()&&adReady())showInterstitial(cb);else{if(adDue())STAT.ad('int','none',Date.now()-lastAdT<AD_GAP?'gap':'nosdk');cb();}} // STAT v1.2: положена, но рано после прошлой рекламы — gap
+// rules2510 (п. 5.1.5): перед межэкранной — короткий экран «Загрузка…» (#adLd, 0,4 с) — показ в момент явной загрузки, а не поверх экрана
+function adLoad(f){const e=$('adLd');if(!e){f();return;}e.classList.add('on');setTimeout(()=>{e.classList.remove('on');f();},window.__fastAd?30:400);}
+function between(cb){if(adDue()&&adReady())adLoad(()=>showInterstitial(cb));else{if(adDue())STAT.ad('int','none',Date.now()-lastAdT<AD_GAP?'gap':'nosdk');cb();}} // STAT v1.2: положена, но рано после прошлой рекламы — gap
 // удалённая настройка Яндекса (флаги консоли). Границы жёсткие: межэкранная — не чаще раза в 2 лестницы и раза в 180 с
 function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
   if((n=num('ad_coins',10,60))!==null)AD_COINS=n;if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;}
@@ -2172,7 +2177,8 @@ function socPut(o,dense){const w=$('mWon');w.insertAdjacentHTML('afterend',socBo
 // Не в «полном» окне (full: новое звание, новая медаль темы, обещание страховки после двух неудач) и не когда не влезает: примерка тем же текстом —
 // обычный вид, потом плотный; годится вид, где окно целиком на экране и портрет Михалыча не пропал из-за вопроса (цитата, цель и ряд ступенек — необязательные,
 // fitCard и так убирает их первыми). Не влезло — не спрашиваем, показ не тратится (SOC.offer не зовём)
-function socEarly(full){if(PLAT!=='vk'||!VK||askedNow||full||TMR.due()||window.__demo||ladFin()<3||Date.now()-BOOT_T<120000||!$('mWon')||socBusy()||!SOC.ntfDue())return;
+const ses2=()=>(isObj(S.soc)&&+S.soc.ses||0)>=2; // rules2510 (п. 2.6.3): предложения и окно «Завтра» — только со 2-го захода, в первый никогда
+function socEarly(full){if(!ses2()||PLAT!=='vk'||!VK||askedNow||full||TMR.due()||window.__demo||ladFin()<3||Date.now()-BOOT_T<120000||!$('mWon')||socBusy()||!SOC.ntfDue())return;
   const n=(isObj(S.soc)&&isObj(S.soc.ntf)&&+S.soc.ntf.n||0)+1,tx=ntfText(n);if(!tx)return;
   const base=fitCard();fitUndo();let view=-1;
   for(const dense of [0,1]){$('mWon').insertAdjacentHTML('afterend',socBox({k:'ntf',t:tx,b:L('🔔 Напоминать','🔔 Remind me')},dense));
@@ -2180,7 +2186,8 @@ function socEarly(full){if(PLAT!=='vk'||!VK||askedNow||full||TMR.due()||window._
     if(h.indexOf('!')<0&&(h.indexOf('.av')<0||base.indexOf('.av')>=0)){view=dense;break;}}
   if(view<0)return;
   const o=SOC.offer(ladFin(),socBusy());if(!o)return;askedNow=true;socPut(o,view);}
-async function offerReturn(){if(askedNow||window.__demo||TMR.due())return; // UP-OV: следом окно «Завтра — подарок» с вопросом про напоминанияsessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
+async function offerReturn(){if(askedNow||window.__demo||TMR.due()||!ses2())return; // UP-OV: следом окно «Завтра — подарок» с вопросом про напоминания
+  sessWins++;if(sessWins<2||Date.now()-BOOT_T<120000||adBusy||$('ad').classList.contains('on'))return;
   if(pauseWhy.size||!(G&&G.over&&modalOn&&$('mWon')))return;
   if(!isObj(S.ask))S.ask={};const now=Date.now(),due=(k,d)=>!S.ask[k]||now-S.ask[k]>d*864e5,mark=k=>{askedNow=true;S.ask[k]=now;save();};
   try{
@@ -2207,7 +2214,7 @@ function tmrBody(){const g=giftState(),sd=isObj(S.tdS)?S.tdS:{},n=sd.d===dayKey(
   return '<p class="goal tipl">🎁 <b>Гостинец Михалыча завтра:</b> +'+coinsTxt(g.after)+'</p>'+
     '<p class="goal">📅 <b>Новая викторина дня</b> — 10 вопросов, одни на весь двор'+(wkTom!==wkNow?' · ⭐ новая тема недели':'')+'</p>'+
     '<p class="goal">🔥 <b>Серия:</b> '+(n?n+' '+pl(n,'день','дня','дней','day','days')+' — ':'')+'заходи завтра, не потеряй серию</p>';}
-TMR.init({ready:()=>ladFin()>=3,done:()=>(S.tmr||0)>0,mark:()=>{S.tmr=1;save();},body:tmrBody,title:'📅 Завтра — подарок!',
+TMR.init({ready:()=>ladFin()>=3&&ses2(),done:()=>(S.tmr||0)>0,mark:()=>{S.tmr=1;save();},body:tmrBody,title:'📅 Завтра — подарок!',
   modal:h=>{modal('<div class="av">'+portrait('mihalych','happy')+'</div>'+h);return $('mcard');},close:()=>hideModal(),toast:t=>toast(t),cls:'btn noenter',main:'accent',row:'row',now:()=>nowMs(),
   ok:'Договорились! Завтра напомню.'});
 if(!DUEL_ON)$('btnDuel').style.display='none';
