@@ -1,0 +1,52 @@
+/* zb3 КОЖА «Зины 3.0» (MIX), хозяин — SKIN: только переменные --z3-* под html.z3 (+ шрифты). Пояснения к переменным — шапка js/zb3-skin-s.js. */
+@font-face{font-family:"ZLobster";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/lobster-z3.woff2) format("woff2")}
+@font-face{font-family:"ZCaveat";font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/caveat-z3.woff2) format("woff2")}
+html.z3{
+--z3-bg:#f6efe3;
+--z3-paper:#fbf7ec;
+--z3-card:rgba(255,255,255,.94);
+--z3-ink:#27324a;
+--z3-ink2:#5d6781;
+--z3-line:#e6dcc8;
+--z3-acc:#c2410c;
+--z3-acc-grad:linear-gradient(#cf4a10,#b83a0a);
+--z3-acc-edge:#8f2c06;
+--z3-acc-ink:#fff;
+--z3-ok:#237a3b;
+--z3-blue:#2563c9;
+--z3-blue-grad:linear-gradient(#3b7be0,#2563c9);
+--z3-blue-edge:#1d4fa3;
+--z3-gold:#f5b72d;
+--z3-red:#d0342c;
+--z3-wood:#a9673a;
+--z3-wood2:#d9a06a;
+--z3-sky:#cfe9f4;
+--z3-grass:#a7d775;
+--z3-shadow:0 3px 0 rgba(39,50,74,.10),0 10px 24px -8px rgba(39,50,74,.28);
+--z3-shadow-btn:0 5px 0 var(--z3-acc-edge),0 12px 22px rgba(160,70,20,.28);
+--z3-r:22px;
+--z3-rb:16px;
+--z3-font:"ZRubik",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+--z3-font-head:"ZRubik",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+--z3-font-paper:"ZLobster",Georgia,"Times New Roman",serif;
+--z3-font-news:Georgia,"Times New Roman",serif;
+--z3-font-hand:"ZCaveat","Segoe Print","Comic Sans MS",cursive;
+--z3-y-sky1:#8fc9ec; --z3-y-sky2:#cfe9f4; --z3-y-sky3:#fbf1df;
+--z3-y-mead1:#d9ebc2; --z3-y-mead2:#c3e09c; --z3-y-mead3:#a9d37e; --z3-y-far:#a9cf8a;
+--z3-y-lawn:#a7d775; --z3-y-lawn2:#b9e086; --z3-y-alawn:#c6cc72; --z3-y-alawn2:#dcc566;
+--z3-y-leaf1:#4f9e46; --z3-y-leaf2:#6fbd52; --z3-y-leaf3:#9ad86c;
+--z3-y-aleaf1:#c8741a; --z3-y-aleaf2:#e89a2a; --z3-y-aleaf3:#f7c955;
+--z3-y-birch1:#7fb84a; --z3-y-birch2:#9fd25c; --z3-y-birch3:#c9ea84;
+--z3-y-abirch1:#d99a1a; --z3-y-abirch2:#f2c33a; --z3-y-abirch3:#ffe17a;
+--z3-y-wall:#f7d4b8; --z3-y-wall2:#d9a98d; --z3-y-night:#1b2352; --z3-y-lamp:#ffd27a;
+--z3-y-tag:#ffffff; --z3-y-tag-ink:#27324a; --z3-y-tag-ink2:#5d6781; --z3-y-badge:#d0342c;
+}
+html.z3.z3t-eve{--z3-y-sky1:#5a4a8c}
+html.z3.z3t-night{--z3-y-sky1:#141c46}
+html.z3.z3s-aut.z3t-day{--z3-y-sky1:#a8c3d6}
+html.z3{--z3-h-b1:#e8a24a; --z3-h-b2:#5aa0d8; --z3-h-b3:#6dbf6a; --z3-h-b4:#c2410c; --z3-h-roof:#b5523a; --z3-h-wip:#f5c542;
+--z3-h-bar:#237a3b; --z3-h-bar0:#e9e1cc; --z3-h-me:#fff3d6}
+html.z3{--z3-a-body:#8a5130;--z3-a-drawer:#b9784a;--z3-a-edge:#6b3d22;--z3-a-knob:#f5b72d;--z3-a-linen:#fffdf6;--z3-a-stitch:#c8322b;--z3-a-card:#fffaf0}
+html.z3:not(.th-x) #zmgHost{--paper:#fbf7ec;--card:#fffdf8;--ink:#27324a;--ink2:#5d6781;--line:#efe6d2;--edge:#e6dcc8;--soft:#f6efe3;--track:#efe6d4;
+--blue:#2563c9;--blue2:#2f6fd6;--blue3:#e3ecfb;--green:#34a853;--green2:#237a3b;--gold:#f5b72d;--gold3:#e0921a;--red:#e2463b;--red2:#d0342c;--margin:#f0b3ad;
+--shadow:0 3px 0 rgba(39,50,74,.10),0 10px 24px -8px rgba(39,50,74,.28);--font:"ZRubik",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}

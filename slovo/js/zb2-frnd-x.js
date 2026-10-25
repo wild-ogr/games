@@ -80,6 +80,8 @@ function copy(t,done){var f=function(){try{var a=document.createElement('textare
 function send(h,txt,ok){var u=link(h);
   var cp=function(){copy(txt+'\n'+u,function(){try{toast('Ссылка скопирована — вставь соседу в личные сообщения',3500);}catch(e){}ok('copy');});};
   if(!REAL||!window.vkBridge||typeof vkSend!=='function'){cp();return;}
+  // Z3-SHARE: общий SHR.post (отклик сразу, 8 с без окна или ошибка → копия ссылки + тост; отказ игрока — ничего)
+  if(window.SHR){SHR.post(txt,{k:'frnd',link:u,cb:function(h){if(h==='vk')ok('vk');else if(h==='copy')ok('copy');}});return;}
   vkSend('VKWebAppShare',{link:u,text:txt},120000).then(function(d){ok('vk');},function(e){var t=e&&(e.error_data&&(e.error_data.error_reason||e.error_data.error_code))||'';
     if(/cancel|denied|4/i.test(String(t)))return;cp();});}
 /* ---------- стили (вставкой) ---------- */
@@ -261,17 +263,20 @@ function bragText(k,id){var L=['👵 Баба Зина: слова из букв
   return L.join('\n');}
 function brag(k,id){if(!ON.brag)return;tap();k=k==='cal'||k==='rec'?k:'';var txt=bragText(k,id),wall=VK&&!OKP&&REAL&&!!window.vkBridge&&typeof vkSend==='function';ev({a:'open',k:'b',e:k||'home'});
   win('<h2>📣 Похвастаться</h2>'+say('happy','Вот что я про тебя напишу. Скромничать не будем.')+'<div class="zq-pre">'+esc(txt)+'</div>'+
-    '<div class="btns"><button class="btn blue" id="zqGo">'+(wall?'📣 На стену ВКонтакте':'📋 Скопировать текст')+'</button><button class="btn ghost small" id="zqOk">Не сейчас</button></div>');
+    '<div class="btns"><button class="btn blue" id="zqGo">'+(wall?'📨 Отправить ВКонтакте':'📋 Скопировать текст')+'</button><button class="btn ghost small" id="zqOk">Не сейчас</button></div>');
   $$('zqOk').onclick=function(){tap();done();};
   $$('zqGo').onclick=function(){tap();var Z2=Z();
-    if(wall){var a=+qp('vk_app_id');vkSend('VKWebAppShowWallPostBox',{message:txt+(a?'\nhttps://vk.com/app'+a:'')},60000).then(function(){ev({a:'brag',k:'b',e:'vk'});},function(){ev({a:'brag',k:'b',e:'vkno'});});done();return;}
+    // Z3-SHARE: было VKWebAppShowWallPostBox (устарел, молча падал, окно закрывалось) — теперь SHR.post: VK — «Поделиться» с текстом, иначе копия + тост
+    if(window.SHR){done();SHR.post(txt,{k:'brag',cb:function(h){ev({a:'brag',k:'b',e:h==='vk'?'vk':h==='cancel'?'vkno':h});}});return;}
     copy(txt,function(){ev({a:'brag',k:'b',e:'copy'});try{toast('Скопировано — вставь другу в сообщение',3000);}catch(e){}done();});};}
 
 /* ================= ДОМ: баннер входящего (top) и карточка «С соседями» (bottom) ================= */
 ZB.add(ZB.homeSlots,{id:'zq-in',order:HFIT()?5:4,zone:HFIT()?'chips':'top',render:function(){var h=banner();if(h)css();return h;},
   mount:function(el){var b=el&&el.querySelector('#zqIn');if(b)b.onclick=openIn;}});
 var cardShown=0;
-ZB.add(ZB.homeSlots,{id:'zq-card',order:66,zone:'bottom',render:function(){if((+S.lv||0)<N.from)return '';
+// Z3-SRV 25.10 (аудит, SOCIAL п.9): в ОК карточки «С соседями» нет — 2249 показов → 11 открытий (гостинец и загадка в ОК без ссылок). ?off=okclean — вернуть
+var OKCLEAN=ZB2.reg('okclean',{t:'ОК: без карточки «С соседями» на Доме',who:'SRV'});
+ZB.add(ZB.homeSlots,{id:'zq-card',order:66,zone:'bottom',render:function(){if((+S.lv||0)<N.from||OKP&&OKCLEAN)return '';
     var b=[];if(ON.gift)b.push('<button class="zq-b" data-f="gift"><b>🎁</b>Гостинец соседу</button>');
     if(ON.word)b.push('<button class="zq-b" data-f="word"><b>🔤</b>Загадать слово</button>');
     if(ON.brag)b.push('<button class="zq-b" data-f="brag"><b>📣</b>Похвастаться</button>');

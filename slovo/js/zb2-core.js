@@ -39,7 +39,7 @@
     return a;};
 
   Z.field=function(key,o){o=o||{};
-    if(!/^z2[a-z]$/.test(key)){console.error('[zb2] поле должно быть z2<буква>: '+key);return;}
+    if(!/^z[23][a-z]$/.test(key)){console.error('[zb2] поле должно быть z2<буква>: '+key);return;}
     Z._fld[key]=o;
     ZB.onSave({id:'zb2-'+key,keys:[key],
       fix:function(S){var v=S[key];if(!v||typeof v!=='object'||Array.isArray(v))S[key]=copy(o.def||{});

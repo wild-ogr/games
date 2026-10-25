@@ -94,7 +94,10 @@ ZB.on('five',function(){addPts(CFG.pts.five,'five');});
 function bought(){var Q=q();if(!eco())Q.a=dk();try{STAT.ev('ss',{a:'buy',s:steps()});}catch(e){}var g=grant();try{save();cloudSoon();}catch(e){}
   try{toast('🎟 Абонемент в библиотеку на '+CFG.abonDays+' дней!'+(g.length?' Получено: '+g.filter(function(x){return x.paid;}).length:''));}catch(e){}
   refresh();}
-function canBuy(){try{return !OK&&PAY.on&&!!PAY_ITEMS.abon&&!!PAY.item('abon');}catch(e){return false;}}
+// z3-KIOSK 25.10: Абонемент входит в Подписку на «Вечёрку» (ларёк) — здесь кнопка ведёт туда; Z3KIOSK.F.ab выключен — как было
+function z3ab(){try{return !!(window.Z3KIOSK&&Z3KIOSK.F.ab);}catch(e){return false;}}
+function z3sub(){try{return z3ab()&&Z3KIOSK.has('vecherka');}catch(e){return false;}}
+function canBuy(){try{return okPayOn()&&PAY.on&&!!PAY_ITEMS.abon&&!!PAY.item('abon');}catch(e){return false;}}
 function buy(){if(!canBuy())return false;try{PAY.re=function(){open();};PAY.buy('abon');}catch(e){return false;}return true;}
 ZB.on('ready',function(){try{if(!eco()&&typeof PAY_ITEMS!=='undefined'&&PAY_ITEMS.abon&&!PAY_ITEMS.abon.give)PAY_ITEMS.abon.give=bought;}catch(e){}fix();grant();});
 ZB.on('abon',function(){bought();});
@@ -104,17 +107,18 @@ function dm(k){var M=['янв','фев','мар','апр','мая','июн','и�
 function render(el){var c=cur(),Q=q(),st=steps(),sp=stepPts(),into=Q.p-st*sp,h='';
   for(var i=1;i<=CFG.steps;i++){var r=free(i),pd=PAID.filter(function(x){return x.s===i;})[0],done=st>=i;
     h+='<div class="sq-st'+(done?' done':'')+(i===st+1?' now':'')+'"><span class="sq-n">'+i+'</span><span class="sq-f">'+freeTxt(r)+(BAR&&i===CFG.steps?' · 🍽️ блюдце «'+esc(FIN[c.s.id][0])+'»':'')+'</span>'+
-      (pd?'<span class="sq-p'+(has(pd.id)?' got':'')+'">'+(BAR&&!has(pd.id)&&!abon()?'🔒 ':'🎟 ')+esc(pd.n)+(BAR&&!has(pd.id)&&!abon()?'<small> · с Абонементом</small>':'')+'</span>':'<span class="sq-p empty"></span>')+'</div>';}
+      (pd?'<span class="sq-p'+(has(pd.id)?' got':'')+'">'+(BAR&&!has(pd.id)&&!abon()?'🔒 ':'🎟 ')+esc(pd.n)+(BAR&&!has(pd.id)&&!abon()?'<small> · '+(z3ab()?'с подпиской':'с Абонементом')+'</small>':'')+'</span>':'<span class="sq-p empty"></span>')+'</div>';}
   var ab=abon();
   el.innerHTML='<div class="sc-scr"><div class="sq-head" style="--sq:'+c.s.c+'"><span class="sq-ic">'+c.s.ic+'</span><span><small>ЧЕТВЕРТЬ · '+dm(c.from)+' — '+dm(c.to)+'</small><b>'+esc(c.s.n)+'</b>'+
     '<em>ступень '+st+' из '+CFG.steps+' · ещё '+c.left+' '+pl(c.left,'день','дня','дней')+'</em></span></div>'+
     (st<CFG.steps?'<div class="sq-bar"><i style="width:'+Math.round(100*into/sp)+'%"></i><span>до ступени '+(st+1)+': '+(sp-into)+' '+pl(sp-into,'очко','очка','очков')+'</span></div>':'<p class="sc-mut">Вся дорожка пройдена — медаль твоя!</p>')+
     '<p class="sc-mut">Очки: уровень +'+CFG.pts.first+', повтор и урок дня +'+CFG.pts.lvl+', «5» в дневник +'+CFG.pts.five+'.</p>'+
-    '<div class="sq-ab'+(ab?' on':'')+'"><b>🎟 Абонемент в библиотеку</b><small>'+(ab?'действует ещё '+abonLeft()+' '+pl(abonLeft(),'день','дня','дней')+' — красота сверху твоя':'только красота сверху: наклейки, рамка открыток, табличка, цветы, ленточка, медаль. Прошлые ступени — сразу')+'</small>'+
-    (!ab&&canBuy()?'<div class="sq-buy">'+ZB.safe('abon-html',function(){return PAY.html(['abon']);})+'</div>':'')+'</div>'+
-    '<div class="sq-cols"><span>Всем</span><span>С абонементом</span></div><div class="sq-list">'+h+'</div>'+
+    '<div class="sq-ab'+(ab?' on':'')+'"><b>'+(z3ab()?'🎟 С подпиской на «Вечёрку»':'🎟 Абонемент в библиотеку')+'</b><small>'+(ab?'действует ещё '+abonLeft()+' '+pl(abonLeft(),'день','дня','дней')+' — красота сверху твоя':'только красота сверху: наклейки, рамка открыток, табличка, цветы, ленточка, медаль. Прошлые ступени — сразу')+'</small>'+
+    (!ab&&canBuy()?'<div class="sq-buy">'+ZB.safe('abon-html',function(){return PAY.html(['abon']);})+'</div>':'')+(!ab&&z3sub()?'<div class="sq-buy"><button type="button" class="btn green small" id="sqSub">📰 Подписка на «Вечёрку»</button></div>':'')+'</div>'+
+    '<div class="sq-cols"><span>Всем</span><span>'+(z3ab()?'С подпиской':'С абонементом')+'</span></div><div class="sq-list">'+h+'</div>'+
     '<div class="btns"><button type="button" class="btn blue" id="sqBack">← Назад</button></div></div>';
   try{if(!ab&&canBuy())PAY.bind(el);}catch(e){}
+  var zs=el.querySelector('#sqSub');if(zs)zs.onclick=function(){try{SND.tap();}catch(e){}Z3KIOSK.open('season');};
   el.querySelector('#sqBack').onclick=function(){try{SND.tap();}catch(e){}if(ZB._scr.home)ZB.go('home');else try{openMenu();}catch(e){}};
   var now=el.querySelector('.sq-st.now');if(now&&now.scrollIntoView)try{now.scrollIntoView({block:'center'});}catch(e){}}
 ZB.screen('season',{title:'Четверть',render:render});

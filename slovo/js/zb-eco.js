@@ -157,13 +157,15 @@
   // 4) сундук главы #mChX2 → окно главы рисуется как «ролика нет» (adLikely=false на время отрисовки);
   // 5) «×2 после уровня» (#mX2) в main уже заменён корзинкой (п. 1).
   function x2off(){return E.on&&E.x2===false;}
+  // решение владельца 25.10 (через LEAD, поток KIOSK): «Сундук главы» за ролик вернули — ролик по делу; кнопка #mChX2 — в AD_BTN_SEL, html.adno (только при готовом ролике), с late. ?off=chestad — снова без сундука
+  var CHEST=!window.ZB2||ZB2.reg('chestad',{t:'Сундук главы за ролик (💡 +1 и монеты)',who:'KIOSK'});function chestAd(){return CHEST;}
   function wrap(name,mk){var f=window[name];if(typeof f!=='function'||f.__zbEco)return;var w=mk(f);w.__zbEco=1;window[name]=w;}
   function x2Install(){
     try{if(x2off()&&typeof ECO!=='undefined')ECO.gift=0;}catch(e){}
     wrap('boxStep',function(f){return function(g,ok,skip){return x2off()?0:f.apply(this,arguments);};});
     wrap('jarFull',function(f){return function(){if(x2off())return;return f.apply(this,arguments);};});
     wrap('applyFlags',function(f){return function(){var r=f.apply(this,arguments);try{if(x2off()){ECO.gift=0;if(typeof updGift==='function')updGift();}}catch(e){}return r;};});
-    wrap('openChapFinale',function(f){return function(g,r){if(!x2off()||(r&&r.chx2))return f.apply(this,arguments);
+    wrap('openChapFinale',function(f){return function(g,r){if(!x2off()||chestAd()||(r&&r.chx2))return f.apply(this,arguments);
       var al=window.adLikely;window.adLikely=function(){return false;};
       try{return f.apply(this,arguments);}finally{window.adLikely=al;var b=document.getElementById('mChX2');if(b){b.remove();if(typeof fitChap==='function')ZB.safe('eco:fitChap',fitChap);}}};});
     try{if(typeof updGift==='function')updGift();}catch(e){}}

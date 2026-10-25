@@ -6,7 +6,7 @@ const PAY_ROW='prow';
 const PAY_ITEMS={
   no_ads:{perm:1,bonus:150,vk:20,ic:'🚫',name:'Без рекламы между уровнями',desc:'Навсегда — и сразу +150 монет. Кнопки «🎬 за рекламу» остаются — по желанию'},
   coins_s:{n:250,vk:5,ic:COIN_I,name:'Кошелёк: 250 монет',desc:'Примерно на 7 букв-подсказок',done:'+250 монет — спасибо!'},
-  coins_l:{n:800,vk:14,ic:COIN_I,name:'Копилка: 800 монет',desc:'Выгоднее кошелька',done:'+800 монет — спасибо!'},
+  coins_l:{n:800,vk:14,ic:COIN_I,name:'Мешочек: 800 монет',desc:'Выгоднее кошелька',done:'+800 монет — спасибо!'},
   // zb-ECO 10.10: «Гостинец от Зины» 8 → «Узелок новичка» 5 голосов (id прежний — купившие сохраняются; бонус S.buyB — один раз), продаётся первые 3 дня (ZBECO.uzelokOn)
   starter:{perm:1,bonus:300,vk:5,ic:'🎁',name:'Узелок новичка',desc:'300 монет, 5 подсказок 💡 в запас и наряд «Праздничный платок» — его нет в магазине. Один раз',done:'Узелок твой! Платок — в «Нарядах», подсказки — в запасе',
     give(){if(typeof hbAdd==='function'&&window.ZBECO&&!(S.buyB&&S.buyB.starter_hb)){S.buyB.starter_hb=1;hbAdd(ZBECO.pay.uzelok.hb,'buy');}}},
@@ -48,6 +48,8 @@ function payAfter(id){if(id)payOk=id;updCoins();if($('modal').classList.contains
      которая «съест» первый чужой pay_ этого товара — второй раз не выдастся.
    Мак: ?paytest=1 — имитация Яндекса (localStorage «paytest»), ?vk=1&paytest=1 — имитация VK с сервером (localStorage «paytestvk»),
    ?paytest=fail — отказ. В настоящем VK (vk_app_id) и в Яндексе заглушек нет */
+const OK_PER_VOTE=6; // ОКов за голос (решение владельца 25.10: 1000 ОК = 1250 ₽, голос ≈ 7 ₽); цена — до кратного 5: okPrice(5)=30. То же в hobby-pay/catalog.json (поле ok)
+const okPrice=v=>Math.round(v*OK_PER_VOTE/5)*5;
 const payObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 const PAY={on:false,p:null,v:null,list:[],busy:false,
   test:/[?&]paytest=/.test(location.search),
@@ -111,7 +113,9 @@ const PAY={on:false,p:null,v:null,list:[],busy:false,
   // «Восстановить покупки» (Об игре): заново читаем getPurchases / ключи VK
   async again(){if(!(PAY.p||PAY.v)||PAY.busy)return;PAY.busy=true;let got=0;try{got=await PAY.restore();}catch(e){}PAY.busy=false;if(!got)toast('Покупки проверены — всё на месте',2400);},
   // цена: VK — число голосов (требование VK); Яндекс — из каталога: число + значок валюты (getPriceCurrencyImage), иначе готовая строка price
-  price(pr){if(PAY.v){const n=PAY_ITEMS[pr.id].vk,a=n%10,b=n%100;return n+' '+(a===1&&b!==11?'голос':a>=2&&a<=4&&(b<12||b>14)?'голоса':'голосов');}
+  // ОК (Z3-SRV 25.10): цена в ОКах = голоса × 6 до кратного 5 — так же в hobby-pay/catalog.json (поле ok), сервер отдаёт её ОК по site=OK
+  price(pr){if(PAY.v&&typeof OK!=='undefined'&&OK)return okPrice(PAY_ITEMS[pr.id].vk)+' ОК';
+    if(PAY.v){const n=PAY_ITEMS[pr.id].vk,a=n%10,b=n%100;return n+' '+(a===1&&b!==11?'голос':a>=2&&a<=4&&(b<12||b>14)?'голоса':'голосов');}
     let img='';try{img=pr.getPriceCurrencyImage?pr.getPriceCurrencyImage('svg'):'';}catch(e){}
     return img&&pr.priceValue?payEsc(pr.priceValue)+'<img class="pcur" src="'+payEsc(img)+'" alt="">':payEsc(pr.price||pr.priceValue||'');},
   row(pr){const it=PAY_ITEMS[pr.id],own=it.perm&&PAY.own(pr.id),txt='<span>'+it.ic+' '+payEsc(it.name)+'<br><small>'+payEsc(it.desc)+'</small></span>';

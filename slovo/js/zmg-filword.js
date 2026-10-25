@@ -72,6 +72,9 @@ ZMG_REG({id:'filword',finWho:'tamara',deps:['js/zmg-filword-data.js'],
         if(!moved&&wasLast){sel.pop();try{host.snd.tap();}catch(e){}paint();return;}
         check(false);}});
     hb.onclick=hint;
+    // z3-KIOSK M17: после подсказки — «Тамара покажет слово» за ролик (по кнопке, без минуса звезды; js/zb3-kiosk-ad.js)
+    if(window.Z3KIOSK&&Z3KIOSK.mg)Z3KIOSK.mg(host,{at:$('.zmc-fw-bt'),kind:'word',t:'🎬 Тамара покажет слово',when:()=>!lock&&hints>=1&&W.some(y=>!y.found),
+      go:()=>{let k=W.findIndex(y=>!y.found&&y.hint>0);if(k<0)k=W.findIndex(y=>!y.found);if(k>=0)found(k);}});
     host.keys(k=>{if(lock)return false;const r=Math.floor(cur/N),c=cur%N;
       if(/^Arrow/.test(k)){kbd=true;const nr=r+(k==='ArrowDown')-(k==='ArrowUp'),nc=c+(k==='ArrowRight')-(k==='ArrowLeft');if(nr>=0&&nr<N&&nc>=0&&nc<N)cur=nr*N+nc;paint();return true;}
       if(k===' '||k==='Enter'){kbd=true;if(sel.indexOf(cur)<0)add(cur);else check(true);return true;}

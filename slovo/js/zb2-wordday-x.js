@@ -23,6 +23,7 @@ function lose(id){var z=Z(),p=P[id]||P.zagadala;z[p[3]]=tk();z[p[1]]=0;if(id==='
 /* «Похвастаться»: VK — окно записи на стене (ответ не ждём); ОК/Яндекс/браузер — копируем текст */
 function share(txt,id){var br=typeof PLAT!=='undefined'&&PLAT==='vk'&&!!window.vkBridge&&typeof vkSend==='function',vk=br&&!(typeof OK!=='undefined'&&OK);
   ev({id:id||'zagadala',ok:vk?'vk':'copy'},'share');
+  if(window.SHR){SHR.post(txt,{k:'wd'});return vk?'vk':'copy';} // Z3-SHARE: было VKWebAppShowWallPostBox (устарел, молча падал)
   if(vk){var a=new URLSearchParams(location.search).get('vk_app_id');vkSend('VKWebAppShowWallPostBox',{message:txt+(a?'\nhttps://vk.com/app'+a:'')},60000).catch(function(){});return 'vk';}
   var done=function(){try{toast('Скопировано — вставь другу в сообщение',3000);}catch(e){}};
   try{if(br){vkSend('VKWebAppCopyText',{text:txt}).then(done,function(){cp(txt,done);});return 'copy';}}catch(e){}

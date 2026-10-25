@@ -228,12 +228,19 @@ var STAT=(function(){
     if(!O.url&&!dev){on=false;window.__se=[];saveSt();return;}          // адреса нет — молчим
     if(!enabled()||Math.random()>=(typeof O.rate==='number'?O.rate:1)){on=false;ls('stat-q-'+G,null);saveSt();return;}
     start();}
+  // 25.10 (D39, Z3-SRV): в ОК vk_ref всегда «other» → src = место перехода ОК (vk_ok_ref; у старых ОК-приложений refplace)
+  // + «~метка» своей части ссылки (hash= / custom_args / #…): только имя первого параметра (≤5 строчных букв/цифр) и короткое
+  // значение из строчных букв — z3n=wd → «~z3n.wd» (оповещение), gift=КОД → «~gift», zfg_… → «~zfg». Коды и номера не уходят.
+  function okSrc(){var r=qp('vk_ok_ref')||qp('refplace')||qp('vk_ref'),h=qp('hash')||qp('custom_args')||String(location.hash||'').slice(1),m,k='';
+    try{h=decodeURIComponent(h);}catch(e){}
+    m=/^([a-z][a-z0-9]{0,4})(?:[^a-z0-9]|$)/.exec(h);if(m){k=m[1];var v=/^[a-z][a-z0-9]{0,4}=([a-z][a-z.]{0,7})(&|$)/.exec(h);if(v)k+='.'+v[1];}
+    return scrub(r,k?31-k.length:32)+(k?'~'+k:'');}
   function start(){var d=device(),i,x,se=window.__se;on=true;sk=rnd();seq=0;
     // Одноклассники: та же VK-сборка, запущенная с vk_client=ok (vk_platform — с хвостом _ok; на маке ?vk=1&ok=1) → площадка p:'ok',
     // а vp — без хвоста (mobile_android_ok не влезает в 16 знаков; значения те же, что в VK: desktop_web, mobile_android, mobile_iphone, mobile_web)
     var okp=/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(location.search);
     hdr={v:V,sv:SV,g:G,gv:String(O.gv||'').slice(0,20),p:String(O.plat==='yandex'&&/\.github\.io$/.test(location.hostname)?'web':O.plat==='vk'&&okp?'ok':O.plat||'').slice(0,8),l:String(O.lang||'').slice(0,4),
-      vp:scrub(qp('vk_platform').replace(/_ok$/,''),16),src:scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
+      vp:scrub(qp('vk_platform').replace(/_ok$/,''),16),src:okp?okSrc():scrub(qp('vk_ref'),32),os:d.os,dv:d.dv,wv:d.wv,br:d.br,sw:d.sw,sh:d.sh,sk:sk};
     pend=dev&&!O.url?[]:jp(ls('stat-q-'+G))||[];if(!(pend instanceof Array))pend=[]; // журнал мака очередь не трогает
     // start ждёт STAT.progress() (поля pl, cn, bt), но не дольше 3 с; события до него встанут после
     sP=['start',sec(),hw({sn:st.n,f:first?1:0,ld:Math.round(window.performance&&performance.now?performance.now():0)})];slN=0;
@@ -403,7 +410,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Игра только на русском — lang:'ru' (window.LANG от Яндекса интерфейс не меняет).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v4.6-102421',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v5.0-102519',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе — после облака (что позже), но не дольше 2,5 с (иначе модуль сам отправит start без полей через 3 с).
 // pl — пройдено уровней, cn — монет, bt — облако хоть раз отдавало сохранение (S.cl — метка на устройстве, ставит cloudLoad)
 let statPr=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:+S.lv||0,cn:+S.coins||0,bt:S.cl?1:0});}
@@ -433,6 +440,59 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||20000);});}
 // ответ VK с ограничением по времени (вне VK мост не отвечает)
 function vkSend(method,params,ms){return withTimeout(window.vkBridge.send(method,params||{}),ms||4000);}
+/* ===== SHR — общий «поделиться» (Z3-SHARE, 25.10; жалоба владельца «поделиться не срабатывает» в VK на Android).
+   Правило: нажатие ВСЕГДА даёт видимый итог — окно площадки, тост «скопировано» или окно с текстом «скопируй сам». Никогда «ничего».
+   VK: VKWebAppShare {link,text} (VKWebAppShowWallPostBox устарел — его нет в списке методов моста, в приложении молча падал).
+     На сайте/моб. сайте VK Share берёт только ссылку — текст заранее кладём в буфер. Ошибка (не отказ игрока) или 8 с без ответа и без ухода
+     со страницы → запасной путь: копия «текст + ссылка» (VKWebAppCopyText → clipboard → execCommand) + тост; не скопировалось — окно с текстом.
+   ОК: ссылки vk.com нельзя; с явной ссылкой ОК (o.link — подарок, кроссворд) — то же окно VKWebAppShare, без неё — копия текста (+ OK_LINK) + тост. Яндекс/браузер: копия + тост (кнопки там подписаны «📋 Скопировать»).
+   SHR.post(txt,{link,cb}) — cb(how): 'vk' ушло | 'cancel' отказ игрока | 'copy' скопировано | 'manual' показали текст.
+   SHR.copy(t) → Promise<bool>; SHR.fallback(t,msg) — копия + тост (или окно); SHR.link(tag) — ссылка на игру на этой площадке ('' — нет). STAT: 'z3sh' {k: card|brag|wd|frnd|zvan|agift|cw, e: vk|cancel|copy|manual|share|hang|err<код>}. */
+// текст приглашения для запасного пути «Позвать/Поделиться» (ссылка «Приведи друга», если REF включён; в ОК — ссылка ОК)
+function socInvTxt(){const u=typeof REF!=='undefined'&&REF&&REF.on&&REF.on()&&!OK?REF.link():SHR.link('');return 'Заходи в игру «Баба Зина: слова из букв» — посоревнуемся!'+(u?'\n'+u:'');}
+var SHR=(function(){
+  var busy=0;
+  function qp(k){var m=new RegExp('[?&]'+k+'=([^&#]*)').exec(location.search);return m?decodeURIComponent(m[1]):'';}
+  function br(){return PLAT==='vk'&&!!window.vkBridge&&typeof vkSend==='function';}
+  function vk(){return br()&&!OK&&VK_REAL;}
+  function link(tag){tag=tag||'';if(OK)return OK_LINK?OK_LINK+tag:'';if(PLAT==='vk')return 'https://vk.com/app'+(+qp('vk_app_id')||54787973)+tag;return '';}
+  function ev(k,e){try{STAT.ev('z3sh',{k:k||'',e:e});}catch(x){}}
+  function t(s,ms){try{toast(s,ms||3500);}catch(e){}}
+  function exec(s){try{var a=document.createElement('textarea');a.value=s;a.setAttribute('readonly','');a.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(a);a.select();var r=document.execCommand('copy');a.remove();return !!r;}catch(e){return false;}}
+  function web(s){return new Promise(function(res){var f=function(){res(exec(s));};
+    try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(s).then(function(){res(true);},f);return;}}catch(e){}f();});}
+  function copy(s){if(br())return vkSend('VKWebAppCopyText',{text:s},3000).then(function(r){return r&&r.result===false?web(s):true;},function(){return web(s);});return web(s);}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  // последний запасной путь: окно с текстом — выделить и скопировать самому
+  function manual(s){try{modal('<h2>📋 Скопируй и отправь</h2><p>Выдели текст, скопируй и вставь другу в сообщение:</p>'+
+      '<textarea id="shrTa" readonly style="width:100%;min-height:120px;font:inherit;font-size:15px;border-radius:12px;padding:8px;box-sizing:border-box">'+esc(s)+'</textarea>'+
+      '<div class="btns"><button class="btn green" id="shrOk">Готово</button></div>');
+    var a=$('shrTa');if(a){a.onfocus=a.onclick=function(){a.select();};}$('shrOk').onclick=function(){try{SND.tap();}catch(e){}hideModal();};}catch(e){}}
+  function fallback(s,msg){return copy(s).then(function(ok){if(ok){t(msg||'Ссылка скопирована — вставь её другу в сообщение');return 'copy';}manual(s);return 'manual';});}
+  function isCancel(e){var d=e&&e.error_data||{};return d.error_code===4||/denied|cancel/i.test(String(d.error_reason||d.error_msg||''));}
+  function post(txt,o){o=o||{};var cb=o.cb||function(){},k=o.k||'',u=o.link!=null?o.link:link(''),full=txt+(u?'\n'+u:'');
+    if(Date.now()-busy<1500)return;busy=Date.now();
+    if(vk()||OK&&br()&&VK_REAL&&o.link){var pf=qp('vk_platform'),app=/^mobile_(android|iphone|ipad)/.test(pf),done=0,left=0;
+      if(!app&&txt)copy(txt); // сайт VK: в окне только ссылка — текст уже в буфере
+      t(app||!txt?'Открываю «Поделиться»…':'Текст скопирован — вставь его в сообщение после ссылки',app?2000:4500);
+      var away=function(){left=1;};window.addEventListener('blur',away);document.addEventListener('visibilitychange',away);
+      var off=function(){window.removeEventListener('blur',away);document.removeEventListener('visibilitychange',away);};
+      var wd=setTimeout(function(){off();if(done||left)return;done=1;ev(k,'hang');fallback(full,'Если окно не открылось — текст со ссылкой уже скопирован, вставь его другу').then(cb);},8000);
+      vkSend('VKWebAppShare',{link:u||link(''),text:txt},120000).then(function(){clearTimeout(wd);off();if(done)return;done=1;ev(k,'vk');cb('vk');},
+        function(e){clearTimeout(wd);off();if(done)return;done=1;if(isCancel(e)){ev(k,'cancel');cb('cancel');return;}
+          var d=e&&e.error_data||{};ev(k,'err'+(d.error_code||''));fallback(full,'Окно не открылось — текст со ссылкой скопирован, вставь его другу').then(cb);});
+      return;}
+    fallback(full,'Скопировано — вставь другу в сообщение').then(function(h){ev(k,h);cb(h);});}
+  // watch(промис окна площадки, текст): 8 с без ответа и без ухода со страницы → копия текста + тост (для SOC «Позвать/Поделиться», у которых ждать 60 с)
+  var wfired=0;
+  function watch(pr,txt){var done=0,left=0,away=function(){left=1;};window.addEventListener('blur',away);document.addEventListener('visibilitychange',away);
+    var off=function(){window.removeEventListener('blur',away);document.removeEventListener('visibilitychange',away);};
+    var wd=setTimeout(function(){off();if(done||left)return;wfired=Date.now();ev('soc','hang');fallback(txt,'Если окно не открылось — приглашение уже скопировано, вставь его другу');},8000);
+    return Promise.resolve(pr).then(function(r){done=1;clearTimeout(wd);off();return r;},function(e){done=1;clearTimeout(wd);off();throw e;});}
+  function fired(){return Date.now()-wfired<90000;}
+  return {post:post,copy:copy,fallback:fallback,link:link,manual:manual,isCancel:isCancel,vk:vk,watch:watch,fired:fired};
+})();
 /*SOC*/
 /* ===== SOC v2.6 (24.10, решение владельца: сообщество «Игры во дворе» — предложение СО 2-ГО захода и первым в очереди (после уведомлений); НАГРАДА за вступление (п. 2.6.2 разрешает) — настройка SOC.init(…,{grp:{n,c,give}}), один раз на игрока, помним в S.soc.grw (облако); кнопки в ⚙ «📣 Новости двора» и «🔔 Сообщать о новом» (VKWebAppAllowMessagesFromGroup); статистика soc a:'grp' r:'rew', a:'msg' — см. «v2.6» ниже. v2.5 — 15.10: в Одноклассниках «Ещё игры» НЕТ — SOC.list() там пуст, open() сразу false, кнопка «🎲 Игры» прячется сама по SOC.can('more'); причина — VKWebAppOpenApp {app_id:<ID в ОК>, app_is_local:true} в ОК игру не открывает, модерация ОК отклонила Выезд 15.10. v2.4 — 06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====
    Общий модуль для всех игр. Источник — ~/Projects/hobby-analytics/soc/soc.js (правки — только там, потом soc-sync.sh).
@@ -492,7 +552,8 @@ var SOC=(function(){
   function tried(k){var x=st[k]||{};x.n=(x.n||0)+1;x.t=Date.now();st[k]=x;saveFn();}
   // STAT v1.2 (А15): итог предложения площадки → soc {a: fav|home|inv|grp|shr|more, r: show|ok|no|err}; отказ игрока (код 4 / «denied») — no
   function sx(a,r,n,x){try{if(typeof STAT!=='undefined'&&STAT.ev){var p={a:a,r:r},k;if(n)p.n=n;if(x)for(k in x)if(x[k]!==''&&x[k]!=null)p[k]=x[k];STAT.ev('soc',p);}}catch(e){}} // n — номер попытки (уведомления: 1–3); x — доп. поля (v2.4)
-  function sr(a){return function(e){var d=e&&e.error_data||{};sx(a,d.error_code===4||/denied|cancel/i.test(String(d.error_reason||d.error_msg||''))?'no':'err');};}
+  function sr(a){return function(e){var d=e&&e.error_data||{},r=d.error_code===4||/denied|cancel/i.test(String(d.error_reason||d.error_msg||''))?'no':'err';sx(a,r);
+    if(r==='err'&&O.fail)try{O.fail(a,e);}catch(x){}};} // Z3-SHARE: ошибка (не отказ) — игра показывает запасной путь (O.fail), а не молчит. Перенести в soc/soc.js
   function due(k){var x=st[k]||{};return !x.d&&(x.n||0)<3&&(!x.t||Date.now()-x.t>30*DAY);}
 
   /* SOC.init(S, {save, toast, cls, modal, close}) — один раз при запуске, после загрузки сохранения (считает сессии).
@@ -735,6 +796,7 @@ var SOC=(function(){
    Номера миссий — VKM_ID (js/vkm.js, пишет tools/missions.py из data/vk-missions-ids.json). На маке адрес можно подменить: ?evurl=http://localhost:порт/ */
 const EV_URL=(()=>{const m=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&/[?&]evurl=([^&#]*)/.exec(location.search);return m?decodeURIComponent(m[1]):'https://functions.yandexcloud.net/d4e7egf62asn7suf30m0?op=vkev';})();
 SOC.init(S,{save:()=>save(),toast:t=>toast(t),cls:'btn ghost',modal:h=>{modal(h);return $('mcard');},close:()=>hideModal(),okLink:OK_LINK,
+  fail:k=>{if((k==='inv'||k==='shr')&&!SHR.fired())SHR.fallback(socInvTxt(),'Окно не открылось — приглашение скопировано, вставь его другу');}, // Z3-SHARE
   evUrl:EV_URL,evId:c=>typeof VKM_ID==='object'&&VKM_ID[c]||0,
   // grp (24.10, SOC v2.6): за вступление в сообщество «Игры во дворе» — разово 35 💰 (= «Буква»), один раз на игрока (S.soc.grw, облако); только VK
   grp:{n:35,c:'💰',give:n=>addCoins(n,'quest')},
@@ -820,7 +882,15 @@ async function initSDK(){
   Promise.resolve(cloudLoad()).then(payInit,payInit);if(typeof askProbe==='function')askProbe();
 }
 // покупки (js/pay.js) — после SDK/моста и облака; меню не ждёт
-function payInit(){if(typeof PAY!=='undefined'&&!OK)PAY.init();} // ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет
+// Z3-SRV 25.10: покупки в ОК за ОКи (решение владельца 24.10; сервер hobby-pay: get_item site=OK + ?op=okpay). ?off=okpay — как раньше: в ОК покупок нет
+try{ZB2.reg('okpay',{t:'Покупки в Одноклассниках за ОКи',who:'SRV'});}catch(e){}
+function okPayOn(){try{return !OK||!(typeof ZB2!=='undefined'&&ZB2.off('okpay'));}catch(e){return !OK;}}
+// z3-KIOSK 25.10: VK на iPhone/iPad — оплата голосами не проходит ни в одной игре (0 из 46, MONEY.md) → покупки прячем (купленное восстанавливается: PAY.init идёт, PAY.on=false).
+// ОК на iPhone — покупки есть (VKWebAppShowOrderBox в ОК работает и на iOS). ?off=payios — как раньше. Мак: ?vk=1&paytest=1&vkios=1
+try{ZB2.reg('payios',{t:'VK на iPhone: покупки спрятаны',who:'KIOSK'});}catch(e){}
+function payIosOff(){try{if(!VK_IOS||(typeof ZB2!=='undefined'&&ZB2.off('payios')))return false;}catch(e){return false;}return true;}
+const VK_IOS=PLAT==='vk'&&!OK&&(/[?&]vk_platform=mobile_ip(hone|ad)/.test(location.search)||/[?&]vkios=1(&|$)/.test(location.search));
+function payInit(){if(typeof PAY!=='undefined'&&okPayOn())Promise.resolve(PAY.init()).then(()=>{if(payIosOff()&&PAY.on){PAY.on=false;try{STAT.ev('z3s',{a:'ios'});}catch(e){}try{ZB.refresh();}catch(e){}}},()=>{});}
 
 /* ---------- реклама ---------- */
 function stubAd(cb){const ad=$('ad'),tEl=$('adT');adOpen();ad.classList.add('on');let n=3;tEl.textContent=n;

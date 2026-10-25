@@ -13,7 +13,11 @@ var THEMES=[
  {id:'classic',ru:'Тетрадь в клетку',cls:'',unlock:{t:'free'},ds:'Основной вид игры: тетрадь в клетку с красным полем'},
  {id:'kitchen',ru:'Кухня бабы Зины',cls:'th-kitchen',unlock:{t:'pay',pay:'th_kitchen'},ds:'Обои, окно с геранью и стол со скатертью. Кроссворд — тетрадный листок на столе'},
  {id:'veranda',ru:'Веранда. Летний вечер',cls:'th-veranda',dark:1,unlock:{t:'pay',pay:'th_veranda'},ds:'Закат над садом, гирлянда лампочек, тёмное стекло и тёплый свет'},
- {id:'gzhel',ru:'Гжель и лён',cls:'th-gzhel',unlock:{t:'ads',n:15},ds:'Светлый лён и синяя роспись. Самый спокойный и крупный вид'}
+ {id:'gzhel',ru:'Гжель и лён',cls:'th-gzhel',unlock:{t:'ads',n:15},ds:'Светлый лён и синяя роспись. Самый спокойный и крупный вид'},
+ /* zb3-SKIN 25.10: «Зимний двор» — продаёт ларёк «Зины 3.0» (KIOSK, товар th_zima); двор «Дом №7» с ней зимний круглый год (Z3.scene, js/zb3-skin.js) */
+ {id:'zima',ru:'Зимний двор',cls:'th-zima',unlock:{t:'pay',pay:'th_zima'},ds:'Снег во дворе круглый год: сугробы, иней на окнах, ёлочки и морозное стекло. Навсегда'},
+ /* zb3-SKIN 25.10: «Осенний двор» — пара к «Зимнему» (KIOSK, товар th_osen); двор «Дом №7» с ней осенний круглый год (Z3.scene) */
+ {id:'osen',ru:'Осенний двор',cls:'th-osen',unlock:{t:'pay',pay:'th_osen'},ds:'Золотая осень во дворе круглый год: клёны, листопад, рябина и тёплые окна. Навсегда'}
 ];
 window.THEMES=THEMES;
 var DOC=document.documentElement,TRY_MAX=2;
@@ -150,6 +154,20 @@ veranda:function(){var f='';for(var i=0;i<30;i++)f+='<path d="M'+(i*28+4)+' 232v
   '<path d="M0 196h800" stroke="#241a3d" stroke-width="6"/>'+f+'<rect x="0" y="228" width="800" height="32" fill="#1c1532"/>'+
   '<g fill="#ffe9a8"><circle cx="230" cy="120" r="2.200"/><circle cx="560" cy="150" r="2"/><circle cx="270" cy="170" r="1.800"/><circle cx="520" cy="110" r="2.200"/><circle cx="180" cy="200" r="1.800"/></g></svg>'+
   '<div class="sc-moon"></div><div class="sc-garl"></div><div class="sc-beam"></div>';},
+zima:function(){var f='',i;for(i=0;i<40;i++)f+='<circle cx="'+((i*97)%800)+'" cy="'+((i*53)%170)+'" r="'+(1.5+(i%3))+'" fill="#fff" opacity=".85"/>';
+  return '<svg class="sc-snow" viewBox="0 0 800 260" preserveAspectRatio="xMidYMax slice" aria-hidden="true">'+f+
+  '<g fill="#5f8f86"><path d="M70 210l34-70 34 70z"/><path d="M78 176l26-56 26 56z"/><path d="M640 214l40-84 40 84z"/><path d="M650 172l30-64 30 64z"/><path d="M730 220l26-52 26 52z"/></g>'+
+  '<g fill="#fff"><path d="M84 176l20-36 20 36q-20-8-40 0z"/><path d="M656 172l24-44 24 44q-24-8-48 0z"/></g>'+
+  '<path d="M0 200c90-30 170-26 260-4s170 18 270-10 190-20 270 10v64H0z" fill="#fff"/><path d="M0 226c120-18 260-14 400 0s280 10 400-6v40H0z" fill="#e6eff9"/></svg>'+
+  '<div class="sc-frost tl"></div><div class="sc-frost tr"></div>';},
+osen:function(){var f='',i,c=['#e8742a','#d0461e','#f2b233','#b8541f'];for(i=0;i<26;i++){var x=(i*97)%800,y=(i*53)%160+6,r=((i*41)%60)-30;f+='<path transform="translate('+x+' '+y+') rotate('+r+')" d="M0 -6q6 2 5 8q-5 1 -5 -2q0 3 -5 2q-1 -6 5 -8z" fill="'+c[i%4]+'" opacity=".9"/>';}
+  return '<svg class="sc-snow sc-leaf" viewBox="0 0 800 260" preserveAspectRatio="xMidYMax slice" aria-hidden="true">'+f+
+  '<g fill="#8a5a3c"><rect x="98" y="150" width="10" height="64"/><rect x="676" y="140" width="12" height="76"/></g>'+
+  '<g fill="#e8742a"><circle cx="90" cy="140" r="34"/><circle cx="122" cy="128" r="28"/><circle cx="668" cy="128" r="40"/><circle cx="706" cy="118" r="30"/></g>'+
+  '<g fill="#f2b233"><circle cx="110" cy="112" r="20"/><circle cx="690" cy="100" r="24"/><circle cx="740" cy="150" r="22"/></g>'+
+  '<path d="M0 200c90-30 170-26 260-4s170 18 270-10 190-20 270 10v64H0z" fill="#e9c27a"/><path d="M0 226c120-18 260-14 400 0s280 10 400-6v40H0z" fill="#d9a85a"/>'+
+  '<g fill="#d0461e"><circle cx="300" cy="222" r="4"/><circle cx="312" cy="226" r="4"/><circle cx="306" cy="216" r="4"/><circle cx="520" cy="230" r="4"/><circle cx="530" cy="224" r="4"/></g></svg>'+
+  '<div class="sc-frost sc-sun tl"></div>';},
 gzhel:function(){return '<div class="sc-orn tr">'+gzOrn('thg')+'</div><div class="sc-orn bl">'+gzOrn('thh')+'</div><div class="sc-stitch"></div>';}
 };
 /* «Веранда» без размытия: старый WebView без backdrop-filter, слабый телефон, «меньше прозрачности» в системе или ?nb=1 */
@@ -200,7 +218,7 @@ function prevHtml(T){return '<span class="thp thp-'+T.id+'"><i class="thp-h"></i
 var back=null;
 function open(bk){if(typeof bk==='function')back=bk;check(true);try{STAT.screen('look');}catch(e){}var c=cur(),h='',ads=adOk();
   for(var i=0;i<THEMES.length;i++){var T=THEMES[i],own=owned(T.id),u=T.unlock,pr=prog(T),btn='',on=T.id===c&&!(TRIAL===T.id);
-    if(u.t==='pay'&&!own&&((typeof OK!=='undefined'&&OK)||typeof PAY==='undefined'||!PAY.on))continue; // ОК и площадка без покупок (Яндекс: товаров нет, PAY.on=false) — платные темы не показываем (ни «купить», ни примерки; модерация Яндекса 1.15/8.2.2)
+    if(u.t==='pay'&&!own&&((typeof OK!=='undefined'&&OK&&!(typeof okPayOn==='function'&&okPayOn()))||typeof PAY==='undefined'||!PAY.on))continue; // ОК и площадка без покупок (Яндекс: товаров нет, PAY.on=false) — платные темы не показываем (ни «купить», ни примерки; модерация Яндекса 1.15/8.2.2)
     if(on)btn='<span class="th-on">✓ Включено</span>';
     else if(own)btn='<button class="btn green" data-th="set:'+T.id+'">Включить</button>';
     else if(u.t==='pay'){btn=canBuy(T)?'<button class="btn green noenter" data-th="buy:'+T.id+'">Купить · '+PAY.price(PAY.item(u.pay))+'</button>':'<span class="th-lk">'+(inLevel()?'Купить можно из меню':'Покупки сейчас недоступны')+'</span>';

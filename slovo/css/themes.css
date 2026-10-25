@@ -33,6 +33,21 @@ html.th-gzhel{--font:"ZGolos",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",A
   --blue:#1f4fbf;--blue2:#3566d6;--cell:#fbf9f4;--cellb:#cdd8ef;--cello:#fff;--cellob:#1f4fbf;--cellotx:#1f4fbf;--cellsh:0 2px 0 #c3d1f1;
   --soft:#f4f7fd;--track:#dfe8fb;--hl:#fdf1cf;--stamp:#c23a2b;--dim:rgba(22,32,64,.45);--good:#1f6a2b;--margin:#1f4fbf;--edge:#cdd8ef;--edge2:#dfe8fb;--toastbg:#1b2747;--toasttx:#fff}
 
+/* «Зимний двор» (zb3-SKIN 25.10, продаёт ларёк KIOSK) */
+html.th-zima{--font:"ZRubik",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--fonth:var(--font);
+  --bgc:#eaf2fa;--ink:#1d2b4a;--ink2:#4a5a78;--paper:#fff;--card:#fff;--pn:#fbfdff;--pnb:#c9daef;--pnsh:0 2px 8px rgba(40,80,140,.14);--hd:#1f5aa8;
+  --accbg:linear-gradient(180deg,#d04a2c,#b5381c);--onacc:#fff;--accsh:0 6px 14px rgba(150,40,20,.3),inset 0 1px 0 rgba(255,255,255,.3);--accc:#1f5aa8;
+  --adbg:linear-gradient(180deg,#ffe08a,#f6c453);--adtx:#4a2f08;--adbd:transparent;--adsh:0 4px 10px rgba(170,110,10,.28);--tint:#dbe9f8;--icc:#1f5aa8;
+  --blue:#1f5aa8;--blue2:#2f6fd6;--cell:#f7fbff;--cellb:#c3d6ee;--cello:#fff;--cellob:#1f5aa8;--cellotx:#1f5aa8;--cellsh:0 2px 0 #c3d6ee;
+  --soft:#f2f7fd;--track:#dbe9f8;--hl:#fff2c8;--stamp:#c23a2b;--dim:rgba(20,36,70,.45);--good:#1f6a2b;--margin:#c23a2b;--edge:#c9daef;--edge2:#dbe9f8;--toastbg:#1d2b4a;--toasttx:#fff}
+/* «Осенний двор» (zb3-SKIN 25.10): тёплая бумага, ржавчина клёна, синие буквы (контраст ≥4,5) */
+html.th-osen{--font:"ZRubik",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--fonth:var(--font);
+  --bgc:#f6ead4;--ink:#3a2414;--ink2:#6b4a30;--paper:#fffaf0;--card:#fffaf0;--pn:#fffdf7;--pnb:#e8cfa4;--pnsh:0 2px 8px rgba(120,70,20,.16);--hd:#a3401a;
+  --accbg:linear-gradient(180deg,#cf4a10,#b0390a);--onacc:#fff;--accsh:0 6px 14px rgba(150,60,10,.3),inset 0 1px 0 rgba(255,255,255,.3);--accc:#a3401a;
+  --adbg:linear-gradient(180deg,#ffe08a,#f6c453);--adtx:#4a2f08;--adbd:transparent;--adsh:0 4px 10px rgba(170,110,10,.28);--tint:#fbe3c0;--icc:#a3401a;
+  --blue:#2450a8;--blue2:#2f6fd6;--cell:#fffaf0;--cellb:#e3c99c;--cello:#fff;--cellob:#a3401a;--cellotx:#a3401a;--cellsh:0 2px 0 #e3c99c;
+  --soft:#fdf3e2;--track:#f1dcb8;--hl:#fff2c8;--stamp:#c23a2b;--dim:rgba(58,36,20,.45);--good:#1f6a2b;--margin:#c23a2b;--edge:#e8cfa4;--edge2:#f1dcb8;--toastbg:#3a2414;--toasttx:#fff}
+
 /* ===== 3. общие правила тем ===== */
 html.th-x,html.th-x body{background:var(--bgc);background-image:none}
 html.th-x body{font-family:var(--font)}
@@ -301,3 +316,18 @@ html.th-x .th-on{color:var(--good)}
 .thp-veranda .thp-h{background:rgba(24,27,58,.6);box-shadow:0 0 0 1px rgba(255,255,255,.3)}.thp-veranda .thp-c b{background:#fff5df;color:#1d3f8f}.thp-veranda .thp-b{background:#ffb252}
 .thp-gzhel{background:#f6f2ea}
 .thp-gzhel .thp-h{background:#fff;box-shadow:0 0 0 1px #cdd8ef}.thp-gzhel .thp-c b{background:#fff;color:#1f4fbf;box-shadow:0 0 0 1.5px #1f4fbf}.thp-gzhel .thp-b{background:#1f4fbf}
+/* «Зимний двор»: морозное небо, снежные холмы с ёлочками, иней по углам (zb3-SKIN) */
+html.th-zima #thbg{background:linear-gradient(180deg,#bcd8f0 0%,#dcebf8 45%,#f4f8fc 100%)}
+.sc-snow{position:absolute;left:0;bottom:0;width:100%;height:42%}
+.sc-frost{position:absolute;width:150px;height:150px;opacity:.7;background:radial-gradient(circle at 0 0,#fff 0,rgba(255,255,255,.85) 30%,rgba(255,255,255,0) 70%)}
+.sc-frost.tl{left:0;top:0}.sc-frost.tr{right:0;top:0;transform:scaleX(-1)}
+html.th-zima:not([data-scr=menu]) .sc-snow{opacity:.55}
+/* «Осенний двор»: тёплое небо, клёны, листья на холмах, солнечный угол (zb3-SKIN) */
+html.th-osen #thbg{background:linear-gradient(180deg,#fde3b8 0%,#fbeed6 45%,#fbf5ea 100%)}
+.sc-sun{background:radial-gradient(circle at 0 0,#ffe7a6 0,rgba(255,215,130,.6) 30%,rgba(255,215,130,0) 70%)}
+html.th-osen:not([data-scr=menu]) .sc-snow{opacity:.55}
+.thp-zima{background:linear-gradient(180deg,#bcd8f0 0,#dcebf8 55%,#fff 55%)}
+.thp-zima .thp-h{background:#fff;box-shadow:0 0 0 1px #c9daef}.thp-zima .thp-c b{background:#f7fbff;color:#1f5aa8;box-shadow:0 0 0 1px #c3d6ee}.thp-zima .thp-b{background:#c4402a}
+.thp-osen{background:linear-gradient(180deg,#fde3b8 0,#fbeed6 55%,#e9c27a 55%)}
+.thp-osen .thp-h{background:#fffaf0;box-shadow:0 0 0 1px #e8cfa4}.thp-osen .thp-c b{background:#fff;color:#a3401a;box-shadow:0 0 0 1px #e3c99c}.thp-osen .thp-b{background:#b8400e}
+@media (min-width:860px){.sc-snow{height:48%}}

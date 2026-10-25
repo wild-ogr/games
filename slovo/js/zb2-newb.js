@@ -15,7 +15,12 @@ var K=['w','cg','cp','ak','d1','td'];
 ZB2.field('z2n',{def:{w:0,cg:0,cp:0,ak:0,d1:0,td:0},
   merge:function(m,c){c=c||{};['w','cp','ak'].forEach(function(k){m[k]=(+m[k]||0)|(+c[k]||0);});m.cg=Math.max(+m.cg||0,+c.cg||0);m.td=Math.max(+m.td||0,+c.td||0);
     var a=+m.d1||0,b=+c.d1||0;m.d1=a&&b?Math.min(a,b):a||b;},
-  fix:function(m){K.forEach(function(k){m[k]=+m[k]||0;});}});
+  fix:function(m,S1){K.forEach(function(k){m[k]=+m[k]||0;});if(d1Bad(m,S1))m.d1=0;}});
+/* D38 (BUILD 25.10): ложный «новичок» — Safari на iPhone (VK) теряет localStorage, игра сразу даёт 1-й уровень и метит d1=сегодня ДО облака.
+   Облако с прогрессом (≥5 уровней) без d1 → d1 этого устройства ложный (Z3.day у старых — 99). Уже испорченные с 17.10: установлен раньше d1 (S.stc.c<d1) при ≥20 уровнях. */
+function d1Bad(z,S1){var d1=+z.d1||0,c=S1&&S1.stc&&+S1.stc.c||0;return !!d1&&c>0&&c<d1&&(+S1.lv||0)>=20;}
+ZB.onSave({id:'zb2-z2n-d38',merge:function(S1,d){var z=S1&&S1.z2n,c=d&&d.z2n;if(!z||!+z.d1||!d)return;
+  if((+d.lv||0)>=5&&!(c&&+c.d1)){z.d1=0;ev({a:'d38',lv:+d.lv||0});}}});
 function Z(){return S.z2n||(S.z2n={w:0,cg:0,cp:0,ak:0,d1:0,td:0});}
 N.z=Z;
 (function(){var l=document.createElement('link');l.rel='stylesheet';l.href='css/zb2-newb.css';document.head.appendChild(l);

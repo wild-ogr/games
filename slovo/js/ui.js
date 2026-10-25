@@ -406,7 +406,10 @@ function updMore(){const b=$('btnMore');if(b)b.style.display=SOC.can('more')?'':
 function openSocial(back){if(!SOC.ok()){openSettings();return;}STAT.screen('social');STAT.ev('mod',{m:'soc',a:'open'});
   const bk=typeof back==='function'?back:openSettings;
   modal(`<h2>${OK?'Друзья':'Друзья и игры'}</h2>${SOC.settingsHtml()}<div class="btns"><button class="btn ghost" id="socBack">← Назад</button></div>`);
-  SOC.bind($('mcard'),()=>openSocial(bk));$('socBack').onclick=()=>{SND.tap();bk();};}
+  SOC.bind($('mcard'),()=>openSocial(bk));$('socBack').onclick=()=>{SND.tap();bk();};
+  // Z3-SHARE: «Позвать/Поделиться» — отклик сразу и запасной путь через 8 с, если окно VK не открылось (SOC ждёт 60 с молча)
+  [['inv','invite'],['share','share']].forEach(([k,f])=>{const b=document.querySelector('#mcard [data-soc="'+k+'"]');
+    if(b)b.onclick=()=>{SND.tap();toast('Открываю окно…',2000);SHR.watch(SOC[f](),socInvTxt()).catch(()=>{});};});}
 function applyBig(){document.body.classList.toggle('big',!!S.big);if(G)layoutWheel();}
 
 /* ---------- благодарности (музыка — чужая, подпись обязательна по лицензии) ---------- */

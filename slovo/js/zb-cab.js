@@ -245,7 +245,7 @@ function upHtml(id){var l=lv(id),p=price(id),r=row(id)||{},h='<div class="zbc-bo
   else if(vis(id)<3&&payRemont())h+='<div class="zbc-pay"><small>Шторы, цветы, паркет — только для красоты:</small>'+ZB.safe('pay',function(){return PAY.html(['remont']);})+'</div>';
   return h+'</div>';}
 function topUp(p){try{return typeof adsOk==='function'&&adsOk()&&E().topUp?+E().topUp(p)||0:0;}catch(e){return 0;}}
-function payRemont(){try{return typeof PAY!=='undefined'&&PAY.on&&!!PAY.item('remont')&&!(typeof OK!=='undefined'&&OK);}catch(e){return false;}}
+function payRemont(){try{return typeof PAY!=='undefined'&&PAY.on&&!!PAY.item('remont')&&(typeof okPayOn!=='function'||okPayOn());}catch(e){return false;}}
 function renderRoom(el,id){css();el.classList.add('zbc-scr');cur=id;var r=row(id)||{},l=lv(id),who=ROOM[id].who;
   if(id==='biblioteka')shelfPay();if(id==='muzej')cardPay();
   var first=!(S.cbN||{})[id];if(first&&opened(id)){S.cbN=isO(S.cbN)?S.cbN:{};S.cbN[id]=1;sv();}

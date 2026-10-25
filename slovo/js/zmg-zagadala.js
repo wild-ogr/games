@@ -65,23 +65,24 @@ ZMG_REG({a:'Угадай слово дня за 6 попыток: зелёная
     let day=dToday;if(arch){day=dToday-1-Math.floor(o.rnd()*Math.min(120,Math.max(1,dToday)));}
     const ans=wordOf(day),L=ans.length;
     const showOnly=todayDone&&!arch;   // сегодня уже всё — показать итог дня и «Похвастаться»
-    const G=arch?[]:String(mem.g||'').split(',').filter(Boolean).filter(w=>w.length===L).slice(0,TRIES);
+    const G=arch?[]:String(mem.g||'').split(',').filter(Boolean).filter(w=>w.length===L).slice(0,TRIES+1);
+    let MT=G.length>TRIES||+mem.x===today?TRIES+1:TRIES;   /* Z3-PAPER 25.10: 7-я попытка за рекламу (починка по PUZ) */
     let cur='',fin=false,busy=false;const kst={};
     host.el.innerHTML='<div class="zmw-wrap"><div class="zmw-sheet"><div class="zmw-grid" style="--n:'+L+'"></div></div><div class="zmw-say"></div><div class="zmw-kb"></div></div>';
     const $=s=>host.el.querySelector(s),grid=$('.zmw-grid'),sayEl=$('.zmw-say'),kb=$('.zmw-kb');
-    let h='';for(let r=0;r<TRIES;r++){h+='<div class="zmw-row">';for(let i=0;i<L;i++)h+='<span class="zmw-c"><b></b></span>';h+='</div>';}grid.innerHTML=h;
+    let h='';for(let r=0;r<MT;r++){h+='<div class="zmw-row">';for(let i=0;i<L;i++)h+='<span class="zmw-c"><b></b></span>';h+='</div>';}grid.innerHTML=h;
     let kh='';ROWS.forEach((row,ri)=>{kh+='<div class="zmw-kr">';if(ri===2)kh+='<button class="zmw-k zmw-kx" data-k="⌫" aria-label="Стереть">⌫</button>';
       for(const c of row)kh+='<button class="zmw-k" data-k="'+c+'">'+c+'</button>';if(ri===2)kh+='<button class="zmw-k zmw-ko" data-k="ok">'+(host.pc?'Enter':'✔')+'</button>';kh+='</div>';});
     kb.innerHTML=kh;
     const cells=r=>grid.children[r].children;
     function fit(){const w=host.w,hh=host.h,kbH=kb.offsetHeight||150,sh=sayEl.offsetHeight||48;
-      const cs=Math.max(30,Math.min(58,Math.floor((Math.min(w,460)-28-(L-1)*6)/L),Math.floor((hh-kbH-sh-34-(TRIES-1)*6)/TRIES)));
+      const cs=Math.max(30,Math.min(58,Math.floor((Math.min(w,460)-28-(L-1)*6)/L),Math.floor((hh-kbH-sh-34-(MT-1)*6)/MT)));
       grid.style.setProperty('--cs',cs+'px');}
     host.onResize(fit);
     function say(t,m){sayEl.innerHTML=host.say('zina',t,m||'norm');}
     function paintRow(r,g,res,anim){const c=cells(r);for(let i=0;i<L;i++){c[i].firstChild.textContent=g[i]||'';c[i].className='zmw-c'+(g[i]?' f':'')+(res?' s'+res[i]:'');
         if(res&&anim)c[i].style.animationDelay=(i*.12)+'s';}}
-    function paintCur(){const r=G.length;if(r>=TRIES)return;paintRow(r,cur,null);const c=cells(r);for(let i=0;i<L;i++)c[i].classList.toggle('cur',i===cur.length);}
+    function paintCur(){const r=G.length;if(r>=MT)return;paintRow(r,cur,null);const c=cells(r);for(let i=0;i<L;i++)c[i].classList.toggle('cur',i===cur.length);}
     function paintKeys(){[].forEach.call(kb.querySelectorAll('.zmw-k[data-k]'),b=>{const v=kst[b.dataset.k];b.classList.remove('s0','s1','s2');if(v!=null)b.classList.add('s'+v);});}
     function mark(g,res){for(let i=0;i<L;i++){const c=g[i],v=res[i];kst[c]=Math.max(kst[c]==null?-1:kst[c],v);}}
     const rows=[];
@@ -101,12 +102,26 @@ ZMG_REG({a:'Угадай слово дня за 6 попыток: зелёная
       const won=g===ans;
       if(won){try{host.snd.win();}catch(e){}say(WIN[G.length],'happy');end(true);return;}
       try{host.snd.word&&host.snd.word(3,res.filter(x=>x===2).length);}catch(e){}
-      if(G.length>=TRIES){say('Слово было «'+ans.toUpperCase()+'». Не беда — завтра новое загадаю!','sad');end(false);return;}
+      if(G.length>=MT){if(MT===TRIES&&!arch&&host.adOk()){offer();return;}say('Слово было «'+ans.toUpperCase()+'». Не беда — завтра новое загадаю!','sad');end(false);return;}
       say(sayFor(res,G.length,L),res.some(x=>x===2)?'happy':'norm');paintCur();}
-    function end(won){if(fin)return;fin=true;const n=G.length;let sr=null;
+    /* шесть мимо — седьмая попытка за рекламу (одна; кнопка — zbad zmg-ad, поздний досмотр — host.adNeed) */
+    function offer(){const kh0=kb.innerHTML;say('Шесть мимо! Седьмую попытку дам — за рекламу. Или сдаёшься?','norm');
+      kb.innerHTML='<div class="zmw-done"><button class="btn green zbad zmg-ad zmw-7">🎬 Ещё попытка за рекламу</button><button class="btn sec zmw-gv">Сдаюсь</button></div>';
+      const giveUp=()=>{say('Слово было «'+ans.toUpperCase()+'». Не беда — завтра новое загадаю!','sad');end(false);};
+      kb.querySelector('.zmw-gv').onclick=e=>{e.stopPropagation();try{host.snd.tap();}catch(x){}giveUp();};
+      kb.querySelector('.zmw-7').onclick=e=>{e.stopPropagation();const b=e.currentTarget;b.disabled=true;
+        host.adNeed('try7').then(ok=>{if(fin)return;if(!ok){giveUp();return;}MT=TRIES+1;mem.x=today;try{if(typeof save==='function')save();}catch(x){}
+          let r='<div class="zmw-row">';for(let i=0;i<L;i++)r+='<span class="zmw-c"><b></b></span>';grid.insertAdjacentHTML('beforeend',r+'</div>');
+          kb.innerHTML=kh0;paintKeys();fit();paintCur();upTop();say('Последняя попытка! Думай, как Галя: она всегда знает заранее.','happy');});};}
+    /* «отгадали соседи»: сервер дома (вид 'wd', просьба к SRV) — только живые числа, от 100 человек; без сервера строки нет */
+    function hood(won,n){try{if(!window.Z3||!Z3.srv)return;Z3.srv.send('wd',{n:won?n:0});
+      Z3.srv.get('wd').then(o=>{if(!o||o._sim||!(+o.all>=100)||!o.n)return;const put=t=>{const p=host.root.querySelector('.zmw-res');if(!p){if(t<20)setTimeout(()=>put(t+1),250);return;}
+        const k=won?(+o.n[n-1]||0):0,pc=Math.round(100*k/o.all),d=document.createElement('div');d.className='zmw-sm';
+        d.textContent='Сегодня угадали '+(+o.win||0)+' из '+o.all+(won?' · с '+n+'-й попытки — как '+pc+'%':'');p.insertBefore(d,p.firstChild);};put(0);},()=>{});}catch(e){}}
+    function end(won){if(fin)return;fin=true;const n=G.length;let sr=null;if(!arch)hood(won,n);
       if(!arch){mem.e=won?1:2;try{if(typeof save==='function')save();}catch(e){}
         if(window.ZBWD)sr=won?ZBWD.win(ID,n):(ZBWD.lose(ID),null);}
-      setTimeout(()=>{host.finish({sc:won?TRIES+1-n:0,st:tierOf(won,n),label:won?'Угадано с '+n+'-й попытки: «'+ans.toUpperCase()+'»':'Слово было: «'+ans.toUpperCase()+'»'});
+      setTimeout(()=>{host.finish({sc:won?Math.max(1,TRIES+1-n):0,st:tierOf(won,n),label:won?'Угадано с '+n+'-й попытки: «'+ans.toUpperCase()+'»':'Слово было: «'+ans.toUpperCase()+'»'});
         if(!arch)setTimeout(()=>extra(won,sr),30);},L*120+900);}
     /* дорисовать окно итога: серия, значок, 💡, «Похвастаться», «новое через N ч» */
     function extra(won,sr){const p=host.root.querySelector('.zmg-res .zmg-panel');if(!p)return;const bt=p.querySelector('.zmg-btns');
@@ -130,7 +145,7 @@ ZMG_REG({a:'Угадай слово дня за 6 попыток: зелёная
     kb.addEventListener('click',e=>{const b=e.target.closest('.zmw-k');if(!b)return;key(b.dataset.k);});
     host.keys((k,e)=>{if(k==='Enter'){key('ok');return true;}if(k==='Backspace'){key('⌫');return true;}
       let c=nrm(k);if(!/^[а-я]$/.test(c))c=e&&CODE[e.code]||'';if(c){key(c==='ё'?'е':c);return true;}return false;});
-    const upTop=()=>host.top(arch?'архив':(TRIES-G.length)+' из '+TRIES);
+    const upTop=()=>host.top(arch?'архив':(MT-G.length)+' из '+MT);
     const kOrig=key;
     /* бот стенда: набирает слово, согласное с подсказками (k — доля «умных» ходов) */
     host.bot=k=>{if(fin||busy)return;if(cur.length){cur='';paintCur();}const P=D().a5.split(' ').concat(D().a6.split(' ')).filter(w=>w.length===L);
@@ -138,7 +153,7 @@ ZMG_REG({a:'Угадай слово дня за 6 попыток: зелёная
       const w=Math.random()<k?C[Math.floor(Math.random()*C.length)]:P[Math.floor(Math.random()*P.length)];for(const c of w)kOrig(c);kOrig('ok');upTop();};
     kb.addEventListener('click',upTop);host.keys(()=>{setTimeout(upTop,0);return false;});
     const intro=arch?'Слово из архива — '+L+' букв. Тренировка: без серии и наград, зато для ума полезно!':
-      G.length?'Продолжаем! Осталось '+(TRIES-G.length)+' '+(typeof plural==='function'?plural(TRIES-G.length,'попытка','попытки','попыток'):'попыток')+'.':
+      G.length?'Продолжаем! Осталось '+(MT-G.length)+' '+(typeof plural==='function'?plural(MT-G.length,'попытка','попытки','попыток'):'попыток')+'.':
       'Я загадала слово из <b>'+L+' букв</b> — одно на весь подъезд! У тебя <b>6 попыток</b>. Подчеркну зелёным — буква на месте, жёлтым — есть, но не тут, зачеркну — нет совсем.';
     host.intro({who:'zina',text:intro,btn:G.length?'Дальше':'Угадывать!',hint:(L===6?'сегодня воскресенье — слово длиннее · ':'')+'несуществующее слово попыткой не считается'+(host.pc?' · печатай с клавиатуры':'')}).then(()=>{
       say(G.length?sayFor(rows[rows.length-1],G.length,L):'Ну-ка, первое слово — любое из '+L+' букв.');paintCur();upTop();fit();setTimeout(fit,50);});}});

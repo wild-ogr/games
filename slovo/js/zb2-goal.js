@@ -29,7 +29,7 @@
   function perk(o){try{var c=C();return c&&c.perk?String(c.perk(o.id,o.lv)).replace(/<[^>]+>/g,''):'';}catch(e){return '';}}
   function topN(o){try{return typeof adsOk==='function'&&adsOk()&&E().topUp?+E().topUp(o.p)||0:0;}catch(e){return 0;}}
   // «Учительская»: платежи есть → вход; «новое» — витрина поменялась с прошлого захода
-  function payOn(){return !!(window.ZBSHOP&&ZBSHOP.on&&typeof PAY!=='undefined'&&PAY.on);}
+  function payOn(){return !!(window.ZBSHOP&&ZBSHOP.on&&typeof PAY!=='undefined'&&PAY.on&&(!ZBSHOP.has||ZBSHOP.has()));} /* zb3-NUM: пустой витрины нет */
   function sig(){if(!payOn())return 0;var s='',h=7;try{var e=E();s=(e&&e.uzelokOn()&&!PAY.own('starter')?'u':'')+Object.keys(PAY_ITEMS).filter(function(k){return !!PAY.item(k);}).join(',');}catch(x){}
     for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)||1;}
   function fresh(){var s=sig();return s&&z().s!==s;}

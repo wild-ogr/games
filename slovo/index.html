@@ -472,6 +472,7 @@ html.zk #toast{font-size:calc(15px * var(--zk));top:calc(70px * var(--zk))}
 </style>
 <link rel="stylesheet" href="css/themes.css">
 <link rel="stylesheet" href="css/zb-view.css"><!-- zb-VIEW: новый вид, всё под html.zbv -->
+<link rel="stylesheet" href="css/zb3-skin.css">
 <script>/* themes1: купленная тема оформления — до первой отрисовки (владение проверяет js/themes.js). У кого темы нет — ничего не делает */
 (function(){try{var q=location.search,m=/[?&]theme=([a-z0-9_]+)/.exec(q),t=m&&/^(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)$/.test(location.hostname)&&!/[?&]vk_app_id=/.test(q)?m[1]:'';
 if(!t&&!/[?&]shot=/.test(q)){var o=JSON.parse(localStorage.getItem('slovo-v1')||'{}');if(o&&o.th&&((o.thU||{})[o.th]||(o.buy||{})['th_'+o.th]))t=o.th;}
@@ -595,6 +596,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/vkm.js" defer></script>
 <script src="js/zb-core.js" defer></script><!-- zb: каркас буста «Школа бабы Зины» — до core.js -->
 <script src="js/zb2-core.js" defer></script><!-- zb2: каркас «буст_в2.0» (ZB2: флаги новинок, поля S.z2*) — сразу после zb-core.js -->
+<script src="js/zb3-core.js" defer></script>
 <script src="js/core.js" defer></script>
 <script src="js/text.js" defer></script>
 <script src="js/game.js" defer></script>
@@ -691,6 +693,26 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 
 <!-- zb2:CUP -->
 <script src="js/zb2-cup.js" defer data-zb></script><!-- up2410 UP-ZN: живая лига hobby-cup в Соседках (флаг cup; модуль и окна — js/zb2-cup-x.js, лениво) -->
+<!-- zb3:NUM — «Вечёрка у Зины» и юмор (24.10, ветка num2410; ленивые js/zb3-num-x.js, js/zb3-num-data.js) -->
+<script src="js/zb3-num.js" defer data-zb></script>
+<!-- zb3: модули «Зина 3.0» — каждый поток под СВОЕЙ меткой; описание модулей — шапки js/zb3-*.js и docs/zb3-core.txt -->
+<!-- zb3:YARD -->
+<script src="js/zb3-yard.js" defer data-zb></script>
+<!-- zb3:CORE -->
+<script src="js/zb3-kitchen.js" defer data-zb></script>
+<!-- zb3:PAPER -->
+<script src="js/zb3-paper.js" defer data-zb></script>
+<!-- zb3:MAIL -->
+<script src="js/zb3-mail.js" defer data-zb></script>
+<!-- zb3:HOUSE -->
+<script src="js/zb3-house.js" defer data-zb></script>
+<script src="js/zb3-hood.js" defer data-zb></script>
+<!-- zb3:KIOSK -->
+<script src="js/zb3-kiosk.js" defer data-zb></script>
+<!-- zb3:ALBUM -->
+<script src="js/zb3-album.js" defer data-zb></script>
+<!-- zb3:SKIN -->
+<script src="js/zb3-skin.js" defer data-zb></script>
 <script src="js/zb-ready.js" defer></script><!-- zb: все модули выполнены → ZB.ready() (до словаря) -->
 <script>/* zb-TECH (10.10): словари — zina.js 40К, gloss.js 94К, dict.js 323К (40 % веса) — грузим ПОСЛЕ первого экрана (DOMContentLoaded: все defer-скрипты
    выполнены, меню/1-й уровень уже показаны), по порядку (async=false). До них игра живёт: isWord ждёт dictReady() (бонусные слова не засчитываются

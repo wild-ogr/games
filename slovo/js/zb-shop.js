@@ -10,7 +10,7 @@
   var SH=window.ZBSHOP={on:true,from:null};
   function E(){return window.ZBECO||null;}
   function $(id){return document.getElementById(id);}
-  function OKP(){return PLAT!=='vk'||(typeof OK!=='undefined'&&OK);} /* zb2-ECO: голоса — только VK */
+  function OKP(){return PLAT!=='vk'||(typeof OK!=='undefined'&&OK&&!(typeof okPayOn==='function'&&okPayOn()));} /* zb2-ECO: голоса — только VK; Z3-SRV: и ОКи в ОК */
   function dd(n){return ('0'+n%100).slice(-2)+'.'+('0'+Math.floor(n/100)%100).slice(-2);}
   function uzD(){var n=+(E()&&E().pay.uzelok.days)||3;return n+(n===1?' день':n<5?' дня':' дней');} /* zb2-ECO */
   function payOn(){return SH.on&&typeof PAY!=='undefined'&&PAY.on;}
@@ -22,7 +22,7 @@
     remont:'<svg viewBox="0 0 80 80"><ellipse cx="40" cy="72" rx="28" ry="4" fill="#000" opacity=".12"/><rect x="10" y="40" width="34" height="28" rx="3" fill="#f3e3c2"/><path d="M10 40l17-14 17 14z" fill="#e8661b"/><rect x="21" y="50" width="12" height="18" fill="#9b6a3c"/><rect x="34" y="46" width="7" height="7" fill="#bfe0ff"/><g transform="rotate(35 56 30)"><rect x="53" y="20" width="6" height="40" rx="2" fill="#9b6a3c"/><rect x="44" y="12" width="24" height="12" rx="3" fill="#5d6781"/></g><g transform="rotate(-30 60 56)"><rect x="57" y="44" width="6" height="22" rx="2" fill="#c98a4b"/><rect x="52" y="36" width="16" height="10" rx="2" fill="#237a3b"/></g></svg>',
     no_ads:'<svg viewBox="0 0 80 80"><ellipse cx="40" cy="72" rx="26" ry="4" fill="#000" opacity=".12"/><rect x="12" y="18" width="56" height="40" rx="6" fill="#27324a"/><rect x="17" y="23" width="46" height="30" rx="3" fill="#7fb1ff"/><path d="M36 30l12 8-12 8z" fill="#fff"/><path d="M32 58l-6 10M48 58l6 10" stroke="#27324a" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="38" r="26" fill="none" stroke="#d0342c" stroke-width="6"/><path d="M22 20l36 36" stroke="#d0342c" stroke-width="6" stroke-linecap="round"/></svg>',
     coins_s:'<svg viewBox="0 0 80 80"><ellipse cx="40" cy="72" rx="24" ry="4" fill="#000" opacity=".12"/><path d="M18 34c0-8 6-12 22-12s22 4 22 12v26c0 6-6 10-22 10S18 66 18 60z" fill="#c0392b"/><path d="M18 34c0 6 8 9 22 9s22-3 22-9" fill="none" stroke="#8e2a20" stroke-width="2"/><circle cx="34" cy="20" r="5" fill="#f5b400" stroke="#c98a00" stroke-width="2"/><circle cx="46" cy="20" r="5" fill="#f5b400" stroke="#c98a00" stroke-width="2"/><circle cx="40" cy="54" r="10" fill="#f5b400" stroke="#c98a00" stroke-width="2.5"/><path d="M40 48.5l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="#fff6d0"/></svg>',
-    coins_l:'<svg viewBox="0 0 80 80"><ellipse cx="40" cy="72" rx="28" ry="4" fill="#000" opacity=".12"/><ellipse cx="40" cy="46" rx="27" ry="21" fill="#f29bb0"/><circle cx="64" cy="46" r="7" fill="#ee8aa2"/><circle cx="62" cy="45" r="1.6" fill="#8a3a50"/><circle cx="66" cy="45" r="1.6" fill="#8a3a50"/><circle cx="52" cy="38" r="2.4" fill="#27324a"/><path d="M24 30l-4-10 10 6M44 27l4-10 2 11" fill="#ee8aa2"/><rect x="34" y="27" width="12" height="3" rx="1.5" fill="#8a3a50"/><path d="M22 64v6M34 66v5M48 66v5M58 62v6" stroke="#ee8aa2" stroke-width="6" stroke-linecap="round"/><circle cx="40" cy="14" r="8" fill="#f5b400" stroke="#c98a00" stroke-width="2.5"/></svg>',
+    coins_l:'<svg viewBox="0 0 80 80"><ellipse cx="40" cy="72" rx="26" ry="4" fill="#000" opacity=".12"/><path d="M40 28c-18 4-26 18-24 30 2 10 10 14 24 14s22-4 24-14c2-12-6-26-24-30z" fill="#c9a26b"/><path d="M30 28c4-8 16-8 20 0" fill="#b48a52"/><path d="M28 28h24" stroke="#8a5a32" stroke-width="4" stroke-linecap="round"/><path d="M30 22l-4-8M50 22l4-8M40 22v-10" stroke="#b48a52" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="52" r="10" fill="#f5b400" stroke="#c98a00" stroke-width="2.5"/><path d="M40 46.5l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="#fff6d0"/></svg>',
     tea:'<svg viewBox="0 0 80 80"><ellipse cx="40" cy="72" rx="28" ry="5" fill="#000" opacity=".12"/><ellipse cx="40" cy="66" rx="28" ry="6" fill="#fff" stroke="#2563c9" stroke-width="2"/><path d="M20 38h40v8c0 12-8 20-20 20s-20-8-20-20z" fill="#fff" stroke="#2563c9" stroke-width="2.5"/><path d="M60 42c8 0 10 4 10 8s-4 8-11 8" fill="none" stroke="#2563c9" stroke-width="3"/><ellipse cx="40" cy="39" rx="19" ry="3.5" fill="#a0522d"/><g fill="#2563c9"><circle cx="30" cy="52" r="2"/><circle cx="40" cy="56" r="2"/><circle cx="50" cy="52" r="2"/></g><path d="M32 30c-3-5 3-7 0-12M42 30c-3-5 3-7 0-12M50 30c-3-5 3-7 0-12" stroke="#9aa6bd" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
     theme:'<svg viewBox="0 0 80 80"><ellipse cx="40" cy="72" rx="26" ry="4" fill="#000" opacity=".12"/><path d="M40 12c16 0 30 11 30 26 0 9-7 12-13 12-5 0-7 3-5 7 3 6-2 11-12 11-16 0-28-13-28-28s12-28 28-28z" fill="#f3e3c2" stroke="#c98a4b" stroke-width="2"/><circle cx="26" cy="34" r="6" fill="#d0342c"/><circle cx="38" cy="22" r="6" fill="#f5b400"/><circle cx="54" cy="26" r="6" fill="#237a3b"/><circle cx="26" cy="50" r="6" fill="#2563c9"/></svg>'
   };
@@ -59,16 +59,17 @@
     if(typeof STAT!=='undefined'&&STAT.ev)STAT.ev('uchit',{a:'open',f:SH.from||'?',n:L.length});}
   function back(){var f=SH.from;SH.from=null;if(f==='shop'&&typeof openShop==='function')openShop();else if(typeof openMenu==='function')openMenu();}
   if(window.ZB){ZB.screen('uchit',{title:'Учительская',render:render});}
-  SH.open=function(from){if(!payOn()||!window.ZB)return false;SH.from=from||null;ZB.go('uchit');return true;};
+  SH.has=function(){return list().length>0;}; /* zb3-NUM */
+  SH.open=function(from){if(!payOn()||!window.ZB||!list().length)return false; /* zb3-NUM (VIS): пустую «Касса закрыта» не показываем */SH.from=from||null;ZB.go('uchit');return true;};
   // ---------- входы ----------
   // низ магазина «Облики»: null — модуль выключен (старый список покупок), '' — платежей нет
-  window.zbShopEntry=function(from){if(!SH.on)return null;if(!payOn())return '';
+  window.zbShopEntry=function(from){if(!SH.on)return null;if(!payOn()||!list().length)return '';
     var u=E()&&E().uzelokOn()&&!PAY.own('starter');
     return '<button class="prow zt-in" id="ztIn"><span>🏫 Учительская<br><small>'+(u?'Узелок новичка — только первые '+uzD():'Абонемент, без рекламы, монеты')+'</small></span><b>›</b></button>';};
   window.zbShopBind=function(root){var b=root&&root.querySelector('#ztIn');if(b)b.onclick=function(){SND.tap();SH.open('shop');};};
   // главный: строка-кнопка внизу (VIEW раскладывает зону bottom)
   if(window.ZB)ZB.add(ZB.homeSlots,{id:'uchit',order:90,zone:'bottom',
-    render:function(){if(!payOn())return '';if(window.ZB2GOAL&&ZB2GOAL.card())return ''; /* zb2-ECO: вход — в карточке «Цели» */var u=E()&&E().uzelokOn()&&!PAY.own('starter');
+    render:function(){if(!payOn()||!list().length)return '';if(window.ZB2GOAL&&ZB2GOAL.card())return ''; /* zb2-ECO: вход — в карточке «Цели» */var u=E()&&E().uzelokOn()&&!PAY.own('starter');
       return '<button type="button" class="btn ghost small zt-home">🏫 Учительская'+(u?' · <b>Узелок 🎁</b>':'')+'</button>';},
     mount:function(el){var b=el.querySelector('.zt-home');if(b)b.onclick=function(){SND.tap();SH.open('home');};}});
   // после покупки — перерисовать витрину (payAfter в pay.js знает только окно и «Облики»)

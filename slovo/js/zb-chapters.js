@@ -63,9 +63,9 @@
   // сколько уровней всего: LV_ZB — число новых (пишет tools/build_zb.py в levels.js), файл новых может быть ещё не подгружен
   ZBCH.total=function(){var z=ZBCH.ON&&typeof LV_ZB!=='undefined'?+LV_ZB||0:0;return Math.max(LEVELS.length,N_OLD+z+(z&&ZB3_N?ZB3_N:0));};
   ZBCH.N3=ZB3_N;ZBCH.FROM3=N_OLD+(typeof LV_ZB!=='undefined'?+LV_ZB||0:0); // 1500: с какого индекса — «Сверх программы»
-  ZBCH.count=function(){return Math.min(NCH,Math.ceil(ZBCH.total()/LEN));};
+  ZBCH.count=function(){return Math.min(ZBCH.list.length,Math.ceil(ZBCH.total()/LEN));}; /* zb3: главы 101+ дописывает CORE (js/zb3-kitchen.js) в ZBCH.list */
   ZBCH.get=function(n){return n>=1&&n<=ZBCH.count()?ZBCH.list[n-1]:null;};
-  ZBCH.of=function(l){var n=Math.max(1,Math.min(NCH,Math.ceil(l/LEN))),c=ZBCH.list[n-1];
+  ZBCH.of=function(l){var n=Math.max(1,Math.min(ZBCH.list.length,Math.ceil(l/LEN))),c=ZBCH.list[n-1]; /* zb3: длина списка вместо NCH */
     return {ch:c,n:n,cls:c.cls,i:(l-1)%LEN,boss:!!c.boss&&c.boss===l};};
   ZBCH.classes=function(){var out=[],m=ZBCH.count();ZBCH.list.slice(0,m).forEach(function(c){var o=out[out.length-1];
     if(!o||o.cls!==c.cls)out.push(o={cls:c.cls,from:c.n,to:c.n,boss:0});o.to=c.n;o.boss=c.to;});return out;};

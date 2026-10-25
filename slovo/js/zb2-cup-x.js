@@ -208,7 +208,8 @@ CUP.init({g:'zina',plat:PLAT==='vk'?'vk':'yandex',url:CUP_URL,lang:'ru',name:fun
 function vkName(cb){if(PLAT!=='vk'||vkAsked||typeof vkSend!=='function')return cb();vkAsked=true;
   vkSend('VKWebAppGetUserInfo',{},4000).then(function(u){if(u&&u.first_name)vkNm=(u.first_name+' '+(u.last_name||'')).trim();cb();},function(){cb();});}
 // Яндекс: живая лига — только вошедшему игроку (правило Яндекса: вход не требуем, без входа онлайна просто нет)
-function platOk(){if(PLAT==='vk')return typeof OK==='undefined'||!OK;return typeof ypAuth==='function'&&ypAuth();}
+// Z3-SRV 25.10: живая лига и в ОК (та же VK-подпись запуска, vk_client=ok — сервер hobby-cup принимает); ?off=okcup — в ОК лиги нет, как раньше
+function platOk(){if(PLAT==='vk')return typeof OK==='undefined'||!OK||!ZB2.off('okcup');return typeof ypAuth==='function'&&ypAuth();}
 
 /* ---------- лестница ---------- */
 function lad(){return lg&&lg.lad||CUP.me()&&CUP.me().lad||LAD0;}

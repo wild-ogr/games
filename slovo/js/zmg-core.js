@@ -126,9 +126,12 @@ const isZ2=id=>{const i=infoOf(id);return !!(i&&i.z2);};
 function due(n){const i=INFO[n];if(!i||isOff(i.id))return false;const z=Z(),l=lvl();return i.lv?l>=i.lv:(!!i.dp&&l>=5&&z.dp>=i.dp);}
 const isOpen=id=>{const i=infoOf(id);return !!(i&&!isOff(i.id)&&S.zmg&&S.zmg.o[i.num]);};
 const avail=id=>isOpen(id)&&!!REG.by[id]&&gOk(REG.by[id]);
+const Z3MU=!!(window.Z3&&Z3.reg&&Z3.reg('zmuha',{t:'«Из мухи слона» раньше: с 3-го дня (P21)',who:'CORE'}));   /* zb3 */
 let sesDay=0;   // в этом сеансе уже открыли игру по дням
 /* открыть следующую (одну): по уровням — одна за победу, по дням — одна за сеанс и день. Вернёт id или '' */
 function unlock(byLevel){const z=Z(),l=lvl();
+  if(!byLevel&&Z3MU&&!sesDay&&z.od!==z.d.k&&l>=5&&Z3.day()>=(Z3.OPEN.school||3)){const i=infoOf('muha');   /* zb3 P21: «Из мухи слона» раньше — с 3-го дня (школа), первой из открытий по дням */
+    if(i&&!z.o[i.num]&&!isOff('muha')&&!bad.muha&&Z2HAVE.indexOf('muha')>=0){z.o[i.num]=1;z.od=z.d.k;sesDay=1;if(!z.s[i.num])z.nw='muha';touch();save();stEv({a:'open',id:'muha',l,z3:1});loadGame('muha').catch(()=>{});return 'muha';}}
   for(let n=1;n<=15;n++){if(z.o[n]||!due(n))continue;const i=INFO[n];   /* 16+ (z2) — очередь «Новая затея!» (zb2-MGR) */
     if(i.lv){if(!byLevel||z.ol>=l)continue;z.o[n]=1;z.ol=l;}
     else{if(sesDay||z.od===z.d.k)continue;z.o[n]=1;z.od=z.d.k;sesDay=1;}

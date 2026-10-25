@@ -69,6 +69,8 @@ ZMG_REG({id:'telegramma',finWho:'lyusya',due:TG.due,state:TG.state,deps:['krug',
       hb.style.visibility=solved||ph2==='read'||hn>=hmax()?'hidden':'';}
     const hmax=()=>1+Math.max(1,t.a.length-2);let ly='';
     hb.onclick=()=>{try{host.snd.tap();}catch(e){}hint();};
+    // z3-KIOSK M17: после двух подсказок — «Люся прочтёт слово» за ролик (по кнопке; js/zb3-kiosk-ad.js)
+    if(window.Z3KIOSK&&Z3KIOSK.mg)Z3KIOSK.mg(host,{at:say,kind:'word',t:'🎬 Люся прочтёт',when:()=>!!t&&!solved&&ph2==='fill'&&hn>=2,go:()=>{if(!solved)solve();}});
     function show(){t=L[i];hn=0;solved=false;ly=t.l||'';ph2=compact()?'read':'fill';say.innerHTML='';
       dots.forEach((d,k)=>d.className=k<i?(res[k]?'ok':'no'):k===i?'cur':'');host.top('Телеграмма '+(i+1)+' из '+L.length);ph.textContent=hints?'подсказок: '+hints:'';
       if(ph2==='read'){kw.style.display='none';root.classList.add('nok');draw();say.innerHTML='<div class="zmb-tn"><button type="button" class="btn green zmb-tgo">Вставить слово'+(host.pc?' '+host.kc('Enter'):'')+'</button></div>';

@@ -262,7 +262,7 @@ function shareImg2(c,url,blob,w,txt,back,title,sub){
   modal(`<h2>Открытка</h2><p>${sub}</p><img class="cardimg" src="${url}" alt="Открытка">
     ${hold?'<p style="font-size:15px">Чтобы сохранить, нажми на картинку и подержи палец.</p>':''}
     <div class="btns">${hold?'':`<button class="btn green" id="cShare">${canFiles?'📤 Поделиться':'💾 Сохранить картинку'}</button>`}
-      ${VK&&!OK?'<button class="btn blue" id="cWall">На стену ВКонтакте</button>':''}
+      ${PLAT==='vk'?'<button class="btn blue" id="cWall">'+(OK?'📋 Скопировать текст':'📨 Отправить ВКонтакте')+'</button>':''}
       <button class="btn ghost small" id="cBack">${back?'← Назад':'Закрыть'}</button></div>`);
   const done=()=>{if(back)back();else hideModal();};
   // скачать: проверить, получилось ли, браузер не даёт — поэтому не обещаем «сохранено», а подсказываем запасной путь
@@ -272,8 +272,8 @@ function shareImg2(c,url,blob,w,txt,back,title,sub){
   // сначала системное «Поделиться» с файлом (телефон), не вышло — просто скачиваем
   const cs=$('cShare');if(cs)cs.onclick=()=>{if(!canFiles){download();return;}
     navigator.share({files:[file],title:title,text:txt}).catch(e=>{if(!e||e.name!=='AbortError')download();});};
-  const wb=$('cWall');if(wb)wb.onclick=()=>{const id=new URLSearchParams(location.search).get('vk_app_id');
-    vkSend('VKWebAppShowWallPostBox',{message:txt+(id?'\nhttps://vk.com/app'+id:'')},60000).catch(()=>{});};
+  // Z3-SHARE: было VKWebAppShowWallPostBox (устарел, в приложении VK молча падал) — теперь общий SHR.post (VKWebAppShare, ошибка → копия + тост)
+  const wb=$('cWall');if(wb)wb.onclick=()=>{SND.tap();SHR.post(txt,{k:'card'});};
 }
 
 /* ================= возвращение: ярлык, оценка, избранное, приглашение ================= */
@@ -295,7 +295,7 @@ function pickAsk(free){ // free — окно задания дня: не ждё�
   if(PLAT==='vk'){ // VK: одно предложение за сессию из общего модуля SOC (правила п. 2.6.3)
     const o=SOC.offer(S.wins||0,Date.now()-lastRew<60000||adBusy||paused||(!free&&typeof interDue==='function'&&interDue()));
     if(!o)return null;askShown=true;
-    return {k:'soc_'+(o.k||''),t:o.b,ok:o.ok||'Готово!',soc:o.t,run:()=>Promise.resolve(o.run()).then(r=>r!==false)};}
+    return {k:'soc_'+(o.k||''),t:o.b,ok:o.ok||'Готово!',soc:o.t,run:()=>(o.k==='inv'?SHR.watch(o.run(),socInvTxt()):Promise.resolve(o.run())).then(r=>r!==false)};} // Z3-SHARE: «Позвать» — запасной путь через 8 с
   const now=Date.now(),a=ASKS.find(x=>{const st=S.ask[x.k]||{};return x.can()&&(S.wins||0)>=x.wins&&!st.done&&(st.n||0)<3&&now-(st.t||0)>3*864e5;});
   if(!a)return null;askShown=true;const st=S.ask[a.k]=S.ask[a.k]||{};st.n=(st.n||0)+1;st.t=now;save();
   return {k:a.k,t:a.t,ok:a.ok,run:()=>a.run().then(ok=>{if(ok){S.ask[a.k].done=1;save();}return ok;})};
