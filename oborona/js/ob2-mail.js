@@ -8,11 +8,14 @@
   function el(id){return document.getElementById(id);}
   function click(){try{SND.click();}catch(e){}}
   function scrub(t){t=String(t==null?'':t).replace(/[\u0000-\u001f]+/g,' ');
-    t=t.replace(/(?:https?:\/\/|www\.)\S+/gi,'[url]').replace(/\S+@\S+\.\S+/g,'[mail]').replace(/(?:\+?\d[\d\s()-]{5,}\d)/g,'#');
+    // LTG-OB 24.10: как у Зины + «голые» домены и мессенджеры (vk.com/…, t.me/…, ok.ru, что-то.ru/.рф/.com/.net/.org/.su/.me/.io) и @ник
+    t=t.replace(/(?:https?:\/\/|www\.)\S+/gi,'[ссылка]').replace(/\S+@\S+\.\S+/g,'[почта]')
+      .replace(/(^|[^a-zа-яё0-9@.\-])((?:[a-zа-яё0-9-]+\.)+(?:ru|рф|com|net|org|su|me|io)(?![a-zа-яё0-9])(?:\/\S*)?)/gi,'$1[ссылка]')
+      .replace(/(^|\s)@[a-z0-9_]{3,}/gi,'$1[ссылка]').replace(/(?:\+?\d[\d\s()-]{5,}\d)/g,'#');
     return t.replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'').slice(0,MAX);}
   function send(txt,o){var t=scrub(txt),i,n=0,l=typeof S!=='undefined'?Math.floor(+S.wins||0):0;if(t.length<2)return 0;
     if(Date.now()-sentT<20e3)return -1;sentT=Date.now();o=o||{};
-    M.st('send',o.f,{n:t.length});
+    M.st('send',o.f,o.k?{n:t.length,k:o.k}:{n:t.length});
     for(i=0;i<t.length;i+=CH)n++;
     for(i=0;i<n;i++){var p={m:t.slice(i*CH,i*CH+CH),n:i+1,of:n};if(!i){if(o.k)p.k=o.k;p.l=l;}try{STAT.ev('fb',p);}catch(e){}}
     try{if(STAT.flush)STAT.flush();}catch(e){}
@@ -28,8 +31,8 @@
     '.o2m-cnt{display:flex;justify-content:space-between;align-items:flex-start;margin:6px 0 4px;font-size:13.5px;text-align:left}.o2m-cnt b{white-space:nowrap;margin-left:8px}'+
     '@media (max-height:600px){.o2m-say{font-size:14.5px;margin-bottom:6px}.o2m-txt{min-height:80px}}';
     (document.head||document.documentElement).appendChild(c);}
-  // f — откуда: set (Настройки) | win (окно победы); back — куда вернуться (без него — закрыть окно)
-  function open(f,back){css();var k='',sent=0;
+  // f — откуда: about (⚙, «Об игре»; старое 'set' → about) | win (окно победы); back — куда вернуться (без него — закрыть окно)
+  function open(f,back){css();f=f==='win'?'win':'about';var k='',sent=0;
     try{STAT.screen('mail');}catch(e){}M.st('open',f);
     showModal('<h3>'+Lg('✉️ Письмо воеводе Потапу','✉️ A letter to Commander Potap')+'</h3>'+
       '<p class="o2m-say">'+Lg('Пиши как есть: что по душе, что не так, где нечисть совсем распоясалась. Прочитаю всё — между двумя набегами.',
@@ -48,10 +51,10 @@
     el('o2mNo').onclick=function(){click();if(!sent)M.st('cancel',f);done();};
     bs.onclick=function(){click();var r=0;try{r=send(ta.value.slice(0,MAX),{f:f,k:k});}catch(e){r=1;}
       if(r===-1){try{toast(Lg('Гонец ещё в пути с прошлым письмом — подожди минутку','The messenger is still on the road — wait a minute'));}catch(e){}return;}
-      if(!r)return;sent=1;M.mem('d',M.day());try{save();}catch(e){}
-      showModal('<h3>'+Lg('Письмо ушло!','Letter sent!')+'</h3><p class="o2m-say" style="text-align:center">'+
-        Lg('Гонец ускакал — даже коня не забыл. Спасибо, что написал! Лично ответить не смогу, но каждое письмо прочитаю.',
-           'The messenger rode off — and even remembered his horse. Thank you for writing! I cannot answer in person, but I read every letter.')+
+      if(!r)return;sent=1;M.mem('n',M.mem('n')+1);M.mem('d',M.day());
+      showModal('<h3>'+Lg('Спасибо, прочитаем!','Thank you, we will read it!')+'</h3><p class="o2m-say" style="text-align:center">'+
+        Lg('Гонец ускакал — даже коня не забыл. Письмо у меня — прочитаю между набегами. Лично ответить не смогу, но каждое письмо читаю сам.',
+           'The messenger rode off — and even remembered his horse. I will read it between raids. I cannot answer in person, but I read every letter myself.')+
         '</p><div class="btns"><button class="btn big" id="o2mOk">'+Lg('Так точно!','Yes, sir!')+'</button></div>','mail');
       el('o2mOk').onclick=function(){click();done();};};
   }

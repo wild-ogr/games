@@ -17,11 +17,15 @@
   BB2.pult=function(path,def){var o=P.x,w=String(path).split('.'),i;for(i=0;BB2.ob(o)&&i<w.length;i++)o=o[w[i]];return o===undefined||o===null?def:o;};
   BB2.lazy('vkt',['js/bb2-vkt-x.js'],function(){return !!V.mail;});
   if(BB2.on('pult')||BB2.on('mail')||BB2.on('vkm2')&&typeof vkmOn==='function'&&vkmOn())BB2.late('vkt');
-  V.btn=btn;function btn(el,id,t,f){var d=BB2.put(el,'btns','<button class="btn ghost" id="'+id+'" style="width:100%;margin:8px 0 0">'+t+'</button>',id+'W'),b=d&&d.firstChild;
-    if(b)b.onclick=function(){try{SND.click();}catch(e){}BB2.stat('mail',{a:'tap',f:f});BB2.open('vkt',function(){V.mail(f);},b);};}
+  /* Челобитная: поле S.bb2.vkt {w — день последнего показа ссылки в итогах, n — писем отправлено, d — день последнего письма} (дни — целые, как у Зины) */
+  var VKF=['w','n','d'];function vfix(o){VKF.forEach(function(k){o[k]=Math.max(0,Math.floor(+o[k]||0));});return o;}
+  BB2.save('vkt',{fix:vfix,merge:function(a,c){a=vfix(BB2.ob(a)?a:{});c=vfix(BB2.ob(c)?c:{});VKF.forEach(function(k){a[k]=Math.max(a[k],c[k]);});return a;}});
+  /* вход в ⚙ (у Богатыря «Об игре» нет — «Благодарности» живут в ⚙): строкой сразу под заголовком — окно длинное, внизу её не видели (0 нажатий до 24.10) */
+  V.btn=btn;function btn(el,id,t,f){var d=BB2.put(el,'top','<button class="btn ghost" id="'+id+'" style="width:100%;margin:0 0 6px;line-height:1.25;min-height:48px;white-space:normal;flex-direction:column;gap:2px">'+t+'</button>',id+'W'),b=d&&d.firstChild;if(!b)return;
+    b.onclick=function(){try{SND.click();}catch(e){}BB2.stat('mail',{a:'tap',f:f});BB2.open('vkt',function(){V.mail(f);},b);};}
   BB2.hook('modal',function(k,el){
     if(OK&&el.querySelector('#credOk'))BB2.put(el,'btns','<p class="sub"><b>Поддержка.</b> Вопросы и пожелания — в группе «Игры во дворе» в Одноклассниках.<br><a class="btn ghost" href="https://ok.ru/group/70000058939568" target="_blank" rel="noopener">Открыть группу</a></p>','vktOk'); // i18n:ru ОК п.1.6
     if(!BB2.on('mail'))return;
-    if(el.querySelector('#setOk'))btn(el,'vktMl',L('✉️ Челобитная князю Владимиру','✉️ A petition to Prince Vladimir'),'set');
+    if(el.querySelector('#setOk'))btn(el,'vktMl',L('✉️ Челобитная князю Владимиру','✉️ A petition to Prince Vladimir')+'<small style="font-weight:600;opacity:.8;font-size:13.5px">'+L('похвалить, поругать, подсказать','praise, complain, suggest')+'</small>','about');
 });
 })();

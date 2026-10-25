@@ -50,3 +50,6 @@ body.nb .r2h-ic{-webkit-backdrop-filter:none;backdrop-filter:none;background:var
 .r2fb-txt{display:block;box-sizing:border-box;width:100%;min-height:110px;max-height:34vh;padding:10px 12px;border-radius:12px;border:2px solid var(--pnB,#c9cfe0);font:inherit;font-size:17px;resize:vertical;background:#fff;color:#1d2733;-webkit-user-select:text;user-select:text}
 .r2fb-txt:focus{outline:none;border-color:var(--acc1,#ffb35c)}
 .r2fb-cnt{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin:6px 0 4px;font-size:17px}.r2fb-cnt b{white-space:nowrap}
+/* letters-2410: ссылка «Напишите Петровичу» в итогах рыбалки (раз в 7 дней) */
+.r2fb-win{margin:6px 0 0;text-align:center}.r2fb-link{font:inherit;font-size:17px;font-weight:700;min-height:44px;padding:6px 10px;border:0;background:none;color:var(--acc1,#ffb35c);text-decoration:underline;cursor:pointer}
+@media (max-height:600px){.r2fb-say{font-size:17px;margin-bottom:6px}.r2fb-txt{min-height:80px}}

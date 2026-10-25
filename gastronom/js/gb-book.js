@@ -5,7 +5,7 @@
      | {glass:1} (сдана стеклотара) | {thx:N} (благодарностей от мини-игр). Закрытая запись = благодарность (GBM.thanks('book')).
    10 благодарностей = страница → вещь «за благодарности» в зал (id bk_* — рисует VIEW/ART, список BOOK_ITEMS) + открытка.
    Мини-игры пишут благодарности: GBM.thanks('mg') (≤2 в день) — в Книге видны строкой «Спасибо за …».
-   Форма «Написать в Книгу жалоб и предложений» — только если есть STAT.fb (TECH: кусками по 120 в поле m) — иначе строки нет.
+   Форма «Написать в Книгу жалоб и предложений» — кнопка окна письма js/gb-mail.js (GBMAIL, f:'book'); нет модуля — строки нет.
    Выключатели: GB.flag('book'), GB.flag('fb') (форма).
    Поля: S.mtBc — строка '0/1' по номерам записей (закрыта), S.mtBp — страниц получено, S.mtO — заказов соседей выполнено, S.mtBg — сдавал ли стеклотару. */
 (function(){
@@ -109,13 +109,15 @@ GB.screen('book',{render:render});
 function open(){GB.go('book');try{STAT.screen('book');}catch(e){}}
 GB.add(GB.navSlots,{id:'book',order:50,ic:'📕',get t(){return R('Книга');},on:function(){return ON&&!!R('Книга');},go:open,dot:function(){return news.length>0;}});
 
-/* ---------- форма отзыва (TECH: STAT.fb) ---------- */
-function fbOn(){try{return ON&&GB.flag('fb')&&window.STAT&&typeof STAT.fb==='function'&&!!R('Написать в Книгу жалоб и предложений');}catch(e){return false;}}
-function fbHtml(){if(!fbOn())return '';return '<div class="mt-fb"><b>✍️ '+esc(R('Написать в Книгу жалоб и предложений'))+'</b><small>'+esc(R('Ваша жалоба или предложение тёте Вале — прочитаем всё.'))+'</small>'+
-  '<textarea id="mtFbT" maxlength="600" rows="3"></textarea><button type="button" class="btn small" id="mtFbGo">'+esc(R('Отправить'))+'</button></div>';}
-function fbBind(el){var b=el.querySelector('#mtFbGo');if(!b)return;b.onclick=function(){var t=el.querySelector('#mtFbT'),v=String(t&&t.value||'').trim();
-  if(v.length<3){try{toast(R('Напишите хоть пару слов'));}catch(e){}return;}b.disabled=true;GB.safe('fb',function(){STAT.fb(v.slice(0,600));});t.value='';
-  try{toast(R('Записала! Спасибо, что пишете.'));}catch(e){}stat('book',{a:'fb',n:v.length});};}
+/* ---------- «Написать тёте Вале» (LTG-GB 24.10): окно письма — js/gb-mail.js (GBMAIL), события mail f:'book' + куски fb.
+   Раньше форма ждала STAT.fb, а такой функции нет (fb — в STATGB.fb) → строки не видел никто; теперь — через GBMAIL. ---------- */
+function T(ru,en){try{return L(ru,en);}catch(e){return ru;}}
+function fbOn(){try{return ON&&GB.flag('fb')&&!!window.GBMAIL&&GBMAIL.on;}catch(e){return false;}}
+function fbHtml(){if(!fbOn())return '';GB.safe('mail:book',function(){GBMAIL.showBook();});
+  return '<div class="mt-fb"><b>✍️ '+esc(T('Написать в Книгу жалоб и предложений','Write in the Complaints and Suggestions Book'))+'</b><small>'+
+    esc(T('Ваша жалоба или предложение тёте Вале — она прочитает всё.','Your complaint or suggestion to Aunt Valya — she reads them all.'))+'</small>'+
+    '<button type="button" class="btn small" id="mtFbGo">'+esc(T('✉️ Написать тёте Вале','✉️ Write to Aunt Valya'))+'</button></div>';}
+function fbBind(el){var b=el.querySelector('#mtFbGo');if(!b)return;b.onclick=function(){tap();GB.safe('mail:open',function(){GBMAIL.open('book');});};}
 
 window.GBBOOK={on:ON,open:open,check:check,entries:entries,items:items,ITEMS:BOOK_ITEMS,closedN:closedN,fix:function(){fix();}};
 })();

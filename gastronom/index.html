@@ -994,7 +994,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
 // (на маке — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (STAT.optOut)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'gastronom',gv:'v14.6-102421',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'gastronom',gv:'v14.7-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: настройки сеанса (cfg), вход (start: pl — пройдено уровней, cn — монет, bt — было ли сохранение в облаке; после облака, но не позже 2,5 с),
    баланс (bal → cb в pause), откуда монеты (ern → earn: lvl, ad, gift, chest, buy, quest) */
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
@@ -3321,6 +3321,7 @@ window.__test={get G(){return G;},get S(){return S;},startLevel,tryMove,layout,r
 <script src="js/gb-plan.js" defer data-gb></script>
 <script src="js/gb-dep.js" defer data-gb></script>
 <script src="js/gb-book-data.js" defer data-gb></script>
+<script src="js/gb-mail.js" defer data-gb></script> <!-- LTG-GB 24.10: «Написать тёте Вале» (Книга, Об игре, Касса) -->
 <script src="js/gb-book.js" defer data-gb></script>
 <script src="js/gb-album.js" defer data-gb></script>
 <script src="js/gb-migrate.js" defer data-gb></script>

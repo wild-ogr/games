@@ -225,6 +225,16 @@ body.calm .arow .btn.sug{box-shadow:0 0 0 3px #ffd23f}
 .set{display:flex;align-items:center;justify-content:space-between;background:#f1ede2;border-radius:14px;padding:10px 12px;margin-top:8px;font-weight:700;font-size:16px;text-align:left;color:#2d3436;width:100%;min-height:50px}
 .set i{font-style:normal;font-weight:800;color:#fff;background:#2b8a3e;border-radius:999px;padding:3px 12px;min-width:56px;text-align:center;flex:none}.set i.off{color:#57606f;background:#dcd6c8}.set i.go,.pay .set i{background:none;color:#237032;padding:0;min-width:0}
 .set small{font-weight:600;color:#57606f;font-size:15px}
+/* mail2410: окно «Написать нам» */
+.hdm h2{margin:0 0 6px}.hdm-say{font-size:16px;margin:0 0 10px;line-height:1.35}
+.hdm-top{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 8px}
+.hdm-chip{font:inherit;font-size:15px;font-weight:700;min-height:44px;padding:6px 12px;border-radius:999px;border:2px solid #d8d2c2;background:#fff;color:#2d3436;cursor:pointer}
+.hdm-chip.on{border-color:#237032;background:#2b8a3e;color:#fff}
+.hdm-txt{display:block;width:100%;min-height:110px;max-height:34vh;padding:10px 12px;border-radius:12px;border:2px solid #d8d2c2;font:inherit;font-size:16px;resize:vertical;background:#fff;color:#2d3436;-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.hdm-txt:focus{outline:none;border-color:#2b8a3e}
+.hdm-cnt{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin:6px 0 0;font-size:14px;text-align:left;color:#57606f}.hdm-cnt b{white-space:nowrap}
+.hdm-win{margin:8px 0 0;text-align:center}.hdm-link{font:inherit;font-size:15.5px;font-weight:700;min-height:44px;padding:6px 10px;border:0;background:none;color:#1f6f8b;text-decoration:underline;cursor:pointer}
+@media (max-height:600px){.hdm-say{font-size:15px;margin-bottom:6px}.hdm-txt{min-height:80px}}
 .pay{margin-top:12px;text-align:left}.pay h3{font-size:16px;margin:0 0 2px;color:#2d3436}.pay .set span{padding-right:10px}.pay .set small{font-weight:600}
 .pbuy b{white-space:nowrap;color:#1f5e2c;font-size:17px}.pcur{width:18px;height:18px;vertical-align:-3px;margin-left:3px}.pown i{color:#237032}
 .about{font-size:15px!important;text-align:left;color:#57606f}
@@ -924,6 +934,7 @@ function fixSave(){for(const f of NUMOBJ)if(!isObj(S[f]))S[f]={};if(!isObj(S.sel
   if(S.fin==null&&S.wins>0)S.fin=S.wins; // старое сохранение: победа = доиграл турнир (для «Первых шагов»)
   for(const f of ['tours','wins','hands','pots','bestHand','wkBest','adW','age','fin','insN'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;
   if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=START_M;S.coins=Math.max(0,Math.round(S.coins));
+  if(S.mail!=null){const m=isObj(S.mail)?S.mail:{};S.mail={};for(const f of ['w','n','d'])S.mail[f]=Math.max(0,Math.floor(+m[f]||0));} // mail2410: письмо {w показ, n писем, d день письма}
   if(S.music!=null&&typeof S.music!=='boolean')S.music=S.music===1; // музыка: только true — включена (по умолчанию выключена)
   if(S.streak!=null&&!isObj(S.streak))delete S.streak;
   if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};}
@@ -1190,7 +1201,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Турнир / раздача дня / турнир недели / учебная раздача — «уровень» STAT: lvl в newGame/resumeLive, end в finishGame (win/lose/draw) и leaveGame (quit).
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'holdem',gv:'v2.4-102421',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'holdem',gv:'v2.5-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: progress — после облака, но не позже 2,5 с: pl — турниров сыграно, cn — спички, bt — облако хоть раз отдавало сохранение
    (метка устройства holdem-cl, в сохранение не пишется); cfg — настройки сеанса: th — выбранный стол, snd, calm */
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('holdem-cl')?1:0;}catch(e){}
@@ -1211,7 +1222,8 @@ function mergeSave(d,ref){if(!isObj(d))return;
   for(const f of NUMS)if(typeof d[f]==='number')S[f]=Math.max(S[f]||0,d[f]);
   for(const f of NUMOBJ)if(isObj(d[f])){if(!isObj(S[f]))S[f]={};for(const k in d[f])if(typeof d[f][k]==='number')S[f][k]=Math.max(S[f][k]||0,d[f][k]);}
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|coins|streak|buy|buyB|payT|payV|unlocked|tours|wins|hands|pots|bestHand|wkBest|age|best|daily|wkN|wkB|own|tips|adM|soc|fsG|dwk|rec|tp|fin|insN|stc)$/.test(k))S[k]=d[k]; // флажки и настройки
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|coins|streak|buy|buyB|payT|payV|unlocked|tours|wins|hands|pots|bestHand|wkBest|age|best|daily|wkN|wkB|own|tips|adM|soc|fsG|dwk|rec|tp|fin|insN|stc|mail)$/.test(k))S[k]=d[k]; // флажки и настройки
+  if(isObj(d.mail)){const a=isObj(S.mail)?S.mail:{},b=d.mail;S.mail={};for(const f of ['w','n','d'])S.mail[f]=Math.max(+a[f]||0,+b[f]||0);} // mail2410
   payMerge(d);if(d.soc)SOC.merge(d.soc);STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
     if(!a||(b.last||0)>(a.last||0))S.streak=b;
@@ -2414,7 +2426,7 @@ function tipsOnShow(r){if(r.sd)tip('show',L('Вскрытие: у кого ко�
 
 /* ---- конец турнира / раздачи дня ---- */
 function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear();$('toast').classList.remove('on');G.tipQ=[];G.tip='';G.bub={};G.say='';G.over=true;G.barMsg='';clearTimeout(tip._t);clearTimeout(toast._t);render();renderActs();
-  const place=placeOf(0),n=G.seats.length,end=me.st;let html='',stars=0,newTable=false;
+  const place=placeOf(0),n=G.seats.length,end=me.st;let html='',stars=0,newTable=false,mailOk=false;
   const list=standings().map((i,k)=>{const p=s.seats[i],nm=i===0?L('Вы','You'):T2(CHARS[G.seats[i].id].n),av=i===0?meSvg(curLook()):portrait(G.seats[i].id,p.out?'sad':'norm');
     return `<div class="${i===0?'me':''}"><b>${k+1}</b><span class="av">${av}</span><span>${nm}</span><i>${p.out?L('выбыл','out'):mH(p.st)}</i></div>`;}).join('');
   const winnerId=standings()[0],quoteBy=winnerId>0?winnerId:standings()[1];
@@ -2435,6 +2447,7 @@ function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear(
       ${opened?`<p class="goal tipl">🔓 ${L('Открылся новый стол','A new table is open')}: <b>${opened}</b></p>`:stars<2&&pi+1<PLACES.length&&S.unlocked<pi+2?`<p class="goal">${L('Займите 1-е или 2-е место — откроется следующий стол.','Finish 1st or 2nd to open the next table.')}</p>`:''}
       ${fsLine()}${tmrwLine()}${me.out?REVB():''}
       <div class="row"><div class="row2"><button class="btn" id="rMenu">${L('В меню','Menu')}</button><button class="btn green" id="rAgain">${L('Ещё раз','Again')}</button></div></div>`;
+    mailOk=!newTable&&rankIdx()<=rk0; // mail2410: не в окне с новым столом/званием
     if(place===1){SND.win();confetti();}else if(me.out&&!ins)SND.lose();else if(ins)SND.coin();}
   else if(mode==='daily'){const k=G.key,profit=end-G.stack0,won=profit>0,bonus=won?DAILY_BONUS:0;
     S.daily[k]=Math.max(S.daily[k]||0,won?2:1);if(bonus){ern('lvl',bonus);S.coins+=bonus;}for(const d in S.daily)if(+d<dayKey(-40))delete S.daily[d];
@@ -2467,6 +2480,7 @@ function finishGame(){const s=G.s,me=s.seats[0],mode=G.mode;YG.stop();liveClear(
     if(mode==='tour'&&S.tours===1)STAT.ev('tut',{s:'t1'});}
   modal(html);$('mcard').classList.add('fin');G.over=true;
   socEarly(mode==='learn'||newTable,mode!=='daily'&&mode!=='learn'&&!me.out&&adDue()&&adReady()&&adOk());
+  if(mailOk&&mailWant()){const pi0=G.pi;mailWin(()=>finishShowAgain(html,mode,pi0));} // mail2410: «Написать нам» раз в 7 дней
   const next=f=>()=>{hideModal();const go=()=>{G=null;f();};
     if(mode!=='daily'&&mode!=='learn'&&!me.out&&adDue()&&adReady()&&adOk())showInterstitial(go);else{if(mode!=='daily'&&mode!=='learn'&&!me.out)statInt();go();}};
   $('rMenu').onclick=next(()=>{openMenu();menuPopups();});
@@ -2803,9 +2817,60 @@ function openAbout(){STAT.screen('about');
     ${OK?'':'<p class="about">'+L('Продаются только «Без рекламы» и украшения (столы, рубашки, облик). Они меняют лишь вид.','Only "No ads" and decorations (tables, card backs, looks) are sold. They only change the look.')+'</p>'}
     <p class="about" id="abMus">${L('Музыка: “Lobby Time” — Kevin MacLeod (incompetech.com), CC BY 4.0','Music: “Lobby Time” — Kevin MacLeod (incompetech.com), CC BY 4.0')}</p>
     ${PLAT==='vk'&&!OK?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
+    <button class="set" id="abMail"><span>✉️ ${L('Написать нам','Write to us')}<br><small>${L('отзыв, ошибка, идея','feedback, a bug, an idea')}</small></span><i class="go">›</i></button>
     <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ '+L('Восстановить покупки','Restore purchases')+'</button>':''}<button class="btn" id="abBack">← ${L('Назад','Back')}</button></div>`);
   if($('abPay'))$('abPay').onclick=()=>PAY.again();
+  $('abMail').onclick=()=>{SND.tap();mailOpen('about',openAbout);};
   $('abBack').onclick=openSettings;}
+/* ---- mail2410 (24.10, по образцу Зины zb2-mail): окно «Написать нам». Игра 18+ — тон нейтральный, без героя-зазывалы.
+   Входы: «ℹ️ Об игре» (f:'about') и раз в 7 дней строка в окне итога турнира (f:'win') с 15-го доигранного турнира (S.tours — аналог уровня;
+   не в раздаче дня/учебной/неделе, не при новом столе/новом звании, не вместе с вопросом Толика про напоминания).
+   События — штатный STAT: mail {a:show|open|send|cancel, f, l:S.tours (+n, k на send)} и куски fb {m ≤ 40, n, of, k, l (на 1-м)}.
+   Текст ≤ 500 знаков, ссылки/домены/почта/телефоны вычищаются, не чаще раза в 20 с. Ответ не обещаем. Поле S.mail {w,n,d} (дни): fixSave/mergeSave. ---- */
+const MAIL_MAX=500,MAIL_CH=40;let mailT=0;
+function mailZ(){if(!isObj(S.mail))S.mail={w:0,n:0,d:0};return S.mail;}
+function mailDay(){const t=nowMs();return Math.floor((t-new Date(t).getTimezoneOffset()*6e4)/864e5);}
+function mailSt(a,f,x){try{STAT.ev('mail',Object.assign({a,f,l:+S.tours||0},x||{}));}catch(e){}}
+function mailScrub(t){t=String(t==null?'':t).replace(/[\u0000-\u001f]+/g,' ');
+  t=t.replace(/\b(?:https?:\/\/|www\.)\S+/gi,'[ссылка]').replace(/\S+@\S+\.\S+/g,'[почта]')
+    .replace(/(?:^|[^\wа-яё@.-])((?:[a-zа-яё0-9-]+\.)+(?:ru|рф|com|net|org|su|me|io|рус|info|biz|cc|ly|gg|tv|app|xyz|online|site|pro)(?:\/[^\s,;!?()«»\"]*)?)(?![\wа-яё])/gi,(m,d)=>m.slice(0,m.length-d.length)+'[ссылка]')
+    .replace(/(?:^|\s)@[a-z0-9_]{4,}/gi,m=>m.replace(/@\S+/,'[ссылка]'))
+    .replace(/(?:\+?\d[\d\s()-]{5,}\d)/g,'#');
+  return t.replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'').slice(0,MAIL_MAX);}
+function mailSend(txt,o){const t=mailScrub(txt),l=+S.tours||0;let n=0,i;if(!t)return 0;
+  if(Date.now()-mailT<20e3)return -1;mailT=Date.now();o=o||{};
+  for(i=0;i<t.length;i+=MAIL_CH)n++;
+  mailSt('send',o.f,{n:t.length,k:o.k||''});
+  for(i=0;i<n;i++)STAT.ev('fb',i?{m:t.slice(i*MAIL_CH,i*MAIL_CH+MAIL_CH),n:i+1,of:n}:{m:t.slice(0,MAIL_CH),n:1,of:n,k:o.k||'',l});
+  try{STAT.flush();}catch(e){}
+  return n;}
+const MAIL_TOP=[['like','👍',['Нравится','Like it']],['bug','🐞',['Ошибка','A bug']],['idea','💡',['Идея','An idea']],['rules','🃏',['Про игру','The game']]];
+// back — куда вернуться (окно «Об игре» или итог турнира)
+function mailOpen(f,back){f=f==='win'?'win':'about';let k='',sent=0;STAT.screen('mail');mailSt('open',f);
+  modal(`<div class="hdm"><h2>✉️ ${L('Написать нам','Write to us')}</h2>
+    <p class="hdm-say">${L('Что нравится, что работает не так, чего не хватает — напишите, мы читаем все письма.','What you like, what isn\'t working, what\'s missing — write to us, we read every message.')}</p>
+    <div class="hdm-top">${MAIL_TOP.map(t=>`<button class="hdm-chip noenter" data-k="${t[0]}">${t[1]} ${T2(t[2])}</button>`).join('')}</div>
+    <textarea id="hdmTxt" class="hdm-txt" maxlength="${MAIL_MAX}" rows="5" placeholder="${L('Ваше сообщение…','Your message…')}"></textarea>
+    <div class="hdm-cnt"><small>${L('Имя, телефон и почту не пишите.','Please don\'t include your name, phone or email.')}</small><b id="hdmCnt">0 / ${MAIL_MAX}</b></div>
+    <div class="row"><div class="row2"><button class="btn noenter" id="hdmNo">${L('Не сейчас','Not now')}</button><button class="btn green noenter" id="hdmSend" disabled>${L('Отправить','Send')}</button></div></div></div>`);
+  const ta=$('hdmTxt'),bs=$('hdmSend'),cn=$('hdmCnt'),done=()=>{if(back)back();else hideModal();};
+  const upd=()=>{cn.textContent=Math.min(ta.value.length,MAIL_MAX)+' / '+MAIL_MAX;bs.disabled=ta.value.replace(/^\s+|\s+$/g,'').length<2;};ta.oninput=upd;
+  const chips=[].slice.call($('mcard').querySelectorAll('.hdm-chip'));
+  chips.forEach(b=>b.onclick=()=>{SND.tap();const on=!b.classList.contains('on');chips.forEach(x=>x.classList.remove('on'));if(on)b.classList.add('on');k=on?b.dataset.k:'';});
+  $('hdmNo').onclick=()=>{SND.tap();if(!sent)mailSt('cancel',f);done();};
+  bs.onclick=()=>{SND.tap();let r=0;try{r=mailSend(ta.value.slice(0,MAIL_MAX),{f,k});}catch(e){r=1;}
+    if(r===-1){toast(L('Письмо только что ушло — подождите немного','Your message was just sent — please wait a little'),3500);return;}
+    if(!r)return;sent=1;const v=mailZ();v.n=(+v.n||0)+1;v.d=mailDay();save();
+    modal(`<div class="hdm"><h2>${L('Спасибо, прочитаем!','Thank you, we\'ll read it!')}</h2>
+      <p class="hdm-say">${L('Письмо отправлено. Лично ответить не сможем, но прочитаем каждое.','Your message has been sent. We can\'t reply personally, but we read every one.')}</p>
+      <div class="row"><button class="btn green" id="hdmOk">${L('Хорошо','OK')}</button></div></div>`);
+    $('hdmOk').onclick=()=>{SND.tap();done();};};}
+// строка в окне итога турнира: раз в 7 дней (с показа и с последнего письма), с 15-го доигранного турнира
+function mailWant(){if(window.__demo||(+S.tours||0)<15||$('socBox'))return false;const v=mailZ(),d=mailDay();return d-v.w>=7&&d-v.d>=7;}
+function mailWin(back){const c=$('mcard'),row=c&&c.lastElementChild;if(!row||!row.classList.contains('row'))return;
+  row.insertAdjacentHTML('beforebegin',`<p class="hdm-win"><button class="hdm-link noenter" id="hdmWin">✉️ ${L('Написать нам: отзыв или идея','Write to us: feedback or an idea')}</button></p>`);
+  mailZ().w=mailDay();save();mailSt('show','win');
+  $('hdmWin').onclick=()=>{SND.tap();mailOpen('win',back);};}
 function applyCalm(){document.body.classList.toggle('calm',calm());applyLook();}
 $('btnSet').onclick=openSettings;$('gSet').onclick=openSettings;
 // статичные надписи вёрстки
@@ -2822,7 +2887,8 @@ function setLang(l){l=normLang(l);if(IS_VK)l='ru';if(l===LANG)return;LANG=l;appl
 /* ---- клавиатура на ПК ---- */
 document.addEventListener('keydown',e=>{const k=e.key;if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||$('ad').classList.contains('on'))return;
   if(modalOn){
-    if(k==='Escape'){const b=['mCancel','lbClose','gClose','stClose','abBack','gOk','rMenu','hBack','cbBack','pBack','wBack','stOk','lvStay','nmOk','bpBack','socClose','socBack'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
+    if(k!=='Escape'&&document.activeElement&&/^(TEXTAREA|INPUT)$/.test(document.activeElement.tagName))return; // mail2410: печатают в поле
+    if(k==='Escape'){const b=['hdmNo','hdmOk','mCancel','lbClose','gClose','stClose','abBack','gOk','rMenu','hBack','cbBack','pBack','wBack','stOk','lvStay','nmOk','bpBack','socClose','socBack'].map($).find(Boolean);if(b){e.preventDefault();b.click();}}
     else if((k==='Enter'||k===' ')&&!(document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('mcard').contains(document.activeElement))){
       const b=$('mcard').querySelector('.btn:not([disabled]):not(.x2):not(.buy):not(.noenter)');if(b){e.preventDefault();b.click();}}
     return;}

@@ -5,7 +5,7 @@
    hrow  — одна строка значков «Ещё»: Лига · Наука · Россия · Васька · Донка (+ праздник) вместо плашки лиги, трёх плиток, донки и строки праздника;
    hgate — новичку значки открываются по одному в день (старожилы видят всё сразу): R2H.open(ключ), R2H.isNew(ключ);
    hgoal — «Цель» в «Сегодня»: ближайшая покупка с полоской (новичку — путёвка);
-   hfb   — «Написать Петровичу» (настройки): окно лениво — js/rb2-home-fb.js, текст уходит в STAT (fb кусками по 40 + mod pmail).
+   hfb   — «Напишите Петровичу — он читает» (⚙, «Об игре», итоги раз в 7 дней): окно лениво — js/rb2-home-fb.js, STAT mail {a,f,l} + fb кусками по 40.
    ЗОНЫ гнёзд главного (R2.slot('home',id,{pri})): pri ≥100 — над кольцами (полоска сезона / конверты новичка), 80–99 — сразу под кольцами
    (лента «Записок»), 70 — строка «Ещё» (HOME), 50–69 — карточки («Мостки рекордов»), <50 — прочее. Поле S.r2h: o старожил, n дней игры,
    ld последний день, tw неделя открытия турнира, fd день письма. */
@@ -101,12 +101,40 @@ window.R2H={icon:icon,lay:function(){return on('hlay');},open:open,isNew:isNew,d
   goalRow:goalRow,goalPre:goalPre,after:after,ring:function(id){return open(id==='uhDaily'?'daily':id==='uhWeek'?'tour':id==='uhDvor'?'dvor':'');},
   ringNew:function(id){return isNew(id==='uhDaily'?'daily':id==='uhWeek'?'tour':id==='uhDvor'?'dvor':'');}};
 
-/* ---- «Написать Петровичу»: строка в настройках, окно — лениво ---- */
-function fbGo(){try{SND.tap();}catch(e){}R2.need('js/rb2-home-fb.js').then(function(){if(window.R2HFB)R2HFB.open(function(){openSettings();});},function(){try{toast(L_('Письмо не открылось — проверь интернет','Could not open — check the connection'),3000);}catch(e){}});}
+/* ---- «Напишите Петровичу — он читает» (letters-2410): входы ⚙ Настройки (f:'set'), «ℹ Об игре» (f:'about'), итоги рыбалки раз в 7 дней (f:'win');
+   окно — лениво js/rb2-home-fb.js. Поле S.r2l {w день показа в итогах, n писем, d день письма} (флаг hfb; старое сохранение — умолчание). ---- */
+var FBL=['w','n','d'];
+R2.field('l',{id:'hfb',def:function(){return {w:0,n:0,d:0};},
+  fix:function(o,S){FBL.forEach(function(k){o[k]=Math.max(0,Math.floor(+o[k]||0));});var h_=S&&S.r2h;if(h_&&+h_.fd>o.d)o.d=Math.floor(+h_.fd);}, // день письма до 24.10 — S.r2h.fd
+  merge:function(a,b){FBL.forEach(function(k){a[k]=Math.max(+a[k]||0,+b[k]||0);});}});
+function fl(){if(!S.r2l||typeof S.r2l!=='object')S.r2l={w:0,n:0,d:0};return S.r2l;}
+function fbSt(a,f){try{STAT.ev('mail',{a:a,f:f,l:+S.sessions||0});}catch(e){}}
+function fbGo(f,back){try{SND.tap();}catch(e){}if(typeof f!=='string'){f='set';back=function(){openSettings();};}
+  R2.need('js/rb2-home-fb.js').then(function(){if(window.R2HFB)R2HFB.open(f,back);},function(){try{toast(L_('Письмо не открылось — проверь интернет','Could not open — check the connection'),3000);}catch(e){}});}
+function fbRow(id,f,back){var b=document.createElement('button');b.className='set noenter';b.id=id;
+  b.innerHTML='<span>✉️ '+L_('Написать Петровичу','Write to Petrovich')+'<br><small>'+L_('он читает: похвалить, поругать, подсказать','he reads it: praise, complain, suggest')+'</small></span><i class="go">›</i>';
+  b.onclick=function(){fbGo(f,back);};return b;}
 function setHook(){if(typeof openSettings!=='function'||openSettings.__r2h)return;var os=openSettings;
-  var w=openSettings=function(){var r=os.apply(this,arguments);try{if(on('hfb')&&LANG!=='en'){var mc=$('mcard'),row=mc&&mc.querySelector('.row');if(row&&!$('r2hFb')){var b=document.createElement('button');b.className='set noenter';b.id='r2hFb';
-    b.innerHTML='<span>✉️ Написать Петровичу<br><small>похвалить, поругать, подсказать</small></span><i class="go">›</i>';row.parentNode.insertBefore(b,row);b.onclick=fbGo;}}}catch(e){}return r;};w.__r2h=1;
+  var w=openSettings=function(){var r=os.apply(this,arguments);try{if(on('hfb')){var mc=$('mcard'),row=mc&&mc.querySelector('.row');if(row&&!$('r2hFb'))row.parentNode.insertBefore(fbRow('r2hFb','set',function(){openSettings();}),row);}}catch(e){}return r;};w.__r2h=1;
   try{['btnSet','fSet'].forEach(function(id){var b=$(id);if(b)b.onclick=function(){openSettings();};});}catch(e){}}
-document.addEventListener('DOMContentLoaded',function(){setHook();setTimeout(setHook,0);});
+function aboutHook(){if(typeof openAbout!=='function'||openAbout.__r2h)return;var oa=openAbout;
+  var w=window.openAbout=openAbout=function(){var r=oa.apply(this,arguments);try{if(on('hfb')){var mc=$('mcard'),rows=mc&&mc.querySelectorAll('.row'),row=rows&&rows[rows.length-1];
+    if(row&&!$('r2hFbA'))row.parentNode.insertBefore(fbRow('r2hFbA','about',function(){openAbout();}),row);}}catch(e){}return r;};w.__r2h=1;}
+// итоги рыбалки: раз в 7 дней, с 15-й законченной рыбалки, с уловом; не турнир/гости/«Домой», не «полное» окно (подарок, легенда, рекорд),
+// не когда в окне вопрос про напоминания (#mSocBox) или следом межэкранная; не в день письма и не через 7 дней после него
+function winWant(g){if(!on('hfb')||!g||g.tourn||g.guest||g.quit||g.nfull||window.__demo)return false;
+  if((+S.sessions||0)<15)return false;if(!(g.catch||[]).some(function(c){return c&&!c.miss&&!c.lost&&!c.junk;}))return false;
+  if($('mSocBox'))return false;try{if(adDue()&&adReady())return false;}catch(e){}
+  var v=fl(),d=dn();return d-(+v.w||0)>=7&&d-(+v.d||0)>=7;}
+function winShow(g){try{var mc=$('mcard');if(!mc||!$('rWin')||$('r2hFbW')||!winWant(g))return;var row=mc.querySelector('.row');if(!row)return;
+  fl().w=dn();try{save();}catch(e){}fbSt('show','win');
+  var p=document.createElement('p');p.className='r2fb-win';p.innerHTML='<button class="r2fb-link noenter" id="r2hFbW">✉️ '+L_('Напишите Петровичу пару слов — он читает','Drop Petrovich a line — he reads it all')+'</button>';
+  row.parentNode.insertBefore(p,row);
+  $('r2hFbW').onclick=function(){p.style.display='none'; // после письма ссылка не нужна; итоги — живыми узлами (кнопки с обработчиками)
+    var fr=document.createDocumentFragment();[].slice.call(mc.childNodes).forEach(function(n){fr.appendChild(n);});
+    fbGo('win',function(){mc.innerHTML='';mc.appendChild(fr);$('modal').classList.add('on');try{modalOn=true;}catch(e){}mc.scrollTop=0;});};}catch(e){}}
+R2.on('end',function(g){winShow(g);},'hfb');
+R2H.fbSent=function(){var v=fl();v.n=(+v.n||0)+1;v.d=dn();};
+document.addEventListener('DOMContentLoaded',function(){setHook();aboutHook();setTimeout(function(){setHook();aboutHook();},0);});
 window.r2hFeedback=fbGo;
 })();

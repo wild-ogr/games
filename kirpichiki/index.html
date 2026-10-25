@@ -1252,7 +1252,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'kirpichiki',gv:'v7.4-102421',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'kirpichiki',gv:'v7.5-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl уровни/задание дня/бесконечная, ad ролики и ×2, gift подарок за вход, chest сундуки глав и посылки сезона, buy покупки,
    quest поручения/звания/кладовка/неделя/кубки); progress — после облака, но не позже 2,5 с: pl — уровней со звёздами, cn — монеты, bt — облако хоть раз отдало
    сохранение (метка устройства kirpichiki-cl, в сохранение не пишется); cfg — тема, звук, спокойный режим. */
@@ -3456,5 +3456,6 @@ window.__test={get MUS(){return MUS;},musTick,setPause,/*K1*/THEME:window.THEME,
   openShop,openMap,openMenu,levelCfg,dailyCfg,/*K2*/openDream,dreamBuy,dreamAd,yardGive,yardGiveSet,YARD_PAY,dreamTick,dreamBg,DREAM,openQuests,qToday,qEv,openDailyCal,monthCnt,cupChip,tmrwTxt,openPantry,boostClick,useBomb,showLose,levelWon,say,phr,pieceTL,wouldClear,adReset(){lastAdT=0;},set VK(v){VK=v;},get VK(){return VK;},PAY,VARS,canPlace};
 </script>
 <script src="js/kr-cup.js"></script><!--BK-KR: «Лига двора» — живая лига hobby-cup (модуль CUP + окна); сервер молчит → игра как без неё-->
+<script src="js/kr-mail.js"></script><!--mail2410: «Написать деду Митяю» — «Об игре» + окно победы с 15-го уровня / рекорда, раз в 7 дней (STAT mail/fb)-->
 </body>
 </html>

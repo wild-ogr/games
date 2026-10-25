@@ -475,7 +475,7 @@ const SKEY='viktorina-v1';
 let S={coins:60,lvl:0,games:0,wins:0,correct:0,best:0,seen:{},cyc:{},tp:{},tc:{},daily:{},duel:{},bad:[],adW:0,lossRow:0,dold:0,tips:{}};
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
-const NUMOBJ=['cyc','tp','daily','duel','tips','tc'],NUMS=['lvl','games','wins','correct','best','dold','fin','tmr'];
+const NUMOBJ=['cyc','tp','daily','duel','tips','tc','mlm'],NUMS=['lvl','games','wins','correct','best','dold','fin','tmr'];
 // защита от сохранений неожиданной формы (ручная правка, старая версия)
 function fixSave(){for(const f of NUMOBJ)if(!isObj(S[f]))S[f]={};if(!isObj(S.seen))S.seen={};for(const k in S.seen)if(typeof S.seen[k]!=='string')delete S.seen[k];
   for(const f of NUMS.concat(['adW','lossRow']))if(typeof S[f]!=='number'||!isFinite(S[f])||S[f]<0)S[f]=0;
@@ -780,7 +780,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'viktorina',gv:'v5.4-102421',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'viktorina',gv:'v5.5-102500',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (pl — пройдено уровней, cn — монеты, bt — облако хоть раз отдавало сохранение: метка устройства viktorina-cl) — после облака, не позже 2,5 с
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('viktorina-cl')?1:0;}catch(e){}STAT.progress({pl:+S.lvl||0,cn:+S.coins||0,bt:bt});if(window.STATANS)STATANS.prg();} // STATANS.prg — разовое prg (js/stat-ans.js)
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound===false?0:1,calm:S.calm===true?1:0});
@@ -803,7 +803,7 @@ function mergeSave(d,ref){if(!isObj(d))return;
   if(Array.isArray(d.bad))for(const x of d.bad)if(typeof x==='string'&&S.bad.indexOf(x)<0)S.bad.push(x);
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
   if(window.BOARD)BOARD.merge(d); // табло (js/board.js): S.bd* — счёт и дни табло объединяются, а не берутся из более нового
-  for(const k in d)if(!(k in S)||newer&&!/^(ts|lvl|games|wins|correct|best|dold|fin|seen|cyc|tp|tc|daily|duel|tips|bad|coins|streak|soc|stc|buy|buyB|payT|payV|lg|dlc|lcur|car|td|tdS)$/.test(k))S[k]=d[k]; // флажки и настройки
+  for(const k in d)if(!(k in S)||newer&&!/^(ts|lvl|games|wins|correct|best|dold|fin|seen|cyc|tp|tc|daily|duel|tips|bad|coins|streak|soc|stc|buy|buyB|payT|payV|lg|dlc|lcur|car|td|tdS|mlm)$/.test(k))S[k]=d[k]; // флажки и настройки
   payMerge(d);SOC.merge(d.soc);STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
   if(isObj(d.streak)){const a=S.streak,b=d.streak;
     if(!a||(b.last||0)>(a.last||0))S.streak=b;
@@ -2252,5 +2252,6 @@ window.__test={get G(){return G;},get S(){return S;},get MUS(){return MUS;},musT
 <script src="js/vmg-board.js"></script>
 <link rel="stylesheet" href="css/vma.css"><script src="js/vmg-vma.js"></script><script src="js/vmg-bukva.js"></script><script src="js/vmg-god.js"></script><script src="js/vmg-hrono.js"></script><script src="js/vmg-pary.js"></script><!-- MGA: затеи №4–7 (после vmg-core.js) -->
 <script src="js/stat-ans.js"></script>
+<script src="js/mlm-mail.js"></script> <!-- LTG-VK 24.10: окно «Написать Михалычу» (Об игре, ⚑ Ошибка в вопросе, итог лестницы с 15-го уровня раз в 7 дней); S.mlm в NUMOBJ -->
 </body>
 </html>

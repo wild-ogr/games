@@ -149,14 +149,14 @@
   var hidT=0;
   document.addEventListener('visibilitychange',function(){if(document.hidden){hidT=now();return;}if(prgOn&&hidT&&now()-hidT>30*60e3)setTimeout(prg,500);});
 
-  // ---- форма отзывов «Книга жалоб и предложений» (UI — META): кусками по 120 знаков в поле m, до 5 событий fb {m, n, of} ----
+  // ---- форма отзывов «Книга жалоб и предложений» (запасной вход; окно — js/gb-mail.js GBMAIL): кусками по 40 знаков в поле m, до 13 событий fb {m, n, of} ----
   // Сервер STAT режет строки до 40 знаков, поле m — до 120 (stat/function/index.py) — поэтому кусками. Ссылки, почта и длинные числа вычищаются.
   var fbT=0;
   function fbScrub(t){t=String(t==null?'':t).replace(/[\u0000-\u001f]+/g,' ');
     t=t.replace(/\b(?:https?:\/\/|www\.)\S+/gi,'[ссылка]').replace(/\S+@\S+\.\S+/g,'[почта]').replace(/(?:\+?\d[\d\s()-]{5,}\d)/g,'#');
-    return t.replace(/\s+/g,' ').trim().slice(0,600);}
+    return t.replace(/\s+/g,' ').trim().slice(0,500);}
   function fb(txt,opt){var t=fbScrub(txt);if(!t)return 0;if(now()-fbT<20e3)return -1;fbT=now(); /* не чаще раза в 20 с */
-    var parts=[],i;for(i=0;i<t.length&&parts.length<5;i+=120)parts.push(t.slice(i,i+120));
+    var parts=[],i;for(i=0;i<t.length&&parts.length<13;i+=40)parts.push(t.slice(i,i+40)); /* LTG-GB 24.10: модуль STAT режет строку до 40 — кусок 40 (как GBMAIL) */
     var G_=g(),st=sv(),x=opt&&typeof opt==='object'?opt:{};
     for(i=0;i<parts.length;i++)ev('fb',{m:parts[i],n:i+1,of:parts.length,k:i===0&&x.k?String(x.k).slice(0,12):undefined,l:i===0&&st?Math.max(0,(+st.unlocked||1)-1):undefined});
     try{var s=S_();if(s&&s.flush)s.flush();}catch(e){}

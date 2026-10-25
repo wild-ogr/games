@@ -605,13 +605,109 @@ const GAMES={
 const GC=GAMES[GID],R=RULES[GID];
 document.title=GC.title;
 
+/* ===== MAIL-DVOR v1 (24.10.2026): окно «Написать соседям / ведущей» — общий модуль карточной серии (Дурак, Козёл, Пасьянсы) =====
+   Источник — hobby-analytics/release-i/letters-2410/ltg-card-tools/mail-dvor.js (правки только там, в игры — mail-sync.sh; блок байт-в-байт одинаковый).
+   Образец — «Баба Зина» (slovo/js/zb2-mail*.js). Игра даёт MAILD.init({...}) — тексты, лицо, modal/hideModal/toast/save/tap, lvl() = число побед.
+   Входы: строка в «Об игре» (aboutRow/bindAbout) и раз в 7 дней ссылка в окне победы с C.from побед, со 2-го сеанса (winLine/bindWin; что окно «спокойное» — решает игра).
+   Поле сохранения S.nbm {w: день показа в окне победы, n: писем, d: день письма} — fix() в fixSave, merge() в mergeSave (максимум).
+   Статистика (через штатный STAT): mail {a:'show'|'open'|'send'|'cancel', f:'about'|'win', l:побед, на send n:длина, k:тема}; текст — кусками
+   fb {m ≤ 40 знаков, n, of, k и l на 1-м куске} (STAT режет строки до 40). Текст ≤ 500 знаков, ссылки/домены/почта/телефоны вычищаются. Не чаще раза в 20 с.
+   Старый синтаксис: только var/function. */
+var MAILD=(function(){
+  var C={},MAX=500,CH=40,sentT=0,K=['w','n','d'];
+  function el(id){return document.getElementById(id);}
+  function isO(v){return !!v&&typeof v==='object'&&!(v instanceof Array);}
+  function fix(S){if(!S)return {w:0,n:0,d:0};var v=S.nbm,i;if(!isO(v))v={};for(i=0;i<3;i++)v[K[i]]=Math.max(0,Math.floor(+v[K[i]]||0));S.nbm=v;return v;}
+  function merge(S,c){var v=fix(S),i;if(isO(c))for(i=0;i<3;i++)v[K[i]]=Math.max(v[K[i]],Math.floor(+c[K[i]]||0));}
+  function z(){return fix(C.S?C.S():null);}
+  function day(){var t=Date.now();try{if(C.now)t=+C.now()||t;}catch(e){}return Math.floor((t-new Date(t).getTimezoneOffset()*6e4)/864e5);}
+  function lv(){try{return Math.max(0,+C.lvl()||0);}catch(e){return 0;}}
+  function ev(n,p){try{if(window.STAT&&STAT.ev)STAT.ev(n,p);}catch(e){}}
+  function st(a,f,x){var p={a:a,f:f,l:lv()},k;if(x)for(k in x)if(x[k]!==undefined&&x[k]!=='')p[k]=x[k];ev('mail',p);}
+  function tap(){try{if(C.tap)C.tap();}catch(e){}}
+  function sv(){try{if(C.save)C.save();}catch(e){}}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  // чистка: ссылки, «голые» домены и мессенджеры (vk.com/…, t.me/…, ok.ru, что-то.ru/.рф/.com …), почта, телефоны (7+ цифр)
+  function scrub(t){t=String(t==null?'':t).replace(/[\u0000-\u001f\u007f]+/g,' ');
+    t=t.replace(/[^\s@,;:()«»"']+@[^\s@,;:()«»"']+\.[a-zа-яё]{2,}/gi,'[почта]').replace(/(?:https?:\/\/|www\.)[^\s,;!()«»"']+/gi,'[ссылка]')
+      .replace(/(?:^|[^\wа-яё@.\-])((?:[a-z0-9а-яё\-]+\.)+(?:ru|рф|com|net|org|su|me|io|info|biz|online|site|ua|by|kz|tv|cc|xyz|club|app|pro)(?:\/[^\s,;!()«»"']*)?)(?=$|[^\wа-яё])/gi,function(m,d){return m.slice(0,m.length-d.length)+'[ссылка]';})
+      .replace(/(?:^|\s)@[a-z0-9_]{4,}/gi,function(m){return m.charAt(0)==='@'?'[ссылка]':m.charAt(0)+'[ссылка]';})
+      .replace(/\+?\d(?:[\s().\-]*\d){6,}/g,'#');
+    return t.replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'').slice(0,MAX);}
+  function send(txt,o){var t=scrub(txt),i,n=0,l=lv();o=o||{};if(t.length<2)return 0;
+    if(Date.now()-sentT<20e3)return -1;sentT=Date.now();
+    st('send',o.f,{n:t.length,k:o.k});
+    for(i=0;i<t.length;i+=CH)n++;
+    for(i=0;i<n;i++){var p={m:t.slice(i*CH,i*CH+CH),n:i+1,of:n};if(!i){if(o.k)p.k=o.k;p.l=l;}ev('fb',p);}
+    try{if(window.STAT&&STAT.flush)STAT.flush();}catch(e){}
+    return n;}
+
+  // строка в «Об игре» (кнопка во всю ширину, над «Назад»)
+  function aboutRow(){return '<button class="mld-row noenter" id="mldAbout"><span>✉️ '+esc(C.row)+'<small>'+esc(C.rowSub||'похвалить, поругать, подсказать')+'</small></span><b>›</b></button>';}
+  function bindAbout(back){var b=el('mldAbout');if(b)b.onclick=function(){tap();open('about',back);};}
+  // окно победы: ok — игра решила, что окно «спокойное» (не ежедневка/обучение/первая победа, нет наград-новостей); решение помним в g (повторный показ окна — тот же ответ)
+  function want(ok){if(!ok||lv()<(C.from||15))return false;var s=0;try{s=C.sess?+C.sess()||0:2;}catch(e){}if(s<2)return false;
+    var v=z(),d=day();return d-v.w>=7&&d-v.d>=7;}
+  function winLine(g,ok){if(!g)return '';
+    if(g.mldW===undefined){g.mldW=want(ok)?1:0;if(g.mldW){z().w=day();sv();st('show','win');}}
+    return g.mldW?'<p class="mld-win"><button class="mld-link noenter" id="mldWin">✉️ '+esc(C.winTxt)+'</button></p>':'';}
+  // mk() зовётся при нажатии и отдаёт «вернуться в окно победы»
+  function bindWin(mk){var b=el('mldWin');if(b)b.onclick=function(){tap();var back=null;try{back=mk&&mk();}catch(e){}open('win',back);};}
+
+  function open(f,back){f=f==='win'?'win':'about';var k='',sent=0,T=C.top||[];
+    try{if(window.STAT&&STAT.screen)STAT.screen('mail');}catch(e){}st('open',f);
+    C.modal('<div class="mld" id="mldBox">'+(C.face?'<div class="mld-face">'+C.face()+'</div>':'')+'<h2>✉️ '+esc(C.title)+'</h2>'+
+      '<p class="mld-say">'+esc(C.say)+'</p>'+
+      '<div class="mld-top">'+T.map(function(t){return '<button class="mld-chip noenter" data-k="'+t[0]+'">'+esc(t[1])+'</button>';}).join('')+'</div>'+
+      '<textarea id="mldTxt" class="mld-txt" maxlength="'+MAX+'" rows="5" placeholder="'+esc(C.ph)+'"></textarea>'+
+      '<div class="mld-cnt"><small>'+esc(C.note)+'</small><b id="mldCnt">0 / '+MAX+'</b></div>'+
+      '<div class="mld-btns"><button class="btn green noenter" id="mldSend" disabled>Отправить ✉️</button><button class="btn noenter" id="mldNo">Не сейчас</button></div></div>');
+    var box=el('mldBox'),ta=el('mldTxt'),bs=el('mldSend'),cn=el('mldCnt'),no=el('mldNo');
+    function upd(){var n=ta.value.replace(/^\s+|\s+$/g,'').length;cn.textContent=Math.min(ta.value.length,MAX)+' / '+MAX;bs.disabled=n<2;}
+    ta.oninput=upd;
+    // клавиши игры (Enter — «главная кнопка», цифры, H, Z, пробел…) в поле письма не срабатывают; Esc — «Не сейчас»
+    box.addEventListener('keydown',function(e){if(e.key==='Escape'||e.key==='Esc'){e.preventDefault();e.stopPropagation();no.click();return;}
+      if(e.target===ta)e.stopPropagation();});
+    [].slice.call(box.querySelectorAll('.mld-chip')).forEach(function(b){b.onclick=function(){tap();
+      var on=!b.classList.contains('on');[].slice.call(box.querySelectorAll('.mld-chip')).forEach(function(x){x.classList.remove('on');});
+      if(on)b.classList.add('on');k=on?b.getAttribute('data-k'):'';};});
+    function done(){if(back)back();else C.hideModal();}
+    no.onclick=function(){tap();if(!sent)st('cancel',f);done();};
+    bs.onclick=function(){tap();var r=0;try{r=send(ta.value.slice(0,MAX),{f:f,k:k});}catch(e){r=1;}
+      if(r===-1){try{C.toast(C.busy||'Прошлое письмо ещё в пути — подождите минутку',3500);}catch(e){}return;}
+      if(!r)return;sent=1;var v=z();v.n=v.n+1;v.d=day();sv();
+      C.modal('<div class="mld mld-ok">'+(C.face?'<div class="mld-face">'+C.face(1)+'</div>':'')+'<h2>'+esc(C.okTitle||'Спасибо, прочитаем!')+'</h2><p class="mld-say">'+esc(C.okSay)+'</p>'+
+        '<div class="mld-btns"><button class="btn green" id="mldOk">'+esc(C.okBtn||'Пожалуйста!')+'</button></div></div>');
+      el('mldOk').onclick=function(){tap();done();};try{if(C.after)C.after(1);}catch(e){}};
+    try{if(C.after)C.after();}catch(e){}
+  }
+  // стили — вставкой; крупно (аудитория 45+), кнопки ≥ 44 px, поле не выше 34vh (телефон 360×640 с клавиатурой)
+  function css(){if(el('mldCss'))return;var c=document.createElement('style');c.id='mldCss';c.textContent=
+    '.mld h2{margin:0 0 6px}.mld-face{display:flex;justify-content:center;margin:0 0 4px}.mld-face>*{width:64px;height:64px}.mld-face svg,.mld-face img{width:64px;height:64px}'+
+    '.mld-say{font-size:16px;line-height:1.35;margin:0 0 10px;text-align:center}'+
+    '.mld-top{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 8px}'+
+    '.mld-chip{font:inherit;font-size:15px;font-weight:700;min-height:44px;padding:6px 12px;border-radius:999px;border:2px solid #c9cfe0;background:#fff;color:#27324a;cursor:pointer}'+
+    '.mld-chip.on{border-color:#2563c9;background:#2563c9;color:#fff}'+
+    '.mld-txt{display:block;box-sizing:border-box;width:100%;min-height:110px;max-height:34vh;padding:10px 12px;border-radius:12px;border:2px solid #c9cfe0;font:inherit;font-size:16px;line-height:1.35;resize:vertical;background:#fff;color:#27324a;-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:auto}'+
+    '.mld-txt:focus{outline:none;border-color:#2563c9}'+
+    '.mld-cnt{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin:6px 0 8px;font-size:14px;text-align:left}.mld-cnt b{white-space:nowrap;font-size:14px}'+
+    '.mld-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.mld-btns .btn{min-height:48px;flex:1 1 140px;margin:0}'+
+    '.mld-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;box-sizing:border-box;min-height:56px;margin:10px 0 4px;padding:8px 14px;border-radius:14px;border:2px solid #c9cfe0;background:#fff;color:#27324a;font:inherit;font-size:17px;font-weight:700;text-align:left;cursor:pointer}'+
+    '.mld-row small{display:block;font-size:14px;font-weight:400;opacity:.8}.mld-row b{font-size:24px;line-height:1}'+
+    '.mld-win{margin:6px 0 0;text-align:center}.mld-link{font:inherit;font-size:16px;font-weight:700;min-height:44px;padding:6px 10px;border:0;background:none;color:#2563c9;text-decoration:underline;cursor:pointer}'+
+    '@media (max-height:600px){.mld-say{font-size:15px;margin-bottom:6px}.mld-txt{min-height:80px}.mld-face{display:none}}';
+    (document.head||document.documentElement).appendChild(c);}
+  function init(c){C=c||{};css();}
+  return {init:init,fix:fix,merge:merge,scrub:scrub,send:send,aboutRow:aboutRow,bindAbout:bindAbout,winLine:winLine,bindWin:bindWin,open:open,_day:day,_want:want};
+})();
+/* ===== MAIL-DVOR END ===== */
 /* ================= сохранение ================= */
 const SKEY=GC.skey;
 let S={coins:50,st:{},daily:{},ach:{},own:{},seq:{},games:0,wins:0};
 try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);if(o&&typeof o==='object'&&!Array.isArray(o))S=Object.assign(S,o);}}catch(e){}
 const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 // защита от сохранений неожиданной формы (ручная правка, старая версия): не даём им сломать игру и слияние
-function fixSave(){for(const f of ['st','daily','ach','own','seq'])if(!isObj(S[f]))S[f]={};for(const k in S.st)if(!isObj(S.st[k]))delete S.st[k];
+function fixSave(){MAILD.fix(S);for(const f of ['st','daily','ach','own','seq'])if(!isObj(S[f]))S[f]={};for(const k in S.st)if(!isObj(S.st[k]))delete S.st[k];
   for(const f of ['tables','backs','faces'])if(!Array.isArray(S.own[f]))S.own[f]=[];
   for(const f of ['games','wins','adW'])if(typeof S[f]!=='number'||!isFinite(S[f]))S[f]=0;if(typeof S.coins!=='number'||!isFinite(S.coins))S.coins=50;
   if(S.streak!=null&&!isObj(S.streak))delete S.streak;if(S.payT!=null&&!Array.isArray(S.payT))S.payT=[];if(S.payV!=null&&!Array.isArray(S.payV))S.payV=[];if(S.buy!=null&&!isObj(S.buy))S.buy={};if(S.buyB!=null&&!isObj(S.buyB))S.buyB={};
@@ -895,7 +991,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Имя игры — по сборке (BUILD_GAME → GID): Косынка — kosynka, Паук — pauk, Ячейка — yacheyka. Раздача = «уровень» (STAT.lvl в startDeal/resumeDeal)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v3.3-102421',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v3.4-102500',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (сыграно раскладов, монеты, было ли облачное сохранение) — после облака или через 2,5 с; баланс; настройки
 let statPr=0,statBt=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:played(),cn:+S.coins||0,bt:statBt});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0,th:S.th||'day'});
@@ -921,7 +1017,8 @@ function mergeSave(d,ref){if(!isObj(d))return;
     if(typeof a.cs==='number'&&newer)b.cs=a.cs;}
   if(isObj(d.own))for(const f of ['tables','backs','faces'])if(Array.isArray(d.own[f])){if(!Array.isArray(S.own[f]))S.own[f]=[];for(const x of d.own[f])if(typeof x==='string'&&S.own[f].indexOf(x)<0)S.own[f].push(x);}
   if(typeof d.coins==='number')S.coins=newer?Math.max(0,d.coins+(S.coins-BOOT_COINS)):(dt===rt&&!dt)?Math.max(S.coins,d.coins):S.coins;
-  for(const k in d)if(k!=='soc'&&k!=='stc'&&(!(k in S)||newer&&!/^(ts|games|wins|daily|ach|seq|st|own|coins|streak|buy|buyB|payT|payV|soc|stc|rk|dwk|ez|abn|col|thU|adTot|lk1)$/.test(k)))S[k]=d[k]; // настройки, выбранный стол и т. п.
+  for(const k in d)if(k!=='soc'&&k!=='stc'&&(!(k in S)||newer&&!/^(ts|games|wins|daily|ach|seq|st|own|coins|streak|buy|buyB|payT|payV|soc|stc|rk|dwk|ez|abn|col|thU|adTot|lk1|nbm)$/.test(k)))S[k]=d[k]; // настройки, выбранный стол и т. п.
+  MAILD.merge(S,d.nbm); // письмо ведущей: дни показа/письма — более поздние
   payMerge(d); // покупки — объединение
   STAT.merge(d.stc); // статистика: день установки, число сеансов — раньше/больше
   S.rk=Math.max(S.rk||0,typeof d.rk==='number'?d.rk:rankOf(d.wins||0)); // звание: награда выдана — у кого больше
@@ -2379,20 +2476,21 @@ function winRecord(G){if(G.rec)return;G.rec=true;G.won=true;STAT.end('win',{mv:G
 // склонение по числу: 1 ход, 2 хода, 5 ходов
 function plw(n,a,b,c){const t=n%100,u=n%10;return t>10&&t<20?c:u===1?a:u>1&&u<5?b:c;}
 function showWin(got,firstDaily){if(!G)return;STAT.screen('win');const gf=streakAfterWin(); // первый подарок — до окна (чипсой в окне, без тоста): строка «Завтра: …» уже про него
-  if(gf)got=got.concat([{ic:'🎁',name:'Подарок за вход',c:gf.c}]);const m=stat(),x2=!window.__demo&&X2_ON&&adBtn()&&S.wins>2&&played()>NOVICE_DEALS&&!(adDue()&&adReady())&&!G.daily;
+  if(gf)got=got.concat([{ic:'🎁',name:'Подарок за вход',c:gf.c}]);const m=stat(),x2=!window.__demo&&X2_ON&&adBtn()&&S.wins>2&&played()>NOVICE_DEALS&&!(adDue()&&adReady())&&!G.daily&&!G.x2,bk=!!G.mldBk;G.mldBk=0;
   modal(`<div class="wfan" id="wFan"></div><h2 id="mWon">${G.daily?'Расклад дня разложен!':'Разложено!'}</h2>
     <div class="hello" style="margin:4px 0"><canvas id="winHost" width="112" height="122" style="width:56px;height:61px;flex:0 0 56px;margin:0 6px 0 0"></canvas><div class="bub" style="font-size:16px">${pick(G.daily&&firstDaily?HOSTL.daily:HOSTL.win)}</div></div>
     <div class="wstat"><span>${ic('moves')}${G.moves}<small>${plw(G.moves,'ход','хода','ходов')}</small></span>${S.timer?`<span>${ic('clock')}${fmtT(G.time)}<small>время</small></span>`:''}<span>${ic('fire')}${m.cs||1}<small>подряд</small></span></div>
-    <div class="prize">${COIN}<span class="coins-won" id="wCoins">+${calm()||window.__demo?G.coins:0}</span></div>${got.length>=3?'':winGoal()}
+    <div class="prize">${COIN}<span class="coins-won" id="wCoins">+${calm()||window.__demo||bk?G.coins*(G.x2?2:1)+(G.x2?' (×2)':''):0}</span></div>${got.length>=3?'':winGoal()}
     ${got.length>1?`<div class="achs" id="wAchs">${got.map((x,i)=>`<span${i>=2&&got.length>3?' class="xh" style="display:none"':''}>${x.ic} ${x.name} +${x.c}</span>`).join('')}${got.length>3?`<button class="lnk" id="wMore" style="min-height:48px;grid-column:1/3;text-decoration:underline">ещё ${got.length-2} ${plw(got.length-2,'награда','награды','наград')}</button>`:''}</div>`:got.map(x=>`<div class="achn">${x.ic} ${x.name} — +${x.c} монет</div>`).join('')}
     <div class="row"><button class="btn accent" id="mNext">${ic('deal')}Новая раздача</button>${winNext()}
-      ${x2?`<button class="btn adb noenter x2" id="mX2">${ic('tv')}Удвоить: +${G.coins} за рекламу</button>`:''}${G.daily&&LB.ok()?'<button class="btn noenter" id="mLb">'+ic('cup')+'Рейтинг</button>':''}<button class="lnk noenter" id="mMenu">${ic('home')}В меню</button></div>`);
+      ${MAILD.winLine(G,!G.daily&&!firstDaily&&!got.length)}${x2?`<button class="btn adb noenter x2" id="mX2">${ic('tv')}Удвоить: +${G.coins} за рекламу</button>`:''}${G.daily&&LB.ok()?'<button class="btn noenter" id="mLb">'+ic('cup')+'Рейтинг</button>':''}<button class="lnk noenter" id="mMenu">${ic('home')}В меню</button></div>`);
   $('mcard').classList.toggle('wmany',got.length>=3); // много наград: без цели и (на низких экранах) без хозяйки — кнопки видны без прокрутки
   $('mcard').classList.add('win');drawHost($('winHost'),GC.host,'happy');winFan();winConf();if($('wMore'))$('wMore').onclick=()=>{$('mcard').querySelectorAll('.achs .xh').forEach(e=>e.style.display='');$('wMore').remove();};
   if($('mX2'))STAT.offer('x2');if($('mX2'))$('mX2').onclick=()=>{const g=G,b0=$('mX2');STAT.place('x2');showRewarded(()=>{if(g.x2)return;g.x2=true;S.coins+=g.coins;STAT.earn('ad',g.coins);save();updCoins();SND.coin();$('wCoins')&&($('wCoins').textContent='+'+g.coins*2+' (×2)');const b=$('mX2');b&&b.remove();},()=>{},
     ()=>{if(g.x2)return '';g.x2=true;S.coins+=g.coins;STAT.earn('ad',g.coins);save();updCoins();SND.coin();if(document.body.contains(b0)){b0.remove();$('wCoins')&&($('wCoins').textContent='+'+g.coins*2+' (×2)');}return 'монеты за раздачу ×2: +'+g.coins;});}; // поздний зачёт (adt): всегда, один раз (g.x2), чужие окна не трогаем
   $('mNext').onclick=()=>{const md=G&&!G.daily?G.mode:undefined;hideModal();newDeal(md);};$('mMenu').onclick=()=>{hideModal();G=null;openMenu();};if($('mDaily'))$('mDaily').onclick=()=>{hideModal();G=null;openDaily();};if($('mLb'))$('mLb').onclick=()=>LB.show();
-  socEarly(x2||got.length>=3);coinsRoll(G);setTimeout(offerReturn,1200);}
+  MAILD.bindWin(()=>{const g=G,gt=got,fd=firstDaily;return ()=>{if(G!==g){hideModal();return;}g.mldBk=1;showWin(gt,fd);};}); // письмо ведущей → назад в окно победы
+  if(bk){updCoins();return;}socEarly(x2||got.length>=3);coinsRoll(G);setTimeout(offerReturn,1200);}
 // look1: веер королей над окном победы (карты рисуются той же колодой) и конфетти (в спокойном режиме — без него)
 function winFan(){const el=$('wFan');if(!el)return;const d=Math.min(2,window.devicePixelRatio||1),ids=[12,25,38,51,0];el.innerHTML='';
   ids.forEach((id,i)=>{const c=document.createElement('canvas');c.width=Math.round(54*d);c.height=Math.round(77*d);const g=c.getContext('2d');g.scale(d,d);const sv=S.deck;if(sv==='con')S.deck='std';drawFace(g,id,54,77);S.deck=sv;c.style.transform='rotate('+((i-2)*15)+'deg)';el.appendChild(c);});}
@@ -2620,8 +2718,25 @@ function openAbout(){STAT.screen('about');modal(`<h2>Об игре</h2><p class=
     <p class="about" id="abMus">Музыка: «Bossa Antigua» — Kevin MacLeod (incompetech.com), CC BY 4.0</p>
     ${PLAT==='vk'&&!OK?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
     <p class="about">На компьютере: Z — отмена, H — подсказка, ${GID==='freecell'?'':'пробел — колода, '}N — новая раздача, Esc — назад, Enter — главная кнопка окна.</p>
-    <div class="row">${PAY.on?'<button class="btn" id="abPay">↻ Восстановить покупки</button>':''}<button class="btn" id="abBack">← Назад</button></div>`);
-  if($('abPay'))$('abPay').onclick=()=>PAY.again();$('abBack').onclick=openSettings;}
+    ${MAILD.aboutRow()}<div class="row">${PAY.on?'<button class="btn" id="abPay">↻ Восстановить покупки</button>':''}<button class="btn" id="abBack">← Назад</button></div>`);
+  if($('abPay'))$('abPay').onclick=()=>PAY.again();$('abBack').onclick=openSettings;MAILD.bindAbout(openAbout);}
+/* «Написать ведущей» (MAIL-DVOR, 24.10): «Об игре» + раз в 7 дней в окне победы (не расклад дня, без наград-новостей) с 15-й победы; голос — хозяйка игры (Зина / Валя / Галя) */
+const MAIL_HOST={zina:{row:'Написать бабе Зине',title:'Письмо бабе Зине',winTxt:'Черкни бабе Зине пару слов',
+    say:'Пиши как есть, внучок: что нравится, что не так, какая раздача не сошлась. Всё прочитаю — с лупой и чаем.',
+    ph:'Дорогая баба Зина, …',note:'Имя, телефон и почту не пиши — я тебя и так по почерку узнаю.',
+    okSay:'Я — с лупой, внуки — вслух. Ответить лично не умею, но каждое письмо прочитаю.',busy:'Баба Зина ещё читает прошлое письмо — подожди минутку'},
+  valya:{row:'Написать тёте Вале',title:'Письмо тёте Вале',winTxt:'Черкни тёте Вале пару слов',
+    say:'Пиши как есть: что нравится, что не так, какая раздача не сложилась. Прочитаю вечером на веранде, с чаем и вареньем.',
+    ph:'Дорогая тётя Валя, …',note:'Имя, телефон и почту не пиши — письма я читаю и без обратного адреса.',
+    okSay:'Вечером на веранде всей дачей прочитаем. Ответить каждому лично не смогу, но прочитаю всё.',busy:'Тётя Валя ещё читает прошлое письмо — подожди минутку'},
+  galya:{row:'Написать медсестре Гале',title:'Письмо медсестре Гале',winTxt:'Черкни медсестре Гале пару слов',
+    say:'Пиши как есть: что нравится, что «болит», какая раздача не сошлась. Прочитаю всё после обхода.',
+    ph:'Дорогая Галя, …',note:'Имя, телефон и почту не пиши — в санатории всё анонимно.',
+    okSay:'После обхода прочитаем всем санаторием. Ответить каждому лично не смогу, но прочитаю всё.',busy:'Галя ещё на обходе с прошлым письмом — подожди минутку'}}[GC.host]||{};
+MAILD.init(Object.assign({S:()=>S,now:()=>nowMs(),lvl:()=>S.wins||0,sess:()=>(S.stc&&S.stc.n)||0,from:15,save:()=>save(),tap:()=>SND.tap&&SND.tap(),
+  modal:h=>modal(h),hideModal:()=>hideModal(),toast:(t,ms)=>toast(t,ms),face:()=>'<canvas id="mldHost" width="112" height="122" style="width:56px;height:61px"></canvas>',
+  after:ok=>{const c=$('mldHost');if(c)drawHost(c,GC.host,ok?'happy':'norm');},
+  top:[['like','👍 Хвалю'],['bug','🐞 Ошибка'],['idea','💡 Идея'],['deal','🃏 Про раздачи']],okTitle:'Спасибо, прочитаем!',okBtn:'Пожалуйста!'},MAIL_HOST));
 function applyCalm(){document.body.classList.toggle('calm',calm());}applyCalm();
 
 /* ================= реклама (SDK площадки; без него — заглушка) ================= */
