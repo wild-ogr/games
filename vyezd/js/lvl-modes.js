@@ -10,6 +10,7 @@
      LVLM.start(idx,mode)  — запустить двор в режиме ('rush'|'ice')
      LVLM.stars(k,mode)    — звёзд в режиме по десятку k (макс. 10 у «Час пик», 30 у «Гололёда»)
      LVLM.mapHtml(k)       — готовые кнопки «⏰ Час пик · ★n/10» / «❄️ Гололёд · ★n/30» для строки региона на карте (onclick — LVLM.pick)
+     LVLM.pick(k,mode)     — окно выбора двора десятка k в режиме (hz2610: любой из 10, главная кнопка — первый без звёзд)
      LVLM.hook(G,ok)       — {mode, region, fails} для yardHook (mode: 'n' обычный, 'rush', 'ice', 'daily', 'fest')
      LVLM.norm(G)          — норма «Гололёда», с
      LVLM.dayOne           — true: задание дня (двор дня) одно на всех — ступень «как двор 15» у всех (было: по прогрессу игрока)
@@ -63,15 +64,49 @@
     return '<p class="goal">'+m.ico+' '+L2(m.ru,m.en)+L2(' · дворы ',' · yards ')+(k*10+1)+'–'+(k*10+10)+': <b>★'+n+'/'+mx+'</b>'+(n>=mx?L2(' — все звёзды! 🏆',' — all stars! 🏆'):'')+'</p>';}
   function winN(G){fix();if(G&&!G.daily)delete Sv().lvF[key(G)];stopTimer();}
   function start(idx,mode){if(!MODES[mode])mode=undefined;try{hideModal();}catch(e){}startLevel(idx,false,mode?{mode:mode}:undefined);}
-  /* выбор двора режима: первый двор десятка без звезды режима, иначе первый */
-  function pick(k,mode){fix();var S=Sv(),o=mode==='rush'?S.lvR:S.lvI;for(var i=k*10;i<k*10+10;i++)if(!o[i])return start(i,mode);start(k*10,mode);}
+  /* hz2610 (письмо игрока 26.10): выбор двора режима — окно с 10 дворами десятка, можно взять любой (раньше кнопка всегда вела
+     в первый двор без звезды, и один трудный двор закрывал остальные 9). Плитки — как дни праздника (css/fest-vy.css .fvT);
+     главная кнопка — первый двор без полных звёзд (как было). */
+  var CSS='.lvpSub{margin:2px 0 6px!important;font-size:14.5px!important;color:#636e72!important;font-weight:600}'+
+    '.lvpRule{margin:0 0 4px!important;font-size:15px!important}'+
+    '.lvpG{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0 10px}'+
+    '.lvpT{position:relative;border:0;border-radius:12px;padding:7px 2px 5px;font:inherit;cursor:pointer;background:#efeadb;color:#3a2206;box-shadow:0 3px 0 #d3ccb8;min-width:0}'+
+    '.lvpT b{display:block;font-size:18px;line-height:1.1;font-weight:900}'+
+    '.lvpT small{display:block;font-size:10.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#8a6d3b}'+
+    '.lvpT.done{background:linear-gradient(#8be28f,#3fae5a);color:#0f3d1f;box-shadow:0 3px 0 #2b7a3f}.lvpT.done small{color:#0f3d1f}'+
+    '.lvpT.part{background:#e3f4dc;box-shadow:0 3px 0 #a9cf9c}.lvpT.part small{color:#2b7a3f}'+
+    '.lvpT.nx{background:linear-gradient(#ffd36e,#ff9f43);box-shadow:0 3px 0 #c8741d}.lvpT.nx small{color:#5c3608}'+
+    '.lvpT.boss:not(.done):not(.nx){background:linear-gradient(#ff8a80,#e53935);color:#fff;box-shadow:0 3px 0 #a82b25}.lvpT.boss:not(.done):not(.nx) small{color:#fff}'+
+    '.lvpT:active{transform:translateY(2px);box-shadow:none}'+
+    '@media (max-width:350px){.lvpG{gap:4px}.lvpT b{font-size:16px}.lvpT small{font-size:9.5px}}';
+  function css(){if(document.getElementById('lvpCss'))return;var st=document.createElement('style');st.id='lvpCss';st.textContent=CSS;document.head.appendChild(st);}
+  function yname(i){try{return yardName(i);}catch(e){return '';}}
+  function rname(k){try{var r=W.VYREG&&VYREG.at(k*10);if(r)return L2(r.name,r.en||r.name);}catch(e){}return '';}
+  function pick(k,mode){fix();if(!MODES[mode])return;var S=Sv(),o=mode==='rush'?S.lvR:S.lvI,mx=mode==='rush'?1:3,m=MODES[mode],nx=-1,t='',i;
+    for(i=k*10;i<k*10+10;i++)if(nx<0&&(o[i]||0)<mx)nx=i;
+    for(i=k*10;i<k*10+10;i++){var st=Math.min(mx,o[i]||0),nm=yname(i);
+      t+='<button class="lvpT'+(st>=mx?' done':st?' part':'')+(i===nx?' nx':'')+(i%10===9?' boss':'')+'" data-lvp="'+i+'" title="'+String(nm).replace(/"/g,'&quot;')+'"><b>'+(i+1)+'</b><small>'+(st?'★'.repeat(st):(i%10===9?'🔥 ':'')+nm)+'</small></button>';}
+    var rn=rname(k),all=stars(k,mode),max=mode==='rush'?10:30,
+      rule=mode==='rush'?L2('Одна ❤️, без подсказки и эвакуатора.','One ❤️, no hints, no tow truck.'):L2('Успей за норму времени — звёзды за скорость.','Beat the time limit — stars for speed.');
+    css();
+    try{modal('<h2>'+m.ico+' '+L2(m.ru,m.en)+'</h2><p class="lvpSub">'+(rn?rn+' · ':'')+L2('дворы ','yards ')+(k*10+1)+'–'+(k*10+10)+' · <b>★'+all+'/'+max+'</b></p>'+
+      '<p class="lvpRule">'+rule+' '+L2('Выбери любой двор:','Pick any yard:')+'</p><div class="lvpG">'+t+'</div>'+
+      '<div class="row">'+(nx>=0?'<button class="btn green" id="lvpGo">'+L2('Двор ','Yard ')+(nx+1)+' →</button>':'<p class="goal">'+L2('Все звёзды собраны! 🏆 Можно переиграть любой двор.','All stars collected! 🏆 Replay any yard.')+'</p>')+
+      '<button class="btn" id="mCancel">'+L2('Закрыть','Close')+'</button></div>');}
+    catch(e){return start(nx>=0?nx:k*10,mode);} /* окна нет (старый вызов) — как раньше */
+    [].forEach.call(document.querySelectorAll('#mcard .lvpT'),function(b){b.onclick=function(){start(+b.getAttribute('data-lvp'),mode);};});
+    var go=document.getElementById('lvpGo');if(go)go.onclick=function(){start(nx,mode);};
+    var cc=document.getElementById('mCancel');if(cc)cc.onclick=function(){try{hideModal();}catch(e){}};}
   function mapHtml(k,lab){if(!open(k))return '';var h=lab?'<span class="lvmlab">'+(k*10+1)+'–'+(k*10+10)+'</span>':'';
     for(var m in MODES)h+='<button class="btn sec sm lvm" style="flex:1 1 40%;min-width:130px;padding:6px 8px;font-size:14px" onclick="LVLM.pick('+k+',\''+m+'\')">'+MODES[m].ico+' '+L2(MODES[m].ru,MODES[m].en)+' · ★'+stars(k,m)+'/'+(m==='rush'?10:30)+'</button>';
     return '<div class="lvmrow" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin:4px 8px 8px">'+h+'</div>';}
   /* карта (гнездо UX mapSlots, зона 'region'): под заголовком региона — кнопки режимов по каждому пройденному десятку.
      ctx.region — индекс в REGIONS (у «Вокруг света» 20 дворов — две строки с номерами дворов) */
   (W.mapSlots=W.mapSlots||[]).push({id:'lvl-modes',order:30,zone:'region',render:function(ctx){try{
-    var R=REGIONS,r=R[ctx.region];if(!r)return null;var nx=R[ctx.region+1],to=nx?nx.from:r.from+10,h='',many=to-r.from>10;
+    /* hz2610: ctx.region = (первый двор региона)/10, а не индекс в REGIONS («Вокруг света» — 20 дворов одной записью): со 2-го региона VYREG
+       строка региона показывала кнопки СЛЕДУЮЩЕГО десятка (у «Карелии» — «Час пик» дворов 111–120), у «Золотого кольца» и «Города будущего» кнопок не было */
+    var R=REGIONS,ri=-1,i0=ctx.region*10;for(var q=0;q<R.length;q++)if(R[q].from===i0){ri=q;break;}if(ri<0)return null;
+    var r=R[ri],nx=R[ri+1],to=nx?nx.from:r.from+10,h='',many=to-r.from>10;
     for(var k=Math.floor(r.from/10);k*10<to&&k<21;k++)h+=mapHtml(k,many);return h||null;}catch(e){return null;}}});
   /* ---- вид «Гололёда» (только рисунок — раскладка, решатель и правила те же): наледь на асфальте, блики, следы заноса ---- */
   var ICE={g:null,patches:[],skids:[]};

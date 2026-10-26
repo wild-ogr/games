@@ -74,7 +74,14 @@
     if(hz.cells.length||hz.gran>=0)lv.hz=hz;
     /* скорая с помехами: запас считаем честно — сколько выездов нужно до неё, если помехи ещё закрыты (жадно: сначала её цепочка) */
     if(lv.hz&&lv.amb){var E=ambNeed(lv);if(E>=0)lv.amb.limit=Math.max(lv.amb.limit,E+1);}
+    /* hz2610 (письмо игрока 26.10): бабушка на пути цепочки скорой — +3 хода. Ждать бабушку или толкнуть её = потерянный ход скорой,
+       а ambNeed бабушку не считает → в «Час пик» (1 ❤️) дворы 113,116,125,146,149,150,160,190 были непроходимы (перебор: нужно +1…+3).
+       Дворы, где цепочка скорой мимо перехода, не меняются. Раскладка та же — меняется только число на скорой. */
+    if(lv.hz&&lv.amb&&lv.hz.gran>=0&&granOnChain(lv))lv.amb.limit+=3;
     return lv;}
+  function granOnChain(lv){var w=lv.w,h=lv.h,vs=lv.vehicles,g=lv.hz.gran,cl=closureOf(vs,baseOcc(lv),w,h,lv.amb.id),hit=false;
+    cl.forEach(function(i){var v=vs[i],d=DIRS[v.dir],x=v.cells[0][0]+d[0],y=v.cells[0][1]+d[1];while(!hit&&x>=0&&y>=0&&x<w&&y<h){if(y*w+x===g)hit=true;x+=d[0];y+=d[1];}});
+    return hit;}
   function ambNeed(lv){var w=lv.w,h=lv.h,vs=lv.vehicles,occ=baseOcc(lv),alive=[],ex=0,cells=lv.hz.cells,key=lv.hz.key,a=lv.amb.id,i;
     cells.forEach(function(c){c[2]=0;occ[c[0]]=-3;});for(i=0;i<vs.length;i++)alive.push(i);
     for(var g=0;g<500&&alive.length;g++){var need=closureOf(vs,occ,w,h,a),fr=[],pick=-1;
