@@ -1,93 +1,26 @@
-'use strict';
-/* rb2-LOVA №7 «Сачок в ручье» (js/mg-sachok.js, id 'sachok', флаг lov-sachok; объявлена MGREC.add в index.html). Движок — «Пирожки» Зины / «Выбросили» Гастронома.
-   Ручей несёт мальков, листья и пиявок по трём струям. Петрович заказывает живца («Уклейку на живца!») — черпай сачком только заказ:
-   кнопка своей струи (← ↓ →, или касание струи), когда малёк над сачком. Заказ — +1, не та рыбка — −1, пиявка — −2, листик — ничего.
-   Каждые 5 пойманных Петрович меняет заказ. 25 секунд, течение всё быстрее. Первая ошибка — разминка. Баланс: LK.simMany('sachok',k,200). */
-(function(){
-if(typeof MG_REG!=='function'||typeof R2==='undefined')return;
-var ID='sachok',KIT=window.LK?Promise.resolve():R2.need('js/mg-lkit.js'),G0=null;
-function g(){return G0||(G0=window.LK.add(def(window.LK)));}
-MG_REG({id:ID,kind:'lov',n:{ru:'Сачок в ручье',en:'Net in the brook'},icon:'star',
-  run:function(h,o){KIT.then(function(){window.LK.run(g(),h,o);},function(){try{h.quit();}catch(e){}});},
-  bot:function(lv,o){return window.LK?window.LK.bot(g(),lv,o):null;}});
-KIT.then(g,function(){});
-function def(K){
-var TAU=Math.PI*2,DUR=25,LN=['L','B','R'];
-var KIND={
- ukl:{n:['уклейку','bleak'],nn:['Уклейка','Bleak'],c:'#cfd9e0',c2:'#8fa3b0',f:'#e6eef2',w:1},
- pes:{n:['пескаря','gudgeon'],nn:['Пескарь','Gudgeon'],c:'#b39a72',c2:'#6f5a3e',f:'#c9b48e',w:.9,sp:1},
- plo:{n:['плотвичку','roach'],nn:['Плотвичка','Roach'],c:'#c8ccc4',c2:'#7d8a80',f:'#d9452e',w:1.05}};
-var FISH=['ukl','pes','plo'];
-function lx(fr,i){return fr.W*(.25+.25*i);}
+'use strict';(function(){if(typeof MG_REG!=='function'||typeof R2==='undefined')return;var ID='sachok',KIT=window.LK?Promise.resolve():R2.need('js/mg-lkit.js'),G0=null;function g(){return G0||(G0=window.LK.add(def(window.LK)));}
+MG_REG({id:ID,kind:'lov',n:{ru:'Сачок в ручье',en:'Net in the brook'},icon:'star',run:function(h,o){KIT.then(function(){window.LK.run(g(),h,o);},function(){try{h.quit();}catch(e){}});},bot:function(lv,o){return window.LK?window.LK.bot(g(),lv,o):null;}});KIT.then(g,function(){});function def(K){var TAU=Math.PI*2,DUR=25,LN=['L','B','R'];var KIND={ukl:{n:['уклейку','bleak'],nn:['Уклейка','Bleak'],c:'#cfd9e0',c2:'#8fa3b0',f:'#e6eef2',w:1},pes:{n:['пескаря','gudgeon'],nn:['Пескарь','Gudgeon'],c:'#b39a72',c2:'#6f5a3e',f:'#c9b48e',w:.9,sp:1},plo:{n:['плотвичку','roach'],nn:['Плотвичка','Roach'],c:'#c8ccc4',c2:'#7d8a80',f:'#d9452e',w:1.05}};var FISH=['ukl','pes','plo'];function lx(fr,i){return fr.W*(.25+.25*i);}
 function zone(fr){return fr.H*.8;}
-var G={id:ID,amb:'forest',n:['Сачок в ручье','Net in the brook'],who:L('Петрович','Petrovich'),u:LANG==='en'?['fish','fish','fish']:['малёк','малька','мальков'],mid:17,md:[7,15,22],
- short:['Черпай только того малька, что заказал Петрович!','Scoop only the fry Petrovich asked for!'],
- rules:[['Ручей несёт мальков. Петрович заказывает живца — смотри вверху.','The brook carries fry. Petrovich orders bait — see the top.'],
-   ['Жми кнопку струи, когда малёк над сачком: ← ↓ → или касание.','Press the stream’s button when the fry is over the net: ← ↓ → or tap.'],
-   ['Не та рыбка — −1, пиявка — −2, листик — ничего.','Wrong fish −1, leech −2, leaf — nothing.']],
- ctl:[['L',L('Слева','Left'),'←'],['B',L('Середина','Middle'),'↓',['ArrowDown','s','S','ы','Ы',' ','Spacebar','ArrowUp','w','W','ц','Ц']],['R',L('Справа','Right'),'→']],
- tapKey:function(x,y,fr){var i=Math.round((x/fr.W-.25)/.25);i=Math.max(0,Math.min(2,i));return LN[i];},
- init:function(st,fr){st.t=0;st.sc=0;st.it=[];st.next=.4;st.ord=FISH[Math.floor(fr.rnd(0,3))];st.got=0;st.net=[0,0,0];st.cool=[0,0,0];st.warm=fr.demo?0:1;st.flow=0;st.sinceOrd=0;
-   if(!fr.demo)fr.say(L('Наловим живца? Мне — '+KIND[st.ord].n[0]+'!','Let’s catch some bait! I need '+KIND[st.ord].n[1]+'!'));},
- speed:function(st,fr){return fr.H*(.3+Math.min(.32,st.t*.013))*(fr.calm?.82:1);},
- step:function(st,dt,inp,fr){var H=fr.H,T=DUR-st.t,self=this,v=self.speed(st,fr),z=zone(fr);st.t+=dt;st.flow+=v*dt;
-  if(T<=0){fr.end(st.sc,L('Время вышло','Time’s up'));return;}
-  st.next-=dt;st.sinceOrd+=dt;if(st.next<=0){st.next=Math.max(.32,.62-st.t*.01)*fr.rnd(.7,1.3);
-    var r=fr.rnd(0,1),k;var wantOrd=st.sinceOrd>1.6;if(wantOrd||r<.45){k=st.ord;st.sinceOrd=0;}else if(r<.72)k=FISH[Math.floor(fr.rnd(0,3))];else if(r<.88)k='leaf';else k='leech';
-    var fl=[];for(var ln0=0;ln0<3;ln0++){var bz=false;for(var b=0;b<st.it.length;b++)if(st.it[b].l===ln0&&st.it[b].y<H*.2)bz=true;if(!bz)fl.push(ln0);} // струя занята — малёк подождёт: в сачок попадает один
-    if(!fl.length){st.next=.08;if(k===st.ord)st.sinceOrd=2;}else st.it.push({k:k,l:fl[Math.floor(fr.rnd(0,fl.length))],y:-20,ph:fr.rnd(0,6),dx:0,got:0});}
-  for(var i=0;i<st.it.length;i++){var it=st.it[i];if(it.got){it.got+=dt;continue;}it.y+=v*dt*(it.k==='leaf'?.85:1);it.dx=Math.sin(st.t*3+it.ph)*fr.W*.012;}
-  st.it=st.it.filter(function(it){return it.y<H+30&&it.got<.5;});
-  for(var j=0;j<3;j++){st.net[j]=Math.max(0,st.net[j]-dt);st.cool[j]-=dt;
-    if(fr.edge(LN[j])&&st.cool[j]<=0){st.net[j]=.25;st.cool[j]=.28;fr.snd('splash');
-      var best=null;for(var q=0;q<st.it.length;q++){var o=st.it[q];if(o.got||o.l!==j)continue;if(Math.abs(o.y-z)<H*.055*(fr.calm?1.3:1)&&(!best||Math.abs(o.y-z)<Math.abs(best.y-z)))best=o;}
-      if(best){best.got=.01;self.take(st,fr,best);}}}
-  fr.score(st.sc+' · '+Math.ceil(Math.max(0,T))+L(' с',' s'));},
- take:function(st,fr,o){var k=o.k;
-  if(k===st.ord){st.sc++;st.got++;fr.pop('+1');fr.snd('hook');
-    if(st.got>=5){st.got=0;var nk=st.ord;while(nk===st.ord)nk=FISH[Math.floor(fr.rnd(0,3))];st.ord=nk;st.sinceOrd=2;fr.say(L('Хватит! Теперь давай '+KIND[nk].n[0]+'!','Enough! Now get me '+KIND[nk].n[1]+'!'));fr.snd('bell');}}
-  else if(k==='leaf'){fr.pop(L('Листик','A leaf'));}
-  else{var n=k==='leech'?2:1,why=k==='leech'?L('Фу, пиявка!','Yuck, a leech!'):L('Не та рыбка — мне '+KIND[st.ord].n[0]+'!','Wrong fish — I need '+KIND[st.ord].n[1]+'!');
-    if(st.warm){st.warm=0;fr.say(why+' '+L('Разминка — не считается.','Warm-up — doesn’t count.'));}else{st.sc=Math.max(0,st.sc-n);fr.pop('−'+n);fr.say(why);fr.shake(3);}fr.snd('no');}},
- bot:function(st,fr,k,mem){var out={},z=zone(fr),H=fr.H,v=this.speed(st,fr);mem.s=mem.s||{};
-  for(var i=0;i<st.it.length;i++){var o=st.it[i];if(o.got)continue;var id=o.ph;var m=mem.s[id];
-    if(!m){m=mem.s[id]={};m.gw=k>=1||fr.rnd(0,1)<.55+.45*k;m.gx=k<1&&o.k!=='leaf'&&fr.rnd(0,1)<(1-k)*.22;
-      m.e=k>=1?0:(fr.rnd(-1,1)+fr.rnd(-1,1))*(.02+.2*(1-k));}
-    m.go=o.k===st.ord?m.gw:m.gx;if(m.go&&!m.d&&o.y>=z-v*m.e-H*.01){m.d=1;out[LN[o.l]]=1;}}
-  return out;},
- fish:function(g,x,y,k,s,t){var d=KIND[k];g.save();g.translate(x,y);g.rotate(Math.PI/2+Math.sin(t*8)*.15);g.scale(s*d.w,s);
-  g.fillStyle=d.c;g.beginPath();g.ellipse(0,0,14,4.5,0,0,TAU);g.fill();g.fillStyle=d.c2;g.beginPath();g.ellipse(0,-1.5,12,2,0,0,TAU);g.fill();
-  if(d.sp){g.fillStyle='rgba(60,40,20,.6)';for(var i=-2;i<=2;i++){g.beginPath();g.arc(i*4,0,1.3,0,TAU);g.fill();}}
-  g.fillStyle=d.f;g.beginPath();g.moveTo(-12,0);g.lineTo(-19,-5);g.lineTo(-19,5);g.fill();g.beginPath();g.moveTo(-2,3);g.lineTo(-5,7);g.lineTo(2,4);g.fill();
-  g.fillStyle='#111';g.beginPath();g.arc(9,-1,1.3,0,TAU);g.fill();g.restore();},
- draw:function(g,st,fr){var W=fr.W,H=fr.H,A=fr.art,t=st.t,z=zone(fr),self=this;
-  fr.layer('sk',function(x,w,h){x.fillStyle='#4e7d3a';x.fillRect(0,0,w,h);
-    for(var i=0;i<60;i++){x.fillStyle=i%3?'#5c8f43':'#466f33';x.beginPath();x.arc((i*53)%w,(i*97)%h,6+(i%5)*3,0,TAU);x.fill();}
-    var gr=x.createLinearGradient(w*.1,0,w*.9,0);gr.addColorStop(0,'#3a7a8a');gr.addColorStop(.5,'#5aa3b2');gr.addColorStop(1,'#3a7a8a');x.fillStyle=gr;
-    x.beginPath();x.moveTo(w*.1,0);for(var y=0;y<=h;y+=20)x.lineTo(w*.1+Math.sin(y*.02)*8,y);x.lineTo(w*.9+Math.sin(h*.02)*8,h);for(var y2=h;y2>=0;y2-=20)x.lineTo(w*.9+Math.sin(y2*.02+1)*8,y2);x.fill();
-    x.fillStyle='#8c8f86';for(var s=0;s<10;s++){var sx=s%2?w*.09:w*.91,sy=(s*83)%h;x.beginPath();x.ellipse(sx,sy,10+s%3*4,7,0,0,TAU);x.fill();}
-    for(var b=0;b<5;b++){var bx=b%2?w*.03:w*.97;if(A&&A.birch)A.birch(x,bx,h*(.2+b*.17),h*.18,0,false);}});
-  // струи
-  g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=1.5;var o2=st.flow%40;
-  for(var ln=0;ln<6;ln++){var sx=W*(.18+ln*.13);for(var y=-40+o2;y<H;y+=40){g.beginPath();g.moveTo(sx,y);g.lineTo(sx+Math.sin(y*.05)*3,y+14);g.stroke();}}
-  // сачки
-  for(var j=0;j<3;j++){var cx=lx(fr,j),a=st.net[j]>0?1:.45;g.strokeStyle='rgba(255,255,255,'+(a*.8)+')';g.lineWidth=st.net[j]>0?4:2;g.setLineDash(st.net[j]>0?[]:[5,5]);
-    g.beginPath();g.ellipse(cx,z,W*.1,H*.045,0,0,TAU);g.stroke();g.setLineDash([]);
-    if(st.net[j]>0){g.fillStyle='rgba(255,255,255,.18)';g.beginPath();g.ellipse(cx,z,W*.1,H*.045,0,0,TAU);g.fill();g.strokeStyle='#7a5a3a';g.lineWidth=5;g.beginPath();g.moveTo(cx,z+H*.045);g.lineTo(cx+W*.02,H);g.stroke();}
-    if(fr.pc){g.globalAlpha=.7;try{MG.keycap(g,cx,z+H*.085,['←','↓','→'][j],22);}catch(e){}g.globalAlpha=1;}}
-  for(var i=0;i<st.it.length;i++){var it=st.it[i],x=lx(fr,it.l)+it.dx,y=it.y,sc=Math.min(1.3,W/300);if(it.got){g.globalAlpha=Math.max(0,1-it.got*2);y-=it.got*60;}
-    if(it.k==='leaf'){g.save();g.translate(x,y);g.rotate(t*1.5+it.ph);g.fillStyle='#d9a23a';g.beginPath();g.ellipse(0,0,10*sc,5*sc,0,0,TAU);g.fill();g.strokeStyle='#a8741e';g.lineWidth=1;g.beginPath();g.moveTo(-9*sc,0);g.lineTo(9*sc,0);g.stroke();g.restore();}
-    else if(it.k==='leech'){g.strokeStyle='#2a2320';g.lineWidth=5*sc;g.lineCap='round';g.beginPath();for(var p=0;p<6;p++){var py=y-10*sc+p*4*sc,px=x+Math.sin(t*6+p+it.ph)*4*sc;if(p)g.lineTo(px,py);else g.moveTo(px,py);}g.stroke();}
-    else self.fish(g,x,y,it.k,sc,t+it.ph);
-    if(it.k===st.ord&&!it.got){g.strokeStyle='rgba(255,224,138,.6)';g.lineWidth=2;g.beginPath();g.arc(x,y,16*sc,0,TAU);g.stroke();}
-    g.globalAlpha=1;}
-  // заказ Петровича
-  var cw=Math.min(W-24,300),cx0=W/2-cw/2,cy0=Math.max(56,H*.09);g.fillStyle='rgba(251,246,234,.95)';K.rr(g,cx0,cy0,cw,52,14);g.fill();
-  if(A&&A.petr){g.save();g.beginPath();g.rect(cx0,cy0,52,52);g.clip();A.petr(g,cx0+26,cy0+78,70,t,{bust:true,face:'talk'});g.restore();}
-  g.fillStyle='#b5541c';g.font='700 17px '+fr.font;g.textAlign='left';g.fillText(L('Заказ:','Order:'),cx0+56,cy0+22);
-  g.fillStyle='#2a2a2a';g.font='800 18px '+fr.font;g.fillText(L2(KIND[st.ord].nn)+'  '+st.got+'/5',cx0+56,cy0+44);
-  self.fish(g,cx0+cw-30,cy0+26,st.ord,1.1,0);
-  function L2(a){return LANG==='en'?a[1]:a[0];}
- }};
-return G;}
-})();
+var G={id:ID,amb:'forest',n:['Сачок в ручье','Net in the brook'],who:L('Петрович','Petrovich'),u:LANG==='en'?['fish','fish','fish']:['малёк','малька','мальков'],mid:17,md:[7,15,22],short:['Черпай только того малька, что заказал Петрович!','Scoop only the fry Petrovich asked for!'],rules:[['Ручей несёт мальков. Петрович заказывает живца — смотри вверху.','The brook carries fry. Petrovich orders bait — see the top.'],['Жми кнопку струи, когда малёк над сачком: ← ↓ → или касание.','Press the stream’s button when the fry is over the net: ← ↓ → or tap.'],['Не та рыбка — −1, пиявка — −2, листик — ничего.','Wrong fish −1, leech −2, leaf — nothing.']],ctl:[['L',L('Слева','Left'),'←'],['B',L('Середина','Middle'),'↓',['ArrowDown','s','S','ы','Ы',' ','Spacebar','ArrowUp','w','W','ц','Ц']],['R',L('Справа','Right'),'→']],tapKey:function(x,y,fr){var i=Math.round((x/fr.W-.25)/.25);i=Math.max(0,Math.min(2,i));return LN[i];},init:function(st,fr){st.t=0;st.sc=0;st.it=[];st.next=.4;st.ord=FISH[Math.floor(fr.rnd(0,3))];st.got=0;st.net=[0,0,0];st.cool=[0,0,0];st.warm=fr.demo?0:1;st.flow=0;st.sinceOrd=0;if(!fr.demo)fr.say(L('Наловим живца? Мне — '+KIND[st.ord].n[0]+'!','Let’s catch some bait! I need '+KIND[st.ord].n[1]+'!'));},speed:function(st,fr){return fr.H*(.3+Math.min(.32,st.t*.013))*(fr.calm?.82:1);},step:function(st,dt,inp,fr){var H=fr.H,T=DUR-st.t,self=this,v=self.speed(st,fr),z=zone(fr);st.t+=dt;st.flow+=v*dt;if(T<=0){fr.end(st.sc,L('Время вышло','Time’s up'));return;}
+st.next-=dt;st.sinceOrd+=dt;if(st.next<=0){st.next=Math.max(.32,.62-st.t*.01)*fr.rnd(.7,1.3);var r=fr.rnd(0,1),k;var wantOrd=st.sinceOrd>1.6;if(wantOrd||r<.45){k=st.ord;st.sinceOrd=0;}else if(r<.72)k=FISH[Math.floor(fr.rnd(0,3))];else if(r<.88)k='leaf';else k='leech';var fl=[];for(var ln0=0;ln0<3;ln0++){var bz=false;for(var b=0;b<st.it.length;b++)if(st.it[b].l===ln0&&st.it[b].y<H*.2)bz=true;if(!bz)fl.push(ln0);}
+if(!fl.length){st.next=.08;if(k===st.ord)st.sinceOrd=2;}else st.it.push({k:k,l:fl[Math.floor(fr.rnd(0,fl.length))],y:-20,ph:fr.rnd(0,6),dx:0,got:0});}
+for(var i=0;i<st.it.length;i++){var it=st.it[i];if(it.got){it.got+=dt;continue;}it.y+=v*dt*(it.k==='leaf'?.85:1);it.dx=Math.sin(st.t*3+it.ph)*fr.W*.012;}
+st.it=st.it.filter(function(it){return it.y<H+30&&it.got<.5;});for(var j=0;j<3;j++){st.net[j]=Math.max(0,st.net[j]-dt);st.cool[j]-=dt;if(fr.edge(LN[j])&&st.cool[j]<=0){st.net[j]=.25;st.cool[j]=.28;fr.snd('splash');var best=null;for(var q=0;q<st.it.length;q++){var o=st.it[q];if(o.got||o.l!==j)continue;if(Math.abs(o.y-z)<H*.055*(fr.calm?1.3:1)&&(!best||Math.abs(o.y-z)<Math.abs(best.y-z)))best=o;}
+if(best){best.got=.01;self.take(st,fr,best);}}}
+fr.score(st.sc+' · '+Math.ceil(Math.max(0,T))+L(' с',' s'));},take:function(st,fr,o){var k=o.k;if(k===st.ord){st.sc++;st.got++;fr.pop('+1');fr.snd('hook');if(st.got>=5){st.got=0;var nk=st.ord;while(nk===st.ord)nk=FISH[Math.floor(fr.rnd(0,3))];st.ord=nk;st.sinceOrd=2;fr.say(L('Хватит! Теперь давай '+KIND[nk].n[0]+'!','Enough! Now get me '+KIND[nk].n[1]+'!'));fr.snd('bell');}}
+else if(k==='leaf'){fr.pop(L('Листик','A leaf'));}
+else{var n=k==='leech'?2:1,why=k==='leech'?L('Фу, пиявка!','Yuck, a leech!'):L('Не та рыбка — мне '+KIND[st.ord].n[0]+'!','Wrong fish — I need '+KIND[st.ord].n[1]+'!');if(st.warm){st.warm=0;fr.say(why+' '+L('Разминка — не считается.','Warm-up — doesn’t count.'));}else{st.sc=Math.max(0,st.sc-n);fr.pop('−'+n);fr.say(why);fr.shake(3);}fr.snd('no');}},bot:function(st,fr,k,mem){var out={},z=zone(fr),H=fr.H,v=this.speed(st,fr);mem.s=mem.s||{};for(var i=0;i<st.it.length;i++){var o=st.it[i];if(o.got)continue;var id=o.ph;var m=mem.s[id];if(!m){m=mem.s[id]={};m.gw=k>=1||fr.rnd(0,1)<.55+.45*k;m.gx=k<1&&o.k!=='leaf'&&fr.rnd(0,1)<(1-k)*.22;m.e=k>=1?0:(fr.rnd(-1,1)+fr.rnd(-1,1))*(.02+.2*(1-k));}
+m.go=o.k===st.ord?m.gw:m.gx;if(m.go&&!m.d&&o.y>=z-v*m.e-H*.01){m.d=1;out[LN[o.l]]=1;}}
+return out;},fish:function(g,x,y,k,s,t){var d=KIND[k];g.save();g.translate(x,y);g.rotate(Math.PI/2+Math.sin(t*8)*.15);g.scale(s*d.w,s);g.fillStyle=d.c;g.beginPath();g.ellipse(0,0,14,4.5,0,0,TAU);g.fill();g.fillStyle=d.c2;g.beginPath();g.ellipse(0,-1.5,12,2,0,0,TAU);g.fill();if(d.sp){g.fillStyle='rgba(60,40,20,.6)';for(var i=-2;i<=2;i++){g.beginPath();g.arc(i*4,0,1.3,0,TAU);g.fill();}}
+g.fillStyle=d.f;g.beginPath();g.moveTo(-12,0);g.lineTo(-19,-5);g.lineTo(-19,5);g.fill();g.beginPath();g.moveTo(-2,3);g.lineTo(-5,7);g.lineTo(2,4);g.fill();g.fillStyle='#111';g.beginPath();g.arc(9,-1,1.3,0,TAU);g.fill();g.restore();},draw:function(g,st,fr){var W=fr.W,H=fr.H,A=fr.art,t=st.t,z=zone(fr),self=this;fr.layer('sk',function(x,w,h){x.fillStyle='#4e7d3a';x.fillRect(0,0,w,h);for(var i=0;i<60;i++){x.fillStyle=i%3?'#5c8f43':'#466f33';x.beginPath();x.arc((i*53)%w,(i*97)%h,6+(i%5)*3,0,TAU);x.fill();}
+var gr=x.createLinearGradient(w*.1,0,w*.9,0);gr.addColorStop(0,'#3a7a8a');gr.addColorStop(.5,'#5aa3b2');gr.addColorStop(1,'#3a7a8a');x.fillStyle=gr;x.beginPath();x.moveTo(w*.1,0);for(var y=0;y<=h;y+=20)x.lineTo(w*.1+Math.sin(y*.02)*8,y);x.lineTo(w*.9+Math.sin(h*.02)*8,h);for(var y2=h;y2>=0;y2-=20)x.lineTo(w*.9+Math.sin(y2*.02+1)*8,y2);x.fill();x.fillStyle='#8c8f86';for(var s=0;s<10;s++){var sx=s%2?w*.09:w*.91,sy=(s*83)%h;x.beginPath();x.ellipse(sx,sy,10+s%3*4,7,0,0,TAU);x.fill();}
+for(var b=0;b<5;b++){var bx=b%2?w*.03:w*.97;if(A&&A.birch)A.birch(x,bx,h*(.2+b*.17),h*.18,0,false);}});g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=1.5;var o2=st.flow%40;for(var ln=0;ln<6;ln++){var sx=W*(.18+ln*.13);for(var y=-40+o2;y<H;y+=40){g.beginPath();g.moveTo(sx,y);g.lineTo(sx+Math.sin(y*.05)*3,y+14);g.stroke();}}
+for(var j=0;j<3;j++){var cx=lx(fr,j),a=st.net[j]>0?1:.45;g.strokeStyle='rgba(255,255,255,'+(a*.8)+')';g.lineWidth=st.net[j]>0?4:2;g.setLineDash(st.net[j]>0?[]:[5,5]);g.beginPath();g.ellipse(cx,z,W*.1,H*.045,0,0,TAU);g.stroke();g.setLineDash([]);if(st.net[j]>0){g.fillStyle='rgba(255,255,255,.18)';g.beginPath();g.ellipse(cx,z,W*.1,H*.045,0,0,TAU);g.fill();g.strokeStyle='#7a5a3a';g.lineWidth=5;g.beginPath();g.moveTo(cx,z+H*.045);g.lineTo(cx+W*.02,H);g.stroke();}
+if(fr.pc){g.globalAlpha=.7;try{MG.keycap(g,cx,z+H*.085,['←','↓','→'][j],22);}catch(e){}g.globalAlpha=1;}}
+for(var i=0;i<st.it.length;i++){var it=st.it[i],x=lx(fr,it.l)+it.dx,y=it.y,sc=Math.min(1.3,W/300);if(it.got){g.globalAlpha=Math.max(0,1-it.got*2);y-=it.got*60;}
+if(it.k==='leaf'){g.save();g.translate(x,y);g.rotate(t*1.5+it.ph);g.fillStyle='#d9a23a';g.beginPath();g.ellipse(0,0,10*sc,5*sc,0,0,TAU);g.fill();g.strokeStyle='#a8741e';g.lineWidth=1;g.beginPath();g.moveTo(-9*sc,0);g.lineTo(9*sc,0);g.stroke();g.restore();}
+else if(it.k==='leech'){g.strokeStyle='#2a2320';g.lineWidth=5*sc;g.lineCap='round';g.beginPath();for(var p=0;p<6;p++){var py=y-10*sc+p*4*sc,px=x+Math.sin(t*6+p+it.ph)*4*sc;if(p)g.lineTo(px,py);else g.moveTo(px,py);}g.stroke();}
+else self.fish(g,x,y,it.k,sc,t+it.ph);if(it.k===st.ord&&!it.got){g.strokeStyle='rgba(255,224,138,.6)';g.lineWidth=2;g.beginPath();g.arc(x,y,16*sc,0,TAU);g.stroke();}
+g.globalAlpha=1;}
+var cw=Math.min(W-24,300),cx0=W/2-cw/2,cy0=Math.max(56,H*.09);g.fillStyle='rgba(251,246,234,.95)';K.rr(g,cx0,cy0,cw,52,14);g.fill();if(A&&A.petr){g.save();g.beginPath();g.rect(cx0,cy0,52,52);g.clip();A.petr(g,cx0+26,cy0+78,70,t,{bust:true,face:'talk'});g.restore();}
+g.fillStyle='#b5541c';g.font='700 17px '+fr.font;g.textAlign='left';g.fillText(L('Заказ:','Order:'),cx0+56,cy0+22);g.fillStyle='#2a2a2a';g.font='800 18px '+fr.font;g.fillText(L2(KIND[st.ord].nn)+'  '+st.got+'/5',cx0+56,cy0+44);self.fish(g,cx0+cw-30,cy0+26,st.ord,1.1,0);function L2(a){return LANG==='en'?a[1]:a[0];}}};return G;}})();

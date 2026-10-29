@@ -1,82 +1,20 @@
-'use strict';
-/* rb2-LOVA №5 «Поленница» (js/mg-polen.js, id 'polen', флаг lov-polen; объявлена MGREC.add в index.html). Движок — «Стопка» Зины / «Пирамида» Гастронома.
-   У бани Петрович складывает дрова: полено ездит над поленницей туда-обратно — жми, чтобы уронить. Что свисает за край — Петрович отпиливает,
-   следующее полено короче. Ровно (свес меньше 6 % ширины) — «Ровно!», полено не укорачивается, после 3 ровных подряд — чуть длиннее. Скорость растёт.
-   Мимо — конец. Первое «мимо» в первых 3 поленьях — разминка (Петрович подаёт новое). Рекорд — поленья в поленнице. Баланс: LK.simMany('polen',k,200). */
-(function(){
-if(typeof MG_REG!=='function'||typeof R2==='undefined')return;
-var ID='polen',KIT=window.LK?Promise.resolve():R2.need('js/mg-lkit.js'),G0=null;
-function g(){return G0||(G0=window.LK.add(def(window.LK)));}
-MG_REG({id:ID,kind:'lov',n:{ru:'Поленница',en:'Woodpile'},icon:'star',
-  run:function(h,o){KIT.then(function(){window.LK.run(g(),h,o);},function(){try{h.quit();}catch(e){}});},
-  bot:function(lv,o){return window.LK?window.LK.bot(g(),lv,o):null;}});
-KIT.then(g,function(){});
-function def(K){
-var TAU=Math.PI*2,LH=.055; // высота полена — доля высоты поля
-var G={id:ID,amb:'yard',n:['Поленница','Woodpile'],who:L('Петрович','Petrovich'),u:LANG==='en'?['log','logs','logs']:['полено','полена','поленьев'],mid:18,md:[9,18,28],
- short:['Жми — полено падает на поленницу!','Tap — the log drops onto the pile!'],
- rules:[['Полено ездит над поленницей. Жми — оно падает.','The log slides over the pile. Tap — it drops.'],
-   ['Что свисает за край — Петрович отпилит: следующее короче.','Overhang gets sawn off: the next log is shorter.'],
-   ['Ровно — длина целая. Мимо — конец.','Drop it neatly — length kept. Miss — game over.']],
- ctl:[['M',L('Жми — уронить','Tap — drop'),L('Пробел','Space')]],
- init:function(st,fr){var W=fr.W;st.t=0;st.sc=0;st.pile=[{x:W*.5,w:W*.56}];st.w=W*.56;st.x=0;st.dir=1;st.drop=null;st.cut=[];st.even=0;st.warm=fr.demo?0:1;st.cam=0;st.camT=0;st.wait=.5;st.bump=0;},
- speed:function(st,fr){return fr.W*(.42+Math.min(.75,st.sc*.035))*(fr.calm?.8:1);},
- step:function(st,dt,inp,fr){var W=fr.W,H=fr.H,lh=H*LH,self=this;st.t+=dt;
-  st.camT=Math.max(0,(st.pile.length-6))*lh;st.cam+=(st.camT-st.cam)*Math.min(1,dt*5);
-  for(var i=0;i<st.cut.length;i++){var c=st.cut[i];c.vy+=H*2*dt;c.y+=c.vy*dt;c.r+=c.vr*dt;}st.cut=st.cut.filter(function(c){return c.y<H+st.cam+80;});
-  fr.score(st.sc+' '+fr.unit(st.sc).replace(/^\d+ /,''));
-  if(st.wait>0){st.wait-=dt;if(st.wait<=0){st.x=st.dir>0?st.w/2:W-st.w/2;}return;}
-  if(st.drop){var d=st.drop;d.vy+=H*3*dt;d.y+=d.vy*dt;if(d.y>=d.ty){self.land(st,fr);}return;}
-  var sp=self.speed(st,fr);st.x+=st.dir*sp*dt;if(st.x>W-st.w/2){st.x=W-st.w/2;st.dir=-1;}if(st.x<st.w/2){st.x=st.w/2;st.dir=1;}
-  if(fr.edge('M')){var top=H*.86-st.pile.length*lh;st.drop={x:st.x,w:st.w,y:top-lh*2.2,vy:0,ty:top};fr.snd('tap');}},
- land:function(st,fr){var W=fr.W,H=fr.H,lh=H*LH,d=st.drop,b=st.pile[st.pile.length-1];st.drop=null;
-  var l=Math.max(d.x-d.w/2,b.x-b.w/2),r=Math.min(d.x+d.w/2,b.x+b.w/2),ov=r-l;
-  if(ov<=0){if(st.warm&&st.sc<3){st.warm=0;fr.say(L('Мимо! Ничего — разминка. Держи другое полено.','Missed! No matter — warm-up. Here’s another log.'));fr.snd('no');st.cut.push({x:d.x,y:d.ty,w:d.w,vy:-H*.2,r:0,vr:3});st.wait=.6;return;}
-    st.cut.push({x:d.x,y:d.ty,w:d.w,vy:-H*.2,r:0,vr:3});fr.snd('brk');fr.shake(6);fr.end(st.sc,L('Полено мимо поленницы','The log missed the pile'));return;}
-  var off=Math.abs(d.x-b.x),nx,nw;
-  if(off<=Math.max(3,d.w*.06)){nx=b.x;nw=d.w;st.even++;fr.pop(L('Ровно!','Neat!'));fr.snd('coin');
-    if(st.even>=3){st.even=0;nw=Math.min(W*.56,nw+W*.04);fr.say(L('Три ровных подряд — держи полено подлиннее!','Three neat in a row — a longer log for you!'));}}
-  else{nx=(l+r)/2;nw=ov;st.even=0;fr.snd('plop');var cx=d.x<b.x?l-(d.w-ov)/2:r+(d.w-ov)/2;st.cut.push({x:cx,y:d.ty,w:d.w-ov,vy:-H*.1,r:0,vr:d.x<b.x?-4:4});fr.shake(2);}
-  st.pile.push({x:nx,w:nw,sh:(st.pile.length*37)%5});st.w=nw;st.sc++;st.warm=st.sc<3?st.warm:0;st.bump=.15;
-  if(st.sc%10===0)fr.say(L(st.sc+' поленьев! Банька будет жаркая.',st.sc+' logs! The sauna will be hot.'));
-  st.wait=.25;st.dir=fr.rnd(0,1)<.5?1:-1;},
- bot:function(st,fr,k,mem){if(st.wait>0||st.drop){mem.e=null;return {};}var b=st.pile[st.pile.length-1],sp=this.speed(st,fr);
-  if(mem.e==null){mem.e=k>=1?0:(fr.rnd(-1,1)+fr.rnd(-1,1))*(.02+.12*(1-k))*(1+st.sc*.02);mem.wt=k>=1?.2:fr.rnd(.15,.7);}
-  if(mem.wt>0){mem.wt-=1/60;return {};}
-  // жмёт, когда центр полена (с учётом ошибки по времени) над поленницей
-  var lead=st.dir*sp*mem.e;if(Math.abs(st.x+lead-b.x)<sp/60*1.2){mem.e=null;return {M:1};}return {};},
- log:function(g,x,y,w,h,fr,birch){var r=h/2;g.fillStyle=birch?'#e9e4d6':'#9a6a3e';K.rr(g,x-w/2,y,w,h,r*.5);g.fill();
-  if(birch){g.fillStyle='#3a3a36';for(var i=0;i<w/14;i++){g.fillRect(x-w/2+6+i*14+((i*7)%5),y+2+((i*3)%Math.max(1,h-6)),5,2);}}
-  else{g.strokeStyle='rgba(60,35,15,.4)';g.lineWidth=1;g.beginPath();g.moveTo(x-w/2+r,y+h*.35);g.lineTo(x+w/2-r,y+h*.35);g.moveTo(x-w/2+r,y+h*.7);g.lineTo(x+w/2-r,y+h*.7);g.stroke();}
-  g.fillStyle='#d9b07a';g.beginPath();g.ellipse(x+w/2-r*.5,y+h/2,r*.55,r*.9,0,0,TAU);g.fill();g.strokeStyle='#a87a48';g.lineWidth=1;g.beginPath();g.ellipse(x+w/2-r*.5,y+h/2,r*.3,r*.5,0,0,TAU);g.stroke();},
- draw:function(g,st,fr){var W=fr.W,H=fr.H,lh=H*LH,A=fr.art,t=st.t,self=this;
-  fr.layer('pl',function(x,w,h){if(A&&A.sky)A.sky(x,w,h,h*.55,'day',0);else{x.fillStyle='#9cc8e6';x.fillRect(0,0,w,h);}
-    var mg=x.createLinearGradient(0,h*.55,0,h*.86);mg.addColorStop(0,'#9cc46a');mg.addColorStop(1,'#7aa34a');x.fillStyle=mg;x.fillRect(0,h*.55,w,h*.32);
-    x.fillStyle='#6f9a8c';x.beginPath();x.moveTo(0,h*.56);for(var hh=0;hh<=10;hh++)x.lineTo(hh*w/10,h*.53-Math.abs(Math.sin(hh*1.3))*h*.03);x.lineTo(w,h*.56);x.fill();
-    for(var f=0;f<w/22+1;f++){x.fillStyle=f%2?'#b48a5a':'#a67c4e';x.beginPath();x.moveTo(f*22,h*.7);x.lineTo(f*22,h*.63);x.lineTo(f*22+8,h*.615);x.lineTo(f*22+16,h*.63);x.lineTo(f*22+16,h*.7);x.fill();}
-    x.fillStyle='#8a6440';x.fillRect(0,h*.64,w,5);x.fillRect(0,h*.68,w,5);
-    // баня: бревенчатая стена справа, окошко, крыша
-    var bx=w*.7,bw=w*.45,by=h*.3;x.fillStyle='#7a4f2c';x.fillRect(bx,by,bw,h*.6);
-    for(var i=0;i<14;i++){x.fillStyle=i%2?'#8a5b33':'#7d522d';x.fillRect(bx,by+i*h*.045,bw,h*.04);x.fillStyle='#5e3b1f';x.beginPath();x.ellipse(bx+3,by+i*h*.045+h*.02,4,h*.02,0,0,TAU);x.fill();}
-    x.fillStyle='#4a3020';x.beginPath();x.moveTo(bx-14,by+4);x.lineTo(bx+bw*.45,by-h*.12);x.lineTo(bx+bw+14,by+4);x.fill();
-    x.fillStyle='#dfeaf0';x.fillRect(bx+bw*.15,by+h*.12,w*.1,h*.07);x.strokeStyle='#4a3020';x.lineWidth=3;x.strokeRect(bx+bw*.15,by+h*.12,w*.1,h*.07);
-    if(A&&A.birch){A.birch(x,w*.12,h*.88,h*.4,0,false);}
-    x.fillStyle='#6d8f3f';x.fillRect(0,h*.86,w,h*.14);x.fillStyle='#5e7d35';x.fillRect(0,h*.86,w,4);
-    if(A&&A.grass)A.grass(x,0,h*.9,w,h*.05,0,'#4f7a32',40,4);});
-  g.save();g.translate(0,st.cam);
-  // основание — колоды
-  g.fillStyle='#6b4a2c';g.fillRect(W*.2,H*.86,W*.06,H*.03);g.fillRect(W*.74,H*.86,W*.06,H*.03);
-  for(var i=0;i<st.pile.length;i++){var p=st.pile[i],y=H*.86-(i+1)*lh;if(i===0)continue;self.log(g,p.x,y+(i===st.pile.length-1?-st.bump*20:0),p.w,lh-1,fr,i%4===0);}
-  var b0=st.pile[0];g.fillStyle='#8a6a48';K.rr(g,b0.x-b0.w/2,H*.86-lh,b0.w,lh-1,4);g.fill();
-  for(var c=0;c<st.cut.length;c++){var q=st.cut[c];g.save();g.translate(q.x,q.y+lh/2);g.rotate(q.r);self.log(g,0,-lh/2,q.w,lh-1,fr,false);g.restore();}
-  if(st.drop)self.log(g,st.drop.x,st.drop.y,st.drop.w,lh-1,fr,st.pile.length%4===0);
-  else if(st.wait<=0){var top=H*.86-st.pile.length*lh-lh*2.2;self.log(g,st.x,top,st.w,lh-1,fr,st.pile.length%4===0);
-    g.strokeStyle='rgba(255,255,255,.35)';g.setLineDash([4,5]);g.lineWidth=1.5;g.beginPath();g.moveTo(st.x-st.w/2,top+lh);g.lineTo(st.x-st.w/2,H*.86-st.pile.length*lh);g.moveTo(st.x+st.w/2,top+lh);g.lineTo(st.x+st.w/2,H*.86-st.pile.length*lh);g.stroke();g.setLineDash([]);}
-  g.restore();
-  st.bump=Math.max(0,st.bump-1/60);
-  if(A&&A.petr)A.petr(g,W*.1,H*.99,Math.min(H*.17,W*.3),t,{arm:st.even>=2?'laugh':'point',face:'smile',look:1});
-  if(A&&A.cat)A.cat(g,W*.9,H*.99,Math.min(H*.08,W*.14),t,{pose:'loaf',look:-1});
-  if(st.warm&&!fr.demo&&st.sc<3){g.fillStyle='rgba(13,22,31,.7)';K.rr(g,W/2-Math.min(W/2-8,165),H*.14,Math.min(W-16,330),30,12);g.fill();g.fillStyle='#fff';g.font='600 17px '+fr.font;g.textAlign='center';g.fillText(L('Разминка — первый промах не в счёт','Warm-up — first miss doesn’t count'),W/2,H*.14+21);}
- }};
-return G;}
-})();
+'use strict';(function(){if(typeof MG_REG!=='function'||typeof R2==='undefined')return;var ID='polen',KIT=window.LK?Promise.resolve():R2.need('js/mg-lkit.js'),G0=null;function g(){return G0||(G0=window.LK.add(def(window.LK)));}
+MG_REG({id:ID,kind:'lov',n:{ru:'Поленница',en:'Woodpile'},icon:'star',run:function(h,o){KIT.then(function(){window.LK.run(g(),h,o);},function(){try{h.quit();}catch(e){}});},bot:function(lv,o){return window.LK?window.LK.bot(g(),lv,o):null;}});KIT.then(g,function(){});function def(K){var TAU=Math.PI*2,LH=.055;var G={id:ID,amb:'yard',n:['Поленница','Woodpile'],who:L('Петрович','Petrovich'),u:LANG==='en'?['log','logs','logs']:['полено','полена','поленьев'],mid:18,md:[9,18,28],short:['Жми — полено падает на поленницу!','Tap — the log drops onto the pile!'],rules:[['Полено ездит над поленницей. Жми — оно падает.','The log slides over the pile. Tap — it drops.'],['Что свисает за край — Петрович отпилит: следующее короче.','Overhang gets sawn off: the next log is shorter.'],['Ровно — длина целая. Мимо — конец.','Drop it neatly — length kept. Miss — game over.']],ctl:[['M',L('Жми — уронить','Tap — drop'),L('Пробел','Space')]],init:function(st,fr){var W=fr.W;st.t=0;st.sc=0;st.pile=[{x:W*.5,w:W*.56}];st.w=W*.56;st.x=0;st.dir=1;st.drop=null;st.cut=[];st.even=0;st.warm=fr.demo?0:1;st.cam=0;st.camT=0;st.wait=.5;st.bump=0;},speed:function(st,fr){return fr.W*(.42+Math.min(.75,st.sc*.035))*(fr.calm?.8:1);},step:function(st,dt,inp,fr){var W=fr.W,H=fr.H,lh=H*LH,self=this;st.t+=dt;st.camT=Math.max(0,(st.pile.length-6))*lh;st.cam+=(st.camT-st.cam)*Math.min(1,dt*5);for(var i=0;i<st.cut.length;i++){var c=st.cut[i];c.vy+=H*2*dt;c.y+=c.vy*dt;c.r+=c.vr*dt;}st.cut=st.cut.filter(function(c){return c.y<H+st.cam+80;});fr.score(st.sc+' '+fr.unit(st.sc).replace(/^\d+ /,''));if(st.wait>0){st.wait-=dt;if(st.wait<=0){st.x=st.dir>0?st.w/2:W-st.w/2;}return;}
+if(st.drop){var d=st.drop;d.vy+=H*3*dt;d.y+=d.vy*dt;if(d.y>=d.ty){self.land(st,fr);}return;}
+var sp=self.speed(st,fr);st.x+=st.dir*sp*dt;if(st.x>W-st.w/2){st.x=W-st.w/2;st.dir=-1;}if(st.x<st.w/2){st.x=st.w/2;st.dir=1;}
+if(fr.edge('M')){var top=H*.86-st.pile.length*lh;st.drop={x:st.x,w:st.w,y:top-lh*2.2,vy:0,ty:top};fr.snd('tap');}},land:function(st,fr){var W=fr.W,H=fr.H,lh=H*LH,d=st.drop,b=st.pile[st.pile.length-1];st.drop=null;var l=Math.max(d.x-d.w/2,b.x-b.w/2),r=Math.min(d.x+d.w/2,b.x+b.w/2),ov=r-l;if(ov<=0){if(st.warm&&st.sc<3){st.warm=0;fr.say(L('Мимо! Ничего — разминка. Держи другое полено.','Missed! No matter — warm-up. Here’s another log.'));fr.snd('no');st.cut.push({x:d.x,y:d.ty,w:d.w,vy:-H*.2,r:0,vr:3});st.wait=.6;return;}
+st.cut.push({x:d.x,y:d.ty,w:d.w,vy:-H*.2,r:0,vr:3});fr.snd('brk');fr.shake(6);fr.end(st.sc,L('Полено мимо поленницы','The log missed the pile'));return;}
+var off=Math.abs(d.x-b.x),nx,nw;if(off<=Math.max(3,d.w*.06)){nx=b.x;nw=d.w;st.even++;fr.pop(L('Ровно!','Neat!'));fr.snd('coin');if(st.even>=3){st.even=0;nw=Math.min(W*.56,nw+W*.04);fr.say(L('Три ровных подряд — держи полено подлиннее!','Three neat in a row — a longer log for you!'));}}
+else{nx=(l+r)/2;nw=ov;st.even=0;fr.snd('plop');var cx=d.x<b.x?l-(d.w-ov)/2:r+(d.w-ov)/2;st.cut.push({x:cx,y:d.ty,w:d.w-ov,vy:-H*.1,r:0,vr:d.x<b.x?-4:4});fr.shake(2);}
+st.pile.push({x:nx,w:nw,sh:(st.pile.length*37)%5});st.w=nw;st.sc++;st.warm=st.sc<3?st.warm:0;st.bump=.15;if(st.sc%10===0)fr.say(L(st.sc+' поленьев! Банька будет жаркая.',st.sc+' logs! The sauna will be hot.'));st.wait=.25;st.dir=fr.rnd(0,1)<.5?1:-1;},bot:function(st,fr,k,mem){if(st.wait>0||st.drop){mem.e=null;return{};}var b=st.pile[st.pile.length-1],sp=this.speed(st,fr);if(mem.e==null){mem.e=k>=1?0:(fr.rnd(-1,1)+fr.rnd(-1,1))*(.02+.12*(1-k))*(1+st.sc*.02);mem.wt=k>=1?.2:fr.rnd(.15,.7);}
+if(mem.wt>0){mem.wt-=1/60;return{};}
+var lead=st.dir*sp*mem.e;if(Math.abs(st.x+lead-b.x)<sp/60*1.2){mem.e=null;return{M:1};}return{};},log:function(g,x,y,w,h,fr,birch){var r=h/2;g.fillStyle=birch?'#e9e4d6':'#9a6a3e';K.rr(g,x-w/2,y,w,h,r*.5);g.fill();if(birch){g.fillStyle='#3a3a36';for(var i=0;i<w/14;i++){g.fillRect(x-w/2+6+i*14+((i*7)%5),y+2+((i*3)%Math.max(1,h-6)),5,2);}}
+else{g.strokeStyle='rgba(60,35,15,.4)';g.lineWidth=1;g.beginPath();g.moveTo(x-w/2+r,y+h*.35);g.lineTo(x+w/2-r,y+h*.35);g.moveTo(x-w/2+r,y+h*.7);g.lineTo(x+w/2-r,y+h*.7);g.stroke();}
+g.fillStyle='#d9b07a';g.beginPath();g.ellipse(x+w/2-r*.5,y+h/2,r*.55,r*.9,0,0,TAU);g.fill();g.strokeStyle='#a87a48';g.lineWidth=1;g.beginPath();g.ellipse(x+w/2-r*.5,y+h/2,r*.3,r*.5,0,0,TAU);g.stroke();},draw:function(g,st,fr){var W=fr.W,H=fr.H,lh=H*LH,A=fr.art,t=st.t,self=this;fr.layer('pl',function(x,w,h){if(A&&A.sky)A.sky(x,w,h,h*.55,'day',0);else{x.fillStyle='#9cc8e6';x.fillRect(0,0,w,h);}
+var mg=x.createLinearGradient(0,h*.55,0,h*.86);mg.addColorStop(0,'#9cc46a');mg.addColorStop(1,'#7aa34a');x.fillStyle=mg;x.fillRect(0,h*.55,w,h*.32);x.fillStyle='#6f9a8c';x.beginPath();x.moveTo(0,h*.56);for(var hh=0;hh<=10;hh++)x.lineTo(hh*w/10,h*.53-Math.abs(Math.sin(hh*1.3))*h*.03);x.lineTo(w,h*.56);x.fill();for(var f=0;f<w/22+1;f++){x.fillStyle=f%2?'#b48a5a':'#a67c4e';x.beginPath();x.moveTo(f*22,h*.7);x.lineTo(f*22,h*.63);x.lineTo(f*22+8,h*.615);x.lineTo(f*22+16,h*.63);x.lineTo(f*22+16,h*.7);x.fill();}
+x.fillStyle='#8a6440';x.fillRect(0,h*.64,w,5);x.fillRect(0,h*.68,w,5);var bx=w*.7,bw=w*.45,by=h*.3;x.fillStyle='#7a4f2c';x.fillRect(bx,by,bw,h*.6);for(var i=0;i<14;i++){x.fillStyle=i%2?'#8a5b33':'#7d522d';x.fillRect(bx,by+i*h*.045,bw,h*.04);x.fillStyle='#5e3b1f';x.beginPath();x.ellipse(bx+3,by+i*h*.045+h*.02,4,h*.02,0,0,TAU);x.fill();}
+x.fillStyle='#4a3020';x.beginPath();x.moveTo(bx-14,by+4);x.lineTo(bx+bw*.45,by-h*.12);x.lineTo(bx+bw+14,by+4);x.fill();x.fillStyle='#dfeaf0';x.fillRect(bx+bw*.15,by+h*.12,w*.1,h*.07);x.strokeStyle='#4a3020';x.lineWidth=3;x.strokeRect(bx+bw*.15,by+h*.12,w*.1,h*.07);if(A&&A.birch){A.birch(x,w*.12,h*.88,h*.4,0,false);}
+x.fillStyle='#6d8f3f';x.fillRect(0,h*.86,w,h*.14);x.fillStyle='#5e7d35';x.fillRect(0,h*.86,w,4);if(A&&A.grass)A.grass(x,0,h*.9,w,h*.05,0,'#4f7a32',40,4);});g.save();g.translate(0,st.cam);g.fillStyle='#6b4a2c';g.fillRect(W*.2,H*.86,W*.06,H*.03);g.fillRect(W*.74,H*.86,W*.06,H*.03);for(var i=0;i<st.pile.length;i++){var p=st.pile[i],y=H*.86-(i+1)*lh;if(i===0)continue;self.log(g,p.x,y+(i===st.pile.length-1?-st.bump*20:0),p.w,lh-1,fr,i%4===0);}
+var b0=st.pile[0];g.fillStyle='#8a6a48';K.rr(g,b0.x-b0.w/2,H*.86-lh,b0.w,lh-1,4);g.fill();for(var c=0;c<st.cut.length;c++){var q=st.cut[c];g.save();g.translate(q.x,q.y+lh/2);g.rotate(q.r);self.log(g,0,-lh/2,q.w,lh-1,fr,false);g.restore();}
+if(st.drop)self.log(g,st.drop.x,st.drop.y,st.drop.w,lh-1,fr,st.pile.length%4===0);else if(st.wait<=0){var top=H*.86-st.pile.length*lh-lh*2.2;self.log(g,st.x,top,st.w,lh-1,fr,st.pile.length%4===0);g.strokeStyle='rgba(255,255,255,.35)';g.setLineDash([4,5]);g.lineWidth=1.5;g.beginPath();g.moveTo(st.x-st.w/2,top+lh);g.lineTo(st.x-st.w/2,H*.86-st.pile.length*lh);g.moveTo(st.x+st.w/2,top+lh);g.lineTo(st.x+st.w/2,H*.86-st.pile.length*lh);g.stroke();g.setLineDash([]);}
+g.restore();st.bump=Math.max(0,st.bump-1/60);if(A&&A.petr)A.petr(g,W*.1,H*.99,Math.min(H*.17,W*.3),t,{arm:st.even>=2?'laugh':'point',face:'smile',look:1});if(A&&A.cat)A.cat(g,W*.9,H*.99,Math.min(H*.08,W*.14),t,{pose:'loaf',look:-1});if(st.warm&&!fr.demo&&st.sc<3){g.fillStyle='rgba(13,22,31,.7)';K.rr(g,W/2-Math.min(W/2-8,165),H*.14,Math.min(W-16,330),30,12);g.fill();g.fillStyle='#fff';g.font='600 17px '+fr.font;g.textAlign='center';g.fillText(L('Разминка — первый промах не в счёт','Warm-up — first miss doesn’t count'),W/2,H*.14+21);}}};return G;}})();

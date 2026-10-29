@@ -1,56 +1,17 @@
-'use strict';
-/* rb2-home-fb — окно «Напишите Петровичу — он читает» (поток HOME, буст 2.0; флаг hfb; доводка letters-2410 LTG-RB 24.10).
-   Грузится по требованию: R2.need из js/rb2-home.js (входы: ⚙ Настройки f:'set', «ℹ Об игре» f:'about', итоги рыбалки раз в 7 дней f:'win';
-   поле S.r2l {w,n,d} — там). Образец — «Написать бабе Зине» (slovo js/zb2-mail-ui.js).
-   События (единый формат писем, разбирает stat/letters.py): mail {a:'open'|'cancel'|'send', f, l:рыбалок всего, на send n:длина, k:тема}
-   + куски fb {m ≤ 40, n, of, k и l — на 1-м куске}. STAT режет строки до 40 — отсюда кусок 40; после — STAT.flush().
-   Текст ≤ 500 знаков; ссылки, голые домены, мессенджеры → [ссылка], почта → [почта], телефоны → #. Не чаще раза в 20 с. */
-(function(){
-if(window.R2HFB)return;
-var MAX=500,CH=40,sentT=0;
-var DOM='(?:[a-z0-9\\u0430-\\u044f\\u0451-]+\\.)+(?:ru|\\u0440\\u0444|com|net|org|su|me|io|info|biz|online|site|club|pro|xyz|ua|by|kz|tv|cc|ly|gg|app|link|to)(?![a-z0-9\\u0430-\\u044f\\u0451])(?:[\\/?#]\\S*)?';
-var RE_URL=/\b(?:https?:\/\/|www\.)\S+/gi,RE_MAIL=/\S+@\S+\.\S+/g,RE_DOM=new RegExp('(^|[^\\w@.\\u0400-\\u04ff])'+DOM,'gi'),
-  RE_MSG=/(?:^|\s)@[a-z0-9_]{4,}/gi,RE_TEL=/(?:\+?\d[\d\s()-]{5,}\d)/g;
-function $(id){return document.getElementById(id);}
+'use strict';(function(){if(window.R2HFB)return;var MAX=500,CH=40,sentT=0;var DOM='(?:[a-z0-9\\u0430-\\u044f\\u0451-]+\\.)+(?:ru|\\u0440\\u0444|com|net|org|su|me|io|info|biz|online|site|club|pro|xyz|ua|by|kz|tv|cc|ly|gg|app|link|to)(?![a-z0-9\\u0430-\\u044f\\u0451])(?:[\\/?#]\\S*)?';var RE_URL=/\b(?:https?:\/\/|www\.)\S+/gi,RE_MAIL=/\S+@\S+\.\S+/g,RE_DOM=new RegExp('(^|[^\\w@.\\u0400-\\u04ff])'+DOM,'gi'),RE_MSG=/(?:^|\s)@[a-z0-9_]{4,}/gi,RE_TEL=/(?:\+?\d[\d\s()-]{5,}\d)/g;function $(id){return document.getElementById(id);}
 function tap(){try{SND.tap();}catch(e){}}
 function T(r,e){try{return L(r,e);}catch(x){return r;}}
-function lv(){try{return +S.sessions||0;}catch(e){return 0;}}
+function lv(){try{return+S.sessions||0;}catch(e){return 0;}}
 function st(a,o){try{var p={a:a},k;for(k in o)if(o[k]!==undefined&&o[k]!=='')p[k]=o[k];STAT.ev('mail',p);}catch(e){}}
-function scrub(t){t=String(t==null?'':t).replace(/[\u0000-\u001f]+/g,' ');
-  t=t.replace(RE_URL,'[ссылка]').replace(RE_MAIL,'[почта]').replace(RE_DOM,'$1[ссылка]').replace(RE_MSG,' [ссылка]').replace(RE_TEL,'#');
-  return t.replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'').slice(0,MAX);}
-function send(txt,o){var t=scrub(txt),i,n=0,l=lv();o=o||{};if(!t)return 0;if(Date.now()-sentT<20e3)return -1;sentT=Date.now();
-  st('send',{f:o.f,l:l,n:t.length,k:o.k||undefined});
-  for(i=0;i<t.length;i+=CH)n++;
-  for(i=0;i<n;i++)try{STAT.ev('fb',i?{m:t.slice(i*CH,i*CH+CH),n:i+1,of:n}:{m:t.slice(0,CH),n:1,of:n,k:o.k||'',l:l});}catch(e){}
-  try{STAT.flush();}catch(e){}
-  return n;}
-var TOP=[['like','👍 '+T('Хвалю','Praise')],['bug','🐞 '+T('Ошибка','Bug')],['idea','💡 '+T('Идея','Idea')],['fish','🐟 '+T('Про рыбу','Fish')]];
-// f — откуда открыли ('about'|'set'|'win'); back — куда вернуться (окно «Об игре», настройки, итоги); без него — просто закрыть
-function open(f,back){if(typeof f==='function'){back=f;f='set';}f=f||'set';var k='',sent=0;
-  try{STAT.screen('pmail');}catch(e){}st('open',{f:f,l:lv()});
-  modal('<div class="r2fb"><h2>✉️ '+T('Напишите Петровичу — он читает','Write to Petrovich — he reads it all')+'</h2>'+
-    '<p class="r2fb-say">'+T('Пиши как есть: что нравится, что не так, какой рыбы не хватает. Всё прочитаю — вечером, у костра, с чаем.',
-      'Tell it like it is: what you like, what’s wrong, which fish is missing. I’ll read it by the campfire with a cup of tea.')+'</p>'+
-    '<div class="r2fb-top">'+TOP.map(function(t){return '<button class="r2fb-chip noenter" data-k="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'+
-    '<textarea id="r2fbTxt" class="r2fb-txt" maxlength="'+MAX+'" rows="5" placeholder="'+T('Петрович, привет! …','Hi Petrovich! …')+'"></textarea>'+
-    '<div class="r2fb-cnt"><small>'+T('Имя, телефон и почту не пиши — я тебя и так по улову узнаю.','Please don’t write your name, phone or e-mail.')+'</small><b id="r2fbCnt">0 / '+MAX+'</b></div>'+
-    '<div class="row"><button class="btn green noenter" id="r2fbSend" disabled>'+T('Отправить','Send')+' ✉️</button><button class="btn" id="mCancel">'+T('Не сейчас','Not now')+'</button></div></div>');
-  var ta=$('r2fbTxt'),bs=$('r2fbSend'),cn=$('r2fbCnt');
-  function upd(){var n=ta.value.replace(/^\s+|\s+$/g,'').length;cn.textContent=Math.min(ta.value.length,MAX)+' / '+MAX;bs.disabled=n<2;}
-  ta.oninput=upd;
-  [].slice.call(document.querySelectorAll('#mcard .r2fb-chip')).forEach(function(b){b.onclick=function(){tap();
-    var on=!b.classList.contains('on');[].slice.call(document.querySelectorAll('#mcard .r2fb-chip')).forEach(function(x){x.classList.remove('on');});
-    if(on)b.classList.add('on');k=on?b.getAttribute('data-k'):'';};});
-  function done(){if(back)back();else hideModal();}
-  $('mCancel').onclick=function(){tap();if(!sent)st('cancel',{f:f,l:lv()});done();};
-  bs.onclick=function(){tap();var r=0;try{r=send(ta.value.slice(0,MAX),{f:f,k:k});}catch(e){r=1;}
-    if(r===-1){try{toast(T('Письмо ещё в пути — подожди минутку','The letter is still on its way — wait a minute'),3000);}catch(e){}return;}
-    if(!r)return;sent=1;try{if(window.R2H&&R2H.fbSent)R2H.fbSent();save();}catch(e){}
-    modal('<div class="r2fb"><h2>'+T('Спасибо, прочитаем!','Thank you, we’ll read it!')+'</h2><p class="r2fb-say">'+
-      T('Митяй отнёс письмо на почту на велосипеде — даже в лужу не уронил. Вечером у костра почитаем. Лично ответить не смогу, но прочитаю всё.',
-        'Mityai took your letter to the post office. Can’t reply personally, but I read every letter.')+'</p>'+
-      '<div class="row"><button class="btn green noenter" id="r2fbOk">'+T('Пожалуйста!','You’re welcome!')+'</button></div></div>');
-    $('r2fbOk').onclick=function(){tap();done();};};}
-window.R2HFB={open:open,send:send,_scrub:scrub,scrub:scrub};
-})();
+function scrub(t){t=String(t==null?'':t).replace(/[\u0000-\u001f]+/g,' ');t=t.replace(RE_URL,'[ссылка]').replace(RE_MAIL,'[почта]').replace(RE_DOM,'$1[ссылка]').replace(RE_MSG,' [ссылка]').replace(RE_TEL,'#');return t.replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'').slice(0,MAX);}
+function send(txt,o){var t=scrub(txt),i,n=0,l=lv();o=o||{};if(!t)return 0;if(Date.now()-sentT<20e3)return-1;sentT=Date.now();st('send',{f:o.f,l:l,n:t.length,k:o.k||undefined});for(i=0;i<t.length;i+=CH)n++;for(i=0;i<n;i++)try{STAT.ev('fb',i?{m:t.slice(i*CH,i*CH+CH),n:i+1,of:n}:{m:t.slice(0,CH),n:1,of:n,k:o.k||'',l:l});}catch(e){}
+try{STAT.flush();}catch(e){}
+return n;}
+var TOP=[['like','👍 '+T('Хвалю','Praise')],['bug','🐞 '+T('Ошибка','Bug')],['idea','💡 '+T('Идея','Idea')],['fish','🐟 '+T('Про рыбу','Fish')]];function open(f,back){if(typeof f==='function'){back=f;f='set';}f=f||'set';var k='',sent=0;try{STAT.screen('pmail');}catch(e){}st('open',{f:f,l:lv()});modal('<div class="r2fb"><h2>✉️ '+T('Напишите Петровичу — он читает','Write to Petrovich — he reads it all')+'</h2>'+'<p class="r2fb-say">'+T('Пиши как есть: что нравится, что не так, какой рыбы не хватает. Всё прочитаю — вечером, у костра, с чаем.','Tell it like it is: what you like, what’s wrong, which fish is missing. I’ll read it by the campfire with a cup of tea.')+'</p>'+'<div class="r2fb-top">'+TOP.map(function(t){return'<button class="r2fb-chip noenter" data-k="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'+'<textarea id="r2fbTxt" class="r2fb-txt" maxlength="'+MAX+'" rows="5" placeholder="'+T('Петрович, привет! …','Hi Petrovich! …')+'"></textarea>'+'<div class="r2fb-cnt"><small>'+T('Имя, телефон и почту не пиши — я тебя и так по улову узнаю.','Please don’t write your name, phone or e-mail.')+'</small><b id="r2fbCnt">0 / '+MAX+'</b></div>'+'<div class="row"><button class="btn green noenter" id="r2fbSend" disabled>'+T('Отправить','Send')+' ✉️</button><button class="btn" id="mCancel">'+T('Не сейчас','Not now')+'</button></div></div>');var ta=$('r2fbTxt'),bs=$('r2fbSend'),cn=$('r2fbCnt');function upd(){var n=ta.value.replace(/^\s+|\s+$/g,'').length;cn.textContent=Math.min(ta.value.length,MAX)+' / '+MAX;bs.disabled=n<2;}
+ta.oninput=upd;[].slice.call(document.querySelectorAll('#mcard .r2fb-chip')).forEach(function(b){b.onclick=function(){tap();var on=!b.classList.contains('on');[].slice.call(document.querySelectorAll('#mcard .r2fb-chip')).forEach(function(x){x.classList.remove('on');});if(on)b.classList.add('on');k=on?b.getAttribute('data-k'):'';};});function done(){if(back)back();else hideModal();}
+$('mCancel').onclick=function(){tap();if(!sent)st('cancel',{f:f,l:lv()});done();};bs.onclick=function(){tap();var r=0;try{r=send(ta.value.slice(0,MAX),{f:f,k:k});}catch(e){r=1;}
+if(r===-1){try{toast(T('Письмо ещё в пути — подожди минутку','The letter is still on its way — wait a minute'),3000);}catch(e){}return;}
+if(!r)return;sent=1;try{if(window.R2H&&R2H.fbSent)R2H.fbSent();save();}catch(e){}
+modal('<div class="r2fb"><h2>'+T('Спасибо, прочитаем!','Thank you, we’ll read it!')+'</h2><p class="r2fb-say">'+
+T('Митяй отнёс письмо на почту на велосипеде — даже в лужу не уронил. Вечером у костра почитаем. Лично ответить не смогу, но прочитаю всё.','Mityai took your letter to the post office. Can’t reply personally, but I read every letter.')+'</p>'+'<div class="row"><button class="btn green noenter" id="r2fbOk">'+T('Пожалуйста!','You’re welcome!')+'</button></div></div>');$('r2fbOk').onclick=function(){tap();done();};};}
+window.R2HFB={open:open,send:send,_scrub:scrub,scrub:scrub};})();

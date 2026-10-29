@@ -1,228 +1,63 @@
-'use strict';
-/* ================= rb2-mgrec — рекорды мини-игр Рыбалки: «Ещё разок», соседи по мосткам, медали недели, «Мостки рекордов» (13.10.2026, поток MGREC;
-   журнал hobby-analytics/release-i/rybak-boost2/logs/MGREC.md). Стартовая часть (под меткой <!-- rb2:MGREC -->, после mg-core.js); окно итогов
-   и экран «Мостки» — лениво js/rb2-mgrec-ui.js (MGREC.load()). Перенос договора ZMGREC Зины (slovo-zb2-lov js/zmg-rec*.js) на оболочку Рыбалки.
-
-   ДОГОВОР ДЛЯ ЛОВКОСТНЫХ (LOVA, LOVB):
-   1) Объявить игру — одна строка под своей меткой в index.html (НЕ грузит файл игры, только говорит «игра есть»):
-        <script>MGREC.add('blinchiki',{f:'js/mg-blinchiki.js',u:['блинчик','блинчика','блинчиков'],mid:12,md:[6,12,20],nm:'Блинчиках'});</script>
-      f — файл игры (грузится по требованию R2.need перед первой партией); u — единица счёта (1, 2, 5), ue — по-английски [1, много]; mid — результат «средней руки»
-      (от него соседи, пока игрок не играл); md — пороги медалей [бронза, серебро, золото] (= ступени 1..3 → монеты MG_RW); max — потолок счёта (необяз.);
-      nm — «в …» для вызова «Петрович побил твой рекорд в Блинчиках». Флаг игры `lov-<id>` объявляет MGREC.add (выключен → игры нет нигде).
-      Id и названия — таблица LOV ниже (менять — только через журнал MGREC).
-   2) Файл игры js/mg-<id>.js: MG_REG({id, kind:'lov', n:{ru,en}, icon, run(host,o), bot?}) — как все игры Двора (договор js/mg-core.js).
-      Конец партии — host.done({score}) (tier можно не давать: ступень = медаль по md; дали tier — берётся ваш). Остальное делает оболочка:
-      запись рекорда, соседи, медаль, окно итогов с большой «↻ Ещё разок» (Enter) и «Хватит» (Esc), монеты 3 партии в день (RECO.mg), событие R2 'mg'.
-      o.again — номер повтора подряд (0 — первая партия): при o.again>0 пропускайте заставку/показ пальцем. o.first=1 — первая партия новичка (Блинчики).
-   3) Своё сохранение игры (если нужно) — ТОЛЬКО S.r2m.x[<id>] (объект ≤60 знаков JSON, числа/короткие строки; слияние облака — максимум).
-      MGREC.x(id) → этот объект (заведёт пустой). Остальные ключи S.r2m — MGREC.
-
-   API: MGREC.ids — порядок открытия; MGREC.info(id) → {id,n,ic,who,...}; MGREC.has(id) — у игры есть рекорды (ловкостная или старая со счётом);
-        MGREC.best(id) — рекорд (0 — не играл); MGREC.put(id,sc) → {rec,first,best,prev,place,of,gap,medal,beat,sc} (зовёт оболочка, не игра);
-        MGREC.table(id) → [{who,nm,sc,me}] — 6 строк (Ты + 5 соседей лиги); MGREC.gap(id) → {who,nm,n}|null; MGREC.medal(id) → 0..3 (медаль недели);
-        MGREC.unit(id,n) → '12 блинчиков'; MGREC.tier(id,sc) → 0..3; MGREC.isOpen(id) — открыта ли ловкостная игроку;
-        MGREC.play(id,{src}) — догрузить файл и сыграть (src: home|win|mostki|first|day); MGREC.load() → обещание ленивой части; MGREC.mostki() — экран «Мостки».
-   Флаги: mgrec (оболочка рекордов и «Ещё разок»), mostki (карточка на главном + место во Дворе), pkrec (Перекур с вызовом в итогах рыбалки),
-          blin1 (Блинчики сами после 1-й рыбалки), lov-<id> (каждая ловкостная). Поле S.r2m. События: R2 'mg' {id,sc,rec,src,tr,t} — после каждой партии.
-   STAT: mg {id,a:'again',n} · mg {id,a:'rec',sc,pl} · mg {a:'show'|'go'|'no',id,src}. Старые WebView (Chrome 92): без новых операторов */
-(function(){
-if(typeof R2==='undefined'||!window.MG||!MG.by||!R2.reg('mgrec',{s:'MGREC',t:'Рекорды мини-игр: соседи, медали, «Ещё разок»'}))return;
-var W=window,MSTK=R2.reg('mostki',{s:'MGREC',t:'«Мостки рекордов»: карточка на главном и место во Дворе'}),
-  PKON=R2.reg('pkrec',{s:'MGREC',t:'«Перекур» с вызовом соседа в итогах рыбалки'}),B1=R2.reg('blin1',{s:'MGREC',t:'Блинчики сами после 1-й рыбалки'});
-function en(){return typeof LANG!=='undefined'&&LANG==='en';}
+'use strict';(function(){if(typeof R2==='undefined'||!window.MG||!MG.by||!R2.reg('mgrec',{s:'MGREC',t:'Рекорды мини-игр: соседи, медали, «Ещё разок»'}))return;var W=window,MSTK=R2.reg('mostki',{s:'MGREC',t:'«Мостки рекордов»: карточка на главном и место во Дворе'}),PKON=R2.reg('pkrec',{s:'MGREC',t:'«Перекур» с вызовом соседа в итогах рыбалки'}),B1=R2.reg('blin1',{s:'MGREC',t:'Блинчики сами после 1-й рыбалки'});function en(){return typeof LANG!=='undefined'&&LANG==='en';}
 function L2(r,e){return en()&&e?e:r;}
 function pl(n,a,b,c){try{return plural(n,a,b,c);}catch(e){return c;}}
 function ev(o){try{STAT.ev('mg',o);}catch(e){}}
 function sv(){try{save();}catch(e){}}
-function esc(t){return String(t==null?'':t).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
+function esc(t){return String(t==null?'':t).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
 function dn(){try{return dayNum();}catch(e){return Math.floor(Date.now()/864e5);}}
-function wk(){return Math.floor((dn()+3)/7);}   // неделя с понедельника
-function rn(s){s=String(s);var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}h=Math.imul(h^h>>>15,1|h);h^=h+Math.imul(h^h>>>7,61|h);return ((h^h>>>14)>>>0)/4294967296;}
-function ses(){return +S.sessions||0;}
-
-/* ---------- 10 ловкостных: порядок открытия, названия, значки, хозяин. pl — место, после открытия которого игра «к месту» (Перекур);
-   gate(z) — доп. условие открытия (после предыдущей ≥ gap дней; за день — не больше одной новой) ---------- */
-var LOV=[
- {id:'blinchiki',n:['Блинчики','Skipping stones'],ic:'💦',who:'LOVA',gap:0,pl:[0,1,2,3,4,5,6]},
- {id:'zabros',   n:['Заброс в окошко','Cast to the gap'],ic:'🎯',who:'LOVA',gap:1,pl:[0,3,4]},
- {id:'blesna',   n:['Проводка блесны','Spoon retrieve'],ic:'🐟',who:'LOVA',gap:2,pl:[2,5,6],need:2},
- {id:'prichal',  n:['Причаль лодку','Moor the boat'],ic:'🛶',who:'LOVB',gap:2,pl:[1,2],need:1},
- {id:'foto',     n:['Фото с трофеем','Trophy photo'],ic:'📷',who:'LOVB',gap:0,pl:[],old:1},  // уже есть (карточка улова); рекорд — LOVB
- {id:'polen',    n:['Поленница','Woodpile'],ic:'🌲',who:'LOVA',gap:2,pl:[]},
- {id:'poplavki', n:['Пять поплавков','Five floats'],ic:'🎣',who:'LOVA',gap:2,pl:[0,3,4]},
- {id:'sachok',   n:['Сачок в ручье','Net in the brook'],ic:'🥅',who:'LOVA',gap:2,pl:[1]},
- {id:'nasos',    n:['Накачай лодку','Pump the boat'],ic:'🐸',who:'LOVB',gap:2,pl:[3]},
- {id:'utyata',   n:['Утята за мамой','Ducklings'],ic:'🦆',who:'LOVB',gap:2,pl:[0,3]}];
-var BY={};LOV.forEach(function(g,i){g.no=101+i;BY[g.id]=g;});
-/* старые игры со счётом — тоже на рекорд и «Ещё разок» (решение владельца в.5); mid — бот «mid», md — ступени игры + золото чуть выше бота «good» (MGREC-tools/bot_old.py, журнал MGREC) */
-var CFG={griby:{u:['гриб','гриба','грибов'],ue:['mushroom','mushrooms'],mid:8,md:[7,12,16],nm:'Грибах'},
-  chist:{u:['рыба','рыбы','рыб'],ue:['fish','fish'],mid:5,md:[4,9,12],nm:'Чистке'},
-  raki:{u:['рак','рака','раков'],ue:['crayfish','crayfish'],mid:7,md:[6,9,11],max:12,nm:'Ночных раках'},
-  nazh:{u:['наживка','наживки','наживок'],ue:['bait','baits'],mid:14,md:[10,18,24],nm:'Наживке'}};
-var OLD={griby:1,chist:1,raki:1,nazh:1};
-var ADD={};   // id → объявлено MGREC.add (игра собрана)
-
-/* ---------- поле S.r2m: r{id:{b рекорд, n партий, p Петрович, pd день Петровича, w лучший недели, wm медаль недели показана}}, wk — неделя,
-   op{id:день открытия}, od — день последнего открытия, nw/nd — «Петрович побил» (игра, день), pk — рыбалка последнего Перекура, pn — «Не сейчас» подряд,
-   b1 — Блинчики после 1-й рыбалки предложены, x{id:{…}} — своё ловкостных ---------- */
-var IDK=/^[a-z]{2,12}$/;
-function num(v){v=+v;return isFinite(v)&&v>0?Math.round(v):0;}
+function wk(){return Math.floor((dn()+3)/7);}
+function rn(s){s=String(s);var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}h=Math.imul(h^h>>>15,1|h);h^=h+Math.imul(h^h>>>7,61|h);return((h^h>>>14)>>>0)/4294967296;}
+function ses(){return+S.sessions||0;}
+var LOV=[{id:'blinchiki',n:['Блинчики','Skipping stones'],ic:'💦',who:'LOVA',gap:0,pl:[0,1,2,3,4,5,6]},{id:'zabros',n:['Заброс в окошко','Cast to the gap'],ic:'🎯',who:'LOVA',gap:1,pl:[0,3,4]},{id:'blesna',n:['Проводка блесны','Spoon retrieve'],ic:'🐟',who:'LOVA',gap:2,pl:[2,5,6],need:2},{id:'prichal',n:['Причаль лодку','Moor the boat'],ic:'🛶',who:'LOVB',gap:2,pl:[1,2],need:1},{id:'foto',n:['Фото с трофеем','Trophy photo'],ic:'📷',who:'LOVB',gap:0,pl:[],old:1},{id:'polen',n:['Поленница','Woodpile'],ic:'🌲',who:'LOVA',gap:2,pl:[]},{id:'poplavki',n:['Пять поплавков','Five floats'],ic:'🎣',who:'LOVA',gap:2,pl:[0,3,4]},{id:'sachok',n:['Сачок в ручье','Net in the brook'],ic:'🥅',who:'LOVA',gap:2,pl:[1]},{id:'nasos',n:['Накачай лодку','Pump the boat'],ic:'🐸',who:'LOVB',gap:2,pl:[3]},{id:'utyata',n:['Утята за мамой','Ducklings'],ic:'🦆',who:'LOVB',gap:2,pl:[0,3]}];var BY={};LOV.forEach(function(g,i){g.no=101+i;BY[g.id]=g;});var CFG={griby:{u:['гриб','гриба','грибов'],ue:['mushroom','mushrooms'],mid:8,md:[7,12,16],nm:'Грибах'},chist:{u:['рыба','рыбы','рыб'],ue:['fish','fish'],mid:5,md:[4,9,12],nm:'Чистке'},raki:{u:['рак','рака','раков'],ue:['crayfish','crayfish'],mid:7,md:[6,9,11],max:12,nm:'Ночных раках'},nazh:{u:['наживка','наживки','наживок'],ue:['bait','baits'],mid:14,md:[10,18,24],nm:'Наживке'}};var OLD={griby:1,chist:1,raki:1,nazh:1,vedro:1,gitara:1,kum:1};var ADD={};var IDK=/^[a-z]{2,12}$/;function num(v){v=+v;return isFinite(v)&&v>0?Math.round(v):0;}
 function fixR(o){var r={};['b','n','p','pd','w','wm'].forEach(function(k){var v=num(o&&o[k]);if(v)r[k]=v;});return r;}
-function fixM(z){if(!z.r||typeof z.r!=='object'||Array.isArray(z.r))z.r={};for(var k in z.r)if(!IDK.test(k))delete z.r[k];else z.r[k]=fixR(z.r[k]);
-  if(!z.op||typeof z.op!=='object'||Array.isArray(z.op))z.op={};for(var j in z.op)if(!IDK.test(j)||!num(z.op[j]))delete z.op[j];
-  if(!z.x||typeof z.x!=='object'||Array.isArray(z.x))z.x={};for(var q in z.x){var s='';try{s=JSON.stringify(z.x[q]);}catch(e){}if(!IDK.test(q)||!z.x[q]||typeof z.x[q]!=='object'||s.length>60)delete z.x[q];}
-  ['wk','od','nd','pk','pn','b1'].forEach(function(k){z[k]=num(z[k]);});if(typeof z.nw!=='string'||z.nw.length>12)z.nw='';}
-R2.field('m',{id:'mgrec',def:function(){return {r:{},wk:0,op:{},od:0,nw:'',nd:0,pk:0,pn:0,b1:0,x:{}};},fix:function(z){fixM(z);},
-  merge:function(a,b){fixM(a);fixM(b);var aw=a.wk,bw=b.wk;
-    for(var k in b.r){var x=a.r[k]||{},y=b.r[k],o={};['b','n','p','pd'].forEach(function(f){var v=Math.max(x[f]||0,y[f]||0);if(v)o[f]=v;});
-      // неделя: лучший недели — из более новой недели (одинаковая — максимум)
-      var w=bw>aw?y.w:bw<aw?x.w:Math.max(x.w||0,y.w||0),wm=bw>aw?y.wm:bw<aw?x.wm:Math.max(x.wm||0,y.wm||0);if(w)o.w=w;if(wm)o.wm=wm;
-      if((y.pd||0)>(x.pd||0)&&y.p)o.p=y.p;else if(x.p)o.p=x.p;a.r[k]=o;}
-    if(bw>aw){for(var j in a.r)if(!(j in b.r)){delete a.r[j].w;delete a.r[j].wm;}a.wk=bw;}
-    for(var q in b.op)if(!a.op[q]||b.op[q]<a.op[q])a.op[q]=b.op[q];a.od=Math.max(a.od,b.od);
-    if(b.nd>a.nd){a.nd=b.nd;a.nw=b.nw;}['pk','pn','b1'].forEach(function(f){a[f]=Math.max(a[f],b[f]);});
-    for(var xk in b.x){if(!a.x[xk])a.x[xk]=b.x[xk];else R2.merge(a.x[xk],b.x[xk]);}}});
-function Z(){var z=S.r2m;if(!z||typeof z!=='object'){z=S.r2m={r:{},wk:0,op:{},od:0,nw:'',nd:0,pk:0,pn:0,b1:0,x:{}};}fixQ(z);return z;}
+function fixM(z){if(!z.r||typeof z.r!=='object'||Array.isArray(z.r))z.r={};for(var k in z.r)if(!IDK.test(k))delete z.r[k];else z.r[k]=fixR(z.r[k]);if(!z.op||typeof z.op!=='object'||Array.isArray(z.op))z.op={};for(var j in z.op)if(!IDK.test(j)||!num(z.op[j]))delete z.op[j];if(!z.x||typeof z.x!=='object'||Array.isArray(z.x))z.x={};for(var q in z.x){var s='';try{s=JSON.stringify(z.x[q]);}catch(e){}if(!IDK.test(q)||!z.x[q]||typeof z.x[q]!=='object'||s.length>60)delete z.x[q];}
+['wk','od','nd','pk','pn','b1'].forEach(function(k){z[k]=num(z[k]);});if(typeof z.nw!=='string'||z.nw.length>12)z.nw='';}
+R2.field('m',{id:'mgrec',def:function(){return{r:{},wk:0,op:{},od:0,nw:'',nd:0,pk:0,pn:0,b1:0,x:{}};},fix:function(z){fixM(z);},merge:function(a,b){fixM(a);fixM(b);var aw=a.wk,bw=b.wk;for(var k in b.r){var x=a.r[k]||{},y=b.r[k],o={};['b','n','p','pd'].forEach(function(f){var v=Math.max(x[f]||0,y[f]||0);if(v)o[f]=v;});var w=bw>aw?y.w:bw<aw?x.w:Math.max(x.w||0,y.w||0),wm=bw>aw?y.wm:bw<aw?x.wm:Math.max(x.wm||0,y.wm||0);if(w)o.w=w;if(wm)o.wm=wm;if((y.pd||0)>(x.pd||0)&&y.p)o.p=y.p;else if(x.p)o.p=x.p;a.r[k]=o;}
+if(bw>aw){for(var j in a.r)if(!(j in b.r)){delete a.r[j].w;delete a.r[j].wm;}a.wk=bw;}
+for(var q in b.op)if(!a.op[q]||b.op[q]<a.op[q])a.op[q]=b.op[q];a.od=Math.max(a.od,b.od);if(b.nd>a.nd){a.nd=b.nd;a.nw=b.nw;}['pk','pn','b1'].forEach(function(f){a[f]=Math.max(a[f],b[f]);});for(var xk in b.x){if(!a.x[xk])a.x[xk]=b.x[xk];else R2.merge(a.x[xk],b.x[xk]);}}});function Z(){var z=S.r2m;if(!z||typeof z!=='object'){z=S.r2m={r:{},wk:0,op:{},od:0,nw:'',nd:0,pk:0,pn:0,b1:0,x:{}};}fixQ(z);return z;}
 var fixedAt=-1;function fixQ(z){if(fixedAt===z)return;fixedAt=z;fixM(z);}
 function newWeek(){var z=Z(),w=wk();if(z.wk!==w){for(var k in z.r){delete z.r[k].w;delete z.r[k].wm;}z.wk=w;}return z;}
 function get(id,mk){var z=newWeek(),t=z.r[id]||(mk?(z.r[id]={}):{});if(OLD[id]){try{var b=+S.mg.rec[id]||0;if(b>(t.b||0))t.b=b;}catch(e){}}return t;}
-
-/* ---------- числа игры ---------- */
 function cf(id){return CFG[id]||{u:['очко','очка','очков'],mid:10,md:[6,10,15]};}
-function has(id){return !!(CFG[id]&&(OLD[id]||ADD[id]&&!R2.off('lov-'+id)));}
+function has(id){return!!(CFG[id]&&(OLD[id]||ADD[id]&&!R2.off('lov-'+id)));}
 function unit(id,n){var c=cf(id),u=c.u;if(en()){u=c.ue||['point','points'];return n+' '+(n===1?u[0]:u[1]);}return n+' '+pl(n,u[0],u[1],u[2]);}
 function tier(id,sc){var m=cf(id).md,k=0;for(var i=0;i<3;i++)if(sc>=m[i])k=i+1;return k;}
 function medal(id){return tier(id,get(id).w||0);}
-
-/* ---------- соседи по мосткам: 5 ботов лиги. Петрович — всегда рядом: обогнал его — на второй день он ставит рекорд на 5–15 % выше твоего
-   (первое место реально, но не навсегда). Остальные — от «средней руки» игры (mid) ×k ×(0,85…1,15) на неделю, к воскресенью +18 %; у каждого «своя» игра ×1,18 — сильный игрок обходит их честно ---------- */
-var NB={petr:['Петрович','Петровича',1],mit:['Дед Митяй','деда Митяя',.9],gen:['Генка-дачник','Генки',.7],kol:['Колька-спиннингист','Кольки',.8],mih:['Михалыч с лодкой','Михалыча',.76]};
-var NBE={petr:'Petrovich',mit:'Grandpa Mityai',gen:'Genka',kol:'Kolka',mih:'Mikhalych'};
-var FAV={mit:{zabros:1,poplavki:1,blinchiki:1},kol:{blesna:1,sachok:1},mih:{prichal:1,nasos:1},gen:{polen:1,griby:1}};
-function nbN(k){return en()?NBE[k]:NB[k][0];}
+var NB={petr:['Петрович','Петровича',1],mit:['Дед Митяй','деда Митяя',.9],gen:['Генка-дачник','Генки',.7],kol:['Колька-спиннингист','Кольки',.8],mih:['Михалыч с лодкой','Михалыча',.76]};var NBE={petr:'Petrovich',mit:'Grandpa Mityai',gen:'Genka',kol:'Kolka',mih:'Mikhalych'};var FAV={mit:{zabros:1,poplavki:1,blinchiki:1},kol:{blesna:1,sachok:1},mih:{prichal:1,nasos:1},gen:{polen:1,griby:1}};function nbN(k){return en()?NBE[k]:NB[k][0];}
 function nbG(k){return en()?NBE[k]:NB[k][1];}
 function cap(id,v){var c=cf(id);return c.max?Math.min(c.max,v):v;}
 function petrUp(id,b){return cap(id,Math.max(Math.round(cf(id).mid*.9),Math.ceil(b*(1.05+.1*rn(id+'|p|'+dn())))+1));}
 function petr(id){var t=get(id,1);if(!t.p){t.p=petrUp(id,0);t.pd=dn();}return t.p;}
-function table(id){var t=get(id),c=cf(id),base=c.mid*(1+.03*((dn()+3)%7)),w=wk(),out=[{who:'petr',nm:nbN('petr'),sc:petr(id)}];
-  ['mit','gen','kol','mih'].forEach(function(k){var f=FAV[k]&&FAV[k][id]?1.18:1,s=Math.round(base*NB[k][2]*f*(.85+.3*rn(id+'|'+k+'|'+w)));out.push({who:k,nm:nbN(k),sc:Math.max(1,cap(id,s))});});
-  out.push({who:'me',nm:L2('Ты','You'),sc:t.b||0,me:true});out.sort(function(a,b){return b.sc-a.sc||(a.me?-1:b.me?1:0);});return out;}
+function table(id){var t=get(id),c=cf(id),base=c.mid*(1+.03*((dn()+3)%7)),w=wk(),out=[{who:'petr',nm:nbN('petr'),sc:petr(id)}];['mit','gen','kol','mih'].forEach(function(k){var f=FAV[k]&&FAV[k][id]?1.18:1,s=Math.round(base*NB[k][2]*f*(.85+.3*rn(id+'|'+k+'|'+w)));out.push({who:k,nm:nbN(k),sc:Math.max(1,cap(id,s))});});out.push({who:'me',nm:L2('Ты','You'),sc:t.b||0,me:true});out.sort(function(a,b){return b.sc-a.sc||(a.me?-1:b.me?1:0);});return out;}
 function place(id){var L=table(id);for(var i=0;i<L.length;i++)if(L[i].me)return i+1;return L.length;}
-function gap(id){var L=table(id),i=place(id)-1;if(!i)return null;var u=L[i-1];return {who:u.who,nm:u.nm,g:nbG(u.who),n:u.sc-L[i].sc+1};}
-/* раз в день: Петрович отыгрывается (на 2-й день после того, как его обогнали); новость — по самой играемой игре */
-var tickD=0;
-function tick(){var d=dn();if(tickD===d)return;tickD=d;var z=newWeek(),best=null;
-  for(var id in z.r){var t=z.r[id];if(!t.b||!t.p||t.b<t.p||d-(t.pd||0)<2)continue;if(!has(id))continue;
-    t.p=petrUp(id,t.b);t.pd=d;if(!best||(t.n||0)>best.n)best={id:id,n:t.n||0};}
-  if(best){z.nw=best.id;z.nd=d;}openTick();}
+function gap(id){var L=table(id),i=place(id)-1;if(!i)return null;var u=L[i-1];return{who:u.who,nm:u.nm,g:nbG(u.who),n:u.sc-L[i].sc+1};}
+var tickD=0;function tick(){var d=dn();if(tickD===d)return;tickD=d;var z=newWeek(),best=null;for(var id in z.r){var t=z.r[id];if(!t.b||!t.p||t.b<t.p||d-(t.pd||0)<2)continue;if(!has(id))continue;t.p=petrUp(id,t.b);t.pd=d;if(!best||(t.n||0)>best.n)best={id:id,n:t.n||0};}
+if(best){z.nw=best.id;z.nd=d;}openTick();}
 function news(){var z=Z();if(!z.nw||dn()-z.nd>3||!has(z.nw))return null;var t=get(z.nw);return t.p>(t.b||0)?{id:z.nw,p:t.p,b:t.b||0}:null;}
-
-/* ---------- запись партии (зовёт оболочка mg-core из finishGame) ---------- */
-function put(id,sc){sc=Math.max(0,Math.round(+sc||0));var t=get(id,1),prev=t.b||0,p0=petr(id),z=Z();
-  t.n=(t.n||0)+1;if(sc>(t.w||0))t.w=sc;if(sc>prev)t.b=sc;
-  var m=tier(id,t.w||0),md=0;if(m>(t.wm||0)){md=m;t.wm=m;}
-  var pl0=place(id),r={rec:sc>prev&&sc>0,first:!prev&&sc>0,best:t.b||0,prev:prev,place:pl0,of:6,gap:gap(id),medal:md,beat:prev<=p0&&sc>p0,sc:sc,id:id};
-  if(r.beat){t.pd=dn();if(z.nw===id)z.nw='';}
-  if(r.rec&&!r.first)ev({id:id,a:'rec',sc:sc,pl:pl0});sv();return r;}
-
-/* ---------- открытие ловкостных по одной: Блинчики — после 1-й рыбалки, дальше — не чаще одной в день, через gap дней после предыдущей,
-   нужное место (need) открыто. Игра не собрана (нет MGREC.add) или выключена флагом — пропускаем, очередь не стоит ---------- */
-function avail(id){var g=BY[id];return !!g&&!!ADD[id]&&!R2.off('lov-'+id)&&!g.old;}
-function isOpen(id){if(!avail(id))return false;try{if(MG.ALL||/[?&]all=1/.test(location.search)&&/[?&]mg=/.test(location.search))return true;}catch(e){}return !!Z().op[id];}
-function openTick(){var z=Z(),d=dn();if(ses()<1)return '';var prev=0;
-  for(var i=0;i<LOV.length;i++){var g=LOV[i];if(!avail(g.id))continue;var o=z.op[g.id];if(o){prev=o;continue;}
-    if(z.od===d&&prev)return '';if(prev&&d-prev<g.gap)return '';if(g.need&&!(S.open&&S.open[g.need]))return '';
-    z.op[g.id]=d;z.od=d;sv();ev({a:'open',id:g.id});return g.id;}
-  return '';}
+function put(id,sc){sc=Math.max(0,Math.round(+sc||0));var t=get(id,1),prev=t.b||0,p0=petr(id),z=Z();t.n=(t.n||0)+1;if(sc>(t.w||0))t.w=sc;if(sc>prev)t.b=sc;var m=tier(id,t.w||0),md=0;if(m>(t.wm||0)){md=m;t.wm=m;}
+var pl0=place(id),r={rec:sc>prev&&sc>0,first:!prev&&sc>0,best:t.b||0,prev:prev,place:pl0,of:6,gap:gap(id),medal:md,beat:prev<=p0&&sc>p0,sc:sc,id:id};if(r.beat){t.pd=dn();if(z.nw===id)z.nw='';}
+if(r.rec&&!r.first)ev({id:id,a:'rec',sc:sc,pl:pl0});sv();return r;}
+function avail(id){var g=BY[id];return!!g&&!!ADD[id]&&!R2.off('lov-'+id)&&!g.old;}
+function isOpen(id){if(!avail(id))return false;try{if(MG.ALL||/[?&]all=1/.test(location.search)&&/[?&]mg=/.test(location.search))return true;}catch(e){}return!!Z().op[id];}
+function openTick(){var z=Z(),d=dn();if(ses()<1)return'';var prev=0;for(var i=0;i<LOV.length;i++){var g=LOV[i];if(!avail(g.id))continue;var o=z.op[g.id];if(o){prev=o;continue;}
+if(z.od===d&&prev)return'';if(prev&&d-prev<g.gap)return'';if(g.need&&!(S.open&&S.open[g.need]))return'';z.op[g.id]=d;z.od=d;sv();ev({a:'open',id:g.id});return g.id;}
+return'';}
 function opened(){var a=[];LOV.forEach(function(g){if(isOpen(g.id))a.push(g.id);});return a;}
-function fresh(){var z=Z(),d=dn(),a=opened();for(var i=a.length-1;i>=0;i--)if(z.op[a[i]]===d&&a[i]!=='blinchiki')return a[i];return '';}
-
-/* ---------- сыграть: файл игры — по требованию ---------- */
+function fresh(){var z=Z(),d=dn(),a=opened();for(var i=a.length-1;i>=0;i--)if(z.op[a[i]]===d&&a[i]!=='blinchiki')return a[i];return'';}
 function load(){return R2.need('js/rb2-mgrec-ui.js').then(function(){return W.MGREC;});}
 function play(id,o){o=o||{};var g=BY[id],f=(ADD[id]||{}).f;ev({a:'go',id:id,src:o.src||''});try{R2.mark('mg:'+id);}catch(e){}
-  var go=function(){try{if(typeof hideModal==='function'&&o.hide)hideModal();}catch(e){}
-    var op={src:o.src||'yard',back:o.back,noBack:o.noBack!==false,cb:o.cb,first:o.first};MG.play(id,op);};
-  if(MG.reg[id]||!f||!g){go();return;}
-  var t=setTimeout(function(){try{toast(L2('Петрович достаёт снасти…','Petrovich is getting his gear…'),2500);}catch(e){}},300);
-  R2.need(f).then(function(){clearTimeout(t);go();},function(){clearTimeout(t);try{toast(L2('Не получилось загрузить — проверьте интернет','Failed to load — check your connection'),3000);}catch(e){}});}
-
-/* ---------- в оболочку mg-core: ловкостные в MG.by (MG_REG их примет), награды — числа ECO (RECO.mg), в момент вызова ---------- */
-function rwLov(){var E=W.RECO&&W.RECO.mg||{};return {c:E.tier||[0,.1,.2,.3],pt:[1,2,3,4],rec:E.rec!=null?E.rec:.05,day:E.paid||3};}
-LOV.forEach(function(g){if(g.old)return;MG.by[g.id]={id:g.id,no:g.no,at:-1,lov:1,n:g.n};
-  try{Object.defineProperty(W.MG_RW,g.id,{get:rwLov,configurable:true,enumerable:true});}catch(e){}});
-
-var api=W.MGREC={v:1,ids:LOV.map(function(g){return g.id;}),LOV:LOV,CFG:CFG,
-  add:function(id,o){if(!BY[id]||!o)return;R2.reg('lov-'+id,{s:BY[id].who,t:'Ловкостная «'+BY[id].n[0]+'»'});ADD[id]=o;if(o.u&&o.md)CFG[id]=o;},
-  cfg:function(id,o){if(o&&o.u&&o.md){var a=ADD[id];CFG[id]=o;if(a&&!a.u){o.f=a.f;ADD[id]=o;}}},
-  x:function(id){var z=Z();return z.x[id]||(z.x[id]={});},
-  info:function(id){return BY[id]||null;},has:has,best:function(id){return get(id).b||0;},put:put,table:table,gap:gap,medal:medal,unit:unit,tier:tier,
-  place:place,petr:petr,isOpen:isOpen,opened:opened,openTick:openTick,news:news,tick:tick,get:get,cf:cf,nbN:nbN,nbG:nbG,play:play,load:load,
-  name:function(id){var g=BY[id];if(g)return L2(g.n[0],g.n[1]);try{return L2(MG.by[id].n[0],MG.by[id].n[1]);}catch(e){return id;}},
-  ic:function(id){var g=BY[id];return g?g.ic:({griby:'🍄',chist:'🐈',raki:'🦞',nazh:'🐛'})[id]||'🎲';},
-  mostki:function(){load().then(function(R){R.mostkiOpen();}).catch(function(){});},
-  mostkiOn:function(){return MSTK;},Z:Z,esc:esc,L2:L2,dn:dn};
-
-/* ---------- карточка «Мостки рекордов» на главном (гнездо home): видна, когда открыта хоть одна ловкостная и сыграна или это 2-я+ рыбалка ---------- */
-var CCSS='.r2mk{display:block;width:100%;box-sizing:border-box;text-align:left;padding:10px 12px;border-radius:16px;border:1px solid var(--inB,rgba(255,255,255,.22));background:var(--in,rgba(255,255,255,.08));color:inherit;font:inherit;cursor:pointer}'+
- '.r2mk-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:17px}.r2mk-h small{font-size:17px;opacity:.75;white-space:nowrap}'+
- '.r2mk-g{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}.r2mk-g span{display:block;text-align:center;padding:5px 2px;border-radius:12px;background:rgba(255,255,255,.08);font-size:17px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
- '.r2pk{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:var(--in,rgba(255,255,255,.08));border:1px solid rgba(255,207,122,.55);text-align:left;font-size:17px;line-height:1.25}'+
- '.r2pk>span:first-child{flex:1 1 100%;min-width:0}.r2pk small{display:block;font-size:17px;color:var(--tx3,rgba(255,255,255,.75))}.r2pk .mgpb{display:flex;gap:8px;width:100%}.r2pk .mgpb .btn{flex:1;margin:0;min-height:48px}'+
- '.r2mk-g b{display:block;font-size:22px;line-height:1.15}.r2mk-g span.nw{box-shadow:inset 0 0 0 2px #ffcf7a}.r2mk-c{margin-top:6px;font-size:17px;line-height:1.3;color:#ffd27a}.r2mk-c.ok{color:inherit;opacity:.8}';
-function ccss(){if(document.getElementById('r2mkCss'))return;var s=document.createElement('style');s.id='r2mkCss';s.textContent=CCSS;document.head.appendChild(s);}
+var go=function(){try{if(typeof hideModal==='function'&&o.hide)hideModal();}catch(e){}
+var op={src:o.src||'yard',back:o.back,noBack:o.noBack!==false,cb:o.cb,first:o.first};MG.play(id,op);};if(MG.reg[id]||!f||!g){go();return;}
+var t=setTimeout(function(){try{toast(L2('Петрович достаёт снасти…','Petrovich is getting his gear…'),2500);}catch(e){}},300);R2.need(f).then(function(){clearTimeout(t);go();},function(){clearTimeout(t);try{toast(L2('Не получилось загрузить — проверьте интернет','Failed to load — check your connection'),3000);}catch(e){}});}
+function rwLov(){var E=W.RECO&&W.RECO.mg||{};return{c:E.tier||[0,.1,.2,.3],pt:[1,2,3,4],rec:E.rec!=null?E.rec:.05,day:E.paid||3};}
+LOV.forEach(function(g){if(g.old)return;MG.by[g.id]={id:g.id,no:g.no,at:-1,lov:1,n:g.n};try{Object.defineProperty(W.MG_RW,g.id,{get:rwLov,configurable:true,enumerable:true});}catch(e){}});var api=W.MGREC={v:1,ids:LOV.map(function(g){return g.id;}),LOV:LOV,CFG:CFG,add:function(id,o){if(!BY[id]||!o)return;R2.reg('lov-'+id,{s:BY[id].who,t:'Ловкостная «'+BY[id].n[0]+'»'});ADD[id]=o;if(o.u&&o.md)CFG[id]=o;},cfg:function(id,o){if(o&&o.u&&o.md){var a=ADD[id];CFG[id]=o;if(a&&!a.u){o.f=a.f;ADD[id]=o;}}},x:function(id){var z=Z();return z.x[id]||(z.x[id]={});},info:function(id){return BY[id]||null;},has:has,best:function(id){return get(id).b||0;},put:put,table:table,gap:gap,medal:medal,unit:unit,tier:tier,place:place,petr:petr,isOpen:isOpen,opened:opened,openTick:openTick,news:news,tick:tick,get:get,cf:cf,nbN:nbN,nbG:nbG,play:play,load:load,name:function(id){var g=BY[id];if(g)return L2(g.n[0],g.n[1]);try{return L2(MG.by[id].n[0],MG.by[id].n[1]);}catch(e){return id;}},ic:function(id){var g=BY[id];return g?g.ic:({griby:'🍄',chist:'🐈',raki:'🦞',nazh:'🐛'})[id]||'🎲';},mostki:function(){load().then(function(R){R.mostkiOpen();}).catch(function(){});},mostkiOn:function(){return MSTK;},Z:Z,esc:esc,L2:L2,dn:dn};var CCSS='.r2mk{display:block;width:100%;box-sizing:border-box;text-align:left;padding:10px 12px;border-radius:16px;border:1px solid var(--inB,rgba(255,255,255,.22));background:var(--in,rgba(255,255,255,.08));color:inherit;font:inherit;cursor:pointer}'+'.r2mk-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:17px}.r2mk-h small{font-size:17px;opacity:.75;white-space:nowrap}'+'.r2mk-g{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}.r2mk-g span{display:block;text-align:center;padding:5px 2px;border-radius:12px;background:rgba(255,255,255,.08);font-size:17px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+'.r2pk{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:var(--in,rgba(255,255,255,.08));border:1px solid rgba(255,207,122,.55);text-align:left;font-size:17px;line-height:1.25}'+'.r2pk>span:first-child{flex:1 1 100%;min-width:0}.r2pk small{display:block;font-size:17px;color:var(--tx3,rgba(255,255,255,.75))}.r2pk .mgpb{display:flex;gap:8px;width:100%}.r2pk .mgpb .btn{flex:1;margin:0;min-height:48px}'+'.r2mk-g b{display:block;font-size:22px;line-height:1.15}.r2mk-g span.nw{box-shadow:inset 0 0 0 2px #ffcf7a}.r2mk-c{margin-top:6px;font-size:17px;line-height:1.3;color:#ffd27a}.r2mk-c.ok{color:inherit;opacity:.8}';function ccss(){if(document.getElementById('r2mkCss'))return;var s=document.createElement('style');s.id='r2mkCss';s.textContent=CCSS;document.head.appendChild(s);}
 function cardOn(){if(!MSTK)return false;var a=opened();if(!a.length)return false;var n=0;a.forEach(function(id){n+=get(id).n||0;});return n>0||ses()>=2;}
-var cardShown=0;
-function cardHtml(){ccss();tick();var a=opened(),nw=news(),fr=fresh(),z=Z(),pls=[];
-  a.forEach(function(id){var p=place(id);if(get(id).b)pls.push(p);});
-  var avg=pls.length?Math.round(pls.reduce(function(s,x){return s+x;},0)/pls.length):0;
-  var g='';a.slice(-4).forEach(function(id){var t=get(id),md=medal(id);
-    g+='<span'+(id===fr||nw&&nw.id===id?' class="nw"':'')+' title="'+esc(api.name(id))+'"><b>'+BY[id].ic+'</b>'+(t.b?t.b+(md?' '+['','🥉','🥈','🥇'][md]:''):'—')+'</span>';});
-  var c='';
-  if(nw)c='<div class="r2mk-c">'+esc(nbN('petr'))+L2(' побил твой рекорд в «',' beat your record in «')+esc(api.name(nw.id))+'»: '+nw.p+L2(' против ',' vs ')+nw.b+' → '+L2('Ответить','Answer')+'</div>';
-  else if(fr)c='<div class="r2mk-c">'+L2('Новое на мостках: «','New on the pier: «')+esc(api.name(fr))+'» → '+L2('Попробовать','Try it')+'</div>';
-  else{var pick='';a.forEach(function(id){if(!pick&&!get(id).b)pick=id;});
-    if(pick)c='<div class="r2mk-c">'+esc(api.name(pick))+L2(': ещё не пробовал. Петрович: «Спорим, не побьёшь?»',': not tried yet')+'</div>';
-    else{var gp=null,gi='';a.forEach(function(id){var x=gap(id);if(x&&(!gp||x.n<gp.n)){gp=x;gi=id;}});
-      c=gp?'<div class="r2mk-c">'+L2('До ','To beat ')+esc(gp.g)+L2(' в «',' in «')+esc(api.name(gi))+'» — '+esc(unit(gi,gp.n))+'</div>':'<div class="r2mk-c ok">'+L2('Ты первый на всех мостках!','You lead on every pier!')+'</div>';}}
-  if(!cardShown){cardShown=1;ev({a:'show',id:nw?nw.id:fr||'',src:'home'});}
-  return '<button type="button" class="r2mk noenter" data-a="mk"><div class="r2mk-h"><b>🏆 '+L2('Мостки рекордов','Record pier')+'</b><small>'+(avg?L2('неделя · ','week · ')+avg+L2('-й из 6','th of 6'):L2('соседи ждут','neighbours wait'))+'</small></div><div class="r2mk-g">'+g+'</div>'+c+'</button>';}
-R2.slot('home','mostki',{pri:44,when:function(){try{return cardOn();}catch(e){return false;}},html:cardHtml,
-  bind:function(el){var b=el.querySelector('[data-a=mk]');if(!b)return;b.onclick=function(){try{SND.tap();}catch(e){}var nw=news(),fr=fresh();
-    if(nw)play(nw.id,{src:'home'});else if(fr)play(fr,{src:'home'});else api.mostki();};}});
-
-/* ---------- первая ловкостная: Блинчики после 1-й рыбалки (строка итогов, выше прочих; одна партия с показом пальцем) ---------- */
-function b1When(c){var g=c&&c.g;if(!B1||!g||g.tourn||g.guest||ses()!==1)return false;openTick();var z=Z();if(!isOpen('blinchiki'))return false;
-  if(g._b1===undefined){g._b1=!z.b1&&!(get('blinchiki').n);if(g._b1){z.b1=1;sv();ev({a:'show',id:'blinchiki',src:'first'});}}return !!g._b1;}
-R2.slot('res','blin1',{pri:55,when:b1When,
-  html:function(){ccss();return '<div class="mgp win r2pk"><span>💦 '+L2('Петрович: «Пока сматываю удочки — кинем блинчики?»','Petrovich: «While I pack up — skip some stones?»')+'<small>'+L2('полминуты, один палец','half a minute, one finger')+'</small></span>'+
-    '<span class="mgpb"><button type="button" class="btn green noenter" data-a="go">💦 '+L2('Кинуть','Throw')+'</button></span></div>';},
-  bind:function(el){var b=el.querySelector('[data-a=go]');
-    // итоги первых рыбалок ui-first прячет в «Подробнее» — эту строку выносим над гнёздами (класс ui-keep)
-    try{var rs=el.parentNode;if(rs&&rs.id==='rSlots'&&rs.parentNode){el.classList.add('ui-keep');rs.parentNode.insertBefore(el,rs);}}catch(e){}
-    if(b)b.onclick=function(){try{SND.tap();}catch(e){}
-    play('blinchiki',{src:'first',first:1,cb:function(r){if(!r)return;var p=el.querySelector('.mgp');if(p)p.innerHTML='<span>✓ '+L2('Блинчики','Stones')+': <b>'+esc(unit('blinchiki',r.score||0))+'</b><small>'+L2('рекорды — на главном, «Мостки рекордов»','records — on the main screen')+'</small></span>';}});};}});
-
-/* ---------- «Перекур» с вызовом: раз в 2–3 рыбалки — ловкостная к месту, со строкой «Петрович: мой рекорд — 19, твой — 16» ---------- */
-function pkPick(g){if(!PKON||!g||g.tourn||g.guest||g.quit)return '';if(g._pkr!==undefined)return g._pkr;g._pkr='';var z=Z(),n=ses();
-  if(n<2||g._b1)return '';var gp=(z.pn>=2?5:2)+(n%2);if(n-z.pk<gp)return '';
-  var a=opened();if(!a.length)return '';var pi=+g.pi||0,fit=a.filter(function(id){return BY[id].pl.indexOf(pi)>=0;}),L=fit.length?fit:a;
-  var id=L[Math.floor(n/2)%L.length];g._pkr=id;g._pk='';z.pk=n;sv();ev({a:'show',id:id,src:'win'});return id;}
-R2.slot('res','pkrec',{pri:32,ad:true,when:function(c){try{return !!pkPick(c&&c.g);}catch(e){return false;}},
-  html:function(c){var id=c.g._pkr,t=get(id),p=petr(id),me=t.b||0,nm=esc(api.name(id));
-    var line=me?(me>=p?L2('Петрович: «Твой рекорд — ','Petrovich: «Your record — ')+me+L2('. Ну-ка, ещё раз?»','. Again?»'):L2('Петрович: «Мой рекорд — ','Petrovich: «My record — ')+p+L2(', твой — ',', yours — ')+me+'»'):L2('Петрович: «Спорим, больше ','Petrovich: «Bet you can\'t beat ')+p+L2(' не сделаешь?»','»');
-    ccss();return '<div class="mgp win r2pk"><span>'+BY[id].ic+' '+L2('Перекур: ','Break: ')+'<b>«'+nm+'»</b><small>'+line+'</small></span>'+
-      '<span class="mgpb"><button type="button" class="btn green noenter" data-a="go">▶ '+L2('Ответить','Play')+'</button><button type="button" class="btn noenter" data-a="no">'+L2('Не сейчас','Not now')+'</button></span></div>';},
-  bind:function(el,c){var id=c.g._pkr,b=el.querySelector('[data-a=go]'),x=el.querySelector('[data-a=no]');
-    if(x)x.onclick=function(){try{SND.tap();}catch(e){}Z().pn++;sv();ev({a:'no',id:id,src:'win'});el.style.visibility='hidden';};
-    if(b)b.onclick=function(){try{SND.tap();}catch(e){}Z().pn=0;sv();play(id,{src:'win',cb:function(r){if(!r)return;var p=el.querySelector('.mgp');
-      if(p)p.innerHTML='<span>✓ '+L2('Перекур удался!','Nice break!')+' <b>«'+esc(api.name(id))+'»</b><small>'+L2('рекорд: ','record: ')+esc(unit(id,get(id).b||0))+'</small></span>';}});};}});
-
-/* ---------- «Мостки» во Дворе: кнопка в верхней полосе (перед «Книгой») ---------- */
-R2.on('dvor',function(){if(!opened().length)return;var top=document.querySelector('.mg-dv .mg-dtop'),bk=top&&top.querySelector('.mg-bk');if(!top||top.querySelector('.r2mkb'))return;
-  if(!document.getElementById('r2mkbCss')){var s=document.createElement('style');s.id='r2mkbCss';s.textContent='.r2mkb{pointer-events:auto;height:52px;margin-right:8px;padding:0 14px;border-radius:16px;border:1px solid rgba(255,255,255,.25);background:rgba(16,26,36,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;font:700 17px var(--font,system-ui,sans-serif);cursor:pointer;flex:none;white-space:nowrap}@media (max-width:400px){.r2mkb span{display:none}}';document.head.appendChild(s);}
-  var b=document.createElement('button');b.type='button';b.className='r2mkb noenter';b.innerHTML='🏆<span> '+L2('Мостки','Pier')+'</span>';
-  b.onclick=function(e){e.stopPropagation();try{SND.tap();}catch(x){}ev({a:'go',id:'',src:'mostki'});api.mostki();};if(bk)top.insertBefore(b,bk);else top.appendChild(b);},'mostki');
-
-R2.on('home',function(){try{tick();}catch(e){}},'mgrec');
-R2.on('end',function(){try{openTick();}catch(e){}},'mgrec');
-})();
+var cardShown=0;function cardHtml(){ccss();tick();var a=opened(),nw=news(),fr=fresh(),z=Z(),pls=[];a.forEach(function(id){var p=place(id);if(get(id).b)pls.push(p);});var avg=pls.length?Math.round(pls.reduce(function(s,x){return s+x;},0)/pls.length):0;var g='';a.slice(-4).forEach(function(id){var t=get(id),md=medal(id);g+='<span'+(id===fr||nw&&nw.id===id?' class="nw"':'')+' title="'+esc(api.name(id))+'"><b>'+BY[id].ic+'</b>'+(t.b?t.b+(md?' '+['','🥉','🥈','🥇'][md]:''):'—')+'</span>';});var c='';if(nw)c='<div class="r2mk-c">'+esc(nbN('petr'))+L2(' побил твой рекорд в «',' beat your record in «')+esc(api.name(nw.id))+'»: '+nw.p+L2(' против ',' vs ')+nw.b+' → '+L2('Ответить','Answer')+'</div>';else if(fr)c='<div class="r2mk-c">'+L2('Новое на мостках: «','New on the pier: «')+esc(api.name(fr))+'» → '+L2('Попробовать','Try it')+'</div>';else{var pick='';a.forEach(function(id){if(!pick&&!get(id).b)pick=id;});if(pick)c='<div class="r2mk-c">'+esc(api.name(pick))+L2(': ещё не пробовал. Петрович: «Спорим, не побьёшь?»',': not tried yet')+'</div>';else{var gp=null,gi='';a.forEach(function(id){var x=gap(id);if(x&&(!gp||x.n<gp.n)){gp=x;gi=id;}});c=gp?'<div class="r2mk-c">'+L2('До ','To beat ')+esc(gp.g)+L2(' в «',' in «')+esc(api.name(gi))+'» — '+esc(unit(gi,gp.n))+'</div>':'<div class="r2mk-c ok">'+L2('Ты первый на всех мостках!','You lead on every pier!')+'</div>';}}
+if(!cardShown){cardShown=1;ev({a:'show',id:nw?nw.id:fr||'',src:'home'});}
+return'<button type="button" class="r2mk noenter" data-a="mk"><div class="r2mk-h"><b>🏆 '+L2('Мостки рекордов','Record pier')+'</b><small>'+(avg?L2('неделя · ','week · ')+avg+L2('-й из 6','th of 6'):L2('соседи ждут','neighbours wait'))+'</small></div><div class="r2mk-g">'+g+'</div>'+c+'</button>';}
+R2.slot('home','mostki',{pri:44,when:function(){try{return cardOn();}catch(e){return false;}},html:cardHtml,bind:function(el){var b=el.querySelector('[data-a=mk]');if(!b)return;b.onclick=function(){try{SND.tap();}catch(e){}var nw=news(),fr=fresh();if(nw)play(nw.id,{src:'home'});else if(fr)play(fr,{src:'home'});else api.mostki();};}});function b1When(c){var g=c&&c.g;if(!B1||!g||g.tourn||g.guest||ses()!==1)return false;openTick();var z=Z();if(!isOpen('blinchiki'))return false;if(g._b1===undefined){g._b1=!z.b1&&!(get('blinchiki').n);if(g._b1){z.b1=1;sv();ev({a:'show',id:'blinchiki',src:'first'});}}return!!g._b1;}
+R2.slot('res','blin1',{pri:55,when:b1When,html:function(){ccss();return'<div class="mgp win r2pk"><span>💦 '+L2('Петрович: «Пока сматываю удочки — кинем блинчики?»','Petrovich: «While I pack up — skip some stones?»')+'<small>'+L2('полминуты, один палец','half a minute, one finger')+'</small></span>'+'<span class="mgpb"><button type="button" class="btn green noenter" data-a="go">💦 '+L2('Кинуть','Throw')+'</button></span></div>';},bind:function(el){var b=el.querySelector('[data-a=go]');try{var rs=el.parentNode;if(rs&&rs.id==='rSlots'&&rs.parentNode){el.classList.add('ui-keep');rs.parentNode.insertBefore(el,rs);}}catch(e){}
+if(b)b.onclick=function(){try{SND.tap();}catch(e){}
+play('blinchiki',{src:'first',first:1,cb:function(r){if(!r)return;var p=el.querySelector('.mgp');if(p)p.innerHTML='<span>✓ '+L2('Блинчики','Stones')+': <b>'+esc(unit('blinchiki',r.score||0))+'</b><small>'+L2('рекорды — на главном, «Мостки рекордов»','records — on the main screen')+'</small></span>';}});};}});function pkPick(g){if(!PKON||!g||g.tourn||g.guest||g.quit)return'';if(g._pkr!==undefined)return g._pkr;g._pkr='';var z=Z(),n=ses();if(n<2||g._b1)return'';var gp=(z.pn>=2?5:2)+(n%2);if(n-z.pk<gp)return'';var a=opened();if(!a.length)return'';var pi=+g.pi||0,fit=a.filter(function(id){return BY[id].pl.indexOf(pi)>=0;}),L=fit.length?fit:a;var id=L[Math.floor(n/2)%L.length];g._pkr=id;g._pk='';z.pk=n;sv();ev({a:'show',id:id,src:'win'});return id;}
+R2.slot('res','pkrec',{pri:32,ad:true,when:function(c){try{return!!pkPick(c&&c.g);}catch(e){return false;}},html:function(c){var id=c.g._pkr,t=get(id),p=petr(id),me=t.b||0,nm=esc(api.name(id));var line=me?(me>=p?L2('Петрович: «Твой рекорд — ','Petrovich: «Your record — ')+me+L2('. Ну-ка, ещё раз?»','. Again?»'):L2('Петрович: «Мой рекорд — ','Petrovich: «My record — ')+p+L2(', твой — ',', yours — ')+me+'»'):L2('Петрович: «Спорим, больше ','Petrovich: «Bet you can\'t beat ')+p+L2(' не сделаешь?»','»');ccss();return'<div class="mgp win r2pk"><span>'+BY[id].ic+' '+L2('Перекур: ','Break: ')+'<b>«'+nm+'»</b><small>'+line+'</small></span>'+'<span class="mgpb"><button type="button" class="btn green noenter" data-a="go">▶ '+L2('Ответить','Play')+'</button><button type="button" class="btn noenter" data-a="no">'+L2('Не сейчас','Not now')+'</button></span></div>';},bind:function(el,c){var id=c.g._pkr,b=el.querySelector('[data-a=go]'),x=el.querySelector('[data-a=no]');if(x)x.onclick=function(){try{SND.tap();}catch(e){}Z().pn++;sv();ev({a:'no',id:id,src:'win'});el.style.visibility='hidden';};if(b)b.onclick=function(){try{SND.tap();}catch(e){}Z().pn=0;sv();play(id,{src:'win',cb:function(r){if(!r)return;var p=el.querySelector('.mgp');if(p)p.innerHTML='<span>✓ '+L2('Перекур удался!','Nice break!')+' <b>«'+esc(api.name(id))+'»</b><small>'+L2('рекорд: ','record: ')+esc(unit(id,get(id).b||0))+'</small></span>';}});};}});R2.on('dvor',function(){if(!opened().length)return;var top=document.querySelector('.mg-dv .mg-dtop'),bk=top&&top.querySelector('.mg-bk');if(!top||top.querySelector('.r2mkb'))return;if(!document.getElementById('r2mkbCss')){var s=document.createElement('style');s.id='r2mkbCss';s.textContent='.r2mkb{pointer-events:auto;height:52px;margin-right:8px;padding:0 14px;border-radius:16px;border:1px solid rgba(255,255,255,.25);background:rgba(16,26,36,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;font:700 17px var(--font,system-ui,sans-serif);cursor:pointer;flex:none;white-space:nowrap}@media (max-width:400px){.r2mkb span{display:none}}';document.head.appendChild(s);}
+var b=document.createElement('button');b.type='button';b.className='r2mkb noenter';b.innerHTML='🏆<span> '+L2('Мостки','Pier')+'</span>';b.onclick=function(e){e.stopPropagation();try{SND.tap();}catch(x){}ev({a:'go',id:'',src:'mostki'});api.mostki();};if(bk)top.insertBefore(b,bk);else top.appendChild(b);},'mostki');R2.on('home',function(){try{tick();}catch(e){}},'mgrec');R2.on('end',function(){try{openTick();}catch(e){}},'mgrec');})();
