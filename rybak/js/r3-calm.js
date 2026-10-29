@@ -1,0 +1,10 @@
+(function(){'use strict';if(typeof R3!=='object'||!R3.on)return;if(!R3.reg('calm',{s:'R3-NBR',t:'спокойный режим неловкому: после 2 сходов крупной подряд'}))return;var row=0,due=0,MAXN=3;function Z(){try{return S.r3z&&typeof S.r3z==='object'?S.r3z:null;}catch(e){return null;}}
+function isCalm(){try{return calm();}catch(e){return!!(S&&S.calm);}}
+function can(){var z=Z();if(!z||isCalm())return false;try{if(typeof ses2==='function'&&!ses2())return false;}catch(e){}
+try{if(R3.day()===1)return false;}catch(e){}return(z.cq|0)<MAXN&&z.cd!==R3.dk();}
+function wrap(){if(typeof fightEnd!=='function'||fightEnd._calm)return;var fe=fightEnd;fightEnd=function(res){var big=false,zor=false;try{zor=!!(G&&G.zor&&!G.tourn&&!G.cup);var pk=G&&G.pk,f=pk&&pk.f;big=!!(f&&!pk.junk&&(G.ft&&G.ft.zk&&G.ft.zk.troph||pk.w>=f.w[1]*.4));}catch(e){}
+var r=fe.apply(this,arguments);try{if(zor&&big){if(res==='ok')row=0;else{row++;if(row>=2&&can()){due=1;row=0;}}}else if(zor&&res==='ok')row=0;}catch(e){}
+return r;};fightEnd._calm=1;}
+function ask(){if(!due)return;try{if(modalOn||G)return;}catch(e){}if(!can()){due=0;return;}due=0;var z=Z();z.cq=(z.cq|0)+1;z.cd=R3.dk();try{save();}catch(e){}
+R3.ev('calm',{k:'ask',n:z.cq});try{modal('<h2>🎣 Спокойный режим</h2><p><b>Петрович:</b> «Крупная пошла, а сходит — обидно. Давай спокойнее: рыба тянет мягче, сходит реже, без рывков на экране. '+'Мастерство никуда не денется — переключить обратно можно в настройках».</p><div class="row"><button class="btn green noenter" id="r3cmY">Включить</button><button class="btn" id="r3cmN">Не надо</button></div>');document.getElementById('r3cmY').onclick=function(){S.calm=true;try{save();applyCalm();}catch(e){}hideModal();R3.ev('calm',{k:'yes'});try{toast('Спокойный режим включён. Выключить — ⚙ «Настройки»',3200);}catch(e){}};document.getElementById('r3cmN').onclick=function(){hideModal();R3.ev('calm',{k:'no'});};}catch(e){}}
+wrap();R3.sub('boot',wrap,'calm');R3.sub('home',function(){if(due)setTimeout(ask,1200);},'calm');window.R3CALM={due:function(){return due;},row:function(){return row;},ask:ask,_set:function(n){row=n;}};})();

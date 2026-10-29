@@ -1,0 +1,8 @@
+(function(){'use strict';if(typeof R3!=='object'||!R3.on||typeof afterRes!=='function')return;if(!R3.reg('first',{s:'R3-CORE',t:'первый день: итоги 1–3-й рыбалки — только «Ещё раз»; «Завтра на берегу» — после 4-й'}))return;var $=function(id){return document.getElementById(id);};var N_SIMPLE=3,N_TMRW=4;function day1(){try{return!R3.off('first')&&!S.r3c.v&&R3.day()===1&&!window.__demo;}catch(e){return false;}}
+function plain(g){return!!g&&!g.tourn&&!g.guest&&!g.cup;}
+function ses(){try{return+S.sessions||0;}catch(e){return 0;}}
+function simplify(g){if(!day1()||!plain(g)||ses()>N_SIMPLE)return;var card=$('mcard');if(!card||!$('rWin'))return;var hide=['#rMap','#rGoal','#rSlots','.r2pk','[data-trip]','.ui-trip'];hide.forEach(function(s){card.querySelectorAll(s).forEach(function(e){e.style.display='none';e.setAttribute('data-r3f','1');});});var ra=$('rAgain');if(ra){ra.classList.add('green','ui-big');var row=ra.parentNode;if(row&&row.classList.contains('row2'))row.classList.add('r3f-one');}
+R3.ev('f1',{n:ses(),k:'show'});}
+var fi=finish;finish=function(){var g=G;var r=fi.apply(this,arguments);try{simplify(g);}catch(e){}return r;};var ar=afterRes;afterRes=function(g,where){var self=this,args=arguments;try{if(day1()&&plain(g)){if(ses()<N_TMRW&&where==='again'&&S.tips&&!S.tips.tmrw){S.tips.tmrw=1;try{return ar.apply(self,args);}finally{delete S.tips.tmrw;}}
+var T=window.__upTmr;if(ses()>=N_TMRW&&T&&S.tips&&!S.tips.tmrw&&PLAT==='vk'&&(typeof ses2!=='function'||ses2())&&(where==='again'||where==='map')){R3.ev('f1',{n:ses(),k:'tmrw'});hideModal();T.show(function(){ar.apply(self,args);});return;}}}catch(e){try{console.warn('r3 first',e);}catch(x){}}
+return ar.apply(self,args);};window.R3F={day1:day1};})();

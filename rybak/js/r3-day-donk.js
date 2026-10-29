@@ -1,0 +1,40 @@
+(function(){'use strict';if(typeof R3!=='object'||!R3.on||!window.R3D)return;if(!R3.reg('day.donk',{s:'R3-DAY',t:'донки/жерлицы на ночь — утром колокольчик и улов (вещь «Донки»)'}))return;var D=R3D,H=36e5,ID='day.donk';function T(r){return r;}
+function st0(){try{return S.r3d;}catch(e){return null;}}
+function ice(){try{return!!(window.RSEZ&&RSEZ.ice&&RSEZ.ice(0));}catch(e){return false;}}
+function word(){return ice()?{n:'Жерлицы',a:'жерлицы',ic:'🚩'}:{n:'Донки',a:'донки',ic:'🔔'};}
+function readyAt(t){var h=D.hour(t);if(h>=14||h<5){var d=new Date(t);if(h>=5)d.setDate(d.getDate()+1);d.setHours(5,0,0,0);return Math.max(d.getTime(),t+4*H);}return t+8*H;}
+function club(){try{return S.r3k&&S.r3k.to>D.now();}catch(e){return false;}}
+function old(){try{return!!(S.awayD&&window.__away);}catch(e){return false;}}
+function st(){var d=st0();if(!d)return'free';if(old())return'old';if(!d.t||d.s)return'free';return D.now()>=readyAt(d.t)?'ready':'wait';}
+function canSet(){return st()==='free'&&R3.isOpen('bell');}
+function placeDef(){try{var p=S.awayP;if(typeof p==='number'&&S.open[p]&&p!==7)return p;}catch(e){}try{return topPlace();}catch(e){return 0;}}
+function EK(){try{var E=window.R3E;if(E&&E.on()&&E.donka)return E.donka;}catch(e){}return null;}
+function maxN(){var k=EK();return club()?(k&&k.club||4):(k&&k.n||3);}
+function cap(){var k=EK();try{return k?R3E.c(k.maxR||1,10):0;}catch(e){return 0;}}
+function catchOf(d){var out=[];try{var R=rng(Math.floor(d.t/1000)+d.p*131+7),max=maxN(),n=max,bait=ice()?'live':'worm',dn=D.dkOf(d.t)+1,wx='clear';try{wx=wxOf(dn,2,d.p);}catch(e){}
+for(var i=0;i<n;i++)for(var k=0;k<14;k++){var pk=null;try{pk=pickFish(d.p,bait,'night',wx,.7,R,undefined);}catch(e){}
+var f=pk&&pk.f;if(f&&!pk.junk&&!f.leg&&!f.fest&&f.rar!=='rb'&&f.rar!=='tsar'&&S.alb[f.id]&&S.alb[f.id].n>0){out.push([f.id,Math.round(pk.w*1000)]);break;}}}catch(e){}
+return out.slice(0,4);}
+function coinsOf(d,f){var s=0;f.forEach(function(x){try{s+=price(FISH[x[0]],x[1]/1000,d.p);}catch(e){}});s=Math.round(s);var c=cap();return c>0?Math.min(s,c):s;}
+function set(pi){var d=st0();if(!d||st()!=='free')return false;if(!S.open[pi])pi=placeDef();d.p=pi;d.t=Math.round(D.now());d.f=[];d.s=0;d.k=(d.k||0)+1;save();R3.ev('dk',{k:'set',pi:pi,h:D.hour(),n:d.k,ic:ice()?1:0});R3.emit('day:donkset',pi);D.rebuild();return true;}
+function take(){var d=st0();if(st()!=='ready')return null;var f=catchOf(d),m=coinsOf(d,f);d.f=f;d.s=1;f.forEach(function(x){var a=S.alb[x[0]]||(S.alb[x[0]]={n:0,mx:0,tr:0});a.n=(a.n||0)+1;a.mx=Math.max(a.mx||0,x[1]);});if(m)S.coins+=ern('gift',m);try{var p=S.r3p,b=null;f.forEach(function(x){if(!b||x[1]>b.g)b={i:x[0],g:x[1],p:d.p,d:R3.dk()};});if(b&&(!p.tb||p.tb.d!==b.d||p.tb.g<b.g))p.tb=b;}catch(e){}
+save();try{updCoins();}catch(e){}
+R3.ev('dk',{k:'take',n:f.length,c:m,pi:d.p,w:Math.round((D.now()-d.t)/H)});R3.emit('day:donk',f,m);return{f:f,c:m};}
+function left(){var d=st0();var ms=Math.max(0,readyAt(d.t)-D.now()),mn=Math.ceil(ms/6e4),h=Math.floor(mn/60),m=mn%60;return(h?h+' ч':'')+(m?(h?' ':'')+m+' мин':h?'':'минуту');}
+function at(){var d=st0(),t=new Date(readyAt(d.t));return('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2);}
+function fishRow(x){var f=FISH[x[0]];return'<div class="r3dk-f"><span>'+(f&&f.ic?f.ic:'🐟')+'</span><b>'+D.esc(D.fnm(x[0]))+'</b><i>'+D.kg(x[1])+'</i></div>';}
+function open(){var s=st(),W=word();if(s==='old'){var n=0;try{var a=__away.st();if(a==='ready'||a==='gone')n=__away.take();else{toast(W.ic+' Донка стоит, колокольчик молчит. Утром проверим.',2600);return;}}catch(e){}
+R3.ev('dk',{k:'old',c:n||0});D.rebuild();return;}
+if(s==='ready'){var r=take();if(!r)return;try{SND.bell();}catch(e){}
+D.dlg({hd:W.ic+' <b>'+W.n+': улов за ночь</b>',lines:[['p',r.f.length?'Колокольчик ночью звенел — я слышал. Снимай, что попалось!':'Пусто — рыба ночью спала. Бывает. Наживку не съели — ставь снова.']],html:(r.f.length?'<div class="r3dk-c">'+r.f.map(fishRow).join('')+'<div class="r3dk-s">+'+(function(){try{return coinsTxt(r.c);}catch(e){return r.c;}})()+'</div></div>':''),btns:[['r3dkAgain',W.ic+' Поставить снова','green',function(){hideModal();askSet();}],['mCancel','Хорошо','',function(){hideModal();D.rebuild();}]]});return;}
+if(s==='wait'){var d=st0();D.dlg({hd:W.ic+' <b>'+W.n+' стоят</b>',lines:[['p',(ice()?'Жерлицы на «':'Донки на «')+D.pnm(d.p)+'» стоят. Колокольчик зазвенит к '+at()+'. Ещё '+left()+'. Не торопи рыбу — она этого не любит.']],btns:[['mCancel','Жду утра','',function(){hideModal();}],['r3dkGo','🎣 Пока — на зорьку','green',function(){hideModal();R3.go('rods');}]]});return;}
+askSet();}
+function askSet(){var W=word(),pi=placeDef(),opts='';try{for(var i=0;i<PLACES.length;i++)if(S.open[i]&&i!==7)opts+='<option value="'+i+'"'+(i===pi?' selected':'')+'>'+D.esc(D.pnm(i))+'</option>';}catch(e){}
+var h=D.hour(),tip=h>=14||h<5?'Колокольчик зазвенит утром, к пяти.':'Днём донка ловит дольше — к вечеру, через 8 часов. Лучше всего ставить вечером.';D.dlg({hd:W.ic+' <b>'+W.n+' на ночь</b>',lines:[['p',(ice()?'Жерлицы поставим — щука ночью не спит, она дежурит. ':'Донки поставим, а сами — по домам. Ночью рыба смелая. ')+tip]],html:'<label class="r3dk-pl">Где ставим: <select id="r3dkPi">'+opts+'</select></label><p class="r3dk-n">До '+(club()?4:3)+' рыб за ночь, только знакомые по альбому.</p>',btns:[['r3dkSet',W.ic+' Поставить','green',function(){var e=document.getElementById('r3dkPi'),p=e?+e.value:pi;hideModal();if(set(p)){try{SND.plop();}catch(x){}
+toast(W.ic+' '+(ice()?'Жерлицы':'Донки')+' на «'+D.pnm(p)+'». Загляни после '+at()+'.',3200);}}],['mCancel','Не сейчас','',function(){hideModal();}]]});}
+R3.part({id:'bell',ord:20,get ic(){return word().ic;},get t(){return word().n;},tEn:'Lines',flag:'day.donk',badge:function(){var s=st();return s==='ready'?'!':s==='old'?(function(){try{var a=__away.st();return a==='ready'||a==='gone'?'!':'';}catch(e){return'';}})():'';},hot:function(){return st()==='ready';},note:function(){var s=st();return s==='wait'?'ещё '+left():s==='ready'?'звенит!':'';},go:open});var LS='rybak-r3dring';function ring(){if(st()!=='ready')return;var d=String(R3.dk());try{if(localStorage.getItem(LS)===d)return;localStorage.setItem(LS,d);}catch(e){}
+try{SND.bell();}catch(e){}try{buzz([60,60,60]);}catch(e){}
+try{var b=document.querySelector('#r3m [data-p="bell"]');if(b){b.classList.add('r3dk-ring');setTimeout(function(){b.classList.remove('r3dk-ring');},2400);}}catch(e){}
+R3.ev('dk',{k:'ring',h:D.hour()});}
+R3.sub('home',function(){setTimeout(ring,700);},ID);setInterval(function(){try{if(D.onHome()&&!D.busy()&&st()==='ready'){var b=document.querySelector('#r3m [data-p="bell"] .r3d');if(!b)D.rebuild();ring();}}catch(e){}},6e4);try{if(typeof slotAdd==='function'){if(typeof mapSlots!=='undefined')slotAdd(mapSlots,{id:'donka',pri:30,when:function(){return(S.sessions||0)>=1&&(canSet()||st()==='wait');},html:function(){var W=word();if(st()==='wait')return'<button class="a3m noenter rb-away" disabled>'+W.ic+' '+W.n+' — ещё '+left()+'</button>';return'<button class="a3m noenter rb-away">'+W.ic+' <b>Поставить '+W.a+' на ночь</b> · утром улов ›</button>';},bind:function(el){var b=el.querySelector('button:not([disabled])');if(b)b.onclick=function(){D.tap();askSet();};}});if(typeof resultSlots!=='undefined')slotAdd(resultSlots,{id:'donka',pri:20,when:function(c){return canSet()&&c&&c.g&&!c.g.tourn&&!c.g.guest&&(S.sessions||0)>=1;},html:function(){var W=word();return'<button class="a3m noenter rb-away">'+W.ic+' Уходишь? Поставь '+W.a+' на ночь — утром улов ›</button>';},bind:function(el,c){var b=el.querySelector('button');if(b)b.onclick=function(){D.tap();if(set(c.g.pi)){b.disabled=true;b.textContent=word().ic+' Стоят. Колокольчик — к '+at();}};}});}}catch(e){}
+window.R3DK={st:st,set:set,take:take,readyAt:readyAt,catchOf:catchOf,open:open,ring:ring,canSet:canSet};})();

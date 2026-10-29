@@ -1,0 +1,44 @@
+var R3SEZ=(function(){'use strict';var SZ={autumn:{n:'Осень',ic:'🍂',art:'autumn',from:'09-01',to:'11-30',ph:[['gold','09-01','10-15','листопад'],['zhor','10-16','11-19','осенний жор'],['pre','11-20','11-30','предзимье']],dish:'уха из щуки с дымком',exp:'осенний жор: щука и окунь у бровок',tip:'Хищник жирует перед зимой — блесна и живец у бровок.',hello:'Осень пришла. Листья в воду — рыба за едой.'},winter:{n:'Зима',ic:'❄️',art:'winter',from:'12-01',to:'03-15',ph:[['ice1','12-01','12-20','первый лёд'],['deep','12-21','02-28','глухозимье'],['last','03-01','03-15','последний лёд']],dish:'уха из налима — на морозе самая наваристая',exp:'подлёдная: окунь, налим, ряпушка',tip:'Лёд на прудах, речках и озёрах: мормышка и жерлицы. Рыба у дна.',hello:'Зима! Мостки в снегу, вода под льдом.'},spring:{n:'Весна',ic:'🌱',art:'spring',from:'03-16',to:'05-31',ph:[['thaw','03-16','04-25','ледоход'],['green','04-26','05-31','первая зелень']],dish:'уха из первой плотвы',exp:'большая вода: плотва и щука у травы',tip:'Вода высокая, рыба жмётся к берегу и траве.',hello:'Весна! Лёд пошёл, грачи прилетели.'},summer:{n:'Лето',ic:'☀️',art:'summer',from:'06-01',to:'08-31',ph:[['warm','06-01','06-30','белые ночи'],['hot','07-01','08-15','жара'],['late','08-16','08-31','конец лета']],dish:'тройная уха с ершом',exp:'летние зорьки: карп, лещ, а ночью — сом',tip:'Днём рыба в тени и на глубине — ловим утром и вечером.',hello:'Лето! Зорьки длинные, ночи короткие.'}};var ORD=['winter','spring','summer','autumn'];var MON={winter:[11,0,1,2],spring:[2,3,4],summer:[5,6,7],autumn:[8,9,10]};function z2(n){return(n<10?'0':'')+n;}
+function q(){try{return location.search||'';}catch(e){return'';}}
+function local(){try{return typeof IS_LOCAL!=='undefined'&&!!IS_LOCAL;}catch(e){return false;}}
+var DKM=-1,DKV='';function dk(){try{if(typeof window!=='undefined'&&window.RSEZ&&typeof RSEZ.dk==='function')return RSEZ.dk();}catch(e){}
+try{var m=/[?&]sezday=(\d{4}-\d\d-\d\d)/.exec(q());if(m&&local())return m[1];}catch(e){}
+var t=(typeof nowMs==='function'?nowMs():Date.now())+108e5,mm=Math.floor(t/6e4);if(mm===DKM)return DKV;DKM=mm;return DKV=new Date(t).toISOString().slice(0,10);}
+function inR(md,a,b){return a<=b?md>=a&&md<=b:md>=a||md<=b;}
+function at(day){var md=day.slice(5),y=+day.slice(0,4);for(var k in SZ){var s=SZ[k];if(!inR(md,s.from,s.to))continue;var ph='',pn='';for(var i=0;i<s.ph.length;i++)if(inR(md,s.ph[i][1],s.ph[i][2])){ph=s.ph[i][0];pn=s.ph[i][3];}
+var y0=k==='winter'&&md<=s.to?y-1:y,y1=k==='winter'?y0+1:y0;return{k:k,ph:ph,pn:pn,id:k+z2(y0%100),from:y0+'-'+s.from,to:y1+'-'+s.to,n:s.n,ic:s.ic,art:ph==='pre'?'winter':s.art};}
+return{k:'autumn',ph:'',pn:'',id:'autumn'+z2(y%100),from:'',to:'',n:SZ.autumn.n,ic:SZ.autumn.ic,art:'autumn'};}
+var CK='',CV=null;function cur(){var d=dk();if(d===CK&&CV)return CV;CK=d;return CV=at(d);}
+function next(){var c=cur(),i=ORD.indexOf(c.k),k=ORD[(i+1)%4],s=SZ[k],y=+c.to.slice(0,4)||+dk().slice(0,4);return{k:k,n:s.n,ic:s.ic,from:y+'-'+s.from};}
+function fish(pi,k){var out=[];try{var P=PLACES[pi],ms=MON[k||cur().k];for(var i=0;i<P.fish.length;i++){var f=FISH[P.fish[i]];if(!f||f.leg||f.fest)continue;var a=f.a2,m=0;if(a&&a.m){for(var j=0;j<ms.length;j++)m+=a.m[ms[j]]||0;m/=ms.length;}else m=1;out.push({id:f.id,x:m*(f.r||1),m:m});}
+out.sort(function(a,b){return b.x-a.x;});}catch(e){}return out.slice(0,3).map(function(o){return o.id;});}
+function theme(pi){var c=cur(),s=SZ[c.k];return{k:c.k,ph:c.ph,pn:c.pn,n:s.n,ic:s.ic,dish:s.dish,exp:s.exp,tip:s.tip,fish:pi!=null?fish(pi,c.k):[]};}
+function k(){return cur().k;}
+return{SZ:SZ,ORD:ORD,MON:MON,dk:dk,at:at,cur:cur,next:next,fish:fish,theme:theme,k:k};})();if(typeof window!=='undefined')window.R3SEZ=R3SEZ;(function(){'use strict';if(typeof window==='undefined'||typeof document==='undefined'||typeof R3!=='object'||!R3.on)return;if(!R3.reg('sez',{s:'R3-FLY',t:'смена сезонов: осень → зима с 1.12 (лёд) → весна → лето — Мостки, слово Петровича, тема котла и экспедиций'}))return;var W=window;function E(e){try{console.warn('r3sez',e);}catch(_){}}
+function $$(id){return document.getElementById(id);}
+function rt(k,ctx,fb){try{if(W.R3T&&R3T.pick){var t=R3T.pick(k,ctx||{});if(t)return t;}}catch(e){}return fb;}
+function escS(s){try{return esc(s);}catch(e){return String(s);}}
+R3.field('s',{id:'sez',def:function(){return{k:'',n:0};},fix:function(o){o.k=typeof o.k==='string'?o.k.slice(0,12):'';o.n=Math.max(0,Math.floor(+o.n||0));},merge:function(a,b){if(String(b.k||'')>String(a.k||''))a.k=String(b.k).slice(0,12);a.n=Math.max(+a.n||0,+b.n||0);}});function st(){var o=S.r3s;if(!o||typeof o!=='object')o=S.r3s={k:'',n:0};return o;}
+try{if(W.R3A&&typeof R3A.sez==='function'){var sz0=R3A.sez;R3A.sez=function(ms){if(ms)return sz0.apply(this,arguments);try{return R3SEZ.cur().art;}catch(e){return sz0.apply(this,arguments);}};}}catch(e){E(e);}
+function htmlSez(){try{var h=document.documentElement;if(h&&h.hasAttribute('data-r3sez'))h.setAttribute('data-r3sez',R3SEZ.cur().art);}catch(e){}}
+var last='';function key(){var c=R3SEZ.cur();return c.id+'/'+c.ph;}
+function homeOn(){try{var m=$$('r3m');return!!(W.R3H&&R3H.mode()==='r3'&&m&&m.style.display!=='none'&&!G&&$$('scr-map').classList.contains('on'));}catch(e){return false;}}
+function tick(){try{if(document.hidden)return;var k2=key();if(k2===last)return;var prev=last;last=k2;if(!prev)return;var c=R3SEZ.cur();htmlSez();R3.ev('sez',{k:'chg',s:c.id,p:c.ph});R3.emit('sez',c,prev);if(homeOn())R3H.build();}catch(e){E(e);}}
+try{last=key();setInterval(tick,60000);document.addEventListener('visibilitychange',tick);}catch(e){E(e);}
+function hello(c){return rt(c.k==='winter'&&c.ph==='ice1'?'sez.winter.ice1':c.k==='spring'&&c.ph==='thaw'?'sez.spring.thaw':c.k==='autumn'&&c.ph==='pre'?'sez.autumn.pre':'',{},'')||rt('sez.'+c.k+'.hello',{},R3SEZ.SZ[c.k].hello);}
+function pl(){try{return typeof topPlace==='function'?topPlace():0;}catch(e){return 0;}}
+function iceList(){var out=[];try{if(!W.RSEZ||!RSEZ.ice)return out;for(var i=0;i<PLACES.length;i++)if(S.open&&S.open[i]&&RSEZ.ice(i))out.push(PLACES[i].sh||nm(PLACES[i]));}catch(e){}return out;}
+function open(){var c=R3SEZ.cur(),th=R3SEZ.theme(pl()),nx=R3SEZ.next(),P=PLACES[pl()]||{},fs=th.fish.map(function(id){try{return nm(FISH[id]);}catch(e){return id;}}),il=c.k==='winter'?iceList():[];var nd=nx.from.split('-');modal('<h2>'+c.ic+' '+escS(c.n)+(c.pn?' · '+escS(c.pn):'')+'</h2><p class="quote">Петрович: «'+escS(hello(c))+'»</p>'
++(fs.length?'<p>🎣 <b>Сейчас клюёт</b> ('+escS(P.sh||nm(P))+'): '+escS(fs.join(', ').toLowerCase())+'.</p>':'')
++'<p>💡 '+escS(th.tip)+'</p>'+(il.length?'<p>🧊 Лёд встал: '+escS(il.join(', '))+'.</p>':'')
++'<p>🍲 В котле — '+escS(th.dish)+'. ⛺ Экспедиция — '+escS(th.exp)+'.</p>'
++'<p><small>Дальше — '+escS(nx.n.toLowerCase())+' '+nx.ic+', с '+(+nd[2])+' '+(typeof MON_G!=='undefined'?MON_G[+nd[1]-1]:nd[1])+'.</small></p>'
++'<div class="row"><button class="btn green" id="mCancel">Понятно</button></div>');$$('mCancel').onclick=hideModal;R3.ev('sez',{k:'open',s:c.id});}
+function pill(){try{var hr=document.querySelector('#r3m .r3hr');if(!hr||$$('r3Sez'))return;var c=R3SEZ.cur(),b=document.createElement('button');b.id='r3Sez';b.className='pill noenter r3sz';b.setAttribute('aria-label',c.n);b.innerHTML=c.ic+'<span> '+escS(c.n)+'</span>';hr.insertBefore(b,hr.firstChild);b.onclick=function(){try{SND.tap();}catch(e){}open();};}catch(e){E(e);}}
+var LI=0;try{R3.sub('live:ice',function(){LI=1;},'sez');}catch(e){}
+function liv(){try{return LI||!!(window.R3LV&&R3LV.iceSeen&&R3LV.iceSeen());}catch(e){return LI;}}
+function greet(){try{var c=R3SEZ.cur(),o=st();if(o.k===c.id)return;var d=99;try{d=R3.day();}catch(e){}if(d<=1||!(S.sessions>0)){o.k=c.id;save();return;}
+o.k=c.id;o.n++;save();R3.ev('sez',{k:'greet',s:c.id,p:c.ph});var n=0;function show(){try{if(!homeOn()||c.k==='winter'&&(LI||c.ph==='ice1'&&liv()))return;if(typeof modalOn!=='undefined'&&modalOn){if(++n<40)setTimeout(show,1500);return;}toast(c.ic+' Петрович: «'+hello(c)+'»',5200);}catch(e){}}setTimeout(show,900);}catch(e){E(e);}}
+R3.sub('home',function(){pill();greet();},'sez');R3.sub('run',function(g){try{if(!g||g.tourn||g.cup||g.guest||!(S.sessions>0)||Math.random()>.35)return;var c=R3SEZ.cur(),t=rt('sez.'+c.k+'.idle',{},'');if(!t)return;setTimeout(function(){try{if(G===g&&!g.over&&(g.phase==='aim'||g.phase==='wait')&&!$$('say').classList.contains('on'))say('petr',t,4500);}catch(e){}},14000);}catch(e){E(e);}},'sez');try{var css=document.createElement('style');css.textContent='.r3sz span{display:none}@media (min-width:420px){.r3sz span{display:inline}}';document.head.appendChild(css);}catch(e){}
+try{R3.emit('sez',R3SEZ.cur(),'');}catch(e){}
+W.R3SEZUI={open:open,tick:tick};})();
