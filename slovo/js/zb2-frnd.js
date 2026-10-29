@@ -1,4 +1,4 @@
-'use strict';/* zb2-FRND: поле S.z2f; всё — zb2-frnd-x.js */
+'use strict';
 (function(){if(typeof ZB=='undefined'||typeof ZB2=='undefined'||typeof S=='undefined'||['gift','word','brag'].every(ZB2.off))return;
 var D='gs gr ty ws wv'.split(' '),T='G T N W R V'.split(' '),L={sx:8,rx:16,wx:6},Q={me:8,nm:14,pg:120};
 function n(x){x=+x;return x>0&&x<1e9?Math.floor(x):0}function s(x,k){return typeof x=='string'?x.slice(0,k):''}

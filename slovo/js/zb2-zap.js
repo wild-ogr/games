@@ -1,12 +1,10 @@
 'use strict';
-/* zb2-zap — «Записки на холодильнике» (ZAP), стартовая часть: флаги zap/zapchain, поле S.z2z, ловля событий, ZB2ZAP.hook.
-Логика — лениво: zb2-zap-data.js + zb2-zap-ui.js. ДОГОВОР (hook, list, open, total, поле, STAT) — шапка js/zb2-zap-ui.js. */
 (function(){
 if(typeof window.ZB==='undefined'||!window.ZB2)return;
 var ZB=window.ZB,ON=ZB2.reg('zap',{t:'Записки на холодильнике',who:'ZAP',on:true});
 ZB2.reg('zapchain',{t:'Записки: связки героев и магнитики',who:'ZAP',on:true});
-var Z=window.ZB2ZAP={on:ON,v:1,_q:[],hook:function(){},list:function(){return [];},open:function(){},
-total:function(){try{return S.z2z&&+S.z2z.n||0;}catch(e){return 0;}}};  // TECH: миссии VK zp1/zp25/zp100
+var Z=window.ZB2ZAP={on:ON,v:1,_q:[],hook:function(){},list:function(){return[];},open:function(){},
+total:function(){try{return S.z2z&&+S.z2z.n||0;}catch(e){return 0;}}};
 if(!ON)return;
 function num(v){v=+v;return isFinite(v)?v:0;}
 var DEF={n:0,k:[],h:'',sd:0,sw:0,m:0,tu:0,d0:0,nb:0,cn:0,c:null,mg:''};
