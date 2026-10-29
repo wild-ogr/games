@@ -1,4 +1,3 @@
-/* zb3 КОЖА «Зины 3.0» (MIX), хозяин — SKIN: только переменные --z3-* под html.z3 (+ шрифты). Пояснения к переменным — шапка js/zb3-skin-s.js. */
 @font-face{font-family:"ZLobster";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/lobster-z3.woff2) format("woff2")}
 @font-face{font-family:"ZCaveat";font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/caveat-z3.woff2) format("woff2")}
 html.z3{
@@ -50,3 +49,6 @@ html.z3{--z3-a-body:#8a5130;--z3-a-drawer:#b9784a;--z3-a-edge:#6b3d22;--z3-a-kno
 html.z3:not(.th-x) #zmgHost{--paper:#fbf7ec;--card:#fffdf8;--ink:#27324a;--ink2:#5d6781;--line:#efe6d2;--edge:#e6dcc8;--soft:#f6efe3;--track:#efe6d4;
 --blue:#2563c9;--blue2:#2f6fd6;--blue3:#e3ecfb;--green:#34a853;--green2:#237a3b;--gold:#f5b72d;--gold3:#e0921a;--red:#e2463b;--red2:#d0342c;--margin:#f0b3ad;
 --shadow:0 3px 0 rgba(39,50,74,.10),0 10px 24px -8px rgba(39,50,74,.28);--font:"ZRubik",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+html.z3{--z4v-wall:#f7d4b8}
+html.z3{--z4c-bag:#efe0c2;--z4c-pie:#ffc98a;--z4c-key:#dcdcdc;--z4c-pen:#c62828;--z4c-dark:#3b4058;--z4c-lit:#fff1c1}
+html.z3{--z4l-l2:#d6e9f7;--z4l-w2:#f7d9de}
