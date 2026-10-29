@@ -1,12 +1,11 @@
-/* Место 12 «Почта» (ART-2). Фон главы 400×300: окошки (почти все закрыты), посылка от внука. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{};
 A[12]={id:'pochta',n:'Почта',c:'#fdecd2',
 svg:function(r){var u='a12_'+(++A._n||(A._n=1));r=r||'xMidYMid slice';
-var win=function(x,n,t,open){return `<g transform="translate(${x} 70)"><rect width="64" height="62" fill="#fff" stroke="#c9b48c" stroke-width="3"/><rect x="5" y="5" width="54" height="52" fill="${open?'#fff6dd':'#e8e3d6'}"/>
+var win=function(x,n,t,open){return`<g transform="translate(${x} 70)"><rect width="64" height="62" fill="#fff" stroke="#c9b48c" stroke-width="3"/><rect x="5" y="5" width="54" height="52" fill="${open?'#fff6dd':'#e8e3d6'}"/>
 <path d="M5 30 h54" stroke="#c9b48c" stroke-width="2"/><rect x="22" y="-14" width="20" height="14" rx="3" fill="#2f6fd6"/><text x="32" y="-3" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Arial">${n}</text>
 ${open?'':`<rect x="9" y="34" width="46" height="16" rx="2" fill="#fff" stroke="#e2463b" stroke-width="1.5" transform="rotate(-6 32 42)"/><text x="32" y="45.5" text-anchor="middle" font-size="7" font-weight="700" fill="#e2463b" font-family="Arial" transform="rotate(-6 32 42)">${t}</text>`}</g>`;};
-var box=function(x,y,w,h,c){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c||'#d8a868'}" stroke="#a87a45" stroke-width="1.5"/><path d="M${x+w/2} ${y} v${h} M${x} ${y+h/2} h${w}" stroke="#7a5a3a" stroke-width="1.2" opacity=".6"/>`;};
-return `<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
+var box=function(x,y,w,h,c){return`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c||'#d8a868'}" stroke="#a87a45" stroke-width="1.5"/><path d="M${x+w/2} ${y} v${h} M${x} ${y+h/2} h${w}" stroke="#7a5a3a" stroke-width="1.2" opacity=".6"/>`;};
+return`<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="${u}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdf3e2"/><stop offset="1" stop-color="#f7e4c4"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#${u}w)"/>
 <rect x="0" y="0" width="400" height="44" fill="#2f6fd6"/><rect x="0" y="44" width="400" height="4" fill="#1d4fa3"/>

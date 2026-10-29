@@ -1,10 +1,9 @@
-/* Место 17 «Круиз по Волге» (ART-2). Фон главы 400×300: теплоход «Зинаида», чайки, гармонь на палубе, берег с церковкой. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{};
 A[17]={id:'kruiz',n:'Круиз по Волге',c:'#dbeafc',
 svg:function(r){var u='a17_'+(++A._n||(A._n=1));r=r||'xMidYMid slice';
-var gull=function(x,y,s){return `<path d="M${x-10*s} ${y} q${5*s} ${-6*s} ${10*s} 0 q${5*s} ${-6*s} ${10*s} 0" stroke="#5b6b7a" stroke-width="${2*s}" fill="none" stroke-linecap="round"/>`;};
-var birch=function(x,y,s){return `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-2" y="-30" width="4" height="32" fill="#f4f1ea"/><circle cx="0" cy="-34" r="12" fill="#7cbf63"/><circle cx="-8" cy="-28" r="8" fill="#6fae52"/></g>`;};
-return `<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
+var gull=function(x,y,s){return`<path d="M${x-10*s} ${y} q${5*s} ${-6*s} ${10*s} 0 q${5*s} ${-6*s} ${10*s} 0" stroke="#5b6b7a" stroke-width="${2*s}" fill="none" stroke-linecap="round"/>`;};
+var birch=function(x,y,s){return`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-2" y="-30" width="4" height="32" fill="#f4f1ea"/><circle cx="0" cy="-34" r="12" fill="#7cbf63"/><circle cx="-8" cy="-28" r="8" fill="#6fae52"/></g>`;};
+return`<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd0f5"/><stop offset="1" stop-color="#eaf5ff"/></linearGradient>
 <linearGradient id="${u}r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a9fd6"/><stop offset="1" stop-color="#2f6fa8"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#${u}s)"/>

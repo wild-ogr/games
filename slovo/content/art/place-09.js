@@ -1,12 +1,10 @@
-/* Место 9 «Юбилей» (ART-1). Фон главы 400×300. Подключение: ZB.load('content/art/place-09.js').then(()=>el.innerHTML=ZB_ART[9].svg()) — см. README-1.md.
-   Комната с ковром на стене, флажки «С ЮБИЛЕЕМ!», шарики, стол: торт «75», оливье в хрустале, холодец, селёдка под шубой, подарки. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{},k=0;
 A[9]={id:'yubiley',n:'Юбилей',c:'#fde2ef',svg:function(r){var u='a9_'+(++k);r=r||'xMidYMid slice';
 var fl='',L='С ЮБИЛЕЕМ!'.split(''),cs=['#e8475a','#f5b72d','#2f6fd6','#2f9a5a','#b48be0'];
 L.forEach(function(ch,i){var x=92+i*24,y=36+Math.sin(i/(L.length-1)*Math.PI)*12;fl+=`<g transform="translate(${x} ${y})"><path d="M-10 0 h20 l-10 22z" fill="${cs[i%5]}"/><text y="10" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">${ch===' '?'':ch}</text></g>`;});
-var ball=function(x,y,c){return `<g transform="translate(${x} ${y})"><ellipse rx="15" ry="18" fill="${c}"/><ellipse cx="-5" cy="-7" rx="4" ry="6" fill="#fff" opacity=".45"/><path d="M0 18 l-3 5 h6z" fill="${c}"/><path d="M0 23 q-6 16 2 30 q6 14 -2 30" stroke="#9aa3ae" stroke-width="1.2" fill="none"/></g>`;};
+var ball=function(x,y,c){return`<g transform="translate(${x} ${y})"><ellipse rx="15" ry="18" fill="${c}"/><ellipse cx="-5" cy="-7" rx="4" ry="6" fill="#fff" opacity=".45"/><path d="M0 18 l-3 5 h6z" fill="${c}"/><path d="M0 23 q-6 16 2 30 q6 14 -2 30" stroke="#9aa3ae" stroke-width="1.2" fill="none"/></g>`;};
 var orn='';for(var i=0;i<5;i++)for(var j=0;j<3;j++)orn+=`<g transform="translate(${110+i*45} ${92+j*34})"><path d="M0 -12 l12 12 l-12 12 l-12 -12z" fill="${(i+j)%2?'#f5b72d':'#2f6fd6'}"/><path d="M0 -6 l6 6 l-6 6 l-6 -6z" fill="#fff4e0"/></g>`;
-return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
+return`<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
 <defs><pattern id="wp${u}" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#fbe3ee"/><circle cx="6" cy="6" r="2.4" fill="#f4c2d6"/><circle cx="18" cy="18" r="2.4" fill="#f4c2d6"/></pattern>
 <linearGradient id="t${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f1ecf4"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#wp${u})"/>

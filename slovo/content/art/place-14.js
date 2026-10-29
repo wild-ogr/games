@@ -1,11 +1,10 @@
-/* Место 14 «Рыбалка с дедом» (ART-2). Фон главы 400×300: утреннее озеро, мостки, два ведра — у деда ёрш, у Зины слова. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{};
 A[14]={id:'rybalka',n:'Рыбалка с дедом',c:'#dcefe9',
 svg:function(r){var u='a14_'+(++A._n||(A._n=1));r=r||'xMidYMid slice';
-var pine=function(x,y,s,c){return `<g transform="translate(${x} ${y}) scale(${s})" fill="${c}"><path d="M0 -60 l14 22 h-8 l12 18 h-8 l12 20 h-44 l12 -20 h-8 l12 -18 h-8z"/><rect x="-2" y="0" width="4" height="6" fill="#6b4626"/></g>`;};
-var reed=function(x,y,h){return `<path d="M${x} ${y} q2 ${-h/2} 0 ${-h}" stroke="#6f9a3e" stroke-width="2.5" fill="none"/><rect x="${x-2.5}" y="${y-h-12}" width="5" height="14" rx="2.5" fill="#7a4a2a"/>`;};
-var bucket=function(x,y,lbl){return `<g transform="translate(${x} ${y})"><path d="M-20 -30 h40 l-5 32 h-30z" fill="#9aa3ad"/><ellipse cx="0" cy="-30" rx="20" ry="5" fill="#5fb7e0" stroke="#7c8590" stroke-width="2"/><path d="M-12 -14 h24" stroke="#7c8590" stroke-width="2"/><text x="0" y="-4" text-anchor="middle" font-size="7.5" font-weight="800" fill="#fff" font-family="Arial">${lbl}</text></g>`;};
-return `<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
+var pine=function(x,y,s,c){return`<g transform="translate(${x} ${y}) scale(${s})" fill="${c}"><path d="M0 -60 l14 22 h-8 l12 18 h-8 l12 20 h-44 l12 -20 h-8 l12 -18 h-8z"/><rect x="-2" y="0" width="4" height="6" fill="#6b4626"/></g>`;};
+var reed=function(x,y,h){return`<path d="M${x} ${y} q2 ${-h/2} 0 ${-h}" stroke="#6f9a3e" stroke-width="2.5" fill="none"/><rect x="${x-2.5}" y="${y-h-12}" width="5" height="14" rx="2.5" fill="#7a4a2a"/>`;};
+var bucket=function(x,y,lbl){return`<g transform="translate(${x} ${y})"><path d="M-20 -30 h40 l-5 32 h-30z" fill="#9aa3ad"/><ellipse cx="0" cy="-30" rx="20" ry="5" fill="#5fb7e0" stroke="#7c8590" stroke-width="2"/><path d="M-12 -14 h24" stroke="#7c8590" stroke-width="2"/><text x="0" y="-4" text-anchor="middle" font-size="7.5" font-weight="800" fill="#fff" font-family="Arial">${lbl}</text></g>`;};
+return`<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9b8"/><stop offset=".55" stop-color="#fdeedd"/><stop offset="1" stop-color="#e6f4ef"/></linearGradient>
 <linearGradient id="${u}l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd3cf"/><stop offset="1" stop-color="#5fa8a8"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#${u}s)"/>

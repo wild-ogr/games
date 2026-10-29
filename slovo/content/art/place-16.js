@@ -1,12 +1,11 @@
-/* Место 16 «Свадьба внучки» (ART-2). Фон главы 400×300: зал, цветочная арка, торт в три яруса, растяжка «ГОРЬКО!». */
 (function(){var A=window.ZB_ART=window.ZB_ART||{};
 A[16]={id:'svadba',n:'Свадьба внучки',c:'#fbe3e8',
 svg:function(r){var u='a16_'+(++A._n||(A._n=1));r=r||'xMidYMid slice';
-var rose=function(x,y,s,c){return `<g transform="translate(${x} ${y}) scale(${s})"><circle r="7" fill="${c}"/><path d="M-3 -1 q3 -5 6 0 q-3 4 -6 0z" fill="#fff" opacity=".45"/><path d="M-7 3 q-6 4 -8 0 M7 3 q6 4 8 0" stroke="#4fa15a" stroke-width="3" stroke-linecap="round"/></g>`;};
-var heart=function(x,y,s,c){return `<path d="M0 4 q-10 -8 -6 -13 q4 -4 6 1 q2 -5 6 -1 q4 5 -6 13z" fill="${c}" transform="translate(${x} ${y}) scale(${s})"/>`;};
-var glass=function(x,y,a){return `<g transform="translate(${x} ${y}) rotate(${a})"><path d="M-5 -22 h10 l-1 14 q-4 4 -8 0z" fill="#fff6c4" stroke="#c9b48c" stroke-width="1"/><path d="M-4.4 -16 h8.8 l-.6 8 q-4 4 -7.6 0z" fill="#f5d77a"/><path d="M0 -6 v10 M-5 4 h10" stroke="#c9b48c" stroke-width="1.6"/></g>`;};
+var rose=function(x,y,s,c){return`<g transform="translate(${x} ${y}) scale(${s})"><circle r="7" fill="${c}"/><path d="M-3 -1 q3 -5 6 0 q-3 4 -6 0z" fill="#fff" opacity=".45"/><path d="M-7 3 q-6 4 -8 0 M7 3 q6 4 8 0" stroke="#4fa15a" stroke-width="3" stroke-linecap="round"/></g>`;};
+var heart=function(x,y,s,c){return`<path d="M0 4 q-10 -8 -6 -13 q4 -4 6 1 q2 -5 6 -1 q4 5 -6 13z" fill="${c}" transform="translate(${x} ${y}) scale(${s})"/>`;};
+var glass=function(x,y,a){return`<g transform="translate(${x} ${y}) rotate(${a})"><path d="M-5 -22 h10 l-1 14 q-4 4 -8 0z" fill="#fff6c4" stroke="#c9b48c" stroke-width="1"/><path d="M-4.4 -16 h8.8 l-.6 8 q-4 4 -7.6 0z" fill="#f5d77a"/><path d="M0 -6 v10 M-5 4 h10" stroke="#c9b48c" stroke-width="1.6"/></g>`;};
 var arc=[];for(var i=0;i<=20;i++){var t=Math.PI*i/20;arc.push([200-Math.cos(t)*92,196-Math.sin(t)*130]);}
-return `<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
+return`<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="${u}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdeef1"/><stop offset="1" stop-color="#f8d9e0"/></linearGradient>
 <radialGradient id="${u}g" cx=".5" cy=".4" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
 <rect width="400" height="300" fill="url(#${u}w)"/>

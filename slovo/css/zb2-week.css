@@ -1,4 +1,3 @@
-/* zb2-week — «Неделя у Зины» (поток WEEK, з2). Грузится лениво из js/zb2-week-x.js. Префикс классов zk-. Старые WebView: без :has, inset. */
 .zk-card{display:block;width:100%;margin:8px 0 0;padding:8px 12px 9px;background:var(--card,#fff);border:0;border-radius:14px;box-shadow:var(--shadow,0 2px 0 rgba(39,50,74,.1));color:var(--ink,#27324a);font:inherit;text-align:left;cursor:pointer;position:relative}
 .zk-card .zk-ch{display:block;font-size:12.5px;font-weight:800;color:var(--ink2,#5d6781);letter-spacing:.2px;margin-bottom:2px}
 .zk-card p{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:2px 0;min-width:0}
@@ -34,8 +33,8 @@
 .zk-cal i.today{box-shadow:inset 0 0 0 2px #2563c9}
 .zk-kls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
 .zk-st{position:relative;text-align:center;padding:9px 4px 7px;background:#f4f1e8;border-radius:4px;min-width:0;
-  background-image:radial-gradient(circle at 50% 0,var(--card,#fff) 3px,transparent 3.5px),radial-gradient(circle at 50% 100%,var(--card,#fff) 3px,transparent 3.5px);
-  background-size:10px 6px,10px 6px;background-repeat:repeat-x;background-position:0 -3px,0 calc(100% + 3px);color:#9aa3b5;border:1px dashed #d9d3c2}
+background-image:radial-gradient(circle at 50% 0,var(--card,#fff) 3px,transparent 3.5px),radial-gradient(circle at 50% 100%,var(--card,#fff) 3px,transparent 3.5px);
+background-size:10px 6px,10px 6px;background-repeat:repeat-x;background-position:0 -3px,0 calc(100% + 3px);color:#9aa3b5;border:1px dashed #d9d3c2}
 .zk-st b{display:block;font-size:26px;line-height:32px}
 .zk-st span{display:block;font-size:12.5px;line-height:1.2;min-height:15px;overflow:hidden;text-overflow:ellipsis}
 .zk-st small{display:block;font-size:11.5px;color:#9aa3b5}

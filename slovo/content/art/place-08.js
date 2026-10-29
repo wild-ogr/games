@@ -1,11 +1,9 @@
-/* Место 8 «Сберкасса» (ART-1). Фон главы 400×300. Подключение: ZB.load('content/art/place-08.js').then(()=>el.innerHTML=ZB_ART[8].svg()) — см. README-1.md.
-   Зал сберкассы: окошки «Пенсии» и «Касса», плакат «Копейка рубль бережёт», счёты, ручка на цепочке, копилка-свинка, календарь «день пенсии», стойки очереди. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{},k=0;
 A[8]={id:'sberkassa',n:'Сберкасса',c:'#e2f2e4',svg:function(r){var u='a8_'+(++k);r=r||'xMidYMid slice';
-var wnd=function(x,t,c){return `<g transform="translate(${x} 66)"><rect width="110" height="96" rx="4" fill="#cfe6d3" stroke="#8fbf98" stroke-width="2"/><rect x="8" y="8" width="94" height="70" rx="3" fill="#eaf7f5"/><path d="M20 12 l30 60 M60 12 l20 40" stroke="#fff" stroke-width="5" opacity=".8"/>
+var wnd=function(x,t,c){return`<g transform="translate(${x} 66)"><rect width="110" height="96" rx="4" fill="#cfe6d3" stroke="#8fbf98" stroke-width="2"/><rect x="8" y="8" width="94" height="70" rx="3" fill="#eaf7f5"/><path d="M20 12 l30 60 M60 12 l20 40" stroke="#fff" stroke-width="5" opacity=".8"/>
 <path d="M40 78 q15 -14 30 0z" fill="#cfe6d3" stroke="#8fbf98"/><rect x="18" y="-24" width="74" height="18" rx="3" fill="${c}"/><text x="55" y="-11" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">${t}</text></g>`;};
-var post=function(x){return `<g transform="translate(${x} 250)"><rect x="-3" y="-34" width="6" height="34" fill="#c9a46a"/><circle cy="-36" r="5" fill="#f5b72d"/><ellipse cy="2" rx="10" ry="3" fill="#b9860f"/></g>`;};
-return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
+var post=function(x){return`<g transform="translate(${x} 250)"><rect x="-3" y="-34" width="6" height="34" fill="#c9a46a"/><circle cy="-36" r="5" fill="#f5b72d"/><ellipse cy="2" rx="10" ry="3" fill="#b9860f"/></g>`;};
+return`<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
 <defs><linearGradient id="w${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef8ef"/><stop offset="1" stop-color="#d9eedc"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#w${u})"/><rect x="0" y="0" width="400" height="22" fill="#2f9a5a"/><text x="200" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" letter-spacing="3">СБЕРЕГАТЕЛЬНАЯ КАССА</text>
 <rect x="0" y="162" width="400" height="58" fill="#b07a48"/><rect x="0" y="158" width="400" height="8" fill="#c9915a"/>${[0,1,2,3,4,5,6,7].map(i=>`<rect x="${10+i*50}" y="172" width="40" height="40" rx="3" fill="none" stroke="#9a6638" stroke-width="2"/>`).join('')}

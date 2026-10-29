@@ -1,11 +1,9 @@
-/* Место 4 «Поликлиника» (ART-1). Фон главы 400×300. Подключение: ZB.load('content/art/place-04.js').then(()=>el.innerHTML=ZB_ART[4].svg()) — см. README-1.md.
-   Коридор: кабинеты «Терапевт» и «Окулист», таблица для глаз «З И Н А», ряд стульев с сумками, окошко регистратуры «Талонов нет», фикус, часы 6:00. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{},k=0;
 A[4]={id:'poliklinika',n:'Поликлиника',c:'#e1f3f6',svg:function(r){var u='a4_'+(++k);r=r||'xMidYMid slice';
-var door=function(x,t,n){return `<g transform="translate(${x} 70)"><rect width="62" height="130" fill="#f4f6f8" stroke="#b9c4cc" stroke-width="2"/><rect x="6" y="8" width="50" height="40" fill="#dfe8ee"/><rect x="6" y="56" width="50" height="66" fill="#dfe8ee"/><circle cx="52" cy="70" r="3" fill="#9aa3ae"/>
+var door=function(x,t,n){return`<g transform="translate(${x} 70)"><rect width="62" height="130" fill="#f4f6f8" stroke="#b9c4cc" stroke-width="2"/><rect x="6" y="8" width="50" height="40" fill="#dfe8ee"/><rect x="6" y="56" width="50" height="66" fill="#dfe8ee"/><circle cx="52" cy="70" r="3" fill="#9aa3ae"/>
 <rect x="4" y="-22" width="54" height="17" rx="2" fill="#2f6fd6"/><text x="31" y="-10" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">${t}</text><text x="31" y="32" text-anchor="middle" font-size="12" font-weight="700" fill="#7a8794">${n}</text></g>`;};
-var chair=function(x){return `<g transform="translate(${x} 228)"><rect x="-14" y="-28" width="28" height="22" rx="3" fill="#2fa5b8"/><rect x="-15" y="-6" width="30" height="7" rx="2" fill="#26919f"/><path d="M-11 1 v20 M11 1 v20" stroke="#5f6876" stroke-width="3"/></g>`;};
-return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
+var chair=function(x){return`<g transform="translate(${x} 228)"><rect x="-14" y="-28" width="28" height="22" rx="3" fill="#2fa5b8"/><rect x="-15" y="-6" width="30" height="7" rx="2" fill="#26919f"/><path d="M-11 1 v20 M11 1 v20" stroke="#5f6876" stroke-width="3"/></g>`;};
+return`<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
 <defs><linearGradient id="w${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7f5f8"/><stop offset="1" stop-color="#cfe9ee"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#w${u})"/>
 <rect x="0" y="150" width="400" height="60" fill="#9fd3dc"/><path d="M0 150 h400" stroke="#7fbcc8" stroke-width="3"/>

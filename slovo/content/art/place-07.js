@@ -1,12 +1,10 @@
-/* Место 7 «Баня» (ART-1). Фон главы 400×300. Подключение: ZB.load('content/art/place-07.js').then(()=>el.innerHTML=ZB_ART[7].svg()) — см. README-1.md.
-   Парная: бревенчатые стены, полок, печка-каменка с паром, шайка с ковшом, берёзовый веник, войлочная шапка «ЗИНА» на крючке, градусник, песочные часы. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{},k=0;
 A[7]={id:'banya',n:'Баня',c:'#fbe0dc',svg:function(r){var u='a7_'+(++k);r=r||'xMidYMid slice';
 var logs='';for(var i=0;i<9;i++)logs+=`<rect x="0" y="${i*24}" width="400" height="22" rx="11" fill="${i%2?'#e3b27a':'#dca46a'}"/><path d="M0 ${i*24+16} h400" stroke="#c98e52" stroke-width="1.5" opacity=".6"/>`;
-var steam=function(x,y,s){return `<g transform="translate(${x} ${y}) scale(${s})" fill="#fff" opacity=".55"><circle r="16"/><circle cx="18" cy="-6" r="13"/><circle cx="-16" cy="-4" r="11"/><circle cx="4" cy="-18" r="12"/></g>`;};
-var leaf=function(x,y,a){return `<ellipse cx="${x}" cy="${y}" rx="10" ry="5" fill="#5ea54a" stroke="#4f9a3c" transform="rotate(${a} ${x} ${y})"/>`;};
+var steam=function(x,y,s){return`<g transform="translate(${x} ${y}) scale(${s})" fill="#fff" opacity=".55"><circle r="16"/><circle cx="18" cy="-6" r="13"/><circle cx="-16" cy="-4" r="11"/><circle cx="4" cy="-18" r="12"/></g>`;};
+var leaf=function(x,y,a){return`<ellipse cx="${x}" cy="${y}" rx="10" ry="5" fill="#5ea54a" stroke="#4f9a3c" transform="rotate(${a} ${x} ${y})"/>`;};
 var ven='';[[-10,30,-30],[8,34,30],[-14,46,-50],[12,50,50],[-6,58,-20],[6,62,20],[0,44,90],[-18,38,-70],[18,42,70],[0,70,0],[-8,24,-60],[8,24,60],[0,54,0],[-12,64,-30],[12,66,30]].forEach(function(p){ven+=leaf(p[0],p[1],p[2]);});
-return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
+return`<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
 <defs><radialGradient id="h${u}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb070"/><stop offset="1" stop-color="#ffb070" stop-opacity="0"/></radialGradient></defs>
 <rect width="400" height="300" fill="#dca46a"/>${logs}
 <g transform="translate(150 30)"><rect width="100" height="26" rx="4" fill="#8a5a34"/><text x="50" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#ffe7c2">С лёгким паром!</text><path d="M20 0 l6 -8 M80 0 l-6 -8" stroke="#6b4325" stroke-width="2"/></g>

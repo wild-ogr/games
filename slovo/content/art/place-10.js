@@ -1,10 +1,8 @@
-/* Место 10 «Санаторий» (ART-2). Фон главы 400×300, рисунок кодом, без внешних картинок.
-   Подключение: ZB.load('content/art/place-10.js').then(()=>el.innerHTML=ZB_ART[10].svg()) — см. README-2.md */
 (function(){var A=window.ZB_ART=window.ZB_ART||{};
 A[10]={id:'sanatoriy',n:'Санаторий',c:'#d9f1fb',
 svg:function(r){var u='a10_'+(++A._n||(A._n=1));r=r||'xMidYMid slice';
-var palm=function(x,y,s){return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-3 0 q-6 -40 4 -78 h6 q-8 38 -2 78z" fill="#a8774a"/>${[-60,-45,-30,-15].map(v=>`<path d="M-4 ${v} h9" stroke="#8a5d36" stroke-width="2"/>`).join('')}<g fill="#4fa15a">${[-150,-110,-70,-30,10].map(a=>`<path d="M2 -80 q30 -14 46 6 q-26 -8 -46 0z" transform="rotate(${a} 2 -80)"/>`).join('')}</g><rect x="-14" y="-4" width="28" height="22" rx="3" fill="#c8673b"/><rect x="-16" y="-6" width="32" height="6" rx="2" fill="#a9532c"/></g>`;};
-return `<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
+var palm=function(x,y,s){return`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-3 0 q-6 -40 4 -78 h6 q-8 38 -2 78z" fill="#a8774a"/>${[-60,-45,-30,-15].map(v=>`<path d="M-4 ${v} h9" stroke="#8a5d36" stroke-width="2"/>`).join('')}<g fill="#4fa15a">${[-150,-110,-70,-30,10].map(a=>`<path d="M2 -80 q30 -14 46 6 q-26 -8 -46 0z" transform="rotate(${a} 2 -80)"/>`).join('')}</g><rect x="-14" y="-4" width="28" height="22" rx="3" fill="#c8673b"/><rect x="-16" y="-6" width="32" height="6" rx="2" fill="#a9532c"/></g>`;};
+return`<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9dcf6"/><stop offset="1" stop-color="#eef9fe"/></linearGradient>
 <linearGradient id="${u}m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb7e0"/><stop offset="1" stop-color="#9fd6ee"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#${u}s)"/>

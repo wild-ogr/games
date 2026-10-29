@@ -1,58 +1,40 @@
-/* Баба Зина — ТЕМЫ ОФОРМЛЕНИЯ (themes1, 04.10). Реестр и код — js/themes.js; журнал — hobby-analytics/release-g/slovo-themes.md
-   ОСНОВНОЙ ВИД («Тетрадь в клетку») ЗДЕСЬ НЕ ОПИСАН И НЕ МЕНЯЕТСЯ: он в index.html. Всё ниже (кроме окна «Оформление») действует только под html.th-x.
-   Тема = класс html.th-<id> с блоком переменных (раздел 2) + фон-место #thbg (раздел 5). Общие правила тем — раздел 3 (панели, кнопки, размеры, значки).
-   Правила серии: текст ≥ 16–17 px (подписи ≥ 15), кнопки ≥ 48 px, одна главная кнопка, реклама — своим цветом и со значком-телевизором; без inset:, без gap в ключевой раскладке.
-   Переменные темы: --bgc фон; --font/--fonth шрифт/заголовки; --ink/--ink2 текст; --paper окно; --pn/--pnb/--pnsh панель/рамка/тень; --hd заголовки;
-   --accbg/--onacc/--accsh главная кнопка; --accc цвет акцента (рамки, значки); --adbg/--adtx/--adbd/--adsh кнопка «за рекламу»; --tint/--icc значки;
-   --cell/--cellb закрытая клетка; --cello/--cellob/--cellotx/--cellsh открытая клетка; --soft/--track/--hl/--stamp/--dim; --good «зелёный» текст; --toastbg/--toasttx. */
-
-/* ===== 1. шрифты серии (грузятся, только когда тема включена) ===== */
 @font-face{font-family:"ZRubik";font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/rubik-cyrillic.woff2) format("woff2");unicode-range:U+0400-045F,U+0490-0491}
 @font-face{font-family:"ZRubik";font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/rubik-latin.woff2) format("woff2");unicode-range:U+0020-007E,U+00A0-00FF,U+2013-2014,U+2018-201E,U+2022,U+2026,U+2039-203A,U+2116,U+2212}
 @font-face{font-family:"ZGolos";font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/golos-text.woff2) format("woff2")}
-
-/* ===== 2. блоки переменных: по одному на тему ===== */
 html.th-kitchen{--font:"ZRubik",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--fonth:var(--font);
-  --bgc:#f3e2c4;--ink:#3b2a20;--ink2:#6f5543;--paper:#fffaf0;--card:#fffaf0;--pn:#fffaf0;--pnb:#e3cfa8;--pnsh:0 2px 6px rgba(90,55,20,.16);--hd:#8f2f12;
-  --accbg:linear-gradient(180deg,#d4582c,#b8431f);--onacc:#fff;--accsh:0 6px 14px rgba(150,50,15,.32),inset 0 1px 0 rgba(255,255,255,.3);--accc:#b8431f;
-  --adbg:linear-gradient(180deg,#ffd97a,#f6c453);--adtx:#4a2f08;--adbd:transparent;--adsh:0 4px 10px rgba(170,110,10,.3);--tint:#fbe3b0;--icc:#b8431f;
-  --blue:#2450a8;--blue2:#2f62c4;--cell:#f4ecd9;--cellb:#dcc9a2;--cello:#fff;--cellob:#9db4e6;--cellotx:#2450a8;--cellsh:0 2px 0 #c9d6f2;
-  --soft:#f3ead6;--track:#eadbbd;--hl:#fbe9b6;--stamp:#c0392b;--dim:rgba(60,35,15,.5);--good:#2f7d3b;--margin:#e79a90;--edge:#e3cfa8;--edge2:#ead9b6;--toastbg:#3b2a20;--toasttx:#fff}
+--bgc:#f3e2c4;--ink:#3b2a20;--ink2:#6f5543;--paper:#fffaf0;--card:#fffaf0;--pn:#fffaf0;--pnb:#e3cfa8;--pnsh:0 2px 6px rgba(90,55,20,.16);--hd:#8f2f12;
+--accbg:linear-gradient(180deg,#d4582c,#b8431f);--onacc:#fff;--accsh:0 6px 14px rgba(150,50,15,.32),inset 0 1px 0 rgba(255,255,255,.3);--accc:#b8431f;
+--adbg:linear-gradient(180deg,#ffd97a,#f6c453);--adtx:#4a2f08;--adbd:transparent;--adsh:0 4px 10px rgba(170,110,10,.3);--tint:#fbe3b0;--icc:#b8431f;
+--blue:#2450a8;--blue2:#2f62c4;--cell:#f4ecd9;--cellb:#dcc9a2;--cello:#fff;--cellob:#9db4e6;--cellotx:#2450a8;--cellsh:0 2px 0 #c9d6f2;
+--soft:#f3ead6;--track:#eadbbd;--hl:#fbe9b6;--stamp:#c0392b;--dim:rgba(60,35,15,.5);--good:#2f7d3b;--margin:#e79a90;--edge:#e3cfa8;--edge2:#ead9b6;--toastbg:#3b2a20;--toasttx:#fff}
 html.th-veranda{--font:"ZGolos",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--fonth:var(--font);
-  --bgc:#2a2c56;--ink:#fff;--ink2:rgba(255,255,255,.88);--paper:rgba(28,30,64,.82);--card:rgba(24,27,58,.6);--pn:rgba(24,27,58,.6);--pnb:rgba(255,255,255,.26);--pnsh:0 4px 14px rgba(8,6,26,.28);--hd:#fff;
-  --accbg:linear-gradient(180deg,#ffc978,#ffb252 45%,#ff8f3c);--onacc:#3a1c00;--accsh:0 8px 22px rgba(255,140,50,.4),inset 0 1px 0 rgba(255,255,255,.55);--accc:#ffb252;
-  --adbg:rgba(24,27,58,.6);--adtx:#fff;--adbd:#ffb252;--adsh:0 4px 14px rgba(8,6,26,.28);--tint:rgba(255,178,82,.4);--icc:#ffd9a0;
-  --blue:#ffd9a0;--blue2:#ffc978;--cell:rgba(255,255,255,.17);--cellb:rgba(255,255,255,.45);--cello:#fff5df;--cellob:#fff;--cellotx:#1d3f8f;--cellsh:0 3px 10px rgba(20,10,40,.35);
-  --soft:rgba(255,255,255,.14);--track:rgba(255,255,255,.24);--hl:rgba(255,178,82,.3);--stamp:#d0342c;--dim:rgba(14,12,36,.55);--good:#9ff0b0;--margin:#ffb252;--edge:rgba(255,255,255,.26);--edge2:rgba(255,255,255,.3);--toastbg:#fff5df;--toasttx:#2a2350}
-/* запасной вид «Веранды» без размытия (слабый телефон, старый WebView, ?nb=1): плотные панели */
+--bgc:#2a2c56;--ink:#fff;--ink2:rgba(255,255,255,.88);--paper:rgba(28,30,64,.82);--card:rgba(24,27,58,.6);--pn:rgba(24,27,58,.6);--pnb:rgba(255,255,255,.26);--pnsh:0 4px 14px rgba(8,6,26,.28);--hd:#fff;
+--accbg:linear-gradient(180deg,#ffc978,#ffb252 45%,#ff8f3c);--onacc:#3a1c00;--accsh:0 8px 22px rgba(255,140,50,.4),inset 0 1px 0 rgba(255,255,255,.55);--accc:#ffb252;
+--adbg:rgba(24,27,58,.6);--adtx:#fff;--adbd:#ffb252;--adsh:0 4px 14px rgba(8,6,26,.28);--tint:rgba(255,178,82,.4);--icc:#ffd9a0;
+--blue:#ffd9a0;--blue2:#ffc978;--cell:rgba(255,255,255,.17);--cellb:rgba(255,255,255,.45);--cello:#fff5df;--cellob:#fff;--cellotx:#1d3f8f;--cellsh:0 3px 10px rgba(20,10,40,.35);
+--soft:rgba(255,255,255,.14);--track:rgba(255,255,255,.24);--hl:rgba(255,178,82,.3);--stamp:#d0342c;--dim:rgba(14,12,36,.55);--good:#9ff0b0;--margin:#ffb252;--edge:rgba(255,255,255,.26);--edge2:rgba(255,255,255,.3);--toastbg:#fff5df;--toasttx:#2a2350}
 html.th-veranda.th-nb{--paper:#262a58;--card:rgba(27,30,62,.95);--pn:rgba(27,30,62,.95);--adbg:rgba(27,30,62,.95)}
 html.th-gzhel{--font:"ZGolos",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--fonth:Georgia,"PT Serif","Times New Roman",serif;
-  --bgc:#f6f2ea;--ink:#1b2747;--ink2:#4c5875;--paper:#fff;--card:#fff;--pn:#fff;--pnb:#cdd8ef;--pnsh:0 2px 6px rgba(31,79,191,.08);--hd:#1f4fbf;
-  --accbg:#1f4fbf;--onacc:#fff;--accsh:0 6px 16px rgba(31,79,191,.3);--accc:#1f4fbf;
-  --adbg:#fffaf0;--adtx:#1b2747;--adbd:#b98416;--adsh:0 2px 6px rgba(185,132,22,.18);--tint:#dfe8fb;--icc:#1f4fbf;
-  --blue:#1f4fbf;--blue2:#3566d6;--cell:#fbf9f4;--cellb:#cdd8ef;--cello:#fff;--cellob:#1f4fbf;--cellotx:#1f4fbf;--cellsh:0 2px 0 #c3d1f1;
-  --soft:#f4f7fd;--track:#dfe8fb;--hl:#fdf1cf;--stamp:#c23a2b;--dim:rgba(22,32,64,.45);--good:#1f6a2b;--margin:#1f4fbf;--edge:#cdd8ef;--edge2:#dfe8fb;--toastbg:#1b2747;--toasttx:#fff}
-
-/* «Зимний двор» (zb3-SKIN 25.10, продаёт ларёк KIOSK) */
+--bgc:#f6f2ea;--ink:#1b2747;--ink2:#4c5875;--paper:#fff;--card:#fff;--pn:#fff;--pnb:#cdd8ef;--pnsh:0 2px 6px rgba(31,79,191,.08);--hd:#1f4fbf;
+--accbg:#1f4fbf;--onacc:#fff;--accsh:0 6px 16px rgba(31,79,191,.3);--accc:#1f4fbf;
+--adbg:#fffaf0;--adtx:#1b2747;--adbd:#b98416;--adsh:0 2px 6px rgba(185,132,22,.18);--tint:#dfe8fb;--icc:#1f4fbf;
+--blue:#1f4fbf;--blue2:#3566d6;--cell:#fbf9f4;--cellb:#cdd8ef;--cello:#fff;--cellob:#1f4fbf;--cellotx:#1f4fbf;--cellsh:0 2px 0 #c3d1f1;
+--soft:#f4f7fd;--track:#dfe8fb;--hl:#fdf1cf;--stamp:#c23a2b;--dim:rgba(22,32,64,.45);--good:#1f6a2b;--margin:#1f4fbf;--edge:#cdd8ef;--edge2:#dfe8fb;--toastbg:#1b2747;--toasttx:#fff}
 html.th-zima{--font:"ZRubik",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--fonth:var(--font);
-  --bgc:#eaf2fa;--ink:#1d2b4a;--ink2:#4a5a78;--paper:#fff;--card:#fff;--pn:#fbfdff;--pnb:#c9daef;--pnsh:0 2px 8px rgba(40,80,140,.14);--hd:#1f5aa8;
-  --accbg:linear-gradient(180deg,#d04a2c,#b5381c);--onacc:#fff;--accsh:0 6px 14px rgba(150,40,20,.3),inset 0 1px 0 rgba(255,255,255,.3);--accc:#1f5aa8;
-  --adbg:linear-gradient(180deg,#ffe08a,#f6c453);--adtx:#4a2f08;--adbd:transparent;--adsh:0 4px 10px rgba(170,110,10,.28);--tint:#dbe9f8;--icc:#1f5aa8;
-  --blue:#1f5aa8;--blue2:#2f6fd6;--cell:#f7fbff;--cellb:#c3d6ee;--cello:#fff;--cellob:#1f5aa8;--cellotx:#1f5aa8;--cellsh:0 2px 0 #c3d6ee;
-  --soft:#f2f7fd;--track:#dbe9f8;--hl:#fff2c8;--stamp:#c23a2b;--dim:rgba(20,36,70,.45);--good:#1f6a2b;--margin:#c23a2b;--edge:#c9daef;--edge2:#dbe9f8;--toastbg:#1d2b4a;--toasttx:#fff}
-/* «Осенний двор» (zb3-SKIN 25.10): тёплая бумага, ржавчина клёна, синие буквы (контраст ≥4,5) */
+--bgc:#eaf2fa;--ink:#1d2b4a;--ink2:#4a5a78;--paper:#fff;--card:#fff;--pn:#fbfdff;--pnb:#c9daef;--pnsh:0 2px 8px rgba(40,80,140,.14);--hd:#1f5aa8;
+--accbg:linear-gradient(180deg,#d04a2c,#b5381c);--onacc:#fff;--accsh:0 6px 14px rgba(150,40,20,.3),inset 0 1px 0 rgba(255,255,255,.3);--accc:#1f5aa8;
+--adbg:linear-gradient(180deg,#ffe08a,#f6c453);--adtx:#4a2f08;--adbd:transparent;--adsh:0 4px 10px rgba(170,110,10,.28);--tint:#dbe9f8;--icc:#1f5aa8;
+--blue:#1f5aa8;--blue2:#2f6fd6;--cell:#f7fbff;--cellb:#c3d6ee;--cello:#fff;--cellob:#1f5aa8;--cellotx:#1f5aa8;--cellsh:0 2px 0 #c3d6ee;
+--soft:#f2f7fd;--track:#dbe9f8;--hl:#fff2c8;--stamp:#c23a2b;--dim:rgba(20,36,70,.45);--good:#1f6a2b;--margin:#c23a2b;--edge:#c9daef;--edge2:#dbe9f8;--toastbg:#1d2b4a;--toasttx:#fff}
 html.th-osen{--font:"ZRubik",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--fonth:var(--font);
-  --bgc:#f6ead4;--ink:#3a2414;--ink2:#6b4a30;--paper:#fffaf0;--card:#fffaf0;--pn:#fffdf7;--pnb:#e8cfa4;--pnsh:0 2px 8px rgba(120,70,20,.16);--hd:#a3401a;
-  --accbg:linear-gradient(180deg,#cf4a10,#b0390a);--onacc:#fff;--accsh:0 6px 14px rgba(150,60,10,.3),inset 0 1px 0 rgba(255,255,255,.3);--accc:#a3401a;
-  --adbg:linear-gradient(180deg,#ffe08a,#f6c453);--adtx:#4a2f08;--adbd:transparent;--adsh:0 4px 10px rgba(170,110,10,.28);--tint:#fbe3c0;--icc:#a3401a;
-  --blue:#2450a8;--blue2:#2f6fd6;--cell:#fffaf0;--cellb:#e3c99c;--cello:#fff;--cellob:#a3401a;--cellotx:#a3401a;--cellsh:0 2px 0 #e3c99c;
-  --soft:#fdf3e2;--track:#f1dcb8;--hl:#fff2c8;--stamp:#c23a2b;--dim:rgba(58,36,20,.45);--good:#1f6a2b;--margin:#c23a2b;--edge:#e8cfa4;--edge2:#f1dcb8;--toastbg:#3a2414;--toasttx:#fff}
-
-/* ===== 3. общие правила тем ===== */
+--bgc:#f6ead4;--ink:#3a2414;--ink2:#6b4a30;--paper:#fffaf0;--card:#fffaf0;--pn:#fffdf7;--pnb:#e8cfa4;--pnsh:0 2px 8px rgba(120,70,20,.16);--hd:#a3401a;
+--accbg:linear-gradient(180deg,#cf4a10,#b0390a);--onacc:#fff;--accsh:0 6px 14px rgba(150,60,10,.3),inset 0 1px 0 rgba(255,255,255,.3);--accc:#a3401a;
+--adbg:linear-gradient(180deg,#ffe08a,#f6c453);--adtx:#4a2f08;--adbd:transparent;--adsh:0 4px 10px rgba(170,110,10,.28);--tint:#fbe3c0;--icc:#a3401a;
+--blue:#2450a8;--blue2:#2f6fd6;--cell:#fffaf0;--cellb:#e3c99c;--cello:#fff;--cellob:#a3401a;--cellotx:#a3401a;--cellsh:0 2px 0 #e3c99c;
+--soft:#fdf3e2;--track:#f1dcb8;--hl:#fff2c8;--stamp:#c23a2b;--dim:rgba(58,36,20,.45);--good:#1f6a2b;--margin:#c23a2b;--edge:#e8cfa4;--edge2:#f1dcb8;--toastbg:#3a2414;--toasttx:#fff}
 html.th-x,html.th-x body{background:var(--bgc);background-image:none}
 html.th-x body{font-family:var(--font)}
 #thbg{position:fixed;top:0;right:0;bottom:0;left:0;z-index:0;overflow:hidden;pointer-events:none}
-/* значки вместо эмодзи */
 .ti{display:inline-block;position:relative;width:1.15em;height:1.15em;vertical-align:-.2em;font-style:normal;flex:none}
 .ti svg{display:block;width:100%;height:100%}
 .ti:not(.tch) svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -60,10 +42,8 @@ html.th-x body{font-family:var(--font)}
 .ti .ti-e{position:absolute;left:0;top:0;width:0;height:0;overflow:hidden;font-size:0;line-height:0}
 .ti.tch{width:1.4em;height:1.4em;vertical-align:-.35em}
 .ti.ti-check{color:var(--good)}
-/* монета — «пятак Зины» */
 html.th-x .coin,html.th-x .coinfly{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23e2a019'/%3E%3Ccircle cx='12' cy='11.2' r='10.2' fill='%23ffd257'/%3E%3Ccircle cx='12' cy='11.2' r='7.4' fill='none' stroke='%23e2a019' stroke-width='1.4'/%3E%3Cpath d='M9.3 8.3c1.2-1.3 4.700-1.300 4.900.700.200 1.500-1.400 2-2.500 2 1.400 0 3.100.600 2.900 2.300-.300 2.300-4.300 2.200-5.600.700' fill='none' stroke='%23b9770a' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E") 50% 50%/100% 100% no-repeat;box-shadow:none;border-radius:50%}
 html.th-x .coin::after{display:none}
-/* панели: одна бумага/стекло, без «кирпичного» низа */
 html.th-x .ibtn,html.th-x .coins,html.th-x .mbubble,html.th-x .chap,html.th-x .lv,html.th-x .zina .say,html.th-x .hb,html.th-x .goal,html.th-x .cred,html.th-x .words span,
 html.th-x .dict,html.th-x .dhead,html.th-x .tabs button,html.th-x .item,html.th-x .stat,html.th-x .lbbox,html.th-x .setrow,html.th-x .prow,html.th-x .week,html.th-x .logo .rank,
 html.th-x .btn.ghost,html.th-x .btn.blue,html.th-x .pvb,html.th-x .fire,html.th-x .thc{background:var(--pn);border:1.5px solid var(--pnb);box-shadow:var(--pnsh);color:var(--ink);text-shadow:none}
@@ -71,7 +51,6 @@ html.th-x .ibtn:active,html.th-x .hb:active,html.th-x .setrow:active,html.th-x b
 html.th-x .ibtn,html.th-x .hb,html.th-x .setrow>span .ti,html.th-x .mbtns .btn .ti,html.th-x .btn.ghost .ti,html.th-x .btn.blue .ti{color:var(--icc)}
 html.th-x .ibtn{width:48px;height:48px;font-size:22px}
 html.th-x .ibtn small,html.th-x .hb .lbl{color:var(--ink)}
-/* кнопки: главная — одна краска; «за рекламу» — своя; остальное — панель */
 html.th-x .btn{min-height:48px;border:0;background:var(--accbg);color:var(--onacc);box-shadow:var(--accsh);text-shadow:none;font-family:var(--font)}
 html.th-x .btn:active{transform:scale(.98);box-shadow:var(--accsh)}
 html.th-x .btn.green,html.th-x .btn.blue#mOk{background:var(--accbg);color:var(--onacc);box-shadow:var(--accsh);border:0}
@@ -85,7 +64,6 @@ html.th-x .item .btn:not(.ghost):not(.blue){background:var(--pn);color:var(--ink
 html.th-x .mbtns .row .btn{font-size:16px}
 html.th-x .mbtns .row2 .btn{min-height:50px}
 html.th-x .dot{background:var(--accc);border-color:var(--pn)}
-/* заголовки и текст */
 html.th-x .logo h1{font-family:var(--fonth);color:var(--hd);text-shadow:none}
 html.th-x .logo p.sub{color:var(--accc);text-shadow:none}
 html.th-x .logo .rank{font-size:16px;color:var(--ink2);padding:4px 12px}
@@ -113,7 +91,6 @@ html.th-x .lv.test:not(.lock){outline-color:var(--accc)}
 html.th-x #levels .scroll>p{font-size:16px!important}
 html.th-x .bar i{background:var(--good)}
 html.th-veranda .bar i{background:linear-gradient(90deg,#ffd992,#ffa043)}
-/* поле: клетки и слово */
 html.th-x .cell{border-width:1.5px;color:var(--cellotx)}
 html.th-x .cell.open{background:var(--cello);border-color:var(--cellob);box-shadow:var(--cellsh)}
 html.th-x .cell.hint,html.th-x .cell.gift{color:var(--btnor)}
@@ -135,7 +112,6 @@ html.th-x .side{gap:34px}
 html.th-x .jar .cnt{font-size:15px;min-width:24px;height:24px;border-radius:12px;border-color:var(--pn)}
 html.th-x .hb.glow{animation:none;box-shadow:0 0 0 4px var(--accc),var(--pnsh)}
 html.th-x .fly{color:var(--cellotx)}
-/* окна */
 html.th-x .chk{font-size:16px}
 html.th-x .money,html.th-x .goal,html.th-x .tmr,html.th-x .dly,html.th-x .soc-o{font-size:16px!important}
 html.th-x .goal.can{box-shadow:0 0 0 2px var(--accc)}
@@ -191,25 +167,20 @@ html.th-x [style*="font-size:12px"]{font-size:15px!important}
 html.th-x [style*="font-size:13.5px"],html.th-x [style*="font-size:14px"],html.th-x [style*="font-size:14.5px"],html.th-x [style*="font-size:15px"]{font-size:16px!important}
 html.th-x .mtop .ibtn{width:auto;min-width:54px;height:54px}
 html.th-x .mtop .ibtn small{font-size:15px;color:var(--ink)}
-/* низкие и узкие экраны: текст не мельче 16, кнопки не ниже 48 */
 @media (max-height:700px){html.th-x .mcard p{font-size:16px}html.th-x .zina .say{font-size:16px}html.th-x .mbubble{font-size:16px}html.th-x .hb{width:50px;height:50px}
-  html.th-x .mcard .btns .btn{padding-top:8px;padding-bottom:8px}html.th-x .defcard .def{font-size:16px}html.th-x .stamp small{font-size:15px}}
+html.th-x .mcard .btns .btn{padding-top:8px;padding-bottom:8px}html.th-x .defcard .def{font-size:16px}html.th-x .stamp small{font-size:15px}}
 @media (max-height:600px){html.th-x .defcard .tag{font-size:15px}html.th-x #btnPlay{padding:10px!important}
-  html.th-x .win .week{padding:5px 8px;margin-top:4px}html.th-x .win .week .wt{margin-bottom:3px}html.th-x .win .week .wc{height:44px}html.th-x .win>p{margin:2px 0}html.th-x .mcard h2{margin-bottom:2px}html.th-x .mcard .btns{margin-top:8px;gap:8px}}
+html.th-x .win .week{padding:5px 8px;margin-top:4px}html.th-x .win .week .wt{margin-bottom:3px}html.th-x .win .week .wc{height:44px}html.th-x .win>p{margin:2px 0}html.th-x .mcard h2{margin-bottom:2px}html.th-x .mcard .btns{margin-top:8px;gap:8px}}
 @media (max-width:400px){html.th-x .ghdr .ibtn{width:48px;height:48px}html.th-x .ghdr .t b{font-size:16px}html.th-x .mtop .ibtn{min-width:50px;padding:2px 4px}}
 @media (max-width:340px){html.th-x .hb .lbl{font-size:15px}html.th-x .mbtns .row .btn{font-size:16px;padding-left:4px;padding-right:4px}html.th-x .ghdr .coins{padding:5px 7px 5px 5px}}
 @media (min-height:701px) and (max-width:859px){html.th-x .zina{position:relative;z-index:6}html.th-x .zina .say{font-size:16px;line-height:1.28}}
 @media (max-height:700px){html.th-x .side{gap:30px}}
 @media (min-width:860px){html.th-x .zina .av{background:none;border:0}html.th-x .zina .say{font-size:18px}}
-
-/* ===== 4. своё у каждой темы (то, что не выражается переменными) ===== */
-/* «Кухня»: кроссворд — тетрадный листок на столе */
 html.th-kitchen #grid::before{content:"";position:absolute;top:-12px;right:-12px;bottom:-12px;left:-12px;z-index:-1;border-radius:6px;background-color:#fffdf7;
-  background-image:linear-gradient(90deg,transparent 0,transparent calc(100% - 20px),#f0a8a0 calc(100% - 20px),#f0a8a0 calc(100% - 18px),transparent calc(100% - 18px)),linear-gradient(#dfe7f6 1px,transparent 1px),linear-gradient(90deg,#dfe7f6 1px,transparent 1px);
-  background-size:100% 100%,17px 17px,17px 17px;box-shadow:0 8px 18px rgba(90,55,20,.26)}
+background-image:linear-gradient(90deg,transparent 0,transparent calc(100% - 20px),#f0a8a0 calc(100% - 20px),#f0a8a0 calc(100% - 18px),transparent calc(100% - 18px)),linear-gradient(#dfe7f6 1px,transparent 1px),linear-gradient(90deg,#dfe7f6 1px,transparent 1px);
+background-size:100% 100%,17px 17px,17px 17px;box-shadow:0 8px 18px rgba(90,55,20,.26)}
 html.th-kitchen .defcard{background-color:#fff;background-image:linear-gradient(transparent 27px,#dfe7f6 28px);background-size:100% 28px}
 html.th-kitchen .mbubble,html.th-kitchen .zina .say{border-color:#e3cfa8}
-/* «Веранда»: стекло и свет */
 html.th-veranda .mcard,html.th-veranda .mbubble,html.th-veranda .zina .say,html.th-veranda .ibtn,html.th-veranda .coins,html.th-veranda .hb,html.th-veranda .mbtns .btn.blue,html.th-veranda .mbtns .btn.ghost,html.th-veranda #preview .w{-webkit-backdrop-filter:blur(12px) saturate(1.2);backdrop-filter:blur(12px) saturate(1.2)}
 html.th-veranda.th-nb .mcard,html.th-veranda.th-nb .mbubble,html.th-veranda.th-nb .zina .say,html.th-veranda.th-nb .ibtn,html.th-veranda.th-nb .coins,html.th-veranda.th-nb .hb,html.th-veranda.th-nb .mbtns .btn,html.th-veranda.th-nb #preview .w{-webkit-backdrop-filter:none;backdrop-filter:none}
 html.th-veranda .mbubble::after,html.th-veranda .zina .say::before{display:none}
@@ -232,7 +203,6 @@ html.th-veranda .jar .ring circle{stroke:rgba(255,255,255,.3)}
 html.th-veranda .cell.hint,html.th-veranda .cell.gift{color:#c2410c}
 html.th-veranda .chk input{accent-color:#ffb252}
 @media (min-width:860px){html.th-veranda .zina .av{background:none;box-shadow:none}}
-/* «Гжель и лён»: книжные заголовки, тонкие синие рамки */
 html.th-gzhel .logo h1{font-weight:700;letter-spacing:0}
 html.th-gzhel .logo p.sub{color:#c23a2b;font-weight:600;letter-spacing:3px;text-transform:uppercase;font-size:17px}
 html.th-gzhel .cell.open{border-width:2px}
@@ -241,9 +211,6 @@ html.th-gzhel .defcard{background:#f4f7fd}
 html.th-gzhel .goal{border-left:0;border-right:0;border-radius:0;box-shadow:none;background:transparent}
 html.th-gzhel #preview .w:not(.ok):not(.bad):not(.bonus):not(.old){border:0;border-bottom:2.5px solid #1f4fbf;border-radius:0;background:transparent}
 @media (min-width:860px){html.th-gzhel .zina .av{background:none}}
-
-/* ===== 5. фон-место ===== */
-/* «Кухня»: обои в горошек, занавеска-подзор, окно с геранью (в меню), стол со скатертью */
 html.th-kitchen #thbg{background-color:#f3e2c4;background-image:radial-gradient(circle at 20px 20px,#ecd3a7 3px,transparent 3.5px),radial-gradient(circle at 50px 50px,#ecd3a7 3px,transparent 3.5px),radial-gradient(circle at 20px 20px,transparent 6px,#efd9b2 6.5px,#efd9b2 7.5px,transparent 8px);background-size:60px 60px}
 .sc-val{position:absolute;left:0;top:0;width:100%;height:16px;background:radial-gradient(circle at 14px 0,#fffdf6 13px,rgba(120,80,40,.18) 13.5px,transparent 15px);background-size:28px 16px}
 .sc-table{position:absolute;left:0;bottom:0;width:100%;height:44%;background-color:#e9d3ac;background-image:linear-gradient(0deg,rgba(255,255,255,.22) 50%,transparent 50%),linear-gradient(90deg,rgba(255,255,255,.22) 50%,transparent 50%);background-size:28px 28px;box-shadow:0 -3px 0 #c9a873,0 -10px 18px rgba(90,55,20,.18)}
@@ -253,7 +220,6 @@ html.th-kitchen #heroArt{background:var(--kwin) 50% 0/auto 96% no-repeat}
 html[data-scr=game] .sc-table{top:128px;height:auto}
 html[data-scr=chapters] .sc-table,html[data-scr=levels] .sc-table,html[data-scr=dictS] .sc-table,html[data-scr=shopS] .sc-table,html[data-scr=rateS] .sc-table{display:none}
 @media (min-width:860px){html[data-scr=menu] .sc-table{height:30%}html[data-scr=game] .sc-table{top:auto;height:72%}}
-/* «Веранда»: закат над садом, домик с окном, забор, гирлянда; на рабочих экранах фон приглушён */
 html.th-veranda #thbg{background:linear-gradient(180deg,#23264f 0%,#4a3a78 26%,#a5567f 48%,#f08c62 66%,#ffd08a 80%,#ffe2ad 100%)}
 html.th-veranda #thbg::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(22,20,52,.5)}
 html.th-veranda[data-scr=menu] #thbg::after{background:rgba(22,20,52,.12)}
@@ -265,7 +231,6 @@ html.th-veranda[data-scr=game] #thbg::after{background:rgba(22,20,52,.38)}
 html[data-scr=menu] .sc-moon{display:block}
 @media (min-width:860px){.sc-garden{height:52%}}
 @media (max-height:600px){.sc-moon{display:none!important}}
-/* «Гжель и лён»: льняное полотно, роспись по углам, красная строчка */
 html.th-gzhel #thbg{background-color:#f6f2ea;background-image:linear-gradient(0deg,rgba(150,130,95,.07) 50%,transparent 50%),linear-gradient(90deg,rgba(150,130,95,.07) 50%,transparent 50%);background-size:4px 4px}
 .sc-orn{position:absolute;width:210px;height:210px}
 .sc-orn svg{width:100%;height:100%;display:block}
@@ -275,9 +240,6 @@ html:not([data-scr=menu]) .sc-orn{opacity:.45}
 html:not([data-scr=menu]) .sc-orn.tr{right:-110px;top:-110px}
 .sc-stitch{position:absolute;left:0;top:0;width:100%;height:6px;background:repeating-linear-gradient(90deg,#c23a2b 0,#c23a2b 8px,transparent 8px,transparent 14px);opacity:.75}
 @media (min-width:860px){.sc-orn{width:320px;height:320px}.sc-orn.tr{right:-60px;top:-56px}.sc-orn.bl{left:-70px;bottom:-66px}}
-
-/* ===== 6. окно «🎨 Оформление» (есть и в основном виде) ===== */
-/* строка «🎨 Оформление» в «Обликах» (есть и в основном виде) */
 .setrow.shth{margin:0 0 12px;text-align:left;font-size:17px;padding:10px 14px}
 .setrow.shth small{font-size:14px;font-weight:600;color:var(--ink2)}
 .setrow.shth b{min-width:44px;text-align:center}
@@ -316,13 +278,11 @@ html.th-x .th-on{color:var(--good)}
 .thp-veranda .thp-h{background:rgba(24,27,58,.6);box-shadow:0 0 0 1px rgba(255,255,255,.3)}.thp-veranda .thp-c b{background:#fff5df;color:#1d3f8f}.thp-veranda .thp-b{background:#ffb252}
 .thp-gzhel{background:#f6f2ea}
 .thp-gzhel .thp-h{background:#fff;box-shadow:0 0 0 1px #cdd8ef}.thp-gzhel .thp-c b{background:#fff;color:#1f4fbf;box-shadow:0 0 0 1.5px #1f4fbf}.thp-gzhel .thp-b{background:#1f4fbf}
-/* «Зимний двор»: морозное небо, снежные холмы с ёлочками, иней по углам (zb3-SKIN) */
 html.th-zima #thbg{background:linear-gradient(180deg,#bcd8f0 0%,#dcebf8 45%,#f4f8fc 100%)}
 .sc-snow{position:absolute;left:0;bottom:0;width:100%;height:42%}
 .sc-frost{position:absolute;width:150px;height:150px;opacity:.7;background:radial-gradient(circle at 0 0,#fff 0,rgba(255,255,255,.85) 30%,rgba(255,255,255,0) 70%)}
 .sc-frost.tl{left:0;top:0}.sc-frost.tr{right:0;top:0;transform:scaleX(-1)}
 html.th-zima:not([data-scr=menu]) .sc-snow{opacity:.55}
-/* «Осенний двор»: тёплое небо, клёны, листья на холмах, солнечный угол (zb3-SKIN) */
 html.th-osen #thbg{background:linear-gradient(180deg,#fde3b8 0%,#fbeed6 45%,#fbf5ea 100%)}
 .sc-sun{background:radial-gradient(circle at 0 0,#ffe7a6 0,rgba(255,215,130,.6) 30%,rgba(255,215,130,0) 70%)}
 html.th-osen:not([data-scr=menu]) .sc-snow{opacity:.55}

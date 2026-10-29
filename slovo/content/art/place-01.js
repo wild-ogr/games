@@ -1,10 +1,9 @@
-/* Место 1 «Подъезд» (ART-1). Фон главы 400×300. Подключение: ZB.load('content/art/place-01.js').then(()=>el.innerHTML=ZB_ART[1].svg()) — см. README-1.md. Пятиэтажка, козырёк, домофон, доска объявлений, лебедь из шины. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{},k=0;
 A[1]={id:'podyezd',n:'Подъезд',c:'#dbe7fb',svg:function(r){var u='a1_'+(++k);r=r||'xMidYMid slice';
-var win=function(x,y,lit,cur){return `<g transform="translate(${x} ${y})"><rect width="30" height="30" rx="2" fill="#fff"/><rect x="2.5" y="2.5" width="25" height="25" fill="${lit?'#ffe08a':'#9cc3e6'}"/><path d="M15 2.5 V27.5 M2.5 13 H27.5" stroke="#fff" stroke-width="2.5"/>${cur?`<path d="M2.5 2.5 q6 12 0 25z M27.5 2.5 q-6 12 0 25z" fill="${cur}"/>`:''}<rect x="-2" y="29" width="34" height="3.5" rx="1" fill="#d9cfc0"/></g>`;};
+var win=function(x,y,lit,cur){return`<g transform="translate(${x} ${y})"><rect width="30" height="30" rx="2" fill="#fff"/><rect x="2.5" y="2.5" width="25" height="25" fill="${lit?'#ffe08a':'#9cc3e6'}"/><path d="M15 2.5 V27.5 M2.5 13 H27.5" stroke="#fff" stroke-width="2.5"/>${cur?`<path d="M2.5 2.5 q6 12 0 25z M27.5 2.5 q-6 12 0 25z" fill="${cur}"/>`:''}<rect x="-2" y="29" width="34" height="3.5" rx="1" fill="#d9cfc0"/></g>`;};
 var cols=[30,76,122,248,294,340],rows=[18,62,106],W='';
 rows.forEach(function(y,r){W+=`<g transform="translate(188 ${y+8})"><rect width="24" height="16" rx="2" fill="#fff"/><rect x="2" y="2" width="20" height="12" fill="#b7d3ec"/><path d="M12 2 V14" stroke="#fff" stroke-width="2"/></g>`;cols.forEach(function(x,c){var l=(r*5+c*3)%4===0,cu=['','#f2a0a0','','#b9d98a','#f5c86b',''][(r+c)%6];W+=win(x,y,l,cu);});});
-return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
+return`<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
 <defs><linearGradient id="s${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9d3fb"/><stop offset="1" stop-color="#e6f3ff"/></linearGradient>
 <linearGradient id="w${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efe3d0"/><stop offset="1" stop-color="#e0cfb6"/></linearGradient>
 <linearGradient id="d${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a34"/><stop offset="1" stop-color="#6b4325"/></linearGradient></defs>

@@ -1,9 +1,8 @@
-/* Место 13 «ЖЭК» (ART-2). Фон главы 400×300: дверь «Приём сантехника», капающая труба, календарь прошлого года. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{};
 A[13]={id:'zhek',n:'ЖЭК',c:'#e6e9ef',
 svg:function(r){var u='a13_'+(++A._n||(A._n=1));r=r||'xMidYMid slice';
-var chair=function(x,y){return `<g transform="translate(${x} ${y})"><rect x="-14" y="-40" width="28" height="22" rx="3" fill="#8a8f99"/><rect x="-16" y="-18" width="32" height="7" rx="2" fill="#6b7280"/><path d="M-12 -11 v20 M12 -11 v20" stroke="#4b5260" stroke-width="3"/></g>`;};
-return `<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
+var chair=function(x,y){return`<g transform="translate(${x} ${y})"><rect x="-14" y="-40" width="28" height="22" rx="3" fill="#8a8f99"/><rect x="-16" y="-18" width="32" height="7" rx="2" fill="#6b7280"/><path d="M-12 -11 v20 M12 -11 v20" stroke="#4b5260" stroke-width="3"/></g>`;};
+return`<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="${u}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef1f6"/><stop offset="1" stop-color="#dfe4ec"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#${u}w)"/>
 <rect x="0" y="130" width="400" height="90" fill="#8fb3a4"/><rect x="0" y="128" width="400" height="4" fill="#6f9585"/>

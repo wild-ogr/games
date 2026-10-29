@@ -1,15 +1,13 @@
-/* Место 3 «Рынок» (ART-1). Фон главы 400×300. Подключение: ZB.load('content/art/place-03.js').then(()=>el.innerHTML=ZB_ART[3].svg()) — см. README-1.md.
-   Два прилавка под полосатыми навесами, весы с гирькой, ценники с торгом, гора арбузов, ящик «свежих букв». */
 (function(){var A=window.ZB_ART=window.ZB_ART||{},k=0;
 A[3]={id:'rynok',n:'Рынок',c:'#ffe7cf',svg:function(r){var u='a3_'+(++k);r=r||'xMidYMid slice';
-var awn=function(x,w,c1,c2){var n=Math.round(w/20),s='';for(var i=0;i<n;i++)s+=`<path d="M${x+i*w/n} 70 h${w/n} v22 q-${w/n/2} 10 -${w/n} 0z" fill="${i%2?c2:c1}"/>`;return `<rect x="${x}" y="62" width="${w}" height="10" fill="${c1}"/>${s}`;};
-var tag=function(x,y,a,b,rot){return `<g transform="translate(${x} ${y}) rotate(${rot})"><rect x="-30" y="-12" width="60" height="24" rx="2" fill="#fff" stroke="#c9a46a"/><text y="-2" text-anchor="middle" font-size="7" font-weight="700" fill="#3a2a22">${a}</text><text y="8" text-anchor="middle" font-size="6" fill="#e8475a">${b}</text></g>`;};
-var carrot=function(x,y,a){return `<g transform="translate(${x} ${y}) rotate(${a})"><path d="M-4 0 q4 26 4 26 q0 0 4 -26z" fill="#f58a2a"/><path d="M0 0 l-5 -9 M0 0 l0 -10 M0 0 l5 -9" stroke="#4f9a3c" stroke-width="2.4" stroke-linecap="round"/></g>`;};
+var awn=function(x,w,c1,c2){var n=Math.round(w/20),s='';for(var i=0;i<n;i++)s+=`<path d="M${x+i*w/n} 70 h${w/n} v22 q-${w/n/2} 10 -${w/n} 0z" fill="${i%2?c2:c1}"/>`;return`<rect x="${x}" y="62" width="${w}" height="10" fill="${c1}"/>${s}`;};
+var tag=function(x,y,a,b,rot){return`<g transform="translate(${x} ${y}) rotate(${rot})"><rect x="-30" y="-12" width="60" height="24" rx="2" fill="#fff" stroke="#c9a46a"/><text y="-2" text-anchor="middle" font-size="7" font-weight="700" fill="#3a2a22">${a}</text><text y="8" text-anchor="middle" font-size="6" fill="#e8475a">${b}</text></g>`;};
+var carrot=function(x,y,a){return`<g transform="translate(${x} ${y}) rotate(${a})"><path d="M-4 0 q4 26 4 26 q0 0 4 -26z" fill="#f58a2a"/><path d="M0 0 l-5 -9 M0 0 l0 -10 M0 0 l5 -9" stroke="#4f9a3c" stroke-width="2.4" stroke-linecap="round"/></g>`;};
 var veg='';[[50,146,-78],[56,140,-86],[62,134,-80],[90,146,-96],[96,140,-90],[102,134,-100],[70,128,-88]].forEach(function(v){veg+=carrot(v[0],v[1],v[2]);});
 var app='';[[226,150],[240,152],[254,150],[268,152],[233,142],[247,143],[261,142],[247,134]].forEach(function(p,i){app+=`<circle cx="${p[0]}" cy="${p[1]}" r="8" fill="${i%3?'#e8475a':'#f5b72d'}"/><path d="M${p[0]} ${p[1]-8} l2 -4" stroke="#6b4a32" stroke-width="1.5"/>`;});
 var cuc='';[[300,148,-10],[316,150,8],[332,148,-4],[308,140,12],[324,141,-14]].forEach(function(p){cuc+=`<ellipse cx="${p[0]}" cy="${p[1]}" rx="11" ry="4.5" fill="#4f9a3c" transform="rotate(${p[2]} ${p[0]} ${p[1]})"/>`;});
 var wm='';[[150,262],[180,264],[210,262],[165,246],[195,247],[180,231]].forEach(function(p){wm+=`<g transform="translate(${p[0]} ${p[1]})"><ellipse rx="17" ry="14" fill="#3c8a3a"/><path d="M-14 -4 q14 -8 28 0 M-15 4 q15 -6 30 0" stroke="#7cc46a" stroke-width="2.5" fill="none"/></g>`;});
-return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
+return`<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
 <defs><linearGradient id="s${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9a8"/><stop offset="1" stop-color="#fff4e3"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#s${u})"/>
 <circle cx="70" cy="34" r="20" fill="#fff0a8"/>

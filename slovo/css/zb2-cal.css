@@ -1,4 +1,3 @@
-/* zb2-cal — окно «Отрывной календарь» (поток CAL, буст_в2.0). Всё под .zc-* */
 .zc-win{text-align:center}
 .zc-top{display:flex;align-items:center;gap:12px;justify-content:center;margin:0 0 6px}
 .zc-leaf{flex:0 0 auto;width:74px;border-radius:8px;background:#fffdf7;box-shadow:0 2px 6px rgba(0,0,0,.18);overflow:hidden;line-height:1.05;border:1px solid #e4d6c0;position:relative}
@@ -37,16 +36,13 @@
 .zc-env{background:#fffdf7;border:1px solid #e4d6c0;border-radius:12px;padding:6px 10px;margin:6px 0;font-size:14.5px;text-align:left}
 .zc-env b{display:block;font-size:15.5px}
 @media (max-height:600px){.zc-say .av{display:none}.zc-tip{display:none!important}.zc-leaf b{font-size:28px}}
-/* плашка, 🔥 у монет, вечерняя строка */
 .zc-fire{font-weight:800;font-size:15px;margin:0 6px 0 auto;padding:2px 8px;border-radius:12px;background:rgba(245,183,45,.25);color:#c2410c;cursor:pointer;white-space:nowrap;align-self:center}
 #game .ghdr .zc-fire{margin:0 4px}
 .zc-late{display:block;width:100%;border:0;border-radius:10px;background:#c2410c;color:#fff;font:700 14.5px/1.25 inherit;padding:8px 10px;margin:4px 0;cursor:pointer}
 .zc-chip.zc-hot{box-shadow:0 0 0 2px #c2410c inset}
-/* zb2-MERGE: свой вид плашки — только без NEWB homefit (иначе плашка ряда chips) */
 html:not(.zn-homefit) .zbs-zc-cal>.zc-chip{display:flex;align-items:center;gap:8px;width:100%;border:0;border-radius:12px;background:rgba(245,183,45,.18);padding:8px 12px;margin:4px 0;font:inherit;cursor:pointer;text-align:left}
 html:not(.zn-homefit) .zbs-zc-cal>.zc-chip i{font-style:normal;font-size:20px}
 html:not(.zn-homefit) .zbs-zc-cal>.zc-chip small{margin-left:auto;color:#c2410c;font-weight:700}
-/* up2410 ЗАВТРА ПОДАРОК: обещание завтра в первом листке */
 .zc-ta{margin:6px 0;padding:6px 8px;border-radius:12px;background:rgba(194,65,12,.08);border:1px dashed rgba(194,65,12,.35)}
 .zc-ta p{margin:0 0 6px;font-size:14px;line-height:1.35}
 .zc-tab{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}

@@ -1,11 +1,9 @@
-/* Место 2 «Лавочка» (ART-1). Фон главы 400×300. Подключение: ZB.load('content/art/place-02.js').then(()=>el.innerHTML=ZB_ART[2].svg()) — см. README-1.md.
-   Двор: лавочка у сирени, табличка «Занято с 1975 г.», кулёк семечек, вязание, бельё на верёвке, песочница. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{},k=0;
 A[2]={id:'lavochka',n:'Лавочка',c:'#e5f4d8',svg:function(r){var u='a2_'+(++k);r=r||'xMidYMid slice';
-var lilac=function(x,y,s){return `<g transform="translate(${x} ${y}) scale(${s})"><g fill="#6fae52"><circle cx="0" cy="-30" r="30"/><circle cx="-26" cy="-14" r="22"/><circle cx="26" cy="-14" r="22"/></g>
+var lilac=function(x,y,s){return`<g transform="translate(${x} ${y}) scale(${s})"><g fill="#6fae52"><circle cx="0" cy="-30" r="30"/><circle cx="-26" cy="-14" r="22"/><circle cx="26" cy="-14" r="22"/></g>
 <g fill="#b48be0">${[[-14,-44],[10,-50],[-30,-22],[22,-30],[0,-20],[34,-10],[-12,-6]].map(([a,b])=>`<ellipse cx="${a}" cy="${b}" rx="6" ry="9"/>`).join('')}</g><g fill="#d3b8f2">${[[-12,-47],[12,-53],[-28,-25],[24,-33],[2,-23]].map(([a,b])=>`<circle cx="${a}" cy="${b}" r="3"/>`).join('')}</g></g>`;};
-var shirt=function(x,c){return `<path d="M${x} 62 l-8 4 l3 7 l4 -2 v14 h16 v-14 l4 2 l3 -7 l-8 -4 q-7 4 -14 0z" fill="${c}"/><path d="M${x+7} 60 v3" stroke="#8a6a4a" stroke-width="2"/>`;};
-return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
+var shirt=function(x,c){return`<path d="M${x} 62 l-8 4 l3 7 l4 -2 v14 h16 v-14 l4 2 l3 -7 l-8 -4 q-7 4 -14 0z" fill="${c}"/><path d="M${x+7} 60 v3" stroke="#8a6a4a" stroke-width="2"/>`;};
+return`<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
 <defs><linearGradient id="s${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe3ff"/><stop offset="1" stop-color="#f1faff"/></linearGradient>
 <linearGradient id="g${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9d67f"/><stop offset="1" stop-color="#8cc463"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#s${u})"/>

@@ -1,12 +1,11 @@
-/* Место 15 «За грибами» (ART-2). Фон главы 400×300: осенний лес, тропинка, корзинка, мухомор «НЕ БРАТЬ», указатель «Домой» в обе стороны. */
 (function(){var A=window.ZB_ART=window.ZB_ART||{};
 A[15]={id:'griby',n:'За грибами',c:'#f3e6d6',
 svg:function(r){var u='a15_'+(++A._n||(A._n=1));r=r||'xMidYMid slice';
-var pine=function(x,y,s,c){return `<g transform="translate(${x} ${y}) scale(${s})" fill="${c}"><rect x="-3" y="-24" width="6" height="28" fill="#6b4626"/><path d="M0 -96 l16 26 h-9 l15 22 h-9 l17 26 h-60 l17 -26 h-9 l15 -22 h-9z"/></g>`;};
-var birch=function(x,y,s,c){return `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-4" y="-80" width="8" height="84" fill="#f4f1ea"/><g fill="#333">${[-66,-50,-34,-18].map(v=>`<rect x="-4" y="${v}" width="5" height="2.4"/>`).join('')}</g><g fill="${c}"><circle cx="0" cy="-92" r="24"/><circle cx="-18" cy="-76" r="16"/><circle cx="18" cy="-76" r="16"/></g></g>`;};
-var boro=function(x,y,s){return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-6 0 q-2 -12 0 -18 h12 q2 6 0 18z" fill="#f2e8d2"/><path d="M-16 -16 q16 -22 32 0 q-16 5 -32 0z" fill="#8a4f24"/><ellipse cx="-5" cy="-21" rx="4" ry="2" fill="#a8683a" opacity=".7"/></g>`;};
-var leaf=function(x,y,a,c){return `<path d="M0 -5 q5 2 0 10 q-5 -8 0 -10z" fill="${c}" transform="translate(${x} ${y}) rotate(${a})"/>`;};
-return `<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
+var pine=function(x,y,s,c){return`<g transform="translate(${x} ${y}) scale(${s})" fill="${c}"><rect x="-3" y="-24" width="6" height="28" fill="#6b4626"/><path d="M0 -96 l16 26 h-9 l15 22 h-9 l17 26 h-60 l17 -26 h-9 l15 -22 h-9z"/></g>`;};
+var birch=function(x,y,s,c){return`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-4" y="-80" width="8" height="84" fill="#f4f1ea"/><g fill="#333">${[-66,-50,-34,-18].map(v=>`<rect x="-4" y="${v}" width="5" height="2.4"/>`).join('')}</g><g fill="${c}"><circle cx="0" cy="-92" r="24"/><circle cx="-18" cy="-76" r="16"/><circle cx="18" cy="-76" r="16"/></g></g>`;};
+var boro=function(x,y,s){return`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-6 0 q-2 -12 0 -18 h12 q2 6 0 18z" fill="#f2e8d2"/><path d="M-16 -16 q16 -22 32 0 q-16 5 -32 0z" fill="#8a4f24"/><ellipse cx="-5" cy="-21" rx="4" ry="2" fill="#a8683a" opacity=".7"/></g>`;};
+var leaf=function(x,y,a,c){return`<path d="M0 -5 q5 2 0 10 q-5 -8 0 -10z" fill="${c}" transform="translate(${x} ${y}) rotate(${a})"/>`;};
+return`<svg viewBox="0 0 400 300" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f0e0"/><stop offset="1" stop-color="#f7ead2"/></linearGradient></defs>
 <rect width="400" height="300" fill="url(#${u}s)"/>
 <g opacity=".55">${[[30,170,.9],[100,160,.8],[160,166,.7],[250,162,.75],[300,168,.85],[370,158,.8]].map(([x,y,s])=>pine(x,y,s,'#8fb08a')).join('')}</g>

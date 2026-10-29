@@ -1,14 +1,12 @@
-/* Место 6 «Электричка» (ART-1). Фон главы 400×300. Подключение: ZB.load('content/art/place-06.js').then(()=>el.innerHTML=ZB_ART[6].svg()) — см. README-1.md.
-   Вагон электрички: окна с берёзами, деревянные лавки, полка с вёдрами и рассадой, табло «Следующая — Дачная», лоток «Буквы: 3 по цене 2!». */
 (function(){var A=window.ZB_ART=window.ZB_ART||{},k=0;
 A[6]={id:'elektrichka',n:'Электричка',c:'#e8e3fa',svg:function(r){var u='a6_'+(++k);r=r||'xMidYMid slice';
-var birch=function(x,y,s){return `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-3" y="-50" width="6" height="54" fill="#f4f1ea"/><g fill="#333"><rect x="-3" y="-40" width="4" height="2"/><rect x="-3" y="-24" width="4" height="2"/></g><g fill="#7cbf63"><circle cx="0" cy="-58" r="18"/><circle cx="-12" cy="-46" r="12"/><circle cx="12" cy="-46" r="12"/></g></g>`;};
-var win=function(x){return `<g transform="translate(${x} 46)"><rect width="104" height="80" rx="10" fill="#d9d2ef"/><rect x="6" y="6" width="92" height="68" rx="7" fill="url(#v${u})"/>
+var birch=function(x,y,s){return`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-3" y="-50" width="6" height="54" fill="#f4f1ea"/><g fill="#333"><rect x="-3" y="-40" width="4" height="2"/><rect x="-3" y="-24" width="4" height="2"/></g><g fill="#7cbf63"><circle cx="0" cy="-58" r="18"/><circle cx="-12" cy="-46" r="12"/><circle cx="12" cy="-46" r="12"/></g></g>`;};
+var win=function(x){return`<g transform="translate(${x} 46)"><rect width="104" height="80" rx="10" fill="#d9d2ef"/><rect x="6" y="6" width="92" height="68" rx="7" fill="url(#v${u})"/>
 <g clip-path="url(#c${u})" transform="translate(6 6)"><path d="M0 48 q40 -10 92 -2 v22 h-92z" fill="#9fcf7a"/>${birch(16,56,.8)}${birch(46,52,.6)}${birch(80,58,.9)}<g fill="#fff" opacity=".9"><ellipse cx="60" cy="12" rx="16" ry="5"/></g></g>
 <path d="M6 40 h92" stroke="#bfb6dd" stroke-width="3"/></g>`;};
-var bench=function(x,f){return `<g transform="translate(${x} 0)"><rect x="0" y="150" width="120" height="62" rx="6" fill="#b07a48"/>${[0,1,2,3].map(i=>`<path d="M4 ${160+i*14} h112" stroke="#8a5a34" stroke-width="3"/>`).join('')}
+var bench=function(x,f){return`<g transform="translate(${x} 0)"><rect x="0" y="150" width="120" height="62" rx="6" fill="#b07a48"/>${[0,1,2,3].map(i=>`<path d="M4 ${160+i*14} h112" stroke="#8a5a34" stroke-width="3"/>`).join('')}
 <rect x="-4" y="206" width="128" height="14" rx="4" fill="#c9915a"/><path d="M4 220 h112 v24 h-112z" fill="#8a5a34"/><rect x="4" y="216" width="112" height="3" fill="#a5703f"/></g>`;};
-return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
+return`<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" font-family="ZRubik,Arial,sans-serif" preserveAspectRatio="${r}" style="width:100%;height:100%;display:block">
 <defs><linearGradient id="v${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe3ff"/><stop offset="1" stop-color="#eef8ff"/></linearGradient>
 <linearGradient id="w${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ece7fb"/><stop offset="1" stop-color="#ddd5f3"/></linearGradient>
 <clipPath id="c${u}"><rect width="92" height="68" rx="7"/></clipPath></defs>

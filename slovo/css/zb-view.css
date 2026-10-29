@@ -1,10 +1,4 @@
-/* ================= zb-view.css — новый вид «Школа бабы Зины» (поток VIEW, 10.10.2026) =================
-   ВСЁ — под html.zbv (класс ставит скрипт в <head>, снимает zb-core.js, если js/zb-view.js не загрузился; ?view=0 — не ставится).
-   Без html.zbv — старый вид байт-в-байт. Без inset:, :has, gap-only раскладок для важного (старые WebView). */
-
-/* ---------- общее ---------- */
 html.zbv{--zbnav:64px;--zbor:#e8661b;--zbok:#2f9e4f}
-/* safe-area один раз (просьба NEWBIE 10.10: .screen и внутренние .hdr/.ghdr/.wheelwrap прибавляли env() дважды — на iPhone X+ в VK терялось ~80 px) */
 html.zbv .screen{padding-top:0;padding-bottom:0}
 html.zbv .screen .scroll{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px)}
 body.nb1 #zbLvSide{visibility:hidden}
@@ -13,14 +7,12 @@ html.zbv.zbnav-on #dictS .hdr .ibtn,html.zbv.zbnav-on #shopS .hdr .ibtn,html.zbv
 .zbhdr{padding:calc(env(safe-area-inset-top) + 12px) 16px 8px}
 .zbhdr .t b{font-size:21px}
 .zbscr{padding-top:4px}
-
-/* ---------- нижняя панель ---------- */
 html.zbv #zbNav{position:absolute;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:stretch;justify-content:space-around;
-  height:calc(var(--zbnav) + env(safe-area-inset-bottom,0px));padding:0 4px env(safe-area-inset-bottom,0px);
-  background:var(--card);box-shadow:0 -2px 0 var(--edge2),0 -6px 18px rgba(39,50,74,.08);border-radius:18px 18px 0 0}
+height:calc(var(--zbnav) + env(safe-area-inset-bottom,0px));padding:0 4px env(safe-area-inset-bottom,0px);
+background:var(--card);box-shadow:0 -2px 0 var(--edge2),0 -6px 18px rgba(39,50,74,.08);border-radius:18px 18px 0 0}
 html:not(.zbv) #zbNav .zbnav b{font-size:20px}
 .zbnav{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  font-size:12.5px;font-weight:800;color:var(--ink2);padding:4px 0;border-radius:14px}
+font-size:12.5px;font-weight:800;color:var(--ink2);padding:4px 0;border-radius:14px}
 .zbnav b{font-size:23px;line-height:1;filter:grayscale(.25)}
 .zbnav span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .zbnav.on{color:var(--zbor,#e8661b)}
@@ -28,11 +20,9 @@ html:not(.zbv) #zbNav .zbnav b{font-size:20px}
 .zbnav.on::after{content:"";position:absolute;top:2px;left:50%;width:28px;height:4px;margin-left:-14px;border-radius:4px;background:var(--zbor,#e8661b)}
 .zbnav .dot{top:4px;right:calc(50% - 22px)}
 .zbnav .kbd{position:absolute;top:3px;left:6px}
-
-/* ---------- плитки ---------- */
 .zbtiles,.zbmore{display:grid;grid-template-columns:1fr 1fr;grid-gap:10px}
 .zbtile{position:relative;display:flex;align-items:center;gap:8px;text-align:left;background:var(--card);border-radius:16px;padding:10px 10px;min-height:60px;
-  box-shadow:0 3px 0 var(--edge),0 4px 12px rgba(39,50,74,.06);color:var(--ink)}
+box-shadow:0 3px 0 var(--edge),0 4px 12px rgba(39,50,74,.06);color:var(--ink)}
 .zbtile:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
 .zbtile .zi{font-size:26px;line-height:1;flex:none}
 .zbtile .zb{min-width:0;display:flex;flex-direction:column}
@@ -43,8 +33,6 @@ html:not(.zbv) #zbNav .zbnav b{font-size:20px}
 .ztag{position:absolute;top:-7px;right:8px;background:var(--gold);color:#5a3a00;font-style:normal;font-weight:900;font-size:12.5px;padding:2px 7px;border-radius:9px}
 .ztag.ok{background:var(--zbok,#2f9e4f);color:#fff}
 .zbmore{margin-top:12px}
-
-/* ---------- «Дом» ---------- */
 html.zbv #menu{padding:0;justify-content:flex-start;align-items:stretch;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 html.zbv #menu>.logo,html.zbv #menu>.hero,html.zbv #menu>.mbtns{display:none!important}
 .zbh{display:flex;flex-direction:column;width:100%;min-height:100%;flex:none}
@@ -84,12 +72,10 @@ html.zbv .zbh-old .btn{width:100%}
 html.zbv .zbh-old .mgoal{text-align:center}
 html.zbv #zbHomeTop:empty{display:none}
 html.zbv #zbHomeTop{position:relative;z-index:4}
-
-/* ---------- «Путь» ---------- */
 .zbp{position:relative}
 .zbp-road{position:relative;padding:6px 0 20px}
 .zbp-road::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:34px;margin-left:-17px;border-radius:17px;background:#efe3cc;
-  box-shadow:inset 0 0 0 3px #e4d3b3}
+box-shadow:inset 0 0 0 3px #e4d3b3}
 .zbp-road::after{content:"";position:absolute;top:10px;bottom:10px;left:50%;width:0;margin-left:-2px;border-left:4px dashed rgba(255,255,255,.95)}
 .zbp-node{position:relative;z-index:1;display:flex;align-items:center;margin:18px 0}
 .zbp-node.l{flex-direction:row;padding-left:9%}
@@ -117,26 +103,21 @@ html.zbv #zbHomeTop{position:relative;z-index:4}
 .zbp-slot{margin-top:6px}
 .zbp-cls{position:relative;z-index:1;text-align:center;margin:22px 0 4px}
 .zbp-cls span{display:inline-block;background:var(--blue);color:#fff;font-weight:900;font-size:15px;padding:6px 16px;border-radius:999px;box-shadow:0 3px 0 #123a7a}
-
-/* варианты мест (ZBCH.v): вечер, зима, дождь — накладкой поверх рисунка */
 .zbpv-eve,.zbpv-win,.zbpv-rain{position:relative}
 .zbpv-eve::after,.zbpv-win::after,.zbpv-rain::after{content:"";position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
 .zbpv-eve::after{background:linear-gradient(rgba(38,40,110,.42),rgba(255,140,80,.18));mix-blend-mode:multiply}
 .zbpv-win::after{background:radial-gradient(circle,#fff 1.4px,transparent 2px) 0 0/22px 22px,radial-gradient(circle,rgba(255,255,255,.9) 1px,transparent 1.6px) 11px 9px/17px 17px,linear-gradient(rgba(220,236,255,.45),rgba(255,255,255,.35))}
 .zbpv-rain::after{background:repeating-linear-gradient(105deg,rgba(120,150,190,.0) 0 9px,rgba(120,150,190,.35) 9px 10px),linear-gradient(rgba(110,125,150,.32),rgba(110,125,150,.18))}
-
-/* ---------- уровень: место главы фоном, лист тетради под кроссвордом, кот Ять ---------- */
 .zblvbg{position:absolute;top:0;left:0;right:0;bottom:0;z-index:-1;pointer-events:none;overflow:hidden}
 html:not(.zbv) .zblvbg{display:none}
 .zblvbg .art{position:absolute;top:0;left:0;right:0;bottom:0}
 .zblvbg .art svg{width:100%;height:100%;display:block}
 .zblvbg .veil{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(rgba(251,247,236,.5),rgba(251,247,236,.78) 55%,rgba(251,247,236,.9))}
 html.zbv #board::before{content:"";position:absolute;top:2px;bottom:2px;left:8px;right:8px;border-radius:20px;z-index:0;
-  background-color:var(--paper);background-image:linear-gradient(90deg,transparent 22px,var(--margin) 22px,var(--margin) 24px,transparent 24px),
-  linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:100% 100%,22px 22px,22px 22px;
-  box-shadow:0 3px 0 rgba(39,50,74,.08),0 8px 22px rgba(39,50,74,.12)}
+background-color:var(--paper);background-image:linear-gradient(90deg,transparent 22px,var(--margin) 22px,var(--margin) 24px,transparent 24px),
+linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:100% 100%,22px 22px,22px 22px;
+box-shadow:0 3px 0 rgba(39,50,74,.08),0 8px 22px rgba(39,50,74,.12)}
 html.zbv #grid{z-index:1}
-/* платные темы (html.th-x): в уровне — фон и лист темы (её #thbg), место главы и лист в клетку не рисуем; на «Доме» окно «Кухни» за Зиной не нужно — фон уже место главы */
 html.th-x.zbv #board::before,html.th-x .zblvbg{display:none}
 html.zbv.th-kitchen .zbh-hero #heroArt{background-image:none}
 .zbcat{position:absolute;right:6px;top:-58px;width:62px;height:62px;z-index:4;padding:0;background:none}
@@ -151,17 +132,15 @@ html:not(.zbv) .zbcat{display:none}
 .zbblub{animation:zbblub .6s cubic-bezier(.3,1.8,.5,1)}
 @keyframes zbblub{30%{transform:scale(1.22,.86)}60%{transform:scale(.92,1.12)}}
 .zbbub{position:fixed;z-index:25;width:28px;height:28px;border-radius:50%;background:rgba(255,214,120,.95);color:#7a4a00;font-weight:900;font-size:13px;
-  display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:inset 0 -3px 0 rgba(0,0,0,.08);animation:zbbub 1.05s ease-out both}
+display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:inset 0 -3px 0 rgba(0,0,0,.08);animation:zbbub 1.05s ease-out both}
 @keyframes zbbub{0%{opacity:0;transform:translateY(8px) scale(.4)}25%{opacity:1;transform:translateY(-6px) scale(1.1)}100%{opacity:0;transform:translateY(-46px) scale(.8)}}
 @media (max-height:700px){.zbcat{width:48px;height:48px;top:-46px}}
 @media (max-height:600px){.zbcat{display:none}}
 #zbLvSide{display:none}
-
-/* ---------- окно победы «лесенка» ---------- */
 .zbw-top{position:relative;display:flex;align-items:center;justify-content:center}
 .zbw-top h2{margin:0 6px 0 0}
 .zbw-stamp{flex:none;width:58px;height:58px;border:4px solid var(--stamp);border-radius:50%;color:var(--stamp);font-weight:900;font-size:30px;font-style:italic;
-  display:flex;align-items:center;justify-content:center;transform:rotate(-12deg);background:rgba(255,255,255,.65);line-height:1;font-family:Georgia,"Times New Roman",serif}
+display:flex;align-items:center;justify-content:center;transform:rotate(-12deg);background:rgba(255,255,255,.65);line-height:1;font-family:Georgia,"Times New Roman",serif}
 .zbw-stamp sup{font-size:20px;margin-left:1px;vertical-align:8px}
 .zbw .defcard .word .no{float:right;margin-top:6px;font-size:13px;font-weight:800;font-style:italic;color:var(--stamp);letter-spacing:0;text-transform:none}
 .zbw-zina{width:96px;height:96px;margin:4px auto}
@@ -200,55 +179,48 @@ html:not(.zbv) .zbcat{display:none}
 .win.zbw>.tmr{animation-delay:1.2s}
 @keyframes zbstamp{from{opacity:0;transform:rotate(-12deg) scale(2.4)}}
 @media (max-height:700px){.zbw-stamp{width:48px;height:48px;font-size:25px;border-width:3px}.zbw-stamp sup{font-size:16px}
-  .zbw-chips{margin-top:6px}.zbw-chips .zc.coins{font-size:24px}.zbw-chap{margin-top:6px;padding:6px 10px}.zbw-react{margin-top:6px}.zbw-react .zz{width:52px;height:52px}.zbw-react .kt{width:40px;height:40px}.zbw .btns{margin-top:10px}}
-
-/* ---------- компьютер: две колонки ---------- */
+.zbw-chips{margin-top:6px}.zbw-chips .zc.coins{font-size:24px}.zbw-chap{margin-top:6px;padding:6px 10px}.zbw-react{margin-top:6px}.zbw-react .zz{width:52px;height:52px}.zbw-react .kt{width:40px;height:40px}.zbw .btns{margin-top:10px}}
 @media (min-width:860px){
-  html.zbv #menu.on{display:flex!important;padding:0;overflow:hidden}
-  html.zbv #menu{bottom:var(--zbnav)}
-  html.zbv .zbh{flex-direction:row;height:100%;min-height:0}
-  html.zbv .zbh>#zbHomeTop{position:absolute;top:0;left:0;right:420px;z-index:5;pointer-events:none} /* zb-MERGE (просьба SCHOOL): пустая полоса не ловит нажатия кнопок звука/«Об игре» */
-  html.zbv .zbh>#zbHomeTop>*{pointer-events:auto}
-  html.zbv .zbh>#zbHomeTop{padding-top:calc(env(safe-area-inset-top) + 72px)} /* zb-MERGE: полосы zone top (праздник FEST, четверть SCHOOL) — под кнопками звука/музыки/«Об игре», не поверх */
-  html.zbv .zbh>#zbHomeTop>*{width:min(380px,calc(50% - 24px));margin:0 0 6px 12px}
-  html.zbv .zbh>#zbHomeTop:not(:empty)~.zbh-scene .zbh-chip{left:auto;right:12px;text-align:right} /* zb-MERGE: на ПК слева сверху — полоса четверти/праздника (zone top), «Звание» — вправо, под монеты */
-  .zbh-scene{flex:1 1 auto;height:auto;border-radius:0 0 28px 0;min-width:0}
-  .zbh-hero{width:64%;height:70%;left:2%}
-  .zbh-say{width:48%;top:calc(env(safe-area-inset-top) + 92px)}
-  html.zbv .zbh-say .mbubble{font-size:17px;padding:12px 16px}
-  .zbh-col{flex:0 0 400px;width:400px;margin:0;padding:18px 18px 24px;overflow-y:auto}
-  html.zbv #zbNav{left:50%;right:auto;width:560px;margin-left:-280px}
-  html.zbv .zbh-side:empty{display:none}
-  html.zbv #zbLvSide{display:block;position:absolute;left:0;bottom:12px;width:310px;padding:0 10px 0 22px;z-index:7}
-  html.zbv #zbLvSide:empty{display:none}
-  .zbcat{right:22px;top:-74px;width:66px;height:66px}
-  .zbp-node.l{padding-left:18%}.zbp-node.r{padding-right:18%}
+html.zbv #menu.on{display:flex!important;padding:0;overflow:hidden}
+html.zbv #menu{bottom:var(--zbnav)}
+html.zbv .zbh{flex-direction:row;height:100%;min-height:0}
+html.zbv .zbh>#zbHomeTop{position:absolute;top:0;left:0;right:420px;z-index:5;pointer-events:none}
+html.zbv .zbh>#zbHomeTop>*{pointer-events:auto}
+html.zbv .zbh>#zbHomeTop{padding-top:calc(env(safe-area-inset-top) + 72px)}
+html.zbv .zbh>#zbHomeTop>*{width:min(380px,calc(50% - 24px));margin:0 0 6px 12px}
+html.zbv .zbh>#zbHomeTop:not(:empty)~.zbh-scene .zbh-chip{left:auto;right:12px;text-align:right}
+.zbh-scene{flex:1 1 auto;height:auto;border-radius:0 0 28px 0;min-width:0}
+.zbh-hero{width:64%;height:70%;left:2%}
+.zbh-say{width:48%;top:calc(env(safe-area-inset-top) + 92px)}
+html.zbv .zbh-say .mbubble{font-size:17px;padding:12px 16px}
+.zbh-col{flex:0 0 400px;width:400px;margin:0;padding:18px 18px 24px;overflow-y:auto}
+html.zbv #zbNav{left:50%;right:auto;width:560px;margin-left:-280px}
+html.zbv .zbh-side:empty{display:none}
+html.zbv #zbLvSide{display:block;position:absolute;left:0;bottom:12px;width:310px;padding:0 10px 0 22px;z-index:7}
+html.zbv #zbLvSide:empty{display:none}
+.zbcat{right:22px;top:-74px;width:66px;height:66px}
+.zbp-node.l{padding-left:18%}.zbp-node.r{padding-right:18%}
 }
 @media (min-width:1300px) and (min-height:860px){.zbh-col{flex-basis:440px;width:440px}html.zbv #zbLvSide{width:420px;padding-left:30px}}
-
-/* ---------- клавиатура (zb-keys.js): подсказки — только на компьютере с мышью ---------- */
 .kbd{display:none}
 @media (hover:hover) and (pointer:fine){
-  html.zbv .kbd{display:inline-block;min-width:18px;padding:1px 5px;border-radius:6px;background:#fff;border:1.5px solid #c9d1de;border-bottom-width:3px;
-    font:800 11.5px/1.3 var(--font);color:var(--ink2);text-align:center;vertical-align:middle}
-  html.zbv #btnPlay .kbd{margin-left:8px;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5);color:#fff}
+html.zbv .kbd{display:inline-block;min-width:18px;padding:1px 5px;border-radius:6px;background:#fff;border:1.5px solid #c9d1de;border-bottom-width:3px;
+font:800 11.5px/1.3 var(--font);color:var(--ink2);text-align:center;vertical-align:middle}
+html.zbv #btnPlay .kbd{margin-left:8px;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5);color:#fff}
 }
 .zbkeys{background:var(--card);border-radius:14px;padding:8px 12px;font-size:13.5px;line-height:1.45;color:var(--ink2);box-shadow:0 2px 0 var(--edge2)}
 .zbkeys b{color:var(--ink)}
 .zbmore-t{margin:18px 2px 0}
-
-/* окно победы на компьютере: открытка слева, монеты/глава/Зина справа — ниже окно, меньше прячет fitWin */
 @media (min-width:760px){
-  .mcard.zbw-m{max-width:720px}
-  .zbw{display:grid;grid-template-columns:1fr 1fr;grid-column-gap:18px;align-items:start}
-  .zbw>*{grid-column:1/-1}
-  .zbw>.zbw-top{grid-row:1}
-  .zbw>.defcard,.zbw>.zbw-zina{grid-column:1;grid-row:2/6;margin-top:10px}
-  .zbw>.zbw-chips{grid-column:2;grid-row:2}
-  .zbw>.zbw-chap{grid-column:2;grid-row:3}
-  .zbw>.zbw-react{grid-column:2;grid-row:4}
-  .zbw>.btns{max-width:420px;width:100%;justify-self:center}
+.mcard.zbw-m{max-width:720px}
+.zbw{display:grid;grid-template-columns:1fr 1fr;grid-column-gap:18px;align-items:start}
+.zbw>*{grid-column:1/-1}
+.zbw>.zbw-top{grid-row:1}
+.zbw>.defcard,.zbw>.zbw-zina{grid-column:1;grid-row:2/6;margin-top:10px}
+.zbw>.zbw-chips{grid-column:2;grid-row:2}
+.zbw>.zbw-chap{grid-column:2;grid-row:3}
+.zbw>.zbw-react{grid-column:2;grid-row:4}
+.zbw>.btns{max-width:420px;width:100%;justify-self:center}
 }
 .mcard.zbfit *{animation:none!important;transition:none!important}
-/* FEST: уголок листьев / снежная шапка (#menu::before) — поверх сцены «Дома» */
 html.zbv body.fest-leaves #menu::before,html.zbv body.fest-snow #menu::before{z-index:5}
