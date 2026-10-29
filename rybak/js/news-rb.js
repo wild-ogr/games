@@ -1,0 +1,10 @@
+(function(){'use strict';var W=window,D=document;if(!W.NEWS||typeof R3!=='object'||!R3.on)return;if(!R3.reg('news',{s:'NEWS-RB',t:'объявления игрокам при входе (карточка на Мостках + лента «📰»)'}))return;function $(id){return D.getElementById(id);}
+function vis(e){if(!e)return false;try{var c=getComputedStyle(e);if(c.display==='none'||c.visibility==='hidden')return false;var r=e.getBoundingClientRect();return r.width>0&&r.height>0;}catch(x){return false;}}
+function home(){try{if(typeof G!=='undefined'&&G)return false;}catch(e){}var m=$('r3m');return!!m&&m.style.display!=='none'&&vis(m);}
+var since=0;function ready(){try{if(!home()){since=0;return false;}
+if(typeof modalOn!=='undefined'&&modalOn)return(since=0,false);var md=$('modal');if(md&&md.classList.contains('on'))return(since=0,false);if(!(S&&+S.sessions>=1))return false;var t=D.elementFromPoint(Math.round(innerWidth/2),Math.round(innerHeight/2)),m=$('r3m');if(!t||!(t===m||m.contains(t))){since=0;return false;}
+var n=Date.now();if(!since)since=n;return n-since>=3000;}catch(e){return false;}}
+function slot(){var m=$('r3m');if(!m||m.style.display==='none')return null;var s=$('newsSlot');if(s&&s.parentNode===m)return s;if(!s){s=D.createElement('div');s.id='newsSlot';s.className='nws-rb';s.style.display='none';}
+var bt=m.querySelector('.r3bt');try{m.insertBefore(s,bt&&bt.parentNode===m?bt:null);}catch(e){return null;}
+return s;}
+var st=D.createElement('style');st.textContent='#newsSlot{flex:none;padding:0 10px;background:var(--r3-pan)}#newsSlot .nws-line{margin:6px 0 2px;min-height:48px;font-size:17px}.nws-ov .nws-head,.nws-ov .nws-head small{font-size:17px}';(D.head||D.documentElement).appendChild(st);NEWS.init({g:'rybak',lang:function(){try{return LANG;}catch(e){return'ru';}},ready:ready,slot:slot,cls:'noenter',hero:{i:'🎣',n:'Мостки Петровича'},head:'Петрович сообщает',theme:{card:'#fffaf0',ink:'#1f3a4a',sub:'#5a6f7c',accent:'#ff8f4f',accentInk:'#3b1c00',line:'#f0e2c8',btnShadow:'0 4px 0 #d9682c',lineBg:'rgba(255,250,240,.94)',font:'-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif'},z:9500});})();
