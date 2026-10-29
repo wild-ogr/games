@@ -425,7 +425,7 @@ progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg
 _dbg:function(){return{on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v24.1-102923',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v24.2-103001',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 if(window.V3)V3.wire1();
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -1485,6 +1485,7 @@ ctx.save();ctx.globalAlpha=a;
 if(b0.win){ctx.fillStyle='#f5cba7';ctx.beginPath();ctx.arc(bx0,by0+fs*.1,fs*.42,0,7);ctx.fill();ctx.fillStyle='#6d4c41';ctx.beginPath();ctx.arc(bx0,by0-fs*.05,fs*.45,Math.PI,0);ctx.fill();}
 const bx=Math.max(6,Math.min(W-bw-6,bx0-bw/2));let by=by0-bh-fs*.9-(1-pop)*6;let below=by<b0.top;if(below)by=Math.max(b0.top,by0+fs*.9);by=Math.min(by,H-bh-4);
 if(b0.win&&window.V3&&V3.fix('bub')){const fy=oy*cam.z+cam.y;if(by+bh>fy-2){by=Math.max(2,fy-bh-4);below=by>by0;}}
+b0.r=[bx,by,bw,bh];
 ctx.drawImage(I.c,bx-I.pad,by-I.pad,bw+I.pad*2,bh+I.pad*2);
 const tx=Math.max(bx+12,Math.min(bx+bw-12,bx0));ctx.fillStyle='#fff';ctx.beginPath();
 if(below){ctx.moveTo(tx-7,by+1);ctx.lineTo(tx,by-8);ctx.lineTo(tx+7,by+1);}else{ctx.moveTo(tx-7,by+bh-1);ctx.lineTo(tx,by+bh+8);ctx.lineTo(tx+7,by+bh-1);}ctx.fill();
@@ -2654,7 +2655,7 @@ if(document.readyState==='complete')go();else W.addEventListener('load',go);})()
 
 <script defer src="js/v3-deep.js"></script><script defer src="js/v3-deep-attic.js"></script><script defer src="js/v3-deep-tails.js"></script>
 
-<script defer src="js/v3-ux.js"></script><script defer src="js/v3-ux-ui.js"></script><script defer src="js/v3-ux-yard.js"></script><script defer src="js/v3-ux-say.js"></script><script defer src="js/v3-ux-build.js"></script>
+<script defer src="js/v3-ux.js"></script><script defer src="js/v3-ux-ui.js"></script><script defer src="js/v3-ux-yard.js"></script><script defer src="js/v3-ux-say.js"></script><script defer src="js/v3-ux-bub.js"></script><script defer src="js/v3-ux-build.js"></script>
 
 <script defer src="js/v3-season-cal.js"></script><script defer src="js/v3-season.js"></script>
 
