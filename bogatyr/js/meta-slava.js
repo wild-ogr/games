@@ -219,7 +219,7 @@ function slTalHTML(s){const pts=talPts(s),sp=talSpent(s),fr=pts-sp;let h='';
       (w===''?'<button class="btn gold slPlus" data-slt="'+T.id+'">+1</button>':w==='max'?'<span class="tag ok">✓</span>':'')+'</div></div>';}
   if(sp)h+='<div class="btns"><button class="btn ghost" id="slReset">'+(slRes?L('Точно сбросить все таланты?','Really reset all talents?'):L('↺ Сбросить таланты (бесплатно)','↺ Reset talents (free)'))+'</button></div>';
   return h;}
-// платная «Удалая» — только где работают покупки VK (в Яндексе/ОК — нет: PAY.v только в VK, в ОК PAY.init не зовётся)
+// платная «Удалая» — только где работают покупки VK (в Яндексе/ОК — нет: PAY.v только в VK, в ОК с 29.10 — за ОКи, флаг okpay)
 function slPayOk(){return typeof PAY!=='undefined'&&PAY.on&&!!PAY.v&&!G&&!!PAY.item('saga_pass')&&!!PAY.item('saga_pass10');}
 function slSagaHTML(s){const q=slSaga();sagaDay(q);const nm=SAGA[q.id%SAGA.length],st=sagaStep(q.p),su=sagaStep(q.u),ud=sagaUd(q);let h='';
   h+='<div class="card slHead"><div class="row"><img class="ic" src="'+ic('sl_saga',120)+'"><div class="t"><b>'+nm.nm()+'</b><span>'+L('ступень ','step ')+st+' / '+SAGA_N+' · '+L('осталось дней: ','days left: ')+slSagaLeft()+'</span>'+

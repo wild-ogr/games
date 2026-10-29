@@ -1,23 +1,23 @@
 /* ===== bb2-eco-m.js — поток ECO (деньги): заглушки на старте; окна Лавки/Обоза и кузница — js/bb2-eco-shop.js по требованию (набор 'eco').
-   Флаги: adtrim, adfree, temper, buysee; платные shop, uzelok, oboz, saga15 — только при BB2E.eco.live=1 (стенд: ?ecopay=1), не в ОК.
-   S.bb2.eco: t{ключ:[уровень,шагов]} · gd/rd день дара/перебора · fr[день,n] «Взять так» · ob[ветка,уровень] заказ обоза. Потокам: BB2.eco.band(), BB2.eco.rw('s'|'m'|'b'). */
+   Флаги: adtrim, adfree, temper, buysee; платные shop, uzelok, oboz, saga15 — только при BB2E.eco.live=1 (стенд: ?ecopay=1); в ОК — за ОКи (флаг okpay, BG-SHOP 29.10).
+   S.bb2.eco: uz 1 — свитки Узелка выданы · t{ключ:[уровень,шагов]} · gd/rd день дара/перебора · fr[день,n] «Взять так» · ob[ветка,уровень] заказ обоза. Потокам: BB2.eco.band(), BB2.eco.rw('s'|'m'|'b'). */
 (function(){'use strict';
 if(typeof BB2==='undefined')return;
 var Q=location.search,X=BB2.eco={};
 function N(p,d){return BB2.n('eco.'+p,d);}
 function ob(x){return x&&typeof x==='object'&&!Array.isArray(x)?x:null;}
-function live(){return !!(N('live',0)||/[?&]ecopay=1/.test(Q))&&!(typeof OK!=='undefined'&&OK);}
+function live(){return !!(N('live',0)||/[?&]ecopay=1/.test(Q))&&!(typeof OK!=='undefined'&&OK&&!(typeof okPayOn==='function'&&okPayOn()));} /* BG-SHOP 29.10: в ОК — тоже (за ОКи), если флаг okpay не выключен */
 function paid(f){return live()&&BB2.on(f);}
 function st(){return BB2.s('eco');}
 function pair(a,str){return Array.isArray(a)&&a.length===2&&typeof a[0]===(str?'string':'number')&&typeof a[1]==='number'?a:null;}
 function later(a,b){return typeof b==='string'&&(typeof a!=='string'||b>a)?b:a;}
 BB2.save('eco',{fix:function(o){var t=ob(o.t)||{},k;for(k in t)if(!pair(t[k]))delete t[k];o.t=t;if(!Object.keys(t).length)delete o.t; /* пустое не храним: нет поля = как у новичка */
     if(typeof o.gd!=='string')delete o.gd;if(typeof o.rd!=='string')delete o.rd;if(!pair(o.fr,1))delete o.fr;
-    if(!(Array.isArray(o.ob)&&typeof o.ob[0]==='string'&&typeof o.ob[1]==='number'))delete o.ob;return o;},
+    if(!(Array.isArray(o.ob)&&typeof o.ob[0]==='string'&&typeof o.ob[1]==='number'))delete o.ob;if(o.uz!==1)delete o.uz;return o;},
   merge:function(a,b){var k,x,y;a.t=ob(a.t)||{};b=ob(b)||{};
     for(k in ob(b.t)||{}){x=pair(a.t[k]);y=pair(b.t[k]);if(y&&(!x||y[0]>x[0]||(y[0]===x[0]&&y[1]>x[1])))a.t[k]=y.slice();}
     a.gd=later(a.gd,b.gd);a.rd=later(a.rd,b.rd);x=pair(a.fr,1);y=pair(b.fr,1);if(y&&(!x||y[0]>x[0]||(y[0]===x[0]&&y[1]>x[1])))a.fr=y.slice();
-    if(!a.ob&&b.ob)a.ob=b.ob;if(!Object.keys(a.t).length)delete a.t;return a;}});
+    if(!a.ob&&b.ob)a.ob=b.ob;if(b.uz===1)a.uz=1;if(!Object.keys(a.t).length)delete a.t;return a;}});
 function stat(a,o){o=o||{};o.a=a;BB2.stat('eco',o);}
 X.live=live;X.paid=paid;X.st=st;X.stat=stat;
 
@@ -98,7 +98,11 @@ function setup(){if(typeof PAY_ITEMS==='undefined'||!live())return;var P=functio
   if(BB2.on('oboz'))for(var i=1;i<=4;i++){PAY_ITEMS['oboz'+i]={meta:1,vk:P('oboz'+i,[0,3,5,7,10][i]),ic:'🛒',get name(){return L('Обоз кузнецу','Wagon for the smith');},get desc(){return L('Недостающее золото на выбранный уровень кузницы','The missing gold for the forge level you picked');},
       get done(){return L('Обоз пришёл — кузнец сделал!','The wagon arrived — forged!');},give:(function(t){return function(){BB2.eco.obGive(t);};})(i)};try{PAY_TEST['oboz'+i]=[0,19,39,59,79][i];}catch(e){}}}
 X.uzGive=function(){if(!ob(S.buyB))S.buyB={};if(S.buyB.uzelok)return;S.buyB.uzelok=1;var g=N('uzelok.gold',[1400,3800,3800])[X.band()];payAdd(g);
-  try{var s=typeof SL==='function'&&SL();if(s&&s.it)s.it.rr=(s.it.rr||0)+N('uzelok.scroll',3);}catch(e){}stat('uzelok',{g:g});};
+  uzSc();stat('uzelok',{g:g});};
+/* свитки Узелка: долг = «узелок куплен (S.buyB.uzelok), а метки uz нет». Подворье новичку догружается позже (BB2.inc('meta')) — выдаём, когда оно есть; при входе и после облака проверяем снова */
+function uzSc(){try{if(!ob(S.buyB)||!S.buyB.uzelok||st().uz)return;}catch(e){return;}
+  BB2.after('meta',function(){try{var s=typeof SL==='function'&&SL(),e=st();if(s&&ob(s.it)&&!e.uz){s.it.rr=(s.it.rr||0)+N('uzelok.scroll',3);e.uz=1;save();}}catch(e){}});}
+X.uzSc=uzSc;BB2.hook('ready',uzSc);BB2.hook('cloud',uzSc);BB2.hook('menu',uzSc);
 X.obGive=function(t){var s=st(),o=s.ob,ok=0,f,cur,c,pay;try{if(o){f=FORGE.find(function(x){return x.id===o[0];});cur=S.forge[o[0]]||0;
     if(f&&cur===o[1]-1&&o[1]<=f.max&&o[1]<=N('oboz.maxLvl',10)){c=forgeCost(cur,f.id);pay=Math.min(Math.floor(S.gold),c);S.gold-=pay;if(pay>0)STAT.ev('spend',{k:'forge:'+f.id,c:pay});S.forge[f.id]=o[1];gearRefresh();ok=1;}}}catch(e){}
   delete s.ob;if(!ok)payAdd(N('oboz.lack',[1500,4000,8000,12000])[t-1]||0); /* заказ не найден (довыдача на другом устройстве) — золотом по размеру обоза */
@@ -110,7 +114,11 @@ function shopBtn(){var tb=document.querySelector('#menu .topbar');if(!tb)return;
   b.innerHTML='🛒'+(PAY_ITEMS.uzelok&&!PAY.own('uzelok')?'<i style="position:absolute;right:4px;top:4px;width:10px;height:10px;border-radius:50%;background:#e0332a;border:1.5px solid #fff"></i>':'');b.style.display='';}
 X.shopBtn=shopBtn;
 try{setup();}catch(e){}
+/* запертый облик «Походный» во вкладке «Богатыри»: старое окно buyFest пишет про праздничные облики — для Узелка открываем Лавку */
+if(typeof buyFest==='function'){var bF=buyFest;buyFest=function(sk){if(sk&&sk.pay==='uzelok'&&paid('uzelok')&&typeof payHere==='function'&&payHere()){BB2.open('eco',function(){BB2.eco.x.shop();},null);return;}return bF(sk);};}
 if(typeof payAfter==='function'){var pA=payAfter;payAfter=function(id){pA(id);shopBtn();};}
 BB2.hook('ready',shopBtn);BB2.hook('cloud',shopBtn);BB2.hook('menu',shopBtn);
 BB2.lazy('eco',['js/bb2-eco-shop.js'],function(){return !!BB2.eco.x;});
+/* крючок 'ready' срабатывает в конце ui.js — раньше, чем загружен этот файл, поэтому стартовые дела делаем сами: кэш закалок оружия, кнопка Лавки, долг свитков Узелка */
+setTimeout(function(){try{retw();shopBtn();uzSc();}catch(e){}},0);
 })();

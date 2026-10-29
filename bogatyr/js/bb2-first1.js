@@ -29,13 +29,26 @@
       G.nvGo={x:wx,y:wy,t:0};if(!G.nvTap){G.nvTap=1;st('nv_tap',{s:Math.floor(G.t)});}});}
   /* ---------- tap1: «Хрясь!» — нажатие в первые секунды первого похода = рывок к пальцу и удар вокруг ---------- */
   function hitOk(g){var n=g&&g.nv;return !!(n&&n.hit&&n.first&&!g.over&&!g.paused&&g.t<K.hitT&&!(g.boss&&!g.boss.dead)&&on('tap1'));}
-  function hintOn(g){var n=g.nv;return hitOk(g)&&n.hit.n<K.hitHint&&!n.demo;}
+  function hintOn(g){var n=g.nv;if(on('fsth'))return !!(n&&n.first&&!g.over&&!g.paused&&g.nvMv==null&&g.t<K.hitT&&!n.demo&&!(g.boss&&!g.boss.dead));return hitOk(g)&&n.hit.n<K.hitHint&&!n.demo;}
   function strike(g,x,y){var n=g.nv,h=n.hit,H=g.hero,R=K.hitR,k=0,i,e,ex,ey,d;if(h.cd>0)return;h.cd=K.hitCd;h.n++;
     ex=x-H.x;ey=y-H.y;d=Math.hypot(ex,ey)||1;var j=Math.min(d,K.hitDash);for(i=0;i<5;i++)burst(H.x+ex/d*j*i/5,H.y+ey/d*j*i/5,'#ffe07a',2,60);
     H.x+=ex/d*j;H.y+=ey/d*j;if(Math.abs(ex)>4)H.flip=ex<0?-1:1;
     for(i=0;i<g.en.length;i++){e=g.en[i];if(e.dead||e.prop)continue;ex=e.x-H.x;ey=e.y-H.y;d=Math.hypot(ex,ey)||1;if(d>R+(e.r||0))continue;k++;hitEnemy(e,e.boss||e.elite?K.hitBig:e.hp+1,ex/d*320,ey/d*320);}
     g.fx.push({k:'wave',own:1,x:H.x,y:H.y,t:0,dur:.45,r1:R,col:'#ffe07a'});g.shake=Math.max(g.shake||0,7);try{vib(25);}catch(e){}
-    heroSay(k?L('Хрясь!','Smash!'):L('Эх!','Hah!'));if(h.n===1)st('nv_hit',{s:Math.round(g.t*10)/10,k:k});}
+    heroSay(k?L('Хрясь!','Smash!'):L('Эх!','Hah!'));if(h.n===1)st('nv_hit',{s:Math.round(g.t*10)/10,k:k});if(g.nvMv==null)g.nvMv=g.t;}
+  /* ---------- BG-FIRST 29.10 ---------- fsth: одна подсказка «Веди пальцем!» — рука-джойстик от богатыря к ближайшей нечисти, пока игрок не сдвинулся (вместо «Жми — ударь!», которая спорила с нижней «Веди пальцем…»; нажатие по-прежнему = «Хрясь!»).
+     fstp: «сила с первой секунды» — в 0,15 с рядом встаёт кучка мелкой нечисти, в 0,9 с богатырь сам делает «Хрясь!» и раскидывает её (STAT fst_p). Выключить: ?bb2=-fsth / -fstp. */
+  function dragHint(c,g){var W=VIEW.W,Hh=VIEW.H,z=VIEW.zoom,h=g.hero,hx=W/2+(h.x-VIEW.cx)*z,hy=Hh/2+(h.y-VIEW.cy)*z,e=nearEn(g),dx=1,dy=-.3,d,t=performance.now()/1000,k=Math.min(1,(t%1.5)/1.1),ox=hx,oy=Math.min(Hh-250,hy+95),f=typeof CVL!=='undefined'&&CVL.font||'sans-serif',s=L('Веди пальцем!','Drag your finger!'),ty=Math.max(120,hy-(h.r||16)*z-118);
+    if(e){dx=W/2+(e.x-VIEW.cx)*z-hx;dy=Hh/2+(e.y-VIEW.cy)*z-hy;}d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;
+    c.save();c.globalAlpha=.9;c.strokeStyle='rgba(255,216,74,.75)';c.lineWidth=5;c.setLineDash([8,8]);c.beginPath();c.moveTo(ox,oy);c.lineTo(ox+dx*44*k,oy+dy*44*k);c.stroke();c.setLineDash([]);c.globalAlpha=1;
+    hand(c,ox,oy,ox+dx*44*k,oy+dy*44*k);
+    c.font='900 28px '+f;c.textAlign='center';c.textBaseline='middle';c.lineWidth=7;c.strokeStyle='rgba(40,20,0,.85)';var tx=Math.min(W-c.measureText(s).width/2-10,Math.max(c.measureText(s).width/2+10,hx));
+    c.strokeText(s,tx,ty);c.fillStyle='#ffd84a';c.fillText(s,tx,ty);c.restore();}
+  function power(g,n){var H=g.hero,i,a,e,R=K.hitR,k=0,ty=g.ch&&g.ch.en&&g.ch.en[0];if(!ty||typeof EN==='undefined'||!EN[ty])return;
+    if(!n.pw&&g.t>=.15){n.pw=1;for(i=0;i<6;i++){a=i/6*6.283+.4;mkEnemy(ty,H.x+Math.cos(a)*(70+i%2*22),H.y+Math.sin(a)*(70+i%2*22));}return;}
+    if(n.pw===1&&g.t>=.9){n.pw=2;for(i=0;i<g.en.length;i++){e=g.en[i];if(e.dead||e.prop||e.boss||e.elite)continue;var ex=e.x-H.x,ey=e.y-H.y,d=Math.hypot(ex,ey)||1;if(d>R+(e.r||0))continue;k++;hitEnemy(e,e.hp+1,ex/d*360,ey/d*360);}
+      for(i=0;i<8;i++)burst(H.x+Math.cos(i/8*6.283)*40,H.y+Math.sin(i/8*6.283)*40,'#ffe07a',3,150);
+      g.fx.push({k:'wave',own:1,x:H.x,y:H.y,t:0,dur:.5,r1:R+20,col:'#ffe07a'});g.shake=Math.max(g.shake||0,8);heroSay(L('Хрясь!','Smash!'));st('fst_p',{k:k});}}
   function nearEn(g){var H=g.hero,b=null,bd=1e9,i,e,d,sx,sy,z=VIEW.zoom;for(i=0;i<g.en.length;i++){e=g.en[i];if(e.dead||e.prop)continue;
       sx=VIEW.W/2+(e.x-VIEW.cx)*z;sy=VIEW.H/2+(e.y-VIEW.cy)*z;if(sx<40||sx>VIEW.W-40||sy<130||sy>VIEW.H-200)continue; /* не под шапкой и не под подсказкой внизу */d=Math.hypot(e.x-H.x,e.y-H.y);if(d<bd){bd=d;b=e;}}return b;}
   function hitHint(c,g){var e=nearEn(g),W=VIEW.W,Hh=VIEW.H,t=performance.now()/1000,x=W/2,y=Hh/2,z=VIEW.zoom,p=.5+.5*Math.sin(t*6);
@@ -88,8 +101,9 @@
   function wrapXp(){if(o.axW||typeof addXp!=='function')return;o.axW=1;var ax0=addXp;addXp=function(v){ax0(v);var g=G,n=g&&g.nv;if(n&&n.first&&!g.over)autoLv(g);};} /* файл может прийти раньше game.js — оборачиваем при первом походе */
   BB2.hook('frame',function(dt,g){tapGo(g,dt);var n=g.nv,H=g.hero;if(!n)return;if(n.hit&&n.hit.cd>0)n.hit.cd-=dt;
     if(n.nh&&!g.novHeal){n.nh=0;n.loaf=1;}
-    if(real()||g.nvGo){n.idle=0;n.still=0;}else{n.idle+=dt;n.still=(n.still||0)+dt;}
+    if(real()||g.nvGo){n.idle=0;n.still=0;if(g.nvMv==null)g.nvMv=g.t;}else{n.idle+=dt;n.still=(n.still||0)+dt;}
     if(n.first){
+      if(n.pw!==2&&on('fstp')&&!g.over)power(g,n);
       if(n.demo)demoStep(g,dt);else if(on('autowalk')&&g.t<45&&n.idle>=K.idle&&!g.boss)demoGo(g);
       if(g.tut&&!n.x10&&g.t>=10){n.x10=1;if(TUT[g.tut.i]){g.tut.xOff=0;document.getElementById('tipX').classList.add('on');}}
       autoLv(g);}
@@ -107,7 +121,7 @@
     if(q){c.setTransform(B,0,0,B,(q.x-VIEW.cx)*B+cv.width/2,(q.y-VIEW.cy)*B+cv.height/2);c.drawImage(spDot(),-14,-14,28,28);}
     w=n&&n.wh;e=g.boss;if(w&&e){c.setTransform(B,0,0,B,(e.x-VIEW.cx)*B+cv.width/2,(e.y-VIEW.cy)*B+cv.height/2);c.rotate(w.a);c.globalAlpha=.45+.5*(1-w.t/K.whWarn);c.drawImage(spCone(),0,-190,340,380);c.globalAlpha=1;}
     if(q||w)c.setTransform(B,0,0,B,-VIEW.cx*B+cv.width/2,-VIEW.cy*B+cv.height/2);});
-  BB2.hook('drawTop',function(c,g){var n=g.nv;if(!n)return;if(hintOn(g)&&!IN.on)hitHint(c,g);var W=VIEW.W,H=VIEW.H,h=g.hero,d=n.demo,r=n.ring,k;
+  BB2.hook('drawTop',function(c,g){var n=g.nv;if(!n)return;if(hintOn(g)&&!IN.on)(on('fsth')?dragHint:hitHint)(c,g);var W=VIEW.W,H=VIEW.H,h=g.hero,d=n.demo,r=n.ring,k;
     if(d){var ox=W/2,oy=H*.62,m=Math.min(1,d.t*4)*40;hand(c,ox,oy,ox+d.s*m,oy-m*.25);}
     k=1-h.hp/(g.st.maxHp||1);if(k>.35&&!g.over){c.globalAlpha=Math.min(.75,(k-.35)*1.2)*(.75+.25*Math.sin(g.t*7));c.drawImage(spRed(),0,0,W,H);c.globalAlpha=1;}
     if(r&&!r.out){var a=r.a,x=W/2+Math.cos(a)*Math.min(W,H)*.3,y=H/2+Math.sin(a)*Math.min(W,H)*.3,p=1+Math.sin(g.t*8)*.08;c.save();c.translate(x,y);c.rotate(a);c.scale(p,p);c.drawImage(spArrow(),-36,-24,72,48);c.restore();}});

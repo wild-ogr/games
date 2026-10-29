@@ -39,6 +39,11 @@ function payAfter(){if($('modal').classList.contains('on')&&PAY.re)PAY.re();if(!
    Мак: ?paytest=1 — имитация Яндекса (localStorage «paytest»), ?vk=1&paytest=1 — имитация VK с сервером (localStorage «paytestvk»),
    ?paytest=fail — отказ. В настоящем VK (vk_app_id) и в Яндексе заглушек нет */
 // rules2510: клиент VK на iOS (vk_platform=mobile_iphone|mobile_ipad, без хвоста _ok) — VKWebAppShowOrderBox там не работает. ОК (…_ok) не трогаем
+// BG-SHOP 29.10: покупки в Одноклассниках за ОКи (как у Зины, сервер hobby-pay: get_item site=OK + ?op=okpay). Цена = голоса × 6 до кратного 5 — так же поле ok в hobby-pay/catalog.json
+// флаг bb2 okpay: ?bb2=-okpay — в ОК покупок нет (как до 29.10). ОК на iPhone — покупки есть (VKWebAppShowOrderBox в ОК работает и на iOS)
+const OK_PER_VOTE=6;
+const okPrice=v=>Math.round(v*OK_PER_VOTE/5)*5;
+function okPayOn(){try{return typeof BB2==='undefined'||BB2.on('okpay');}catch(e){return true;}}
 const PAY_IOS=PLAT==='vk'&&!OK&&/[?&]vk_platform=mobile_(iphone|ipad)(&|$)/.test(location.search);
 const payObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 const PAY={on:false,p:null,v:null,list:[],busy:false,
@@ -104,7 +109,8 @@ const PAY={on:false,p:null,v:null,list:[],busy:false,
   // «Восстановить покупки» (Об игре): заново читаем getPurchases / ключи VK
   async again(){if(!(PAY.p||PAY.v)||PAY.busy)return;PAY.busy=true;let got=0;try{got=await PAY.restore();}catch(e){}PAY.busy=false;if(!got)toast('Покупки проверены — всё на месте',2400);},
   // цена: VK — число голосов (требование VK); Яндекс — из каталога: число + значок валюты (getPriceCurrencyImage), иначе готовая строка price
-  price(pr){if(PAY.v){const n=PAY_ITEMS[pr.id].vk,a=n%10,b=n%100;return n+' '+(a===1&&b!==11?'голос':a>=2&&a<=4&&(b<12||b>14)?'голоса':'голосов');}
+  price(pr){if(PAY.v&&OK)return okPrice(PAY_ITEMS[pr.id].vk)+' ОК';
+    if(PAY.v){const n=PAY_ITEMS[pr.id].vk,a=n%10,b=n%100;return n+' '+(a===1&&b!==11?'голос':a>=2&&a<=4&&(b<12||b>14)?'голоса':'голосов');}
     let img='';try{img=pr.getPriceCurrencyImage?pr.getPriceCurrencyImage('svg'):'';}catch(e){}
     return img&&pr.priceValue?payEsc(pr.priceValue)+'<img class="pcur" src="'+payEsc(img)+'" alt="">':payEsc(pr.price||pr.priceValue||'');},
   row(pr){const it=PAY_ITEMS[pr.id],own=it.perm&&PAY.own(pr.id),txt='<span>'+it.ic+' '+payEsc(it.name)+'<br><small>'+payEsc(it.desc)+'</small></span>';

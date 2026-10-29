@@ -59,8 +59,9 @@
   function label(t,col){var d=Math.min(2,window.devicePixelRatio||1),w=96,h=16,c=mkCanvas(w*d,h*d),x=c.getContext('2d');x.scale(d,d);
     x.fillStyle='rgba(20,16,30,.55)';x.beginPath();if(x.roundRect)x.roundRect(0,0,w,h,8);else x.rect(0,0,w,h);x.fill();
     x.font='600 11px '+(typeof FONT==='string'?FONT:'system-ui,sans-serif');x.textAlign='center';x.textBaseline='middle';x.fillStyle=col||'#cfe6ff';x.fillText(t,w/2,h/2+.5);return c;}
-  BB2.hook('draw',function(c,g){if(!gh||!BB2.on('ghost')||g.over||g.win)return;var r=gh.r,o=gh.o,end=o.end||r.t+3;if(!r.s||g.t>end)return;
-    var p=R.at(r,g.t),q=R.at(r,g.t+.25),al=.42*Math.min(1,(end-g.t)/3,g.t/1.5),Hh=g.hero,i,m,mx=0,my=0;if(al<=.02)return;
+  BB2.hook('draw',function(c,g){if(!gh||!BB2.on('ghost')||g.over||g.win)return;var r=gh.r,o=gh.o,end=o.end||r.t+3,t0=0;if(!r.s||g.t>end)return;
+    if(o.src==='mentor'&&BB2.on('fstg')){t0=Math.min(g.nvMv!=null?g.nvMv+1:6,6);if(g.t<t0)return;} /* BG-FIRST 29.10: наставник не загораживает богатыря в первые секунды — выходит после первого шага игрока или с 6 с; ?bb2=-fstg */
+    var p=R.at(r,g.t),q=R.at(r,g.t+.25),al=.42*Math.min(1,(end-g.t)/3,(g.t-t0)/1.5),Hh=g.hero,i,m,mx=0,my=0;if(al<=.02)return;
     if(o.near){for(i=-3;i<=3;i++){m=R.at(r,g.t+i);mx+=m.x/7;my+=m.y/7;}p={x:Hh.x+64+p.x-mx,y:Hh.y+8+p.y-my};q={x:Hh.x+64+q.x-mx,y:Hh.y+8+q.y-my};} /* наставник: его движение рядом с игроком */
     var ex=VIEW.ww-28,ey=VIEW.wh-48,cx=Math.max(VIEW.cx-ex,Math.min(VIEW.cx+ex,p.x)),cy=Math.max(VIEW.cy-ey,Math.min(VIEW.cy+ey,p.y));
     if(cx!==p.x||cy!==p.y){q={x:q.x-p.x+cx,y:q.y-p.y+cy};p={x:cx,y:cy};al*=.7;} /* убежала за край — держим у края экрана */

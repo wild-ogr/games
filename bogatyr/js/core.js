@@ -303,7 +303,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev',STAT_FB='https://stat.assortiz.ru/ev'; /* bb2 (13.10): облако Яндекса лежит с 11.10 → свой сервер ПЕРВЫМ, облако — запасным. Вернуть как было: url:STAT_URL и убрать url2 */
-STAT.init({g:'bogatyr',gv:'v25.9-102721',plat:PLAT,lang:LANG,url:STAT_FB,url2:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+STAT.init({g:'bogatyr',gv:'v26.0-102914',plat:PLAT,lang:LANG,url:STAT_FB,url2:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
@@ -724,7 +724,7 @@ async function initSDK(){
       vkSend('VKWebAppCheckNativeAds',{ad_format:'interstitial'}).then(r=>STAT.adChk('int',r&&r.result?1:0),()=>STAT.adChk('int',0));
     }catch(e){VK=null;}
     try{await cl;}catch(e){}
-    if(typeof PAY!=='undefined'&&!OK)PAY.init(); // ОК: покупки в «ОКах», сервер не готов → PAY.on=false, кнопок и окон покупок нет. покупки VK (js/pay.js): после моста и облака (на маке без моста — только ?vk=1&paytest=1)
+    if(typeof PAY!=='undefined'&&(!OK||okPayOn()))PAY.init(); // покупки VK (js/pay.js): после моста и облака (на маке без моста — только ?vk=1&paytest=1). BG-SHOP 29.10: в ОК — тоже, за ОКи (флаг okpay; ?bb2=-okpay — как раньше, в ОК покупок нет)
     return;
   }
   // Яндекс: меню тоже уже показано — SDK и облако догружаем следом
@@ -755,7 +755,7 @@ function applyFlags(f){if(!f||typeof f!=='object')return;const num=(k,a,b)=>{con
 function adMark(){ADV.last=Date.now();try{localStorage.setItem('bogatyr-ad',String(ADV.last));}catch(e){}}
 // поход закончен и итоги забраны: показать межэкранную? (runT — длина похода, с). Считает походы захода — звать ровно раз за поход
 function interReady(runT){ADV.sess++;const now=Date.now();if(ADV.last>now)adMark(); // часы перевели назад — отсчёт заново
-  if(typeof PAY!=='undefined'&&PAY.own('no_ads'))return false; // куплено «Без рекламы между походами»
+  if(typeof PAY!=='undefined'&&PAY.own('no_ads'))return false;if(typeof BB2!=='undefined'&&BB2.grm&&BB2.grm.on())return false; /* BG-SHOP: «Дружинная грамота» */ // куплено «Без рекламы между походами»
   if(!ADV.on||S.runs<ADV.from||ADV.sess<2||!(runT>=45)||adBusy||adShowing||now-ADV.t0<ADV.early)return false;
   // STAT v1.2: положена, но не показана — ad int none: gap — рано после прошлой межэкранной, cap — рано после ролика за награду, nosdk — нет SDK/моста
   if(now-ADV.last<ADV.gap*60000){STAT.ad('int','none',now-lastIntT<ADV.gap*60000?'gap':'cap');return false;}
@@ -774,7 +774,7 @@ function showInter0(cb0){let done=false;const cb=()=>{if(done)return;done=true;a
   STAT.adReq('int');
   try{ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();if(w!==false)STAT.ad('int','show');else STAT.ad('int','none','nofill');cb();},onError:()=>{adClose();STAT.ad('int','err','sdk');cb();},onOffline:()=>{adClose();STAT.ad('int','err','offline');cb();}}});}catch(e){adClose();STAT.ad('int','err','ex');cb();}}
 // будет ли межэкранная после этих итогов (как interReady, но без счёта походов) — чтобы не предлагать «Друзья и игры» перед роликом
-function interPeek(runT){const now=Date.now();if(typeof PAY!=='undefined'&&PAY.own('no_ads'))return false;
+function interPeek(runT){const now=Date.now();if(typeof PAY!=='undefined'&&PAY.own('no_ads'))return false;if(typeof BB2!=='undefined'&&BB2.grm&&BB2.grm.on())return false; /* BG-SHOP: «Дружинная грамота» */
   if(!ADV.on||S.runs<ADV.from||ADV.sess+1<2||!(runT>=45)||now-ADV.last<ADV.gap*60000||now-ADV.t0<ADV.early)return false;return PLAT==='vk'?!!VK||(!VK_REAL&&LOCAL):!!ysdk||LOCAL;}
 function stubAd(cb){const ad=$('ad'),tEl=$('adT');ad.classList.add('on');adOpen();let n=3;tEl.textContent=n;
   const it=setInterval(()=>{n--;tEl.textContent=n;if(n<=0){clearInterval(it);ad.classList.remove('on');adClose();cb();}},600);}

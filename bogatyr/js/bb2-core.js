@@ -84,7 +84,8 @@ var BB2=(function(){
     if(n>=GAP.length){st.a=n+1;no(e);return;}setTimeout(go,GAP[n++]);});})();});}
   function wait(ms){return new Promise(function(ok){setTimeout(ok,ms);});}
   function inRun(){try{return typeof G!=='undefined'&&!!G;}catch(e){return false;}}
-  function calm(d){return new Promise(function(ok){var n=0;(function q(){if(d.fast||(d.menu?!inRun()&&lateOk():!busy()||++n>60))ok();else setTimeout(q,d.menu?250:500);})();});} /* набор menu:1 выполняется только в меню (ждёт конца похода сколько угодно) */
+  function calm(d){return new Promise(function(ok){var n=0;(function q(){if(d.fast||(d.menu?!inRun()&&lateOk():!busy()&&!hold1()||++n>60))ok();else setTimeout(q,d.menu?250:500);})();});} /* набор menu:1 выполняется только в меню (ждёт конца похода сколько угодно) */
+  function hold1(){try{return B.on('fstl')&&typeof G!=='undefined'&&!!G&&!!G.first&&!G.over&&G.t<8;}catch(e){return false;}} /* BG-FIRST 29.10: фоновые наборы (чудеса, богатыри, дела…) не выполняются в первые 8 с первого похода — без подвисания на старте; выключить ?bb2=-fstl */
   var rdT=0;function lateOk(){try{return S.runs>0||Date.now()-rdT>4000;}catch(e){return true;}} /* новичка первые 4 с не трогаем: он уходит в первый поход */
   function loadSeq(d,bg){var i=0,f=d.f;return new Promise(function(ok,no){(function nx(){if(i>=f.length){ok();return;}
     var src=f[i++],p=bg&&!d.fast?calm(d):Promise.resolve();p.then(function(){return loadTry(src,d);}).then(function(){if(bg&&!d.fast)wait(d.menu?30:B.bgGap).then(nx);else nx();},no);})();});}

@@ -467,7 +467,7 @@ function openWkRules(){STAT.screen('weekly');const w=weekly();showModal('<h3>'+w
 /* drawMap — в js/map.js */
 
 /* ---------- забег ---------- */
-function startRun(chi,endless,wk,dr){if(!BB2.going&&BB2.hk('march',chi,{endless:endless,wk:wk,dr:dr})===true)return;ntfV=null;ac();hideModal();gearRefresh();$('toast').classList.remove('on');document.body.classList.add('run');layout();newRun(chi,HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.hero:'dob',endless,wk,dr);musicPlay('run');YG.start();
+function startRun(chi,endless,wk,dr){if(!BB2.going&&BB2.hk('march',chi,{endless:endless,wk:wk,dr:dr})===true)return;fstMenu=true;$('loading').style.display='none';ntfV=null;ac();hideModal();gearRefresh();$('toast').classList.remove('on');document.body.classList.add('run');layout();newRun(chi,HERO_BY[S.hero]&&heroOpen(HERO_BY[S.hero])?S.hero:'dob',endless,wk,dr);musicPlay('run');YG.start();
   STAT.screen('game');if(G.endless&&!G.weekly)STAT.lvl('inf','',{p:powerScore(G.heroId)});else STAT.lvl(chPos(G.chi),G.daily?'daily':G.weekly?'week':G.dif==='s'||G.dif==='h'?'ch_'+G.dif:'ch',{s:G.chi,p:powerScore(G.heroId)});} /* M2: l — место в кампании (1…N), s — слот (ключ сейва) */ // сеча (бесконечный) — l:'inf' (STAT v1.2), как и в end // статистика: поход = «уровень» (номер главы, режим)
 function togglePause(){if(!G||G.over)return;if($('modal').classList.contains('on')&&!G.pauseOpen)return;
   if(G.pauseOpen){G.pauseOpen=false;G.paused=false;hideModal();musicDuck(1);YG.start();return;}
@@ -771,11 +771,15 @@ function ecoMigrate(){if(S.eco>=2)return;S.eco=2;const v=S.village;if(!v.mill||!
 // облако пришло позже меню и оно добавило прогресс — обновить экран
 function onCloud(){if(window.LOOK)LOOK.sync();if(G)return;gearRefresh();ecoMigrate();for(const i in S.done)if(CH[i])S.bossKill[CH[i].boss]=1;sndIcon();volApply();
   if(S.runs&&curTab==='Village'&&!firstGo)curTab='Map';openTab(curTab);if(S.runs)openToday(true);BB2.hk('cloud');}
-function onReady(){$('loading').style.display='none';STAT.once('ready',{ms:Math.round(performance.now())});gearRefresh();ecoMigrate();musicPlay('menu');for(const i in S.done)if(CH[i])S.bossKill[CH[i].boss]=1;openTab(S.runs?'Map':'Village');achCheck();
-  if(!S.runs)firstStart();else setTimeout(()=>openToday(true),400);BB2.hk('ready');}
+function onReady(){const f0=fstNew();if(!f0)$('loading').style.display='none';STAT.once('ready',{ms:Math.round(performance.now())});gearRefresh();ecoMigrate();musicPlay('menu');for(const i in S.done)if(CH[i])S.bossKill[CH[i].boss]=1;if(f0)STAT.once('menu');else openTab(S.runs?'Map':'Village');achCheck();
+  if(!S.runs)firstStart(f0);else setTimeout(()=>openToday(true),400);BB2.hk('ready');}
+/* BG-FIRST 29.10, флаг fst0: новичок не видит деревню «Жми «В поход»» на 1–3 с — экран загрузки держится до первого кадра похода, деревня не рисуется зря.
+   fstc: облако не ждём (позднее облако и так сливается во время похода — тот же путь, что после 3 с). Выключить: ?bb2=-fst0 / -fstc. */
+function fstNew(){return !S.runs&&BB2.on('fst0')&&!/[?&](bot|promo)\b/.test(location.search);}
+let fstMenu=false;function fstShow(){if(fstMenu)return;fstMenu=true;$('loading').style.display='none';if(!G)openTab(S.runs&&curTab==='Village'?'Map':curTab);}
 // новичок — сразу в первый поход (без деревни и меню). Облако ждём до 3 с: вдруг прогресс есть на другом устройстве
 let firstGo=false;
-function firstStart(){if(/[?&](bot|promo)\b/.test(location.search))return;const t0=Date.now(),tick=()=>{if(G||S.runs)return;if(cloudReady||Date.now()-t0>3000){if(!$('modal').classList.contains('on')){firstGo=true;startRun(0);}return;}setTimeout(tick,150);};tick();}
+function firstStart(f0){if(/[?&](bot|promo)\b/.test(location.search))return;const t0=Date.now(),cap=f0&&BB2.on('fstc')?0:3000,tick=()=>{if(G)return;if(S.runs){if(f0)fstShow();return;}if(cloudReady||Date.now()-t0>=cap){if(!$('modal').classList.contains('on')){firstGo=true;startRun(0);}else if(f0)fstShow();return;}setTimeout(tick,150);};if(f0){setTimeout(tick,0);setTimeout(()=>{if(!G)fstShow();},6000);}else tick();}
 (function boot(){cv=$('cv');ctx=cv.getContext('2d');initInput();layout();
   if(S.calm==null)S.calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches?1:0; // «спокойный режим» по настройке телефона
   $('goldIc').src=ic('coin',48);$('nav1').src=ic('d_oak',60);$('nav2').src=ic('i_sword',60);$('nav3').src=ic('i_mace',60);$('nav4').src=ic('hp_dob',60);$('nav5').src=ic('chest',60);

@@ -246,6 +246,8 @@ nav{border-top:2px solid #d9a441}
   nav{justify-content:center}nav button{max-width:180px}
   .panel{max-width:460px}
 }
+/* BG-REL 29.10: низкое окно ПК (ОК ok.ru ~1000×560, блок «Баба Зина» внизу) — «Выступить» над карточкой «Сегодня», а не под полосой */
+@media (min-width:880px) and (max-height:640px){.mapR .today{order:0}}
 </style>
 <!-- вид «Живая сказка» и темы оформления: css/look.css (переменные) + js/look.js (реестр тем, значки, цвета холста) -->
 <link rel="stylesheet" href="css/look.css">
@@ -333,6 +335,7 @@ setTimeout(function(){var l=document.getElementById('loading');if(l&&l.style.dis
 <script src="js/map.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/bb2-eco-m.js"></script><!-- bb2 ECO: заглушки денег (после ui.js: оборачивает takeGift/showRewarded/calcStats); окно Лавки — js/bb2-eco-shop.js по требованию -->
+<script src="js/bb2-grm.js"></script><!-- BG-SHOP этап 2: подписка «Дружинная грамота» (после bb2-eco-m.js: кнопка Лавки, окно гибели) -->
 <script>BB2.inc('zab',['js/zba-kit.js','js/zba-nakoval.js','js/zba-travy.js','js/zba-gadanie.js','js/zbd-kit.js','js/zbd-kulak.js','js/zbd-skachki.js'])</script>
 <!--XPZ--><script>
 /* XPZ v1.1 (27.10, XPZ-FIX): только в ОК — блок «Баба Зина» вместо «Ещё игр» (переход: сайт/моб. браузер ОК — новая вкладка ok.ru/game, иначе окно со ссылкой). Источник и описание — hobby-analytics/release-i/zina-boost3/z3-xpromo-tools/xpz.js, правки только там. */
