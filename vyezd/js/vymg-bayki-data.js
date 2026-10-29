@@ -1,6 +1,4 @@
 'use strict';
-/* vy-mgb: тексты «Байки гаража» (Толик «Карбюратор»). Строка: [1 — правда / 0 — байка, утверждение RU, утверждение EN, пояснение RU, пояснение EN].
-   Темы: советские машины и заводы, ПДД (по действующим правилам РФ), двор и зима. Байка — неверное утверждение, пояснение говорит, как на самом деле. */
 window.VYB_BAYKI=[
 [1,'У «Запорожца» мотор стоял сзади, а багажник — спереди.','The Zaporozhets had its engine in the back and the boot in the front.','Мотор воздушного охлаждения сзади, под капотом спереди — запаска и чемодан. Открываешь «багажник» — а там бензобак!','An air-cooled engine sat in the back; under the front lid — the spare wheel and a suitcase.'],
 [1,'«Уши» по бокам «Запорожца» — это воздухозаборники для мотора.','The “ears” on the Zaporozhets’ sides are air intakes for the engine.','Через них мотор дышал и охлаждался. За них машину и прозвали «Ушастым».','The engine breathed and cooled through them — hence the nickname “Big Ears”.'],
