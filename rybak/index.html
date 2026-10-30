@@ -15,6 +15,7 @@ if(document.body)show();else addEventListener('DOMContentLoaded',show);},true);a
 <link rel="stylesheet" href="css/look.css"><link rel="stylesheet" href="css/themes.css"><script src="js/look.js"></script>
 <script src="js/places.js"></script><script src="js/places-art.js"></script><script src="js/rb2-water.js"></script>
 <script src="js/rb2-core.js"></script><script src="js/r3-core.js"></script>
+<script src="js/rs-core.js"></script><script src="js/rs-days.js"></script>
 <script>(function(){var a=null;function on(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
 if(!a){try{a=new Audio('data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAGAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');a.loop=true;a.volume=0.01;a.setAttribute('playsinline','');}catch(e){a=null;}}
 if(a&&!document.hidden)a.play().catch(function(){});}
@@ -384,7 +385,7 @@ if(op==='ticket')return{ok:1,t:'dev'+mockN,mode:b.mode,seed:mseed(b.mode),left:1
 if(op==='top')return{ok:1,b:b.mode,per:b.per||'d',top:[{i:1,nm:'Наталья К.',tg:0,v:320},{i:2,nm:'',tg:7313,v:290},{i:3,nm:'Иван П.',tg:0,v:250,me:1}],me:{i:3,v:250},around:[]};if(op==='league')return{ok:1,wk:0,wend:86400,lad:LAD0,tier:0,tiers:28,joined:1,tr:0,n:2,up:1,down:0,i:2,claims:[],rows:[{i:1,v:90,nm:'Наталья К.',tg:0,z:'up'},{i:2,v:40,nm:'Иван П.',tg:0,me:1},{i:3,v:25,bot:1,nm:'Петрович',nm_en:'Petrovich'}]};if(op==='chal')return{ok:1,code:'ABC234',v:250,mode:'day'};if(op==='accept')return{ok:1,t:'dev'+mockN,mode:'day',seed:mseed('day'),left:0,exp:3600,from:{nm:'Наталья К.',tg:0,v:320}};return{ok:1};}
 var api={on:false,v:V,init:init,rng:rng,ticket:ticket,submit:submit,top:top,league:league,claim:claim,challenge:challenge,accept:accept,chres:chres,friends:friends,notify:notify,showName:showName,forget:forget,nameOf:nameOf,state:function(){return st;},me:function(){return me;},shown:function(){return sh;},_dbg:function(){return{url:url,cut:cut,dev:dev,st:st,tok:!!tok,log:log,rest:restDay,tks:tks};}};return api;})();
 /*/CUP*/
-var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';STAT.init({g:'rybak',gv:'v10.3-103001',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
+var CUP_URL='https://functions.yandexcloud.net/d4e5nfg9u466prmmiooj';const STAT_URL=IS_LOCAL||/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)?'':'https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';STAT.init({g:'rybak',gv:'v11.0-103018',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});function ern(s,n){try{STAT.earn(s,n);}catch(e){}return n;}
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('rybak-cl')?1:0;}catch(e){}STAT.progress({pl:+S.sessions||0,cn:+S.coins||0,bt:bt});statPrg();}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);let statPrgK='',statHidT=0;function statPrg(){try{const tk=S.tk||{},o={op:Object.keys(S.open||{}).filter(i=>S.open[i]).length,tk:(tk.rod|0)*100+(tk.line|0)*10+(tk.reel|0),al:spCount(),lg:Object.keys(S.legs||{}).length},k=JSON.stringify(o);if(k===statPrgK)return;statPrgK=k;STAT.ev('prg',o);}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){statHidT=Date.now();return;}if(statPr&&statHidT&&Date.now()-statHidT>30*60e3){statPrgK='';statPrg();}});const tutS={};function statTut(s){if(tutS[s])return;tutS[s]=1;STAT.ev('tut',{s:s});}
@@ -794,7 +795,7 @@ else if(ph==='nibble'||ph==='wait'&&G.pk)early();else if(ph==='wait'){G.hold=tru
 else if(ph==='bite'){doHook();if(G.phase==='fight'||G.phase==='reel')G.hold=true;}
 else if(ph==='fight'||ph==='reel')G.hold=true;else if(ph==='card')nextCast();}
 function doCast(x,y){const tk=curTk(),maxd=TACKLE.rod.dist[tk.rod]*a2DK();let d=GEO.dOf(y);if(baitCnt(G.bait)<=0){G.bait='worm';S.sel='worm';updHud();}
-if(d>maxd){d=maxd;toast(L('Дальше не добросить — удочка короткая','Can\'t cast further — the rod is too short'),1800);}
+if(d>maxd){d=maxd;if(!(window.RSF&&RSF.fish))toast(L('Дальше не добросить — удочка короткая','Can\'t cast further — the rod is too short'),1800);}
 d=Math.max(3,d);x=clamp(x,GEO.W*.08,GEO.W*.94);const b=BAIT[G.bait];if(b.pack&&!G.tourn){S.bait[G.bait]=Math.max(0,(S.bait[G.bait]||0)-1);}
 G.used++;S.casts++;save();updHud();let z='open';if(G.o){const q=a2ZoneAt(x,GEO.yOf(d),d,maxd);z=q.k;x=q.x;d=q.d;}
 G.fl={x,y:GEO.yOf(d),d,sx:GEO.tip.x,sy:GEO.tip.y,dip:0,sink:0,lay:0,drag:0,vis:1,z};G.phase='fly';G.t=0;G.pk=null;G.spook=0;G.a2q=0;SND.cast();hint(G.o?ZONES[z].ic+' '+L(ZONES[z].n,ZONES[z].en)+(a2Led()?' · 🔔':' · '+L(DEP_N[G.o.dp][0],DEP_N[G.o.dp][1]).toLowerCase()):'');}
@@ -1499,6 +1500,7 @@ if(DEMO==='shop')openShop(q.get('tab')||'t');else if(DEMO==='alb')openAlb();else
 <script src="js/mg-path.js"></script><script src="js/statx.js"></script>
 <script src="js/meta-vkm-data.js"></script><script src="js/meta-vkm.js"></script>
 
+<script src="js/rs-pis.js"></script><script src="js/rs-week.js"></script>
 <script src="js/rb2-first.js"></script>
 
 <link rel="stylesheet" href="css/rb2-home.css"><script src="js/rb2-home.js"></script>
@@ -1520,7 +1522,9 @@ $('stCupM').textContent=x?L('Готово: данные турниров уда�
 <script src="js/rb2-up.js"></script>
 <script src="js/rb2-cupsl.js"></script>
 <script src="js/r3-text-core.js"></script><script src="js/r3-text.js"></script><script src="js/r3-zorka.js"></script><script src="js/r3-zorka-ui.js"></script><script src="js/r3-econ.js"></script>
+<link rel="stylesheet" href="css/rs-look.css"><script src="js/rs-word.js"></script>
 <link rel="stylesheet" href="css/r3-home.css"><script src="js/r3-art.js"></script><script src="js/r3-home.js"></script><script src="js/r3-first.js"></script><script src="js/r3-srv.js"></script>
+<link rel="stylesheet" href="css/rs-home.css"><script src="js/rs-home.js"></script>
 <link rel="stylesheet" href="css/r3-day.css"><script src="js/r3-day.js"></script><script src="js/r3-day-mtop.js"></script><script src="js/r3-day-donk.js"></script><script src="js/r3-day-call.js"></script><script src="js/r3-day-mail.js"></script><script src="js/r3-day-ntf.js"></script>
 <link rel="stylesheet" href="css/r3-skin.css"><script src="js/r3-skin.js"></script><script src="js/r3-art-places.js"></script><script src="js/r3-art-fix.js"></script><script src="js/r3-art-shore.js"></script>
 <script>if(/[?&]r3a=(shore|card|fish|place)/.test(location.search))document.write('<script src="js/r3-art-stand.js"><\/script>');</script>
@@ -1572,6 +1576,8 @@ document.addEventListener('keydown',function(e){if(e.keyCode===27)x();});return{
 <script src="js/r3-smotka.js"></script>
 <script src="js/r3-rekl.js"></script>
 <script src="js/r3-ux.js"></script>
+<script src="js/r3-tih.js"></script>
+<script src="js/rs-fish.js"></script>
 <script>/*NEWS-RB*/addEventListener('load',function(){setTimeout(function(){try{if(window.R2&&R2.needAll&&window.R3&&R3.on&&!R3.off('news'))R2.needAll(['js/news.js','js/news-rb.js'],30000).catch(function(){});}catch(e){}},2000);});</script>
 </body>
 </html>

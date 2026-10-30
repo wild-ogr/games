@@ -18,7 +18,7 @@ function cfgFetch(){var u=cfgUrl();if(!u)return;try{fetch(u,{cache:'no-store'}).
 function isOff(id){if(!on)return true;if(!id||id==='r3')return false;if(roff[id]&&!(hasR2&&qp('on')&&new RegExp('(^|,)'+id+'(,|$)').test(qp('on'))))return true;return hasR2?(R2.off(id)||R2.off('r3.'+id)):false;}
 var feats={};function reg(id,o){o=o||{};feats[id]={id:id,s:o.s||'',t:o.t||''};if(hasR2)R2.reg('r3.'+id,{s:o.s||'',t:'(3.0) '+(o.t||'')});return!isOff(id);}
 function flags(){var r=[{id:'r3',s:'R3-CORE',t:'главный',off:!on,why:why,pct:pct,b:bucket}];for(var k in feats)r.push({id:k,s:feats[k].s,t:feats[k].t,off:isOff(k)});return r;}
-var evs={};function sub(ev,fn,id){(evs[ev]=evs[ev]||[]).push({fn:fn,id:id});}
+if(on)reg('rs',{s:'RS-RYBAK',t:'переделка 31.10: один главный из 6 кнопок, разделы, открытие по дням, тихая ловля (?off=r3.rs — игра = v10.3 + R3-CALM; подфлаги — js/rs-core.js)'});var evs={};function sub(ev,fn,id){(evs[ev]=evs[ev]||[]).push({fn:fn,id:id});}
 function emit(ev){if(!on)return;var a=Array.prototype.slice.call(arguments,1),L=evs[ev],r;if(!L)return;for(var i=0;i<L.length;i++){if(L[i].id&&isOff(L[i].id))continue;try{var x=L[i].fn.apply(null,a);if(r===undefined)r=x;}catch(e){err(ev+(L[i].id?'/'+L[i].id:''),e);}}return r;}
 var evN={};function ev(a,o){a=String(a||'').slice(0,12);evN[a]=(evN[a]||0)+1;if(evN[a]>40)return;var p={a:a};if(o)for(var k in o){if(k==='a')continue;p[k]=o[k];}
 try{if(typeof STAT==='object'&&STAT.ev)STAT.ev('r3',p);}catch(e){}}

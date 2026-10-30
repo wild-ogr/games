@@ -1,0 +1,66 @@
+(function(){'use strict';var W=window,$=function(id){return document.getElementById(id);};var R3OK=typeof R3==='object'&&R3&&R3.on&&typeof R2==='object';var ON=false;if(R3OK){try{R3.reg('rs',{s:'RS',t:'переделка 31.10 целиком (?off=r3.rs — игра как v10.3)'});ON=R3.reg('rs.pop',{s:'RS-П3',t:'при входе одно окно «Доброе утро»; остальное — письмами в «Письмах»'})&&!R3.off('rs');}catch(e){ON=false;}}
+var API=W.RSPIS={on:ON,open:function(){return false;},n:function(){return 0;},line:function(){return'';}};if(!ON)return;(function(){var o=R2.off;R2.off=function(id){if(id==='ux.pop'||id==='r3.ux.pop')return true;return o.apply(this,arguments);};})();function ev(k,o){var p={k:k};if(o)for(var x in o)p[x]=o[x];try{R3.ev('rs',p);}catch(e){}}
+function esc_(s){try{return esc(String(s));}catch(e){return String(s).replace(/[&<>"]/g,'');}}
+function tap(){try{SND.tap();}catch(e){}}
+function dk(){try{return R3.dk();}catch(e){try{return dayNum();}catch(x){return Math.floor(Date.now()/864e5);}}}
+function mOn(){try{return $('modal').classList.contains('on');}catch(e){return false;}}
+function onHome(){try{return!G&&$('scr-map').classList.contains('on');}catch(e){return false;}}
+var LS='rybak-rspis';function ld(){var o=null;try{o=JSON.parse(localStorage.getItem(LS)||'null');}catch(e){}if(!o||o.d!==dk())o={d:dk(),m:null,mr:0,g:0,gx:0};return o;}
+function sv(o){try{localStorage.setItem(LS,JSON.stringify(o));}catch(e){}}
+var uiT=0,adT=0,curUser=false,allow=0,dropMail=0,park=[];['pointerdown','keydown'].forEach(function(t){document.addEventListener(t,function(){uiT=Date.now();},{capture:true,passive:true});});if(typeof showRewarded==='function'){var sr0=showRewarded;showRewarded=function(a,b,c){var w=function(f){return function(){adT=Date.now();if(typeof f==='function')return f.apply(this,arguments);};};return sr0.call(this,w(a),w(b),c);};}
+function frag(mc){var f=document.createDocumentFragment();while(mc.firstChild)f.appendChild(mc.firstChild);return f;}
+function titleOf(f){var t='';try{var h=f.querySelector('h2,h3,.r3dd-hd,.nws-t,b');t=(h&&(h.textContent||''))||'';if(!t)t=f.textContent||'';}catch(e){}
+t=t.replace(/[✕×]/g,'').replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'');return t.length>44?t.slice(0,43)+'…':(t||'Записка');}
+function userNow(){var e=null;try{e=W.event;}catch(x){}if(e&&/^(click|keydown|keyup|pointerup|mouseup|touchend)$/.test(e.type))return true;var ua=false;try{ua=!W.__rsStrict&&!!(navigator.userActivation&&navigator.userActivation.isActive);}catch(x){}
+var dt=Date.now()-uiT;return dt<900||ua&&dt>5000||Date.now()-adT<2500;}
+function keep(f,how){var t=titleOf(f);park.unshift({t:t,f:f,rd:0});if(park.length>8)park.pop();ev('pk',{w:how||'',t:t.slice(0,20)});}
+var md=typeof modal==='function'?modal:null;if(md){modal=function(html){var hold=false;try{hold=typeof saveHold!=='undefined'&&saveHold;}catch(e){}
+if(allow>0){allow--;curUser=false;return md.apply(this,arguments);}
+if(allowT&&Date.now()<allowT){allowT=0;curUser=true;return md.apply(this,arguments);}
+var user=userNow();if(user||hold||!onHome()||modalOn&&curUser){curUser=user||modalOn&&curUser;return md.apply(this,arguments);}
+var mc=$('mcard'),was=modalOn,prev=was?frag(mc):null,r=md.apply(this,arguments);if(!was){$('modal').classList.remove('on');modalOn=false;}
+var done=false,take=function(){if(done)return;done=true;try{keep(frag(mc),'self');if(prev){mc.appendChild(prev);$('modal').classList.add('on');modalOn=true;}D2();}catch(e){}};try{Promise.resolve().then(take);}catch(e){setTimeout(take,0);}
+return r;};}
+if(typeof maybeStreak==='function'){var ms0=maybeStreak;maybeStreak=function(){if(typeof openMail==='function'&&!openMail.__rs){var om=openMail;openMail=function(){if(dropMail&&!userNow()){return;}return om.apply(this,arguments);};openMail.__rs=1;}
+dropMail=1;try{return ms0.apply(this,arguments);}finally{dropMail=0;}};}
+var oth=[],othRan=0;function parkRun(id,fn){var mc=$('mcard'),was=modalOn,prev=was?frag(mc):null,r=false;allow++;try{r=fn();}catch(e){try{console.warn('rs enter '+id,e);}catch(x){}}if(allow>0)allow--;try{if(r===true&&mOn()){keep(frag(mc),'enter:'+id);$('modal').classList.remove('on');modalOn=false;}if(prev){mc.innerHTML='';mc.appendChild(prev);$('modal').classList.add('on');modalOn=true;}}catch(e){}
+D2();return false;}
+function parkOthers(){if(othRan)return;othRan=1;oth.sort(function(a,b){return b.p-a.p;});oth.forEach(function(o){if(!R2.off(o.id))parkRun(o.id,o.fn);});}
+if(R2.enter){var en0=R2.enter;R2.enter=function(id,p,fn){if(id==='morning')return en0.call(R2,id,1000,function(){var r=fn();if(r===true){curUser=true;parkOthers();}return r;});oth.push({id:id,p:+p||0,fn:fn});return en0.call(R2,id,p,function(){parkOthers();return false;});};}
+API.allowOne=function(){allow=1;};var allowT=0;API.allowFor=function(ms){allowT=Date.now()+(ms||5000);};API.note=function(o){if(!o)return;var tt=String(o.html||'').replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'');for(var i=0;i<park.length;i++)if(park[i].h===o.html)return;park.unshift({t:(o.ic?o.ic+' ':'')+(tt.length>44?tt.slice(0,43)+'…':tt),h:o.html,o:o,rd:0});if(park.length>8)park.pop();ev('pk',{w:'note',t:tt.slice(0,20)});D2();};function noteOpen(o){var b=(o.btns||[]);modal('<div data-rs="n"><div class="r3dd"><p class="quote"><span style="font-size:26px;margin-right:8px">'+(o.ic||'✉')+'</span>'+o.html+'</p></div><div class="row">'
++'<button class="btn" id="mCancel">← К письмам</button>'+b.map(function(x){return'<button class="btn noenter '+(x[2]||'')+'" id="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div></div>');$('mCancel').onclick=function(){tap();openPis();};b.forEach(function(x){var e=$(x[0]);if(e)e.onclick=function(){tap();hideModal();o.btns=[];try{x[3]();}catch(y){}};});}
+API.morning=function(o){var s=ld();s.m={rows:(o.rows||[]).slice(0,8),ser:o.ser||'',task:o.task||'',tm:o.tm||''};s.mr=0;s.g=o.gc||0;s.gx=0;sv(s);D2();};API.x2done=function(){var s=ld();s.gx=1;sv(s);};function mornOpen(){var s=ld(),m=s.m;if(!m)return;s.mr=1;sv(s);modal('<div data-rs="m"><h2>☀ Утренние новости</h2>'+(m.ser?'<p class="r2f-ser">'+m.ser+'</p>':'')+'<div class="r2f-rows">'+m.rows.join('')+'</div>'
++(m.task?'<button class="noenter r2f-task" id="rsTask">📅 '+m.task+' ›</button>':'')+(m.tm?'<p class="r2f-tm">'+m.tm+'</p>':'')
++'<div class="row"><button class="btn" id="mCancel">← К письмам</button></div></div>');if($('rsTask'))$('rsTask').onclick=function(){tap();hideModal();try{openDaily();}catch(e){}};$('mCancel').onclick=function(){tap();openPis();};}
+function openedTxt(ids){var L=[];try{var a=RSD.list();ids.forEach(function(id){for(var i=0;i<a.length;i++)if(a[i].id===id){L.push(a[i].t);break;}});}catch(e){}return L;}
+try{R3.sub('rs:open',function(ids){if(!ids||!ids.length)return;var s=ld();s.o=(s.o||[]).concat(ids).filter(function(x,i,a){return a.indexOf(x)===i;}).slice(0,6);s.or=0;sv(s);D2();},'rs.pop');}catch(e){}
+function openedOpen(){var s=ld(),L=openedTxt(s.o||[]);s.or=1;sv(s);modal('<div data-rs="o"><h2>🆕 Петрович</h2><p class="quote"><b>Петрович</b>Сегодня открыл тебе: '+esc_(L.join(', ')||'новое')+'. Загляни, как будет минутка.</p>'
++'<div class="row"><button class="btn" id="mCancel">← К письмам</button></div></div>');$('mCancel').onclick=function(){tap();openPis();};}
+function som(){try{if(!W.R3MEM||!R3MEM.ON||!R3MEM.ON.som||R3.off('mem.som'))return null;var g=R3MEM.M().g;if(!g||g.st!==0)return null;var nm=(FISH[g.i]&&(FISH[g.i].n||FISH[g.i].name))||'Рыба',pc=Math.min(100,Math.floor((g.p||0)/10));try{nm=fishName(g.i)||nm;}catch(e){}
+return{t:nm+' на крючке · '+pc+' %',sub:g.pd===R3MEM.day()?'Петрович держит — загляни':'Ждёт тебя — тяни!',morn:g.pd!==R3MEM.day()};}catch(e){return null;}}
+function callDue(){try{return!!(W.R3DC&&R3DC.due());}catch(e){return false;}}
+function dkSt(){try{return W.R3DK?R3DK.st():'';}catch(e){return'';}}
+function dkCan(){try{return!!(W.R3DK&&R3DK.canSet&&R3DK.canSet()&&R3.isOpen('bell')&&(+S.sessions||0)>=3);}catch(e){return false;}}
+function newsN(){try{return W.NEWS&&NEWS.count?NEWS.count():0;}catch(e){return 0;}}
+function newsF(){try{return W.NEWS&&NEWS.fresh?NEWS.fresh():0;}catch(e){return 0;}}
+function giftX2(){var s=ld();try{return!!(s.g&&!s.gx&&W.R2F&&R2F.x2ok&&R2F.x2ok());}catch(e){return false;}}
+function row(k,ic,t,sub,isNew,btn){var act=btn&&btn.length>1?btn:'';return'<button class="r3ml-r noenter rs-r'+(isNew?' new':'')+'" data-rs="'+k+'"><span>'+ic+'</span><b>'+esc_(t)+'</b><small>'+esc_(sub||'')+(act?' · <u>'+esc_(act)+'</u>':'')+'</small></button>';}
+function rows(){var h='',s=ld();if(s.g)h+=row('g','🎁','Подарок дня','+'+s.g+' 💰 — уже у тебя',giftX2(),giftX2()?'📺 удвоить':'');if(callDue())h+=row('c','📞','Петрович звонил','Хотел что-то рассказать',true,'Послушать');var d=dkSt();if(d==='ready'||d==='old'&&(function(){try{return __away.st()==='ready';}catch(e){return false;}})())h+=row('d','🔔','Улов с донок','Донки поймали рыбу за ночь',true,'Забрать');else if(d==='wait')h+=row('dw','🔔','Донки стоят','Улов будет к утру',false,'');else if(dkCan())h+=row('d','🔔','Поставить донку на ночь','Утром — улов',false,'›');var g=som();if(g)h+=row('s','🎣',g.t,g.sub,g.morn,'›');if(s.o&&s.o.length){var ot=openedTxt(s.o);if(ot.length)h+=row('o','🆕','Петрович: сегодня открыл',ot.join(', '),!s.or,'›');}
+if(s.m)h+=row('m','☀','Утренние новости',(s.m.ser||'').replace(/<[^>]+>/g,'').slice(0,40)||'Серия, гостинцы, задание дня',!s.mr,'›');var nn=newsN();if(nn){var tt='';try{tt=NEWS.titles()[0]||'';}catch(e){}h+=row('n','📰','Петрович сообщает',tt,newsF()>0,'›');}
+park.forEach(function(p,i){h+=row('p'+i,'✉',p.t,'Петрович оставил',!p.rd,'›');});return h;}
+function n(){var c=0,s=ld();try{if(callDue())c++;var sg=som();if(sg&&sg.morn)c++;if(s.o&&s.o.length&&!s.or)c++;if(dkSt()==='ready')c++;if(s.m&&!s.mr)c++;if(newsF())c++;park.forEach(function(p){if(!p.rd)c++;});if(W.R3DM&&R3DM.unread)c+=R3DM.unread();if(typeof a3MailCnt==='function')c+=a3MailCnt()||0;}catch(e){}return c;}
+API.n=n;API.line=function(){var c=n();return c?c+' '+(function(){try{return pl(c,'новое','новых','новых','','');}catch(e){return'новых';}})():'';};API.rows=rows;API.act=function(k){tap();var s=ld();if(k==='g'){if(giftX2()){try{R2F.x2(function(){API.x2done();openPis();});}catch(e){}}return;}
+if(k==='c'){try{R3DC.answer();}catch(e){}return;}
+if(k==='d'){try{R3.go('bell');}catch(e){try{R3DK.open();}catch(x){}}return;}
+if(k==='m'){mornOpen();return;}
+if(k==='o'){openedOpen();return;}
+if(k==='n'){hideModal();try{NEWS.open();}catch(e){}return;}
+if(k==='s'){try{R3MEM.open();}catch(e){}return;}
+if(k.charAt(0)==='p'){var p=park[+k.slice(1)];if(!p)return;p.rd=1;ev('po',{t:p.t.slice(0,20)});if(p.o){noteOpen(p.o);return;}var mc=$('mcard');mc.innerHTML='';if(p.f.childNodes.length){mc.appendChild(p.f);p.f=document.createDocumentFragment();}else mc.innerHTML='<p>Это письмо уже прочитано.</p><div class="row"><button class="btn" id="mCancel">← К письмам</button></div>';var c=$('mCancel');if(c&&!c.onclick)c.onclick=function(){openPis();};$('modal').classList.add('on');modalOn=true;curUser=true;mc.scrollTop=0;return;}};function openPis(){ev('pis',{n:n()});try{if(W.R3DM&&R3DM.box){R3DM.box();return true;}}catch(e){}try{openMail();return true;}catch(e){}return false;}
+API.open=openPis;function rshRows(){var H=W.RSH;if(!H||!H.add||H.__rsp)return;H.__rsp=1;H.add('ulov','t',{id:'otkr',ic:'💌',t:'Открытка от Петровича',sub:function(){return'Утром — родным и друзьям';},ok:function(){try{return!!(W.R3OTKR&&R3OTKR.chipOk&&R3OTKR.chipOk());}catch(e){return false;}},go:function(){try{R3OTKR.open();}catch(e){}}});H.add('ulov','n',{id:'kun',ic:'🧬',t:'Чудо-рыбы',sub:function(){return'Рыбы с приметами — твоя коллекция';},ok:function(){try{return!!(W.R3EV&&R3EV.openKun&&R3EV.X().mk.length);}catch(e){return false;}},go:function(){try{R3EV.openKun();}catch(e){}}});H.add('dvor','r',{id:'sez',ic:'🍂',t:'Время года',sub:function(){try{var c=R3SEZ.cur();return c.ic+' '+c.n;}catch(e){return'';}},ok:function(){return!!W.R3SEZ;},go:function(){var b=$('r3Sez');if(b){b.click();return;}try{toast(R3SEZ.cur().ic+' '+R3SEZ.cur().n,2600);}catch(e){}}});H.add('ulov','f',{id:'som',ic:'🎣',t:'Сом на три дня',sub:function(){var g=som();return g?g.t:'';},ok:function(){return!!som();},go:function(){try{R3MEM.open();}catch(e){}}});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(rshRows,0);});else setTimeout(rshRows,0);function D2(){try{if(W.R3D&&R3D.rebuild)R3D.rebuild();}catch(e){}try{if(W.RSHOME&&RSHOME.upd)RSHOME.upd();}catch(e){}}
+document.addEventListener('click',function(e){try{if(e.target===$('modal')&&$('mcard').querySelector('[data-rs],.rs-pis')){hideModal();}}catch(x){}},true);var st=document.createElement('style');st.textContent='.rs-r small u{text-decoration:none;font-weight:700;color:#c2410c}'
++'.rs-pis .r3ml-r{min-height:60px;font-size:17px}.rs-pis .r3ml-r small{font-size:15px}'
++'.rs-morn h2{font-size:24px}.rs-morn .quote{font-size:18px;line-height:1.4}.rs-morn .rs-gift{font-size:20px;font-weight:700;margin:10px 0}'
++'.rs-morn .rs-go1{width:100%;min-height:64px;font-size:21px}.rs-morn .rs-rest{font-size:15px;opacity:.8;text-align:center;margin:8px 0 0}'
++'.rs-back{min-height:48px;font-size:17px;margin:0 0 6px}';(document.head||document.documentElement).appendChild(st);})();

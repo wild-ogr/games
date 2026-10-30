@@ -32,7 +32,7 @@ qKick();return r;};}
 if(typeof landed==='function'){var ld=landed;landed=function(){try{var ft=G&&G.ft,h=ft&&ft.hd,f=G&&G.pk&&G.pk.f;if(h&&f&&!h.saved){h.saved=1;var st=R3HF.story(ft,f,'ok');st.pi=G.pi;LAST.push(st);if(LAST.length>20)LAST.shift();try{R3.emit('hand:fight',st);}catch(e){}}}catch(e){err(e);}return ld.apply(this,arguments);};}
 function whoHide(){var el=$i('r3zWho');if(el)el.classList.remove('on','done');}
 function whoOk(f){return zon()&&!isCalm()&&f&&!f.leg&&FISH[f.id]&&!(S.r3z&&S.r3z.who===0);}
-function whoLater(f){G.hWho=whoOk(f)?1:0;}
+function whoLater(f){G.hWho=whoOk(f)&&(!(typeof TIH==='object'&&TIH)||TIH.whoOk(f,!!(G.ft&&G.ft.hd&&G.ft.hd.tr)))?1:0;}
 function whoTick(ft,f){if(G.hWho===1&&ft.t>=(ft.small?.25:.65)){G.hWho=2;try{whoShow(f);}catch(e){err(e);}}}
 function whoShow(f){try{var sy=$i('say');if(sy&&sy.classList.contains('on')&&typeof sayWho!=='undefined'&&sayWho!=='wife'){clearTimeout(sayT);sy.classList.remove('on');}}catch(e){}
 var n=nb()?2:3,o=R3HF.whoOpts(f,G.pi,Math.random,n),h=G.ft&&G.ft.hd;G.zwho={o:o,a:'',h:1};var el=$i('r3zWho');if(!el){el=document.createElement('div');el.id='r3zWho';el.className='r3zWho';$i('scr-fish').appendChild(el);}

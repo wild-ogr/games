@@ -20,7 +20,7 @@ try{var css=document.createElement('style');css.textContent='#r3zWho.r3g{top:110
 +'cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .2s,transform .12s}'
 +'#r3zWho.r3g button.r3gB:active{transform:scale(.96)}'
 +'#r3zWho.r3g .r3gP{display:block;line-height:0;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}#r3zWho.r3g .r3gP canvas{display:block;max-width:100%;height:auto!important}'
-+'#r3zWho.r3g .r3gN{display:block;margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.5)}'
++'#r3zWho.r3g .r3gN{display:block;margin-top:2px;max-width:100%;white-space:normal;overflow-wrap:break-word;hyphens:auto;text-align:center;line-height:1.1;text-shadow:0 1px 3px rgba(0,0,0,.5)}'
 +'#r3zWho.r3g.done button.r3gB{opacity:.35}'
 +'#r3zWho.r3g{transition:opacity .35s,transform .35s}#r3zWho.r3g.r3gOut{opacity:0;transform:translateX(-50%) translateY(-10px);pointer-events:none}'
 +'#r3zWho.r3g button.r3gB.sel{opacity:1;background:rgba(255,207,122,.2);border:2px solid var(--gold,#ffd27a);box-shadow:0 0 0 3px rgba(255,207,122,.18);color:var(--gold,#ffd27a)}'
