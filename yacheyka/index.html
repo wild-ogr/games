@@ -990,7 +990,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // Имя игры — по сборке (BUILD_GAME → GID): Косынка — kosynka, Паук — pauk, Ячейка — yacheyka. Раздача = «уровень» (STAT.lvl в startDeal/resumeDeal)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v3.7-102721',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:{klondike:'kosynka',spider:'pauk',freecell:'yacheyka'}[GID],gv:'v3.8-103020',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (сыграно раскладов, монеты, было ли облачное сохранение) — после облака или через 2,5 с; баланс; настройки
 let statPr=0,statBt=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:played(),cn:+S.coins||0,bt:statBt});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0,th:S.th||'day'});
@@ -2759,6 +2759,11 @@ let lastAdT=Date.now(),AD_GAP=180000;const AD_FROM=2;
    Тот же приём — во всех играх (журнал hobby-analytics/release-f/ads-fail.md, раздел «ОБРАЗЕЦ»). Здесь «ролик готов» — adVidReady (adReady занято правилом межэкранной), как в «Дураке». */
 const AD_RETRY_MS=3000,AD_COOL_MS=30000,AD_COOL_MIN=8000,AD_POLL_MS=5000,AD_BTN_SEL='#mAd,#mX2,#mAdCoins,#mAdTh';let adCoolT=0,adCoolS=0,adDimT=0,adChkT=0,adRdyT=0;
 function adErrCode(e){const d=e&&e.error_data||{};return d.error_code||d.error_reason||(e&&(e.error_type||e.message))||'';} // код VK, иначе причина словами — в статистику
+/* err3010: код VK 13 («Custom error for every handler») — общий отказ клиента VK, сам код причину не говорит. Пишем в статистику пояснение VK (поле er):
+   у ролика/межэкранной — в событии ad, у проверки Check — один раз за запуск событием adchk {f,e:код,er}. Поведение рекламы не меняется. */
+function adErrWhy(e){const d=e&&e.error_data||{};let s=[d.error_description,d.error_reason,d.error_msg].filter(x=>x&&typeof x!=='object').join('|');if(!s&&e&&e.message)s=e.message;
+  return s?String(s).replace(/[\u0000-\u001f"\\<>]/g,' ').slice(0,60):undefined;}
+let adChkErr=0;
 function adShut(e){const d=e&&e.error_data||{};return +d.error_code===4;} // код VK 4 — игрок сам закрыл ролик раньше конца
 function adNoFill(e){const d=e&&e.error_data||{};return +d.error_code===20||/no ads?\b/i.test(String(d.error_reason||''));}
 function adSoon(){return 'Ролик будет через несколько секунд — кнопка загорится, когда он загрузится';}
@@ -2779,7 +2784,7 @@ function adPreload(why){if(!VK)return;clearTimeout(adChkT);if(typeof why==="stri
   const now=typeof why==='string'&&why!=='back'&&why!=='look'; // итог показа и запуск — спрашиваем сразу (ролик потрачен, прежний ответ устарел); опрос по таймеру — не чаще AD_ASK_MIN
   if(!now){const wait=adAsking?AD_ASK_MIN:adAskT+AD_ASK_MIN-Date.now();if(wait>0){adChkT=setTimeout(adPreload,wait);return;}}
   adAskT=Date.now();const id=adAsking=++adAskN; // ответ на прежний, уже устаревший вопрос не слушаем
-  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(id!==adAskN)return;adAsking=0;const ok=!!(r&&r.result);STAT.adChk('rew',ok?1:0);adAns(ok);},()=>{if(id!==adAskN)return;adAsking=0;STAT.adChk('rew',0);adAns(null);});}
+  vkSend('VKWebAppCheckNativeAds',{ad_format:'reward'}).then(r=>{if(id!==adAskN)return;adAsking=0;const ok=!!(r&&r.result);STAT.adChk('rew',ok?1:0);adAns(ok);},e=>{if(id!==adAskN)return;adAsking=0;STAT.adChk('rew',0);if(!adChkErr&&!adNoFill(e)){adChkErr=1;STAT.ev('adchk',{f:'rew',e:String(adErrCode(e)).slice(0,24),er:adErrWhy(e)});}adAns(null);});}
 function adAns(ok){const t=Date.now();
   if(ok){if(adNoN)STAT.ev('adchk',{f:'rew',w:Math.round((t-adNoT0)/1000),k:adNoN,s:adAskWhy});
     const was=adSt<0&&adNoN>=2;adSt=1;adStT=t;adNoN=0;adStepN=0;adVidReady();
@@ -2861,7 +2866,7 @@ function showRewarded(cb0,onFail0,late0){
   const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0; /* pre: был ли ролик готов к нажатию */const secs=()=>Math.round((Date.now()-t0)/1000);
   let paid=false,st=0; // st: 0 — ждём ответ, 1 — ответ получен, 2 — игрока отпустили без ответа (слушаем поздний)
   const cb=()=>{if(paid)return;paid=true;adBusy=false;lastAdT=Date.now();S.adTot=(S.adTot|0)+1;save();cb0();thCheck();if(VK||YP)setTimeout(cloudFlush,1500);} /* rules2510: награда — в облако сразу */,onFail=()=>{adBusy=false;lastAdT=Date.now();onFail0&&onFail0();};
-  const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr}); // ms ставит модуль (adReq); место живёт до итога; pre: pr — был ли ролик готов к нажатию (нужен STAT с 4-м параметром)
+  const stat=(r,c,er)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr,er:er}); // ms ставит модуль (adReq); место живёт до итога; pre: pr — был ли ролик готов к нажатию (нужен STAT с 4-м параметром)
   const rel=why=>{if(st)return;st=2;rec.w=secs();rec.exit=why==='exit';adUnwatch();adClose();adPreload('exit');
     toast(rec.exit?'Хорошо. Подтвердится просмотр — награду отдам':'Не дождалась ответа о просмотре. Придёт — награду отдам',4500);onFail();adDim();adLatePend(rec);};
   const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||pauseWhy.has('ad')||document.hidden){setTimeout(lateOk,1000);return;} // другой ролик (или межэкранная) либо игра свёрнута — подождём (hold: «не пришло» уже не пишем)
@@ -2877,7 +2882,7 @@ function showRewarded(cb0,onFail0,late0){
         if(st===2){adLateEnd(rec,'err','late:'+adErrCode(e));return;}
         if(st)return;adUnwatch();
         if(adNoFill(e)&&!tries){tries=1;adWait(1);adPreload('retry');setTimeout(()=>{adWait(0);go();},AD_RETRY_MS);return;} // ролика нет — один тихий повтор; игра остаётся на паузе (adClose — после него)
-        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e));toast(adShut(e)?AD_CLOSED:AD_FAIL);adPreload('err');}
+        st=1;adClose();if(adNoFill(e)){stat('none',adErrCode(e));toast(adSoon());adCool();}else{stat('err',adErrCode(e),adShut(e)?undefined:adErrWhy(e));toast(adShut(e)?AD_CLOSED:AD_FAIL);adPreload('err');}
         onFail();adDim();});}; // adDim — если onFail открыл окно с кнопкой рекламы
     go();return;}
   if(!ysdk){if(AD_LOCAL){STAT.ad('rew','ok','stub');stubAd(cb);}else{STAT.ad('rew','fail','nosdk');toast(AD_FAIL);onFail();}return;}
@@ -2898,10 +2903,10 @@ function adOk(){return !(PLAT==='vk'&&!VK&&VK_REAL);}
 function adDue(){return !PAY.own('no_ads')&&(S.adW||0)>=AD_EVERY&&(S.games||0)>=AD_FROM&&!novice();} // rules2510 (VK 5.1.5): не новичку (первые NOVICE_DEALS раздачи с обучением)
 function showInterstitial(cb0){STAT.adReq('int');
   /* не показана: none c=nofill (площадка не дала: result:false или код 20) / nosdk; ошибка — err c=код VK или причина (как у ролика — adErrCode) */
-  const fin=(r,c)=>{lastAdT=Date.now();STAT.ad('int',r,c);if(r==='show'){S.adW=0;save();}cb0();};
+  const fin=(r,c,x)=>{lastAdT=Date.now();STAT.ad('int',r,c,x);if(r==='show'){S.adW=0;save();}cb0();};
   const cb=shown=>fin(shown!==false?'show':'none',shown!==false?'':'nofill');
   if(PLAT==='vk'&&!VK){if(VK_REAL){STAT.ad('int','none','nosdk');cb0();}else stubAd(cb);return;}
-  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();cb(!!(r&&r.result));},e=>{adClose();if(adNoFill(e))cb(false);else fin('err',adErrCode(e));});return;}
+  if(VK){adOpen();vkSend('VKWebAppShowNativeAds',{ad_format:'interstitial'},60000).then(r=>{adClose();cb(!!(r&&r.result));},e=>{adClose();if(adNoFill(e))cb(false);else fin('err',adErrCode(e),{er:adErrWhy(e)});});return;}
   if(!ysdk){if(AD_LOCAL)stubAd(cb);else{STAT.ad('int','none','nosdk');cb0();}return;}
   ysdk.adv.showFullscreenAdv({callbacks:{onOpen:adOpen,onClose:w=>{adClose();cb(w!==false);},onError:()=>{adClose();fin('err','');}}});
 }

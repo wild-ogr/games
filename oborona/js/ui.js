@@ -97,7 +97,8 @@ function drawMap(cvm,W,d){cvm=cvm||$('mapCv');if(!cvm)return;const fixed=!!W;W=W
     if(S.stars[lvKey(c,5)]){g.font='900 '+Math.round(r*.7)+'px system-ui';g.fillText('✅',x+r*.75,y-r*.75);}
     if(typeof difWon==='function'&&difWon(c,'s')){g.font='900 '+Math.round(r*.62)+'px system-ui';g.fillText(difWon(c,'h')?'🔥':'⚔',x-r*.8,y-r*.75);}}   // OB:DIF глава пройдена на Сложном/Адском
   const v=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);v.addColorStop(0,'rgba(80,40,10,0)');v.addColorStop(1,'rgba(80,40,10,.35)');g.fillStyle=v;g.fillRect(0,0,W,H);}
-function renderChCard(){if(!$('chCard'))return;const c=mapSel,ch=CH[c],dm=difOf(c),LN=chLvN(c),nl=difNextLv(c,dm);   // OB:DIF уровни и звёзды — выбранного режима главы · OB:CH Логово
+function renderChCard(){if(!$('chCard'))return;if(!CH[mapSel]){let f=CH_ORDER[0];for(const c of CH_ORDER)if(chOpen(c))f=c;mapSel=f;}   /* ERR-2910: S.lastCh=11 («Долгая ночь» ещё не догружена) + resize до renderMap → CH[11] нет, было TypeError ch.boss (v5.2, ui.js:101) */
+  const c=mapSel,ch=CH[c],dm=difOf(c),LN=chLvN(c),nl=difNextLv(c,dm);   // OB:DIF уровни и звёзды — выбранного режима главы · OB:CH Логово
   const hd='<div class="row"><img class="ic" src="'+ic(ch.boss)+'" style="width:44px;height:44px"><div class="t"><b>'+chNum(c)+'. '+ch.name+'</b><span>'+ch.sub+'</span></div>'+
     '<button class="btn" id="playNext">'+swordImg()+(difStars(c,nl,dm)?Lg('Ещё','Again'):Lg('Играть','Play'))+(dm!=='n'?' '+difIcon(dm):'')+'</button></div>'+(difAny()&&chOpen(c)?difRowHTML(c):'');
   // look1: на телефоне шапка главы с «Играть» стоит над картой глав (видна в первом экране и на 320×568), плитки уровней — под картой
