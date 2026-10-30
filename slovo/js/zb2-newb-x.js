@@ -41,7 +41,9 @@ function l1(){L1.g=null;if(!timer)timer=setInterval(function(){if(!N.l1On()){if(
 function calm(){try{return typeof CALM==='function'&&CALM();}catch(e){return false;}}
 function cg(then){var c=window.ZBCAB,o=N.CG();if(!c||c.lv(o.id)||Z().cg){then();return;}
 ZB.safe('nb2:grant',function(){c.grant(1);});if(!c.lv(o.id)){then();return;}
-Z().cg=1;save();if(window.ZBNB&&ZBNB.turn)ZBNB.turn('cab');
+Z().cg=1;save();
+if(window.RSD&&RSD.on){ev({a:'cab8',l:o.at,c:S.coins,q:1});ZB.safe('nb2:cgnote',function(){RSD.note('cab');});then();return;}
+if(window.ZBNB&&ZBNB.turn)ZBNB.turn('cab');
 var row=(window.ZBECO&&ZBECO.cab||[]).filter(function(r){return r.id===o.next;})[0],nxN=row&&row.n||'Столовая тёти Вали',nxP=c.price(o.next)||(row&&row.p&&row.p[0])||250;
 ev({a:'cab8',l:o.at,c:S.coins});
 modal('<div class="zn-cg"><h2>🔑 Ключ от класса русского</h2>'+
@@ -56,7 +58,8 @@ $('znCgGo').onclick=function(){hideModal();if(typeof SND!=='undefined')SND.tap()
 $('znCgSch').onclick=function(){hideModal();if(typeof SND!=='undefined')SND.tap();ZB.safe('nb2:cgsch',function(){if(c.go)c.go(o.id);else ZB.go('school');});};}
 function ask(){var tries=0;setTimeout(function try1(){ZB.safe('nb2:ask',function(){if(!$('menu').classList.contains('on')||Z().ak&1)return;
 if($('modal').classList.contains('on')){if(++tries<30)setTimeout(try1,1000);return;}
-var o=N.ask();if(!o)return;Z().ak|=1;save();ev({a:'ask',d:1,k:o.k});
+var o=N.ask();if(!o)return;if(window.RSD&&RSD.one&&!RSD.one('ask'))return;
+Z().ak|=1;save();ev({a:'ask',d:1,k:o.k});
 modal('<div class="zn-ask"><div class="zn-askz">'+(typeof zinaSVG==='function'?zinaSVG('happy'):'')+'</div><h2>До завтра?</h2><p>'+ZB.esc(o.t)+'</p>'+
 '<div class="btns"><button class="btn green" id="znAskY">'+ZB.esc(o.b||'🔔 Напоминать')+'</button><button class="btn ghost small" id="znAskN">Не надо</button></div></div>');
 $('znAskY').onclick=function(){this.disabled=true;Promise.resolve(o.run()).then(function(ok){hideModal();if(ok&&typeof toast==='function')toast(o.ok||'Хорошо, напомню!',3000);},function(){hideModal();});};

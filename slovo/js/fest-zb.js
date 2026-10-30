@@ -191,7 +191,7 @@ return h;}
 var babShown=false;
 ZB.add(ZB.homeSlots,{id:'fest',order:5,zone:'top',render:function(){return ZB.safe('fest-pl',plaque)||'';},
 mount:function(el){[].forEach.call(el.querySelectorAll('.fzpl'),function(b){b.onclick=function(){SND.tap();var k=b.dataset.k;if(k==='bab')openBab();else if(k==='mar')openMar();else openEv(k);};});
-var id=babId();if(id&&!fs(id).c&&!babShown&&lvlOk()&&!(typeof SHOT!=='undefined'&&SHOT)){babShown=true;setTimeout(function(){var m=$$('menu');if(m&&m.classList.contains('on')&&!$$('modal').classList.contains('on'))openBab(true);},1600);}}});
+var id=babId();if(id&&!fs(id).c&&!babShown&&lvlOk()&&!(typeof SHOT!=='undefined'&&SHOT)){babShown=true;setTimeout(function(){var m=$$('menu');if(m&&m.classList.contains('on')&&!$$('modal').classList.contains('on')&&!(window.RSD&&RSD.one&&!RSD.one('bab')))openBab(true);},1600);}}});
 if(typeof openShop==='function'){var oShop=openShop;openShop=function(){addPrizes();var r=oShop.apply(this,arguments);ZB.safe('fest-shop',function(){
 for(var id in PRIZE){var it=PRIZE[id].it;if(hasPrize(id))continue;[].forEach.call(D.querySelectorAll('#shopList .item'),function(e){var b=e.querySelector('b');if(!b||b.textContent!==it.n)return;
 var o=e.querySelector('.ok');if(o){var ev=EVS[PRIZE[id].ev];o.innerHTML=ev.ic+' '+esc(ev.title)+'<br>(пройди все '+ev.n+')';}});}});return r;};}

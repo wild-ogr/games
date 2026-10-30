@@ -49,15 +49,17 @@ try{var Zp=window.ZB2ZAP,zl=Zp&&Zp.list?Zp.list():[];if(zl&&zl.length)L.push('<a
 C.lines().slice().sort(function(a,b){return(a.order||0)-(b.order||0);}).forEach(function(x){var v=ZB.safe('cal-add-'+x.id,function(){return typeof x.html==='function'?x.html():x.html;});if(v)L.push(v);});
 L.slice(0,3).forEach(function(x){h+='<p class="zc-ln">'+x+'</p>';});return h;}
 function sosHtml(){try{if(typeof sosCalHtml==='function')return sosCalHtml()||'';}catch(e){}return'';}
+function fire(n,taken){return n?'🔥 Серия: <b>'+n+' '+pl(n,'день','дня','дней')+'</b>':taken?'🔥 Пройдите урок — и серия пойдёт':'🔥 Листок — ваш, а серию начнёт сегодняшний урок';}
 var then=null;
 function go(){var t=then;then=null;if(t)try{t();}catch(e){}}
 if(C.w1()&&!window.ZB2W1)ZB.load('js/zb2-week1.js').catch(function(){});
 function open(o){o=o||{};then=o.then||null;var c=C.c(),T=C.tk(),taken=c.g===T,t=today();
+if(!o.view){var ak='zc-auto',was='';try{was=localStorage.getItem(ak)||'';localStorage.setItem(ak,String(T));}catch(e){}if(was===String(T)){try{hideModal();}catch(e){}go();return;}}
 var d=new Date(Math.floor(T/10000),Math.floor(T/100)%100-1,T%100,12),n=C.streak();
 if(!o.view&&!taken)C.ev({a:'show',n:t.k,w:Math.floor((t.k-1)/7)+1,f:t.w?'w1':''});
 var save=c.q==='s'&&!taken;
 var head='<div class="zc-top"><div class="zc-leaf"><small>'+MON[d.getMonth()]+'</small><b>'+d.getDate()+'</b><span>'+WD[d.getDay()]+'</span></div>'+
-'<div class="zc-hd"><h2>'+(t.w?'Неделя первоклассника':'Отрывной календарь')+'</h2><p class="zc-fire2">'+(n?'🔥 Серия: <b>'+n+' '+pl(n,'день','дня','дней')+'</b>':'🔥 Серия начнётся с первого урока')+
+'<div class="zc-hd"><h2>'+(t.w?'Неделя первоклассника':'Отрывной календарь')+'</h2><p class="zc-fire2">'+fire(n,taken)+
 (c.b>1?'<small> · лучшая '+Math.max(c.b,n)+'</small>':'')+'</p></div></div>';
 var body=taken?'<div class="zc-say"><div class="av">'+face('happy')+'</div><p>Сегодняшний листок уже оторван.'+(C.tomorrow()?' '+C.tomorrow().replace(/^Завтра у Зины: /,'Завтра: '):'')+'</p></div>'+week(t,true)
 :'<div class="zc-say"><div class="av">'+face(c.q==='s'?'wow':'happy')+'</div><p>'+esc(sayTxt(t))+'</p></div>'+
@@ -79,7 +81,7 @@ try{if(typeof fitWin==='function')fitWin();}catch(e){}}
 function rescue(yes){C.saved(yes);var t=today(),bd=$$('zcBody'),s=$$('zcSave'),p=D.querySelector('.zc-say p');
 if(s)s.parentNode.removeChild(s);if(p)p.textContent=yes?'Спасли! Кот отдувается, серия цела.':sayTxt(t);
 if(bd){bd.innerHTML=week(t,false)+'<div class="zc-gift" id="zcGift"><small>Подарок '+t.k+'-го дня:</small>'+giftLine(t)+(t.back?'<em>+'+t.back+' за возвращение</em>':'')+'</div>'+sosHtml();bd.style.display='';}
-var fr=D.querySelector('.zc-fire2');if(fr){var n=C.streak();fr.innerHTML=n?'🔥 Серия: <b>'+n+' '+pl(n,'день','дня','дней')+'</b>':'🔥 Серия начнётся с первого урока';}
+var fr=D.querySelector('.zc-fire2');if(fr){var n=C.streak();fr.innerHTML=fire(n,C.c().g===C.tk());}
 var b=$$('zcTake');if(b){b.style.display='';b.onclick=function(){take(t);};}}
 function give(n){if(n<=0)return 0;var e=E();try{if(e.give)return e.give('cal',n,'gift');}catch(x){}try{addCoins(n,'gift');}catch(x){}return n;}
 function take(t){var o=C.c(),T=C.tk();if(o.g===T)return;tap();var g=t.g,got=give(t.c),extra=[];

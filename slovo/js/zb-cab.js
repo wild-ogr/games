@@ -133,8 +133,8 @@ function hdr(title,sub,back){return'<div class="hdr'+(back?'':' zbhdr')+'">'+(ba
 '<div class="coins"><span class="coin"></span><span class="cc">'+coins()+'</span></div></div>';}
 function stars(id){var l=lv(id),v=vis(id),s='';for(var i=1;i<=3;i++)s+='<i class="'+(i<=l?'on':i<=v?'vw':'')+'">★</i>';return'<span class="zbc-st" aria-label="Уровень '+l+' из 3">'+s+'</span>';}
 function cardHtml(id){var r=row(id)||{},o=opened(id),l=lv(id),p=price(id),st='',cl='';
-if(OFF[id]){cl=' lock';st='🔒 На ремонте · откроется в '+Math.max(cls()+1,r.cls)+' классе';}
-else if(!o){cl=' lock';st='🔒 Кабинет откроется в '+r.cls+' классе';}
+if(OFF[id]){cl=' lock';st='🔒 Откроется '+vo(Math.max(cls()+1,r.cls))+' классе';}
+else if(!o){cl=' lock';st='🔒 Откроется '+vo(r.cls)+' классе';}
 else if(id==='stolovaya'&&bufet().n>0){cl=bufet().full?' ready':'';st='🥧 Забрать '+bufet().n+' '+COIN;}
 else if(id==='zhivoj'&&yatReady()){cl=' ready';st='🐈 Ять принёс букву!';}
 else if(id==='trud'&&sewCur()&&now()>=+sewCur().t){cl=' ready';st='🧵 Готово! Забрать';}
@@ -146,7 +146,7 @@ return'<button type="button" class="zbc-card'+cl+'" data-cab="'+id+'"><span clas
 function schoolHtml(){var s=steps();
 return'<div class="zbc-fac"><div class="zbc-art" id="zbcFac"></div><div class="zbc-plate">ШКОЛА №7</div></div>'+
 '<div class="zbc-sayw">'+(window.ZBP?ZBP.say('vp',s?say('school'):'Школу №7 хотели закрыть. Не дождутся! Начнём с класса русского — без него никуда.',s?'happy':'norm'):'')+'</div>'+
-'<div class="zbc-prog"><b>Отремонтировано: '+s+' из 24</b><span class="zbc-bar"><i style="width:'+Math.round(s/24*100)+'%"></i></span></div>'+
+'<div class="zbc-prog"><b>Кабинетов: '+built()+' из 8</b><span class="zbc-bar"><i style="width:'+Math.round(built()/8*100)+'%"></i></span></div>'+
 '<div class="zbc-grid">'+IDS.map(cardHtml).join('')+'</div>';}
 function bindSchool(el){drawArt($('zbcFac'),'school',facLv(),[built()]);
 el.querySelectorAll('.zbc-th').forEach(function(t){var n=+t.dataset.n,l=+t.dataset.l;art(n).then(function(A){if(!A||!t.isConnected)return;
@@ -155,9 +155,10 @@ el.querySelectorAll('[data-cab]').forEach(function(b){b.onclick=function(){tap()
 backBind(el);}
 function backBind(el){el.querySelectorAll('[data-zbback]').forEach(function(b){b.onclick=function(){tap();var t=b.dataset.zbback;
 if(t==='school')go();else if(t==='home'&&ZB._scr.home)ZB.go('home');else{try{openMenu();}catch(e){}}};});}
+function vo(n){return(n===2?'во ':'в ')+n;}
 function clsTxt(){var c=cls();return c>12?'Академия':c===12?'Выпускник':c+'-й класс';}
 function renderSchool(el){css();el.classList.add('zbc-scr');shelfPay();cardPay();var c={},vw=!!ZB.vw;
-el.innerHTML=hdr('Школа №7',clsTxt()+' · открыто '+built()+' из 8',vw?'':'menu')+
+el.innerHTML=hdr('Школа №7',clsTxt(),vw?'':'menu')+
 '<div class="scroll zbc-scroll">'+ZB.html(ZB.schoolSlots,'top',c)+schoolHtml()+ZB.html(ZB.schoolSlots,'main',c)+
 (vw&&typeof ZB.vwMore==='function'?'<div class="zbc-more">'+(ZB.safe('vwMore',ZB.vwMore)||'')+'</div>':'')+ZB.html(ZB.schoolSlots,'bottom',c)+'</div>';
 bindSchool(el);ZB.mount(el,ZB.schoolSlots,c);if(typeof ZB.vwBind==='function')ZB.safe('vwBind',function(){ZB.vwBind(el);});try{updCoins();}catch(e){}}
@@ -218,7 +219,7 @@ var first=!(S.cbN||{})[id];if(first&&opened(id)){S.cbN=isO(S.cbN)?S.cbN:{};S.cbN
 el.innerHTML=hdr(esc(r.n||id),opened(id)?'Уровень '+l+' из 3':'Кабинет закрыт','school')+
 '<div class="scroll zbc-scroll"><div class="zbc-room"><div class="zbc-art big" id="zbcArt"></div>'+
 (id==='stolovaya'&&bufet().n>0?'<span class="zbc-badge">🥧 '+bufet().n+'</span>':'')+'</div>'+
-'<div class="zbc-sayw">'+(window.ZBP?ZBP.say(who,!opened(id)?'Тут пока разруха. Подрасти до '+r.cls+' класса — откроем.':l?say(id):'Кабинет закрыт на ремонт. Откроем — и заживём!',l?'happy':'norm'):'')+'</div>'+
+'<div class="zbc-sayw">'+(window.ZBP?ZBP.say(who,!opened(id)?'Тут пока разруха. Откроется '+vo(r.cls)+' классе.':l?say(id):'Кабинет закрыт на ремонт. Откроем — и заживём!',l?'happy':'norm'):'')+'</div>'+
 '<div class="zbc-fun">'+roomFun(id)+'</div>'+upHtml(id)+'</div>';
 drawArt($('zbcArt'),ROOM[id].n,pic(id),id==='biblioteka'?[shelvesFull()]:[]);
 bindRoom(el,id);try{updCoins();}catch(e){}}
@@ -252,7 +253,7 @@ function go(id){if(id)ZB.go('cab',{id:id});else ZB.go('school');}
 ZB.screen('cab',{title:'Кабинет',render:function(el,o){renderRoom(el,o&&o.id||cur||'russkij');}});
 ZB.screen('school',{title:'Школа',render:renderSchool});
 ZB.add(ZB.navSlots,{id:'school',order:30,ic:'🏫',t:'Школа',go:function(){go();},dot:function(){return dot();}});
-function homeHtml(){if(!(+S.lv>=1))return'';var b=bufet(),t=b.full?'🥧 Буфет полный — забери '+b.n+'!':yatReady()?'🐈 Ять принёс букву':b.n>0?'🥧 В буфете '+b.n:'Отремонтировано '+steps()+' из 24';
+function homeHtml(){if(!(+S.lv>=1))return'';var b=bufet(),t=b.full?'🥧 Буфет полный — забери '+b.n+'!':yatReady()?'🐈 Ять принёс букву':b.n>0?'🥧 В буфете '+b.n:'Кабинетов: '+built()+' из 8';
 return'<button type="button" class="zbc-home'+(dot()?' on':'')+'" id="zbcHome"><b>🏫 Школа №7</b><small>'+t+'</small></button>';}
 ZB.add(ZB.homeSlots,{id:'cab',order:50,zone:'school',render:function(){css();return homeHtml();},mount:function(el){var b=el.querySelector('#zbcHome');if(b)b.onclick=function(){tap();go();};}});
 ZB.on('cloud',function(){if(ZB.cur==='school'||ZB.cur==='cab')ZB.safe('cabcloud',function(){ZB.go(ZB.cur,ZB.cur==='cab'?{id:cur}:{});});});

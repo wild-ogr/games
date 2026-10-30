@@ -20,7 +20,7 @@ SC.mult=function(k){k=+k;if(k>0){SC.k*=k;draw();}};
 SC.get=function(){return Math.round(SC.p*SC.k);};
 var st={g:null,on:0};SCH.st=function(){return st;};
 function fit(g,mix){return!!g&&Z.open('z4s')&&!g.daily&&!g.mode&&!g.tut&&!g.fest&&!mix;}
-function medals(g,lv){var M={};if(!O.medal)return M;var U=[],seen={},W=g.words.map(function(x){return x.w;});
+function medals(g,lv){var M={};if(!O.medal||1)return M;var U=[],seen={},W=g.words.map(function(x){return x.w;});
 g.letters.forEach(function(c){if(!seen[c]){seen[c]=1;var n=W.filter(function(w){return w.indexOf(c)>=0;}).length;if(n>0&&n<W.length)U.push(c);}});
 if(!U.length)return M;var r=rnd(lv*7919+13),k=lv>=100&&U.length>=5?2:1;
 for(var i=0;i<k&&U.length;i++){var c=U.splice(Math.floor(r()*U.length),1)[0];M[c]=RARE.indexOf(c)>=0?3:2;}return M;}
@@ -35,10 +35,10 @@ for(var k=0;k<FK.length;k++){var id=FK[(lv+k)%FK.length];if(fits(id,g,lv))return
 function init(g,mix){if(!g)return st;if(st.g===g)return st;var lv=g.idx+1;
 st={g:g,lv:lv,on:fit(g,mix)?1:0,fi:'',m:{},kon:0,bk:0,ck:1,c5:0,pl:0,lm:1,nc:0,gold:0,ch:0,c4:0,ll:'',tw:'',tws:0,T:{},res:null,hint:''};
 if(st.on){st.m=medals(g,lv);st.fi=pick(g,lv);if(st.fi==='twin')st.T=pairs(g);}return st;}
-var FN={bank:'Банк',chalk:'Мел',last:'Дороже',ladder:'Лесенка',chain:'Цепочка',twin:'Близнецы'};
+var FN={bank:'Копилка серии',chalk:'Мел',last:'Дороже',ladder:'Лесенка',chain:'Цепочка',twin:'Близнецы'};
 var LAD='<svg class="z4sl" viewBox="0 0 22 16" aria-hidden="true"><rect x="1" y="10" width="5" height="5" rx="1"/><rect x="8.5" y="6" width="5" height="9" rx="1"/><rect x="16" y="1" width="5" height="14" rx="1"/></svg>';
 function fiTxt(){var s=st,f=s.fi,n;
-if(f==='bank')return s.kon?'Кон <b>'+s.kon+'</b> — жми «Банк!», промах сожжёт':'Банк: слова подряд удваивают кон';
+if(f==='bank')return s.kon?'Копилка <b>'+s.kon+'</b> — жми «В копилку!», промах сожжёт':'Копилка серии: слова подряд удваивают';
 if(f==='chalk')return'Мел <b>×'+s.ck+'</b>'+(s.ck<5?' · без промаха — выше':' · ОТЛИЧНО');
 if(f==='last'){n=s.g.words.filter(function(x){return!x.found;}).length;return n<=1?'Последнее слово — <b>золотое</b>!':'Следующее слово <b>+'+(s.nc+3)+'</b>, последнее — золотое';}
 if(f==='ladder')return LAD+(s.pl?'<b>×'+s.lm+'</b> · дальше слово длиннее '+s.pl:'Каждое слово длиннее прошлого — ×2');
@@ -49,7 +49,7 @@ function medTxt(){var a=[];for(var c in st.m)a.push('<i class="z4smd">'+up(c)+'�
 function draw(){var e=document.getElementById('z4sBar');if(!e)return;var g=typeof G!=='undefined'?G:null;
 if(!st.on||!g||st.g!==g){e.style.display='none';e.innerHTML='';return;}e.style.display='';css();
 var h='<b class="z4sp">✦ '+SC.get()+'</b>'+medTxt()+(st.fi?'<span class="z4sf">'+fiTxt()+'</span>':'<span class="z4sf"></span>');
-if(st.fi==='bank'&&st.kon)h+='<button type="button" class="z4sbk" id="z4sBank">Банк! +'+st.kon+'</button>';
+if(st.fi==='bank'&&st.kon)h+='<button type="button" class="z4sbk" id="z4sBank">В копилку! +'+st.kon+'</button>';
 e.innerHTML=h;var b=document.getElementById('z4sBank');if(b)b.onclick=bank;marks();}
 function marks(){var wh=document.getElementById('wheel');if(!wh)return;var on=st.on&&typeof G!=='undefined'&&st.g===G;
 var L=wh.querySelectorAll('.let');for(var i=0;i<L.length;i++){var c=(L[i].textContent||'').toLowerCase(),m=on&&st.m[c];
@@ -78,7 +78,7 @@ var cssOk=0;function css(){if(cssOk)return;cssOk=1;var s=document.createElement(
 '@keyframes z4sch{0%{opacity:0;transform:translate(-50%,-30%) scale(.8)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%)}}';
 document.head.appendChild(s);}
 function bank(){var s=st;if(!s.on||!s.kon||typeof G==='undefined'||s.g!==G||G.won)return;try{SND.tap();}catch(e){}
-var n=s.kon;s.kon=0;s.bk+=n;chip('Банк! +'+n+' ✦');SC.add(n,'bank');}
+var n=s.kon;s.kon=0;s.bk+=n;chip('В копилку! +'+n+' ✦');SC.add(n,'bank');}
 function onWord(o){var s=init(o.G);if(!s.on||o.G!==s.g)return;var w=o.w,len=w.length;
 if(o.byHint){if(!o.bonus)s.nc++;draw();return;}
 var p=o.bonus?Math.ceil(len/2):len;for(var c in s.m)if(w.indexOf(c)>=0)p*=s.m[c];

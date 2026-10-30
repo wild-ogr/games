@@ -1,7 +1,7 @@
 'use strict';
 (function(){
 var Z=window.Z3;if(!Z||!Z.on||typeof ZB==='undefined')return;
-if(!Z.reg('z3s',{t:'Ларёк «Учительская» во дворе: подписка, копилка, узелок, витрина',who:'KIOSK'}))return;
+if(!Z.reg('z3s',{t:'Ларёк во дворе: подписка, копилка, узелок, витрина',who:'KIOSK'}))return;
 var F={sub:Z.reg('z3s-sub',{t:'Подписка на «Вечёрку» (30 дней без межэкранной, 💡 в день)',who:'KIOSK'}),
 pig:Z.reg('z3s-pig',{t:'Копилка на подоконнике (монеты сверх — разбить за покупку)',who:'KIOSK'}),
 uz:Z.reg('z3s-uz',{t:'Узелок новичка — с 3-го по 9-й день',who:'KIOSK'})};

@@ -22,6 +22,7 @@ if(window.ZBNB&&ZBNB.turn&&ZB.safe('ZBNB.turn',function(){return ZBNB.turn('mail
 var v=z(),d=day();return d-v.w>=7&&d-v.d>=7;}
 ZB.add(ZB.winSlots,{id:'ztm-mail',order:90,zone:'extra',
 render:function(c){var r=c&&c.r;if(!r||!c.g)return'';
+if(window.RS&&RS.on&&RS.on('win'))return'';
 if(r.ztMail===undefined){r.ztMail=want(c)?1:0;if(r.ztMail){z().w=day();try{save();}catch(e){}st('show','win');}}
 return r.ztMail?'<p class="ztm-win"><button class="wmenu ztm-link" id="ztWin" style="min-height:44px;margin:0">✉️ Напиши бабе Зине пару слов</button></p>':'';},
 mount:function(root,c){var b=root&&root.querySelector('#ztWin');if(b)b.onclick=function(){tap();var g=c.g,r=c.r;

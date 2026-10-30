@@ -265,8 +265,12 @@ finish(r){if(fin)return;fin=true;stop();r=r||{};fin2(g,o,{score:r.sc!=null?r.sc:
 quit(){if(!fin){fin=true;stop();}close();if(opt.back)opt.back(null);}};
 host.done=host.finish;
 function stop(){loops.length=0;if(raf)cancelAnimationFrame(raf);raf=0;for(const f of offs.splice(0))try{f();}catch(e){}keys.length=0;}
+let moved=false;const mv0=e=>{if(!moved&&!(e.target&&e.target.closest&&e.target.closest('.zmg-intro,.zmg-head,.zmg-veil')))moved=true;},
+mk0=e=>{if(!moved&&e.key!=='Escape'&&e.key!=='p'&&e.key!=='P'&&e.key!=='з'&&e.key!=='З'&&!root.querySelector('.zmg-intro,.zmg-veil'))moved=true;};
+root.addEventListener('pointerdown',mv0,true);window.addEventListener('keydown',mk0,true);offs.push(()=>{root.removeEventListener('pointerdown',mv0,true);window.removeEventListener('keydown',mk0,true);});
 qb.onclick=()=>{try{SND.tap();}catch(e){}if(fin){close();if(opt.back)opt.back(null);return;}quitAsk();};
-function quitAsk(){if(root.querySelector('.zmg-veil'))return;const v=document.createElement('div');v.className='zmg-veil';
+function quitAsk(){if(root.querySelector('.zmg-veil'))return;
+if(!moved){stEv({a:'quit',id:g.id,m:mode,s:Math.round((Date.now()-cur.t0)/1000),nm:1});host.quit();return;}const v=document.createElement('div');v.className='zmg-veil';
 v.innerHTML='<div class="zmg-panel"><h2>Выйти из игры?</h2><p>'+(train?'Это тренировка — ничего не потеряешь.':'Заход не засчитается — сыграть можно будет снова.')+'</p>'+
 '<div class="zmg-btns"><button class="btn green">Продолжить</button><button class="btn" data-esc="1">Выйти</button></div></div>';
 root.appendChild(v);veilKc(v);const bs=v.querySelectorAll('button');bs[0].onclick=()=>{try{SND.tap();}catch(e){}v.remove();last=0;};

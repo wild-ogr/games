@@ -30,6 +30,7 @@ if(Array.isArray(g)){var L=g.map(function(x){return x&&typeof x==='object'?(x.n|
 return L.length?'Отремонтировано: '+L.join(', '):'';}return typeof g==='string'?g:'';}
 function face(){try{return zinaSVG('happy');}catch(e){return'👵';}}
 function open(then){if(!pending()){if(then)then();return false;}run();var m=S.zbM;m.shown=1;try{save();}catch(e){}
+try{if(window.RSD&&RSD.one)RSD.one('mig');}catch(e){}
 var inf=ZBS.info(),cards=ZBS.cards().filter(function(x){return x.got;}).length,ct=cabTxt();try{STAT.screen('zbm');}catch(e){}
 modal('<div class="sc-mig"><h2>🏫 Зина открыла школу!</h2><div class="sc-cerz">'+face()+'</div>'+
 '<p>«Школу №7, где я сорок лет учила русскому, хотели закрыть: крыша течёт, в химии живёт голубь. Не дам! '+
@@ -42,7 +43,13 @@ modal('<div class="sc-mig"><h2>🏫 Зина открыла школу!</h2><div
 '<div class="btns"><button type="button" class="btn green" id="scMgOk">За парту!</button></div></div>');
 try{SND.win();}catch(e){}
 $('scMgOk').onclick=function(){hideModal();try{SND.tap();}catch(e){}if(then)then();else try{ZB.refresh();}catch(e){}};return true;}
-ZB.on('ready',function(){fix();if(S.zbM.need&&!S.zbM.done)run();
+function dictVet(){try{if(typeof DEFS==='undefined'||typeof LEVELS==='undefined')return;if(!S.dict||typeof S.dict!=='object')return;
+var n=Math.min(num(S.lv),LEVELS.length),k=0,i,j,L,w;for(i=0;i<n;i++){L=LEVELS[i];if(!L||!L.w)continue;for(j=0;j<L.w.length;j++){w=L.w[j]&&L.w[j][0];if(w&&DEFS[w]&&!S.dict[w]){S.dict[w]=1;k++;}}}
+if(k){try{STAT.ev('rs',{a:'dict',n:k});}catch(e){}save();}}catch(e){}}
+ZB.on('ready',function(){fix();
+try{var m0=S.zbM,c0=S.sc;if(!m0.rv&&(m0.done||m0.b)&&num(S.lv)>=60&&window.ZBS&&ZBS.cls()===1&&c0&&c0.f<oldFives()){m0.rv=1;m0.need=1;m0.done=0;m0.shown=0;m0.g=0;}}catch(e){}
+if(S.zbM.need&&!S.zbM.done)run();
+dictVet();ZB.on('levels',dictVet);
 if(typeof window.openLogin==='function'&&!window.openLogin.zbMig){var ol=window.openLogin;
 window.openLogin=function(then){var self=this,a=arguments;if(pending())return open(function(){ol.apply(self,a);});return ol.apply(self,a);};
 window.openLogin.zbMig=1;window.openLogin.zbBack=ol.zbBack;}});

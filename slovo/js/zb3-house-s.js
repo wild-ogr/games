@@ -62,7 +62,7 @@ if(r&&r.ok===0&&r.why==='tok'&&!a){tok=null;lsS('z3-tok',null);return ident(func
 if(!r||r.ok!==1)return fail(r&&r.why||'bad');
 if(r.tok){tok={t:r.tok,exp:now()+((r.ttl||86400)-600)*1000};lsS('z3-tok',tok);}
 Q.splice(0,n);qsave();fails=0;next=0;lsS('z3-fails',0);lsS('z3-next',0);lastOk=now();lsS('z3-ok',lastOk);
-if(r.me)lsS('z3-me',r.me);if(r.z3off!=null)lsS('z3-off',r.z3off?1:0);if(r.z4off!=null)lsS('z4-off',r.z4off?1:0);if(b.a&&b.ref)lsS('z3-ref','');
+if(r.me)lsS('z3-me',r.me);if(r.z3off!=null)lsS('z3-off',r.z3off?1:0);if(r.z4off!=null)lsS('z4-off',r.z4off?1:0);if(r.rsoff!=null)lsS('rs-off',r.rsoff?1:0);if(b.a&&b.ref)lsS('z3-ref','');
 ev('ok',{n:n,ms:now()-t0});done(r);},function(e){fail('net');});}
 function fail(why){fails++;var w=why==='off'||why==='rest'||why==='op'?6*3600e3:Math.min(30*60e3,60e3*Math.pow(2,fails-1));
 next=now()+w;lsS('z3-fails',fails);lsS('z3-next',next);ev('fail',{why:why,n:n});done(null);}

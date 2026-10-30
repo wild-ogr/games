@@ -521,6 +521,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/zb2-core.js" defer></script>
 <script src="js/zb3-core.js" defer></script>
 <script src="js/zb4-core.js" defer></script>
+<script src="js/rs-core.js" defer></script>
 <script src="js/core.js" defer></script>
 <script src="js/text.js" defer></script>
 <script src="js/game.js" defer></script>
@@ -576,7 +577,11 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 <script src="js/zb3-album.js" defer data-zb></script>
 <script src="js/zb3-skin.js" defer data-zb></script>
 <script src="js/zb4-start.js" defer data-zb></script>
+<script src="js/rs-home.js" defer data-zb></script>
+<script src="js/rs-level.js" defer data-zb></script>
+<script src="js/rs-drip.js" defer data-zb></script>
 <script src="js/zb-ready.js" defer></script>
+<script>document.addEventListener('DOMContentLoaded',function(){try{if(!window.ZB||!ZB.load||!window.RS||!RS.on)return;if(RS.on('words'))ZB.load('js/rs-words.js').catch(function(){});if(RS.on('sect'))ZB.load('js/rs-sect.js').catch(function(){});}catch(e){}});</script>
 <script>window.addEventListener('load',function(){setTimeout(function(){try{if(window.ZB&&ZB.load&&!(window.ZB2&&ZB2.off('news')))ZB.load('js/news-zb.js').catch(function(){});}catch(e){}},1500);});</script>
 <script>(function(){var Z=window.__lz=window.__lz||{},on=false;function go(){if(on)return;on=true;['js/zina.js','js/dict.js','js/gloss.js'].forEach(function(s){var e=document.createElement('script'),z=Z[s]={t:Date.now(),s:0};e.src=s;e.async=false;e.setAttribute('data-lazy','');
 e.onload=function(){z.s=1;if(typeof dictCame==='function')dictCame();};e.onerror=function(){z.s=-1;};document.body.appendChild(e);});}window.__lzGo=go;

@@ -85,14 +85,13 @@ for(var i=1;i<=CFG.steps;i++){var r=free(i),pd=PAID.filter(function(x){return x.
 h+='<div class="sq-st'+(done?' done':'')+(i===st+1?' now':'')+'"><span class="sq-n">'+i+'</span><span class="sq-f">'+freeTxt(r)+(BAR&&i===CFG.steps?' · 🍽️ блюдце «'+esc(FIN[c.s.id][0])+'»':'')+'</span>'+
 (pd?'<span class="sq-p'+(has(pd.id)?' got':'')+'">'+(BAR&&!has(pd.id)&&!abon()?'🔒 ':'🎟 ')+esc(pd.n)+(BAR&&!has(pd.id)&&!abon()?'<small> · '+(z3ab()?'с подпиской':'с Абонементом')+'</small>':'')+'</span>':'<span class="sq-p empty"></span>')+'</div>';}
 var ab=abon();
-el.innerHTML='<div class="sc-scr"><div class="sq-head" style="--sq:'+c.s.c+'"><span class="sq-ic">'+c.s.ic+'</span><span><small>ЧЕТВЕРТЬ · '+dm(c.from)+' — '+dm(c.to)+'</small><b>'+esc(c.s.n)+'</b>'+
+el.innerHTML='<div class="sc-scr"><button type="button" class="btn ghost small rs-back" id="sqBack" style="margin:8px 0 6px;min-height:48px;font-size:17px">← Назад</button><div class="sq-head" style="--sq:'+c.s.c+'"><span class="sq-ic">'+c.s.ic+'</span><span><small>ЧЕТВЕРТЬ · '+dm(c.from)+' — '+dm(c.to)+'</small><b>'+esc(c.s.n)+'</b>'+
 '<em>ступень '+st+' из '+CFG.steps+' · ещё '+c.left+' '+pl(c.left,'день','дня','дней')+'</em></span></div>'+
 (st<CFG.steps?'<div class="sq-bar"><i style="width:'+Math.round(100*into/sp)+'%"></i><span>до ступени '+(st+1)+': '+(sp-into)+' '+pl(sp-into,'очко','очка','очков')+'</span></div>':'<p class="sc-mut">Вся дорожка пройдена — медаль твоя!</p>')+
 '<p class="sc-mut">Очки: уровень +'+CFG.pts.first+', повтор и урок дня +'+CFG.pts.lvl+', «5» в дневник +'+CFG.pts.five+'.</p>'+
 '<div class="sq-ab'+(ab?' on':'')+'"><b>'+(z3ab()?'🎟 С подпиской на «Вечёрку»':'🎟 Абонемент в библиотеку')+'</b><small>'+(ab?'действует ещё '+abonLeft()+' '+pl(abonLeft(),'день','дня','дней')+' — красота сверху твоя':'только красота сверху: наклейки, рамка открыток, табличка, цветы, ленточка, медаль. Прошлые ступени — сразу')+'</small>'+
 (!ab&&canBuy()?'<div class="sq-buy">'+ZB.safe('abon-html',function(){return PAY.html(['abon']);})+'</div>':'')+(!ab&&z3sub()?'<div class="sq-buy"><button type="button" class="btn green small" id="sqSub">📰 Подписка на «Вечёрку»</button></div>':'')+'</div>'+
-'<div class="sq-cols"><span>Всем</span><span>'+(z3ab()?'С подпиской':'С абонементом')+'</span></div><div class="sq-list">'+h+'</div>'+
-'<div class="btns"><button type="button" class="btn blue" id="sqBack">← Назад</button></div></div>';
+'<div class="sq-cols"><span>Всем</span><span>'+(z3ab()?'С подпиской':'С абонементом')+'</span></div><div class="sq-list">'+h+'</div>'+'</div>';
 try{if(!ab&&canBuy())PAY.bind(el);}catch(e){}
 var zs=el.querySelector('#sqSub');if(zs)zs.onclick=function(){try{SND.tap();}catch(e){}Z3KIOSK.open('season');};
 el.querySelector('#sqBack').onclick=function(){try{SND.tap();}catch(e){}if(ZB._scr.home)ZB.go('home');else try{openMenu();}catch(e){}};

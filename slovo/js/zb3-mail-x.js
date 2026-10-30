@@ -269,8 +269,8 @@ play(el.querySelector('.z3m-pl'),ki,rows,function(){},true);ev('cw',{s:'make',k:
 $('z3mRe').onclick=function(){snd();make(el,ki,seed+7919);};
 $('z3mGo').onclick=function(){snd();var bt=$('z3mGo');bt.disabled=true;var cw=enc(ki,rows);
 Z3.srv.get('code').then(function(r){return r&&r.code||'';},function(){return'';}).then(function(code){share(cw,code,function(ok,why){bt.disabled=false;
-var msg=$('z3mMsg');if(ok){var z=Z();z.g++;sv();msg.textContent=U('cw.sent','Открытка ушла!');ev('cw',{s:'send',k:ki,g:code?1:0});}
-else{msg.textContent=U('cw.noshare','Отправить не вышло.');ev('cw',{s:'fail',e:why||''});}});});};}
+var msg=$('z3mMsg');if(ok){var z=Z();z.g++;sv();if(msg)msg.textContent=U('cw.sent','Открытка ушла!');ev('cw',{s:'send',k:ki,g:code?1:0});}
+else{if(msg)msg.textContent=U('cw.noshare','Отправить не вышло.');ev('cw',{s:'fail',e:why||''});}});});};}
 function share(cw,code,cb){var okp=typeof OK!=='undefined'&&OK,app=(/[?&]vk_app_id=(\d+)/.exec(location.search)||[])[1]||'',tag='#cw='+cw+(code?'&gift='+code:'');
 var u=okp?(typeof OK_LINK!=='undefined'?OK_LINK:'')+tag:'https://vk.com/app'+app+tag,txt='Баба Зина сделала кроссворд про сестру Галю. Разгадаешь?';
 var real=typeof VK_REAL!=='undefined'&&VK_REAL;
