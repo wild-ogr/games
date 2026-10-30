@@ -121,7 +121,7 @@ else ok(function(){VY.toast(L('Не он. ','Not them. ')+Lp(C.s[i].w.al),3200);
 openCase();}
 function stripTxt(q){return L('Москвич деда: ','Grandad’s car: ')+q.p+'/'+CFG.N+' · '+card(q);}
 function hot(q){return q.r===0&&q.c>q.g&&q.c>0;}
-homeSlots.push({id:'th-street',zone:'thing',order:30,render:function(){if(!allowed())return null;var q=tick();if(!q)return null;
+homeSlots.push({id:'th-street',zone:'thing',order:30,render:function(){if(!allowed()||W.RSS&&RSS.on)return null;var q=tick();if(!q)return null;
 return{at:'street',t:L('Кто угнал «Москвич»?','Who took the Moskvich?'),short:L('Москвич','Moskvich'),go:openCase,badge:q.r?'':(q.c?'🔍':'!'),hot:hot(q)};}});
 homeSlots.push({id:'v3q-feed',zone:'feed',order:25,render:function(){if(!allowed()||V3.is('skin.home'))return null;var q=tick();if(!q)return null;
 return UI.tile({ic:'🔍',t:L('Кто угнал «Москвич» деда?','Who took Grandad’s Moskvich?'),s:stripTxt(q),prog:[q.p,CFG.N],tag:q.r===1?'✓':'',cls:'v3qT'});},

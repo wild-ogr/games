@@ -425,7 +425,7 @@ progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg
 _dbg:function(){return{on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v24.2-103001',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v25.0-103015',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 if(window.V3)V3.wire1();
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -1331,6 +1331,7 @@ const CATS=[['#f0a04b','#c9772a','#fff1dc'],['#8e949c','#5f656d','#e9ecef'],['#2
 function hoodPt(v){const p=toPx(trackPt(v.track,v.s+v.L-1+.1));return[p[0],p[1]-cs*(v.dir===2?.02:.2)];}
 function updCat(dt){const c=G.cat,{w,h}=G.p;c.ph=(c.ph||0)+dt;if(c.meow>0)c.meow-=dt;
 const host=c.host!=null?G.vs[c.host]:null,moved=host&&host.state!=='idle';
+if(c.host!=null&&!host&&(c.st==='walk'||c.st==='jump'||c.st==='sit')){Object.assign(c,{st:'run',z:0,host:null});c.face=c.x<W/2?-1:1;return;}
 if(c.st==='wait'){c.t-=dt;if(c.t>0||G.over)return;
 const idle=G.vs.filter(v=>v.state==='idle'&&v.ap>=1&&v.kind!=='amb');if(!idle.length){c.t=4;return;}
 const stuck=idle.filter(v=>!canExit(v,G.occ,w,h,v.id).free),pool=(stuck.length?stuck:idle),cars=pool.filter(v=>v.L===2),hv=(cars.length?cars:pool)[Math.floor(Math.random()*(cars.length||pool.length))];
@@ -1574,6 +1575,7 @@ if(!G){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);retur
 if(paused)return;
 STAT.frame();
 update(dt);frameN++;
+if(!G)return;
 if(!modalOn||G.parts.length||frameN%4===0){const t0=LOW?0:performance.now();render();
 if(!LOW&&frameN>30){lowT+=performance.now()-t0;if(++lowN>=40){if(lowT/lowN>14){LOW=true;try{layout();}catch(e){}}lowT=lowN=0;}}}
 loopOn=true;requestAnimationFrame(loop);}
@@ -2661,6 +2663,11 @@ if(document.readyState==='complete')go();else W.addEventListener('load',go);})()
 
 <script defer src="js/v3-quarter-scoot.js"></script>
 <script defer src="js/v3-qsrv.js"></script>
+
+<link rel="stylesheet" href="css/rs-home.css"><script defer src="js/rs-home.js"></script>
+<script defer src="js/rs-drip.js"></script><script defer src="js/rs-today.js"></script>
+<link rel="stylesheet" href="css/rs-sect.css"><script defer src="js/rs-sect.js"></script><script defer src="js/rs-words.js"></script><script defer src="js/rs-route.js"></script>
+<link rel="stylesheet" href="css/rs-win.css"><script defer src="js/rs-win.js"></script><script defer src="js/rs-yard.js"></script>
 
 <script>var XPZ=(function(){var Z=512005727621,U='https://ok.ru/game/'+Z,q=location.search,OK=/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(q)&&!/[?&]off=[^&#]*xpz/.test(q),
 AP=/[?&]vk_platform=mobile_(android|iphone)_ok/.test(q),WB=/[?&]vk_platform=(desktop|mobile)_web_ok/.test(q),T='Баба Зина: слова из букв',sh=0,c0=0,bx=null,F='font:600 14px/17px system-ui,-apple-system,Roboto,Arial,sans-serif;',

@@ -47,7 +47,7 @@ function vFixO(z){const d=vNew();for(const k in d)if(!(k in z))z[k]=d[k];
 for(const k of['o','s','b','n','m'])if(!ob(z[k]))z[k]={};
 for(const k of['b','n'])for(const i in z[k])z[k][i]=nn(z[k][i]);for(const k of['o','s'])for(const i in z[k])z[k][i]=z[k][i]?1:0;
 for(const i in z.m)if(!ob(z.m[i]))delete z.m[i];
-for(const k of['dp','dl','ol','od','pw','pc','tu'])z[k]=nn(z[k]);z.tk=Math.min(VYMG_RW.tkMax,nn(z.tk));z.ts=+z.ts||0;
+for(const k of['dp','dl','ol','od','pw','pc','tu'])z[k]=nn(z[k]);if(z.ob)z.ob=nn(z.ob);else delete z.ob;z.tk=Math.min(VYMG_RW.tkMax,nn(z.tk));z.ts=+z.ts||0;
 if(!ob(z.d))z.d=d.d;z.d.k=nn(z.d.k);z.d.c=Math.min(VYMG_RW.cap,nn(z.d.c));z.d.pt=Math.min(VYMG_RW.pt,nn(z.d.pt));z.d.pk=nn(z.d.pk);z.d.z=z.d.z?1:0;z.d.t=z.d.t?1:0;if(z.d.ax)z.d.ax=1;else delete z.d.ax;
 if(!ob(z.d.p))z.d.p={};for(const i in z.d.p)z.d.p[i]=z.d.p[i]?1:0;
 if(!ob(z.w))z.w={t:0,f:{}};z.w.t=nn(z.w.t);if(!ob(z.w.f))z.w.f={};for(const i in z.w.f)z.w.f[i]=z.w.f[i]?1:0;
@@ -75,18 +75,21 @@ function gOk(g){try{return!g.open||g.open()!==false;}catch(e){return false;}}
 function vymgReady(n){const i=VYMG_INFO[n];if(!i)return false;const g=REG.by[i.id];if(!g||!gOk(g))return false;const z=Z(),y=yards();
 return y>=i.yd||(!!i.dp&&y>=VYMG_RW.first&&z.dp>=i.dp);}
 const vymgOpen=n=>{const i=VYMG_INFO[n];return!!(i&&S.vymg&&S.vymg.o[n]&&REG.by[i.id]&&gOk(REG.by[i.id]));};
-function vymgUnlock(){const z=Z(),y=yards();
-for(let n=1;n<=15;n++){if(z.o[n]||!vymgReady(n))continue;const i=VYMG_INFO[n],byY=y>=i.yd;
-if(byY?z.ol>=y:z.od===z.d.k)return 0;
-z.o[n]=1;if(byY)z.ol=y;else z.od=z.d.k;touch();save();stEv({a:'open',id:i.id,l:y});return n;}
+function vymgUnlock(){const z=Z(),y=yards();let first=0,all=0;
+if(!(z.ol>=y))for(let n=1;n<=15;n++){const i=VYMG_INFO[n];if(z.o[n]||y<i.yd||!vymgReady(n))continue;z.o[n]=1;all++;if(!first)first=n;}
+if(all){z.ol=y;if(all>1)z.ob=all;touch();save();stEv(all>1?{a:'open',id:'all',k:all,l:y}:{a:'open',id:VYMG_INFO[first].id,l:y});return first;}
+for(let n=1;n<=15;n++){if(z.o[n]||!vymgReady(n))continue;if(y>=VYMG_INFO[n].yd||z.od===z.d.k)return 0;
+z.o[n]=1;z.od=z.d.k;touch();save();stEv({a:'open',id:VYMG_INFO[n].id,l:y});return n;}
 return 0;}
 function vymgLockTxt(n){const i=VYMG_INFO[n],z=Z(),y=yards();if(!i)return'';const g=REG.by[i.id];
 if(!g)return'';if(!gOk(g))return LG('не в этот сезон','not this season');
 const a=i.yd-y,b=i.dp?Math.max(0,i.dp-z.dp):99;
 if(a>0&&(b>=a||b>=99))return LG('ещё '+a+' '+plural(a,'двор','двора','дворов'),a+' more yards');
 if(b>0&&b<99)return LG('через '+b+' '+plural(b,'день','дня','дней')+' игры','in '+b+' days');
-return LG('после следующей победы','after your next win');}
+return vymgReady(n)&&y<i.yd?LG('завтра','tomorrow'):LG('после следующей победы','after your next win');}
 const openList=()=>REG.list.filter(g=>vymgOpen(g.num));
+{let bt=0;const boot=()=>{if(bt)return;bt=1;try{if(yards()>=4&&vymgUnlock())try{if(window.UI)UI.refresh();}catch(e){}}catch(e){console.warn('vymg boot',e);}};
+if(document.readyState==='complete')window.addEventListener('vy-late',boot);else window.addEventListener('load',()=>setTimeout(boot,0));}
 function vymgSeed(id,day){let h=2166136261;const s=(day||dayKey(0))+'|vymg|'+id;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 const R=typeof rng==='function'?rng:(seed=>{let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};});
 const vymgPC=()=>{try{return matchMedia('(hover:hover) and (pointer:fine)').matches;}catch(e){return false;}};
