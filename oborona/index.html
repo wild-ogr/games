@@ -456,6 +456,7 @@ window.nochNeed=function(force){if(CH.length>11)return Promise.resolve(true);if(
 OB2.on('menu',function(){nochNeed();},'noch');OB2.on('end',function(){setTimeout(function(){nochNeed();},300);},'noch');setTimeout(function(){nochNeed();},2500);})();</script>
 <!-- ob2:SPEED -->
 <script src="js/ob2-speed.js"></script> <!-- ob2:SPEED шторка перед боем, ленивая загрузка, повтор межэкранной, режим попроще -->
+<!-- fix0611:OB --><script src="js/ob-fx.js"></script> <!-- FIX-OB 06.11: «Ярь» (флаг yar) и межэкранная вне боя (флаг olad) — журнал hobby-analytics/release-i/fix-0611/FIX-OB.md -->
 <!--XPZ--><script>
 /* XPZ v1.1 (27.10, XPZ-FIX): только в ОК — блок «Баба Зина» вместо «Ещё игр» (переход: сайт/моб. браузер ОК — новая вкладка ok.ru/game, иначе окно со ссылкой). Источник и описание — hobby-analytics/release-i/zina-boost3/z3-xpromo-tools/xpz.js, правки только там. */
 var XPZ=(function(){var Z=512005727621,U='https://ok.ru/game/'+Z,q=location.search,OK=/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(q)&&!/[?&]off=[^&#]*xpz/.test(q),
