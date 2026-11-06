@@ -25,6 +25,9 @@ var NV=(function(){
       if(m.nk)m.nk.r=Math.max(a.nk&&a.nk.r||0,b.nk&&b.nk.r||0);return m;}});
   BB2.lazy('nv2',['js/bb2-first2.js'],function(){return !!o.go;});
   o.on=on;o.st=st;o.sv=sv;o.PCT=PCT;
+  /* FIX-BOG 06.11 (v26.2), флаг f611s: первый бой короче — главарь на 50-й секунде (было 90; 73 % новичков уходили до конца, победа шла лишь на ~105 с), события раньше, главарь слабее;
+     золото победы то же (монеты/«за нечисть» ×90/50 — в награде время уже приведено к полному походу). Выключить: ?bb2=-f611s. Журнал: hobby-analytics/release-i/fix-0611/FIX-BOG.md */
+  try{if(on('f611s')&&FIRST.boss===90){var fr=90/50;FIRST.boss=50;FIRST.bossHp=.25;FIRST.evoT=30;FIRST.coin*=fr;FIRST.kill*=fr;FIRST.prop=14;FIRST.ev=[{t:16,k:'elite'},{t:27,k:'ring'},{t:34,k:'elite'},{t:40,k:'evo'}];}}catch(e){}
   BB2.lazy('nv1',['js/bb2-first1.js'],function(){return !!o.f1;});
   function nov(){try{return !S.done[ORD[0]]||(S.runs|0)<K.tapRuns;}catch(e){return true;}}
   try{if(nov()&&(on('first2')||on('tapgo')))BB2.need('nv1').then(function(){},function(){});}catch(e){}

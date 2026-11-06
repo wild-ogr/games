@@ -38,7 +38,7 @@
     heroSay(k?L('Хрясь!','Smash!'):L('Эх!','Hah!'));if(h.n===1)st('nv_hit',{s:Math.round(g.t*10)/10,k:k});if(g.nvMv==null)g.nvMv=g.t;}
   /* ---------- BG-FIRST 29.10 ---------- fsth: одна подсказка «Веди пальцем!» — рука-джойстик от богатыря к ближайшей нечисти, пока игрок не сдвинулся (вместо «Жми — ударь!», которая спорила с нижней «Веди пальцем…»; нажатие по-прежнему = «Хрясь!»).
      fstp: «сила с первой секунды» — в 0,15 с рядом встаёт кучка мелкой нечисти, в 0,9 с богатырь сам делает «Хрясь!» и раскидывает её (STAT fst_p). Выключить: ?bb2=-fsth / -fstp. */
-  function dragHint(c,g){var W=VIEW.W,Hh=VIEW.H,z=VIEW.zoom,h=g.hero,hx=W/2+(h.x-VIEW.cx)*z,hy=Hh/2+(h.y-VIEW.cy)*z,e=nearEn(g),dx=1,dy=-.3,d,t=performance.now()/1000,k=Math.min(1,(t%1.5)/1.1),ox=hx,oy=Math.min(Hh-250,hy+95),f=typeof CVL!=='undefined'&&CVL.font||'sans-serif',s=L('Веди пальцем!','Drag your finger!'),ty=Math.max(120,hy-(h.r||16)*z-118);
+  function dragHint(c,g){var W=VIEW.W,Hh=VIEW.H,z=VIEW.zoom,h=g.hero,hx=W/2+(h.x-VIEW.cx)*z,hy=Hh/2+(h.y-VIEW.cy)*z,e=nearEn(g),dx=1,dy=-.3,d,t=performance.now()/1000,k=Math.min(1,(t%1.5)/1.1),ox=hx,oy=Math.min(Hh-250,hy+95),f=typeof CVL!=='undefined'&&CVL.font||'sans-serif',s=PC&&on('f611g')?L('Зажми мышь и веди!','Hold and drag the mouse!'):L('Веди пальцем!','Drag your finger!'),ty=Math.max(120,hy-(h.r||16)*z-118);
     if(e){dx=W/2+(e.x-VIEW.cx)*z-hx;dy=Hh/2+(e.y-VIEW.cy)*z-hy;}d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;
     c.save();c.globalAlpha=.9;c.strokeStyle='rgba(255,216,74,.75)';c.lineWidth=5;c.setLineDash([8,8]);c.beginPath();c.moveTo(ox,oy);c.lineTo(ox+dx*44*k,oy+dy*44*k);c.stroke();c.setLineDash([]);c.globalAlpha=1;
     hand(c,ox,oy,ox+dx*44*k,oy+dy*44*k);
@@ -80,6 +80,7 @@
     if(!camp||pos!==1||g.short!==FIRST||!on('first2'))return;
     var n=g.nv={sc:1,first:g.first?1:0,idle:0,lv:0,saves:0,loaf:0,whHit:0,whOk:0,wt:0,nh:g.novHeal,s0:{d:S.stars[g.chi+'d'],t:S.stars[g.chi+'t']}};
     if(!n.first)return;
+    if(F611('a')){g.ev=g.ev.filter(function(e){return e.k!=='ring';});n.ringD=1;} /* f611a: в самом первом бою нет «Окружили!» (стоящего на месте кольцо било) */
     g.banner=null;g.bq=[];if(g.tut){g.tut.xOff=1;var x=document.getElementById('tipX');if(x)x.classList.remove('on');}
     if(on('tap1')){n.hit={n:0,cd:0};st('nv_wait',{pc:PC?1:0,a:1});BB2.ev('nv','wake',g);return;} /* tap1: мир живой сразу, без заморозки */
     n.wait=1;n.w0=performance.now();g.hs=1e9;st('nv_wait',{pc:PC?1:0});requestAnimationFrame(waiter);});
@@ -96,7 +97,7 @@
     if(d<K.whR&&q<K.whAng){n.whHit++;n.pass=1;H.inv=0;hurtHero(g.st.maxHp*K.whDmg+g.st.armor,'solo');n.pass=0;H.kx+=dx/d*520;H.ky+=dy/d*520;}
     else{n.whOk++;heroSay(L('Увернулся!','Dodged!'));}}
   /* первые уровни без окна: сразу при наборе опыта (окно уровня открывается в конце того же кадра — крючок frame опаздывает) */
-  function autoLv(g){var n=g.nv,H=g.hero;while(g.lvlQ>0&&H.hp>0&&(g.t<K.noWin||n.lv<K.autoLv)){var w=g.weapons[0],c=w.lvl<5?{t:'w',id:w.id,lvl:w.lvl+1}:rollCards(1)[0];if(!c)break;applyCard(c);g.lvlQ--;n.lv++;SND.level();
+  function autoLv(g){var n=g.nv,H=g.hero;while(g.lvlQ>0&&H.hp>0&&(g.t<K.noWin||n.lv<K.autoLv||F611('w'))){var w=g.weapons[0],c=w.lvl<5?{t:'w',id:w.id,lvl:w.lvl+1}:rollCards(1)[0];if(!c)break;applyCard(c);g.lvlQ--;n.lv++;SND.level();if(F611('w')&&on('stat2')&&n.lv<=25){var cd=c.t==='w'||c.t==='p'?c.t+c.id+c.lvl:c.t;st('up',{lv:H.lvl,t:Math.round(g.t),p:cd,a:cd,au:1});} /* f611w: уровень взят сам — в STAT как up с au:1 (окна не было) */
         heroSay(c.t==='w'&&c.id===w.id?L('Меч сильнее!','Stronger blade!'):qt(cardInfo(c).name)+'!');g.fx.push({k:'wave',own:1,x:H.x,y:H.y,t:0,dur:.5,r1:150,col:'#ffe07a'});BB2.ev('nv','lvl',g);}}
   function wrapXp(){if(o.axW||typeof addXp!=='function')return;o.axW=1;var ax0=addXp;addXp=function(v){ax0(v);var g=G,n=g&&g.nv;if(n&&n.first&&!g.over)autoLv(g);};} /* файл может прийти раньше game.js — оборачиваем при первом походе */
   BB2.hook('frame',function(dt,g){tapGo(g,dt);var n=g.nv,H=g.hero;if(!n)return;if(n.hit&&n.hit.cd>0)n.hit.cd-=dt;
@@ -104,7 +105,7 @@
     if(real()||g.nvGo){n.idle=0;n.still=0;if(g.nvMv==null)g.nvMv=g.t;}else{n.idle+=dt;n.still=(n.still||0)+dt;}
     if(n.first){
       if(n.pw!==2&&on('fstp')&&!g.over)power(g,n);
-      if(n.demo)demoStep(g,dt);else if(on('autowalk')&&g.t<45&&n.idle>=K.idle&&!g.boss)demoGo(g);
+      if(n.demo)demoStep(g,dt);else if(on('autowalk')&&(g.t<45||F611('a'))&&n.idle>=(F611('a')?3:K.idle)&&!g.boss)demoGo(g);
       if(g.tut&&!n.x10&&g.t>=10){n.x10=1;if(TUT[g.tut.i]){g.tut.xOff=0;document.getElementById('tipX').classList.add('on');}}
       autoLv(g);}
     if(!n.ringD&&!g.ev.some(function(e){return e.k==='ring';})){n.ringD=1;gap(g);}
@@ -125,6 +126,32 @@
     if(d){var ox=W/2,oy=H*.62,m=Math.min(1,d.t*4)*40;hand(c,ox,oy,ox+d.s*m,oy-m*.25);}
     k=1-h.hp/(g.st.maxHp||1);if(k>.35&&!g.over){c.globalAlpha=Math.min(.75,(k-.35)*1.2)*(.75+.25*Math.sin(g.t*7));c.drawImage(spRed(),0,0,W,H);c.globalAlpha=1;}
     if(r&&!r.out){var a=r.a,x=W/2+Math.cos(a)*Math.min(W,H)*.3,y=H/2+Math.sin(a)*Math.min(W,H)*.3,p=1+Math.sin(g.t*8)*.08;c.save();c.translate(x,y);c.rotate(a);c.scale(p,p);c.drawImage(spArrow(),-36,-24,72,48);c.restore();}});
+
+  /* ---------- FIX-BOG 06.11 (v26.2): первый бой — без окон, с целью словами, почти без проигрыша ----------
+     Разбор новичков v26.0–26.1 (fix-0611/FIX-BOG.md): в первом бою не проигрывал никто, но до победы (~105 с) доходили 15 % — уходили на 1-м окне уровня (~32 с) и окнах сундука;
+     цель («победи главаря») нигде не сказана. Флаги: f611w — весь первый поход уровни и сундуки без окон (награда — надписью над богатырём); f611g — табличка цели сверху;
+     f611a — автопомощь: нечисть бьёт вдвое слабее, рука сама водит богатыря после 3 с без движения, нет кольца «Окружили!». Выключить: ?bb2=-f611w,-f611g,-f611a */
+  function F611(k){return on('f611'+k);}
+  function cName(c){try{return qt(cardInfo(c).name);}catch(e){return '';}}
+  function evoNext(g){try{if(!evoHelp())return null;var w=evoPath()[0];if(!w)return null;var need=WEAPONS[w.id].evo.need,f=w.lvl<5?{t:'w',id:w.id,lvl:w.lvl+1}:!g.pas[need]?{t:'p',id:need,lvl:1}:{t:'w',id:w.id,lvl:6};return cardOk(f)?f:null;}catch(e){return null;}}
+  BB2.hook('pick',function(p,g){var n=g&&g.nv;if(!n||!n.first||p.k!=='chest'||g.over||!F611('w'))return;
+    var gold2=p.v>=2,k=gold2?3:g.q.chests>=1||g.t>=(g.short&&g.short.evoT||99)?3:1,got=[],i,c,ev=0,H=g.hero;g.q.chests++;
+    g.gold+=Math.round(randi(15,30)*g.ch.gold*ECO.coin*(gold2?3:1)*(g.short?g.short.coin:1));
+    for(i=0;i<k;i++){c=evoNext(g)||rollCards(1)[0];if(!c)break;applyCard(c);got.push(c);if(c.t==='w'&&c.lvl===6)ev=1;}
+    SND.chest();try{vib(30);}catch(e){}g.fx.push({k:'wave',own:1,x:H.x,y:H.y,t:0,dur:.6,r1:170,col:'#ffd84a'});
+    if(got.length)banner(ev?L('ЭВОЛЮЦИЯ!','EVOLUTION!'):L('Сундук!','Chest!'),got.map(cName).join(' · '),2);
+    st('f611c',{n:got.length,e:ev,s:Math.floor(g.t)});return true;},20);
+  BB2.hook('hurt',function(d,src,g){var n=g&&g.nv;if(!n||!n.first||n.pass||!F611('a')||typeof d!=='number')return;return d*.5;},61);
+  function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+  function goal(c,g){var W=VIEW.W,f=typeof CVL!=='undefined'&&CVL.font||'sans-serif',b=g.boss,bn='',l1,l2,left=Math.max(0,bossT()-g.t),y=W>=VIEW.H*1.2?74:Math.max(132,VIEW.H*.17),w=Math.min(W-24,340),x=(W-w)/2,p=g.t<3?1+.04*Math.sin(g.t*9):1;
+    if(g.win||g.over||b&&b.dead)return;try{bn=EN[g.ch.boss].n;}catch(e){}
+    if(b){var n=g.nv;if(n.gb==null)n.gb=g.t;if(g.t-n.gb>8)return;y=VIEW.H-190;l1=L('🎯 Подойди к главарю — богатырь бьёт сам!','🎯 Get close to the boss — you strike on your own!'); /* у главаря своя полоса с именем вверху — табличка внизу над подсказкой, одной строкой и 8 с */
+      c.save();c.fillStyle='rgba(28,18,8,.78)';rr(c,x,y,w,38,12);c.fill();c.strokeStyle='rgba(255,216,74,.85)';c.lineWidth=2;c.stroke();c.textAlign='center';c.textBaseline='middle';c.fillStyle='#ffd84a';c.font='800 16px '+f;c.fillText(l1,W/2,y+20,w-16);c.restore();return;}
+    l1=L('🎯 Цель: победи главаря','🎯 Goal: defeat the boss');
+    l2=L(bn+' выйдет через '+fmtTime(left+.99),bn+' arrives in '+fmtTime(left+.99));
+    c.save();c.translate(W/2,y+30);c.scale(p,p);c.translate(-W/2,-y-30);c.globalAlpha=.92;c.fillStyle='rgba(28,18,8,.78)';rr(c,x,y,w,60,14);c.fill();c.globalAlpha=1;c.strokeStyle='rgba(255,216,74,.85)';c.lineWidth=2;c.stroke();
+    c.textAlign='center';c.textBaseline='middle';c.fillStyle='#ffd84a';c.font='900 19px '+f;c.fillText(l1,W/2,y+19,w-16);c.fillStyle='#fff';c.font='700 15px '+f;c.fillText(l2,W/2,y+43,w-16);c.restore();}
+  BB2.hook('drawTop',function(c,g){var n=g.nv;if(n&&n.first&&F611('g'))goal(c,g);});
 
   /* ---------- первая карточка: из двух и без цифр ---------- */
   BB2.hook('upOffer',function(cards,g){var n=g.nv;if(!n||!n.first||n.c2)return;n.c2=1;var w=g.weapons[0],a=[],id=g.weapons.some(function(q){return q.id==='perun';})?'fire':'perun';
