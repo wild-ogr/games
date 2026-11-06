@@ -111,7 +111,7 @@ GB.levelHook.push(function(i){
   W={l:i.l,first:!!i.first&&!i.daily&&!i.mode,tok:null,busy:false};
   if(!isNew()||!W.first)return;
   if(i.l===5)tut(9);if(i.l===6)tut(10);if(i.l===10)tut(12);
-  if(i.l===3&&on('gift'))gift();
+  if(i.l===(NB.GIFT_L||3)&&on('gift'))gift(); /* g3 П2: фикус — после 5-го (NB.GIFT_L=6) */
 });
 GB.startHook.push(function(i){
   W={l:0,first:false,tok:null,busy:false};

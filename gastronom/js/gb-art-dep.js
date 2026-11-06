@@ -112,6 +112,19 @@ function scaffold(g,x,y,w,h,u,note){ // леса, плёнка, табличка
  var bx=x+w*.78,by=y+h*.97,bs=Math.max(6,w*.11);H.P(g,[bx-bs*.5,by-bs,bx+bs*.5,by-bs,bx+bs*.42,by,bx-bs*.42,by],'#8fa3ad');H.E(g,bx,by-bs,bs*.5,bs*.14,'#5aa0d8');
  g.strokeStyle='#5d6b72';g.lineWidth=Math.max(1,u*.8);g.beginPath();g.arc(bx,by-bs,bs*.5,PI,0);g.stroke();
  g.strokeStyle='#8a5229';g.lineWidth=Math.max(1.5,2*u);g.beginPath();g.moveTo(bx-bs*.2,by-bs*1.05);g.lineTo(bx-bs*.6,by-bs*1.8);g.stroke();g.lineCap='butt';}
+/* G3-П4 (VIS 25.10): неоткрытый отдел — закрытые двустворчатые двери с табличкой «ЗАКРЫТО» (note — «7/10» — мелко под ней), без лесов и ведра */
+function closedDoor(g,x,y,w,h,u,note,col){var dw=Math.min(w*.62,h*.95),dx=x+(w-dw)/2,dy=y+h*.08,dh=h*.92;
+ g.fillStyle='rgba(60,30,10,.10)';g.fillRect(x,y,w,h);
+ H.R(g,dx-3*u,dy-3*u,dw+6*u,dh+3*u,4*u,'#6b4226');
+ for(var k=0;k<2;k++){var lx=dx+k*dw/2+1.5*u,lw=dw/2-3*u;H.R(g,lx,dy,lw,dh,2*u,H.V(g,dy,dy+dh,['#a8703f','#8a5229']));
+  H.R(g,lx+lw*.16,dy+dh*.1,lw*.68,dh*.34,2*u,'rgba(220,235,240,.55)');g.strokeStyle='rgba(60,30,10,.45)';g.lineWidth=Math.max(1,1.2*u);g.stroke();
+  H.R(g,lx+lw*.16,dy+dh*.56,lw*.68,dh*.32,2*u);g.stroke();
+  H.E(g,k?lx+lw*.1:lx+lw*.9,dy+dh*.5,Math.max(1.5,2.2*u),Math.max(1.5,2.2*u),'#e0b23a');}
+ var pw=Math.min(w*.8,dw*1.15),ph=Math.max(12,h*.2),px=x+(w-pw)/2,py=dy+dh*.36;
+ g.strokeStyle='#5a3a2a';g.lineWidth=Math.max(.8,u);g.beginPath();g.moveTo(px+pw*.3,py);g.lineTo(x+w/2,dy+dh*.22);g.lineTo(px+pw*.7,py);g.stroke();
+ H.R(g,px,py,pw,ph,ph*.18,'#fffbe9');g.strokeStyle=col||'#8a5229';g.lineWidth=Math.max(1.5,2*u);g.stroke();
+ H.txt(g,Lx('ЗАКРЫТО','CLOSED'),px+pw/2,py+ph*.52,ph*.6,'#5a2a14',pw*.88);
+ if(note){var nh=Math.max(10,ph*.7);H.R(g,px+pw*.2,py+ph+2*u,pw*.6,nh,nh*.2,'rgba(255,251,233,.92)');H.txt(g,note,px+pw/2,py+ph+2*u+nh*.52,nh*.62,'#5a2a14',pw*.56);}}
 function season(g,x,y,w,h,sh,u,s,t){
  if(s==='ny'){var n=Math.max(3,Math.round(w/(14*u))),sag=Math.max(3,sh*.3),cols=['#e0352b','#f5c93a','#2f7fd8','#3fb26a'];
   var y0=y+sh*.92;g.strokeStyle='#2c8a4a';g.lineWidth=Math.max(1.5,2.4*u);g.beginPath();g.moveTo(x,y0);g.quadraticCurveTo(x+w/2,y0+sag*2,x+w,y0);g.stroke();
@@ -133,7 +146,7 @@ function paint(id,lv,c){var g=c.g,x=c.x,y=c.y,w=c.w,h=c.h,t=c.tk||0,inf=INFO[id]
  var ix=x+Math.max(3,w*.045)*(lux?1.5:1),iw=w-2*(ix-x),iy=top,ih=y+h-top;
  wall(g,x,top,w,ih,lv,inf.c,u);
  if(lux){stucco(g,x,top,w,Math.max(6,sh*.55),u);iy=top+Math.max(6,sh*.55);ih=y+h-iy;}
- if(lv===0)scaffold(g,ix,iy,iw,ih,u,c.note);
+ if(lv===0){if(window.G3&&G3.on('vis'))closedDoor(g,ix,iy,iw,ih,u,c.note,inf.c);else scaffold(g,ix,iy,iw,ih,u,c.note);} /* G3-П4 (VIS): закрытая дверь с табличкой вместо лесов «РЕМОНТ» */
  else{var d=DEF[id];g.save();g.beginPath();g.rect(ix,iy,iw,ih);g.clip();
   // широкий низкий проём (телефон: 88×57, w:h 1,53): начинка — по центру в пропорции не шире AMAX, прилавок — на всю ширину
   var vw=Math.min(iw,ih*AMAX),vx=ix+(iw-vw)/2,cnt=H.counter;

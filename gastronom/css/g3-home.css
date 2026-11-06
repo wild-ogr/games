@@ -1,0 +1,52 @@
+/* g3-home — главный «6 блоков» (Гастроном 3.0, поток П4). Всё под html.g3h (класс ставит js/g3-home.js при G3.on('home')). Текст ≥16 px, кнопки ≥48 px. */
+/* 1. шапка: ⚙ · разряд · монеты; логотип на телефоне не нужен (вывеска — в зале) */
+html.g3h #scr-map .mh .pill{display:none}
+html.g3h #scr-map .mh #mCoins,html.g3h #scr-map .mh .g3-rank{display:flex;align-items:center;min-height:48px;font-size:17px}
+html.g3h #scr-map .mh .icon{width:48px;height:48px}
+html.g3h .g3-rank{max-width:46vw;white-space:nowrap;cursor:pointer}
+html.g3h .g3-rank span{overflow:hidden;text-overflow:ellipsis;margin-left:4px}
+@media (max-width:699px){html.g3h #scr-map .mh .logo{display:none}html.g3h #scr-map .mh{justify-content:flex-end}}
+/* 2. зал и реплика под ним */
+html.g3h #vwSay{display:none}
+html.g3h .g3-say{position:relative;background:#fffdf6;border-radius:14px;padding:9px 14px;font-size:17px;line-height:1.3;font-weight:600;color:#3b2a1a;box-shadow:0 2px 6px rgba(0,0,0,.12);margin-top:12px}
+html.g3h .g3-say:before{content:"";position:absolute;left:38%;top:-7px;width:14px;height:14px;background:#fffdf6;transform:rotate(45deg)}
+html.g3h .vw-hallbox{height:42vh;min-height:200px}
+html.g3h .vw-work{min-height:64px}
+/* 4. «Утро» — запасная карточка (до гнезда П3): план дня одной строкой + задание дня */
+html.g3h .g3-utro0{display:flex;flex-direction:column;padding:6px}
+html.g3h .g3-utro0>*+*{margin-top:6px}
+html.g3h .g3-utro0 .mt-home{min-height:52px;box-shadow:none;margin:0;width:100%}
+html.g3h .g3-utro0 .mt-chips{display:none}
+html.g3h .g3-utro0 .mt-hl{font-size:16px}
+html.g3h .g3-utro0 .vw-row{min-height:48px;font-size:17px;width:100%}
+/* 5. событие */
+html.g3h .g3-ev:empty{display:none}
+/* 6. вкладки из 4: подпись 16 px (4 вместо 5 — места хватает) */
+html.g3h .gbnav{font-size:16px;letter-spacing:-.2px}html.g3h .gbnav span{overflow:visible}
+html.g3h .gbnavs.g3-nonav{display:none!important}
+html.g3h.g3-nonav .vw-home{padding-bottom:14px}
+/* «Отделы»: сверху стеклотара/обстановка */
+.g3-shopx{display:flex;flex-direction:column;margin:6px 12px 8px}
+.g3-shopx>*+*{margin-top:8px}
+.g3-shopx .mt-hall{display:flex;flex-wrap:wrap}
+.g3-shopx .mt-pill{min-height:48px;font-size:16px}
+.g3-zat{margin:0 0 4px}
+/* ПК: зал + реплика + «Работать» слева, справа «Утро» и событие */
+html.g3h.gbv-pc .vw-l .g3-say{flex:0 0 auto}
+html.g3h.gbv-pc .vw-l>.vw-work{flex:0 0 auto;margin-top:10px}
+@supports not (inset:0){html.g3h .g3-utro0>*+*{margin-top:6px}.g3-shopx>*+*{margin-top:8px}}
+/* ---- «Касса» из 4 блоков (js/g3-win.js): лицо · чек на память · одна новость · «Дальше» ---- */
+.g3-win .g3w-face .vsay{margin:4px 0 8px}
+.g3-win .g3w-face .vsay span{font-size:17px}
+.g3-win .g3w-chek{display:flex;flex-direction:column}
+.g3-win .g3w-fun{justify-content:center;font-style:italic;opacity:.8;font-size:16px}
+.g3-win .g3w-x2{display:flex;justify-content:center;margin-top:6px}
+.g3-win .g3w-x2 .btn{min-height:48px;font-size:16px;padding:8px 14px;width:auto;max-width:100%}
+.g3-win .g3w-news{margin:10px 0 4px;font-size:16px}
+.g3-win .g3w-news>*+*{margin-top:8px}
+.g3-win .g3w-news .btn{min-height:48px;width:100%}
+.g3-win .g3w-go{margin-top:10px}
+.g3-win .vw-klink{min-height:48px;font-size:17px}
+@supports not (inset:0){.g3-win .g3w-news>*+*{margin-top:8px}}
+.g3-win .g3w-x2 .btn.x2b{margin:0;box-shadow:0 2px 0 #e0b26a}
+.g3-win .vw-kline{margin-top:8px}

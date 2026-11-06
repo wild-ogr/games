@@ -1,0 +1,12 @@
+/* g3 — Гастроном 3.0, волна 1: общие стили (под html.g3) */
+html.g3 .g3-ropot{font-size:17px;font-style:italic;margin:6px 0 4px}
+html.g3 .g3-anek{font-size:16px;opacity:.85;margin:0 0 8px}
+html.g3 .g3-anek small{font-size:16px}
+html.g3 .btn.g3-link{background:none;border:none;box-shadow:none;text-decoration:underline;font-weight:600;min-height:48px;opacity:.85}
+/* П5: лимит 4.1 в уровне — кнопки ≥48 px, подписи бустеров крупнее (на узких ≤360 — 15 px, иначе не влезает «Подсказка») */
+html.g3 #scr-game .gh .icon{width:48px;height:48px}
+html.g3 #scr-game #gCoins{min-height:48px}
+html.g3 #scr-game .gf .btn{min-height:56px}
+html.g3 #scr-game .gf .btn span{font-size:16px;letter-spacing:-.2px}
+html.g3 #scr-game .gf .btn small{font-size:15px}
+@media (max-width:380px){html.g3 #scr-game .gf .btn span{font-size:15px;letter-spacing:-.4px}html.g3 #scr-game .gf .btn small{font-size:14px}}

@@ -289,6 +289,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 </div>
 
 <script src="js/gb-core.js"></script> <!-- gb: каркас буста «Образцовый» (до основного скрипта; договор — шапка файла) -->
+<script src="js/g3-core.js" data-gb></script> <!-- g3: Гастроном 3.0 волна 1 — каркас (флаги ?off=g3, части g3.*) -->
 <script>
 'use strict';
 /*LOGIC*/
@@ -1027,7 +1028,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/37): без vk_user_id, IP и постоянного номера; адрес приёмника пока пуст — модуль молчит
 // (на маке — только журнал [STAT] в консоль). Выключатель — ⚙ «Анонимная статистика» (STAT.optOut)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'gastronom',gv:'v14.9-110614',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'gastronom',gv:'v15.0-110700',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: настройки сеанса (cfg), вход (start: pl — пройдено уровней, cn — монет, bt — было ли сохранение в облаке; после облака, но не позже 2,5 с),
    баланс (bal → cb в pause), откуда монеты (ern → earn: lvl, ad, gift, chest, buy, quest) */
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
@@ -2040,7 +2041,7 @@ function drawHall(tk){const R=HALL;ctx.drawImage(hallCv,R.x,R.y,R.w,R.h);
   const Q=G.queue;ctx.save();ctx.beginPath();ctx.rect(R.x,R.y,R.w,R.h);ctx.clip();for(const c of Q)drawCustomer(c,tk);
   ctx.drawImage(counterCv,R.x,R.y,R.w,R.h);
   drawPerson(ctx,'valya',R.x+R.vX,R.y+R.vY,R.vS,G.valyaMood,tk,G.valyaTalk);
-  ctx.restore();for(const c of Q)drawWant(c,tk);}
+  ctx.restore();if(window.G3S)G3S.draw(ctx,R,tk); /* g3: арифмометр кассы */for(const c of Q)drawWant(c,tk);}
 function custX(k){const R=HALL;if(!R)return 0;return R.x+R.cx0+(k+.5)*R.cw;}
 function drawCustomer(c,tk){const R=HALL,mood=c.st==='happy'?1:c.st==='angry'?-1:c.pat<=3?-1:0;let x=c.x,y=R.y+R.base,a=1;
   if(c.st==='happy'||c.st==='angry'){const k=Math.min(1,c.tt/0.9);a=1-Math.max(0,k-.4)/.6;if(c.st==='happy')y-=Math.abs(Math.sin(c.tt*9))*R.ph*.06;}
@@ -2087,7 +2088,7 @@ function toast(t,ms){if(LANG==='en'&&PAY_EN[t])t=PAY_EN[t];const e=$('toast');e.
   const st=e.style;if(G&&HALL&&$('scr-game').classList.contains('on')){const a=$('app').getBoundingClientRect(),r=stage.getBoundingClientRect();
     st.bottom='auto';st.left=(r.left-a.left+HALL.x+HALL.w/2)+'px';st.top=(r.top-a.top+HALL.y+6)+'px';st.maxWidth=Math.round(Math.max(200,HALL.w-16))+'px';}
   else st.bottom=st.left=st.top=st.maxWidth='';
-  const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
+  const d=Math.max(ms||0,t.length<=12?2500:Math.min(20000,5000+120*t.length));/* шутки-28.10: тост 5 с + 0,12 с/букву (до 20 с), короткий ≥ 2,5 с */toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 function tip(t){const e=$('tip'),was=e.style.display==='block';if(t){e.textContent=t;e.style.display='block';}else e.style.display='none';if(G&&HALL&&(was||t))layout();}
 function nowMs(){try{if(ysdk&&ysdk.serverTime){const t=ysdk.serverTime();if(typeof t==='number'&&t>1.6e12)return t;}}catch(e){}return Date.now();}
 function todaySeed(){const d=new Date(nowMs());return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
@@ -2120,6 +2121,7 @@ function startLevel(idx,daily){if(window.GB&&G)GB._lvEnd('quit'); /* gb: «За�
   // мама с малышом «без очереди» (аудит 14; до 10.10 — ветеран, убран решением владельца): раз в 4 уровня с 11-го, не в Ревизию и не в задании дня; встаёт первым, за него +5 💰 в конце уровня.
   // Раскладку и очередь (что просят, терпение) не меняет — только кто стоит первым
   G.vetId=!daily&&!G.boss&&idx>=7&&idx%4===2&&lv.K>=2?(lv.K>=6?3:1):-1; // 4-й покупатель приходит позже (встаёт вперёд на глазах), на коротком уровне — 2-й
+  if(window.G3S)GB.safe('g3s',()=>G3S.start(G)); /* g3 П1: пила, комбо, «Выбросили!» — до очереди */
   if(window.GBMD&&G.idx>=GBMD.BASE)GBMD._g(G); /* gb-MODE: уровень режима (G.mode, Ревизия, своя очередь) — до очереди и хуков */
   qFill(lv,st,G.q);syncQueue(true);
   if(window.GB)GB._lvStart(); /* gb */
@@ -2137,7 +2139,7 @@ function startLevel(idx,daily){if(window.GB&&G)GB._lvEnd('quit'); /* gb: «За�
     }
   nextTip();
   save();
-  later(()=>{if(!G||G.tutor)return;if(G.boss)say(pick(PH.valya.boss),'valya');else say(pick(PH.valya.start),'valya');},500); /* v14.1: на 1-м уровне новичка (обучение) без случайной реплики — бывало «Товар руками не трогать!» */
+  later(()=>{if(!G||G.tutor)return;if(window.G3&&G3.on('vis')&&G.tipOn&&!G.boss)return; /* g3 П5: ≤1 облачка — висит подсказка, Валя молчит */if(G.boss)say(pick(PH.valya.boss),'valya');else say(pick(PH.valya.start),'valya');},500); /* v14.1: на 1-м уровне новичка (обучение) без случайной реплики — бывало «Товар руками не трогать!» */
   if(!modalOn)YG.start();kick();}
 function nextTip(){if(!G)return;const t=G.tipQ&&G.tipQ.shift();if(t){G.tipCur=t;tip(L(t[0],t[1]));G.tipT=performance.now();G.tipOn=true;}else{G.tipOn=false;G.tipCur=null;tip('');}}
 function lvHas(lv,f){return lv.sh.some(L=>L.some(r=>r.some(c=>c&&f(c))));}
@@ -2160,12 +2162,12 @@ function syncQueue(first){const vis=G.q.vis;
 function spawnLook(){if(!G||G.over||!HALL||G.queue.some(c=>c.look))return;G.lookN++;
   const c={id:-1-G.lookN,t:0,pat:99,max:99,kind:pick(KINDS),st:'in',tt:0,talk:0,shake:0,x:HALL.x+HALL.w+60,slot:1,look:true};G.queue.push(c);
   later(()=>{if(c.st==='wait'||c.st==='in')say(pick(PH.look),c);},900);later(()=>{if(c.st==='wait'||c.st==='in'){c.st='happy';c.tt=0;}},4200);kick();}
-function askLine(c){if(!G||c.st!=='wait'&&c.st!=='in')return;const g=GOODS[c.t];if(!g)return;const a=g.a,n=g.n;
+function askLine(c){if(!G||c.st!=='wait'&&c.st!=='in')return;const g=GOODS[c.t];if(!g)return;const ge=LANG==='en'&&window.GBEN_D&&GBEN_D[g.n],a=ge?ge.toLowerCase():g.a,n=ge||g.n; /* g3 П5: местные товары по-английски (было «get печатный пряник») */
   say(pick(PH.ask[c.kind]).replace('{a}',a).replace('{N}',n).replace('{n}',n.charAt(0).toLowerCase()+n.slice(1)),c);}
 function custLeave(v,happy){const c=G.queue.find(x=>x.id===v.id&&(x.st==='wait'||x.st==='in'));if(!c)return;c.st=happy?'happy':'angry';c.tt=0;
   say(pick((happy?PH.happy:PH.angry)[c.kind]),c);if(!happy){c.shake=.4;SND.grumble();vib(60);}}
 // реплика: одна за раз; who — 'valya' или покупатель
-function say(text,who){if(!G)return;G.speech={text,who,t:0,life:Math.max(2.2,1.2+text.length*.06),img:null};
+function say(text,who){if(!G)return;G.speech={text,who,t:0,life:Math.min(30,8+text.length*.2),img:null};   /* шутки-28.10: 8 с + 0,2 с/букву (до 30 с), было max(2,2; 1,2+0,06 с/букву) */
   if(who==='valya')G.valyaTalk=.9;else if(who&&who.kind)who.talk=.9;}
 
 /* ---- размеры: зал сверху (портрет) или слева (альбом), витрина — сетка полок «змейкой» (соседние номера — рядом) ---- */
@@ -2230,7 +2232,7 @@ function dimCanvas(d){const q=d.getContext('2d');try{const im=q.getImageData(0,0
     for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;let r=a[i]*.68,g=a[i+1]*.68,b=a[i+2]*.68;const m=(r+g+b)/3;r=m+(r-m)*1.3;g=m+(g-m)*1.3;b=m+(b-m)*1.3;a[i]=r<0?0:r>255?255:r;a[i+1]=g<0?0:g>255?255:g;a[i+2]=b<0?0:b>255?255:b;}
     q.putImageData(im,0,0);}catch(e){q.globalCompositeOperation='source-atop';q.fillStyle='rgba(45,28,12,.5)';q.fillRect(0,0,d.width,d.height);q.globalCompositeOperation='source-over';}}
 function buildSprites(){SPR={};SPRD={};const types=new Set(G.lv.types);lvHas(G.lv,c=>{types.add(tOf(c));return false;});
-  const k=G.kk||1,w=Math.ceil(U*1.14*k),h=Math.ceil(U*1.12*k);
+  const k=(G.kk||1)*(window.G3&&G3.on('vis')?1.12:1),w=Math.ceil(U*1.14*k),h=Math.ceil(U*1.12*k); /* G3-П4 (VIS): товар крупнее в ячейке ×1,12 (было 50–60 % клетки) */
   for(const t of types){const c=document.createElement('canvas');c.width=Math.ceil(w*dpr);c.height=Math.ceil(h*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);drawGood(g,t,w/2,h-U*.03,U*k);
     const d=document.createElement('canvas');d.width=c.width;d.height=c.height;const q=d.getContext('2d');q.drawImage(c,0,0);dimCanvas(d);
     SPR[t]={c,w,h};SPRD[t]={c:d,w,h};}
@@ -2278,7 +2280,7 @@ function flyItem(c,x0,y0,i,s,dur){G.hide[i+':'+s]=1;G.fly.push({c,x0,y0,i,s,t:0,
 // события хода: тройки уходят покупателям (или просто в кассу), коробки рядом открываются, ряды выезжают; терпение — если тройки не было
 function afterMove(ev,delay,isMove){let clears=0,rare=-1,lonely=0;
   for(const e of ev){if(e.k==='clear'){const d=delay+clears*.12;clears++;const v=qClear(G.q,e.t);let tgt=null;
-      if(v){G.served++;if(v.id===G.vetId)G.vetOk=true;const c=G.queue.find(x=>x.id===v.id&&(x.st==='wait'||x.st==='in'));if(c)tgt={x:c.x,y:HALL.y+HALL.base-HALL.ph*.6,cust:v};}
+      if(v){G.served++;if(v.id===G.vetId)G.vetOk=true;if(window.G3S)G3S.serve2(e.t); /* g3: «Выбросили!» — тройка уводит двоих */const c=G.queue.find(x=>x.id===v.id&&(x.st==='wait'||x.st==='in'));if(c)tgt={x:c.x,y:HALL.y+HALL.base-HALL.ph*.6,cust:v};}
       else if(G.q.left<=0&&!G.q.vis.length)lonely++;
       if(e.t>=RARE0){rare=e.t-RARE0;}
       G.pops.push({i:e.i,cells:e.cells,t:-d,tgt,served:v,cb:isMove?G.combo+1:1});G.undo=[];}
@@ -2290,15 +2292,17 @@ function afterMove(ev,delay,isMove){let clears=0,rare=-1,lonely=0;
     else if(Math.random()<.3)later(()=>{if(G&&!G.speech)say(pick(PH.valya.clear),'valya');},delay*1000+400);
     G.valyaMood=1;later(()=>{if(G)G.valyaMood=0;},1500);}
   else if(isMove)G.combo=0;
+  if(window.G3S)GB.safe('g3m',()=>G3S.move(clears,isMove)); /* g3 П1: касса-комбо, «Выбросили!» */
   // очередь кончилась, а товар ещё есть: тройка уходит «в кассу» с репликой Вали, иногда заглядывает зевака (аудит 14: «пустой зал»)
   if(lonely&&G.st.n>0){if(Math.random()<.45)later(()=>{if(G&&!G.speech)say(pick(PH.valya.kassa),'valya');},delay*1000+600);
     if(G.lookN<2&&!G.queue.some(c=>c.look)&&Math.random()<.35)later(spawnLook,delay*1000+900);}
   // POLISH 11.10 (QA-RU Ф4): очередь обслужена, а товар на полках остался — ясный знак, что уровень не завис (раз за уровень; не в «Приёмке» без покупателей)
+  if(!G.qDone&&G.lv.K>0&&G.q.left<=0&&!G.q.vis.length&&G.st.n>0&&!G.over&&window.G3NB&&G3NB.revDone()){G.qDone=1;G.over=true;later(()=>{if(G)win();},delay*1000+1200);} /* g3 П2: Ревизия ≤90 с — ревизор обслужен, остатки разберёт смена */
   if(!G.qDone&&G.lv.K>0&&G.q.left<=0&&!G.q.vis.length&&G.st.n>0&&!G.over){G.qDone=1;
     later(()=>{if(!G||G.over||G.won)return;const t=L('Покупатели обслужены! Осталось убрать остатки с полок — собирайте тройки.','All customers served! Now clear what’s left on the shelves — keep making triples.');
       say(t,'valya');G.tipQ=[];G.tipOn=false;G.tipCur=null;tip('✅ '+t);},delay*1000+900);}
   if(rare>=0){const isNew=!S.album.includes(rare);if(isNew){S.album.push(rare);G.newCard=rare;save();}
-    later(()=>{say(pick(PH.valya.rare),'valya');toast((isNew?L('⭐ Новое в коллекции: ','⭐ New in the collection: '):L('⭐ Дефицит: ','⭐ Rare goods: '))+RARE[rare].n);},delay*1000+500);}
+    later(()=>{say(pick(PH.valya.rare),'valya');if(!(window.G3&&G3.on('win')&&G&&G.over))toast( /* g3 П5: уровень кончился — карточка будет в «Кассе», тост не лезет на её шапку */(isNew?L('⭐ Новое в коллекции: ','⭐ New in the collection: '):L('⭐ Дефицит: ','⭐ Rare goods: '))+RARE[rare].n);},delay*1000+500);}
   // терпение тает только от хода без тройки
   if(isMove&&!clears){const gone=qTick(G.q);for(const v of gone){G.angry++;G.hearts=Math.max(0,G.hearts-1);custLeave(v,false);
       const h=$('gHearts');h.classList.remove('warn');void h.offsetWidth;if(!calm())h.classList.add('warn');}
@@ -2315,7 +2319,7 @@ function afterMove(ev,delay,isMove){let clears=0,rare=-1,lonely=0;
   updHud();checkEnd(delay+.5);kick();}
 function checkEnd(d){const st=G.st;
   if(st.n===0){G.over=true;later(()=>{if(G)win();},d*1000+700);return;}
-  if(G.hearts<=0){G.over=true;later(()=>{if(G)lose();},d*1000+900);return;}
+  if(G.hearts<=0&&!(window.G3S&&G3S.forgive())){G.over=true;later(()=>{if(G)lose();},d*1000+900);return;} /* g3: 1–10-й без провала */
   if(!hasMove(G.lv,st)){later(()=>{if(G&&!G.over&&!hasMove(G.lv,G.st))stuck();},d*1000+700);}}
 function updUndo(){$('bUndo').classList.toggle('off',!(G&&G.undo.length));}
 
@@ -2435,7 +2439,8 @@ function render(){if(!G||!HALL)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clea
   drawHall(tk);
   const st=G.st;
   for(let i=0;i<G.lv.S;i++){const un=G.units[i],L=G.lv.sh[i],p=st.p[i],a=G.adv[i],f=a?ease(a.t/.3):1;
-    if(p+1<L.length&&f>=1){const r=L[p+1];for(let k=0;k<3;k++)if(r[k])drawCell(st.x?r[k]&255:r[k],slotX(i,k),un.pt-.34*U,.8,true);}
+    if(p+1<L.length&&f>=1){const r=L[p+1],g3v=window.G3&&G3.on('vis');if(g3v){ctx.save();ctx.beginPath();ctx.rect(un.x,un.y-U*2,un.w,un.pt-U*.78*(G.kk||1)-un.y+U*2);ctx.clip();} /* G3-П4 (VIS): задний ряд — только тусклые верхушки над передним */
+      for(let k=0;k<3;k++)if(r[k])drawCell(st.x?r[k]&255:r[k],slotX(i,k),un.pt-.34*U,.8,true);if(g3v)ctx.restore();}
     const more=L.length-1-p-(p+1<L.length?1:0);if(more>0){ctx.fillStyle='rgba(255,240,200,.9)';for(let k=0;k<Math.min(more,4);k++)ell(ctx,un.x+U*.18+k*U*.14,un.pt+U*.1,U*.045,U*.045);}
     for(let k=0;k<3;k++){const c=st.F[i][k];if(!c||G.hide[i+':'+k])continue;let y=un.pt,sc=1,dim=false;
       if(f<1){y=un.pt-.34*U*(1-f);sc=.8+.2*f;dim=f<.5;}
@@ -2479,7 +2484,8 @@ function drawSpeech(){const s=G.speech;if(!s)return;const a=Math.min(1,s.t*6,(s.
   const maxW=T?(s.who==='valya'?Math.max(120,HALL.w-vr-30):Math.min(HALL.w-24,300)):HALL.land&&s.who==='valya'?Math.max(140,Math.min(340,HALL.w-HALL.vX-HALL.vS*.42-30)):Math.min(W*.8,340),words=s.text.split(' '),lines=[];let ln='';for(const w of words){const t=ln?ln+' '+w:w;if(ctx.measureText(t).width>maxW&&ln){lines.push(ln);ln=w;}else ln=t;}lines.push(ln);
   const bw=Math.max(...lines.map(l=>ctx.measureText(l).width))+24,bh=lines.length*(fs+4)+14;
   let ax=s.who==='valya'?HALL.x+HALL.vw*.35:s.who.x,ay=HALL.y+HALL.h-(s.who==='valya'?HALL.ph*.5:HALL.h*.35);
-  let x=Math.max(6,Math.min(W-bw-6,ax-bw*.3)),y=HALL.y+HALL.h-bh*.55;if(W>H*1.15)y=Math.min(H-bh-6,ay+HALL.ph*.3);
+  let x=Math.max(6,Math.min(W-bw-6,ax-bw*.3)),y=HALL.y+HALL.h-bh*.55;
+  if(window.G3&&G3.on('vis')&&W<=H&&$('tip').style.display!=='block'){const sb=Math.max(...G.units.map(u=>u.y+u.h));if(sb+bh+14<=H)y=sb+10;else y=HALL.y+HALL.h-bh-4;} /* G3-П4 (VIS): облачко не на полке и не на лицах — под витриной, если там есть место, иначе целиком в зале; П5: при подсказке внизу — по-старому (не два облачка друг на друге) */if(W>H*1.15)y=Math.min(H-bh-6,ay+HALL.ph*.3);
   // телефон в альбомной: реплика Вали — правее её головы, не закрывает лицо
   if(!T&&HALL.land&&s.who==='valya'){x=Math.max(6,Math.min(W-bw-6,HALL.x+HALL.vX+HALL.vS*.42));y=Math.min(H-bh-6,HALL.y+HALL.h-bh-4);ax=x+14;}
   let down=false;
@@ -2943,7 +2949,7 @@ function valyaHtml(t){return `<div class="vsay"><canvas id="vsCv"></canvas><span
 function valyaDraw(){requestAnimationFrame(()=>{const c=$('vsCv');if(!c)return;const d=Math.min(2,window.devicePixelRatio||1),w=56;c.width=w*d;c.height=w*d;const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);
   g.save();g.beginPath();g.arc(w/2,w/2,w/2,0,Math.PI*2);g.clip();g.fillStyle='#f6dcb0';g.fillRect(0,0,w,w);drawPerson(g,'valya',w/2,w*1.3,w*1.12,1,0,0);g.restore();});}
 // окно поверх (💰/⚙ нажали в последнюю секунду) — закрываем его: победа не теряется (аудит 14)
-function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true;YG.stop();SND.win();const st=Math.max(1,3-G.angry),i=G.idx;
+function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true;YG.stop();SND.win();const st=window.G3S?G3S.stars(Math.max(1,3-G.angry)):Math.max(1,3-G.angry),i=G.idx; /* g3: 3-я ★ — план выручки */
   const vline=pick(PH.valya.win);say(vline,'valya');qEnd(true,st);STAT.end('win',Object.assign({st},stEnd()));if(window.GB)GB._lvEnd('win',{st:st}); /* gb */
   // задание дня: в первый раз за день — 30 💰 и серия дней; повтор — как обычный уровень
   let reward=window.GBECO&&GBECO.on?GBECO.lvlReward(st,G):(2*st+Math.ceil(G.served/2))*(G.boss?2:1),sk=null,bonus=0,chest=0; /* gb-ECO: числа — GBECO.lvl */
@@ -2955,7 +2961,7 @@ function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true
   const dOpen=!G.daily&&i===AD_FROM-1&&!S.tips.dOpen;if(dOpen)S.tips.dOpen=1;
   {const gf=sk?sk.bonus:0;ern('gift',gf);ern('chest',chest);ern('lvl',reward+bonus-gf-chest);} /* STAT v1.2: откуда монеты — серия дней, грамота города, сам уровень */
   S.coins+=reward+bonus;save();updCoins();setTimeout(()=>SND.coin(),500);
-  const card=G.newCard,cityDone=!G.daily&&G.boss,cs=G.daily?0:cityStars(Math.floor(i/10)),nd=nextDecor(),canBuy=!G.daily&&nd&&S.coins>=nd.p;
+  const card=G.newCard,cityDone=!G.daily&&G.boss,cs=G.daily?0:cityStars(Math.floor(i/10)),nd=nextDecor(),canBuy=!G.daily&&nd&&S.coins>=nd.p&&!(window.G3NB&&G3NB.quiet(i)); /* g3 П2: 1–5 новичка — без «Обставить» */
   // межэкранная после «Дальше»: не после Ревизии и новой карточки; решаем сразу — чтобы не предлагать ×2 и оценку перед роликом
   const adAsk=!G.daily&&!cityDone&&card<0,adNext=adAsk&&adDue()&&adReady()&&intOk();if(adAsk&&adDue())intFresh(); /* gb-TECH: VK заранее «нет» — без межэкранной */
   // ×2 за рекламу: не на первых трёх уровнях, не когда следом межэкранная (два ролика подряд), один раз за уровень, в VK — только с мостом
@@ -3001,7 +3007,7 @@ function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true
   setTimeout(()=>offerReturn(adNext||!(G===g&&modalOn)),2200);
   // межэкранная — раз в AD_EVERY уровней или раз в AD_MIN минут, первая — после 6-го уровня; перед показом — предупреждение.
   // После Ревизии «Дальше» ведёт на карту: новый город открывается на глазах (аудит 14)
-  const n=$('mNext');if(n)n.onclick=()=>{n.disabled=true;const go=cityDone&&!vwK?()=>openMap({city:Math.floor((i+1)/10)}):()=>startLevel(i+1); /* gb-VIEW: после Ревизии — сразу уровень, новый город плашкой в уровне */
+  const n=$('mNext');if(n)n.onclick=()=>{n.disabled=true;const go=window.G3NB&&G3NB.toHall(i)?()=>{hideModal();openMap();}:cityDone&&!vwK?()=>openMap({city:Math.floor((i+1)/10)}):()=>startLevel(i+1); /* g3 П2: после 5-го — впервые в зал */ /* gb-VIEW: после Ревизии — сразу уровень, новый город плашкой в уровне */
     if(adNext&&adReady()&&intOk()){toast(L('Реклама через секунду…','Ad in a second…'),1200);setTimeout(()=>showInterstitial(go),1000);}else{if(adAsk&&adDue())adWhy();go();}}; /* gb-TECH: intOk */
   const md=$('mDaily');if(md)md.onclick=()=>startLevel(0,true);
   const ms=$('mShop');if(ms)ms.onclick=()=>{hideModal();openShop();};
@@ -3009,16 +3015,16 @@ function win(){if(!G||G.won)return;G.won=true;if(modalOn)hideModal();G.over=true
 /* UP-GS 24.10 «ролик по делу»: «Ещё попытка за рекламу» щедрее попытки за монеты — очереди +REV_PAT хода терпения (как «ещё 3 хода» у Зины/Рыбалки) */
 const REV_PAT=3;
 function revPat(){if(!G||!G.q)return;for(const v of G.q.vis)if(v.max<90){v.pat+=REV_PAT;if(v.pat>v.max)v.max=v.pat;}syncQueue(true);STAT.ev('mod',{m:'revpat',a:'ok'});kick();}
-function lose(){if(!G)return;YG.stop();SND.stuck();qEnd(false,0);STAT.end('lose',stEnd());if(window.GB)GB._lvEnd('lose'); /* gb */const canPay=S.coins>=PRICE.life;const gbL=window.GB?GB.winCtx({rev:!!G.gbRev}):null;
-  modal(`<h2>${L('Очередь обиделась 😟','The queue got upset 😟')}</h2><p>${L('Трое покупателей ушли, не дождавшись. Тётя Валя вздыхает: «Бывает…» Попробуем ещё?','Three customers gave up and left. Aunt Valya sighs: "It happens…" Shall we try again?')}</p>
+function lose(){if(!G)return;YG.stop();SND.stuck();qEnd(false,0);STAT.end('lose',stEnd());if(window.GB)GB._lvEnd('lose'); /* gb */const canPay=S.coins>=PRICE.life;const gbL=window.GB?GB.winCtx({rev:!!G.gbRev}):null;const g3p=!!(window.G3S&&G3S.pochti()); /* g3 П1: «почти» — «Очередь ропщет», ещё 3 хода */
+  modal(`${g3p?G3S.loseTop():`<h2>${L('Очередь обиделась 😟','The queue got upset 😟')}</h2><p>${L('Трое покупателей ушли, не дождавшись. Тётя Валя вздыхает: «Бывает…» Попробуем ещё?','Three customers gave up and left. Aunt Valya sighs: "It happens…" Shall we try again?')}</p>`}
     ${gbL?GB.loseHtml(gbL):''}
-    <div class="row">${canPay?`<button class="btn accent buy" id="mLife">${L('❤️ Ещё попытка','❤️ One more try')} — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent rw" id="mRev">'+L('📺 Ещё попытка за рекламу','📺 One more try for an ad')+'<small style="display:block;font-weight:600">'+L('и +'+REV_PAT+' хода терпения очереди','and +'+REV_PAT+' moves of queue patience')+'</small></button>'}<button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn" id="mMap2">${L('На карту','To the map')}</button></div>`);
+    <div class="row">${canPay?`<button class="btn accent buy" id="mLife">${g3p?L('Ещё 3 хода','3 more moves'):L('❤️ Ещё попытка','❤️ One more try')} — ${PRICE.life} 💰</button>`:''}${G.usedRevive||!adOk()?'':'<button class="btn accent rw" id="mRev">'+(g3p?L('📺 Ещё 3 хода за рекламу','📺 3 more moves for an ad'):L('📺 Ещё попытка за рекламу','📺 One more try for an ad'))+(g3p?'</button>':'<small style="display:block;font-weight:600">'+L('и +'+REV_PAT+' хода терпения очереди','and +'+REV_PAT+' moves of queue patience')+'</small></button>')}<button class="btn" id="mRe">${L('↻ Заново','↻ Restart')}</button><button class="btn${g3p?' g3-link':''}" id="mMap2">${g3p?L('В магазин','To the store'):L('На карту','To the map')}</button></div>`);
   if(gbL)GB.loseMount(gbL); /* gb */
   const revive=()=>{if(window.GB)GB._lvRevive(); /* gb */STAT.lvl(G.idx+1,'rev');G.hearts=1;G.over=false;renderHearts();hideModal();YG.start();kick();if(!hasMove(G.lv,G.st))stuck();};
-  if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);SND.coin();STAT.ev('spend',{k:'life',c:PRICE.life});revive();};
-  const r=$('mRev');if(r){STAT.offer('life');r.onclick=()=>{const g=G;hideModal();STAT.place('life');showRewarded(()=>{G.usedRevive=true;revive();revPat();},lose,
+  if(canPay)$('mLife').onclick=()=>{setCoins(S.coins-PRICE.life);SND.coin();STAT.ev('spend',{k:'life',c:PRICE.life});revive();if(g3p){revPat();G3.mark('pochti','coins');}};
+  const r=$('mRev');if(r){STAT.offer('life');r.onclick=()=>{const g=G;hideModal();STAT.place('life');if(g3p)G3.mark('pochti','ad');showRewarded(()=>{G.usedRevive=true;revive();revPat();},lose,
     ()=>{if(G===g&&G.over&&modalOn&&$('mRev')&&$('scr-game').classList.contains('on')){G.usedRevive=true;revive();revPat();return L('❤️ ещё попытка','❤️ one more try');}return adLateCoins(PRICE.life);});};} /* adt: поздний досмотр — попытка, только если то же окно поражения ещё открыто; иначе монеты по цене попытки */
-  $('mRe').onclick=()=>startLevel(G.daily?0:G.idx,G.daily);$('mMap2').onclick=()=>{hideModal();openMap();};}
+  $('mRe').onclick=()=>{if(g3p)G3.mark('pochti','re');startLevel(G.daily?0:G.idx,G.daily);};$('mMap2').onclick=()=>{hideModal();openMap();};}
 // тупик: ставить некуда — предлагаем бустеры, иначе уровень заново
 // тупик: ставить некуда — бустеры за монеты и рядом тот же бустер за рекламу (многие берегут монеты на обстановку), иначе уровень заново
 function stuck(){if(!G||G.over||modalOn)return;SND.stuck();G.nStuck=(G.nStuck||0)+1;say(pick(PH.valya.stuck),'valya');
@@ -3159,8 +3165,10 @@ function openAlbum(){STAT.screen('album');const gd=$('albGrid');gd.innerHTML='';
 $('shopBack').onclick=openMap;$('albBack').onclick=openMap;
 
 /* ================= настройки, «Об игре» ================= */
+const OK_GROUP_LINK='https://ok.ru/group/70000058939568'; /* g3 П5 (CL-2): группа поддержки «Игры во дворе» в ОК (правила ОК, п. 1.6) — строка вверху ⚙ и в «Об игре», только в ОК */
+function okSup(){return OK&&OK_GROUP_LINK?'<p class="about okSup" style="margin:2px 0 10px;font-size:16px"><b>Поддержка.</b> Вопросы и пожелания — в группе «Игры во дворе» в Одноклассниках.<br><a class="btn noent" id="sGrp" href="'+OK_GROUP_LINK+'" target="_blank" rel="noopener" style="display:inline-flex;margin-top:6px;min-height:48px;text-decoration:none">💬 Открыть группу поддержки</a></p>':'';}
 function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','on')+'</i>':'<i class="off">'+L('выкл','off')+'</i>';
-  modal(`<h2>${L('Настройки','Settings')}</h2>
+  modal(`<h2>${L('Настройки','Settings')}</h2>${okSup()}
     <button class="set" id="stSnd"><span>${L('🔊 Звуки','🔊 Sounds')}</span>${on(S.sound!==false)}</button>
     ${window.NO_MUSIC?'':`<button class="set" id="stMus"><span>${L('🎵 Музыка','🎵 Music')}</span>${on(!!S.music)}</button>`}
     <button class="set" id="stVib"><span>${L('📳 Вибрация','📳 Vibration')}</span>${on(S.vib!==false)}</button>
@@ -3201,7 +3209,7 @@ function updQuest(){const b=$('btnQuest'),bd=qOn()?QUEST.badge():null;if(!b)retu
 function openAbout(){
   modal(`<h2>${L('Об игре','About')}</h2><p class="about">${L('«'+GAME_NAME+'» — спокойная головоломка без таймера. Раскладывайте товары по полкам: три одинаковых в переднем ряду уходят покупателю. Тётя Валя, покупатели, товары и сам магазин нарисованы прямо в игре, звуки собраны кодом. Названия товаров — общие, без торговых марок; все совпадения случайны.','"'+GAME_NAME+'" is a relaxing puzzle with no timer, set in a Soviet grocery store (a "gastronom") of the 1980s. Sort the goods on the shelves: three of a kind in the front row go to a customer. Aunt Valya, the customers, the goods and the store itself are drawn right in the game, and the sounds are made in code. Product names are generic, with no brands; any resemblance is coincidental.')}</p>
     <p class="about">${L('<b>Музыка.</b> «Green Salon» — Yubatake (opengameart.org), лицензия Creative Commons Attribution 4.0. «Investigations» — Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0.','<b>Music.</b> "Green Salon" by Yubatake (opengameart.org), licensed under Creative Commons Attribution 4.0. "Investigations" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0.')}</p>
-    ${PLAT==='vk'&&!OK?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
+    ${okSup()}${PLAT==='vk'&&!OK?'<p class="about"><b>Благодарности.</b> VK Bridge — © V Kontakte, LLC, лицензия MIT.</p>':''}
     <p class="about">${L('На компьютере: Esc — назад, Enter — главная кнопка окна, H — подсказка, U — отменить ход, R — заново.','On a computer: Esc — back, Enter — main button, H — hint, U — undo, R — restart.')}</p>
     <div class="row">${PAY.on?'<button class="btn" id="abPay">'+L('↻ Восстановить покупки','↻ Restore purchases')+'</button>':''}<button class="btn" id="abBack">${L('← Назад','← Back')}</button></div>`);
   if($('abPay'))$('abPay').onclick=()=>PAY.again();
@@ -3393,6 +3401,17 @@ window.__test={get G(){return G;},get S(){return S;},startLevel,tryMove,layout,r
 <script src="js/gb-en.js" defer data-gb></script>
 <!-- gb:UP (UP-GS 24.10: «Завтра — подарок», ролик по делу) -->
 <script src="js/gb-up.js" defer data-gb></script>
+<!-- g3:W1 (Гастроном 3.0, волна 1 — модули g3-*; порядок: П1 смена, П2 новичок, П3 утро, П4 главный/окна) -->
+<link rel="stylesheet" href="css/g3.css" data-gb>
+<script src="js/g3-shift.js" defer data-gb></script>
+<script src="js/g3-novo.js" defer data-gb></script><script src="js/g3-novo-tab.js" defer data-gb></script>
+<script src="js/g3-newbie.js" defer data-gb></script>
+<script src="js/g3-lines.js" defer data-gb></script><script src="js/g3-utro.js" defer data-gb></script> <!-- G3-П3: «Утро у Вали», постоянные, Витрина дня, карточка G3U.card -->
+<!-- G3-П4: межэкранная вне уровня (переходник SHR_A — g3-int.js, общий модуль shr-rekl.js из серии SHR0611) -->
+<script src="js/g3-int.js" defer data-gb></script><script src="js/shr-rekl.js" defer data-gb></script>
+<!-- G3-П4: главный «6 блоков», вкладки 4, переезд разделов -->
+<link rel="stylesheet" href="css/g3-home.css" data-gb><script src="js/g3-home.js" defer data-gb></script><script src="js/g3-win.js" defer data-gb></script><script src="js/g3-vis.js" defer data-gb></script>
+<!-- /g3:W1 -->
 <script src="js/gb-ready.js" defer data-gb></script> <!-- gb: ПОСЛЕДНИМ, не трогать -->
 </body>
 </html>

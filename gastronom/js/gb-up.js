@@ -48,7 +48,7 @@ function tmrLine(){try{if(window.GBNB&&GBNB.tmrPick){var p=GBNB.tmrPick();if(p&&
 function show(go){var s=S_();s.upTm.s=day();sv();
   var c=typeof DAILY_REWARD!=='undefined'?DAILY_REWARD:30,open=(s.unlocked||1)>=7,rows='';
   rows+=row('🎁',Lx('Подарок от тёти Вали: +','A gift from Aunt Valya: +')+UP.GIFT+' 💰',Lx('просто зайдите завтра','just come back tomorrow'));
-  rows+=row('📅',Lx('Задание дня: +','Daily task: +')+c+' 💰',open?Lx('и серия дней — 7 дней подряд, подарок больше','and a day streak — 7 days in a row, a bigger gift'):Lx('откроется после 6-го уровня, дальше — серия дней','unlocks after level 6, then a day streak'));
+  /* G3-П4: Витрина дня */rows+=row(window.G3&&G3.vt&&G3.on('vitr')?'🥫':'📅',(window.G3&&G3.vt?G3.vt:String)(Lx('Задание дня: +','Daily task: +'))+c+' 💰',open?Lx('и серия дней — 7 дней подряд, подарок больше','and a day streak — 7 days in a row, a bigger gift'):Lx('откроется после 6-го уровня, дальше — серия дней','unlocks after level 6, then a day streak'));
   var t=tmrLine();if(t)rows+=row('🛒',t,'');
   var nb=ntfCan(),fb=favCan();
   if(nb){try{S.soc.ntf={n:1,t:typeof nowMs==='function'?nowMs():Date.now()};sv();STAT.ev('soc',{a:'ntf',r:'show',n:1,d:SOC.ntfDay(),w:'tmrw'});}catch(e){}}

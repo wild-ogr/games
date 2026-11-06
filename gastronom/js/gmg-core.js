@@ -510,7 +510,7 @@ const NEW_SAY={sdacha:T('Тётя Валя: «Касса у нас без кал
   nakladnaya:T('Ревизор: «Накладная — документ строгий. Сверим?»','The inspector: “Let’s check the invoice.”'),
   zakaz:T('Галя с третьего: «Заказ на праздник! Запоминайте — диктую».','Galya: “A holiday order!”'),
   kulek:T('Дед Семён: «Что в кульке? Угадаешь с первой подсказки?»','Grandpa Semyon: “What’s in the bag?”'),
-  zavoz:T('Толик: «Завоз приехал! После задания дня — разгружаем».','Tolik: “Delivery’s here!”'),
+  zavoz:T(window.G3&&G3.on('vitr')?'Толик: «Завоз приехал! После Витрины дня — разгружаем».':'Толик: «Завоз приехал! После задания дня — разгружаем».'/* G3-П4: Витрина дня */,'Tolik: “Delivery’s here!”'),
   piramida:T('Тётя Валя: «Построим витрину из банок, как в лучших домах!»','Aunt Valya: “Let’s build a can pyramid!”'),
   sklad:T('Дядя Коля: «В подсобке не повернуться. Расставим ящики?»','Uncle Kolya: “Let’s sort the crates.”'),
   kot:T('Пломбир опять у докторской! Шугните его, только покупателя не задевайте.','Plombir is at the sausage again!')};

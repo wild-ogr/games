@@ -58,7 +58,7 @@
       q.beginPath();q.moveTo(x+8,y+h*.35);q.lineTo(x+w-8,y+h*.35);q.moveTo(x+8,y+h*.72);q.lineTo(x+w-8,y+h*.72);q.stroke();
       rrect(q,x+w*.1,y+h*.42,w*.8,h*.26,4);q.fillStyle='#fffbe9';q.fill();q.strokeStyle='#c62828';q.lineWidth=2;q.stroke();
       q.fillStyle='#c62828';q.font='900 '+Math.round(Math.min(h*.11,w*.12))+'px -apple-system,Segoe UI,Roboto,sans-serif';
-      q.fillText(d.need?Lx('РЕМОНТ ','REPAIR ')+(d.p||0)+'/'+d.need:Lx('РЕМОНТ','REPAIR'),x+w/2,y+h*.555,w*.76);}}
+      q.fillText(window.G3&&G3.on('vis')?Lx('ЗАКРЫТО','CLOSED'):d.need?Lx('РЕМОНТ ','REPAIR ')+(d.p||0)+'/'+d.need:Lx('РЕМОНТ','REPAIR'),x+w/2,y+h*.555,w*.76);}} /* G3-П4 (VIS): «ЗАКРЫТО» вместо «РЕМОНТ» */
 
   /* ---------- вывеска (текст — разряд от META: GBM.info(r).sign, без него — «ГАСТРОНОМ») ---------- */
   function signText(){if(window.GBM&&GBM.info){var i=GB.safe('GBM.info',function(){return GBM.info();});if(i&&i.sign)return i.sign;}

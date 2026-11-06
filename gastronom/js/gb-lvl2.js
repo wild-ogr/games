@@ -59,7 +59,8 @@ var GBL2=(function(){
     if(P.r===0)return b-Math.min(.1,Math.floor(i/10)*.015);
     return Math.max(.25,b-.1-Math.min(.08,P.r*.006)-(P.ci>=7?.04:0)-(P.glavk?.05:0));}
   // помехи уровня: [{id,pow}] — новая помеха республики + (в миксе) прежние; республики 14–15 и Сверхплан — смесь
-  function obsFor(i,P){if(!P.r||P.tut)return [];var U=typeof GBU!=='undefined'?GBU:null;if(!U)return [];
+  function obsFor(i,P){if(!P.r&&!P.tut&&!P.sp&&typeof G3N!=='undefined'&&G3N&&G3N.obs){var g3o=G3N.obs(i,P);if(g3o)return g3o;} /* g3 П2: новинки в 11–100 (только непройденные; в сторожах G3N нет — как было) */
+    if(!P.r||P.tut)return [];var U=typeof GBU!=='undefined'?GBU:null;if(!U)return [];
     var R=rng(seed(i)*3+11),all=U.obs(14),out=[],nw=U.REPS[P.r].ob,prev=U.obs(P.r).filter(function(x){return x!==nw;});
     function pick(list,n){list=list.slice();var o=[];while(n-->0&&list.length){var k=Math.floor(R()*list.length);o.push(list.splice(k,1)[0]);}return o;}
     var ids;
@@ -118,7 +119,7 @@ var GBL2=(function(){
   function n36(s){return parseInt(s,36);}
   function tabEntry(lv){if(!lv||!lv.v2||lv.gE==null)return null;var k=lv.try+(lv.gR?120:0)+240*(lv.rx||0);
     return B36[Math.floor(k/36)]+B36[k%36]+B36[lv.gE]+B36[Math.floor(lv.P/36)]+B36[lv.P%36]+B36[lv.pd]+lhash(lv);}
-  function fast(i,rareId){var T=typeof GBL2_TAB!=='undefined'?GBL2_TAB:null;if(!T||!T.d||i<1||i>=T.n)return null;
+  function fast(i,rareId){var T=typeof GBL2_TAB!=='undefined'?GBL2_TAB:null;if(typeof G3N!=='undefined'&&G3N&&G3N.use&&G3N.use(i))T=G3N.tab(); /* g3: уровень с новинкой — своя таблица */if(!T||!T.d||i<1||i>=T.n)return null;
     var e=T.d.substr(i*9,9);if(e.length<9||e==='---------')return null;
     var k=n36(e.substr(0,2)),rx=Math.floor(k/240),rs=k%240>=120;k=k%120;var P=params(i),obs=prep(i,P,rx);if(rs)obs=[];P.E=n36(e[2]);
     var R=rng(seed(i)+rx*500009+k*1013),lv=build(P,R,i,rareId==null?-1:rareId);if(!lv)return null;
