@@ -29,15 +29,15 @@ ROWS.push({id:'show',ic:'📺',t:'Телешоу у Зины',sub:'Лото, Б�
 ROWS.push({id:'stol',ic:'🍵',t:'За одним столом',sub:'банка, скрабл, внук',card:'z4l',show:function(){return!!window.Z4L;}});
 ROWS.push({id:'kuh',ic:'🥘',t:'Кухня и дача',sub:'борщ, книга рецептов, грядка, банки',show:function(){return!!ZB._scr.z4kuh;},go:function(){ZB.go('z4kuh');}});
 var ZAB=[['port','🎒','Портфель четверти'],['kontr','📝','Контрольная дня'],['tetr','📓','Бесконечная тетрадь']];
-ROWS.push({id:'zabeg',ic:'🏃',t:'Забеги по пройденным',sub:'пройденные уровни заново — на время',ks:function(){var Z=Z4();return kinds(Z&&Z.ZAB,ZAB);},X:function(){var Z=Z4();return Z&&Z.ZAB;}});
+ROWS.push({id:'zabeg',ic:'🏃',t:'Забеги по пройденным',sub:'пройденные уроки заново — на время',ks:function(){var Z=Z4();return kinds(Z&&Z.ZAB,ZAB);},X:function(){var Z=Z4();return Z&&Z.ZAB;}});
 function igrK(){var Z=Z4(),X=Z&&Z.IGR;if(!X||!X.CH)return[];return Object.keys(X.CH).map(function(k){return[k,X.CH[k][0],X.CH[k][1]];});}
-ROWS.push({id:'igry',ic:'🧩',t:'Новые виды уровней',sub:'слог, две тетради, мешок букв',ks:function(){var Z=Z4();return kinds(Z&&Z.IGR,igrK());},X:function(){var Z=Z4();return Z&&Z.IGR;}});
+ROWS.push({id:'igry',ic:'🧩',t:'Новые виды уроков',sub:'слог, две тетради, мешок букв',ks:function(){var Z=Z4();return kinds(Z&&Z.IGR,igrK());},X:function(){var Z=Z4();return Z&&Z.IGR;}});
 function lvl(){return window.RS&&RS.lvl&&RS.lvl.play?RS.lvl:null;}
 function lvCan(k){var L=lvl();return!!(L&&(!L.can||ZB.safe('rs-lvcan',function(){return L.can(k);})));}
-[['int','🎯','Уровень на интерес','спор с Зиной: копилка серии, раз в день'],['sur','🎁','Уровень с сюрпризом','на уровне что-нибудь случится, раз в день']].forEach(function(x){
+[['int','🎯','Урок на интерес','спор с Зиной: копилка серии, раз в день'],['sur','🎁','Урок с сюрпризом','на уроке что-нибудь случится, раз в день']].forEach(function(x){
 ROWS.push({id:'lv-'+x[0],ic:x[1],t:x[2],sub:function(){return lvCan(x[0])?x[3]:'сегодня сыграно — завтра снова';},show:function(){return!!lvl()&&!!(window.Z4&&window.Z4.on)&&(+S.lv||0)>=30;},
 go:function(){if(lvCan(x[0]))lvl().play(x[0]);else try{toast('Сегодня уже сыграно — завтра снова',2400);}catch(e){}}});});
-ROWS.push({id:'modes',ic:'⭐',t:'Особые уровни',sub:'«До последнего слова», «Сканворд деда Семёна», «Электричка»',show:function(){return!!ZB._scr.modes;},go:function(){ZB.go('modes');}});
+ROWS.push({id:'modes',ic:'⭐',t:'Особые уроки',sub:'«До последнего слова», «Сканворд деда Семёна», «Электричка»',show:function(){return!!ZB._scr.modes;},go:function(){ZB.go('modes');}});
 var RSID={show:'show',stol:'stol',kuh:'kuhnya',zabeg:'zabeg',igry:'igry','lv-int':'interes','lv-sur':'surprise'};
 function rowHtml(r,i){var R=window.RSD;if(RSID[r.id]&&R&&R.on&&R.open&&!ZB.safe('rs-rsd',function(){return R.open(RSID[r.id]);}))return'';
 var ks=r.ks?r.ks():null;
@@ -67,7 +67,7 @@ if(op1.length)h+='<div class="rs-shelf">'+op1.slice(0,6).map(function(i){return 
 if(op1.length>6)h+='<button type="button" class="btn blue rs-more" data-rs="more">Ещё игры ('+(op1.length-6)+')</button>';
 if(lock>0&&op1.length<=6)h+='<p class="rs-lk">Ещё '+lock+' '+pl(lock,'игра откроется','игры откроются','игр откроются')+' — по одной в день</p>';
 var rh=ROWS.map(rowHtml).join('');if(rh)h+='<div class="rs-rows">'+rh+'</div>';
-var a=M.noteAt(z.np);h+='<button type="button" class="rs-line" data-rs="old"><span>📰</span><b>'+(a.done?'Стенгазета: все выпуски собраны':'Стенгазета «'+esc(a.t)+'» · '+(a.k-1)+' из '+M.PER_ISS)+'</b><i>›</i></button>';
+var a=M.noteAt(z.np);h+='<button type="button" class="rs-line" data-rs="old"><span>🗞️</span><b>'+(a.done?'Стенгазета: все выпуски собраны':'Стенгазета «'+esc(a.t)+'» · '+(a.k-1)+' из '+M.PER_ISS)+'</b><i>›</i></button>';
 }else{
 h+='<div class="rs-list">'+op1.map(function(i){return gTile(i,true);}).join('')+'</div>';
 if(lock>0)h+='<p class="rs-lk">Ещё '+lock+' '+pl(lock,'игра откроется','игры откроются','игр откроются')+' — по одной в день</p>';

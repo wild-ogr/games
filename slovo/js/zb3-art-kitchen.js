@@ -34,7 +34,7 @@ for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){var a=at(c,r),b=at(c+1,r),d=at(c+
 cl+='<polygon points="'+pts([a,b,d,e])+'" fill="'+(odd?'#f5cfc7':'#fffaf5')+'"/>';}
 g+='<rect y="'+(T-6)+'" width="'+w+'" height="12" fill="#b8784a"/><polygon points="'+pts([[tl,T],[tr,T],[br,h],[bl,h]])+'" fill="#fff6ef"/>'+cl;
 var jy=pc?h*.17:h*.555,jx=pc?w*.77:w*.6,jk=pc?.75:.5;g+='<g transform="translate('+jx.toFixed(0)+' '+(jy-62*jk).toFixed(0)+') scale('+jk+')">'+jarsRow(0,0,pc?3:3)+'</g>';
-if(pc){g+=pirozhki(w*.03,h*.86,1)+'<g transform="translate('+(w*.9).toFixed(0)+' '+(h*.885).toFixed(0)+') scale(1.1)">'+teapot()+'</g>';}
+if(pc){var tx=w*.03,ty=h*.86+40;g+='<rect x="'+(tx-14).toFixed(0)+'" y="'+ty.toFixed(0)+'" width="208" height="16" rx="5" fill="#c98a5a"/><rect x="'+(tx-14).toFixed(0)+'" y="'+(ty+12).toFixed(0)+'" width="208" height="5" fill="#8a5030" opacity=".5"/><rect x="'+(tx+4).toFixed(0)+'" y="'+(ty+16).toFixed(0)+'" width="12" height="90" fill="#a9673a"/><rect x="'+(tx+160).toFixed(0)+'" y="'+(ty+16).toFixed(0)+'" width="12" height="90" fill="#a9673a"/>';g+=pirozhki(w*.03,h*.86,1)+'<g transform="translate('+(w*.9).toFixed(0)+' '+(h*.885).toFixed(0)+') scale(1.1)">'+teapot()+'</g>';}
 if(eve)g+='<rect width="'+w+'" height="'+T+'" fill="#2a1840" opacity="'+(night?.3:.2)+'"/>';
 s+='<g mask="url(#'+k+'m)">'+g+'</g>';
 if(eve)s+='<rect x="'+wx+'" y="'+wy+'" width="'+ww+'" height="'+wh+'" rx="6" fill="'+(night?'#0b1030':'#2b2f6b')+'" opacity="'+(night?.55:.38)+'"/>';

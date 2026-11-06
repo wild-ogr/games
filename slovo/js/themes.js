@@ -66,7 +66,7 @@ people:'<circle class="t" cx="9" cy="8.500" r="3.500"/><path class="t" d="M2.500
 dice:'<rect class="t" x="4" y="4" width="16" height="16" rx="3.500"/><path d="M9 9v.100M15 15v.100M15 9v.100M9 15v.100M12 12v.100"/>',
 bolt:'<path class="t" d="M13 2.500L5 13.500h5.500l-1 8 8.500-11.500h-5.500z"/>'
 };
-var EMO={'🔊':'sound','🔇':'mute','🎵':'music','ℹ':'info','▶':'play','←':'back','🗺':'map','📅':'cal','📖':'book','📒':'book','👗':'dress','🏆':'cup','🎁':'gift','🧺':'gift','🎓':'cap',
+var EMO={'🔊':'sound','🔇':'mute','🎵':'music','ℹ':'info','▶':'play','←':'back','🗺':'map','📅':'cal','🗓️':'cal','🗓':'cal','📖':'book','📒':'book','👗':'dress','🏆':'cup','🎁':'gift','🧺':'gift','🎓':'cap',
 '⚙':'gear','🍯':'jar','🔀':'shuffle','📜':'word','💡':'bulb','🎬':'tv','📺':'tv','🏅':'medal','📤':'card','🔒':'lock','🔥':'fire','⭐':'star','🎉':'star','📳':'vib','🔍':'zoom',
 '✅':'check','🛒':'cart','🚫':'noads','🎨':'palette','🍽':'plate','☕':'tea','📊':'bars','👥':'people','🎲':'dice','⚡':'bolt'};
 var CHART={
@@ -216,7 +216,7 @@ window.THEME={list:list,owned:owned,cur:cur,set:set,get:get,progress:function(id
 window.thFix=function(){thU();if(typeof S.adTot!=='number'||!(S.adTot>=0))S.adTot=0;if(S.th!=null&&(typeof S.th!=='string'||!get(S.th)))delete S.th;};
 window.thMerge=function(d,newer){if(!d||typeof d!=='object')return;var u=thU();if(d.thU&&typeof d.thU==='object'&&!Array.isArray(d.thU))for(var k in d.thU)if(d.thU[k])u[k]=1;
 S.adTot=Math.max(+S.adTot||0,+d.adTot||0);if(newer&&typeof d.th==='string'&&get(d.th))S.th=d.th;window.thFix();setTimeout(apply,0);};
-function rowBtn(id){var T=get(cur()),b=document.createElement('button');b.className='setrow';b.id=id;b.innerHTML='<span>🎨 Оформление<br><small class="th-now">сейчас: '+T.ru+'</small></span><b>›</b>';return b;}
+function rowBtn(id){var T=get(cur()),b=document.createElement('button');b.className='setrow';b.id=id;b.innerHTML='<span>🎨 Оформление<br><small class="th-now">сейчас: '+T.ru+'</small></span><b class="go">Открыть</b>';return b;}
 {var os=openSettings;openSettings=function(){os.apply(this,arguments);var mc=document.getElementById('mcard'),bt=mc&&mc.querySelector('.btns');if(!bt||document.getElementById('sTheme'))return;
 var b=rowBtn('sTheme'),rows=document.getElementById('setRows');bt.parentNode.insertBefore(b,rows&&rows.nextSibling?rows.nextSibling:bt);b.onclick=function(){try{SND.tap();}catch(e){}open(openSettings);};};
 var gs=document.getElementById('gSet');if(gs)gs.onclick=openSettings;}

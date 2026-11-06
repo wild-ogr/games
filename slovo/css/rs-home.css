@@ -64,3 +64,13 @@ html.rs-home-on #menu .znr{display:none!important}
 .rsh-ev #zbHomeTop>*~*{display:none!important}
 .rsh-ev .dot{display:none!important}
 .rsh-ev #zbHomeTop small,.rsh-ev #zbHomeTop span{font-size:max(14px,1em)}
+@media (min-width:860px){
+.rsh-play #btnPlay{width:100%;margin:0}
+.rsh-side{align-self:stretch;display:flex;flex-direction:column;gap:14px}
+.rsh-side>.rsh-ev{margin-top:auto}
+}
+@media (max-width:400px){
+.rs-yard .z3y-tag{min-height:44px;max-width:120px;padding:4px 10px}
+.rs-yard .z3y-tag b{font-size:16px}.rs-yard .z3y-tag b i,.rs-yard .z3y-tag b .ti,.rs-yard .z3y-tag b svg{display:none!important}
+.rsh-ytop b{font-size:17px;white-space:nowrap}
+}

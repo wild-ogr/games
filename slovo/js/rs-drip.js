@@ -49,7 +49,7 @@ var M4={z4a:'kuhnya',z4w:'show',z4q:'zabeg',z4i:'igry',z4l:'stol',z4y:'traty',z4
 z4n:'news',z4u:'news',z4o:'news',z4m:'mail2',z4h:'mail2',z4v:'event',z4d:'event'};
 if(window.Z4&&Z4.open&&!Z4.open.__rs){var o4=Z4.open;Z4.open=function(id){if(!o4(id))return false;if(!ON)return true;var m=M4[String(id).split('.')[0]];return!m||isOpen(m);};Z4.open.__rs=1;}
 function cardOpen(cid){var m=M4[String(cid||'').split('.')[0]];return!ON||!m||isOpen(m);}
-var EV=[{id:'vsem',d:'event',ic:'🔤',t:'Одна на всех',sub:'пропавшая буква, Час Зины, выборы старшей',c:['z4v']},
+var EV=[{id:'vsem',d:'event',ic:'✏️',t:'Одна на всех',sub:'пропавшая буква, Час Зины, выборы старшей',c:['z4v']},
 {id:'show',d:'show',ic:'📺',t:'Телешоу у Зины',sub:'Лото, Барабан, своя игра, песня',c:['z4w']},
 {id:'sport',d:'event',ic:'🏅',t:'Спартакиада подъезда',sub:'кто ловчее из соседок',scr:'zsport'},
 {id:'kuhnya',d:'kuhnya',ic:'🥒',t:'Кухня и дача',sub:'рецепты, банки, авоська',c:['z4a'],scr:'z4kuh'},
@@ -86,7 +86,7 @@ if(cont){if(typeof then==='function')sf('lgthen',then);return;}
 var ev=window.event;if(ev&&(ev.type==='click'||ev.type==='pointerup'||ev.type==='keydown'))return ol.apply(this,arguments);};window.openLogin.__rs=1;}
 window.retDue=function(){return false;};
 var y=S.z3y;if(y&&typeof y==='object'&&!y.r&&!(+y.l&1)){y.r=1;sv();}
-ZB.on('screen',function(id){if(id!=='zb-school'||!Z().nk)return;Z().nk=0;sv();setTimeout(function(){try{toast('🔑 Класс русского — ваш! Отремонтирован даром.',4000);}catch(e){}},400);});});
+ZB.on('screen',function(id){if(id!=='zb-school'||!Z().nk)return;Z().nk=0;sv();setTimeout(function(){try{toast('🔑 Класс русского — твой! Отремонтирован даром.',4000);}catch(e){}},400);});});
 }
 window.RSD={on:ON,day:day,open:isOpen,today:todayNew,gate:gate,one:one,cardOpen:cardOpen,kind:function(){return first().k;},z:Z,go:{},newWin:function(id){X().then(function(x){x.newWin(id);});},css:function(){},Y3:Y3,sf:sf,esc:esc,tap:tap,
 X:function(){return X();},home:home,first:first,wkEv:wkEv,EV:EV,

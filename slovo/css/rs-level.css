@@ -18,6 +18,9 @@ html.rs-level #zbcMilk::before{content:'🥛';font-size:16px}
 .rsw .rsw-l{font-size:16px;color:var(--ink2,#4a5368);margin-top:2px;line-height:1.35}
 .rsw .rsw-card{margin:10px auto 0;max-width:420px}
 .rsw .rsw-card .word{font-size:24px}.rsw .rsw-card .def{font-size:17px;line-height:1.4}
+.rsw .rsw-card .tag{font-size:14px;letter-spacing:.3px;text-transform:none}
+.rsw .rsw-card .sig{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rsw .rsw-react{max-width:420px;margin:8px auto 0}.rsw .rsw-react .bb{font-size:16px;line-height:1.35}
 .rsw .rsw-z{width:96px;height:96px;margin:6px auto}.rsw .rsw-z svg{width:100%;height:100%}
 .rsw .rsw-urg{margin:12px auto 0;max-width:420px;background:#fbf7ec;border-radius:16px;padding:12px 14px;box-shadow:0 2px 0 #e4d8bf}
 .rsw .rsw-urg p{margin:0 0 10px;font-size:17px;line-height:1.4}.rsw .rsw-urg p:last-child{margin:0}
@@ -30,7 +33,17 @@ html.rs-level #zbcMilk::before{content:'🥛';font-size:16px}
 @media (min-width:760px){
 .zbw.rsw>.rsw-rew{grid-column:2;grid-row:2;align-self:center}
 .zbw.rsw>.rsw-urg{grid-column:2;grid-row:3}
+.zbw.rsw>.rsw-react{grid-column:2;grid-row:3;align-self:end}
 .zbw.rsw>.btns,.zbw.rsw>.rsw-x{grid-column:2;max-width:none}
 .zbw.rsw>.btns{grid-row:4}.zbw.rsw>.rsw-x{grid-row:5}
 }
 html.rs-level #game.rs-one .zbs-z4s{display:none!important}
+#mcard .setrow{margin:6px 0;padding:8px 12px;min-height:50px;text-align:left;font-size:17px;gap:10px}
+#mcard .setrow>span{flex:1;min-width:0;text-align:left;line-height:1.25}
+#mcard .setrow>span br{display:none}
+#mcard .setrow>span small{display:block;font-size:14px;font-weight:600;color:var(--ink2,#4a5368);margin-top:1px}
+#mcard .setrow b{flex:none;font-size:15px}
+#mcard .setrow b.go{background:var(--soft,#eef2fb);color:var(--blue,#2563c9)}
+@media (max-width:400px),(max-height:780px){#mcard .setrow{margin:3px 0;padding:5px 12px;min-height:44px;font-size:16px}#mcard h2{margin-top:0;margin-bottom:6px}}
+@media (max-width:400px){#gBack.rs-bk{font-size:0;min-width:48px}#gBack.rs-bk::before{content:'←';font-size:24px}}
+@media (min-width:1200px){#game .zina #zAv{overflow:visible}#game .zina #zAv:not([style*="absolute"]){position:relative}#game .zina #zAv::after{content:'';position:absolute;left:-16%;right:-16%;bottom:-4px;height:20px;border-radius:6px;background:linear-gradient(#f4ece0,#e3cdb8);box-shadow:0 5px 0 #c9ab92,0 10px 14px rgba(90,60,30,.18);z-index:2}}

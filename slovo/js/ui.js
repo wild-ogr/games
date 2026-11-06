@@ -34,7 +34,7 @@ const n=lgN(),amt=lgAmt(n),item=lgItem(n)&&!owned('s',skinOf('guest')),first=!S.
 S.lg={d:todayKey(),n:n+1};if(item){S.own=S.own||{};S.own['s:guest']=1;}addCoins(amt,'gift');vkmCheck();cloudSoon();
 const k=n%LOGIN.length,cells=LOGIN.map((a,i)=>`<div class="wc${i===k?' now':''}${i<k?' got':''}"><small>${i+1}-й</small><b>${i<k?'✓':i===LOGIN.length-1&&n<LOGIN.length?'🍽️':'+'+a}</b></div>`).join('');
 modal(`<h2>🎁 Гостинец от бабы Зины</h2><div style="width:100px;height:100px;margin:2px auto">${zinaSVG('happy')}</div>
-    <p>${first?'Кто ко мне заходит — без гостинца не уходит. Заходи каждый день: чем дальше, тем гостинец больше!':pick(['Пришёл! А я уж гостинец приготовила.','Опять ты! Ну держи, заслужил.','Каждый день заходишь — вот это внук! Держи.','Я знала, что придёшь. Кот — не верил.'])}</p>
+    <p>${first?'Кто ко мне заходит — без гостинца не уходит. Заходи каждый день: чем дальше, тем гостинец больше!':pick(['Пришёл! А я уж гостинец приготовила.','Опять ты! Ну держи, заработано.','Каждый день заходишь — вот это внук! Держи.','Я знала, что придёшь. Кот — не верил.'])}</p>
     <div class="week lg"><div class="wd">${cells}</div></div>
     <div class="reward big" id="mRew">+${amt} <span class="coin"></span></div>
     ${item?`<p style="font-weight:800;color:var(--ink)">И блюдце «${skinOf('guest').n}» — оно уже в «Обликах»!</p>`:''}
@@ -324,7 +324,7 @@ if(vibOk)$('sVib').onclick=()=>{S.vib=S.vib===0?1:0;save();SND.tap();buzz('word'
 $('sBig').onclick=()=>{S.big=S.big?0:1;save();SND.tap();applyBig();draw();};
 const st=$('sStat');if(st)st.onclick=()=>{STAT.setEnabled(!STAT.enabled());SND.tap();draw();};};
 const shop=typeof PAY!=='undefined'&&PAY.on&&!$('game').classList.contains('on');
-modal(`<h2>⚙️ Настройки</h2><div id="setRows"></div>${SOC.ok()?'<button class="setrow" id="sSoc"><span>👥 '+(OK?'Друзья<br><small>позвать друзей в игру</small>':'Друзья и игры')+'</span><b>›</b></button>':''}${shop?PAY.html(['no_ads','tiho_d','tiho_w'],false)+'<button class="setrow" id="sShop"><span>🛒 Все покупки</span><b>›</b></button>':''}<div class="btns"><button class="btn green" id="mOk">Продолжить</button></div>`);
+modal(`<h2>⚙️ Настройки</h2><div id="setRows"></div>${SOC.ok()?'<button class="setrow" id="sSoc"><span>👥 '+(OK?'Друзья<br><small>позвать друзей в игру</small>':'Друзья и игры')+'</span><b class="go">Открыть</b></button>':''}${shop?PAY.html(['no_ads','tiho_d','tiho_w'],false)+'<button class="setrow" id="sShop"><span>🛒 Все покупки</span><b class="go">Открыть</b></button>':''}<div class="btns"><button class="btn green" id="mOk">Продолжить</button></div>`);
 draw();$('mOk').onclick=()=>{hideModal();SND.tap();};if($('sSoc'))$('sSoc').onclick=()=>{SND.tap();openSocial();};
 if(shop){PAY.bind($('mcard'));PAY.re=openSettings;$('sShop').onclick=()=>{hideModal();SND.tap();openShop();const p=document.querySelector('#shopList .pay');if(p)p.scrollIntoView();};}
 }

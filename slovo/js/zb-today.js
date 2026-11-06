@@ -40,8 +40,8 @@ var ERR=[
 say:function(x){return'Галя: «Мне для кроссворда в журнале не хватает слов на «'+x.L.toUpperCase()+'». Найдёшь три — расскажу, что у Тамары на балконе.»';}},
 {id:'tamara',who:'Тамара из 15-й',ic:'🌷',t:function(x){return'найди 2 слова из '+x.m+'+ букв';},n:2,
 say:function(x){return'Тамара: «Длинные слова — как длинные сериалы: всё самое интересное там. Найди два из '+x.m+' букв, не меньше.»';}},
-{id:'lyusya',who:'Люся-почтальонка',ic:'✉️',t:function(){return'пройди 2 уровня без подсказок';},n:2,
-say:function(){return'Люся: «Письма надо доставлять без помарок! Вот и ты — два уровня без подсказок, будь добр.»';}},
+{id:'lyusya',who:'Люся-почтальонка',ic:'✉️',t:function(){return'пройди 2 урока без подсказок';},n:2,
+say:function(){return'Люся: «Письма надо доставлять без помарок! Вот и ты — два урока без подсказок, будь добр.»';}},
 {id:'semyon',who:'Дед Семён',ic:'🧓',t:function(){return'найди 15 слов за день';},n:15,
 say:function(){return'Дед Семён: «В сорок седьмом мы по пятнадцать слов в день находили! И ничего, выросли. Давай-ка.»';}},
 {id:'vp',who:'Валентина Петровна',ic:'👓',t:function(){return'пройди уровень быстрее 3 минут';},n:1,
@@ -80,7 +80,7 @@ go:function(){var x=errand();try{toast(x.e.say(x),6000);}catch(e){}startNext();}
 {id:'mg-fb',order:40,sub:'Перемена',ic:'🔔',t:'Перемена: Отличник',done:function(){return cnt('nh')>0||!!sd().m['mg-fb'];},
 hint:function(){return'уровень без единой подсказки';},go:startNext},
 {id:'home',order:50,sub:'Домашка',ic:'📚',t:'Домашка',done:function(){return cnt('w')>=nHome();},prog:function(){return[Math.min(cnt('w'),nHome()),nHome()];},
-hint:function(){return(allDone()?'повтори ':'пройди ')+nHome()+' уровня · '+Math.min(cnt('w'),nHome())+' из '+nHome();},go:startNext}];
+hint:function(){return(allDone()?'повтори ':'пройди ')+nHome()+' урока · '+Math.min(cnt('w'),nHome())+' из '+nHome();},go:startNext}];
 OWN.forEach(function(x){x.own=1;for(var i=0;i<ZB.todayTasks.length;i++)if(ZB.todayTasks[i].id===x.id)return;ZB.todayTasks.push(x);});
 function onOk(x){return x&&ZB.safe('td-on:'+x.id,function(){return(!x.on||x.on()!==false)&&!(x.off&&x.off());})!==false;}
 var STD=['lesson','dict','errand','mg','home'];

@@ -143,10 +143,11 @@ s+=box(11.7,4,2.15,1.9,.95,.2,{t:'#f26b5e',l:'#e2463b',r:'#b83228'},{ao:false});
 {const p=P(12.65,4,2.6);s+=`<ellipse cx="${p[0]}" cy="${p[1]}" rx="9" ry="5" fill="#fff6c8" class="z3a-glow"/>`}
 {const u=KIT.x-H.x,w=H.h-(.6+2*KIT.k)-1.25;
 CHL+=faceL(H.x,H.y+H.d,H.h,`<ellipse cx="${u+.5}" cy="${w+.6}" rx="1.6" ry="1.3" fill="url(#gGlowW)" class="z3a-glow"/>`+winEl(u,w,{lit:1})+`<path d="M${u+.05} ${w+.05} h.3 q-.12 .55 0 1.1 h-.3z M${u+.95} ${w+.05} h-.3 q.12 .55 0 1.1 h.3z" fill="url(#pDots)"/><path d="M${u-.1} ${w-.1} h1.2 v.2 q-.1 .12 -.2 0 q-.1 .12 -.2 0 q-.1 .12 -.2 0 q-.1 .12 -.2 0 q-.1 .12 -.2 0 q-.1 .12 -.2 0z" fill="#e2463b"/>`);
-const c=P(KIT.x+.5,H.y+H.d+.05,(.6+2*KIT.k)+1.25*.55);const zw=2.3*U;
-const sill=P(KIT.x+.5,H.y+H.d,(.6+2*KIT.k)+.06);
-CHL+=`<clipPath id="kitClip"><polygon points="${pts([P(KIT.x-.6,H.y+H.d,(.6+2*KIT.k)+.07),P(KIT.x+1.6,H.y+H.d,(.6+2*KIT.k)+.07),P(KIT.x+1.6,H.y+H.d,(.6+2*KIT.k)+3.5),P(KIT.x-.6,H.y+H.d,(.6+2*KIT.k)+3.5)])}"/></clipPath>
-     <g clip-path="url(#kitClip)"><g class="z3a-bobz">${zinaSVG('happy').replace('<svg',`<svg x="${(c[0]-zw/2).toFixed(1)}" y="${(sill[1]-zw*.86).toFixed(1)}" width="${zw}" height="${zw}"`)}</g></g>`;
+const b0=.6+2*KIT.k,c=P(KIT.x+.5,H.y+H.d+.05,b0+1.25*.55);const zw=1.45*U;
+const sill=P(KIT.x+.5,H.y+H.d,b0+.06);
+CHL+=`<clipPath id="kitClip"><polygon points="${pts([P(KIT.x+.06,H.y+H.d,b0+.06),P(KIT.x+.94,H.y+H.d,b0+.06),P(KIT.x+.94,H.y+H.d,b0+1.19),P(KIT.x+.06,H.y+H.d,b0+1.19)])}"/></clipPath>
+     <g clip-path="url(#kitClip)"><g class="z3a-bobz">${zinaSVG('happy').replace('<svg',`<svg x="${(c[0]-zw/2).toFixed(1)}" y="${(sill[1]-zw*.98).toFixed(1)}" width="${zw}" height="${zw}"`)}</g></g>`;
+CHL+=faceL(H.x,H.y+H.d,H.h,`<rect x="${u+.02}" y="${w+.02}" width=".96" height="1.21" fill="none" stroke="#fffaf0" stroke-width=".07"/>`);
 CHL+=faceL(H.x,H.y+H.d,H.h,`<rect x="${u-.18}" y="${w+1.27}" width="1.36" height=".12" fill="#fff"/><rect x="${u-.05}" y="${w+1.38}" width="1.1" height=".24" rx=".05" fill="#c96a3a"/>`+[.1,.32,.55,.78,.95].map((d,i)=>`<circle cx="${u+d}" cy="${w+1.33}" r=".11" fill="${['#e2463b','#ff8fb0','#f5b72d'][i%3]}"/><circle cx="${u+d+.06}" cy="${w+1.42}" r=".08" fill="#5aa84a"/>`).join(''));
 }
 {const bx=15.75,bz=.6+2*2-.15;s+=box(bx+.6,H.y+H.d+.12,bz+.15,.62,.45,.72,{t:'#c98a5a',l:'#a9673a',r:'#8a5030'},{ao:false})+faceL(bx+.6,H.y+H.d+.57,bz+.87,`<rect x=".06" y=".1" width=".5" height=".2" rx=".04" fill="#e8b47a"/><rect x=".06" y=".38" width=".5" height=".2" rx=".04" fill="#e8b47a"/>`);

@@ -34,6 +34,7 @@ document.addEventListener('pointerdown',function(e){var w=$('wheel');if(w&&e.tar
 document.addEventListener('keydown',function(e){if(/^[а-яё]$/i.test(e.key||''))touched();},true);
 function l1Line(){var w=shortestOpen();if(!w)return;
 var z2=window.ZB2N&&ZB2N.ok('lv1safe');
+if(window.FXZN&&FXZN.ok('l1')){zina(FXZN.goal()+((typeof TOUCH!=='undefined'&&TOUCH)?'Веди пальцем: ':'Веди мышкой: ')+upw(w.w),'happy',99);pulse(w.w,true);return;}
 zina((st.rep||z2?'':'Я баба Зина! ')+((typeof TOUCH!=='undefined'&&TOUCH)?(z2?'Веди пальцем: ':'Веди пальцем по буквам: '):'Веди мышкой с нажатой кнопкой или печатай: ')+upw(w.w),'happy',99);}
 function pulse(w,num){var ix=letIdx(w),els=(typeof WH!=='undefined'&&WH.els)||[];
 ix.forEach(function(i,k){var e=els[i];if(!e)return;e.classList.remove('nbp');void e.offsetWidth;e.classList.add('nbp');

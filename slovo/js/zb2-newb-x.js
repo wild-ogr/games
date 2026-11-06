@@ -18,7 +18,7 @@ var sw=shortestWord;shortestWord=function(){return w;};try{startTutorial();}fina
 var L1={g:null,f:0,t:0,s1:0,s3:0,busy:0},timer=0;
 var L1_HAND=4000,L1T=0;
 document.addEventListener('pointerdown',function(e){var w=$('wheel');if(w&&e.target&&w.contains(e.target))L1T=Date.now();},true);
-function spell(wd,why){var g=G,ix=letIdx(wd.w),E=els(),k=0,up=wd.w.toUpperCase().split('');L1.busy=1;unnum();
+function spell(wd,why){if(window.FXZN)FXZN.auto=G;var g=G,ix=letIdx(wd.w),E=els(),k=0,up=wd.w.toUpperCase().split('');L1.busy=1;unnum();
 if(typeof stopTutorial==='function')stopTutorial();
 ev({a:'auto1',l:1,ms:Date.now()-g.t0,w:why,m:g.miss||0});
 function end(){unnum();L1.busy=0;L1.t=Date.now();L1.s1=L1.s3=0;}
@@ -32,7 +32,8 @@ function tick(){if(!N.l1On()||L1.busy||(typeof dragging!=='undefined'&&dragging)
 if(L1.g!==G)L1={g:G,f:foundN(),t:Date.now(),s1:0,s3:0,busy:0};
 var f=foundN(),now=Date.now();if(f!==L1.f){L1.f=f;L1.t=now;L1.s1=L1.s3=0;unnum();return;}
 var w=shortestOpen();if(!w)return;var idle=now-L1.t,m=G.miss||0,still=now-Math.max(L1.t,L1T);
-if(G.tut){if(m>=6||idle>=40000)spell(w,m>=6?'miss':'idle');return;}
+if(G.tut){var fx=window.FXZN&&FXZN.ok('l1');
+if(fx?(m>=3||still>=10000||idle>=25000):(m>=6||idle>=40000))spell(w,m>=(fx?3:6)?'miss':'idle');return;}
 if(m>=4||idle>=20000){spell(w,m>=4?'miss':'idle');return;}
 if(!L1.s1&&(m>=2||still>=L1_HAND)){L1.s1=1;numbers(w.w);hand(w.w);
 zina('Смотри на цифры: '+upw(w.w)+'. Веди по порядку!','happy',8);ev({a:'help1',l:1,ms:now-G.t0,w:m>=2?'miss':'idle'});}

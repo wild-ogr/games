@@ -15,8 +15,8 @@ function ev(a,o){try{var p={a:a};for(var k in o)p[k]=o[k];STAT.ev('rsl',p);}catc
 function esc(t){return String(t==null?'':t).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
 (function(){var l=document.createElement('link');l.rel='stylesheet';l.href='css/rs-level.css';document.head.appendChild(l);})();
 L.calm=function(v){if(v!==undefined)ls('rs-calm',v?'1':'0');return ls('rs-calm')!=='0';};
-var KIND={int:{t:'Уровень на интерес',q:'Сыграем на интерес? Счёт очков, а если захочешь — пари с моим. Проиграешь — не беда.',y:'Да, на интерес'},
-sur:{t:'Уровень с сюрпризом',q:'Сыграем с сюрпризом? Особая клетка, кот Ять или соседи что-нибудь учудят.',y:'Да, с сюрпризом'}};
+var KIND={int:{t:'Урок на интерес',q:'Сыграем на интерес? Счёт очков, а если захочешь — пари с моим. Проиграешь — не беда.',y:'Да, на интерес'},
+sur:{t:'Урок с сюрпризом',q:'Сыграем с сюрпризом? Особая клетка, кот Ять или соседи что-нибудь учудят.',y:'Да, с сюрпризом'}};
 L.KIND=KIND;
 L.used=function(k){var o={};try{o=JSON.parse(ls('rs-lvk')||'{}')||{};}catch(e){}return o.d===tk()&&!!o[k];};
 L.can=function(k){return ON&&!!KIND[k]&&!!(window.Z4&&Z4.on)&&!L.used(k)&&(+S.lv||0)>=30;};
@@ -79,7 +79,7 @@ return false;};
 try{Object.defineProperty(K,'mixDue',{configurable:true,get:function(){return md0?mdW:undefined;},set:function(v){if(!mdB)mdB=v;md0=v;}});}catch(e){}}
 if(ON&&ZB2._reg.autonajdi){ZB2._reg.autonajdi.on=false;L.najdi=1;}
 function setRow(){var c=$('mcard'),bt=c&&c.querySelector('.btns');if(!bt||$('rsCalm')||!$('setRows'))return;var v=L.calm(),b=document.createElement('button');
-b.className='setrow'+(v?'':' off');b.id='rsCalm';b.innerHTML='<span>🍵 Спокойная игра<br><small>без пари, гонок и сюрпризов в уровне</small></span><b>'+(v?'● вкл':'○ выкл')+'</b>';
+b.className='setrow'+(v?'':' off');b.id='rsCalm';b.innerHTML='<span>🍵 Спокойная игра<br><small>без сюрпризов на уроке</small></span><b>'+(v?'● вкл':'○ выкл')+'</b>';
 bt.parentNode.insertBefore(b,bt);b.onclick=function(){L.calm(!L.calm());try{SND.tap();}catch(e){}b.remove();setRow();};}
 function wrapSet(){var f=window.openSettings;if(typeof f!=='function'||f.__rsl)return;var w=function(){var r=f.apply(this,arguments);ZB.safe('rs.set',setRow);return r;};
 w.__rsl=1;window.openSettings=w;var gs=$('gSet');if(gs)gs.onclick=function(){window.openSettings();};}

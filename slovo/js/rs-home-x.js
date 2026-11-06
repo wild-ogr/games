@@ -12,11 +12,12 @@ function setMode(m){H.mode=m;DE.classList.toggle('rs-yard',m==='yard');if(ZB.nav
 function wrapMenu(){var om=window.openMenu;if(typeof om!=='function'||om.__rs)return;
 var w=window.openMenu=function(){setMode(want||'home');want='';return om.apply(this,arguments);};w.__rs=1;}
 H.home=function(){openMenu();};
-H.yard=function(){if(!yardOn()){openMenu();return;}want='yard';st('yard');openMenu();};
+H.yard=function(){if(!yardOn()){openMenu();return;}want='yard';st('yard');openMenu();
+if(!Z.YARD.length){var m=$('mSay');if(m)m.textContent='Во дворе пока тихо — соседи обживаются. Скоро тут откроются Газета и Почта.';}};
 var DOT0={};
 function nget(id){var L=ZB.navSlots;for(var i=0;i<L.length;i++)if(L[i]&&L[i].id===id)return L[i];return null;}
 function dotOf(id){var f=DOT0[id];return!!(f&&ZB.safe('rs:dot:'+id,f));}
-function yardDot(){if(!yardOn())return false;var o=(orgGet?orgGet.call(Z,'mail'):null)||window.Z3Y&&Z3Y.DEF.mail;if(!o||!Z.open('mail'))return false;
+function yardDot(){if(!yardOn()||Z.YARD.indexOf('mail')<0)return false;var o=(orgGet?orgGet.call(Z,'mail'):null)||window.Z3Y&&Z3Y.DEF.mail;if(!o||!Z.open('mail'))return false;
 return!!ZB.safe('rs:ydot',function(){return(typeof o.hot==='function'&&o.hot())||(typeof o.badge==='function'&&o.badge());});}
 function dotWin(){var hm=ZB.cur==='menu'||!ZB.cur;
 if(H.mode==='home'&&hm&&$('menu')&&$('menu').classList.contains('on')&&window.RST&&RST.dot&&ZB.safe('rs:tdot',function(){return RST.dot();}))return'';
@@ -78,11 +79,11 @@ function art(){var box=$('rsArt'),A=window.Z3ART;if(!box)return;
 if(!A||!A.yardLay||!Z||!Z.art){if(!box.firstChild&&typeof heroSVG==='function')box.innerHTML='<div class="rsh-hero">'+heroSVG()+'</div>';return;}
 if(A.yardCss&&!$('z3yArtCss')){var c=document.createElement('style');c.id='z3yArtCss';c.textContent=A.yardCss;document.head.appendChild(c);}
 var sc=ZB.safe('rs:scene',function(){return Z.scene?Z.scene({}):null;})||{},k=(S.outfit||'')+'|'+sc.time+'|'+sc.season+'|'+(A.yardRev||0);
-if(k!==akey){var h=Z.art('yard',{lay:'tall',time:sc.time,season:sc.season,hot:{kitchen:1}});if(h){akey=k;box.innerHTML=h;}}
+if(k!==akey){var h=Z.art('yard',{lay:'tall',time:sc.time,season:sc.season,hot:{}});if(h){akey=k;box.innerHTML=h;}}
 fit();}
 function fit(){var box=$('rsArt'),sv=box&&box.querySelector('svg'),A=window.Z3ART;if(!sv||!A||!A.yardLay)return;
 var w=A.yardLay.tall.win,W=box.clientWidth,Hh=box.clientHeight;if(!W||!Hh)return;
-var vw=w[2]*(W/Hh>1.3?9:7),vh=vw*Hh/W;if(vh<w[3]*3){vh=w[3]*3;vw=vh*W/Hh;}
+var vw=w[2]*(W/Hh>1.3?7:5),vh=vw*Hh/W;if(vh<w[3]*3){vh=w[3]*3;vw=vh*W/Hh;}
 var x=w[0]+w[2]/2-vw/2,y=w[1]+w[3]*.5-vh*.48;
 sv.setAttribute('viewBox',[x,y,vw,vh].map(function(v){return v.toFixed(1);}).join(' '));sv.setAttribute('preserveAspectRatio','xMidYMid slice');}
 function place(){var s=$('mSay');if(!s||!$('rsSay'))return;var yb=$('zbSayBox');
@@ -117,8 +118,8 @@ H.render();if(window.Z3Y&&Z3Y.render)ZB.safe('rs:y',Z3Y.render);RSH0.done();
 function wrapSet(){var os=window.openSettings;if(typeof os!=='function'||os.__rs)return;
 var w=window.openSettings=function(){var r=os.apply(this,arguments);ZB.safe('rs:set',function(){var mc=$('mcard'),bt=mc&&mc.querySelector('.btns');if(!bt||$('rsSetAb'))return;
 if(window.ZB2MAIL&&ZB2MAIL.go&&!$('rsSetMl')){var a=document.createElement('button');a.className='setrow';a.id='rsSetMl';
-a.innerHTML='<span>✉️ Написать Зине<br><small>похвалить, поругать, подсказать</small></span><b>›</b>';bt.parentNode.insertBefore(a,bt);
+a.innerHTML='<span>✉️ Написать Зине<br><small>похвалить, поругать, подсказать</small></span><b class="go">Открыть</b>';bt.parentNode.insertBefore(a,bt);
 a.onclick=function(){tap();ZB2MAIL.go('about',function(){window.openSettings();});};}
-var b=document.createElement('button');b.className='setrow';b.id='rsSetAb';b.innerHTML='<span>ℹ️ Об игре<br><small>авторы, музыка, оформление</small></span><b>›</b>';
+var b=document.createElement('button');b.className='setrow';b.id='rsSetAb';b.innerHTML='<span>ℹ️ Об игре<br><small>авторы, музыка, оформление</small></span><b class="go">Открыть</b>';
 bt.parentNode.insertBefore(b,bt);b.onclick=function(){tap();openCredits();};});return r;};w.__rs=1;}
 })();

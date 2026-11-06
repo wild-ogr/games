@@ -11,7 +11,7 @@ function fest(){var F=window.FESTZB;if(!F||!F.now||lv()<3)return null;var n=sf('
 var ev=F.ev&&F.ev[n.k]||{},all=+ev.n||0,d=+F.doneN(n.id)||0;return{k:n.k,id:n.id,ic:n.ic,t:n.title,d:d,n:all,left:+n.left||0};}
 function season(){var A=window.ZBSEA;if(!A||!A.cur||lv()<3)return null;var c=sf('scur',function(){return A.cur();});if(!c||!c.s)return null;
 return{id:c.s.id,ic:c.s.ic,t:c.s.id==='osen'?'Осень у Зины':c.s.n,st:+sf('sst',function(){return A.steps();})||0,of:+(A.CFG&&A.CFG.steps)||30};}
-function cur(){if(!ON0||!isOpen('event'))return null;var f=fest(),s=season(),w=wkEv(),r=null,more=w?{t:w.t,go:function(){evGo(w);}}:null;
+function cur(){if(!ON0||!isOpen('event'))return null;var f=fest(),s=season(),w=wkEv(),r=null,more=w?{t:w.t+(w.id==='vsem'?' — общее дело дома':''),go:function(){evGo(w);}}:null;
 if(s&&s.id==='osen'){var fh=f&&f.k==='hw'?f:null;r={id:'osen',ic:s.ic,t:s.t+' · '+s.st+' из '+s.of,
 sub:fh?'страшилка дня: '+fh.d+' из '+fh.n+(fh.left>0?' · ещё '+fh.left+' '+pl(fh.left,'день','дня','дней'):''):'шаг за каждый урок',
 go:function(){tap();if(fh&&fh.d<fh.n&&window.FESTZB)FESTZB.open(fh.k);else ZBSEA.open();}};if(fh)f=null;}
@@ -47,17 +47,17 @@ if(t.x){for(var i=0;i<L.length;i++)if(L[i].id===t.x)return ok(L[i])||t.m.z4?L[i]
 var R=L.filter(ok);if(!R.length)return null;var c=R[(tk()%97)%R.length];t.x=c.id;sv();return c;}
 function startNext(){try{hideModal();}catch(e){}try{var i=Math.min(+S.lv||0,LEVELS.length-1);if(typeof maybeInterstitial==='function')maybeInterstitial(function(){startLevel(i);});else startLevel(i);}catch(e){}}
 var POOL={
-lesson:{ic:'📅',t:'Задание дня',av:function(){return true;},done:function(){return!!(S.daily&&S.daily[tk()])||!!T().m.lesson;},
+lesson:{ic:'🗓️',t:'Задание дня',av:function(){return true;},done:function(){return!!(S.daily&&S.daily[tk()])||!!T().m.lesson;},
 h:function(){return'кроссворд дня — один на всех';},go:function(){try{openDaily();}catch(e){}}},
-two:{ic:'📚',t:'Пройдите 2 урока',av:function(){return true;},done:function(){return T().w>=2;},
+two:{ic:'📚',t:'Пройди 2 урока',av:function(){return true;},done:function(){return T().w>=2;},
 h:function(){return Math.min(T().w,2)+' из 2';},go:startNext},
 game:{ic:'🎲',t:'Игра дня',av:function(){return RSD.open('games')&&!!task('mg');},done:function(){var x=task('mg');return!!x&&!!sf('d:mg',x.done);},
 h:function(){var x=task('mg');return x?String(x.t||'').replace(/^Затея дня:?\s*/,''):'';},go:function(){var x=task('mg');if(x)sf('g:mg',x.go);}},
 word:{ic:'🔠',t:'Слово дня',av:function(){return!!task('wd');},done:function(){var x=task('wd');return!!x&&!!sf('d:wd',x.done);},
 h:function(){var x=task('wd');return x?String(x.t||''):'';},go:function(){var x=task('wd');if(x)sf('g:wd',x.go);}},
-paper:{ic:'📰',t:'Загляните в газету',av:function(){return RSD.open('paper')&&!!(ZB._scr.z3paper||ZB._scr.vech||(RS&&RS.sect)||1);},done:function(){return!!T().m.paper;},
+paper:{ic:'🗞️',t:'Загляни в газету',av:function(){return RSD.open('paper')&&!!(ZB._scr.z3paper||ZB._scr.vech||(RS&&RS.sect)||1);},done:function(){return!!T().m.paper;},
 h:function(){return'свежий номер «Вечёрки»';},go:function(){T().m.paper=1;sv();RSD.X().then(function(x){x.go.paper();});}},
-z4:{ic:'🏠',t:'Загляните к соседям',av:function(){return RSD.open('news')&&!!z4card();},done:function(){return!!T().m.z4;},
+z4:{ic:'🏠',t:'Загляни к соседям',av:function(){return RSD.open('news')&&!!z4card();},done:function(){return!!T().m.z4;},
 h:function(){return'новое у соседей — на этой странице';},go:function(){open();}}};
 var WK=[['z4','word'],['two','word'],['game','paper'],['two','z4'],['word','game'],['paper','z4'],['two','game']],ALT=['two','game','word','paper','z4'];
 function z4ready(){return!(window.Z4&&Z4.on&&Z4.day&&Z4.day()>=4)||!!(Z4.card&&Z4.card.L.length);}

@@ -172,7 +172,7 @@ document.body.appendChild(el);var z=el.firstChild,calm=false;try{calm=typeof CAL
 setTimeout(function(){z.style.transform='scale(1)';},calm?0:350);
 setTimeout(function(){Z3Y.letter('pie',fin);},calm?300:2300);}
 var touched=0;document.addEventListener('pointerdown',function(e){var w=$('wheel');if(w&&e.target&&w.contains(e.target))touched=Date.now();},true);
-function demo(info){if(!F.demo||!info||info.daily||info.idx!==0||S.lv!==0||Y().d)return;var g=G,t0=Date.now(),tries=0;
+function demo(info){if(window.FXZN&&FXZN.ok('l1'))return;if(!F.demo||!info||info.daily||info.idx!==0||S.lv!==0||Y().d)return;var g=G,t0=Date.now(),tries=0;
 (function wait(){if(G!==g||!g||g.won||touched>t0)return;var X=window.ZB2N&&ZB2N.X;
 var busy=$('modal')&&$('modal').classList.contains('on');if(busy||!X||!X.spell||document.hidden){if(++tries<40)setTimeout(wait,500);return;}
 if(Date.now()-t0<1500){setTimeout(wait,300);return;}

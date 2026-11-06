@@ -6,7 +6,16 @@ function $(id){return document.getElementById(id);}
 function esc(t){return String(t==null?'':t).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
 function pl(n,a,b,c){try{return plural(n,a,b,c);}catch(e){return c;}}
 function ev(a,o){try{var p={a:a};for(var k in o)p[k]=o[k];STAT.ev('rsw',p);}catch(e){}}
-function phrase(t){t=String(t||'').replace(/<[^>]*>/g,'').trim();var m=t.match(/^[\s\S]*?[.!?…]+(\s|$)/);return(m?m[0]:t).trim();}
+var PH_MAX=170;
+function phrase(t){t=String(t||'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();if(t.length<=PH_MAX)return t;
+var a=t.match(/[^.!?…]+[.!?…]+(\s|$)/g)||[t],o='';for(var i=0;i<a.length;i++){if(o&&(o+a[i]).length>PH_MAX)break;o+=a[i];}return o.trim();}
+var SAY=['Без единой подсказки! Ять, неси пирожок.','Вот это голова! Пойду соседке расскажу.','Ять, видал? Учись, пока я жива.',
+'Пятёрка! В журнал — красной ручкой, с нажимом.','Молодец! Даже кот проснулся похлопать.','Ну, профессор! Очки протру — не верится.',
+'Умница! Ять говорит «мяу» — это «браво» по-кошачьи.','Отлично! Ставлю тебе пять и пирожок сверху.','Вот это скорость! Я так только за пенсией бегаю.'];
+function react(g,r){var t=r.rsSay||(r.rsSay=ZB.safe('rsw.say',function(){return ZB.say?ZB.say('win',{g:g,r:r,exc:r.exc,daily:g.daily},SAY):'';})||SAY[Math.floor(Math.random()*SAY.length)]);
+var z=typeof zinaSVG==='function'?zinaSVG(r.exc?'wow':'happy'):'',c=typeof catSVG==='function'?catSVG():'';
+return'<div class="zbw-react rsw-react"><i class="zz">'+z+'</i><span class="bb">'+esc(t)+'</span><i class="kt">'+c+'</i></div>';}
+function cardNo(){var n=0;if(typeof S!=='undefined'&&S.dict)for(var k in S.dict)if(S.dict[k])n++;return n;}
 function najdiDue(g){var X=ZB.mgr,M=window.ZMG;if(!L.najdi||!X||!M||g.daily||(M.isOff&&M.isOff('najdi')))return false;
 try{return X.Z().a<Math.floor(g.idx/CH_LEN)+1;}catch(e){return false;}}
 function urgent(g,r,p){var Z=window.Z4;
@@ -14,14 +23,16 @@ if(p.chapDone&&najdiDue(g))return{t:'Ять потерялся на экскур
 if(p.chapDone||p.last)return{t:p.lastAll?'Новые главы — скоро. А задание дня — каждый день новое.':'Дальше — подарок за главу.'};
 if(Z&&Z.on&&Z.winLine&&Z.winLine.L){var info={lv:g.idx+1,idx:g.idx,daily:!!g.daily,mode:g.mode||'',first:!!r.first,hints:0,words:g.words.length,of:g.words.length,bonus:g.bonus.size,G:g,r:r};
 for(var i=0;i<Z.winLine.L.length;i++){var it=Z.winLine.L[i];if(it.urg&&ZB.safe('rsw.urg:'+it.id,function(){return it.urg(info);})){var t=ZB.safe('rsw.txt:'+it.id,function(){return it.txt(info);});if(t)return{t:t};}}}
-if(r.dly&&!(S.daily&&S.daily[todayKey()]))return{t:'Открылось задание дня: каждый день — новый кроссворд с подарком.',b:'📅 Сыграть',id:'mDly'};
+if(r.dly&&!(S.daily&&S.daily[todayKey()]))return{t:'Открылось задание дня: каждый день — новый кроссворд с подарком.',b:'🗓️ Сыграть',id:'mDly'};
 return null;}
 function card(p){var w=p.dw;if(!p.hasDef||!w||typeof DEFS==='undefined'||!DEFS[w])return'<div class="zbw-zina rsw-z">'+(typeof zinaSVG==='function'?zinaSVG('happy'):'')+'</div>';
 var y=w;try{y=yo(w);}catch(e){}
-return'<div class="defcard rsw-card'+(p.isNew?' new':'')+'"><div class="word">'+esc(y)+'</div><div class="def">'+esc(phrase(DEFS[w]))+'</div><div class="sig"><span>— баба Зина</span></div></div>';}
+var no=cardNo();
+return'<div class="defcard rsw-card'+(p.isNew?' new':'')+'"><div class="tag">📖 Толковый словарь бабы Зины</div><div class="word">'+esc(y)+'</div><div class="def">'+esc(phrase(DEFS[w]))+'</div>'+
+'<div class="sig"><button class="sh" id="mShare" type="button">📤 Открытка</button><span>'+(no?'открытка № '+no:'— баба Зина')+'</span></div></div>';}
 function line(g,r){var a=[];
 if(g.daily){if(r.streak)a.push('серия '+r.streak+' '+pl(r.streak,'день','дня','дней'));else a.push('задание дня ✓');}
-else{try{var ch=ZB.chap(ZB.chapAt(g.idx)),len=ch.to-ch.from+1,d=Math.max(0,Math.min(len,S.lv-ch.from));a.push('Глава: '+d+' из '+len);}catch(e){}}
+else{try{var ch=ZB.chap(ZB.chapAt(g.idx)),len=ch.to-ch.from+1,d=Math.max(0,Math.min(len,S.lv-ch.from));a.push((ch.name?ch.name+': ':'')+'урок '+d+' из '+len);}catch(e){}}
 if(r.exBonus)a.push('Отличник +'+r.exBonus);else if(r.exc&&!g.daily)a.push('без подсказок');
 if(L.kind==='int'&&window.Z4&&Z4.score){var sc=Z4.score.get();if(sc>0)a.push('очки '+sc);}
 L.bits.forEach(function(b){var t=ZB.safe('rsw.bit',function(){return typeof b==='function'?b(g,r):b;});if(t)a.push(String(t));});
@@ -38,7 +49,7 @@ var nx=p.nextTxt==='В меню'?'Домой':p.nextTxt;
 return'<div class="'+(p.again?'':'win ')+'zbw rsw">'+
 '<div class="zbw-top"><h2>'+esc(title)+'</h2>'+stamp+'</div>'+
 '<div class="rsw-rew"><div class="rsw-c" id="mRew">+'+p.reward+' <span class="coin"></span></div><div class="rsw-l">'+esc(line(g,r))+'</div></div>'+
-c+'<div class="btns"><button class="btn green rsw-next" id="mNext">'+esc(nx)+'</button></div>'+(box||ask?'<div class="rsw-x">'+box+ask+'</div>':'')+'</div>';}
+c+(u||!p.hasDef?'':react(g,r))+'<div class="btns"><button class="btn green rsw-next" id="mNext">'+esc(nx)+'</button></div>'+(box||ask?'<div class="rsw-x">'+box+ask+'</div>':'')+'</div>';}
 function after(g,r,again){var m=$('mMenu'),bs=document.querySelector('#mcard .rsw .btns');
 if(m){m.textContent='Домой';m.className='btn rs-white rsw-home';}
 var n=$('rsNajdi');if(n)n.onclick=function(){var c=Math.floor(g.idx/CH_LEN),X=ZB.mgr;try{X.Z().a=c+1;save();}catch(e){}hideModal();try{SND.tap();}catch(e){}ev('najdi',{c:c+1});

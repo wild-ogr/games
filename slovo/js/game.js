@@ -272,10 +272,11 @@ if(!byHint){STAT.move();SND.word(wd.w.length,G.combo);S.found=(S.found||0)+1;G.c
 const long=wd.w.length>=7;buzz(long?'long':'word');if(long)boardStamp(pick(['Молодец!','Пять с плюсом!','Вот это слово!']));
 const note=defNote(nd);
 if(G.tut){STAT.ev('tut',{s:3});
+if(window.FXZN&&FXZN.ok('l1'))zina((FXZN.auto===G?'Вот так! ':'Молодец! ')+'Теперь сам: из этих же букв — ещё одно слово.','happy',8);else{
 zina('Молодец! Засчитываю только предметы — «кто? что?», и по одной штуке: «нос», а не «носы».','happy',7);
-const g=G;setTimeout(()=>{if(G===g&&!g.won)zina('Ищи остальные слова! Сколько осталось — написано сверху.','happy',6);},7000);}
+const g=G;setTimeout(()=>{if(G===g&&!g.won)zina('Ищи остальные слова! Сколько осталось — написано сверху.','happy',6);},7000);}}
 else if(!left)zina(pick(['Всё! Все слова на месте!','Готово! Кроссворд сдан!','Последнее! Ура!']),'happy',6);
-else if(G.rid===wd)zina(pick(['Загадку отгадал! Ну голова!','Отгадал! Я эту загадку на соседке Гале проверяла — она не смогла.','Правильно! Вот что значит начитанный.']),'wow',4.5);
+else if(G.rid===wd)zina(pick(['Загадка отгадана! Ну голова!','Отгадал! Я эту загадку на соседке Гале проверяла — она не смогла.','Правильно! Вот что значит много читать.']),'wow',4.5);
 else if(SOFTW[wd.w]&&left)zina(SOFTW[wd.w],'happy',5);
 else if(note)zina(say(wd.w.length>=6?'wordLong':'word')+note,'happy',4.5);
 else if(left===1)zina(say('oneLeft'),'wow',3.5);

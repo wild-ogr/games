@@ -12,7 +12,7 @@ const INFO={
 1:{id:'diktant',t:'Диктант Валерки',who:'valerka',ic:'✍️',a:'Валерка написал диктант. Выбери верную букву — проверим красной ручкой!',s:30,lv:5},
 2:{id:'splet',t:'Сплетня Гали',who:'galya',ic:'🗣',a:'Галя торопится и путает буквы — собери слово из сплетни',s:45,lv:15},
 3:{id:'slova',t:'Слово из слова',who:'zina',ic:'🧩',a:'Набери из букв длинного слова как можно больше слов',s:60,dp:2},
-4:{id:'vecherka',t:'«Вечерка»',who:'lyusya',ic:'📰',a:'Люся принесла газету — разгадай кроссворд дня',s:90,lv:10},
+4:{id:'vecherka',t:'«Вечерка»',who:'lyusya',ic:'🗞️',a:'Люся принесла газету — разгадай кроссворд дня',s:90,lv:10},
 5:{id:'baraban',t:'Барабан у бабы Зины',who:'zina',ic:'🎡',a:'Крути барабан и называй буквы — угадай слово',s:60,dp:7},
 6:{id:'lishnee',t:'Что лишнее?',who:'zina',ic:'🤔',a:'Четыре слова — одно не из той компании',s:40,dp:3},
 7:{id:'pogovorka',t:'Собери поговорку',who:'nina',ic:'📜',a:'Нина Аркадьевна начала поговорку — закончи её',s:45,lv:35},
@@ -21,7 +21,7 @@ const INFO={
 10:{id:'telegramma',t:'Телеграмма от внука',who:'lyusya',ic:'✉️',a:'Вставь выпавшие слова в телеграмму',s:45,dp:11},
 11:{id:'recept',t:'Рецепт тёти Вали',who:'valya',ic:'🥧',a:'Тётя Валя диктует рецепт — собери продукты из букв',s:60,dp:17},
 12:{id:'loto',t:'Лото во дворе',who:'mityai',ic:'🎱',a:'Митяй кричит бочонки загадками — закрой ряд',s:90,dp:21},
-13:{id:'filword',t:'Филворд на лавочке',who:'tamara',ic:'🔤',a:'Найди спрятанные слова в поле букв',s:60,dp:14},
+13:{id:'filword',t:'Филворд на лавочке',who:'tamara',ic:'✏️',a:'Найди спрятанные слова в поле букв',s:60,dp:14},
 14:{id:'pary',t:'Пары: слово и толкование',who:'vp',ic:'🃏',a:'Найди пары: слово и его толкование',s:45,lv:25},
 15:{id:'lovit',t:'Ять ловит буквы',who:'yat',ic:'🐈',a:'Лови буквы слова по порядку — лапой!',s:30,dp:5},
 16:{id:'zagadala',t:'Зина загадала',who:'zina',ic:'🔠',s:90,z2:1,k:'w',own:'MGW'},
@@ -330,7 +330,7 @@ function finUI(g,o,r,out,opt){const c=REG.cur;if(!c)return;const root=c.root;
 const head=r.tier===3?'Садись, пять!':r.tier===2?'Четыре — хорошо!':r.tier===1?'Три — уже неплохо!':'Не беда!';
 let st='';for(let i=1;i<=3;i++)st+='<span class="zmg-st'+(i<=r.tier?' on':'')+'" style="animation-delay:'+(i*.18)+'s">⭐</span>';
 const rw=[];if(out.coins)rw.push('<div class="zmg-rw c">+'+out.coins+' <span class="coin"></span></div>');
-if(out.note)rw.push('<div class="zmg-rw p">📰 Заметка №'+out.note.k+' в стенгазету «'+escH(out.note.t)+'»</div>');
+if(out.note)rw.push('<div class="zmg-rw p">🗞️ Заметка №'+out.note.k+' в стенгазету «'+escH(out.note.t)+'»</div>');
 if(out.note&&!out.note.full){const pp=window.ZMG_HOSTS&&ZMG_HOSTS.paper;const t=(window.ZBT&&ZBT.say&&ZB.safe('zbt',()=>ZBT.say('mg.paper',{n:PER_ISS-out.note.k})))||(pp?hsub(hp(pp.slice(0,3)),{n:PER_ISS-out.note.k}):'');if(t)rw.push('<div class="zmg-rw s">'+escH(t)+'</div>');}
 if(out.note&&out.note.full)rw.push('<div class="zmg-rw t">🎉 Выпуск собран!'+(out.note.prize&&out.note.prize.hb?' 💡 +'+out.note.prize.hb:'')+(out.note.prize&&out.note.prize.c?' · +'+out.note.prize.c+' <span class="coin"></span>':'')+'</div>');
 if(out.hb)rw.push('<div class="zmg-rw t">💡 Подсказка в запас</div>');
@@ -344,7 +344,7 @@ else if(!out.paid)notes.push(o.mode==='win'&&Z().d.pk>=rwN.pk?'Перемен с
 else{if(out.ntCap)notes.push('Заметок на сегодня хватит ('+rwN.nt+' в день) — завтра ещё.');
 else if(!out.note&&o.mode==='win')notes.push('Заметку в стенгазету дают за две звезды.');
 if(out.capped)notes.push('Монеты Перемен на сегодня собраны ('+rwN.cap+') — завтра ещё.');}
-const np=Z().np,a=noteAt(np),bar=a.done?'':'<div class="zmg-xpb"><span>📰 Стенгазета «'+escH(a.t)+'»: '+(a.k-1)+'/'+PER_ISS+'</span><span class="zmg-bar"><i style="width:'+Math.round(100*(a.k-1)/PER_ISS)+'%"></i></span></div>';
+const np=Z().np,a=noteAt(np),bar=a.done?'':'<div class="zmg-xpb"><span>🗞️ Стенгазета «'+escH(a.t)+'»: '+(a.k-1)+'/'+PER_ISS+'</span><span class="zmg-bar"><i style="width:'+Math.round(100*(a.k-1)/PER_ISS)+'%"></i></span></div>';
 const hl=HG(g.id)&&hp(HG(g.id)['st'+r.tier]);
 const lines=g.lines||{},line=opt.line||hl||(r.tier>=2?(lines.good||'Вот это грамотей! Красной ручкой — пятёрка.'):r.tier===1?(lines.ok||'Неплохо! Ещё чуть-чуть — и пятёрка.'):(lines.bad||'Ничего, на следующей перемене получится!'));
 const nx=opt.next||null,v=document.createElement('div');v.className='zmg-veil zmg-res';
@@ -397,7 +397,7 @@ el.querySelectorAll('[data-zmg="go"]').forEach(b=>b.onclick=ev=>{ev.stopPropagat
 void i;}});
 function paperDue(c){return!NOPAPER&&!!(c&&c.daily&&c.first&&!c.again&&avail('vecherka')&&!Z().d.v);}
 ZB.add(ZB.winSlots,{id:'zmg-paper',order:11,zone:'mg',fit:3,
-render(c){if(!paperDue(c))return'';return'<div class="zmg-pw" data-zmg="go" role="button" tabindex="0"><span class="zmg-pav">'+face('lyusya','happy')+'</span><span class="zmg-pt"><b>📰 Люся принесла «Вечерку»</b><span>Кроссворд дня — один на весь подъезд.</span></span><button class="btn ghost small" data-zmg="go">📰 Читать</button></div>';},
+render(c){if(!paperDue(c))return'';return'<div class="zmg-pw" data-zmg="go" role="button" tabindex="0"><span class="zmg-pav">'+face('lyusya','happy')+'</span><span class="zmg-pt"><b>🗞️ Люся принесла «Вечерку»</b><span>Кроссворд дня — один на весь подъезд.</span></span><button class="btn ghost small" data-zmg="go">📰 Читать</button></div>';},
 mount(el,c){if(!paperDue(c))return;if(!c.pshown){c.pshown=1;stEv({a:'show',id:'vecherka',m:'paper',l:lvl()});}
 el.querySelectorAll('[data-zmg="go"]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();try{SND.tap();}catch(e){}
 open('vecherka',{mode:'paper',back:()=>{const e=document.querySelector('#mcard .zbs-zmg-paper');if(e&&Z().d.v)e.innerHTML='<div class="zmg-pw done"><b>✓ «Вечерка» разгадана</b></div>';}});});}});
@@ -405,16 +405,16 @@ ZB.add(ZB.todayTasks,{id:'mg',order:40,sub:'Перемена',ic:'🔔',get t(){
 off:()=>!dayId(),done:()=>!!Z().d.z,
 go:()=>{const id=dayId();if(!id){ugolok();return;}stEv({a:'show',id,m:'day',l:lvl()});open(id,{mode:'day',back:()=>ZB.refresh()});},
 hint:()=>{const id=dayId(),i=infoOf(id);return i?(zateyaSay(id)||whoName(i.who)+' ждёт')+' · заметка в стенгазету':'';}});
-ZB.add(ZB.todayTasks,{id:'zmg-paper',order:41,ic:'📰',t:'«Вечерка» от Люси',off:()=>!avail('vecherka'),done:()=>!!Z().d.v,
+ZB.add(ZB.todayTasks,{id:'zmg-paper',order:41,ic:'🗞️',t:'«Вечерка» от Люси',off:()=>!avail('vecherka'),done:()=>!!Z().d.v,
 go:()=>{stEv({a:'show',id:'vecherka',m:'paper',l:lvl()});open('vecherka',{mode:'paper',back:()=>ZB.refresh()});},hint:()=>'кроссворд дня · 10 монет и заметка'});
 ZB.add(ZB.navSlots,{id:'mg',order:50,ic:'🔔',t:'Перемена',on:()=>true,go:()=>ugolok(),dot:()=>!!dayId()&&!Z().d.z});
 ZB.add(ZB.homeSlots,{id:'zmg-ugolok',order:60,zone:'school',
 render(){if(lvl()<5&&!openList().length)return'';const a=noteAt(Z().np),dot=!!dayId()&&!Z().d.z;
-return'<button class="zmg-tile" type="button"><span class="zmg-ti">📰</span><span class="zmg-tt"><b>Красный уголок</b><small>'+(a.done?'Все выпуски стенгазеты собраны!':'Стенгазета «'+escH(a.t)+'»: '+(a.k-1)+' из '+PER_ISS)+'</small></span>'+(dot?'<i class="dot on"></i>':'')+'</button>';},
+return'<button class="zmg-tile" type="button"><span class="zmg-ti">🗞️</span><span class="zmg-tt"><b>Красный уголок</b><small>'+(a.done?'Все выпуски стенгазеты собраны!':'Стенгазета «'+escH(a.t)+'»: '+(a.k-1)+' из '+PER_ISS)+'</small></span>'+(dot?'<i class="dot on"></i>':'')+'</button>';},
 mount(el){const b=el.querySelector('.zmg-tile');if(b)b.onclick=()=>{try{SND.tap();}catch(e){}ugolok();};}});
 const loadU=()=>Promise.all([ZB.load('js/zmg-ugolok-data.js').catch(()=>{}),ZB.load('js/zmg-ugolok.js')]);
 ZB.screen('mg',{title:'Перемена',render(el,op){if(window.ZMGU){ZMGU.render(el,op);return;}
-el.innerHTML='<div class="zmg-wait" style="position:absolute"><div><b>📰</b>Красный уголок<br><small>Загружаю…</small></div></div>';
+el.innerHTML='<div class="zmg-wait" style="position:absolute"><div><b>🗞️</b>Красный уголок<br><small>Загружаю…</small></div></div>';
 loadU().then(()=>{if(ZB.cur==='mg'&&window.ZMGU)ZMGU.render(el,op);}).catch(()=>{toastT('Красный уголок не загрузился — попробуй ещё раз');if(typeof openMenu==='function')openMenu();});}});
 function ugolok(opt){ZB.go('mg',opt||{});}
 const paperLoad=()=>loadU().then(()=>window.ZMGU?ZMGU.paperHtml():'');

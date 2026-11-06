@@ -49,7 +49,7 @@ try{var Zp=window.ZB2ZAP,zl=Zp&&Zp.list?Zp.list():[];if(zl&&zl.length)L.push('<a
 C.lines().slice().sort(function(a,b){return(a.order||0)-(b.order||0);}).forEach(function(x){var v=ZB.safe('cal-add-'+x.id,function(){return typeof x.html==='function'?x.html():x.html;});if(v)L.push(v);});
 L.slice(0,3).forEach(function(x){h+='<p class="zc-ln">'+x+'</p>';});return h;}
 function sosHtml(){try{if(typeof sosCalHtml==='function')return sosCalHtml()||'';}catch(e){}return'';}
-function fire(n,taken){return n?'🔥 Серия: <b>'+n+' '+pl(n,'день','дня','дней')+'</b>':taken?'🔥 Пройдите урок — и серия пойдёт':'🔥 Листок — ваш, а серию начнёт сегодняшний урок';}
+function fire(n,taken){return n?'🔥 Серия: <b>'+n+' '+pl(n,'день','дня','дней')+'</b>':taken?'🔥 Пройди урок — и серия пойдёт':'🔥 Листок — твой, а серию начнёт сегодняшний урок';}
 var then=null;
 function go(){var t=then;then=null;if(t)try{t();}catch(e){}}
 if(C.w1()&&!window.ZB2W1)ZB.load('js/zb2-week1.js').catch(function(){});
@@ -104,7 +104,7 @@ var ta=o.k===1?ZB.safe('cal-tmrask',tmrAsk):null;if(ta)h+=ta.h;
 var ln=$$('zcLn');if(ln)ln.insertAdjacentHTML('afterbegin',h);bindZap();if(ta)ZB.safe('cal-tmrask-b',ta.b);
 var dl=(+S.lv||0)>=10&&!(S.daily&&S.daily[T]),bt=$$('zcBtns'),act=t.w&&W&&W.act?ZB.safe('w1-act',function(){return W.act(t.w);}):null;
 bt.innerHTML=(act?'<button type="button" class="btn green" id="zcAct">'+act.t+'</button>':'')+
-(dl?'<button type="button" class="btn '+(act?'blue':'green')+'" id="zcDay">📅 Задание дня — начать</button>':'')+
+(dl?'<button type="button" class="btn '+(act?'blue':'green')+'" id="zcDay">🗓️ Задание дня — начать</button>':'')+
 '<button type="button" class="btn '+(act||dl?'ghost small':'green')+'" id="zcGo">'+(act||dl?'Потом':'Спасибо, баба Зина!')+'</button>';
 if(act)$$('zcAct').onclick=function(){tap();hideModal();ZB.safe('w1-go',act.go);};
 if(dl)$$('zcDay').onclick=function(){hideModal();try{openDaily();}catch(e){}};
