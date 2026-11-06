@@ -84,7 +84,7 @@ return got;};
 ALB.league=function(){var c=CARS.filter(function(x){return x.src==='lg'&&!st(x.id);}).sort(function(a,b){return a.k-b.k;})[0];if(!c)return null;S.albL=MY.num(S.albL)+1;ALB.give(c.id,'lg',true);return c.id;};
 ALB.barLot=function(){if(MY.dist()<2)return null;var miss=CARS.filter(function(c){return!st(c.id)&&(c.src==='lg'||c.src==='bar');});if(!miss.length)return null;
 var c=miss[MY.dayNo()%miss.length];return{id:c.id,pr:c.src==='bar'?1500:2500};};
-ALB.announce=function(){if(!S.albA.length)return false;try{if(G||modalOn)return false;}catch(e){}
+ALB.announce=function(){if(!S.albA.length)return false;try{if(window.RSD&&RSD.wait&&RSD.wait())return false;}catch(e){}try{if(G||modalOn)return false;}catch(e){}
 if(S.albA.length>2){var ids=S.albA.slice();S.albA=[];MY.save();
 var hm='<h2>'+L('Толик пригнал машины!','Tolik brought cars!')+'</h2>'+(window.TOLIK?TOLIK.say(L('Пока тебя не было, я по округе поездил. Вот, '+ids.length+' '+MY.pl(ids.length,'машина','машины','машин')+' за твои дворы — ржавые, но наши.','While you were away I drove round the area. Here are '+ids.length+' cars for your yards — rusty, but ours.')):'')+
 '<div class="albmany">'+ids.slice(0,9).map(function(x){return'<span>'+ALB.svg(x,{rust:st(x)<4})+'<small>'+esc(nm(BY[x]))+'</small></span>';}).join('')+'</div>'+(ids.length>9?'<p>'+L('и ещё ','and ')+(ids.length-9)+L('…',' more…')+'</p>':'');

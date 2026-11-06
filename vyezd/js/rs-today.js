@@ -55,6 +55,7 @@ function pick(){var r=RT();if(mornOn()&&r.mn!==dkey()){r.mn=dkey();}
 var l=r.l.filter(function(k){return!!NAMES[k];}),out=[];
 if(l.length===3)return l;
 var want=[];if(avail('mn'))want.push('mn');if(avail('mk'))want.push('mk');
+if(f6('dot'))want.push('mg');
 var s=wd();for(var i=0;i<BASE.length;i++)want.push(BASE[(i+s)%BASE.length]);want.push('y3','cl','s3');
 for(var j=0;j<want.length&&out.length<3;j++){var k=want[j];if(out.indexOf(k)<0&&avail(k))out.push(k);}
 if(r.l.length===0&&done()>=1){r.l=out.slice();sv();}
@@ -71,7 +72,9 @@ function chestTxt(){return ok(function(){var c=CAR.CFG.chest,x=wd()===0?c.sun:c.
 function takeChest(el){if(!chestReady())return 0;var d=td();if(d&&!d.l){d.l=1;ok(function(){CAR.list();});}var c=ok(function(){return TD.takeChest(el);},0);ok(function(){V3.ev('rs',{k:'chest',c:c});});changed();return c;}
 function state(){var a=items(),n=a.filter(function(x){return x.ok;}).length,nx=null;for(var i=0;i<a.length;i++)if(!a[i].ok){nx=a[i];break;}
 return{n:n,of:a.length,next:nx?{k:nx.k,t:nx.t,s:nx.s,ic:nx.ic}:null,chest:chestReady(),chestTaken:chestTaken(),gift:!!(a[0]&&a[0].k==='gf'&&!a[0].ok),items:a};}
-function shown(){return ON&&RO('today')&&done()>=1;}
+function f6(k){return!!(W.RSD&&RSD.f6&&ok(function(){return RSD.f6(k);},false));}
+function wait(){return!!(W.RSD&&RSD.wait&&ok(function(){return RSD.wait();},false));}
+function shown(){return ON&&RO('today')&&done()>=1&&!wait();}
 function cardHtml(){if(!shown())return'';var st=state(),h='<div class="rst-card" role="group"><div class="rst-head"><b>'+esc(T('На сегодня','Today'))+'</b><span class="rst-cnt">'+st.n+T(' из ',' of ')+st.of+'</span></div>';
 if(st.next)h+='<div class="rst-row"><span class="rst-ic">'+st.next.ic+'</span><span class="rst-tx"><b>'+esc(st.next.t)+'</b>'+(st.next.s?'<small>'+esc(st.next.s)+'</small>':'')+'</span>'+
 '<button class="btn green rst-do noenter" type="button" data-rst="do">'+esc(st.next.k==='gf'?T('Забрать','Collect'):T('Сделать','Do it'))+'</button></div>';
@@ -178,7 +181,9 @@ if(o&&!o.__rs){ws.push({id:'td',order:o.order,zone:o.zone,fit:o.fit,__rs:1,mount
 if(d&&mine&&!d.l){d.l=1;ok(function(){CAR.list();});}
 if(d&&!mine&&d.l&&!d.ch)d.l=0;
 var h=null;try{h=o.render(c);}finally{if(d&&!mine&&l0&&!d.ch)d.l=l0;}
-if(h)h=String(h).replace(/Сундук дня/g,T('Сундучок дня','Daily chest')).replace(/📄 [^<]*?(Путевой лист!? ?)/g,'');return h||null;}});}
+if(h)h=String(h).replace(/Сундук дня/g,T('Сундучок дня','Daily chest')).replace(/📄 [^<]*?(Путевой лист!? ?)/g,'');
+if(h&&f6('pol')&&shown())h=h.replace(/<p class="goal td-rs"[^>]*>[\s\S]*?<\/p>/,function(){var st=state();return'<p class="goal td-rs" data-fit="4">📋 '+esc(T('На сегодня: ','Today: ')+st.n+T(' из ',' of ')+st.of+(st.next?' · '+T('дальше: ','next: ')+st.next.t:''))+'</p>';});
+return h||null;}});}
 (W.homeSlots||[]).push({id:'td-chest',zone:'feed',order:1,render:function(){return null;}});
 var d=td();if(d&&!d.ask){d.ask=1;}}
 function init(){if(!ON)return;css();wireTD();wireRSH();V3.sub('day',function(){var d=td();if(d)d.ask=1;},'rs.today');

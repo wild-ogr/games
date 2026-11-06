@@ -176,7 +176,7 @@ mount:function(el){first(el,openToday);auto();flush();}},
 return tile({ic:v.ic||'🧩',t:tr('Затея дня','Pastime of the day'),s:v.n,tag:v.rw?'🔩 '+v.rw:'',cls:'yel td-tmg'});},mount:function(el){first(el,playMg);}},
 {id:'td-tasks',order:30,render:function(){if(done()<1)return null;var d=sd(),k=d.tk.filter(function(x){return x.r;}).length,nx=d.tk.filter(function(x){return!x.r;})[0];
 return tile({ic:'✅',t:tr('Задания: ','Tasks: ')+k+tr(' из 3',' of 3'),s:nx?tText(nx)+' · '+nx.p+'/'+nx.n:tr('все сделаны!','all done!'),cls:k>=3?'':'td-ttk'});},mount:function(el){first(el,openTasks);}}];
-function tqLine(){if(!tq.n)return'';var t=tq.n===1?'✅ '+tr('Задание дня: ','Daily task: ')+tq.t:'✅ '+tr('Заданий дня: ','Daily tasks: ')+tq.n+(tq.all?tr(' — все три!',' — all three!'):'');
+function tqLine(){if(!tq.n)return'';var t=tq.n===1?'✅ '+tr('Задание дня: ','Daily task: ')+tq.t:tq.all?'✅ '+tr('Все три задания дня сделаны!','All three daily tasks done!'):'✅ '+tr('Заданий дня: ','Daily tasks: ')+tq.n;
 t+=' · +'+ct(tq.c)+(tq.p?' +'+tq.p+' 🔩':'');tq={n:0,c:0,p:0,t:''};return t;}
 function winHtml(){var d=sd(),h='',n=count(),justL=!!tq.l,tl=tqLine(),showL=chestReady();
 var ev=evq.filter(function(x){return!(showL&&x.indexOf('📄')===0);});evq=[];if(tl)ev.unshift(tl);

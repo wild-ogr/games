@@ -12,12 +12,18 @@ function L(a,b){return ok(function(){return W.VY.L(a,b);},a);}
 function txt(e){return(e&&e.textContent||'').replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'');}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function ev(o){ok(function(){V3.ev('rsw',o);});}
+function pol(){return ok(function(){return V3.is('rs.f6.pol');},false);}
+var FIND=/Под машиной|Under a car|Found under/i;
+function cut(t){t=String(t||'').replace(/…$/,'').trim();var w=t.split(' ');if(w.length<=6)return t;
+var m=t.match(/^(.{6,}?)\s*[:!—.](\s|$)/);if(m&&m[1].split(' ').length>=2)return m[1].replace(/[\s,;—-]+$/,'');
+return w.length<=8?t:w.slice(0,6).join(' ').replace(/[\s.,:;!—-]+$/,'')+'…';}
 function slotOf(e){return e&&e.getAttribute&&e.getAttribute('data-slot')||'';}
 function hide(e){if(e&&e.classList)e.classList.add('rsw-h');}
 function wrapFit(){if(typeof W.fitWin!=='function'||W.fitWin.__rs)return;var f=W.fitWin;
 W.fitWin=function(){if(V3.is('rs.win'))return;return f.apply(this,arguments);};W.fitWin.__rs=1;}
 wrapFit();
 function kind(e){var c=e.classList,s=slotOf(e),t=txt(e);
+if(c.contains('wSay')&&pol())return{k:'keep'};
 if(e.tagName==='H2'||c.contains('big-stars')||c.contains('rew')||c.contains('row'))return{k:'keep'};
 if(c.contains('shura'))return{k:'news',p:1};
 if(e.tagName==='P'&&e.getAttribute('data-fit')==='3'&&e.querySelector('b'))return{k:'news',p:2};
@@ -36,13 +42,15 @@ if(s==='deep-clip')return{k:'clip'};
 return{k:'hide'};}
 function shortBon(e){var t=txt(e);if(!t)return'';
 if(e.classList.contains('clean'))return L('без аварий','no crashes');
+if(pol()&&FIND.test(t)){var fb=e.querySelector('b');return'🔎 '+L('Нашлось: ','Found: ')+(fb?txt(fb):cut(t.replace(/^\W*(Под машиной|Under a car):?\s*/i,'')));}
 var m=t.match(/\+\s?(\d+)\s?💰/);if(m)t=t.replace(/«[^»]*»/g,'').replace(/\+\s?\d+\s?💰.*/,'');
 t=t.replace(/^[^\wА-Яа-яЁё]+/,'').replace(/[\s:—,.!]+$/,'');
+if(pol())return cut(t)+(m?' +'+m[1]+' 💰':'');
 var w=t.split(' ');if(w.length>6)t=w.slice(0,6).join(' ')+'…';
 return t+(m?' +'+m[1]+' 💰':'');}
 function lookBtn(e){if(e.querySelector('button'))return;var t=txt(e),go=null;
 if(/Маршрут|карт|Route|map/.test(t))go=function(){ok(function(){if(G)G.over=true;});hideModal();ok(function(){openMap();});};
-else if(/гараж|garage/.test(t))go=function(){ok(function(){if(G)G.over=true;});hideModal();ok(function(){openGarage('cars');});};
+else if(/гараж|garage|Мой двор → Машины/.test(t))go=function(){ok(function(){if(G)G.over=true;});hideModal();ok(function(){openGarage('cars');});};
 if(!go)return;var b=D.createElement('button');b.className='btn sec sm noenter rsw-look';b.textContent=L('Посмотреть','Take a look');b.onclick=go;e.appendChild(b);}
 function items(card){var out=[];[].slice.call(card.children).forEach(function(e){
 if(e.tagName==='DETAILS'){[].slice.call(e.children).forEach(function(x){if(x.tagName!=='SUMMARY')out.push(x);});out.push(e);}
@@ -56,7 +64,9 @@ fixWin.n=0;
 function fresh(c){return[].slice.call(c.children).some(function(e){return!e.getAttribute('data-rsw-k')&&!/rsw-(news|bon)/.test(e.className);});}
 function build(card){card.classList.add('rsw-card');
 var rew=card.querySelector('.rew'),row=card.querySelector(':scope > .row')||card.querySelector('.row'),news=[],bons=[],gone=[],clip=null;
-var cl=rew&&rew.querySelector('.clean'),clean='';if(cl&&!cl.getAttribute('data-rsw-k')){cl.setAttribute('data-rsw-k','bon');clean=shortBon(cl);hide(cl);}
+var cl=rew&&rew.querySelector('.clean'),clean='';if(cl&&!cl.getAttribute('data-rsw-k')){
+if(pol()){cl.setAttribute('data-rsw-k','keep');cl.classList.add('rsw-clean');cl.textContent='✨ '+L('Чисто!','Flawless!');}
+else{cl.setAttribute('data-rsw-k','bon');clean=shortBon(cl);hide(cl);}}
 items(card).forEach(function(e){if(e.getAttribute&&e.getAttribute('data-rsw-k'))return;var k=kind(e);e.setAttribute('data-rsw-k',k.k);
 if(e.tagName==='DETAILS'){hide(e);return;}
 if(k.k==='keep')return;
@@ -64,7 +74,9 @@ if(k.k==='news'){news.push({e:e,p:k.p});return;}
 if(k.k==='bon'){var b=shortBon(e);if(b)bons.push(b);hide(e);return;}
 if(k.k==='clip'){clip=e;return;}
 hide(e);var t=txt(e);if(t&&!e.classList.contains('wTop'))gone.push({k:slotOf(e)||(e.className+'').split(' ')[0]||e.tagName,t:t.slice(0,140)});});
-var yq=(R.yq||[]).splice(0);var cn=bons.filter(function(t){return/💰/.test(t);}),ot=bons.filter(function(t){return!/💰/.test(t);});bons=cn.concat(yq,ot);if(clean)bons.push(clean);
+var yq=(R.yq||[]).splice(0);
+if(pol()){var fb0=bons.some(function(t){return/^🔎/.test(t);});yq=yq.filter(function(t){var keep=/💰|🔩/.test(t)&&!(fb0&&FIND.test(t)||/нашлось/i.test(t));
+if(!keep&&!(fb0&&/нашлось|found/i.test(t)))gone.push({k:'toast',t:String(t).slice(0,140)});return keep;}).map(cut);}var cn=bons.filter(function(t){return/💰/.test(t);}),ot=bons.filter(function(t){return!/💰/.test(t);});bons=cn.concat(yq,ot);if(clean)bons.push(clean);
 if(rew&&!card.querySelector('.rsw-bon')&&(bons.length||clip)){var p=D.createElement('p');p.className='rsw-bon';
 var shown=bons.slice(0,3);gone=bons.slice(3).map(function(t){return{k:'bon',t:t};}).concat(gone);
 p.innerHTML=shown.length?L('и ещё: ','and also: ')+shown.map(esc).join(' · '):'';
@@ -76,7 +88,7 @@ if(news.length){var box=card.querySelector('.rsw-news');if(!box){box=D.createEle
 if(!box.children.length){var top=news[0].e;box.appendChild(top);lookBtn(top);news=news.slice(1);}
 news.forEach(function(n){hide(n.e);gone.push({k:slotOf(n.e)||'news',t:txt(n.e).slice(0,140)});});}
 if(row){var nx=$('mNext'),mp=$('mMap');if(nx){nx.classList.add('rsw-main');row.insertBefore(nx,row.firstChild);}
-if(mp&&nx){mp.classList.remove('green');mp.classList.add('sec','rsw-2');if(/Во двор|To my yard/.test(mp.textContent))mp.textContent=L('В свой двор','To my yard');}
+if(mp&&nx){mp.classList.remove('green');mp.classList.add('sec','rsw-2');if(/Во двор|To my yard/.test(mp.textContent))mp.textContent=pol()?'🏠 '+L('Во двор','To the yard'):L('В свой двор','To my yard');}
 else if(mp&&!nx)mp.classList.add('rsw-main');
 if(card.lastElementChild!==row)card.appendChild(row);}
 fixWin.n++;card.setAttribute('data-rsw',String(fixWin.n));

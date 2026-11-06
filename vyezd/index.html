@@ -425,7 +425,7 @@ progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg
 _dbg:function(){return{on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v25.1-110610',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v25.2-110612',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 if(window.V3)V3.wire1();
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -2004,7 +2004,7 @@ if(nx){const n=chestStars(t);if(n<nx[0])return`<p class="goal" data-fit="4">🎁
 return'';}
 function winTip(){
 if(!window.TD)for(let k=0;k*10<S.unlocked-1;k++){const nx=CHEST[S.chest[k]||0];if(nx&&chestStars(k)>=nx[0])return L('🎁 Сундук за звёзды готов — забери на «Маршруте»!','🎁 A star chest is ready — collect it on the Route!');}
-{const s=SETS.find(x=>setReady(x)&&!winTip.seen[x.id]);if(s){winTip.seen[s.id]=1;return L('🏆 Набор «'+s.name+'» собран — награда ждёт в гараже!','🏆 Set “'+s.name+'” complete — the reward is waiting in the garage!');}}
+{const s=SETS.find(x=>setReady(x)&&!winTip.seen[x.id]);if(s){winTip.seen[s.id]=1;return L('🏆 Набор «'+s.name+'» собран — награда ждёт '+(window.V3&&V3.is('rs.f6.pol')?'в «Мой двор → Машины»!':'в гараже!'),'🏆 Set “'+s.name+'” complete — the reward is waiting in the garage!');}}
 if(!S.tipD&&!dailyLocked()){S.tipD=1;return L('📅 Открылось задание дня — оно на карте!','📅 The daily challenge is unlocked — find it on the map!');}
 if(!S.tipP&&S.coins>=PRICE.paint&&S.garage.length&&!Object.keys(S.paint).length){S.tipP=1;return L('🎨 Монет хватает на покраску машины в гараже!','🎨 You have enough coins to paint a car in the garage!');}
 return'';}

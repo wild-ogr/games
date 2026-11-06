@@ -107,7 +107,7 @@ function hero(b){if(!b.who)return'';try{if(window.VYPEOPLE&&VYPEOPLE.face){var f
 var ME_AV=['#ffcf7a','#e8b48e','cap','#ff7a1a',0,0,'#5a3a22'];
 var WD=L('пн вт ср чт пт сб вс','Mo Tu We Th Fr Sa Su').split(' ');
 function leftTxt(){var d=6-MY.wday(),h=24-MY.date().getHours();return d>0?L('до итогов '+d+' '+MY.pl(d,'день','дня','дней'),d+(d>1?' days':' day')+' to the results'):L('итоги сегодня в полночь (через '+h+' ч)','results tonight at midnight (in '+h+' h)');}
-function showResult(then){var r=S.lgaR;if(!r){if(then)then();return false;}delete S.lgaR;MY.save();
+function showResult(then){var r=S.lgaR;if(!r||(!MY.lgOpen()&&window.V3&&V3.is('rs.f6.pol'))){if(then)then();return false;}delete S.lgaR;MY.save();
 var h='<h2>🥇 '+L('Итоги недели','Week results')+'</h2>';
 if(!r.p)h+='<div class="lgres">'+badge(r.l,56)+'<div><b>'+MY.lgName(r.l)+'</b><small>'+L('На прошлой неделе ты не играл — остаёшься в этой лиге. Новая неделя уже идёт!','You didn’t play last week — you stay in this league. A new week has begun!')+'</small></div></div>';
 else{var z=r.z==='up'?L('Повышение! Теперь — ','Promoted! Now — ')+MY.lgName(r.nl)+'.':r.z==='down'?L('Спускаешься: ','Relegated: ')+MY.lgName(r.nl)+L('. Отыграешься!','. You’ll bounce back!'):L('Остаёшься в лиге.','You stay in the league.');

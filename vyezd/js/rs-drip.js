@@ -3,7 +3,12 @@ var W=window,D=document;
 function ok(f,d){try{return f();}catch(e){return d;}}
 function isO(x){return!!x&&typeof x==='object'&&!Array.isArray(x);}
 var ON=false;
-if(W.V3&&V3.reg){ok(function(){V3.reg('rs',{s:'RS',t:'реструктуризация 30.10'});});ON=V3.reg('rs.drip',{s:'RS-П2',t:'открытие по дням, одно окно при входе'});}
+if(W.V3&&V3.reg){ok(function(){V3.reg('rs',{s:'RS',t:'реструктуризация 30.10'});});ON=V3.reg('rs.drip',{s:'RS-П2',t:'открытие по дням, одно окно при входе'});
+ok(function(){V3.reg('rs.f6',{s:'FIX-VY',t:'fix-0611: мини-игры только из Отдыха, сначала «Выехать», точка Отдыха'});
+V3.reg('rs.f6.mg',{s:'FIX-VY',t:'мини-игры сами не выскакивают'});V3.reg('rs.f6.go',{s:'FIX-VY',t:'сначала «Выехать»: гостинец и «На сегодня» после 1-го двора'});
+V3.reg('rs.f6.dot',{s:'FIX-VY',t:'точка «Отдых» раз в день, «Игра дня» в «На сегодня»'});
+if(V3.reg('rs.f6.pol',{s:'FIX-VY',t:'шлифовка: душа окна победы, трава под домом, подсказка двора 1, тексты'}))D.documentElement.classList.add('rsw6');});}
+function f6(k){return ok(function(){return!!(W.V3&&V3.is('rs.f6.'+k));},false);}
 function S_(){return ok(function(){return typeof S!=='undefined'&&isO(S)?S:null;},null);}
 function T(ru,en){return ok(function(){return L(ru,en);},ru);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -41,10 +46,10 @@ news:function(){if(W.RST&&RST.news)RST.news();},workshop:function(){scr('my','ga
 mail:function(){ok(function(){VYMAIL.open('about');});},order:function(){scr('home');},bench:function(){ok(function(){V3SKIN.say();});},
 quarter:function(){scr('my','league',{tab:'nb'});},shift:function(){scr('map');},attic:function(){scr('map');}}[k];if(g)ok(g);}
 function scr(a,b,o){if(ok(function(){return UI.has(a);},false))return ok(function(){UI.go(a,o);});if(b&&ok(function(){return UI.has(b);},false))ok(function(){UI.go(b);});}
-function fixR(o){if(!isO(o))o={v:1};o.v=1;['d0','dk','n','ew'].forEach(function(k){if(typeof o[k]!=='number'||!isFinite(o[k])||o[k]<0)o[k]=0;});
+function fixR(o){if(!isO(o))o={v:1};o.v=1;['d0','dk','n','ew','rv'].forEach(function(k){if(typeof o[k]!=='number'||!isFinite(o[k])||o[k]<0)o[k]=0;});
 if(!isO(o.sh))o.sh={};if(!isO(o.sn))o.sn={};return o;}
 if(ON)V3.field('v3rd',{s:'RS-П2',def:{v:1},fix:function(o){return fixR(o);},
-merge:function(a,b){a=fixR(a);b=fixR(b);var r={v:1,d0:a.d0&&b.d0?Math.min(a.d0,b.d0):(a.d0||b.d0),dk:Math.max(a.dk,b.dk),n:Math.max(a.n,b.n),ew:Math.max(a.ew,b.ew),sh:{},sn:{}},k;
+merge:function(a,b){a=fixR(a);b=fixR(b);var r={v:1,d0:a.d0&&b.d0?Math.min(a.d0,b.d0):(a.d0||b.d0),dk:Math.max(a.dk,b.dk),n:Math.max(a.n,b.n),ew:Math.max(a.ew,b.ew),rv:Math.max(a.rv,b.rv),sh:{},sn:{}},k;
 for(k in a.sh)r.sh[k]=a.sh[k];for(k in b.sh)r.sh[k]=Math.max(r.sh[k]||0,b.sh[k]);for(k in a.sn)r.sn[k]=1;for(k in b.sn)r.sn[k]=1;return r;}});
 function R(){var s=S_();if(!s)return fixR({});if(!isO(s.v3rd))s.v3rd=fixR({});return s.v3rd;}
 function dk(){return ok(function(){return V3.dk();},0);}
@@ -72,7 +77,11 @@ if(k==='quarter'&&!ok(function(){return V3.is('quarter');},false))continue;if(k=
 if(wasShown(k))continue;best=k;break;}
 return best;}
 function fresh(k){if(!ON)return false;if(!open(k)||R().sn[k])return false;var nd=needDay(k);return nd>1&&curDay()-nd<3;}
-function seen(k){if(!ON)return;var r=R();if(!r.sn[k]){r.sn[k]=1;sv();}}
+function seen(k){if(!ON)return;var r=R();if(!r.sn[k]){r.sn[k]=1;sv();}if(k==='rest'){var d=dk();if(d&&r.rv!==d){r.rv=d;sv();}}}
+function restDue(){if(!ON||!f6('dot')||!open('rest'))return false;var d=dk();if(!d||R().rv===d)return false;
+return ok(function(){return!!(W.VYMG&&VYMG.openList&&VYMG.openList().length);},false);}
+var SES=0;
+function wait(){return ON&&f6('go')&&SES<1&&done()>=1;}
 var GAMES=['zavedi','foto','moyka','parkovka','doroga','bagazh','domino','bayki','regul','nomera','otlich','polomka','zapravka','ugaday','sneg'];
 function games(){if(!ON||vet())return 15;var d=vday();if(d<6)return 0;if(d<15)return 3;return Math.min(15,3+(d-14));}
 var AT={night:'night',calendar:'news',moskvich:'event',mail:'mail',garages:'rest',chalk:'league',camera:'photo',flowers:'myyard',bench:'bench'};
@@ -83,8 +92,11 @@ var a=D.getElementById('ad');if(a&&a.classList.contains('on'))return true;if(UI.
 var shownAt=0,arrive=0;
 function giftDue(){return ok(function(){return!streakState().claimed&&done()>=1;},false);}
 function retDue(){return ok(function(){return!!(W.TD&&TD.retState&&TD.retState());},false);}
-function showGift(){if(retDue()&&ok(function(){return TD.openReturn();},false))return true;
+function showGift(){if(retDue()&&ok(function(){return TD.openReturn();},false)){mergeGift();return true;}
 return ok(function(){var st=streakState();if(st.claimed)return false;if(st.day===1&&typeof giftN==='function'&&!giftN()){claimStreak(1,true);return false;}showStreak();return true;},false);}
+function mergeGift(){if(!f6('pol'))return;ok(function(){var st=streakState();if(st.claimed)return;var w=D.getElementById('tdRetW'),b=D.getElementById('tdRetOk');if(!w||!b)return;
+var p=D.createElement('p');p.className='goal rsd-gift';p.textContent='🎁 '+T('И гостинец бабы Шуры: ','And Granny Shura’s gift: ')+ok(function(){return giftTxt(streakReward(st.day));},'');w.parentNode.insertBefore(p,w.nextSibling);
+var o=b.onclick;b.onclick=function(){ok(function(){if(!streakState().claimed){claimStreak(1,'silent');V3.ev('rs',{k:'gift',d:st.day,m:1});}});if(o)return o.apply(this,arguments);};});}
 function doorQuiet(){
 ok(function(){var s=S_();if(!s||!isO(s.v3n)||!V3.is('night.door'))return;var t=dayKey(0);if(s.v3n.dr!==t){s.v3n.dr=t;sv();}});}
 function festQuiet(){
@@ -107,11 +119,13 @@ if(l)l.onclick=function(){ok(function(){SND.tap();});ok(function(){hideModal();}
 return true;}
 function entry(){if(!ON||busy())return false;var t=Date.now();if(t-shownAt<4000)return false;stamp();doorQuiet();festQuiet();
 if(done()<1)return false;
+if(wait())return false;
 if(arrive===shownArr)return false;
 var shown=false;
 if(giftDue()||retDue())shown=showGift();
 if(!shown){var k=todayNew();if(k)shown=newWin(k);}
-if(!shown){var c=festDue();if(c){markShown('f:'+c.id,dk());sv();shown=ok(function(){FESTVY.open();return true;},false);}}
+if(!shown&&!(f6('go')&&R().ew===dk())){var c=festDue();if(c){markShown('f:'+c.id,dk());sv();shown=ok(function(){FESTVY.open();return true;},false);}}
+if(!shown&&albDue())shown=ok(function(){return!!ALB.announce();},false);
 if(shown){shownAt=t;shownArr=arrive;}
 return shown;}
 var shownArr=-1;
@@ -124,8 +138,22 @@ function wireRSH(){if(!W.RSH||!RSH.on||!RSH.gate)return;ok(function(){RSH.gate(f
 function init(){if(!ON)return;css();stamp();wrapGate();wireRSH();
 if(typeof W.maybeStreak==='function'&&!W.maybeStreak.__rs){var f=function(){entry();};f.__rs=1;ok(function(){maybeStreak=f;});}
 doorQuiet();festQuiet();V3.sub('map',festQuiet,'rs.drip');V3.sub('cloud',function(){doorQuiet();festQuiet();},'rs.drip');V3.sub('home',onHome,'rs.drip');V3.sub('day',function(){stamp();},'rs.drip');V3.sub('cloud',function(){stamp();},'rs.drip');
-ok(function(){if(UI.cur==='home')onHome();});}
+ok(function(){if(UI.cur==='home')onHome();});
+V3.sub('yard',function(i){if(i&&(i.end==='win'||i.end==='lose')){SES++;if(SES===1)ok(function(){if(W.RSH&&RSH.refresh)RSH.refresh();});}},'rs.drip');
+wrapGift();quietMg();wrapAlb();W.addEventListener('vy-late',function(){quietMg();wrapAlb();});}
+function wrapAlb(){if(!W.ALB||typeof ALB.announce!=='function'||ALB.announce.__f6)return;var o=ALB.announce;
+var f=function(){if(wait())return false;return o.apply(this,arguments);};f.__f6=1;ALB.announce=f;}
+function albDue(){return ok(function(){return f6('go')&&!!W.ALB&&Array.isArray(S.albA)&&S.albA.length>0;},false);}
+function wrapGift(){if(typeof W.streakAuto!=='function'||W.streakAuto.__f6)return;var o=W.streakAuto;
+var f=function(){var r=o.apply(this,arguments);if(r||!f6('go')||W.__demo)return r;
+return ok(function(){var st=streakState();if(st.claimed||retDue())return 0;var q=streakReward(st.day);if(!q||q.car>=0||q.paint)return 0;
+var c=claimStreak(1,'silent');ok(function(){V3.ev('rs',{k:'gift',d:st.day,c:c});});return c;},0);};
+f.__f6=1;W.streakAuto=f;}
+function quietMg(){if(!f6('mg'))return;var nil=function(){return null;};
+ok(function(){if(Array.isArray(W.winSlots)){winSlots.push({id:'vymg-perekur',order:5,zone:'extra',fit:0,render:nil});winSlots.push({id:'vypark-fin',order:6,zone:'extra',fit:0,render:nil});}});
+ok(function(){if(Array.isArray(W.mapSlots))mapSlots.push({id:'vya-doroga',order:10,zone:'region',render:nil});});}
 if(ON){if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);}
 W.RSD={on:ON,open:open,day:dayLeft,need:needDay,fresh:fresh,seen:seen,games:games,GAMES:GAMES,entry:entry,todayNew:todayNew,
-cur:curDay,NOV:NOV,OLD:OLD,_r:R,_used:used};
+cur:curDay,NOV:NOV,OLD:OLD,_r:R,_used:used,
+wait:wait,ses:function(){return SES;},restDue:restDue,f6:f6};
 })();

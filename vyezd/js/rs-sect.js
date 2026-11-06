@@ -124,6 +124,9 @@ UI.screen('garage',function(o){ok(function(){leaveYard();});myOpen(o&&o.tab==='y
 var og=W.openGarage;if(typeof og==='function'&&!og.__rs){W.openGarage=function(tab){if(!V3.is('rs.sect'))return og.apply(this,arguments);
 ok(function(){STAT.screen('garage');});myOpen(tab==='yard'?'yard':'album');};W.openGarage.__rs=1;}}
 var SHELF=['parkovka','foto','zavedi','doroga','moyka','bagazh'];
+function f6(k){try{return!!(W.RSD&&RSD.f6&&RSD.f6(k));}catch(e){return false;}}
+var SHELF6=['parkovka','doroga','moyka','zavedi','foto','bagazh'];
+function shelf(){return f6('dot')?SHELF6:SHELF;}
 var rest=null,view='';
 function mem(){var m=VYMG.Z().m;if(!isO(m._g))m._g={};var g=m._g;if(!isO(g.st))g.st={};if(!isO(g.sn))g.sn={};return g;}
 function mgOk(){return!!(W.VYMG&&VYMG.INFO&&VYMG.REG);}
@@ -137,7 +140,7 @@ return'<div class="rpG'+(big?' big':' row')+(op?'':' lock')+(day?' day':'')+'" d
 '<span class="rpGi">'+i.ic+'</span><span class="rpGf">'+ok(function(){return VYMG.face(i.who,op?'happy':'norm');},'')+'</span>'+
 '<span class="rpGb"><b>'+esc(nm(i))+(nw?' <em class="rpNew">'+L('новое','new')+'</em>':'')+'</b>'+(op?'<small>'+esc(rule(i))+'</small>'+(stars?'<span class="rpSt">'+stars+'</span>':''):'<small>🔒 '+esc(ok(function(){return VYMG.lockTxt(n);},''))+'</small>')+'</span>'+
 (op?'<span class="rpGbtn">'+(day?'<button class="btn green noenter" data-a="day">☀ '+L('Игра дня','Game of the day')+'</button>':'')+'<button class="btn '+(day?'sec':'green')+' noenter" data-a="play">▶ '+L('Играть','Play')+'</button></span>':'')+'</div>';}
-function restHtml(){var h='',z=VYMG.Z(),ns=Object.keys(VYMG.INFO).map(Number).sort(function(a,b){return a-b;}),more=ns.map(function(n){return VYMG.INFO[n].id;}).filter(function(id){return SHELF.indexOf(id)<0;});
+function restHtml(){var h='',z=VYMG.Z(),ns=Object.keys(VYMG.INFO).map(Number).sort(function(a,b){return a-b;}),more=ns.map(function(n){return VYMG.INFO[n].id;}).filter(function(id){return shelf().indexOf(id)<0;});
 if(view==='more'){h+='<button class="rpSub" data-r="main">‹ '+L('Игры Толика','Tolik’s games')+'</button><h2 class="rpH2">'+L('Ещё игры','More games')+'</h2>';
 more.forEach(function(id){h+=gameCard(id,false);});return h;}
 var op=VYMG.openList().length;
@@ -146,7 +149,10 @@ if(z.ob>1)h+='<p class="rpBulk">🎉 '+L('У Толика открылось и�
 if(W.VYPARK&&dOpen('avtodrom'))ok(function(){var gate=VYPARK.groups[0].gate,y=VYMG.yards(),o=y>=gate;
 h+='<button class="rpLine rpAvto'+(o?'':' lock')+'" data-r="avto"><span class="rpLi">🅿</span><span class="rpLt"><b>'+L('Автодром деда Митяя','Grandpa Mityai’s driving ground')+'</b><small>'+
 (o?(VYPARK.dayDone()?L('парковки задним ходом · ★ ','reverse parking · ★ ')+VYPARK.total():L('парковка дня ждёт','parking of the day is waiting')):'🔒 '+L('откроется после '+gate+'-го двора','opens after yard '+gate))+'</small></span><i class="rpLg">›</i></button>';});
-h+='<div class="rpShelf">';SHELF.forEach(function(id){h+=gameCard(id,true);});h+='</div>';
+if(f6('dot'))ok(function(){var t=VYMG.today&&VYMG.today();if(!t)return;var i=VYMG.INFO[VYMG.IDS[t.id]]||{};
+h+='<button class="rpLine rpDay'+(t.done?'':' hot')+'" data-r="day"><span class="rpLi">☀</span><span class="rpLt"><b>'+L('Игра дня','Game of the day')+': '+esc(nm(i)||t.n)+'</b><small>'+
+(t.done?L('сыграно ✓ — завтра новая','done ✓ — a new one tomorrow'):L('🔩 деталь для «Москвича» · ~1 мин','🔩 a car part · ~1 min'))+'</small></span><i class="rpLg">›</i></button>';});
+h+='<div class="rpShelf">';shelf().forEach(function(id){h+=gameCard(id,true);});h+='</div>';
 var mo=more.filter(function(id){return VYMG.isOpen(VYMG.IDS[id]);}).length;
 h+='<button class="rpLine rpMore" data-r="more"><span class="rpLi">🎲</span><span class="rpLt"><b>'+L('Ещё игры','More games')+' ('+more.length+')</b><small>'+(mo?L('открыто '+mo+' из '+more.length,mo+' of '+more.length+' open'):L('откроются по ходу игры','open as you play'))+'</small></span><i class="rpLg">›</i></button>';
 if(W.XPZ&&XPZ.on)h+='<h3 class="rpH">'+L('Другие игры','Other games')+'</h3><div class="rpXpz"></div>';
@@ -164,6 +170,7 @@ b.innerHTML=restHtml();b.scrollTop=0;
 var z=VYMG.Z();if(z.ob&&view!=='more'){delete z.ob;VYMG.touch();ok(function(){save();});}
 [].forEach.call(b.querySelectorAll('[data-r]'),function(x){x.onclick=function(){tap();var r=x.getAttribute('data-r');
 if(r==='more'){view='more';restRender();}else if(r==='main'){view='';restRender();}
+else if(r==='day'){ok(function(){VYMG.openDay(function(){openRest();});});}
 else if(r==='avto'){if(x.classList.contains('lock'))return;ok(function(){VYPARK.open();var bb=D.querySelector('#scr-avtodrom .vyp-back');if(bb)bb.onclick=function(){tap();UI.go('rest');};});}};});
 [].forEach.call(b.querySelectorAll('.rpG'),function(c){c.onclick=function(e){if(c.classList.contains('lock'))return;var a=e.target.closest&&e.target.closest('[data-a]');play(c.getAttribute('data-g'),a?a.getAttribute('data-a'):'play');};});
 var xz=b.querySelector('.rpXpz');if(xz)ok(function(){var d=XPZ.el('xpm');if(d)xz.appendChild(d);});
@@ -176,7 +183,7 @@ if(o&&o.more)view='more';else if(!(o&&o.keep))view='';
 restRender();UI.show('scr-rest');ok(function(){STAT.screen('rest');});seen('rest');}
 RSS.rest=openRest;
 RSS.games=function(){return mgOk()?VYMG.openList().map(function(g){return g.id;}):[];};
-function restDot(){return fresh('rest')||isNewG()||dayLeft();}
+function restDot(){if(f6('dot'))return fresh('rest')||!!ok(function(){return RSD.restDue();},false);return fresh('rest')||isNewG()||dayLeft();}
 function myDot(){return fresh('myyard')||(W.MY&&MY.dot?ok(function(){return MY.dot();},false):false);}
 RSS.dot=function(id){return id==='rest'?ok(restDot,false):id==='my'?ok(myDot,false):false;};
 function restWire(){UI.screen('rest',openRest);UI.screen('garazhi',openRest);if(W.VYMG)VYMG.openGarazhi=openRest;}

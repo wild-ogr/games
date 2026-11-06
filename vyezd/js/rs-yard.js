@@ -28,6 +28,7 @@ function short(t){t=String(t||'').replace(/^[^\wА-Яа-яЁё«+]+/,'').replace
 function wrapToast(){if(typeof W.toast!=='function'||W.toast.__rs)return;var f=W.toast;
 var w=function(t,ms){if(!V3.is('rs.yard'))return f.apply(this,arguments);var s=String(t||''),q=g(),mo=ok(function(){return modalOn;},false);
 if(/приблизили|zoomed/.test(s)){if(inYard()&&q&&!q.moves)return f.apply(this,arguments);return;}
+if(/^\W*(Сезон|Season)/.test(s)&&V3.is('rs.f6.pol')&&(inYard()||mo||(q&&q.over))){if(R.yq.length<8)R.yq.push(short(s));ev({k:'tq'});return;}
 if(resp()||PASS.test(s))return f.apply(this,arguments);
 if(/сериал|serial/i.test(s)){news(s);return;}
 if(inYard()){if(/тронь|нажми|жми|коснись|\btap\b|press/i.test(s)){force=1;ok(function(){W.say(s.replace(/^[^\wА-Яа-яЁё«]+/,''),'bench');});force=0;ev({k:'t2s'});return;}

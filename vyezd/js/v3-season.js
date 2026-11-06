@@ -225,7 +225,7 @@ try{
 if(is('evt')){var e=d.evt,add={clean:info.crashes?0:1,cars:g&&g.vs?g.vs.length:0,stars:info.stars||0,yards:1,three:info.stars===3?1:0,nohint:info.hint?0:1}[e.g]||0;
 if(add&&!c.pt[e.id]){c.ed+=add;if(c.ed>=e.n){c.pt[e.id]=1;var k=regPaint(e);var s=S_();if(s&&k){if(!s.gp)s.gp={};s.gp[k]=1;}toastL('🎨 '+(pickT('season.evt',1)||Lg('Краска твоя!','The paint is yours!'))+' «'+Lg(e.p[0],e.p[1])+'»');ev('evtdone',{e:e.id});}}}
 if(X&&X.exam){if((info.crashes||0)<=1){c.ex=1;c.ep=14;try{if(W.ALB&&ALB.give)ALB.give('oka','v3c',true);}catch(x){}toastL(pickT('season.exam',1));ev('examok',{t:c.exn});}else toastL(pickT('season.exam',2));}
-else if(X&&X.lesson&&c.ep<13&&!(c.epk===d.k&&c.epn>=2)){c.ep++;c.oc=0;if(c.epk!==d.k){c.epk=d.k;c.epn=0;}c.epn++;toastL('📺 '+Lg('Урок '+c.ep+'. ','Lesson '+c.ep+'. ')+pickT('season.lesson',c.ep-1));ev('lesson',{n:c.ep});}
+else if(X&&X.lesson&&c.ep<13&&!(c.epk===d.k&&c.epn>=2)){c.ep++;c.oc=0;if(c.epk!==d.k){c.epk=d.k;c.epn=0;}c.epn++;var lt=pickT('season.lesson',c.ep-1)||'';toastL('📺 '+(/^\s*(Урок|Lesson)/i.test(lt)?'':Lg('Урок '+c.ep+'. ','Lesson '+c.ep+'. '))+lt);ev('lesson',{n:c.ep});}
 else if(!info.daily&&norm(g))c.oc++;
 if(X&&X.bell&&!X.br){X.br=Date.now()-X.bell.t0<=X.bell.lim?1:2;c.rk=d.k;c.rr=X.br;toastL(pickT('season.sep1',X.br));ev('rule',{r:'sep1',ok:X.br===1?1:0});}
 if(is('card')&&!info.daily&&info.idx%10===9){var r=Math.floor(info.idx/10);if(c.cd.indexOf(r)<0&&c.cd.length<40){c.cd.push(r);setTimeout(function(){toastL('✨ '+fill(pickT('season.card',0)||Lg('Открытка из {city}!','A postcard from {city}!'),{city:regName(r)}));},2500);ev('card',{r:r});}}
