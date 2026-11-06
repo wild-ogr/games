@@ -395,10 +395,10 @@ function onReady(){
 bind();updCoins();
 if(typeof PAY!=='undefined'){const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;
 const it=PAY_ITEMS[id],v=it&&it.vk||0;let why='';STAT.ev('buy',{i:id,r:'try',v:v});
-const cls=e=>{const d=e&&e.error_data||{},m=String(d.error_reason||d.error_msg||e&&e.message||e||'');return+d.error_code===4||/cancel|closed?|denied|abort|user/i.test(m)?'cancel':'fail';};
-const wrap=(o,k,ok)=>{if(!o||typeof o[k]!=='function')return null;const f=o[k];o[k]=function(){return Promise.resolve(f.apply(o,arguments)).then(r=>{if(ok&&!ok(r))why='cancel';return r;},e=>{why=cls(e);throw e;});};return()=>{o[k]=f;};};
+let ec='',em='';const cls=e=>{const d=e&&e.error_data||{},m=String(d.error_reason||d.error_msg||e&&e.message||e||'');ec=d.error_code!=null?String(d.error_code):e&&e.error_type?String(e.error_type):'';em=m.slice(0,40);return+d.error_code===4||/cancel|closed?|denied|abort|user/i.test(m)?'cancel':'fail';};
+const wrap=(o,k,ok)=>{if(!o||typeof o[k]!=='function')return null;const f=o[k];o[k]=function(){return Promise.resolve(f.apply(o,arguments)).then(r=>{if(ok&&!ok(r)){why='cancel';ec='nosucc';}return r;},e=>{why=cls(e);throw e;});};return()=>{o[k]=f;};};
 const un=[wrap(PAY.v,'order',r=>r&&r.success),wrap(PAY.p,'purchase')];
-return Promise.resolve(b0.call(PAY,id)).then(()=>{un.forEach(u=>u&&u());STAT.ev('buy',{i:id,r:payOk===id?'ok':why||'cancel',v:v});});};}
+return Promise.resolve(b0.call(PAY,id)).then(()=>{un.forEach(u=>u&&u());const o={i:id,r:payOk===id?'ok':why||'cancel',v:v};if(o.r!=='ok'){o.c=ec||(why?'':'noorder');if(em)o.m=em;}STAT.ev('buy',o);});};}
 onRoute();
 }
 function onRoute(){

@@ -57,7 +57,7 @@ L.map(function(c,i){return'<div class="rsx-c" data-i="'+i+'">'+(sf('ch:'+c.id,fu
 [].forEach.call(el.querySelectorAll('.rsx-c'),function(b){var c=L[+b.dataset.i];if(c&&c.mount)sf('cm:'+c.id,function(){c.mount(b);});});
 $('rsxB').onclick=function(){tap();home();};
 var s=$('rsxS');if(s)s.onclick=function(){tap();ZB.go(e.scr);};var p=$('rsxP');if(p)p.onclick=function(){tap();play();};}});
-var R=window.RST&&RST._;
+var R=window.RST&&RST._,rTd=null;
 if(R){var T=R.T,ids=R.ids,POOL=R.POOL,ALT=R.ALT,ready=R.ready,take=R.take,pfTxt=R.pfTxt,wd=R.wd,z4card=R.z4card,replace=R.replace,check=R.check,pl=R.pl,list=RST.list;
 (function(){if($('rstxCss'))return;var s=D.createElement('style');s.id='rstxCss';s.textContent=
 '.rst{padding:12px 16px 90px;max-width:640px;margin:0 auto;color:#27324a}.rst-hd{display:flex;align-items:baseline;justify-content:space-between;margin-top:12px}.rst-hd h2{margin:0;font-size:24px}'+
@@ -93,6 +93,6 @@ $('rstB').onclick=function(){tap();home();};
 var s=$('rstSw');if(s)s.onclick=function(){tap();replace();render(el);};
 var tb=$('rstTake');if(tb)tb.onclick=function(){take(tb);render(el);try{if(typeof updCoins==='function')updCoins();}catch(e){}};
 var gb=$('rstG');if(gb&&g)gb.onclick=function(){tap();sf('goal-go',g.go);};}
-ZB.screen('rs-today',{title:'Сегодня у Зины',render:render});}
-window.RSX={go:GO,newWin:newWin,today:function(el){if(R)render(el);}};
+ZB.screen('rs-today',{title:'Сегодня у Зины',render:render});rTd=render;}
+window.RSX={go:GO,newWin:newWin,today:function(el){if(rTd)rTd(el);}};
 })();

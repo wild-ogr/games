@@ -350,7 +350,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
 // STAT_O.S — текущее сохранение: облако подменяет S целиком (cloudMerge), ссылку обновляем там же
-const STAT_O={g:'oborona',gv:'v5.3-103020',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
+const STAT_O={g:'oborona',gv:'v5.4-110610',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S};STAT.init(STAT_O);
 /* STAT v1.2: настройки сеанса (cfg), прогресс на входе (progress: pl — уровней кампании со звёздами, cn — золото, bt — облако хоть раз отдало сохранение;
    после первого чтения облака, но не позже 2,5 с), баланс золота (bal — в setPills), откуда золото (ern → earn: lvl, ad, gift, chest, buy, quest) */
 function statCfg(){let th='';try{th=window.LOOK&&LOOK.cur?LOOK.cur():(S.th||'');}catch(e){}STAT.cfg({th:th,snd:S.sound?1:0,calm:S.shake?0:1});}
@@ -393,7 +393,11 @@ const YG={
 };
 // SDK и мост ждём до 20 с: на медленной сети 4 с не хватало — игра запускалась без рекламы и облака
 const SDK_WAIT=20000;
-function loadScript(src,ms){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);setTimeout(no,ms||SDK_WAIT);});}
+/* ERR-0611: повтор после таймаута не добавляет второй тег — первый мог догрузиться и выполниться (SyntaxError «Identifier 'MGD' has already been declared», mg-dkit.js) */
+function loadScript(src,ms){return new Promise((ok,no)=>{const L=loadScript.L||(loadScript.L={});let s=L[src];
+  if(s&&s.__ok){ok();return;}
+  if(!s){s=document.createElement('script');s.src=src;L[src]=s;s.addEventListener('load',()=>{s.__ok=1;});s.addEventListener('error',()=>{if(L[src]===s)delete L[src];});document.head.appendChild(s);}
+  s.addEventListener('load',ok);s.addEventListener('error',no);setTimeout(no,ms||SDK_WAIT);});}
 function vkSend(method,params,ms){return withTimeout(window.vkBridge.send(method,params||{}),ms||4000);}
 /*SOC*/
 /* ===== SOC v2.6 (24.10, решение владельца: сообщество «Игры во дворе» — предложение СО 2-ГО захода и первым в очереди (после уведомлений); НАГРАДА за вступление (п. 2.6.2 разрешает) — настройка SOC.init(…,{grp:{n,c,give}}), один раз на игрока, помним в S.soc.grw (облако); кнопки в ⚙ «📣 Новости двора» и «🔔 Сообщать о новом» (VKWebAppAllowMessagesFromGroup); статистика soc a:'grp' r:'rew', a:'msg' — см. «v2.6» ниже. v2.5 — 15.10: в Одноклассниках «Ещё игры» НЕТ — SOC.list() там пуст, open() сразу false, кнопка «🎲 Игры» прячется сама по SOC.can('more'); причина — VKWebAppOpenApp {app_id:<ID в ОК>, app_is_local:true} в ОК игру не открывает, модерация ОК отклонила Выезд 15.10. v2.4 — 06.10 вечер: уведомления в статистике — день игрока, код ошибки, «включены ли» раз за сеанс; кнопка в ⚙ возвращается, если игрок выключил их в VK; Гастроном в «Ещё игры»; off:'all' действует и в ОК — см. «v2.4» ниже. v2.3 — 06.10: события VK — лента друзей, таблица, миссии: SOC.level/score/mission через свою функцию ?op=vkev; разрешение на уведомления — SOC.ntf и предложение 'ntf'; см. «v2.3» ниже. v2.2 — 04.10: Одноклассники — см. «ОК» ниже; v2.1 — 04.10: итоги в STAT — событие soc; v2 — 29.09.2026; v2 — дружит с REF: «Позвать друзей» = ссылка с #ref): друзья, избранное, «Ещё игры во дворе» — ТОЛЬКО VK с мостом; в Яндексе молчит =====

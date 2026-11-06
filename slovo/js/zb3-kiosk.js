@@ -9,7 +9,7 @@ F.ab=F.sub&&Z.reg('z3s-ab',{t:'Абонемент в библиотеку вхо
 ['pigp','train','mgad'].forEach(function(k){F[k]=Z.reg('z3s-'+k,{t:'ларёк этап 4: '+k,who:'KIOSK'});});F.pigp=F.pig&&F.pigp;
 F.pass=Z.reg('z3s-pass',{t:'Сезонный пропуск «Сезон двора»: бесплатная и платная дорожки на месяц',who:'KIOSK'});
 var DAY=864e5,SUB={days:30,vk:15},PIG={share:.25,cap:1500,min:300,vk:7,part:400,pmax:1000,pvk:3},UZ={from:3,to:9},SK={c:20};
-var NK=['to','n','hd','pg','pb','sk','u','v','yd','yn'];
+var NK=['to','n','hd','pg','pb','sk','u','v','yd','yn'],PSK=['p','f','g'];
 Z.field('z3s',{def:{to:0,n:0,hd:0,pg:0,pb:0,sk:0,u:0,v:0},
 fix:function(m){NK.forEach(function(k){var x=+m[k];m[k]=isFinite(x)&&x>0?Math.floor(x):0;});for(var k in m)if(NK.indexOf(k)<0&&k!=='ps')delete m[k];
 if(m.pg>PIG.cap)m.pg=PIG.cap;psFix(m);},
@@ -18,7 +18,6 @@ merge:function(m,c){var pb=+c.pb||0;if(pb>(+m.pb||0)){m.pb=pb;m.pg=+c.pg||0;}els
 if(+c.yd===+m.yd)m.yn=Math.max(+m.yn||0,+c.yn||0);else if(+c.yd>+m.yd){m.yd=+c.yd;m.yn=+c.yn||0;}
 psFix(m);psFix(c);var a=m.ps,b=c.ps;if(b.k>a.k){a.k=b.k;a.p=b.p;a.f=b.f;a.g=b.g;}else if(b.k===a.k)PSK.forEach(function(k){a[k]=Math.max(a[k],b[k]);});
 a.b=Math.max(a.b,b.b);a.n=Math.max(a.n,b.n);}});
-var PSK=['p','f','g'];
 function psFix(m){var p=m.ps;if(!p||typeof p!=='object'||Array.isArray(p))p=m.ps={};['k','p','f','g','b','n'].forEach(function(k){var x=+p[k];p[k]=isFinite(x)&&x>0?Math.floor(x):0;});
 for(var k in p)if('kpfgbn'.indexOf(k)<0||k.length!==1)delete p[k];}
 function K(){return S.z3s||(S.z3s={to:0,n:0,hd:0,pg:0,pb:0,sk:0,u:0,v:0});}

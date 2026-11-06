@@ -304,7 +304,7 @@ progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg
 _dbg:function(){return{on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'slovo',gv:'v7.0-103018',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'slovo',gv:'v7.1-110610',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;STAT.progress({pl:+S.lv||0,cn:+S.coins||0,bt:S.cl?1:0});}
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound?1:0});
 const PR=new Set();
@@ -732,7 +732,8 @@ STAT.adReq('rew');
 const t0=Date.now(),rec={p:adPl,t0:t0,fin:0};adPl='';if(VK&&adSt)rec.pr=adSt>0?1:0;
 let paid=false,st=0;
 const cb=()=>{if(paid)return;paid=true;adBusy=false;lastRew=Date.now();cb0();},onFail=w=>{adBusy=false;lastRew=Date.now();adFailWhy=w||'';onFail0&&onFail0();};
-const stat=(r,c)=>STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr});
+const hv=()=>{if(document.hidden)rec.hd=2;},hb=()=>{if(!rec.hd)rec.hd=1;};document.addEventListener('visibilitychange',hv);window.addEventListener('blur',hb);
+const stat=(r,c)=>{document.removeEventListener('visibilitychange',hv);window.removeEventListener('blur',hb);STAT.ad('rew',r,Date.now()-t0>=AD_SLOW_MS?c||'slow':c,{pr:rec.pr,hd:rec.hd||0});};
 const rel=why=>{if(st)return;st=2;rec.w=Date.now()-t0;rec.exit=why==='exit';adUnwatch();adClose();adPreload('exit');
 toast(rec.exit?'Хорошо. Подтвердится просмотр — награду отдам':'Не дождалась ответа о просмотре. Придёт — награду отдам',4500);onFail(rec.exit?'exit':'timeout');adDim();adLatePend(rec);};
 const lateOk=()=>{if(paid)return;rec.hold=1;if(adBusy||interOn||document.hidden){setTimeout(lateOk,1000);return;}

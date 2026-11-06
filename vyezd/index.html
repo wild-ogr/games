@@ -425,7 +425,7 @@ progress:progress,pl:setPl,bal:bal,move:move,earn:earn,frame:frame,ab:ab,cfg:cfg
 _dbg:function(){return{on:on,dev:dev,cut:cut,Q:Q,pend:pend,st:st,hdr:hdr,lvl:lvl,lastErr:lastErr,srv:srv,nm:nm,fails:fails,nextT:nextT,sP:!!sP,cb:cb,fN:fN,fHg:fHg,fJ:fJ,pl:place};}};
 })();
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'vyezd',gv:'v25.0-103015',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'vyezd',gv:'v25.1-110610',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 if(window.V3)V3.wire1();
 STAT.cfg({snd:S.sound!==false?1:0,calm:S.calm===true?1:0});
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('vyezd-cl')==='1'?1:0;}catch(e){}
@@ -1852,13 +1852,15 @@ html(ids,owned){const L=PAY.list.filter(pr=>(!ids||ids.indexOf(pr.id)>=0)&&(owne
 return L.length?'<div class="pay"><h3>Покупки</h3>'+L.map(PAY.row).join('')+'</div>':'';},
 bind(root){(root||document).querySelectorAll('.pbuy').forEach(b=>b.onclick=()=>{try{(SND.tap||SND.click)();}catch(e){}PAY.buy(b.dataset.pid);});}
 };
-function payWhy(e){const d=e&&e.error_data||{},s=String(d.error_reason||d.error_msg||(e&&(e.message||e.code||e.error_type))||e||'');return+d.error_code===4||/cancel|close|denied|reject|user/i.test(s)?'cancel':'fail';}
-{const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;let why='';const v=(PAY_ITEMS[id]||{}).vk|0,o=PAY.v,p=PAY.p,ov=o&&o.order,pp=p&&p.purchase;
-if(ov)o.order=function(){return Promise.resolve(ov.apply(o,arguments)).then(r=>{if(!r||!r.success)why='cancel';return r;},e=>{why=payWhy(e);throw e;});};
+let payEc='',payEm='';
+function payWhy(e){const d=e&&e.error_data||{},s=String(d.error_reason||d.error_msg||(e&&(e.message||e.code||e.error_type))||e||'');payEc=d.error_code!=null?String(d.error_code):e&&e.error_type?String(e.error_type):'';payEm=s.slice(0,40);return+d.error_code===4||/cancel|close|denied|reject|user/i.test(s)?'cancel':'fail';}
+{const b0=PAY.buy;PAY.buy=function(id){if(PAY.busy||!PAY.on)return b0.call(PAY,id);payOk=null;payEc='';payEm='';let why='';const v=(PAY_ITEMS[id]||{}).vk|0,o=PAY.v,p=PAY.p,ov=o&&o.order,pp=p&&p.purchase;
+if(ov)o.order=function(){return Promise.resolve(ov.apply(o,arguments)).then(r=>{if(!r||!r.success){why='cancel';payEc='nosucc';}return r;},e=>{why=payWhy(e);throw e;});};
 if(pp)try{p.purchase=function(){return Promise.resolve(pp.apply(p,arguments)).catch(e=>{why=payWhy(e);throw e;});};}catch(e){}
 STAT.ev('buy',{i:id,r:'try',v:v});
 const back=()=>{if(ov)o.order=ov;if(pp)try{p.purchase=pp;}catch(e){}};
-return Promise.resolve(b0.call(PAY,id)).then(()=>{back();STAT.ev('buy',{i:id,r:payOk===id?'ok':why||'fail',v:v});},e=>{back();STAT.ev('buy',{i:id,r:'fail',v:v});throw e;});};}
+const bx=r=>{const x={i:id,r:r,v:v};if(r!=='ok'){x.c=payEc||(why?'':'noorder');if(payEm)x.m=payEm;}return x;};
+return Promise.resolve(b0.call(PAY,id)).then(()=>{back();STAT.ev('buy',bx(payOk===id?'ok':why||'fail'));},e=>{back();STAT.ev('buy',bx('fail'));throw e;});};}
 function payMark(v){if(!Array.isArray(S.payV))S.payV=[];if(S.payV.indexOf(v)<0)S.payV.push(v);if(S.payV.length>30)S.payV=S.payV.slice(-30);}
 function payMerge(d,T){T=T||S;if(!payObj(d)||!payObj(T))return;
 for(const f of['buy','buyB'])if(payObj(d[f])){if(!payObj(T[f]))T[f]={};for(const k in d[f])if(d[f][k])T[f][k]=1;}
