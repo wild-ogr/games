@@ -17,7 +17,7 @@ function run(host,o){
     var d=kind==='hen'?HEN:kind==='med'?MED:GOOD[Math.floor(Math.random()*GOOD.length)],r=Math.max(24,Math.min(W,Hh)*.062)*d[2];
     it.push({k:kind,key:d[0],col:d[1],x:x,y:Hh+r,vx:(tx-x)/tt,vy:vy,r:r,rot:Math.random()*TAU,vr:(Math.random()-.5)*5,t:0});spawned++;}
   function wave(){var n=1+Math.floor(Math.random()*Math.min(4,1+sc/14)),i,bp=spawned<N.warm?0:Math.min(N.badMax,N.bad0+N.badK*sc);for(i=0;i<n;i++){var b=Math.random()<bp;setTimeout(function(q){return function(){if(live&&!over&&!dead&&!host.paused)throwOne(q?(Math.random()<.6?'hen':'med'):'good');};}(b),i*130);}K.snd('swing');}
-  function say(t,col){note={t:t,a:1.5,col:col};}
+  function say(t,col){note={t:t,a:Math.max(2.5,Math.min(8,2+.08*String(t).length)),col:col};}   /* шутки-28.10: было 1,5 с */
   function lose(why){if(demo)return;cause[why]++;lives--;K.vib(60);flash=.35;if(lives<=0){dead=1;K.snd('lose');setTimeout(function(){if(over)return;K.cont(host,o,sc,function(ok){if(!ok){finish();return;}dead=0;lives=2;it.length=0;spT=1;});},500);}else K.snd('hurt');}
   function cut(q,ax,ay,bx,by){var a=Math.atan2(by-ay,bx-ax),i;q.dead=1;
     for(i=-1;i<=1;i+=2)hal.push({key:q.key,x:q.x,y:q.y,vx:q.vx+Math.cos(a+Math.PI/2)*i*90,vy:q.vy*.4+Math.sin(a+Math.PI/2)*i*90-60,r:q.r,rot:q.rot,vr:i*5,ca:a,sd:i,t:0});

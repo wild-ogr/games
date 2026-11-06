@@ -337,7 +337,7 @@ const STAT_URL=STAT_SINK?'http://localhost:'+(STAT_SINK[1]||'8795')+'/fn?op=ev':
 // бета для друзей: папка games/magnat-beta/ на GitHub (или ?beta=1 на маке/LAN) — пометка «ТЕСТ», «Написать отзыв» в ⚙, статистика с gv 'beta3' (бета-1 — 'beta1', бета-2 — 'beta2'; отдельно от настоящих цифр)
 const BETA=/\/magnat-beta\//.test(location.pathname)||(LOCAL||STAT_LAN)&&/[?&]beta=1/.test(location.search);
 const FB_URL='https://vk.me/igry_dvor';
-STAT.init({g:'magnat',gv:BETA?'beta15':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
+STAT.init({g:'magnat',gv:BETA?'beta16':'v1',plat:PLAT,lang:LANG,url:STAT_URL,dev:STAT_REC,now:()=>nowMs(),S:S});
 /* STAT v1.2 (M44): «монеты» статистики в Магнате — 💎 (S.cr): cn в start, cb в pause, earn по источникам (js/stat-hooks.js, GAME 'cr'; покупки — payAdd).
    progress — после облака или готовности SDK, но не позже 2,5 с (statProg; pl — глава 1–5, bt — облако хоть раз отдавало сохранение: метка устройства magnat-cl) */
 STAT.bal(S.cr|0);
@@ -1160,17 +1160,21 @@ const LB={
 const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const calm=()=>S.calm===true||RM;
 let modalOn=false,modalRe=null; // modalRe — функция, которая перерисует открытое окно (смена языка)
-// M38 (a45, игрок 45+): тост — не дольше 2 с, на месте нижнего меню (не поверх читаемого текста), при открытом окне — в очередь
+// M38 (a45, игрок 45+): тост (время — toastMs, шутки-28.10), на месте нижнего меню (не поверх читаемого текста), при открытом окне — в очередь
 // (покажется после закрытия; ответ на своё нажатие в окне — сразу, внизу); очередь — не больше 3, одинаковые не повторяются
 let tapT=0;try{document.addEventListener('pointerdown',()=>{tapT=Date.now();},{passive:true,capture:true});}catch(e){}
-const TOAST_MIN=1200;   // M48: тост виден не меньше 1,2 с, если за ним очередь
+const TOAST_MIN=2500;   // M48: тост виден не меньше 2,5 с, если за ним очередь (шутки-28.10: было 1,2 с)
 function toast(t,ms){if(LANG==='en'&&TOAST_EN[t])t=TOAST_EN[t];const e=$('toast');if(!e||!t)return;
   if(modalOn&&Date.now()-tapT>700){const q=toast.q||(toast.q=[]);const i=q.indexOf(t);if(i>=0)q.splice(i,1);q.push(t);if(q.length>3)q.shift();return;}
   // M48: другой тост не перебивает показанный раньше чем через TOAST_MIN — ждёт в очереди (было: итог первого заказа «+1 200 ₽» виден 0,1 с — его сразу накрывали «Звание», «+1 💎», «Новое фото»)
-  const age=Date.now()-(toast.at||0);if(e.classList.contains('on')&&toast.base!==t&&age<TOAST_MIN){const q=toast.q||(toast.q=[]);const i=q.indexOf(t);if(i>=0)q.splice(i,1);q.push(t);if(q.length>4)q.shift();clearTimeout(toast._w);toast._w=setTimeout(()=>toastNext(1),TOAST_MIN-age+30);return;}
+  const age=Date.now()-(toast.at||0);if(e.classList.contains('on')&&toast.base!==t&&age<toastHold()){const q=toast.q||(toast.q=[]);const i=q.indexOf(t);if(i>=0)q.splice(i,1);q.push(t);if(q.length>4)q.shift();clearTimeout(toast._w);toast._w=setTimeout(()=>toastNext(1),toastHold()-age+30);return;}
   if(e.classList.contains('on')&&toast.base===t){toast.n=(toast.n|0)+1;e.textContent=t+' ×'+toast.n;}else{toast.base=t;toast.n=1;e.textContent=t;}   // M47: одинаковые тосты подряд склеиваем («×3»)
-  e.classList.add('on');clearTimeout(toast._t);toast.at=Date.now();if(toast.q&&toast.q.length&&!modalOn){clearTimeout(toast._w);toast._w=setTimeout(()=>toastNext(1),TOAST_MIN+30);}
-  const d=ms&&ms<2000?ms:2000;toast._t=setTimeout(()=>{e.classList.remove('on');if(toast.q&&toast.q.length)setTimeout(toastNext,350);},d);}
+  const d=toast.d=toastMs(t,ms);
+  e.classList.add('on');clearTimeout(toast._t);toast.at=Date.now();if(toast.q&&toast.q.length&&!modalOn){clearTimeout(toast._w);toast._w=setTimeout(()=>toastNext(1),toastHold()+30);}
+  toast._t=setTimeout(()=>{e.classList.remove('on');if(toast.q&&toast.q.length)setTimeout(toastNext,350);},d);}
+// шутки-28.10 (решение владельца «чтоб дольше висели»): тост с текстом 5 с + 0,12 с/букву (до 20 с); короткий служебный (≤ 12 букв, «+5 💎») — не меньше 2,5 с; было жёстко 2 с, ms ≥ 2000 игнорировался
+function toastHold(){return Math.max(TOAST_MIN,Math.min(toast.d||0,5000));}   // при очереди тост держится до 5 с (длинный), потом уступает следующему
+function toastMs(t,ms){const n=String(t).length;return Math.max(ms||0,n<=12?2500:Math.min(20000,5000+120*n));}
 function toastNext(cut){if(modalOn||!toast.q||!toast.q.length)return;const e=$('toast');if(e&&e.classList.contains('on')){if(!(cut===1&&Date.now()-(toast.at||0)>=1000))return;clearTimeout(toast._t);}toast(toast.q.shift());}   // M44: после закрытия окна старый тост (висел над окном ≥ 1 с) уступает очереди — ждущий не стоит лишние 1–2 с
 // окно = нижний лист на телефоне (css: .modal/#mcard); role=dialog, фокус внутрь окна и обратно
 let mFocus=null;

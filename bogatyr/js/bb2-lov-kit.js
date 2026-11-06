@@ -40,6 +40,8 @@ var LOVK=(function(){
     g.fillStyle='#fff3e6';K.rr(g,-6,1,12,12,5);g.fill();g.restore();};
   K.tag=function(g,W,y,t,col){var px=Math.min(22,W*.055);g.font=ZABK.font(px,900);var w=Math.min(W-24,g.measureText(t).width+28);g.fillStyle=col||'rgba(46,28,14,.82)';K.rr(g,W/2-w/2,y-px*.9,w,px*1.8,px*.6);g.fill();
     ZABK.text(g,t,W/2,y+1,px,{ol:false,mw:w-16});};
+  // шутки-28.10: сколько висит облачко охоты — не меньше a, 5 с + 0,12 с/букву (до 20 с)
+  K.sd=function(s,a){return Math.max(a||0,Math.min(20,5+.12*String(s||'').length));};
   K.say=function(g,t,x,y,W,a){if(a<=0)return;var px=Math.min(17,W*.045);g.save();g.globalAlpha=Math.min(1,a);g.font=ZABK.font(px,800);var lines=ZABK.wrap(g,t,px,Math.min(W*.6,230),800),w=0,i;
     for(i=0;i<lines.length;i++)w=Math.max(w,g.measureText(lines[i]).width);w+=20;var h=lines.length*px*1.25+14;x=K.clamp(x,w/2+6,W-w/2-6);
     g.fillStyle='#fffaf0';g.strokeStyle='#3a2410';g.lineWidth=2.5;K.rr(g,x-w/2,y-h,w,h,10);g.fill();g.stroke();g.beginPath();g.moveTo(x-7,y-1.5);g.lineTo(x,y+9);g.lineTo(x+7,y-1.5);g.fill();g.stroke();g.fillRect(x-6,y-4,12,3.5);

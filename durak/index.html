@@ -163,7 +163,7 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .nm i{font-style:normal;color:#ffd23f}
 .stt{display:block;margin:3px auto 0;font-size:13px;font-weight:800;color:#fff;background:#b8390a;border-radius:8px;padding:1px 8px;width:max-content;max-width:100%}
 .stt.g{background:#2b8a3e}.stt.b{background:#1c6fb8}.stt:empty{display:none}
-.bub{position:absolute;left:50%;transform:translateX(-50%);background:#fff;color:#2d3436;border-radius:14px;padding:7px 11px;font-weight:700;font-size:15px;line-height:1.25;box-shadow:0 4px 14px rgba(0,0,0,.3);width:max-content;max-width:210px;opacity:0;transition:opacity .25s;z-index:6;pointer-events:none;text-align:center}
+.bub{position:absolute;left:50%;transform:translateX(-50%);background:#fff;color:#2d3436;border-radius:14px;padding:7px 11px;font-weight:700;font-size:15px;line-height:1.25;box-shadow:0 4px 14px rgba(0,0,0,.3);width:max-content;max-width:210px;opacity:0;transition:opacity .25s;z-index:6;pointer-events:none;text-align:center}.bub.on{pointer-events:auto;cursor:pointer}
 .bub.on{opacity:1}
 .bub::before{left:calc(50% + var(--bx,0px))}.bub.sr::before,.bub.sl::before{top:14px;margin-left:0;border:7px solid transparent}
 .bub.sr::before{left:-7px;border-left:0;border-right-color:#fff}.bub.sl::before{left:auto;right:-7px;border-right:0;border-left-color:#fff}
@@ -1353,7 +1353,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'durak',gv:'v2.8-110614',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'durak',gv:'v2.9-110622',plat:PLAT,lang:'ru',url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl партии/расклад/задачка, ad ролики и ×2, gift гостинцы лавочки, chest сундуки, buy покупки, quest достижения);
    progress — после облака, но не позже 2,5 с: pl — побед всего, cn — монеты, bt — облако хоть раз отдало сохранение (метка устройства durak-cl, в сохранение не пишется);
    cfg — стол (th), звук, спокойный режим. Покадрового цикла нет (переходы CSS) — STAT.frame() не зовём. */
@@ -1961,7 +1961,7 @@ function showInterstitial(cb0){
 }
 // удалённая настройка Яндекса (флаги консоли). Границы жёсткие: межэкранная — не чаще раза в 2 партии и раза в 180 с
 function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
-  if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;
+  if((n=num('ad_coins',10,100))!==null)AD_COINS=n;if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;if(window.SHR)SHR.flags(f);
   if(f.x2==='0'||f.x2==='off')X2_ON=false;updCoins();}
 
 /* ================= монеты ================= */
@@ -2157,7 +2157,7 @@ let G=null,modalOn=false;
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
 function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');
   const ing=$('scr-game').classList.contains('on')&&LY;e.style.bottom=ing?'auto':'';e.style.top=ing?Math.round(LY.midT+LY.midH*.62+56)+'px':'';clearTimeout(toast._t);
-  const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
+  const d=Math.max(ms||0,t.length<=12?2500:Math.min(20000,5000+120*t.length));/* шутки-28.10: тост 5 с + 0,12 с/букву (до 20 с), короткий ≥ 2,5 с */toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 function hideModal(){$('modal').classList.remove('on');modalOn=false;}
 function modal(html){PAY.re=null;$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;}
 function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="e">☆</span>';return s;}
@@ -2294,10 +2294,13 @@ function say(q,kind,force){if(!G||q<=0||q>=G.s.n)return;const id=G.who[q],L=LINE
   const now=Date.now();if(!force&&now-G.lastSay<1600)return;G.lastSay=now;
   const t=L[Math.floor(Math.random()*L.length)],el=$('seats').childNodes[q-1];if(!el)return;const b=el.childNodes[3];
   // одна реплика на экране: новая гасит предыдущую у другого места
-  $('seats').childNodes.forEach((e2,j)=>{const b2=e2.childNodes[3];if(b2&&b2!==b&&b2.classList.contains('on')){b2.classList.remove('on');clearTimeout(b2._t);if(G)G.mood[j+1]='norm';}});
+  $('seats').childNodes.forEach((e2,j)=>{const b2=e2.childNodes[3];if(b2&&b2!==b&&b2.classList.contains('on')&&!b2._held){b2.classList.remove('on');clearTimeout(b2._t);if(G)G.mood[j+1]='norm';}});
   b.textContent=t;placeBub(q,b);b.classList.add('on');
   G.mood[q]=kind==='lose'||kind==='trTo'||kind==='take'?'sad':kind==='out'||kind==='beat'||kind==='youTake'||kind==='tr'?'happy':kind==='trump'?'wow':'norm';render();
-  clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove('on');if(G){G.mood[q]='norm';render();}},Math.max(2200,900+55*t.length));}
+  b._held=0;bubTap(b,q);clearTimeout(b._t);b._t=setTimeout(()=>bubOff(b,q),Math.min(30000,8000+200*t.length));}   /* шутки-28.10: было max(2,2 с; 0,9+0,055 с/букву) */
+function bubOff(b,q){clearTimeout(b._t);b._held=0;b.classList.remove('on');if(G){G.mood[q]='norm';render();}}
+// касание пузыря: первое — задержать, второе — закрыть
+function bubTap(b,q){b._q=q;if(b._tap)return;b._tap=1;b.addEventListener('click',e=>{if(!b.classList.contains('on'))return;e.stopPropagation();if(b._held)bubOff(b,b._q);else{b._held=1;clearTimeout(b._t);}});}
 // реплика — в экран: в альбомной раскладке сбоку от портрета (не на столе), иначе под картами; прижать к краям стола
 function placeBub(q,b){const L=LY,st=L&&L.seats[seatOf(q)];if(!st)return;const side=L.land;
   b.classList.remove('sl','sr');b.style.setProperty('--bx','0px');
@@ -3009,5 +3012,12 @@ d.lastChild.onclick=function(e){e.stopPropagation();go();};if(!sh){sh=1;setTimeo
 document.addEventListener('keydown',function(e){if(e.keyCode===27)x();});return {mount:mount,el:el,go:go,box:box,on:OK};})();
 document.addEventListener('DOMContentLoaded',function(){XPZ.mount({"at": "btnMore", "row": ".nrow", "pos": "after"});});
 </script><!--/XPZ-->
+<!--SHR0611: межэкранная вне партии (второй путь) — js/shr-rekl.js; переходник игры SHR_A-->
+<script>window.SHR_A={inGame:()=>$('scr-game').classList.contains('on'),
+  busy:()=>modalOn||adBusy||paused||PAY.busy||document.hidden||$('ad').classList.contains('on'),
+  ok:()=>PAY.own('no_ads')?'noads':(S.games||0)<10?'new':!ses2()?'ses1':'',
+  ready:()=>adReady(),last:()=>lastAdT,
+  show:()=>{toast('Загрузка… реклама через секунду',1200);setTimeout(()=>{if(modalOn||$('scr-game').classList.contains('on')){SHR.cancel();return;}showInterstitial(()=>{});},1000);},
+  modals:['#modal'],skip:['coins','shop','settings','rules','about','mail','intro'],btn:AD_BTN_SEL+',[data-pid],.pbuy,.x2,.buy'};</script><script src="js/shr-rekl.js"></script>
 </body>
 </html>

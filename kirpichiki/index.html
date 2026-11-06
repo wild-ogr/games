@@ -325,6 +325,7 @@ button.pill::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-4px;
 .scl small{font-size:15px;opacity:.95;margin-left:6px}
 .movesl{font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);margin-top:3px;white-space:nowrap}
 .bub{position:absolute;left:74px;right:10px;top:6px;bottom:4px;display:flex;align-items:center;background:#fff;border-radius:16px;padding:6px 12px;font-weight:800;font-size:16px;line-height:1.22;box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transition:opacity .25s;pointer-events:none;z-index:4}
+#bub.on{pointer-events:auto;cursor:pointer}
 .bub::before{content:"";position:absolute;left:-8px;top:50%;margin-top:-8px;border:8px solid transparent;border-left:0;border-right-color:#fff}
 .bub.on{opacity:1}
 .field{flex:1;position:relative;min-height:0;touch-action:none;overflow:hidden}
@@ -1286,7 +1287,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'kirpichiki',gv:'v7.9-110614',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'kirpichiki',gv:'v8.0-110622',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 /* STAT v1.2: earn — откуда монеты (lvl уровни/задание дня/бесконечная, ad ролики и ×2, gift подарок за вход, chest сундуки глав и посылки сезона, buy покупки,
    quest поручения/звания/кладовка/неделя/кубки); progress — после облака, но не позже 2,5 с: pl — уровней со звёздами, cn — монеты, bt — облако хоть раз отдало
    сохранение (метка устройства kirpichiki-cl, в сохранение не пишется); cfg — тема, звук, спокойный режим. */
@@ -1935,7 +1936,7 @@ function adHintOnce(){if(!PAY.on||!PAY.item('no_ads')||PAY.own('no_ads')||(S.adN
   if(S.ask.noads&&now-S.ask.noads<7*864e5)return;S.ask.noads=now;save();setTimeout(()=>toast(L('Рекламу между уровнями можно отключить навсегда — ⚙','You can turn off ads between levels — ⚙'),4200),900);}
 // удалённая настройка Яндекса (флаги консоли). Границы жёсткие: межэкранная — не чаще раза в 2 уровня и раза в 180 с
 function applyFlags(f){if(!isObj(f))return;const num=(k,a,b)=>{const n=parseInt(f[k],10);return isFinite(n)&&n>=a&&n<=b?n:null;};let n;
-  if((n=num('ad_coins',10,100))!==null){AD_COINS=n;AD_FLAT=true;}if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;updCoins();}
+  if((n=num('ad_coins',10,100))!==null){AD_COINS=n;AD_FLAT=true;}if((n=num('ad_every',2,6))!==null)AD_EVERY=n;if((n=num('ad_gap',180,600))!==null)AD_GAP=n*1000;if(window.SHR)SHR.flags(f);updCoins();}
 
 /* ================= монеты ================= */
 // экономика: уровень 10 + 3 за звезду (первый раз; «Субботник» ×2, повтор +3), задание дня 30, бесконечная — до 30 за партию,
@@ -2146,7 +2147,7 @@ function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.to
 function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
   // в игре — сверху, над счётом (не закрывает поле и лоток с фигурами)
   const ing=$('scr-game').classList.contains('on');e.style.bottom=ing?'auto':'';e.style.top=ing?Math.round($('scr-game').querySelector('.gh').offsetHeight+6)+'px':'';
-  const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
+  const d=Math.max(ms||0,t.length<=12?2500:Math.min(20000,5000+120*t.length));toast._t=   /* шутки-28.10: тост 5 с + 0,12 с/букву (до 20 с), короткий ≥ 2,5 с */setTimeout(()=>e.classList.remove('on'),d);}
 function hideModal(){$('modal').classList.remove('on');modalOn=false;}
 function modal(html){PAY.re=null;/*K1*/$('mcard').className='card'+(/^\s*<div class="av">/.test(html)?' hasav':'')+(/big-stars|id="dCoins"|class="rec"/.test(html)?' win':'');/*/K1*/$('mcard').innerHTML=html;$('modal').classList.add('on');modalOn=true;$('mcard').scrollTop=0;$('modal').scrollTop=0;}
 function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="e">☆</span>';return s;}
@@ -2312,7 +2313,11 @@ function setHud(){if(!G)return;const st=G.st,n=st.cfg.need;let h='';
   $('movesL').textContent=m;/*K1*/LK.hud();/*/K1*/}
 function bubFit(){const b=$('bub');b.style.fontSize='';let f=parseFloat(getComputedStyle(b).fontSize)||16;for(let i=0;i<10&&f>12&&b.scrollHeight>b.clientHeight+1;i++){f-=.75;b.style.fontSize=f+'px';}} /* start1: реплика не обрезается — шрифт ужимается под пузырь */
 function say(t,mood,ms){if(!G||!t)return;const b=$('bub');b.classList.remove('fst1','bump');b.textContent=t;b.classList.add('on');bubFit();$('hAv').innerHTML=portrait(G.host,mood||'happy');
-  clearTimeout(say._t);say._t=setTimeout(()=>{b.classList.remove('on');if(G)$('hAv').innerHTML=portrait(G.host,'norm');},ms||2800);}
+  // шутки-28.10: реплика соседа 8 с + 0,2 с/букву (до 30 с), подсказка/обучение (ms задан) — не меньше 5 с + 0,12 с/букву (до 20 с); было фикс 2,8 с (после хода 1,7 с)
+  // касание пузыря: первое — задержать, второе — закрыть
+  const n=String(t).length;say.held=0;if(!b._tap){b._tap=1;b.addEventListener('click',e=>{if(!b.classList.contains('on')||b.classList.contains('fst1'))return;e.stopPropagation();if(say.held)sayOff();else{say.held=1;clearTimeout(say._t);}});}
+  clearTimeout(say._t);say._t=setTimeout(sayOff,ms?Math.max(ms,Math.min(20000,5000+120*n)):Math.min(30000,8000+200*n));}
+function sayOff(){clearTimeout(say._t);say.held=0;$('bub').classList.remove('on');if(G)$('hAv').innerHTML=portrait(G.host,'norm');}
 // обучение 1-го уровня: после каждого хода — новая подсветка и слово соседа (boost)
 const TUT=[L('Ряд собрался — и пропал! Так и разбираем старые кирпичи.','The row is full — and gone! That is how old bricks go.'),
   L('Я подсвечиваю хорошее место — ставь туда. Можно и просто коснуться фигуры, а потом клетки.','I light up a good spot — put it there. Or tap a piece, then a cell.'),
@@ -2572,7 +2577,7 @@ function doPlace(ti,r,c){const st=G.st,p=st.tray[ti];if(!p)return;STAT.move();co
     if(res.n>=3&&!calm())G.shake=now;
     if(!calm()&&(res.n>=3||res.allClear||res.combo>=4)){G.flash=now;G.zoom=now;} /* большая комбинация: вспышка поля и короткое приближение (аудит 36) */
     /* аудит release-f №3: реплика во время игры — коротко (1,7 с) и не чаще раза в 3 фигуры, чтобы не закрывать чипы цели */
-    if(!G.tut&&st.moves-(G.sayM||-9)>=3){const t=res.allClear?['clean','wow']:res.n>=3?['big','wow']:res.combo>=3&&res.combo%2===1?['combo','happy']:null;if(t){G.sayM=st.moves;say(phr(G.host,t[0]),t[1],1700);}}}
+    if(!G.tut&&st.moves-(G.sayM||-9)>=3){const t=res.allClear?['clean','wow']:res.n>=3?['big','wow']:res.combo>=3&&res.combo%2===1?['combo','happy']:null;if(t){G.sayM=st.moves;say(phr(G.host,t[0]),t[1]);}}}
   pop('+'+res.pts,cx,cy,{size:Math.round(LY.cs*(res.pts>=50?.62:.5))});
   if(res.dealt){G.dealT=now+120;setTimeout(()=>SND.deal(),140);}
   if(G.mode==='endless'&&(S.best||0)>0&&st.score>S.best&&!G.rec){G.rec=true;SND.record();pop(L('Новый рекорд!','New best!'),LY.bx+LY.B/2,LY.by+LY.B*.25,{size:Math.round(LY.cs*.8),c:'#ffd43b',big:1,dur:1600,delay:300,kind:'rec'/*K1*/});say(phr(G.host,'record'),'wow');}
@@ -3494,6 +3499,12 @@ window.__test={get MUS(){return MUS;},musTick,setPause,/*K1*/THEME:window.THEME,
 </script>
 <script src="js/kr-cup.js"></script><!--BK-KR: «Лига двора» — живая лига hobby-cup (модуль CUP + окна); сервер молчит → игра как без неё-->
 <script src="js/kr-mail.js"></script><!--mail2410: «Написать деду Митяю» — «Об игре» + окно победы с 15-го уровня / рекорда, раз в 7 дней (STAT mail/fb)-->
+<!--SHR0611: межэкранная вне уровня (второй путь) — js/shr-rekl.js; переходник игры SHR_A-->
+<script>window.SHR_A={inGame:()=>$('scr-game').classList.contains('on'),
+  busy:()=>modalOn||adBusy||paused||PAY.busy||document.hidden||$('adLd').classList.contains('on')||$('ad').classList.contains('on'),
+  ok:()=>PAY.own('no_ads')?'noads':(S.done||0)<10?'new':!ses2()?'ses1':'',
+  ready:()=>adReady(),last:()=>lastAdT,show:()=>adLoad(()=>showInterstitial(()=>{})),
+  modals:['#modal'],skip:['coins','look','shop','settings','rules','about','mail'],btn:AD_BTN_SEL+',[data-pid],.pbuy,[data-ad]'};</script><script src="js/shr-rekl.js"></script>
 <!--XPZ--><script>
 /* XPZ v1.1 (27.10, XPZ-FIX): только в ОК — блок «Баба Зина» вместо «Ещё игр» (переход: сайт/моб. браузер ОК — новая вкладка ok.ru/game, иначе окно со ссылкой). Источник и описание — hobby-analytics/release-i/zina-boost3/z3-xpromo-tools/xpz.js, правки только там. */
 var XPZ=(function(){var Z=512005727621,U='https://ok.ru/game/'+Z,q=location.search,OK=/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(q)&&!/[?&]off=[^&#]*xpz/.test(q),

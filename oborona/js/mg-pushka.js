@@ -162,7 +162,7 @@ function pkRun(host,o){o=o||{};const seed=(o.seed|0)||20261008,calm=mgbCalm(o),M
     for(let i=S2.flies.length-1;i>=0;i--){const q=S2.flies[i];q.t+=dt;q.vy+=700*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.rot+=q.vr*dt;if(q.t>1.6)S2.flies.splice(i,1);}
     for(const t of T){if(t.k==='nech'&&!t.dead){t.nx=t.B.x+Math.sin(S2.t*.5+t.ph)*14;}if(t.fall!=null)t.fall=Math.min(1,t.fall+dt*1.4);if(t.tip!=null)t.tip=Math.min(1,t.tip+dt*3);}
     if(S2.sink){S2.sink.t+=dt;if(S2.sink.t>1.5)S2.sink=null;}
-    if(S2.msg){S2.msg.t+=dt;if(S2.msg.t>1.8)S2.msg=null;}}
+    if(S2.msg){S2.msg.t+=dt;if(S2.msg.t>Math.max(2.5,Math.min(8,2+.08*String(S2.msg.s).length)))S2.msg=null;}   /* шутки-28.10: было 1,8 с */}
 
   function endOrOffer(){if(!S2.E&&!S2.offer){const gap=S2.score<PK.TIERS[0]?PK.TIERS[0]-S2.score:S2.score<PK.TIERS[1]?PK.TIERS[1]-S2.score:99;
     if(!o.train&&!S2.adUsed&&host.ad&&host.adOk&&host.adOk()&&gap<=5&&T.some(t=>!t.dead&&t.k!=='nech')){S2.offer={t:0,gap,bs:[]};return;}showEnd();}}

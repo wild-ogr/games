@@ -19,7 +19,7 @@ function run(host,o){
     if(kind==='fast'){e.beh='lov_dash';e.ds=0;e.dt=.4+Math.random()*.6;}return e;}
   function kindOf(){var n=wave,x=Math.random();if(n<2)return 'slow';if(n<4)return x<.6?'slow':'mid';if(n<7)return x<.4?'slow':x<.8?'mid':'fast';return x<.28?'slow':x<.6?'mid':x<.84?'fast':'fly';}
   function say(e,t2){try{say2(e,L(t2[0],t2[1]));}catch(x){}}
-  function say2(e,s){g.bub.push({e:e,s:s,t:0,dur:2.2});if(g.bub.length>4)g.bub.shift();}
+  function say2(e,s){g.bub.push({e:e,s:s,t:0,dur:K.sd(s,2.2)});if(g.bub.length>4)g.bub.shift();}
   function note(t2,sub){msg={t:L(t2[0],t2[1]),s:sub?L(sub[0],sub[1]):'',a:2.4};}
   /* события раз в ~13 с: кольцо с воротами, клин бегунов, стая летунов */
   function event(){var k=Math.floor(Math.random()*3),i,a0=Math.random()*TAU,hx=g.hero.x,hy=g.hero.y;

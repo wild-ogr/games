@@ -172,7 +172,8 @@ function run(host,o){css();const P=pick(o),R=o.rnd||Math.random;
   document.getElementById('vmbKrH').onclick=hint;
   const gu=document.getElementById('vmbKrG');gu.onclick=()=>{if(st.done)return;if(!st.gu){st.gu=1;gu.classList.add('sure');gu.textContent='Точно? Ещё раз';setTimeout(()=>{st.gu=0;gu.classList.remove('sure');gu.textContent='Сдаюсь';},3000);return;}finish(true);};
   for(const b of V.$a(Wd.main,'.vmb-kr-nav'))b.onclick=()=>{V.snd(host,'tap');goWord(st.w+(+b.dataset.n));};
-  let sayT=0;function say(t){Wd.stage.style.display='flex';Wd.say(t,'norm');clearTimeout(sayT);sayT=setTimeout(()=>{if(!st.done)Wd.stage.style.display='';},2600);}
+  // шутки-28.10: реплика ведущего 5 с + 0,12 с/букву (до 20 с), было 2,6 с (плашка лежит над верхом сетки и нажатия пропускает — касанием не задерживаем)
+  let sayT=0;function say(t){Wd.stage.style.display='flex';Wd.say(t,'norm');clearTimeout(sayT);sayT=setTimeout(()=>{if(!st.done)Wd.stage.style.display='';},Math.min(20000,5000+120*String(t).replace(/<[^>]*>/g,'').length));}
   function finish(gave){if(st.done)return;st.done=1;const sol=G.words.filter(x=>x.ok).length;
     if(gave)for(const k in G.cells){const cl=G.cells[k];if(cl.v!==cl.ch){cl.v=cl.ch;cl.op=1;}}
     // STAT (просьба STAT к затеям): определения — вопросы базы, по каждому слову один ответ; mode 'vmg-kross'; в тренировке не шлём

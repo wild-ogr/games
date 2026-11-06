@@ -35,7 +35,7 @@ function run(host,o){
     spr.bank=mk(G.W,G.rh,function(x,w,hh){var gr=x.createLinearGradient(0,0,0,hh);gr.addColorStop(0,'#8fcf62');gr.addColorStop(1,'#5f9a3a');x.fillStyle=gr;x.fillRect(0,0,w,hh);
       x.fillStyle='#d8c08a';x.fillRect(0,hh-6,w,6);x.fillRect(0,0,w,4);x.fillStyle='rgba(40,80,20,.35)';for(var i=0;i<w/14;i++){var px=(i*37)%w,py=8+((i*53)%(hh-20));x.fillRect(px,py,2,7);x.fillRect(px+3,py+2,2,5);}
       for(i=0;i<3;i++){var rx=w*(.15+i*.35);x.fillStyle='#4f8a34';x.beginPath();x.arc(rx,hh*.4,hh*.18,0,TAU);x.arc(rx+hh*.16,hh*.46,hh*.14,0,TAU);x.fill();}});}
-  function say(t,a){bub={t:L(t[0],t[1]),a:a||2.6};}
+  function say(t,a){var s=L(t[0],t[1]);bub={t:s,a:K.sd(s,a||2.6)};}
   function note(){var f=MEL[st.note%MEL.length];st.note++;try{tone(f,.28,'triangle',.08,0,0);tone(f*2,.18,'sine',.025,0,.02);}catch(e){}}
   function jump(auto){if(!live||dead||over||st.hop>0||(demo&&!auto))return;st.hop=N.hop;st.hx=st.x;st.idle=0;st.iw=0;K.snd('swing');}
   function land(G){st.row++;var r=st.row;if(isBank(r)){st.on=null;st.x=K.clamp(st.x,G.u*.6,G.W-G.u*.6);st.banks++;K.snd('level');ZABK.burst(P,st.x,G.by,{n:10,col:'#ffe27a',k:'star',s:6});}

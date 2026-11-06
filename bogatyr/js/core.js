@@ -324,7 +324,7 @@ var STAT=(function(){
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 // S: облако ЗАМЕНЯЕТ объект S (mergeSave) — модулю даём «окно» в текущий S (отметки stc всегда пишутся в живое сохранение)
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev',STAT_FB='https://stat.assortiz.ru/ev'; /* bb2 (13.10): облако Яндекса лежит с 11.10 → свой сервер ПЕРВЫМ, облако — запасным. Вернуть как было: url:STAT_URL и убрать url2 */
-STAT.init({g:'bogatyr',gv:'v26.3-110614',plat:PLAT,lang:LANG,url:STAT_FB,url2:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
+STAT.init({g:'bogatyr',gv:'v26.4-110621',plat:PLAT,lang:LANG,url:STAT_FB,url2:STAT_URL,now:()=>nowMs(),S:{get stc(){return S.stc;},set stc(v){S.stc=v;}}});
 // STAT v1.2 (04.10): ern — откуда золото (lvl поход, ad ролик, gift подарок/вход, chest сундук дня, buy покупка, quest задания/достижения, oth казна и прочее);
 // statProg — прогресс на входе (pl: пройдено глав, cn: золото, bt: облако хоть раз отдало сохранение — метка устройства bogatyr-cl) + cfg; после облака, не позже 2,5 с
 function ern(s,n){n=Math.round(n);if(n>0)STAT.earn(s,n);}
@@ -1064,7 +1064,7 @@ function qFrame(t){if(QL.mode!==0||QL.auto)return;const gap=t-QL.last;QL.last=t;
 let toastT=0;
 // тосты общего модуля покупок (js/pay.js пишет по-русски, модуль не меняем) — английский здесь
 const TOAST_EN={'Покупка зачислена':'Purchase credited','Готово! Спасибо за покупку':'Done! Thanks for your purchase','Покупка не состоялась':'Purchase not completed','Покупки проверены — всё на месте':'Purchases checked — everything’s in place'}; // i18n:ru — ключи на русском
-function toast(s){if(LANG==='en'&&TOAST_EN[s])s=TOAST_EN[s];const t=$('toast');t.textContent=s;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),Math.max(2500,1000+60*String(s).length));}
+function toast(s){if(LANG==='en'&&TOAST_EN[s])s=TOAST_EN[s];const t=$('toast');t.textContent=s;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),String(s).length<=12?2500:Math.min(20000,5000+120*String(s).length));}   /* шутки-28.10: тост 5 с + 0,12 с/букву (до 20 с), короткий 2,5 с */
 
 /* ================= день (для заданий) ================= */
 function dayKey(t){const d=new Date(t||dayMs());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}

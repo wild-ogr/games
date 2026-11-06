@@ -31,7 +31,7 @@ function run(host,o){
     gr=x.createLinearGradient(0,G.gy,0,Hh);gr.addColorStop(0,'#a87c44');gr.addColorStop(1,'#7a5228');x.fillStyle=gr;x.fillRect(0,G.gy,W,Hh-G.gy);x.fillStyle='rgba(255,255,255,.12)';x.fillRect(0,G.gy,W,3);
     /* полоса рук: где ловить */
     x.fillStyle='rgba(255,250,220,.28)';x.fillRect(0,G.zt,W,G.gy-G.zt);x.strokeStyle='rgba(140,90,40,.35)';x.setLineDash([6,8]);x.beginPath();x.moveTo(0,G.zt);x.lineTo(W,G.zt);x.stroke();x.setLineDash([]);});
-  function say(t,a){bub={t:L(t[0],t[1]),a:a||2.4};}
+  function say(t,a){var s=L(t[0],t[1]);bub={t:s,a:K.sd(s,a||2.4)};}
   function tapAt(x,y,auto){if(!live||dead||over||(demo&&!auto))return;var G=geo(),best=null,bd=1e9,i,m;
     for(i=0;i<st.m.length;i++){m=st.m[i];if(m.y<G.zt-G.ms*.4||m.vy<-30)continue;var d=Math.abs(m.x-x)+Math.abs(m.y-y)*.35;if(Math.abs(m.x-x)<G.W*N.catchW&&d<bd){bd=d;best=m;}}
     if(!best){K.snd('click');return;}toss(best,G);ZABK.burst(P,best.x,best.y,{n:5,sp:110,col:'#fff0c0',s:3,d:.3});

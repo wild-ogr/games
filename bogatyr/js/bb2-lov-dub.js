@@ -32,7 +32,7 @@ function run(host,o){
     else if(j.k===1){g.fillStyle='#d8b46a';g.beginPath();g.moveTo(-14,4);g.quadraticCurveTo(-12,-8,0,-6);g.quadraticCurveTo(14,-4,15,5);g.lineTo(-14,8);g.closePath();g.fill();g.stroke();g.beginPath();for(var i=-10;i<12;i+=5){g.moveTo(i,-5);g.lineTo(i+4,6);}g.stroke();}
     else{g.fillStyle='#b8322a';g.beginPath();g.moveTo(-13,6);g.quadraticCurveTo(0,-22,13,6);g.closePath();g.fill();g.stroke();g.fillStyle='#f3e6c8';K.rr(g,-15,4,30,7,3);g.fill();g.stroke();}
     g.restore();}
-  function say(t){bub={t:L(t[0],t[1]),a:3};}
+  function say(t){var s=L(t[0],t[1]);bub={t:s,a:K.sd(s,3)};}
   function kill(why){if(dead||demo)return;dead=1;st.dT=0;st.why=why;K.snd('hurt');K.vib(80);if(!o.calm)st.shake=10;}
   function tapSide(s,auto){if(!live||dead||over||(demo&&!auto))return;var G=geo();st.side=s;st.sw=.13;
     if(st.segs[0]===s){kill(1);return;}

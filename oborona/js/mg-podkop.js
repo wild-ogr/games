@@ -33,8 +33,8 @@ function run(host,o){const cv=MGK.canvas(host),g=cv.getContext('2d'),R=o.rnd,P=p
     if(!st.leadDone&&p>=P.leadAt){st.leadDone=true;h.who='lead';h.hp=3;h.st='mound';say(Lg('Вожак полез! Бей трижды!','The leader! Hit him three times!'));return;}
     if(p>.08&&R()<P.friend){h.who=R()<.6?'ezh':'muh';h.st='friend';h.dur=1.5*P.cm;return;}
     h.who=R()<.5?'upyr':'krot';h.st='mound';}
-  let sayT=0,sayS='';function say(s){sayS=s;sayT=2.2;}
-  if(mgPC()){cv.style.cursor='pointer';say(Lg('Щёлкай мышкой по бугоркам!','Click the mounds with your mouse!'));sayT=3.2;}   // OB:FINAL ПК: мышь, подсказка в первые секунды
+  let sayT=0,sayS='';function say(s){sayS=s;sayT=Math.min(20,5+.12*String(s).length);}   /* шутки-28.10: было 2,2 с */
+  if(mgPC()){cv.style.cursor='pointer';say(Lg('Щёлкай мышкой по бугоркам!','Click the mounds with your mouse!'));sayT=Math.max(sayT,3.2);}   // OB:FINAL ПК: мышь, подсказка в первые секунды
   // касание
   cv.addEventListener('pointerdown',e=>{e.preventDefault();if(host.paused||st.over||st.t<0)return;const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
     let best=null,bd=1e9;for(const h of holes){if(h.st==='idle'||h.st==='hit')continue;const up=h.st==='up'||h.st==='friend'?h.s*.35:0,dx=x-h.x,dy=y-(h.y-up);const d=Math.hypot(dx,dy*1.15);if(d<h.s*.58&&d<bd){bd=d;best=h;}}

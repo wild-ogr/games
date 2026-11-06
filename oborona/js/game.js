@@ -426,8 +426,8 @@ function hitSpark(x,y){for(let i=0;i<2&&G.pt.length<(window.SP_LQ?90:300);i++)G.
 function coinFly(x,y,n){let k=0;for(const f of G.fx)if(f.k==='coin')k++;for(let i=0;i<n&&k<14;i++,k++)G.fx.push({k:'coin',x:x+rand(-6,6),y:y+rand(-4,4),t:-i*.06,dur:.6,ax:rand(-24,24)});}
 function plus(x,y){G.nums.push({x,y,v:'+',t:0,col:'#6aff8a'});}
 function poof(x,y){G.fx.push({k:'poof',x,y,t:0,dur:.5});}
-// реплики держатся не меньше 2,5 с + 50 мс на знак (успеть прочитать)
-function bubDur(s,d){return Math.max(d||0,2.5+.05*s.length);}
+// реплики держатся 5 с + 0,12 с на знак, до 20 с (шутки-28.10, было 2,5 с + 0,05 с)
+function bubDur(s,d){return Math.max(d||0,Math.min(20,5+.12*s.length));}
 // одинаковая реплика рядом ещё видна — второй пузырь не добавляем («Увяз! Увяз!» друг на друге)
 function bubDup(x,y,s){const r=G.map.rot;return G.bub.some(b=>b.s===s&&b.t<b.dur*.8&&Math.abs(b.e.x-x)<(r?50:70)&&Math.abs(b.e.y-y)<(r?70:50));}   // OB:VIS лёжа — оси «стоя» (от числа реплик зависит случайность боя)
 function say(e,s,dur){if(bubDup(e.x,e.y,s)&&!G.bub.some(b=>b.e===e))return;G.bub=G.bub.filter(b=>b.e!==e);if(G.bub.length>3)G.bub.shift();G.bub.push({e,s,t:0,dur:bubDur(s,dur)});}

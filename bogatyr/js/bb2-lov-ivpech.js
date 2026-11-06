@@ -70,7 +70,7 @@ function run(host,o){
     if(inSlot()&&aligned()&&Math.abs(car.v)<16){holdT+=dt;if(holdT>=N.hold)parked();}else holdT=Math.max(0,holdT-dt*2);}
   function parked(){K.snd('win');ZABK.burst(P,car.x,car.y,{n:18,col:'#ffe27a',k:'star',s:6,sp:200});
     if(demo){demo=0;joy=null;sc=0;time=N.t0;hits=0;note={t:L('Теперь ты!','Your turn!'),a:1.8};newYard();return;}
-    sc++;H.set(sc);var add=N.add[Math.min(N.add.length-1,Math.floor((sc-1)/2))];time+=add;note={t:L('Двор сдан! +'+add+' с','Yard done! +'+add+' s'),a:1.5};bub={t:L.apply(null,K.pick(CAR)),a:2.2};newYard();}
+    sc++;H.set(sc);var add=N.add[Math.min(N.add.length-1,Math.floor((sc-1)/2))];time+=add;note={t:L('Двор сдан! +'+add+' с','Yard done! +'+add+' s'),a:1.5};bub={t:L.apply(null,K.pick(CAR))};bub.a=K.sd(bub.t,2.2);newYard();}
   function finish(){if(over)return;over=true;live=false;if(H)H.end();host.done({score:sc,extra:{msg:hits>sc+1?L('Задел '+hits+' раз: −'+N.pen+' с за каждый','Bumped '+hits+'×: −'+N.pen+' s each'):L('К рамке — прямо, отпускай заранее','Go straight in, let go early')}});}
   ZABK.loop(host,function(dt,now){var G=geo(),i;T+=dt;if(!grass||gk!==G.k*1000+c.D)mkGrass(G);
     if(live&&!over&&!dead&&Y){physics(dt);if(!demo){time-=dt;if(time<=0){time=0;dead=1;K.snd('lose');K.cont(host,o,sc,function(ok){if(!ok){finish();return;}dead=0;time=12;});}}else{demoT+=dt;if(demoT>9){demoT=0;parked();}}}

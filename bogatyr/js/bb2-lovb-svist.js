@@ -31,7 +31,7 @@ function run(host,o){
     x.strokeStyle='#8a5a2c';x.lineWidth=3;x.setLineDash([8,6]);x.beginPath();x.ellipse(G.cx,G.gy+G.R*.08,G.R*1.04,G.R*.2,0,0,TAU);x.stroke();x.setLineDash([]);
     /* дуб Соловья сверху */
     var ty=K.top()+128,tx=G.cx;x.fillStyle='#5d3a1c';x.fillRect(tx-W*.035,ty+30,W*.07,Hh*.08);x.fillStyle='#3d8a35';x.beginPath();x.ellipse(tx,ty+30,W*.32,44,0,0,TAU);x.fill();x.fillStyle='#4aa83e';x.beginPath();x.ellipse(tx-W*.08,ty+18,W*.16,26,0,0,TAU);x.fill();});
-  function say(t,a){bub={t:L(t[0],t[1]),a:a||2.4};}
+  function say(t,a){var s=L(t[0],t[1]);bub={t:s,a:K.sd(s,a||2.4)};}
   function setIn(d){if(!live||dead||over||demo)return;st.in=d;}
   function kill(){if(dead||demo)return;dead=1;st.dT=0;K.snd('hurt');K.vib(90);if(!o.calm)st.shake=8;
     st.why=st.x>0?L('Сдуло вправо — держи палец слева, когда дует вправо','Blown right — hold LEFT when the wind blows right'):L('Сдуло влево — держи палец справа, когда дует влево','Blown left — hold RIGHT when the wind blows left');

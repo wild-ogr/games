@@ -808,7 +808,7 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'viktorina',gv:'v6.0-110620',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'viktorina',gv:'v6.1-110622',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (pl — пройдено уровней, cn — монеты, bt — облако хоть раз отдавало сохранение: метка устройства viktorina-cl) — после облака, не позже 2,5 с
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('viktorina-cl')?1:0;}catch(e){}STAT.progress({pl:+S.lvl||0,cn:+S.coins||0,bt:bt});if(window.STATANS)STATANS.prg();} // STATANS.prg — разовое prg (js/stat-ans.js)
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound===false?0:1,calm:S.calm===true?1:0});
@@ -1627,7 +1627,7 @@ const onScr=id=>$(id).classList.contains('on');
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));if(window.LK)LK.scene(id==='scr-menu'?'full':'dim');UI.emit('show',id);}
 window.__show=show;
 function toast(t,ms){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);
-  const d=ms&&ms<2000?ms:Math.max(ms||0,2500,1000+60*t.length);toast._t=setTimeout(()=>e.classList.remove('on'),d);}
+  const d=Math.max(ms||0,t.length<=12?2500:Math.min(20000,5000+120*t.length));/* шутки-28.10: тост 5 с + 0,12 с/букву (до 20 с), короткий ≥ 2,5 с */toast._t=setTimeout(()=>e.classList.remove('on'),d);}
 function hideModal(){$('modal').classList.remove('on','rs');$('mcard').classList.remove('wide2','res');modalOn=false;}
 // look1: окно итогов-праздник — party(): класс res на карточке (ведущий над ней) и rs на подложке (лучи)
 function party(){$('mcard').classList.add('res');$('modal').classList.add('rs');}
@@ -2320,6 +2320,7 @@ window.__test={get G(){return G;},get S(){return S;},get MUS(){return MUS;},musT
 <!-- /rv:П6 -->
 <script src="js/stat-ans.js"></script>
 <script src="js/mlm-mail.js"></script> <!-- LTG-VK 24.10: окно «Написать Михалычу» (Об игре, ⚑ Ошибка в вопросе, итог лестницы с 15-го уровня раз в 7 дней); S.mlm в NUMOBJ -->
+<script src="js/vik-olad.js"></script> <!-- SHR-0611: межэкранная вне лестниц (флаг olad; после всех модулей — оборачивает modal/hideModal/between) -->
 <!--XPZ--><script>
 /* XPZ v1.1 (27.10, XPZ-FIX): только в ОК — блок «Баба Зина» вместо «Ещё игр» (переход: сайт/моб. браузер ОК — новая вкладка ok.ru/game, иначе окно со ссылкой). Источник и описание — hobby-analytics/release-i/zina-boost3/z3-xpromo-tools/xpz.js, правки только там. */
 var XPZ=(function(){var Z=512005727621,U='https://ok.ru/game/'+Z,q=location.search,OK=/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(q)&&!/[?&]off=[^&#]*xpz/.test(q),

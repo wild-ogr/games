@@ -42,7 +42,7 @@ function run(host,o){
     x.fillStyle=gr;x.fillRect(0,0,W,Hh);x.fillStyle='rgba(60,100,40,.35)';for(var i=0;i<26;i++){var px=(i*97)%W,py=Hh*.45+((i*53)%100)/100*Hh*.55;x.fillRect(px,py,3,7);x.fillRect(px+4,py+2,3,5);}
     x.fillStyle='rgba(255,240,200,.28)';x.beginPath();x.ellipse(G.cx,G.cy+G.R*.55,G.R*1.25,G.R*.42,0,0,TAU);x.fill();
     x.strokeStyle='rgba(255,250,230,.35)';x.lineWidth=2;x.setLineDash([6,8]);x.beginPath();x.moveTo(0,G.cy-(G.cy-G.top)*.0);x.lineTo(W,G.cy);x.moveTo(G.cx,G.top);x.lineTo(G.cx,Hh);x.stroke();x.setLineDash([]);});
-  function say(t,a){bub={t:L(t[0],t[1]),a:a||2.6};}
+  function say(t,a){var s=L(t[0],t[1]);bub={t:s,a:K.sd(s,a||2.6)};}
   function pos(G,p,q){var d=p.d,D=G.D[d],r=G.R+(D-G.R)*(1-q);if(p.k==='c')r=G.R*1.7+(D-G.R*1.7)*(1-q);return [G.cx+DX[d]*r,G.cy+DY[d]*r];}
   function setDir(d,auto){if(!live||dead||over||(demo&&!auto))return;if(st.dir!==d){st.dir=d;st.turn=.08;K.snd('swing');if(st.lastC===d&&st.t-st.lastCT<.7)st.fool=1;else st.fool=0;}}
   function tapAt(x,y){var G=geo(),dx=x-G.cx,dy=y-G.cy;setDir(Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0));}
