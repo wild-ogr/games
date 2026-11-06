@@ -13,7 +13,9 @@
   navSlots.push({id:'topics',order:20,ic:'📚',t:'Темы',go:'topics',on:function(){return cur==='scr-topics';}});
   navSlots.push({id:'doska',order:30,ic:'🎮',t:'Доска',go:'doska',hide:function(){return !UI.has('doska');},on:function(){return cur==='scr-doska';}});
   navSlots.push({id:'medals',order:40,ic:'🏅',t:'Медали',go:'medals'});
-  navSlots.push({id:'shop',order:50,ic:'🛒',t:'Лавка',go:'shop'});
+  // OK-VK 06.11: в Одноклассниках покупок нет (цен в ОКах нет) — кнопка не «🛒 Лавка», а «💰 Монеты» (то же окно: откуда монеты и на что тратить)
+  var OKN=/[?&](vk_client=ok|vk_platform=[a-z_]*_ok|ok=1)(&|$)/.test(W.location.search)&&/[?&](vk_app_id|vk)=/.test(W.location.search);
+  navSlots.push({id:'shop',order:50,ic:OKN?'💰':'🛒',t:OKN?'Монеты':'Лавка',go:'shop'});
   var NAV_ON={'scr-menu':1,'scr-topics':1}; // на каких экранах видна панель (свои экраны-разделы добавляйте UIH.navOn('scr-yard'))
   UI.on('show',function(id){cur=id;var a=$('app');if(a)a.classList.toggle('navOn',!!NAV_ON[id]);if(NAV_ON[id])nav();});
 
