@@ -107,10 +107,11 @@ function onLadder(ctx){try{var g=ctx||window.G;if(!g||!g.res)return;var good=g.r
   check();}catch(e){}}
 
 /* ---------- пять дел ---------- */
-function boardOn(){try{return !!(window.BOARD&&BOARD.openDay)&&(S.lvl||0)>=4;}catch(e){return false;}} // табло — с 5-го уровня (BOARD OPEN_LVL)
+function bOpen(){try{if(window.BOARD&&typeof BOARD.isOpen==='function')return !!BOARD.isOpen();}catch(e){}return (S.lvl||0)>=4;} // RV П5: табло открывается раньше — спрашиваем BOARD.isOpen() (без него — с 5-го уровня, как было)
+function boardOn(){try{return !!(window.BOARD&&BOARD.openDay)&&bOpen();}catch(e){return false;}}
 function deals(){var d=sd(),t=dk(),dq=false;try{dq=S.daily[t]!=null;}catch(e){}
   var bd=boardOn(),mg=!!window.VMG,a=[];
-  a.push({k:'qd',ic:'❓',n:'Вопрос дня',s:d.q?(d.q===1?'верно! +'+C().qday+' очков':'байку рассказал'):'Михалыч спросит одно трудное',ok:d.q>0});
+  a.push({k:'qd',ic:'❓',n:'Вопрос дня',s:d.q?(d.q===1?'верно! +'+C().qday+' очков':'ответ узнал'):'Михалыч спросит одно трудное',ok:d.q>0});
   a.push({k:'dq',ic:'📅',n:'Викторина дня',s:dq?'сыграно: '+S.daily[t]+' из 10':'10 вопросов на весь двор',ok:dq});
   if(bd){var bdd=!!d.m.bd,bi=null;try{bi=BOARD.day&&BOARD.day();if(bi&&bi.done)bdd=true;}catch(e){}
     a.push({k:'bd',ic:'📺',n:'Табло дня',s:bdd?'сыграно'+(bi&&bi.score!=null?': '+bi.score+(bi.place?' · '+bi.place+'-е место':''):''):'одно табло на весь двор',ok:bdd});}
@@ -141,9 +142,10 @@ function openChest(){var d=sd();if(!d.sl||d.ch)return;d.ch=1;var n=today().chest
 function qid(t){try{var day={};try{seededSet(t*7919+13).qs.forEach(function(i){day[i]=1;});}catch(e){}
   var R=rng(t*104729+3),c=QS.filter(function(q){return q.d===3&&!day[q.i]&&q.x;});if(!c.length)c=QS.filter(function(q){return q.d===3;});
   return c[Math.floor(R()*c.length)].i;}catch(e){return '';}}
-function openQday(){if(typeof qReady!=='undefined'&&!qReady){try{qWait(openQday);}catch(e){}return;}var d=sd(),q=null;try{q=QI[d.qi];}catch(e){}if(!q){d.qi=qid(d.d);try{q=QI[d.qi];}catch(e){}}if(!q)return;
+function rvA(){try{return !!(window.RVDAY&&RVDAY.act());}catch(e){return false;}} // RV П4: «Листок дня» (js/rv-day.js) вместо окон вопроса дня и серии
+function openQday(){if(rvA())return RVDAY.open();if(typeof qReady!=='undefined'&&!qReady){try{qWait(openQday);}catch(e){}return;}var d=sd(),q=null;try{q=QI[d.qi];}catch(e){}if(!q){d.qi=qid(d.d);try{q=QI[d.qi];}catch(e){}}if(!q)return;
   try{STAT.screen('qday');}catch(e){}d.ask=1;save();
-  var tq=null;try{tq=QI[qid(dk(1))];}catch(e){}
+  var tq=null;try{tq=window.RVDAY&&window.RV&&RV.on('day')?RVDAY.promise(q):QI[qid(dk(1))];}catch(e){} // RV П4: 1-й день нового вида — обещание то же, что выполнит листок завтра
   if(d.q){ // уже ответил — показать байку ещё раз
     modal('<div class="av">'+portrait('mihalych',d.q===1?'happy':'norm')+'</div><h2>❓ Вопрос дня</h2><p class="td-q">'+esc(q.q)+'</p><p class="goal">Ответ: <b>'+esc(q.a[0])+'</b></p>'+(q.x?'<p class="quote">'+esc(q.x)+'</p>':'')+
       (tq?'<p class="goal tmr">Завтра спрошу про «'+esc(tn(tq.t))+'»</p>':'')+'<div class="row"><button class="btn accent" id="tdQOk">Хорошо</button></div>');
@@ -155,11 +157,12 @@ function openQday(){if(typeof qReady!=='undefined'&&!qReady){try{qWait(openQday)
   try{fitCard();}catch(e){}
   $('tdQLater').onclick=function(){hideModal();render();};
   var bs=document.querySelectorAll('#mcard .td-a');for(var i=0;i<bs.length;i++)bs[i].onclick=function(){var k=+this.dataset.k,ok=perm[k]===0;
-    d.q=ok?1:2;if(ok){CAR.add(C().qday,'qday');try{SND.right();}catch(e){}}else try{SND.wrong();}catch(e){}
+    d.q=ok?1:2;try{if(window.RVDAY&&window.RV&&RV.on('day'))RVDAY.seen(q,ok);}catch(e){} // RV П4: листок завтра скажет «вчера знали N из 10 — и ты…»
+    if(ok){CAR.add(C().qday,'qday');try{SND.right();}catch(e){}}else try{SND.wrong();}catch(e){}
     try{CAR.fire({id:q.i,ok:ok,hint:0,mode:'qday',step:0,price:500});}catch(e){}
     check();
     modal('<div class="av">'+portrait('mihalych',ok?'happy':'sad')+'</div><h2>'+(ok?'Верно! +'+C().qday+' очков':'Эх, мимо…')+'</h2><p class="td-q">'+esc(q.q)+'</p><p class="goal">Ответ: <b>'+esc(q.a[0])+'</b></p>'+
-      (q.x?'<p class="quote">'+(ok?'А знаешь байку? ':'Не беда — вот тебе байка: ')+esc(q.x)+'</p>':'')+
+      (q.x?'<p class="quote">'+(ok?'':'Не беда. ')+esc(q.x)+'</p>':'')+
       (tq?'<p class="goal tmr">Завтра спрошу про «'+esc(tn(tq.t))+'»</p>':'')+'<div class="row"><button class="btn accent" id="tdQOk">Хорошо</button></div>');
     try{fitCard();}catch(e){}$('tdQOk').onclick=function(){hideModal();render();flush();};};}
 
@@ -256,21 +259,25 @@ function go(k){
   else if(k==='tk')openTasks();
   else if(k==='lv'||k==='c10'){try{if(lcurOk())resumeLadder();else if(window.UIH&&LK.on())UIH.play();else openTopics();}catch(e){}}}
 // обновить главный (после окон «Сегодня», вопроса дня, сундука, заначки)
-function render(){try{if(modalOn)return;var m=$('scr-menu');if(!m||!m.classList.contains('on'))return;if(window.UIH&&UIH.render)UIH.render();else openMenu();}catch(e){}}
+var rT=0;function render(){try{clearTimeout(rT);if(modalOn){rT=setTimeout(render,700);return;} /* №4: окно (марка из сундука) ещё открыто — обновим главный, когда закроется */var m=$('scr-menu');if(!m||!m.classList.contains('on'))return;if(window.UIH&&UIH.render)UIH.render();else openMenu();}catch(e){}}
 function tile(o){try{return UI.tile(o);}catch(e){return '<button class="hsT"><b>'+esc(o.t)+'</b></button>';}}
 function first(el,fn){var b=el.querySelector('button')||el.firstChild;if(b)b.onclick=function(){try{SND.tap();}catch(e){}fn();};}
 var TILES=[
  {id:'car-fin',order:0,render:function(){var f=CAR.finState();if(!f||!f.ready)return null;return tile({ic:'🏆',t:'Финал района',s:f.ch.n+(f.free?' ждёт тебя!':' — завтра снова'),tag:'финал',cls:'red car-tfin'});},mount:function(el){first(el,CAR.openFinal);}},
  {id:'car-today',order:1,render:function(){fix();check();var n=count(),d=sd();
-   return tile({ic:'📋',t:'Сегодня '+n+'/5',s:d.sl?(d.ch?'печать двора есть ✓':'открой сундук дня!'):'ещё '+Math.max(0,3-n)+' — и печать двора',tag:d.sl&&!d.ch?'сундук':'',cls:'grn car-ttd'});},mount:function(el){first(el,openToday);autoQ();flush();}},
+   return tile({ic:'📋',t:'Сегодня '+n+'/5',s:d.sl?(d.ch?'печать двора есть ✓':'открой сундук дня!'):'ещё '+Math.max(0,3-n)+' — и печать двора',tag:d.sl&&!d.ch?'🎁':'',cls:'grn car-ttd'});},mount:function(el){first(el,openToday);autoQ();flush();}},
  {id:'car-qday',order:2,render:function(){var d=sd();if(d.q||(S.games||0)<1)return null;return tile({ic:'❓',t:'Вопрос дня',s:'Михалыч ждёт у подъезда',tag:'+'+C().qday,cls:'yel'});},mount:function(el){first(el,openQday);}},
  {id:'car-tasks',order:3,render:function(){var d=sd(),k=d.tk.filter(function(x){return x.r;}).length;if((S.games||0)<1)return null;var nx=d.tk.filter(function(x){return !x.r;})[0];
-   return tile({ic:'✅',t:'Задания: '+k+' из 3',s:nx?tText(nx)+' · '+nx.p+'/'+nx.n:'все сделаны!',cls:k>=3?'':'car-ttk'});},mount:function(el){first(el,openTasks);}},
+   return tile({ic:k>=3?'✅':'✏',t:'Задания: '+k+' из 3',s:nx?tText(nx)+' · '+nx.p+'/'+nx.n:'все сделаны!',cls:k>=3?'':'car-ttk'});},mount:function(el){first(el,openTasks);}},
  {id:'car-stash',order:45,render:function(){var n=stash();if(n<10||(S.games||0)<1)return null;return tile({ic:'💰',t:'Заначка Михалыча',s:n>=C().stash.max?'полная — забирай!':'накопилось '+n+' 💰',tag:'+'+n,cls:n>=C().stash.max?'grn':''});},mount:function(el){first(el,function(){openStash();});}},
- {id:'car-day',order:55,render:function(){if((S.lvl||0)<4)return null;/* FIX1: «акцент дня» (Табло дня, Кубок) — когда табло открыто */var t=today();return tile({ic:'🗓',t:DN[t.wd],s:t.ac,cls:'car-tday'});},mount:function(el){first(el,openToday);}}];
+ {id:'car-day',order:55,render:function(){if(!bOpen())return null;/* FIX1: «акцент дня» (Табло дня, Кубок) — когда табло открыто */var t=today();return tile({ic:'🗓',t:DN[t.wd],s:t.ac,cls:'car-tday'});},mount:function(el){first(el,openToday);}}];
 // вопрос дня — сам при первом заходе в меню за день (не новичку и не поверх другого окна)
-function autoQ(){var d=sd();if(d.q||d.ask||(S.games||0)<2)return;setTimeout(function(){try{if(modalOn||!$('scr-menu').classList.contains('on'))return;}catch(e){return;}openQday();},700);}
+function autoQ(){if(rvA())return;var d=sd();if(d.q||d.ask||(S.games||0)<2)return;setTimeout(function(){try{if(modalOn||!$('scr-menu').classList.contains('on'))return;}catch(e){return;}openQday();},700);}
 function flush(){if(!evq.length)return;var t=evq.join(' · ');evq=[];try{toast(t);}catch(e){}}
+
+// RV П4: под листком (rv.day) плитки «Сегодня», вопрос дня, задания, заначка, акцент дня — в листке и окне «Сегодня во дворе»
+var RV_HIDE={'car-today':1,'car-qday':1,'car-tasks':1,'car-stash':1,'car-day':1};
+TILES.forEach(function(x){if(RV_HIDE[x.id]){var r0=x.render;x.render=function(c){return rvA()?null:r0(c);};}});
 
 /* ---------- окно итога лестницы (resultSlots): задания, печать ---------- */
 function resultHtml(ctx){onLadder(ctx&&ctx.G||ctx);var d=sd(),h='',n=count();
@@ -281,12 +288,13 @@ function resultHtml(ctx){onLadder(ctx&&ctx.G||ctx);var d=sd(),h='',n=count();
 /* ---------- регистрация в гнёздах UX (js/ui-core.js) ---------- */
 ['homeSlots','resultSlots','answerHook'].forEach(function(n){if(!Array.isArray(window[n]))window[n]=[];});
 TILES.forEach(function(x){homeSlots.push(x);});
-resultSlots.push({id:'car-today',order:20,render:function(ctx){return resultHtml(ctx)||null;}});
+resultSlots.push({id:'car-today',order:20,render:function(ctx){if(window.RVRES&&RVRES.on()){onLadder(ctx&&ctx.G||ctx);return null;} // rv.res: дела дня считаются, строки в итоге нет (события — тостом flush)
+  return resultHtml(ctx)||null;}});
 answerHook.push({id:'today',fn:onAnswer});
 // табло дня доиграно (BOARD → UI.emit('board',res)) — дело засчитано сразу, печать — если набралось 3 из 5
 try{if(window.UI&&UI.on)UI.on('board',function(r){try{if(r&&r.mode==='day'&&!r.quit){fix();sd().m.bd=1;check();}}catch(e){}});}catch(e){}
 window.TD={fix:fix,merge:merge,today:today,mul:mul,deals:deals,count:count,check:check,mark:mark,ev:ev,openToday:openToday,body:body,render:render,
-  giftState:giftState,claimGift:claim,showSeries:showSeries,stash:stash,openStash:openStash,stashNeed:function(n){if(short(n))openStash(n);},
+  giftState:giftState,claimGift:claim,serState:serState,showSeries:showSeries,stash:stash,openStash:openStash,stashNeed:function(n){if(short(n))openStash(n);},
   openQday:openQday,openTasks:openTasks,openChest:openChest,onAnswer:function(o){onAnswer(o);},onLadder:function(g){onLadder(g);},resultHtml:resultHtml,flush:flush,WEEK:WEEK};
 try{fix();}catch(e){}
 })();

@@ -1,0 +1,19 @@
+/* rv-res.css — итог лестницы «Весь двор отвечает» (поток П3, флаг rv.res). Текст не мельче 14 px. */
+#mcard .rv-say{margin:6px 0}
+#mcard .rv-joke{font-style:normal;text-align:left;line-height:1.35}
+#mcard .rv-jl{display:block;font-size:14px;font-weight:800;font-style:normal;opacity:.75;margin-bottom:2px}
+#mcard .rv-dv{display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:700;margin:6px 0;line-height:1.3}
+#mcard .rv-dh{display:inline-grid;grid-template-columns:repeat(5,9px);gap:2px;padding:3px;border-radius:4px 4px 2px 2px;background:#8a5a3b;flex:none}
+#mcard .rv-dh i{width:9px;height:8px;border-radius:1px;background:#3d3550}
+#mcard .rv-dh i.on{background:#ffd34d;box-shadow:0 0 3px #ffcf40}
+#mcard .rv-of{margin:4px 0}
+#mcard .rv-of .goal{margin:4px 0}
+#mcard .rv-btns .btn{flex:none}
+#mcard .coins-won small{font-size:15px}
+html.lk #mcard .rv-dv{color:var(--card-ink)}
+/* счёт и монеты — одной строкой (экономит ~40 px; окно m.ok.ru 360×540 без прокрутки) */
+#mcard .rv-sc{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:0}
+#mcard .rv-sc .score,#mcard .rv-sc .coins-won{margin:0}
+#mcard .rv-sc .coins-won small{display:block;line-height:1.2}
+@media (max-height:620px){#mcard .rv-sc .score{font-size:40px}html.lk #mcard.res>.av:first-child{width:84px;height:92px;margin-top:-70px}html.lk #mcard.res{margin-top:40px}#mcard .rv-say{padding:6px 10px;font-size:16px}#mcard h2{margin:2px 0}}
+#mcard .rv-nw{white-space:nowrap}

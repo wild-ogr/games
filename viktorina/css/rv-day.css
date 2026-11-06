@@ -1,0 +1,48 @@
+/* rv-day.css — «Листок дня» (поток П4 революции; js/rv-day.js). Окно — то же #mcard, класс .rvd-card. Кегль не меньше 14 px. */
+#mcard.rvd-card{padding-top:0;overflow:hidden}
+.rvd{text-align:left}
+.rvd-top{margin:0 -20px 10px;padding:6px 12px 8px;background:#fffdf6;border-bottom:2px dashed #d9cfb8;text-align:center;position:relative;
+  background-image:linear-gradient(#c8372d,#c8372d);background-size:100% 30px;background-repeat:no-repeat}
+.rvd-wd{color:#fff;font-weight:800;font-size:16px;letter-spacing:.08em;text-transform:uppercase;line-height:24px}
+.rvd-dn{font-size:58px;font-weight:900;line-height:1;color:#c8372d;margin-top:6px;font-variant-numeric:tabular-nums}
+.rvd-mn{font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#2a2f38}
+.rvd-no{font-size:14px;color:#6b6457;margin-top:2px}
+.rvd-posl{font-style:italic;text-align:center;font-size:16px;margin:4px 0 8px;color:#4a4335}
+.rvd-g{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;font-size:16px;margin:0 0 8px;padding:6px 10px;border-radius:12px;background:#eaf6ea;color:#1f4d22}
+.rvd-g>span{flex:1 1 60%}
+#mcard .rvd .rvd-g .rvd-ad{min-height:40px;padding:4px 14px;font-size:16px;margin:0;width:auto!important;min-width:0;flex:0 0 auto;display:inline-flex!important;align-items:center;gap:4px}
+.rvd-y{font-size:15px;margin:0 0 8px;color:#3d4654}
+.rvd-qh{display:flex;align-items:center;gap:8px;margin:0 0 2px}
+.rvd-av{flex:0 0 44px;width:44px;height:44px;border-radius:50%;overflow:hidden;background:#f1e7d0;display:inline-flex;align-items:flex-start;justify-content:center}
+.rvd-av>*{width:56px;max-width:none;height:auto}
+.rvd-av svg,.rvd-av img{width:56px;height:auto}
+.rvd .td-sub{margin:0;font-size:15px}
+.rvd .td-q{margin:4px 0 8px}
+.rvd .td-a{min-height:48px}
+.rvd-res{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:#fdeceb;margin:0 0 6px}
+.rvd-res.ok{background:#e6f5e6}
+.rvd-res b{display:block;font-size:20px}
+.rvd-res small{display:block;font-size:15px;color:#3d4654}
+.rvd-a{font-size:17px;margin:0 0 4px}
+.rvd-k{font-size:16px;margin:0 0 6px;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+.rvd-w{display:inline-flex;gap:3px}
+.rvd-w i{width:12px;height:15px;border-radius:2px;background:#cfd6df;border:1px solid #9aa6b5}
+.rvd-w i.on{background:#ffd34d;border-color:#c99a00;box-shadow:0 0 4px #ffe48a}
+.rvd-x{font-size:15px;margin:0 0 6px}
+.rvd-tm{margin:0 0 6px}
+.rvd-ln{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:6px 10px;margin:0 0 6px;border:2px solid #d9cfb8;border-radius:12px;background:#fffaf0;
+  font:inherit;font-size:16px;text-align:left;color:#2a2f38;cursor:pointer}
+.rvd-ln span:nth-child(2){flex:1}
+.rvd-ln span:last-child{font-weight:900;font-size:20px;color:#8a7d60}
+html.lk .rvd-top{margin-left:-18px;margin-right:-18px}
+/* низкие окна (m.ok.ru 360×540): пословица уходит первой (fitCard — .quote), дальше ужимаем шапку листка */
+@media (max-height:600px){
+  .rvd-top{display:flex;align-items:baseline;justify-content:center;gap:8px;padding:0 10px 4px;background-size:100% 100%;margin-bottom:8px}
+  .rvd-wd{font-size:15px}.rvd-dn{font-size:26px;color:#fff;margin:0}.rvd-mn{font-size:15px;color:#fff}.rvd-no{display:none}
+  .rvd-g{padding:4px 8px;margin-bottom:6px}.rvd .td-q{font-size:17px;margin:2px 0 6px}.rvd .td-as{gap:6px}.rvd .td-a{min-height:42px;padding-top:4px;padding-bottom:4px}
+  .rvd .row{margin-top:6px}.rvd-res{padding:4px 8px}.rvd-ln{min-height:40px;padding:4px 8px}}
+@media (prefers-color-scheme:dark){html:not(.lk) .rvd-ln{background:#2b2f36;color:#eee;border-color:#555}}
+/* VK-UX №5 (не под флагом): плитка «Задания» не растягивается на 6 строк — подпись в 2 строки */
+.hsT.car-ttk small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* VK-UX №4 (не под флагом): ярлык сундука не налезает на «Сегодня 3/5» */
+.hsT.car-ttd .hsB{padding-right:24px}

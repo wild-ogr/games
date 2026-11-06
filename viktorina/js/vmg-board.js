@@ -44,7 +44,7 @@ let mcT=0;function menuCheck(k){clearTimeout(mcT);if(W.__vmgStand||W.__demo||VMG
 /* ---------- 1) Переменка в окне итога лестницы ---------- */
 function pausePick(){const z=VMG.Z(),L=VMG.lads();const c=opened().filter(n=>n!==2&&!z.d.p[n]);if(!c.length||!capLeft())return 0;
   c.sort((a,b)=>(z.n[a]|0)-(z.n[b]|0)||a-b);return c[L%Math.min(2,c.length)];}
-W.resultSlots.push({id:'vmg-pause',order:60,render(ctx){if(!ctx||!ctx.G||ctx.G.mode!=='lad'||W.__demo)return null;
+W.resultSlots.push({id:'vmg-pause',order:60,render(ctx){if(!ctx||!ctx.G||ctx.G.mode!=='lad'||W.__demo||(window.RVRES&&RVRES.on()))return null; // rv.res: «Переменки» в итоге нет (затеи — на Доске)
     const nw=VMG.unlock(),L=VMG.lads();let n=0,m='pause';
     if(nw&&nw!==2){n=nw;m='new';seenN(nw);}else if(L%2===0&&L>=2)n=pausePick();
     if(!n)return null;const g=VMG.REG.by[id(n)],cap=capLeft(),rw=Math.min(rwMax(n),cap);
@@ -54,8 +54,8 @@ W.resultSlots.push({id:'vmg-pause',order:60,render(ctx){if(!ctx||!ctx.G||ctx.G.m
     // окно итога без прокрутки: после fitCard — плотная карточка, не влезла и так — убираем (показ не засчитан)
     setTimeout(()=>{const md=$('modal'),over=()=>md.scrollHeight>md.clientHeight+1;if(over()){b.classList.add('sm');if(over()){el.style.display='none';return;}}st('show',n,m);},0);
     b.onclick=()=>{SND.tap();hideModal();
-      const nextL=()=>{if(pass||typeof startLadder!=='function')openTopics();else startLadder(topic);};
-      VMG_OPEN(id(n),{mode:m,next:{t:'▶ Следующая лестница',f:nextL},back:()=>openTopics()});};}});
+      const nextL=()=>{if(typeof startLadder!=='function')openTopics();else startLadder(topic);}; // RV П3 поломка №8: «Следующая лестница» — в лестницу, «Готово» — в меню
+      VMG_OPEN(id(n),{mode:m,next:{t:'▶ Следующая лестница',f:nextL},back:()=>{if(typeof openMenu==='function')openMenu();else openTopics();}});};}});
 
 /* ---------- 2) Затея дня — плитка главного ---------- */
 W.homeSlots.push({id:'vmg-day',order:25,render(){const t=today();if(!t)return null;
@@ -64,12 +64,13 @@ W.homeSlots.push({id:'vmg-day',order:25,render(){const t=today();if(!t)return nu
   mount(el){const b=el.querySelector('.vmg-dt');if(b){const t=today();if(t&&!t.done&&!W.__showDay){W.__showDay=1;st('show',t.num,'day');}b.onclick=()=>{SND.tap();playDay();};}}});
 
 /* ---------- 3) Разминка перед темой ---------- */
-W.preTopicSlots.push({id:'vmg-warm',order:10,when(){const z=VMG.Z();return VMG.isOpen(2)&&!z.d.p[2]&&!VMG.cur;},
+W.preTopicSlots.push({id:'vmg-warm',order:10,when(){if(window.RVRES&&RVRES.on())return false; // rv.res: окна «Разминка?» перед лестницей нет (Разминка — на Доске)
+    const z=VMG.Z();return VMG.isOpen(2)&&!z.d.p[2]&&!VMG.cur;},
   render(topic){const z=VMG.Z(),tk=!z.d.t&&z.tk<VMG.RW.tkMax;st('show',2,'warm');
     return '<button class="vmg-pz warm" data-warm="1"><span class="vmg-pzI">💪</span><span class="vmg-pzB"><b>Разминка перед темой</b><small>3 карточки и 2 вопроса'+(tk?' → 🎟 жетон подсказки':'')+'</small></span><span class="vmg-pzG">▶</span></button>';},
   mount(el,topic,start){const b=el.querySelector('[data-warm]');if(!b)return;b.onclick=()=>{SND.tap();hideModal();
     const go=()=>{if(typeof start==='function')start();else startLadder(topic);};
-    VMG_OPEN('razminka',{mode:'warm',ctx:{topic},next:{t:'▶ К лестнице',f:go},back:r=>{if(r)go();}});};}});
+    VMG_OPEN('razminka',{mode:'warm',ctx:{topic},next:{t:'▶ К лестнице',f:go},back:()=>go()});};}}); // RV П3 поломка №9: выход из разминки — всё равно в лестницу
 
 /* ---------- 5) Доска объявлений ---------- */
 function board(){if(VMG.cur)VMG.close();hideModal();let el=$('vmgBoard');if(!el){el=document.createElement('div');el.id='vmgBoard';el.className='vmg';($('app')||document.body).appendChild(el);}

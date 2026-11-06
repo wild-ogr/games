@@ -68,7 +68,9 @@ function prOf(q,mode){try{return priceOf(q,{mode:mode});}catch(e){return 300;}}
 function rivTop(id){var h=typeof HELP!=='undefined'&&HELP[id];return (RIV[id]&&RIV[id].top)||(h&&h.top)||[];}
 function rivP(r,q){var p=pOf(q)+(r.sk||0)+((r.top||[]).indexOf(q.t)>=0?.08:0);return Math.max(.08,Math.min(.97,p));}
 function norm(s){return String(s||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9]/g,'');}
-function open(){return (S.lvl||0)>=OPEN_LVL;}
+// РЕВ П5 (rv.board, js/rv-home.js): Табло — с 3-го уровня на 4-й день игрока (по одной новинке в день); первая игра — сразу табло дня, без окна выбора и стены правил
+function rvb(){try{return !!(W.RVH&&RVH.boardOn());}catch(e){return false;}}
+function open(){if(rvb())return RVH.boardOpen();return (S.lvl||0)>=OPEN_LVL;}
 // район карьеры (1 Лавочка … 6 Город): от CAR, пока его нет — по уровню (старые звания: 10 Эрудит двора, 20 Профессор лавочки …)
 function distNo(){try{var C=W.CAR;if(C){var v=typeof C.district==='function'?C.district():typeof C.dist==='function'?C.dist():C.district;
     var n=+(v&&typeof v==='object'?(v.n||v.i||v.no):v);if(n>=1&&n<=6)return n;}}catch(e){}
@@ -188,7 +190,8 @@ function renderGrid(){var g=$b('bdGrid');if(!g||!B)return;var h='',n=B.cols;
   else{for(c=0;c<n;c++){t=B.topics[c];h+='<div class="bdTh'+(tNew(t)?' new':'')+'"><span class="ti">'+tIc(t)+'</span><span class="tn">'+E(tShort(t))+'</span></div>';}
     for(r=0;r<5;r++)for(c=0;c<n;c++)h+=cellH(r*n+c);}
   g.className='bdGrid '+(lay==='rows'?'rows':'grid');g.innerHTML=h;scan(g);
-  $b('bdLeg').innerHTML='<span>🎁 посылка от бабы Зины — цену назначаешь сам</span><span>💰 торг у гаражей — ставка</span>'+(isPC()?'<span class="pc">⌨ стрелки + Enter, 1–4 — ответ</span>':'');scan($b('bdLeg'));}
+  $b('bdLeg').innerHTML='<span>🎁 посылка от бабы Зины — цену назначаешь сам</span><span>💰 торг у гаражей — ставка</span>'+(isPC()?'<span class="pc">⌨ стрелки + Enter, 1–4 — ответ</span>':'')+(rvb()?'<button class="lnk noenter" id="bdHowL">Как играть?</button>':'');scan($b('bdLeg'));
+  if($b('bdHowL'))$b('bdHowL').onclick=function(){snd('tap');howTo();};}
 function cellH(i){var x=B.cells[i],d=x.r!=null,cls='bdCell'+(d?' done '+(x.r===1?'ok':x.r===0?'no':'ps'):'')+(i===B.sel?' sel':'');
   var lab=tName(x.t)+' за '+x.v+(d?(x.r===1?', верно':x.r===0?', неверно':', пас'):'');
   return '<button class="'+cls+'" data-i="'+i+'" aria-label="'+E(lab)+'"'+(d?' disabled':'')+'><span class="v">'+(d?(x.r===1?'✓':x.r===0?'✗':'—'):fmt(x.v))+'</span></button>';}
@@ -261,7 +264,7 @@ function ask(o){var q=o.q;if(!q){hideQ();return;}showQ(o.kind==='fin');
   if(o.kind==='fin')B.fin.st=1;else B.cur={i:o.i,k:o.kind,v:o.v};keep();renderQ();}
 var KN={cell:'',gift:'Посылка от бабы Зины',bet:'Торг у гаражей',fin:'Финал у подъезда'};
 function renderQ(){if(!Q||Q.phase!=='ask')return;var q=Q.q,done=Q.st==='done',right=Q.perm.indexOf(0),h='';
-  h+='<div class="bdPrice'+(Q.kind!=='cell'?' sp':'')+'"><span>💰</span><b>'+fmt(Q.v)+'</b></div>';
+  h+='<div class="bdPrice'+(Q.kind!=='cell'?' sp':'')+'">'+(rvb()?'':'<span>💰</span>')+'<b>'+fmt(Q.v)+'</b>'+(rvb()?'<small> очков</small>':'')+'</div>';
   h+='<div class="bdQm">'+E(tIc(q.t)+' '+tName(q.t))+(KN[Q.kind]?' · '+E(KN[Q.kind]):'')+'</div><div class="bdQt">'+E(q.q)+'</div><div class="bdAns">';
   for(var k=0;k<4;k++){var c='';if(Q.gone.has(k))c='gone';if(done&&k===right)c='ok';else if(done&&k===Q.sel)c='no';else if(Q.st==='wait'&&k===Q.sel)c='sel';else if(done)c+=' dim';
     if(Q.hint===k&&!done)c+=' tip';
@@ -272,8 +275,8 @@ function renderQ(){if(!Q||Q.phase!=='ask')return;var q=Q.q,done=Q.st==='done',ri
     h+='<div class="bdFoot"><button class="btn green big" id="bdNext">'+(nextIsEnd()?'Итоги':'Дальше →')+'</button><button class="lnk noenter" id="bdRep">⚑ Ошибка в вопросе?</button></div>';}
   else{var free=B.mode==='free',hf=B.h.ff;
     h+='<div class="bdFoot lifes"><button class="life" id="bdFF"'+(hf||Q.st!=='ask'?' disabled':'')+'>½<small>50 на 50<br>'+(hf?'уже было':'даром')+'</small></button>';
-    h+='<button class="life" id="bdNb"'+(!free||Q.hs.indexOf('nb')>=0||Q.st!=='ask'?' disabled':'')+'>🙋<small>Сосед<br>'+(free?COST.nb+' 💰':'нельзя')+'</small></button>';
-    h+='<button class="life" id="bdZi"'+(!free||Q.hs.indexOf('zi')>=0||Q.st!=='ask'?' disabled':'')+'>👵<small>Баба Зина<br>'+(free?COST.zi+' 💰':'нельзя')+'</small></button>';
+    if(free||!rvb())h+='<button class="life" id="bdNb"'+(!free||Q.hs.indexOf('nb')>=0||Q.st!=='ask'?' disabled':'')+'>🙋<small>Сосед<br>'+(free?COST.nb+' 💰':'нельзя')+'</small></button>';
+    if(free||!rvb())h+='<button class="life" id="bdZi"'+(!free||Q.hs.indexOf('zi')>=0||Q.st!=='ask'?' disabled':'')+'>👵<small>Баба Зина<br>'+(free?COST.zi+' 💰':'нельзя')+'</small></button>';
     if(B.minus&&Q.kind==='cell')h+='<button class="life pass" id="bdPass"'+(Q.st!=='ask'?' disabled':'')+'>🏳<small>Пас<br>без минуса</small></button>';
     h+='</div>';if(isPC())h+='<p class="bdKb">1–4 или А–Г / A–D — ответ'+(B.minus&&Q.kind==='cell'?', 0 — пас':'')+', Esc — к табло</p>';}
   var c=$b('bdQc');c.innerHTML=h;scan(c);
@@ -398,7 +401,7 @@ function key(e){if(!onBoard()||e.ctrlKey||e.metaKey||e.altKey)return;var ad=$b('
 function firstFree(){for(var i=0;i<B.cells.length;i++)if(B.cells[i].r==null)return i;return 0;}
 
 /* ---------- режимы ---------- */
-function lockToast(){toast('Табло Михалыча откроется на 5-м уровне. Проходи лестницы!');}
+function lockToast(){if(rvb()&&(S.lvl||0)>=2){toast('Табло Михалыча откроется совсем скоро — загляни завтра!');return;}toast('Табло Михалыча откроется на '+(rvb()?3:5)+'-м уровне. Проходи лестницы!');}
 function resumeOpen(){if(!B)return;enter();
   // открытый вопрос (вышли посреди) — открываем снова: это та же клетка, ответ не переигрывается подсказками
   if(B.fin&&B.fin.st===1&&left()===0){ask({kind:'fin',q:QI[B.fin.q],v:B.fin.v||0});return;}
@@ -406,15 +409,18 @@ function resumeOpen(){if(!B)return;enter();
   if(left()===0&&!B.done){if(B.fin&&B.fin.st<2)finIntro();else finish();}}
 function startFree(again){if(!open())return lockToast();var nb=build({mode:'free'});if(!nb){toast('Не хватает вопросов для табло');return;}
   B=nb;B.say=null;keep();stat(function(){STAT.lvl(0,'bd');});enter();
-  if(!S.bdTip){S.bdTip=1;try{save();}catch(e){}howTo();}}
+  if(!S.bdTip){S.bdTip=1;try{save();}catch(e){}if(rvb())firstSay();else howTo();}}
 function openDay(){if(!open())return lockToast();var k=dayKey(0),d=S.bdDay;
   if(d&&d.k===k&&d.s){var b=unsnap(d.s);if(b){B=b;B.sub='';if(B.done){enter();showDone();return;}stat(function(){STAT.lvl(0,'bdd');});resumeOpen();return;}}
   var nb=build({mode:'day',k:k,seed:k*7919+4243});if(!nb){toast('Табло дня не собралось');return;}
-  B=nb;keep();stat(function(){STAT.lvl(0,'bdd');});enter();if(!S.bdTip){S.bdTip=1;howTo();}}
+  B=nb;keep();stat(function(){STAT.lvl(0,'bdd');});enter();if(!S.bdTip){S.bdTip=1;if(rvb())firstSay();else howTo();}}
+function firstSay(){try{save();}catch(e){}say('Всё просто: выбирай клетку — тему и цену. Дороже — труднее. Ответишь верно — очки твои. Таймера нет.','mihalych','happy');}
 function showDone(){var sc=B.sc,pl=placeOf();say('Табло дня уже сыграно: '+fmt(sc)+' очков, '+pl+'-е место. Завтра — новое табло!','mihalych','happy');}
 function startMatch(o){o=o||{};var nb=build({mode:o.mode==='cup'?'cup':'champ',seed:o.seed,cols:o.cols,mult:o.mult,rivals:o.rivals||['zina'],topics:o.topics,noGift:o.noGift,noBet:o.noBet,noFinal:o.noFinal,title:o.title,sub:o.sub,onEnd:o.onEnd});
   if(!nb){toast('Не хватает вопросов для табло');return false;}B=nb;stat(function(){STAT.lvl(0,o.mode==='cup'?'bdc':'bdf');});enter();return true;}
-function hub(){if(!open())return lockToast();var k=dayKey(0),d=S.bdDay,dd=d&&d.k===k&&d.s,dn=dd&&d.s.d,cur=S.bdCur&&unsnap(S.bdCur);
+function hub(){if(!open())return lockToast();
+  if(rvb())try{RV.mark('board');}catch(e){}
+  if(rvb()&&!S.bdN&&!S.bdCur&&!(S.bdDay&&S.bdDay.k===dayKey(0)))return openDay(); // первая игра — сразу табло дняvar k=dayKey(0),d=S.bdDay,dd=d&&d.k===k&&d.s,dn=dd&&d.s.d,cur=S.bdCur&&unsnap(S.bdCur);
   var ds=dn?'сыграно: '+fmt(d.s.sc)+' · завтра новое':dd?'начато — продолжить':'одно на весь двор · 3 темы',fs=cur?'продолжить: счёт '+fmt(cur.sc)+', осталось '+cur.cells.filter(function(x){return x.r==null;}).length+' клеток':'5 тем × 100–500 · соседи-соперники';
   modal('<div class="av">'+av('mihalych','happy')+'</div><h2>Табло Михалыча</h2><p>Выбираешь тему и цену: дороже — труднее. Соседи отвечают на те же вопросы — кто больше наберёт?</p>'
     +'<div class="row"><button class="btn blue big" id="bdGoDay">📅 Табло дня<small>'+E(ds)+'</small></button>'
@@ -444,7 +450,7 @@ function merge(d){if(!isO(d))return;try{
 
 /* ---------- гнёзда UX: плитка на главном, экраны роутера ---------- */
 function tile(){var k=dayKey(0),d=S.bdDay,dn=d&&d.k===k&&d.s&&d.s.d;
-  if(!open())return (S.lvl||0)>=3?UI.tile({ic:'🔒',t:'Табло Михалыча',s:'откроется на 5-м уровне',cls:'lock',go:'board'}):null; // FIX1: новичку закрытое табло в ленте не показываем (есть большая кнопка)
+  if(!open())return rvb()?null:(S.lvl||0)>=3?UI.tile({ic:'🔒',t:'Табло Михалыча',s:'откроется на 5-м уровне',cls:'lock',go:'board'}):null; // FIX1: новичку закрытое табло в ленте не показываем (есть большая кнопка)
   return UI.tile({ic:'🏆',t:'Табло Михалыча',s:dn?'табло дня: '+fmt(d.s.sc)+' · сыграть ещё':S.bdCur?'продолжить табло':'табло дня ждёт · 5 тем × 100–500',tag:!S.bdN?'новое':dn?'':'сегодня',cls:'gold',go:'board'});}
 function reg(){var W2=W;if(!Array.isArray(W2.homeSlots))W2.homeSlots=[];W2.homeSlots.push({id:'board',order:30,render:function(){try{return tile();}catch(e){return null;}}});
   if(W2.UI){UI.screen('board',function(o){if(o&&o.mode==='free')return startFree();if(o&&o.mode==='day')return openDay();hub();});UI.screen('bday',function(){openDay();});}}
@@ -467,7 +473,7 @@ function demo(){var p=new URLSearchParams(location.search),d=p.get('demo');if(!d
   else if(d==='bhub'){hub();}}
 W.addEventListener('load',function(){setTimeout(demo,50);});
 
-W.BOARD={open:hub,openDay:openDay,startFree:startFree,start:startMatch,minus:minusOn,district:distNo,merge:merge,
+W.BOARD={isOpen:open,open:hub,openDay:openDay,startFree:startFree,start:startMatch,minus:minusOn,district:distNo,merge:merge,
   day:function(){var k=dayKey(0),d=S.bdDay,s=d&&d.k===k&&d.s;return {k:k,done:!!(s&&s.d),score:s?+s.sc||0:0,place:s?(1+(s.rv||[]).filter(function(r){return r.sc>s.sc;}).length):0};},
   days:function(){return Object.assign({},S.bdDays||{});},
   // для автотестов

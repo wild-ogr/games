@@ -283,6 +283,7 @@ document.addEventListener('visibilitychange',function(){if(!a)return;if(document
 </div>
 <script src="js/topics.js"></script><script src="js/topics-fest.js"></script><!--FEST: праздничные наборы (после данных тем CONTENT)-->
 <script src="js/price-id.js"></script><script src="js/price.js"></script>
+<!-- rv:П0 --><script src="js/rv-core.js"></script><script src="js/know-id.js"></script><!-- /rv:П0 — каркас флагов RV и «знает двор» KNOW (до игры) -->
 <script src="js/qstart.js"></script> <!-- UP-OV 24.10: стартовый набор для первой лестницы новичка (tools/qstart.py) -->
 <script src="js/tmr.js"></script> <!-- UP-OV 24.10: окно «Завтра — подарок» (VK/ОК, одно за всё время; тот же файл, что в Обороне) -->
 <link rel="stylesheet" href="css/board.css"><script src="js/board.js"></script>
@@ -337,12 +338,12 @@ const DNAME=['',L('лёгкий','easy'),L('средний','medium'),L('тру�
 
 /* ---- лестница: 10 вопросов, монеты на кону, несгораемые — 5-я и 10-я ступени ---- */
 const PR=[2,4,6,8,12,16,20,25,30,40],SAFE=[4,9];
-const prz=i=>PR[i]*(G&&G.wk?2:1); // тема недели — монеты лестницы ×2
+const prz=i=>PR[i]*(G&&G.wk?2:1)*(window.RVD?RVD.k(i):1); // тема недели — монеты лестницы ×2; RV-П2 rv.stake: ×1/×2/×3 по уровню и «Спорим?» (js/rv-drama.js)
 // сложность по пройденным уровням: сначала полегче, потом больше трудных
 function ramp(lv){return lv<3?[1,1,1,1,1,1,1,1,2,2]:lv<10?[1,1,1,1,2,2,2,2,3,3]:[1,1,1,2,2,2,2,3,3,3];}
 const DAYRAMP=[1,1,1,2,2,2,2,3,3,3];
 // цены повторной подсказки (первая на лестнице — бесплатно) и второй попытки; экономика — tools/econ.py
-const COST={ff:30,nb:20,zi:35,second:50};
+const COST={ff:30,nb:20,zi:35,get second(){return 50*(window.RVD?RVD.sm():1);}}; // RV-П2 rv.stake: вторая попытка дорожает вместе со ставками 50/100/150 (tools/econ_rv.py)
 // звание — по пройденным уровням (S.lvl)
 const RANKS=[[0,L('Новичок','Newbie')],[2,L('Любознательный сосед','Curious neighbour')],[5,L('Знаток подъезда','Stairwell expert')],[10,L('Эрудит двора','Yard scholar')],
   [20,L('Профессор лавочки','Bench professor')],[35,L('Академик района','District academic')],[60,L('Мудрец всего города','City sage')],[100,L('Живая энциклопедия','Walking encyclopedia')]];
@@ -807,13 +808,13 @@ var STAT=(function(){
 // STAT — своя ОБЕЗЛИЧЕННАЯ статистика (hobby-analytics/stat): без vk_user_id, IP и постоянного номера; выключатель — ⚙ «Анонимная статистика».
 // Адрес боевой; на маке/LAN/в headless модуль молчит сам (03.10). ?stat=dev на localhost — журнал [STAT] в консоль без отправки.
 const STAT_URL='https://functions.yandexcloud.net/d4efqgmii6honbajplim?op=ev';
-STAT.init({g:'viktorina',gv:'v5.9-110614',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
+STAT.init({g:'viktorina',gv:'v6.0-110620',plat:PLAT,lang:LANG,url:STAT_URL,now:()=>nowMs(),S:S});
 // STAT v1.2: прогресс на входе (pl — пройдено уровней, cn — монеты, bt — облако хоть раз отдавало сохранение: метка устройства viktorina-cl) — после облака, не позже 2,5 с
 let statPr=0;function statProg(){if(statPr)return;statPr=1;let bt=0;try{bt=localStorage.getItem('viktorina-cl')?1:0;}catch(e){}STAT.progress({pl:+S.lvl||0,cn:+S.coins||0,bt:bt});if(window.STATANS)STATANS.prg();} // STATANS.prg — разовое prg (js/stat-ans.js)
 setTimeout(statProg,2500);STAT.bal(+S.coins||0);STAT.cfg({snd:S.sound===false?0:1,calm:S.calm===true?1:0});
 const pauseWhy=new Set();
 function setPause(why,on){if(on)pauseWhy.add(why);else pauseWhy.delete(why);paused=muted=pauseWhy.size>0;
-  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false||S.music===true)acWake();}catch(e){}}
+  if(AC){try{if(muted){const p=AC.suspend();p&&p.catch&&p.catch(()=>{});}else if(S.sound!==false||musWant())acWake();}catch(e){}}
   try{musTick();}catch(e){}} // музыка: замолчать сразу, а не через 300 мс
 const YG={
   start(){try{ysdk&&ysdk.features.GameplayAPI&&ysdk.features.GameplayAPI.start();}catch(e){}},
@@ -1214,14 +1215,16 @@ function unlockAudio(){if(S.sound===false||muted)return;const a=ac();if(!a)retur
 ['pointerdown','touchend','click','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{capture:true,passive:true})); // буст 09.10: + pointerdown — Android Chrome будит AC на первом касании (как Рыбалка)
 /* ---- музыка (07.10): записанный трек по кругу в меню и в игре ----
    audio/hepcats.m4a — «Hep Cats», Kevin MacLeod (incompetech.com), CC BY 4.0 (выбор владельца 07.10.2026): подпись в «Об игре» НЕ удалять.
-   По умолчанию ВЫКЛЮЧЕНА (S.music===true — включена; ⚙ → «🎵 Музыка»). Файл не запрашивается, пока музыка выключена и пока игрок не коснулся экрана.
+   По умолчанию ВЫКЛЮЧЕНА (S.music===true — включена; ⚙ → «🎵 Музыка»); с революцией RV (06.11) — по умолчанию ВКЛЮЧЕНА, см. musWant(). Файл не запрашивается, пока музыка выключена и пока игрок не коснулся экрана.
    Потоком, как в «Покере» и «Гастрономе»: <audio loop> → createMediaElementSource → GainNode (трек 4 минуты в память не распаковывается).
    Тихо (MUS_VOL): игрок читает вопрос и думает; звуки игры поверх слышны.
    Молчит, пока есть любая причина паузы setPause (ad / hide / sdk / pay) и при скрытой вкладке: musTick ставит элемент на паузу, AC.suspend глушит выход.
    iOS: элемент создаётся и первый раз запускается только в жесте (musPrime — касание/клик/клавиша и сам выключатель). От S.sound не зависит. */
 const MUSF='audio/hepcats.m4a',MUS_VOL=.14;
 const MUS={el:null,g:null,ok:0,bad:0};
-function musOn(){return S.music===true&&!muted&&!document.hidden;}
+// RV (06.11, решение владельца): при включённой революции музыка по умолчанию ВКЛЮЧЕНА (тихо, MUS_VOL); S.music===false — игрок выключил сам; ?off=rv / ?off=rv.mus — как v5.9
+function musWant(){return S.music===true||S.music==null&&!!(window.RV&&RV.on('mus'));}
+function musOn(){return musWant()&&!muted&&!document.hidden;}
 function musEl(){if(MUS.el||MUS.bad)return MUS.el;const a0=ac();if(!a0)return null;
   try{const a=new Audio();a.loop=true;a.preload='auto';a.setAttribute('playsinline','');a.addEventListener('error',()=>{MUS.bad=1;});a.src=MUSF;
     try{const src=a0.createMediaElementSource(a),g=a0.createGain();g.gain.value=MUS_VOL;src.connect(g).connect(a0.destination);MUS.g=g;}catch(e){a.volume=MUS_VOL;}
@@ -1444,7 +1447,7 @@ function inGame(){return !!(G&&!G.over&&onScr('scr-game'));}
 function openCoins(back){STAT.screen('shop'); // STAT v1.2: окно «Монеты» — это магазин (было 'coins')
   // покупки за деньги — только вне игры; нет платежей — раздела нет совсем
   const buy=PAY.on&&!inGame();
-  modal(`<h2>${L('Монеты','Coins')} 💰</h2><p>${L('У тебя','You have')} ${coinsTxt(S.coins)}. ${L('Монеты дают за лестницу, викторину и табло дня, затеи и задания. Тратятся на «Мой двор» (лавочка, качели, киоск и украшения), подсказки и вторую попытку.','Coins come from ladders, the daily quiz and board, mini-games and tasks. Spend them on «My yard», extra hints and second tries.')}${window.YD&&buy&&LANG!=='en'?' Абонемент сезона — в «Двор → Сезон».':''}</p>${buy?PAY.html(['no_ads','coins_s','coins_l']):''}<div class="row">${AD_EXTRA&&adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} ${L('за рекламу','for an ad')}</button>`:''}${window.YD&&!inGame()?`<button class="btn accent noenter" id="mYard">🏠 ${L('Мой двор — потратить','My yard')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`); // FIX1 (аудит 🟠7): Лавка говорит про «Мой двор»
+  modal(`<h2>${L('Монеты','Coins')} 💰</h2><p>${L('У тебя','You have')} ${coinsTxt(S.coins)}. ${L('Монеты дают за лестницу, викторину и табло дня, затеи и задания. Тратятся на «Мой двор» (лавочка, качели, киоск и украшения), подсказки и вторую попытку.','Coins come from ladders, the daily quiz and board, mini-games and tasks. Spend them on «My yard», extra hints and second tries.')}${window.YD&&buy&&LANG!=='en'?(window.RVH&&RVH.on()?' Абонемент — в «Мой двор → Украшения».':' Абонемент сезона — в «Двор → Сезон».'):''}</p>${buy?PAY.html(['no_ads','coins_s','coins_l']):''}<div class="row">${AD_EXTRA&&adOk()?`<button class="btn accent noenter" id="mAdCoins">📺 +${coinsTxt(AD_COINS)} ${L('за рекламу','for an ad')}</button>`:''}${window.YD&&!inGame()?`<button class="btn accent noenter" id="mYard">🏠 ${L('Мой двор — потратить','My yard')}</button>`:''}<button class="btn" id="mCancel">${L('Закрыть','Close')}</button></div>`); // FIX1 (аудит 🟠7): Лавка говорит про «Мой двор»
   if($('mYard'))$('mYard').onclick=()=>{hideModal();UI.go('yard');};
   if(buy){PAY.bind($('mcard'));PAY.re=()=>openCoins(back);}
   if($('mAdCoins'))STAT.offer('coins');if($('mAdCoins'))$('mAdCoins').onclick=()=>{if(adHold('coins'))return;hideModal();STAT.place('coins');const n=AD_COINS;showRewarded(()=>{STAT.earn('ad',n);setCoins(S.coins+n);SND.coin();toast('+'+coinsTxt(n));if(back)back();},w=>{if(w==='wait')openCoins(back);else if(back)back();},
@@ -1723,7 +1726,7 @@ function openIntro(){STAT.screen('intro');STAT.ev('tut',{s:1});modal(`<div class
 function pickQ(ts,d,used,tu,ez){const order=d===1?[1,2,3]:d===2?[2,1,3]:[3,2,1];
   for(let pass=0;pass<2;pass++){
     for(const dd of order)for(const e of dd===1&&ez?(ez>=5?[5,4,0]:[ez,0]):[0]){const by={};let any=false;
-      for(const t of ts)for(const q of BYT[t])if(q.d===dd&&(!e||(q.e||0)>=e)&&!used.has(q.i)&&!seen(q)&&!isBad(q)){(by[t]=by[t]||[]).push(q);any=true;}
+      for(const t of ts)for(const q of BYT[t])if(q.d===dd&&(!e||(q.e||0)>=e)&&!used.has(q.i)&&!seen(q)&&!isBad(q)&&!(pass===0&&window.RVD&&RVD.vet(q,used.size))){/* RV-П2 rv.vet: ветерану на ступенях 1–5 без вопросов «знают 95 %+» */(by[t]=by[t]||[]).push(q);any=true;}
       if(!any)continue;
       const tl=Object.keys(by),mn=Math.min(...tl.map(t=>tu[t]||0));
       return pick(by[pick(tl.filter(t=>(tu[t]||0)===mn))]);}
@@ -1783,7 +1786,7 @@ const LET=['А','Б','В','Г'];
 function renderQ(){if(!G)return;const q=cur();
   if(G.pi!==G.i){G.pi=G.i;G.perm=G.perms?G.perms[G.i].slice():shuffle([0,1,2,3]);G.gone=new Set();G.wrongs=new Set();G.hint=null;G.st='ask';G.sel=null;G.qh=[];G.qSec=null;G.qT0=performance.now();G.qH0=hidMs;
     if(!seen(q)){markSeen(q);save();}
-    if(G.i>0||!G.say)G.say={who:'mihalych',t:G.mode==='lad'?(G.i===9?HOST.last[0]:fill(pick(HOST.q),{n:G.i+1,p:coinsTxt(prz(G.i))})):L('Вопрос ','Question ')+(G.i+1)+L(' из 10',' of 10')};}
+    if(G.i>0||!G.say)G.say=(window.RVQ&&RVQ.ask(q,G))||{who:'mihalych',t:G.mode==='lad'?(G.i===9?HOST.last[0]:fill(pick(HOST.q),{n:G.i+1,p:coinsTxt(prz(G.i))})):L('Вопрос ','Question ')+(G.i+1)+L(' из 10',' of 10')};}
   const tn=TN[q.t];
   $('gTitle').textContent=G.mode==='lad'?L('Уровень ','Level ')+((S.lvl||0)+1):G.mode==='day'?L('Викторина дня','Daily quiz'):L('Дуэль','Duel');
   $('gSub').textContent=G.mode==='lad'?(G.topic==='all'?L('Всё подряд','Mixed'):TN[G.topic].n):G.mode==='day'?L('одни вопросы на весь двор','same for everyone'):G.foe!=null?L('друг ответил на ','friend scored ')+G.foe+L(' из 10',' of 10'):L('те же вопросы получит друг','your friend gets the same questions');
@@ -1857,7 +1860,7 @@ function reveal(k){if(!G||G.st!=='wait')return;const q=cur(),ok=G.perm[k]===0;
     if(!isObj(S.tc))S.tc={};const tc0=S.tc[q.t]||0;S.tc[q.t]=tc0+1;const tm=TCM.indexOf(tc0+1);if(tm>=0)(G.newM=G.newM||[]).push({t:q.t,m:TMEDAL(tc0+1)});
     const sf=G.mode==='lad'&&SAFE.indexOf(G.i)===0;
     if(sf)setTimeout(()=>SND.safe(),350);
-    G.say={who:'mihalych',m:'happy',t:G.mode==='lad'&&G.i===9?pick(HOST.win):sf?HOST.safe[0]+(G.first||G.help?' '+L('Дальше — уже без страховки.','From here on — no safety net.'):''):pick(HOST.right)};
+    G.say=(window.RVQ&&RVQ.right(q,G,{safe:sf,tail:G.first||G.help?L('Дальше — уже без страховки.','From here on — no safety net.'):''}))||{who:'mihalych',m:'happy',t:G.mode==='lad'&&G.i===9?pick(HOST.win):sf?HOST.safe[0]+(G.first||G.help?' '+L('Дальше — уже без страховки.','From here on — no safety net.'):''):pick(HOST.right)};
     dayProg();save();renderQ();if(window.UIF)UIF.right();return;}
   G.wrongs.add(k);SND.wrong();buzz([60,40,60]);if(window.UIF)setTimeout(()=>UIF.wrong(k),0);
   // лестница: можно взять вторую попытку (одна на лестницу) — за монеты или ролик по кнопке
@@ -1872,16 +1875,18 @@ function reveal(k){if(!G||G.st!=='wait')return;const q=cur(),ok=G.perm[k]===0;
   if(G.mode==='lad'&&!G.second&&left>=2){G.st='ask';
     // первые 3 уровня — вторая попытка даром, без окна (новичок с 60 💰 не должен отдавать 50 на первом же вопросе — аудит F5)
     if(novice()){G.second=1;G.say={who:'mihalych',m:'sad',t:L('Мимо! Но на первых уровнях вторая попытка — даром. Этот вариант убрал, подумай ещё.','Missed! On the first levels a second try is free.')};save();renderQ();return;}
-    G.say={who:'mihalych',m:'sad',t:pick(HOST.wrong)};renderQ();secondOffer();return;}
+    G.say=(window.RVQ&&RVQ.wrong(q,G,false))||{who:'mihalych',m:'sad',t:pick(HOST.wrong)};renderQ();secondOffer();return;}
   endQ();}
 // викторина дня: ответы И взятые подсказки переживают перезапуск (аудит F2: подсказки возвращались перезагрузкой)
 function dayProg(){if(G&&G.mode==='day'){S.dprog={k:G.day,res:G.res.slice(),life:Object.assign({},G.life)};save();}}
 function endQ(){if(!G)return; /* окно «вторая попытка» осталось открытым после выхода из игры — G уже нет */
-  G.st='done';G.res[G.i]=0;ansFire(0);dayProg();G.say={who:'mihalych',m:'sad',t:pick(HOST.wrong)+' '+L('Верный ответ — ','The answer is ')+'«'+cur().a[0]+'».'};save();renderQ();}
+  G.st='done';G.res[G.i]=0;ansFire(0);dayProg();G.say=(window.RVQ&&RVQ.wrong(cur(),G,true,qq(cur().a[0])))||{who:'mihalych',m:'sad',t:pick(HOST.wrong)+' '+L('Верный ответ — ','The answer is ')+qq(cur().a[0])+'.'};save();renderQ();}
+// ответ в кавычки «…», если в нём своих кавычек нет (поломка VK-UX №1: «««Всегда готов!»»»)
+function qq(s){s=String(s);return /[«»"]/.test(s)?s:'«'+s+'»';}
 function uiFree2Left(){const d=dayKey(0);return !(isObj(S.uiFree)&&S.uiFree.d===d&&S.uiFree.n>=AD_FREE2);} // FX-GV: проверка без траты
 function uiFree2(){const d=dayKey(0);if(!isObj(S.uiFree)||S.uiFree.d!==d)S.uiFree={d,n:0};if(S.uiFree.n>=AD_FREE2)return false;S.uiFree.n++;save();return true;}
 function secondOffer(){const can=S.coins>=COST.second,fr=adBtnOk()&&!can&&uiFree2Left(); // FX-GV: ролика нет (кнопка спрятана) и монет мало — «даром» до AD_FREE2 раз в день
-  modal(`<h2>${L('Неверно…','Wrong…')}</h2><p>${L('Можно попробовать ещё раз: этот вариант уберём. Вторая попытка — одна на лестницу.','You can try again without this option. One second try per ladder.')}</p>
+  modal(`<h2>${L('Неверно…','Wrong…')}</h2><p>${L('Можно попробовать ещё раз: этот вариант уберём. Вторая попытка — одна на лестницу.','You can try again without this option. One second try per ladder.')}</p>${window.RVQ&&RVQ.on()?RVQ.second(cur()):''}
     <div class="row">${adBtnOk()?`<button class="btn accent noenter" id="s2Ad">📺 ${L('Вторая попытка за рекламу','Second try for an ad')}</button>`:''}${fr?`<button class="btn accent noenter adno-only" id="s2Free">🎁 ${L('Вторая попытка даром','Free second try')}</button>`:''}
     <button class="btn buy noenter" id="s2Coin" ${can?'':'disabled'}>${L('Вторая попытка за ','Second try for ')}${coinsTxt(COST.second)}${can?'':'<small>'+L('у тебя ','you have ')+coinsTxt(S.coins)+'</small>'}</button>
     <button class="btn" id="s2No">${L('Показать ответ','Show the answer')}</button></div>`);
@@ -1930,7 +1935,7 @@ function askHelper(id){const h=id==='zina'?ZINA:HELP[id],q=cur();let p=h.base[q.
   const k=Math.random()<p||!av.length?right:pick(av);
   const conf=p>=.8?'sure':p>=.55?'think':'guess';
   G.hint=k;G.hintBy=id==='zina'?'zi':'nb';(G.qh=G.qh||[]).push(G.hintBy==='zi'?'z':'n');SND.hint();
-  const a='<b>'+LET[k]+' — «'+esc(q.a[G.perm[k]])+'»</b>';
+  const a='<b>'+LET[k]+' — '+esc(qq(q.a[G.perm[k]]))+'</b>';
   G.say={who:id,m:conf==='sure'?'happy':conf==='guess'?'wow':'norm',h:'<b>'+esc(h.n)+':</b> '+fill(esc(pick(HL[id][conf])),{a})};
   renderQ();}
 function neighbour(free){const q=cur();
@@ -1944,13 +1949,13 @@ function neighbour(free){const q=cur();
 $('lf50').onclick=()=>useLife('ff',fifty);
 $('lfNb').onclick=()=>useLife('nb',free=>{G.life.nb=1;neighbour(free===true);});
 $('lfZi').onclick=()=>useLife('zi',()=>askHelper('zina'));
-$('lfTake').onclick=()=>{if(!G||G.st!=='ask'||G.i===0||G.mode!=='lad'||insured())return;const p=prz(G.i-1);
+$('lfTake').onclick=()=>{if(window.RVD&&RVD.take())return; /* RV-П2 rv.spor: «Спорим?» на месте «Забрать» */if(!G||G.st!=='ask'||G.i===0||G.mode!=='lad'||insured())return;const p=prz(G.i-1);
   modal(`<h2>🏳 ${L('Забрать монеты?','Take the coins?')}</h2><p>${L('Уйдёшь с ','You leave with ')}<b>${coinsTxt(p)}</b>. ${L('Если ответишь неверно — останется только ','A wrong answer leaves only ')}${coinsTxt(safeWon())}.</p>
     <div class="row"><button class="btn green" id="tkNo">${L('Играю дальше','Keep playing')}</button><button class="btn noenter" id="tkYes">${L('Забрать','Take')} ${coinsTxt(p)}</button></div>`);
   $('tkNo').onclick=hideModal;$('tkYes').onclick=()=>{hideModal();finishLadder('take');};};
 $('gBack').onclick=()=>{if(!G)return openMenu();if(G.over)return openMenu();
   const lad=G.mode==='lad';
-  modal(`<h2>${L('Выйти?','Leave?')}</h2><p>${lad?L('Лестница прервётся, монеты на кону не сохранятся.','The ladder ends and coins at stake are lost.'):G.mode==='day'?L('Викторина дня засчитается с тем, что уже отвечено.','The daily quiz counts what you answered so far.'):L('Дуэль прервётся.','The duel ends.')}</p>
+  modal(`<h2>${L('Выйти?','Leave?')}</h2><p>${lad?L('Лестница прервётся, монеты на кону не сохранятся.','The ladder ends and coins at stake are lost.'):G.mode==='day'?L('Викторина дня засчитается с тем, что уже отвечено.','The daily quiz counts what you answered so far.'):G.vnuk?L('Проверка внука прервётся.','The game ends.'):L('Дуэль прервётся.','The duel ends.')}</p>
     <div class="row"><button class="btn green" id="qStay">${L('Остаться','Stay')}</button><button class="btn noenter" id="qLeave">${L('Выйти','Leave')}</button></div>`);
   $('qStay').onclick=hideModal;
   $('qLeave').onclick=()=>{hideModal();if(G.mode==='day'){G.quit=1;while(G.res.length<10)G.res.push(0);finishDay();return;}
@@ -1975,6 +1980,7 @@ function finishLadder(kind){if(!G||G.over)return;G.over=true;YG.stop();
   save();updCoins();
   const topic=G.topic,r0=rankOf(S.lvl-(pass?1:0)),r1=rankOf(S.lvl),newRank=window.CAR?false:r1!==r0,carNews=window.CAR&&CAR.hasNews(); // CAR: новое звание — строкой карьеры (resultSlots)
   if(kind==='win'){SND.win();confetti();buzz([30,50,30]);}else if(pass)SND.safe();else setTimeout(()=>SND.lose(),200);
+  if(window.RVRES&&RVRES.on()){RVRES.show({kind,good,prize,pass,gift,topic,newRank,rank:r1,help:!pass&&helpDue()});return;} // rv.res (П3): итог — 4 блока + ≤1 предложение (js/rv-res.js)
   const head=kind==='win'?L('Вся лестница!','The whole ladder!'):pass?L('Уровень пройден!','Level passed!'):kind==='take'?L('Монеты забраны','Coins taken'):L('Лестница оборвалась','The ladder broke');
   const line=kind==='win'?pick(HOST.win):kind==='take'?L('Разумно! Синица в руках лучше журавля в небе.','Wise! A bird in the hand…'):pass?L('Несгораемые монеты — твои. В следующий раз дойдёшь до верха!','Safe coins are yours. Next time — to the top!'):good>0?L('Уже '+good+' '+pl(good,'верный','верных','верных')+'! Дойди до 5-й ступени — и уровень пройден.','Reach step 5 to pass the level!'):L('Ничего, во дворе не все с первого раза академики. Дойди до 5-й ступени — и уровень пройден!','No worries — reach step 5 to pass the level!');
   // награды и цели — не больше трёх строк: новое (медаль/звание/гостинец), потом одна ближайшая цель, потом «Завтра»
@@ -2004,12 +2010,14 @@ function finishLadder(kind){if(!G||G.over)return;G.over=true;YG.stop();
 function lad10(res){let h='';for(let k=0;k<10;k++)h+='<span class="'+(res[k]===1?'done':res[k]===0?'bad':'')+'">'+(res[k]===1?'✓':res[k]===0?'✗':'')+'</span>';return '<div class="lad10 lk-o">'+h+'</div>';}
 // окно итога без прокрутки на низком экране: по очереди убираем цитату, цель, портрет (награды и «Завтра» остаются)
 const FIT_SEL=['.quote','.goal:not(.tipl):not(.tmr):not(.soc-o)','.lad10','.av','.coins-won small'];
+const FIT_RV=['.lad10','.coins-won small','.rv-dv','.quote','.av']; // rv.res: сначала ряд ступенек и мелочь, Михалыч — последним
+const fitSel=()=>$('mcard').querySelector('#mWon.rv-btns')?FIT_RV:FIT_SEL;
 function fitCard(){const m=$('modal'),c=$('mcard'),hid=[];if(window.LK&&LK.on()&&LK.scan)LK.scan(c); // значки вместо эмодзи — сразу, иначе строки вырастут уже после подгонки (+17 px)
   const ms=getComputedStyle(m),pad=c.querySelector('.soc-o.ntf')?(parseFloat(ms.paddingTop)||0)+(parseFloat(ms.paddingBottom)||0):20; // с вопросом про напоминания — строго, без прокрутки
-  const fits=()=>c.offsetHeight+(c.classList.contains('res')&&window.LK&&LK.on()?parseFloat(getComputedStyle(c).marginTop)||0:0)<=m.clientHeight-pad;if(fits())return hid;
-  for(const sel of FIT_SEL){const e=c.querySelector(sel);if(e)e.style.display='none';if(sel==='.av')c.classList.remove('res');if(e)hid.push(sel);if(fits())return hid;}hid.push('!');return hid;}
+  const fits=()=>c.offsetHeight+((c.classList.contains('res')||c.querySelector('#mWon.rv-btns'))&&window.LK&&LK.on()?parseFloat(getComputedStyle(c).marginTop)||0:0)<=m.clientHeight-pad; // rv.res (П7): портрет над окном итога и при победеif(fits())return hid;
+  for(const sel of fitSel()){const e=c.querySelector(sel);if(e)e.style.display='none';if(sel==='.av')c.classList.remove('res');if(e)hid.push(sel);if(fits())return hid;}hid.push('!');return hid;}
 // ntf: вернуть окно итога к виду «до подгонки» (примерка вопроса про напоминания — socEarly)
-function fitUndo(){const c=$('mcard');for(const sel of FIT_SEL){const e=c.querySelector(sel);if(e)e.style.display='';}c.classList.add('res');}
+function fitUndo(){const c=$('mcard');for(const sel of fitSel()){const e=c.querySelector(sel);if(e)e.style.display='';}c.classList.add('res');}
 // «Завтра: …» — повод вернуться: гостинец (не сгорает), новая викторина дня, тема недели (если сменится)
 function tmrTxt(){const g=giftState(),wkNow=weekTopic(),d=new Date(nowMs());const wkTom=TK[((weekNo()+(d.getDay()===0?1:0))*7+4)%TK.length];
   return L('Завтра: ','Tomorrow: ')+'🎁 +'+coinsTxt(g.after)+' · 📅 '+L('новая викторина дня','new daily quiz')+(wkTom!==wkNow?' · ⭐ '+L('новая тема недели','new topic of the week'):'');}
@@ -2068,21 +2076,26 @@ function maybeStreak(){if(G||window.__demo||modalOn||$('ad').classList.contains(
 /* ================= дуэль с другом (VK): зерно в ссылке, без сервера =================
    Игрок проходит 10 вопросов по случайному зерну и отправляет ссылку vk.com/app<ID>#duel=<зерно>-<счёт>. Друг открывает игру —
    ему достаются те же вопросы в том же порядке, в конце сравнение счёта. Ответный вызов — та же ссылка со своим счётом */
-function duelLink(seed,score){const h='duel='+seed.toString(36)+'-'+score;const m=/[?&]vk_app_id=(\d+)/.exec(location.search);
+function appLink(h){const m=/[?&]vk_app_id=(\d+)/.exec(location.search); // RV-П6: общая сборка ссылки (дуэль, «Проверь внука» js/rv-vnuk.js)
   if(OK)return OK_LINK+'#'+h; // ОК: ссылки на vk.com запрещены
   if(m)return 'https://vk.com/app'+m[1]+'#'+h;return location.origin+location.pathname+'?vk=1#'+h;}
+function duelLink(seed,score){return appLink('duel='+seed.toString(36)+'-'+score);}
 function parseDuel(){const m=/duel=([0-9a-z]{1,8})-(\d{1,2})/.exec(location.hash+'&'+location.search);if(!m)return null;
   const seed=parseInt(m[1],36),foe=+m[2];return seed>0&&foe>=0&&foe<=10?{seed,foe}:null;}
-let duelIn=DUEL_ON?parseDuel():null;
+// RV-П6 «Проверь внука»: #vnuk=<зерно36>[-<внук из 5>[-<бабушка из 5>]] — разбор здесь (до загрузки js/rv-vnuk.js), окна — в RVV
+function parseVnuk(){const m=/vnuk=([0-9a-z]{1,8})(?:-([0-5]))?(?:-([0-5]))?/.exec(location.hash+'&'+location.search);if(!m)return null;
+  const seed=parseInt(m[1],36);return seed>0?{vnuk:{seed,v:m[2]==null?null:+m[2],b:m[3]==null?null:+m[3]}}:null;}
+let duelIn=DUEL_ON?parseDuel()||parseVnuk():null;
 function duelIncoming(){if(!duelIn||window.__demo)return false;const d=duelIn;duelIn=null;
+  if(d.vnuk)return !!(window.RVV&&RVV.on()&&RVV.incoming(d.vnuk));
   const mine=S.duel[d.seed.toString(36)];
-  modal(`<div class="av">${portrait('valerka','wow')}</div><h2>⚔️ ${L('Вас вызвали на дуэль!','You are challenged!')}</h2>
-    <p>${L('Друг ответил верно на ','Your friend got ')}<b>${d.foe} ${L('из 10','of 10')}</b>. ${L('Те же 10 вопросов — сможете лучше?','Same 10 questions — can you beat it?')}</p>
-    ${mine!=null?'<p class="goal">'+L('Вы уже играли эту дуэль: ','You already played: ')+mine+'/10</p>':''}
+  modal(`<div class="av">${portrait('valerka','wow')}</div><h2>⚔️ ${L('Тебя вызвали на дуэль!','You are challenged!')}</h2>
+    <p>${L('Друг ответил верно на ','Your friend got ')}<b>${d.foe} ${L('из 10','of 10')}</b>. ${L('Те же 10 вопросов — сможешь лучше?','Same 10 questions — can you beat it?')}</p>
+    ${mine!=null?'<p class="goal">'+L('Ты уже играл эту дуэль: ','You already played: ')+mine+'/10</p>':''}
     <div class="row">${mine==null?`<button class="btn violet" id="dAcc">⚔️ ${L('Принять вызов','Accept')}</button>`:''}<button class="btn" id="mCancel">${mine==null?L('Потом','Later'):L('Хорошо','OK')}</button></div>`);
   if($('dAcc'))$('dAcc').onclick=()=>{hideModal();startDuel(d.seed,d.foe);};$('mCancel').onclick=hideModal;return true;}
-function openDuel(){STAT.screen('duel');modal(`<div class="av">${portrait('valerka','happy')}</div><h2>⚔️ ${L('Дуэль с другом','Duel with a friend')}</h2>
-  <p>${L('Ответьте на 10 вопросов, потом отправьте другу ссылку: у него будут те же вопросы в том же порядке. Кто больше — тот и знаток двора!','Answer 10 questions, then send the link: your friend gets the same questions.')}</p>
+function openDuel(){if(window.RVV&&RVV.on())return RVV.open('duel');STAT.screen('duel');modal(`<div class="av">${portrait('valerka','happy')}</div><h2>⚔️ ${L('Дуэль с другом','Duel with a friend')}</h2>
+  <p>${L('Ответь на 10 вопросов, потом отправь другу ссылку: у него будут те же вопросы в том же порядке. Кто больше — тот и знаток двора!','Answer 10 questions, then send the link: your friend gets the same questions.')}</p>
   <p class="about">${L('Подсказки — по одной каждого вида, без повторов: условия у обоих одинаковые. Монеты (2 за верный) — за первые '+DUEL_PAID+' дуэли в день.','One hint of each kind, no extras: fair for both.')}</p>
   <div class="row"><button class="btn violet" id="dGo">⚔️ ${L('Начать','Start')}</button><button class="btn" id="mCancel">${L('Отмена','Cancel')}</button></div>`);
   $('dGo').onclick=()=>{hideModal();startDuel(1+Math.floor(Math.random()*2e9),null);};$('mCancel').onclick=hideModal;}
@@ -2090,25 +2103,25 @@ function startDuel(seed,foe){if(!qReady)return qWait(()=>startDuel(seed,foe));co
   STAT.lvl(0,foe!=null?'duel-in':'duel');STAT.screen('game');
   G=newG('duel',set.qs,{perms:set.perms,seed,foe});G.say={who:'mihalych',t:HOST.duel[0]};
   show('scr-game');hideModal();renderQ();YG.start();}
-function finishDuel(){if(!G||G.over)return;G.over=true;YG.stop();
+function finishDuel(){if(G&&G.vnuk&&window.RVV)return RVV.finish();if(!G||G.over)return;G.over=true;YG.stop();
   const good=G.res.filter(x=>x===1).length,key=G.seed.toString(36),first=S.duel[key]==null,t=dayKey(0);
   if(!isObj(S.dlc)||S.dlc.d!==t)S.dlc={d:t,n:0};const paid=first&&S.dlc.n<DUEL_PAID,coins=paid?good*2:0;
   STAT.end(G.foe==null?(good>=5?'win':'lose'):good>=G.foe?'win':'lose',{g:good});  // «по приглашению» видно по m=duel-in; f в end — только «пройден впервые»
   if(first){S.duel[key]=good;S.coins+=coins;if(coins)STAT.earn('lvl',coins);if(paid)S.dlc.n++;}S.adW=(S.adW||0)+1;save();updCoins();
-  const foe=G.foe,res=foe==null?'':good>foe?L('Победа! Вы ответили лучше друга.','You won!'):good<foe?L('Друг оказался сильнее. Реванш?','Your friend won. Rematch?'):L('Ничья! Достойные соперники.','A draw!');
+  const foe=G.foe,res=foe==null?'':good>foe?L('Победа! Ты ответил лучше друга.','You won!'):good<foe?L('Друг оказался сильнее. Реванш?','Your friend won. Rematch?'):L('Ничья! Достойные соперники.','A draw!');
   if(foe==null||good>=foe){SND.win();confetti();}else SND.lose();
   const link=duelLink(G.seed,good);
   modal(`<div class="av">${portrait('valerka',foe!=null&&good<foe?'sad':'happy')}</div><h2>⚔️ ${L('Дуэль','Duel')}</h2>
     <p class="score">${good}/10</p>${foe!=null?'<p><b>'+L('Друг: ','Friend: ')+foe+'/10</b> — '+esc(res)+'</p>':''}
     ${coins?'<p class="coins-won">+'+coinsTxt(coins)+'</p>':first?'<p class="about">'+L('Монеты за дуэль — первые '+DUEL_PAID+' в день. Дальше — играем на интерес!','Coins for the first duels of the day only.')+'</p>':''}
-    <p>${foe==null?L('Отправьте другу вызов — ему достанутся те же вопросы.','Send the challenge — your friend gets the same questions.'):L('Отправьте ответ — пусть друг увидит ваш счёт.','Send your answer back.')}</p>
+    <p>${foe==null?L('Отправь другу вызов — ему достанутся те же вопросы.','Send the challenge — your friend gets the same questions.'):L('Отправь ответ — пусть друг увидит твой счёт.','Send your answer back.')}</p>
     <input class="link" id="dLink" readonly value="${esc(link)}">
     <div class="row" id="mWon"><button class="btn violet noenter" id="dShare">📨 ${foe==null?L('Отправить вызов','Send challenge'):L('Отправить ответ','Send answer')}</button><button class="btn green" id="dOk">${L('В меню','Menu')}</button></div>`);
   $('dShare').onclick=()=>shareLink(link);party();fitCard();$('dOk').onclick=()=>{hideModal();between(openMenu);};}
-function shareLink(link){STAT.ev('mod',{m:'duel',a:'share'});
+function shareLink(link,m){STAT.ev('mod',{m:m||'duel',a:'share'});
   if(VK){vkSend('VKWebAppShare',{link},60000).catch(()=>{});return;}
-  const i=$('dLink');try{i.select();}catch(e){}
-  const done=()=>toast(L('Ссылка скопирована — отправьте её другу','Link copied — send it to a friend'));
+  const i=$('dLink');try{if(i)i.select();}catch(e){}
+  const done=()=>toast(L('Ссылка скопирована — отправь её в сообщении','Link copied — send it to a friend'));
   try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(link).then(done,()=>{try{document.execCommand('copy');done();}catch(e){}});return;}}catch(e){}
   try{document.execCommand('copy');done();}catch(e){}}
 
@@ -2117,7 +2130,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','
   if(G&&!G.over)YG.stop();
   modal(`<h2>${L('Настройки','Settings')}</h2>${okSup()}
     <button class="set" id="stSnd"><span>🔊 ${L('Звук','Sound')}</span>${on(S.sound!==false)}</button>
-    <button class="set" id="stMus"><span>🎵 ${L('Музыка','Music')}</span>${on(S.music===true)}</button>
+    <button class="set" id="stMus"><span>🎵 ${L('Музыка','Music')}</span>${on(musWant())}</button>
     <button class="set" id="stVib"><span>📳 ${L('Вибрация','Vibration')}</span>${on(S.vib!==false)}</button>
     <button class="set" id="stBig"><span>🔎 ${L('Очень крупный шрифт','Extra large text')}<br><small>${L('вопросы и ответы ещё крупнее','bigger questions and answers')}</small></span>${on(!!S.big)}</button>
     <button class="set" id="stCalm"><span>🌿 ${L('Спокойный режим','Calm mode')}<br><small>${L('без конфетти и лишнего движения','no confetti or extra motion')}</small></span>${on(calm())}</button>
@@ -2129,7 +2142,7 @@ function openSettings(){STAT.screen('settings');const on=v=>v?'<i>'+L('вкл','
   okSupBind('sGrp');
   if($('stStat'))$('stStat').onclick=()=>{STAT.setEnabled(!STAT.enabled());SND.tap();openSettings();};
   $('stSnd').onclick=()=>{S.sound=S.sound===false;save();STAT.cfg({snd:S.sound===false?0:1});if(S.sound){unlockAudio();SND.tap();}openSettings();};
-  $('stMus').onclick=()=>{S.music=S.music!==true;save();if(S.music)musPrime();else musTick();openSettings();};
+  $('stMus').onclick=()=>{S.music=!musWant();save();if(S.music)musPrime();else musTick();openSettings();};
   $('stVib').onclick=()=>{S.vib=S.vib===false;save();try{if(S.vib&&navigator.vibrate)navigator.vibrate(40);}catch(e){}openSettings();};
   $('stBig').onclick=()=>{S.big=!S.big;save();applyLook();openSettings();};
   $('stCalm').onclick=()=>{if(RM){toast(L('Включено в настройках телефона («уменьшить движение»)','Enabled in system settings'));return;}S.calm=!S.calm;save();applyLook();openSettings();};
@@ -2288,6 +2301,23 @@ window.__test={get G(){return G;},get S(){return S;},get MUS(){return MUS;},musT
 <script src="js/vmg-anagram.js"></script>
 <script src="js/vmg-board.js"></script>
 <link rel="stylesheet" href="css/vma.css"><script src="js/vmg-vma.js"></script><script src="js/vmg-bukva.js"></script><script src="js/vmg-god.js"></script><script src="js/vmg-hrono.js"></script><script src="js/vmg-pary.js"></script><!-- MGA: затеи №4–7 (после vmg-core.js) -->
+<!-- rv: подключение потоков революции (PLAN-VK раздел 7). Каждый поток — СВОИ строки только между своими метками; чужие не трогать. -->
+<!-- rv:П1 -->
+<link rel="stylesheet" href="css/rv-q.css"><script src="js/rv-say.js"></script><script src="js/rv-q.js"></script>
+<!-- /rv:П1 -->
+<!-- rv:П2 --><link rel="stylesheet" href="css/rv-drama.css"><script src="js/rv-drama.js"></script>
+<!-- /rv:П2 -->
+<!-- rv:П3 --><link rel="stylesheet" href="css/rv-res.css"><script src="js/rv-res.js"></script>
+<!-- /rv:П3 -->
+<!-- rv:П4 -->
+<link rel="stylesheet" href="css/rv-day.css"><script src="js/rv-day.js"></script>
+<!-- /rv:П4 -->
+<!-- rv:П5 -->
+<link rel="stylesheet" href="css/rv-home.css"><script src="js/rv-home.js"></script> <!-- П5: главный 6 вещей, панель 4 кнопки, «Награды», Табло с 3-го уровня (rv.home, rv.board) -->
+<!-- /rv:П5 -->
+<!-- rv:П6 -->
+<link rel="stylesheet" href="css/rv-vnuk.css"><script src="js/rv-vnuk-data.js"></script><script src="js/rv-vnuk.js"></script> <!-- RV-П6 «Проверь внука» (флаг rv.vnuk; в ОК выкл. — DUEL_ON) -->
+<!-- /rv:П6 -->
 <script src="js/stat-ans.js"></script>
 <script src="js/mlm-mail.js"></script> <!-- LTG-VK 24.10: окно «Написать Михалычу» (Об игре, ⚑ Ошибка в вопросе, итог лестницы с 15-го уровня раз в 7 дней); S.mlm в NUMOBJ -->
 <!--XPZ--><script>

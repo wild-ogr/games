@@ -304,7 +304,7 @@ YD.open=function(tab,bk){ensureScreen();if(tab&&TABS.some(function(t){return t.i
   try{hideModal();}catch(e){}try{if(window.__show)__show('scr-yard');else show('scr-yard');}catch(e){try{show('scr-yard');}catch(x){}}try{if(window.LK)LK.scene('dim');}catch(e){}
   try{STAT.screen('yard');}catch(e){}YD.render();};
 YD.render=function(){if(!Q('scr-yard'))return;try{Q('ydCoins').textContent='💰 '+YD.coins();}catch(e){}
-  Q('ydTabs').innerHTML=TABS.map(function(t){var dot=t.dot&&t.dot();return '<button class="ydtab'+(t.id===cur?' on':'')+'" role="tab" data-t="'+t.id+'" aria-selected="'+(t.id===cur)+'">'+t.ic+' '+t.n+(dot?'<i class="yddot"></i>':'')+'</button>';}).join('');
+  Q('ydTabs').innerHTML=TABS.map(function(t){var dot=t.dot&&t.dot();return '<button class="ydtab'+(t.id===cur?' on':'')+'" role="tab" data-t="'+t.id+'" aria-selected="'+(t.id===cur)+'"><span class="ydtI">'+t.ic+' </span>'+t.n+(dot?'<i class="yddot"></i>':'')+'</button>';}).join('');
   Q('ydTabs').querySelectorAll('[data-t]').forEach(function(b){b.onclick=function(){YD.snd('tap');cur=b.dataset.t;YD.render();};});
   var t=TABS.filter(function(x){return x.id===cur;})[0]||TABS[0],pane=Q('ydPane');Q('ydTitle').textContent=t.id==='yard'?'Мой двор':t.n;
   Q('ydSub').textContent=t.sub?t.sub():'';pane.className='ydpane yp-'+t.id;
@@ -316,7 +316,8 @@ try{var uc0=window.updCoins;if(typeof uc0==='function')window.updCoins=function(
 
 function renderYard(el){var lv=YD.levels(),d=YD.district(),tot=YD.total(),hol=YD.hol(),nb=YD.nextB();
   var h='<div class="ydstage" id="ydStage">'+YD.scene({hot:true})+(hol?'<div class="ydhol">'+YD.HOL[hol].ic+' '+YD.HOL[hol].n+'</div>':'')+'</div>';
-  h+='<div class="ydprog"><div class="ydbar"><i style="width:'+Math.round(tot/24*100)+'%"></i></div><span><b>'+tot+'</b> из 24 улучшений<br><small>вложено '+YD.spent()+' из '+YD.ct(YD.BTOT)+'</small></span></div>';
+  if(window.RVH&&RVH.on())h+='<div class="ydprog"><div class="ydbar"><i style="width:'+Math.round(tot/24*100)+'%"></i></div><span>'+(tot?'<b>'+tot+'</b> '+YD.pl(tot,'улучшение','улучшения','улучшений')+' во дворе<br><small>двор растёт — соседи радуются</small>':'Начни с лавочки — на ней сядет Михалыч')+'</span></div>'; // РЕВ П5: словами, без «вложено 0 из 9010»
+  else h+='<div class="ydprog"><div class="ydbar"><i style="width:'+Math.round(tot/24*100)+'%"></i></div><span><b>'+tot+'</b> из 24 улучшений<br><small>вложено '+YD.spent()+' из '+YD.ct(YD.BTOT)+'</small></span></div>';
   if(YD.extraTop)h+=YD.extraTop();
   h+='<div class="ydlist">'+B.map(function(b,i){var l=lv[i],nx=l<3?l+1:0,need=nx?YD.needDist(i,nx):0,lock=nx&&d<need,c=nx?b.c[l]:0,can=nx&&!lock&&YD.coins()>=c;
     var st='';for(var k=1;k<=3;k++)st+='<i class="'+(k<=l?'on':'')+'"></i>';

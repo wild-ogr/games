@@ -22,7 +22,7 @@
     var n=G.mode==='lad'?Math.min(6,2+Math.round(prz(G.i)/8)):3;
     fly(btn,step,n,function(){bump(step);try{SND.coin();}catch(e){}});
     var s=streakN();if(s>=3&&(s===3||s===5||s===7||s===10))setTimeout(function(){badge('🔥 ×'+s,'streak');},350);
-    if(G.mode==='lad'&&SAFE.indexOf(G.i)>=0)setTimeout(function(){badge(G.i===9?'Вся лестница!':'Несгораемая!','safe');},s>=3?1250:350);}
+    var gi=G.i;if(G.mode==='lad'&&SAFE.indexOf(gi)>=0)setTimeout(function(){badge(gi===9?'Вся лестница!':'Несгораемая!','safe');},s>=3?1250:350);}
   function wrong(k){if(!G||quiet())return;var q=document.querySelector('#scr-game .qcard'),b=document.querySelector('#answers .ans[data-k="'+k+'"]');bump(b,'fxShake');bump(q,'fxShake');}
   // окно итога: «+N» считает вверх
   function countUp(el,to,ms){if(!el||quiet()||!(to>0))return;var t0=performance.now(),tn=null;
@@ -34,6 +34,6 @@
   function menuCoins(){var el=$('coinCnt');if(!el)return;var to=S.coins;if(shown==null||quiet()||to<=shown||!$('scr-menu').classList.contains('on')){shown=to;return;}
     var from=shown,t0=performance.now();shown=to;(function f(){var p=Math.min(1,(performance.now()-t0)/900);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f);else bump($('mCoins'));})();}
   // цена вопроса на плашке (js/price.js от BOARD) — вместо «лёгкий/средний/трудный»
-  qSlots.push({id:'price',order:10,render:function(c){if(typeof priceOf!=='function')return null;var p=priceOf(c.q,{mode:c.mode,step:c.step,lvl:(S.lvl||0)+1});return p?'<span class="qprice" title="цена вопроса">'+p+'</span>':null;}});
+  qSlots.push({id:'price',order:10,render:function(c){if(typeof priceOf!=='function')return null;if(W.RVQ&&RVQ.on()&&c.mode!=='board')return null; /* rv.q (П1): цена — только в Табло; на лестнице «на кону» и «знают N из 10» (поломка VK-UX №13) */var p=priceOf(c.q,{mode:c.mode,step:c.step,lvl:(S.lvl||0)+1});return p?'<span class="qprice" title="цена вопроса">'+p+'</span>':null;}});
   W.UIF={right:right,wrong:wrong,result:result,fly:fly,bump:bump,badge:badge,countUp:countUp,menuCoins:menuCoins};
 })();

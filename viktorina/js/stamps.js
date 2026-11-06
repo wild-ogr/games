@@ -129,7 +129,7 @@ function render(el){if(!SER.length)initSeries();YD.checkAll();var all=0,got=YD.s
   else{var cs=todayCase();h+='<small>'+(cs.length?'Сегодня на витрине — '+cs.length+' '+YD.pl(cs.length,'марка','марки','марок')+'. Завтра — новые.':'Витрина пуста до завтра — приходи!')+'</small></div></div>';
     if(cs.length)h+='<div class="stcase">'+cs.map(function(x){var s=x[0],i=x[1],own=YD.has(s.k,i),pr=s.sell(i),can=YD.coins()>=pr;
       return '<div class="stci">'+YD.stampSvg(s,i,true,64)+'<small>'+esc(s.names[i])+'<br><span>'+esc(s.n)+'</span></small>'+(own?'<i>куплено</i>':'<button class="btn '+(can?'accent':'')+' noenter stbuy" data-s="'+s.k+'" data-i="'+i+'"'+(can?'':' aria-disabled="true"')+'>'+YD.ct(pr)+'</button>')+'</div>';}).join('')+'</div>';}
-  h+='<div class="stsum"><b>'+got+'</b> из '+all+' марок · собрано серий: '+SER.filter(function(s){return serCount(s)>=s.cnt;}).length+'</div>';
+  h+='<div class="stsum"><b>'+got+'</b> '+YD.pl(got,'марка','марки','марок')+' в альбоме'+(window.RVH&&RVH.on()?'':' из '+all)+' · собрано серий: '+SER.filter(function(s){return serCount(s)>=s.cnt;}).length+'</div>';
   var hol=YD.hol();
   var list=SER.filter(function(s){return !s.hol||s.hol===hol||serCount(s)>0;}).filter(function(s){return !s.sea||s.sea===YD.seaId()||serCount(s)>0;});
   // сначала начатые серии
@@ -144,7 +144,7 @@ function render(el){if(!SER.length)initSeries();YD.checkAll();var all=0,got=YD.s
   el.querySelectorAll('.stbuy').forEach(function(b){b.onclick=function(){var s=YD.ser(b.dataset.s),i=+b.dataset.i,pr=s.sell(i);
     if(YD.coins()<pr){YD.toast('Не хватает '+YD.ct(pr-YD.coins()));return;}
     if(YD.spend(pr,'stamp')){YD.stampGive(s.k,i,'buy');YD.render();}};});}
-YD.tab({id:'stamps',n:'Марки',ic:'📨',o:10,render:render,sub:function(){return YD.stampCount()+' марок в альбоме';}});
+YD.tab({id:'stamps',n:'Марки',ic:'📨',o:10,render:render,sub:function(){var n=YD.stampCount();return n+' '+YD.pl(n,'марка','марки','марок')+' в альбоме';}});
 
 /* ---------- марка на выбор из 3 (сундук дня CAR) ---------- */
 YD.stampPick=function(cb,title){if(!SER.length)initSeries();var miss=[];SER.forEach(function(s){if(s.paid||s.hol||s.sea)return;for(var i=0;i<s.cnt;i++)if(!YD.has(s.k,i))miss.push([s,i]);});

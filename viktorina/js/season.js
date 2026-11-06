@@ -78,9 +78,17 @@ var CDEC=[{slot:'small',c:300,n:'Ещё одно у дорожки',tr:'translat
   {slot:'wall',c:500,n:'Украшение на фасад',tr:'translate(244 -34)',z:0},{slot:'big',c:600,n:'Большое у клумбы',tr:'translate(250 112)',z:1}];
 function cdecId(id,i){return id+'-m'+i;}
 function regCoin(id){var s=seaOf(id);CDEC.forEach(function(c,i){var k=cdecId(id,i),dd=s.d[c.slot];if(YD.DEC[k]||!dd)return;
-  YD.DEC[k]={n:c.n+' ('+s.n+')',z:c.z,slot:'m'+i,d:function(){return '<g class="yddec" transform="'+c.tr+'">'+DR[dd[0]](dd[1]||{})+'</g>';}};});}
+  YD.DEC[k]={n:rvn()?drName(s,c.slot,'m'+i):c.n+' ('+s.n+')',z:c.z,slot:'m'+i,d:function(){return '<g class="yddec" transform="'+c.tr+'">'+DR[dd[0]](dd[1]||{})+'</g>';}};});}
 function coinBuy(i){var id=S.sea.id,c=CDEC[i],k=cdecId(id,i);regCoin(id);if(!c||YD.decOwned().indexOf(k)>=0)return false;if(!YD.spend(c.c,'sea-dec'))return false;YD.addDec(k);YD.save();YD.ev('ss',{s:id,cd:i,c:c.c});return true;}
-function decName(slot,s){return {ban:'Растяжка «'+s.n+'»',small:'Мелочь у лавочки',big:'Большое у подъезда',gar:'Гирлянда на дом',sky:'Над берёзой',wall:'Украшение у двери'}[slot]+' ('+s.n+')';}
+// РЕВ П5 (поломка №15): украшения — по тому, что нарисовано («Самовар у лавочки»), а не «Мелочь у лавочки (Кино и мультфильмы)»
+var DRN={apple:'Яблоня',ball:'Мяч',balls:'Воздушные шары',chuch:'Чучело Масленицы',elka:'Ёлка',flags:'Флажки',flake:'Снежинки',flowr:'Цветы',fort:'Снежная крепость',kite:'Воздушный змей',
+  lights:'Гирлянда огоньков',melon:'Арбуз',portf:'Портфель',pump:'Тыквы',reel:'Кинолента',rocket:'Ракета-горка',ryab:'Рябина',samo:'Самовар',siren:'Куст сирени',skvor:'Скворечник',
+  sled:'Санки',snow:'Снеговик',star:'Звёзды',tumba:'Афишная тумба',wreath:'Венок'};
+var DRW={small:' у лавочки',big:' у подъезда',gar:' на доме',sky:' над берёзой',wall:' у двери',m0:' у дорожки',m1:' в небе',m2:' на фасаде',m3:' у клумбы'};
+function rvn(){return !!(window.RVH&&RVH.on());}
+function drName(s,slot,where){var dd=s.d[slot];if(!dd)return '';if(dd[0]==='ban')return 'Растяжка «'+((dd[1]&&dd[1].t)||s.n)+'»';
+  if(dd[0]==='poster')return 'Афиша «'+((dd[1]&&dd[1].t)||'').toLowerCase()+'»'+(DRW[where]||'');return (DRN[dd[0]]||'Украшение')+(DRW[where]||'');}
+function decName(slot,s){if(rvn())return drName(s,slot,slot);return {ban:'Растяжка «'+s.n+'»',small:'Мелочь у лавочки',big:'Большое у подъезда',gar:'Гирлянда на дом',sky:'Над берёзой',wall:'Украшение у двери'}[slot]+' ('+s.n+')';}
 YD.seaId=function(t){return 's'+YD.mon(t);};
 
 /* ---------- облик Михалыча (шапка на лавочке; наружу — YARD.mihLook()) ---------- */
@@ -189,7 +197,7 @@ function render(el){rollSeason();var s=S.sea,S0=seaOf(s.id),st=stepOf(s.p),ser=s
   if(YD.Q('seaBuy'))YD.Q('seaBuy').onclick=function(){payBuy('sea_pass');};
   el.querySelectorAll('[data-cd]').forEach(function(b){b.onclick=function(){var i=+b.dataset.cd,c=CDEC[i];if(YD.coins()<c.c){YD.toast('Не хватает монет: нужно '+YD.ct(c.c));return;}if(coinBuy(i)){YD.toast('🎀 Украшение во дворе!');YD.render();}};});
   el.querySelectorAll('.seac.can').forEach(function(b){b.onclick=function(){if(claim(+b.dataset.i,b.dataset.u==='1')){YD.save();YD.snd('coin');YD.render();}};});}
-YD.tab({id:'season',n:'Сезон',ic:'📅',o:30,render:render,sub:function(){return seaOf(S.sea.id).n;},dot:canClaim});
+YD.tab({id:'season',n:(rvn()?'Украшения':'Сезон'),ic:'📅',o:30,render:render,sub:function(){return seaOf(S.sea.id).n;},dot:canClaim});
 YD.homeLine({pri:30,f:function(){var s=S.sea;return {ic:seaOf(s.id).ic,t:canClaim()?'Сезон: награда ждёт — забери!':'Сезон «'+seaOf(s.id).n+'»: ступень '+stepOf(s.p)+' из '+STEPS,a:'season'};}});
 YD.homeLine({pri:5,f:function(){return uzOffer()&&payOn('uzelok')?{ic:'🎒',t:'Узелок новичка — 300 💰 и клумба',a:'yard'}:null;}});
 

@@ -1,0 +1,24 @@
+/* rv-q.css — домик «знают N из 10» в облачке Михалыча, «Редкий ответ!», плашка «Вопрос от соседа» (поток П1, rv.q) */
+.rvDv{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:15px;font-weight:600;line-height:1.2;white-space:nowrap}
+.rvH{display:inline-grid;grid-template-columns:repeat(5,12px);grid-auto-rows:10px;gap:2px;padding:4px 4px 3px;background:#b5653a;border-radius:4px 4px 2px 2px;position:relative;flex:none;margin-top:6px}
+.rvH::before{content:"";position:absolute;left:-3px;right:-3px;top:-7px;height:8px;background:#8a3f22;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.rvH i{display:block;background:#3b4a63;border-radius:1px}
+.rvH i.on{background:#ffd75e;box-shadow:0 0 4px #ffcf40}
+.rvN b{color:inherit;font-weight:800}
+.say .sb .rvN b{color:inherit}
+/* «Редкий ответ!» — золотая вспышка облачка ~1 с */
+.say.rvGold .sb{animation:rvGold 1s ease-out}
+@keyframes rvGold{0%{box-shadow:0 0 0 0 rgba(255,207,64,.95)}40%{box-shadow:0 0 0 8px rgba(255,207,64,.55)}100%{box-shadow:0 0 0 14px rgba(255,207,64,0)}}
+/* окно второй попытки — одна тёплая строка */
+.rvSec{font-weight:700;margin-top:-4px}
+/* «Вопрос от тёти Вали» — над вопросом, на месте плашки цены */
+.rvFrom{display:inline-flex;white-space:nowrap;align-items:center;gap:6px;padding:2px 10px 2px 3px;border-radius:14px;background:#fff4d6;color:#5a3b00;border:2px solid #233247;font-weight:800;font-size:15px;line-height:1.2}
+.rvFa{display:inline-block;width:22px;height:22px;border-radius:50%;overflow:hidden;background:#fff;flex:none}
+.rvFa svg{width:100%;height:100%;display:block}
+/* на тесном экране домик мельче, подпись остаётся ≥14 px */
+.fit3 .rvDv,.fit4 .rvDv{margin-top:3px;font-size:14px}
+.fit4 .rvH{grid-template-columns:repeat(10,8px);grid-auto-rows:8px;margin-top:4px}
+@media (prefers-reduced-motion:reduce){.say.rvGold .sb{animation:none}}
+.rvN .rvR{color:#b8860b}
+/* крайний случай (fitS — всё равно не влезло): домик прячем, подпись «знают N из 10» остаётся */
+.fitS .rvH{display:none}

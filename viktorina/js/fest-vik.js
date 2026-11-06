@@ -60,7 +60,7 @@ function tile(t){var st=stat(t.k),pk=VTOP.festPeak(t.k),hol=t.kind==='hol',w=st.
     '<span class="fbTag">'+(hol?'праздник':'сезон')+'</span></button>';}
 function go(k){try{SND.tap();}catch(e){}if(!VTOP.isOpen(k)){toast('Этот набор уже закрыт — вернётся в свои даты');return;}
   try{FEST.use(VTOP.festId(k),'open');}catch(e){}uiPreTopic(k);}
-[0,1].forEach(function(i){homeSlots.push({id:'fest'+i,order:4+i,render:function(){var t=tiles()[i];return t?tile(t):null;},
+[0,1].forEach(function(i){homeSlots.push({id:'fest'+i,order:4+i,render:function(){if(window.RVDAY&&RVDAY.act())return null; /* RV П4: праздник — строкой на листке дня */var t=tiles()[i];return t?tile(t):null;},
   mount:function(el){var t=tiles()[i],b=el.querySelector('button');if(t&&b)b.onclick=function(){go(t.k);};}});});
 
 /* ---- 3. приветствие и итог ---- */

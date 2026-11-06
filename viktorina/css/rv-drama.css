@@ -1,0 +1,29 @@
+/* RV-П2 «драма лестницы» (js/rv-drama.js). Всё под html.rv (класс ставит js/rv-core.js; ?off=rv — нет класса, вид v5.9). */
+
+/* «Спорим?» на месте «Забрать» */
+html.rv #lfTake.rvSpor:not([disabled]){background:#ffd36b!important;border-color:#c98a12;color:#5a3a00!important;animation:rvSporP 1.4s ease-in-out 3}
+html.rv #lfTake.rvSpor small{font-weight:800}
+html.rv #lfTake.rvSpor.rvOn{background:#ffd36b;opacity:1}
+@keyframes rvSporP{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+html.rv #lifes.rvNoHelp .life:not(#lfTake){opacity:.35;filter:grayscale(1)}
+
+/* 10-й вопрос — кульминация: двор темнеет (края), гирлянда сверху, окна соседей горят */
+html.rv #scr-game.rv-fin::before{content:'';position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:3;
+  background:radial-gradient(ellipse 75% 65% at 50% 45%,rgba(10,14,40,0) 55%,rgba(10,14,40,.5) 100%);animation:rvDim 1.2s ease-out both}
+html.rv #scr-game.rv-fin::after{content:'';position:absolute;left:0;right:0;top:0;height:12px;pointer-events:none;z-index:4;
+  background:radial-gradient(circle at 10px 6px,#ffd84a 0 4px,transparent 5px) 0 0/40px 12px,
+             radial-gradient(circle at 30px 6px,#ff6a5a 0 4px,transparent 5px) 0 0/40px 12px;animation:rvGar 1.1s steps(2) infinite}
+@keyframes rvDim{from{opacity:0}to{opacity:1}}
+@keyframes rvGar{50%{filter:brightness(.55)}}
+/* окна соседей: тёплые квадратики по краям лестницы */
+html.rv #scr-game.rv-fin #ladder{box-shadow:0 0 0 3px rgba(255,216,74,.55),0 0 18px rgba(255,200,60,.55)}
+/* пауза «Окончательный ответ?» — выбранный ответ мерцает */
+html.rv #scr-game.rv-hold #answers .ans.sel{animation:rvHold .7s ease-in-out infinite}
+@keyframes rvHold{50%{filter:brightness(1.25);transform:scale(1.02)}}
+
+/* поломка VK-UX №6: огонёк «×5» закрывал реплику Михалыча — маленьким в правый верхний угол */
+html.rv .fxBadge.streak{top:8px;left:auto;right:10px;transform:none;font-size:20px;padding:4px 12px;border-width:2px;box-shadow:0 3px 0 #233247;animation:rvStreak 1.6s ease-out forwards}
+@keyframes rvStreak{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.1)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+
+@media (prefers-reduced-motion:reduce){html.rv #scr-game.rv-fin::after,html.rv #lfTake.rvSpor,html.rv #scr-game.rv-hold #answers .ans.sel,html.rv #scr-game.rv-fin::before{animation:none!important}}
+html.rv body.calm #scr-game.rv-fin::after,html.rv body.calm #lfTake.rvSpor{animation:none}

@@ -19,7 +19,7 @@
   var NAV_ON={'scr-menu':1,'scr-topics':1}; // на каких экранах видна панель (свои экраны-разделы добавляйте UIH.navOn('scr-yard'))
   UI.on('show',function(id){cur=id;var a=$('app');if(a)a.classList.toggle('navOn',!!NAV_ON[id]);if(NAV_ON[id])nav();});
 
-  function nav(){var b=$('navBar');if(!b)return;var it=UI.list(navSlots).filter(function(x){try{return !(x.hide&&x.hide());}catch(_){return false;}}),h='';
+  function nav(){var b=$('navBar');if(!b)return;var it=UI.list(rv()?RVH.nav(UI.list(navSlots)):navSlots).filter(function(x){try{return !(x.hide&&x.hide());}catch(_){return false;}}),h='';
     it.forEach(function(x){var d=false,o=false;try{d=x.dot?!!x.dot():false;o=x.on?!!x.on():false;}catch(_){}
       h+='<button class="nb'+(o?' on':'')+'" data-nav="'+e(x.id||'')+'">'+(d?'<span class="dot"></span>':'')+'<span class="nbI">'+e(x.ic||'')+'</span><span class="nbT">'+e(x.t||'')+'</span></button>';});
     b.innerHTML=h;
@@ -35,7 +35,8 @@
   W.UIH_frame=function(){return look().fr;};
 
   // ---- реплика Михалыча на главном (только новый вид; в «Классике» — прежняя) ----
-  function say(){var lc=lcurOk()?S.lcur:null,t=TK.indexOf(S.uiTopic)>=0?TN[S.uiTopic]:null,ul=S.uiLast,yd=dayKey(-1),td=dayKey(0);
+  function rv(){return !!(W.RVH&&RVH.on());} // революция «Весь двор отвечает» (П5, js/rv-home.js): главный 6 вещей, панель 4 кнопки
+  function say(){if(rv())return RVH.say();var lc=lcurOk()?S.lcur:null,t=TK.indexOf(S.uiTopic)>=0?TN[S.uiTopic]:null,ul=S.uiLast,yd=dayKey(-1),td=dayKey(0);
     if(lc)return 'Лестница ждёт: вопрос '+(lc.i+1)+' из 10. Доиграем?';
     var nw=VT&&VT.list.filter(function(x){return VT.isNew(x.k,nowMs());})[0];
     if(nw&&!(S.tips&&S.tips['nw_'+nw.k]))return 'На полке новая тема — «'+nw.n+'»! Загляни в «Темы».';
@@ -66,7 +67,7 @@
     // шапка «кто я»
     var c=look(),av=S.uiAv&&(HELP[S.uiAv]||S.uiAv==='zina')?S.uiAv:'valerka';
     $('meAv').innerHTML=lk?LK.who(av,'happy'):'';$('meAv').className='frm fr-'+(c.fr||'wood');
-    $('meRank').textContent=c.t;$('meNext').textContent=c.s||'';$('meBar').style.width=Math.round(100*Math.max(0,Math.min(1,c.f||0)))+'%';
+    $('meRank').textContent=c.t;$('meNext').textContent=c.s||'';$('meBar').style.width=Math.round(100*Math.max(0,Math.min(1,c.f||0)))+'%';if(rv())RVH.header();
     // реплика и зрители
     if(lk){var l=say();if(l&&!(lkSayG===S.games))$('hostSay').innerHTML='<b class="lk-o">Михалыч: </b>'+e(l);
       $('crowd').innerHTML='<span>'+LK.who('valya','happy')+'</span><span>'+LK.who('kolya','wow')+'</span><span>'+LK.who('zina','happy')+'</span>';}
@@ -77,9 +78,13 @@
     $('btnPlay').classList.toggle('loading',!qReady);
     // режимы
     var bd=$('btnBoard');if(UI.has('board')){bd.style.display='';$('boardSub').textContent=lv<4?'откроется с 5-го уровня':'выбирай тему и цену';bd.classList.toggle('lock',lv<4);}else bd.style.display='none';
+    if(rv()){var bo=UI.has('board')&&RVH.boardOpen(),bdd=W.BOARD&&BOARD.day?BOARD.day():null;bd.style.display=bo?'':'none';bd.classList.remove('lock'); // П5: Табло — только открытое (поломка №11)
+      if(bo)$('boardSub').textContent=bdd&&bdd.done?'табло дня сыграно · завтра новое':!S.bdN?'новое! темы и цены':'табло дня ждёт';
+      $('btnDaily').style.display=RVH.newbie()&&RVH.day()<2?'none':'';} // новичку викторина дня — со 2-го дня (по одной новинке)
+    else $('btnDaily').style.display='';
     $('topicsSub').textContent=TK.filter(function(k){return !TN[k].season;}).length+' '+pl(TK.length,'тема','темы','тем')+' на полках';
     // лента «Сегодня»
-    var n=UI.fill($('homeSlots'),B.concat(homeSlots),{S:S,lvl:lv},'hs');$('scr-menu').classList.toggle('hasHs',n>0);
+    var n=UI.fill($('homeSlots'),rv()?RVH.slots(B.concat(homeSlots)):B.concat(homeSlots),{S:S,lvl:lv},'hs');$('scr-menu').classList.toggle('hasHs',n>0);
     nav();if(W.UIF)UIF.menuCoins();}
   function play(){var t=S.uiTopic;if(t&&TK.indexOf(t)>=0&&(S.games||0)>0)uiPreTopic(t);else openTopics();}
   // «кто я»: звание, рамка, выбор портрета (S.uiAv)
@@ -94,7 +99,7 @@
   // шапка: портрет → выбор портрета; остальное → «Карьера знатока» (CAR.look().go), без CAR — окно «кто я»
   document.addEventListener('DOMContentLoaded',function(){var m=$('meCard');if(m)m.onclick=function(ev){SND.tap();var g=carGo(),onAv=ev&&ev.target&&ev.target.closest&&ev.target.closest('#meAv');
     if(g&&!onAv){try{g();return;}catch(_){}}if(W.LK&&LK.on())me();};});
-  W.UIH={me:me,render:render,nav:nav,play:play,look:look,navOn:function(id){NAV_ON[id]=1;}};
+  W.UIH={me:me,render:render,nav:nav,play:play,look:look,cur:function(){return cur;},navOn:function(id){NAV_ON[id]=1;}};
   // ПК: Enter на главном = «Играть»
   document.addEventListener('keydown',function(ev){if(ev.repeat||ev.ctrlKey||ev.metaKey||ev.altKey)return;if(typeof modalOn==='undefined'||modalOn)return;
     var m=$('scr-menu');if(!m||!m.classList.contains('on'))return;if(ev.key==='Enter'){ev.preventDefault();$('btnPlay').click();}});

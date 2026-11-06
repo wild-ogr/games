@@ -8,6 +8,9 @@
      s  — секунд на ответ: от показа вопроса до ПЕРВОГО нажатия, без времени в свёрнутом виде и под рекламой (0…600, округлённо)
      d  — сложность вопроса 1–3
      h  — подсказки, взятые НА ЭТОМ вопросе: f — 50/50, n — сосед, z — баба Зина (нет поля — без подсказок)
+     a  — RV (06.11, П0; для «Весь двор» волны 2): ПЕРВЫЙ выбранный вариант в исходном порядке вопроса (0 — верный, 1–3 — неверные q.a[1..3]).
+          Пишется только при ok 0/2 и без подсказок (h): при ok:1 первый выбор = 0 (поле не нужно), после 50/50/соседа выбор не «чистый».
+          Так полей не больше 8 и ничего не отрезается. Берётся из info.a, иначе из лестницы/дня/дуэли (G.perm, G.wrongs — порядок нажатий).
    Порядок полей = приоритет (модуль STAT пропускает всё после 8-го).
    Вход:
      STATANS.ans({id, ok, mode, step, price, sec, d, hint, tries}) — подписчик answerHook (info из UI.answered); можно звать и напрямую:
@@ -32,6 +35,12 @@
     if(num(o.price)&&o.price>0)return Math.round(o.price);
     try{if(q&&typeof priceOf==='function')return priceOf(q,{mode:o.mode,step:o.step});}catch(e){}
     return 0;}
+  // первый выбранный вариант в исходном порядке (0 — верный): info.a или ход текущего вопроса игры (G.perm[показанный]=исходный, G.wrongs — Set по порядку нажатий)
+  function pick0(o,id){
+    if(num(o.a))return o.a>=0&&o.a<=3?Math.round(o.a):null;
+    try{if(typeof G==='undefined'||!G||!G.perm||typeof cur!=='function')return null;var q=cur();if(!q||q.i!==id)return null;
+      var k=null;if(G.wrongs&&G.wrongs.size)k=G.wrongs.values().next().value;else if(num(G.sel))k=G.sel;
+      var v=k==null?null:G.perm[k];return num(v)&&v>=0&&v<=3?v:null;}catch(e){return null;}}
   // одно событие на вопрос: повтор того же id в том же режиме за 5 с (обёртка + гнездо) не шлём
   function ans(o){
     var S_=st();if(!S_||!o||!o.id)return false;
@@ -44,6 +53,7 @@
     if(num(o.sec)&&o.sec>=0)p.s=Math.min(600,Math.round(o.sec));
     v=num(o.d)?o.d:q&&q.d;if(v)p.d=v;
     v=hintStr(o.hint);if(v)p.h=v;
+    if(okv!==1&&!p.h){v=pick0(o,id);if(v!=null)p.a=v;}
     S_.ev('ans',p);
     return true;}
 
