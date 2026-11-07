@@ -354,7 +354,7 @@ function razryv(){G.fx.push({k:'wave',own:1,t:0,dur:.6,r1:VIEW.R,col:'#9aff6a'})
 // сон-трава: нечисть спит 5 с (босс — 1,5 с), снаряды пропадают, новая не лезет
 function sleepAll(){G.sleepT=5;for(const e of G.en){if(e.dead||e.prop)continue;e.stun=Math.max(e.stun||0,e.boss?1.5:5);}G.eproj.length=0;G.fx.push({k:'pulse',own:1,t:0,dur:.9,r1:VIEW.R,evo:1});SND.heal();vib(40);}
 function addXp(v){const H=G.hero;H.xp+=v*G.st.xp*Math.max(G.short?(H.lvl<4?G.short.xp0:G.short.xp):1,G.df?G.df.xp:1);while(H.xp>=H.need){H.xp-=H.need;H.lvl++;H.need=xpNeed(H.lvl);G.lvlQ++;}}
-function heroSay(s){const H=G.hero;H.sayT=6;compact(G.bub,b=>b.e!==H);G.bub.push({e:H,s,t:0,dur:bubDur(s)});}
+function heroSay(s){const r=BB2.hk('say',s,G);if(r===false)return;if(typeof r==='string'&&r)s=r;const H=G.hero;H.sayT=6;compact(G.bub,b=>b.e!==H);G.bub.push({e:H,s,t:0,dur:bubDur(s)});}
 function say(e,s,dur){const H=G.hero;compact(G.bub,b=>b.e!==e&&(b.e===H||b.e.boss||e.boss));G.bub.push({e,s,t:0,dur:Math.max(dur||0,bubDur(s))});if(G.bub.length>5)G.bub.splice(G.bub.findIndex(b=>b.e!==H&&!b.e.boss)>>>0,1);}
 // шутки-28.10: реплика над головой 5 с + 0,12 с/букву (до 20 с), было 2,5 с + 0,05 с/букву; облачков не больше 5 (лишнее — старое от рядовой нечисти)
 function bubDur(s){return Math.min(20,5+.12*String(s).length);}

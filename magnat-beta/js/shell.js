@@ -1173,9 +1173,9 @@ function toast(t,ms){if(LANG==='en'&&TOAST_EN[t])t=TOAST_EN[t];const e=$('toast'
   e.classList.add('on');clearTimeout(toast._t);toast.at=Date.now();if(toast.q&&toast.q.length&&!modalOn){clearTimeout(toast._w);toast._w=setTimeout(()=>toastNext(1),toastHold()+30);}
   toast._t=setTimeout(()=>{e.classList.remove('on');if(toast.q&&toast.q.length)setTimeout(toastNext,350);},d);}
 // шутки-28.10 (решение владельца «чтоб дольше висели»): тост с текстом 5 с + 0,12 с/букву (до 20 с); короткий служебный (≤ 12 букв, «+5 💎») — не меньше 2,5 с; было жёстко 2 с, ms ≥ 2000 игнорировался
-function toastHold(){return Math.max(TOAST_MIN,Math.min(toast.d||0,5000));}   // при очереди тост держится до 5 с (длинный), потом уступает следующему
+function toastHold(){return TOAST_MIN;}   // при очереди тост держится 2,5 с, потом уступает следующему (SHR-2 06.11: было до 5 с — итог заказа «+N ₽» ждал за подсказкой 5 с; без очереди тост висит полное toastMs)
 function toastMs(t,ms){const n=String(t).length;return Math.max(ms||0,n<=12?2500:Math.min(20000,5000+120*n));}
-function toastNext(cut){if(modalOn||!toast.q||!toast.q.length)return;const e=$('toast');if(e&&e.classList.contains('on')){if(!(cut===1&&Date.now()-(toast.at||0)>=1000))return;clearTimeout(toast._t);}toast(toast.q.shift());}   // M44: после закрытия окна старый тост (висел над окном ≥ 1 с) уступает очереди — ждущий не стоит лишние 1–2 с
+function toastNext(cut){if(modalOn||!toast.q||!toast.q.length)return;const e=$('toast');if(e&&e.classList.contains('on')){const age=Date.now()-(toast.at||0);if(!(cut===1&&age>=1000)){if(cut===1){clearTimeout(toast._w);toast._w=setTimeout(()=>toastNext(1),1030-age);}return;}clearTimeout(toast._t);e.classList.remove('on');}toast(toast.q.shift());}   // M44: после закрытия окна старый тост (висел над окном ≥ 1 с) уступает очереди — ждущий не стоит лишние 1–2 с; SHR-2 06.11: висел меньше 1 с — повтор, когда наберёт 1 с (иначе очередь ждала весь долгий тост 5–20 с); уступает по-настоящему — гасим его до показа следующего (иначе toast() возвращал следующий в хвост очереди и порядок путался)
 // окно = нижний лист на телефоне (css: .modal/#mcard); role=dialog, фокус внутрь окна и обратно
 let mFocus=null;
 // M38 (a45): одно окно за раз — окна, которые игра открывает сама (награды, сцены, торги), ждут WIN_GAP после закрытия прошлого окна

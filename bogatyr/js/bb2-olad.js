@@ -7,7 +7,7 @@
 (function(){
   if(typeof BB2==='undefined'||/[?&](bot|promo|shot)\b/.test(location.search))return;
   var GAP=6,HOLD=4000,MOPEN=8000,DELAY=600,tBtn=0,tRun=0,tZab=0,mOpen=0,mKind='',mOut=false,pend=0;
-  var SKIP=/^(result|win|lose|death|pause|level|chest|gift|login|today|tmrw|evutro|nv|prival|nechPause|nechRes|shop|grm|zab)$/;
+  var SKIP=/^(result|win|lose|death|pause|level|chest|gift|login|today|tmrw|evutro|nv|prival|nechPause|nechRes|shop|grm|zab|b3sor)$/;
   function now(){return Date.now();}
   // пауза: пульт olad.gap (минут, 2–30; пульт приезжает позже старта — читаем каждый раз), иначе GAP
   function gap(){try{var g=BB2.pult?+BB2.pult('olad.gap',0):0;if(g>=2&&g<=30)return g;}catch(e){}return GAP;}
