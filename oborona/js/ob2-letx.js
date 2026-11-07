@@ -180,7 +180,7 @@ OB2.slot('map','let',el=>{const at=el.querySelector('#glBox');if(!at)return;let 
   if(LON()&&typeof slVis==='function'&&slVis()&&typeof slSaga==='function'){const q=slSaga(),nm=SAGA[((q.id%SAGA.length)+SAGA.length)%SAGA.length],st=sagaStep(q.p),rd=sagaReady(q);
     h+='<button class="letbar saga'+(rd?' hot':'')+'" id="letSaga"><b>📜 '+Lg(nm.n,nm.en)+(rd?' 🎁':'')+'</b><span>'+Lg('ступень '+st+'/'+SAGA_N+' · '+slSagaLeft()+' дн.','step '+st+'/'+SAGA_N+' · '+slSagaLeft()+' d')+'</span>'+
       '<i class="lb"><i style="width:'+Math.round((st>=SAGA_N?1:(q.p%SAGA_P)/SAGA_P)*100)+'%"></i></i></button>';}
-  if(!h)return;const d=document.createElement('div');d.id='letMap';d.innerHTML=h;el.insertBefore(d,at);
+  if(!h)return;const d=document.createElement('div');d.id='letMap';d.innerHTML=h;at.parentNode.insertBefore(d,at);   // o3:QA #glBox может быть уже в «ещё» Карты 3.0 (o3-ui.js § П5) — не прямой ребёнок el
   on('letNb',nbOpen);on('letSaga',()=>openSlava('saga'));},10);
 
 /* ---------- «Сегодня»: фишка «📅 День» открывает Летопись; не больше 2 рядов, остальное — «ещё ›» ---------- */

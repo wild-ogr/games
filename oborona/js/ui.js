@@ -356,11 +356,12 @@ function initInput(){
     if(G.aim==='thunder'){if(p.y>-40&&p.y<WH+20){castThunder(p.x,p.y);G.aim=null;G.aimPt=null;}return;}
     if(G.egg&&!G.egg.dead&&(G.egg.x-p.x)**2+(G.egg.y-6-p.y)**2<34*34){const ex=G.egg.x,ey=G.egg.y;dmgEnemy(G.egg,G.egg.max*.07,'true');sparkle(ex,ey-6,'#ffd84a',5);SND.click();return;}
     if(G.kolo&&!G.kolo.got&&(G.kolo.x-p.x)**2+(G.kolo.y-8-p.y)**2<30*30){koloTap();return;}
+    if(window.O3&&O3.call('tap',p,e))return;   // o3: касание поля — сначала волна 3.0 (узелки на дороге, богатырь, «тык»); true = съела
     // застава нарисована выше площадки — по ней попадаем по всей высоте (центр на 18 выше, радиус ≥34); пустое место — как было
     const rT=Math.min(38,Math.max(26,24/VIEW.s));let best=-1,bd=1;G.map.spots.forEach((s,i)=>{const tw=G.tw[i],r=tw?Math.max(rT,34):rT,y=tw?s.y-18:s.y;
       const d=((s.x-p.x)**2+(y-p.y)**2)/(r*r);if(d<bd){bd=d;best=i;}});
     if(best>=0){if(best===ringI){closeRing();return;}SND.click();openRing(best);}
-    else if(skullAt(p)){SND.click();closeRing();showWaveInfo();}else closeRing();});
+    else if(skullAt(p)){SND.click();closeRing();showWaveInfo();}else{if(window.O3)O3.call('tapm',p,e);closeRing();}});   // o3 tapm: касание мимо мест — «иди сюда» богатырю
   cv.addEventListener('pointermove',e=>{if(G&&G.aim){G.aimPt=toWorld(e.clientX,e.clientY);}});
   on('waveBtn',()=>{if(!G)return;if(G.tut===1){G.tut=2;}callWave();closeRing();});
   on('speedBtn',()=>{if(!G)return;const order=[1,1.5,2,3],nx=order[(order.indexOf(G.speed)+1)%4];
@@ -440,6 +441,7 @@ function onBattleEnd(win){if(!G)return;closeRing();$('voice').classList.remove('
   P.kills=G.kills;P.kt=Object.assign({},G.kt);P.built=G.built||0;P.ups=G.ups||0;P.spells=G.spells||0;
   META_HK('END',G,win); // OB:META1 розетка меты (после «ещё попытки» зовётся ещё раз — считать приростом)
   if(G.wk){weekEnd(dq0);META_HK('WIN',G,win);achAfter();return;}   // OB:SLAVA WIN — строки меты в окне итогов (Слава, место среди соседей, трофеи)
+  if(G.o3t&&!G.o3t.ts&&window.TRP){TRP.end(dq0);META_HK('WIN',G,win);achAfter();return;} // o3:П3 «Тропа Кощея» (js/o3-tropa.js): свой итог, рекорды осады не трогаем
   if(G.dly){dlyEnd(dq0);META_HK('WIN',G,win);achAfter();return;} // OB:META1 «Застава дня» (js/meta-dly.js)
   if(G.rule){dchEnd(win,dq0);META_HK('WIN',G,win);achAfter();return;}
   if(G.endless){const waves=Math.max(0,G.wave-1),rec=waves>P.best0;S.endBest=Math.max(S.endBest||0,waves);if(P.n===1)S.endRuns++;
@@ -960,6 +962,7 @@ function onReady(){
      (награда за вход до облака дала бы забрать её второй раз на втором устройстве) — аудит 14 */
   const t0=Date.now(),wait=!!ysdk||VK_REAL;
   const go=()=>{if(wait&&!cloudLoaded&&Date.now()-t0<3000){setTimeout(go,100);return;}
+    if(S.tut&&typeof O3LZ!=='undefined'&&O3LZ.wait()&&Date.now()-t0<2500){setTimeout(go,100);return;}   // o3:FIX меню 3.0 (Карта/Рапорт) — ждать ленивую часть js/o3-tropa.js до 2,5 с, чтобы не мигать; новичок — сразу в бой
     dailyBoost();openTab('Map');$('loading').style.display='none';
     // новичок — сразу в первый бой, без окна и стены текста (разблокировка звука — в core.js, на любое касание)
     if(!S.tut){S.tut=1;save();setTimeout(()=>{if(!G){if(window.SP)SP.go(()=>{if(!G)startLevel(0,0);},1);else startLevel(0,0);}},250);   /* ob2:SPEED первый бой новичка — под шторкой */}
